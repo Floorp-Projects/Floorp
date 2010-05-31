@@ -48,8 +48,6 @@ class nsFormSubmission;
 enum FormControlsTypes {
   NS_FORM_FIELDSET = 1,
   NS_FORM_LABEL,
-  NS_FORM_OPTION,
-  NS_FORM_OPTGROUP,
   NS_FORM_OUTPUT,
   NS_FORM_LEGEND,
   NS_FORM_SELECT,
