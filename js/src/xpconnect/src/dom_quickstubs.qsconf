@@ -140,8 +140,7 @@ members = [
     'nsIDOMNode.removeChild',
     'nsIDOMNode.hasAttributes',
     'nsIDOMNode.attributes',
-    'nsIDOMNodeList.item',
-    'nsIDOMNodeList.length',
+    'nsIDOMNodeList.*',
     'nsIDOMNodeSelector.querySelector',
     'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
@@ -635,6 +634,9 @@ customMethodCalls = {
         },
     'nsIDOMHTMLDocument_': {
         'thisType': 'nsHTMLDocument'
+        },
+    'nsIDOMNodeList_GetLength': {
+        'thisType': 'nsINodeList'
         },
     'nsIDOMHTMLDocument_Write': {
         'thisType': 'nsHTMLDocument',
