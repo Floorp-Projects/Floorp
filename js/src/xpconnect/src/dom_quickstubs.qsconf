@@ -672,13 +672,7 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCSS2Properties_': CSS2Properties_,
     'nsIDOMNSCSS2Properties_': CSS2Properties_,
-    'nsIDOMNSElement_GetClientRects': {
-        'thisType': 'nsGenericElement'
-        },
-    'nsIDOMNSElement_GetBoundingClientRect': {
-        'thisType': 'nsGenericElement'
-        },
-    'nsIDOMNSElement_GetElementsByClassName': {
+    'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
     'nsIDOMNSElement_GetScrollWidth': {
