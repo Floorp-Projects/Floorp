@@ -185,21 +185,21 @@ AppendString(JSCharBuffer &cb, JSString *str)
     return cb.append(chars, end);
 }
 
-#define DEFINE_GETTER(name,code)                                                     \
-    static JSBool                                                                    \
-    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                          \
-    {                                                                                \
-        { code; }                                                                    \
-        return true;                                                                 \
+#define DEFINE_GETTER(name,code)                                               \
+    static JSBool                                                              \
+    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    {                                                                          \
+        code;                                                                  \
+        return true;                                                           \
     }
 
 /*
  * Namespace class and library functions.
  */
 DEFINE_GETTER(NamePrefix_getter,
-              *vp = (obj->getClass() == &js_NamespaceClass.base) ? obj->getNamePrefix() : *vp)
+              if (obj->getClass() == &js_NamespaceClass.base) *vp = obj->getNamePrefix())
 DEFINE_GETTER(NameURI_getter,
-              *vp = (obj->getClass() == &js_NamespaceClass.base) ? obj->getNameURI() : *vp)
+              if (obj->getClass() == &js_NamespaceClass.base) *vp = obj->getNameURI())
 
 static void
 namespace_finalize(JSContext *cx, JSObject *obj)
@@ -285,10 +285,11 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
  * QName class and library functions.
  */
 DEFINE_GETTER(QNameNameURI_getter,
-              *vp = (obj->getClass() == &js_QNameClass.base)
-              ? (JSVAL_IS_VOID(obj->getNameURI()) ? JSVAL_NULL : obj->getNameURI()) : *vp)
+              if (obj->getClass() == &js_QNameClass.base)
+                  *vp = JSVAL_IS_VOID(obj->getNameURI()) ? JSVAL_NULL : obj->getNameURI())
 DEFINE_GETTER(QNameLocalName_getter,
-              *vp = (obj->getClass() == &js_QNameClass.base) ? obj->getQNameLocalName() : *vp)
+              if (obj->getClass() == &js_QNameClass.base)
+                  *vp = obj->getQNameLocalName())
 
 static void
 anyname_finalize(JSContext* cx, JSObject* obj)
