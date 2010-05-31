@@ -215,20 +215,20 @@ interface nsIDocumentEncoder : nsISupports
    */
   const unsigned long OutputDontRewriteEncodingDeclaration = (1 << 18);
  
-  /**
-   * Output for delsp=yes (RFC 3676). This is used with OutputFormatFlowed
-   * when converting to text for mail sending.
-   * PlainText output only.
-   */
-  const unsigned long OutputFormatDelSp  = (1 << 19);
- 
-  /**
    * When using the HTML or XHTML serializer, skip elements that are not
    * visible when this flag is set.  Elements are not visible when they
    * have CSS style display:none or visibility:collapse, for example.
    */
   const unsigned long SkipInvisibleContent = (1 << 19);
   
+  /**
+   * Output for delsp=yes (RFC 3676). This is used with OutputFormatFlowed
+   * when converting to text for mail sending.
+   * PlainText output only.
+   */
+  const unsigned long OutputFormatDelSp  = (1 << 20);
+ 
+  /**
   /**
    * Initialize with a pointer to the document and the mime type.
    * @param aDocument Document to encode.
