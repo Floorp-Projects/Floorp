@@ -782,6 +782,9 @@ customMethodCalls = {
         'code': '    nsIVariant *result = self->GetUserData(arg0);',
         'canFail': False
         },
+    'nsIDOMNSHTMLElement_': {
+        'thisType': 'nsGenericHTMLElement'
+        },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
