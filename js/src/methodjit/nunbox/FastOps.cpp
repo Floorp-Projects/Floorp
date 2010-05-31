@@ -85,16 +85,14 @@ mjit::Compiler::jsop_bitop(JSOp op)
     /* Test the types. */
     if (!rhs->isTypeKnown()) {
         RegisterID reg = frame.tempRegForType(rhs);
-        Jump rhsFail = masm.branch32(Assembler::NotEqual, reg, Imm32(JSVAL_MASK32_INT32));
+        Jump rhsFail = masm.testInt32(Assembler::NotEqual, reg);
         stubcc.linkExit(rhsFail);
-        frame.freeReg(reg);
         frame.learnType(rhs, JSVAL_MASK32_INT32);
     }
     if (!lhs->isTypeKnown()) {
         RegisterID reg = frame.tempRegForType(lhs);
-        Jump lhsFail = masm.branch32(Assembler::NotEqual, reg, Imm32(JSVAL_MASK32_INT32));
+        Jump lhsFail = masm.testInt32(Assembler::NotEqual, reg);
         stubcc.linkExit(lhsFail);
-        frame.freeReg(reg);
     }
 
     stubcc.leave();
@@ -151,5 +149,60 @@ mjit::Compiler::jsop_bitop(JSOp op)
     frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
 
     stubcc.rejoin(2);
+}
+
+void
+mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
+{
+    uint32 slot = script->getGlobalSlot(index);
+
+    bool popped = false;
+    PC += JSOP_GLOBALINC_LENGTH;
+    if (JSOp(*PC) == JSOP_POP && !analysis[PC].nincoming) {
+        popped = true;
+        PC += JSOP_POP_LENGTH;
+    }
+
+    int amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
+    bool post = !!(js_CodeSpec[op].format & JOF_POST);
+
+    RegisterID data;
+    RegisterID reg = frame.allocReg();
+    Address addr = masm.objSlotRef(globalObj, reg, slot);
+
+    if (post && !popped) {
+        frame.push(addr);
+        FrameEntry *fe = frame.peek(-1);
+        Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
+        stubcc.linkExit(notInt);
+        data = frame.copyData(fe);
+    } else {
+        Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
+        stubcc.linkExit(notInt);
+        data = frame.allocReg();
+        masm.loadData32(addr, data);
+    }
+
+    Jump ovf;
+    if (amt > 0)
+        ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), data);
+    else
+        ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), data);
+    stubcc.linkExit(ovf);
+
+    stubcc.leave();
+    stubcc.masm.lea(addr, Registers::ArgReg1);
+    stubcc.vpInc(op, post && !popped);
+
+    masm.storeData32(data, addr);
+
+    if (!post && !popped)
+        frame.pushUntypedPayload(JSVAL_MASK32_INT32, data);
+    else
+        frame.freeReg(data);
+
+    frame.freeReg(reg);
+
+    stubcc.rejoin(1);
 }
 

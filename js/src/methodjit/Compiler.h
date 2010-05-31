@@ -129,6 +129,7 @@ class Compiler
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
+    void jsop_globalinc(JSOp op, uint32 index);
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \

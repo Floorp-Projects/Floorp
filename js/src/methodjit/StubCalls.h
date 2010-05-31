@@ -53,6 +53,11 @@ JSObject * JS_FASTCALL BindName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
 
+void JS_FASTCALL VpInc(VMFrame &f, Value *vp);
+void JS_FASTCALL VpDec(VMFrame &f, Value *vp);
+void JS_FASTCALL DecVp(VMFrame &f, Value *vp);
+void JS_FASTCALL IncVp(VMFrame &f, Value *vp);
+
 void JS_FASTCALL BitAnd(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */

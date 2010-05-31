@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "StubCalls.h"
 #include "StubCompiler.h"
 #include "Compiler.h"
 #include "assembler/assembler/LinkBuffer.h"
@@ -107,9 +108,15 @@ typedef JSC::MacroAssembler::Imm32 Imm32;
 JSC::MacroAssembler::Call
 StubCompiler::stubCall(void *ptr)
 {
+    return stubCall(ptr, frame.stackDepth() + script->nfixed);
+}
+
+JSC::MacroAssembler::Call
+StubCompiler::stubCall(void *ptr, uint32 slots)
+{
     generation++;
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
-    Call cl = masm.stubCall(ptr, cc.getPC(), frame.stackDepth() + script->nfixed);
+    Call cl = masm.stubCall(ptr, cc.getPC(), slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
     return cl;
 }
@@ -131,5 +138,40 @@ void
 StubCompiler::finalize(uint8 *ncode)
 {
     masm.finalize(ncode);
+}
+
+JSC::MacroAssembler::Call
+StubCompiler::vpInc(JSOp op, bool pushed)
+{
+    uint32 slots = frame.stackDepth() + script->nfixed;
+    if (pushed) {
+        JS_ASSERT(frame.stackDepth());
+        slots--;
+    }
+
+    VoidVpStub stub = NULL;
+    switch (op) {
+      case JSOP_GLOBALINC:
+        stub = stubs::VpInc;
+        break;
+
+      case JSOP_GLOBALDEC:
+        stub = stubs::VpDec;
+        break;
+
+      case JSOP_INCGLOBAL:
+        stub = stubs::IncVp;
+        break;
+
+      case JSOP_DECGLOBAL:
+        stub = stubs::DecVp;
+        break;
+
+      default:
+        JS_NOT_REACHED("unknown incdec op");
+        break;
+    }
+
+    return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots);
 }
 

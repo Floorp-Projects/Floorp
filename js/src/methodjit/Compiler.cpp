@@ -349,6 +349,15 @@ mjit::Compiler::generateMethod()
             jsop_setglobal(GET_SLOTNO(PC));
           END_CASE(JSOP_SETGLOBAL)
 
+          BEGIN_CASE(JSOP_INCGLOBAL)
+          BEGIN_CASE(JSOP_DECGLOBAL)
+          BEGIN_CASE(JSOP_GLOBALINC)
+          BEGIN_CASE(JSOP_GLOBALDEC)
+            /* Advances PC automatically. */
+            jsop_globalinc(op, GET_SLOTNO(PC));
+            break;
+          END_CASE(JSOP_GLOBALINC)
+
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW

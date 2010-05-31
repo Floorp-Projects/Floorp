@@ -180,7 +180,7 @@ extern "C" void JaegerStubVeneer(void);
 #endif
 
 typedef void (JS_FASTCALL *VoidStub)(VMFrame &);
-typedef void (JS_FASTCALL *VoidVpStub)(VMFrame &, jsval *);
+typedef void (JS_FASTCALL *VoidVpStub)(VMFrame &, Value *);
 typedef void (JS_FASTCALL *VoidStubUInt32)(VMFrame &, uint32);
 typedef void (JS_FASTCALL *VoidStubInt32)(VMFrame &, int32);
 typedef JSBool (JS_FASTCALL *BoolStub)(VMFrame &);
