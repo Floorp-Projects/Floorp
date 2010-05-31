@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "MethodJIT.h"
+#include "jsnum.h"
 #include "Compiler.h"
 #include "StubCalls.h"
 #include "assembler/jit/ExecutableAllocator.h"
@@ -289,6 +290,59 @@ mjit::Compiler::generateMethod()
             jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
           }
           END_CASE(JSOP_GOTO)
+
+          BEGIN_CASE(JSOP_LT)
+          BEGIN_CASE(JSOP_LE)
+          BEGIN_CASE(JSOP_GT)
+          BEGIN_CASE(JSOP_GE)
+          {
+            /* These advance the PC automatically. */
+            JSOp fused = JSOp(PC[JSOP_GE_LENGTH]);
+            if (fused != JSOP_IFEQ && fused != JSOP_IFNE)
+                fused = JSOP_NOP;
+            jsbytecode *target = &PC[JSOP_GE_LENGTH] + GET_JUMP_OFFSET(&PC[JSOP_GE_LENGTH]);
+
+            FrameEntry *rhs = frame.peek(-1);
+            FrameEntry *lhs = frame.peek(-2);
+
+            /* Check for easy cases that the parser does not constant fold. */
+            if (lhs->isConstant() && rhs->isConstant() &&
+                lhs->getValue().isPrimitive() && rhs->getValue().isPrimitive())
+            {
+                /* Primitives can be trivially constant folded. */
+                const Value &lv = lhs->getValue();
+                const Value &rv = rhs->getValue();
+
+                bool result = compareTwoValues(cx, op, lv, rv);
+
+                frame.pop();
+                frame.pop();
+
+                if (fused == JSOP_NOP) {
+                    frame.push(Value(BooleanTag(result)));
+                } else {
+                    if (fused == JSOP_IFEQ)
+                        result = !result;
+
+                    /* Branch is never taken, don't bother doing anything. */
+                    if (result) {
+                        frame.forgetEverything();
+                        Jump j = masm.jump();
+                        jumpInScript(j, target);
+                    }
+                }
+            } else {
+                /* Anything else should go through the fast path generator. */
+                jsop_relational(op, target, fused);
+            }
+
+            /* Advance PC manually. */
+            PC += JSOP_GE_LENGTH;
+            if (fused != JSOP_NOP)
+                PC += JSOP_IFNE_LENGTH;
+            break;
+          }
+          END_CASE(JSOP_GE)
 
           BEGIN_CASE(JSOP_BITAND)
             jsop_bitop(op);
@@ -563,5 +617,49 @@ void
 mjit::Compiler::restoreFrameRegs()
 {
     masm.loadPtr(FrameAddress(offsetof(VMFrame, fp)), Assembler::FpReg);
+}
+
+bool
+mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs)
+{
+    JS_ASSERT(lhs.isPrimitive());
+    JS_ASSERT(rhs.isPrimitive());
+
+    if (lhs.isString() && rhs.isString()) {
+        int cmp = js_CompareStrings(lhs.asString(), rhs.asString());
+        switch (op) {
+          case JSOP_LT:
+            return cmp < 0;
+          case JSOP_LE:
+            return cmp <= 0;
+          case JSOP_GT:
+            return cmp > 0;
+          case JSOP_GE:
+            return cmp >= 0;
+          default:
+            JS_NOT_REACHED("NYI");
+        }
+    } else {
+        double ld, rd;
+        
+        /* These should be infallible w/ primitives. */
+        ValueToNumber(cx, lhs, &ld);
+        ValueToNumber(cx, rhs, &rd);
+        switch(op) {
+          case JSOP_LT:
+            return ld < rd;
+          case JSOP_LE:
+            return ld <= rd;
+          case JSOP_GT:
+            return ld > rd;
+          case JSOP_GE:
+            return ld >= rd;
+          default:
+            JS_NOT_REACHED("NYI");
+        }
+    }
+
+    JS_NOT_REACHED("NYI");
+    return false;
 }
 
