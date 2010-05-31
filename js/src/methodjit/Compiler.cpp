@@ -283,6 +283,17 @@ mjit::Compiler::generateMethod()
             frame.pushSyncedType(JSVAL_MASK32_NONFUNOBJ);
           END_CASE(JSOP_CALLNAME)
 
+          BEGIN_CASE(JSOP_CALL)
+          {
+            uint32 argc = GET_ARGC(PC);
+            prepareStubCall();
+            masm.move(Imm32(argc), Registers::ArgReg1);
+            dispatchCall(stubs::Call);
+            frame.popn(argc + 2);
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_CALL)
+
           BEGIN_CASE(JSOP_NAME)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
@@ -476,10 +487,53 @@ mjit::Compiler::prepareStubCall()
 JSC::MacroAssembler::Call
 mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
 {
-    //frame.forget(uses.nuses);
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
     Call cl = masm.stubCall(ptr, PC, frame.stackDepth() + script->nfixed);
     JaegerSpew(JSpew_Insns, " ---- END STUB CALL ---- \n");
     return cl;
+}
+
+void
+mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
+{
+    masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
+
+    /*
+     * Stub call returns a pointer to JIT'd code, or NULL.
+     *
+     * If the function could not be JIT'd, it was already invoked using
+     * js_Interpret() or js_Invoke(). In that case, the stack frame has
+     * already been popped. We don't have to do any extra work, except
+     * update FpReg later on.
+     *
+     * Otherwise, pop the VMFrame's cached return address, then call
+     * (which realigns it to SP).
+     */
+    Jump j = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
+
+#ifndef JS_CPU_ARM
+    /*
+     * Since ARM does not push return addresses on the stack, we rely on the
+     * scripted entry to store back the LR safely. Upon return we then write
+     * back the LR to the VMFrame instead of pushing.
+     */
+    masm.addPtr(Imm32(sizeof(void*)), Registers::StackPointer);
+#endif
+    masm.call(Registers::ReturnReg);
+
+#ifdef JS_CPU_ARM
+    masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, scriptedReturn)));
+#else
+    masm.push(Registers::ReturnReg);
+#endif
+
+    j.linkTo(masm.label(), &masm);
+    restoreFrameRegs();
+}
+
+void
+mjit::Compiler::restoreFrameRegs()
+{
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, fp)), Assembler::FpReg);
 }
 
