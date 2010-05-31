@@ -564,6 +564,7 @@ NameOp(VMFrame &f, uint32 index)
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
+            f.regs.sp++;
             f.regs.sp[-1].setFunObj(entry->vword.toFunObj());
             return obj;
         }
@@ -571,6 +572,7 @@ NameOp(VMFrame &f, uint32 index)
         if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
+            f.regs.sp++;
             f.regs.sp[-1] = obj2->lockedGetSlot(slot);
             return obj;
         }
@@ -589,6 +591,7 @@ NameOp(VMFrame &f, uint32 index)
         /* Kludge to allow (typeof foo == "undefined") tests. */
         JSOp op2 = js_GetOpcode(cx, f.fp->script, f.regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
+            f.regs.sp++;
             f.regs.sp[-1].setUndefined();
             return obj;
         }
