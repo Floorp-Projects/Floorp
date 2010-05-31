@@ -44,7 +44,7 @@ using namespace js;
 using namespace js::mjit;
 
 FrameState::FrameState(JSContext *cx, JSScript *script, Assembler &masm)
-  : cx(cx), script(script), masm(masm)
+  : cx(cx), script(script), masm(masm), entries(NULL)
 {
 }
 
@@ -59,8 +59,10 @@ FrameState::init(uint32 nargs)
     this->nargs = nargs;
 
     uint32 nslots = script->nslots + nargs;
-    if (!nslots)
+    if (!nslots) {
+        sp = spBase = locals = args = base = NULL;
         return true;
+    }
 
     uint8 *cursor = (uint8 *)cx->malloc(sizeof(FrameEntry) * nslots +       // entries[]
                                         sizeof(FrameEntry *) * nslots +     // base[]
