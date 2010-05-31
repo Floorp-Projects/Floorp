@@ -419,14 +419,9 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     gUploadLastDir->FetchLastUsedDirectory(doc->GetDocumentURI(),
                                            getter_AddRefs(localFile));
     if (!localFile) {
-      // Default to "home" directory for each platform
+      // Default to "desktop" directory for each platform
       nsCOMPtr<nsIFile> homeDir;
-#ifdef XP_WIN
-      const char *dir = NS_WIN_DESKTOP_DIRECTORY; // Use Desktop on Windows
-#else
-      const char *dir = NS_OS_HOME_DIR;
-#endif
-      NS_GetSpecialDirectory(dir, getter_AddRefs(homeDir));
+      NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(homeDir));
       localFile = do_QueryInterface(homeDir);
     }
     filePicker->SetDisplayDirectory(localFile);
