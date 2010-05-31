@@ -71,7 +71,7 @@ class FrameEntry
         return type.isConstant();
     }
 
-    uint32 getTypeTag() const {
+    JSValueMask32 getTypeTag() const {
         return v_.s.mask32;
     }
 
@@ -86,7 +86,7 @@ class FrameEntry
         return index_;
     }
 
-    void setTypeTag(uint32 u32) {
+    void setTypeTag(JSValueMask32 u32) {
         type.setConstant();
         v_.s.mask32 = u32;
     }

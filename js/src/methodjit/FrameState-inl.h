@@ -168,7 +168,7 @@ FrameState::pushSynced()
 }
 
 inline void
-FrameState::pushSyncedType(uint32 tag)
+FrameState::pushSyncedType(JSValueMask32 tag)
 {
     FrameEntry *fe = rawPush();
 
@@ -204,7 +204,7 @@ FrameState::push(Address address)
 }
 
 inline void
-FrameState::pushTypedPayload(uint32 tag, RegisterID payload)
+FrameState::pushTypedPayload(JSValueMask32 tag, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
@@ -217,7 +217,7 @@ FrameState::pushTypedPayload(uint32 tag, RegisterID payload)
 }
 
 inline void
-FrameState::pushUntypedPayload(uint32 tag, RegisterID payload)
+FrameState::pushUntypedPayload(JSValueMask32 tag, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
@@ -228,7 +228,7 @@ FrameState::pushUntypedPayload(uint32 tag, RegisterID payload)
     fe->type.unsync();
 #endif
 
-    masm.storeTypeTag(Imm32(tag), addressOf(fe));
+    masm.storeTypeTag(ImmTag(tag), addressOf(fe));
     fe->type.sync();
     fe->data.unsync();
     fe->data.setRegister(payload);
@@ -287,7 +287,7 @@ FrameState::syncType(const FrameEntry *fe, Assembler &masm) const
 
     if (fe->type.isConstant()) {
         JS_ASSERT(fe->isTypeKnown());
-        masm.storeTypeTag(Imm32(fe->getTypeTag()), addressOf(fe));
+        masm.storeTypeTag(ImmTag(fe->getTypeTag()), addressOf(fe));
     } else {
         masm.storeTypeTag(fe->type.reg(), addressOf(fe));
     }
@@ -310,7 +310,7 @@ FrameState::syncData(const FrameEntry *fe, Assembler &masm) const
 }
 
 inline void
-FrameState::learnType(FrameEntry *fe, uint32 tag)
+FrameState::learnType(FrameEntry *fe, JSValueMask32 tag)
 {
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
