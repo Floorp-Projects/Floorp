@@ -58,16 +58,15 @@ ThebesLayerD3D9::~ThebesLayerD3D9()
 void
 ThebesLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
 {
-  if (aRegion.GetBounds() == mVisibleRect) {
+  if (aRegion.IsEqual(mVisibleRegion)) {
     return;
   }
-  mVisibleRect = aRegion.GetBounds();
+  ThebesLayer::SetVisibleRegion(aRegion);
 
-  device()->CreateTexture(mVisibleRect.width, mVisibleRect.height, 1,
+  mInvalidatedRect = mVisibleRegion.GetBounds();
+  device()->CreateTexture(mInvalidatedRect.width, mInvalidatedRect.height, 1,
                           D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                           D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
-
-  mInvalidatedRect = mVisibleRect;
 }
 
 
@@ -76,7 +75,7 @@ ThebesLayerD3D9::InvalidateRegion(const nsIntRegion &aRegion)
 {
   nsIntRegion invalidatedRegion;
   invalidatedRegion.Or(aRegion, mInvalidatedRect);
-  invalidatedRegion.And(invalidatedRegion, mVisibleRect);
+  invalidatedRegion.And(invalidatedRegion, mVisibleRegion);
   mInvalidatedRect = invalidatedRegion.GetBounds();
 }
 
@@ -86,20 +85,16 @@ ThebesLayerD3D9::GetType()
   return TYPE_THEBES;
 }
 
-const nsIntRect&
-ThebesLayerD3D9::GetVisibleRect()
-{
-  return mVisibleRect;
-}
-
 void
 ThebesLayerD3D9::RenderLayer()
 {
+  nsIntRect visibleRect = mVisibleRegion.GetBounds();
+
   if (!mTexture) {
-    device()->CreateTexture(mVisibleRect.width, mVisibleRect.height, 1,
+    device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
                             D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
-    mInvalidatedRect = mVisibleRect;
+    mInvalidatedRect = visibleRect;
   }
   if (!mInvalidatedRect.IsEmpty()) {
     nsIntRegion region = mInvalidatedRect;
@@ -150,8 +145,8 @@ ThebesLayerD3D9::RenderLayer()
     tmpTexture->GetSurfaceLevel(0, getter_AddRefs(srcSurface));
 
     POINT point;
-    point.x = mInvalidatedRect.x - mVisibleRect.x;
-    point.y = mInvalidatedRect.y - mVisibleRect.y;
+    point.x = mInvalidatedRect.x - visibleRect.x;
+    point.y = mInvalidatedRect.y - visibleRect.y;
     device()->UpdateSurface(srcSurface, NULL, dstSurface, &point);
   }
 
@@ -164,11 +159,11 @@ ThebesLayerD3D9::RenderLayer()
    * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
    */
   memset(&quadTransform, 0, sizeof(quadTransform));
-  quadTransform[0][0] = (float)GetVisibleRect().width;
-  quadTransform[1][1] = (float)GetVisibleRect().height;
+  quadTransform[0][0] = (float)visibleRect.width;
+  quadTransform[1][1] = (float)visibleRect.height;
   quadTransform[2][2] = 1.0f;
-  quadTransform[3][0] = (float)GetVisibleRect().x - 0.5f;
-  quadTransform[3][1] = (float)GetVisibleRect().y - 0.5f;
+  quadTransform[3][0] = (float)visibleRect.x - 0.5f;
+  quadTransform[3][1] = (float)visibleRect.y - 0.5f;
   quadTransform[3][3] = 1.0f;
 
   device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);

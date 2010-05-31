@@ -59,18 +59,6 @@ ContainerLayerD3D9::~ContainerLayerD3D9()
   }
 }
 
-const nsIntRect&
-ContainerLayerD3D9::GetVisibleRect()
-{
-  return mVisibleRect;
-}
-
-void
-ContainerLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
-{
-  mVisibleRect = aRegion.GetBounds();
-}
-
 void
 ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
 {
@@ -165,11 +153,12 @@ ContainerLayerD3D9::RenderLayer()
   float renderTargetOffset[] = { 0, 0, 0, 0 };
   float oldViewMatrix[4][4];
 
+  nsIntRect visibleRect = mVisibleRegion.GetBounds();
   PRBool useIntermediate = (opacity != 1.0 || !mTransform.IsIdentity());
 
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
-    device()->CreateTexture(mVisibleRect.width, mVisibleRect.height, 1,
+    device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
                             D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
                             NULL);
@@ -177,8 +166,8 @@ ContainerLayerD3D9::RenderLayer()
     renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
     device()->SetRenderTarget(0, renderSurface);
     device()->GetVertexShaderConstantF(12, previousRenderTargetOffset, 1);
-    renderTargetOffset[0] = (float)GetVisibleRect().x;
-    renderTargetOffset[1] = (float)GetVisibleRect().y;
+    renderTargetOffset[0] = (float)visibleRect.x;
+    renderTargetOffset[1] = (float)visibleRect.y;
     device()->SetVertexShaderConstantF(12, renderTargetOffset, 1);
 
     float viewMatrix[4][4];
@@ -187,8 +176,8 @@ ContainerLayerD3D9::RenderLayer()
      * <1.0, -1.0> bottomright)
      */
     memset(&viewMatrix, 0, sizeof(viewMatrix));
-    viewMatrix[0][0] = 2.0f / mVisibleRect.width;
-    viewMatrix[1][1] = -2.0f / mVisibleRect.height;
+    viewMatrix[0][0] = 2.0f / visibleRect.width;
+    viewMatrix[1][1] = -2.0f / visibleRect.height;
     viewMatrix[2][2] = 1.0f;
     viewMatrix[3][0] = -1.0f;
     viewMatrix[3][1] = 1.0f;
@@ -215,11 +204,11 @@ ContainerLayerD3D9::RenderLayer()
         r.left = 0;
         r.top = 0;
       } else {
-        r.left = GetVisibleRect().x;
-        r.top = GetVisibleRect().y;
+        r.left = visibleRect.x;
+        r.top = visibleRect.y;
       }
-      r.right = r.left + GetVisibleRect().width;
-      r.bottom = r.top + GetVisibleRect().height;
+      r.right = r.left + visibleRect.width;
+      r.bottom = r.top + visibleRect.height;
     }
 
     nsRefPtr<IDirect3DSurface9> renderSurface;
@@ -256,11 +245,11 @@ ContainerLayerD3D9::RenderLayer()
      * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
      */
     memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)GetVisibleRect().width;
-    quadTransform[1][1] = (float)GetVisibleRect().height;
+    quadTransform[0][0] = (float)visibleRect.width;
+    quadTransform[1][1] = (float)visibleRect.height;
     quadTransform[2][2] = 1.0f;
-    quadTransform[3][0] = (float)GetVisibleRect().x - 0.5f;
-    quadTransform[3][1] = (float)GetVisibleRect().y - 0.5f;
+    quadTransform[3][0] = (float)visibleRect.x - 0.5f;
+    quadTransform[3][1] = (float)visibleRect.y - 0.5f;
     quadTransform[3][3] = 1.0f;
 
     device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
