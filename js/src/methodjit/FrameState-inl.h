@@ -247,6 +247,7 @@ FrameState::tempRegForType(FrameEntry *fe)
 
     RegisterID reg = alloc(fe, RematInfo::TYPE, true);
     masm.loadTypeTag(addressOf(fe), reg);
+    fe->type.setRegister(reg);
     return reg;
 }
 
@@ -262,6 +263,7 @@ FrameState::tempRegForData(FrameEntry *fe)
 
     RegisterID reg = alloc(fe, RematInfo::DATA, true);
     masm.loadData32(addressOf(fe), reg);
+    fe->data.setRegister(reg);
     return reg;
 }
 
@@ -310,7 +312,8 @@ FrameState::syncData(const FrameEntry *fe, Assembler &masm) const
 inline void
 FrameState::learnType(FrameEntry *fe, uint32 tag)
 {
-    JS_ASSERT(!fe->type.inRegister());
+    if (fe->type.inRegister())
+        forgetReg(fe->type.reg());
     fe->setTypeTag(tag);
 }
 
