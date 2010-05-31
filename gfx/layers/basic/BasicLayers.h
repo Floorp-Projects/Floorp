@@ -103,7 +103,6 @@ private:
                   DrawThebesLayerCallback aCallback,
                   void* aCallbackData);
 
-  nsRefPtr<Layer> mRoot;
   // The default context for BeginTransaction.
   nsRefPtr<gfxContext> mDefaultTarget;
   // The context to draw into.

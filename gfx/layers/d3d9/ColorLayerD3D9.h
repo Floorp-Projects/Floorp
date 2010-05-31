@@ -55,17 +55,12 @@ public:
     mImplData = static_cast<LayerD3D9*>(this);
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
-
   // LayerD3D9 Implementation
   virtual LayerType GetType();
 
   virtual Layer* GetLayer();
 
   virtual void RenderLayer();
-
-protected:
-  nsIntRegion mVisibleRegion;
 };
 
 } /* layers */

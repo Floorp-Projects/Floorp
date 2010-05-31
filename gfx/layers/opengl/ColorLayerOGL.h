@@ -54,8 +54,6 @@ public:
     mImplData = static_cast<LayerOGL*>(this);
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
-
   // LayerOGL Implementation
   virtual LayerType GetType();
 
@@ -63,9 +61,6 @@ public:
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
-
-protected:
-  nsIntRegion mVisibleRegion;
 };
 
 } /* layers */
