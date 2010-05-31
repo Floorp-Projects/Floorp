@@ -481,6 +481,7 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 void
 mjit::Compiler::emitReturn()
 {
+    stubCall(stubs::Return, Uses(0), Defs(0));
 #if defined(JS_CPU_ARM)
     masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
 #endif
@@ -520,6 +521,7 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
      * Otherwise, pop the VMFrame's cached return address, then call
      * (which realigns it to SP).
      */
+    restoreFrameRegs();
     Jump j = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
 
 #ifndef JS_CPU_ARM
@@ -539,7 +541,6 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
 #endif
 
     j.linkTo(masm.label(), &masm);
-    restoreFrameRegs();
 }
 
 void
