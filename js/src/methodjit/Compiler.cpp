@@ -275,6 +275,14 @@ mjit::Compiler::generateMethod()
             jsop_bitop(op);
           END_CASE(JSOP_BITAND)
 
+          BEGIN_CASE(JSOP_CALLNAME)
+            prepareStubCall();
+            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
+            stubCall(stubs::CallName, Uses(0), Defs(2));
+            frame.pushSynced();
+            frame.pushSyncedType(JSVAL_MASK32_NONFUNOBJ);
+          END_CASE(JSOP_CALLNAME)
+
           BEGIN_CASE(JSOP_NAME)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);

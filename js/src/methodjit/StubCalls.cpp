@@ -328,7 +328,7 @@ ValueToObject(JSContext *cx, Value *vp)
                 (vp)->setUndefined();                                         \
         } else {                                                              \
             if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
-                THROW();                                                      \
+                return NULL;                                                  \
         }                                                                     \
     JS_END_MACRO
 
@@ -548,8 +548,8 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         js_ReportIsNotDefined(cx, printable);
 }
 
-void JS_FASTCALL
-stubs::Name(VMFrame &f, uint32 index)
+static JSObject *
+NameOp(VMFrame &f, uint32 index)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp;
@@ -565,14 +565,14 @@ stubs::Name(VMFrame &f, uint32 index)
     if (!atom) {
         if (entry->vword.isFunObj()) {
             f.regs.sp[-1].setFunObj(entry->vword.toFunObj());
-            return;
+            return obj;
         }
 
         if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
             f.regs.sp[-1] = obj2->lockedGetSlot(slot);
-            return;
+            return obj;
         }
 
         JS_ASSERT(entry->vword.isSprop());
@@ -584,23 +584,23 @@ stubs::Name(VMFrame &f, uint32 index)
     id = ATOM_TO_JSID(atom);
     JSProperty *prop;
     if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
-        THROW();
+        return NULL;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
         JSOp op2 = js_GetOpcode(cx, f.fp->script, f.regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             f.regs.sp[-1].setUndefined();
-            return;
+            return obj;
         }
         ReportAtomNotDefined(cx, atom);
-        THROW();
+        return NULL;
     }
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
         obj2->dropProperty(cx, prop);
         if (!obj->getProperty(cx, id, &rval))
-            THROW();
+            return NULL;
     } else {
         sprop = (JSScopeProperty *)prop;
   do_native_get:
@@ -608,11 +608,30 @@ stubs::Name(VMFrame &f, uint32 index)
         obj2->dropProperty(cx, (JSProperty *) sprop);
     }
 
+    f.regs.sp++;
     f.regs.sp[-1] = rval;
+    return obj;
 }
 
 void JS_FASTCALL
-mjit::stubs::BitAnd(VMFrame &f)
+stubs::Name(VMFrame &f, uint32 index)
+{
+    if (!NameOp(f, index))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::CallName(VMFrame &f, uint32 index)
+{
+    JSObject *obj = NameOp(f, index);
+    if (!obj)
+        THROW();
+    f.regs.sp++;
+    f.regs.sp[-1].setNonFunObj(*obj);
+}
+
+void JS_FASTCALL
+stubs::BitAnd(VMFrame &f)
 {
     int32_t i, j;
 
