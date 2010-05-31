@@ -122,6 +122,8 @@ public:
   virtual void RemoveChild(Layer* aChild);
 
 protected:
+  void RemoveChildInternal(Layer* aChild);
+
   BasicLayerManager* BasicManager()
   {
     return static_cast<BasicLayerManager*>(mManager);
@@ -131,12 +133,7 @@ protected:
 BasicContainerLayer::~BasicContainerLayer()
 {
   while (mFirstChild) {
-    Layer* next = mFirstChild->GetNextSibling();
-    mFirstChild->SetNextSibling(nsnull);
-    mFirstChild->SetPrevSibling(nsnull);
-    mFirstChild->SetParent(nsnull);
-    NS_RELEASE(mFirstChild);
-    mFirstChild = next;
+    RemoveChildInternal(mFirstChild);
   }
 
   MOZ_COUNT_DTOR(BasicContainerLayer);
@@ -184,6 +181,12 @@ BasicContainerLayer::RemoveChild(Layer* aChild)
 {
   NS_ASSERTION(BasicManager()->InConstruction(),
                "Can only set properties in construction phase");
+  RemoveChildInternal(aChild);
+}
+
+void
+BasicContainerLayer::RemoveChildInternal(Layer* aChild)
+{
   NS_ASSERTION(aChild->Manager() == Manager(),
                "Child has wrong manager");
   NS_ASSERTION(aChild->GetParent() == this,

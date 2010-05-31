@@ -50,12 +50,7 @@ ContainerLayerD3D9::ContainerLayerD3D9(LayerManagerD3D9 *aManager)
 ContainerLayerD3D9::~ContainerLayerD3D9()
 {
   while (mFirstChild) {
-    Layer* next = mFirstChild->GetNextSibling();
-    mFirstChild->SetNextSibling(nsnull);
-    mFirstChild->SetPrevSibling(nsnull);
-    mFirstChild->SetParent(nsnull);
-    NS_RELEASE(mFirstChild);
-    mFirstChild = next;
+    RemoveChild(mFirstChild);
   }
 }
 
@@ -95,11 +90,13 @@ void
 ContainerLayerD3D9::RemoveChild(Layer *aChild)
 {
   if (GetFirstChild() == aChild) {
-    mFirstChild = GetFirstChild()->GetNextSibling() ?
-      GetFirstChild()->GetNextSibling() : nsnull;
+    mFirstChild = GetFirstChild()->GetNextSibling();
     if (mFirstChild) {
       mFirstChild->SetPrevSibling(nsnull);
     }
+    aChild->SetNextSibling(nsnull);
+    aChild->SetPrevSibling(nsnull);
+    aChild->SetParent(nsnull);
     NS_RELEASE(aChild);
     return;
   }
