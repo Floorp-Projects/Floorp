@@ -217,7 +217,7 @@ FrameState::syncAndKill(uint32 mask)
         if (!fe->data.synced()) {
             syncData(fe, masm);
             fe->data.sync();
-            if (fe->isConstant())
+            if (fe->isConstant() && !fe->type.synced())
                 fe->type.sync();
         }
         if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
