@@ -104,6 +104,7 @@ _TEST_FILES =	\
 		test_bug514127.html \
 		test_bug518777.html \
 		test_bug548545.xhtml \
+		test_bug559499.html \
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
