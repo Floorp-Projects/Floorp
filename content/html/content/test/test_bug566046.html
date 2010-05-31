@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=566046
+-->
+<head>
+  <title>Test for Bug 566046</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <base target='frame2'>
+</head>
+<body onload="runTests();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566046">Mozilla Bug 566046</a>
+<p id="display"></p>
+<iframe name='frame1' id='frame1'></iframe>
+<iframe name='frame2' id='frame2'></iframe>
+<div id="content" style="display: none">
+  <form target='frame1' action="data:text/html," method="GET">
+    <input name='foo' value='foo'>
+  </form>
+  <form action="data:text/html," method="GET">
+    <input name='bar' value='bar'>
+  </form>
+  <form target="">
+  </form>
+  <form target="tulip">
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 566046 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var gTestResults = {
+  frame1: "data:text/html,?foo=foo",
+  frame2: "data:text/html,?bar=bar",
+};
+
+var gPendingLoad = 0; // Has to be set after depending on the frames number.
+
+function runTests()
+{
+  // Check the target IDL attribute.
+  for (var i=0; i<document.forms.length; ++i) {
+    var testValue = document.forms[i].getAttribute('target');
+    is(document.forms[i].target, testValue ? testValue : "",
+       "target IDL attribute should reflect the target content attribute");
+  }
+
+  // We add a load event for the frames which will be called when the forms
+  // will be submitted.
+  var frames = [ document.getElementById('frame1'),
+                 document.getElementById('frame2') ];
+  gPendingLoad = frames.length;
+
+  for (var i=0; i<frames.length; i++) {
+    frames[i].setAttribute('onload', "frameLoaded(this);");
+  }
+
+  // Submitting only the forms with a valid target.
+  document.forms[0].submit();
+  document.forms[1].submit();
+}
+
+function frameLoaded(aFrame) {
+  // Check if when target is unspecified, it fallback correctly to the base
+  // element target attribute.
+  is(aFrame.contentWindow.location.href, gTestResults[aFrame.name],
+     "the target attribute doesn't have the correct behavior");
+
+  if (--gPendingLoad == 0) {
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
