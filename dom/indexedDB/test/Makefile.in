@@ -61,6 +61,8 @@ _TEST_FILES = \
   test_put_get_values_autoIncrement.html \
   test_readonly_transactions.html \
   test_remove_objectStore.html \
+  test_request_readyState.html \
+  test_transaction_abort.html \
   test_setVersion.html \
   test_writer_starvation.html \
   $(NULL)

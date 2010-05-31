@@ -49,6 +49,9 @@
 #include "DatabaseInfo.h"
 #include "TransactionThreadPool.h"
 
+#define SAVEPOINT_INITIAL "initial"
+#define SAVEPOINT_INTERMEDIATE "intermediate"
+
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
@@ -86,6 +89,23 @@ private:
 
 } // anonymous namespace
 
+BEGIN_INDEXEDDB_NAMESPACE
+
+class CommitHelper : public nsRunnable
+{
+public:
+  CommitHelper(IDBTransactionRequest* aTransaction)
+  : mTransaction(aTransaction)
+  { }
+
+  NS_IMETHOD Run();
+
+private:
+  nsRefPtr<IDBTransactionRequest> mTransaction;
+};
+
+END_INDEXEDDB_NAMESPACE
+
 // static
 already_AddRefed<IDBTransactionRequest>
 IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
@@ -114,7 +134,9 @@ IDBTransactionRequest::IDBTransactionRequest()
   mMode(nsIIDBTransaction::READ_ONLY),
   mTimeout(0),
   mPendingRequests(0),
-  mLastUniqueNumber(0)
+  mSavepointCount(0),
+  mHasInitialSavepoint(false),
+  mAborted(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -123,7 +145,7 @@ IDBTransactionRequest::~IDBTransactionRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
-
+  NS_ASSERTION(!mSavepointCount, "Should have released them all!");
   NS_ASSERTION(!mConnection, "Should have called CloseConnection!");
 
   if (mListenerManager) {
@@ -150,57 +172,75 @@ IDBTransactionRequest::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
-    NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad readyState!");
+    if (!mAborted) {
+      NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
+    }
     mReadyState = nsIIDBTransaction::DONE;
 
-    Commit();
+    CommitOrRollback();
   }
 }
 
 nsresult
-IDBTransactionRequest::Commit()
+IDBTransactionRequest::CommitOrRollback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mReadyState == nsIIDBTransaction::DONE, "Bad readyState!");
 
-  NS_WARNING("Commit doesn't do anything yet!");
+  TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
+  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
-  CloseConnection();
+  nsRefPtr<CommitHelper> helper(new CommitHelper(this));
 
-  nsCOMPtr<nsIRunnable> runnable =
-    IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(COMPLETE_EVT_STR),
-                                         this);
-  NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
-
-  nsresult rv = NS_DispatchToCurrentThread(runnable);
+  nsresult rv = pool->Dispatch(this, helper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 bool
-IDBTransactionRequest::StartSavepoint(const nsCString& aName)
+IDBTransactionRequest::StartSavepoint()
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  NS_PRECONDITION(mConnection, "No connection!");
+
+  nsresult rv;
+
+  if (!mHasInitialSavepoint) {
+    NS_NAMED_LITERAL_CSTRING(beginSavepoint,
+                             "SAVEPOINT " SAVEPOINT_INITIAL);
+    rv = mConnection->ExecuteSimpleSQL(beginSavepoint);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    mHasInitialSavepoint = true;
+  }
+
+  NS_ASSERTION(!mSavepointCount, "Mismatch!");
+  mSavepointCount = 1;
 
   // TODO try to cache this statement
-  nsCAutoString sql("SAVEPOINT ");
-  sql.Append(aName);
-  nsresult rv = mConnection->ExecuteSimpleSQL(sql);
+  NS_NAMED_LITERAL_CSTRING(savepoint, "SAVEPOINT " SAVEPOINT_INTERMEDIATE);
+  rv = mConnection->ExecuteSimpleSQL(savepoint);
   NS_ENSURE_SUCCESS(rv, false);
+
   return true;
 }
 
-void
-IDBTransactionRequest::RevertToSavepoint(const nsCString& aName)
+nsresult
+IDBTransactionRequest::ReleaseSavepoint()
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  NS_PRECONDITION(mConnection, "No connection!");
+
+  NS_ASSERTION(mSavepointCount == 1, "Mismatch!");
+  mSavepointCount = 0;
 
   // TODO try to cache this statement
-  nsCAutoString sql("SAVEPOINT ");
-  sql.Append(aName);
-  nsresult rv = mConnection->ExecuteSimpleSQL(sql);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Rollback failed");
+  NS_NAMED_LITERAL_CSTRING(savepoint, "RELEASE " SAVEPOINT_INTERMEDIATE);
+  nsresult rv = mConnection->ExecuteSimpleSQL(savepoint);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 nsresult
@@ -209,8 +249,11 @@ IDBTransactionRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   if (!mConnection) {
-    mConnection = IndexedDatabaseRequest::GetConnection(mDatabase->FilePath());
-    NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
+    nsCOMPtr<mozIStorageConnection> connection =
+      IndexedDatabaseRequest::GetConnection(mDatabase->FilePath());
+    NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
+
+    connection.swap(mConnection);
   }
 
   nsCOMPtr<mozIStorageConnection> result(mConnection);
@@ -410,6 +453,16 @@ IDBTransactionRequest::CloseConnection()
   }
 }
 
+#ifdef DEBUG
+bool
+IDBTransactionRequest::TransactionIsOpen()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  return mReadyState == nsIIDBTransaction::INITIAL ||
+         mReadyState == nsIIDBTransaction::LOADING;
+}
+#endif
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransactionRequest,
@@ -442,8 +495,6 @@ IDBTransactionRequest::GetDb(nsIIDBDatabase** aDB)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
-
   NS_ADDREF(*aDB = mDatabase);
   return NS_OK;
 }
@@ -452,8 +503,6 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetReadyState(PRUint16* aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_STATE(TransactionIsOpen());
 
   *aReadyState = mReadyState;
   return NS_OK;
@@ -464,8 +513,6 @@ IDBTransactionRequest::GetMode(PRUint16* aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
-
   *aMode = mMode;
   return NS_OK;
 }
@@ -474,8 +521,6 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_STATE(TransactionIsOpen());
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
   PRUint32 count = mObjectStoreNames.Length();
@@ -492,7 +537,9 @@ IDBTransactionRequest::ObjectStore(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
+  if (!TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   ObjectStoreInfo* info = nsnull;
 
@@ -523,17 +570,13 @@ NS_IMETHODIMP
 IDBTransactionRequest::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_WARNING("Abort doesn't actually do anything yet! Fix me now!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
+  if (!TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  nsCOMPtr<nsIRunnable> runnable =
-    IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(ABORT_EVT_STR),
-                                         this);
-  NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
-
-  nsresult rv = NS_DispatchToCurrentThread(runnable);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mAborted = true;
+  mReadyState = nsIIDBTransaction::DONE;
 
   return NS_OK;
 }
@@ -543,8 +586,6 @@ IDBTransactionRequest::GetOncomplete(nsIDOMEventListener** aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
-
   return GetInnerEventListener(mOnCompleteListener, aOncomplete);
 }
 
@@ -552,8 +593,6 @@ NS_IMETHODIMP
 IDBTransactionRequest::SetOncomplete(nsIDOMEventListener* aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_STATE(TransactionIsOpen());
 
   return RemoveAddEventListener(NS_LITERAL_STRING(COMPLETE_EVT_STR),
                                 mOnCompleteListener, aOncomplete);
@@ -564,8 +603,6 @@ IDBTransactionRequest::GetOnabort(nsIDOMEventListener** aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
-
   return GetInnerEventListener(mOnAbortListener, aOnabort);
 }
 
@@ -573,8 +610,6 @@ NS_IMETHODIMP
 IDBTransactionRequest::SetOnabort(nsIDOMEventListener* aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_STATE(TransactionIsOpen());
 
   return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
                                 mOnAbortListener, aOnabort);
@@ -585,8 +620,6 @@ IDBTransactionRequest::GetOntimeout(nsIDOMEventListener** aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
-
   return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
 }
 
@@ -595,8 +628,48 @@ IDBTransactionRequest::SetOntimeout(nsIDOMEventListener* aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(TransactionIsOpen());
-
   return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_EVT_STR),
                                 mOnTimeoutListener, aOntimeout);
+}
+
+NS_IMETHODIMP
+CommitHelper::Run()
+{
+  nsresult rv;
+
+  if (NS_IsMainThread()) {
+    mTransaction->CloseConnection();
+
+    nsCOMPtr<nsIDOMEvent> event;
+    if (mTransaction->mAborted) {
+      event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(ABORT_EVT_STR));
+    }
+    else {
+      event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR));
+    }
+    NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+
+    PRBool dummy;
+    rv = mTransaction->DispatchEvent(event, &dummy);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Dispatch failed!");
+
+    mTransaction = nsnull;
+    return rv;
+  }
+
+  if (mTransaction->mAborted) {
+    NS_ASSERTION(mTransaction->mConnection, "This had better not be null!");
+
+    NS_NAMED_LITERAL_CSTRING(savepoint, "ROLLBACK TRANSACTION");
+    rv = mTransaction->mConnection->ExecuteSimpleSQL(savepoint);
+  }
+  else if (mTransaction->mHasInitialSavepoint) {
+    NS_ASSERTION(mTransaction->mConnection, "This had better not be null!");
+
+    NS_NAMED_LITERAL_CSTRING(savepoint, "RELEASE " SAVEPOINT_INITIAL);
+    rv = mTransaction->mConnection->ExecuteSimpleSQL(savepoint);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
 }

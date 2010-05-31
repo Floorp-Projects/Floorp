@@ -46,17 +46,18 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsStringGlue.h"
+#include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
 
 USING_INDEXEDDB_NAMESPACE
 
-////////////////////////////////////////////////////////////////////////////////
-//// Request
-
-IDBRequest::IDBRequest(Generator* aGenerator)
+IDBRequest::IDBRequest(Generator* aGenerator,
+                       bool aWriteRequest)
 : mGenerator(aGenerator),
-  mReadyState(INITIAL)
+  mReadyState(nsIIDBRequest::INITIAL),
+  mAborted(false),
+  mWriteRequest(aWriteRequest)
 {
   NS_ASSERTION(aGenerator, "Null generator!");
 }
@@ -70,14 +71,22 @@ IDBRequest::~IDBRequest()
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// nsIIDBRequest
-
 NS_IMETHODIMP
 IDBRequest::Abort()
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (mAborted || mReadyState != nsIIDBRequest::LOADING) {
+    return NS_OK;
+  }
+
+  if (mWriteRequest) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mAborted = true;
+  mReadyState = nsIIDBRequest::DONE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -112,9 +121,6 @@ IDBRequest::GetOnerror(nsIDOMEventListener** aErrorListener)
 {
   return GetInnerEventListener(mOnErrorListener, aErrorListener);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBRequest)
 

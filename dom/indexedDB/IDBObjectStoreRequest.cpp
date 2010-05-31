@@ -58,6 +58,7 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBTransactionRequest.h"
 #include "DatabaseInfo.h"
+#include "Savepoint.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -386,8 +387,6 @@ IDBObjectStoreRequest::GetName(nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
-
   aName.Assign(mName);
   return NS_OK;
 }
@@ -397,8 +396,6 @@ IDBObjectStoreRequest::GetKeyPath(nsAString& aKeyPath)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
-
   aKeyPath.Assign(mKeyPath);
   return NS_OK;
 }
@@ -407,8 +404,6 @@ NS_IMETHODIMP
 IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
 #if 0
@@ -427,7 +422,9 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   Key key;
   nsresult rv = GetKeyFromVariant(aKey, key);
@@ -457,7 +454,9 @@ IDBObjectStoreRequest::GetAll(nsIIDBKeyRange* aKeyRange,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -470,7 +469,9 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -488,7 +489,7 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
@@ -508,7 +509,9 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -526,7 +529,7 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
@@ -546,7 +549,9 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -564,7 +569,7 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
@@ -583,7 +588,9 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -599,7 +606,7 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveHelper> helper =
@@ -620,7 +627,9 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aRange,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -634,7 +643,9 @@ IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -646,7 +657,9 @@ IDBObjectStoreRequest::Index(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -658,7 +671,9 @@ IDBObjectStoreRequest::RemoveIndex(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -707,7 +722,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mozStorageStatementScoper scoper(stmt);
 
-  mozStorageTransaction transaction(aConnection, PR_FALSE);
+  Savepoint savepoint(mTransaction);
 
   NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
@@ -777,7 +792,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   // TODO update indexes if needed
 
-  rv = transaction.Commit();
+  rv = savepoint.Release();
   return NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;
 }
 
@@ -866,7 +881,10 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   PRBool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseException::NOT_FOUND_ERR);
+
+  if (!hasResult) {
+    return nsIIDBDatabaseException::NOT_FOUND_ERR;
+  }
 
   // Set the value based on results.
   (void)stmt->GetString(0, mValue);
