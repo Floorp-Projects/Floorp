@@ -1016,6 +1016,14 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static void
+RenderProgress(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
+{
+  HIThemeTrackDrawInfo* tdi = (HIThemeTrackDrawInfo*)aData;
+  tdi->bounds = aRenderRect;
+  HIThemeDrawTrack(tdi, NULL, cgContext, kHIThemeOrientationNormal);
+}
+
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
                                  PRBool inIsIndeterminate, PRBool inIsHorizontal,
@@ -1040,7 +1048,8 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect
   tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
                                  milliSecondsPerStep % 16;
 
-  HIThemeDrawTrack(&tdi, NULL, cgContext, HITHEME_ORIENTATION);
+  RenderTransformedHIThemeControl(cgContext, inBoxRect, RenderProgress, &tdi,
+                                  IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
