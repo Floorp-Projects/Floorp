@@ -206,3 +206,9 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     stubcc.rejoin(1);
 }
 
+void
+mjit::Compiler::jsop_relational(JSOp op, jsbytecode *target, JSOp fused)
+{
+    JS_NOT_REACHED("NYI");
+}
+

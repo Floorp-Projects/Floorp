@@ -120,6 +120,7 @@ class Compiler
     uint32 fullAtomIndex(jsbytecode *pc);
     void jumpInScript(Jump j, jsbytecode *pc);
     JSC::ExecutablePool *getExecPool(size_t size);
+    bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
 
     /* Emitting helpers. */
     void restoreFrameRegs();
@@ -134,6 +135,7 @@ class Compiler
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
     void jsop_globalinc(JSOp op, uint32 index);
+    void jsop_relational(JSOp op, jsbytecode *target, JSOp fused);
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
