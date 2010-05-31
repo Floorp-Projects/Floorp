@@ -737,6 +737,9 @@ customMethodCalls = {
                 '    rv = nsGenericElement::doQuerySelectorAll(self, '
                 'arg0, getter_AddRefs(result));'
         },
+    'nsIDOM3Node_': {
+        'thisType': 'nsINode'
+        },
     'nsIDOM3Node_GetBaseURI': {
         'thisType': 'nsINode',
         'canFail': False
@@ -748,9 +751,6 @@ customMethodCalls = {
     'nsIDOM3Node_GetTextContent': {
         'thisType': 'nsINode',
         'canFail': False
-        },
-    'nsIDOM3Node_SetTextContent': {
-        'thisType': 'nsINode'
         },
     'nsIDOM3Node_IsSameNode': {
         'thisType': 'nsINode',
@@ -777,16 +777,10 @@ customMethodCalls = {
         'code': '    PRBool result = self->IsEqualNode(arg0);',
         'canFail': False
         },
-    'nsIDOM3Node_GetFeature': {
-        'thisType': 'nsINode'
-        },
     'nsIDOM3Node_GetUserData': {
         'thisType': 'nsINode',
         'code': '    nsIVariant *result = self->GetUserData(arg0);',
         'canFail': False
-        },
-    'nsIDOM3Node_SetUserData': {
-        'thisType': 'nsINode'
         },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
