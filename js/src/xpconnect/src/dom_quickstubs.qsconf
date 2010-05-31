@@ -629,6 +629,10 @@ customMethodCalls = {
                 '    if(NS_FAILED(rv))\n'
                 '        result = nsnull;'
         },
+    'nsIDOMNode_GetNodeType': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
     'nsIDOMNodeList_Item': {
         'thisType': 'nsINodeList',
         'code': '    nsINode *result = self->GetNodeAt(arg0);',
