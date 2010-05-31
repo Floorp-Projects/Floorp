@@ -600,15 +600,6 @@ ValueFitsInInt32(const Value &v, int32_t *pi)
     return v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), *pi);
 }
 
-static JS_ALWAYS_INLINE void
-Uint32ToValue(uint32_t u, Value *vp)
-{
-    if (JS_UNLIKELY(u > INT32_MAX))
-        vp->setDouble(u);
-    else
-        vp->setInt32((int32_t)u);
-}
-
 JS_ALWAYS_INLINE
 Value::Value(NumberTag arg)
 {

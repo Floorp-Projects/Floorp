@@ -2040,8 +2040,10 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
                     str = js_ValueToString(cx, v);
                     if (!str)
                         return false;
-                    vec[2 * i].setString(str);
+                    // Copying v must come first, because the following line overwrites v
+                    // when i == 0.
                     vec[2 * i + 1] = v;
+                    vec[2 * i].setString(str);
                 } while (i != 0);
 
                 JS_ASSERT(tvr.array == vec);
@@ -2730,7 +2732,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
             return JS_FALSE;
         }
         if (!hole && StrictlyEqual(cx, *vp, tosearch)) {
-            Uint32ToValue(i, vp);
+			vp->setNumber(i);
             return JS_TRUE;
         }
         if (i == stop)

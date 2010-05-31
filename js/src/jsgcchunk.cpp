@@ -39,6 +39,10 @@
 #ifdef XP_WIN
 # include <windows.h>
 
+#ifdef _M_X64
+# include "jsstr.h"
+#endif
+
 # ifdef _MSC_VER
 #  pragma warning( disable: 4267 4996 4146 )
 # endif
@@ -140,6 +144,68 @@ UnmapPages(void *p, size_t size)
 
 # else /* WINCE */
 
+#  ifdef _M_X64
+
+typedef long (*ntavm_fun)(HANDLE handle, void **addr, ULONG zbits,
+                          size_t *size, ULONG alloctype, ULONG prot);
+typedef long (*ntfvm_fun)(HANDLE handle, void **addr, size_t *size, 
+                          ULONG freetype);
+
+static ntavm_fun NtAllocateVirtualMemory;
+static ntfvm_fun NtFreeVirtualMemory;
+
+bool 
+js::InitNtAllocAPIs()
+{
+    HMODULE h = GetModuleHandle("ntdll.dll");
+    if (!h)
+        return false;
+    NtAllocateVirtualMemory = ntavm_fun(GetProcAddress(h, "NtAllocateVirtualMemory"));
+    if (!NtAllocateVirtualMemory)
+        return false;
+    NtFreeVirtualMemory = ntfvm_fun(GetProcAddress(h, "NtFreeVirtualMemory"));
+    if (!NtFreeVirtualMemory)
+        return false;
+}
+
+// Allocate pages with 32-bit addresses (i.e., top 16 bits are all 0).
+static void *
+MapPages(void *addr, size_t size)
+{
+    long rc = NtAllocateVirtualMemory(INVALID_HANDLE_VALUE, &addr, 1, &size,
+                                      MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    return rc ? NULL : addr;
+}
+
+static void
+UnmapPages(void *addr, size_t size)
+{
+    NtFreeVirtualMemory(INVALID_HANDLE_VALUE, &addr, &size, MEM_RELEASE);
+}
+
+bool
+JSString::initStringTables()
+{
+    char *p = (char *) MapPages(NULL, unitStringTableSize + intStringTableSize);
+    if (!p)
+        return false;
+    unitStringTable = (JSString*) memcpy(p, staticUnitStringTable, unitStringTableSize);
+    intStringTable = (JSString*) memcpy(p + unitStringTableSize, 
+                                        staticIntStringTable, intStringTableSize);
+
+    return true;
+}
+
+void
+JSString::freeStringTables()
+{
+    UnmapPages(unitStringTable, unitStringTableSize + intStringTableSize);
+    unitStringTable = NULL;
+    intStringTable = NULL;
+}
+
+#  else /* _M_X64 */
+
 static void *
 MapPages(void *addr, size_t size)
 {
@@ -153,6 +219,8 @@ UnmapPages(void *addr, size_t size)
 {
     JS_ALWAYS_TRUE(VirtualFree(addr, 0, MEM_RELEASE));
 }
+
+#  endif /* _M_X64 */
 
 # endif /* !WINCE */
 
@@ -203,8 +271,9 @@ MapAlignedPages(size_t size, size_t alignment)
      * We don't use MAP_FIXED here, because it can cause the *replacement*
      * of existing mappings, and we only want to create new mappings.
      */
+	// TODO: this is totally a hack for now; need to replace
     void *p = mmap((caddr_t) alignment, size, PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
+                     MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON | MAP_32BIT, -1, 0);
     if (p == MAP_FAILED)
         return NULL;
     return p;
@@ -219,7 +288,8 @@ MapPages(void *addr, size_t size)
      * We don't use MAP_FIXED here, because it can cause the *replacement*
      * of existing mappings, and we only want to create new mappings.
      */
-    void *p = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON,
+	// TODO: this is totally a hack for now; need to replace
+    void *p = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_32BIT,
                    -1, 0);
     if (p == MAP_FAILED)
         return NULL;

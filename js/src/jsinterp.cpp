@@ -387,8 +387,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
 
 namespace js {
 
-static const uint32 FAKE_NUMBER_MASK = JSVAL_MASK32_INT32 |
-                                       PrimitiveValue::DOUBLE_MASK;
+static const uint32 FAKE_NUMBER_MASK = JSVAL_MASK32_INT32 | PrimitiveValue::DOUBLE_MASK;
 
 const uint32 PrimitiveValue::Masks[PrimitiveValue::THISP_ARRAY_SIZE] = {
     0,                                                             /* 000 */
@@ -1001,36 +1000,29 @@ EqualObjects(JSContext *cx, JSObject *lobj, JSObject *robj)
 }
 
 bool
-StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval)
+StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref)
 {
-    uint32 lmask = lval.data.s.mask32;
-    uint32 rmask = rval.data.s.mask32;
-    if (lmask == rmask) {
-        if (lmask == JSVAL_MASK32_STRING)
-            return js_EqualStrings(lval.data.s.payload.str, rval.data.s.payload.str);
-        if (Value::isObjectMask(lmask))
-            return EqualObjects(cx, lval.data.s.payload.obj, rval.data.s.payload.obj);
-        if (Value::isDoubleMask(lmask))
-            return JSDOUBLE_COMPARE(lval.data.asDouble, ==, rval.data.asDouble, JS_FALSE);
-        JS_ASSERT(lmask == JSVAL_MASK32_NULL ||
-                  lmask == JSVAL_MASK32_UNDEFINED ||
-                  lmask == JSVAL_MASK32_INT32 ||
-                  lmask == JSVAL_MASK32_FUNOBJ ||
-                  lmask == JSVAL_MASK32_NONFUNOBJ ||
-                  lmask == JSVAL_MASK32_BOOLEAN);
-        return lval.data.s.payload.u32 == rval.data.s.payload.u32;
+    Value lval = lref, rval = rref;
+    if (SamePrimitiveTypeOrBothObjects(lval, rval)) {
+        if (lval.isString())
+            return js_EqualStrings(lval.asString(), rval.asString());
+        if (lval.isDouble())
+            return JSDOUBLE_COMPARE(lval.asDouble(), ==, rval.asDouble(), JS_FALSE);
+        if (lval.isObject())
+            return EqualObjects(cx, &lval.asObject(), &rval.asObject());
+        return lval.asRawUint32() == rval.asRawUint32();
     }
 
-    if (Value::isNumberMask(lmask) && Value::isNumberMask(rmask)) {
-        double ld = lmask == JSVAL_MASK32_INT32 ? lval.data.s.payload.i32
-                                                : lval.data.asDouble;
-        double rd = rmask == JSVAL_MASK32_INT32 ? rval.data.s.payload.i32
-                                                : rval.data.asDouble;
+    if (lval.isDouble() && rval.isInt32()) {
+        double ld = lval.asDouble();
+        double rd = rval.asInt32();
         return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
     }
-
-    if (Value::isObjectMask(lmask) && Value::isObjectMask(rmask))
-        return EqualObjects(cx, lval.data.s.payload.obj, rval.data.s.payload.obj);
+    if (lval.isInt32() && rval.isDouble()) {
+        double ld = lval.asInt32();
+        double rd = rval.asDouble();
+        return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+    }
 
     return false;
 }
@@ -1824,9 +1816,11 @@ namespace reprmeter {
         if ((vp)->isObject()) {                                               \
             obj = &(vp)->asObject();                                          \
         } else {                                                              \
-            if (!js_ValueToNonNullObject(cx, *(vp), (vp)))                    \
+            Value v;                                                          \
+            if (!js_ValueToNonNullObject(cx, *(vp), &v))                      \
                 goto error;                                                   \
-            obj = &(vp)->asObject();                                          \
+            *(vp) = v;                                                        \
+            obj = &v.asObject();                                              \
         }                                                                     \
     JS_END_MACRO
 
@@ -1834,6 +1828,15 @@ namespace reprmeter {
     JS_BEGIN_MACRO                                                            \
         Value *vp_ = &regs.sp[n];                                             \
         VALUE_TO_OBJECT(cx, vp_, obj);                                        \
+    JS_END_MACRO
+
+#define DEFAULT_VALUE(cx, n, hint, v)                                         \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(v.isObject());                                              \
+        JS_ASSERT(v == regs.sp[n]);                                           \
+        if (!v.asObject().defaultValue(cx, hint, &regs.sp[n]))                \
+            goto error;                                                       \
+        v = regs.sp[n];                                                       \
     JS_END_MACRO
 
 /* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */

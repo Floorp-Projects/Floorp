@@ -289,8 +289,20 @@ struct JSString {
 #pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringOintStringTable_)
 #endif
 
+#ifndef _M_X64
     static JSString unitStringTable[];
     static JSString intStringTable[];
+#else
+    static JSString staticUnitStringTable[];
+    static JSString staticIntStringTable[];
+    static JSString *unitStringTable;
+    static JSString *intStringTable;
+
+    static size_t unitStringTableSize;
+    static size_t intStringTableSize;
+    static bool initStringTables();
+    static void freeStringTables();
+#endif
     static const char *deflatedIntStringTable[];
     static const char deflatedUnitStringTable[];
 
