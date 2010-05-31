@@ -811,6 +811,9 @@ customMethodCalls = {
     'nsIDOM3Document_': {
         'thisType': 'nsDocument'
         },
+    'nsIDOMElement_': {
+        'thisType': 'nsGenericElement'
+        },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
