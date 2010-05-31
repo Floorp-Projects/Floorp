@@ -146,6 +146,20 @@ NS_IMETHODIMP
 AsyncConnectionHelper::Run()
 {
   if (NS_IsMainThread()) {
+    if (mRequest->mAborted) {
+      NS_ASSERTION(mRequest->mReadyState == nsIIDBRequest::DONE,
+                   "Wrong state!");
+      mError = true;
+      mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;
+    }
+    else {
+      NS_ASSERTION(mRequest->mReadyState == nsIIDBRequest::LOADING,
+                   "Wrong state!");
+      mRequest->mReadyState = nsIIDBRequest::DONE;
+    }
+
+    // Call OnError if the database had an error or if the OnSuccess handler
+    // has an error.
     if (mError || ((mErrorCode = OnSuccess(mRequest)) != OK)) {
       OnError(mRequest, mErrorCode);
     }
@@ -253,6 +267,10 @@ AsyncConnectionHelper::Dispatch(nsIEventTarget* aDatabaseThread)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  NS_ASSERTION(mRequest->mReadyState == nsIIDBRequest::INITIAL,
+               "Wrong readyState!");
+  mRequest->mReadyState = nsIIDBRequest::LOADING;
 
   rv = aDatabaseThread->Dispatch(this, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);

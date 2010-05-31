@@ -40,7 +40,8 @@
 #ifndef mozilla_dom_indexeddb_savepoint_h__
 #define mozilla_dom_indexeddb_savepoint_h__
 
-#include "mozilla/dom/indexedDB/IDBTransactionRequest.h"
+// Only meant to be included in IndexedDB source files, not exported.
+#include "IDBTransactionRequest.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -52,19 +53,27 @@ public:
   : mTransaction(aTransaction)
   , mHasSavepoint(false)
   {
-    mName.AppendInt(mTransaction->GetUniqueNumberForName());
-    hasSavepoint = mTransaction->StartSavepoint(mName);
+    mHasSavepoint = mTransaction->StartSavepoint();
+    NS_WARN_IF_FALSE(mHasSavepoint, "Failed to make savepoint!");
   }
 
-  void Rollback()
+  ~Savepoint()
   {
-    if (mHasSavepoint) {
-      mTransaction->RevertToSavepoint(mName);
-    }
+    Release();
   }
+
+  nsresult Release()
+  {
+    nsresult rv = NS_OK;
+    if (mHasSavepoint) {
+      rv = mTransaction->ReleaseSavepoint();
+      mHasSavepoint = false;
+    }
+    return rv;
+  }
+
 private:
-  nsRefPtr<IDBTransactionRequest> mTransaction;
-  nsCString mName;
+  IDBTransactionRequest* mTransaction;
   bool mHasSavepoint;
 };
 
