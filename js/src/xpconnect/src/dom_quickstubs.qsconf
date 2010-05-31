@@ -141,8 +141,7 @@ members = [
     'nsIDOMNode.removeChild',
     'nsIDOMNode.hasAttributes',
     'nsIDOMNode.attributes',
-    'nsIDOMNodeList.item',
-    'nsIDOMNodeList.length',
+    'nsIDOMNodeList.*',
     'nsIDOMNodeSelector.querySelector',
     'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
@@ -633,6 +632,9 @@ customMethodCalls = {
         'thisType': 'nsINodeList',
         'code': '    nsINode *result = self->GetNodeAt(arg0);',
         'canFail': False
+        },
+    'nsIDOMNodeList_GetLength': {
+        'thisType': 'nsINodeList'
         },
     'nsIDOMHTMLDocument_Write': {
         'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write'
