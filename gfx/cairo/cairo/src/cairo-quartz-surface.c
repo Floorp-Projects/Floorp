@@ -1139,9 +1139,14 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 	}
 
 	if (_cairo_quartz_is_cgcontext_bitmap_context (surface->cgContext)) {
-	    *image_out = CGBitmapContextCreateImage (surface->cgContext);
-	    if (*image_out)
-		return CAIRO_STATUS_SUCCESS;
+	    if (!surface->bitmapContextImage) {
+	        surface->bitmapContextImage =
+	            CGBitmapContextCreateImage (surface->cgContext);
+	    }
+	    if (surface->bitmapContextImage) {
+                *image_out = CGImageRetain (surface->bitmapContextImage);
+                return CAIRO_STATUS_SUCCESS;
+            }
 	}
     }
 
@@ -1594,6 +1599,19 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 }
 
 /**
+ * Call this before any operation that can modify the contents of a
+ * cairo_quartz_surface_t.
+ */
+static void
+_cairo_quartz_surface_will_change (cairo_quartz_surface_t *surface)
+{
+    if (surface->bitmapContextImage) {
+        CGImageRelease (surface->bitmapContextImage);
+        surface->bitmapContextImage = NULL;
+    }
+}
+
+/**
  * Sets up internal state to be used to draw the source mask, stored in
  * cairo_quartz_state_t. Guarantees to call CGContextSaveGState on
  * surface->cgContext.
@@ -1613,6 +1631,8 @@ _cairo_quartz_setup_state (cairo_quartz_surface_t *surface,
     state.imageSurface = NULL;
     state.shading = NULL;
     state.pattern = NULL;
+
+    _cairo_quartz_surface_will_change (surface);
 
     // Save before we change the pattern, colorspace, etc. so that
     // we can restore and make sure that quartz releases our
@@ -1941,6 +1961,11 @@ _cairo_quartz_surface_finish (void *abstract_surface)
 
     surface->cgContext = NULL;
 
+    if (surface->bitmapContextImage) {
+        CGImageRelease (surface->bitmapContextImage);
+        surface->bitmapContextImage = NULL;
+    }
+
     if (surface->imageSurfaceEquiv) {
 	cairo_surface_destroy (surface->imageSurfaceEquiv);
 	surface->imageSurfaceEquiv = NULL;
@@ -2010,6 +2035,8 @@ _cairo_quartz_surface_acquire_dest_image (void *abstract_surface,
     cairo_int_status_t status;
 
     ND((stderr, "%p _cairo_quartz_surface_acquire_dest_image\n", surface));
+
+    _cairo_quartz_surface_will_change (surface);
 
     status = _cairo_quartz_get_image (surface, image_out);
     if (status)
@@ -2944,6 +2971,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 
     surface->imageData = NULL;
     surface->imageSurfaceEquiv = NULL;
+    surface->bitmapContextImage = NULL;
 
     return surface;
 }
