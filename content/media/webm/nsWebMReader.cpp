@@ -61,14 +61,7 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-// Nestegg doesn't expose the framerate and the framerate is optional
-// anyway. We use a default value - the backend playback code
-// only uses it for a 'maximum wait time' not actual frame display time
-// so an estimate is fine. A value higher than a standard framerate is
-// used to ensure that backend Wait's don't take longer than frame
-// display. Bug 568431 should remove the need for 'faking' a framerate in
-// the future.
-#define DEFAULT_FRAMERATE 32.0
+static const unsigned NS_PER_MS = 1000000;
 
 // Functions for reading and seeking using nsMediaStream required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -205,7 +198,7 @@ nsresult nsWebMReader::ReadMetadata()
   if (r == 0) {
     MonitorAutoExit exitReaderMon(mMonitor);
     MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
-    mDecoder->GetStateMachine()->SetDuration(duration / 1000000);
+    mDecoder->GetStateMachine()->SetDuration(duration / NS_PER_MS);
   }
 
   unsigned int ntracks = 0;
@@ -256,9 +249,6 @@ nsresult nsWebMReader::ReadMetadata()
       // See bug 566779 for a suggestion to refactor
       // and remove it.
       mInfo.mDataOffset = -1;
-
-      mInfo.mFramerate = DEFAULT_FRAMERATE;
-      mInfo.mCallbackPeriod = 1000 / mInfo.mFramerate;
     }
     else if (!mHasAudio && type == NESTEGG_TRACK_AUDIO) {
       nestegg_audio_params params;
@@ -271,10 +261,6 @@ nsresult nsWebMReader::ReadMetadata()
       mAudioTrack = track;
       mHasAudio = PR_TRUE;
       mInfo.mHasAudio = PR_TRUE;
-
-      if (!mInfo.mHasVideo) {
-        mInfo.mCallbackPeriod = 1000 / DEFAULT_FRAMERATE;
-      }
 
       // Get the Vorbis header data
       unsigned int nheaders = 0;
@@ -360,7 +346,7 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
     return PR_FALSE;
   }
 
-  PRUint64 tstamp_ms = tstamp / 1000000;
+  PRUint64 tstamp_ms = tstamp / NS_PER_MS;
   for (PRUint32 i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -497,7 +483,7 @@ PRBool nsWebMReader::DecodeAudioData()
 }
 
 PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
-                                     PRInt64 aTimeThreshold)
+                                      PRInt64 aTimeThreshold)
 {
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
@@ -531,7 +517,30 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     return PR_FALSE;
   }
 
-  PRInt64 tstamp_ms = tstamp / 1000000;
+  // The end time of this frame is the start time of the next frame.  Fetch
+  // the timestamp of the next packet for this track.  If we've reached the
+  // end of the stream, use the file's duration as the end time of this
+  // video frame.
+  uint64_t next_tstamp = 0;
+  {
+    nestegg_packet* next_packet = NextPacket(VIDEO);
+    if (next_packet) {
+      r = nestegg_packet_tstamp(next_packet, &next_tstamp);
+      if (r == -1) {
+        nestegg_free_packet(next_packet);
+        return PR_FALSE;
+      }
+    } else {
+      r = nestegg_duration(mContext, &next_tstamp);
+      if (r == -1) {
+        nestegg_free_packet(next_packet);
+        return PR_FALSE;
+      }
+    }
+    mVideoPackets.PushFront(next_packet);
+  }
+
+  PRInt64 tstamp_ms = tstamp / NS_PER_MS;
   for (PRUint32 i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -571,9 +580,9 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
 
     while((img = vpx_codec_get_frame(&mVP8, &iter))) {
       NS_ASSERTION(mInfo.mPicture.width == static_cast<PRInt32>(img->d_w), 
-        "WebM picture width from header does not match decoded frame");
+                   "WebM picture width from header does not match decoded frame");
       NS_ASSERTION(mInfo.mPicture.height == static_cast<PRInt32>(img->d_h),
-        "WebM picture height from header does not match decoded frame");
+                   "WebM picture height from header does not match decoded frame");
       NS_ASSERTION(img->fmt == IMG_FMT_I420, "WebM image format is not I420");
 
       // Chroma shifts are rounded down as per the decoding examples in the VP8 SDK
@@ -597,6 +606,7 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                        mDecoder->GetImageContainer(),
                                        -1,
                                        tstamp_ms,
+                                       next_tstamp / NS_PER_MS,
                                        b,
                                        si.is_kf,
                                        -1);
@@ -621,7 +631,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
   }
-  int r = nestegg_track_seek(mContext, 0, aTarget * 1000000);
+  int r = nestegg_track_seek(mContext, 0, aTarget * NS_PER_MS);
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
@@ -629,7 +639,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
     PRBool eof = PR_FALSE;
     PRInt64 startTime = -1;
     while (HasVideo() && !eof) {
-      while (mVideoQueue.GetSize() < 2 && !eof) {
+      while (mVideoQueue.GetSize() == 0 && !eof) {
         PRBool skip = PR_FALSE;
         eof = !DecodeVideoFrame(skip, 0);
         MonitorAutoExit exitReaderMon(mMonitor);
@@ -638,22 +648,20 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
           return NS_ERROR_FAILURE;
         }
       }
-      if (mVideoQueue.GetSize() < 2) {
+      if (mVideoQueue.GetSize() == 0) {
         break;
       }
-      nsAutoPtr<VideoData> video(mVideoQueue.PopFront());
-      nsAutoPtr<VideoData> videoNext(mVideoQueue.PeekFront());
+      nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
       // If the frame end time is less than the seek target, we won't want
       // to display this frame after the seek, so discard it.
-      if (video && videoNext && videoNext->mTime < aTarget) {
+      if (video && video->mEndTime < aTarget) {
         if (startTime == -1) {
           startTime = video->mTime;
         }
+        mVideoQueue.PopFront();
         video = nsnull;
-        videoNext.forget();
       } else {
-        videoNext.forget();
-        mVideoQueue.PushFront(video.forget());
+        video.forget();
         break;
       }
     }
