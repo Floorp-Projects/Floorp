@@ -1899,7 +1899,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
 PRBool
 CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsCOMPtr<nsMediaList> media = new nsMediaList();
+  nsRefPtr<nsMediaList> media = new nsMediaList();
   if (!media) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -2015,7 +2015,7 @@ CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
 PRBool
 CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsCOMPtr<nsMediaList> media = new nsMediaList();
+  nsRefPtr<nsMediaList> media = new nsMediaList();
   if (!media) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
