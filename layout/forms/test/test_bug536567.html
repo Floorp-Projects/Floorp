@@ -34,11 +34,7 @@ if ("@mozilla.org/privatebrowsing;1" in Cc) {
 }
 
 var tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
-var homeDirName = "Home";
-const isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-if (isWindows)
-  homeDirName = "DeskP";
-var homeDir = dirSvc.get(homeDirName, Ci.nsILocalFile);
+var homeDir = dirSvc.get("Desk", Ci.nsILocalFile);
 prefSvc.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
 function newDir() {
