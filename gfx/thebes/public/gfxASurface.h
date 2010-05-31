@@ -132,6 +132,27 @@ public:
 
     virtual void Finish();
 
+    /**
+     * Create an offscreen surface that can be efficiently copied into
+     * this surface (at least if tiling is not involved).
+     * Returns null on error.
+     */
+    virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
+                                                               const gfxIntSize& aSize);
+    /**
+     * Return trues if offscreen surfaces created from this surface
+     * would behave differently depending on the gfxContentType. Returns
+     * false if they don't (i.e. the surface returned by
+     * CreateOffscreenSurface is always as if you passed
+     * CONTENT_COLOR_ALPHA). Knowing this can be useful to avoid
+     * recreating a surface just because it changed from opaque to
+     * transparent.
+     */
+    virtual PRBool AreSimilarSurfacesSensitiveToContentType()
+    {
+      return PR_TRUE;
+    }
+
     int CairoStatus();
 
     /* Make sure that the given dimensions don't overflow a 32-bit signed int
@@ -178,10 +199,11 @@ protected:
         RecordMemoryFreed();
     }
 
+    cairo_surface_t *mSurface;
+
 private:
     static void SurfaceDestroyFunc(void *data);
 
-    cairo_surface_t *mSurface;
     PRInt32 mFloatingRefs;
     PRInt32 mBytesRecorded;
 
