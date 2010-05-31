@@ -750,6 +750,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     // only happen with a plugin in a XUL popup.
     if (parentWidget == GetWindow()) {
       mWidget->Show(PR_TRUE);
+#ifdef XP_MACOSX
+      // On Mac, we need to invalidate ourselves since even windowed
+      // plugins are painted through Thebes and we need to ensure
+      // the Thebes layer containing the plugin is updated.
+      Invalidate(GetContentRect() - GetPosition());
+#endif
     }
   }
 
