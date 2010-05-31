@@ -624,3 +624,59 @@ mjit::stubs::BitAnd(VMFrame &f)
     f.regs.sp[-2].setInt32(i);
 }
 
+template <int32 N>
+static inline bool
+PostInc(VMFrame &f, Value *vp)
+{
+    double d;
+    if (!ValueToNumber(f.cx, *vp, &d))
+        return false;
+    f.regs.sp++;
+    f.regs.sp[-1].setDouble(d);
+    d += N;
+    vp->setDouble(d);
+    return true;
+}
+
+template <int32 N>
+static inline bool
+PreInc(VMFrame &f, Value *vp)
+{
+    double d;
+    if (!ValueToNumber(f.cx, *vp, &d))
+        return false;
+    d += N;
+    vp->setDouble(d);
+    f.regs.sp++;
+    f.regs.sp[-1].setDouble(d);
+    return true;
+}
+
+void JS_FASTCALL
+stubs::VpInc(VMFrame &f, Value *vp)
+{
+    if (!PostInc<1>(f, vp))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::VpDec(VMFrame &f, Value *vp)
+{
+    if (!PostInc<-1>(f, vp))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::DecVp(VMFrame &f, Value *vp)
+{
+    if (!PreInc<-1>(f, vp))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::IncVp(VMFrame &f, Value *vp)
+{
+    if (!PreInc<1>(f, vp))
+        THROW();
+}
+

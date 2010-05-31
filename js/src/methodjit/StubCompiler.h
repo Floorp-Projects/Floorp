@@ -72,7 +72,11 @@ class StubCompiler
     Compiler &cc;
     FrameState &frame;
     JSScript *script;
+
+  public:
     Assembler masm;
+
+  private:
     uint32 generation;
     uint32 lastGeneration;
 
@@ -93,6 +97,8 @@ class StubCompiler
     uint8 *buffer() {
         return masm.buffer();
     }
+
+    Call vpInc(JSOp op, bool pushed);
 
 #define STUB_CALL_TYPE(type)                                    \
     Call call(type stub) {                                      \
@@ -122,6 +128,7 @@ class StubCompiler
 
   private:
     Call stubCall(void *ptr);
+    Call stubCall(void *ptr, uint32 slots);
 };
 
 } /* namepsace mjit */

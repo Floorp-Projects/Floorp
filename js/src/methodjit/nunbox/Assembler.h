@@ -91,6 +91,14 @@ class Assembler : public BaseAssembler
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
+
+    Jump testInt32(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, Imm32(JSVAL_MASK32_INT32));
+    }
+
+    Jump testInt32(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), Imm32(JSVAL_MASK32_INT32));
+    }
 };
 
 } /* namespace js */
