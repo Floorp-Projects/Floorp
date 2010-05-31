@@ -51,12 +51,15 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+class AsyncConnectionHelper;
 class IndexedDatabaseRequest;
 class IDBDatabaseRequest;
 
 class IDBRequest : public nsDOMEventTargetHelper,
                    public nsIIDBRequest
 {
+  friend class AsyncConnectionHelper;
+
 public:
   class Generator : public nsISupports
   {
@@ -66,18 +69,19 @@ public:
       Generator() { }
 
       virtual ~Generator() {
-        PRUint32 count = mLiveRequests.Length();
-        if (count) {
-          nsTArray<IDBRequest*> requests(mLiveRequests);
-          NS_ASSERTION(count == requests.Length(), "Copy failed!");
-          for (PRUint32 index = 0; index < count; index++) {
-            requests[index]->NoteDyingGenerator();
-          }
-        }
+        NS_ASSERTION(mLiveRequests.IsEmpty(), "Huh?!");
       }
 
       IDBRequest* GenerateRequest() {
-        IDBRequest* request = new IDBRequest(this);
+        IDBRequest* request = new IDBRequest(this, false);
+        if (!mLiveRequests.AppendElement(request)) {
+          NS_ERROR("Append failed!");
+        }
+        return request;
+      }
+
+      IDBRequest* GenerateWriteRequest() {
+        IDBRequest* request = new IDBRequest(this, true);
         if (!mLiveRequests.AppendElement(request)) {
           NS_ERROR("Append failed!");
         }
@@ -109,7 +113,8 @@ public:
 
 private:
   // Only called by IDBRequestGenerator::Generate().
-  IDBRequest(Generator* aGenerator);
+  IDBRequest(Generator* aGenerator,
+             bool aWriteRequest);
 
   nsRefPtr<Generator> mGenerator;
 
@@ -117,11 +122,9 @@ protected:
   // Called by Release().
   ~IDBRequest();
 
-  virtual void NoteDyingGenerator() {
-    Abort();
-  }
-
   PRUint16 mReadyState;
+  PRBool mAborted;
+  PRBool mWriteRequest;
   nsRefPtr<nsDOMEventListenerWrapper> mOnSuccessListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 };

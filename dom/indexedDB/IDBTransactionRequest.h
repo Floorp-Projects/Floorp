@@ -56,6 +56,7 @@ class nsIThread;
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
+class CommitHelper;
 class ObjectStoreInfo;
 class TransactionThreadPool;
 
@@ -64,6 +65,7 @@ class IDBTransactionRequest : public nsDOMEventTargetHelper,
                               public nsIIDBTransactionRequest
 {
   friend class AsyncConnectionHelper;
+  friend class CommitHelper;
   friend class TransactionThreadPool;
 
 public:
@@ -83,15 +85,8 @@ public:
   void OnNewRequest();
   void OnRequestFinished();
 
-  nsresult Commit();
-
-  PRInt64 GetUniqueNumberForName()
-  {
-    return ++mLastUniqueNumber;
-  }
-
-  bool StartSavepoint(const nsCString& aName);
-  void RevertToSavepoint(const nsCString& aName);
+  bool StartSavepoint();
+  nsresult ReleaseSavepoint();
 
   already_AddRefed<mozIStorageStatement> AddStatement(bool aCreate,
                                                       bool aOverwrite,
@@ -101,12 +96,15 @@ public:
 
   already_AddRefed<mozIStorageStatement> GetStatement(bool aAutoIncrement);
 
-  void CloseConnection();
-
-  bool TransactionIsOpen() {
+#ifdef DEBUG
+  bool TransactionIsOpen();
+#else
+  bool TransactionIsOpen()
+  {
     return mReadyState == nsIIDBTransaction::INITIAL ||
            mReadyState == nsIIDBTransaction::LOADING;
   }
+#endif
 
 private:
   IDBTransactionRequest();
@@ -115,6 +113,10 @@ private:
   // Only meant to be called on mStorageThread!
   nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
 
+  void CloseConnection();
+
+  nsresult CommitOrRollback();
+
   nsRefPtr<IDBDatabaseRequest> mDatabase;
   nsTArray<nsString> mObjectStoreNames;
   PRUint16 mReadyState;
@@ -122,16 +124,13 @@ private:
   PRUint32 mTimeout;
   PRUint32 mPendingRequests;
 
-  PRInt64 mLastUniqueNumber;
-
+  // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnCompleteListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
 
   // Only touched on the database thread.
   nsCOMPtr<mozIStorageConnection> mConnection;
-  nsAutoPtr<mozStorageTransaction> mDBTransaction;
-
   nsCOMPtr<mozIStorageStatement> mAddStmt;
   nsCOMPtr<mozIStorageStatement> mAddAutoIncrementStmt;
   nsCOMPtr<mozIStorageStatement> mModifyStmt;
@@ -142,6 +141,12 @@ private:
   nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
   nsCOMPtr<mozIStorageStatement> mGetStmt;
   nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
+
+  // Only touched on the database thread.
+  PRUint32 mSavepointCount;
+
+  bool mHasInitialSavepoint;
+  bool mAborted;
 };
 
 NS_STACK_CLASS

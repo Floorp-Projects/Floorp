@@ -389,7 +389,7 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
@@ -435,7 +435,7 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
 
   nsRefPtr<RemoveObjectStoreHelper> helper =
     new RemoveObjectStoreHelper(transaction, request, aName);
@@ -465,7 +465,7 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
 
   nsRefPtr<IDBTransactionRequest> transaction =
     IDBTransactionRequest::Create(this, storesToOpen,
