@@ -77,6 +77,9 @@
 
 #ifdef XP_WIN
 # include <windows.h>
+#elif defined(XP_OS2)
+# define INCL_DOSMEMMGR
+# include <os2.h>
 #else
 # include <unistd.h>
 # include <sys/mman.h>
@@ -136,6 +139,12 @@ StackSpace::init()
     base = reinterpret_cast<jsval *>(p);
     commitEnd = base + COMMIT_VALS;
     end = base + CAPACITY_VALS;
+#elif defined(XP_OS2)
+    if (DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE | OBJ_ANY) &&
+        DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
+        return false;
+    base = reinterpret_cast<jsval *>(p);
+    end = base + CAPACITY_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -153,6 +162,8 @@ StackSpace::finish()
 #ifdef XP_WIN
     VirtualFree(base, (commitEnd - base) * sizeof(jsval), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
+#elif defined(XP_OS2)
+    DosFreeMem(base);
 #else
     munmap(base, CAPACITY_BYTES);
 #endif
