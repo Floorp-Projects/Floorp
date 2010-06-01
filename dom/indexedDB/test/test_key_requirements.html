@@ -192,6 +192,37 @@
       request.onsuccess = unexpectedSuccessHandler;
       yield;
 
+      request = objectStore.add({}, null);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(typeof(event.result), "string", "Good generated key");
+
+      try {
+        objectStore.modify({}, null);
+        ok(false, "modify with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "modify with null key threw");
+      }
+
+      try {
+        objectStore.addOrModify({}, null);
+        ok(false, "addOrModify with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "addOrModify with null key threw");
+      }
+
+      try {
+        objectStore.remove({}, null);
+        ok(false, "remove with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "remove with null key threw");
+      }
+
       request = db.createObjectStore("bazing", "id", true);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
