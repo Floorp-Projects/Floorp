@@ -1,0 +1,29 @@
+<html>
+<head>
+  <script type="text/javascript">
+    var result = null;
+
+    function handlePosition(position) {
+      result.innerHTML = position.coords.latitude + " " + position.coords.longitude;
+    }
+
+    function handleError(error) {
+      result.innerHTML = error.message;
+    }
+
+    function init() {
+      result = document.getElementById("result");
+
+      if (navigator.geolocation)
+        navigator.geolocation.getCurrentPosition(handlePosition, handleError,
+                                                 {enableHighAccuracy: false, timeout: 6000});
+      else
+        result.innerHTML = "not available";
+    }
+
+  </script>
+</head>
+<body onload="init()">
+  <p id="result">undefined</p>
+</body>
+</html>

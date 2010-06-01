@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+	<title>EditArea documentation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="doc_style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div class='header'>
+		<h1>Main script include</h1>
+	</div>
+	<div class='content'>
+		<p>As you have seen it before in <a href='installation.html'>installation</a> and 
+		<a href='configuration.html'>configuration</a>, in order to make EditArea work on a 
+		webpage, you must include one external javascript file and call an init 
+		function for each textarea you want to convert. 
+		In thoses examples the file "edit_area_full.js" whas the file included, 
+		but in fact there are 5 possible files to include EditArea scripts 
+		into your webpage. All thoses files are in the same directory, 
+		and they all have advantage and inconvenient.
+		</p>
+		
+		<h2>edit_area_full.js</h2>
+		<blockquote>
+		<p>This is the easier file to use for script integration. The file is nearly 100Kb length.
+<pre>&lt;script language=&quot;javascript&quot; type=&quot;text/javascript&quot; src=&quot;/editarea/edit_area/edit_area_full.js&quot;&gt;&lt;/script&gt;</pre>
+			<br />
+			<h3>Advantage:</h3>
+			<ul>
+				<li>The simplest choice.</li>
+				<li>Load the core script in one call to server.</li>
+			</ul>
+			<h3>Inconvient:</h3>
+			<ul>
+				<li>Not designed to allow core script modification.</li>
+				<li>Need to make additional server calls for plugins.</li>
+			</ul>
+			<br />
+		</p>
+		</blockquote>
+		
+		<div class='separator'></div>
+		
+		<h2>edit_area_compressor.php</h2>
+		<blockquote>
+		<p>This php file send in a gzipped file the whole core script to the brower (if the browser 
+			has not already an updated version in cache). 
+			<br />
+			If the source core script files have changed, it take thoses files and merge them into one file.
+			Then it remove all comments, white-spaces, etc... and save it in 
+			"edit_area_full.js". It also save a gzip version in 
+			"edit_area_full.gz". Then it send the gzip content to the browser (except for IE for which it is not gzipped due to IE bug with compression). 
+<pre>&lt;script language=&quot;javascript&quot; type=&quot;text/javascript&quot; src=&quot;/editarea/edit_area/edit_area_compressor.php&quot;&gt;&lt;/script&gt;</pre>
+			<br />
+			<h3>Advantage:</h3>
+			<ul>
+				<li>The script is very small if gzip is supported (~25Ko).</li>
+				<li>Designed to allow core script modification.</li>
+				<li>Load the core script in one call to server.</li>			
+			</ul>
+			<h3>Inconvient:</h3>
+			<ul>
+				<li>Need PHP to be installed on the server (and allowed to write in editarea directory for disk caching).</li>
+				<li>Need to make additional server calls for plugins.</li>
+			</ul>
+			<br />
+		</p>
+		<p>If you plan to use &quot;edit_area_compressor.php&quot; be sure that PHP scripts are allowed 
+			to write in editarea directory (at the same level than the file &quot;edit_area_compressor.php&quot;) 
+			for disk caching.
+		</p>
+		</blockquote>
+		
+		<div class='separator'></div>
+		
+		<h2>edit_area_compressor.php?plugins</h2>
+		<h5 class='marked'>recommanded version</h5>
+		<blockquote>
+		<p>This include is very similar to &quot;edit_area_compressor.php&quot;. The difference is that 
+			with &quot;plugins&quot; parameter, the compressor also include the main script of all the plugins
+			in the merged file and also compress them. This will avoid later server calls for plugin main script.
+			<br />
+			In this case, the saved files are "edit_area_full_with_plugins.js" and "edit_area_full_with_plugins.gz".   
+<pre>&lt;script language=&quot;javascript&quot; type=&quot;text/javascript&quot; src=&quot;/editarea/edit_area/edit_area_compressor.php?plugins&quot;&gt;&lt;/script&gt;</pre>
+			<br />
+			<h3>Advantage:</h3>
+			<ul>
+				<li>The script is very small if gzip is supported.</li>
+				<li>Designed to allow core script modification.</li>
+				<li>Load the core script in one call to server.</li>
+				<li>Load plugins script in the same call.</li>			
+			</ul>
+			<h3>Inconvient:</h3>
+			<ul>
+				<li>Need PHP to be installed on the server (and allowed to write in editarea directory for disk caching).</li>
+			</ul>
+			<br />
+		</p>
+		<p>If you plan to use &quot;edit_area_compressor.php&quot; be sure that PHP scripts are allowed 
+			to write in editarea directory (at the same level than the file &quot;edit_area_compressor.php&quot;) 
+			for disk caching.
+		</p>
+		</blockquote>
+		
+		<div class='separator'></div>
+		
+		<h2>edit_area_full.gz</h2>
+		<blockquote>
+		<p>This is the smaller file to use for script integration. The file is gzipped and is only 20Kb 
+			length. 
+<pre>&lt;script language=&quot;javascript&quot; type=&quot;text/javascript&quot; src=&quot;/editarea/edit_area/edit_area_full.gz&quot;&gt;&lt;/script&gt;</pre>
+			<br />
+			<h3>Advantage:</h3>
+			<ul>
+				<li>The script is only 20Kb length.</li>
+				<li>Load the core script in one call to server.</li>
+			</ul>
+			<h3>Inconvient:</h3>
+			<ul>
+				<li>Is server dependant: It will work only on servers that will return a 
+					"Content-Encoding: gzip" for *.gz files (can work with Apache). 
+					So you must test if it work on your server.</li>
+				<li>Not designed to allow core script modification.</li>
+				<li>Need to make additional server calls for plugins.</li>
+			</ul>
+			<br />
+		</p>
+		</blockquote>
+		
+		<div class='separator'></div>
+		
+		<h2>edit_area_loader.js</h2>
+		<blockquote>
+		<p>This is the original loading script of EditArea. Use this one only if you can't use 
+			any of the 3 other loading files. There is no code epuration nor gzip compression.  
+<pre>&lt;script language=&quot;javascript&quot; type=&quot;text/javascript&quot; src=&quot;/editarea/edit_area/edit_area_loader.js&quot;&gt;&lt;/script&gt;</pre>
+			<br />
+			<h3>Advantage:</h3>
+			<ul>
+				<li>Designed to allow core script modification.</li>
+			</ul>
+			<h3>Inconvient:</h3>
+			<ul>
+				<li>Load the core scripts in 12 call to the server.</li>
+				<li>Need to make additional server calls for plugins.</li>
+			</ul>
+			<br />
+		</p>
+		</blockquote>
+		
+	</div>
+	<div class='footer'>
+		<div class="indexlink"><a href="index.html">Index</a></div>	
+		<div class='copyright'>EditArea - &copy; Christophe Dolivet 2007-2008</div>
+		<br style="clear: both" />
+	</div>
+</body>
+</html>
