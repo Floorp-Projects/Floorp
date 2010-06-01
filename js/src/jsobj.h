@@ -676,6 +676,8 @@ struct JSObject {
         return map->ops->typeOf(cx, this);
     }
 
+    JSObject *wrappedObject(JSContext *cx) const;
+
     /* These four are time-optimized to avoid stub calls. */
     JSObject *thisObject(JSContext *cx) {
         return map->ops->thisObject ? map->ops->thisObject(cx, this) : this;

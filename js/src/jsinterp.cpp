@@ -986,8 +986,8 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
             !JSVAL_IS_NULL(rval)) {
             JSObject *lobj, *robj;
 
-            lobj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(lval));
-            robj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(rval));
+            lobj = JSVAL_TO_OBJECT(lval)->wrappedObject(cx);
+            robj = JSVAL_TO_OBJECT(rval)->wrappedObject(cx);
             lval = OBJECT_TO_JSVAL(lobj);
             rval = OBJECT_TO_JSVAL(robj);
         }

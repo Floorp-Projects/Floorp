@@ -599,7 +599,7 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 JSBool
 js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp)
 {
-    JSObject *wrappedObj = js_GetWrappedObject(cx, obj);
+    JSObject *wrappedObj = obj->wrappedObject(cx);
 
     *answerp = wrappedObj->isArguments() || wrappedObj->isArray();
     if (!*answerp) {
@@ -2600,7 +2600,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
             JSObject *wobj;
 
             aobj = JSVAL_TO_OBJECT(v);
-            wobj = js_GetWrappedObject(cx, aobj);
+            wobj = aobj->wrappedObject(cx);
             if (wobj->isArray()) {
                 jsid id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
                 if (!aobj->getProperty(cx, id, tvr.addr()))
@@ -3041,7 +3041,7 @@ array_isArray(JSContext *cx, uintN argc, jsval *vp)
 {
     *vp = BOOLEAN_TO_JSVAL(argc > 0 &&
                            !JSVAL_IS_PRIMITIVE(vp[2]) &&
-                           js_GetWrappedObject(cx, JSVAL_TO_OBJECT(vp[2]))->isArray());
+                           JSVAL_TO_OBJECT(vp[2])->wrappedObject(cx)->isArray());
     return JS_TRUE;
 }
 

@@ -795,7 +795,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     JSPropertyOp watcher;
 
     origobj = obj;
-    obj = js_GetWrappedObject(cx, obj);
+    obj = obj->wrappedObject(cx);
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
         return JS_FALSE;
