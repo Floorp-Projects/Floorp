@@ -287,6 +287,7 @@ gfxDWriteFontEntry::ReadCMAP()
         rv = gfxFontUtils::ReadCMAP(tableData,
                                     len,
                                     mCharacterMap,
+                                    mUVSOffset,
                                     isUnicode,
                                     isSymbol);
     }

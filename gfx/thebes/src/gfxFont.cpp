@@ -100,6 +100,55 @@ PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
 }
 
 
+nsresult gfxFontEntry::InitializeUVSMap()
+{
+    // mUVSOffset will not be initialized
+    // until cmap is initialized.
+    if (!mCmapInitialized) {
+        ReadCMAP();
+    }
+
+    if (!mUVSOffset) {
+        return NS_ERROR_FAILURE;
+    }
+
+    if (!mUVSData) {
+        const PRUint32 kCmapTag = TRUETYPE_TAG('c','m','a','p');
+        nsAutoTArray<PRUint8,16384> buffer;
+        if (GetFontTable(kCmapTag, buffer) != NS_OK) {
+            mUVSOffset = 0; // don't bother to read the table again
+            return NS_ERROR_FAILURE;
+        }
+
+        PRUint8* uvsData;
+        nsresult rv = gfxFontUtils::ReadCMAPTableFormat14(
+                          buffer.Elements() + mUVSOffset,
+                          buffer.Length() - mUVSOffset,
+                          uvsData);
+        if (NS_FAILED(rv)) {
+            mUVSOffset = 0; // don't bother to read the table again
+            return rv;
+        }
+
+        mUVSData = uvsData;
+    }
+
+    return NS_OK;
+}
+
+
+PRUint16 gfxFontEntry::GetUVSGlyph(PRUint32 aCh, PRUint32 aVS)
+{
+    InitializeUVSMap();
+
+    if (mUVSData) {
+        return gfxFontUtils::MapUVSToGlyphFormat14(mUVSData, aCh, aVS);
+    }
+
+    return 0;
+}
+
+
 nsresult gfxFontEntry::ReadCMAP()
 {
     mCmapInitialized = PR_TRUE;
@@ -1999,6 +2048,18 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, 
             selectedFont = aPrevMatchedFont;
             return selectedFont.forget();
         }
+    }
+
+    // if this character is a variation selector,
+    // use the previous font regardless of whether it supports VS or not.
+    // otherwise the text run will be divided.
+    if (gfxFontUtils::IsVarSelector(aCh)) {
+        if (aPrevMatchedFont) {
+            selectedFont = aPrevMatchedFont;
+            return selectedFont.forget();
+        }
+        // VS alone. it's meaningless to search different fonts
+        return nsnull;
     }
 
     // 1. check fonts in the font group
