@@ -20,4 +20,14 @@ function run_test() {
 
   _("sanity check that the item anno is still there");
   do_check_eq(Utils.anno(1, "anno"), "hi");
+
+  _("invalid uris don't get annos");
+  let didThrow = false;
+  try {
+    Utils.anno("foo/bar/baz", "bad");
+  }
+  catch(ex) {
+    didThrow = true;
+  }
+  do_check_true(didThrow);
 }
