@@ -173,6 +173,9 @@ struct JSFunction : public JSObject
         return u.i.nvars;
     }
 
+    /* uint16 representation bounds number of call object dynamic slots. */
+    enum { MAX_ARGS_AND_VARS = 2 * UINT16_MAX };
+
     uintN countArgsAndVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return nargs + u.i.nvars;
