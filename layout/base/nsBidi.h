@@ -850,6 +850,8 @@ public:
   nsresult WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize);
 
 protected:
+  friend class nsBidiPresUtils;
+
   /** length of the current text */
   PRInt32 mLength;
 

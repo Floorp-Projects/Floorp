@@ -229,6 +229,22 @@ moz_valloc(size_t size)
 }
 #endif // if defined(HAVE_VALLOC)
 
+size_t
+moz_malloc_usable_size(void *ptr)
+{
+    if (!ptr)
+        return 0;
+
+#if defined(MOZ_MEMORY)
+    return malloc_usable_size(ptr);
+#elif defined(XP_MACOSX)
+    return malloc_size(ptr);
+#elif defined(XP_WIN)
+    return _msize(ptr);
+#else
+    return 0;
+#endif
+}
 
 namespace mozilla {
 
