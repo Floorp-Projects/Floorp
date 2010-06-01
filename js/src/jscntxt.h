@@ -1436,6 +1436,7 @@ struct JSRuntime {
 
     JSEmptyScope          *emptyArgumentsScope;
     JSEmptyScope          *emptyBlockScope;
+    JSEmptyScope          *emptyCallScope;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this

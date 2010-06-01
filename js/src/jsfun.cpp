@@ -184,8 +184,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
     argsobj->setArgsCallee(OBJECT_TO_JSVAL(callee));
     argsobj->setArgsLength(argc);
 
-    argsobj->map = cx->runtime->emptyArgumentsScope;
-    cx->runtime->emptyArgumentsScope->hold();
+    argsobj->map = cx->runtime->emptyArgumentsScope->hold();
 
     /* This must come after argsobj->map has been set. */
     if (!js_EnsureReservedSlots(cx, argsobj, argc))
@@ -770,11 +769,18 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSObject *
 NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
-    JSObject *callobj = NewObjectWithGivenProto(cx, &js_CallClass, NULL, scopeChain);
-    if (!callobj ||
-        !js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars())) {
+    JSObject *callobj = js_NewGCObject(cx);
+    if (!callobj)
         return NULL;
-    }
+
+    /* Init immediately to avoid GC seeing a half-init'ed object. */
+    callobj->init(&js_CallClass, NULL, scopeChain, JSVAL_NULL);
+
+    callobj->map = cx->runtime->emptyCallScope->hold();
+
+    /* This must come after callobj->map has been set. */
+    if (!js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars()))
+        return NULL;
     return callobj;
 }
 
