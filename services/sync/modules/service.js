@@ -1370,8 +1370,8 @@ WeaveSvc.prototype = {
   _checkServerError: function WeaveSvc__checkServerError(resp) {
     if (Utils.checkStatus(resp.status, null, [500, [502, 504]])) {
       Status.enforceBackoff = true;
-      if (resp.status == 503 && resp.headers["Retry-After"])
-        Observers.notify("weave:service:backoff:interval", parseInt(resp.headers["Retry-After"], 10));
+      if (resp.status == 503 && resp.headers["retry-after"])
+        Observers.notify("weave:service:backoff:interval", parseInt(resp.headers["retry-after"], 10));
     }
   },
   /**
