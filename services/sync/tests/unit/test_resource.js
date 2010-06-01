@@ -342,5 +342,5 @@ function run_test() {
   do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
   do_check_eq(typeof error.stack, "string");
 
-  server.stop();
+  server.stop(function() {});
 }

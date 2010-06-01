@@ -74,5 +74,5 @@ function run_test() {
     log.info("Done!");
   }
   catch (e) { do_throw(e); }
-  finally { server.stop(); }
+  finally { server.stop(function() {}); }
 }
