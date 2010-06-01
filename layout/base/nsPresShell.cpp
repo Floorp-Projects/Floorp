@@ -1565,13 +1565,13 @@ NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
                              "layout/all",
                              "Memory in use by layout PresShell, PresContext, and other related areas.",
                              PresShell::SizeOfLayoutMemoryReporter,
-                             nsnull);
+                             nsnull)
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
                              "layout/bidi",
                              "Memory in use by layout Bidi processor.",
                              PresShell::SizeOfBidiMemoryReporter,
-                             nsnull);
+                             nsnull)
 
 PresShell::PresShell()
 {
