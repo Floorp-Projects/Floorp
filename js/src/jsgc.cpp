@@ -3258,7 +3258,7 @@ js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
 
         cycle = false;
         for (JSObject *obj2 = pobj; obj2;) {
-            obj2 = js_GetWrappedObject(cx, obj2);
+            obj2 = obj2->wrappedObject(cx);
             if (obj2 == obj) {
                 cycle = true;
                 break;
