@@ -42,12 +42,12 @@
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
+#include "mozilla/dom/indexedDB/IDBTransactionRequest.h"
 
 #include "nsIIDBObjectStoreRequest.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBTransactionRequest;
 class ObjectStoreInfo;
 
 class Key
@@ -146,6 +146,26 @@ public:
          IDBTransactionRequest* aTransaction,
          const ObjectStoreInfo* aInfo,
          PRUint16 aMode);
+
+  bool TransactionIsOpen()
+  {
+    return mTransaction->TransactionIsOpen();
+  }
+
+  bool IsAutoIncrement()
+  {
+    return mAutoIncrement;
+  }
+
+  bool IsWriteAllowed()
+  {
+    return mTransaction->IsWriteAllowed();
+  }
+
+  PRInt64 Id()
+  {
+    return mId;
+  }
 
 protected:
   IDBObjectStoreRequest();

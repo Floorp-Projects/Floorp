@@ -44,6 +44,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
+#include "IDBCursorRequest.h"
 #include "IDBObjectStoreRequest.h"
 #include "IndexedDatabaseRequest.h"
 #include "DatabaseInfo.h"
@@ -53,41 +54,6 @@
 #define SAVEPOINT_INTERMEDIATE "intermediate"
 
 USING_INDEXEDDB_NAMESPACE
-
-namespace {
-
-class CloseConnectionRunnable : public nsRunnable
-{
-public:
-  template<class T>
-  bool AddDoomedObject(nsCOMPtr<T>& aCOMPtr)
-  {
-    if (aCOMPtr) {
-      if (!mDoomedObjects.AppendElement(do_QueryInterface(aCOMPtr))) {
-        NS_ERROR("Out of memory!");
-        return false;
-      }
-      aCOMPtr = nsnull;
-    }
-    return true;
-  }
-
-  bool HasWorkToDo()
-  {
-    return !mDoomedObjects.IsEmpty();
-  }
-
-  NS_IMETHOD Run()
-  {
-    mDoomedObjects.Clear();
-    return NS_OK;
-  }
-
-private:
-  nsAutoTArray<nsCOMPtr<nsISupports>, 10> mDoomedObjects;
-};
-
-} // anonymous namespace
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -461,6 +427,13 @@ IDBTransactionRequest::TransactionIsOpen()
   return mReadyState == nsIIDBTransaction::INITIAL ||
          mReadyState == nsIIDBTransaction::LOADING;
 }
+
+bool
+IDBTransactionRequest::IsWriteAllowed()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  return mMode == nsIIDBTransaction::READ_WRITE;
+}
 #endif
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)
@@ -630,6 +603,15 @@ IDBTransactionRequest::SetOntimeout(nsIDOMEventListener* aOntimeout)
 
   return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_EVT_STR),
                                 mOnTimeoutListener, aOntimeout);
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(CloseConnectionRunnable, nsIRunnable)
+
+NS_IMETHODIMP
+CloseConnectionRunnable::Run()
+{
+  mDoomedObjects.Clear();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

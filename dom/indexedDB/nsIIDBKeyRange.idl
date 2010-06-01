@@ -58,21 +58,4 @@ interface nsIIDBKeyRange : nsISupports
 
   readonly attribute nsIVariant left;
   readonly attribute nsIVariant right;
-
-  nsIIDBKeyRange
-  only(in nsIVariant value);
-
-  nsIIDBKeyRange
-  leftBound(in nsIVariant bound,
-            [optional /* false */] in boolean open);
-
-  nsIIDBKeyRange
-  rightBound(in nsIVariant bound,
-             [optional /* false */] in boolean open);
-
-  nsIIDBKeyRange
-  bound(in nsIVariant left,
-        in nsIVariant right,
-        [optional /* false */] in boolean openLeft,
-        [optional /* false */] in boolean openRight);
 };
