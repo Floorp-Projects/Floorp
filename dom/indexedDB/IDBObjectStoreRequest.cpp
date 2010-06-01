@@ -56,6 +56,8 @@
 #include "mozilla/Storage.h"
 
 #include "AsyncConnectionHelper.h"
+#include "IDBCursorRequest.h"
+#include "IDBKeyRange.h"
 #include "IDBTransactionRequest.h"
 #include "DatabaseInfo.h"
 #include "Savepoint.h"
@@ -113,9 +115,6 @@ public:
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
 
-  // Disabled until we can use nsIVariants with jsvals
-  //PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
-
 protected:
   // In-params.
   const PRInt64 mOSID;
@@ -139,6 +138,33 @@ public:
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+};
+
+class OpenCursorHelper : public AsyncConnectionHelper
+{
+public:
+  OpenCursorHelper(IDBTransactionRequest* aTransaction,
+                   IDBRequest* aRequest,
+                   IDBObjectStoreRequest* aObjectStore,
+                   nsIIDBKeyRange* aKeyRange,
+                   PRUint16 aDirection,
+                   PRBool aPreload)
+  : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
+    mKeyRange(aKeyRange), mDirection(aDirection), mPreload(aPreload)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+private:
+  // In-params.
+  const nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  const nsCOMPtr<nsIIDBKeyRange> mKeyRange;
+  const PRUint16 mDirection;
+  const PRBool mPreload;
+
+  // Out-params.
+  nsTArray<KeyValuePair> mData;
 };
 
 // Remove once nsIVariant can handle jsvals
@@ -392,7 +418,7 @@ NS_IMPL_ADDREF(IDBObjectStoreRequest)
 NS_IMPL_RELEASE(IDBObjectStoreRequest)
 
 NS_INTERFACE_MAP_BEGIN(IDBObjectStoreRequest)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIIDBObjectStoreRequest)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
   NS_INTERFACE_MAP_ENTRY(nsIIDBObjectStoreRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBObjectStore)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBObjectStoreRequest)
@@ -637,7 +663,7 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aRange,
+IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
                                   PRUint16 aDirection,
                                   PRBool aPreload,
                                   PRUint8 aOptionalArgCount,
@@ -649,8 +675,42 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aRange,
     return NS_ERROR_UNEXPECTED;
   }
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+
+  if (aKeyRange) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (aOptionalArgCount >= 2) {
+    if (aDirection != nsIIDBCursor::NEXT &&
+        aDirection != nsIIDBCursor::NEXT_NO_DUPLICATE &&
+        aDirection != nsIIDBCursor::PREV &&
+        aDirection != nsIIDBCursor::PREV_NO_DUPLICATE) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  else {
+    aDirection = nsIIDBCursor::NEXT;
+  }
+
+  if (aPreload) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<OpenCursorHelper> helper =
+    new OpenCursorHelper(mTransaction, request, this, aKeyRange, aDirection,
+                         aPreload);
+
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -947,6 +1007,106 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // Search for it!
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  return OK;
+}
+
+PRUint16
+OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  nsCString query;
+  if (mObjectStore->IsAutoIncrement()) {
+    query.AssignLiteral(
+      "SELECT id, data "
+      "FROM ai_objectdata "
+      "WHERE object_store_id = :osid "
+//      "AND key_value >= :minkey "
+//      "AND key_value <= :maxkey "
+      "ORDER BY id DESC"
+    );
+  }
+  else {
+    query.AssignLiteral(
+      "SELECT key_value, data "
+      "FROM object_data "
+      "WHERE object_store_id = :osid "
+//      "AND key_value >= :minkey "
+//      "AND key_value <= :maxkey "
+      "ORDER BY key_value DESC"
+    );
+  }
+
+  if (!mData.SetCapacity(50)) {
+    NS_ERROR("Out of memory!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(query, getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStore->Id());
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool hasResult;
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (mData.Capacity() == mData.Length()) {
+      if (!mData.SetCapacity(mData.Capacity() * 2)) {
+        NS_ERROR("Out of memory!");
+        return nsIIDBDatabaseException::UNKNOWN_ERR;
+      }
+    }
+
+    KeyValuePair* pair = mData.AppendElement();
+    NS_ASSERTION(pair, "Shouldn't fail if SetCapacity succeeded!");
+
+    PRInt32 keyType;
+    rv = stmt->GetTypeOfIndex(0, &keyType);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+                 keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                 "Bad key type!");
+
+    if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+      pair->key = stmt->AsInt64(0);
+    }
+    else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+      rv = stmt->GetString(0, pair->key.ToString());
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    }
+
+#ifdef DEBUG
+    {
+      PRInt32 valueType;
+      NS_ASSERTION(NS_SUCCEEDED(stmt->GetTypeOfIndex(1, &valueType)) &&
+                   valueType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                   "Bad value type!");
+    }
+#endif
+
+    rv = stmt->GetString(1, pair->value);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  return OK;
+}
+
+PRUint16
+OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  if (mData.IsEmpty()) {
+    aResult->SetAsEmpty();
+    return NS_OK;
+  }
+
+  nsRefPtr<IDBCursorRequest> cursor =
+    IDBCursorRequest::Create(mRequest, mTransaction, mObjectStore, mDirection,
+                             mData);
+  NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
 
   return OK;
 }

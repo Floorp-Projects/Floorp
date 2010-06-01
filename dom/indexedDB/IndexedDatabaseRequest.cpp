@@ -56,6 +56,7 @@
 #include "AsyncConnectionHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBDatabaseRequest.h"
+#include "IDBKeyRange.h"
 #include "LazyIdleThread.h"
 
 #define DB_SCHEMA_VERSION 1
@@ -134,7 +135,7 @@ CreateTables(mozIStorageConnection* aDBConn)
       "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
       "data TEXT NOT NULL, "
-      "key_value TEXT DEFAULT NULL UNIQUE, "
+      "key_value TEXT DEFAULT NULL, "
       "PRIMARY KEY (id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
@@ -144,7 +145,7 @@ CreateTables(mozIStorageConnection* aDBConn)
 
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE INDEX key_index "
-    "ON object_data (id, object_store_id);"
+    "ON object_data (key_value, object_store_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -472,7 +473,7 @@ NS_IMPL_ADDREF(IndexedDatabaseRequest)
 NS_IMPL_RELEASE(IndexedDatabaseRequest)
 
 NS_INTERFACE_MAP_BEGIN(IndexedDatabaseRequest)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIIndexedDatabaseRequest)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
   NS_INTERFACE_MAP_ENTRY(nsIIndexedDatabaseRequest)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IndexedDatabaseRequest)
 NS_INTERFACE_MAP_END
@@ -518,6 +519,80 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+IndexedDatabaseRequest::MakeSingleKeyRange(nsIVariant* aValue,
+                                           nsIIDBKeyRange** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<IDBKeyRange> range =
+    IDBKeyRange::Create(aValue, aValue, PRUint16(nsIIDBKeyRange::SINGLE));
+  NS_ASSERTION(range, "Out of memory?");
+
+  range.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IndexedDatabaseRequest::MakeLeftBoundKeyRange(nsIVariant* aBound,
+                                              PRBool aOpen,
+                                              nsIIDBKeyRange** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  PRUint16 flags = aOpen ?
+                   PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
+                   PRUint16(nsIIDBKeyRange::LEFT_BOUND);
+
+  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(aBound, nsnull, flags);
+  NS_ASSERTION(range, "Out of memory?");
+
+  range.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IndexedDatabaseRequest::MakeRightBoundKeyRange(nsIVariant* aBound,
+                                               PRBool aOpen,
+                                               nsIIDBKeyRange** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  PRUint16 flags = aOpen ?
+                   PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
+                   PRUint16(nsIIDBKeyRange::RIGHT_BOUND);
+
+  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(nsnull, aBound, flags);
+  NS_ASSERTION(range, "Out of memory?");
+
+  range.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IndexedDatabaseRequest::MakeBoundKeyRange(nsIVariant* aLeft,
+                                          nsIVariant* aRight,
+                                          PRBool aOpenLeft,
+                                          PRBool aOpenRight,
+                                          nsIIDBKeyRange **_retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  PRUint16 flags = aOpenLeft ?
+                   PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
+                   PRUint16(nsIIDBKeyRange::LEFT_BOUND);
+
+  flags |= aOpenRight ?
+           PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
+           PRUint16(nsIIDBKeyRange::RIGHT_BOUND);
+
+  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(aLeft, aRight, flags);
+  NS_ASSERTION(range, "Out of memory?");
+
+  range.forget(_retval);
+  return NS_OK;
+}
+
 PRUint16
 OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
@@ -548,20 +623,26 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
     PRBool hasResult;
-    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
       nsAutoPtr<ObjectStoreInfo>* element =
         mObjectStores.AppendElement(new ObjectStoreInfo());
       NS_ENSURE_TRUE(element, nsIIDBDatabaseException::UNKNOWN_ERR);
 
       ObjectStoreInfo* const info = element->get();
 
-      stmt->GetString(0, info->name);
+      rv = stmt->GetString(0, info->name);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
       info->id = stmt->AsInt64(1);
+
       rv = stmt->GetString(2, info->keyPath);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
       info->autoIncrement = !!stmt->AsInt32(3);
       info->databaseId = mDatabaseId;
     }
   }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   { // Load version information.
     nsCOMPtr<mozIStorageStatement> stmt;

@@ -481,6 +481,8 @@ using namespace mozilla::dom;
 #include "mozilla/dom/indexedDB/IDBEvents.h"
 #include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
 #include "mozilla/dom/indexedDB/IDBTransactionRequest.h"
+#include "mozilla/dom/indexedDB/IDBCursorRequest.h"
+#include "mozilla/dom/indexedDB/IDBKeyRange.h"
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -1414,6 +1416,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBObjectStoreRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBTransactionRequest, nsEventTargetSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBCursorRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBKeyRange, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -3917,6 +3923,15 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBTransaction)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBCursorRequest, nsIIDBCursorRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursorRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBKeyRange, nsIIDBKeyRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBKeyRange)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
