@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 et sw=2 tw=80: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,7 +21,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
  *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,38 +37,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_dom_indexeddb_idbkeyrange_h__
+#define mozilla_dom_indexeddb_idbkeyrange_h__
 
-interface nsIIDBKeyRange;
-interface nsIIDBRequest;
-interface nsIVariant;
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-/**
- * Interface that defines the indexedDB property on a window.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IndexedDatabaseRequest
- * for more information.
- */
-[scriptable, uuid(043161e0-93b8-43b4-94d8-f34046d679b4)]
-interface nsIIndexedDatabaseRequest : nsISupports
+#include "nsIIDBKeyRange.h"
+#include "nsIVariant.h"
+
+BEGIN_INDEXEDDB_NAMESPACE
+
+class IndexedDatabaseRequest;
+
+class IDBKeyRange : public nsIIDBKeyRange
 {
-  nsIIDBRequest
-  open(in AString name,
-       in AString description);
+  friend class IndexedDatabaseRequest;
 
-  nsIIDBKeyRange
-  makeSingleKeyRange(in nsIVariant value);
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIDBKEYRANGE
 
-  nsIIDBKeyRange
-  makeLeftBoundKeyRange(in nsIVariant bound,
-                        [optional /* false */] in boolean open);
+protected:
+  static
+  already_AddRefed<IDBKeyRange> Create(nsIVariant* aLeft,
+                                       nsIVariant* aRight,
+                                       PRUint16 aFlags);
 
-  nsIIDBKeyRange
-  makeRightBoundKeyRange(in nsIVariant bound,
-                         [optional /* false */] in boolean open);
+  IDBKeyRange()
+  : mFlags(nsIIDBKeyRange::SINGLE)
+  { }
 
-  nsIIDBKeyRange
-  makeBoundKeyRange(in nsIVariant left,
-                    in nsIVariant right,
-                    [optional /* false */] in boolean openLeft,
-                    [optional /* false */] in boolean openRight);
+  ~IDBKeyRange() { }
+
+  nsCOMPtr<nsIVariant> mLeft;
+  nsCOMPtr<nsIVariant> mRight;
+  PRUint16 mFlags;
 };
+
+END_INDEXEDDB_NAMESPACE
+
+#endif // mozilla_dom_indexeddb_idbkeyrange_h__

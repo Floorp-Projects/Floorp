@@ -1,0 +1,77 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const values = [
+        { key: 1, value: "one" },
+        { key: "two", value: "two" }
+      ];
+
+      let request = indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+
+      request = db.createObjectStore("foo", "");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let objectStore = event.result;
+
+      for (let i in values) {
+        request = objectStore.add(values[i].value, values[i].key);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+      }
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+
+      let valueIndex = 0;
+
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (!cursor) {
+          testGenerator.next();
+          return;
+        }
+  
+        is (cursor.key, values[valueIndex].key, "Correct key");
+        is (cursor.value, values[valueIndex].value, "Correct value");
+        valueIndex++;
+
+        let ok = cursor.continue();
+        is(ok, true, "Correct return from continue");
+      }
+      yield;
+
+      is(valueIndex, values.length, "Saw all added items");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

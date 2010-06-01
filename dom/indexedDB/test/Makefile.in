@@ -48,6 +48,7 @@ _TEST_FILES = \
   helpers.js \
   test_add_twice_failure.html \
   test_create_objectStore.html \
+  test_cursors.html \
   test_event_source.html \
   test_global_data.html \
   test_key_requirements.html \

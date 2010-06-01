@@ -44,6 +44,7 @@
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 
 #include "nsIIDBTransactionRequest.h"
+#include "nsIRunnable.h"
 
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
@@ -98,11 +99,17 @@ public:
 
 #ifdef DEBUG
   bool TransactionIsOpen();
+  bool IsWriteAllowed();
 #else
   bool TransactionIsOpen()
   {
     return mReadyState == nsIIDBTransaction::INITIAL ||
            mReadyState == nsIIDBTransaction::LOADING;
+  }
+
+  bool IsWriteAllowed()
+  {
+    return mMode == nsIIDBTransaction::READ_WRITE;
   }
 #endif
 
@@ -167,6 +174,29 @@ public:
 
 private:
   nsRefPtr<IDBTransactionRequest> mTransaction;
+};
+
+class CloseConnectionRunnable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  template<class T>
+  bool AddDoomedObject(nsCOMPtr<T>& aCOMPtr)
+  {
+    if (aCOMPtr) {
+      if (!mDoomedObjects.AppendElement(do_QueryInterface(aCOMPtr))) {
+        NS_ERROR("Out of memory!");
+        return false;
+      }
+      aCOMPtr = nsnull;
+    }
+    return true;
+  }
+
+private:
+  nsAutoTArray<nsCOMPtr<nsISupports>, 10> mDoomedObjects;
 };
 
 END_INDEXEDDB_NAMESPACE
