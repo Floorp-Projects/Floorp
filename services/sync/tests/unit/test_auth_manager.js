@@ -43,5 +43,5 @@ function run_test() {
   do_check_eq(content, "This path exists and is protected");
   do_check_eq(content.status, 200);
 
-  server.stop();
+  server.stop(function() {});
 }

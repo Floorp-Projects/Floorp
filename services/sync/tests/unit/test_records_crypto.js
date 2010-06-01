@@ -124,5 +124,5 @@ function run_test() {
 
     log.info("Done!");
   }
-  finally { server.stop(); }
+  finally { server.stop(function() {}); }
 }
