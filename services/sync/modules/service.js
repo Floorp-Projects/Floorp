@@ -260,7 +260,6 @@ WeaveSvc.prototype = {
     this._initLogs();
     this._log.info("Loading Weave " + WEAVE_VERSION);
 
-    Status.service = STATUS_OK;
     this.enabled = true;
 
     this._registerEngines();
@@ -333,8 +332,6 @@ WeaveSvc.prototype = {
       this._log.debug("checkSetup: no passphrase set");
       Status.login = LOGIN_FAILED_NO_PASSPHRASE;
     }
-    else
-      Status.service = STATUS_OK;
     
     return Status.service;
   },
