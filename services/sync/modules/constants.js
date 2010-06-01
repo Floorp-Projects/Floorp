@@ -79,7 +79,8 @@ PERMS_PASSFILE:                        0600,
 PERMS_DIRECTORY:                       0755,
 
 // Number of records to upload in a single POST (multiple POSTS if exceeded)
-// Record size limit is currently 10K, so 100 is a bit over 1MB
+// FIXME: Record size limit is 256k (new cluster), so this can be quite large!
+// (Bug 569295)
 MAX_UPLOAD_RECORDS:                    100,
 
 // Top-level statuses:
