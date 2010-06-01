@@ -244,15 +244,15 @@ var WinTaskbarJumpList =
     if (!this._startBuild())
       return;
 
-    if (this._showTasks && !this._buildTasks())
-      return;
+    if (this._showTasks)
+      this._buildTasks();
 
     // Space for frequent items takes priority over recent.
-    if (this._showFrequent && !this._buildFrequent())
-      return;
+    if (this._showFrequent)
+      this._buildFrequent();
 
-    if (this._showRecent && !this._buildRecent())
-      return;
+    if (this._showRecent)
+      this._buildRecent();
 
     this._commitBuild();
   },
@@ -289,16 +289,13 @@ var WinTaskbarJumpList =
       items.appendElement(item, false);
     }, this);
     
-    if (items.length == 0)
-      return true;
-
-    return this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_TASKS, items);
+    if (items.length > 0)
+      this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_TASKS, items);
   },
 
   _buildCustom: function WTBJL__buildCustom(title, items) {
-    if (items.length == 0)
-      return true;
-    return this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_CUSTOMLIST, items, title);
+    if (items.length > 0)
+      this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_CUSTOMLIST, items, title);
   },
 
   _buildFrequent: function WTBJL__buildFrequent() {
@@ -312,7 +309,7 @@ var WinTaskbarJumpList =
     var list = this._getNavFrequent(this._maxItemCount);
 
     if (!list || list.length == 0)
-      return true;
+      return;
 
     // track frequent items so that we don't add them to
     // the recent list.
@@ -323,7 +320,7 @@ var WinTaskbarJumpList =
       items.appendElement(shortcut, false);
       this._frequentHashList.push(entry.uri);
     }, this);
-    return this._buildCustom(_getString("taskbar.frequent.label"), items);
+    this._buildCustom(_getString("taskbar.frequent.label"), items);
   },
 
   _buildRecent: function WTBJL__buildRecent() {
@@ -332,7 +329,7 @@ var WinTaskbarJumpList =
     var list = this._getNavRecent(this._maxItemCount*2);
     
     if (!list || list.length == 0)
-      return true;
+      return;
 
     let count = 0;
     for (let idx = 0; idx < list.length; idx++) {
@@ -348,11 +345,11 @@ var WinTaskbarJumpList =
       items.appendElement(shortcut, false);
       count++;
     }
-    return this._buildCustom(_getString("taskbar.recent.label"), items);
+    this._buildCustom(_getString("taskbar.recent.label"), items);
   },
 
   _deleteActiveJumpList: function WTBJL__deleteAJL() {
-    return this._builder.deleteActiveList();
+    this._builder.deleteActiveList();
   },
 
   /**
@@ -459,7 +456,7 @@ var WinTaskbarJumpList =
         try { // in case we get a bad uri
           let uriSpec = oldItem.app.getParameter(0);
           _navHistoryService.QueryInterface(Ci.nsIBrowserHistory).removePage(
-            _ioService.newURI(uriSpec));
+            _ioService.newURI(uriSpec, null, null));
         } catch (err) { }
       }
     }
@@ -527,6 +524,8 @@ var WinTaskbarJumpList =
   observe: function WTBJL_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
+        if (this._enabled == true && !_prefs.getBoolPref(PREF_TASKBAR_ENABLED))
+          this._deleteActiveJumpList();
         this._refreshPrefs();
         this.update();
       break;
