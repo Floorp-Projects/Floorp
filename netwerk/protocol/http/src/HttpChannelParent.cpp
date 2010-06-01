@@ -45,6 +45,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIBadCertListener2.h"
 
 namespace mozilla {
 namespace net {
@@ -263,10 +264,11 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
       aIID.Equals(NS_GET_IID(nsIHttpEventSink))  ||
       // FIXME: application cache (bug 536295):
       aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer)) ||
-      // FIXME:  progress notifications
       aIID.Equals(NS_GET_IID(nsIProgressEventSink)) ||
       // FIXME:  bug 561830: when fixed, we shouldn't be asked for this interface
-      aIID.Equals(NS_GET_IID(nsIDocShellTreeItem))) 
+      aIID.Equals(NS_GET_IID(nsIDocShellTreeItem)) ||
+      // Let this return NS_ERROR_NO_INTERFACE: it's OK to not provide it.
+      aIID.Equals(NS_GET_IID(nsIBadCertListener2))) 
   {
     return QueryInterface(aIID, result);
   } 
