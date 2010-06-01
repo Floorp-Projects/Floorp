@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGEHELPER_H_
-#define _MOZSTORAGEHELPER_H_
+#ifndef MOZSTORAGEHELPER_H
+#define MOZSTORAGEHELPER_H
 
 #include "nsAutoPtr.h"
 
@@ -192,4 +192,4 @@ protected:
   nsCOMPtr<mozIStorageStatement> mStatement;
 };
 
-#endif /* _MOZSTORAGEHELPER_H_ */
+#endif /* MOZSTORAGEHELPER_H */
