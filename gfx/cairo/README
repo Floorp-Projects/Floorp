@@ -52,6 +52,8 @@ zombie-face.patch: bug 486974; leak and possible crash with @font-face{src:url()
 
 win32-raster.patch: bug 498689; use scanline rasterizer on win32
 
+quartz-cache-CGImageRef.patch: cache CGImageRef for a CGBitmapContext; when we reuse it, Quartz will cache stuff, improving performance
+
 quartz-falback.patch: try to fix Quartz fallback-to-pixman path; possiby incorrect and obsoleted by Andrea Canciani patch
 
 quartz-repeating-radial-gradients.patch: use Quartz to render repeating radial gradients instead of falling back
