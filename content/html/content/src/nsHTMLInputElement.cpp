@@ -1795,7 +1795,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
-  aVisitor.mItemFlags |= static_cast<PRUint8>(mType);
+  aVisitor.mItemFlags |= mType;
 
   // Fire onchange (if necessary), before we do the blur, bug 357684.
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
@@ -1857,7 +1857,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   PRBool originalCheckedValue =
     !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
   PRBool noContentDispatch = !!(aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH);
-  PRInt8 oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
+  PRUint8 oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
   // Ideally we would make the default action for click and space just dispatch
   // DOMActivate, and the default action for DOMActivate flip the checkbox/
   // radio state and fire onchange.  However, for backwards compatibility, we
