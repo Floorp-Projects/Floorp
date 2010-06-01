@@ -469,8 +469,7 @@ JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *paren
 
     JSEmptyScope *emptyScope = proto->scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
-    emptyScope->hold();
-    map = emptyScope;
+    map = emptyScope->hold();
 }
 
 inline void

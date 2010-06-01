@@ -504,7 +504,8 @@ struct JSScope : public JSObjectMap
     enum {
         EMPTY_ARGUMENTS_SHAPE = 1,
         EMPTY_BLOCK_SHAPE     = 2,
-        LAST_RESERVED_SHAPE   = 2
+        EMPTY_CALL_SHAPE      = 3,
+        LAST_RESERVED_SHAPE   = 3
     };
 };
 
@@ -515,10 +516,11 @@ struct JSEmptyScope : public JSScope
 
     JSEmptyScope(JSContext *cx, const JSObjectOps *ops, JSClass *clasp);
 
-    void hold() {
+    JSEmptyScope *hold() {
         /* The method is only called for already held objects. */
         JS_ASSERT(nrefs >= 1);
         JS_ATOMIC_INCREMENT(&nrefs);
+        return this;
     }
 
     void drop(JSContext *cx) {
