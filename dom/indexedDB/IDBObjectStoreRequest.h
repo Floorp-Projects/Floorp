@@ -48,7 +48,7 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class ObjectStoreInfo;
+struct ObjectStoreInfo;
 
 class Key
 {
@@ -224,7 +224,7 @@ public:
     return mTransaction->TransactionIsOpen();
   }
 
-  bool IsAutoIncrement()
+  bool IsAutoIncrement() const
   {
     return mAutoIncrement;
   }
@@ -234,10 +234,17 @@ public:
     return mTransaction->IsWriteAllowed();
   }
 
-  PRInt64 Id()
+  PRInt64 Id() const
   {
     return mId;
   }
+
+  IDBTransactionRequest* Transaction()
+  {
+    return mTransaction;
+  }
+
+  ObjectStoreInfo* GetObjectStoreInfo();
 
 protected:
   IDBObjectStoreRequest();
@@ -256,6 +263,7 @@ private:
   nsString mName;
   nsString mKeyPath;
   PRBool mAutoIncrement;
+  PRUint32 mDatabaseId;
   PRUint16 mMode;
 };
 
