@@ -226,7 +226,7 @@ GDIFontEntry::ReadCMAP()
 
     PRPackedBool  unicodeFont = PR_FALSE, symbolFont = PR_FALSE;
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
-                                         mCharacterMap, unicodeFont, symbolFont);
+                                         mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
     mUnicodeFont = unicodeFont;
     mSymbolFont = symbolFont;
 
