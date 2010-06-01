@@ -1066,3 +1066,63 @@ stubs::DefFun(VMFrame &f, uint32 index)
     if (!ok)
         THROW();
 }
+
+#define DEFAULT_VALUE(cx, n, hint, v)                                         \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(v.isObject());                                              \
+        JS_ASSERT(v == regs.sp[n]);                                           \
+        if (!v.asObject().defaultValue(cx, hint, &regs.sp[n]))                \
+            THROWV(JS_FALSE);                                                 \
+        v = regs.sp[n];                                                       \
+    JS_END_MACRO
+
+#define RELATIONAL(OP)                                                        \
+    JS_BEGIN_MACRO                                                            \
+        JSContext *cx = f.cx;                                                 \
+        JSFrameRegs &regs = f.regs;                                           \
+        Value rval = regs.sp[-1];                                             \
+        Value lval = regs.sp[-2];                                             \
+        bool cond;                                                            \
+        if (lval.isObject())                                                  \
+            DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                       \
+        if (rval.isObject())                                                  \
+            DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                       \
+        if (BothString(lval, rval)) {                                         \
+            JSString *l = lval.asString(), *r = rval.asString();              \
+            cond = js_CompareStrings(l, r) OP 0;                              \
+        } else {                                                              \
+            double l, r;                                                      \
+            if (!ValueToNumber(cx, lval, &l) ||                               \
+                !ValueToNumber(cx, rval, &r)) {                               \
+                THROWV(JS_FALSE);                                             \
+            }                                                                 \
+            cond = JSDOUBLE_COMPARE(l, OP, r, false);                         \
+        }                                                                     \
+        regs.sp[-1].setBoolean(cond);                                         \
+        return cond;                                                          \
+    JS_END_MACRO
+
+JSBool JS_FASTCALL
+stubs::LessThan(VMFrame &f)
+{
+    RELATIONAL(<);
+}
+
+JSBool JS_FASTCALL
+stubs::LessEqual(VMFrame &f)
+{
+    RELATIONAL(<=);
+}
+
+JSBool JS_FASTCALL
+stubs::GreaterThan(VMFrame &f)
+{
+    RELATIONAL(>);
+}
+
+JSBool JS_FASTCALL
+stubs::GreaterEqual(VMFrame &f)
+{
+    RELATIONAL(>=);
+}
+

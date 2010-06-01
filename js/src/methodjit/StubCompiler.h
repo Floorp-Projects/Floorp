@@ -68,6 +68,15 @@ class StubCompiler
         Label to;
     };
 
+    struct CrossJumpInScript {
+        CrossJumpInScript(Jump from, jsbytecode *pc)
+          : from(from), pc(pc)
+        { }
+
+        Jump from;
+        jsbytecode *pc;
+    };
+
     JSContext *cx;
     Compiler &cc;
     FrameState &frame;
@@ -83,6 +92,7 @@ class StubCompiler
     /* :TODO: oom check */
     Vector<CrossPatch, 64, SystemAllocPolicy> exits;
     Vector<CrossPatch, 64, SystemAllocPolicy> joins;
+    Vector<CrossJumpInScript, 64, SystemAllocPolicy> scriptJoins;
     Vector<Jump, 8, SystemAllocPolicy> jumpList;
 
   public:
@@ -107,6 +117,7 @@ class StubCompiler
 
     STUB_CALL_TYPE(JSObjStub);
     STUB_CALL_TYPE(VoidStub);
+    STUB_CALL_TYPE(BoolStub);
 
 #undef STUB_CALL_TYPE
 
@@ -125,6 +136,7 @@ class StubCompiler
     /* Finish all native code patching. */
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     void finalize(uint8 *ncode);
+    void jumpInScript(Jump j, jsbytecode *target);
 
   private:
     Call stubCall(void *ptr);

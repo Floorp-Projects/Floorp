@@ -307,6 +307,25 @@ mjit::Compiler::generateMethod()
             if (fused != JSOP_NOP)
                 target = next + GET_JUMP_OFFSET(next);
 
+            BoolStub stub = NULL;
+            switch (op) {
+              case JSOP_LT:
+                stub = stubs::LessThan;
+                break;
+              case JSOP_LE:
+                stub = stubs::LessEqual;
+                break;
+              case JSOP_GT:
+                stub = stubs::GreaterThan;
+                break;
+              case JSOP_GE:
+                stub = stubs::GreaterEqual;
+                break;
+              default:
+                JS_NOT_REACHED("WAT");
+                break;
+            }
+
             FrameEntry *rhs = frame.peek(-1);
             FrameEntry *lhs = frame.peek(-2);
 
@@ -336,45 +355,11 @@ mjit::Compiler::generateMethod()
                         }
                     }
                 } else {
-                    prepareStubCall();
-                    BoolStub stub = NULL;
-                    switch (op) {
-                      case JSOP_LT:
-                        stub = stubs::LessThan;
-                        break;
-                      case JSOP_LE:
-                        stub = stubs::LessEqual;
-                        break;
-                      case JSOP_GT:
-                        stub = stubs::GreaterThan;
-                        break;
-                      case JSOP_GE:
-                        stub = stubs::GreaterEqual;
-                        break;
-                      default:
-                        JS_NOT_REACHED("WAT");
-                        break;
-                    }
-                    stubCall(stub, Uses(2), Defs(0));
-                    frame.pop();
-                    frame.pop();
-
-                    if (!target) {
-                        frame.takeReg(Registers::ReturnReg);
-                        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
-                    } else {
-                        frame.forgetEverything();
-                        Assembler::Condition cond = (fused == JSOP_IFEQ)
-                                                    ? Assembler::Zero
-                                                    : Assembler::NonZero;
-                        Jump j = masm.branchTest32(cond, Registers::ReturnReg,
-                                                   Registers::ReturnReg);
-                        jumpInScript(j, target);
-                    }
+                    emitStubCmpOp(stub, target, fused);
                 }
             } else {
                 /* Anything else should go through the fast path generator. */
-                jsop_relational(op, target, fused);
+                jsop_relational(op, stub, target, fused);
             }
 
             /* Advance PC manually. */
@@ -425,6 +410,14 @@ mjit::Compiler::generateMethod()
             frame.push(Value(DoubleTag(d)));
           }
           END_CASE(JSOP_DOUBLE)
+
+          BEGIN_CASE(JSOP_STRING)
+          {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+            JSString *str = ATOM_TO_STRING(atom);
+            frame.push(Value(StringTag(str)));
+          }
+          END_CASE(JSOP_STRING)
 
           BEGIN_CASE(JSOP_ZERO)
             frame.push(Valueify(JSVAL_ZERO));
@@ -523,7 +516,7 @@ mjit::Compiler::generateMethod()
 #undef END_CASE
 #undef BEGIN_CASE
 
-const JSC::MacroAssembler::Label &
+JSC::MacroAssembler::Label
 mjit::Compiler::labelOf(jsbytecode *pc)
 {
     uint32 offs = uint32(pc - script->code);
@@ -547,6 +540,12 @@ mjit::Compiler::fullAtomIndex(jsbytecode *pc)
 #if 0
     return GET_SLOTNO(pc) + (atoms - script->atomMap.vector);
 #endif
+}
+
+bool
+mjit::Compiler::knownJump(jsbytecode *pc)
+{
+    return pc < PC;
 }
 
 void
@@ -702,5 +701,27 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
 
     JS_NOT_REACHED("NYI");
     return false;
+}
+
+void
+mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
+{
+    prepareStubCall();
+    stubCall(stub, Uses(2), Defs(0));
+    frame.pop();
+    frame.pop();
+
+    if (!target) {
+        frame.takeReg(Registers::ReturnReg);
+        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+    } else {
+        frame.forgetEverything();
+        Assembler::Condition cond = (fused == JSOP_IFEQ)
+                                    ? Assembler::Zero
+                                    : Assembler::NonZero;
+        Jump j = masm.branchTest32(cond, Registers::ReturnReg,
+                                   Registers::ReturnReg);
+        jumpInScript(j, target);
+    }
 }
 
