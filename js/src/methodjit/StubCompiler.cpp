@@ -130,6 +130,11 @@ StubCompiler::fixCrossJumps(uint8 *ncode, size_t offset, size_t total)
     for (size_t i = 0; i < exits.length(); i++)
         fast.link(exits[i].from, slow.locationOf(exits[i].to));
 
+    for (size_t i = 0; i < scriptJoins.length(); i++) {
+        const CrossJumpInScript &cj = scriptJoins[i];
+        slow.link(cj.from, fast.locationOf(cc.labelOf(cj.pc)));
+    }
+
     for (size_t i = 0; i < joins.length(); i++)
         slow.link(joins[i].from, fast.locationOf(joins[i].to));
 }
@@ -173,5 +178,14 @@ StubCompiler::vpInc(JSOp op, bool pushed)
     }
 
     return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots);
+}
+
+void
+StubCompiler::jumpInScript(Jump j, jsbytecode *target)
+{
+    if (cc.knownJump(target))
+        joins.append(CrossPatch(j, cc.labelOf(target)));
+    else
+        scriptJoins.append(CrossJumpInScript(j, target));
 }
 

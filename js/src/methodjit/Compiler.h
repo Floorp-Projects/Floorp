@@ -108,6 +108,8 @@ class Compiler
 
     jsbytecode *getPC() { return PC; }
     Label getLabel() { return masm.label(); }
+    bool knownJump(jsbytecode *pc);
+    Label labelOf(jsbytecode *target);
 
   private:
     CompileStatus generatePrologue();
@@ -116,7 +118,6 @@ class Compiler
     CompileStatus finishThisUp();
 
     /* Non-emitting helpers. */
-    const Label &labelOf(jsbytecode *pc);
     uint32 fullAtomIndex(jsbytecode *pc);
     void jumpInScript(Jump j, jsbytecode *pc);
     JSC::ExecutablePool *getExecPool(size_t size);
@@ -124,6 +125,7 @@ class Compiler
 
     /* Emitting helpers. */
     void restoreFrameRegs();
+    void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
 
     /* Opcode handlers. */
     void jsop_bindname(uint32 index);
@@ -135,7 +137,7 @@ class Compiler
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
     void jsop_globalinc(JSOp op, uint32 index);
-    void jsop_relational(JSOp op, jsbytecode *target, JSOp fused);
+    void jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
