@@ -1,0 +1,295 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mozmill &#8212; Full automation of XULRunner applications. &mdash; mozmill v1.2.1a1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.2.1a1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="mozmill v1.2.1a1 documentation" href="" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="">mozmill v1.2.1a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="module-mozmill">
+<h1><tt class="xref docutils literal"><span class="pre">mozmill</span></tt> &#8212; Full automation of XULRunner applications.<a class="headerlink" href="#module-mozmill" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="command-line-usage">
+<h2>Command Line Usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h2>
+<p>The mozmill command line is versatile and includes a fair amount of debugging options. Even though all these options are available mozmill should run by default without any arguments and find your locally installed Firefox and run with mozmill.</p>
+<p>In most modes, ctrl-c will shut down Firefox and exit out of the mozmill Python side as well.</p>
+<div class="highlight-none"><div class="highlight"><pre>$ mozmill
+</pre></div>
+</div>
+<dl class="cmdoption">
+<dt id="cmdoption-h">
+<tt class="descname">-h</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--help</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-h" title="Permalink to this definition">¶</a></dt>
+<dd>Show help message.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-b">
+<tt class="descname">-b</tt><tt class="descclassname"> &lt;binary&gt;</tt><tt class="descclassname">, </tt><tt class="descname">--binary</tt><tt class="descclassname"> &lt;binary&gt;</tt><a class="headerlink" href="#cmdoption-b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify application binary location.</p>
+<p>Default <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Profile"><tt class="xref docutils literal"><span class="pre">mozrunner.Profile</span></tt></a> and <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Runner"><tt class="xref docutils literal"><span class="pre">mozrunner.Runner</span></tt></a> are still
+<a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.FirefoxProfile"><tt class="xref docutils literal"><span class="pre">mozrunner.FirefoxProfile</span></tt></a> and <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.FirefoxRunner"><tt class="xref docutils literal"><span class="pre">mozrunner.FirefoxRunner</span></tt></a>. You can
+change this by creating your own command line utility by subclassing <a title="mozmill.CLI" class="reference internal" href="#mozmill.CLI"><tt class="xref docutils literal"><span class="pre">CLI</span></tt></a></p>
+</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-d">
+<tt class="descname">-d</tt><tt class="descclassname"> &lt;defaultprofile&gt;</tt><a class="headerlink" href="#cmdoption-d" title="Permalink to this definition">¶</a></dt>
+<dd>Specify the path to the default <strong>clean</strong> profile used to create new profiles.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-n">
+<tt class="descname">-n</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--no-new-profile</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-n" title="Permalink to this definition">¶</a></dt>
+<dd>Do not create a new fresh profile.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-p">
+<tt class="descname">-p</tt><tt class="descclassname"> &lt;profile&gt;</tt><tt class="descclassname">, </tt><tt class="descname">--profile</tt><tt class="descclassname"> &lt;profile&gt;</tt><a class="headerlink" href="#cmdoption-p" title="Permalink to this definition">¶</a></dt>
+<dd>Specifies a profile to use. Must be used with &#8211;no-new-profile.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-w">
+<tt class="descname">-w</tt><tt class="descclassname"> &lt;plugins&gt;</tt><tt class="descclassname">, </tt><tt class="descname">--plugins</tt><tt class="descclassname"> &lt;plugins&gt;</tt><a class="headerlink" href="#cmdoption-w" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comma seperated list of additional paths to plugins to install.</p>
+<p>Plugins can be either .xpi zip compressed extensions or deflated extension directories.</p>
+</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-l">
+<tt class="descname">-l</tt><tt class="descclassname"> &lt;logfile&gt;</tt><tt class="descclassname">, </tt><tt class="descname">--logfile</tt><tt class="descclassname"> &lt;logfile&gt;</tt><a class="headerlink" href="#cmdoption-l" title="Permalink to this definition">¶</a></dt>
+<dd>Log all events to <em>logfile</em>.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption--report">
+<tt class="descname">--report</tt><tt class="descclassname"> &lt;uri&gt;</tt><a class="headerlink" href="#cmdoption--report" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Currently in development.</em></p>
+<p>POST results to given brasstacks results server at <em>uri</em>.</p>
+</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-t">
+<tt class="descname">-t</tt><tt class="descclassname"> &lt;test&gt;</tt><tt class="descclassname">, </tt><tt class="descname">--test</tt><tt class="descclassname"> &lt;test&gt;</tt><a class="headerlink" href="#cmdoption-t" title="Permalink to this definition">¶</a></dt>
+<dd>Run <em>test</em>. Can be either single test file or directory of tests.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption--showall">
+<tt class="descname">--showall</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption--showall" title="Permalink to this definition">¶</a></dt>
+<dd>Show all test output.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-D">
+<tt class="descname">-D</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--debug</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-D" title="Permalink to this definition">¶</a></dt>
+<dd>Install debugging extensions and run with -jsconole</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption--show-errors">
+<tt class="descname">--show-errors</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption--show-errors" title="Permalink to this definition">¶</a></dt>
+<dd>Print all logger errors to the console. When running tests only test failures and skipped
+tests are printed, this option print all other errors.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-s">
+<tt class="descname">-s</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--shell</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-s" title="Permalink to this definition">¶</a></dt>
+<dd>Starts a Python shell for debugging.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-u">
+<tt class="descname">-u</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--usecode</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-u" title="Permalink to this definition">¶</a></dt>
+<dd>By default &#8211;shell mode will use iPython if install and fall back to using the code module.
+This option forces the use of the code module instead of iPython even when installed.</dd></dl>
+
+<dl class="cmdoption">
+<dt id="cmdoption-P">
+<tt class="descname">-P</tt><tt class="descclassname"> &lt;port&gt;</tt><tt class="descclassname">, </tt><tt class="descname">--port</tt><tt class="descclassname"> &lt;port&gt;</tt><a class="headerlink" href="#cmdoption-P" title="Permalink to this definition">¶</a></dt>
+<dd>Specify port for jsbridge.</dd></dl>
+
+</div>
+<div class="section" id="command-line-class">
+<h2>Command Line Class<a class="headerlink" href="#command-line-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mozmill.CLI">
+<!--[mozmill.CLI]-->class <tt class="descclassname">mozmill.</tt><tt class="descname">CLI</tt><a class="headerlink" href="#mozmill.CLI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inherits from <a title="(in jsbridge v2.0a1)" class="reference external" href="http://jsbridge.googlecode.com/svn/trunk/docs/_build/html/index.html#jsbridge.CLI"><tt class="xref docutils literal"><span class="pre">jsbridge.CLI</span></tt></a> which inherits from <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.CLI"><tt class="xref docutils literal"><span class="pre">mozrunner.CLI</span></tt></a>.</p>
+<p>All the heavy lifting is handled by jsbridge and mozrunner. If you are subclassing
+this in order to creat a new command line interface be sure to call <a title="(in Python v2.7)" class="reference external" href="http://docs.python.org/dev/library/functions.html#super"><tt class="xref docutils literal"><span class="pre">super()</span></tt></a> on all
+related methods.</p>
+<dl class="attribute">
+<dt id="mozmill.CLI.runner_class">
+<!--[mozmill.CLI.runner_class]--><tt class="descname">runner_class</tt><a class="headerlink" href="#mozmill.CLI.runner_class" title="Permalink to this definition">¶</a></dt>
+<dd>Default runner class. Should be subclass of <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Runner"><tt class="xref docutils literal"><span class="pre">mozrunner.Runner</span></tt></a>.
+Defaults to <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.FirefoxRunner"><tt class="xref docutils literal"><span class="pre">mozrunner.FirefoxRunner</span></tt></a>.</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.CLI.profile_class">
+<!--[mozmill.CLI.profile_class]--><tt class="descname">profile_class</tt><a class="headerlink" href="#mozmill.CLI.profile_class" title="Permalink to this definition">¶</a></dt>
+<dd>Default profile class. Should be subclass of <tt class="xref docutils literal"><span class="pre">mozruner.Profile</span></tt>.
+Defaults to <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.FirefoxProfile"><tt class="xref docutils literal"><span class="pre">mozrunner.FirefoxProfile</span></tt></a>.</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="running-mozmill-from-python">
+<h2>Running MozMill from Python<a class="headerlink" href="#running-mozmill-from-python" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mozmill.MozMill">
+<!--[mozmill.MozMill]-->class <tt class="descclassname">mozmill.</tt><tt class="descname">MozMill</tt><big>(</big><span class="optional">[</span><em>runner_class</em><span class="optional">[</span>, <em>profile_class</em><span class="optional">[</span>, <em>jsbridge_port</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#mozmill.MozMill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manages an instance of Firefox w/ jsbridge and provides facilities for running tests and
+keeping track of results with callback methods.</p>
+<p>Default <em>runner_class</em> is <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.FirefoxRunner"><tt class="xref docutils literal"><span class="pre">mozrunner.FirefoxRunner</span></tt></a>. Value should be a subclass of
+<a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Runner"><tt class="xref docutils literal"><span class="pre">mozrunner.Runner</span></tt></a>.</p>
+<p>Default <em>profile_class</em> is <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.FirefoxProfile"><tt class="xref docutils literal"><span class="pre">mozrunner.FirefoxProfile</span></tt></a>. Value should be a subclass of
+<a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Profile"><tt class="xref docutils literal"><span class="pre">mozrunner.Profile</span></tt></a>.</p>
+<p>Default <em>jsbridge_port</em> is <cite>24242</cite>.</p>
+<dl class="attribute">
+<dt id="mozmill.MozMill.runner_class">
+<!--[mozmill.MozMill.runner_class]--><tt class="descname">runner_class</tt><a class="headerlink" href="#mozmill.MozMill.runner_class" title="Permalink to this definition">¶</a></dt>
+<dd>Set during initialization to subclass of <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Runner"><tt class="xref docutils literal"><span class="pre">mozrunner.Runner</span></tt></a>.</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.MozMill.profile_class">
+<!--[mozmill.MozMill.profile_class]--><tt class="descname">profile_class</tt><a class="headerlink" href="#mozmill.MozMill.profile_class" title="Permalink to this definition">¶</a></dt>
+<dd>Set during initialization to subclass of <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Profile"><tt class="xref docutils literal"><span class="pre">mozrunner.Profile</span></tt></a>.</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.MozMill.jsbridge_port">
+<!--[mozmill.MozMill.jsbridge_port]--><tt class="descname">jsbridge_port</tt><a class="headerlink" href="#mozmill.MozMill.jsbridge_port" title="Permalink to this definition">¶</a></dt>
+<dd>Set during initialization to <a title="(in Python v2.7)" class="reference external" href="http://docs.python.org/dev/library/numbers.html#numbers.Integral"><tt class="xref docutils literal"><span class="pre">numbers.Integral</span></tt></a>.</dd></dl>
+
+<dl class="method">
+<dt id="mozmill.MozMill.start">
+<!--[mozmill.MozMill.start]--><tt class="descname">start</tt><big>(</big><span class="optional">[</span><em>profile</em><span class="optional">[</span>, <em>runner</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#mozmill.MozMill.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start mozrunner and jsbridge pre-requisites.</p>
+<p><em>profile</em> should be an instance of a <cite>mozrunner.Profile</cite> subclass. If one is not passed
+an instance of <cite>self.profile_class</cite> is created. <cite>self.profile</cite> will be set to this
+value.</p>
+<p><em>runner</em> should be an instance of a <cite>mozrunner.Runner</cite> subclass. If one is not passed an
+instance of <a title="mozmill.MozMill.runner_class" class="reference internal" href="#mozmill.MozMill.runner_class"><tt class="xref docutils literal"><span class="pre">runner_class</span></tt></a> will be created. <a title="mozmill.MozMill.runner" class="reference internal" href="#mozmill.MozMill.runner"><tt class="xref docutils literal"><span class="pre">runner</span></tt></a> will be set to this value.</p>
+<p>This method will also run <cite>runner.start()</cite> and <tt class="xref docutils literal"><span class="pre">mozrunner.wait_and_create_network()</span></tt>
+and sets <a title="mozmill.MozMill.back_channel" class="reference internal" href="#mozmill.MozMill.back_channel"><tt class="xref docutils literal"><span class="pre">back_channel</span></tt></a> and <a title="mozmill.MozMill.bridge" class="reference internal" href="#mozmill.MozMill.bridge"><tt class="xref docutils literal"><span class="pre">bridge</span></tt></a> to instances of
+<a title="(in jsbridge v2.0a1)" class="reference external" href="http://jsbridge.googlecode.com/svn/trunk/docs/_build/html/index.html#jsbridge.BackChannel"><tt class="xref docutils literal"><span class="pre">jsbridge.BackChannel</span></tt></a> and <a title="(in jsbridge v2.0a1)" class="reference external" href="http://jsbridge.googlecode.com/svn/trunk/docs/_build/html/index.html#jsbridge.Bridge"><tt class="xref docutils literal"><span class="pre">jsbridge.Bridge</span></tt></a> respectively.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.MozMill.profile">
+<!--[mozmill.MozMill.profile]--><tt class="descname">profile</tt><a class="headerlink" href="#mozmill.MozMill.profile" title="Permalink to this definition">¶</a></dt>
+<dd>Set during <a title="mozmill.MozMill.start" class="reference internal" href="#mozmill.MozMill.start"><tt class="xref docutils literal"><span class="pre">start()</span></tt></a> to subclass of <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Profile"><tt class="xref docutils literal"><span class="pre">mozrunner.Profile</span></tt></a>.</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.MozMill.runner">
+<!--[mozmill.MozMill.runner]--><tt class="descname">runner</tt><a class="headerlink" href="#mozmill.MozMill.runner" title="Permalink to this definition">¶</a></dt>
+<dd>Set during <a title="mozmill.MozMill.start" class="reference internal" href="#mozmill.MozMill.start"><tt class="xref docutils literal"><span class="pre">start()</span></tt></a> to subclass of <a title="(in mozrunner v2.0a1)" class="reference external" href="http://mozrunner.googlecode.com/svn/trunk/docs/_build/html/index.html#mozrunner.Runner"><tt class="xref docutils literal"><span class="pre">mozrunner.Runner</span></tt></a>.</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.MozMill.back_channel">
+<!--[mozmill.MozMill.back_channel]--><tt class="descname">back_channel</tt><a class="headerlink" href="#mozmill.MozMill.back_channel" title="Permalink to this definition">¶</a></dt>
+<dd>Set during <a title="mozmill.MozMill.start" class="reference internal" href="#mozmill.MozMill.start"><tt class="xref docutils literal"><span class="pre">start()</span></tt></a> to subclass of <a title="(in jsbridge v2.0a1)" class="reference external" href="http://jsbridge.googlecode.com/svn/trunk/docs/_build/html/index.html#jsbridge.BackChannel"><tt class="xref docutils literal"><span class="pre">jsbridge.BackChannel</span></tt></a>.</dd></dl>
+
+<dl class="attribute">
+<dt id="mozmill.MozMill.bridge">
+<!--[mozmill.MozMill.bridge]--><tt class="descname">bridge</tt><a class="headerlink" href="#mozmill.MozMill.bridge" title="Permalink to this definition">¶</a></dt>
+<dd>Set during <a title="mozmill.MozMill.start" class="reference internal" href="#mozmill.MozMill.start"><tt class="xref docutils literal"><span class="pre">start()</span></tt></a> to subclass of <a title="(in jsbridge v2.0a1)" class="reference external" href="http://jsbridge.googlecode.com/svn/trunk/docs/_build/html/index.html#jsbridge.Bridge"><tt class="xref docutils literal"><span class="pre">jsbridge.Bridge</span></tt></a></dd></dl>
+
+<dl class="method">
+<dt id="mozmill.MozMill.run_tests">
+<!--[mozmill.MozMill.run_tests]--><tt class="descname">run_tests</tt><big>(</big><em>test</em><span class="optional">[</span>, <em>report</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#mozmill.MozMill.run_tests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run <em>test</em> in live Firefox using <a title="mozmill.MozMill.bridge" class="reference internal" href="#mozmill.MozMill.bridge"><tt class="xref docutils literal"><span class="pre">bridge</span></tt></a>.</p>
+<p>Adds local listeners <a title="mozmill.MozMill.endTest_listener" class="reference internal" href="#mozmill.MozMill.endTest_listener"><tt class="xref docutils literal"><span class="pre">endTest_listener()</span></tt></a> and <a title="mozmill.MozMill.endRunner_listener" class="reference internal" href="#mozmill.MozMill.endRunner_listener"><tt class="xref docutils literal"><span class="pre">endRunner_listener()</span></tt></a> to
+<cite>&#8220;endTest&#8221;</cite> and <cite>&#8220;endRunner&#8221;</cite> events using <a title="(in jsbridge v2.0a1)" class="reference external" href="http://jsbridge.googlecode.com/svn/trunk/docs/_build/html/index.html#jsbridge.BackChannel.add_listener"><tt class="xref docutils literal"><span class="pre">jsbridge.BackChannel.add_listener()</span></tt></a> of
+<a title="mozmill.MozMill.back_channel" class="reference internal" href="#mozmill.MozMill.back_channel"><tt class="xref docutils literal"><span class="pre">back_channel</span></tt></a>.</p>
+<p>When tests are done the results are posted to a results server at <em>report</em> if passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozmill.MozMill.endTest_listener">
+<!--[mozmill.MozMill.endTest_listener]--><tt class="descname">endTest_listener</tt><big>(</big><em>test</em><big>)</big><a class="headerlink" href="#mozmill.MozMill.endTest_listener" title="Permalink to this definition">¶</a></dt>
+<dd>When a test is finished the test object will be passed to this callback.</dd></dl>
+
+<dl class="method">
+<dt id="mozmill.MozMill.endRunner_listener">
+<!--[mozmill.MozMill.endRunner_listener]--><tt class="descname">endRunner_listener</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#mozmill.MozMill.endRunner_listener" title="Permalink to this definition">¶</a></dt>
+<dd>When all the tests are done running this callback will be fired.</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href=""><tt class="docutils literal"><span class="pre">mozmill</span></tt> &#8212; Full automation of XULRunner applications.</a><ul>
+<li><a class="reference external" href="#command-line-usage">Command Line Usage</a></li>
+<li><a class="reference external" href="#command-line-class">Command Line Class</a></li>
+<li><a class="reference external" href="#running-mozmill-from-python">Running MozMill from Python</a></li>
+</ul>
+</li>
+</ul>
+
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/index.txt">Show Source</a></li>
+            </ul>
+          <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="">mozmill v1.2.1a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, Mikeal Rogers &lt;mikeal.rogers@gmail.com&gt;.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
+    </div>
+  </body>
+</html>
