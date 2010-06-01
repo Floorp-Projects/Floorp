@@ -116,7 +116,7 @@ FrameState::evictReg(RegisterID reg)
 }
 
 JSC::MacroAssembler::RegisterID
-FrameState::evictSomething()
+FrameState::evictSomething(uint32 mask)
 {
 #ifdef DEBUG
     bool fallbackSet = false;
@@ -127,7 +127,7 @@ FrameState::evictSomething()
         RegisterID reg = RegisterID(i);
 
         /* Register is not allocatable, don't bother.  */
-        if (!(Registers::maskReg(reg) & Registers::AvailRegs))
+        if (!(Registers::maskReg(reg) & mask))
             continue;
 
         /* Register is not owned by the FrameState. */

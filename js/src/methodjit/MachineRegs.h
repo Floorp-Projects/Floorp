@@ -177,6 +177,18 @@ struct Registers {
         return reg;
     }
 
+    bool hasRegInMask(uint32 mask) const {
+        Registers temp(freeMask & mask);
+        return !temp.empty();
+    }
+
+    RegisterID takeRegInMask(uint32 mask) {
+        Registers temp(freeMask & mask);
+        RegisterID reg = temp.takeAnyReg();
+        takeReg(reg);
+        return reg;
+    }
+
     bool hasReg(RegisterID reg) const {
         return !!(freeMask & (1 << reg));
     }

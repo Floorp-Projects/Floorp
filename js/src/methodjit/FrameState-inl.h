@@ -78,6 +78,18 @@ FrameState::allocReg()
 }
 
 inline JSC::MacroAssembler::RegisterID
+FrameState::allocReg(uint32 mask)
+{
+    RegisterID reg;
+    if (freeRegs.hasRegInMask(mask))
+        reg = freeRegs.takeRegInMask(mask);
+    else
+        reg = evictSomething(mask);
+    regstate[reg].fe = NULL;
+    return reg;
+}
+
+inline JSC::MacroAssembler::RegisterID
 FrameState::alloc()
 {
     RegisterID reg;
