@@ -338,6 +338,7 @@ FrameState::addressOf(const FrameEntry *fe) const
 {
     uint32 index = (fe - entries);
     JS_ASSERT(index >= nargs);
+    index -= nargs;
     return Address(Assembler::FpReg, sizeof(JSStackFrame) + sizeof(Value) * index);
 }
 

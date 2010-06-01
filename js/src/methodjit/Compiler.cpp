@@ -433,6 +433,16 @@ mjit::Compiler::generateMethod()
             frame.pop();
           END_CASE(JSOP_POP)
 
+          BEGIN_CASE(JSOP_GETARG)
+          {
+            RegisterID reg = frame.allocReg();
+            uint32 index = GET_SLOTNO(PC);
+            masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+            frame.freeReg(reg);
+            frame.push(Address(reg, index * sizeof(Value)));
+          }
+          END_CASE(JSOP_GETARG)
+
           BEGIN_CASE(JSOP_UINT16)
             frame.push(Value(Int32Tag((int32_t) GET_UINT16(PC))));
           END_CASE(JSOP_UINT16)
