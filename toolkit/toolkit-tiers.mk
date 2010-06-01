@@ -260,6 +260,8 @@ tier_platform_dirs	+= tools/codesighs
 endif
 
 ifdef ENABLE_TESTS
-tier_platform_dirs	+= testing/mochitest
+tier_platform_dirs += testing/mochitest
+tier_platform_dirs += testing/xpcshell 
+tier_platform_dirs += testing/mozmill
 endif
 
