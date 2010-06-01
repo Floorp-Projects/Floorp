@@ -87,13 +87,12 @@ function FakeTimerService() {
   Utils.makeTimerForCall = self.makeTimerForCall;
 };
 
+Cu.import("resource://weave/log4moz.js");
 function getTestLogger(component) {
   return Log4Moz.repository.getLogger("Testing");
 }
 
 function initTestLogging(level) {
-  Cu.import("resource://weave/log4moz.js");
-
   function LogStats() {
     this.errorsLogged = 0;
   }
@@ -117,7 +116,8 @@ function initTestLogging(level) {
 
   log.level = Log4Moz.Level.Trace;
   appender.level = Log4Moz.Level.Trace;
-  log.addAppender(appender);
+  // Overwrite any other appenders (e.g. from previous incarnations)
+  log._appenders = [appender];
 
   return logStats;
 }
@@ -221,6 +221,83 @@ function FakeGUIDService() {
   };
 }
 
+
+/*
+ * Mock implementation of IWeaveCrypto.  It does not encrypt or
+ * decrypt, just returns the input verbatimly.
+ */
+function FakeCryptoService() {
+  this.counter = 0;
+
+  delete Svc.Crypto;  // get rid of the getter first
+  Svc.Crypto = this;
+  Utils.sha256HMAC = this.sha256HMAC;
+}
+FakeCryptoService.prototype = {
+
+  sha256HMAC: function(message, key) {
+     message = message.substr(0, 64);
+     while (message.length < 64) {
+       message += " ";
+     }
+     return message;
+  },
+
+  encrypt: function(aClearText, aSymmetricKey, aIV) {
+    return aClearText;
+  },
+
+  decrypt: function(aCipherText, aSymmetricKey, aIV) {
+    return aCipherText;
+  },
+
+  generateKeypair: function(aPassphrase, aSalt, aIV,
+                            aEncodedPublicKey, aWrappedPrivateKey) {
+      aEncodedPublicKey.value = aPassphrase;
+      aWrappedPrivateKey.value = aPassphrase;
+  },
+
+  generateRandomKey: function() {
+    return "fake-symmetric-key-" + this.counter++;
+  },
+
+  generateRandomIV: function() {
+    return "fake-random-iv";
+  },
+
+  generateRandomBytes: function(aByteCount) {
+    var s = "";
+    for (var i=0; i < aByteCount; i++) {
+      s += String.fromCharCode(Math.floor(Math.random() * 256));
+    }
+    return btoa(s);
+  },
+
+  wrapSymmetricKey: function(aSymmetricKey, aEncodedPublicKey) {
+    return aSymmetricKey;
+  },
+
+  unwrapSymmetricKey: function(aWrappedSymmetricKey, aWrappedPrivateKey,
+                               aPassphrase, aSalt, aIV) {
+    if (!this.verifyPassphrase(aWrappedPrivateKey, aPassphrase)) {
+      throw Components.Exception("Unwrapping the private key failed",
+                                 Cr.NS_ERROR_FAILURE);
+    }
+    return aWrappedSymmetricKey;
+  },
+
+  rewrapPrivateKey: function(aWrappedPrivateKey, aPassphrase, aSalt, aIV,
+                             aNewPassphrase) {
+    return aNewPassphrase;
+  },
+
+  verifyPassphrase: function(aWrappedPrivateKey, aPassphrase, aSalt, aIV) {
+    return aWrappedPrivateKey == aPassphrase;
+  }
+
+};
+
+
 function SyncTestingInfrastructure(engineFactory) {
   let __fakePasswords = {
     'Mozilla Services Password': {foo: "bar"},
@@ -249,6 +326,7 @@ function SyncTestingInfrastructure(engineFactory) {
   this.logStats = initTestLogging();
   this.fakeFilesystem = new FakeFilesystemService({});
   this.fakeGUIDService = new FakeGUIDService();
+  this.fakeCryptoService = new FakeCryptoService();
 
   this._logger = getTestLogger();
   this._engineFactory = engineFactory;

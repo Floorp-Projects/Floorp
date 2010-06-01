@@ -447,7 +447,9 @@ SyncEngine.prototype = {
   _processIncoming: function SyncEngine__processIncoming() {
     this._log.trace("Downloading & applying server changes");
 
-    // Figure out how many total items to fetch this sync; do less on mobile
+    // Figure out how many total items to fetch this sync; do less on mobile.
+    // 50 is hardcoded here because of URL length restrictions.
+    // (GUIDs can be up to 64 chars long)
     let fetchNum = Infinity;
     if (Svc.Prefs.get("client.type") == "mobile")
       fetchNum = 50;
@@ -597,6 +599,8 @@ SyncEngine.prototype = {
     }
   },
 
+  // Reconcile incoming and existing records.  Return true if server
+  // data should be applied.
   _reconcile: function SyncEngine__reconcile(item) {
     if (this._log.level <= Log4Moz.Level.Trace)
       this._log.trace("Incoming: " + item);
