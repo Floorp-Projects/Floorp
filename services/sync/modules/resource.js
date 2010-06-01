@@ -58,10 +58,15 @@ function Resource(uri) {
   this._log.level =
     Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
   this.uri = uri;
-  this._headers = {'Content-type': 'text/plain'};
+  this._headers = {};
 }
 Resource.prototype = {
   _logName: "Net.Resource",
+
+  // ** {{{ Resource.serverTime }}} **
+  //
+  // Caches the latest server timestamp (X-Weave-Timestamp header).
+  serverTime: null,
 
   // ** {{{ Resource.authenticator }}} **
   //
@@ -81,9 +86,9 @@ Resource.prototype = {
 
   // ** {{{ Resource.headers }}} **
   //
-  // Getter for access to received headers after the request
-  // for the resource has been made, setter for headers to be included
-  // while making a request for the resource.
+  // Headers to be included when making a request for the resource.
+  // Note: Header names should be all lower case, there's no explicit
+  // check for duplicates due to case!
   get headers() {
     return this.authenticator.onRequest(this._headers);
   },
@@ -94,7 +99,7 @@ Resource.prototype = {
     if (arguments.length % 2)
       throw "setHeader only accepts arguments in multiples of 2";
     for (let i = 0; i < arguments.length; i += 2) {
-      this._headers[arguments[i]] = arguments[i + 1];
+      this._headers[arguments[i].toLowerCase()] = arguments[i + 1];
     }
   },
 
@@ -144,7 +149,7 @@ Resource.prototype = {
     channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
 
     // Setup a callback to handle bad HTTPS certificates.
-    channel.notificationCallbacks = new badCertListener();
+    channel.notificationCallbacks = new BadCertListener();
 
     // Avoid calling the authorizer more than once
     let headers = this.headers;
@@ -182,8 +187,8 @@ Resource.prototype = {
       this._log.debug(action + " Length: " + this._data.length);
       this._log.trace(action + " Body: " + this._data);
 
-      let type = ('Content-Type' in this._headers)?
-        this._headers['Content-Type'] : 'text/plain';
+      let type = ('content-type' in this._headers) ?
+        this._headers['content-type'] : 'text/plain';
 
       let stream = Cc["@mozilla.org/io/string-input-stream;1"].
         createInstance(Ci.nsIStringInputStream);
@@ -227,7 +232,7 @@ Resource.prototype = {
       // Read out the response headers if available
       channel.visitResponseHeaders({
         visitHeader: function visitHeader(header, value) {
-          headers[header] = value;
+          headers[header.toLowerCase()] = value;
         }
       });
       status = channel.responseStatus;
@@ -244,8 +249,8 @@ Resource.prototype = {
         this._log.trace(action + " body: " + this._data);
 
       // this is a server-side safety valve to allow slowing down clients without hurting performance
-      if (headers["X-Weave-Backoff"])
-        Observers.notify("weave:service:backoff:interval", parseInt(headers["X-Weave-Backoff"], 10))
+      if (headers["x-weave-backoff"])
+        Observers.notify("weave:service:backoff:interval", parseInt(headers["x-weave-backoff"], 10))
     }
     // Got a response but no header; must be cached (use default values)
     catch(ex) {
@@ -360,16 +365,16 @@ ChannelListener.prototype = {
   }
 };
 
-// = badCertListener =
+// = BadCertListener =
 //
 // We use this listener to ignore bad HTTPS
 // certificates and continue a request on a network
 // channel. Probably not a very smart thing to do,
 // but greatly simplifies debugging and is just very
 // convenient.
-function badCertListener() {
+function BadCertListener() {
 }
-badCertListener.prototype = {
+BadCertListener.prototype = {
   getInterface: function(aIID) {
     return this.QueryInterface(aIID);
   },

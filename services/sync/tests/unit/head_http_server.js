@@ -24,6 +24,21 @@ function httpd_basic_auth_handler(body, metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+/*
+ * Read bytes string from an nsIInputStream.  If 'count' is omitted,
+ * all available input is read.
+ */
+function readBytesFromInputStream(inputStream, count) {
+  var BinaryInputStream = Components.Constructor(
+      "@mozilla.org/binaryinputstream;1",
+      "nsIBinaryInputStream",
+      "setInputStream");
+  if (!count) {
+    count = inputStream.available();
+  }
+  return new BinaryInputStream(inputStream).readBytes(count);
+}
+
 
 
 /*

@@ -660,7 +660,7 @@ SyncEngine.prototype = {
         }
 
         // Record the modified time of the upload
-        let modified = resp.headers["X-Weave-Timestamp"];
+        let modified = resp.headers["x-weave-timestamp"];
         if (modified > this.lastSync)
           this.lastSync = modified;
 
