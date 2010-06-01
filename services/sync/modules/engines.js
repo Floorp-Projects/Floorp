@@ -151,7 +151,7 @@ Engine.prototype = {
   _trackerObj: Tracker,
 
   get prefName() this.name,
-  get enabled() Svc.Prefs.get("engine." + this.prefName, null),
+  get enabled() Svc.Prefs.get("engine." + this.prefName, false),
   set enabled(val) Svc.Prefs.set("engine." + this.prefName, !!val),
 
   get score() this._tracker.score,
