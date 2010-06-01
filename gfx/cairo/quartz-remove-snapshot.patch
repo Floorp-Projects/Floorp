@@ -1,0 +1,62 @@
+changeset:   42958:dd0f1f0a96b3
+user:        Robert O'Callahan <robert@ocallahan.org>
+date:        Tue Jun 01 11:33:05 2010 +1200
+summary:     Bug 568189. Part 3: Remove snapshot backend function since it doesn't work and we may as well just fall back. r=jrmuizel
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -1993,33 +1993,16 @@ _cairo_quartz_surface_acquire_source_ima
+     if (status)
+ 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+ 
+     *image_extra = NULL;
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+-static cairo_surface_t *
+-_cairo_quartz_surface_snapshot (void *abstract_surface)
+-{
+-    cairo_int_status_t status;
+-    cairo_quartz_surface_t *surface = abstract_surface;
+-    cairo_image_surface_t *image;
+-
+-    if (surface->imageSurfaceEquiv)
+-	return NULL;
+-
+-    status = _cairo_quartz_get_image (surface, &image);
+-    if (unlikely (status))
+-        return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+-
+-    return &image->base;
+-}
+-
+ static void
+ _cairo_quartz_surface_release_source_image (void *abstract_surface,
+ 					     cairo_image_surface_t *image,
+ 					     void *image_extra)
+ {
+     cairo_surface_destroy ((cairo_surface_t *) image);
+ }
+ 
+@@ -2916,17 +2899,17 @@ static const struct _cairo_surface_backe
+     _cairo_quartz_surface_stroke,
+     _cairo_quartz_surface_fill,
+ #if CAIRO_HAS_QUARTZ_FONT
+     _cairo_quartz_surface_show_glyphs,
+ #else
+     NULL, /* show_glyphs */
+ #endif
+ 
+-    _cairo_quartz_surface_snapshot,
++    NULL, /* snapshot */
+     NULL, /* is_similar */
+     NULL  /* fill_stroke */
+ };
+ 
+ cairo_quartz_surface_t *
+ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
+ 					cairo_content_t content,
+ 					unsigned int width,
+
