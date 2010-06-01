@@ -76,6 +76,9 @@ let Status = {
     this.minimumNextSync = 0;
   },
   resetSync: function resetSync() {
+    this.service = STATUS_OK;
+    this._login = LOGIN_SUCCEEDED;
+    this._sync = SYNC_SUCCEEDED;
     this._engines = {};
     this.partial = false;
   },
