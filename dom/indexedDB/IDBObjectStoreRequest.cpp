@@ -146,13 +146,23 @@ class GetSuccessEvent : public IDBSuccessEvent
 {
 public:
   GetSuccessEvent(const nsAString& aValue)
-  : mValue(aValue)
+  : mValue(aValue),
+    mCachedValue(JSVAL_VOID),
+    mJSRuntime(nsnull)
   { }
+
+  ~GetSuccessEvent()
+  {
+    if (mJSRuntime) {
+      JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+    }
+  }
 
   NS_IMETHOD GetResult(nsIVariant** aResult);
 
   nsresult Init(IDBRequest* aRequest,
-                IDBTransactionRequest* aTransaction) {
+                IDBTransactionRequest* aTransaction)
+  {
     mSource = aRequest->GetGenerator();
     mTransaction = aTransaction;
 
@@ -168,6 +178,8 @@ public:
 
 private:
   nsString mValue;
+  jsval mCachedValue;
+  JSRuntime* mJSRuntime;
 };
 
 inline
@@ -939,12 +951,12 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   return OK;
 }
 
-// Remove once nsIVariant supports jsvals!
+// Remove once XPIDL supports jsvals!
 NS_IMETHODIMP
-GetSuccessEvent::GetResult(nsIVariant** aResult)
+GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
 {
-  // This is the slow path, need to do this better once nsIVariants can have
-  // raw jsvals inside them.
+  // This is the slow path, need to do this better once XPIDL can pass raw
+  // jsvals.
   NS_WARNING("Using a slow path for Get! Fix this now!");
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
@@ -959,16 +971,27 @@ GetSuccessEvent::GetResult(nsIVariant** aResult)
   rv = cc->GetRetValPtr(&retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!mJSRuntime) {
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  JSAutoRequest ar(cx);
+    JSAutoRequest ar(cx);
 
-  nsCOMPtr<nsIJSON> json(new nsJSON());
-  rv = json->DecodeToJSVal(mValue, cx, retval);
-  NS_ENSURE_SUCCESS(rv, rv);
+    JSRuntime* rt = JS_GetRuntime(cx);
 
+    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
+                                  "GetSuccessEvent::mCachedValue");
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIJSON> json(new nsJSON());
+    rv = json->DecodeToJSVal(mValue, cx, &mCachedValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mJSRuntime = rt;
+  }
+
+  *retval = mCachedValue;
   cc->SetReturnValueWasSet(PR_TRUE);
   return NS_OK;
 }
