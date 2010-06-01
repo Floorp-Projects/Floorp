@@ -356,6 +356,12 @@ IDBObjectStoreRequest::GetJSONAndKeyForAdd(/* jsval aValue, */
     // Inline keys live on the object.
     rv = GetKeyFromObject(cx, JSVAL_TO_OBJECT(clone.value()), mKeyPath, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Except if null was passed, in which case we're supposed to generate the
+    // key.
+    if (aKey.IsUnset() && argc >= 2 && JSVAL_IS_NULL(argv[1])) {
+      aKey = Key::NULLKEY;
+    }
   }
 
   if (aKey.IsUnset() && !mAutoIncrement) {
@@ -525,7 +531,7 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
     return rv;
   }
 
-  if (key.IsUnset()) {
+  if (key.IsUnset() || key.IsNull()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -565,7 +571,7 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
     return rv;
   }
 
-  if (key.IsUnset()) {
+  if (key.IsUnset() || key.IsNull()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -602,7 +608,7 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
     return rv;
   }
 
-  if (key.IsUnset()) {
+  if (key.IsUnset() || key.IsNull()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
