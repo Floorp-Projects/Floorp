@@ -114,8 +114,10 @@ mjit::Compiler::Compile()
     }
 #endif
 
+#ifdef JS_METHODJIT_SPEW
     Profiler prof;
     prof.start();
+#endif
 
     CHECK_STATUS(generatePrologue());
     CHECK_STATUS(generateMethod());
