@@ -74,6 +74,8 @@ public:
   NS_HIDDEN_(void*) AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize);
   NS_HIDDEN_(void)  FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr);
 
+  PRUint32 Size();
+
 private:
   struct State;
   State* mState;
