@@ -879,7 +879,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
         if (!GetProxyObjectClass(cx, obj, &clazz))
             return false;
     } else {
-        obj = js_GetWrappedObject(cx, obj);
+        obj = obj->wrappedObject(cx);
         clazz = obj->getClass()->name;
     }
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
@@ -1083,9 +1083,9 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
     bool indirectCall = (callerPC && *callerPC != JSOP_EVAL);
 
     /*
-     * This call to js_GetWrappedObject is safe because of the security checks
-     * we do below. However, the control flow below is confusing, so we double
-     * check. There are two cases:
+     * This call to JSObject::wrappedObject is safe because of the security
+     * checks we do below. However, the control flow below is confusing, so we
+     * double check. There are two cases:
      * - Direct call: This object is never used. So unwrapping can't hurt.
      * - Indirect call: If this object isn't already the scope chain (which
      *   we're guaranteed to be allowed to access) then we do a security
@@ -1095,7 +1095,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    obj = js_GetWrappedObject(cx, obj);
+    obj = obj->wrappedObject(cx);
 
     /*
      * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
@@ -1196,7 +1196,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         }
 #endif
     } else {
-        scopeobj = js_GetWrappedObject(cx, scopeobj);
+        scopeobj = scopeobj->wrappedObject(cx);
         OBJ_TO_INNER_OBJECT(cx, scopeobj);
         if (!scopeobj)
             return JS_FALSE;
@@ -5556,7 +5556,7 @@ js_TypeOf(JSContext *cx, JSObject *obj)
      * overwrite js_TypeOf (i.e. XPCCrossOriginWrapper), so we have to
      * unwrap here.
      */
-    obj = js_GetWrappedObject(cx, obj);
+    obj = obj->wrappedObject(cx);
 
     /*
      * ECMA 262, 11.4.3 says that any native object that implements
@@ -5728,7 +5728,7 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     *bp = JS_FALSE;
     if (JSVAL_IS_PRIMITIVE(v))
         return JS_TRUE;
-    obj2 = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(v));
+    obj2 = JSVAL_TO_OBJECT(v)->wrappedObject(cx);
     while ((obj2 = obj2->getProto()) != NULL) {
         if (obj2 == obj) {
             *bp = JS_TRUE;
@@ -6298,20 +6298,16 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
 }
 
 JSObject *
-js_GetWrappedObject(JSContext *cx, JSObject *obj)
+JSObject::wrappedObject(JSContext *cx) const
 {
-    JSClass *clasp;
-
-    clasp = obj->getClass();
+    JSClass *clasp = getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp;
-        JSObject *obj2;
-
-        xclasp = (JSExtendedClass *)clasp;
-        if (xclasp->wrappedObject && (obj2 = xclasp->wrappedObject(cx, obj)))
-            return obj2;
+        if (JSObjectOp wrappedObject = reinterpret_cast<JSExtendedClass *>(clasp)->wrappedObject) {
+            if (JSObject *obj = wrappedObject(cx, const_cast<JSObject *>(this)))
+                return obj;
+        }
     }
-    return obj;
+    return const_cast<JSObject *>(this);
 }
 
 JSObject *

@@ -3761,7 +3761,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
-    return js_GetWrappedObject(cx, obj)->isArray();
+    return obj->wrappedObject(cx)->isArray();
 }
 
 JS_PUBLIC_API(JSBool)
