@@ -2694,6 +2694,8 @@ nsGenericHTMLFormElement::IsLabelableControl() const
   PRInt32 type = GetType();
   return type != NS_FORM_FIELDSET &&
          type != NS_FORM_LABEL &&
+         type != NS_FORM_OPTION &&
+         type != NS_FORM_OPTGROUP &&
          type != NS_FORM_OBJECT &&
          type != NS_FORM_LEGEND;
 }
