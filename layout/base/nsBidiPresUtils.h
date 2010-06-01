@@ -313,6 +313,12 @@ public:
                        PRInt32                aPosResolveCount,
                        nscoord*               aWidth);
 
+  /**
+   * Guess at how much memory is being used by this nsBidiPresUtils instance,
+   * including memory used by nsBidi.
+   */
+  PRUint32 EstimateMemoryUsed();
+
 private:
   nsresult ProcessTextForRenderingContext(const PRUnichar*       aText,
                                           PRInt32                aLength,

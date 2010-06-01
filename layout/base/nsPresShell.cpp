@@ -499,6 +499,16 @@ public:
   void Push();
   void Pop();
 
+  PRUint32 Size() {
+    PRUint32 result = 0;
+    StackBlock *block = mBlocks;
+    while (block) {
+      result += sizeof(StackBlock);
+      block = block->mNext;
+    }
+    return result;
+  }
+
 private:
   // our current position in memory
   size_t mPos;
@@ -1296,6 +1306,54 @@ private:
   // Ensure that every allocation from the PresArena is eventually freed.
   PRUint32 mPresArenaAllocCount;
 #endif
+
+public:
+
+  PRUint32 EstimateMemoryUsed() {
+    PRUint32 result = 0;
+
+    result += sizeof(PresShell);
+    result += mStackArena.Size();
+    result += mFrameArena.Size();
+
+    return result;
+  }
+
+  static PLDHashOperator LiveShellSizeEnumerator(PresShellPtrKey *aEntry,
+                                                 void *userArg)
+  {
+    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
+    PRUint32 *val = (PRUint32*)userArg;
+    *val += aShell->EstimateMemoryUsed();
+    *val += aShell->mPresContext->EstimateMemoryUsed();
+    return PL_DHASH_NEXT;
+  }
+
+  static PLDHashOperator LiveShellBidiSizeEnumerator(PresShellPtrKey *aEntry,
+                                                     void *userArg)
+  {
+    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
+    PRUint32 *val = (PRUint32*)userArg;
+    *val += aShell->mPresContext->GetBidiMemoryUsed();
+    return PL_DHASH_NEXT;
+  }
+
+  static PRUint32
+  EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
+  {
+    PRUint32 result = 0;
+    sLiveShells->EnumerateEntries(aEnumerator, &result);
+    return result;
+  }
+                  
+                                  
+  static PRInt64 SizeOfLayoutMemoryReporter(void *) {
+    return EstimateShellsMemory(LiveShellSizeEnumerator);
+  }
+
+  static PRInt64 SizeOfBidiMemoryReporter(void *) {
+    return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
+  }
 };
 
 class nsAutoCauseReflowNotifier
@@ -1501,6 +1559,20 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
   return NS_OK;
 }
 
+nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
+
+NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
+                             "layout/all",
+                             "Memory in use by layout PresShell, PresContext, and other related areas.",
+                             PresShell::SizeOfLayoutMemoryReporter,
+                             nsnull);
+
+NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
+                             "layout/bidi",
+                             "Memory in use by layout Bidi processor.",
+                             PresShell::SizeOfBidiMemoryReporter,
+                             nsnull);
+
 PresShell::PresShell()
 {
   mSelection = nsnull;
@@ -1519,7 +1591,16 @@ PresShell::PresShell()
   mPresArenaAllocCount = 0;
 #endif
 
+  static bool registeredReporter = false;
+  if (!registeredReporter) {
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
+    registeredReporter = true;
+  }
+
   new (this) nsFrameManager();
+
+  sLiveShells->PutEntry(this);
 }
 
 NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
@@ -1529,6 +1610,8 @@ NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
 
 PresShell::~PresShell()
 {
+  sLiveShells->RemoveEntry(this);
+
   if (!mHaveShutDown) {
     NS_NOTREACHED("Someone did not call nsIPresShell::destroy");
     Destroy();
@@ -8693,4 +8776,18 @@ void ColorToString(nscolor aColor, nsAutoString &aString)
 nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 {
   return FrameConstructor()->GetAbsoluteContainingBlock(aFrame);
+}
+
+void nsIPresShell::InitializeStatics()
+{
+  NS_ASSERTION(sLiveShells == nsnull, "InitializeStatics called multiple times!");
+  sLiveShells = new nsTHashtable<PresShellPtrKey>();
+  sLiveShells->Init();
+}
+
+void nsIPresShell::ReleaseStatics()
+{
+  NS_ASSERTION(sLiveShells, "ReleaseStatics called without Initialize!");
+  delete sLiveShells;
+  sLiveShells = nsnull;
 }
