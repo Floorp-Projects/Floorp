@@ -18,14 +18,14 @@ AC_ARG_ENABLE(libIDLtest, [  --disable-libIDLtest    Do not try to compile and r
 
   if test x$libIDL_config_exec_prefix != x ; then
      libIDL_config_args="$libIDL_config_args --exec-prefix=$libIDL_config_exec_prefix"
-     if test x${LIBIDL_CONFIG+set} != xset ; then
-        LIBIDL_CONFIG=$libIDL_config_exec_prefix/bin/libIDL-config
+     if test x${HOST_LIBIDL_CONFIG+set} != xset ; then
+        HOST_LIBIDL_CONFIG=$libIDL_config_exec_prefix/bin/libIDL-config
      fi
   fi
   if test x$libIDL_config_prefix != x ; then
      libIDL_config_args="$libIDL_config_args --prefix=$libIDL_config_prefix"
-     if test x${LIBIDL_CONFIG+set} != xset ; then
-        LIBIDL_CONFIG=$libIDL_config_prefix/bin/libIDL-config
+     if test x${HOST_LIBIDL_CONFIG+set} != xset ; then
+        HOST_LIBIDL_CONFIG=$libIDL_config_prefix/bin/libIDL-config
      fi
   fi
 
@@ -34,30 +34,26 @@ AC_ARG_ENABLE(libIDLtest, [  --disable-libIDLtest    Do not try to compile and r
   dnl Force a version check to keep upgraded versions from being overridden by the cached value.
   unset ac_cv_path_LIBIDL_CONFIG
 
-  AC_PATH_PROG(LIBIDL_CONFIG, libIDL-config, no)
+  AC_PATH_PROG(HOST_LIBIDL_CONFIG, libIDL-config, no)
   min_libIDL_version=ifelse([$1], ,0.6.0,$1)
   AC_MSG_CHECKING(for libIDL - version >= $min_libIDL_version)
   no_libIDL=""
-  if test "$LIBIDL_CONFIG" = "no" ; then
+  if test "$HOST_LIBIDL_CONFIG" = "no" ; then
     no_libIDL=yes
   else
-    LIBIDL_CFLAGS=`$LIBIDL_CONFIG $libIDL_config_args --cflags`
-    LIBIDL_LIBS=`$LIBIDL_CONFIG $libIDL_config_args --libs`
-    # hack to allow us to keep using libIDL 0.6.3-0.6.7. Anyone may remove
-    # this after we start requiring libIDL 0.6.8 or anything higher
-    LIBIDL_CFLAGS="$GLIB_CFLAGS $LIBIDL_CFLAGS"
-    LIBIDL_LIBS="$GLIB_LIBS $LIBIDL_LIBS"
-    libIDL_config_major_version=`$LIBIDL_CONFIG $libIDL_config_args --version | \
+    HOST_LIBIDL_CFLAGS=`$HOST_LIBIDL_CONFIG $libIDL_config_args --cflags`
+    HOST_LIBIDL_LIBS=`$HOST_LIBIDL_CONFIG $libIDL_config_args --libs`
+    libIDL_config_major_version=`$HOST_LIBIDL_CONFIG $libIDL_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-    libIDL_config_minor_version=`$LIBIDL_CONFIG $libIDL_config_args --version | \
+    libIDL_config_minor_version=`$HOST_LIBIDL_CONFIG $libIDL_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-    libIDL_config_micro_version=`$LIBIDL_CONFIG $libIDL_config_args --version | \
+    libIDL_config_micro_version=`$HOST_LIBIDL_CONFIG $libIDL_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
     if test "x$enable_libIDLtest" = "xyes" ; then
       ac_save_CFLAGS="$CFLAGS"
       ac_save_LIBS="$LIBS"
-      CFLAGS="$CFLAGS $LIBIDL_CFLAGS"
-      LIBS="$LIBIDL_LIBS $LIBS"
+      CFLAGS="$CFLAGS $HOST_LIBIDL_CFLAGS"
+      LIBS="$HOST_LIBIDL_LIBS $LIBS"
 dnl
 dnl Now check if the installed LIBIDL is sufficiently new.
 dnl
@@ -154,7 +150,7 @@ main ()
      ifelse([$2], , :, [$2])     
   else
      AC_MSG_RESULT(no)
-     if test "$LIBIDL_CONFIG" = "no" ; then
+     if test "$HOST_LIBIDL_CONFIG" = "no" ; then
        echo "*** The libIDL-config script installed by libIDL could not be found"
        echo "*** If libIDL was installed in PREFIX, make sure PREFIX/bin is in"
        echo "*** your path, or set the LIBIDL_CONFIG environment variable to the"
@@ -164,8 +160,8 @@ main ()
         :
        else
           echo "*** Could not run libIDL test program, checking why..."
-          CFLAGS="$CFLAGS $LIBIDL_CFLAGS"
-          LIBS="$LIBS $LIBIDL_LIBS"
+          CFLAGS="$CFLAGS $HOST_LIBIDL_CFLAGS"
+          LIBS="$LIBS $HOST_LIBIDL_LIBS"
           AC_TRY_LINK([
 #include <stdio.h>
 #include <stdlib.h>
@@ -188,11 +184,11 @@ main ()
           LIBS="$ac_save_LIBS"
        fi
      fi
-     LIBIDL_CFLAGS=""
-     LIBIDL_LIBS=""
+     HOST_LIBIDL_CFLAGS=""
+     HOST_LIBIDL_LIBS=""
      ifelse([$3], , :, [$3])
   fi
-  AC_SUBST(LIBIDL_CFLAGS)
-  AC_SUBST(LIBIDL_LIBS)
+  AC_SUBST(HOST_LIBIDL_CFLAGS)
+  AC_SUBST(HOST_LIBIDL_LIBS)
   rm -f conf.libIDLtest
 ])

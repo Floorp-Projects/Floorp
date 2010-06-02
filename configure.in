@@ -2293,9 +2293,6 @@ ia64*-hpux*)
     XARGS=xargs
     XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     ZIP=zip
-    LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
-    LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6_s.lib $MOZ_TOOLS_DIR/lib/glib-1.2_s.lib"
-    STATIC_LIBIDL=1
     MOZ_TREE_FREETYPE=1
 
     AC_DEFINE(HAVE_SNPRINTF)
@@ -2474,84 +2471,7 @@ ia64*-hpux*)
         AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
     fi
     MOZ_TOOLS_DIR=`$CYGPATH_W $MOZ_TOOLS_DIR | $CYGPATH_S`
-
-    if test -n "$GLIB_PREFIX"; then
-        _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd -W`
-        if test "$?" = "0"; then
-            if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
-                AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
-            fi
-            _GLIB_PREFIX_DIR=`$CYGPATH_W $_GLIB_PREFIX_DIR | $CYGPATH_S`
-        else
-            AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
-        fi
-    else
-        _GLIB_PREFIX_DIR=$MOZ_TOOLS_DIR
-    fi
-    if test ! -f "${_GLIB_PREFIX_DIR}/include/glib.h"; then
-        AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/include/glib.h .])
-    fi
-    GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
-    if test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"; then
-        GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"
-    elif test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"; then
-        GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
-    else
-        AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/lib/glib-1.2.lib or $_GLIB_PREFIX_DIR/lib/glib-1.2_s.lib])
-    fi
-
-    if test -n "$LIBIDL_PREFIX"; then
-        _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd -W`
-        if test "$?" = "0"; then
-            if test `echo ${PATH}: | grep -ic "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
-                AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
-            fi
-            _LIBIDL_PREFIX_DIR=`$CYGPATH_W $_LIBIDL_PREFIX_DIR | $CYGPATH_S`
-        else
-            AC_MSG_ERROR([LIBIDL_PREFIX is set but "${LIBIDL_PREFIX}" is not a directory.])
-        fi
-    else
-        _LIBIDL_PREFIX_DIR=$MOZ_TOOLS_DIR
-    fi        
-    if test ! -f "${_LIBIDL_PREFIX_DIR}/include/libIDL/IDL.h"; then
-        AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/include/libIDL/IDL.h .])
-    fi
-    LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include ${GLIB_CFLAGS}"
-    if test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"; then
-        LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"
-        STATIC_LIBIDL=1
-    elif test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"; then
-        LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"
-    else
-        AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/lib/libidl-0.6.lib or $_LIBIDL_PREFIX_DIR/lib/libidl-0.6_s.lib])
-    fi
-    LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
     ;;
-
-    *) # else cross-compiling
-        if test -n "$GLIB_PREFIX"; then
-            GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
-            if test -f "${GLIB_PREFIX}/lib/glib-1.2_s.lib"; then
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2_s.lib"
-            elif test -f "${GLIB_PREFIX}/lib/glib-1.2.lib"; then
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
-            else
-                AC_MSG_ERROR([Cannot find $GLIB_PREFIX/lib/glib-1.2.lib or $GLIB_PREFIX/lib/glib-1.2_s.lib])
-            fi
-        fi
-        if test -n "$LIBIDL_PREFIX"; then
-            LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include ${GLIB_CFLAGS}"
-            if test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"; then
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"
-                STATIC_LIBIDL=1
-            elif test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"; then
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"
-            else
-                AC_MSG_ERROR([Cannot find $LIBIDL_PREFIX/lib/libIDL-0.6.lib or $LIBIDL_PREFIX/lib/libIDL-0.6_s.lib])
-            fi
-        fi
-        LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
-        ;;
     esac 
 
 
@@ -7987,14 +7907,7 @@ MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
 dnl Check for GLib and libIDL.
 dnl ========================================================
-case "$target_os" in
-msvc*|mks*|cygwin*|mingw*|wince*|winmo*)
-    SKIP_IDL_CHECK="yes"
-    ;;
-*)
-    SKIP_IDL_CHECK="no"
-    ;;
-esac
+SKIP_IDL_CHECK="no"
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_IDL_CHECK="yes"
@@ -8005,33 +7918,100 @@ MOZ_ARG_WITHOUT_BOOL(libIDL,
 [  --without-libIDL        Skip check for libIDL (standalone modules only)],
 	SKIP_IDL_CHECK="yes")
 
+if test -z "$CROSS_COMPILE"; then
+    if test -z "$HOST_LIBIDL_CONFIG"; then
+        HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
+    fi
+    if test -z "$HOST_LIBIDL_PREFIX"; then
+        HOST_LIBIDL_PREFIX="$LIBIDL_PREFIX"
+    fi
+fi
+
 if test "$SKIP_IDL_CHECK" = "no"
 then
     _LIBIDL_FOUND=
-    if test "$MACOS_SDK_DIR"; then 
-      dnl xpidl, and therefore libIDL, is only needed on the build host.
-      dnl Don't build it against the SDK, as that causes problems.
-      _MACSAVE_CFLAGS="$CFLAGS"
-      _MACSAVE_LIBS="$LIBS"
-      _MACSAVE_LDFLAGS="$LDFLAGS"
-      _MACSAVE_NEXT_ROOT="$NEXT_ROOT"
-      changequote(,)
-      CFLAGS=`echo $CFLAGS|sed -E -e "s%((-I|-isystem )${MACOS_SDK_DIR}/usr/(include|lib/gcc)[^ ]*)|-F${MACOS_SDK_DIR}(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot ${MACOS_SDK_DIR}%%g"`
-      LIBS=`echo $LIBS|sed -e "s?-L${MACOS_SDK_DIR}/usr/lib[^ ]*??g"`
-      LDFLAGS=`echo $LDFLAGS|sed -e "s?-Wl,-syslibroot,${MACOS_SDK_DIR}??g"`
-      changequote([,])
-      unset NEXT_ROOT
+    case "$host" in
+    *-mingw*|*-cygwin*|*-msvc*|*-mks*)
+        if test -n "$GLIB_PREFIX"; then
+            _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd -W`
+            if test "$?" = "0"; then
+                if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
+                    AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
+                fi
+                _GLIB_PREFIX_DIR=`$CYGPATH_W $_GLIB_PREFIX_DIR | $CYGPATH_S`
+            else
+                 AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
+            fi
+        else
+            _GLIB_PREFIX_DIR=$MOZ_TOOLS_DIR
+        fi
+        if test ! -f "${_GLIB_PREFIX_DIR}/include/glib.h"; then
+            AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/include/glib.h .])
+        fi
+        GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
+        if test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"; then
+            GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"
+        elif test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"; then
+            GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
+        else
+            AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/lib/glib-1.2.lib or $_GLIB_PREFIX_DIR/lib/glib-1.2_s.lib])
+        fi
+
+        if test -n "$HOST_LIBIDL_PREFIX"; then
+            _LIBIDL_PREFIX_DIR=`cd $HOST_LIBIDL_PREFIX && pwd -W`
+            if test "$?" = "0"; then
+                if test `echo ${PATH}: | grep -ic "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
+                    AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
+                fi
+                _LIBIDL_PREFIX_DIR=`$CYGPATH_W $_LIBIDL_PREFIX_DIR | $CYGPATH_S`
+            else
+                AC_MSG_ERROR([LIBIDL_PREFIX is set but "${LIBIDL_PREFIX}" is not a directory.])
+            fi
+        else
+            _LIBIDL_PREFIX_DIR=$MOZ_TOOLS_DIR
+        fi        
+        if test ! -f "${_LIBIDL_PREFIX_DIR}/include/libIDL/IDL.h"; then
+            AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/include/libIDL/IDL.h .])
+        fi
+        HOST_LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include ${GLIB_CFLAGS}"
+        if test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"; then
+            HOST_LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"
+            STATIC_LIBIDL=1
+        elif test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"; then
+            HOST_LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"
+        else
+            AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/lib/libidl-0.6.lib or $_LIBIDL_PREFIX_DIR/lib/libidl-0.6_s.lib])
+        fi
+        HOST_LIBIDL_LIBS="${HOST_LIBIDL_LIBS} ${GLIB_LIBS}"
+        _LIBIDL_FOUND=1
+        ;;
+    esac
+
+    if test -z "$_LIBIDL_FOUND"; then
+        if test "$MACOS_SDK_DIR"; then 
+            dnl xpidl, and therefore libIDL, is only needed on the build host.
+            dnl Don't build it against the SDK, as that causes problems.
+            _MACSAVE_CFLAGS="$CFLAGS"
+            _MACSAVE_LIBS="$LIBS"
+            _MACSAVE_LDFLAGS="$LDFLAGS"
+            _MACSAVE_NEXT_ROOT="$NEXT_ROOT"
+          changequote(,)
+          CFLAGS=`echo $CFLAGS|sed -E -e "s%((-I|-isystem )${MACOS_SDK_DIR}/usr/(include|lib/gcc)[^ ]*)|-F${MACOS_SDK_DIR}(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot ${MACOS_SDK_DIR}%%g"`
+          LIBS=`echo $LIBS|sed -e "s?-L${MACOS_SDK_DIR}/usr/lib[^ ]*??g"`
+          LDFLAGS=`echo $LDFLAGS|sed -e "s?-Wl,-syslibroot,${MACOS_SDK_DIR}??g"`
+          changequote([,])
+          unset NEXT_ROOT
+        fi
+
+        PKG_CHECK_MODULES(HOST_LIBIDL, libIDL-2.0 >= 0.8.0 glib-2.0 gobject-2.0, _LIBIDL_FOUND=1,_LIBIDL_FOUND=)
     fi
 
-    if test "$MOZ_ENABLE_GTK2"; then
-        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0 glib-2.0 gobject-2.0, _LIBIDL_FOUND=1,_LIBIDL_FOUND=)
-    fi
     dnl if no gtk/libIDL1 or gtk2/libIDL2 combination was found, fall back
     dnl to either libIDL1 or libIDL2.
     if test -z "$_LIBIDL_FOUND"; then
         AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
         if test -z "$_LIBIDL_FOUND"; then
-            PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
+            PKG_CHECK_MODULES(HOST_LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
         fi
     fi
     dnl
@@ -8046,13 +8026,13 @@ then
     	    _ORBIT_LIBS=`${ORBIT_CONFIG} client --libs`
             _ORBIT_INC_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-I/); } }' -- ${_ORBIT_CFLAGS}`
             _ORBIT_LIB_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-L/); } }' -- ${_ORBIT_LIBS}`
-            LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
-            LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
-            LIBIDL_CONFIG=
+            HOST_LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
+            HOST_LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
+            HOST_LIBIDL_CONFIG=
             _SAVE_CFLAGS="$CFLAGS"
             _SAVE_LIBS="$LIBS"
-            CFLAGS="$LIBIDL_CFLAGS $CFLAGS"
-            LIBS="$LIBIDL_LIBS $LIBS"
+            CFLAGS="$HOST_LIBIDL_CFLAGS $CFLAGS"
+            LIBS="$HOST_LIBIDL_LIBS $LIBS"
             AC_TRY_RUN([
 #include <stdlib.h>
 #include <libIDL/IDL.h>
@@ -8066,8 +8046,8 @@ int main() {
 }
             ], [_LIBIDL_FOUND=1
                 result="yes"],
-               [LIBIDL_CFLAGS=
-                LIBIDL_LIBS=
+               [HOST_LIBIDL_CFLAGS=
+                HOST_LIBIDL_LIBS=
                 result="no"],
                [_LIBIDL_FOUND=1
                 result="maybe"] )
@@ -8091,16 +8071,42 @@ int main() {
 fi
 
 if test -n "$CROSS_COMPILE"; then
-     if test -z "$HOST_LIBIDL_CONFIG"; then
-        HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
-    fi
-    if test -n "$HOST_LIBIDL_CONFIG" && test "$HOST_LIBIDL_CONFIG" != "no"; then
-        HOST_LIBIDL_CFLAGS=`${HOST_LIBIDL_CONFIG} --cflags`
-        HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
-    else
-        HOST_LIBIDL_CFLAGS="$LIBIDL_CFLAGS"
-        HOST_LIBIDL_LIBS="$LIBIDL_LIBS"
-    fi
+    case "$target" in
+    *-mingw*|*-cygwin*|*-msvc*|*-mks*)
+        if test -n "$GLIB_PREFIX"; then
+            GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
+            if test -f "${GLIB_PREFIX}/lib/glib-1.2_s.lib"; then
+                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2_s.lib"
+            elif test -f "${GLIB_PREFIX}/lib/glib-1.2.lib"; then
+                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
+            else
+                AC_MSG_ERROR([Cannot find $GLIB_PREFIX/lib/glib-1.2.lib or $GLIB_PREFIX/lib/glib-1.2_s.lib])
+            fi
+        fi
+
+        if test -n "$LIBIDL_PREFIX"; then
+            LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include ${GLIB_CFLAGS}"
+            if test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"; then
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"
+                STATIC_LIBIDL=1
+            elif test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"; then
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"
+            else
+                AC_MSG_ERROR([Cannot find $LIBIDL_PREFIX/lib/libIDL-0.6.lib or $LIBIDL_PREFIX/lib/libIDL-0.6_s.lib])
+            fi
+        fi
+        LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
+        ;;
+    *)
+        if test -n "LIBIDL_CONFIG" && test "LIBIDL_CONFIG" != "no"; then
+            LIBIDL_CFLAGS=`${LIBIDL_CONFIG} --cflags`
+            LIBIDL_LIBS=`${LIBIDL_CONFIG} --libs`
+        fi
+        ;;
+    esac
+else
+    LIBIDL_CFLAGS="$HOST_LIBIDL_CFLAGS"
+    LIBIDL_LIBS="$HOST_LIBIDL_LIBS"
 fi
 
 if test -z "$SKIP_PATH_CHECKS"; then
