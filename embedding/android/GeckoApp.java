@@ -202,8 +202,14 @@ abstract public class GeckoApp
     }
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
-        return true;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                return false;
+            default:
+                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+                return true;
+        }
     }
 
     public boolean onKeyUp(int keyCode, KeyEvent event) {
