@@ -251,6 +251,8 @@ JSNoopProxyHandler::wrap(JSContext *cx, JSObject *obj, JSObject *proto, JSObject
 
 JS_BEGIN_EXTERN_C
 
+extern JSClass js_ProxyClass;
+
 extern JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj);
 

@@ -893,9 +893,6 @@ JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp);
 #endif
 
 extern JSObject *
-js_InitEval(JSContext *cx, JSObject *obj);
-
-extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
