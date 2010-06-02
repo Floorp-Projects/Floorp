@@ -69,6 +69,7 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
+#include "nsCycleCollectionParticipant.h"
 
 #define MOZ_HUNSPELL_CONTRACTID "@mozilla.org/spellchecker/engine;1"
 #define MOZ_HUNSPELL_CID         \
@@ -81,9 +82,10 @@ class mozHunspell : public mozISpellCheckingEngine,
                    public nsSupportsWeakReference
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_MOZISPELLCHECKINGENGINE
   NS_DECL_NSIOBSERVER
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozHunspell, mozISpellCheckingEngine)
 
   mozHunspell() : mHunspell(nsnull) { }
   virtual ~mozHunspell();

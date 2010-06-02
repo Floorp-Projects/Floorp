@@ -65,7 +65,21 @@ nsFilteredContentIterator::~nsFilteredContentIterator()
 }
 
 //------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsFilteredContentIterator, nsIContentIterator)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFilteredContentIterator)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFilteredContentIterator)
+
+NS_INTERFACE_MAP_BEGIN(nsFilteredContentIterator)
+  NS_INTERFACE_MAP_ENTRY(nsIContentIterator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentIterator)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsFilteredContentIterator)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_5(nsFilteredContentIterator,
+                           mCurrentIterator,
+                           mIterator,
+                           mPreIterator,
+                           mFilter,
+                           mRange)
 
 //------------------------------------------------------------
 nsresult
