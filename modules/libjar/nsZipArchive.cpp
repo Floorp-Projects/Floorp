@@ -355,13 +355,17 @@ nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
   while (true) {
     PRUint32 count = 0;
     PRUint8* buf = cursor.Read(&count);
-    if (!buf)
+    if (!buf) {
       rv = NS_ERROR_FILE_CORRUPTED;
-    else if (count == 0)
       break;
+    } else if (count == 0) {
+      break;
+    }
 
-    if (aFd && PR_Write(aFd, buf, count) < (READTYPE)count)
+    if (aFd && PR_Write(aFd, buf, count) < (READTYPE)count) {
       rv = NS_ERROR_FILE_DISK_FULL;
+      break;
+    }
   }
 
   //-- delete the file on errors, or resolve symlink if needed
