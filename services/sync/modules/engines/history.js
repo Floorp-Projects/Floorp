@@ -142,7 +142,7 @@ HistoryStore.prototype = {
       "FROM moz_places " +
       "WHERE last_visit_date > :cutoff_date " +
       "ORDER BY frecency DESC " +
-      "LIMIT 5000");
+      "LIMIT :max_results");
     this.__defineGetter__("_allUrlStm", function() stm);
     return stm;
   },
@@ -202,6 +202,8 @@ HistoryStore.prototype = {
   getAllIDs: function HistStore_getAllIDs() {
     // Only get places visited within the last 30 days (30*24*60*60*1000ms)
     this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
+    this._allUrlStm.params.max_results = 5000;
+
     let [exec, execCb] = Sync.withCb(this._allUrlStm.executeAsync, this._allUrlStm);
     return exec({
       ids: {},
