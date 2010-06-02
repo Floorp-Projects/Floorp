@@ -69,6 +69,7 @@ class WebGLProgram;
 class WebGLShader;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
+class WebGLUniformLocation;
 
 class WebGLZeroingObject;
 
@@ -657,6 +658,33 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
+
+#define WEBGLUNIFORMLOCATION_PRIVATE_IID \
+    {0x01a8a614, 0xb109, 0x42f1, {0xb4, 0x40, 0x8d, 0x8b, 0x87, 0x0b, 0x43, 0xa7}}
+class WebGLUniformLocation :
+    public nsIWebGLUniformLocation,
+    public WebGLZeroingObject
+{
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLUNIFORMLOCATION_PRIVATE_IID)
+
+    WebGLUniformLocation(WebGLProgram *program, GLint location) :
+        mProgram(program), mLocation(location) { }
+
+    WebGLProgram *Program() const { return mProgram; }
+    GLint Location() const { return mLocation; }
+
+    // needed for our generic helpers to check nsIxxx parameters, see GetConcreteObject.
+    PRBool Deleted() { return PR_FALSE; }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLUNIFORMLOCATION
+protected:
+    WebGLObjectRefPtr<WebGLProgram> mProgram;
+    GLint mLocation;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLUniformLocation, WEBGLUNIFORMLOCATION_PRIVATE_IID)
 
 }
 

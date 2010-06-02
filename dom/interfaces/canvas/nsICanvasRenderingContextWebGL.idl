@@ -120,6 +120,12 @@ interface nsIWebGLActiveInfo : nsISupports
     readonly attribute DOMString name;
 };
 
+[scriptable, uuid(d38b0467-623e-4c82-9140-5f14a3bd1bad)]
+interface nsIWebGLUniformLocation : nsISupports
+{
+    [noscript] attribute WebGLint location;
+};
+
 
 [scriptable, uuid(f02c85e0-8305-11de-abe2-000c29206271)]
 interface nsICanvasRenderingContextWebGL : nsISupports
@@ -688,14 +694,9 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   void getTexParameter(in WebGLenum target, in WebGLenum pname);
 
-  // FIXME: This is problematic. We don't implicitly know how big the returned data buffer
-  // needs to be like in the other glGet* calls. The only way to find out is to iterate 
-  // through all the active uniforms with glGetActiveUniform() looking for the corresponding
-  // 'location'. This will give us the type and size of the data. Since this is a get call
-  // maybe that's ok?
-  void getUniform(in nsIWebGLProgram program, in WebGLint location);
+  void getUniform (in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
 
-  WebGLint getUniformLocation(in nsIWebGLProgram program, in DOMString name);
+  nsIWebGLUniformLocation getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
   void getVertexAttrib(in WebGLuint index, in WebGLenum pname);
 
@@ -769,14 +770,14 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //void glTexParameter(in WebGLenum target, in WebGLenum pname, in nsIWebGLArray params);
 
   // Modified: All the glUniform*v forms below are modified by replacing 'count' and 'v' with a nsIWebGLArray
-  void uniform1f(in WebGLint location, in WebGLfloat x);
-  void uniform1i(in WebGLint location, in WebGLint x);
-  void uniform2f(in WebGLint location, in WebGLfloat x, in WebGLfloat y);
-  void uniform2i(in WebGLint location, in WebGLint x, in WebGLint y);
-  void uniform3f(in WebGLint location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z);
-  void uniform3i(in WebGLint location, in WebGLint x, in WebGLint y, in WebGLint z);
-  void uniform4f(in WebGLint location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z, in WebGLfloat w);
-  void uniform4i(in WebGLint location, in WebGLint x, in WebGLint y, in WebGLint z, in WebGLint w);
+  void uniform1f (in nsIWebGLUniformLocation location, in WebGLfloat x);
+  void uniform1i (in nsIWebGLUniformLocation location, in WebGLint x);
+  void uniform2f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y);
+  void uniform2i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y);
+  void uniform3f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z);
+  void uniform3i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y, in WebGLint z);
+  void uniform4f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z, in WebGLfloat w);
+  void uniform4i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y, in WebGLint z, in WebGLint w);
 
   void uniform1fv([optional] in long dummy);
   void uniform1iv([optional] in long dummy);
@@ -787,23 +788,23 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void uniform4fv([optional] in long dummy);
   void uniform4iv([optional] in long dummy);
 
-  [noscript] void uniform1fv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform1iv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform2fv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform2iv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform3fv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform3iv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform4fv_array(in WebGLint location, in WebGLArrayPtr v);
-  [noscript] void uniform4iv_array(in WebGLint location, in WebGLArrayPtr v);
+  [noscript] void uniform1fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform1iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform2fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform2iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform3fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform3iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform4fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform4iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
 
   // Modified. These are modified by replacing 'count' and 'value' with a WebGLArrayPtr
   void uniformMatrix2fv([optional] in long dummy);
   void uniformMatrix3fv([optional] in long dummy);
   void uniformMatrix4fv([optional] in long dummy);
 
-  [noscript] void uniformMatrix2fv_array(in WebGLint location, in WebGLboolean transpose, in WebGLArrayPtr value);
-  [noscript] void uniformMatrix3fv_array(in WebGLint location, in WebGLboolean transpose, in WebGLArrayPtr value);
-  [noscript] void uniformMatrix4fv_array(in WebGLint location, in WebGLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix2fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix3fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix4fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
 
   // Added API using top entry from the passed nsIWebGLMatrixStack
   //ZZ void glUniformMatrix(in WebGLint location, in WebGLboolean transpose, in nsIWebGLMatrixStack value);
