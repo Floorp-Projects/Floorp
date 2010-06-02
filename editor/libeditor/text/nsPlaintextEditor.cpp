@@ -353,48 +353,81 @@ PRBool nsPlaintextEditor::IsModifiable()
   return !IsReadonly();
 }
 
+nsresult
+nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
+{
+  // NOTE: When you change this method, you should also change:
+  //   * editor/libeditor/text/tests/test_texteditor_keyevent_handling.html
+  //   * editor/libeditor/html/tests/test_htmleditor_keyevent_handling.html
+  //
+  // And also when you add new key handling, you need to change the subclass's
+  // HandleKeyPressEvent()'s switch statement.
+
+  if (IsReadonly() || IsDisabled()) {
+    // When we're not editable, the events handled on nsEditor.
+    return nsEditor::HandleKeyPressEvent(aKeyEvent);
+  }
+
+  nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
+  NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
+  NS_ASSERTION(nativeKeyEvent->message == NS_KEY_PRESS,
+               "HandleKeyPressEvent gets non-keypress event");
+
+  switch (nativeKeyEvent->keyCode) {
+    case nsIDOMKeyEvent::DOM_VK_META:
+    case nsIDOMKeyEvent::DOM_VK_SHIFT:
+    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    case nsIDOMKeyEvent::DOM_VK_ALT:
+    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+    case nsIDOMKeyEvent::DOM_VK_DELETE:
+      // These keys are handled on nsEditor
+      return nsEditor::HandleKeyPressEvent(aKeyEvent);
+    case nsIDOMKeyEvent::DOM_VK_TAB: {
+      if (IsTabbable()) {
+        return NS_OK; // let it be used for focus switching
+      }
+
+      if (nativeKeyEvent->isShift || nativeKeyEvent->isControl ||
+          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+        return NS_OK;
+      }
+
+      // else we insert the tab straight through
+      aKeyEvent->PreventDefault();
+      return TypedText(NS_LITERAL_STRING("\t"), eTypedText);
+    }
+    case nsIDOMKeyEvent::DOM_VK_RETURN:
+    case nsIDOMKeyEvent::DOM_VK_ENTER:
+      if (IsSingleLineEditor() || nativeKeyEvent->isControl ||
+          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+        return NS_OK;
+      }
+      aKeyEvent->PreventDefault();
+      return TypedText(EmptyString(), eTypedBreak);
+    case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+      // pass escape keypresses through as empty strings: needed for IME support
+      // XXX This might be broken, we should check the behavior.
+      aKeyEvent->PreventDefault();
+      return TypedText(EmptyString(), eTypedText);
+  }
+
+  // NOTE: On some keyboard layout, some characters are inputted with Control
+  // key or Alt key, but at that time, widget sets FALSE to these keys.
+  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->isControl ||
+      nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+    // we don't PreventDefault() here or keybindings like control-x won't work
+    return NS_OK;
+  }
+  aKeyEvent->PreventDefault();
+  nsAutoString str(nativeKeyEvent->charCode);
+  return TypedText(str, eTypedText);
+}
 
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  nsIHTMLEditor methods 
 #pragma mark -
 #endif
-
-NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
-{
-  PRUint32 keyCode, character;
-  PRBool   ctrlKey, altKey, metaKey;
-
-  if (!aKeyEvent) return NS_ERROR_NULL_POINTER;
-
-  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
-      NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey)) &&
-      NS_SUCCEEDED(aKeyEvent->GetMetaKey(&metaKey)))
-  {
-    aKeyEvent->GetCharCode(&character);
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
-     || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
-    {
-      nsString empty;
-      return TypedText(empty, eTypedBreak);
-    }
-    else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
-    {
-      // pass escape keypresses through as empty strings: needed for ime support
-      nsString empty;
-      return TypedText(empty, eTypedText);
-    }
-    
-    if (character && !altKey && !ctrlKey && !metaKey)
-    {
-      aKeyEvent->PreventDefault();
-      nsAutoString key(character);
-      return TypedText(key, eTypedText);
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
 
 /* This routine is needed to provide a bottleneck for typing for logging
    purposes.  Can't use HandleKeyPress() (above) for that since it takes

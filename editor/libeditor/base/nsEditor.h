@@ -86,6 +86,7 @@ class nsIFile;
 class nsISelectionController;
 class nsIDOMEventTarget;
 class nsCSSStyleSheet;
+class nsKeyEvent;
 
 #define kMOZEditorBogusNodeAttrAtom nsEditProperty::mozEditorBogusNode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
@@ -356,6 +357,8 @@ protected:
    */
   PRBool GetDesiredSpellCheckState();
 
+  nsKeyEvent* GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent);
+
 public:
 
   /** All editor operations which alter the doc should be prefaced
@@ -567,6 +570,8 @@ public:
 
   PRBool GetShouldTxnSetSelection();
 
+  virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
+
   nsresult HandleInlineSpellCheck(PRInt32 action,
                                     nsISelection *aSelection,
                                     nsIDOMNode *previousSelectedNode,
@@ -645,6 +650,12 @@ public:
   PRBool DontEchoPassword() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
+  }
+
+  PRBool IsTabbable() const
+  {
+    return IsSingleLineEditor() || IsPasswordEditor() || IsFormWidget() ||
+           IsInteractionAllowed();
   }
 
   // Whether the editor has focus or not.
