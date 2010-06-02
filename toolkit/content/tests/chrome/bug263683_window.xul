@@ -43,7 +43,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="onLoad();"
+        onload="SimpleTest.executeSoon(startTest);"
         title="263683 test">
 
   <script type="application/javascript"><![CDATA[
@@ -54,31 +54,24 @@
     var gFindBar = null;
     var gBrowser;
 
-    function ok(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+    var imports = ["SimpleTest", "ok"];
+    for each (var import in imports) {
+      window[import] = window.opener.wrappedJSObject[import];
     }
 
     function finish() {
       window.close();
-      window.opener.wrappedJSObject.SimpleTest.finish();
+      SimpleTest.finish();
     }
 
-    function onLoad() {
-      var _delayedOnLoad = function() {
-        gFindBar = document.getElementById("FindToolbar");
-        gBrowser = document.getElementById("content");
-        gBrowser.addEventListener("pageshow", onPageShow, false);
-        gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
-      }
-      let tm = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager);
-      tm.mainThread.dispatch({
-        run: function() _delayedOnLoad()
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+    function startTest() {
+      gFindBar = document.getElementById("FindToolbar");
+      gBrowser = document.getElementById("content");
+      gBrowser.addEventListener("pageshow", onPageShow, false);
+      gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
     }
 
     function onPageShow() {
-      gBrowser.removeEventListener("load", onPageShow, true);
       gFindBar.open();
       var search = "mozilla";
       gFindBar._findField.value = search;
