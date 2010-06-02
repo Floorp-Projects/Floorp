@@ -62,12 +62,14 @@ class ContinueRunnable : public nsRunnable
 public:
   NS_DECL_NSIRUNNABLE
 
-  ContinueRunnable(IDBCursorRequest* aCursor)
-  : mCursor(aCursor)
+  ContinueRunnable(IDBCursorRequest* aCursor,
+                   const Key& aKey)
+  : mCursor(aCursor), mKey(aKey)
   { }
 
 private:
   nsRefPtr<IDBCursorRequest> mCursor;
+  const Key mKey;
 };
 
 END_INDEXEDDB_NAMESPACE
@@ -232,6 +234,7 @@ IDBCursorRequest::GetValue(nsIVariant** /* aValue */)
 
 NS_IMETHODIMP
 IDBCursorRequest::Continue(nsIVariant* aKey,
+                           PRUint8 aOptionalArgCount,
                            PRBool* _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -240,16 +243,20 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
     return NS_ERROR_UNEXPECTED;
   }
 
-  PRUint16 type;
-  nsresult rv = aKey->GetDataType(&type);
+  Key key;
+  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (type != nsIDataType::VTYPE_EMPTY) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (key.IsNull()) {
+    if (aOptionalArgCount) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    else {
+      key = Key::UNSETKEY;
+    }
   }
 
-  nsRefPtr<ContinueRunnable> runnable(new ContinueRunnable(this));
+  nsRefPtr<ContinueRunnable> runnable(new ContinueRunnable(this, key));
   rv = NS_DispatchToCurrentThread(runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -299,9 +306,15 @@ ContinueRunnable::Run()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  // Remove cached stuff from last time.
   mCursor->mCachedKey = nsnull;
   mCursor->mCachedValue = JSVAL_VOID;
   mCursor->mHaveCachedValue = false;
+
+  mCursor->mData.RemoveElementAt(mCursor->mDataIndex);
+  if (mCursor->mDataIndex) {
+    mCursor->mDataIndex--;
+  }
 
   nsCOMPtr<nsIWritableVariant> variant =
     do_CreateInstance(NS_VARIANT_CONTRACTID);
@@ -311,14 +324,58 @@ ContinueRunnable::Run()
   }
 
   nsresult rv;
-
-  mCursor->mData.RemoveElementAt(mCursor->mDataIndex);
-  if (!mCursor->mDataIndex) {
+  if (mCursor->mData.IsEmpty()) {
     rv = variant->SetAsEmpty();
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    mCursor->mDataIndex--;
+    if (!mKey.IsUnset()) {
+      NS_ASSERTION(!mKey.IsNull(), "Huh?!");
+
+      bool isInt = mKey.IsInt();
+
+      // Skip ahead to our next key match.
+      PRInt32 index = PRInt32(mCursor->mDataIndex);
+      if (isInt) {
+        while (index >= 0) {
+          const Key& key = mCursor->mData[index].key;
+          if (!key.IsInt() || key.IntValue() > mKey.IntValue()) {
+            // Didn't find it.
+            index = -1;
+            break;
+          }
+          if (key.IntValue() == mKey.IntValue()) {
+            // This is the key we were searching for.
+            break;
+          }
+          index--;
+        }
+      }
+      else {
+        while (index >= 0) {
+          const Key& key = mCursor->mData[index].key;
+          if (key.IsInt()) {
+            continue;
+          }
+          int cmp = NS_strcmp(key.StringValue().BeginReading(),
+                              mKey.StringValue().BeginReading());
+          if (!cmp) {
+            break;
+          }
+          else if (cmp > 0) {
+            index = -1;
+            break;
+          }
+          index--;
+        }
+      }
+
+      if (index >= 0) {
+        mCursor->mDataIndex = PRUint32(index);
+        mCursor->mData.RemoveElementsAt(index + 1,
+                                        mCursor->mData.Length() - index - 1);
+      }
+    }
 
     rv = variant->SetAsISupports(static_cast<IDBRequest::Generator*>(mCursor));
     NS_ENSURE_SUCCESS(rv, rv);

@@ -61,6 +61,7 @@ interface nsIIDBCursorRequest : nsIIDBCursor
   // For preloaded cursors returns true if key/value have been set to new
   // values. If false then no more matches are available and getting the key,
   // value property will throw, as will calling update() and remove().
+  [optional_argc]
   boolean continue([optional /* null */] in nsIVariant key);
 
   // Success fires IDBTransactionEvent, result == key
