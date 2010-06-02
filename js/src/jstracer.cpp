@@ -11038,16 +11038,78 @@ TraceRecorder::record_JSOP_DELNAME()
     return ARECORD_STOP;
 }
 
+JSBool JS_FASTCALL
+js_DelIntKey(JSContext* cx, JSObject* obj, int32 i)
+{
+    jsval v = JSVAL_FALSE;
+    jsid id = INT_TO_JSID(i);
+    if (!obj->deleteProperty(cx, id, &v))
+        SetBuiltinError(cx);
+    return JSVAL_TO_BOOLEAN(v);
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_DelIntKey, CONTEXT, OBJECT, INT32, 0, ACC_STORE_ANY)
+
+JSBool JS_FASTCALL
+js_DelStrKey(JSContext* cx, JSObject* obj, JSString* str)
+{
+    jsval v = JSVAL_FALSE;
+    jsid id;
+
+    /*
+     * NB: JSOP_DELPROP does not need js_ValueToStringId to atomize, but (see
+     * jsatominlines.h) that helper early-returns if the computed property name
+     * string is already atomized, and we are *not* on a perf-critical path!
+     */
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) || !obj->deleteProperty(cx, id, &v))
+        SetBuiltinError(cx);
+    return JSVAL_TO_BOOLEAN(v);
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_DelStrKey, CONTEXT, OBJECT, STRING, 0, ACC_STORE_ANY)
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELPROP()
 {
-    return ARECORD_STOP;
+    jsval& lval = stackval(-1);
+    if (JSVAL_IS_PRIMITIVE(lval)) {
+        AbortRecording(cx, "JSOP_DELELEM on primitive base expression");
+        return ARECORD_STOP;
+    }
+
+    JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
+    JS_ASSERT(ATOM_IS_STRING(atom));
+
+    LIns* args[] = { INS_ATOM(atom), get(&lval), cx_ins };
+    LIns* rval_ins = lir->insCall(&js_DelStrKey_ci, args);
+
+    set(&lval, rval_ins);
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELELEM()
 {
-    return ARECORD_STOP;
+    jsval& idx = stackval(-1);
+    if (!JSVAL_IS_INT(idx) && !JSVAL_IS_STRING(idx)) {
+        AbortRecording(cx, "JSOP_DELELEM on non-int, non-string index");
+        return ARECORD_STOP;
+    }
+
+    jsval& lval = stackval(-2);
+    if (JSVAL_IS_PRIMITIVE(lval)) {
+        AbortRecording(cx, "JSOP_DELELEM on primitive base expression");
+        return ARECORD_STOP;
+    }
+
+    LIns* rval_ins;
+    if (isInt32(idx)) {
+        LIns* args[] = { makeNumberInt32(get(&idx)), get(&lval), cx_ins };
+        rval_ins = lir->insCall(&js_DelIntKey_ci, args);
+    } else {
+        LIns* args[] = { get(&idx), get(&lval), cx_ins };
+        rval_ins = lir->insCall(&js_DelStrKey_ci, args);
+    }
+    set(&lval, rval_ins);
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
