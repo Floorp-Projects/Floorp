@@ -112,6 +112,11 @@ struct RematInfo {
         sync_ = UNSYNCED;
     }
 
+    void inherit(const RematInfo &other) {
+        reg_ = other.reg_;
+        location_ = other.location_;
+    }
+
   private:
     /* Set if location is PhysLoc_Register. */
     RegisterID reg_;
