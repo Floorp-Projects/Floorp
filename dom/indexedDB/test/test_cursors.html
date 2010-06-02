@@ -15,10 +15,10 @@
     {
       const name = window.location.pathname;
       const description = "My Test Database";
-      const values = [
-        { key: 1, value: "one" },
-        { key: "two", value: "two" }
-      ];
+      const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
+      const sortedKeys = [-1, 0, 1, 10, 2000, "a", "b", "q", "two", "z"];
+
+      is(keys.length, sortedKeys.length, "Good key setup");
 
       let request = indexedDB.open(name, description);
       request.onerror = errorHandler;
@@ -34,35 +34,97 @@
 
       let objectStore = event.result;
 
-      for (let i in values) {
-        request = objectStore.add(values[i].value, values[i].key);
+      let keyIndex = 0;
+
+      for (let i in keys) {
+        request = objectStore.add("foo", keys[i]);
         request.onerror = errorHandler;
-        request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
-      }
-
-      request = objectStore.openCursor();
-      request.onerror = errorHandler;
-
-      let valueIndex = 0;
-
-      request.onsuccess = function (event) {
-        let cursor = event.result;
-        if (!cursor) {
-          testGenerator.next();
-          return;
-        }
-  
-        is (cursor.key, values[valueIndex].key, "Correct key");
-        is (cursor.value, values[valueIndex].value, "Correct value");
-        valueIndex++;
-
-        let ok = cursor.continue();
-        is(ok, true, "Correct return from continue");
+        request.onsuccess = function(event) {
+          if (++keyIndex == keys.length) {
+            testGenerator.next();
+          }
+        };
       }
       yield;
 
-      is(valueIndex, values.length, "Saw all added items");
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all added items");
+
+      keyIndex = 4;
+
+      let range = indexedDB.makeBoundKeyRange(2000, "q");
+      request = objectStore.openCursor(range);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 8, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let ok = keyIndex ? cursor.continue() : cursor.continue("b");
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex += keyIndex ? 1: 6;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
 
       finishTest();
       yield;

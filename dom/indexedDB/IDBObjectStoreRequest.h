@@ -147,6 +147,10 @@ public:
          const ObjectStoreInfo* aInfo,
          PRUint16 aMode);
 
+  static nsresult
+  GetKeyFromVariant(nsIVariant* aKeyVariant,
+                    Key& aKey);
+
   bool TransactionIsOpen()
   {
     return mTransaction->TransactionIsOpen();
