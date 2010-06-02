@@ -190,7 +190,7 @@ script regress-351515.js
 script regress-352009.js
 script regress-352197.js
 script regress-352208.js
-script regress-352604.js
+skip script regress-352604.js
 skip script regress-354924.js # obsolete test
 script regress-355341.js
 script regress-355344.js
