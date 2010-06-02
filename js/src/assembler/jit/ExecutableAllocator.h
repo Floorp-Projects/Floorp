@@ -255,7 +255,7 @@ public:
         _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
 #endif
     }
-#elif CPU(ARM_THUMB2) && OS(IPHONE_OS)
+#elif WTF_CPU_ARM_THUMB2 && WTF_PLATFORM_IPHONE
     static void cacheFlush(void* code, size_t size)
     {
         sys_dcache_flush(code, size);
