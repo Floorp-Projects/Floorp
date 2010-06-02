@@ -42,7 +42,19 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsCRT.h"
 
-NS_IMPL_ISUPPORTS1(mozEnglishWordUtils, mozISpellI18NUtil)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(mozEnglishWordUtils)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(mozEnglishWordUtils)
+
+NS_INTERFACE_MAP_BEGIN(mozEnglishWordUtils)
+  NS_INTERFACE_MAP_ENTRY(mozISpellI18NUtil)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozISpellI18NUtil)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozEnglishWordUtils)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_3(mozEnglishWordUtils,
+                           mCaseConv,
+                           mCategories,
+                           mURLDetector)
 
 mozEnglishWordUtils::mozEnglishWordUtils()
 {
