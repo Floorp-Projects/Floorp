@@ -3057,8 +3057,10 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
                    JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                    uintN flags, intN tinyid)
 {
+    CHECK_REQUEST(cx);
+
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
     if (flags != 0 && obj->isNative()) {
-        JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
         return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                          attrs, flags, tinyid, NULL);
     }
@@ -3069,7 +3071,6 @@ JS_PUBLIC_API(JSBool)
 JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
                       JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
-    CHECK_REQUEST(cx);
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, 0, 0);
 }
 
@@ -3077,10 +3078,7 @@ JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-
-    CHECK_REQUEST(cx);
-    return obj->defineProperty(cx, INT_TO_JSID(index), value, getter, setter, attrs);
+    return DefinePropertyById(cx, obj, INT_TO_JSID(index), value, getter, setter, attrs, 0, 0);
 }
 
 static JSBool
@@ -3108,7 +3106,6 @@ JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
-    CHECK_REQUEST(cx);
     return DefineProperty(cx, obj, name, value, getter, setter, attrs, 0, 0);
 }
 
@@ -3116,7 +3113,6 @@ JS_PUBLIC_API(JSBool)
 JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name, int8 tinyid,
                             jsval value, JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
-    CHECK_REQUEST(cx);
     return DefineProperty(cx, obj, name, value, getter, setter, attrs,
                           JSScopeProperty::HAS_SHORTID, tinyid);
 }
@@ -3126,27 +3122,16 @@ DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namele
                  jsval value, JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                  uintN flags, intN tinyid)
 {
-    JSAtom *atom;
-
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return JS_FALSE;
-    if (flags != 0 && obj->isNative()) {
-        JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-        return !!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), value,
-                                         getter, setter, attrs, flags, tinyid,
-                                         NULL);
-    }
-    return obj->defineProperty(cx, ATOM_TO_JSID(atom), value, getter, setter, attrs);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && DefinePropertyById(cx, obj, ATOM_TO_JSID(atom), value, getter, setter, attrs,
+                                      flags, tinyid);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
                     jsval value, JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
-    CHECK_REQUEST(cx);
-    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
-                            attrs, 0, 0);
+    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs, 0, 0);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3154,7 +3139,6 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj, const jschar *name, 
                               int8 tinyid, jsval value, JSPropertyOp getter, JSPropertyOp setter,
                               uintN attrs)
 {
-    CHECK_REQUEST(cx);
     return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
                             attrs, JSScopeProperty::HAS_SHORTID, tinyid);
 }
@@ -3210,10 +3194,8 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
 {
     JSBool ok;
 
-    CHECK_REQUEST(cx);
-    for (ok = JS_TRUE; ps->name; ps++) {
-        ok = DefineProperty(cx, obj, ps->name, JSVAL_VOID,
-                            ps->getter, ps->setter, ps->flags,
+    for (ok = true; ps->name; ps++) {
+        ok = DefineProperty(cx, obj, ps->name, JSVAL_VOID, ps->getter, ps->setter, ps->flags,
                             JSScopeProperty::HAS_SHORTID, ps->tinyid);
         if (!ok)
             break;
