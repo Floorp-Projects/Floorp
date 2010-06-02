@@ -6077,20 +6077,38 @@ MOZ_ARG_ENABLE_BOOL(javaxpcom,
     MOZ_JAVAXPCOM=1,
     MOZ_JAVAXPCOM= )
 
-if test -n "${MOZ_JAVAXPCOM}"; then
-  case "$host_os" in
-    cygwin*|msvc*|mks*)
-      if test -n "$JAVA_HOME"; then
-        JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
-      fi
-      ;;
-    *mingw*)
-      if test -n "$JAVA_HOME"; then
-        JAVA_HOME=`cd "$JAVA_HOME" && pwd`
-      fi
-      ;;
-  esac
+case "$host_os" in
+  cygwin*|msvc*|mks*)
+    if test -n "$JAVA_HOME"; then
+      JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
+    fi
+    ;;
+  *mingw*)
+    if test -n "$JAVA_HOME"; then
+      JAVA_HOME=`cd "$JAVA_HOME" && pwd`
+    fi
+    ;;
+esac
 
+if test -n "${JAVA_BIN_PATH}"; then
+  dnl Look for javac and jar in the specified path.
+  JAVA_PATH="$JAVA_BIN_PATH"
+else
+  dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
+  JAVA_PATH="$JAVA_HOME/bin:$PATH"
+fi
+
+MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
+MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
+MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
+
+if test -n "${JAVA_BIN_PATH}" || test "$OS_TARGET" = Android; then
+  if test -z "$JAVA" || test "$JAVA" = ":" || test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+    AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory or use --with-java-bin-path={java-bin-dir}])
+  fi
+fi
+
+if test -n "${MOZ_JAVAXPCOM}"; then
   if test -n "${JAVA_INCLUDE_PATH}"; then
     dnl Make sure jni.h exists in the given include path.
     if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
@@ -6110,21 +6128,6 @@ if test -n "${MOZ_JAVAXPCOM}"; then
     if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
       AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
     fi
-  fi
-
-  if test -n "${JAVA_BIN_PATH}"; then
-    dnl Look for javac and jar in the specified path.
-    JAVA_PATH="$JAVA_BIN_PATH"
-  else
-    dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
-    JAVA_PATH="$JAVA_HOME/bin:$PATH"
-  fi
-
-  MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
-  MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
-  MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
-  if test -z "$JAVA" || test "$JAVA" = ":" || test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-    AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
   fi
 fi
 
