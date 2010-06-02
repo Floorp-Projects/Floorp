@@ -1098,7 +1098,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
             }                                                                 \
             cond = JSDOUBLE_COMPARE(l, OP, r, false);                         \
         }                                                                     \
-        regs.sp[-1].setBoolean(cond);                                         \
+        regs.sp[-2].setBoolean(cond);                                         \
         return cond;                                                          \
     JS_END_MACRO
 
