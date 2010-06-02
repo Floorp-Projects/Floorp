@@ -452,13 +452,13 @@ mjit::Compiler::generateMethod()
             frame.push(Valueify(JSVAL_ONE));
           END_CASE(JSOP_ONE)
 
-          BEGIN_CASE(JSOP_TRUE)
-            frame.push(Value(BooleanTag(true)));
-          END_CASE(JSOP_TRUE)
-
           BEGIN_CASE(JSOP_FALSE)
             frame.push(Value(BooleanTag(false)));
           END_CASE(JSOP_FALSE)
+
+          BEGIN_CASE(JSOP_TRUE)
+            frame.push(Value(BooleanTag(true)));
+          END_CASE(JSOP_TRUE)
 
           BEGIN_CASE(JSOP_POP)
             frame.pop();
