@@ -2872,6 +2872,8 @@ static JSBool
 LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp, JSProperty **propp)
 {
+    CHECK_REQUEST(cx);
+
     JSAutoResolveFlags rf(cx, flags);
     id = js_CheckForStringIndex(id);
     return obj->lookupProperty(cx, id, objp, propp);
@@ -2918,8 +2920,6 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSObject *obj2;
     JSProperty *prop;
-
-    CHECK_REQUEST(cx);
     return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
            LookupResult(cx, obj, obj2, prop, vp);
 }
@@ -2927,59 +2927,21 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    return LookupPropertyById(cx, obj, INT_TO_JSID(index), JSRESOLVE_QUALIFIED, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, vp);
-}
-
-static JSBool
-LookupProperty(JSContext *cx, JSObject *obj, const char *name, uintN flags,
-               JSObject **objp, JSProperty **propp)
-{
-    JSAtom *atom;
-
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return JS_FALSE;
-    return LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), flags, objp, propp);
+    return JS_LookupPropertyById(cx, obj, INT_TO_JSID(index), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    return LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, vp);
-}
-
-static JSBool
-LookupUCProperty(JSContext *cx, JSObject *obj,
-                 const jschar *name, size_t namelen, uintN flags,
-                 JSObject **objp, JSProperty **propp)
-{
-    JSAtom *atom;
-
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return JS_FALSE;
-    return LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), flags, objp, propp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *vp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    return LookupUCProperty(cx, obj, name, namelen, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, vp);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2993,96 +2955,60 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id, uintN flag
     ok = obj->isNative()
          ? js_LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop) >= 0
          : obj->lookupProperty(cx, id, objp, &prop);
-    if (ok)
-        ok = LookupResult(cx, obj, *objp, prop, vp);
-    return ok;
+    return ok && LookupResult(cx, obj, *objp, prop, vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name, uintN flags, jsval *vp)
 {
-    JSAtom *atom;
     JSObject *obj2;
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_LookupPropertyWithFlagsById(cx, obj, ATOM_TO_JSID(atom), flags, &obj2, vp);
+}
 
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    return atom &&
-           JS_LookupPropertyWithFlagsById(cx, obj, ATOM_TO_JSID(atom), flags, &obj2, vp);
+static JSBool
+HasPropertyResult(JSContext *cx, JSObject *obj2, JSProperty *prop, JSBool *foundp)
+{
+    *foundp = (prop != NULL);
+    if (prop)
+        obj2->dropProperty(cx, prop);
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 {
-    JSBool ok;
     JSObject *obj2;
     JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING, &obj2, &prop);
-    if (ok) {
-       *foundp = (prop != NULL);
-       if (prop)
-           obj2->dropProperty(cx, prop);
-    }
-    return ok;
+    return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
+                              &obj2, &prop) &&
+           HasPropertyResult(cx, obj2, prop, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
 {
-    JSBool ok;
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    ok = LookupPropertyById(cx, obj, INT_TO_JSID(index), JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
-                            &obj2, &prop);
-    if (ok) {
-        *foundp = (prop != NULL);
-        if (prop)
-            obj2->dropProperty(cx, prop);
-    }
-    return ok;
+    return JS_HasPropertyById(cx, obj, INT_TO_JSID(index), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
 {
-    JSBool ok;
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    ok = LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING, &obj2, &prop);
-    if (ok) {
-        *foundp = (prop != NULL);
-        if (prop)
-            obj2->dropProperty(cx, prop);
-    }
-    return ok;
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_HasPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_HasUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, JSBool *vp)
+JS_HasUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, JSBool *foundp)
 {
-    JSBool ok;
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    ok = LookupUCProperty(cx, obj, name, namelen, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
-                          &obj2, &prop);
-    if (ok) {
-        *vp = (prop != NULL);
-        if (prop)
-            obj2->dropProperty(cx, prop);
-    }
-    return ok;
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_HasPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
 }
 
-static JSBool
-AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
+JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 {
-    JSScope *scope;
+    CHECK_REQUEST(cx);
 
     if (!obj->isNative()) {
         JSObject *obj2;
@@ -3099,48 +3025,31 @@ AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool *found
     }
 
     JS_LOCK_OBJ(cx, obj);
-    scope = obj->scope();
+    JSScope *scope = obj->scope();
     *foundp = scope->hasProperty(id);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
-{
-    CHECK_REQUEST(cx);
-    return AlreadyHasOwnPropertyHelper(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
 {
-    return AlreadyHasOwnPropertyHelper(cx, obj, INT_TO_JSID(index), foundp);
+    return JS_AlreadyHasOwnPropertyById(cx, obj, INT_TO_JSID(index), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return JS_FALSE;
-    return AlreadyHasOwnPropertyHelper(cx, obj, ATOM_TO_JSID(atom), foundp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_AlreadyHasOwnPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
                            JSBool *foundp)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return JS_FALSE;
-    return AlreadyHasOwnPropertyHelper(cx, obj, ATOM_TO_JSID(atom), foundp);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_AlreadyHasOwnPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
 }
 
 static JSBool
@@ -3317,12 +3226,15 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
 {
     JSObject *obj2;
     JSProperty *prop;
-    JSAtom *atom;
     JSBool ok;
     JSScopeProperty *sprop;
 
     CHECK_REQUEST(cx);
-    if (!LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED, &obj2, &prop))
+
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    if (!atom)
+        return JS_FALSE;
+    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         js_ReportIsNotDefined(cx, name);
@@ -3358,7 +3270,11 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    if (!LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED, &obj2, &prop))
+
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    if (!atom)
+        return JS_FALSE;
+    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         js_ReportIsNotDefined(cx, name);
