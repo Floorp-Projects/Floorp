@@ -126,6 +126,58 @@
 
       is(keyIndex, keys.length, "Saw all the expected keys");
 
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let ok = keyIndex ? cursor.continue() : cursor.continue(10);
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex += keyIndex ? 1: 3;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let ok = keyIndex ? cursor.continue() : cursor.continue("c");
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
       finishTest();
       yield;
     }
