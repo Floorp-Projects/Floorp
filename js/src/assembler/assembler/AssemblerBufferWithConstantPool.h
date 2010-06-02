@@ -91,7 +91,7 @@ public:
     enum {
         UniqueConst,
         ReusableConst,
-        UnusedEntry
+        UnusedEntry,
     };
 
     AssemblerBufferWithConstantPool()
@@ -100,17 +100,13 @@ public:
         , m_maxDistance(maxPoolSize)
         , m_lastConstDelta(0)
     {
-        //m_pool = static_cast<uint32_t*>(fastMalloc(maxPoolSize));
         m_pool = static_cast<uint32_t*>(malloc(maxPoolSize));
-        //m_mask = static_cast<char*>(fastMalloc(maxPoolSize / sizeof(uint32_t)));
         m_mask = static_cast<char*>(malloc(maxPoolSize / sizeof(uint32_t)));
     }
 
     ~AssemblerBufferWithConstantPool()
     {
-        //fastFree(m_mask);
         free(m_mask);
-        //fastFree(m_pool);
         free(m_pool);
     }
 
