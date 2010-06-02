@@ -198,7 +198,8 @@ class nsAccStateChangeEvent: public nsAccEvent,
 public:
   nsAccStateChangeEvent(nsIAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
-                        PRBool aIsEnabled);
+                        PRBool aIsEnabled, PRBool aIsAsynch = PR_FALSE,
+                        EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   nsAccStateChangeEvent(nsIDOMNode *aNode,
                         PRUint32 aState, PRBool aIsExtraState,

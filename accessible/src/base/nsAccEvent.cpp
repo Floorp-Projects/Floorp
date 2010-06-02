@@ -314,11 +314,16 @@ nsAccReorderEvent::HasAccessibleInReasonSubtree()
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,
                              nsIAccessibleStateChangeEvent)
 
+// Note: we pass in eAllowDupes to the base class because we don't currently
+// support correct state change coalescence (XXX Bug 569356). Also we need to
+// decide how to coalesce events created via accessible (instead of node).
 nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
-                        PRBool aIsEnabled):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible),
+                        PRBool aIsEnabled, PRBool aIsAsynch,
+                        EIsFromUserInput aIsFromUserInput):
+  nsAccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, aIsAsynch,
+             aIsFromUserInput, eAllowDupes),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
 }
