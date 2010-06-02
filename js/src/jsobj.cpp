@@ -3375,8 +3375,13 @@ JSClass js_BlockClass = {
 };
 
 JSObject *
-js_InitEval(JSContext *cx, JSObject *obj)
+js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
+                                   object_props, object_methods, NULL, object_static_methods);
+    if (!proto)
+        return NULL;
+
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom,
                            (JSNative)obj_eval, 1,
@@ -3384,14 +3389,7 @@ js_InitEval(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    return obj;
-}
-
-JSObject *
-js_InitObjectClass(JSContext *cx, JSObject *obj)
-{
-    return js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                        object_props, object_methods, NULL, object_static_methods);
+    return proto;
 }
 
 static bool

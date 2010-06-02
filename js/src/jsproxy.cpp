@@ -1343,10 +1343,18 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
 
 }
 
+JSClass js_ProxyClass = {
+    "Proxy",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
+    JS_PropertyStub,        JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub,  NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *module = NewObject(cx, &js_ObjectClass, NULL, obj);
+    JSObject *module = NewObject(cx, &js_ProxyClass, NULL, obj);
     if (!module)
         return NULL;
     if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
