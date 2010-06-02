@@ -42,6 +42,10 @@
 #include <e32std.h>
 #endif
 
+#if WTF_CPU_MIPS && WTF_PLATFORM_LINUX
+#include <sys/cachectl.h>
+#endif
+
 #if WTF_PLATFORM_WINCE
 // From pkfuncs.h (private header file from the Platform Builder)
 #define CACHE_SYNC_ALL 0x07F
@@ -88,7 +92,6 @@ namespace JSC {
   // These are reference-counted. A new one (from the constructor or create)
   // starts with a count of 1. 
   class ExecutablePool {
-                       //: public RefCounted<ExecutablePool> {
 private:
     struct Allocation {
         char* pages;
@@ -116,7 +119,6 @@ public:
     //static PassRefPtr<ExecutablePool> create(size_t n)
     static ExecutablePool* create(size_t n)
     {
-        //return adoptRef(new ExecutablePool(n));
         return new ExecutablePool(n);
     }
 
@@ -141,14 +143,11 @@ public:
     
     ~ExecutablePool()
     {
-        //AllocationList::const_iterator end = m_pools.end();
         Allocation* end = m_pools.end();
-        //for (AllocationList::const_iterator ptr = m_pools.begin(); ptr != end; ++ptr)
         for (Allocation* ptr = m_pools.begin(); ptr != end; ++ptr)
             ExecutablePool::systemRelease(*ptr);
     }
 
-    //size_t available() const { return (m_pools.size() > 1) ? 0 : m_end - m_freePtr; }
     size_t available() const { return (m_pools.length() > 1) ? 0 : m_end - m_freePtr; }
 
 private:
@@ -163,7 +162,7 @@ private:
     char* m_end;
     AllocationList m_pools;
 };
-  
+
 class ExecutableAllocator {
     enum ProtectionSeting { Writable, Executable };
 
@@ -182,7 +181,6 @@ public:
     // to the object; i.e., poolForSize increments the count before returning the
     // object.
 
-    //PassRefPtr<ExecutablePool> poolForSize(size_t n)
     ExecutablePool* poolForSize(size_t n)
     {
         // Try to fit in the existing small allocator
@@ -196,20 +194,18 @@ public:
             return ExecutablePool::create(n);
 
         // Create a new allocator
-        //RefPtr<ExecutablePool> pool = ExecutablePool::create(JIT_ALLOCATOR_LARGE_ALLOC_SIZE);
         ExecutablePool* pool = ExecutablePool::create(JIT_ALLOCATOR_LARGE_ALLOC_SIZE);
-	// At this point, local |pool| is the owner.
+  	    // At this point, local |pool| is the owner.
 
         // If the new allocator will result in more free space than in
         // the current small allocator, then we will use it instead
         if ((pool->available() - n) > m_smallAllocationPool->available()) {
-	    m_smallAllocationPool->release();
+	        m_smallAllocationPool->release();
             m_smallAllocationPool = pool;
-	    pool->addRef();
-	}
-        //return pool.release();
+	        pool->addRef();
+	    }
 
-	// Pass ownership to the caller.
+   	    // Pass ownership to the caller.
         return pool;
     }
 
@@ -233,7 +229,33 @@ public:
     static void cacheFlush(void*, size_t)
     {
     }
-#elif WTF_CPU_ARM_THUMB2 && WTF_PLATFORM_IPHONE
+#elif WTF_CPU_MIPS
+    static void cacheFlush(void* code, size_t size)
+    {
+#if WTF_COMPILER_GCC && (GCC_VERSION >= 40300)
+#if WTF_MIPS_ISA_REV(2) && (GCC_VERSION < 40403)
+        int lineSize;
+        asm("rdhwr %0, $1" : "=r" (lineSize));
+        //
+        // Modify "start" and "end" to avoid GCC 4.3.0-4.4.2 bug in
+        // mips_expand_synci_loop that may execute synci one more time.
+        // "start" points to the fisrt byte of the cache line.
+        // "end" points to the last byte of the line before the last cache line.
+        // Because size is always a multiple of 4, this is safe to set
+        // "end" to the last byte.
+        //
+        intptr_t start = reinterpret_cast<intptr_t>(code) & (-lineSize);
+        intptr_t end = ((reinterpret_cast<intptr_t>(code) + size - 1) & (-lineSize)) - 1;
+        __builtin___clear_cache(reinterpret_cast<char*>(start), reinterpret_cast<char*>(end));
+#else
+        intptr_t end = reinterpret_cast<intptr_t>(code) + size;
+        __builtin___clear_cache(reinterpret_cast<char*>(code), reinterpret_cast<char*>(end));
+#endif
+#else
+        _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
+#endif
+    }
+#elif CPU(ARM_THUMB2) && OS(IPHONE_OS)
     static void cacheFlush(void* code, size_t size)
     {
         sys_dcache_flush(code, size);
@@ -260,7 +282,9 @@ public:
     {
         User::IMB_Range(code, static_cast<char*>(code) + size);
     }
-#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX
+#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_RVCT
+    static __asm void cacheFlush(void* code, size_t size);
+#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_RVCT
     static void cacheFlush(void* code, size_t size)
     {
         asm volatile (
@@ -291,7 +315,6 @@ private:
     static void reprotectRegion(void*, size_t, ProtectionSeting);
 #endif
 
-    //RefPtr<ExecutablePool> m_smallAllocationPool;
     ExecutablePool* m_smallAllocationPool;
     static void intializePageSize();
 };

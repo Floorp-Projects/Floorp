@@ -91,7 +91,7 @@ public:
         }
     }
 
-    void loadDouble(void* address, FPRegisterID dest)
+    void loadDouble(const void* address, FPRegisterID dest)
     {
         move(ImmPtr(address), scratchRegister);
         loadDouble(scratchRegister, dest);
@@ -490,6 +490,14 @@ public:
         return label;
     }
 
+    using MacroAssemblerX86Common::branchTest8;
+    Jump branchTest8(Condition cond, ExtendedAddress address, Imm32 mask = Imm32(-1))
+    {
+        ImmPtr addr(reinterpret_cast<void*>(address.offset));
+        MacroAssemblerX86Common::move(addr, scratchRegister);
+        return MacroAssemblerX86Common::branchTest8(cond, BaseIndex(scratchRegister, address.base, TimesOne), mask);
+    }
+
     Label loadPtrWithPatchToLEA(Address address, RegisterID dest)
     {
         Label label(this);
@@ -500,6 +508,7 @@ public:
     bool supportsFloatingPoint() const { return true; }
     // See comment on MacroAssemblerARMv7::supportsFloatingPointTruncate()
     bool supportsFloatingPointTruncate() const { return true; }
+    bool supportsFloatingPointSqrt() const { return true; }
 
 private:
     friend class LinkBuffer;

@@ -25,7 +25,7 @@
  */
 
 #include <wtf/Platform.h> // MOCO
-
+ 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
 #include "ARMAssembler.h"
@@ -33,39 +33,6 @@
 namespace JSC {
 
 // Patching helpers
-
-ARMWord* ARMAssembler::getLdrImmAddress(ARMWord* insn, uint32_t* constPool)
-{
-    // Must be an ldr ..., [pc +/- imm]
-    ASSERT((*insn & 0x0f7f0000) == 0x051f0000);
-
-    if (constPool && (*insn & 0x1))
-        return reinterpret_cast<ARMWord*>(constPool + ((*insn & SDT_OFFSET_MASK) >> 1));
-
-    ARMWord addr = reinterpret_cast<ARMWord>(insn) + 2 * sizeof(ARMWord);
-    if (*insn & DT_UP)
-        return reinterpret_cast<ARMWord*>(addr + (*insn & SDT_OFFSET_MASK));
-    else
-        return reinterpret_cast<ARMWord*>(addr - (*insn & SDT_OFFSET_MASK));
-}
-
-void ARMAssembler::linkBranch(void* code, JmpSrc from, void* to, int useConstantPool)
-{
-    ARMWord* insn = reinterpret_cast<ARMWord*>(code) + (from.m_offset / sizeof(ARMWord));
-
-    if (!useConstantPool) {
-        int diff = reinterpret_cast<ARMWord*>(to) - reinterpret_cast<ARMWord*>(insn + 2);
-
-        if ((diff <= BOFFSET_MAX && diff >= BOFFSET_MIN)) {
-            *insn = B | getConditionalField(*insn) | (diff & BRANCH_MASK);
-            ExecutableAllocator::cacheFlush(insn, sizeof(ARMWord));
-            return;
-        }
-    }
-    ARMWord* addr = getLdrImmAddress(insn);
-    *addr = reinterpret_cast<ARMWord>(to);
-    ExecutableAllocator::cacheFlush(addr, sizeof(ARMWord));
-}
 
 void ARMAssembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
 {
@@ -272,10 +239,8 @@ void ARMAssembler::moveImm(ARMWord imm, int dest)
 
 ARMWord ARMAssembler::encodeComplexImm(ARMWord imm, int dest)
 {
-    ARMWord tmp;
-
 #if WTF_ARM_ARCH_VERSION >= 7
-    tmp = getImm16Op2(imm);
+    ARMWord tmp = getImm16Op2(imm);
     if (tmp != INVALID_IMM) {
         movw_r(dest, tmp);
         return dest;
@@ -297,28 +262,29 @@ ARMWord ARMAssembler::encodeComplexImm(ARMWord imm, int dest)
 
 // Memory load/store helpers
 
-void ARMAssembler::dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset)
+void ARMAssembler::dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset, bool bytes)
 {
+    ARMWord transferFlag = bytes ? DT_BYTE : 0;
     if (offset >= 0) {
         if (offset <= 0xfff)
-            dtr_u(isLoad, srcDst, base, offset);
+            dtr_u(isLoad, srcDst, base, offset | transferFlag);
         else if (offset <= 0xfffff) {
             add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
-            dtr_u(isLoad, srcDst, ARMRegisters::S0, offset & 0xfff);
+            dtr_u(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff) | transferFlag);
         } else {
             ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtr_ur(isLoad, srcDst, base, reg);
+            dtr_ur(isLoad, srcDst, base, reg | transferFlag);
         }
     } else {
         offset = -offset;
         if (offset <= 0xfff)
-            dtr_d(isLoad, srcDst, base, offset);
+            dtr_d(isLoad, srcDst, base, offset | transferFlag);
         else if (offset <= 0xfffff) {
             sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
-            dtr_d(isLoad, srcDst, ARMRegisters::S0, offset & 0xfff);
+            dtr_d(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff) | transferFlag);
         } else {
             ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtr_dr(isLoad, srcDst, base, reg);
+            dtr_dr(isLoad, srcDst, base, reg | transferFlag);
         }
     }
 }
@@ -390,10 +356,17 @@ void* ARMAssembler::executableCopy(ExecutablePool* allocator)
         // The last bit is set if the constant must be placed on constant pool.
         int pos = (*iter) & (~0x1);
         ARMWord* ldrAddr = reinterpret_cast<ARMWord*>(data + pos);
-        ARMWord offset = *getLdrImmAddress(ldrAddr);
-        if (offset != 0xffffffff) {
-            JmpSrc jmpSrc(pos);
-            linkBranch(data, jmpSrc, data + offset, ((*iter) & 1));
+        ARMWord* addr = getLdrImmAddress(ldrAddr);
+        if (*addr != InvalidBranchTarget) {
+            if (!(*iter & 1)) {
+                int diff = reinterpret_cast<ARMWord*>(data + *addr) - (ldrAddr + DefaultPrefetching);
+
+                if ((diff <= BOFFSET_MAX && diff >= BOFFSET_MIN)) {
+                    *ldrAddr = B | getConditionalField(*ldrAddr) | (diff & BRANCH_MASK);
+                    continue;
+                }
+            }
+            *addr = reinterpret_cast<ARMWord>(data + *addr);
         }
     }
 
