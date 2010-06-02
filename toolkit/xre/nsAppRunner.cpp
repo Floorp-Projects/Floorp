@@ -3115,7 +3115,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #if defined(MOZ_WIDGET_QT)
     const char* qgraphicssystemARG = NULL;
-    ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG);
+    ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG, PR_FALSE);
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
     QApplication app(gArgc, gArgv);
