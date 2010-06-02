@@ -48,8 +48,8 @@ function get_addon_file_url(aFilename) {
   return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
-function wait_for_view_load(aManagerWindow, aCallback) {
-  if (!aManagerWindow.gViewController.isLoading) {
+function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
+  if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
     aCallback(aManagerWindow);
     return;
   }
@@ -112,6 +112,13 @@ function close_manager(aManagerWindow, aCallback) {
 
 function restart_manager(aManagerWindow, aView, aCallback) {
   close_manager(aManagerWindow, function() { open_manager(aView, aCallback); });
+}
+
+function is_element_visible(aWindow, aElement, aExpected, aMsg) {
+  isnot(aElement, null, "Element should not be null, when checking visibility");
+  var style = aWindow.getComputedStyle(aElement, "");
+  var visible = style.display != "none" && style.visibility == "visible";
+  is(visible, aExpected, aMsg);
 }
 
 function CategoryUtilities(aManagerWindow) {
@@ -346,6 +353,10 @@ MockProvider.prototype = {
       for (var prop in aAddonProp) {
         if (prop == "id")
           continue;
+        if (prop == "applyBackgroundUpdates") {
+          addon._applyBackgroundUpdates = aAddonProp[prop];
+          continue;
+        }
         addon[prop] = aAddonProp[prop];
       }
       this.addAddon(addon);
@@ -612,6 +623,7 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this.blocklistState = 0;
   this.appDisabled = false;
   this._userDisabled = false;
+  this._applyBackgroundUpdates = true;
   this.scope = AddonManager.SCOPE_PROFILE;
   this.isActive = true;
   this.creator = "";
@@ -646,6 +658,15 @@ MockAddon.prototype = {
     this._updateActiveState(currentActive, newActive);
 
     return val;
+  },
+  
+  get applyBackgroundUpdates() {
+    return this._applyBackgroundUpdates;
+  },
+  
+  set applyBackgroundUpdates(val) {
+    this._applyBackgroundUpdates = val;
+    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
   },
 
   isCompatibleWith: function(aAppVersion, aPlatformVersion) {

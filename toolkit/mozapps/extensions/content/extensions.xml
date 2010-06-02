@@ -399,7 +399,13 @@
           return this.getAttribute("count");
         ]]></getter>
         <setter><![CDATA[
-          this.setAttribute("count", aCount);
+          if (this.getAttribute("count") == val)
+            return;
+
+          this.setAttribute("count", val);
+          var event = document.createEvent("Events");
+          event.initEvent("CategoryBadgeUpdated", true, true);
+          this.dispatchEvent(event);
         ]]></setter>
       </property>
     </implementation>
@@ -736,7 +742,7 @@
   </binding>
 
 
-  <!-- Addon - generic - A normal addon item -->
+  <!-- Addon - generic - A normal addon item, or an update to one -->
   <binding id="addon-generic"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
@@ -744,14 +750,30 @@
         <xul:image anonid="icon" class="icon"/>
         <xul:spacer flex="1"/>
       </xul:vbox>
-      <xul:vbox flex="1" class="fade">
+      <xul:vbox flex="1" class="basicinfo-container fade">
         <xul:hbox class="name-container">
           <xul:label anonid="name" class="name" xbl:inherits="value=name"/>
           <xul:label anonid="version" class="version"/>
           <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
+          <xul:label class="update-postfix" value="&addon.update.postfix;"/>
         </xul:hbox>
         <xul:label anonid="creator" class="creator"/>
         <xul:description anonid="description" class="description" flex="1"/>
+        <xul:vbox anonid="relnotes-container" class="relnotes-container">
+          <xul:label class="relnotes-header" value="&addon.releaseNotes.label;"/>
+          <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
+          <xul:label anonid="relnotes-error" hidden="true"
+                     value="&addon.errorLoadingReleaseNotes.label;"/>
+          <xul:vbox anonid="relnotes"/>
+        </xul:vbox>
+        <xul:button anonid="relnotes-toggle" class="relnotes-toggle"
+                    hidden="true" label="&cmd.showReleaseNotes.label;"
+                    tooltiptext="&cmd.showReleaseNotes.tooltip;"
+                    showlabel="&cmd.showReleaseNotes.label;"
+                    showtooltip="&cmd.showReleaseNotes.tooltip;"
+                    hidelabel="&cmd.hideReleaseNotes.label;"
+                    hidetooltip="&cmd.hideReleaseNotes.tooltip;"
+                    oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
       </xul:vbox>
       <xul:vbox align="end">
         <xul:vbox class="details-container fade">
@@ -803,6 +825,13 @@
             <xul:image class="spinner"/>
             <xul:label value="&addon.checkingForUpdates.label;"/>
           </xul:hbox>
+          <xul:hbox anonid="update-available" hidden="true">
+            <xul:label value="An update is available"/>
+            <xul:button anonid="update-btn" class="addon-control"
+                        label="&addon.updateNow.label;"
+                        tooltiptext="&addon.updateNow.tooltip;"
+                        oncommand="document.getBindingParent(this).upgrade();"/>
+          </xul:hbox>
           <xul:hbox anonid="install-status" class="install-status"
                     hidden="true"/>
         </xul:hbox>
@@ -852,6 +881,20 @@
 
         if (numExtraDetails == 0)
           this._toggleMore.hidden = true;
+
+        if (!this.mAddon.applyBackgroundUpdates) {
+          var self = this;
+          AddonManager.getAllInstalls(function(aInstallsList) {
+            for (let i = 0; i < aInstallsList.length; i++) {
+              let install = aInstallsList[i];
+              if (install.existingAddon &&
+                  install.existingAddon.id == self.mAddon.id &&
+                  install.state == AddonManager.STATE_AVAILABLE) {
+                self.onNewInstall(install);
+              }
+            }
+          });
+        }
 
         gEventManager.registerAddonListener(this, this.mAddon.id);
       ]]></constructor>
@@ -918,6 +961,10 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "remove-btn");
       </field>
+      <field name="_updateBtn">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "update-btn");
+      </field>
       <field name="_controlContainer">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "control-container");
@@ -929,6 +976,31 @@
       <field name="_checkingUpdate">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "checking-update");
+      </field>
+      <field name="_updateAvailable">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "update-available");
+      </field>
+      <field name="_relNotesLoaded">false</field>
+      <field name="_relNotesToggle">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-toggle");
+      </field>
+      <field name="_relNotesLoading">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-loading");
+      </field>
+      <field name="_relNotesError">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-error");
+      </field>
+      <field name="_relNotesContainer">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-container");
+      </field>
+      <field name="_relNotes">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes");
       </field>
 
       <property name="userDisabled">
@@ -972,11 +1044,17 @@
       <method name="_showStatus">
         <parameter name="aType"/>
         <body><![CDATA[
-          this._controlContainer.hidden = aType != "none";
+          this._controlContainer.hidden = aType != "none" &&
+                                          !(aType == "update-available" && !this.hasAttribute("upgrade"));
+
           this._installStatus.hidden = aType != "progress";
           if (aType == "progress")
             this._installStatus.refreshState();
           this._checkingUpdate.hidden = aType != "checking-update";
+          this._updateAvailable.hidden = aType != "update-available";
+          this._relNotesToggle.hidden = !(this.mManualUpdate ?
+                                          this.mManualUpdate.releaseNotesURI :
+                                          this.mAddon.releaseNotesURI);
         ]]></body>
       </method>
 
@@ -1064,6 +1142,128 @@
         ]]></body>
       </method>
 
+      <method name="_updateUpgradeInfo">
+        <body><![CDATA[
+          this._version.value = this.mManualUpdate.version;
+        ]]></body>
+      </method>
+
+      <method name="_fetchReleaseNotes">
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          var self = this;
+          if (!aURI || this._relNotesLoaded) {
+            sendToggleEvent();
+            return;
+          }
+
+          var relNotesData = null, transformData = null;
+ 
+          this._relNotesLoaded = true;
+          this._relNotesLoading.hidden = false;
+          this._relNotesError.hidden = true;
+          
+          function sendToggleEvent() {
+            var event = document.createEvent("Events");
+            event.initEvent("RelNotesToggle", true, true);
+            self.dispatchEvent(event);
+          }
+
+          function showRelNotes() {
+            if (!relNotesData || !transformData)
+              return;
+
+            self._relNotesLoading.hidden = true;
+
+            var processor = Components.classes["@mozilla.org/document-transformer;1?type=xslt"]
+                                      .createInstance(Components.interfaces.nsIXSLTProcessor);
+            processor.flags |= Components.interfaces.nsIXSLTProcessorPrivate.DISABLE_ALL_LOADS;
+
+            processor.importStylesheet(transformData);
+            var fragment = processor.transformToFragment(relNotesData, document);
+            self._relNotes.appendChild(fragment);
+            if (self.hasAttribute("show-relnotes")) {
+              var container = self._relNotesContainer;
+              container.style.height = container.scrollHeight + "px";
+            }
+            sendToggleEvent();
+          }
+
+          function handleError() {
+            dataReq.abort();
+            styleReq.abort();
+            self._relNotesLoading.hidden = true;
+            self._relNotesError.hidden = false;
+            self._relNotesLoaded = false; // allow loading to be re-tried
+            sendToggleEvent();
+          }
+
+          function handleResponse(aEvent) {
+            var req = aEvent.target;
+            if (req.responseXML &&
+                req.responseXML.documentElement.namespaceURI != XMLURI_PARSE_ERROR) {
+              if (req == dataReq)
+                relNotesData = req.responseXML;
+              else
+                transformData = req.responseXML;
+              showRelNotes();
+            } else {
+              handleError();
+            }
+          }
+
+          var dataReq = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          dataReq.open("GET", aURI.spec, true);
+          dataReq.addEventListener("load", handleResponse, false);
+          dataReq.addEventListener("error", handleError, false);
+          dataReq.send(null);
+
+          var styleReq = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          styleReq.open("GET", UPDATES_RELEASENOTES_TRANSFORMFILE, true);
+          styleReq.addEventListener("load", handleResponse, false);
+          styleReq.addEventListener("error", handleError, false);
+          styleReq.send(null);
+        ]]></body>
+      </method>
+
+      <method name="toggleReleaseNotes">
+        <body><![CDATA[
+          if (this.hasAttribute("show-relnotes")) {
+            this._relNotesContainer.style.height = "0px";
+            this.removeAttribute("show-relnotes");
+            this._relNotesToggle.setAttribute(
+              "label",
+              this._relNotesToggle.getAttribute("showlabel")
+            );
+            this._relNotesToggle.setAttribute(
+              "tooltiptext",
+              this._relNotesToggle.getAttribute("showtooltip")
+            );
+            var event = document.createEvent("Events");
+            event.initEvent("RelNotesToggle", true, true);
+            this.dispatchEvent(event);
+          } else {
+            this._relNotesContainer.style.height = this._relNotesContainer.scrollHeight +
+                                                   "px";
+            this.setAttribute("show-relnotes", true);
+            this._relNotesToggle.setAttribute(
+              "label",
+              this._relNotesToggle.getAttribute("hidelabel")
+            );
+            this._relNotesToggle.setAttribute(
+              "tooltiptext",
+              this._relNotesToggle.getAttribute("hidetooltip")
+            );
+            var uri = this.mManualUpdate ?
+                      this.mManualUpdate.releaseNotesURI :
+                      this.mAddon.releaseNotesURI;
+            this._fetchReleaseNotes(uri);
+          }
+        ]]></body>
+      </method>
+
       <method name="uninstall">
         <body><![CDATA[
           // If uninstalling does not require a restart then just disable it
@@ -1083,6 +1283,14 @@
       <method name="showPreferences">
         <body><![CDATA[
           gViewController.doCommand("cmd_showItemPreferences", this.mAddon);
+        ]]></body>
+      </method>
+
+      <method name="upgrade">
+        <body><![CDATA[
+          var install = this.mManualUpdate;
+          delete this.mManualUpdate;
+          install.install();
         ]]></body>
       </method>
 
@@ -1150,6 +1358,25 @@
       </method>
 
       <method name="onNewInstall">
+        <parameter name="aInstall"/>
+        <body><![CDATA[
+          if (!this.mAddon.applyBackgroundUpdates) {
+            this.mManualUpdate = aInstall;
+            this._showStatus("update-available");
+            this._updateUpgradeInfo();
+          }
+        ]]></body>
+      </method>
+
+      <method name="onDownloadStarted">
+        <parameter name="aInstall"/>
+        <body><![CDATA[
+          this._showStatus("progress");
+          this._installStatus.initWithInstall(aInstall);
+        ]]></body>
+      </method>
+
+      <method name="onInstallStarted">
         <parameter name="aInstall"/>
         <body><![CDATA[
           this._showStatus("progress");
@@ -1291,7 +1518,8 @@
         <body><![CDATA[
           this.mAddon = this.mAddon || this.mInstall.addon;
           if (this.mAddon) {
-            this._icon.src = this.mAddon.iconURL || this.mInstall.iconURL;
+            this._icon.src = this.mAddon.iconURL ||
+                             (this.mInstall ? this.mInstall.iconURL : "");
             this._name.value = this.mAddon.name;
           } else {
             this._icon.src = this.mInstall.iconURL;
