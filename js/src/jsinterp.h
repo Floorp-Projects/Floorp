@@ -454,19 +454,6 @@ js_EnterWith(JSContext *cx, jsint stackIndex);
 extern JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx);
 
-extern JS_REQUIRES_STACK js::Class *
-js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
-
-/*
- * Unwind block and scope chains to match the given depth. The function sets
- * fp->sp on return to stackDepth.
- */
-extern JS_REQUIRES_STACK JSBool
-js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
-
-extern JSBool
-js_OnUnknownMethod(JSContext *cx, js::Value *vp);
-
 /*
  * Find the results of incrementing or decrementing *vp. For pre-increments,
  * both *vp and *vp2 will contain the result on return. For post-increments,
@@ -493,6 +480,19 @@ extern void
 js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 #endif /* JS_LONE_INTERPRET */
+
+extern JS_REQUIRES_STACK js::Class *
+js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
+
+/*
+ * Unwind block and scope chains to match the given depth. The function sets
+ * fp->sp on return to stackDepth.
+ */
+extern JS_REQUIRES_STACK JSBool
+js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
+
+extern JSBool
+js_OnUnknownMethod(JSContext *cx, js::Value *vp);
 
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)

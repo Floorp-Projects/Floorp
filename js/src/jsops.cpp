@@ -1464,9 +1464,11 @@ BEGIN_CASE(JSOP_GLOBALDEC)
     incr = -1; incr2 =  0; goto do_bound_global_incop;
 
   do_bound_global_incop:
-    uint32 slot = GET_SLOTNO(regs.pc);
+    uint32 slot;
+    slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj;
+    obj = fp->scopeChain->getGlobal();
     vp = &obj->getSlotRef(slot);
     goto do_int_fast_incop;
 END_CASE(JSOP_INCGLOBAL)
