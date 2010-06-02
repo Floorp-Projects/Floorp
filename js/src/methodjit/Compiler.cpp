@@ -205,6 +205,21 @@ mjit::Compiler::finishThisUp()
     memcpy(result, masm.buffer(), masm.size());
     memcpy(result + masm.size(), stubcc.buffer(), stubcc.size());
 
+    /* Build the pc -> ncode mapping. */
+    void **nmap = (void **)cx->calloc(sizeof(void *) * script->length);
+    if (!nmap) {
+        execPool->release();
+        return Compile_Error;
+    }
+
+    for (size_t i = 0; i < script->length; i++) {
+        Label L = jumpMap[i];
+        if (analysis[i].safePoint) {
+            JS_ASSERT(L.isValid());
+            nmap[i] = (uint8 *)(result + masm.distanceOf(L));
+        }
+    }
+
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
 
