@@ -303,6 +303,21 @@
 # include "jsautocfg.h" /* Use auto-detected configuration */
 #endif
 
+// Define JS_64BIT iff we are building in an environment with 64-bit
+// addresses.
+#ifdef _MSC_VER
+# if defined(_M_X64) || defined(_M_AMD64)
+#  define JS_64BIT
+# endif
+#elif defined(__GNUC__)
+# ifdef __x86_64__
+#  define JS_64BIT
+# endif
+#else
+# error "Implement me"
+#endif
+
+
 #include "jsinttypes.h"
 
 JS_BEGIN_EXTERN_C

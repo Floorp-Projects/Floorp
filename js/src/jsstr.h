@@ -289,7 +289,7 @@ struct JSString {
 #pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringOintStringTable_)
 #endif
 
-#ifndef _M_X64
+#ifndef JS_64BIT
     static JSString unitStringTable[];
     static JSString intStringTable[];
 #else
