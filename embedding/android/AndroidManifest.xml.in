@@ -3,7 +3,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.mozilla.@MOZ_APP_NAME@"
       android:versionCode="1"
-      android:versionName="1.9.3">
+      android:versionName="1.9.3"
+      android:sharedUserId="org.mozilla.sharedID">
     <uses-sdk android:minSdkVersion="5"
               android:targetSdkVersion="5"/>
 
