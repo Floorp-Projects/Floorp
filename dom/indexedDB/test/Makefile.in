@@ -67,6 +67,7 @@ _TEST_FILES = \
   test_setVersion.html \
   test_writer_starvation.html \
   test_create_index.html \
+  test_remove_index.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)
