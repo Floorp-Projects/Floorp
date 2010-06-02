@@ -1492,11 +1492,14 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
     if (NS_FAILED(rv))
       return;
 
+    // Normally we only fire delayed events created from the node, not an
+    // accessible object. See the nsAccTextChangeEvent constructor for details
+    // about this exceptional case.
     nsRefPtr<nsAccEvent> event =
       new nsAccTextChangeEvent(accessible, offset,
                                renderedEndOffset - renderedStartOffset,
                                aIsInserted, PR_FALSE);
-    nsEventShell::FireEvent(event);
+    FireDelayedAccessibleEvent(event);
 
     FireValueChangeForTextFields(accessible);
   }
@@ -1994,11 +1997,14 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       // XXX Collate events when a range is deleted
       // XXX We need a way to ignore SplitNode and JoinNode() when they
       // do not affect the text within the hypertext
+      // Normally we only fire delayed events created from the node, not an
+      // accessible object. See the nsAccTextChangeEvent constructor for details
+      // about this exceptional case.
       nsRefPtr<nsAccEvent> textChangeEvent =
         CreateTextChangeEventForNode(containerAccessible, childNode, childAccessible,
                                      PR_FALSE, isAsynch);
       if (textChangeEvent) {
-        nsEventShell::FireEvent(textChangeEvent);
+        FireDelayedAccessibleEvent(textChangeEvent);
       }
     }
   }
