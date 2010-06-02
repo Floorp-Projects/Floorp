@@ -502,7 +502,7 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
     uintN flags;
 
     keyonly = js_ValueToBoolean(argv[1]);
-    flags = keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE);
+    flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
     *rval = argv[0];
     return js_ValueToIterator(cx, flags, rval);
 }
