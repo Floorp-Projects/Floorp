@@ -491,6 +491,7 @@ members = [
     '-nsIIDBObjectStoreRequest.add',
     '-nsIIDBObjectStoreRequest.modify',
     '-nsIIDBObjectStoreRequest.addOrModify',
+    '-nsIIDBCursorRequest.continue',
     '-nsIIDBCursorRequest.value',
     '-nsIIDBCursorRequest.update'
     ]

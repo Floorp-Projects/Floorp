@@ -146,11 +146,14 @@ public:
   OpenCursorHelper(IDBTransactionRequest* aTransaction,
                    IDBRequest* aRequest,
                    IDBObjectStoreRequest* aObjectStore,
-                   nsIIDBKeyRange* aKeyRange,
+                   const Key& aLeftKey,
+                   const Key& aRightKey,
+                   PRUint16 aKeyRangeFlags,
                    PRUint16 aDirection,
                    PRBool aPreload)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mKeyRange(aKeyRange), mDirection(aDirection), mPreload(aPreload)
+    mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
+    mDirection(aDirection), mPreload(aPreload)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -159,7 +162,9 @@ public:
 private:
   // In-params.
   const nsRefPtr<IDBObjectStoreRequest> mObjectStore;
-  const nsCOMPtr<nsIIDBKeyRange> mKeyRange;
+  const Key mLeftKey;
+  const Key mRightKey;
+  const PRUint16 mKeyRangeFlags;
   const PRUint16 mDirection;
   const PRBool mPreload;
 
@@ -207,45 +212,6 @@ private:
   jsval mCachedValue;
   JSRuntime* mJSRuntime;
 };
-
-inline
-nsresult
-GetKeyFromVariant(nsIVariant* aKeyVariant,
-                  Key& aKey)
-{
-  NS_ASSERTION(aKeyVariant, "Null pointer!");
-
-  PRUint16 type;
-  nsresult rv = aKeyVariant->GetDataType(&type);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // See xpcvariant.cpp, these are the only types we should expect.
-  switch (type) {
-    case nsIDataType::VTYPE_VOID:
-      aKey = Key::UNSETKEY;
-      break;
-
-    case nsIDataType::VTYPE_EMPTY:
-      aKey = Key::NULLKEY;
-      break;
-
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      rv = aKeyVariant->GetAsAString(aKey.ToString());
-      NS_ENSURE_SUCCESS(rv, rv);
-      break;
-
-    case nsIDataType::VTYPE_INT32:
-    case nsIDataType::VTYPE_DOUBLE:
-      rv = aKeyVariant->GetAsInt64(aKey.ToIntPtr());
-      NS_ENSURE_SUCCESS(rv, rv);
-      break;
-
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
-
-  return NS_OK;
-}
 
 inline
 nsresult
@@ -322,6 +288,45 @@ IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
   objectStore->mMode = aMode;
 
   return objectStore.forget();
+}
+
+// static
+nsresult
+IDBObjectStoreRequest::GetKeyFromVariant(nsIVariant* aKeyVariant,
+                                         Key& aKey)
+{
+  NS_ASSERTION(aKeyVariant, "Null pointer!");
+
+  PRUint16 type;
+  nsresult rv = aKeyVariant->GetDataType(&type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // See xpcvariant.cpp, these are the only types we should expect.
+  switch (type) {
+    case nsIDataType::VTYPE_VOID:
+      aKey = Key::UNSETKEY;
+      break;
+
+    case nsIDataType::VTYPE_EMPTY:
+      aKey = Key::NULLKEY;
+      break;
+
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+      rv = aKeyVariant->GetAsAString(aKey.ToString());
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+
+    case nsIDataType::VTYPE_INT32:
+    case nsIDataType::VTYPE_DOUBLE:
+      rv = aKeyVariant->GetAsInt64(aKey.ToIntPtr());
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
 }
 
 IDBObjectStoreRequest::IDBObjectStoreRequest()
@@ -677,9 +682,25 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
 
   nsresult rv;
 
+  Key leftKey, rightKey;
+  PRUint16 keyRangeFlags = 0;
+
   if (aKeyRange) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    rv = aKeyRange->GetFlags(&keyRangeFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIVariant> variant;
+    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetKeyFromVariant(variant, leftKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aKeyRange->GetRight(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetKeyFromVariant(variant, rightKey);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (aOptionalArgCount >= 2) {
@@ -703,8 +724,8 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<OpenCursorHelper> helper =
-    new OpenCursorHelper(mTransaction, request, this, aKeyRange, aDirection,
-                         aPreload);
+    new OpenCursorHelper(mTransaction, request, this, leftKey, rightKey,
+                         keyRangeFlags, aDirection, aPreload);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1014,27 +1035,59 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 PRUint16
 OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsCString query;
+  nsCString table;
+  nsCString keyColumn;
+
   if (mObjectStore->IsAutoIncrement()) {
-    query.AssignLiteral(
-      "SELECT id, data "
-      "FROM ai_objectdata "
-      "WHERE object_store_id = :osid "
-//      "AND key_value >= :minkey "
-//      "AND key_value <= :maxkey "
-      "ORDER BY id DESC"
-    );
+    table.AssignLiteral("ai_object_data");
+    keyColumn.AssignLiteral("id");
   }
   else {
-    query.AssignLiteral(
-      "SELECT key_value, data "
-      "FROM object_data "
-      "WHERE object_store_id = :osid "
-//      "AND key_value >= :minkey "
-//      "AND key_value <= :maxkey "
-      "ORDER BY key_value DESC"
-    );
+    table.AssignLiteral("object_data");
+    keyColumn.AssignLiteral("key_value");
   }
+
+  NS_NAMED_LITERAL_CSTRING(osid, "osid");
+  NS_NAMED_LITERAL_CSTRING(leftKeyName, "left_key");
+  NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
+
+  nsCAutoString keyRangeClause;
+  if (!mLeftKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND ");
+    keyRangeClause.Append(keyColumn);
+    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+      keyRangeClause.AppendLiteral(" > :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" >= :");
+    }
+    keyRangeClause.Append(leftKeyName);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND ");
+    keyRangeClause.Append(keyColumn);
+    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+      keyRangeClause.AppendLiteral(" < :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" <= :");
+    }
+    keyRangeClause.Append(rightKeyName);
+  }
+
+  nsCAutoString query("SELECT ");
+  query.Append(keyColumn);
+  query.AppendLiteral(", data FROM ");
+  query.Append(table);
+  query.AppendLiteral(" WHERE object_store_id = :");
+  query.Append(osid);
+  query.Append(keyRangeClause);
+  query.AppendLiteral(" ORDER BY ");
+  query.Append(keyColumn);
+  query.AppendLiteral(" DESC");
 
   if (!mData.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
@@ -1045,8 +1098,34 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = aConnection->CreateStatement(query, getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStore->Id());
+  rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (!mLeftKey.IsUnset()) {
+    if (mLeftKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+    }
+    else if (mLeftKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    if (mRightKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+    }
+    else if (mRightKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
 
   PRBool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {

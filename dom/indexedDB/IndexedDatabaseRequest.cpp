@@ -414,6 +414,27 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
   return NS_OK;
 }
 
+inline
+nsresult
+ValidateVariantForKey(nsIVariant* aVariant)
+{
+  PRUint16 type;
+  nsresult rv = aVariant->GetDataType(&type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (type) {
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+    case nsIDataType::VTYPE_INT32:
+    case nsIDataType::VTYPE_DOUBLE:
+      break;
+
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
+}
+
 } // anonyomous namespace
 
 // static
@@ -525,6 +546,11 @@ IndexedDatabaseRequest::MakeSingleKeyRange(nsIVariant* aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  nsresult rv = ValidateVariantForKey(aValue);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsRefPtr<IDBKeyRange> range =
     IDBKeyRange::Create(aValue, aValue, PRUint16(nsIIDBKeyRange::SINGLE));
   NS_ASSERTION(range, "Out of memory?");
@@ -539,6 +565,11 @@ IndexedDatabaseRequest::MakeLeftBoundKeyRange(nsIVariant* aBound,
                                               nsIIDBKeyRange** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsresult rv = ValidateVariantForKey(aBound);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   PRUint16 flags = aOpen ?
                    PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
@@ -557,6 +588,11 @@ IndexedDatabaseRequest::MakeRightBoundKeyRange(nsIVariant* aBound,
                                                nsIIDBKeyRange** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsresult rv = ValidateVariantForKey(aBound);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   PRUint16 flags = aOpen ?
                    PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
@@ -577,6 +613,16 @@ IndexedDatabaseRequest::MakeBoundKeyRange(nsIVariant* aLeft,
                                           nsIIDBKeyRange **_retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsresult rv = ValidateVariantForKey(aLeft);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = ValidateVariantForKey(aRight);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   PRUint16 flags = aOpenLeft ?
                    PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
