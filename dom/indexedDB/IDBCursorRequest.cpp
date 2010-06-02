@@ -332,42 +332,22 @@ ContinueRunnable::Run()
     if (!mKey.IsUnset()) {
       NS_ASSERTION(!mKey.IsNull(), "Huh?!");
 
-      bool isInt = mKey.IsInt();
+      NS_WARNING("Using a slow O(n) search for continue(key), do something "
+                 "smarter!");
 
       // Skip ahead to our next key match.
       PRInt32 index = PRInt32(mCursor->mDataIndex);
-      if (isInt) {
-        while (index >= 0) {
-          const Key& key = mCursor->mData[index].key;
-          if (!key.IsInt() || key.IntValue() > mKey.IntValue()) {
-            // Didn't find it.
-            index = -1;
-            break;
-          }
-          if (key.IntValue() == mKey.IntValue()) {
-            // This is the key we were searching for.
-            break;
-          }
-          index--;
+      while (index >= 0) {
+        const Key& key = mCursor->mData[index].key;
+        if (mKey == key) {
+          break;
         }
-      }
-      else {
-        while (index >= 0) {
-          const Key& key = mCursor->mData[index].key;
-          if (key.IsInt()) {
-            continue;
-          }
-          int cmp = NS_strcmp(key.StringValue().BeginReading(),
-                              mKey.StringValue().BeginReading());
-          if (!cmp) {
-            break;
-          }
-          else if (cmp > 0) {
-            index = -1;
-            break;
-          }
+        if (key < mKey) {
           index--;
+          continue;
         }
+        index = -1;
+        break;
       }
 
       if (index >= 0) {

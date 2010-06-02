@@ -100,6 +100,74 @@ public:
     return *this;
   }
 
+  bool operator==(const Key& aOther) const
+  {
+    if (mType == aOther.mType) {
+      switch (mType) {
+        case UNSETKEY:
+        case NULLKEY:
+          return true;
+
+        case STRINGKEY:
+          return mString == aOther.mString;
+
+        case INTKEY:
+          return mInt == aOther.mInt;
+
+        default:
+          NS_NOTREACHED("Unknown type!");
+      }
+    }
+    return false;
+  }
+
+  bool operator<(const Key& aOther) const
+  {
+    switch (mType) {
+      case UNSETKEY:
+        if (aOther.mType == UNSETKEY) {
+          return false;
+        }
+        return true;
+
+      case NULLKEY:
+        if (aOther.mType == UNSETKEY ||
+            aOther.mType == NULLKEY) {
+          return false;
+        }
+        return true;
+
+      case STRINGKEY:
+        if (aOther.mType == UNSETKEY ||
+            aOther.mType == NULLKEY ||
+            aOther.mType == INTKEY) {
+          return false;
+        }
+        NS_ASSERTION(aOther.mType == STRINGKEY, "Unknown type!");
+        return mString < aOther.mString;
+
+      case INTKEY:
+        if (aOther.mType == UNSETKEY ||
+            aOther.mType == NULLKEY) {
+          return false;
+        }
+        if (aOther.mType == STRINGKEY) {
+          return true;
+        }
+        NS_ASSERTION(aOther.mType == INTKEY, "Unknown type!");
+        return mInt < aOther.mInt;
+
+      default:
+        NS_NOTREACHED("Unknown type!");
+    }
+    return false;
+  }
+
+  bool operator>(const Key& aOther) const
+  {
+    return !(*this == aOther || *this < aOther);
+  }
+
   bool IsUnset() const { return mType == UNSETKEY; }
   bool IsNull() const { return mType == NULLKEY; }
   bool IsString() const { return mType == STRINGKEY; }
