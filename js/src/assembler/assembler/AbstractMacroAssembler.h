@@ -64,7 +64,7 @@ public:
         TimesOne,
         TimesTwo,
         TimesFour,
-        TimesEight,
+        TimesEight
     };
 
     // Address:
@@ -307,7 +307,7 @@ public:
             None = 0x0,
             Linkable = 0x1,
             Near = 0x2,
-            LinkableNear = 0x3,
+            LinkableNear = 0x3
         };
 
         Call()
