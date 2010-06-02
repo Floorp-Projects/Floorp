@@ -698,7 +698,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     };
     
     var rects = Items.arrange(null, bb, options);
-    return (rects[0].width < TabItems.minTabWidth * 1.5);
+    return (rects[0].width < TabItems.minTabWidth * 1.35 );
   },
 
   // ----------  
@@ -833,7 +833,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   _randRotate: function(spread, index){
     if( index >= this._stackAngles.length ){
-      //var randAngle = parseInt( ((Math.random()+.6)/1.3)*spread-(spread/2) );
       var randAngle = 5*index + parseInt( (Math.random()-.5)*1 );
       this._stackAngles.push(randAngle);
       return randAngle;          
@@ -994,15 +993,18 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         self._mouseDownLocation = new Point(e.clientX, e.clientY);
       })    
       .mouseup(function(e){
-      var location = new Point(e.clientX, e.clientY);
+        // Don't zoom in on clicks inside of the title area.
+        if( e.target.className == "title-shield" || e.target.className == "name" ) return;
+        
+        var location = new Point(e.clientX, e.clientY);
       
-      if( location.distance(self._mouseDownLocation) > 1.0 ) return;
-      // Don't zoom in to the last tab for the new tab group.
-      if( self.isNewTabsGroup() ) return;
-      var activeTab = self.getActiveTab();
-      if( activeTab ) TabItems.zoomTo(activeTab)
-      // TODO: This should also accept TabItems
-      else TabItems.zoomTo(self.getChild(0).tab.mirror.el);
+        if( location.distance(self._mouseDownLocation) > 1.0 ) return;
+        // Don't zoom in to the last tab for the new tab group.
+        if( self.isNewTabsGroup() ) return;
+        var activeTab = self.getActiveTab();
+        if( activeTab ) TabItems.zoomTo(activeTab)
+        // TODO: This should also accept TabItems
+        else TabItems.zoomTo(self.getChild(0).tab.mirror.el);
     });
     
     $(container).droppable({
