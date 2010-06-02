@@ -3281,7 +3281,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 }
 
 static JSBool
-GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                           JSBool own, JSPropertyDescriptor *desc)
 {
     JSObject *obj2;
@@ -3339,9 +3339,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                              JSPropertyDescriptor *desc)
 {
-    CHECK_REQUEST(cx);
-
-    return GetPropertyAttributesById(cx, obj, id, flags, JS_FALSE, desc);
+    return GetPropertyDescriptorById(cx, obj, id, flags, JS_FALSE, desc);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3349,11 +3347,9 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj, jsid id,
                                        uintN *attrsp, JSBool *foundp,
                                        JSPropertyOp *getterp, JSPropertyOp *setterp)
 {
-    CHECK_REQUEST(cx);
-
     JSPropertyDescriptor desc;
-    if (!GetPropertyAttributesById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
-        return JS_FALSE;
+    if (!GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
+        return false;
 
     *attrsp = desc.attrs;
     *foundp = (desc.obj != NULL);
@@ -3361,51 +3357,25 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj, jsid id,
         *getterp = desc.getter;
     if (setterp)
         *setterp = desc.setter;
-    return JS_TRUE;
-}
-
-static JSBool
-GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
-                      uintN *attrsp, JSBool *foundp,
-                      JSPropertyOp *getterp, JSPropertyOp *setterp)
-
-{
-    if (!atom)
-        return JS_FALSE;
-
-    JSPropertyDescriptor desc;
-    if (!GetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom),
-                                   JSRESOLVE_QUALIFIED, JS_FALSE, &desc)) {
-        return JS_FALSE;
-    }
-
-    *attrsp = desc.attrs;
-    *foundp = (desc.obj != NULL);
-    if (getterp)
-        *getterp = desc.getter;
-    if (setterp)
-        *setterp = desc.setter;
-    return JS_TRUE;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          uintN *attrsp, JSBool *foundp)
 {
-    CHECK_REQUEST(cx);
-    return GetPropertyAttributes(cx, obj,
-                                 js_Atomize(cx, name, strlen(name), 0),
-                                 attrsp, foundp, NULL, NULL);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+                                                          attrsp, foundp, NULL, NULL);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
                            uintN *attrsp, JSBool *foundp)
 {
-    CHECK_REQUEST(cx);
-    return GetPropertyAttributes(cx, obj,
-                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0),
-                    attrsp, foundp, NULL, NULL);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+                                                          attrsp, foundp, NULL, NULL);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3413,10 +3383,9 @@ JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj, const char *nam
                                    uintN *attrsp, JSBool *foundp,
                                    JSPropertyOp *getterp, JSPropertyOp *setterp)
 {
-    CHECK_REQUEST(cx);
-    return GetPropertyAttributes(cx, obj,
-                                 js_Atomize(cx, name, strlen(name), 0),
-                                 attrsp, foundp, getterp, setterp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+                                                          attrsp, foundp, getterp, setterp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3425,10 +3394,9 @@ JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                      uintN *attrsp, JSBool *foundp,
                                      JSPropertyOp *getterp, JSPropertyOp *setterp)
 {
-    CHECK_REQUEST(cx);
-    return GetPropertyAttributes(cx, obj,
-                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0),
-                    attrsp, foundp, getterp, setterp);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+                                                          attrsp, foundp, getterp, setterp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3439,18 +3407,14 @@ JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-SetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom, uintN attrs, JSBool *foundp)
+SetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN attrs, JSBool *foundp)
 {
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    if (!atom)
+    if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
         return JS_FALSE;
-    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED,
-                            &obj2, &prop)) {
-        return JS_FALSE;
-    }
     if (!prop || obj != obj2) {
         *foundp = JS_FALSE;
         if (prop)
@@ -3459,7 +3423,7 @@ SetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom, uintN attrs, J
     }
 
     *foundp = JS_TRUE;
-    ok = obj->setAttributes(cx, ATOM_TO_JSID(atom), prop, &attrs);
+    ok = obj->setAttributes(cx, id, prop, &attrs);
     obj->dropProperty(cx, prop);
     return ok;
 }
@@ -3468,20 +3432,16 @@ JS_PUBLIC_API(JSBool)
 JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          uintN attrs, JSBool *foundp)
 {
-    CHECK_REQUEST(cx);
-    return SetPropertyAttributes(cx, obj,
-                                 js_Atomize(cx, name, strlen(name), 0),
-                                 attrs, foundp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && SetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom), attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
                            uintN attrs, JSBool *foundp)
 {
-    CHECK_REQUEST(cx);
-    return SetPropertyAttributes(cx, obj,
-                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0),
-                    attrs, foundp);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && SetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom), attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
