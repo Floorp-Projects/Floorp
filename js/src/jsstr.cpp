@@ -2640,7 +2640,7 @@ static const jschar UnitStringData[] = {
 #pragma pack(push, 8)
 #endif
 
-#ifndef _M_X64
+#ifndef JS_64BIT
 JSString JSString::unitStringTable[]
 #else
 JSString JSString::staticUnitStringTable[]
@@ -2683,7 +2683,7 @@ __attribute__ ((aligned (8)))
     U(0xf8), U(0xf9), U(0xfa), U(0xfb), U(0xfc), U(0xfd), U(0xfe), U(0xff)
 };
 
-#ifdef _M_X64
+#ifdef JS_64BIT
 JSString *JSString::unitStringTable = staticUnitStringTable;
 size_t JSString::unitStringTableSize = sizeof(staticUnitStringTable);
 #endif
@@ -2758,7 +2758,7 @@ static const jschar Hundreds[] = {
 #pragma pack(push, 8)
 #endif
 
-#ifndef _M_X64
+#ifndef JS_64BIT
 JSString JSString::intStringTable[]
 #else
 JSString JSString::staticIntStringTable[]
@@ -2801,7 +2801,7 @@ __attribute__ ((aligned (8)))
     L3(0xf8), L3(0xf9), L3(0xfa), L3(0xfb), L3(0xfc), L3(0xfd), L3(0xfe), L3(0xff)
 };
 
-#ifdef _M_X64
+#ifdef JS_64BIT
 JSString *JSString::intStringTable = staticIntStringTable;
 size_t JSString::intStringTableSize = sizeof(staticIntStringTable);
 #endif

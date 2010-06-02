@@ -539,7 +539,7 @@ JSRuntime::init(uint32 maxbytes)
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
 
-#ifdef _M_X64
+#ifdef JS_64BIT
     if (!JSString::initStringTables())
         return false;
 #endif
