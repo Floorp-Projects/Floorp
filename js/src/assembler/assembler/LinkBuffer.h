@@ -61,10 +61,8 @@ public:
     // Note: Initialization sequence is significant, since executablePool is a PassRefPtr.
     //       First, executablePool is copied into m_executablePool, then the initialization of
     //       m_code uses m_executablePool, *not* executablePool, since this is no longer valid.
-    //LinkBuffer(MacroAssembler* masm, PassRefPtr<ExecutablePool> executablePool)
     LinkBuffer(MacroAssembler* masm, ExecutablePool* executablePool)
         : m_executablePool(executablePool)
-        //, m_code(masm->m_assembler.executableCopy(m_executablePool.get()))
         , m_code(masm->m_assembler.executableCopy(m_executablePool))
         , m_size(masm->m_assembler.size())
 #ifndef NDEBUG
@@ -103,7 +101,6 @@ public:
 
     void link(JumpList list, CodeLocationLabel label)
     {
-        //for (unsigned i = 0; i < list.m_jumps.size(); ++i)
         for (unsigned i = 0; i < list.m_jumps.length(); ++i)
             MacroAssembler::linkJump(code(), list.m_jumps[i], label);
     }
@@ -192,7 +189,6 @@ private:
         ExecutableAllocator::cacheFlush(code(), m_size);
     }
 
-    //RefPtr<ExecutablePool> m_executablePool;
     ExecutablePool* m_executablePool;
     void* m_code;
     size_t m_size;

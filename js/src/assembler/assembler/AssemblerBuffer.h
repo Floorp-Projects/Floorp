@@ -50,7 +50,6 @@ namespace JSC {
         ~AssemblerBuffer()
         {
             if (m_buffer != m_inlineBuffer)
-                //fastFree(m_buffer);
                 free(m_buffer);
         }
 
@@ -158,11 +157,9 @@ namespace JSC {
             m_capacity += m_capacity / 2 + extraCapacity;
 
             if (m_buffer == m_inlineBuffer) {
-                //char* newBuffer = static_cast<char*>(fastMalloc(m_capacity));
                 char* newBuffer = static_cast<char*>(malloc(m_capacity));
                 m_buffer = static_cast<char*>(memcpy(newBuffer, m_buffer, m_size));
             } else
-                //m_buffer = static_cast<char*>(fastRealloc(m_buffer, m_capacity));
                 m_buffer = static_cast<char*>(realloc(m_buffer, m_capacity));
         }
 

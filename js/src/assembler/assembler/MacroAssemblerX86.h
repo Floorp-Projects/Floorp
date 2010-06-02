@@ -100,7 +100,7 @@ public:
         m_assembler.movl_mr(address, dest);
     }
 
-    void loadDouble(void* address, FPRegisterID dest)
+    void loadDouble(const void* address, FPRegisterID dest)
     {
         ASSERT(isSSE2Present());
         m_assembler.movsd_mr(address, dest);
@@ -185,6 +185,7 @@ public:
     bool supportsFloatingPoint() const { return m_isSSE2Present; }
     // See comment on MacroAssemblerARMv7::supportsFloatingPointTruncate()
     bool supportsFloatingPointTruncate() const { return m_isSSE2Present; }
+    bool supportsFloatingPointSqrt() const { return m_isSSE2Present; }
 
 private:
     const bool m_isSSE2Present;
