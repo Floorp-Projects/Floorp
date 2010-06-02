@@ -289,6 +289,14 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NOP)
           END_CASE(JSOP_NOP)
 
+          BEGIN_CASE(JSOP_POPV)
+          {
+            FrameEntry *fe = frame.peek(-1);
+            frame.storeTo(fe, Address(Assembler::FpReg, offsetof(JSStackFrame, rval)), true);
+            frame.pop();
+          }
+          END_CASE(JSOP_POPV)
+
           BEGIN_CASE(JSOP_RETURN)
           {
             /* Safe point! */
