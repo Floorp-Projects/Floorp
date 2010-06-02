@@ -75,7 +75,8 @@
 #include "nsCaret.h"
 #include "nsIWidget.h"
 #include "nsIPlaintextEditor.h"
-#include "nsGUIEvent.h"  // nsTextEventReply
+#include "nsIPrivateDOMEvent.h"
+#include "nsGUIEvent.h"
 
 #include "nsIFrame.h"  // Needed by IME code
 
@@ -5045,6 +5046,61 @@ nsEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
 }
 
 nsresult
+nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
+{
+  // NOTE: When you change this method, you should also change:
+  //   * editor/libeditor/text/tests/test_texteditor_keyevent_handling.html
+  //   * editor/libeditor/html/tests/test_htmleditor_keyevent_handling.html
+  //
+  // And also when you add new key handling, you need to change the subclass's
+  // HandleKeyPressEvent()'s switch statement.
+
+  nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
+  NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
+  NS_ASSERTION(nativeKeyEvent->message == NS_KEY_PRESS,
+               "HandleKeyPressEvent gets non-keypress event");
+
+  // if we are readonly or disabled, then do nothing.
+  if (IsReadonly() || IsDisabled()) {
+    // consume backspace for disabled and readonly textfields, to prevent
+    // back in history, which could be confusing to users
+    if (nativeKeyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
+      aKeyEvent->PreventDefault();
+    }
+    return NS_OK;
+  }
+
+  switch (nativeKeyEvent->keyCode) {
+    case nsIDOMKeyEvent::DOM_VK_META:
+    case nsIDOMKeyEvent::DOM_VK_SHIFT:
+    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    case nsIDOMKeyEvent::DOM_VK_ALT:
+      aKeyEvent->PreventDefault(); // consumed
+      return NS_OK;
+    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+      if (nativeKeyEvent->isControl || nativeKeyEvent->isAlt ||
+          nativeKeyEvent->isMeta) {
+        return NS_OK;
+      }
+      DeleteSelection(nsIEditor::ePrevious);
+      aKeyEvent->PreventDefault(); // consumed
+      return NS_OK;
+    case nsIDOMKeyEvent::DOM_VK_DELETE:
+      // on certain platforms (such as windows) the shift key
+      // modifies what delete does (cmd_cut in this case).
+      // bailing here to allow the keybindings to do the cut.
+      if (nativeKeyEvent->isShift || nativeKeyEvent->isControl ||
+          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+        return NS_OK;
+      }
+      DeleteSelection(nsIEditor::eNext);
+      aKeyEvent->PreventDefault(); // consumed
+      return NS_OK; 
+  }
+  return NS_OK;
+}
+
+nsresult
 nsEditor::HandleInlineSpellCheck(PRInt32 action,
                                    nsISelection *aSelection,
                                    nsIDOMNode *previousSelectedNode,
@@ -5197,6 +5253,17 @@ PRBool
 nsEditor::IsModifiableNode(nsIDOMNode *aNode)
 {
   return PR_TRUE;
+}
+
+nsKeyEvent*
+nsEditor::GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privDOMEvent = do_QueryInterface(aDOMKeyEvent);
+  NS_ENSURE_TRUE(privDOMEvent, nsnull);
+  nsEvent* nativeEvent = privDOMEvent->GetInternalNSEvent();
+  NS_ENSURE_TRUE(nativeEvent, nsnull);
+  NS_ENSURE_TRUE(nativeEvent->eventStructType == NS_KEY_EVENT, nsnull);
+  return static_cast<nsKeyEvent*>(nativeEvent);
 }
 
 PRBool
