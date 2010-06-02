@@ -23,6 +23,7 @@ function testBug504520Harder() {
                         '});\n');
                     var actual = [];
                     fun(arr, actual);
+		    print(x, y, op, z);
                     assertEq("" + actual, "" + expected);
                 }
             }
