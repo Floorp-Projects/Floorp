@@ -96,7 +96,7 @@ StubCompiler::rejoin(uint32 invalidationDepth)
     frame.merge(masm, invalidationDepth);
 
     Jump j = masm.jump();
-    joins.append(CrossPatch(j, cc.getLabel()));
+    crossJump(j, cc.getLabel());
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
 }
@@ -181,10 +181,16 @@ StubCompiler::vpInc(JSOp op, bool pushed)
 }
 
 void
+StubCompiler::crossJump(Jump j, Label L)
+{
+    joins.append(CrossPatch(j, L));
+}
+
+void
 StubCompiler::jumpInScript(Jump j, jsbytecode *target)
 {
     if (cc.knownJump(target))
-        joins.append(CrossPatch(j, cc.labelOf(target)));
+        crossJump(j, cc.labelOf(target));
     else
         scriptJoins.append(CrossJumpInScript(j, target));
 }

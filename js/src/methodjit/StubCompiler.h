@@ -137,6 +137,7 @@ class StubCompiler
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     void finalize(uint8 *ncode);
     void jumpInScript(Jump j, jsbytecode *target);
+    void crossJump(Jump j, Label l);
 
   private:
     Call stubCall(void *ptr);
