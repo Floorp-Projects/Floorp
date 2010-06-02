@@ -1562,9 +1562,6 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname)
 
     switch (pname) {
         case LOCAL_GL_CURRENT_PROGRAM:
-        case LOCAL_GL_DELETE_STATUS:
-        case LOCAL_GL_LINK_STATUS:
-        case LOCAL_GL_VALIDATE_STATUS:
         case LOCAL_GL_ATTACHED_SHADERS:
         case LOCAL_GL_INFO_LOG_LENGTH:
         case LOCAL_GL_ACTIVE_UNIFORMS:
@@ -1575,6 +1572,15 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname)
             PRInt32 iv = 0;
             gl->fGetProgramiv(progname, pname, (GLint*) &iv);
             js.SetRetVal(iv);
+        }
+            break;
+        case LOCAL_GL_DELETE_STATUS:
+        case LOCAL_GL_LINK_STATUS:
+        case LOCAL_GL_VALIDATE_STATUS:
+        {
+            PRInt32 iv = 0;
+            gl->fGetProgramiv(progname, pname, (GLint*) &iv);
+            js.SetBoolRetVal(PRBool(iv));
         }
             break;
 
@@ -1766,9 +1772,9 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
         case LOCAL_GL_TEXTURE_WRAP_S:
         case LOCAL_GL_TEXTURE_WRAP_T:
         {
-            float fv = 0;
-            gl->fGetTexParameterfv(target, pname, (GLfloat*) &fv);
-            js.SetRetVal(fv);
+            PRInt32 i = 0;
+            gl->fGetTexParameteriv(target, pname, &i);
+            js.SetRetVal(i);
         }
             break;
 
@@ -1837,11 +1843,18 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc)
     if (baseType == LOCAL_GL_FLOAT) {
         GLfloat fv[16];
         gl->fGetUniformfv(progname, location->Location(), fv);
-        js.SetRetVal(fv, unitSize);
+        if (unitSize == 1)
+            js.SetRetVal(fv[0]);
+        else
+            js.SetRetVal(fv, unitSize);
     } else if (baseType == LOCAL_GL_INT) {
         GLint iv[16];
         gl->fGetUniformiv(progname, location->Location(), iv);
-        js.SetRetVal((PRInt32*)iv, unitSize);
+        if (unitSize == 1)
+            js.SetRetVal(iv[0]);
+        else
+            js.SetRetVal((PRInt32*)iv, unitSize);
+
     } else {
         js.SetRetValAsJSVal(JSVAL_NULL);
     }
@@ -1881,21 +1894,27 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
         {
-            PRInt32 iv = 0;
-            gl->fGetVertexAttribiv(index, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
+            PRInt32 i = 0;
+            gl->fGetVertexAttribiv(index, pname, (GLint*) &i);
+            js.SetRetVal(i);
         }
             break;
 
         case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
         {
             GLfloat fv[4] = { 0 };
-            gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, &fv[0]);
+            gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, fv);
             js.SetRetVal(fv, 4);
+        }
+            break;
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+        {
+            PRInt32 i = 0;
+            gl->fGetVertexAttribiv(index, pname, (GLint*) &i);
+            js.SetBoolRetVal(PRBool(i));
         }
             break;
 
@@ -2096,6 +2115,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
       case LOCAL_GL_RGBA4:
       // XXX case LOCAL_GL_RGB565:
       case LOCAL_GL_RGB5_A1:
+      case LOCAL_GL_DEPTH_COMPONENT:
       case LOCAL_GL_DEPTH_COMPONENT16:
       case LOCAL_GL_STENCIL_INDEX8:
           break;
@@ -2477,14 +2497,20 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname)
 
     switch (pname) {
         case LOCAL_GL_SHADER_TYPE:
-        case LOCAL_GL_DELETE_STATUS:
-        case LOCAL_GL_COMPILE_STATUS:
         case LOCAL_GL_INFO_LOG_LENGTH:
         case LOCAL_GL_SHADER_SOURCE_LENGTH:
         {
             PRInt32 iv = 0;
             gl->fGetShaderiv(shadername, pname, (GLint*) &iv);
             js.SetRetVal(iv);
+        }
+            break;
+        case LOCAL_GL_DELETE_STATUS:
+        case LOCAL_GL_COMPILE_STATUS:
+        {
+            PRInt32 iv = 0;
+            gl->fGetShaderiv(shadername, pname, (GLint*) &iv);
+            js.SetBoolRetVal(PRBool(iv));
         }
             break;
 
