@@ -1,1 +1,1 @@
-print(Infinity >= Infinity ? true : false);
+assertEq(Infinity >= Infinity ? true : false, true);
