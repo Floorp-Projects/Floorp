@@ -806,6 +806,8 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     JSString str;
     JSAtom *atom;
 
+    CHECK_REQUEST(cx);
+
     /*
      * Avoiding the malloc in js_InflateString on shorter strings saves us
      * over 20,000 malloc calls on mozilla browser startup. This compares to
@@ -841,6 +843,7 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 {
     JSString str;
 
+    CHECK_REQUEST(cx);
     str.initFlat((jschar *)chars, length);
     return js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
 }

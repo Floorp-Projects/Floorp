@@ -2121,6 +2121,10 @@ InvokeArgsGuard::~InvokeArgsGuard()
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
+# define CHECK_REQUEST(cx)                                                  \
+    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread)
+#else
+# define CHECK_REQUEST(cx)       ((void)0)
 #endif
 
 static inline uintN
