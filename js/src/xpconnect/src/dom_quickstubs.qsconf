@@ -493,6 +493,7 @@ irregularFilenames = {
     'nsIWebGLFramebuffer': 'nsICanvasRenderingContextWebGL',
     'nsIWebGLRenderbuffer': 'nsICanvasRenderingContextWebGL',
     'nsIWebGLActiveInfo': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLUniformLocation': 'nsICanvasRenderingContextWebGL',
     }
 
 customIncludes = [

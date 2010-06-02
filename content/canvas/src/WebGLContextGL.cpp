@@ -170,7 +170,7 @@ GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
                            PRBool *isDeleted = 0)
 {
     PRBool result = GetConcreteObject(aInterface, aConcreteObject, isNull, isDeleted);
-    if(result == PR_FALSE) return PR_FALSE;
+    if (result == PR_FALSE) return PR_FALSE;
     *aGLObjectName = *aConcreteObject ? (*aConcreteObject)->GLName() : 0;
     return PR_TRUE;
 }
@@ -1782,11 +1782,19 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
 /* XXX fix */
 /* any getUniform(in WebGLProgram program, in WebGLUniformLocation location) raises(DOMException); */
 NS_IMETHODIMP
-WebGLContext::GetUniform(nsIWebGLProgram *pobj, WebGLint location)
+WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname))
         return ErrorInvalidOperation("GetUniform: invalid program");
+
+    WebGLUniformLocation *location;
+    if (!GetConcreteObject(ploc, &location))
+        return ErrorInvalidValue("GetUniform: invalid uniform location");
+
+    if (location->Program() != prog)
+        return ErrorInvalidValue("GetUniform: this uniform location corresponds to another program");
 
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1794,19 +1802,32 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, WebGLint location)
 
     MakeContextCurrent();
 
-    GLint uArraySize = 0;
-    GLenum uType = 0;
+    GLint uniforms = 0;
+    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORMS, &uniforms);
 
-    gl->fGetActiveUniform(progname, location, 0, NULL, &uArraySize, &uType, NULL);
-    if (uArraySize == 0)
+    // we now need the type info to switch between fGetUniformfv and fGetUniformiv
+    // the only way to get that is to iterate through all active uniforms by index until
+    // one matches the given uniform location.
+    GLenum uniformType = 0;
+    GLint uniformNameMaxLength = 0;
+    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniformNameMaxLength);
+    nsAutoArrayPtr<GLchar> uniformName(new GLchar[uniformNameMaxLength+1]);
+    GLint index;
+    for (index = 0; index < uniforms; ++index) {
+        GLsizei dummyLength;
+        GLint dummySize;
+        gl->fGetActiveUniform(progname, index, uniformNameMaxLength, &dummyLength,
+                              &dummySize, &uniformType, uniformName);
+        if (gl->fGetUniformLocation(progname, uniformName) == location->Location())
+            break;
+    }
+
+    if (index == uniforms)
         return NS_ERROR_FAILURE; // XXX GL error? shouldn't happen.
-
-    // glGetUniform needs to be called for each element of an array separately, so we don't
-    // have to deal with uArraySize at all.
 
     GLenum baseType;
     GLint unitSize;
-    if (!BaseTypeAndSizeFromUniformType(uType, &baseType, &unitSize))
+    if (!BaseTypeAndSizeFromUniformType(uniformType, &baseType, &unitSize))
         return NS_ERROR_FAILURE;
 
     // this should never happen
@@ -1815,11 +1836,11 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, WebGLint location)
 
     if (baseType == LOCAL_GL_FLOAT) {
         GLfloat fv[16];
-        gl->fGetUniformfv(progname, location, fv);
+        gl->fGetUniformfv(progname, location->Location(), fv);
         js.SetRetVal(fv, unitSize);
     } else if (baseType == LOCAL_GL_INT) {
         GLint iv[16];
-        gl->fGetUniformiv(progname, location, iv);
+        gl->fGetUniformiv(progname, location->Location(), iv);
         js.SetRetVal((PRInt32*)iv, unitSize);
     } else {
         js.SetRetValAsJSVal(JSVAL_NULL);
@@ -1829,14 +1850,20 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, WebGLint location)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, WebGLint *retval)
+WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, nsIWebGLUniformLocation **retval)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname))
         return ErrorInvalidOperation("GetUniformLocation: invalid program");
 
     MakeContextCurrent();
-    *retval = gl->fGetUniformLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
+
+    GLint intlocation = gl->fGetUniformLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
+
+    nsCOMPtr<WebGLUniformLocation> uloc = new WebGLUniformLocation(prog, intlocation);
+    *retval = uloc.forget().get();
+
     return NS_OK;
 }
 
@@ -2230,24 +2257,33 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     return NS_OK;
 }
 
-#define GL_SIMPLE_ARRAY_METHOD(name, cnt, arrayType, ptrType)           \
+#define OBTAIN_UNIFORM_LOCATION                                         \
+    WebGLUniformLocation *location_object;                              \
+    if (!GetConcreteObject(ploc, &location_object))                     \
+        return ErrorInvalidValue("Invalid uniform location parameter"); \
+    if(mCurrentProgram != location_object->Program())                   \
+        return ErrorInvalidValue("This uniform location corresponds to another program"); \
+    GLint location = location_object->Location();
+
+#define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
 NS_IMETHODIMP                                                           \
 WebGLContext::name(PRInt32 dummy) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
-WebGLContext::name##_array(WebGLint idx, js::TypedArray *wa)               \
+WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, js::TypedArray *wa) \
 {                                                                       \
+    OBTAIN_UNIFORM_LOCATION                                             \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
         return ErrorInvalidOperation("array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % cnt != 0)                       \
         return ErrorInvalidOperation("array must be > 0 elements and have a length multiple of %d", cnt); \
     MakeContextCurrent();                                               \
-    gl->f##name(idx, wa->length / cnt, (ptrType *)wa->data);            \
+    gl->f##name(location, wa->length / cnt, (ptrType *)wa->data);            \
     return NS_OK;                                                       \
 }
 
-#define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(name, cnt, arrayType, ptrType)  \
+#define SIMPLE_ARRAY_METHOD_NO_COUNT(name, cnt, arrayType, ptrType)  \
 NS_IMETHODIMP                                                           \
 WebGLContext::name(PRInt32 dummy) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
@@ -2264,56 +2300,81 @@ WebGLContext::name##_array(WebGLuint idx, js::TypedArray *wa)              \
     return NS_OK;                                                       \
 }
 
-#define GL_SIMPLE_MATRIX_METHOD(name, dim, arrayType, ptrType)          \
+#define SIMPLE_MATRIX_METHOD_UNIFORM(name, dim, arrayType, ptrType)     \
 NS_IMETHODIMP                                                           \
 WebGLContext::name(PRInt32 dummy) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
-WebGLContext::name##_array(WebGLint idx, WebGLboolean transpose, js::TypedArray *wa)  \
+WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, WebGLboolean transpose, js::TypedArray *wa)  \
 {                                                                       \
+    OBTAIN_UNIFORM_LOCATION                                             \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
         return ErrorInvalidOperation("array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % (dim*dim) != 0)                 \
         return ErrorInvalidOperation("array must be > 0 elements and have a length multiple of %d", dim*dim); \
     MakeContextCurrent();                                               \
-    gl->f##name(idx, wa->length / (dim*dim), transpose, (ptrType *)wa->data); \
+    gl->f##name(location, wa->length / (dim*dim), transpose, (ptrType *)wa->data); \
     return NS_OK;                                                       \
 }
 
-GL_SAME_METHOD_2(Uniform1i, Uniform1i, WebGLint, WebGLint)
-GL_SAME_METHOD_3(Uniform2i, Uniform2i, WebGLint, WebGLint, WebGLint)
-GL_SAME_METHOD_4(Uniform3i, Uniform3i, WebGLint, WebGLint, WebGLint, WebGLint)
-GL_SAME_METHOD_5(Uniform4i, Uniform4i, WebGLint, WebGLint, WebGLint, WebGLint, WebGLint)
+#define SIMPLE_METHOD_UNIFORM_1(glname, name, t1)        \
+NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1) {      \
+    OBTAIN_UNIFORM_LOCATION \
+    MakeContextCurrent(); gl->f##glname(location, a1); return NS_OK; \
+}
 
-GL_SAME_METHOD_2(Uniform1f, Uniform1f, WebGLint, WebGLfloat)
-GL_SAME_METHOD_3(Uniform2f, Uniform2f, WebGLint, WebGLfloat, WebGLfloat)
-GL_SAME_METHOD_4(Uniform3f, Uniform3f, WebGLint, WebGLfloat, WebGLfloat, WebGLfloat)
-GL_SAME_METHOD_5(Uniform4f, Uniform4f, WebGLint, WebGLfloat, WebGLfloat, WebGLfloat, WebGLfloat)
+#define SIMPLE_METHOD_UNIFORM_2(glname, name, t1, t2)        \
+NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1, t2 a2) {      \
+    OBTAIN_UNIFORM_LOCATION \
+    MakeContextCurrent(); gl->f##glname(location, a1, a2); return NS_OK; \
+}
 
-GL_SIMPLE_ARRAY_METHOD(Uniform1iv, 1, TYPE_INT32, WebGLint)
-GL_SIMPLE_ARRAY_METHOD(Uniform2iv, 2, TYPE_INT32, WebGLint)
-GL_SIMPLE_ARRAY_METHOD(Uniform3iv, 3, TYPE_INT32, WebGLint)
-GL_SIMPLE_ARRAY_METHOD(Uniform4iv, 4, TYPE_INT32, WebGLint)
+#define SIMPLE_METHOD_UNIFORM_3(glname, name, t1, t2, t3)        \
+NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1, t2 a2, t3 a3) {      \
+    OBTAIN_UNIFORM_LOCATION \
+    MakeContextCurrent(); gl->f##glname(location, a1, a2, a3); return NS_OK; \
+}
 
-GL_SIMPLE_ARRAY_METHOD(Uniform1fv, 1, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_ARRAY_METHOD(Uniform2fv, 2, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_ARRAY_METHOD(Uniform3fv, 3, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_ARRAY_METHOD(Uniform4fv, 4, TYPE_FLOAT32, WebGLfloat)
+#define SIMPLE_METHOD_UNIFORM_4(glname, name, t1, t2, t3, t4)        \
+NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1, t2 a2, t3 a3, t4 a4) {      \
+    OBTAIN_UNIFORM_LOCATION \
+    MakeContextCurrent(); gl->f##glname(location, a1, a2, a3, a4); return NS_OK; \
+}
 
-GL_SIMPLE_MATRIX_METHOD(UniformMatrix2fv, 2, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_MATRIX_METHOD(UniformMatrix3fv, 3, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_MATRIX_METHOD(UniformMatrix4fv, 4, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_METHOD_UNIFORM_1(Uniform1i, Uniform1i, WebGLint)
+SIMPLE_METHOD_UNIFORM_2(Uniform2i, Uniform2i, WebGLint, WebGLint)
+SIMPLE_METHOD_UNIFORM_3(Uniform3i, Uniform3i, WebGLint, WebGLint, WebGLint)
+SIMPLE_METHOD_UNIFORM_4(Uniform4i, Uniform4i, WebGLint, WebGLint, WebGLint, WebGLint)
+
+SIMPLE_METHOD_UNIFORM_1(Uniform1f, Uniform1f, WebGLfloat)
+SIMPLE_METHOD_UNIFORM_2(Uniform2f, Uniform2f, WebGLfloat, WebGLfloat)
+SIMPLE_METHOD_UNIFORM_3(Uniform3f, Uniform3f, WebGLfloat, WebGLfloat, WebGLfloat)
+SIMPLE_METHOD_UNIFORM_4(Uniform4f, Uniform4f, WebGLfloat, WebGLfloat, WebGLfloat, WebGLfloat)
+
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform1iv, 1, TYPE_INT32, WebGLint)
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform2iv, 2, TYPE_INT32, WebGLint)
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform3iv, 3, TYPE_INT32, WebGLint)
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform4iv, 4, TYPE_INT32, WebGLint)
+
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform1fv, 1, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform2fv, 2, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform3fv, 3, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_UNIFORM(Uniform4fv, 4, TYPE_FLOAT32, WebGLfloat)
+
+SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix2fv, 2, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix3fv, 3, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix4fv, 4, TYPE_FLOAT32, WebGLfloat)
 
 GL_SAME_METHOD_2(VertexAttrib1f, VertexAttrib1f, PRUint32, WebGLfloat)
 GL_SAME_METHOD_3(VertexAttrib2f, VertexAttrib2f, PRUint32, WebGLfloat, WebGLfloat)
 GL_SAME_METHOD_4(VertexAttrib3f, VertexAttrib3f, PRUint32, WebGLfloat, WebGLfloat, WebGLfloat)
 GL_SAME_METHOD_5(VertexAttrib4f, VertexAttrib4f, PRUint32, WebGLfloat, WebGLfloat, WebGLfloat, WebGLfloat)
 
-GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib1fv, 1, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib2fv, 2, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib3fv, 3, TYPE_FLOAT32, WebGLfloat)
-GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib4fv, 4, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib1fv, 1, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib2fv, 2, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib3fv, 3, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib4fv, 4, TYPE_FLOAT32, WebGLfloat)
 
 NS_IMETHODIMP
 WebGLContext::UseProgram(nsIWebGLProgram *pobj)
