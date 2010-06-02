@@ -135,7 +135,7 @@ CreateTables(mozIStorageConnection* aDBConn)
       "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
       "data TEXT NOT NULL, "
-      "key_value TEXT DEFAULT NULL, "
+      "key_value DEFAULT NULL, " // NONE affinity
       "PRIMARY KEY (id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
