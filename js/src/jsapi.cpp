@@ -4147,13 +4147,9 @@ JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                   uintN nargs, uintN attrs)
 {
-    JSAtom *atom;
-
     CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return NULL;
-    return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom ? js_DefineFunction(cx, obj, atom, call, nargs, attrs) : NULL;
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4161,45 +4157,44 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, JSNative call,
                     uintN nargs, uintN attrs)
 {
-    JSAtom *atom;
-
     CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return NULL;
-    return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom ? js_DefineFunction(cx, obj, atom, call, nargs, attrs) : NULL;
 }
 
-#define LAST_FRAME_EXCEPTION_CHECK(cx,result)                                 \
-    JS_BEGIN_MACRO                                                            \
-        if (!(result) && !((cx)->options & JSOPTION_DONT_REPORT_UNCAUGHT))    \
-            js_ReportUncaughtException(cx);                                   \
-    JS_END_MACRO
+inline static void
+LAST_FRAME_EXCEPTION_CHECK(JSContext *cx, bool result)
+{
+    if (!result && !(cx->options & JSOPTION_DONT_REPORT_UNCAUGHT))
+        js_ReportUncaughtException(cx);
+}
 
-#define LAST_FRAME_CHECKS(cx,result)                                          \
-    JS_BEGIN_MACRO                                                            \
-        if (!JS_IsRunning(cx)) {                                              \
-            (cx)->weakRoots.lastInternalResult = JSVAL_NULL;                  \
-            LAST_FRAME_EXCEPTION_CHECK(cx, result);                           \
-        }                                                                     \
-    JS_END_MACRO
+inline static void
+LAST_FRAME_CHECKS(JSContext *cx, bool result)
+{
+    if (!JS_IsRunning(cx)) {
+        cx->weakRoots.lastInternalResult = JSVAL_NULL;
+        LAST_FRAME_EXCEPTION_CHECK(cx, result);
+    }
+}
 
-#define JS_OPTIONS_TO_TCFLAGS(cx)                                             \
-    ((((cx)->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) |       \
-     (((cx)->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0))
+inline static uint32 
+JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
+{
+    return ((cx->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) | 
+           ((cx->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
+}
 
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno)
 {
-    uint32 tcflags;
-    JSScript *script;
-
     CHECK_REQUEST(cx);
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                     chars, length, NULL, filename, lineno);
+
+    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
+    JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                               chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4208,9 +4203,7 @@ JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj, const jschar *chars, size_t length,
                    const char *filename, uintN lineno)
 {
-    CHECK_REQUEST(cx);
-    return JS_CompileUCScriptForPrincipals(cx, obj, NULL, chars, length,
-                                           filename, lineno);
+    return JS_CompileUCScriptForPrincipals(cx, obj, NULL, chars, length, filename, lineno);
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4219,15 +4212,12 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               const char *bytes, size_t length,
                               const char *filename, uintN lineno)
 {
-    jschar *chars;
-    JSScript *script;
-
     CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
+
+    jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    script = JS_CompileUCScriptForPrincipals(cx, obj, principals,
-                                             chars, length, filename, lineno);
+    JSScript *script = JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno);
     cx->free(chars);
     return script;
 }
@@ -4236,16 +4226,7 @@ JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj, const char *bytes, size_t length,
                  const char *filename, uintN lineno)
 {
-    jschar *chars;
-    JSScript *script;
-
-    CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
-    if (!chars)
-        return NULL;
-    script = JS_CompileUCScript(cx, obj, chars, length, filename, lineno);
-    cx->free(chars);
-    return script;
+    return JS_CompileScriptForPrincipals(cx, obj, NULL, bytes, length, filename, lineno);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4456,11 +4437,8 @@ JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
                      const jschar *chars, size_t length,
                      const char *filename, uintN lineno)
 {
-    CHECK_REQUEST(cx);
-    return JS_CompileUCFunctionForPrincipals(cx, obj, NULL, name,
-                                             nargs, argnames,
-                                             chars, length,
-                                             filename, lineno);
+    return JS_CompileUCFunctionForPrincipals(cx, obj, NULL, name, nargs, argnames,
+                                             chars, length, filename, lineno);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4470,16 +4448,12 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                 const char *bytes, size_t length,
                                 const char *filename, uintN lineno)
 {
-    jschar *chars;
-    JSFunction *fun;
-
-    CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    fun = JS_CompileUCFunctionForPrincipals(cx, obj, principals, name,
-                                            nargs, argnames, chars, length,
-                                            filename, lineno);
+    JSFunction *fun = JS_CompileUCFunctionForPrincipals(cx, obj, principals, name,
+                                                        nargs, argnames, chars, length,
+                                                        filename, lineno);
     cx->free(chars);
     return fun;
 }
@@ -4490,17 +4464,8 @@ JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
                    const char *bytes, size_t length,
                    const char *filename, uintN lineno)
 {
-    jschar *chars;
-    JSFunction *fun;
-
-    CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
-    if (!chars)
-        return NULL;
-    fun = JS_CompileUCFunction(cx, obj, name, nargs, argnames, chars, length,
-                               filename, lineno);
-    cx->free(chars);
-    return fun;
+    return JS_CompileFunctionForPrincipals(cx, obj, NULL, name, nargs, argnames, bytes, length,
+                                           filename, lineno);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4585,9 +4550,7 @@ JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScript(JSContext *cx, JSObject *obj, const jschar *chars, uintN length,
                     const char *filename, uintN lineno, jsval *rval)
 {
-    CHECK_REQUEST(cx);
-    return JS_EvaluateUCScriptForPrincipals(cx, obj, NULL, chars, length,
-                                            filename, lineno, rval);
+    return JS_EvaluateUCScriptForPrincipals(cx, obj, NULL, chars, length, filename, lineno, rval);
 }
 
 /* Ancient uintN nbytes is part of API/ABI, so use size_t length local. */
@@ -4597,35 +4560,20 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *princ
                                const char *filename, uintN lineno, jsval *rval)
 {
     size_t length = nbytes;
-    jschar *chars;
-    JSBool ok;
-
-    CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return JS_FALSE;
-    ok = JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length,
-                                          filename, lineno, rval);
+    JSBool ok = JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length,
+                                                 filename, lineno, rval);
     cx->free(chars);
     return ok;
 }
 
-/* Ancient uintN nbytes is part of API/ABI, so use size_t length local. */
 JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj, const char *bytes, uintN nbytes,
                   const char *filename, uintN lineno, jsval *rval)
 {
-    size_t length = nbytes;
-    jschar *chars;
-    JSBool ok;
-
-    CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
-    if (!chars)
-        return JS_FALSE;
-    ok = JS_EvaluateUCScript(cx, obj, chars, length, filename, lineno, rval);
-    cx->free(chars);
-    return ok;
+    return JS_EvaluateScriptForPrincipals(cx, obj, NULL, bytes, nbytes, filename, lineno, rval);
 }
 
 JS_PUBLIC_API(JSBool)
