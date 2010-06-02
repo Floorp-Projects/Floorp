@@ -43,6 +43,7 @@
 #include "StubCalls.h"
 #include "assembler/jit/ExecutableAllocator.h"
 #include "FrameState-inl.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
@@ -148,6 +149,7 @@ mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *sco
     Compiler cc(cx, script, fun, scopeChain);
 
     JS_ASSERT(!script->ncode);
+    JS_ASSERT(!script->isEmpty());
 
     CompileStatus status = cc.Compile();
     if (status != Compile_Okay)
