@@ -493,7 +493,7 @@ JSObject::unbrand(JSContext *cx)
                 return false;
             }
         }
-        scope->setGeneric();
+        scope->unbrand(cx);
         JS_UNLOCK_SCOPE(cx, scope);
     }
     return true;
