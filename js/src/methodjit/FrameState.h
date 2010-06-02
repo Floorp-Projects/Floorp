@@ -299,6 +299,12 @@ class FrameState
     inline Jump testInt32(Assembler::Condition cond, FrameEntry *fe);
 
     /*
+     * Special helper for pop-after-set opcodes, which swap the top two stack
+     * elements, then pop.
+     */
+    void popAfterSet();
+
+    /*
      * Returns the current stack depth of the frame.
      */
     uint32 stackDepth() const { return sp - spBase; }
@@ -320,6 +326,11 @@ class FrameState
     inline FrameEntry *addToTracker(uint32 index);
     inline void syncType(const FrameEntry *fe, Assembler &masm) const;
     inline void syncData(const FrameEntry *fe, Assembler &masm) const;
+
+    void
+    moveOwnership(RegisterID reg, FrameEntry *newFe) {
+        regstate[reg].fe = newFe;
+    }
 
     RegisterID evictSomething() {
         return evictSomething(Registers::AvailRegs);
