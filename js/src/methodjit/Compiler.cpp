@@ -214,6 +214,8 @@ mjit::Compiler::finishThisUp()
         return Compile_Error;
     }
 
+    script->nmap = nmap;
+
     for (size_t i = 0; i < script->length; i++) {
         Label L = jumpMap[i];
         if (analysis[i].safePoint) {
