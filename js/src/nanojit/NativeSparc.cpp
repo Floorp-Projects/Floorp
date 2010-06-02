@@ -875,9 +875,8 @@ namespace nanojit
         LIns *rhs = ins->oprnd2();
 
         RegisterMask allow = FpRegs;
-        Register ra = findRegFor(lhs, FpRegs);
-        Register rb = (rhs == lhs) ? ra : findRegFor(rhs, FpRegs);
-
+        Register ra, rb;
+        findRegFor2(allow, lhs, ra, allow, rhs, rb);
         Register rr = deprecated_prepResultReg(ins, allow);
 
         if (op == LIR_addd)
