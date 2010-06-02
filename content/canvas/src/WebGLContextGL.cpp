@@ -301,6 +301,12 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
         return ErrorInvalidEnum("BindBuffer: invalid target");
     }
 
+    if (!isNull) {
+        if ((buf->Target() != LOCAL_GL_NONE) && (target != buf->Target()))
+            return ErrorInvalidOperation("BindBuffer: buffer already bound to a different target");
+        buf->SetTarget(target);
+    }
+
     MakeContextCurrent();
 
     gl->fBindBuffer(target, bufname);
@@ -412,9 +418,9 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
 
     MakeContextCurrent();
 
-    // XXX what happens if BufferData fails? We probably shouldn't
-    // update our size here then, right?
     boundBuffer->SetByteLength(size);
+    boundBuffer->ZeroDataIfElementArray();
+
     gl->fBufferData(target, size, 0, usage);
 
     return NS_OK;
@@ -439,6 +445,8 @@ WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum us
     MakeContextCurrent();
 
     boundBuffer->SetByteLength(wb->byteLength);
+    boundBuffer->CopyDataIfElementArray(wb->data);
+
     gl->fBufferData(target, wb->byteLength, wb->data, usage);
 
     return NS_OK;
@@ -463,6 +471,8 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
     MakeContextCurrent();
 
     boundBuffer->SetByteLength(wa->byteLength);
+    boundBuffer->CopyDataIfElementArray(wa->data);
+
     gl->fBufferData(target, wa->byteLength, wa->data, usage);
 
     return NS_OK;
@@ -475,7 +485,7 @@ WebGLContext::BufferSubData(PRInt32 dummy)
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData_buf(WebGLenum target, WebGLsizei offset, js::ArrayBuffer *wb)
+WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayBuffer *wb)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -491,19 +501,21 @@ WebGLContext::BufferSubData_buf(WebGLenum target, WebGLsizei offset, js::ArrayBu
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
     // XXX check for overflow
-    if (offset + wb->byteLength > boundBuffer->ByteLength())
+    if (byteOffset + wb->byteLength > boundBuffer->ByteLength())
         return ErrorInvalidOperation("BufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
-                                     offset, wb->byteLength, boundBuffer->ByteLength());
+                                     byteOffset, wb->byteLength, boundBuffer->ByteLength());
 
     MakeContextCurrent();
 
-    gl->fBufferSubData(target, offset, wb->byteLength, wb->data);
+    boundBuffer->CopySubDataIfElementArray(byteOffset, wb->byteLength, wb->data);
+
+    gl->fBufferSubData(target, byteOffset, wb->byteLength, wb->data);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei offset, js::TypedArray *wa)
+WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::TypedArray *wa)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -519,13 +531,15 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei offset, js::Typed
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
     // XXX check for overflow
-    if (offset + wa->byteLength > boundBuffer->ByteLength())
+    if (byteOffset + wa->byteLength > boundBuffer->ByteLength())
         return ErrorInvalidOperation("BufferSubData: not enough data -- operation requires %d bytes, but buffer only has %d bytes",
-                                     offset, wa->byteLength, boundBuffer->ByteLength());
+                                     byteOffset, wa->byteLength, boundBuffer->ByteLength());
 
     MakeContextCurrent();
 
-    gl->fBufferSubData(target, offset, wa->byteLength, wa->data);
+    boundBuffer->CopySubDataIfElementArray(byteOffset, wa->byteLength, wa->data);
+
+    gl->fBufferSubData(target, byteOffset, wa->byteLength, wa->data);
 
     return NS_OK;
 }
@@ -864,7 +878,7 @@ WebGLContext::DisableVertexAttribArray(WebGLuint index)
 }
 
 NS_IMETHODIMP
-WebGLContext::DrawArrays(WebGLenum mode, WebGLint offset, WebGLsizei count)
+WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 {
     switch (mode) {
         case LOCAL_GL_TRIANGLES:
@@ -879,18 +893,18 @@ WebGLContext::DrawArrays(WebGLenum mode, WebGLint offset, WebGLsizei count)
             return ErrorInvalidEnum("DrawArrays: invalid mode");
     }
 
-    if (offset < 0 || count < 0 || offset+count < offset || offset+count < count) {
-        return ErrorInvalidValue("DrawArrays: overflow in offset+count");
+    if (first < 0 || count < 0 || first+count < first || first+count < count) {
+        return ErrorInvalidValue("DrawArrays: overflow in first+count");
     }
 
-    if (!ValidateBuffers(offset+count))
-        return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient data for given offset and count");
+    if (!ValidateBuffers(first+count))
+        return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient data for given first and count");
 
     MakeContextCurrent();
 
     //printf ("DrawArrays0: %04x\n", gl->fGetError());
 
-    gl->fDrawArrays(mode, offset, count);
+    gl->fDrawArrays(mode, first, count);
 
     //printf ("DrawArrays: %04x\n", gl->fGetError());
 
@@ -900,7 +914,7 @@ WebGLContext::DrawArrays(WebGLenum mode, WebGLint offset, WebGLsizei count)
 }
 
 NS_IMETHODIMP
-WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebGLuint offset)
+WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebGLuint byteOffset)
 {
     int elementSize = 0;
 
@@ -920,8 +934,8 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebG
     switch (type) {
         case LOCAL_GL_UNSIGNED_SHORT:
             elementSize = 2;
-            if (offset % 2 != 0)
-                return ErrorInvalidValue("DrawElements: invalid offset for UNSIGNED_SHORT (must be a multiple of 2)");
+            if (byteOffset % 2 != 0)
+                 return ErrorInvalidValue("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
             break;
 
         case LOCAL_GL_UNSIGNED_BYTE:
@@ -935,35 +949,29 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebG
     if (!mBoundElementArrayBuffer)
         return ErrorInvalidOperation("DrawElements: must have element array buffer binding");
 
-    if (count < 0 || offset+count < offset || offset+count < count)
-        return ErrorInvalidValue("DrawElements: overflow in offset+count");
+    WebGLuint byteCount = count*elementSize;
 
-    if (count*elementSize + offset > mBoundElementArrayBuffer->ByteLength())
+    if (count < 0 || byteOffset+byteCount < byteOffset || byteOffset+byteCount < byteCount)
+        return ErrorInvalidValue("DrawElements: overflow in byteOffset+byteCount");
+
+    if (byteOffset + byteCount > mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
+
+    WebGLuint maxIndex = 0;
+    if (type == LOCAL_GL_UNSIGNED_SHORT)
+        maxIndex = mBoundElementArrayBuffer->FindMaximum<GLushort>(count, byteOffset);
+    else if (type == LOCAL_GL_UNSIGNED_BYTE)
+        maxIndex = mBoundElementArrayBuffer->FindMaximum<GLubyte>(count, byteOffset);
+
+    // maxIndex+1 because ValidateBuffers expects the number of elements needed
+    if (!ValidateBuffers(maxIndex+1)) {
+        return ErrorInvalidOperation("DrawElements: bound vertex attribute buffers do not have sufficient "
+                                     "data for given indices from the bound element array");
+    }
 
     MakeContextCurrent();
 
-    // XXXmark fix validation
-    // XXX either WebGLushort or WebGLubyte; just put this calculation as a method on the array object
-#if 0
-    WebGLuint maxindex = 0;
-    WebGLushort *ubuf = (GLushort*) gl->fMapBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, LOCAL_GL_READ_ONLY);
-    if (!ubuf)
-        return ErrorInvalidOperation("DrawElements: failed to map ELEMENT_ARRAY_BUFFER for validation!");
-
-    ubuf += offset;
-
-    // XXX cache results for this count,offset pair!
-    for (PRUint32 i = 0; i < count; ++i)
-        maxindex = NS_MAX(maxindex, *ubuf++);
-
-    gl->fUnmapBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER);
-
-    if (!ValidateBuffers(maxindex))
-        return ErrorInvalidOperation("DrawElements: ValidateBuffers failed");
-#endif
-
-    gl->fDrawElements(mode, count, type, (GLvoid*) (offset));
+    gl->fDrawElements(mode, count, type, (GLvoid*) (byteOffset));
 
     Invalidate();
 
@@ -2507,7 +2515,7 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
 NS_IMETHODIMP
 WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type,
                                   WebGLboolean normalized, WebGLuint stride,
-                                  WebGLuint offset)
+                                  WebGLuint byteOffset)
 {
     if (mBoundArrayBuffer == nsnull)
         return ErrorInvalidOperation("VertexAttribPointer: must have valid GL_ARRAY_BUFFER binding");
@@ -2547,13 +2555,14 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
     vd.buf = mBoundArrayBuffer;
     vd.stride = stride;
     vd.size = size;
-    vd.offset = offset;
+    vd.byteOffset = byteOffset;
+    vd.type = type;
 
     MakeContextCurrent();
 
     gl->fVertexAttribPointer(index, size, type, normalized,
                              stride,
-                             (void*) (offset));
+                             (void*) (byteOffset));
 
     return NS_OK;
 }
