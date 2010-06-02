@@ -97,6 +97,10 @@ class BaseAssembler : public JSC::MacroAssembler
     static const RegisterID FpReg = JSC::X86Registers::r11;
 #endif
 
+    size_t distanceOf(Label l) {
+        return differenceBetween(startLabel, l);
+    }
+
     /*
      * Finds and returns the address of a known object and slot.
      */
