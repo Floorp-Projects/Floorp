@@ -11089,10 +11089,8 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELELEM()
 {
     jsval& lval = stackval(-2);
-    if (JSVAL_IS_PRIMITIVE(lval)) {
-        AbortRecording(cx, "JSOP_DELELEM on primitive base expression");
-        return ARECORD_STOP;
-    }
+    if (JSVAL_IS_PRIMITIVE(lval))
+        RETURN_STOP_A("JSOP_DELELEM on primitive base expression");
 
     jsval& idx = stackval(-1);
     LIns* rval_ins;
@@ -11104,8 +11102,7 @@ TraceRecorder::record_JSOP_DELELEM()
         LIns* args[] = { get(&idx), get(&lval), cx_ins };
         rval_ins = lir->insCall(&DeleteStrKey_ci, args);
     } else {
-        AbortRecording(cx, "JSOP_DELELEM on non-int, non-string index");
-        return ARECORD_STOP;
+        RETURN_STOP_A("JSOP_DELELEM on non-int, non-string index");
     }
 
     set(&lval, rval_ins);
