@@ -478,7 +478,13 @@ mjit::Compiler::generateMethod()
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::SetName, Uses(2), Defs(1));
-            frame.pop();
+            if (JSOp(PC[JSOP_SETNAME_LENGTH]) == JSOP_POP &&
+                !analysis[&PC[JSOP_SETNAME_LENGTH]].nincoming) {
+                frame.popn(2);
+                PC += JSOP_SETNAME_LENGTH + JSOP_POP_LENGTH;
+                break;
+            }
+            frame.popAfterSet();
           END_CASE(JSOP_SETNAME)
 
           BEGIN_CASE(JSOP_DEFFUN)
