@@ -36,14 +36,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
-DIRS		= src
+MODULE         = necko
+LIBRARY_NAME   = nkgopher_s
+LIBXUL_LIBRARY = 1
+
+FORCE_STATIC_LIB = 1
+
+CPPSRCS = \
+  nsGopherHandler.cpp \
+  nsGopherChannel.cpp \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../../base/src \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

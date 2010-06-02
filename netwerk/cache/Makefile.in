@@ -35,15 +35,67 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	= nkcache
-DIRS	= public src
+MODULE         = nkcache
+LIBRARY_NAME   = nkcache_s
+LIBXUL_LIBRARY = 1
+XPIDL_MODULE   = necko_cache
+GRE_MODULE     = 1
+
+FORCE_STATIC_LIB = 1
+
+XPIDLSRCS = \
+  nsICache.idl \
+  nsICacheEntryDescriptor.idl \
+  nsICacheListener.idl \
+  nsICacheService.idl \
+  nsICacheSession.idl \
+  nsICacheVisitor.idl \
+  $(NULL)
+
+EXPORTS = \
+  nsCacheService.h \
+  $(NULL)
+
+CPPSRCS = \
+  nsCache.cpp \
+  nsCacheEntry.cpp \
+  nsCacheEntryDescriptor.cpp \
+  nsCacheMetaData.cpp \
+  nsCacheService.cpp \
+  nsCacheSession.cpp \
+  nsMemoryCacheDevice.cpp \
+  $(NULL)
+
+ifdef NECKO_DISK_CACHE
+CPPSRCS += \
+  nsDiskCacheBinding.cpp \
+  nsDiskCacheBlockFile.cpp \
+  nsDiskCacheDevice.cpp \
+  nsDiskCacheEntry.cpp \
+  nsDiskCacheMap.cpp \
+  nsDiskCacheStreams.cpp \
+  nsDeleteDir.cpp \
+  $(NULL)
+endif
+
+ifdef MOZ_STORAGE
+CPPSRCS += \
+  nsDiskCacheDeviceSQL.cpp \
+  $(NULL)
+
+DEFINES += -DNECKO_OFFLINE_CACHE
+endif
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../base/src \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
