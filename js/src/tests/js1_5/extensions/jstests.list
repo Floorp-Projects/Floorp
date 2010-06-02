@@ -78,7 +78,7 @@ script regress-352261.js
 skip script regress-352281.js # obsolete test
 script regress-352291.js
 script regress-352372.js
-script regress-352604.js
+skip script regress-352604.js
 script regress-353214.js
 script regress-354297.js
 script regress-354541-01.js
