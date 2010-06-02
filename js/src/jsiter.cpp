@@ -165,10 +165,8 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
             return false;
     }
     if (enumerable || (flags & JSITER_HIDDEN)) {
-        if (!vec.append(ID_TO_VALUE(id))) {
-            JS_ReportOutOfMemory(cx);
+        if (!vec.append(ID_TO_VALUE(id)))
             return false;
-        }
         if (flags & JSITER_FOREACH) {
             jsval *vp = vec.end() - 1;
 
@@ -201,10 +199,8 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     }
 
     while (sprops.length() > 0) {
-        if (!props.append(sprops.back())) {
-            JS_ReportOutOfMemory(cx);
+        if (!props.append(sprops.back()))
             return false;
-        }
         sprops.popBack();
     }
 
@@ -239,10 +235,8 @@ NativeIterator::allocate(JSContext *cx, uintN flags, uint32 *sarray, uint32 slen
 {
     NativeIterator *ni = (NativeIterator *)
         cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
-    if (!ni) {
-        JS_ReportOutOfMemory(cx);
+    if (!ni)
         return NULL;
-    }
     ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength)
