@@ -3455,38 +3455,21 @@ JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_GetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-
-    CHECK_REQUEST(cx);
-    return obj->getProperty(cx, INT_TO_JSID(index), vp);
+    return JS_GetPropertyById(cx, obj, INT_TO_JSID(index), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return JS_FALSE;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_GetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *vp)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return JS_FALSE;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_GetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3503,12 +3486,8 @@ JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, jsval *
 JS_PUBLIC_API(JSBool)
 JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp, jsval *vp)
 {
-    JSAtom *atom;
-
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return JS_FALSE;
-    return JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), objp, vp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), objp, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3522,38 +3501,21 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-
-    CHECK_REQUEST(cx);
-    return obj->setProperty(cx, INT_TO_JSID(index), vp);
+    return JS_SetPropertyById(cx, obj, INT_TO_JSID(index), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return JS_FALSE;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setProperty(cx, ATOM_TO_JSID(atom), vp);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_SetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *vp)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return JS_FALSE;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setProperty(cx, ATOM_TO_JSID(atom), vp);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_SetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3567,38 +3529,21 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 JS_PUBLIC_API(JSBool)
 JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-
-    CHECK_REQUEST(cx);
-    return obj->deleteProperty(cx, INT_TO_JSID(index), rval);
+    return JS_DeletePropertyById2(cx, obj, INT_TO_JSID(index), rval);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name, jsval *rval)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-        return JS_FALSE;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->deleteProperty(cx, ATOM_TO_JSID(atom), rval);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_DeletePropertyById2(cx, obj, ATOM_TO_JSID(atom), rval);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteUCProperty2(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *rval)
 {
-    JSAtom *atom;
-
-    CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return JS_FALSE;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->deleteProperty(cx, ATOM_TO_JSID(atom), rval);
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_DeletePropertyById2(cx, obj, ATOM_TO_JSID(atom), rval);
 }
 
 JS_PUBLIC_API(JSBool)
