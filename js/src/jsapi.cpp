@@ -1191,7 +1191,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitJSONClass(cx, obj) &&
            js_InitRegExpClass(cx, obj) &&
            js_InitStringClass(cx, obj) &&
-           js_InitEval(cx, obj) &&
            js_InitTypedArrayClasses(cx, obj) &&
 #if JS_HAS_XML_SUPPORT
            js_InitXMLClasses(cx, obj) &&
@@ -1271,26 +1270,25 @@ static JSStdName standard_class_atoms[] = {
  * this table.
  */
 static JSStdName standard_class_names[] = {
-    /* ECMA requires that eval be a direct property of the global object. */
-    {js_InitEval,               EAGER_ATOM(eval), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(eval), CLASP(Object)},
 
     /* Global properties and functions defined by the Number class. */
-    {js_InitNumberClass,        LAZY_ATOM(NaN), NULL},
-    {js_InitNumberClass,        LAZY_ATOM(Infinity), NULL},
-    {js_InitNumberClass,        LAZY_ATOM(isNaN), NULL},
-    {js_InitNumberClass,        LAZY_ATOM(isFinite), NULL},
-    {js_InitNumberClass,        LAZY_ATOM(parseFloat), NULL},
-    {js_InitNumberClass,        LAZY_ATOM(parseInt), NULL},
+    {js_InitNumberClass,        LAZY_ATOM(NaN), CLASP(Number)},
+    {js_InitNumberClass,        LAZY_ATOM(Infinity), CLASP(Number)},
+    {js_InitNumberClass,        LAZY_ATOM(isNaN), CLASP(Number)},
+    {js_InitNumberClass,        LAZY_ATOM(isFinite), CLASP(Number)},
+    {js_InitNumberClass,        LAZY_ATOM(parseFloat), CLASP(Number)},
+    {js_InitNumberClass,        LAZY_ATOM(parseInt), CLASP(Number)},
 
     /* String global functions. */
-    {js_InitStringClass,        LAZY_ATOM(escape), NULL},
-    {js_InitStringClass,        LAZY_ATOM(unescape), NULL},
-    {js_InitStringClass,        LAZY_ATOM(decodeURI), NULL},
-    {js_InitStringClass,        LAZY_ATOM(encodeURI), NULL},
-    {js_InitStringClass,        LAZY_ATOM(decodeURIComponent), NULL},
-    {js_InitStringClass,        LAZY_ATOM(encodeURIComponent), NULL},
+    {js_InitStringClass,        LAZY_ATOM(escape), CLASP(String)},
+    {js_InitStringClass,        LAZY_ATOM(unescape), CLASP(String)},
+    {js_InitStringClass,        LAZY_ATOM(decodeURI), CLASP(String)},
+    {js_InitStringClass,        LAZY_ATOM(encodeURI), CLASP(String)},
+    {js_InitStringClass,        LAZY_ATOM(decodeURIComponent), CLASP(String)},
+    {js_InitStringClass,        LAZY_ATOM(encodeURIComponent), CLASP(String)},
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        LAZY_ATOM(uneval), NULL},
+    {js_InitStringClass,        LAZY_ATOM(uneval), CLASP(String)},
 #endif
 
     /* Exception constructors. */
@@ -1306,8 +1304,8 @@ static JSStdName standard_class_names[] = {
 #if JS_HAS_XML_SUPPORT
     {js_InitAnyNameClass,       EAGER_ATOM_AND_CLASP(AnyName)},
     {js_InitAttributeNameClass, EAGER_ATOM_AND_CLASP(AttributeName)},
-    {js_InitXMLClass,           LAZY_ATOM(XMLList), &js_XMLClass},
-    {js_InitXMLClass,           LAZY_ATOM(isXMLName), NULL},
+    {js_InitXMLClass,           LAZY_ATOM(XMLList), CLASP(XML)},
+    {js_InitXMLClass,           LAZY_ATOM(isXMLName), CLASP(XML)},
 #endif
 
 #if JS_HAS_GENERATORS
@@ -1316,43 +1314,43 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), NULL},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array), &TypedArray::fastClasses[TypedArray::TYPE_INT8]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT8]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array), &TypedArray::fastClasses[TypedArray::TYPE_INT16]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT16]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array), &TypedArray::fastClasses[TypedArray::TYPE_INT32]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT32]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), &TypedArray::fastClasses[TypedArray::TYPE_FLOAT32]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), &TypedArray::fastClasses[TypedArray::TYPE_FLOAT64]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), &TypedArray::fastClasses[TypedArray::TYPE_UINT8_CLAMPED]},
 
-    {js_InitProxyClass,         EAGER_ATOM(Proxy), NULL},
+    {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
     {NULL,                      0, NULL, NULL}
 };
 
 static JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
-    {js_InitObjectClass,        EAGER_ATOM(proto), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(proto), CLASP(Object)},
 #if JS_HAS_TOSOURCE
-    {js_InitObjectClass,        EAGER_ATOM(toSource), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(toSource), CLASP(Object)},
 #endif
-    {js_InitObjectClass,        EAGER_ATOM(toString), NULL},
-    {js_InitObjectClass,        EAGER_ATOM(toLocaleString), NULL},
-    {js_InitObjectClass,        EAGER_ATOM(valueOf), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(toString), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(toLocaleString), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(valueOf), CLASP(Object)},
 #if JS_HAS_OBJ_WATCHPOINT
-    {js_InitObjectClass,        LAZY_ATOM(watch), NULL},
-    {js_InitObjectClass,        LAZY_ATOM(unwatch), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(watch), CLASP(Object)},
+    {js_InitObjectClass,        LAZY_ATOM(unwatch), CLASP(Object)},
 #endif
-    {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), NULL},
-    {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), NULL},
-    {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), CLASP(Object)},
+    {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), CLASP(Object)},
+    {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), CLASP(Object)},
 #if OLD_GETTER_SETTER_METHODS
-    {js_InitObjectClass,        LAZY_ATOM(defineGetter), NULL},
-    {js_InitObjectClass,        LAZY_ATOM(defineSetter), NULL},
-    {js_InitObjectClass,        LAZY_ATOM(lookupGetter), NULL},
-    {js_InitObjectClass,        LAZY_ATOM(lookupSetter), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(defineGetter), CLASP(Object)},
+    {js_InitObjectClass,        LAZY_ATOM(defineSetter), CLASP(Object)},
+    {js_InitObjectClass,        LAZY_ATOM(lookupGetter), CLASP(Object)},
+    {js_InitObjectClass,        LAZY_ATOM(lookupSetter), CLASP(Object)},
 #endif
 
     {NULL,                      0, NULL, NULL}
@@ -1389,6 +1387,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved
     /* Try for class constructors/prototypes named by well-known atoms. */
     stdnm = NULL;
     for (i = 0; standard_class_atoms[i].init; i++) {
+        JS_ASSERT(standard_class_atoms[i].clasp);
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
         if (idstr == ATOM_TO_STRING(atom)) {
             stdnm = &standard_class_atoms[i];
@@ -1399,6 +1398,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved
     if (!stdnm) {
         /* Try less frequently used top-level functions and constants. */
         for (i = 0; standard_class_names[i].init; i++) {
+            JS_ASSERT(standard_class_names[i].clasp);
             atom = StdNameToAtom(cx, &standard_class_names[i]);
             if (!atom)
                 return JS_FALSE;
@@ -1415,6 +1415,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved
              * yet been initialized.
              */
             for (i = 0; object_prototype_names[i].init; i++) {
+                JS_ASSERT(object_prototype_names[i].clasp);
                 atom = StdNameToAtom(cx, &object_prototype_names[i]);
                 if (!atom)
                     return JS_FALSE;
@@ -1428,19 +1429,19 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved
 
     if (stdnm) {
         /*
-         * If this standard class is anonymous and obj advertises itself as a
-         * global object (in order to reserve slots for standard class object
-         * pointers), then we don't want to resolve by name.
-         *
-         * If inversely, either id does not name a class, or id does not name
-         * an anonymous class, or the global does not reserve slots for class
-         * objects, then we must call the init hook here.
+         * If this standard class is anonymous, then we don't want to resolve
+         * by name.
          */
-        if (stdnm->clasp &&
-            (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS) &&
-            (obj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+        JS_ASSERT(obj->getClass()->flags & JSCLASS_IS_GLOBAL);
+        if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return JS_TRUE;
-        }
+
+        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
+        jsval v;
+        if (!JS_GetReservedSlot(cx, obj, key, &v))
+            return JS_FALSE;
+        if (!JSVAL_IS_PRIMITIVE(v))
+            return JS_TRUE;
 
         if (!stdnm->init(cx, obj))
             return JS_FALSE;
