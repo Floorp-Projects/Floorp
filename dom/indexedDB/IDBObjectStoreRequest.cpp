@@ -204,6 +204,26 @@ private:
   PRInt64 mId;
 };
 
+class RemoveIndexHelper : public AsyncConnectionHelper
+{
+public:
+  RemoveIndexHelper(IDBTransactionRequest* aDatabase,
+                    IDBRequest* aRequest,
+                    const nsAString& aName,
+                    IDBObjectStoreRequest* aObjectStore)
+  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName),
+    mObjectStore(aObjectStore)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+private:
+  // In-params
+  nsString mName;
+  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+};
+
 // Remove once nsIVariant can handle jsvals
 class GetSuccessEvent : public IDBSuccessEvent
 {
@@ -837,6 +857,10 @@ IDBObjectStoreRequest::Index(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsRefPtr<IDBIndexRequest> request =
+    IDBIndexRequest::Create(mDatabase, this, mTransaction);
+
+  request.forget(_retval);
   return NS_OK;
 }
 
@@ -844,14 +868,32 @@ NS_IMETHODIMP
 IDBObjectStoreRequest::RemoveIndex(const nsAString& aName,
                                    nsIIDBRequest** _retval)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  ObjectStoreInfo* info = GetObjectStoreInfo();
+  NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+
+  if (!info->indexNames.Contains(aName)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+
+  nsRefPtr<RemoveIndexHelper> helper =
+    new RemoveIndexHelper(mTransaction, request, aName, this);
+  nsresult rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 PRUint16
@@ -1350,6 +1392,42 @@ CreateIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 
   PRBool dummy;
   aTarget->DispatchEvent(event, &dummy);
+  return OK;
+}
+
+PRUint16
+RemoveIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM object_store_index "
+    "WHERE name = :name "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (NS_FAILED(stmt->Execute())) {
+    return nsIIDBDatabaseException::NOT_FOUND_ERR;
+  }
+
+  return OK;
+}
+
+PRUint16
+RemoveIndexHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+{
+  NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+
+  ObjectStoreInfo* info = mObjectStore->GetObjectStoreInfo();
+  if (!info) {
+    NS_ERROR("Unable to get object store info!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+  info->indexNames.RemoveElement(mName);
   return OK;
 }
 
