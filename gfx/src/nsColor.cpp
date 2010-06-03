@@ -168,6 +168,10 @@ NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
 // compatible with legacy Nav behavior
 NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
+  if (aColorSpec.EqualsLiteral("transparent")) {
+    return PR_FALSE;
+  }
+
   int nameLen = aColorSpec.Length();
   const PRUnichar* colorSpec = aColorSpec.get();
   if ('#' == colorSpec[0]) {

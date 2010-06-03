@@ -1170,9 +1170,12 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
 
   // In compatibility mode, try LooseHexToRGB as a fallback for either
   // of the above two possibilities.
-  NS_LooseHexToRGB(colorStr, &color);
-  SetColorValue(color, aString);
-  return PR_TRUE;
+  if (NS_LooseHexToRGB(colorStr, &color)) {
+    SetColorValue(color, aString);
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 PRBool nsAttrValue::ParseFloatValue(const nsAString& aString)
