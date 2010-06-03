@@ -94,6 +94,13 @@
         is(index.unique, indexData[i].unique, "Correct keyPath");
       }
 
+      request = objectStore.index("name").get("Bob");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, "237-23-7732", "Correct key returned!");
+
       finishTest();
       yield;
     }
