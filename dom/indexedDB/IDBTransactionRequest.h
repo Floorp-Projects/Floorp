@@ -98,6 +98,12 @@ public:
 
   already_AddRefed<mozIStorageStatement> GetStatement(bool aAutoIncrement);
 
+  already_AddRefed<mozIStorageStatement> IndexGetStatement(bool aUnique,
+                                                           bool aAutoIncrement);
+
+  already_AddRefed<mozIStorageStatement> IndexRemoveStatement(bool aUnique,
+                                                              bool aAutoIncrement);
+
 #ifdef DEBUG
   bool TransactionIsOpen() const;
   bool IsWriteAllowed() const;
@@ -149,6 +155,10 @@ private:
   nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
   nsCOMPtr<mozIStorageStatement> mGetStmt;
   nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexGetUniqueAIStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexGetAIStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexGetUniqueStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexGetStmt;
 
   // Only touched on the database thread.
   PRUint32 mSavepointCount;
