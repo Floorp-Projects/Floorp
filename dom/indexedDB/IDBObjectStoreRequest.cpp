@@ -1212,6 +1212,8 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   // Update our indexes if needed.
   if (mIndexes.Length()) {
+    // TODO
+    NS_NOTYETIMPLEMENTED("Implement me!");
   }
 
   rv = savepoint.Release();
