@@ -67,6 +67,15 @@ namespace {
 
 const PRUint32 kDefaultThreadTimeoutMS = 30000;
 
+struct ObjectStoreInfoMap
+{
+  ObjectStoreInfoMap()
+  : id(LL_MININT), info(nsnull) { }
+
+  PRInt64 id;
+  ObjectStoreInfo* info;
+};
+
 class OpenDatabaseHelper : public AsyncConnectionHelper
 {
 public:
@@ -84,6 +93,8 @@ public:
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
+  PRUint16 DoDatabaseWorkInternal(mozIStorageConnection* aConnection);
+
   // In-params.
   nsString mName;
   nsString mDescription;
@@ -645,6 +656,16 @@ IndexedDatabaseRequest::MakeBoundKeyRange(nsIVariant* aLeft,
 PRUint16
 OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
+  PRUint16 result = DoDatabaseWorkInternal(aConnection);
+  if (result != OK) {
+    mConnection = nsnull;
+  }
+  return result;
+}
+
+PRUint16
+OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
+{
 #ifdef DEBUG
   {
     PRBool correctThread;
@@ -662,6 +683,8 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mDatabaseId = HashString(mDatabaseFilePath);
   NS_ASSERTION(mDatabaseId, "HashString gave us 0?!");
+
+  nsAutoTArray<ObjectStoreInfoMap, 20> infoMap;
 
   { // Load object store names and ids.
     nsCOMPtr<mozIStorageStatement> stmt;
@@ -689,9 +712,56 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
       info->autoIncrement = !!stmt->AsInt32(3);
       info->databaseId = mDatabaseId;
+
+      ObjectStoreInfoMap* mapEntry = infoMap.AppendElement();
+      if (!mapEntry) {
+        NS_ERROR("Failed to add to map!");
+        return nsIIDBDatabaseException::UNKNOWN_ERR;
+      }
+      mapEntry->id = info->id;
+      mapEntry->info = info;
     }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  { // Load index information
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT object_store_id, name, key_path, unique_index, "
+             "object_store_autoincrement "
+      "FROM object_store_index"
+    ), getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    PRBool hasResult;
+    while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+
+      PRInt64 objectStoreId = stmt->AsInt64(0);
+
+      ObjectStoreInfo* objectStoreInfo = nsnull;
+      PRUint32 count = infoMap.Length();
+      for (PRUint32 index = 0; index < count; index++) {
+        if (infoMap[index].id == objectStoreId) {
+          objectStoreInfo = infoMap[index].info;
+          break;
+        }
+      }
+      NS_ENSURE_TRUE(objectStoreInfo, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      IndexInfo* indexInfo = objectStoreInfo->indexes.AppendElement();
+      NS_ENSURE_TRUE(indexInfo, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      rv = stmt->GetString(1, indexInfo->name);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      rv = stmt->GetString(2, indexInfo->keyPath);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      indexInfo->unique = !!stmt->AsInt32(3);
+      indexInfo->autoIncrement = !!stmt->AsInt32(4);
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
 
   { // Load version information.
     nsCOMPtr<mozIStorageStatement> stmt;
@@ -725,6 +795,7 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
     NS_ASSERTION(dbInfo->referenceCount, "Bad reference count!");
     ++dbInfo->referenceCount;
+
 #ifdef DEBUG
     {
       NS_ASSERTION(dbInfo->name == mName &&
@@ -751,9 +822,26 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
                      "Metadata mismatch!");
         NS_ASSERTION(dbInfo->ContainsStoreName(info->name),
                      "Object store names out of date!");
+        NS_ASSERTION(info->indexes.Length() == otherInfo->indexes.Length(),
+                     "Bad index length!");
+
+        PRUint32 indexCount = info->indexes.Length();
+        for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
+          const IndexInfo& indexInfo = info->indexes[indexIndex];
+          const IndexInfo& otherIndexInfo = otherInfo->indexes[indexIndex];
+          NS_ASSERTION(indexInfo.name == otherIndexInfo.name,
+                       "Bad index name!");
+          NS_ASSERTION(indexInfo.keyPath == otherIndexInfo.keyPath,
+                       "Bad index keyPath!");
+          NS_ASSERTION(indexInfo.unique == otherIndexInfo.unique,
+                       "Bad index unique value!");
+          NS_ASSERTION(indexInfo.autoIncrement == otherIndexInfo.autoIncrement,
+                       "Bad index autoIncrement value!");
+        }
       }
     }
 #endif
+
   }
   else {
     nsAutoPtr<DatabaseInfo> newInfo(new DatabaseInfo());

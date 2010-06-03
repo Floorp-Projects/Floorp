@@ -69,6 +69,17 @@ struct DatabaseInfo
   bool ContainsStoreName(const nsAString& aName);
 };
 
+struct IndexInfo
+{
+  IndexInfo()
+  : unique(false), autoIncrement(false) { }
+
+  nsString name;
+  nsString keyPath;
+  bool unique;
+  bool autoIncrement;
+};
+
 struct ObjectStoreInfo
 {
   nsString name;
@@ -76,7 +87,7 @@ struct ObjectStoreInfo
   nsString keyPath;
   bool autoIncrement;
   PRUint32 databaseId;
-  nsTArray<nsString> indexNames;
+  nsTArray<IndexInfo> indexes;
 
   ObjectStoreInfo()
   : id(0), autoIncrement(false), databaseId(0) { }
