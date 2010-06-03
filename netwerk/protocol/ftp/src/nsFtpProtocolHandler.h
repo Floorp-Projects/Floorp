@@ -76,6 +76,9 @@ public:
     nsresult RemoveConnection(nsIURI *aKey, nsFtpControlConnection **aConn);
     PRUint32 GetSessionId() { return mSessionId; }
 
+    PRUint8 GetDataQoSBits() { return mDataQoSBits; }
+    PRUint8 GetControlQoSBits() { return mControlQoSBits; }
+
 private:
     // Stuff for the timer callback function
     struct timerStruct {
@@ -111,6 +114,9 @@ private:
     // control connection had been created before last "clear active logins" was
     // performed.
     PRUint32 mSessionId;
+
+    PRUint8 mControlQoSBits;
+    PRUint8 mDataQoSBits;
 };
 
 //-----------------------------------------------------------------------------
