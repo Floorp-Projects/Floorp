@@ -696,6 +696,25 @@ pref("network.http.pipelining.maxrequests" , 4);
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
 
+// On networks deploying QoS, it is recommended that these be lockpref()'d,
+// since inappropriate marking can easily overwhelm bandwidth reservations
+// for certain services (i.e. EF for VoIP, AF4x for interactive video,
+// AF3x for broadcast/streaming video, etc)
+
+// default value for HTTP
+// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
+// Section 4.8 "High-Throughput Data Service Class"
+pref("network.http.qos", 0);
+// ditto for Gopher
+pref("network.gopher.qos", 0);
+
+// default values for FTP
+// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
+// Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
+// per Section 4.7 "Low-Latency Data Service Class".
+pref("network.ftp.data.qos", 0);
+pref("network.ftp.control.qos", 0);
+
 // </http>
 
 // If false, remote JAR files that are served with a content type other than

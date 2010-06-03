@@ -51,7 +51,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(ef3f4993-cfbc-4e5a-9509-16deafe16549)]
+[scriptable, uuid(19c37caa-fb41-4c32-bbf1-c6b31b75d789)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -157,6 +157,16 @@ interface nsISocketTransport : nsITransport
      * if this flag is set.
      */
     const unsigned long ANONYMOUS_CONNECT = (1 << 1);
+
+    /**
+     * Socket QoS/ToS markings. Valid values are IPTOS_DSCP_AFxx or
+     * IPTOS_CLASS_CSx (or IPTOS_DSCP_EF, but currently no supported
+     * services require expedited-forwarding).
+     * Not setting this value will leave the socket with the default
+     * ToS value, which on most systems if IPTOS_CLASS_CS0 (formerly
+     * IPTOS_PREC_ROUTINE).
+     */
+    attribute octet QoSBits;
 
 };
 
