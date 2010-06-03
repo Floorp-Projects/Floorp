@@ -104,9 +104,6 @@ public:
   already_AddRefed<mozIStorageStatement> IndexGetObjectStatement(bool aUnique,
                                                                  bool aAutoIncrement);
 
-  already_AddRefed<mozIStorageStatement> IndexRemoveStatement(bool aUnique,
-                                                              bool aAutoIncrement);
-
 #ifdef DEBUG
   bool TransactionIsOpen() const;
   bool IsWriteAllowed() const;
