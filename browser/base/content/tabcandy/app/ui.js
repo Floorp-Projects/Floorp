@@ -292,6 +292,8 @@ window.Page = {
 
       // If we switched to TabCandy window...
       if( focusTab.contentWindow == window ){
+        UI.focused = true;
+        Page.hideChrome();
         var currentTab = UI.currentTab;
         if(currentTab != null && currentTab.mirror != null) {
           // If there was a previous currentTab we want to animate
@@ -299,16 +301,19 @@ window.Page = {
           
           // Zoom out!
           var mirror = currentTab.mirror;
-          var $tab = $(mirror.el);
+          var $tab = iQ(mirror.el);
           var item = TabItems.getItemByTab(mirror.el);
           self.setActiveTab(item);
           
           var rotation = $tab.css("-moz-transform");
+          var extra = item._getSizeExtra();
           var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
+          w -= extra.x;
+          h -= extra.y;
           var scale = window.innerWidth / w;
   
-          var overflow = $("body").css("overflow");
-          $("body").css("overflow", "hidden");
+          var overflow = iQ("body").css("overflow");
+          iQ("body").css("overflow", "hidden");
           
           TabMirror.pausePainting();
           $tab.css({
@@ -317,25 +322,31 @@ window.Page = {
               height: h * (window.innerWidth/w),
               zIndex: 999999,
               '-moz-transform': 'rotate(0deg)'
-          }).animate({
+          });
+          
+          setTimeout(function() { // Marshal event from chrome thread to DOM thread
+            $tab.animate({
               top: pos.top, left: pos.left,
               width: w, height: h
-          },350, '', function() { // note that this will happen on the DOM thread
-            $tab.css({
-              zIndex: z,
-              '-moz-transform': rotation
+            },'animate350', function() { 
+              $tab.css({
+                zIndex: z,
+                '-moz-transform': rotation
+              });
+              iQ("body").css("overflow", overflow);
+              var activeGroup = Groups.getActiveGroup();
+              if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
+      
+              window.Groups.setActiveGroup(null);
+              TabMirror.resumePainting();        
+              UI.resize(true);
             });
-            $("body").css("overflow", overflow);
-            var activeGroup = Groups.getActiveGroup();
-            if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
-    
-            window.Groups.setActiveGroup(null);
-            TabMirror.resumePainting();        
-            UI.resize(true);
-          });
+          }, 1);
         }
       } else { // switched to another tab
         setTimeout(function() { // Marshal event from chrome thread to DOM thread
+          UI.focused = false;
+          Page.showChrome();
           var item = TabItems.getItemByTab(Utils.activeTab);
           if(item) 
             Groups.setActiveGroup(item.parent);
@@ -354,7 +365,7 @@ window.Page = {
     const minSize = 60;
     
     var startPos = {x:e.clientX, y:e.clientY}
-    var phantom = $("<div>")
+    var phantom = iQ("<div>")
       .addClass('group phantom')
       .css({
         position: "absolute",
@@ -383,13 +394,13 @@ window.Page = {
         height: 0,
         top: phantom.position().top + phantom.height()/2,
         left: phantom.position().left + phantom.width()/2
-      }, 300, function(){
+      }, 'animate300', function(){
         phantom.remove();
       });
     }
     
     function finalize(e){
-      $("#bg, .phantom").unbind("mousemove", updateSize);
+      iQ("#bg, .phantom").unbind("mousemove", updateSize);
       if( phantom.css("opacity") != 1 ) collapse();
       else{
         var bounds = new Rect(startPos.x, startPos.y, phantom.width(), phantom.height())
@@ -409,8 +420,8 @@ window.Page = {
       }
     }
     
-    $("#bg, .phantom").mousemove(updateSize)
-    $(window).one('mouseup', finalize);
+    iQ("#bg, .phantom").mousemove(updateSize)
+    iQ(window).one('mouseup', finalize);
     e.preventDefault();  
     return false;
   },
@@ -501,7 +512,7 @@ UIClass.prototype = {
       // ___ Dev Menu
       this.addDevMenu();
 
-      $("#reset").click(function(){
+      iQ("#reset").click(function(){
         self.reset();
       });
       
@@ -510,30 +521,13 @@ UIClass.prototype = {
         Page.hideChrome();
       }
       
-      Tabs.onFocus(function() {
-        var me = this;
-        setTimeout(function() { // Marshal event from chrome thread to DOM thread
-          try{
-            if(me.contentWindow == window) {
-              self.focused = true;
-              Page.hideChrome();
-            } else {
-              self.focused = false;
-              Page.showChrome();
-            }
-          }catch(e){
-            Utils.log(e)
-          }
-        }, 1);
-      });
-    
       Tabs.onOpen(function(a, b) {
         setTimeout(function() { // Marshal event from chrome thread to DOM thread
           self.navBar.show();
         }, 1);
       });
     
-      $(window).bind('beforeunload', function() {
+      iQ(window).bind('beforeunload', function() {
         self.showChrome();  
         self.tabBar.showAllTabs();
       });
@@ -548,7 +542,7 @@ UIClass.prototype = {
       this.storageSanity(data);
        
       var groupsData = Storage.readGroupsData(currentWindow);
-      var firstTime = !groupsData || $.isEmptyObject(groupsData);
+      var firstTime = !groupsData || iQ.isEmptyObject(groupsData);
       var groupData = Storage.readGroupData(currentWindow);
       Groups.reconstitute(groupsData, groupData);
       
@@ -556,7 +550,7 @@ UIClass.prototype = {
       
       if(firstTime) {
         var items = TabItems.getItems();
-        $.each(items, function(index, item) {
+        iQ.each(items, function(index, item) {
           if(item.parent)
             item.parent.remove(item);
         });
@@ -575,7 +569,7 @@ UIClass.prototype = {
       } else 
         this.pageBounds = Items.getPageBounds();    
       
-      $(window).resize(function() {
+      iQ(window).resize(function() {
         self.resize();
       });
             
@@ -596,7 +590,7 @@ UIClass.prototype = {
 
     // If we are currently doing an animation or if TabCandy isn't focused
     // don't perform a resize. This resize really slows things down.
-    var isAnimating = $(":animated").length > 0;
+    var isAnimating = iQ.isAnimating();
     if( force == false){
       if( isAnimating || !Page.isTabCandyFocused() ) return;   }   
         
@@ -604,7 +598,7 @@ UIClass.prototype = {
     var itemBounds = new Rect(this.pageBounds);
     itemBounds.width = 1;
     itemBounds.height = 1;
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       if(item.locked.bounds)
         return;
         
@@ -640,7 +634,7 @@ UIClass.prototype = {
     var scale = Math.min(hScale, wScale);
     var self = this;
     var pairs = [];
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       if(item.locked.bounds)
         return;
         
@@ -662,7 +656,7 @@ UIClass.prototype = {
     
     Items.unsquish(pairs);
     
-    $.each(pairs, function(index, pair) {
+    iQ.each(pairs, function(index, pair) {
       pair.item.setBounds(pair.bounds, true);
     });
 
@@ -674,17 +668,22 @@ UIClass.prototype = {
   addDevMenu: function() {
     var self = this;
     
-    var html = '<select style="position:absolute; bottom:5px; right:5px; opacity:.2;">'; 
-    var $select = $(html)
+    var $select = iQ('<select>')
+      .css({
+        position: 'absolute',
+        bottom: 5,
+        right: 5,
+        opacity: .2
+      })
       .appendTo('body')
       .change(function () {
-        var index = $(this).val();
+        var index = iQ(this).val();
         try {
           commands[index].code();
         } catch(e) {
           Utils.log('dev menu error', e);
         }
-        $(this).val(0);
+        iQ(this).val(0);
       });
       
     var commands = [{
@@ -716,13 +715,10 @@ UIClass.prototype = {
     var count = commands.length;
     var a;
     for(a = 0; a < count; a++) {
-      html = '<option value="'
-        + a
-        + '">'
-        + commands[a].name
-        + '</option>';
-        
-      $select.append(html);
+      iQ('<option>')
+        .val(a)
+        .html(commands[a].name)
+        .appendTo($select);
     }
   },
 
@@ -754,7 +750,7 @@ UIClass.prototype = {
 
   // ----------
   storageSanity: function(data) {
-    if($.isEmptyObject(data))
+    if(iQ.isEmptyObject(data))
       return true;
       
     if(!isRect(data.pageBounds)) {

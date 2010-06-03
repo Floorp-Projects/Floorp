@@ -1,5 +1,19 @@
+.animate200 {
+  -moz-transition-property: all;  
+  -moz-transition-duration: 0.2s;  
+}
+
 .animate300 {
   -moz-transition-property: all;  
   -moz-transition-duration: 0.3s;  
-  background-color: red;
+}
+
+.animate350 {
+  -moz-transition-property: all;  
+  -moz-transition-duration: 0.35s;  
+}
+
+.animate2000 {
+  -moz-transition-property: all;  
+  -moz-transition-duration: 2s;  
 }

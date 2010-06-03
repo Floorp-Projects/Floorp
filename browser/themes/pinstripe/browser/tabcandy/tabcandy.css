@@ -1,6 +1,6 @@
 html {
   overflow: hidden;
-  image-rendering: -moz-crisp-edges;
+/*   image-rendering: -moz-crisp-edges; */
 }
 
 body { 
