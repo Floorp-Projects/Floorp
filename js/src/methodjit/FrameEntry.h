@@ -81,42 +81,43 @@ class FrameEntry
     }
 
   private:
-    uint32 copyOf() {
-        JS_ASSERT(type.isCopy() || data.isCopy());
-        return index_;
-    }
-
     void setTypeTag(JSValueMask32 u32) {
         type.setConstant();
         v_.s.mask32 = u32;
+    }
+
+    void clear() {
+        copied = false;
+        copy = false;
     }
 
     /*
      * Marks the FE as unsynced & invalid.
      */
     void resetUnsynced() {
+        clear();
         type.unsync();
         data.unsync();
 #ifdef DEBUG
         type.invalidate();
         data.invalidate();
 #endif
-        copies = 0;
     }
 
     /*
      * Marks the FE as synced & in memory.
      */
     void resetSynced() {
+        clear();
         type.setMemory();
         data.setMemory();
-        copies = 0;
     }
 
     /*
      * Marks the FE as having a constant.
      */
     void setConstant(const jsval &v) {
+        clear();
         type.unsync();
         data.unsync();
         type.setConstant();
@@ -124,12 +125,38 @@ class FrameEntry
         v_.asBits = v;
     }
 
+    bool isCopied() const {
+        return copied;
+    }
+
+    void setCopied() {
+        copied = true;
+    }
+
+    bool isCopy() const {
+        return copy;
+    }
+
+    uint32 copyOf() const {
+        JS_ASSERT(isCopy());
+        return index_;
+    }
+
+    /*
+     * Set copy index.
+     */
+    void setCopyOf(uint32 index) {
+        index_ = index;
+        copy = true;
+    }
+
   private:
     RematInfo  type;
     RematInfo  data;
     jsval_layout v_;
     uint32     index_;
-    uint32     copies;
+    bool       copied;
+    bool       copy;
 };
 
 } /* namespace mjit */

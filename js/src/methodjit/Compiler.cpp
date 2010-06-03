@@ -476,6 +476,21 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_GETARG)
 
+          BEGIN_CASE(JSOP_GETLOCAL)
+          {
+            uint32 slot = GET_SLOTNO(PC);
+            frame.pushLocal(slot);
+          }
+          END_CASE(JSOP_GETLOCAL)
+
+          BEGIN_CASE(JSOP_SETLOCAL)
+          {
+            uint32 slot = GET_SLOTNO(PC);
+            FrameEntry *fe = frame.peek(-1);
+            frame.storeLocal(fe, slot);
+          }
+          END_CASE(JSOP_SETLOCAL)
+
           BEGIN_CASE(JSOP_UINT16)
             frame.push(Value(Int32Tag((int32_t) GET_UINT16(PC))));
           END_CASE(JSOP_UINT16)
