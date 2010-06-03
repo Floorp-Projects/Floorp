@@ -7227,19 +7227,24 @@ if test "$MOZ_MEMORY"; then
     dnl cpu check
     case "${target_cpu}" in
     i*86)
-      _WIN32_CRT_CPU=intel
+      MOZ_CRT_CPU_ARCH=intel
+      ;;
+    x86_64)
+      MOZ_CRT_CPU_ARCH=amd64
       ;;
     *)
       AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
       ;;
     esac
 
+    AC_SUBST(MOZ_CRT_CPU_ARCH)
+
     if test ! -d "$WIN32_CRT_SRC_DIR"; then
       AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
     fi
     WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
     _objdir_win=`pwd -W`
-    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$_WIN32_CRT_CPU"
+    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
     MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
