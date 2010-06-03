@@ -1164,6 +1164,11 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
     }
   }
 
+  // FIXME (maybe): HTML5 says we should handle system colors.  This
+  // means we probably need another storage type, since we'd need to
+  // handle dynamic changes.  However, I think this is a bad idea:
+  // http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2010-May/026449.html
+
   // Use NS_LooseHexToRGB as a fallback if nothing above worked.
   if (NS_LooseHexToRGB(colorStr, &color)) {
     SetColorValue(color, aString);
