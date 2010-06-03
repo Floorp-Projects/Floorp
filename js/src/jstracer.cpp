@@ -7022,11 +7022,21 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
         return MONITOR_NOT_RECORDING;
 
 #ifdef MOZ_TRACEVIS
-      case MISMATCH_EXIT:  tvso.r = R_MISMATCH_EXIT;  return false;
-      case OOM_EXIT:       tvso.r = R_OOM_EXIT;       return false;
-      case TIMEOUT_EXIT:   tvso.r = R_TIMEOUT_EXIT;   return false;
-      case DEEP_BAIL_EXIT: tvso.r = R_DEEP_BAIL_EXIT; return false;
-      case STATUS_EXIT:    tvso.r = R_STATUS_EXIT;    return false;
+      case MISMATCH_EXIT:
+        tvso.r = R_MISMATCH_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case OOM_EXIT:
+        tvso.r = R_OOM_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case TIMEOUT_EXIT:
+        tvso.r = R_TIMEOUT_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case DEEP_BAIL_EXIT:
+        tvso.r = R_DEEP_BAIL_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case STATUS_EXIT:
+        tvso.r = R_STATUS_EXIT;
+        return MONITOR_NOT_RECORDING;
 #endif
 
       default:
