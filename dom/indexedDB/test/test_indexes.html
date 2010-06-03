@@ -28,9 +28,9 @@
       ];
 
       const indexData = [
-        { name: "name", keyPath: "name" },
-        { name: "height", keyPath: "height" },
-        { name: "weight", keyPath: "weight" }
+        { name: "name", keyPath: "name", unique: false },
+        { name: "height", keyPath: "height", unique: false },
+        { name: "weight", keyPath: "weight", unique: false }
       ];
 
       let request = indexedDB.open(name, description);
@@ -63,7 +63,8 @@
       addedData = 0;
       for (let i in indexData) {
         request = objectStore.createIndex(indexData[i].name,
-                                          indexData[i].keyPath)
+                                          indexData[i].keyPath,
+                                          indexData[i].unique);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           if (++addedData == indexData.length) {
@@ -86,8 +87,12 @@
           }
         }
         is(found, true, "objectStore has our index");
+        let index = objectStore.index(indexData[i].name);
+        is(index.name, indexData[i].name, "Correct name");
+        is(index.storeName, objectStore.name, "Correct store name");
+        is(index.keyPath, indexData[i].keyPath, "Correct keyPath");
+        is(index.unique, indexData[i].unique, "Correct keyPath");
       }
-
 
       finishTest();
       yield;
