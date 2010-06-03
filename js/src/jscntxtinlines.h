@@ -170,7 +170,7 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 void
 AutoIdArray::trace(JSTracer *trc) {
     JS_ASSERT(tag == IDARRAY);
-    MarkBoxedWordRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 class AutoNamespaces : protected AutoGCRooter {
@@ -215,7 +215,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        MarkBoxedWordRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
+        MarkIdRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
         return;
       }
 
@@ -228,15 +228,15 @@ AutoGCRooter::trace(JSTracer *trc)
             MarkValue(trc, desc.value, "PropertyDescriptor::value");
             MarkValue(trc, desc.get, "PropertyDescriptor::get");
             MarkValue(trc, desc.set, "PropertyDescriptor::set");
-            MarkBoxedWord(trc, desc.id, "desc.id");
+            MarkId(trc, desc.id, "desc.id");
         }
         return;
       }
 
       case NAMESPACES: {
         JSXMLArray &array = static_cast<AutoNamespaces *>(this)->array;
-        MarkObjectVector(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
-                         "JSXMLArray");
+        MarkObjectRange(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
+                        "JSXMLArray");
         array.cursors->trace(trc);
         return;
       }
@@ -256,18 +256,12 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case ID:
-        MarkBoxedWord(trc, static_cast<AutoIdRooter *>(this)->idval, "js::AutoIdRooter.val");
+        MarkId(trc, static_cast<AutoIdRooter *>(this)->idval, "js::AutoIdRooter.val");
         return;
 
       case VALVECTOR: {
         Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
         MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
-        return;
-      }
-
-      case BOXEDVECTOR: {
-        Vector<jsboxedword, 8> &vector = static_cast<AutoBoxedWordVector *>(this)->vector;
-        MarkBoxedWordRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
     }

@@ -58,9 +58,9 @@
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 
 struct NativeIterator {
-    jsboxedword *props_array;
-    jsboxedword *props_cursor;
-    jsboxedword *props_end;
+    js::Value   *props_array;
+    js::Value   *props_cursor;
+    js::Value   *props_end;
     uint32      *shapes_array;
     uint32      shapes_length;
     uint32      shapes_key;

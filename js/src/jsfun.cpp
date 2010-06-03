@@ -298,9 +298,9 @@ args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         uintN arg = uintN(JSID_TO_INT(id));
         if (arg < obj->getArgsLength())
             obj->setArgsElement(arg, Value(JS_ARGS_HOLE));
-    } else if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
+    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         obj->setArgsLengthOverridden();
-    } else if (id == ATOM_KEY(cx->runtime->atomState.calleeAtom)) {
+    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom)) {
         obj->setArgsCallee(Value(JS_ARGS_HOLE));
     }
     return true;
@@ -393,6 +393,9 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
                                      : 0,
                                      (script->trynotesOffset != 0)
                                      ? script->trynotes()->length
+                                     : 0,
+                                     (script->constOffset != 0)
+                                     ? script->consts()->length
                                      : 0);
     if (!wscript)
         return NULL;
@@ -509,11 +512,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                     *vp = v;
             }
         }
-    } else if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
+    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
             vp->setInt32(obj->getArgsLength());
     } else {
-        JS_ASSERT(id == ATOM_KEY(cx->runtime->atomState.calleeAtom));
+        JS_ASSERT(id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom));
         const Value &v = obj->getArgsCallee();
         if (!v.isMagic(JS_ARGS_HOLE)) {
             /*
@@ -562,8 +565,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             }
         }
     } else {
-        JS_ASSERT(id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
-                  id == ATOM_KEY(cx->runtime->atomState.calleeAtom));
+        JS_ASSERT(id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom) ||
+                  id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom));
     }
 
     /*
@@ -589,10 +592,10 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         uint32 arg = uint32(JSID_TO_INT(id));
         if (arg < obj->getArgsLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
             valid = true;
-    } else if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
+    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
             valid = true;
-    } else if (id == ATOM_KEY(cx->runtime->atomState.calleeAtom)) {
+    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom)) {
         if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE))
             valid = true;
     }
@@ -602,8 +605,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
          * XXX ECMA specs DontEnum even for indexed properties, contrary to
          * other array-like objects.
          */
-        Value undef = undefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &undef, ArgGetter, ArgSetter, JSPROP_SHARED))
+        Value tmp = UndefinedTag();
+        if (!js_DefineProperty(cx, obj, id, &tmp, ArgGetter, ArgSetter, JSPROP_SHARED))
             return JS_FALSE;
         *objp = obj;
     }
@@ -1381,7 +1384,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (vp->isObject()) {
             callbacks = JS_GetSecurityCallbacks(cx);
             if (callbacks && callbacks->checkObjectAccess) {
-                id = ATOM_KEY(cx->runtime->atomState.callerAtom);
+                id = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
                 if (!callbacks->checkObjectAccess(cx, obj, id, JSACC_READ, Jsvalify(vp)))
                     return JS_FALSE;
             }
@@ -1460,7 +1463,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
      * prototype property.
      */
     atom = cx->runtime->atomState.classPrototypeAtom;
-    if (id == ATOM_KEY(atom)) {
+    if (id == ATOM_TO_JSID(atom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
 
         /*
@@ -1496,7 +1499,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
         LazyFunctionProp *lfp = &lazy_function_props[i];
 
         atom = OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset);
-        if (id == ATOM_KEY(atom)) {
+        if (id == ATOM_TO_JSID(atom)) {
             JS_ASSERT(!IsInternalFunctionObject(obj));
 
             if (!js_DefineNativeProperty(cx, obj,
@@ -2638,12 +2641,6 @@ JS_STATIC_ASSERT(2 <= MAX_ARRAY_LOCALS);
 JS_STATIC_ASSERT(MAX_ARRAY_LOCALS < JS_BITMASK(16));
 
 /*
- * We use the lowest bit of the string atom to distinguish const from var
- * name when there is only single name or when names are stored as an array.
- */
-JS_STATIC_ASSERT((JSBOXEDWORD_TYPE_STRING & 1) == 0);
-
-/*
  * When we use a hash table to store the local names, we use a singly linked
  * list to record the indexes of duplicated parameter names to preserve the
  * duplicates for the decompiler.
@@ -2696,7 +2693,6 @@ HashLocalName(JSContext *cx, JSLocalNameMap *map, JSAtom *name,
         return JS_TRUE;
     }
 #endif
-    JS_ASSERT(ATOM_IS_STRING(name));
     entry = (JSLocalNameHashEntry *)
             JS_DHashTableOperate(&map->names, name, JS_DHASH_ADD);
     if (!entry) {

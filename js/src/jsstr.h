@@ -311,6 +311,8 @@ struct JSString {
     static JSString *intString(jsint i);
 };
 
+JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
+
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
 

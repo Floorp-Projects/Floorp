@@ -623,35 +623,20 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 JSBool
 js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 {
-    jsval v;
-    uint32 type;
+    JSString *str;
 
-    if (xdr->mode == JSXDR_ENCODE) {
-        v = Jsvalify(BoxedWordToValue(ATOM_KEY(*atomp)));
-        return JS_XDRValue(xdr, &v);
-    }
+    if (xdr->mode == JSXDR_ENCODE)
+        str = ATOM_TO_STRING(*atomp);
 
-    /*
-     * Inline JS_XDRValue when decoding to avoid ceation of GC things when
-     * then corresponding atom already exists. See bug 321985.
-     */
-    if (!JS_XDRUint32(xdr, &type))
+    if (!JS_XDRString(xdr, &str))
         return JS_FALSE;
-    if (type == JSVAL_STRING)
-        return js_XDRStringAtom(xdr, atomp);
 
-    if (type == JSVAL_DOUBLE) {
-        jsdouble d = 0;
-        if (!XDRDoubleValue(xdr, &d))
-            return JS_FALSE;
-        *atomp = js_AtomizeDouble(xdr->cx, d);
+    if (xdr->mode == JSXDR_DECODE) {
+        *atomp = js_AtomizeString(xdr->cx, str, 0);
         return *atomp != NULL;
     }
 
-    jsboxedword w;
-    return XDRValueBody(xdr, type, &v) &&
-           ValueToBoxedWord(xdr->cx, Valueify(v), &w) &&
-           js_AtomizePrimitiveValue(xdr->cx, w, atomp);
+    return JS_TRUE;
 }
 
 extern JSBool
@@ -665,7 +650,6 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
     jschar stackChars[256];
 
     if (xdr->mode == JSXDR_ENCODE) {
-        JS_ASSERT(ATOM_IS_STRING(*atomp));
         str = ATOM_TO_STRING(*atomp);
         return JS_XDRString(xdr, &str);
     }

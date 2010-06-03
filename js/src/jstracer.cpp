@@ -9007,7 +9007,7 @@ DumpShape(JSObject* obj, const char* prefix)
     fprintf(shapefp, "\n%s: shape %u flags %x\n", prefix, scope->shape, scope->flags);
     for (JSScopeProperty* sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
         if (JSID_IS_ATOM(sprop->id)) {
-            fprintf(shapefp, " %s", JS_GetStringBytes(JSVAL_TO_STRING(ID_TO_VALUE(sprop->id))));
+            fprintf(shapefp, " %s", JS_GetStringBytes(JSID_TO_STRING(sprop->id)));
         } else {
             JS_ASSERT(!JSID_IS_OBJECT(sprop->id));
             fprintf(shapefp, " %d", JSID_TO_INT(sprop->id));

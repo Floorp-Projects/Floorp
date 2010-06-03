@@ -1332,7 +1332,7 @@ static JSStdName object_prototype_names[] = {
 };
 
 JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id,
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                         JSBool *resolved)
 {
     JSString *idstr;
@@ -1976,7 +1976,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                 } else if (FUN_OBJECT(fun) != obj) {
                     JS_snprintf(buf, bufsize, "%p", fun);
                 } else {
-                    if (fun->atom && ATOM_IS_STRING(fun->atom))
+                    if (fun->atom)
                         js_PutEscapedString(buf, bufsize,
                                             ATOM_TO_STRING(fun->atom), 0);
                 }
@@ -2533,12 +2533,6 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
     cx->free(ida->self);
 }
 
-JS_PUBLIC_API(jsval)
-JSID_TO_JSVAL(jsid id)
-{
-    return Jsvalify(IdToValue(id));
-}
-
 JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
@@ -2550,11 +2544,11 @@ JS_PUBLIC_API(void)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    *vp = Jsvalify(IdToValue(id));
+    *vp = ID_TO_JSVAL(id);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     return JS_TRUE;
 }
@@ -2566,7 +2560,7 @@ JS_EnumerateStub(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id)
+JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id)
 {
     return JS_TRUE;
 }
@@ -3041,8 +3035,8 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
 }
 
 static JSBool
-LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
-             Value *vp)
+LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
+             JSProperty *prop, Value *vp)
 {
     if (!prop) {
         /* XXX bad API: no way to tell "not defined" from "void value" */
@@ -3067,7 +3061,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
         else
             vp->setBoolean(true);
     } else if (obj2->isDenseArray()) {
-        ok = js_GetDenseArrayElementValue(cx, obj2, prop, vp);
+        ok = js_GetDenseArrayElementValue(cx, obj2, id, vp);
     } else {
         /* XXX bad API: no way to return "defined but value unknown" */
         vp->setBoolean(true);
@@ -3317,13 +3311,10 @@ JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    return LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, Valueify(vp));
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    return atom && JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
+
 
 JS_PUBLIC_API(JSBool)
 JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
@@ -3333,7 +3324,7 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     CHECK_REQUEST(cx);
     return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, Valueify(vp));
+           LookupResult(cx, obj, obj2, id, prop, Valueify(vp));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3361,7 +3352,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
          ? js_LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop) >= 0
          : obj->lookupProperty(cx, id, objp, &prop);
     if (ok)
-        ok = LookupResult(cx, obj, *objp, prop, Valueify(vp));
+        ok = LookupResult(cx, obj, *objp, id, prop, Valueify(vp));
     return ok;
 }
 
@@ -3584,18 +3575,12 @@ JS_HasUCProperty(JSContext *cx, JSObject *obj,
 }
 
 JS_PUBLIC_API(JSBool)
-JS_LookupUCProperty(JSContext *cx, JSObject *obj,
-                    const jschar *name, size_t namelen,
-                    jsval *vp)
+JS_LookupUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *vp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    return LookupUCProperty(cx, obj, name, namelen, JSRESOLVE_QUALIFIED,
-                            &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, Valueify(vp));
+    JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    return atom && JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
 }
+
 
 JS_PUBLIC_API(JSBool)
 JS_GetUCProperty(JSContext *cx, JSObject *obj,
@@ -3753,14 +3738,9 @@ JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
 JS_PUBLIC_API(JSBool)
 JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-
-    CHECK_REQUEST(cx);
-    return LookupPropertyById(cx, obj, INT_TO_JSID(index), JSRESOLVE_QUALIFIED,
-                              &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, prop, Valueify(vp));
+    return JS_LookupPropertyById(cx, obj, INT_TO_JSID(index), vp);
 }
+
 
 JS_PUBLIC_API(JSBool)
 JS_GetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
@@ -3864,7 +3844,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        MarkBoxedWordRange(trc, ida->length, ida->vector, "prop iter");
+        MarkIdRange(trc, ida->length, ida->vector, "prop iter");
     }
 }
 
@@ -3945,7 +3925,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             sprop = sprop->parent;
 
         if (!sprop) {
-            *idp = JSBOXEDWORD_VOID;
+            *idp = JSVAL_VOID;
         } else {
             iterobj->setPrivate(sprop->parent);
             *idp = sprop->id;
@@ -3955,7 +3935,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
-            *idp = JSBOXEDWORD_VOID;
+            *idp = JSVAL_VOID;
         } else {
             *idp = ida->vector[--i];
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Tag(i));
