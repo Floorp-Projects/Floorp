@@ -46,6 +46,8 @@
 #include "nsIServiceManager.h"
 #include "nsIStandardURL.h"
 #include "nsStandardURL.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
 
 //-----------------------------------------------------------------------------
 
@@ -54,6 +56,32 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsGopherHandler,
                               nsIProtocolHandler)
 
 //-----------------------------------------------------------------------------
+
+nsGopherHandler *gGopherHandler = nsnull;
+
+nsGopherHandler::nsGopherHandler()
+{
+    gGopherHandler = this;
+}
+
+nsGopherHandler::~nsGopherHandler()
+{
+    gGopherHandler = nsnull;
+}
+
+PRUint8
+nsGopherHandler::GetQoSBits()
+{
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+	PRInt32 val;
+	rv = branch->GetIntPref("network.gopher.qos", &val);
+	if (NS_SUCCEEDED(rv))
+	    return NS_CLAMP(val, 0, 0xff);
+    }
+    return 0x00;
+}
 
 NS_IMETHODIMP
 nsGopherHandler::GetScheme(nsACString &result)
