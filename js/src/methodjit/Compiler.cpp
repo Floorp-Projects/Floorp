@@ -218,7 +218,7 @@ mjit::Compiler::finishThisUp()
 
     for (size_t i = 0; i < script->length; i++) {
         Label L = jumpMap[i];
-        if (analysis[i].safePoint) {
+        if (analysis[i].visited) {
             JS_ASSERT(L.isValid());
             nmap[i] = (uint8 *)(result + masm.distanceOf(L));
         }
@@ -262,8 +262,8 @@ mjit::Compiler::generateMethod()
         if (opinfo.nincoming) {
             opinfo.safePoint = true;
             frame.forgetEverything(opinfo.stackDepth);
-            jumpMap[uint32(PC - script->code)] = masm.label();
         }
+        jumpMap[uint32(PC - script->code)] = masm.label();
 
         if (!opinfo.visited) {
             if (op == JSOP_STOP)
