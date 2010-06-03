@@ -88,6 +88,7 @@ public:
 
   bool StartSavepoint();
   nsresult ReleaseSavepoint();
+  void RollbackSavepoint();
 
   already_AddRefed<mozIStorageStatement> AddStatement(bool aCreate,
                                                       bool aOverwrite,
