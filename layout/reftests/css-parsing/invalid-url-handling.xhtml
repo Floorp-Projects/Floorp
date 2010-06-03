@@ -68,12 +68,12 @@
   #eleven { background: url([) green; }
   </style>
   <style type="text/css">
-  /* not a URI token, but brace matching should work */
-  #twelve { background: url({"")}); background-color: green; }
+  /* not a URI token; brace matching should work only after invalid URI token */
+  #twelve { background: url(}{""{)}); background-color: green; }
   </style>
   <style type="text/css">
-  /* not a URI token, but brace matching should work */
-  #thirteen { background: url(["")]); background-color: green; }
+  /* invalid URI token absorbs the [ */
+  #thirteen { background: url([""); background-color: green; }
   </style>
   <style type="text/css">
   /* not a URI token; the opening ( is never matched */
@@ -81,22 +81,18 @@
   #foo { background: url(() }
   #fourteen { background-color: red; }
   </style>
-  /* The next three tests test that when things don't match a URI
-     token, brace-matching is done properly.  (The first is a reference.) */
+  <!-- The next three tests test that invalid URI tokens absorb [ and { -->
   <style type="text/css">
-  #fifteen { background-color: red }
   #foo { background: url(a()); }
   #fifteen { background-color: green }
   </style>
   <style type="text/css">
-  #sixteen { background-color: green }
   #foo { background: url([()); }
-  #sixteen { background-color: red }
+  #sixteen { background-color: green }
   </style>
   <style type="text/css">
+  #foo { background: url({()); }
   #seventeen { background-color: green }
-  #foo { background: url([()); }
-  #seventeen { background-color: red }
   </style>
  </head>
  <body>
