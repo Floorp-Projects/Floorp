@@ -1142,6 +1142,10 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
 {
   ResetIfSet();
 
+  // FIXME (partially, at least): HTML5's algorithm says we shouldn't do
+  // the whitespace compression, trimming, or the test for emptiness.
+  // (I'm a little skeptical that we shouldn't do the whitespace
+  // trimming; WebKit also does it.)
   nsAutoString colorStr(aString);
   colorStr.CompressWhitespace(PR_TRUE, PR_TRUE);
   if (colorStr.IsEmpty()) {
