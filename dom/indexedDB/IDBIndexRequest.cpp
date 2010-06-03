@@ -56,25 +56,26 @@ USING_INDEXEDDB_NAMESPACE
 
 // static
 already_AddRefed<IDBIndexRequest>
-IDBIndexRequest::Create(IDBDatabaseRequest* aDatabase,
-                        IDBObjectStoreRequest* aObjectStore,
-                        IDBTransactionRequest* aTransaction)
+IDBIndexRequest::Create(IDBObjectStoreRequest* aObjectStore,
+                        const IndexInfo* aIndexInfo)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aObjectStore, "Null pointer!");
+  NS_ASSERTION(aIndexInfo, "Null pointer!");
 
   nsRefPtr<IDBIndexRequest> index = new IDBIndexRequest();
 
-  index->mDatabase = aDatabase;
   index->mObjectStore = aObjectStore;
-  index->mTransaction = aTransaction;
+  index->mName = aIndexInfo->name;
+  index->mKeyPath = aIndexInfo->keyPath;
+  index->mUnique = aIndexInfo->unique;
 
   return index.forget();
 }
 
 IDBIndexRequest::IDBIndexRequest()
-: mId(LL_MININT)
-, mUnique(false)
-, mAutoIncrement(false)
+: mUnique(false),
+  mAutoIncrement(false)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 }

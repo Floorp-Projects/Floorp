@@ -526,10 +526,13 @@ IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
   NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
-  PRUint32 count = info->indexNames.Length();
+
+  PRUint32 count = info->indexes.Length();
   for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(info->indexNames[index]), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(list->Add(info->indexes[index].name),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
+
   list.forget(aIndexNames);
   return NS_OK;
 }
@@ -818,14 +821,22 @@ IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
   ObjectStoreInfo* info = GetObjectStoreInfo();
   NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
 
-  if (info->indexNames.Contains(aName)) {
+  bool found = false;
+  PRUint32 indexCount = info->indexes.Length();
+  for (PRUint32 index = 0; index < indexCount; index++) {
+    if (info->indexes[index].name == aName) {
+      found = true;
+      break;
+    }
+  }
+
+  if (found) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  // XPConnect makes "null" into a void string, we need an empty string.
-  nsString keyPath(aKeyPath);
-  if (keyPath.IsVoid()) {
-    keyPath.Truncate();
+  if (aKeyPath.IsEmpty()) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   if (!mTransaction->TransactionIsOpen()) {
@@ -836,7 +847,7 @@ IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateIndexHelper> helper =
-    new CreateIndexHelper(mTransaction, request, aName, keyPath, !!aUnique,
+    new CreateIndexHelper(mTransaction, request, aName, aKeyPath, !!aUnique,
                           mAutoIncrement, this);
   nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -862,12 +873,21 @@ IDBObjectStoreRequest::Index(const nsAString& aName,
   ObjectStoreInfo* info = GetObjectStoreInfo();
   NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
 
-  if (!info->indexNames.Contains(aName)) {
+  IndexInfo* indexInfo = nsnull;
+  PRUint32 indexCount = info->indexes.Length();
+  for (PRUint32 index = 0; index < indexCount; index++) {
+    if (info->indexes[index].name == aName) {
+      indexInfo = &(info->indexes[index]);
+      break;
+    }
+  }
+
+  if (!indexInfo) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsRefPtr<IDBIndexRequest> request =
-    IDBIndexRequest::Create(mDatabase, this, mTransaction);
+    IDBIndexRequest::Create(this, indexInfo);
 
   request.forget(_retval);
   return NS_OK;
@@ -890,7 +910,16 @@ IDBObjectStoreRequest::RemoveIndex(const nsAString& aName,
   ObjectStoreInfo* info = GetObjectStoreInfo();
   NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
 
-  if (!info->indexNames.Contains(aName)) {
+  bool found = false;
+  PRUint32 indexCount = info->indexes.Length();
+  for (PRUint32 index = 0; index < indexCount; index++) {
+    if (info->indexes[index].name == aName) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1443,12 +1472,30 @@ CreateIndexHelper::GetSuccessResult(nsIWritableVariant* aResult)
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  NS_ASSERTION(!info->indexNames.Contains(mName), "Alreayd have this index!");
+#ifdef DEBUG
+  {
+    bool found = false;
+    PRUint32 indexCount = info->indexes.Length();
+    for (PRUint32 index = 0; index < indexCount; index++) {
+      if (info->indexes[index].name == mName) {
+        found = true;
+        break;
+      }
+    }
+    NS_ASSERTION(!found, "Alreayd have this index!");
+  }
+#endif
 
-  if (!info->indexNames.AppendElement(mName)) {
+  IndexInfo* newInfo = info->indexes.AppendElement();
+  if (!newInfo) {
     NS_ERROR("Couldn't add index name!  Out of memory?");
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
+
+  newInfo->name = mName;
+  newInfo->keyPath = mKeyPath;
+  newInfo->unique = mUnique;
+  newInfo->autoIncrement = mAutoIncrement;
 
   nsCOMPtr<nsIIDBIndexRequest> result;
   nsresult rv = mObjectStore->Index(mName, getter_AddRefs(result));
@@ -1490,7 +1537,29 @@ RemoveIndexHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
     NS_ERROR("Unable to get object store info!");
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
-  info->indexNames.RemoveElement(mName);
+
+#ifdef DEBUG
+  {
+    bool found = false;
+    PRUint32 indexCount = info->indexes.Length();
+    for (PRUint32 index = 0; index < indexCount; index++) {
+      if (info->indexes[index].name == mName) {
+        found = true;
+        break;
+      }
+    }
+    NS_ASSERTION(found, "Didn't know about this one!");
+  }
+#endif
+
+  PRUint32 indexCount = info->indexes.Length();
+  for (PRUint32 index = 0; index < indexCount; index++) {
+    if (info->indexes[index].name == mName) {
+      info->indexes.RemoveElementAt(index);
+      break;
+    }
+  }
+
   return OK;
 }
 

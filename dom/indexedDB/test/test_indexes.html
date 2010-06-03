@@ -1,0 +1,101 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+
+      const objectStoreName = "People";
+
+      const objectStoreData = [
+        { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
+        { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
+        { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } },
+        { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } },
+        { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
+        { key: "237-23-7737", value: { name: "Pat", height: 65 } }
+      ];
+
+      const indexData = [
+        { name: "name", keyPath: "name" },
+        { name: "height", keyPath: "height" },
+        { name: "weight", keyPath: "weight" }
+      ];
+
+      let request = indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+
+      request = db.createObjectStore(objectStoreName, "");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let objectStore = event.result;
+
+      let addedData = 0;
+      for (let i in objectStoreData) {
+        request = objectStore.add(objectStoreData[i].value,
+                                  objectStoreData[i].key);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          if (++addedData == objectStoreData.length) {
+            testGenerator.send(event);
+          }
+        }
+      }
+      event = yield;
+
+      addedData = 0;
+      for (let i in indexData) {
+        request = objectStore.createIndex(indexData[i].name,
+                                          indexData[i].keyPath)
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          if (++addedData == indexData.length) {
+            is(objectStore.indexNames.length, addedData, "Good index count");
+            SimpleTest.executeSoon(function() { testGenerator.next() });
+          }
+        }
+      }
+      yield;
+
+      let objectStore = db.objectStore(objectStoreName);
+
+      is(objectStore.indexNames.length, indexData.length, "Good index count");
+      for (let i in indexData) {
+        let found = false;
+        for (let j = 0; j < objectStore.indexNames.length; j++) {
+          if (objectStore.indexNames.item(j) == indexData[i].name) {
+            found = true;
+            break;
+          }
+        }
+        is(found, true, "objectStore has our index");
+      }
+
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
