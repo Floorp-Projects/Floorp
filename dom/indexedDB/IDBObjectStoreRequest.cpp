@@ -433,6 +433,49 @@ IDBObjectStoreRequest::GetJSONFromArg0(/* jsval arg0, */
   return NS_OK;
 }
 
+// static
+nsresult
+IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
+                                               const nsAString& aKeyPath,
+                                               JSContext** aCx,
+                                               nsAString& aValue)
+{
+  NS_ASSERTION(!aJSON.IsEmpty(), "Empty JSON!");
+  NS_ASSERTION(!aKeyPath.IsEmpty(), "Empty keyPath!");
+  NS_ASSERTION(aCx, "Null pointer!");
+
+  nsresult rv;
+
+  if (!*aCx) {
+    rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(aCx);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  JSAutoRequest ar(*aCx);
+
+  js::AutoValueRooter clone(*aCx);
+
+  nsCOMPtr<nsIJSON> json(new nsJSON());
+  rv = json->DecodeToJSVal(aJSON, *aCx, clone.addr());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject* obj = JSVAL_TO_OBJECT(clone.value());
+
+  const jschar* keyPathChars =
+    reinterpret_cast<const jschar*>(aKeyPath.BeginReading());
+  const size_t keyPathLen = aKeyPath.Length();
+
+  js::AutoValueRooter value(*aCx);
+  JSBool ok = JS_GetUCProperty(*aCx, obj, keyPathChars, keyPathLen,
+                               value.addr());
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+  rv = json->EncodeFromJSVal(value.addr(), *aCx, aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 ObjectStoreInfo*
 IDBObjectStoreRequest::GetObjectStoreInfo()
 {
@@ -1544,6 +1587,17 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // Get the id of this object store, and store it for future use.
   (void)aConnection->GetLastInsertRowID(&mId);
 
+  /* Populate
+  JSContext* cx = nsnull;
+
+  for (i = 0; i < dataCount; i++) {
+    nsString value;
+    rv = IDBObjectStoreRequest::GetKeyPathValueFromJSON(data[dataCount],
+                                                        mKeyPath, &cx, value);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    // Add value to index
+  }
   return OK;
 }
 
