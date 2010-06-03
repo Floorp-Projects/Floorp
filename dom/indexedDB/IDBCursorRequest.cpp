@@ -57,6 +57,7 @@
 #include "IDBObjectStoreRequest.h"
 #include "IDBTransactionRequest.h"
 #include "Savepoint.h"
+#include "TransactionThreadPool.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -73,6 +74,29 @@ public:
                bool aAutoIncrement)
   : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
     mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+private:
+  // In-params.
+  const PRInt64 mOSID;
+  const nsString mValue;
+  const Key mKey;
+  const bool mAutoIncrement;
+};
+
+class RemoveHelper : public AsyncConnectionHelper
+{
+public:
+  RemoveHelper(IDBTransactionRequest* aTransaction,
+               IDBRequest* aRequest,
+               PRInt64 aObjectStoreID,
+               const Key& aKey,
+               bool aAutoIncrement)
+  : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
+    mKey(aKey), mAutoIncrement(aAutoIncrement)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -289,8 +313,12 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
     }
   }
 
+  TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
+  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
+
   nsRefPtr<ContinueRunnable> runnable(new ContinueRunnable(this, key));
-  rv = NS_DispatchToCurrentThread(runnable);
+
+  rv = pool->Dispatch(mTransaction, runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTransaction->OnNewRequest();
@@ -456,9 +484,19 @@ IDBCursorRequest::Remove(nsIIDBRequest** _retval)
   }
 
   const Key& key = mData[mDataIndex].key;
+  NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<RemoveHelper> helper =
+    new RemoveHelper(mTransaction, request, mObjectStore->Id(), key,
+                     mObjectStore->IsAutoIncrement());
+  nsresult rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 PRUint16
@@ -523,10 +561,69 @@ UpdateHelper::GetSuccessResult(nsIWritableVariant* aResult)
   return OK;
 }
 
+PRUint16
+RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_PRECONDITION(aConnection, "Passed a null connection!");
+
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->RemoveStatement(mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Must have a key here!");
+
+  NS_NAMED_LITERAL_CSTRING(key_value, "key_value");
+
+  if (mKey.IsInt()) {
+    rv = stmt->BindInt64ByName(key_value, mKey.IntValue());
+  }
+  else if (mKey.IsString()) {
+    rv = stmt->BindStringByName(key_value, mKey.StringValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  // Search for it!
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  return OK;
+}
+
+PRUint16
+RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
+
+  if (mKey.IsString()) {
+    aResult->SetAsAString(mKey.StringValue());
+  }
+  else if (mKey.IsInt()) {
+    aResult->SetAsInt64(mKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
+  return OK;
+}
+
 NS_IMETHODIMP
 ContinueRunnable::Run()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  nsresult rv;
+
+  if (!NS_IsMainThread()) {
+    rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
 
   // Remove cached stuff from last time.
   mCursor->mCachedKey = nsnull;
@@ -545,7 +642,6 @@ ContinueRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
   if (mCursor->mData.IsEmpty()) {
     rv = variant->SetAsEmpty();
     NS_ENSURE_SUCCESS(rv, rv);
