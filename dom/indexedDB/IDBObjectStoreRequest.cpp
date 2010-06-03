@@ -1598,6 +1598,7 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
     // Add value to index
   }
+  */
   return OK;
 }
 
