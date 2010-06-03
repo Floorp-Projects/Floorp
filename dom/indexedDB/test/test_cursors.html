@@ -178,6 +178,51 @@
 
       is(keyIndex, keys.length, "Saw all the expected keys");
 
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          if (keyIndex == 4) {
+            request = cursor.update("bar");
+            request.onerror = errorHandler;
+            request.onsuccess = function(event) {
+              keyIndex++;
+              cursor.continue();
+            };
+          }
+          else {
+            keyIndex++;
+            cursor.continue();
+          }
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
+      request = objectStore.get(sortedKeys[4]);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, "bar", "Update succeeded");
+
+      request = objectStore.modify("foo", sortedKeys[4]);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        SimpleTest.executeSoon(function() { testGenerator.next(); });
+      };
+      yield;
+
       finishTest();
       yield;
     }

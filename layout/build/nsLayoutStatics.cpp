@@ -130,8 +130,6 @@ PRBool NS_SVGEnabled();
 #include "nsJSEnvironment.h"
 #include "nsContentSink.h"
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
-
 extern void NS_ShutdownChainItemPool();
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
@@ -391,6 +389,4 @@ nsLayoutStatics::Shutdown()
   nsFrameList::Shutdown();
 
   nsFileControlFrame::DestroyUploadLastDir();
-
-  mozilla::dom::indexedDB::Shutdown();
 }

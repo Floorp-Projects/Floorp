@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// XXX remove once we can get jsvals out of nsIVariant
+// XXX remove once we can get jsvals out of XPIDL
 #include "jscntxt.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
@@ -949,9 +949,15 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (!mAutoIncrement || mayOverwrite) {
     NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
 
-    rv = mKey.IsInt() ?
-            stmt->BindInt64ByName(keyValue, mKey.IntValue()) :
-            stmt->BindStringByName(keyValue, mKey.StringValue());
+    if (mKey.IsInt()) {
+      rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
+    }
+    else if (mKey.IsString()) {
+      rv = stmt->BindStringByName(keyValue, mKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
@@ -1021,8 +1027,11 @@ AddHelper::GetSuccessResult(nsIWritableVariant* aResult)
   if (mKey.IsString()) {
     aResult->SetAsAString(mKey.StringValue());
   }
-  else {
+  else if (mKey.IsInt()) {
     aResult->SetAsInt64(mKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Bad key!");
   }
   return OK;
 }
@@ -1244,6 +1253,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
+
+  NS_WARNING("Copying all results for cursor snapshot, do something smarter!");
 
   PRBool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
