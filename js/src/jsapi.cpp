@@ -1438,7 +1438,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved
 
         JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
         jsval v;
-        if (!JS_GetReservedSlot(cx, obj, key, &v))
+        if (!js_GetReservedSlot(cx, obj, key, &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v))
             return JS_TRUE;
@@ -3580,7 +3580,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
         int key;
 
-        for (key = JSProto_Null; key < JSProto_LIMIT; key++)
+        for (key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
             JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
     }
 }
@@ -3990,7 +3990,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     JSObject *tmp;
     JSFastNative native;
 
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(*vp), 0, &fsv))
+    if (!js_GetReservedSlot(cx, JSVAL_TO_OBJECT(*vp), 0, &fsv))
         return JS_FALSE;
     fs = (JSFunctionSpec *) JSVAL_TO_PRIVATE(fsv);
     JS_ASSERT((~fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) == 0);
@@ -4046,7 +4046,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
     JSFunctionSpec *fs;
     JSObject *tmp;
 
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &fsv))
+    if (!js_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &fsv))
         return JS_FALSE;
     fs = (JSFunctionSpec *) JSVAL_TO_PRIVATE(fsv);
     JS_ASSERT((fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) ==

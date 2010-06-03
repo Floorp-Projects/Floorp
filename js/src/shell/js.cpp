@@ -2993,7 +2993,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
-        if (sobj->isArray() || sobj->isXML() || !sobj->isNative()) {
+        if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
             JS_TransferRequest(scx, cx);
             JS_ReportError(cx, "Invalid scope argument to evalcx");
             DestroyContext(scx, false);
