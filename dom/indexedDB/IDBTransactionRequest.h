@@ -98,16 +98,16 @@ public:
   already_AddRefed<mozIStorageStatement> GetStatement(bool aAutoIncrement);
 
 #ifdef DEBUG
-  bool TransactionIsOpen();
-  bool IsWriteAllowed();
+  bool TransactionIsOpen() const;
+  bool IsWriteAllowed() const;
 #else
-  bool TransactionIsOpen()
+  bool TransactionIsOpen() const
   {
     return mReadyState == nsIIDBTransaction::INITIAL ||
            mReadyState == nsIIDBTransaction::LOADING;
   }
 
-  bool IsWriteAllowed()
+  bool IsWriteAllowed() const
   {
     return mMode == nsIIDBTransaction::READ_WRITE;
   }

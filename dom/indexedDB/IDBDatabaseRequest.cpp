@@ -255,6 +255,7 @@ IDBDatabaseRequest::~IDBDatabaseRequest()
       NS_ERROR("This should never fail!");
     }
 
+    NS_ASSERTION(info->referenceCount, "Bad reference count!");
     if (--info->referenceCount == 0) {
       DatabaseInfo::Remove(mDatabaseId);
     }

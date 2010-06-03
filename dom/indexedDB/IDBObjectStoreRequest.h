@@ -219,7 +219,7 @@ public:
   GetKeyFromVariant(nsIVariant* aKeyVariant,
                     Key& aKey);
 
-  bool TransactionIsOpen()
+  bool TransactionIsOpen() const
   {
     return mTransaction->TransactionIsOpen();
   }
@@ -229,7 +229,7 @@ public:
     return mAutoIncrement;
   }
 
-  bool IsWriteAllowed()
+  bool IsWriteAllowed() const
   {
     return mTransaction->IsWriteAllowed();
   }
@@ -237,6 +237,11 @@ public:
   PRInt64 Id() const
   {
     return mId;
+  }
+
+  const nsString& KeyPath() const
+  {
+    return mKeyPath;
   }
 
   IDBTransactionRequest* Transaction()

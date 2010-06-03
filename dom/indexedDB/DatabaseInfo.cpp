@@ -65,7 +65,6 @@ typedef nsClassHashtable<nsUint32HashKey, DatabaseInfoHash>
         DatabaseHash;
 
 DatabaseHash* gDatabaseHash = nsnull;
-bool gShutdown = false;
 
 PLDHashOperator
 EnumerateObjectStoreNames(const nsAString& aKey,
@@ -109,14 +108,14 @@ DatabaseInfo::Put(DatabaseInfo* aInfo)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aInfo, "Null pointer!");
 
-  NS_ENSURE_FALSE(gShutdown, false);
-
   if (!gDatabaseHash) {
-    gDatabaseHash = new DatabaseHash();
-    if (!gDatabaseHash->Init()) {
+    nsAutoPtr<DatabaseHash> databaseHash(new DatabaseHash());
+    if (!databaseHash->Init()) {
       NS_ERROR("Failed to initialize hashtable!");
       return false;
     }
+
+    gDatabaseHash = databaseHash.forget();
   }
 
   if (gDatabaseHash->Get(aInfo->id, nsnull)) {
@@ -143,6 +142,11 @@ DatabaseInfo::Remove(PRUint32 aId)
 
   if (gDatabaseHash) {
     gDatabaseHash->Remove(aId);
+
+    if (!gDatabaseHash->Count()) {
+      delete gDatabaseHash;
+      gDatabaseHash = nsnull;
+    }
   }
 }
 
@@ -216,8 +220,6 @@ ObjectStoreInfo::Put(ObjectStoreInfo* aInfo)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aInfo, "Null pointer!");
 
-  NS_ENSURE_FALSE(gShutdown, false);
-
   if (!gDatabaseHash) {
     NS_ERROR("No databases known!");
     return false;
@@ -230,11 +232,12 @@ ObjectStoreInfo::Put(ObjectStoreInfo* aInfo)
   }
 
   if (!hash->objectStoreHash) {
-    hash->objectStoreHash = new ObjectStoreInfoHash();
-    if (!hash->objectStoreHash->Init()) {
+    nsAutoPtr<ObjectStoreInfoHash> objectStoreHash(new ObjectStoreInfoHash());
+    if (!objectStoreHash->Init()) {
       NS_ERROR("Failed to initialize hashtable!");
       return false;
     }
+    hash->objectStoreHash = objectStoreHash.forget();
   }
 
   if (hash->objectStoreHash->Get(aInfo->name, nsnull)) {
@@ -259,14 +262,4 @@ ObjectStoreInfo::Remove(PRUint32 aDatabaseId,
       hash->objectStoreHash->Remove(aName);
     }
   }
-}
-
-void
-mozilla::dom::indexedDB::Shutdown()
-{
-  NS_ASSERTION(!gShutdown, "Shutdown called twice!");
-  gShutdown = true;
-
-  // Kill the hash
-  delete gDatabaseHash;
 }

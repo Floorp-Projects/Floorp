@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// XXX remove once we can get jsvals out of XPIDL
+#include "jscntxt.h"
+#include "jsapi.h"
+
 #include "IDBCursorRequest.h"
 
 #include "nsIIDBDatabaseException.h"
@@ -52,8 +56,37 @@
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
 #include "IDBTransactionRequest.h"
+#include "Savepoint.h"
 
 USING_INDEXEDDB_NAMESPACE
+
+namespace {
+
+class UpdateHelper : public AsyncConnectionHelper
+{
+public:
+  UpdateHelper(IDBTransactionRequest* aTransaction,
+               IDBRequest* aRequest,
+               PRInt64 aObjectStoreID,
+               const nsAString& aValue,
+               const Key& aKey,
+               bool aAutoIncrement)
+  : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
+    mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+private:
+  // In-params.
+  const PRInt64 mOSID;
+  const nsString mValue;
+  const Key mKey;
+  const bool mAutoIncrement;
+};
+
+} // anonymous namespace
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -280,8 +313,133 @@ IDBCursorRequest::Update(nsIVariant* aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  const Key& key = mData[mDataIndex].key;
+  NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
+
+  // This is the slow path, need to do this better once XPIDL can have raw
+  // jsvals as arguments.
+  NS_WARNING("Using a slow path for Update! Fix this now!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (argc < 1) {
+    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+  }
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSAutoRequest ar(cx);
+
+  js::AutoValueRooter clone(cx);
+  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!mObjectStore->KeyPath().IsEmpty()) {
+    // Make sure the object given has the correct keyPath value set on it or
+    // we will add it.
+    const nsString& keyPath = mObjectStore->KeyPath();
+    const jschar* keyPathChars = reinterpret_cast<const jschar*>(keyPath.get());
+    const size_t keyPathLen = keyPath.Length();
+
+    js::AutoValueRooter prop(cx);
+    JSBool ok = JS_GetUCProperty(cx, JSVAL_TO_OBJECT(clone.value()),
+                                 keyPathChars, keyPathLen, prop.addr());
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    if (JSVAL_IS_VOID(prop.value())) {
+      if (key.IsInt()) {
+        ok = JS_NewNumberValue(cx, key.IntValue(), prop.addr());
+        NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+      }
+      else if (key.IsString()) {
+        const nsString& keyString = key.StringValue();
+        JSString* str =
+          JS_NewUCStringCopyN(cx,
+                              reinterpret_cast<const jschar*>(keyString.get()),
+                              keyString.Length());
+        NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
+
+        *prop.addr() = STRING_TO_JSVAL(str);
+      }
+      else {
+        NS_NOTREACHED("Bad key!");
+      }
+
+      ok = JS_DefineUCProperty(cx, JSVAL_TO_OBJECT(clone.value()), keyPathChars,
+                               keyPathLen, prop.value(), nsnull, nsnull,
+                               JSPROP_ENUMERATE);
+      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+    }
+
+    if (JSVAL_IS_NULL(prop.value())) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    if (JSVAL_IS_INT(prop.value())) {
+      if (!key.IsInt() || JSVAL_TO_INT(prop.value()) != key.IntValue()) {
+        return NS_ERROR_INVALID_ARG;
+      }
+    }
+
+    if (JSVAL_IS_DOUBLE(prop.value())) {
+      if (!key.IsInt() || *JSVAL_TO_DOUBLE(prop.value()) != key.IntValue()) {
+        return NS_ERROR_INVALID_ARG;
+      }
+    }
+
+    if (JSVAL_IS_STRING(prop.value())) {
+      if (!key.IsString()) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      JSString* str = JSVAL_TO_STRING(prop.value());
+      size_t len = JS_GetStringLength(str);
+      if (!len) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      const PRUnichar* chars =
+        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
+      if (key.StringValue() != nsDependentString(chars, len)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+    }
+  }
+
+  nsCOMPtr<nsIJSON> json(new nsJSON());
+
+  nsString jsonValue;
+  rv = json->EncodeFromJSVal(clone.addr(), cx, jsonValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<UpdateHelper> helper =
+    new UpdateHelper(mTransaction, request, mObjectStore->Id(), jsonValue, key,
+                     mObjectStore->IsAutoIncrement());
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -297,8 +455,72 @@ IDBCursorRequest::Remove(nsIIDBRequest** _retval)
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
+  const Key& key = mData[mDataIndex].key;
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRUint16
+UpdateHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_PRECONDITION(aConnection, "Passed a null connection!");
+
+  nsresult rv;
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
+
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->AddStatement(false, true, mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  Savepoint savepoint(mTransaction);
+
+  NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (mKey.IsInt()) {
+    rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
+  }
+  else if (mKey.IsString()) {
+    rv = stmt->BindStringByName(keyValue, mKey.StringValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (NS_FAILED(stmt->Execute())) {
+    return nsIIDBDatabaseException::CONSTRAINT_ERR;
+  }
+
+  // TODO update indexes if needed
+
+  rv = savepoint.Release();
+  return NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;
+}
+
+PRUint16
+UpdateHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
+
+  if (mKey.IsString()) {
+    aResult->SetAsAString(mKey.StringValue());
+  }
+  else if (mKey.IsInt()) {
+    aResult->SetAsInt64(mKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Bad key!");
+  }
+  return OK;
 }
 
 NS_IMETHODIMP
