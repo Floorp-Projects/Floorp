@@ -53,7 +53,7 @@
 #include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
-#include "jsproxy.h"
+#include "jswrapper.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -3847,7 +3847,7 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
         return true;
     }
 
-    JSObject *wrapped = JSNoopProxyHandler::wrap<JSNoopProxyHandler>(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
+    JSObject *wrapped = JSWrapper::wrap(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
     if (!wrapped)
         return false;
 
