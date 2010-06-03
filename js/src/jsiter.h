@@ -61,7 +61,6 @@ JS_BEGIN_EXTERN_C
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
 struct NativeIterator {
-    JSObject  *obj;
     jsval     *props_array;
     jsval     *props_cursor;
     jsval     *props_end;
@@ -71,7 +70,7 @@ struct NativeIterator {
     uintN     flags;
     JSObject  *next;
 
-    static NativeIterator *allocate(JSContext *cx, JSObject *obj, uintN flags,
+    static NativeIterator *allocate(JSContext *cx, uintN flags,
                                     uint32 *sarray, uint32 slength, uint32 key,
                                     jsval *parray, uint32 plength);
 
@@ -92,7 +91,7 @@ bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp);
 
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, jsval *vp);
+JSIdArrayToIterator(JSContext *cx, uintN flags, JSIdArray *ida, jsval *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
@@ -105,9 +104,6 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
 js_CloseIterator(JSContext *cx, jsval v);
-
-bool
-js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
 
 /*
  * IteratorMore() indicates whether another value is available. It might
