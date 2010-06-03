@@ -1152,8 +1152,8 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   // No color names begin with a '#'; in standards mode, all acceptable
   // numeric colors do.
   if (colorStr.First() == '#') {
-    colorStr.Cut(0, 1);
-    if (NS_HexToRGB(colorStr, &color)) {
+    nsDependentString withoutHash(colorStr.get() + 1, colorStr.Length() - 1);
+    if (NS_HexToRGB(withoutHash, &color)) {
       SetColorValue(color, aString);
       return PR_TRUE;
     }
