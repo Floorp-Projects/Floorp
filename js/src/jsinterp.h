@@ -392,15 +392,6 @@ GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
     return obj->getPrivate();
 }
 
-extern Value
-BoxedWordToValue(jsboxedword w);
-
-extern bool
-ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *w);
-
-extern Value
-IdToValue(jsid id);
-
 extern bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp);
 

@@ -334,12 +334,11 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
  * See the assertions in the JSOP_DOUBLE and JSOP_LOOKUPSWTICH* opcode cases in
  * jsops.cpp.
  */
-#define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, atom)                     \
+#define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, dbl)                      \
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_ASSERT(index_ < (script)->atomMap.length);                         \
-        (atom) = (script)->atomMap.vector[index_];                            \
-        JS_ASSERT(ATOM_IS_DOUBLE(atom));                                      \
+        JS_ASSERT(index_ < (script)->consts()->length);                       \
+        (dbl) = (script)->getConst(index_).asDouble();                        \
     JS_END_MACRO
 
 #define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \

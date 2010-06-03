@@ -90,6 +90,8 @@
 #include "jsdhash.h"
 #endif
 
+#include "jsatominlines.h"
+
 using namespace js;
 
 /*
@@ -4094,7 +4096,7 @@ CloneParseTree(JSParseNode *opn, JSTreeContext *tc)
             NULLCHECK(pn->pn_right = CloneParseTree(opn->pn_right, tc));
         else
             pn->pn_right = pn->pn_left;
-        pn->pn_val = opn->pn_val;
+        pn->pn_pval = opn->pn_pval;
         pn->pn_iflags = opn->pn_iflags;
         break;
 
@@ -7984,8 +7986,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().t_dval;
                 if (tc->needStrictChecks()) {
-                    atom = js_AtomizeDouble(context, pn3->pn_dval);
-                    if (!atom)
+                    /*
+                     * Use string-valued atoms for detecting duplicate
+                     * properties so that 1 and "1" properly collide.
+                     */
+                    if (!js_ValueToAtom(context, DoubleTag(pn3->pn_dval), &atom))
                         return NULL;
                 } else {
                     atom = NULL; /* for the compiler */
@@ -8013,8 +8018,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                             return NULL;
                         pn3->pn_dval = tokenStream.currentToken().t_dval;
                         if (tc->needStrictChecks()) {
-                            atom = js_AtomizeDouble(context, pn3->pn_dval);
-                            if (!atom)
+                            /*
+                             * Use string-valued atoms for detecting duplicate
+                             * properties so that 1 and "1" properly collide.
+                             */
+                            if (!js_ValueToAtom(context, DoubleTag(pn3->pn_dval), &atom))
                                 return NULL;
                         } else {
                             atom = NULL; /* for the compiler */
@@ -8096,19 +8104,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 } else {
                     JS_NOT_REACHED("bad opcode in object initializer");
                     attributesMask = 0;
-                }
-
-                /*
-                 * Use only string-valued atoms for detecting duplicate
-                 * properties so that 1 and "1" properly collide.
-                 */
-                if (ATOM_IS_DOUBLE(atom)) {
-                    JSString *str = js_NumberToString(context, pn3->pn_dval);
-                    if (!str)
-                        return JS_FALSE;
-                    atom = js_AtomizeString(context, str, 0);
-                    if (!atom)
-                        return JS_FALSE;
                 }
 
                 JSAtomListElement *ale = seen.lookup(atom);

@@ -341,7 +341,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
             if (!js_IsFunctionQName(cx, obj, &id))
                 return false;
             if (id != 0)
-                vp[0] = IdToValue(id);
+                vp[0] = ID_TO_VALUE(id);
         }
 #endif
         obj = NewObjectWithGivenProto(cx, &js_NoSuchMethodClass, NULL, NULL);
@@ -934,7 +934,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : isFunction
            ? js_function_str
            : js_var_str;
-    name = js_ValueToPrintableString(cx, IdToValue(id));
+    name = js_ValueToPrintableString(cx, ID_TO_VALUE(id));
     if (!name)
         return JS_FALSE;
     return !!JS_ReportErrorFlagsAndNumber(cx, report,
@@ -1109,65 +1109,11 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
     return JS_TRUE;
 }
 
-Value
-BoxedWordToValue(jsboxedword w)
-{
-    if (JSBOXEDWORD_IS_STRING(w))
-        return StringTag(JSBOXEDWORD_TO_STRING(w));
-    if (JSBOXEDWORD_IS_INT(w))
-        return Int32Tag(JSBOXEDWORD_TO_INT(w));
-    if (JSBOXEDWORD_IS_DOUBLE(w))
-        return DoubleTag(*JSBOXEDWORD_TO_DOUBLE(w));
-    if (JSBOXEDWORD_IS_OBJECT(w))
-        return ObjectOrNullTag(JSBOXEDWORD_TO_OBJECT(w));
-    if (JSBOXEDWORD_IS_VOID(w))
-        return UndefinedTag();
-    return BooleanTag(!!JSBOXEDWORD_TO_BOOLEAN(w));
-}
-
-bool
-ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *wp)
-{
-    int32_t i;
-    if (v.isInt32() &&
-        INT32_FITS_IN_JSID((i = v.asInt32()))) {
-        *wp = INT_TO_JSBOXEDWORD(i);
-        return true;
-    }
-    if (v.isString()) {
-        *wp = STRING_TO_JSBOXEDWORD(v.asString());
-        return true;
-    }
-    if (v.isObjectOrNull()) {
-        *wp = OBJECT_TO_JSBOXEDWORD(v.asObjectOrNull());
-        return true;
-    }
-    if (v.isBoolean()) {
-        *wp = BOOLEAN_TO_JSBOXEDWORD(v.asBoolean());
-        return true;
-    }
-    if (v.isUndefined()) {
-        *wp = JSBOXEDWORD_VOID;
-        return true;
-    }
-    double *dp = js_NewWeaklyRootedDoubleAtom(cx, v.asNumber());
-    if (!dp)
-        return false;
-    *wp = DOUBLE_TO_JSBOXEDWORD(dp);
-    return true;
-}
-
-Value
-IdToValue(jsid id)
-{
-    return BoxedWordToValue(id);
-}
-
 bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp)
 {
     int32_t i;
-    if (ValueFitsInInt32(v, &i) && INT32_FITS_IN_JSID(i)) {
+    if (ValueFitsInInt32(v, &i)) {
         *idp = INT_TO_JSID(i);
         return true;
     }
@@ -2011,21 +1957,14 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        jsboxedword w = *ni->props_cursor;
-        if (JSBOXEDWORD_IS_STRING(w))
-            rval->setString(JSBOXEDWORD_TO_STRING(w));
-        else if (ni->flags & JSITER_FOREACH)
-            /* XXX: this begs for a for-each-specialized iterator: we are
-             * boxing going both directions! */
-            *rval = BoxedWordToValue(*ni->props_cursor);
-        else
-            goto slow_path;
-
-        ni->props_cursor++;
-        return true;
+        *rval = *ni->props_cursor;
+        if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
+            ni->props_cursor++;
+            return true;
+        }
+        /* Take the slow path if we have to stringify a numeric property name. */
     }
-  slow_path:
-    return !!js_IteratorNext(cx, iterobj, rval);
+    return js_IteratorNext(cx, iterobj, rval);
 }
 
 
@@ -2197,6 +2136,9 @@ Interpret(JSContext *cx)
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
     (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
+
+#define LOAD_DOUBLE(PCOFF, dbl)                                               \
+    (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).asDouble())
 
 #ifdef JS_TRACER
 
