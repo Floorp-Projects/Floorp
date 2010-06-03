@@ -209,6 +209,22 @@ IDBTransactionRequest::ReleaseSavepoint()
   return NS_OK;
 }
 
+void
+IDBTransactionRequest::RollbackSavepoint()
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  NS_PRECONDITION(mConnection, "No connection!");
+
+  NS_ASSERTION(mSavepointCount == 1, "Mismatch!");
+  mSavepointCount = 0;
+
+  // TODO try to cache this statement
+  NS_NAMED_LITERAL_CSTRING(savepoint, "ROLLBACK TO " SAVEPOINT_INTERMEDIATE);
+  if (NS_FAILED(mConnection->ExecuteSimpleSQL(savepoint))) {
+    NS_ERROR("Rollback failed!");
+  }
+}
+
 nsresult
 IDBTransactionRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
