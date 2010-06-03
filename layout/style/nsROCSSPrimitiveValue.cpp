@@ -39,14 +39,10 @@
 
 #include "nsROCSSPrimitiveValue.h"
 
-#include "nsCOMPtr.h"
-#include "nsDOMError.h"
-#include "prprf.h"
-#include "nsContentUtils.h"
-#include "nsXPIDLString.h"
-#include "nsCRT.h"
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
+#include "nsDOMCSSRGBColor.h"
+#include "nsIDOMRect.h"
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(PRInt32 aAppUnitsPerInch)
   : mType(CSS_PX), mAppUnitsPerInch(aAppUnitsPerInch)
@@ -70,7 +66,7 @@ DOMCI_DATA(ROCSSPrimitiveValue, nsROCSSPrimitiveValue)
 NS_INTERFACE_MAP_BEGIN(nsROCSSPrimitiveValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValue)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSPrimitiveValue)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ROCSSPrimitiveValue)
 NS_INTERFACE_MAP_END
 
@@ -423,7 +419,8 @@ nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aReturn)
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
   NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
-  return CallQueryInterface(mValue.mRect, aReturn);
+  NS_ADDREF(*aReturn = mValue.mRect);
+  return NS_OK;
 }
 
 
@@ -435,6 +432,165 @@ nsROCSSPrimitiveValue::GetRGBColorValue(nsIDOMRGBColor** aReturn)
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
   NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
-  return CallQueryInterface(mValue.mColor, aReturn);
+  NS_ADDREF(*aReturn = mValue.mColor);
+  return NS_OK;
 }
 
+void
+nsROCSSPrimitiveValue::SetNumber(float aValue)
+{
+    Reset();
+    mValue.mFloat = aValue;
+    mType = CSS_NUMBER;
+}
+
+void
+nsROCSSPrimitiveValue::SetNumber(PRInt32 aValue)
+{
+  Reset();
+  mValue.mFloat = float(aValue);
+  mType = CSS_NUMBER;
+}
+
+void
+nsROCSSPrimitiveValue::SetNumber(PRUint32 aValue)
+{
+  Reset();
+  mValue.mFloat = float(aValue);
+  mType = CSS_NUMBER;
+}
+
+void
+nsROCSSPrimitiveValue::SetPercent(float aValue)
+{
+  Reset();
+  mValue.mFloat = aValue;
+  mType = CSS_PERCENTAGE;
+}
+
+void
+nsROCSSPrimitiveValue::SetAppUnits(nscoord aValue)
+{
+  Reset();
+  mValue.mAppUnits = aValue;
+  mType = CSS_PX;
+}
+
+void
+nsROCSSPrimitiveValue::SetAppUnits(float aValue)
+{
+  SetAppUnits(NSToCoordRound(aValue));
+}
+
+void
+nsROCSSPrimitiveValue::SetIdent(nsCSSKeyword aKeyword)
+{
+  NS_PRECONDITION(aKeyword != eCSSKeyword_UNKNOWN &&
+                  0 <= aKeyword && aKeyword < eCSSKeyword_COUNT,
+                  "bad keyword");
+  Reset();
+  mValue.mKeyword = aKeyword;
+  mType = CSS_IDENT;
+}
+
+// FIXME: CSS_STRING should imply a string with "" and a need for escaping.
+void
+nsROCSSPrimitiveValue::SetString(const nsACString& aString, PRUint16 aType)
+{
+  Reset();
+  mValue.mString = ToNewUnicode(aString);
+  if (mValue.mString) {
+    mType = aType;
+  } else {
+    // XXXcaa We should probably let the caller know we are out of memory
+    mType = CSS_UNKNOWN;
+  }
+}
+
+// FIXME: CSS_STRING should imply a string with "" and a need for escaping.
+void
+nsROCSSPrimitiveValue::SetString(const nsAString& aString, PRUint16 aType)
+{
+  Reset();
+  mValue.mString = ToNewUnicode(aString);
+  if (mValue.mString) {
+    mType = aType;
+  } else {
+    // XXXcaa We should probably let the caller know we are out of memory
+    mType = CSS_UNKNOWN;
+  }
+}
+
+void
+nsROCSSPrimitiveValue::SetURI(nsIURI *aURI)
+{
+  Reset();
+  mValue.mURI = aURI;
+  NS_IF_ADDREF(mValue.mURI);
+  mType = CSS_URI;
+}
+
+void
+nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
+{
+  NS_PRECONDITION(aColor, "Null RGBColor being set!");
+  Reset();
+  mValue.mColor = aColor;
+  if (mValue.mColor) {
+    NS_ADDREF(mValue.mColor);
+    mType = CSS_RGBCOLOR;
+  }
+  else {
+    mType = CSS_UNKNOWN;
+  }
+}
+
+void
+nsROCSSPrimitiveValue::SetRect(nsIDOMRect* aRect)
+{
+  NS_PRECONDITION(aRect, "Null rect being set!");
+  Reset();
+  mValue.mRect = aRect;
+  if (mValue.mRect) {
+    NS_ADDREF(mValue.mRect);
+    mType = CSS_RECT;
+  }
+  else {
+    mType = CSS_UNKNOWN;
+  }
+}
+
+void
+nsROCSSPrimitiveValue::SetTime(float aValue)
+{
+  Reset();
+  mValue.mFloat = aValue;
+  mType = CSS_S;
+}
+
+void
+nsROCSSPrimitiveValue::Reset()
+{
+  switch (mType) {
+    case CSS_IDENT:
+      break;
+    case CSS_STRING:
+    case CSS_ATTR:
+    case CSS_COUNTER: // FIXME: Counter should use an object
+      NS_ASSERTION(mValue.mString, "Null string should never happen");
+      nsMemory::Free(mValue.mString);
+      mValue.mString = nsnull;
+      break;
+    case CSS_URI:
+      NS_IF_RELEASE(mValue.mURI);
+      break;
+    case CSS_RECT:
+      NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
+      NS_RELEASE(mValue.mRect);
+      break;
+    case CSS_RGBCOLOR:
+      NS_ASSERTION(mValue.mColor, "Null RGBColor should never happen");
+      NS_RELEASE(mValue.mColor);
+      break;
+  }
+}
