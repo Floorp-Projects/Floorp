@@ -83,20 +83,25 @@ mjit::Compiler::jsop_bitop(JSOp op)
     }
            
     /* Test the types. */
+    bool stubNeeded = false;
     if (!rhs->isTypeKnown()) {
         RegisterID reg = frame.tempRegForType(rhs);
         Jump rhsFail = masm.testInt32(Assembler::NotEqual, reg);
         stubcc.linkExit(rhsFail);
         frame.learnType(rhs, JSVAL_MASK32_INT32);
+        stubNeeded = true;
     }
     if (!lhs->isTypeKnown()) {
         RegisterID reg = frame.tempRegForType(lhs);
         Jump lhsFail = masm.testInt32(Assembler::NotEqual, reg);
         stubcc.linkExit(lhsFail);
+        stubNeeded = true;
     }
 
-    stubcc.leave();
-    stubcc.call(stubs::BitAnd);
+    if (stubNeeded) {
+        stubcc.leave();
+        stubcc.call(stubs::BitAnd);
+    }
 
     if (lhs->isConstant() && rhs->isConstant()) {
         int32 L = lhs->getValue().asInt32();
@@ -148,7 +153,8 @@ mjit::Compiler::jsop_bitop(JSOp op)
     frame.pop();
     frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
 
-    stubcc.rejoin(2);
+    if (stubNeeded)
+        stubcc.rejoin(2);
 }
 
 void

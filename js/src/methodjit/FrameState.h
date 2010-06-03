@@ -180,6 +180,11 @@ class FrameState
     inline void popn(uint32 n);
 
     /*
+     * Pushes a copy of a local variable.
+     */
+    void pushLocal(uint32 n);
+
+    /*
      * Allocates a temporary register for a FrameEntry's type. The register
      * can be spilled or clobbered by the frame. The compiler may only operate
      * on it temporarily, and must take care not to clobber it.
@@ -259,6 +264,11 @@ class FrameState
     void storeTo(FrameEntry *fe, Address address, bool popHint);
 
     /*
+     * Stores a stack slot back to a local variable.
+     */
+    void storeLocal(FrameEntry *fe, uint32 n);
+
+    /*
      * Restores state from a slow path.
      */
     void merge(Assembler &masm, uint32 ivD) const;
@@ -324,11 +334,20 @@ class FrameState
     void evictReg(RegisterID reg);
     inline FrameEntry *rawPush();
     inline FrameEntry *addToTracker(uint32 index);
-    inline void syncType(const FrameEntry *fe, Assembler &masm) const;
-    inline void syncData(const FrameEntry *fe, Assembler &masm) const;
+    inline void syncType(const FrameEntry *fe, Address to, Assembler &masm) const;
+    inline void syncData(const FrameEntry *fe, Address to, Assembler &masm) const;
+    inline FrameEntry *getLocal(uint32 slot);
 
-    void
-    moveOwnership(RegisterID reg, FrameEntry *newFe) {
+    uint32 localIndex(uint32 n) {
+        return nargs + n;
+    }
+
+    FrameEntry *entryFor(uint32 index) const {
+        JS_ASSERT(base[index]);
+        return &entries[index];
+    }
+
+    void moveOwnership(RegisterID reg, FrameEntry *newFe) {
         regstate[reg].fe = newFe;
     }
 

@@ -48,6 +48,7 @@ FrameState::addToTracker(uint32 index)
     JS_ASSERT(!base[index]);
     tracker.add(index);
     base[index] = &entries[index];
+    entries[index].clear();
     return base[index];
 }
 
@@ -140,6 +141,7 @@ FrameState::forgetReg(RegisterID reg)
 {
 #ifdef DEBUG
     if (regstate[reg].fe) {
+        JS_ASSERT(!regstate[reg].fe->isCopy());
         if (regstate[reg].type == RematInfo::TYPE)
             regstate[reg].fe->type.invalidate();
         else
@@ -255,6 +257,8 @@ inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForType(FrameEntry *fe)
 {
     JS_ASSERT(!fe->type.isConstant());
+    if (fe->isCopy())
+        fe = entryFor(fe->copyOf());
 
     if (fe->type.inRegister())
         return fe->type.reg();
@@ -272,6 +276,9 @@ FrameState::tempRegForData(FrameEntry *fe)
 {
     JS_ASSERT(!fe->data.isConstant());
 
+    if (fe->isCopy())
+        fe = entryFor(fe->copyOf());
+
     if (fe->data.inRegister())
         return fe->data.reg();
 
@@ -286,6 +293,7 @@ FrameState::tempRegForData(FrameEntry *fe)
 inline bool
 FrameState::shouldAvoidTypeRemat(FrameEntry *fe)
 {
+    JS_ASSERT(!fe->isCopy());
     return fe->type.inMemory();
 }
 
@@ -296,32 +304,35 @@ FrameState::shouldAvoidDataRemat(FrameEntry *fe)
 }
 
 inline void
-FrameState::syncType(const FrameEntry *fe, Assembler &masm) const
+FrameState::syncType(const FrameEntry *fe, Address to, Assembler &masm) const
 {
-    JS_ASSERT(!fe->type.synced());
+    JS_ASSERT_IF(fe->type.synced(),
+                 fe->isCopied() && addressOf(fe).offset != to.offset);
     JS_ASSERT(fe->type.inRegister() || fe->type.isConstant());
 
     if (fe->type.isConstant()) {
         JS_ASSERT(fe->isTypeKnown());
-        masm.storeTypeTag(ImmTag(fe->getTypeTag()), addressOf(fe));
+        masm.storeTypeTag(ImmTag(fe->getTypeTag()), to);
     } else {
-        masm.storeTypeTag(fe->type.reg(), addressOf(fe));
+        masm.storeTypeTag(fe->type.reg(), to);
     }
 }
 
 inline void
-FrameState::syncData(const FrameEntry *fe, Assembler &masm) const
+FrameState::syncData(const FrameEntry *fe, Address to, Assembler &masm) const
 {
-    JS_ASSERT(!fe->data.synced());
+    JS_ASSERT_IF(addressOf(fe).base == to.base &&
+                 addressOf(fe).offset == to.offset,
+                 !fe->data.synced());
     JS_ASSERT(fe->data.inRegister() || fe->data.isConstant());
 
     if (fe->data.isConstant()) {
        if (!fe->type.synced())
-           masm.storeValue(fe->getValue(), addressOf(fe));
+           masm.storeValue(fe->getValue(), to);
        else
-           masm.storeData32(Imm32(fe->getPayload32()), addressOf(fe));
+           masm.storeData32(Imm32(fe->getPayload32()), to);
     } else {
-        masm.storeData32(fe->data.reg(), addressOf(fe));
+        masm.storeData32(fe->data.reg(), to);
     }
 }
 
@@ -348,6 +359,17 @@ FrameState::testInt32(Assembler::Condition cond, FrameEntry *fe)
     if (shouldAvoidTypeRemat(fe))
         return masm.testInt32(cond, addressOf(fe));
     return masm.testInt32(cond, tempRegForType(fe));
+}
+
+inline FrameEntry *
+FrameState::getLocal(uint32 slot)
+{
+    uint32 index = nargs + slot;
+    if (FrameEntry *fe = base[index])
+        return fe;
+    FrameEntry *fe = addToTracker(index);
+    fe->resetSynced();
+    return fe;
 }
 
 } /* namspace mjit */
