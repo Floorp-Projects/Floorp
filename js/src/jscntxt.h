@@ -1033,9 +1033,6 @@ struct JSThreadData {
     /* Base address of the native stack for the current thread. */
     jsuword             *nativeStackBase;
 
-    /* List of currently active non-escaping enumerators (for-in). */
-    JSObject            *enumerators;
-
     bool init();
     void finish();
     void mark(JSTracer *trc);
