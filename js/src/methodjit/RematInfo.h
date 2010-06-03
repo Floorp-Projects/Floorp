@@ -65,9 +65,6 @@ struct RematInfo {
          */
         PhysLoc_Memory = 0,
 
-        /* Backed by another entry in the stack. */
-        PhysLoc_Copy,
-
         /* Backing bits are known at compile time. */
         PhysLoc_Constant,
 
@@ -99,7 +96,6 @@ struct RematInfo {
 
     void setConstant() { location_ = PhysLoc_Constant; }
 
-    bool isCopy() const { return location_ == PhysLoc_Copy; }
     bool isConstant() const { return location_ == PhysLoc_Constant; }
     bool inRegister() const { return location_ == PhysLoc_Register; }
     bool inMemory() const { return location_ == PhysLoc_Memory; }
