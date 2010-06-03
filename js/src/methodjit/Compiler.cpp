@@ -456,6 +456,10 @@ mjit::Compiler::generateMethod()
             frame.push(Valueify(JSVAL_ONE));
           END_CASE(JSOP_ONE)
 
+          BEGIN_CASE(JSOP_NULL)
+            frame.push(NullTag());
+          END_CASE(JSOP_NULL)
+
           BEGIN_CASE(JSOP_FALSE)
             frame.push(Value(BooleanTag(false)));
           END_CASE(JSOP_FALSE)
