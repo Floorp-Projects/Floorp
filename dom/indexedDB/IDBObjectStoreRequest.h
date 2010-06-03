@@ -46,6 +46,8 @@
 
 #include "nsIIDBObjectStoreRequest.h"
 
+struct JSContext;
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 struct ObjectStoreInfo;
@@ -222,6 +224,12 @@ public:
   static nsresult
   GetJSONFromArg0(/* jsval arg0, */
                   nsAString& aJSON);
+
+  static nsresult
+  GetKeyPathValueFromJSON(const nsAString& aJSON,
+                          const nsAString& aKeyPath,
+                          JSContext** aCx,
+                          nsAString& aValue);
 
   bool TransactionIsOpen() const
   {
