@@ -295,9 +295,10 @@ FrameState::sync(Assembler &masm) const
             }
 
             if (!fe->type.synced()) {
-                if (backing->isTypeKnown()) {
-                    JS_ASSERT(fe->getTypeTag() == backing->getTypeTag());
-                    masm.storeTypeTag(ImmTag(backing->getTypeTag()), address);
+                /* :TODO: we can do better, the type is learned for all copies. */
+                if (fe->isTypeKnown()) {
+                    //JS_ASSERT(fe->getTypeTag() == backing->getTypeTag());
+                    masm.storeTypeTag(ImmTag(fe->getTypeTag()), address);
                 } else {
                     RegisterID r;
                     if (backing->type.inRegister()) {
