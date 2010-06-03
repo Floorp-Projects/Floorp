@@ -218,7 +218,7 @@ mjit::Compiler::finishThisUp()
 
     for (size_t i = 0; i < script->length; i++) {
         Label L = jumpMap[i];
-        if (analysis[i].visited) {
+        if (analysis[i].safePoint) {
             JS_ASSERT(L.isValid());
             nmap[i] = (uint8 *)(result + masm.distanceOf(L));
         }
@@ -259,10 +259,9 @@ mjit::Compiler::generateMethod()
         JSOp op = JSOp(*PC);
 
         OpcodeStatus &opinfo = analysis[PC];
-        if (opinfo.nincoming) {
-            opinfo.safePoint = true;
+        if (opinfo.nincoming)
             frame.forgetEverything(opinfo.stackDepth);
-        }
+        opinfo.safePoint = true;
         jumpMap[uint32(PC - script->code)] = masm.label();
 
         if (!opinfo.visited) {
@@ -478,12 +477,15 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_POP)
 
           BEGIN_CASE(JSOP_GETARG)
+          BEGIN_CASE(JSOP_CALLARG)
           {
             RegisterID reg = frame.allocReg();
             uint32 index = GET_SLOTNO(PC);
             masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
             frame.freeReg(reg);
             frame.push(Address(reg, index * sizeof(Value)));
+            if (op == JSOP_CALLARG)
+                frame.push(NullTag());
           }
           END_CASE(JSOP_GETARG)
 
