@@ -942,13 +942,45 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     mayOverwrite = true;
   }
 
-  nsCOMPtr<mozIStorageStatement> stmt =
-    mTransaction->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
+  Savepoint savepoint(mTransaction);
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  if (!mOverwrite && !unsetKey) {
+    // Make sure the key doesn't exist already
+    stmt = mTransaction->GetStatement(mAutoIncrement);
+    NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    mozStorageStatementScoper scoper(stmt);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    NS_NAMED_LITERAL_CSTRING(id, "id");
+
+    if (mKey.IsInt()) {
+      rv = stmt->BindInt64ByName(id, mKey.IntValue());
+    }
+    else if (mKey.IsString()) {
+      rv = stmt->BindStringByName(id, mKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    PRBool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    if (hasResult) {
+      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+    }
+  }
+
+  stmt = mTransaction->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
-
-  Savepoint savepoint(mTransaction);
 
   NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
