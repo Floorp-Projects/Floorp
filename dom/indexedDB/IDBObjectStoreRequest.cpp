@@ -1031,7 +1031,7 @@ AddHelper::GetSuccessResult(nsIWritableVariant* aResult)
     aResult->SetAsInt64(mKey.IntValue());
   }
   else {
-    NS_NOTREACHED("Bad key!");
+    NS_NOTREACHED("Unknown key type!");
   }
   return OK;
 }
@@ -1092,15 +1092,19 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  NS_ASSERTION(!mKey.IsUnset(), "Must have a key here!");
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Must have a key here!");
 
   NS_NAMED_LITERAL_CSTRING(id, "id");
 
-  rv = mKey.IsNull() ?
-       stmt->BindNullByName(id) :
-       mKey.IsInt() ?
-          stmt->BindInt64ByName(id, mKey.IntValue()) :
-          stmt->BindStringByName(id, mKey.StringValue());
+  if (mKey.IsInt()) {
+    rv = stmt->BindInt64ByName(id, mKey.IntValue());
+  }
+  else if (mKey.IsString()) {
+    rv = stmt->BindStringByName(id, mKey.StringValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   // Search for it!
@@ -1143,13 +1147,19 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Must have a key here!");
+
   NS_NAMED_LITERAL_CSTRING(key_value, "key_value");
 
-  rv = mKey.IsNull() ?
-       stmt->BindNullByName(key_value) :
-       mKey.IsInt() ?
-          stmt->BindInt64ByName(key_value, mKey.IntValue()) :
-          stmt->BindStringByName(key_value, mKey.StringValue());
+  if (mKey.IsInt()) {
+    rv = stmt->BindInt64ByName(key_value, mKey.IntValue());
+  }
+  else if (mKey.IsString()) {
+    rv = stmt->BindStringByName(key_value, mKey.StringValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   // Search for it!
