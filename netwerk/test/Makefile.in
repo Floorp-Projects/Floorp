@@ -85,6 +85,10 @@ endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
+CPP_UNIT_TESTS = \
+		 TestSTSParser.cpp \
+		 $(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 LIBS		= $(EXTRA_DSO_LIBS) \
