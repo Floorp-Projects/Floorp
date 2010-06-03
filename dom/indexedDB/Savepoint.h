@@ -53,13 +53,17 @@ public:
   : mTransaction(aTransaction)
   , mHasSavepoint(false)
   {
+    NS_ASSERTION(mTransaction, "Null pointer!");
+
     mHasSavepoint = mTransaction->StartSavepoint();
     NS_WARN_IF_FALSE(mHasSavepoint, "Failed to make savepoint!");
   }
 
   ~Savepoint()
   {
-    Release();
+    if (mHasSavepoint) {
+      mTransaction->RollbackSavepoint();
+    }
   }
 
   nsresult Release()
