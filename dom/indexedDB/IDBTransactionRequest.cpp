@@ -539,15 +539,6 @@ IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
   return result.forget();
 }
 
-already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::IndexRemoveStatement(bool aUnique,
-                                            bool aAutoIncrement)
-{
-  nsCOMPtr<mozIStorageStatement> result;
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return result.forget();
-}
-
 void
 IDBTransactionRequest::CloseConnection()
 {
