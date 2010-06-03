@@ -161,6 +161,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWebBrowserChrome2.h"
 #include "nsITabChild.h"
+#include "nsIStrictTransportSecurityService.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -3781,13 +3782,27 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         if (!messageStr.IsEmpty()) {
             if (errorClass == nsINSSErrorsService::ERROR_CLASS_BAD_CERT) {
                 error.AssignLiteral("nssBadCert");
+
+                // if this is a Strict-Transport-Security host and the cert
+                // is bad, don't allow overrides (STS Spec section 7.3).
+                nsCOMPtr<nsIStrictTransportSecurityService> stss =
+                          do_GetService(NS_STSSERVICE_CONTRACTID, &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                PRBool isStsHost = PR_FALSE;
+                rv = stss->IsStsURI(aURI, &isStsHost);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                if (isStsHost)
+                  cssClass.AssignLiteral("badStsCert");
+
                 PRBool expert = PR_FALSE;
                 mPrefs->GetBoolPref("browser.xul.error_pages.expert_bad_cert",
                                     &expert);
                 if (expert) {
                     cssClass.AssignLiteral("expertBadCert");
                 }
-                
+
                 // See if an alternate cert error page is registered
                 nsXPIDLCString alternateErrorPage;
                 mPrefs->GetCharPref("security.alternate_certificate_error_page",
