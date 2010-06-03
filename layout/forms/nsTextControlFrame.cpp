@@ -119,6 +119,7 @@
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
 #include "nsIFontMetrics.h"
+#include "nsIDOMNSHTMLElement.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -443,8 +444,17 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   rv = UpdateValueDisplay(PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsSingleLineTextControl()) {
-    // textareas are eagerly initialized
+  // textareas are eagerly initialized
+  PRBool initEagerly = !IsSingleLineTextControl();
+  if (!initEagerly) {
+    nsCOMPtr<nsIDOMNSHTMLElement> element = do_QueryInterface(txtCtrl);
+    if (element) {
+      // so are input text controls with spellcheck=true
+      element->GetSpellcheck(&initEagerly);
+    }
+  }
+
+  if (initEagerly) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Someone forgot a script blocker?");
 
