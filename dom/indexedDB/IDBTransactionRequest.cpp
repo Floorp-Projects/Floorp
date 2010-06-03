@@ -421,7 +421,7 @@ IDBTransactionRequest::CloseConnection()
 
 #ifdef DEBUG
 bool
-IDBTransactionRequest::TransactionIsOpen()
+IDBTransactionRequest::TransactionIsOpen() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return mReadyState == nsIIDBTransaction::INITIAL ||
@@ -429,7 +429,7 @@ IDBTransactionRequest::TransactionIsOpen()
 }
 
 bool
-IDBTransactionRequest::IsWriteAllowed()
+IDBTransactionRequest::IsWriteAllowed() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return mMode == nsIIDBTransaction::READ_WRITE;

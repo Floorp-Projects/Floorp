@@ -721,6 +721,7 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 
   DatabaseInfo* dbInfo;
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
+    NS_ASSERTION(dbInfo->referenceCount, "Bad reference count!");
     ++dbInfo->referenceCount;
 #ifdef DEBUG
     {
