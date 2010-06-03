@@ -727,7 +727,7 @@ OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
   { // Load index information
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT object_store_id, name, key_path, unique_index, "
+      "SELECT object_store_id, id, name, key_path, unique_index, "
              "object_store_autoincrement "
       "FROM object_store_index"
     ), getter_AddRefs(stmt));
@@ -751,14 +751,16 @@ OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
       IndexInfo* indexInfo = objectStoreInfo->indexes.AppendElement();
       NS_ENSURE_TRUE(indexInfo, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      rv = stmt->GetString(1, indexInfo->name);
+      indexInfo->id = stmt->AsInt64(1);
+
+      rv = stmt->GetString(2, indexInfo->name);
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      rv = stmt->GetString(2, indexInfo->keyPath);
+      rv = stmt->GetString(3, indexInfo->keyPath);
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      indexInfo->unique = !!stmt->AsInt32(3);
-      indexInfo->autoIncrement = !!stmt->AsInt32(4);
+      indexInfo->unique = !!stmt->AsInt32(4);
+      indexInfo->autoIncrement = !!stmt->AsInt32(5);
     }
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
@@ -829,6 +831,8 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
         for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
           const IndexInfo& indexInfo = info->indexes[indexIndex];
           const IndexInfo& otherIndexInfo = otherInfo->indexes[indexIndex];
+          NS_ASSERTION(indexInfo.id == otherIndexInfo.id,
+                       "Bad index id!");
           NS_ASSERTION(indexInfo.name == otherIndexInfo.name,
                        "Bad index name!");
           NS_ASSERTION(indexInfo.keyPath == otherIndexInfo.keyPath,

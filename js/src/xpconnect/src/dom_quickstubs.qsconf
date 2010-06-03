@@ -493,7 +493,9 @@ members = [
     '-nsIIDBObjectStoreRequest.addOrModify',
     '-nsIIDBCursorRequest.continue',
     '-nsIIDBCursorRequest.value',
-    '-nsIIDBCursorRequest.update'
+    '-nsIIDBCursorRequest.update',
+    '-nsIIDBIndexRequest.get',
+    '-nsIIDBIndexRequest.getObject',
     ]
 
 # Most interfaces can be found by searching the includePath; to find
