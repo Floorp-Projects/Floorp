@@ -1164,12 +1164,7 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
     }
   }
 
-  if (aDocument->GetCompatibilityMode() != eCompatibility_NavQuirks) {
-    return PR_FALSE;
-  }
-
-  // In compatibility mode, try LooseHexToRGB as a fallback for either
-  // of the above two possibilities.
+  // Use NS_LooseHexToRGB as a fallback if nothing above worked.
   if (NS_LooseHexToRGB(colorStr, &color)) {
     SetColorValue(color, aString);
     return PR_TRUE;
