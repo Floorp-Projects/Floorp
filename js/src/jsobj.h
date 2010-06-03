@@ -944,7 +944,8 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
 extern JSBool
-js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj);
+js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject *cobj, JSObject *prototype);
 
 /*
  * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is

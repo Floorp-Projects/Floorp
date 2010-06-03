@@ -3418,7 +3418,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 
         JSScopeProperty *sprop = scope->lookup(id);
         if (!sprop) {
-            uint32 index = JSProto_LIMIT + key;
+            uint32 index = 2 * JSProto_LIMIT + key;
             if (!js_SetReservedSlot(cx, obj, index, v)) {
                 JS_UNLOCK_SCOPE(cx, scope);
                 return false;
@@ -3569,7 +3569,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         goto bad;
 
     /* If this is a standard class, cache its prototype. */
-    if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor))
+    if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor, proto))
         goto bad;
 
 out:
@@ -3729,11 +3729,18 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 
 JS_END_EXTERN_C
 
+static jsval
+GetGlobalObjectSlot(JSContext *cx, JSObject *obj, uint32 index)
+{
+    JSClass *clasp = obj->getClass();
+    uint32 slot = JSSLOT_START(clasp) + index;
+    return (slot < obj->numSlots()) ? obj->getSlot(slot) : JSVAL_VOID;
+}
+
 JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp)
 {
-    JSBool ok;
     JSObject *tmp, *cobj;
     JSResolvingKey rkey;
     JSResolvingEntry *rentry;
@@ -3748,9 +3755,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
         return JS_TRUE;
     }
 
-    ok = JS_GetReservedSlot(cx, obj, key, &v);
-    if (!ok)
-        return JS_FALSE;
+    v = GetGlobalObjectSlot(cx, obj, key);
     if (!JSVAL_IS_PRIMITIVE(v)) {
         *objp = JSVAL_TO_OBJECT(v);
         return JS_TRUE;
@@ -3767,14 +3772,15 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
     }
     generation = cx->resolvingTable->generation;
 
+    JSBool ok = true;
     cobj = NULL;
     init = lazy_prototype_init[key];
     if (init) {
         if (!init(cx, obj)) {
             ok = JS_FALSE;
         } else {
-            ok = JS_GetReservedSlot(cx, obj, key, &v);
-            if (ok && !JSVAL_IS_PRIMITIVE(v))
+            v = GetGlobalObjectSlot(cx, obj, key);
+            if (!JSVAL_IS_PRIMITIVE(v))
                 cobj = JSVAL_TO_OBJECT(v);
         }
     }
@@ -3785,13 +3791,14 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 }
 
 JSBool
-js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj)
+js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 {
     JS_ASSERT(!obj->getParent());
     if (!(obj->getClass()->flags & JSCLASS_IS_GLOBAL))
         return JS_TRUE;
 
-    return JS_SetReservedSlot(cx, obj, key, OBJECT_TO_JSVAL(cobj));
+    return js_SetReservedSlot(cx, obj, key, OBJECT_TO_JSVAL(cobj)) &&
+           js_SetReservedSlot(cx, obj, JSProto_LIMIT + key, OBJECT_TO_JSVAL(proto));
 }
 
 JSBool
@@ -5730,8 +5737,6 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
     JS_ASSERT(JSProto_Null <= protoKey);
     JS_ASSERT(protoKey < JSProto_LIMIT);
 
-    /* Query cache. */
-    JSClassProtoCache::GlobalAndProto *cacheEntry = NULL;
     if (protoKey != JSProto_Null) {
         if (!scope) {
             if (cx->fp)
@@ -5744,19 +5749,13 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
                 }
             }
         }
-        while (JSObject *tmp = scope->getParent())
-            scope = tmp;
-
-        JS_STATIC_ASSERT(JSProto_Null == 0);
-        JS_STATIC_ASSERT(JSProto_Object == 1);
-        cacheEntry = &cx->classProtoCache.entries[protoKey - JSProto_Object];
-
-        PROTO_CACHE_METER(cx, probe);
-        if (cacheEntry->global == scope) {
-            JS_ASSERT(cacheEntry->proto);
-            PROTO_CACHE_METER(cx, hit);
-            *protop = cacheEntry->proto;
-            return true;
+        scope = scope->getGlobal();
+        if (scope->getClass()->flags & JSCLASS_IS_GLOBAL) {
+            jsval v = GetGlobalObjectSlot(cx, scope, JSProto_LIMIT + protoKey);
+            if (!JSVAL_IS_PRIMITIVE(v)) {
+                *protop = JSVAL_TO_OBJECT(v);
+                return true;
+            }
         }
     }
 
@@ -5779,10 +5778,6 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
              */
             cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] =
                 JSVAL_TO_OBJECT(v);
-            if (cacheEntry) {
-                cacheEntry->global = scope;
-                cacheEntry->proto = JSVAL_TO_OBJECT(v);
-            }
         }
     }
     *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;
