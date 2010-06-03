@@ -102,6 +102,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
+#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -1050,6 +1051,9 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
         obj->decDenseArrayCountBy(1);
         obj->setDenseArrayElement(i, JSVAL_HOLE);
     }
+
+    if (!js_SuppressDeletedProperty(cx, obj, id))
+        return false;
 
     *rval = JSVAL_TRUE;
     return JS_TRUE;
