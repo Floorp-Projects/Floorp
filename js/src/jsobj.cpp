@@ -1130,7 +1130,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
         JSObject *obj = scopeobj;
         while (obj) {
-            if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
+            if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
                 return false;
             JSObject *parent = obj->getParent();
             if (!obj->isNative() ||
@@ -1441,7 +1441,7 @@ obj_watch(JSContext *cx, uintN argc, jsval *vp)
 
     if (attrs & JSPROP_READONLY)
         return JS_TRUE;
-    if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
+    if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
         return JS_FALSE;
     return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, callable);
 }
@@ -2379,7 +2379,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &de
      * attributes).  Such definitions are probably unlikely, so we don't bother
      * for now.
      */
-    if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
+    if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
         return JS_FALSE;
 
     jsuint oldLen = obj->getArrayLength();
