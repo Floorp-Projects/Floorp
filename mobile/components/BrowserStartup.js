@@ -100,7 +100,7 @@ BrowserStartup.prototype = {
         return; // no need to do initial import
     }
 
-    Cu.import("resource://gre/modules/utils.js");
+    Cu.import("resource://gre/modules/PlacesUtils.js");
 
     try {
       let observer = {
