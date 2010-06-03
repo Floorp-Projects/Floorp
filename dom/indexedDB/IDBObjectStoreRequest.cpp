@@ -140,6 +140,8 @@ public:
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 };
 
 class OpenCursorHelper : public AsyncConnectionHelper
@@ -1166,6 +1168,29 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+  return OK;
+}
+
+PRUint16
+RemoveHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  return AsyncConnectionHelper::OnSuccess(aTarget);
+}
+
+PRUint16
+RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
+
+  if (mKey.IsString()) {
+    aResult->SetAsAString(mKey.StringValue());
+  }
+  else if (mKey.IsInt()) {
+    aResult->SetAsInt64(mKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
   return OK;
 }
 
