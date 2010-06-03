@@ -289,8 +289,9 @@ guint32   nsWindow::sLastButtonReleaseTime = 0;
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-// the current focus window
+// The window from which the focus manager asks us to dispatch key events.
 static nsWindow         *gFocusWindow          = NULL;
+static PRBool            gBlockActivateEvent   = PR_FALSE;
 static PRBool            gGlobalsInitialized   = PR_FALSE;
 static PRBool            gRaiseWindows         = PR_TRUE;
 static nsWindow         *gPluginFocusWindow    = NULL;
@@ -1336,7 +1337,7 @@ nsWindow::SetFocus(PRBool aRaise)
     // Make sure that our owning widget has focus.  If it doesn't try to
     // grab it.  Note that we don't set our focus flag in this case.
 
-    LOGFOCUS(("  SetFocus [%p]\n", (void *)this));
+    LOGFOCUS(("  SetFocus %d [%p]\n", aRaise, (void *)this));
 
     GtkWidget *owningWidget = GetMozContainerWidget();
     if (!owningWidget)
@@ -1363,18 +1364,40 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!owningWindow)
         return NS_ERROR_FAILURE;
 
-    if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
-        LOGFOCUS(("  grabbing focus for the toplevel [%p]\n", (void *)this));
+    if (aRaise) {
+        // aRaise == PR_TRUE means request toplevel activation.
 
-        // Set focus to the window
-        if (gRaiseWindows && aRaise && toplevelWidget &&
-            !GTK_WIDGET_HAS_FOCUS(toplevelWidget) &&
-            owningWindow->mIsShown && GTK_IS_WINDOW(owningWindow->mShell))
-          gtk_window_present(GTK_WINDOW(owningWindow->mShell));
+        // This is asynchronous.
+        // If and when the window manager accepts the request, then the focus
+        // widget will get a focus-in-event signal.
+        if (gRaiseWindows && owningWindow->mIsShown && owningWindow->mShell &&
+            !gtk_window_is_active(GTK_WINDOW(owningWindow->mShell))) {
 
-        gtk_widget_grab_focus(owningWidget);
+            LOGFOCUS(("  requesting toplevel activation [%p]\n", (void *)this));
+            NS_ASSERTION(owningWindow->mWindowType != eWindowType_popup
+                         || mParent,
+                         "Presenting an override-redirect window");
+            gtk_window_present(GTK_WINDOW(owningWindow->mShell));
+        }
 
         return NS_OK;
+    }
+
+    // aRaise == PR_FALSE means that keyboard events should be dispatched
+    // from this widget.
+
+    // Ensure owningWidget is the focused GtkWidget within its toplevel window.
+    //
+    // For eWindowType_popup, this GtkWidget may not actually be the one that
+    // receives the key events as it may be the parent window that is active.
+    if (!gtk_widget_is_focus(owningWidget)) {
+        // This is synchronous.  It takes focus from a plugin or from a widget
+        // in an embedder.  The focus manager already knows that this window
+        // is active so gBlockActivateEvent avoids another (unnecessary)
+        // NS_ACTIVATE event.
+        gBlockActivateEvent = PR_TRUE;
+        gtk_widget_grab_focus(owningWidget);
+        gBlockActivateEvent = PR_FALSE;
     }
 
     // If this is the widget that already has focus, return.
@@ -3092,7 +3115,20 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     if (top_window && (GTK_WIDGET_VISIBLE(top_window)))
         SetUrgencyHint(top_window, PR_FALSE);
 
+    // Return if being called within SetFocus because the focus manager
+    // already knows that the window is active.
+    if (gBlockActivateEvent) {
+        LOGFOCUS(("NS_ACTIVATE event is blocked [%p]\n", (void *)this));
+        return;
+    }
+
+    // This is not usually the correct window for dispatching key events,
+    // but the focus manager will call SetFocus to set the correct window if
+    // keyboard input will be accepted.  Setting a non-NULL value here
+    // prevents OnButtonPressEvent() from dispatching NS_ACTIVATE if the
+    // widget is already active.
     gFocusWindow = this;
+
     DispatchActivateEvent();
 
     LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
