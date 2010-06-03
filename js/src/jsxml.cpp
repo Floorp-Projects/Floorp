@@ -252,12 +252,12 @@ namespace_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-namespace_equality(JSContext *cx, JSObject *obj, const jsval *vp, JSBool *bp)
+namespace_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
 {
     JSObject *obj2;
 
-    JS_ASSERT(JSVAL_IS_OBJECT(*vp));
-    obj2 = JSVAL_TO_OBJECT(*vp);
+    JS_ASSERT(JSVAL_IS_OBJECT(*v));
+    obj2 = JSVAL_TO_OBJECT(*v);
     *bp = (!obj2 || obj2->getClass() != &js_NamespaceClass.base)
           ? JS_FALSE
           : js_EqualStrings(GetURI(obj), GetURI(obj2));
@@ -2969,7 +2969,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
      * If the idea is to reject uint32 property names, then the check needs to
      * be stricter, to exclude hexadecimal and floating point literals.
      */
-    if (js_IdIsIndex(STRING_TO_JSBOXEDWORD(name), &index))
+    if (js_IdIsIndex(STRING_TO_JSVAL(name), &index))
         goto bad;
 
     if (*name->chars() == '@') {
@@ -3583,18 +3583,17 @@ Insert(JSContext *cx, JSXML *xml, uint32 i, jsval v)
 }
 
 static JSBool
-IndexToBoxedWord(JSContext *cx, uint32 index, jsboxedword *wp)
+IndexToIdVal(JSContext *cx, uint32 index, jsval *idvp)
 {
     JSString *str;
 
-    if (index <= JSBOXEDWORD_INT_MAX) {
-        *wp = INT_TO_JSBOXEDWORD(index);
+    if (index <= JSVAL_INT_MAX) {
+        *idvp = INT_TO_JSVAL(index);
     } else {
         str = js_NumberToString(cx, (jsdouble) index);
         if (!str)
             return JS_FALSE;
-
-        *wp = STRING_TO_JSBOXEDWORD(str);
+        *idvp = STRING_TO_JSVAL(str);
     }
     return JS_TRUE;
 }
@@ -3850,7 +3849,7 @@ GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     /*
      * ECMA-357 9.2.1.1/9.1.1.1 qname case.
      */
-    nameqn = ToXMLName(cx, Jsvalify(IdToValue(id)), &funid);
+    nameqn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
     if (!nameqn)
         return false;
     if (funid)
@@ -3955,14 +3954,14 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     MUST_FLOW_THROUGH("out");
     jsval roots[3];
     roots[OBJ_ROOT] = OBJECT_TO_JSVAL(obj);
-    roots[ID_ROOT] = Jsvalify(IdToValue(id));
+    roots[ID_ROOT] = ID_TO_JSVAL(id);
     roots[VAL_ROOT] = *vp;
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), Valueify(roots));
 
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
             /* See NOTE in spec: this variation is reserved for future use. */
-            ReportBadXMLName(cx, IdToValue(id));
+            ReportBadXMLName(cx, ID_TO_VALUE(id));
             goto bad;
         }
 
@@ -4247,7 +4246,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             kidobj = js_GetXMLObject(cx, kid);
             if (!kidobj)
                 goto bad;
-            id = ATOM_KEY(cx->runtime->atomState.starAtom);
+            id = ATOM_TO_JSID(cx->runtime->atomState.starAtom);
             ok = PutProperty(cx, kidobj, id, vp);
             if (!ok)
                 goto out;
@@ -4256,7 +4255,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         /*
          * ECMA-357 9.2.1.2/9.1.1.2 qname case.
          */
-        nameqn = ToXMLName(cx, Jsvalify(IdToValue(id)), &funid);
+        nameqn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
         if (!nameqn)
             goto bad;
         if (funid) {
@@ -4436,7 +4435,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         /* 10-11. */
-        id = JSBOXEDWORD_VOID;
+        id = JSVAL_VOID;
         primitiveAssign = !vxml && !IS_STAR(GetLocalName(nameqn));
 
         /* 12. */
@@ -4550,7 +4549,7 @@ out:
 type_error:
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_BAD_XMLLIST_PUT,
-                         js_ValueToPrintableString(cx, IdToValue(id)));
+                         js_ValueToPrintableString(cx, ID_TO_VALUE(id)));
 bad:
     ok = JS_FALSE;
     goto out;
@@ -4719,7 +4718,7 @@ HasProperty(JSContext *cx, JSObject *obj, jsid id, JSBool *found)
     if (js_IdIsIndex(id, &i)) {
         *found = HasIndexedProperty(xml, i);
     } else {
-        qn = ToXMLName(cx, Jsvalify(IdToValue(id)), &funid);
+        qn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
         if (!qn)
             return JS_FALSE;
         if (funid) {
@@ -4796,7 +4795,7 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     if (js_IdIsIndex(id, &i)) {
         found = HasIndexedProperty(xml, i);
     } else {
-        qn = ToXMLName(cx, Jsvalify(IdToValue(id)), &funid);
+        qn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
         if (!qn)
             return JS_FALSE;
         if (funid)
@@ -4822,16 +4821,16 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
-xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *vp,
+xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                    PropertyOp getter, PropertyOp setter, uintN attrs)
 {
-    if (vp->isFunObj() || getter || setter ||
+    if (v->isFunObj() || getter || setter ||
         (attrs & JSPROP_ENUMERATE) == 0 ||
         (attrs & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED))) {
-        return js_DefineProperty(cx, obj, id, vp, getter, setter, attrs);
+        return js_DefineProperty(cx, obj, id, v, getter, setter, attrs);
     }
 
-    jsval tmp = Jsvalify(*vp);
+    jsval tmp = Jsvalify(*v);
     return PutProperty(cx, obj, id, &tmp);
 }
 
@@ -4899,12 +4898,12 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     JSObject *nameqn;
     jsid funid;
 
-    idval = Jsvalify(IdToValue(id));
+    idval = ID_TO_JSVAL(id);
     xml = (JSXML *) obj->getPrivate();
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
             /* See NOTE in spec: this variation is reserved for future use. */
-            ReportBadXMLName(cx, IdToValue(id));
+            ReportBadXMLName(cx, ID_TO_VALUE(id));
             return JS_FALSE;
         }
 
@@ -5012,7 +5011,7 @@ xml_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-xml_hasInstance(JSContext *cx, JSObject *obj, const Value *vp, JSBool *bp)
+xml_hasInstance(JSContext *cx, JSObject *obj, const Value *, JSBool *bp)
 {
     return JS_TRUE;
 }
@@ -5341,16 +5340,11 @@ xml_appendChild(JSContext *cx, uintN argc, jsval *vp)
     vxml = (JSXML *) vobj->getPrivate();
     JS_ASSERT(vxml->xml_class == JSXML_CLASS_LIST);
 
-    jsboxedword w;
-    if (!IndexToBoxedWord(cx, vxml->xml_kids.length, &w))
+    if (!IndexToIdVal(cx, vxml->xml_kids.length, &name))
         return JS_FALSE;
     *vp = (argc != 0) ? vp[2] : JSVAL_VOID;
 
-    /*
-     * N.B. w is not actually a jsid: w may contain an non-interned string.
-     * Apparently, PutProperty is cool with this.
-     */
-    if (!PutProperty(cx, JSVAL_TO_OBJECT(v), w, vp))
+    if (!PutProperty(cx, JSVAL_TO_OBJECT(v), v, vp))
         return JS_FALSE;
 
     *vp = OBJECT_TO_JSVAL(obj);
@@ -5415,14 +5409,10 @@ xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
     JSXML *kid;
     JSObject *kidobj;
 
-    jsid idw;
-    if (!ValueToBoxedWord(cx, Valueify(name), &idw))
-        return JS_FALSE;
-
     /* ECMA-357 13.4.4.6 */
     JS_ASSERT(xml->xml_class != JSXML_CLASS_LIST);
 
-    if (js_IdIsIndex(idw, &index)) {
+    if (js_IdIsIndex(name, &index)) {
         if (index >= JSXML_LENGTH(xml)) {
             *rval = JSVAL_VOID;
         } else {
@@ -5443,7 +5433,7 @@ xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
      * N.B. name is not actually a jsid: name may contain an non-interned
      * string.  Apparently, PutProperty is cool with this.
      */
-    return GetProperty(cx, obj, idw, rval);
+    return GetProperty(cx, obj, name, rval);
 }
 
 /* XML and XMLList */
@@ -5745,12 +5735,7 @@ xml_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     name = argc != 0 ? vp[2] : JSVAL_VOID;
-
-    jsid idw;
-    if (!ValueToBoxedWord(cx, Valueify(name), &idw))
-        return JS_FALSE;
-
-    if (!HasProperty(cx, obj, idw, &found))
+    if (!HasProperty(cx, obj, name, &found))
         return JS_FALSE;
     if (found) {
         *vp = JSVAL_TRUE;
@@ -6312,18 +6297,13 @@ xml_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 
     XML_METHOD_PROLOG;
     *vp = JSVAL_FALSE;
-    if (argc != 0) {
-        jsboxedword idw;
-        if (!ValueToBoxedWord(cx, Valueify(vp[2]), &idw))
-            return JS_FALSE;
-        if (js_IdIsIndex(idw, &index)) {
-            if (xml->xml_class == JSXML_CLASS_LIST) {
-                /* 13.5.4.18. */
-                *vp = BOOLEAN_TO_JSVAL(index < xml->xml_kids.length);
-            } else {
-                /* 13.4.4.30. */
-                *vp = BOOLEAN_TO_JSVAL(index == 0);
-            }
+    if (argc != 0 && js_IdIsIndex(vp[2], &index)) {
+        if (xml->xml_class == JSXML_CLASS_LIST) {
+            /* 13.5.4.18. */
+            *vp = BOOLEAN_TO_JSVAL(index < xml->xml_kids.length);
+        } else {
+            /* 13.4.4.30. */
+            *vp = BOOLEAN_TO_JSVAL(index == 0);
         }
     }
     return JS_TRUE;
@@ -6441,11 +6421,7 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
     if (!xml)
         return JS_FALSE;
 
-    jsid idw;
-    if (!ValueToBoxedWord(cx, Valueify(vp[2]), &idw))
-        return JS_FALSE;
-
-    if (argc == 0 || !js_IdIsIndex(idw, &index)) {
+    if (argc == 0 || !js_IdIsIndex(vp[2], &index)) {
         /*
          * Call function QName per spec, not ToXMLName, to avoid attribute
          * names.
@@ -6490,7 +6466,7 @@ xml_setChildren(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     *vp = argc != 0 ? vp[2] : JSVAL_VOID;     /* local root */
-    if (!PutProperty(cx, obj, ATOM_KEY(cx->runtime->atomState.starAtom), vp))
+    if (!PutProperty(cx, obj, ATOM_TO_JSVAL(cx->runtime->atomState.starAtom), vp))
         return JS_FALSE;
 
     *vp = OBJECT_TO_JSVAL(obj);
@@ -7115,9 +7091,9 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
         if (xml->xml_targetprop)
             JS_CALL_OBJECT_TRACER(trc, xml->xml_targetprop, "targetprop");
     } else {
-        MarkObjectVector(trc, xml->xml_namespaces.length,
-                         (JSObject **) xml->xml_namespaces.vector,
-                         "xml_namespaces");
+        MarkObjectRange(trc, xml->xml_namespaces.length,
+                        (JSObject **) xml->xml_namespaces.vector,
+                        "xml_namespaces");
         XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
         if (IS_GC_MARKING_TRACER(trc))
             XMLArrayTrim(&xml->xml_namespaces);

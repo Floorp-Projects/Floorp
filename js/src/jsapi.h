@@ -778,7 +778,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj);
  * loops any classes not yet resolved lazily.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id,
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                         JSBool *resolved);
 
 extern JS_PUBLIC_API(JSBool)
@@ -977,7 +977,7 @@ JS_ClearNewbornRoots(JSContext *cx);
  * associated with cx.  For example:
  *
  *    JSBool
- *    my_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+ *    my_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  *    {
  *        JSBool ok;
  *
@@ -1585,7 +1585,7 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
  * Global object classes in embeddings that enable JS_HAS_XML_SUPPORT (E4X)
  * should handle this id specially before converting id via JSVAL_TO_INT.
  */
-#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSBOXEDWORD_VOID)
+#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSVAL_VOID)
 
 /*
  * JSNewResolveOp flag bits.
@@ -1598,13 +1598,13 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
 
 extern JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
+JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);

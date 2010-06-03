@@ -168,7 +168,7 @@ struct JSXML {
     } u;
 };
 
-JS_STATIC_ASSERT(sizeof(JSXML) % JSBOXEDWORD_ALIGN == 0);
+JS_STATIC_ASSERT(sizeof(JSXML) % JS_GCTHING_ALIGN == 0);
 
 /* union member shorthands */
 #define xml_kids        u.list.kids

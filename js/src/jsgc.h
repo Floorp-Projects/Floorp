@@ -132,13 +132,6 @@ typedef struct JSPtrTable {
 extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
 
-/*
- * Return a pointer to a new GC-allocated and weakly-rooted jsdouble number,
- * or null when the allocation fails.
- */
-extern jsdouble *
-js_NewWeaklyRootedDoubleAtom(JSContext *cx, jsdouble d);
-
 #ifdef JS_TRACER
 extern JSBool
 js_ReserveObjects(JSContext *cx, size_t nobjects);
@@ -296,13 +289,7 @@ struct JSGCArenaList {
                                      */
 };
 
-struct JSGCDoubleArenaList {
-    JSGCArena       *head;          /* list start */
-    JSGCArena       *cursor;        /* next arena with free cells */
-};
-
 struct JSGCFreeLists {
-    JSGCThing       *doubles;
     JSGCThing       *finalizables[FINALIZE_LIMIT];
 
     void purge();
@@ -310,8 +297,6 @@ struct JSGCFreeLists {
 
 #ifdef DEBUG
     bool isEmpty() const {
-        if (doubles)
-            return false;
         for (size_t i = 0; i != JS_ARRAY_LENGTH(finalizables); ++i) {
             if (finalizables[i])
                 return false;
@@ -327,7 +312,6 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
     void              *finalizableNewborns[FINALIZE_LIMIT];
-    jsdouble          *newbornDouble;
 
     /* Atom root for the last-looked-up atom on this context. */
     JSAtom            *lastAtom;
@@ -447,7 +431,6 @@ struct JSGCStats {
     uint32  maxnchunks;     /* maximum number of allocated chunks */
 
     JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
-    JSGCArenaStats  doubleArenaStats;
 };
 
 extern JS_FRIEND_API(void)
@@ -476,13 +459,40 @@ Mark(JSTracer *trc, void *thing, uint32 kind, const char *name)
 }
 
 static inline void
-MarkObjectVector(JSTracer *trc, uint32 len, JSObject **vec, const char *name)
+MarkString(JSTracer *trc, JSString *str, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkRaw(trc, str, JSTRACE_STRING);
+}
+
+static inline void
+MarkStringRange(JSTracer *trc, size_t len, JSString **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
-        if (JSObject *obj = vec[i]) {
-            JS_SET_TRACING_INDEX(trc, name, i);
-            MarkRaw(trc, obj, JSTRACE_OBJECT);
-        }
+        if (JSString *str = vec[i])
+            MarkString(trc, str, name);
+    }
+}
+
+static inline void
+MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
+{
+    MarkStringRange(trc, len, reinterpret_cast<JSString **>(vec), name);
+}
+
+static inline void
+MarkObject(JSTracer *trc, JSObject *obj, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkRaw(trc, obj, JSTRACE_OBJECT);
+}
+
+static inline void
+MarkObjectRange(JSTracer *trc, size_t len, JSObject **vec, const char *name)
+{
+    for (uint32 i = 0; i < len; i++) {
+        if (JSObject *obj = vec[i])
+            MarkObject(trc, obj, name);
     }
 }
 
@@ -517,29 +527,21 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 }
 
 static inline void
-MarkBoxedWord(JSTracer *trc, jsboxedword w, const char *name)
+MarkId(JSTracer *trc, jsid id, const char *name)
 {
-    if (JSBOXEDWORD_IS_GCTHING(w)) {
-        JS_SET_TRACING_NAME(trc, name);
-        MarkRaw(trc, JSBOXEDWORD_TO_GCTHING(w), JSBOXEDWORD_TRACE_KIND(w));
-    }
+    MarkValue(trc, Valueify(id), name);
 }
 
 static inline void
-MarkBoxedWordRange(JSTracer *trc, jsboxedword *beg, jsboxedword *end, const char *name)
+MarkIdRange(JSTracer *trc, jsid *beg, jsid *end, const char *name)
 {
-    for (jsboxedword *wp = beg; wp < end; ++wp) {
-        if (JSBOXEDWORD_IS_GCTHING(*wp)) {
-            JS_SET_TRACING_INDEX(trc, name, wp - beg);
-            MarkRaw(trc, JSBOXEDWORD_TO_GCTHING(*wp), JSBOXEDWORD_TRACE_KIND(*wp));
-        }
-    }
+    MarkValueRange(trc, Valueify(beg), Valueify(end), name);
 }
 
-inline void
-MarkBoxedWordRange(JSTracer *trc, size_t len, jsboxedword *vec, const char *name)
+static inline void
+MarkIdRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
 {
-    MarkBoxedWordRange(trc, vec, vec + len, name);
+    MarkValueRange(trc, len, Valueify(vec), name);
 }
 
 /* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
