@@ -64,7 +64,6 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
-#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -5333,8 +5332,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     ok = scope->removeProperty(cx, id);
     obj->dropProperty(cx, prop);
-
-    return ok && js_SuppressDeletedProperty(cx, obj, id);
+    return ok;
 }
 
 JSBool

@@ -107,7 +107,6 @@ NativeIterator::mark(JSTracer *trc)
         JS_SET_TRACING_INDEX(trc, "props", (vp - props_array));
         js_CallValueTracerIfGCThing(trc, *vp);
     }
-    JS_CALL_OBJECT_TRACER(trc, obj, "obj");
 }
 
 /*
@@ -231,14 +230,13 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 }
 
 NativeIterator *
-NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 slength,
-                         uint32 key, jsval *parray, uint32 plength)
+NativeIterator::allocate(JSContext *cx, uintN flags, uint32 *sarray, uint32 slength, uint32 key,
+                         jsval *parray, uint32 plength)
 {
     NativeIterator *ni = (NativeIterator *)
         cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
     if (!ni)
         return NULL;
-    ni->obj = obj;
     ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength)
@@ -317,7 +315,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 sleng
         pobj = pobj->getProto();
     }
 
-    return NativeIterator::allocate(cx, obj, flags, sarray, slength, key, props.begin(), props.length());
+    return NativeIterator::allocate(cx, flags, sarray, slength, key, props.begin(), props.length());
 }
 
 bool
@@ -401,19 +399,8 @@ NewIteratorObject(JSContext *cx, uintN flags)
            : NewObjectWithGivenProto(cx, &js_IteratorClass.base, NULL, NULL);
 }
 
-static inline void
-RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
-{
-    /* Register non-escaping native enumerators (for-in) with the current thread. */
-    if (ni->flags & JSITER_ENUMERATE) {
-        JSThreadData *data = JS_THREAD_DATA(cx);
-        ni->next = data->enumerators;
-        data->enumerators = iterobj;
-    }
-}
-
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, jsval *vp)
+JSIdArrayToIterator(JSContext *cx, uintN flags, JSIdArray *ida, jsval *vp)
 {
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -421,14 +408,12 @@ JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, j
 
     *vp = OBJECT_TO_JSVAL(iterobj);
 
-    NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0,
+    NativeIterator *ni = NativeIterator::allocate(cx, flags, NULL, 0, 0,
                                                   ida->vector, ida->length);
     if (!ni)
         return false;
 
     iterobj->setNativeIterator(ni);
-
-    RegisterEnumerator(cx, iterobj, ni);
     return true;
 }
 
@@ -475,8 +460,6 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
                     Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
                     *vp = OBJECT_TO_JSVAL(iterobj);
                     *hp = ni->next;
-
-                    RegisterEnumerator(cx, iterobj, ni);
                     return true;
                 }
             }
@@ -503,8 +486,6 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
         return false;
 
     iterobj->setNativeIterator(ni);
-
-    RegisterEnumerator(cx, iterobj, ni);
     return true;
 }
 
@@ -646,15 +627,8 @@ js_CloseIterator(JSContext *cx, jsval v)
     clasp = obj->getClass();
 
     if (clasp == &js_IteratorClass.base) {
-        /* Remove enumerators from the active list, which is a stack. */
-        NativeIterator *ni = obj->getNativeIterator();
-        if (ni->flags & JSITER_ENUMERATE) {
-            JSThreadData *data = JS_THREAD_DATA(cx);
-            JS_ASSERT(data->enumerators == obj);
-            data->enumerators = ni->next;
-        }
-
         /* Cache the iterator object if possible. */
+        NativeIterator *ni = obj->getNativeIterator();
         if (ni->shapes_length) {
             uint32 hash = ni->shapes_key % NATIVE_ITER_CACHE_SIZE;
             JSObject **hp = &JS_THREAD_DATA(cx)->cachedNativeIterators[hash];
@@ -671,67 +645,6 @@ js_CloseIterator(JSContext *cx, jsval v)
     }
 #endif
     return JS_TRUE;
-}
-
-/*
- * Suppress enumeration of deleted properties. We maintain a list of all active
- * non-escaping for-in enumerators. Whenever a property is deleted, we check
- * whether any active enumerator contains the (obj, id) pair and has not
- * enumerated id yet. If so, we delete the id from the list (or advance the
- * cursor if it is the next id to be enumerated).
- *
- * We do not suppress enumeration of a property deleted along an object's
- * prototype chain. Only direct deletions on the object are handled.
- */
-bool
-js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
-{
-    JSObject *iterobj = JS_THREAD_DATA(cx)->enumerators;
-    while (iterobj) {
-        NativeIterator *ni = iterobj->getNativeIterator();
-        if (ni->obj == obj && ni->props_cursor < ni->props_end) {
-            /* Check whether id is still to come. */
-            for (jsid *idp = ni->props_cursor; idp < ni->props_end; ++idp) {
-                if (*idp == id) {
-                    /*
-                     * Check whether another property along the prototype chain
-                     * became visible as a result of this deletion.
-                     */
-                    if (obj->getProto()) {
-                        AutoObjectRooter proto(cx, obj->getProto());
-                        AutoObjectRooter obj2(cx);
-                        JSProperty *prop;
-                        if (!proto.object()->lookupProperty(cx, id, obj2.addr(), &prop))
-                            return false;
-                        if (obj2.object()) {
-                            uintN attrs;
-                            JSBool ok = obj2.object()->getAttributes(cx, id, prop, &attrs);
-                            obj2.object()->dropProperty(cx, prop);
-                            if (!ok)
-                                return false;
-                            if (attrs & JSPROP_ENUMERATE)
-                                continue;
-                        }
-                    }
-
-                    /*
-                     * No property along the prototype chain steppeded in to take the
-                     * property's place, so go ahead and delete id from the list.
-                     * If it is the next property to be enumerated, just skip it.
-                     */
-                    if (idp == ni->props_cursor) {
-                        ni->props_cursor++;
-                    } else {
-                        memmove(idp, idp + 1, (ni->props_end - (idp + 1)) * sizeof(jsid));
-                        ni->props_end--;
-                    }
-                    break;
-                }
-            }
-        }
-        iterobj = ni->next;
-    }
-    return true;
 }
 
 JSBool
