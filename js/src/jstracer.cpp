@@ -379,6 +379,13 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_ATOM(atom)        INS_CONSTSTR(ATOM_TO_STRING(atom))
 #define INS_NULL()            INS_CONSTPTR(NULL)
 #define INS_VOID()            INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))
+#define INS_HOLE()            INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_HOLE(jsval v)
+{
+    return v == JSVAL_HOLE;
+}
 
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
@@ -1048,9 +1055,11 @@ GetPromotedType(jsval v)
             return TT_FUNCTION;
         return TT_OBJECT;
     }
-    /* N.B. void is JSVAL_SPECIAL. */
+    /* N.B. void and hole are JSVAL_SPECIAL. */
     if (JSVAL_IS_VOID(v))
         return TT_VOID;
+    if (JSVAL_IS_HOLE(v))
+        return TT_MAGIC;
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
@@ -1072,9 +1081,11 @@ getCoercedType(jsval v)
             return TT_FUNCTION;
         return TT_OBJECT;
     }
-    /* N.B. void is JSVAL_SPECIAL. */
+    /* N.B. void and hole are JSVAL_SPECIAL. */
     if (JSVAL_IS_VOID(v))
         return TT_VOID;
+    if (JSVAL_IS_HOLE(v))
+        return TT_MAGIC;
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
@@ -2631,6 +2642,12 @@ ValueToNative(JSContext* cx, jsval v, TraceType type, double* slot)
         debug_only_print0(LC_TMTracer, "undefined ");
         return;
 
+      case TT_MAGIC:
+        JS_ASSERT(JSVAL_IS_HOLE(v));
+        *(JSBool*)slot = JSVAL_TO_SPECIAL(JSVAL_HOLE);
+        debug_only_print0(LC_TMTracer, "hole ");
+        return;
+
       case TT_FUNCTION: {
         JS_ASSERT(tag == JSVAL_OBJECT);
         JSObject* obj = JSVAL_TO_OBJECT(v);
@@ -2808,6 +2825,11 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
       case TT_VOID:
         v = JSVAL_VOID;
         debug_only_print0(LC_TMTracer, "undefined ");
+        break;
+
+      case TT_MAGIC:
+        v = JSVAL_HOLE;
+        debug_only_print0(LC_TMTracer, "hole ");
         break;
 
       case TT_FUNCTION: {
@@ -3356,6 +3378,8 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
             ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else if (t == TT_VOID) {
             ins = INS_VOID();
+        } else if (t == TT_MAGIC) {
+            ins = INS_HOLE();
         } else {
             ins = lir->insLoad(LIR_ldp, base, offset, accSet);
         }
@@ -3857,6 +3881,9 @@ TraceRecorder::determineSlotType(jsval* vp)
     } else if (JSVAL_IS_VOID(*vp)) {
         /* N.B. void is JSVAL_SPECIAL. */
         m = TT_VOID;
+    } else if (JSVAL_IS_HOLE(*vp)) {
+        /* N.B. hole is JSVAL_SPECIAL. */
+        m = TT_MAGIC;
     } else {
         JS_ASSERT(JSVAL_IS_STRING(*vp) || JSVAL_IS_SPECIAL(*vp));
         JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
@@ -6079,7 +6106,7 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
         debug_only_printf(LC_TMTracer, "null != tag%u ", tag);
         return false;
       case TT_SPECIAL:
-        /* N.B. void is JSVAL_SPECIAL. */
+        /* N.B. void and hole are JSVAL_SPECIAL. */
         if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp))
             return true;
         debug_only_printf(LC_TMTracer, "bool != tag%u ", tag);
@@ -6088,6 +6115,11 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
         if (JSVAL_IS_VOID(*vp))
             return true;
         debug_only_printf(LC_TMTracer, "undefined != tag%u ", tag);
+        return false;
+      case TT_MAGIC:
+        if (JSVAL_IS_HOLE(*vp))
+            return true;
+        debug_only_printf(LC_TMTracer, "hole != tag%u ", tag);
         return false;
       default:
         JS_ASSERT(*m == TT_FUNCTION);
@@ -9384,6 +9416,10 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
             guard(true, lir->ins2(LIR_eqp, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
             return INS_VOID();
         }
+        if (JSVAL_IS_HOLE(v)) {
+            guard(true, lir->ins2(LIR_eqp, v_ins, INS_CONSTWORD(JSVAL_HOLE)), exit);
+            return INS_HOLE();
+        }
         guard(true,
               lir->ins2(LIR_eqp,
                         lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
@@ -12466,6 +12502,7 @@ TraceRecorder::stackLoad(LIns* base, AccSet accSet, uint8 type)
       case TT_INT32:
       case TT_SPECIAL:
       case TT_VOID:
+      case TT_MAGIC:
         loadOp = LIR_ldi;
         break;
       case TT_JSVAL:
@@ -13180,7 +13217,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
         JS_ASSERT_IF(!JSVAL_IS_BOOLEAN(*vp), *vp == JSVAL_HOLE);
-        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eqi, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
+        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eqi, v_ins, INS_HOLE()), exit);
 
         /* Don't let the hole value escape. Turn it into an undefined. */
         if (*vp == JSVAL_HOLE) {
@@ -15289,7 +15326,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE)));
+    stack(0, INS_HOLE());
     return ARECORD_CONTINUE;
 }
 
