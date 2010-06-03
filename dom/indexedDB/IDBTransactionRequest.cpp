@@ -469,6 +469,77 @@ IDBTransactionRequest::IndexGetStatement(bool aUnique,
 }
 
 already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
+                                               bool aAutoIncrement)
+{
+  nsCOMPtr<mozIStorageStatement> result;
+
+  nsresult rv;
+  if (aAutoIncrement) {
+    if (aUnique) {
+      if (!mIndexGetObjectUniqueAIStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT data "
+          "FROM ai_object_data "
+          "INNER JOIN unique_ai_index_data "
+          "ON object_data.id = unique_ai_index_data.ai_object_data_id "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetObjectUniqueAIStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetObjectUniqueAIStmt;
+    }
+    else {
+      if (!mIndexGetObjectAIStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT data "
+          "FROM ai_object_data "
+          "INNER JOIN ai_index_data "
+          "ON object_data.id = ai_index_data.ai_object_data_id "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetObjectAIStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetObjectAIStmt;
+    }
+  }
+  else {
+    if (aUnique) {
+      if (!mIndexGetObjectUniqueStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT data "
+          "FROM object_data "
+          "INNER JOIN unique_index_data "
+          "ON object_data.id = unique_index_data.object_data_id "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetObjectUniqueStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetObjectUniqueStmt;
+    }
+    else {
+      if (!mIndexGetObjectStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT data "
+          "FROM object_data "
+          "INNER JOIN index_data "
+          "ON object_data.id = index_data.object_data_id "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetObjectStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetObjectStmt;
+    }
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::IndexRemoveStatement(bool aUnique,
                                             bool aAutoIncrement)
 {
@@ -502,7 +573,11 @@ IDBTransactionRequest::CloseConnection()
       !runnable->AddDoomedObject(mIndexGetUniqueAIStmt) ||
       !runnable->AddDoomedObject(mIndexGetAIStmt) ||
       !runnable->AddDoomedObject(mIndexGetUniqueStmt) ||
-      !runnable->AddDoomedObject(mIndexGetStmt)) {
+      !runnable->AddDoomedObject(mIndexGetStmt) ||
+      !runnable->AddDoomedObject(mIndexGetObjectUniqueAIStmt) ||
+      !runnable->AddDoomedObject(mIndexGetObjectAIStmt) ||
+      !runnable->AddDoomedObject(mIndexGetObjectUniqueStmt) ||
+      !runnable->AddDoomedObject(mIndexGetObjectStmt)) {
     NS_ERROR("Out of memory!");
   }
 
