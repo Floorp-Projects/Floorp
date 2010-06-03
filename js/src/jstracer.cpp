@@ -6594,7 +6594,8 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
                       op == JSOP_INSTANCEOF ||
                       op == JSOP_ITER || op == JSOP_MOREITER || op == JSOP_ENDITER ||
                       op == JSOP_FORARG || op == JSOP_FORLOCAL ||
-                      op == JSOP_FORNAME || op == JSOP_FORPROP || op == JSOP_FORELEM);
+                      op == JSOP_FORNAME || op == JSOP_FORPROP || op == JSOP_FORELEM ||
+                      op == JSOP_DELPROP || op == JSOP_DELELEM);
 
             /*
              * JSOP_SETELEM can be coalesced with a JSOP_POP in the interpeter.
@@ -11066,16 +11067,21 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELPROP()
 {
     jsval& lval = stackval(-1);
-    if (JSVAL_IS_PRIMITIVE(lval)) {
-        AbortRecording(cx, "JSOP_DELELEM on primitive base expression");
-        return ARECORD_STOP;
-    }
+    if (JSVAL_IS_PRIMITIVE(lval))
+        RETURN_STOP_A("JSOP_DELPROP on primitive base expression");
 
     JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
     JS_ASSERT(ATOM_IS_STRING(atom));
 
+    enterDeepBailCall();
     LIns* args[] = { INS_ATOM(atom), get(&lval), cx_ins };
     LIns* rval_ins = lir->insCall(&DeleteStrKey_ci, args);
+
+    LIns* status_ins = lir->insLoad(LIR_ldi,
+                                    lirbuf->state,
+                                    offsetof(TracerState, builtinStatus), ACC_OTHER);
+    pendingGuardCondition = lir->insEqI_0(status_ins);
+    leaveDeepBailCall();
 
     set(&lval, rval_ins);
     return ARECORD_CONTINUE;
@@ -11091,6 +11097,7 @@ TraceRecorder::record_JSOP_DELELEM()
     jsval& idx = stackval(-1);
     LIns* rval_ins;
 
+    enterDeepBailCall();
     if (isInt32(idx)) {
         LIns* args[] = { makeNumberInt32(get(&idx)), get(&lval), cx_ins };
         rval_ins = lir->insCall(&DeleteIntKey_ci, args);
@@ -11100,6 +11107,12 @@ TraceRecorder::record_JSOP_DELELEM()
     } else {
         RETURN_STOP_A("JSOP_DELELEM on non-int, non-string index");
     }
+
+    LIns* status_ins = lir->insLoad(LIR_ldi,
+                                    lirbuf->state,
+                                    offsetof(TracerState, builtinStatus), ACC_OTHER);
+    pendingGuardCondition = lir->insEqI_0(status_ins);
+    leaveDeepBailCall();
 
     set(&lval, rval_ins);
     return ARECORD_CONTINUE;
