@@ -70,7 +70,7 @@ public:
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -78,6 +78,9 @@ private:
   const PRInt64 mId;
   const bool mUnique;
   const bool mAutoIncrement;
+
+  // Out-params.
+  Key mKey;
 };
 
 } // anonymous namespace
@@ -227,9 +230,6 @@ IDBIndexRequest::Get(nsIVariant* /* aKey */,
   nsresult rv = IDBObjectStoreRequest::GetJSONFromArg0(jsonValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
@@ -263,11 +263,53 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mozStorageStatementScoper scoper(stmt);
 
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"), mId);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (hasResult) {
+    PRInt32 keyType;
+    rv = stmt->GetTypeOfIndex(0, &keyType);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+                 keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                 "Bad key type!");
+
+    if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+      mKey = stmt->AsInt64(0);
+    }
+    else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+      rv = stmt->GetString(0, mKey.ToString());
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    }
+  }
+
   return OK;
 }
 
 PRUint16
-GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+GetHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
+  NS_ASSERTION(!mKey.IsNull(), "Badness!");
+
+  if (mKey.IsUnset()) {
+    aResult->SetAsEmpty();
+  }
+  else if (mKey.IsString()) {
+    aResult->SetAsAString(mKey.StringValue());
+  }
+  else if (mKey.IsInt()) {
+    aResult->SetAsInt64(mKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Unknown key type!");
+  }
   return OK;
 }
