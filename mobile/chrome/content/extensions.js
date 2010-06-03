@@ -349,6 +349,7 @@ var ExtensionsView = {
   enable: function ev_enable(aItem) {
     let opType;
     if (aItem.getAttribute("type") == "search") {
+      aItem.setAttribute("isDisabled", false);
       aItem._engine.hidden = false;
       opType = "needs-enable";
     } else {
@@ -367,6 +368,7 @@ var ExtensionsView = {
   disable: function ev_disable(aItem) {
     let opType;
     if (aItem.getAttribute("type") == "search") {
+      aItem.setAttribute("isDisabled", true);
       aItem._engine.hidden = true;
       opType = "needs-disable";
     } else {
