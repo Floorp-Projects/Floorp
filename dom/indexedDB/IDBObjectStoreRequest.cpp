@@ -79,11 +79,14 @@ public:
             const Key& aKey,
             bool aAutoIncrement,
             bool aCreate,
-            bool aOverwrite)
+            bool aOverwrite,
+            nsTArray<IndexInfo>& aIndexes)
   : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
     mKeyPath(aKeyPath), mValue(aValue), mKey(aKey),
     mAutoIncrement(aAutoIncrement), mCreate(aCreate), mOverwrite(aOverwrite)
-  { }
+  {
+    mIndexes.SwapElements(aIndexes);
+  }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
@@ -100,6 +103,7 @@ private:
   const bool mAutoIncrement;
   const bool mCreate;
   const bool mOverwrite;
+  nsTArray<IndexInfo> mIndexes;
 };
 
 class GetHelper : public AsyncConnectionHelper
@@ -655,12 +659,23 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  // Obtain the list of indexes that we'll need to update.
+  nsTArray<IndexInfo> indexes;
+  ObjectStoreInfo* info = GetObjectStoreInfo();
+  if (!info) {
+    NS_ERROR("Unable to get info on object store!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  for (nsTArray_base::size_type i = 0; i < info->indexes.Length(); i++) {
+    indexes.AppendElement(info->indexes[i]);
+  }
+
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, true, false);
+                  !!mAutoIncrement, true, false, indexes);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -695,12 +710,23 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  // Obtain the list of indexes that we'll need to update.
+  nsTArray<IndexInfo> indexes;
+  ObjectStoreInfo* info = GetObjectStoreInfo();
+  if (!info) {
+    NS_ERROR("Unable to get info on object store!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  for (nsTArray_base::size_type i = 0; i < info->indexes.Length(); i++) {
+    indexes.AppendElement(info->indexes[i]);
+  }
+
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, false, true);
+                  !!mAutoIncrement, false, true, indexes);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -735,12 +761,23 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  // Obtain the list of indexes that we'll need to update.
+  nsTArray<IndexInfo> indexes;
+  ObjectStoreInfo* info = GetObjectStoreInfo();
+  if (!info) {
+    NS_ERROR("Unable to get info on object store!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  for (nsTArray_base::size_type i = 0; i < info->indexes.Length(); i++) {
+    indexes.AppendElement(info->indexes[i]);
+  }
+
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, true, true);
+                  !!mAutoIncrement, true, true, indexes);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1051,6 +1088,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
   }
 
+  // Now we add it to the database (or update, depending on our variables).
   stmt = mTransaction->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
@@ -1083,6 +1121,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     return nsIIDBDatabaseException::CONSTRAINT_ERR;
   }
 
+  // If we are supposed to generate a key, get the new id.
   if (mAutoIncrement && mCreate && !mOverwrite) {
 #ifdef DEBUG
     PRInt64 oldKey = unsetKey ? 0 : mKey.IntValue();
@@ -1128,7 +1167,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
   }
 
-  // TODO update indexes if needed
+  // Update our indexes if needed.
+  if (mIndexes.Length()) {
+  }
 
   rv = savepoint.Release();
   return NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;
