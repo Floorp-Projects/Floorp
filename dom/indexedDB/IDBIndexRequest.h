@@ -41,17 +41,17 @@
 #define mozilla_dom_indexeddb_idbindexrequest_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 
 #include "nsIIDBIndexRequest.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBTransactionRequest;
+class IDBDatabaseRequest;
 class IDBObjectStoreRequest;
+class IDBTransactionRequest;
 
-class IDBIndexRequest : public IDBRequest::Generator
-                      , public nsIIDBIndexRequest
+class IDBIndexRequest : public IDBRequest::Generator,
+                        public nsIIDBIndexRequest
 {
 public:
   NS_DECL_ISUPPORTS

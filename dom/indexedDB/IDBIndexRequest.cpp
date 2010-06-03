@@ -37,32 +37,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// XXX remove once we can get jsvals out of nsIVariant
-#include "jscntxt.h"
-#include "jsapi.h"
-#include "nsContentUtils.h"
-#include "nsJSON.h"
-#include "IDBEvents.h"
 
 #include "IDBIndexRequest.h"
-#include "IDBObjectStoreRequest.h"
 
 #include "nsIIDBDatabaseException.h"
-#include "nsIJSContextStack.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Storage.h"
 
 #include "AsyncConnectionHelper.h"
+#include "IDBEvents.h"
+#include "IDBObjectStoreRequest.h"
 #include "IDBTransactionRequest.h"
 #include "DatabaseInfo.h"
 
 USING_INDEXEDDB_NAMESPACE
-
-namespace {
-
-} // anonymous namespace
 
 // static
 already_AddRefed<IDBIndexRequest>
@@ -101,9 +91,7 @@ NS_INTERFACE_MAP_BEGIN(IDBIndexRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
   NS_INTERFACE_MAP_ENTRY(nsIIDBIndexRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBIndex)
-  /* TODO
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBIndexRequest)
-  */
 NS_INTERFACE_MAP_END
 
 DOMCI_DATA(IDBIndexRequest, IDBIndexRequest)
@@ -155,6 +143,7 @@ IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aRange,
                                   nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -164,6 +153,7 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aRange,
                             nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -174,6 +164,7 @@ IDBIndexRequest::Put(nsIVariant* aValue,
                      nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -182,6 +173,7 @@ IDBIndexRequest::GetObject(nsIVariant* aKey,
                            nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -190,6 +182,7 @@ IDBIndexRequest::Get(nsIVariant* aKey,
                      nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -198,5 +191,6 @@ IDBIndexRequest::Remove(nsIVariant* aKey,
                         nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -192,7 +192,7 @@ public:
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -815,6 +815,13 @@ IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
     return NS_ERROR_INVALID_ARG;
   }
 
+  ObjectStoreInfo* info = GetObjectStoreInfo();
+  NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+
+  if (info->indexNames.Contains(aName)) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   // XPConnect makes "null" into a void string, we need an empty string.
   nsString keyPath(aKeyPath);
   if (keyPath.IsVoid()) {
@@ -1394,7 +1401,7 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 PRUint16
-CreateIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+CreateIndexHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1403,6 +1410,9 @@ CreateIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
     NS_ERROR("Couldn't get info!");
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
+
+  NS_ASSERTION(!info->indexNames.Contains(mName), "Alreayd have this index!");
+
   if (!info->indexNames.AppendElement(mName)) {
     NS_ERROR("Couldn't add index name!  Out of memory?");
     return nsIIDBDatabaseException::UNKNOWN_ERR;
@@ -1412,32 +1422,7 @@ CreateIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   nsresult rv = mObjectStore->Index(mName, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  nsCOMPtr<nsIWritableVariant> variant =
-    do_CreateInstance(NS_VARIANT_CONTRACTID);
-  if (!variant) {
-    NS_ERROR("Couldn't create variant!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  variant->SetAsISupports(result);
-
-  if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
-    NS_ERROR("Failed to make variant readonly!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  nsRefPtr<IDBTransactionRequest> transaction = mObjectStore->Transaction();
-  nsCOMPtr<nsIDOMEvent> event =
-    IDBSuccessEvent::Create(mRequest, variant, transaction);
-  if (!event) {
-    NS_ERROR("Failed to create event!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  AutoTransactionRequestNotifier notifier(transaction);
-
-  PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  aResult->SetAsISupports(result);
   return OK;
 }
 

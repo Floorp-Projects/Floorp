@@ -57,6 +57,7 @@ CPPSRCS = \
   IDBCursorRequest.cpp \
   IDBDatabaseRequest.cpp \
   IDBEvents.cpp \
+  IDBIndexRequest.cpp \
   IDBKeyRange.cpp \
   IDBObjectStoreRequest.cpp \
   IDBRequest.cpp \
@@ -64,13 +65,13 @@ CPPSRCS = \
   IndexedDatabaseRequest.cpp \
   LazyIdleThread.cpp \
   TransactionThreadPool.cpp \
-  IDBIndexRequest.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
   IDBCursorRequest.h \
   IDBDatabaseRequest.h \
   IDBEvents.h \
+  IDBIndexRequest.h \
   IDBKeyRange.h \
   IDBObjectStoreRequest.h \
   IDBRequest.h \
