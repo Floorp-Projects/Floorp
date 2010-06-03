@@ -403,6 +403,11 @@ mjit::Compiler::generateMethod()
             jsop_bitop(op);
           END_CASE(JSOP_BITAND)
 
+          BEGIN_CASE(JSOP_VOID)
+            frame.pop();
+            frame.push(UndefinedTag());
+          END_CASE(JSOP_VOID)
+
           BEGIN_CASE(JSOP_CALLNAME)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
