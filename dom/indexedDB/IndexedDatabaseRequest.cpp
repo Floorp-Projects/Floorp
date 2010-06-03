@@ -191,6 +191,7 @@ CreateTables(mozIStorageConnection* aDBConn)
       "id INTEGER, "
       "index_id INTEGER NOT NULL, "
       "object_data_id INTEGER NOT NULL, "
+      "object_data_key NOT NULL, " // NONE affinity
       "value TEXT NOT NULL, "
       "PRIMARY KEY (id), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
@@ -213,11 +214,12 @@ CreateTables(mozIStorageConnection* aDBConn)
       "id INTEGER, "
       "index_id INTEGER NOT NULL, "
       "object_data_id INTEGER NOT NULL, "
+      "object_data_key NOT NULL, " // NONE affinity
       "value TEXT NOT NULL, "
       "PRIMARY KEY (id), "
       "UNIQUE (index_id, value), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
-        "CASCADE, "
+        "CASCADE "
       "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
         "CASCADE"
     ");"

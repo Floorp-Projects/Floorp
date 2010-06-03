@@ -405,6 +405,78 @@ IDBTransactionRequest::GetStatement(bool aAutoIncrement)
   return result.forget();
 }
 
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::IndexGetStatement(bool aUnique,
+                                         bool aAutoIncrement)
+{
+  nsCOMPtr<mozIStorageStatement> result;
+
+  nsresult rv;
+  if (aAutoIncrement) {
+    if (aUnique) {
+      if (!mIndexGetUniqueAIStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT ai_object_data_id "
+          "FROM unique_ai_index_data "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetUniqueAIStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetUniqueAIStmt;
+    }
+    else {
+      if (!mIndexGetAIStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT ai_object_data_id "
+          "FROM ai_index_data "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetAIStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetAIStmt;
+    }
+  }
+  else {
+    if (aUnique) {
+      if (!mIndexGetUniqueStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT object_data_key "
+          "FROM unique_index_data "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetUniqueStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetUniqueStmt;
+    }
+    else {
+      if (!mIndexGetStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT object_data_key "
+          "FROM index_data "
+          "WHERE index_id = :index_id "
+          "AND value = :value"
+        ), getter_AddRefs(mIndexGetStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mIndexGetStmt;
+    }
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::IndexRemoveStatement(bool aUnique,
+                                            bool aAutoIncrement)
+{
+  nsCOMPtr<mozIStorageStatement> result;
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return result.forget();
+}
+
 void
 IDBTransactionRequest::CloseConnection()
 {
@@ -426,7 +498,11 @@ IDBTransactionRequest::CloseConnection()
       !runnable->AddDoomedObject(mRemoveStmt) ||
       !runnable->AddDoomedObject(mRemoveAutoIncrementStmt) ||
       !runnable->AddDoomedObject(mGetStmt) ||
-      !runnable->AddDoomedObject(mGetAutoIncrementStmt)) {
+      !runnable->AddDoomedObject(mGetAutoIncrementStmt) ||
+      !runnable->AddDoomedObject(mIndexGetUniqueAIStmt) ||
+      !runnable->AddDoomedObject(mIndexGetAIStmt) ||
+      !runnable->AddDoomedObject(mIndexGetUniqueStmt) ||
+      !runnable->AddDoomedObject(mIndexGetStmt)) {
     NS_ERROR("Out of memory!");
   }
 
