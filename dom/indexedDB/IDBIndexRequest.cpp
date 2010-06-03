@@ -54,6 +54,34 @@
 
 USING_INDEXEDDB_NAMESPACE
 
+namespace {
+
+class GetHelper : public AsyncConnectionHelper
+{
+public:
+  GetHelper(IDBTransactionRequest* aTransaction,
+            IDBRequest* aRequest,
+            const nsAString& aValue,
+            PRInt64 aId,
+            bool aUnique,
+            bool aAutoIncrement)
+  : AsyncConnectionHelper(aTransaction, aRequest), mValue(aValue), mId(aId),
+    mUnique(aUnique), mAutoIncrement(aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+
+private:
+  // In-params.
+  const nsString mValue;
+  const PRInt64 mId;
+  const bool mUnique;
+  const bool mAutoIncrement;
+};
+
+} // anonymous namespace
+
 // static
 already_AddRefed<IDBIndexRequest>
 IDBIndexRequest::Create(IDBObjectStoreRequest* aObjectStore,
@@ -66,6 +94,7 @@ IDBIndexRequest::Create(IDBObjectStoreRequest* aObjectStore,
   nsRefPtr<IDBIndexRequest> index = new IDBIndexRequest();
 
   index->mObjectStore = aObjectStore;
+  index->mId = aIndexInfo->id;
   index->mName = aIndexInfo->name;
   index->mKeyPath = aIndexInfo->keyPath;
   index->mUnique = aIndexInfo->unique;
@@ -74,7 +103,8 @@ IDBIndexRequest::Create(IDBObjectStoreRequest* aObjectStore,
 }
 
 IDBIndexRequest::IDBIndexRequest()
-: mUnique(false),
+: mId(LL_MININT),
+  mUnique(false),
   mAutoIncrement(false)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
@@ -170,21 +200,47 @@ IDBIndexRequest::Put(nsIVariant* aValue,
 }
 
 NS_IMETHODIMP
-IDBIndexRequest::GetObject(nsIVariant* aKey,
+IDBIndexRequest::GetObject(nsIVariant* /* aKey */,
                            nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_WARNING("Using a slow path for GetObject! Fix this now!");
+
+  nsString jsonValue;
+  nsresult rv = IDBObjectStoreRequest::GetJSONFromArg0(jsonValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-IDBIndexRequest::Get(nsIVariant* aKey,
+IDBIndexRequest::Get(nsIVariant* /* aKey */,
                      nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_WARNING("Using a slow path for Get! Fix this now!");
+
+  nsString jsonValue;
+  nsresult rv = IDBObjectStoreRequest::GetJSONFromArg0(jsonValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<GetHelper> helper =
+    new GetHelper(mObjectStore->Transaction(), request, jsonValue, mId, mUnique,
+                  mAutoIncrement);
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -194,4 +250,24 @@ IDBIndexRequest::Remove(nsIVariant* aKey,
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRUint16
+GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_ASSERTION(aConnection, "Passed a null connection!");
+
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->IndexGetStatement(mUnique, mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  return OK;
+}
+
+PRUint16
+GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  return OK;
 }

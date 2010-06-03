@@ -384,6 +384,51 @@ IDBObjectStoreRequest::GetKeyFromVariant(nsIVariant* aKeyVariant,
   return NS_OK;
 }
 
+// static
+nsresult
+IDBObjectStoreRequest::GetJSONFromArg0(/* jsval arg0, */
+                                       nsAString& aJSON)
+{
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (argc < 1) {
+    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+  }
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSAutoRequest ar(cx);
+
+  js::AutoValueRooter clone(cx);
+  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIJSON> json(new nsJSON());
+
+  rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 ObjectStoreInfo*
 IDBObjectStoreRequest::GetObjectStoreInfo()
 {

@@ -219,6 +219,10 @@ public:
   GetKeyFromVariant(nsIVariant* aKeyVariant,
                     Key& aKey);
 
+  static nsresult
+  GetJSONFromArg0(/* jsval arg0, */
+                  nsAString& aJSON);
+
   bool TransactionIsOpen() const
   {
     return mTransaction->TransactionIsOpen();
