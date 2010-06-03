@@ -2369,6 +2369,19 @@ BEGIN_CASE(JSOP_APPLY)
             }
 #endif
 
+            /*
+             * :FIXME: try to method jit - take this out once we're more
+             * complete.
+             */
+            mjit::CompileStatus status = mjit::CanMethodJIT(cx, newscript, fun, newfp->scopeChain);
+            if (status == mjit::Compile_Error)
+                goto error;
+            if (status == mjit::Compile_Okay) {
+                if (!mjit::JaegerShot(cx))
+                    goto error;
+                goto inline_return;
+            }
+
             /* Load first op and dispatch it (safe since JSOP_STOP). */
             op = (JSOp) *regs.pc;
             DO_OP();
