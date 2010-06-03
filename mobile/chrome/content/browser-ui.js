@@ -44,7 +44,7 @@ XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUtils.js");
+  Cu.import("resource://gre/modules/PlacesUtils.jsm");
   return PlacesUtils;
 });
 
