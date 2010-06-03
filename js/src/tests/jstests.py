@@ -205,7 +205,7 @@ if __name__ == '__main__':
                   help='number of worker threads to run tests on (default 2)')
     op.add_option('-m', '--manifest', dest='manifest',
                   help='select manifest file')
-    op.add_option('-t', '--timeout', dest='timeout', type=float, default=60.0,
+    op.add_option('-t', '--timeout', dest='timeout', type=float, default=150.0,
                   help='set test timeout in seconds')
     op.add_option('-d', '--exclude-random', dest='random', action='store_false',
                   help='exclude tests marked random', default=True)
