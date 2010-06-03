@@ -811,7 +811,11 @@ namespace nanojit
                     return oprnd1;
                 case LIR_andi:
                 case LIR_muli:
+                case LIR_ltui: // unsigned < 0 -> always false
+                    // note that we know that oprnd2 == insImmI(0), so just return that
                     return oprnd2;
+                case LIR_gtui: // unsigned >= 0 -> always true
+                    return insImmI(1);
                 case LIR_eqi:
                     if (oprnd1->isop(LIR_ori) &&
                         oprnd1->oprnd2()->isImmI() &&
@@ -822,19 +826,40 @@ namespace nanojit
                 default:
                     ;
                 }
-            } else if (c == -1 || (c == 1 && oprnd1->isCmp())) {
+            } else if (c == -1) {
                 switch (v) {
                 case LIR_ori:
-                    // x | -1 = -1, cmp | 1 = 1
+                    // x | -1 = -1
                     return oprnd2;
                 case LIR_andi:
-                    // x & -1 = x, cmp & 1 = cmp
+                    // x & -1 = x
                     return oprnd1;
+                case LIR_gtui:
+                    // u32 > 0xffffffff -> always false
+                    return insImmI(0);
                 default:
                     ;
                 }
-            } else if (c == 1 && v == LIR_muli) {
-                return oprnd1;
+            } else if (c == 1) {
+                if (oprnd1->isCmp()) {
+                    switch (v) {
+                    case LIR_ori:
+                        // cmp | 1 = 1
+                        // note that we know that oprnd2 == insImmI(1), so just return that
+                        return oprnd2;
+                    case LIR_andi:
+                        // cmp & 1 = cmp
+                        return oprnd1;
+                    case LIR_gtui:
+                        // (0|1) > 1 -> always false
+                        return insImmI(0);
+                    default:
+                        ;
+                    }
+                } else if (v == LIR_muli) {
+                    // x * 1 = x
+                    return oprnd1;
+                }
             }
         }
 
