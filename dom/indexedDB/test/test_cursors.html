@@ -13,6 +13,9 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
+      const NOT_FOUND_ERR =
+        Components.interfaces.nsIIDBDatabaseException.NOT_FOUND_ERR;
+
       const name = window.location.pathname;
       const description = "My Test Database";
       const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
@@ -218,10 +221,53 @@
 
       request = objectStore.modify("foo", sortedKeys[4]);
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        SimpleTest.executeSoon(function() { testGenerator.next(); });
-      };
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      keyIndex = 0;
+
+      let gotRemoveEvent = false;
+      let ok = false;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          if (keyIndex == 4) {
+            request = cursor.remove();
+            request.onerror = errorHandler;
+            request.onsuccess = function(event) {
+              is(event.result, sortedKeys[4], "Correct key");
+              is(keyIndex, 5, "Got result of remove before next continue");
+              gotRemoveEvent = true;
+            };
+          }
+
+          keyIndex++;
+          cursor.continue();
+        }
+        else {
+          testGenerator.next();
+        }
+      }
       yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+      is(gotRemoveEvent, true, "Saw the remove event");
+
+      request = objectStore.get(sortedKeys[4]);
+      request.onerror = new ExpectError(NOT_FOUND_ERR);
+      request.onsuccess = unexpectedSuccessHandler;
+      event = yield;
+
+      request = objectStore.add("foo", sortedKeys[4]);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
 
       finishTest();
       yield;
