@@ -72,8 +72,9 @@ struct DatabaseInfo
 struct IndexInfo
 {
   IndexInfo()
-  : unique(false), autoIncrement(false) { }
+  : id(LL_MININT), unique(false), autoIncrement(false) { }
 
+  PRInt64 id;
   nsString name;
   nsString keyPath;
   bool unique;
