@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: update check and basic (never button test)"
+<window title="Update Wizard pages: add-ons check, basic, download, and finished"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -21,35 +21,29 @@
 <script type="application/javascript">
 <![CDATA[
 
-gPrefToCheck = PREF_APP_UPDATE_NEVER_BRANCH + Services.appinfo.version;
-
 const TESTS = [ {
-  pageid: PAGEID_CHECKING
+  pageid: PAGEID_INCOMPAT_CHECK
 }, {
   pageid: PAGEID_FOUND_BASIC,
-  extraDelayedCheckFunction: checkPrefHasUserValue,
-  prefHasUserValue: false,
-  neverButton: true,
-  buttonClick: "extra2"
+  buttonClick: "next"
+}, {
+  pageid: PAGEID_DOWNLOADING
+}, {
+  pageid: PAGEID_FINISHED,
+  buttonClick: "extra1"
 } ];
+
+gDisableNoUpdateAddon = true;
 
 function runTest() {
   debugDump("Entering runTest");
 
-  let url = URL_UPDATE + "?showNever=1&showDetails=1" + getVersionParams();
+  let url = URL_UPDATE + "?showDetails=1&showPrompt=1" +
+            getVersionParams(getNewerAppVersion(), getNewerPlatformVersion());
   setUpdateURLOverride(url);
   debugDump("Update URL: " + url);
 
-  // add the never preference for this version to verify that checking for
-  // updates clears the preference.
-  Services.prefs.setBoolPref(gPrefToCheck, true)
-
-  gUP.checkForUpdates();
-}
-
-function finishTest() {
-  checkPrefHasUserValue(true);
-  finishTestDefault();
+  gAUS.notify(null);
 }
 
 ]]>
