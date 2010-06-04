@@ -535,15 +535,13 @@ namespace nanojit
         return at;
     }
 
-    NIns* Assembler::asm_branch_ov(LOpcode, NIns* targ)
+    void Assembler::asm_branch_xov(LOpcode, NIns* targ)
     {
-        NIns* at = 0;
         underrunProtect(32);
         intptr_t tt = ((intptr_t)targ - (intptr_t)_nIns + 8) >> 2;
         // !targ means that it needs patch.
         if( !(isIMM22((int32_t)tt)) || !targ ) {
             JMP_long_nocheck((intptr_t)targ);
-            at = _nIns;
             NOP();
             BA(0, 5);
             tt = 4;
@@ -551,7 +549,6 @@ namespace nanojit
         NOP();
 
         BVS(0, tt);
-        return at;
     }
 
     void Assembler::asm_cmp(LIns *cond)
@@ -875,8 +872,9 @@ namespace nanojit
         LIns *rhs = ins->oprnd2();
 
         RegisterMask allow = FpRegs;
-        Register ra, rb;
-        findRegFor2(allow, lhs, ra, allow, rhs, rb);
+        Register ra = findRegFor(lhs, FpRegs);
+        Register rb = (rhs == lhs) ? ra : findRegFor(rhs, FpRegs);
+
         Register rr = deprecated_prepResultReg(ins, allow);
 
         if (op == LIR_addd)
