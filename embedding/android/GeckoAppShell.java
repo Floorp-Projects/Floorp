@@ -51,6 +51,7 @@ import android.content.*;
 import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
+import android.location.*;
 
 import android.util.*;
 import android.content.DialogInterface; 
@@ -189,6 +190,24 @@ class GeckoAppShell
             sm.registerListener(GeckoApp.surfaceView, accelSensor, SensorManager.SENSOR_DELAY_GAME);
         } else {
             sm.unregisterListener(GeckoApp.surfaceView);
+        }
+    }
+
+    public static void enableLocation(boolean enable) {
+        LocationManager lm = (LocationManager)
+            GeckoApp.surfaceView.getContext().getSystemService(Context.LOCATION_SERVICE);
+
+        if (enable) {
+            Criteria crit = new Criteria();
+            crit.setAccuracy(Criteria.ACCURACY_FINE);
+            String provider = lm.getBestProvider(crit, true);
+            if (provider == null)
+                return;
+
+            sendEventToGecko(new GeckoEvent(lm.getLastKnownLocation(provider)));
+            lm.requestLocationUpdates(provider, 100, (float).5, GeckoApp.surfaceView, Looper.getMainLooper());
+        } else {
+            lm.removeUpdates(GeckoApp.surfaceView);
         }
     }
 

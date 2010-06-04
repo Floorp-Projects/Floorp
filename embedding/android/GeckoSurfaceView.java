@@ -63,6 +63,7 @@ import android.content.*;
 import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
+import android.location.*;
 
 import android.util.*;
 
@@ -74,7 +75,7 @@ import android.util.*;
  */
 class GeckoSurfaceView
     extends SurfaceView
-    implements SurfaceHolder.Callback, SensorEventListener
+    implements SurfaceHolder.Callback, SensorEventListener, LocationListener
 {
     public GeckoSurfaceView(Context context) {
         super(context);
@@ -645,6 +646,7 @@ class GeckoSurfaceView
         return inputConnection;
     }
 
+    // accelerometer
     public void onAccuracyChanged(Sensor sensor, int accuracy)
     {
     }
@@ -652,6 +654,24 @@ class GeckoSurfaceView
     public void onSensorChanged(SensorEvent event)
     {
         GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+    }
+
+    // geolocation
+    public void onLocationChanged(Location location)
+    {
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(location));
+    }
+
+    public void onProviderDisabled(String provider)
+    {
+    }
+
+    public void onProviderEnabled(String provider)
+    {
+    }
+
+    public void onStatusChanged(String provider, int status, Bundle extras)
+    {
     }
 
     // event stuff

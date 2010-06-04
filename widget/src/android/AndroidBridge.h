@@ -91,6 +91,8 @@ public:
 
     void EnableAccelerometer(bool aEnable);
 
+    void EnableLocation(bool aEnable);
+
     void ReturnIMEQueryResult(const PRUnichar *result, PRUint32 len, int selectionStart, int selectionEnd);
 
     void NotifyXreExit();
@@ -141,6 +143,7 @@ protected:
     // other things
     jmethodID jShowIME;
     jmethodID jEnableAccelerometer;
+    jmethodID jEnableLocation;
     jmethodID jReturnIMEQueryResult;
     jmethodID jNotifyXreExit;
     jmethodID jScheduleRestart;
