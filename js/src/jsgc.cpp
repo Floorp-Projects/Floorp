@@ -2874,6 +2874,8 @@ GC(JSContext *cx  GCTIMER_PARAM)
     SweepDoubles(rt);
     TIMESTAMP(sweepDoubleEnd);
 
+    js::SweepCompartments(cx);
+
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
      * had watchpoints referencing tree nodes.
@@ -3276,4 +3278,49 @@ js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
     EndGCSession(cx);
 
     return !cycle;
+}
+
+namespace js {
+
+JSCompartment *
+NewCompartment(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    JSCompartment *compartment = new JSCompartment(rt);
+    if (!compartment) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    AutoLockGC lock(rt);
+
+    if (!rt->compartments.append(compartment)) {
+        AutoUnlockGC unlock(rt);
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return compartment;
+}
+
+void
+SweepCompartments(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    JSCompartment **read = rt->compartments.begin();
+    JSCompartment **end = rt->compartments.end();
+    JSCompartment **write = read;
+    while (read < end) {
+        JSCompartment *compartment = (*read);
+        if (compartment->marked) {
+            compartment->marked = false;
+            *write++ = compartment;
+        } else {
+            delete compartment;
+        }
+        ++read;
+    }
+    rt->compartments.resize(write - rt->compartments.begin());
+}
+
 }

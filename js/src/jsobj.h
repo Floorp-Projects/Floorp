@@ -688,6 +688,8 @@ struct JSObject {
             map->ops->dropProperty(cx, this, prop);
     }
 
+    JSCompartment *getCompartment(JSContext *cx);
+
     void swap(JSObject *obj);
 
     inline bool isArguments() const;

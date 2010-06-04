@@ -1060,7 +1060,6 @@ struct JSThread {
                         js::DefaultHasher<void *>,
                         js::SystemAllocPolicy> Map;
 
-
     /* Linked list of all contexts in use on this thread. */
     JSCList             contextList;
 
@@ -1165,7 +1164,21 @@ typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
                 
 } /* namespace js */
 
+struct JSCompartment {
+    JSRuntime *rt;
+    bool marked;
+
+    JSCompartment(JSRuntime *cx);
+    ~JSCompartment();
+};
+
 struct JSRuntime {
+    /* Default compartment. */
+    JSCompartment       *defaultCompartment;
+
+    /* List of compartments (protected by the GC lock). */
+    js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> compartments;
+
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
 
@@ -1667,6 +1680,9 @@ struct JSContext
     /* Data shared by threads in an address space. */
     JSRuntime *const    runtime;
 
+    /* GC heap compartment. */
+    JSCompartment       *compartment;
+
     /* Currently executing frame, set by stack operations. */
     JS_REQUIRES_STACK
     JSStackFrame        *fp;
@@ -2114,6 +2130,24 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 }
 
 namespace js {
+
+class AutoNewCompartment {
+    JSContext *cx;
+    JSCompartment *compartment;
+  public:
+    JS_FRIEND_API(AutoNewCompartment(JSContext *cx));
+    JS_FRIEND_API(~AutoNewCompartment());
+
+    JS_FRIEND_API(bool) init();
+};
+
+class AutoCompartment {
+    JSContext *cx;
+    JSCompartment *compartment;
+  public:
+    JS_FRIEND_API(AutoCompartment(JSContext *cx, JSObject *obj));
+    JS_FRIEND_API(~AutoCompartment());
+};
 
 class AutoGCRooter {
   public:

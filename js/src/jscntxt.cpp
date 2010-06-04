@@ -2262,6 +2262,7 @@ DSTOffsetCache::DSTOffsetCache()
 
 JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
+    compartment(rt->defaultCompartment),
     fp(NULL),
     regs(NULL),
     regExpStatics(this),
@@ -2463,4 +2464,44 @@ void
 JSContext::purge()
 {
     FreeOldArenas(runtime, &regexpPool);
+}
+
+JSCompartment::JSCompartment(JSRuntime *rt) : rt(rt), marked(false)
+{
+}
+
+JSCompartment::~JSCompartment()
+{
+}
+
+namespace js {
+
+AutoNewCompartment::AutoNewCompartment(JSContext *cx) :
+    cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = NULL;
+}
+
+bool
+AutoNewCompartment::init()
+{
+    return !!(cx->compartment = NewCompartment(cx));
+}
+
+AutoNewCompartment::~AutoNewCompartment()
+{
+    cx->compartment = compartment;
+}
+
+AutoCompartment::AutoCompartment(JSContext *cx, JSObject *obj) :
+    cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = obj->getCompartment(cx);
+}
+
+AutoCompartment::~AutoCompartment()
+{
+    cx->compartment = compartment;
+}
+
 }
