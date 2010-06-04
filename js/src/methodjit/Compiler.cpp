@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "MethodJIT.h"
 #include "jsnum.h"
+#include "jsbool.h"
 #include "Compiler.h"
 #include "StubCalls.h"
 #include "assembler/jit/ExecutableAllocator.h"
@@ -318,6 +319,37 @@ mjit::Compiler::generateMethod()
             jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
           }
           END_CASE(JSOP_GOTO)
+
+          BEGIN_CASE(JSOP_IFEQ)
+          BEGIN_CASE(JSOP_IFNE)
+          {
+            FrameEntry *top = frame.peek(-1);
+            Jump j;
+            if (top->isConstant()) {
+                const Value &v = top->getValue();
+                JSBool b = js_ValueToBoolean(v);
+                if (op == JSOP_IFEQ)
+                    b = !b;
+                frame.pop();
+                frame.forgetEverything();
+                if (b) {
+                    j = masm.jump();
+                    jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
+                }
+            } else {
+                frame.forgetEverything();
+                masm.fixScriptStack(frame.frameDepth());
+                masm.setupVMFrame();
+                masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
+                Assembler::Condition cond = (op == JSOP_IFEQ)
+                                            ? Assembler::Zero
+                                            : Assembler::NonZero;
+                j = masm.branch32(cond, Registers::ReturnReg, Registers::ReturnReg);
+                frame.pop();
+                jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
+            }
+          }
+          END_CASE(JSOP_IFEQ)
 
           BEGIN_CASE(JSOP_BITAND)
             jsop_bitop(op);

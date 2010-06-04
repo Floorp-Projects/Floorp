@@ -1150,6 +1150,12 @@ stubs::GreaterEqual(VMFrame &f)
     RELATIONAL(>=);
 }
 
+JSBool JS_FASTCALL
+stubs::ValueToBoolean(VMFrame &f)
+{
+    return js_ValueToBoolean(f.regs.sp[-1]);
+}
+
 /*
  * Inline copy of jsops.cpp:EQUALITY_OP().
  * @param op true if for JSOP_EQ; false for JSOP_NE.

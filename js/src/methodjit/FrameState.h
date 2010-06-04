@@ -338,6 +338,7 @@ class FrameState
      * Returns the current stack depth of the frame.
      */
     uint32 stackDepth() const { return sp - spBase; }
+    uint32 frameDepth() const { return stackDepth() + script->nfixed; }
     uint32 tos() const { return sp - base; }
 
 #ifdef DEBUG
