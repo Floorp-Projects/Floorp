@@ -2969,7 +2969,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   if (document) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
     // anonymous content that the document is changing.
-    document->BindingManager()->RemovedFromDocument(this, document);
+    document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
     document->ClearBoxObjectFor(this);
   }
@@ -3804,7 +3804,7 @@ nsGenericElement::DestroyContent()
 {
   nsIDocument *document = GetOwnerDoc();
   if (document) {
-    document->BindingManager()->RemovedFromDocument(this, document);
+    document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
     document->ClearBoxObjectFor(this);
   }
 
@@ -4365,8 +4365,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 
   {
     nsIDocument *doc;
-    if (!tmp->GetNodeParent() && (doc = tmp->GetOwnerDoc())) {
-      doc->BindingManager()->RemovedFromDocument(tmp, doc);
+    if (!tmp->GetNodeParent() && (doc = tmp->GetOwnerDoc()) &&
+        tmp->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+      doc->BindingManager()->ChangeDocumentFor(tmp, doc, nsnull);
     }
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
