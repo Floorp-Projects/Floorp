@@ -1168,16 +1168,15 @@ InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
                 cond = JSDOUBLE_COMPARE(l, !=, r, ifnan);
             }
         } else {
-            if (lval.isObject()) {
-                JSObject *l = &lval.asObject();
-
-                /* jsops.cpp:EXTENDED_EQUALITY_OP() */
-                if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&
-                    ((ExtendedClass *)clasp)->equality) {
-                    if (!((ExtendedClass *)clasp)->equality(cx, l, &lval, &jscond))
-                        THROWV(false);
-                    cond = (jscond == JS_TRUE) == op;
-                }
+            /* jsops.cpp:EXTENDED_EQUALITY_OP() */
+            JSObject *lobj;
+            if (lval.isObject() &&
+                (lobj = &lval.asObject()) &&
+                ((clasp = lobj->getClass())->flags & JSCLASS_IS_EXTENDED) &&
+                ((ExtendedClass *)clasp)->equality) {
+                if (!((ExtendedClass *)clasp)->equality(cx, lobj, &lval, &jscond))
+                    THROWV(false);
+                cond = (jscond == JS_TRUE) == op;
             } else {
                 cond = (lval.asRawUint32() == rval.asRawUint32()) == op;
             }
@@ -1219,6 +1218,7 @@ InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
         }
     }
 
+    regs.sp[-2].setBoolean(cond);
     return cond;
 }
 
