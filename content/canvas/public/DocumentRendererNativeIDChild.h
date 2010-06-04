@@ -14,8 +14,8 @@
  * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ *   Nokia.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,10 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_DocumentRendererShmemChild
-#define mozilla_dom_DocumentRendererShmemChild
+#ifndef mozilla_dom_DocumentRendererNativeIDChild
+#define mozilla_dom_DocumentRendererNativeIDChild
 
-#include "mozilla/ipc/PDocumentRendererShmemChild.h"
+#include "mozilla/ipc/PDocumentRendererNativeIDChild.h"
 
 class nsIDOMWindow;
 class gfxMatrix;
@@ -45,22 +45,22 @@ class gfxMatrix;
 namespace mozilla {
 namespace ipc {
 
-class DocumentRendererShmemChild : public PDocumentRendererShmemChild
+class DocumentRendererNativeIDChild : public PDocumentRendererNativeIDChild
 {
 public:
-    DocumentRendererShmemChild();
-    virtual ~DocumentRendererShmemChild();
+    DocumentRendererNativeIDChild();
+    virtual ~DocumentRendererNativeIDChild();
 
-    bool RenderDocument(nsIDOMWindow *window, const PRInt32& x,
+    bool RenderDocument(nsIDOMWindow* window, const PRInt32& x,
                         const PRInt32& y, const PRInt32& w,
                         const PRInt32& h, const nsString& aBGColor,
                         const PRUint32& flags, const PRBool& flush,
                         const gfxMatrix& aMatrix,
-                        Shmem& data);
+                        const PRInt32& nativeID);
 
 private:
 
-    DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererShmemChild);
+    DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererNativeIDChild);
 };
 
 }

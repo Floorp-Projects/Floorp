@@ -57,6 +57,8 @@ EXPORTS_mozilla/ipc = \
 		DocumentRendererParent.h \
 		DocumentRendererShmemChild.h \
 		DocumentRendererShmemParent.h \
+		DocumentRendererNativeIDChild.h \
+		DocumentRendererNativeIDParent.h \
 		$(NULL)
 
 XPIDLSRCS	= \

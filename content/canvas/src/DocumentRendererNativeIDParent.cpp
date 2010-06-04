@@ -14,8 +14,8 @@
  * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ *   Nokia.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,36 +34,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_DocumentRendererShmemChild
-#define mozilla_dom_DocumentRendererShmemChild
+#include "mozilla/ipc/DocumentRendererNativeIDParent.h"
 
-#include "mozilla/ipc/PDocumentRendererShmemChild.h"
+using namespace mozilla::ipc;
 
-class nsIDOMWindow;
-class gfxMatrix;
+DocumentRendererNativeIDParent::DocumentRendererNativeIDParent()
+{}
 
-namespace mozilla {
-namespace ipc {
+DocumentRendererNativeIDParent::~DocumentRendererNativeIDParent()
+{}
 
-class DocumentRendererShmemChild : public PDocumentRendererShmemChild
+void
+DocumentRendererNativeIDParent::SetCanvas(nsICanvasRenderingContextInternal* aCanvas)
 {
-public:
-    DocumentRendererShmemChild();
-    virtual ~DocumentRendererShmemChild();
-
-    bool RenderDocument(nsIDOMWindow *window, const PRInt32& x,
-                        const PRInt32& y, const PRInt32& w,
-                        const PRInt32& h, const nsString& aBGColor,
-                        const PRUint32& flags, const PRBool& flush,
-                        const gfxMatrix& aMatrix,
-                        Shmem& data);
-
-private:
-
-    DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererShmemChild);
-};
-
-}
+    mCanvas = aCanvas;
 }
 
-#endif
+bool
+DocumentRendererNativeIDParent::Recv__delete__(const PRInt32& x, const PRInt32& y,
+                                               const PRInt32& w, const PRInt32& h,
+                                               const PRUint32& nativeID)
+{
+    mCanvas->Swap(nativeID, x, y, w, h);
+    return true;
+}
