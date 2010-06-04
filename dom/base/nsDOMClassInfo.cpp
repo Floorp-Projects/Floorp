@@ -6441,34 +6441,31 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JSBool ok;
   jsval exn;
   {
-    JSAutoSuspendRequest asr(my_cx != cx ? cx : nsnull);
-    {
-      JSAutoRequest ar(my_cx);
+    JSAutoTransferRequest transfer(cx, my_cx);
 
-      JSObject *realObj;
-      wrapper->GetJSObject(&realObj);
-
-      // Don't resolve standard classes on XPCNativeWrapper etc, only
-      // resolve them if we're resolving on the real global object.
-      ok = obj == realObj ?
-           ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
-           JS_TRUE;
-
-      if (!ok) {
-        // Trust the JS engine (or the script security manager) to set
-        // the exception in the JS engine.
-
-        if (!JS_GetPendingException(my_cx, &exn)) {
-          return NS_ERROR_UNEXPECTED;
-        }
-
-        // Return NS_OK to avoid stomping over the exception that was passed
-        // down from the ResolveStandardClass call.
-        // Note that the order of the JS_ClearPendingException and
-        // JS_SetPendingException is important in the case that my_cx == cx.
-
-        JS_ClearPendingException(my_cx);
+    JSObject *realObj;
+    wrapper->GetJSObject(&realObj);
+    
+    // Don't resolve standard classes on XPCNativeWrapper etc, only
+    // resolve them if we're resolving on the real global object.
+    ok = obj == realObj ?
+         ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
+         JS_TRUE;
+    
+    if (!ok) {
+      // Trust the JS engine (or the script security manager) to set
+      // the exception in the JS engine.
+      
+      if (!JS_GetPendingException(my_cx, &exn)) {
+        return NS_ERROR_UNEXPECTED;
       }
+      
+      // Return NS_OK to avoid stomping over the exception that was passed
+      // down from the ResolveStandardClass call.
+      // Note that the order of the JS_ClearPendingException and
+      // JS_SetPendingException is important in the case that my_cx == cx.
+      
+      JS_ClearPendingException(my_cx);
     }
   }
 
