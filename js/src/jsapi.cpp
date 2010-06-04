@@ -4581,11 +4581,8 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval *argv,
                 jsval *rval)
 {
-    JSBool ok;
-
     CHECK_REQUEST(cx);
-    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(FUN_OBJECT(fun)), argc, argv,
-                         rval);
+    JSBool ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(FUN_OBJECT(fun)), argc, argv, rval);
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4609,10 +4606,8 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval *argv,
                      jsval *rval)
 {
-    JSBool ok;
-
     CHECK_REQUEST(cx);
-    ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
+    JSBool ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
