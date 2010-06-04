@@ -3319,6 +3319,10 @@ class Value
 		return JSVAL_TO_PRIVATE_IMPL(data);
     }
 
+    void *asPrivateVoidPtrUnchecked() const {
+        return JSVAL_TO_PRIVATE_IMPL(data);
+    }
+
     void setPrivateUint32(uint32 u) {
 		setInt32((int32)u);
     }

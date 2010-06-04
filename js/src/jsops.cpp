@@ -2675,8 +2675,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     bool match;
 #define SEARCH_PAIRS(MATCH_CODE)                                              \
     for (;;) {                                                                \
-        JS_ASSERT(GET_INDEX(pc2) < script->consts()->length);                 \
-        Value rval = script->consts()->vector[GET_INDEX(pc2)];                \
+        Value rval = script->getConst(GET_INDEX(pc2));                        \
         MATCH_CODE                                                            \
         pc2 += INDEX_LEN;                                                     \
         if (match)                                                            \
