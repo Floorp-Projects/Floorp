@@ -144,9 +144,9 @@ public:
   virtual  ~nsHTMLEditor();
 
   /* ------------ nsPlaintextEditor overrides -------------- */
+  NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
-  virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual PRBool HasFocus();
 
   /* ------------ nsIEditorIMESupport overrides ------------ */
