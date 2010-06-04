@@ -565,7 +565,7 @@ IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
         query.AssignLiteral(
           "INSERT OR REPLACE INTO ai_unique_index_data (index_id, "
                                                        "object_data_id, "
-                                                       "object_data_key, "
+                                                       "id, "
                                                        "value) "
           "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
         );
@@ -573,7 +573,7 @@ IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
       else {
         query.AssignLiteral(
           "INSERT OR REPLACE INTO ai_index_data (index_id, object_data_id, "
-                                                "object_data_key, value) "
+                                                "id, value) "
           "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
         );
       }
