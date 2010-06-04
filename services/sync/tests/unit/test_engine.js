@@ -136,7 +136,7 @@ function test_enabled() {
     engine.enabled = false;
     do_check_false(Svc.Prefs.get("engine.steam"));
   } finally {
-    Svc.Prefs.reset("engine.steam");
+    Svc.Prefs.resetBranch("");
   }
 }
 
@@ -156,7 +156,7 @@ function test_sync() {
     do_check_eq(engineObserver.topics[0], "weave:engine:sync:start");
     do_check_eq(engineObserver.topics[1], "weave:engine:sync:finish");
   } finally {
-    Svc.Prefs.reset("engine.steam");
+    Svc.Prefs.resetBranch("");
     engine.wasSynced = false;
     engineObserver.reset();
   }

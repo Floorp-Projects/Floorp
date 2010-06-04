@@ -223,9 +223,7 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.syncID");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -257,7 +255,7 @@ function test_syncStartup_serverHasNewerVersion() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
@@ -300,9 +298,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.syncID");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -371,9 +367,7 @@ function test_syncStartup_badKeyWipesServerData() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.syncID");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -404,8 +398,7 @@ function test_processIncoming_emptyServer() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -458,8 +451,7 @@ function test_processIncoming_createFromServer() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -580,8 +572,7 @@ function test_processIncoming_reconcile() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -686,9 +677,7 @@ function test_processIncoming_fetchNum() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("client.type");
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -742,8 +731,7 @@ function test_uploadOutgoing_toEmptyServer() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -800,8 +788,7 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -856,7 +843,7 @@ function test_syncFinish_deleteByIds() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
@@ -928,7 +915,7 @@ function test_syncFinish_deleteLotsInBatches() {
 
   } finally {
     server.stop(function() {});
-    Svc.Prefs.reset("clusterURL");
+    Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }

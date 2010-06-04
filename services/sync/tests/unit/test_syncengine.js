@@ -18,7 +18,7 @@ function test_url_attributes() {
                 "https://cluster/1.0/foo/storage/crypto/steam");
     do_check_eq(engine.metaURL, "https://cluster/1.0/foo/storage/meta/global");
   } finally {
-    Svc.Prefs.reset("clusterURL");
+    Svc.Prefs.resetBranch("");
   }
 }
 
@@ -37,7 +37,7 @@ function test_syncID() {
     do_check_eq(Svc.Prefs.get("steam.syncID"), "fake-guid-1");
     do_check_eq(engine.syncID, "fake-guid-1");
   } finally {
-    Svc.Prefs.reset("steam.syncID");
+    Svc.Prefs.resetBranch("");
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -60,7 +60,7 @@ function test_lastSync() {
     do_check_eq(engine.lastSync, 0);
     do_check_eq(Svc.Prefs.get("steam.lastSync"), "0");
   } finally {
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
   }
 }
 
@@ -108,6 +108,6 @@ function test_resetClient() {
     do_check_eq(engine.toFetch.length, 0);
   } finally {
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-    Svc.Prefs.reset("steam.lastSync");
+    Svc.Prefs.resetBranch("");
   }
 }
