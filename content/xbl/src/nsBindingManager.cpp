@@ -621,17 +621,11 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
   return SetOrRemoveObject(mWrapperTable, aContent, aWrappedJS);
 }
 
-nsresult
-nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
-                                    nsIDocument* aNewDocument)
+void
+nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
+                                              nsIDocument* aOldDocument)
 {
-  // XXXbz this code is pretty broken, since moving from one document
-  // to another always passes through a null document!
   NS_PRECONDITION(aOldDocument != nsnull, "no old document");
-  NS_PRECONDITION(!aNewDocument,
-                  "Changing to a non-null new document not supported yet");
-  if (! aOldDocument)
-    return NS_ERROR_NULL_POINTER;
 
   // Hold a ref to the binding so it won't die when we remove it from our
   // table.
@@ -650,18 +644,14 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   }
 
   if (binding) {
-    binding->ChangeDocument(aOldDocument, aNewDocument);
+    binding->ChangeDocument(aOldDocument, nsnull);
     SetBinding(aContent, nsnull);
-    if (aNewDocument)
-      aNewDocument->BindingManager()->SetBinding(aContent, binding);
   }
 
   // Clear out insertion parents and content lists.
   SetInsertionParent(aContent, nsnull);
   SetContentListFor(aContent, nsnull);
   SetAnonymousNodesFor(aContent, nsnull);
-
-  return NS_OK;
 }
 
 nsIAtom*
