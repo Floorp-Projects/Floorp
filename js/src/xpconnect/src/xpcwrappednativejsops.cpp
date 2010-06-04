@@ -522,7 +522,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     }
     else
     {
-        setter = js_GetterOnlyPropertyStub;
+        setter = Jsvalify(js_GetterOnlyPropertyStub);
     }
 
     AutoResolveName arn(ccx, idval);
@@ -853,7 +853,7 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
             return Throw(rv, cx);
 
         if(!*bp && !JSVAL_IS_PRIMITIVE(v) &&
-           JSVAL_TO_OBJECT(v)->getClass() == &XPCSafeJSObjectWrapper::SJOWClass.base)
+           JSVAL_TO_OBJECT(v)->getJSClass() == &XPCSafeJSObjectWrapper::SJOWClass.base)
         {
             v = OBJECT_TO_JSVAL(XPCSafeJSObjectWrapper::GetUnsafeObject(cx, JSVAL_TO_OBJECT(v)));
 
@@ -1283,7 +1283,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
 
 /***************************************************************************/
 
-extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
+JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
 static JSObjectOps XPC_WN_WithCall_JSOps;
 static JSObjectOps XPC_WN_NoCall_JSOps;
@@ -1327,7 +1327,7 @@ static JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
-    JSClass *clazz = obj->getClass();
+    JSClass *clazz = obj->getJSClass();
     if(!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base)
     {
         // obj must be a prototype object or a wrapper w/o a
