@@ -84,22 +84,21 @@ public:
 
   /**
    * Notify the binding manager that an element
-   * has been removed from its document,
+   * has been moved from one document to another,
    * so that it can update any bindings or
    * nsIAnonymousContentCreator-created anonymous
    * content that may depend on the document.
    * @param aContent the element that's being moved
    * @param aOldDocument the old document in which the
-   *   content resided.
+   *   content resided. May be null if the the content
+   *   was not in any document.
+   * @param aNewDocument the document in which the
+   *   content will reside. May be null if the content
+   *   will not reside in any document, or if the
+   *   content is being destroyed.
    */
-  void RemovedFromDocument(nsIContent* aContent, nsIDocument* aOldDocument)
-  {
-    if (aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-      RemovedFromDocumentInternal(aContent, aOldDocument);
-    }
-  }
-  void RemovedFromDocumentInternal(nsIContent* aContent,
-                                   nsIDocument* aOldDocument);
+  nsresult ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
+                             nsIDocument* aNewDocument);
 
   nsIAtom* ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID);
 
