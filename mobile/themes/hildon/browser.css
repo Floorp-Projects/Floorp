@@ -204,8 +204,13 @@ toolbarbutton.urlbar-cap-button {
   background: #fff;
 }
 
+#urlbar-editarea:hover:active {
+  background-color: #8db8d8;
+}
+
 #urlbar-edit {
   -moz-appearance: none !important;
+  background: transparent;
   padding: 0px !important;
   border: none !important;
 }
