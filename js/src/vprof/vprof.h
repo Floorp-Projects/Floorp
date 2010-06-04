@@ -121,13 +121,16 @@ uint64_t readTimestampCounter();
 #define _nvprof(e,v)
 #ifndef VMCFG_SYMBIAN
 #define _vprof(v,...)
-#define _hprof(h,n,...)
+#define _hprof(v,n,...)
 #define _nhprof(e,v,n,...)
 #define _ntprof_begin(e)
 #define _ntprof_end(e)
 #define _jvprof_init(id,...)
 #define _jnvprof_init(id,e,...)
+#define _jhprof_init(id,n,...)
+#define _jnhprof_init(id,e,n,...)
 #define _jvprof(id,v)
+#define _jhprof(id,v)
 #endif // ! VMCFG_SYMBIAN
 #else
 
@@ -209,11 +212,22 @@ do { \
     if (*(id) == 0) \
         initValueProfile((id), (char*) (e), -1, ##__VA_ARGS__, NULL)
 
-// Calls to the _jvprof macro must be wrapped in an actual function
-// in order to be invoked from JIT-compiled code.
+#define _jhprof_init(id,n,...) \
+    if (*(id) == 0) \
+        initHistProfile((id), __FILE__, __LINE__, (int) (n), ##__VA_ARGS__)
+
+#define _jnhprof_init(id,e,n,...) \
+    if (*(id) == 0) \
+        initHistProfile((id), (char*) (e), -1, (int) (n), ##__VA_ARGS__)
+
+// Calls to the _jvprof and _jhprof macros must be wrapped in a non-inline
+// function in order to be invoked from JIT-compiled code.
 
 #define _jvprof(id,v) \
     profileValue((id), (int64_t) (v))
+
+#define _jhprof(id,v) \
+    histValue((id), (int64_t) (v))
 
 #endif
 
