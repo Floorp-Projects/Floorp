@@ -53,6 +53,7 @@ _BROWSER_FILES = \
     browser_privacypane_5.js \
     browser_privacypane_6.js \
     browser_privacypane_7.js \
+    browser_privacypane_8.js \
     $(NULL)
 
 libs::	$(_BROWSER_FILES)
