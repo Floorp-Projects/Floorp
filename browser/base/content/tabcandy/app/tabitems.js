@@ -64,7 +64,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------  
   _getSizeExtra: function() {
-    var $container = $(this.container);
+    var $container = iQ(this.container);
 
     var widthExtra = parseInt($container.css('padding-left')) 
         + parseInt($container.css('padding-right'));
@@ -103,10 +103,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       return;
     }
     
-    var $container = $(this.container);
-    var $title = $('.tab-title', $container);
-    var $thumb = $('.thumb', $container);
-    var $close = $('.close', $container);
+    var $container = iQ(this.container);
+    var $title = iQ('.tab-title', $container);
+    var $thumb = iQ('.thumb', $container);
+    var $close = iQ('.close', $container);
     var extra = this._getSizeExtra();
     var css = {};
     
@@ -133,7 +133,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       css.height = rect.height - extra.y; 
     }
       
-    if($.isEmptyObject(css))
+    if(iQ.isEmptyObject(css))
       return;
       
     this.bounds.copy(rect);
@@ -142,22 +142,21 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     // a random location (i.e., from [0,0]). Instead, just
     // have it appear where it should be.
     if(immediately || (!this._hasBeenDrawn) ) {
-      $container.stop(true, true);
+/*       $container.stop(true, true); */
       $container.css(css);
     } else {
       TabMirror.pausePainting();
-      $container.animate(css,{
-        complete: function() {TabMirror.resumePainting();},
-        duration: 350,
-        easing: "tabcandyBounce"
-      }).dequeue();
+      $container.animate(css, 'animate350', function() {
+        TabMirror.resumePainting();
+      }); // tabcandyBounce
+/*       }).dequeue(); */
     }
 
     if(css.fontSize && !this.inStack()) {
       if(css.fontSize < minFontSize )
-        $title.fadeOut().dequeue();
+        $title.fadeOut();//.dequeue();
       else
-        $title.fadeIn().dequeue();
+        $title.fadeIn();//.dequeue();
     }
 
     if(css.width) {

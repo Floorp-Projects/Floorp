@@ -701,6 +701,11 @@ UIClass.prototype = {
         location.href = '../../doc/index.html';
       }
     }, {
+      name: 'tests', 
+      code: function() {
+        location.href = 'test.html';
+      }
+    }, {
       name: 'save', 
       code: function() {
         self.saveAll();
