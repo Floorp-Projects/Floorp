@@ -255,6 +255,12 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
       case JSOP_GE:
         cond = Assembler::GreaterThanOrEqual;
         break;
+      case JSOP_EQ:
+        cond = Assembler::Equal;
+        break;
+      case JSOP_NE:
+        cond = Assembler::NotEqual;
+        break;
       default:
         JS_NOT_REACHED("wat");
         return;
@@ -281,6 +287,10 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
             break;
           case Assembler::GreaterThanOrEqual:
             cond = Assembler::LessThanOrEqual;
+            break;
+          case Assembler::Equal: /* fall through */
+          case Assembler::NotEqual:
+            /* Equal and NotEqual are commutative. */
             break;
           default:
             JS_NOT_REACHED("wat");
@@ -327,6 +337,10 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
                 break;
               case Assembler::GreaterThanOrEqual:
                 cond = Assembler::LessThan;
+                break;
+              case Assembler::Equal: /* fall through */
+              case Assembler::NotEqual:
+                /* Equal and NotEqual are commutative. */
                 break;
               default:
                 JS_NOT_REACHED("hello");

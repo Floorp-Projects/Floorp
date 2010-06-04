@@ -1126,3 +1126,111 @@ stubs::GreaterEqual(VMFrame &f)
     RELATIONAL(>=);
 }
 
+/*
+ * Inline copy of jsops.cpp:EQUALITY_OP().
+ * @param op true if for JSOP_EQ; false for JSOP_NE.
+ * @param ifnan return value upon NaN comparison.
+ */
+static inline bool
+InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
+{
+    Class *clasp;
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    Value rval = regs.sp[-1];
+    Value lval = regs.sp[-2];
+
+    JSBool jscond;
+    bool cond;
+
+    #if JS_HAS_XML_SUPPORT
+    /* Inline copy of jsops.cpp:XML_EQUALITY_OP() */
+    if ((lval.isNonFunObj() && lval.asObject().isXML()) ||
+        (rval.isNonFunObj() && rval.asObject().isXML())) {
+        if (!js_TestXMLEquality(cx, lval, rval, &jscond))
+            THROWV(false);
+        cond = (jscond == JS_TRUE) == op;
+    } else
+    #endif /* JS_HAS_XML_SUPPORT */
+
+    if (SamePrimitiveTypeOrBothObjects(lval, rval)) {
+        if (lval.isString()) {
+            JSString *l = lval.asString();
+            JSString *r = rval.asString();
+            cond = js_EqualStrings(l, r) == op;
+        } else if (lval.isDouble()) {
+            double l = lval.asDouble();
+            double r = rval.asDouble();
+            if (op) {
+                cond = JSDOUBLE_COMPARE(l, ==, r, ifnan);
+            } else {
+                cond = JSDOUBLE_COMPARE(l, !=, r, ifnan);
+            }
+        } else {
+            if (lval.isObject()) {
+                JSObject *l = &lval.asObject();
+
+                /* jsops.cpp:EXTENDED_EQUALITY_OP() */
+                if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&
+                    ((ExtendedClass *)clasp)->equality) {
+                    if (!((ExtendedClass *)clasp)->equality(cx, l, &lval, &jscond))
+                        THROWV(false);
+                    cond = (jscond == JS_TRUE) == op;
+                }
+            } else {
+                cond = (lval.asRawUint32() == rval.asRawUint32()) == op;
+            }
+        }
+    } else {
+        if (lval.isNullOrUndefined()) {
+            cond = rval.isNullOrUndefined() == op;
+        } else if (rval.isNullOrUndefined()) {
+            cond = !op;
+        } else {
+            if (lval.isObject()) {
+                if (!lval.asObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-2]))
+                    THROWV(false);
+                lval = regs.sp[-2];
+            }
+
+            if (rval.isObject()) {
+                if (!rval.asObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-1]))
+                    THROWV(false);
+                rval = regs.sp[-1];
+            }
+
+            if (BothString(lval, rval)) {
+                JSString *l = lval.asString();
+                JSString *r = rval.asString();
+                cond = js_EqualStrings(l, r) == op;
+            } else {
+                double l, r;
+                if (!ValueToNumber(cx, lval, &l) ||
+                    !ValueToNumber(cx, rval, &r)) {
+                    THROWV(false);
+                }
+                
+                if (op)
+                    cond = JSDOUBLE_COMPARE(l, ==, r, ifnan);
+                else
+                    cond = JSDOUBLE_COMPARE(l, !=, r, ifnan);
+            }
+        }
+    }
+
+    return cond;
+}
+
+JSBool JS_FASTCALL
+stubs::Equal(VMFrame &f)
+{
+    return InlineEqualityOp(f, true, false);
+}
+
+JSBool JS_FASTCALL
+stubs::NotEqual(VMFrame &f)
+{
+    return InlineEqualityOp(f, false, true);
+}
+

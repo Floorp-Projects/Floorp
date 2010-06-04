@@ -65,6 +65,8 @@ JSBool JS_FASTCALL LessThan(VMFrame &f);
 JSBool JS_FASTCALL LessEqual(VMFrame &f);
 JSBool JS_FASTCALL GreaterThan(VMFrame &f);
 JSBool JS_FASTCALL GreaterEqual(VMFrame &f);
+JSBool JS_FASTCALL Equal(VMFrame &f);
+JSBool JS_FASTCALL NotEqual(VMFrame &f);
 
 void JS_FASTCALL BitAnd(VMFrame &f);
 

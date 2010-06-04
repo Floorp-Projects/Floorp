@@ -323,6 +323,8 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LE)
           BEGIN_CASE(JSOP_GT)
           BEGIN_CASE(JSOP_GE)
+          BEGIN_CASE(JSOP_EQ)
+          BEGIN_CASE(JSOP_NE)
           {
             /* Detect fusions. */
             jsbytecode *next = &PC[JSOP_GE_LENGTH];
@@ -348,6 +350,12 @@ mjit::Compiler::generateMethod()
                 break;
               case JSOP_GE:
                 stub = stubs::GreaterEqual;
+                break;
+              case JSOP_EQ:
+                stub = stubs::Equal;
+                break;
+              case JSOP_NE:
+                stub = stubs::NotEqual;
                 break;
               default:
                 JS_NOT_REACHED("WAT");
@@ -391,6 +399,12 @@ mjit::Compiler::generateMethod()
             }
 
             /* Advance PC manually. */
+            JS_STATIC_ASSERT(JSOP_LT_LENGTH == JSOP_GE_LENGTH);
+            JS_STATIC_ASSERT(JSOP_LE_LENGTH == JSOP_GE_LENGTH);
+            JS_STATIC_ASSERT(JSOP_GT_LENGTH == JSOP_GE_LENGTH);
+            JS_STATIC_ASSERT(JSOP_EQ_LENGTH == JSOP_GE_LENGTH);
+            JS_STATIC_ASSERT(JSOP_NE_LENGTH == JSOP_GE_LENGTH);
+
             PC += JSOP_GE_LENGTH;
             if (fused != JSOP_NOP)
                 PC += JSOP_IFNE_LENGTH;
@@ -753,6 +767,10 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
             return cmp > 0;
           case JSOP_GE:
             return cmp >= 0;
+          case JSOP_EQ:
+            return cmp == 0;
+          case JSOP_NE:
+            return cmp != 0;
           default:
             JS_NOT_REACHED("NYI");
         }
@@ -771,6 +789,19 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
             return ld > rd;
           case JSOP_GE:
             return ld >= rd;
+          case JSOP_EQ: /* fall through */
+          case JSOP_NE:
+            /* Special case null/undefined/void comparisons. */
+            if (lhs.isNullOrUndefined()) {
+                if (rhs.isNullOrUndefined())
+                    return op == JSOP_EQ;
+                return op == JSOP_NE;
+            }
+            if (rhs.isNullOrUndefined())
+                return op == JSOP_NE;
+
+            /* Normal return. */
+            return (op == JSOP_EQ) ? (ld == rd) : (ld != rd);
           default:
             JS_NOT_REACHED("NYI");
         }
@@ -792,6 +823,8 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
         frame.takeReg(Registers::ReturnReg);
         frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
     } else {
+        JS_ASSERT(fused == JSOP_IFEQ || fused == JSOP_IFNE);
+
         frame.forgetEverything();
         Assembler::Condition cond = (fused == JSOP_IFEQ)
                                     ? Assembler::Zero
