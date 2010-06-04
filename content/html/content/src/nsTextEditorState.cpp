@@ -165,6 +165,7 @@ public:
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
+  NS_IMETHOD CharacterExtendForBackspace();
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordExtendForDelete(PRBool aForward);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
@@ -394,6 +395,14 @@ nsTextInputSelectionImpl::CharacterExtendForDelete()
 {
   if (mFrameSelection)
     return mFrameSelection->CharacterExtendForDelete();
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::CharacterExtendForBackspace()
+{
+  if (mFrameSelection)
+    return mFrameSelection->CharacterExtendForBackspace();
   return NS_ERROR_NULL_POINTER;
 }
 

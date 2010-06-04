@@ -78,6 +78,7 @@
 #include "nsInternetCiter.h"
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
+#include "nsDebug.h"
 
 // Drag & Drop, Clipboard
 #include "nsIClipboard.h"
@@ -636,6 +637,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
 
   if (*aAction == eNextWord || *aAction == ePreviousWord
       || (*aAction == eNext && bCollapsed)
+      || (*aAction == ePrevious && bCollapsed)
       || *aAction == eToBeginningOfLine || *aAction == eToEndOfLine)
   {
     nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
@@ -658,12 +660,33 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
         result = selCont->CharacterExtendForDelete();
         // Don't set aAction to eNone (see Bug 502259)
         break;
-      case ePrevious:
-        /* FIXME: extend selection over UTF-16 surrogates for Bug #332636
-         * and set *aAction = eNone
-         */
-        result = NS_OK;
+      case ePrevious: {
+        // Only extend the selection where the selection is after a UTF-16
+        // surrogate pair.  For other cases we don't want to do that, in order
+        // to make sure that pressing backspace will only delete the last
+        // typed character.
+        nsCOMPtr<nsIDOMNode> node;
+        PRInt32 offset;
+        result = GetStartNodeAndOffset(aSelection, address_of(node), &offset);
+        NS_ENSURE_SUCCESS(result, result);
+        NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+
+        if (IsTextNode(node)) {
+          nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
+          if (charData) {
+            nsAutoString data;
+            result = charData->GetData(data);
+            NS_ENSURE_SUCCESS(result, result);
+
+            if (offset > 1 &&
+                NS_IS_LOW_SURROGATE(data[offset - 1]) &&
+                NS_IS_HIGH_SURROGATE(data[offset - 2])) {
+              result = selCont->CharacterExtendForBackspace();
+            }
+          }
+        }
         break;
+      }
       case eToBeginningOfLine:
         selCont->IntraLineMove(PR_TRUE, PR_FALSE);          // try to move to end
         result = selCont->IntraLineMove(PR_FALSE, PR_TRUE); // select to beginning
