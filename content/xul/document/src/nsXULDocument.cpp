@@ -238,6 +238,7 @@ nsXULDocument::nsXULDocument(void)
     mCharacterSet.AssignLiteral("UTF-8");
 
     mDefaultElementType = kNameSpaceID_XUL;
+    mIsXUL = PR_TRUE;
 
     mDelayFrameLoaderInitialization = PR_TRUE;
 }
@@ -980,9 +981,6 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
         (aAttribute == nsGkAtoms::id && !aContent->GetIDAttributeName())) {
         RemoveElementFromRefMap(aContent->AsElement());
     }
-    
-    nsXMLDocument::AttributeWillChange(aDocument, aContent, aNameSpaceID,
-                                       aAttribute, aModType);
 }
 
 void
@@ -994,10 +992,6 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 
     // XXXbz once we change AttributeChanged to take Element, we can nix this line
     Element* aElement = aElementContent->AsElement();
-
-    // Do this here so that all the exit paths below don't leave this undone
-    nsXMLDocument::AttributeChanged(aDocument, aElement, aNameSpaceID,
-                                    aAttribute, aModType);
 
     // XXXbz check aNameSpaceID, dammit!
     // See if we need to update our ref map.
@@ -1100,9 +1094,6 @@ nsXULDocument::ContentAppended(nsIDocument* aDocument,
          cur = cur->GetNextSibling()) {
         rv = AddSubtreeToDocument(cur);
     }
-
-    nsXMLDocument::ContentAppended(aDocument, aContainer, aFirstNewContent,
-                                   aNewIndexInContainer);
 }
 
 void
@@ -1114,8 +1105,6 @@ nsXULDocument::ContentInserted(nsIDocument* aDocument,
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
     AddSubtreeToDocument(aChild);
-
-    nsXMLDocument::ContentInserted(aDocument, aContainer, aChild, aIndexInContainer);
 }
 
 void
@@ -1127,27 +1116,12 @@ nsXULDocument::ContentRemoved(nsIDocument* aDocument,
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
     RemoveSubtreeFromDocument(aChild);
-
-    nsXMLDocument::ContentRemoved(aDocument, aContainer, aChild, aIndexInContainer);
 }
 
 //----------------------------------------------------------------------
 //
 // nsIXULDocument interface
 //
-
-NS_IMETHODIMP
-nsXULDocument::AddElementForID(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-    if (!aElement->IsElement())
-        return NS_ERROR_UNEXPECTED;
-
-    UpdateIdTableEntry(aElement->AsElement());
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULDocument::GetElementsForID(const nsAString& aID,
@@ -1661,16 +1635,14 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 }
 
 Element*
-nsXULDocument::GetElementById(const nsAString& aId, nsresult *aResult)
+nsXULDocument::GetElementById(const nsAString& aId)
 {
     nsCOMPtr<nsIAtom> atom(do_GetAtom(aId));
     if (!atom) {
-        *aResult = NS_ERROR_OUT_OF_MEMORY;
-
+        // This can only fail due OOM if the atom doesn't exist, in which
+        // case there couldn't possibly exist an entry for it.
         return nsnull;
     }
-
-    *aResult = NS_OK;
 
     if (!CheckGetElementByIdArg(atom))
         return nsnull;
@@ -1700,7 +1672,10 @@ nsXULDocument::AddElementToDocumentPre(Element* aElement)
     // 1. Add the element to the resource-to-element map. Also add it to
     // the id map, since it seems this can be called when creating
     // elements from prototypes.
-    UpdateIdTableEntry(aElement);
+    nsIAtom* id = aElement->GetID();
+    if (id) {
+        AddToIdTable(aElement, id);
+    }
     rv = AddElementToRefMap(aElement);
     if (NS_FAILED(rv)) return rv;
 
@@ -1835,7 +1810,10 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     // Also remove it from the id map, since we added it in
     // AddElementToDocumentPre().
     RemoveElementFromRefMap(aElement);
-    RemoveFromIdTable(aElement);
+    nsIAtom* id = aElement->GetID();
+    if (id) {
+        RemoveFromIdTable(aElement, id);
+    }
 
     // 3. If the element is a 'command updater', then remove the
     // element from the document's command dispatcher.
@@ -2472,8 +2450,6 @@ nsXULDocument::PrepareToWalk()
         rv = AppendChildTo(root, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
         
-        // Add the root element to the XUL document's ID-to-element map.
-        UpdateIdTableEntry(root);
         rv = AddElementToRefMap(root);
         if (NS_FAILED(rv)) return rv;
 

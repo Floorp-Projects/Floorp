@@ -1108,7 +1108,7 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
 }
 
 nsIAtom*
-nsGenericDOMDataNode::GetID() const
+nsGenericDOMDataNode::DoGetID() const
 {
   return nsnull;
 }
