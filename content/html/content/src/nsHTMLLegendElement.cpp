@@ -219,14 +219,15 @@ nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   PRBool accesskey = (aAttribute == nsGkAtoms::accesskey &&
                       aNameSpaceID == kNameSpaceID_None);
   if (accesskey) {
-    RegUnRegAccessKey(PR_FALSE);
+    UnregAccessKey();
   }
 
   nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aAttribute,
                                                   aPrefix, aValue, aNotify);
 
   if (accesskey && !aValue.IsEmpty()) {
-    RegUnRegAccessKey(PR_TRUE);
+    SetFlags(NODE_HAS_ACCESSKEY);
+    RegAccessKey();
   }
 
   return rv;
@@ -238,7 +239,9 @@ nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 {
   if (aAttribute == nsGkAtoms::accesskey &&
       aNameSpaceID == kNameSpaceID_None) {
-    RegUnRegAccessKey(PR_FALSE);
+    // Have to unregister before clearing flag. See UnregAccessKey
+    UnregAccessKey();
+    UnsetFlags(NODE_HAS_ACCESSKEY);
   }
 
   return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
@@ -261,7 +264,7 @@ nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
-    RegUnRegAccessKey(PR_TRUE);
+    RegAccessKey();
   }
 
   return rv;
@@ -271,7 +274,7 @@ void
 nsHTMLLegendElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   if (IsInDoc()) {
-    RegUnRegAccessKey(PR_FALSE);
+    UnregAccessKey();
   }
 
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
