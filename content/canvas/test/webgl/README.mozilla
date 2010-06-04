@@ -1,0 +1,16 @@
+This is a local copy of the WebGL conformance suite.
+
+  SVN revision: 11588
+
+The canonical location for this testsuite is:
+
+  https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/sdk/tests/
+
+All files and directories in this directory, with the exception of "README.mozilla"
+(this file), the "mozilla" directory, and the "patches" directory come from
+upstream and should not be modified without corresponding upstream fixes and/or a
+patch file in the "patches" directory.
+
+The "mozilla" directory contains integration of this test suite into Mozilla's
+testing system.
+
