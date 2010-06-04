@@ -292,7 +292,7 @@ MaybePreserveWrapper(JSContext *cx, XPCWrappedNative *wn, uintN flags)
 inline JSBool
 IsSecurityWrapper(JSObject *wrapper)
 {
-  JSClass *clasp = wrapper->getClass();
+  JSClass *clasp = wrapper->getJSClass();
   return (clasp->flags & JSCLASS_IS_EXTENDED) &&
     ((JSExtendedClass*)clasp)->wrappedObject;
 }
@@ -316,7 +316,7 @@ Unwrap(JSContext *cx, JSObject *wrapper);
 inline JSObject *
 UnwrapGeneric(JSContext *cx, const JSExtendedClass *xclasp, JSObject *wrapper)
 {
-  if (wrapper->getClass() != &xclasp->base) {
+  if (wrapper->getJSClass() != &xclasp->base) {
     return nsnull;
   }
 

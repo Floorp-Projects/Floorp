@@ -51,12 +51,12 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-#define JSTRACE_XML         3
+#define JSTRACE_XML         2
 
 /*
  * One past the maximum trace kind.
  */
-#define JSTRACE_LIMIT       4
+#define JSTRACE_LIMIT       3
 
 const uintN JS_EXTERNAL_STRING_LIMIT = 8;
 
@@ -102,16 +102,7 @@ extern JSBool
 js_AddRoot(JSContext *cx, js::Value *vp, const char *name);
 
 extern JSBool
-js_AddRootRT(JSRuntime *rt, js::Value *vp, const char *name);
-
-extern JSBool
 js_AddGCThingRoot(JSContext *cx, void **rp, const char *name);
-
-extern JSBool
-js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name);
-
-extern JSBool
-js_RemoveRoot(JSRuntime *rt, void *rp);
 
 #ifdef DEBUG
 extern void
@@ -155,7 +146,7 @@ js_IsAboutToBeFinalized(void *thing);
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_DOUBLE)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_STRING)
 #endif
 
 extern void

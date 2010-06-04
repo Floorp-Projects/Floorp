@@ -173,9 +173,6 @@ public:
     PRUint32 argc;
     jsval *argv;
 
-    static nsIJSRuntimeService* sJSRuntimeService;
-    static JSRuntime* sJSScriptRuntime;
-
 public:
     // static JS helpers
 
