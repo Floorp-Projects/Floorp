@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet 
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=570192
+-->
+<window title="Mozilla Bug 558406"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 570192</title>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript"
+          src="RegisterUnregisterChrome.js"></script>
+
+  <body  xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank" 
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=570192">
+      Mozilla Bug 570192
+    </a>
+
+    <p id="display">
+    </p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <script type="application/javascript">
+    <![CDATA[
+
+    addLoadEvent(function() {
+      try {
+        var content = document.getElementById("content");
+        content.innerHTML = '<textbox newlines="pasteintact" ' +
+          'xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>';
+        var textbox = content.firstChild;
+        ok(textbox, "created the textbox");
+        ok(!textbox.editor, "do we have an editor?");
+      } catch (e) {
+        ok(false, "Got an exception: " + e);
+      }
+      SimpleTest.finish();
+    });
+    SimpleTest.waitForExplicitFinish();
+
+   ]]>
+  </script>
+</window>
