@@ -1049,6 +1049,8 @@ struct JSThreadData {
     /* List of currently pending operations on proxies. */
     JSPendingProxyOperation *pendingProxyOperation;
 
+    js::ConservativeGCThreadData conservativeGC;
+
     bool init();
     void finish();
     void mark(JSTracer *trc);
@@ -1822,6 +1824,10 @@ struct JSContext
     jsrefcount          requestDepth;
     /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
     jsrefcount          outstandingRequests;
+# ifdef DEBUG
+    unsigned            checkRequestDepth;
+# endif    
+
     JSTitle             *lockedSealedTitle; /* weak ref, for low-cost sealed
                                                title locking */
     JSCList             threadLinks;        /* JSThread contextList linkage */
@@ -2125,8 +2131,29 @@ InvokeArgsGuard::~InvokeArgsGuard()
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
+#endif
+
+#if defined JS_THREADSAFE && defined DEBUG
+
+namespace js {
+
+class AutoCheckRequestDepth {
+    JSContext *cx;
+  public:
+    AutoCheckRequestDepth(JSContext *cx) : cx(cx) { cx->checkRequestDepth++; }
+
+    ~AutoCheckRequestDepth() {
+        JS_ASSERT(cx->checkRequestDepth != 0);
+        cx->checkRequestDepth--;
+    }
+};
+
+}
+
 # define CHECK_REQUEST(cx)                                                  \
-    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread)
+    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread);\
+    AutoCheckRequestDepth _autoCheckRequestDepth(cx);
+
 #else
 # define CHECK_REQUEST(cx)       ((void)0)
 #endif
