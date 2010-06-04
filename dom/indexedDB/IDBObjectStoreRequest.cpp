@@ -193,14 +193,14 @@ private:
 class CreateIndexHelper : public AsyncConnectionHelper
 {
 public:
-  CreateIndexHelper(IDBTransactionRequest* aDatabase,
+  CreateIndexHelper(IDBTransactionRequest* aTransaction,
                     IDBRequest* aRequest,
                     const nsAString& aName,
                     const nsAString& aKeyPath,
                     bool aUnique,
                     bool aAutoIncrement,
                     IDBObjectStoreRequest* aObjectStore)
-  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName),
+  : AsyncConnectionHelper(aTransaction, aRequest), mName(aName),
     mKeyPath(aKeyPath), mUnique(aUnique), mAutoIncrement(aAutoIncrement),
     mObjectStore(aObjectStore), mId(LL_MININT)
   { }
@@ -209,15 +209,7 @@ public:
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
-  struct IndexData
-  {
-    PRInt64 odid;
-    nsString odkey;
-    nsString value;
-  };
-
-  PRUint16 GetDataFromObjectStore(mozIStorageConnection* aConnection,
-                                  nsTArray<IndexData>& _retval);
+  PRUint16 InsertDataFromObjectStore(mozIStorageConnection* aConnection);
 
   // In-params.
   nsString mName;
@@ -1648,16 +1640,13 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   (void)aConnection->GetLastInsertRowID(&mId);
 
   // Now we need to populate the index with data from the object store.
-  nsTArray<IndexData> values;
-  GetDataFromObjectStore(aConnection, values);
-  // TODO insert the data from values into the db
+  InsertDataFromObjectStore(aConnection);
 
   return OK;
 }
 
 PRUint16
-CreateIndexHelper::GetDataFromObjectStore(mozIStorageConnection* aConnection,
-                                          nsTArray<IndexData>& _retval)
+CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 {
   nsCAutoString table;
   nsCAutoString columns;
@@ -1681,24 +1670,42 @@ CreateIndexHelper::GetDataFromObjectStore(mozIStorageConnection* aConnection,
 
   PRBool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    IndexData data;
-    data.odid = stmt->AsInt64(0);
+    nsCOMPtr<mozIStorageStatement> insertStmt =
+      mTransaction->IndexUpdateStatement(mAutoIncrement, mUnique);
+    NS_ENSURE_TRUE(insertStmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+    mozStorageStatementScoper scoper(insertStmt);
+
+    rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
+                                     stmt->AsInt64(0));
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
     if (!mAutoIncrement) {
       // XXX does this cause problems with the affinity?
-      rv = stmt->GetString(2, data.odkey);
+      nsString key;
+      rv = stmt->GetString(2, key);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      rv = insertStmt->BindStringByName(NS_LITERAL_CSTRING("object_data_key"),
+                                        key);
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
     }
 
-    nsAutoString json;
+    nsString json;
     rv = stmt->GetString(1, json);
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+    nsString value;
     JSContext* cx = nsnull;
     rv = IDBObjectStoreRequest::GetKeyPathValueFromJSON(json, mKeyPath, &cx,
-                                                        data.value);
+                                                        value);
     // XXX this should be a constraint error maybe?
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-    _retval.AppendElement(data);
+
+    rv = insertStmt->BindStringByName(NS_LITERAL_CSTRING("value"), value);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    rv = insertStmt->Execute();
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
   return OK;
