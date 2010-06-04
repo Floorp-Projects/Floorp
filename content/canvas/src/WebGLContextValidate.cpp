@@ -61,6 +61,11 @@ WebGLContext::ValidateBuffers(PRUint32 count)
         return PR_FALSE;
     }
 
+    if (currentProgram != mCurrentProgram->GLName()) {
+        LogMessage("WebGL internal error: current program doesn't agree with GL current program");
+        return PR_FALSE;
+    }
+
     gl->fGetProgramiv(currentProgram, LOCAL_GL_ACTIVE_ATTRIBUTES, &numAttributes);
     if (numAttributes == -1) {
         // what?
