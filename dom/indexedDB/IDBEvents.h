@@ -50,6 +50,7 @@
 #include "nsIRunnable.h"
 #include "nsIVariant.h"
 
+#include "jsapi.h"
 #include "nsDOMEvent.h"
 
 #define SUCCESS_EVT_STR "success"
@@ -61,6 +62,7 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBRequest;
+class IDBTransactionRequest;
 
 class IDBEvent : public nsDOMEvent,
                  public nsIIDBEvent
@@ -132,6 +134,33 @@ protected:
 
   nsCOMPtr<nsIVariant> mResult;
   nsCOMPtr<nsIIDBTransactionRequest> mTransaction;
+};
+
+class GetSuccessEvent : public IDBSuccessEvent
+{
+public:
+  GetSuccessEvent(const nsAString& aValue)
+  : mValue(aValue),
+    mCachedValue(JSVAL_VOID),
+    mJSRuntime(nsnull)
+  { }
+
+  ~GetSuccessEvent()
+  {
+    if (mJSRuntime) {
+      JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+    }
+  }
+
+  NS_IMETHOD GetResult(nsIVariant** aResult);
+
+  nsresult Init(IDBRequest* aRequest,
+                IDBTransactionRequest* aTransaction);
+
+private:
+  nsString mValue;
+  jsval mCachedValue;
+  JSRuntime* mJSRuntime;
 };
 
 END_INDEXEDDB_NAMESPACE
