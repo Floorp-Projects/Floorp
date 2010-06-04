@@ -315,6 +315,7 @@ window.Page = {
           var overflow = iQ("body").css("overflow");
           iQ("body").css("overflow", "hidden");
           
+/*           Utils.log('pause in ui'); */
           TabMirror.pausePainting();
           $tab.css({
               top: 0, left: 0,
@@ -338,6 +339,7 @@ window.Page = {
               if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
       
               window.Groups.setActiveGroup(null);
+/*               Utils.log('resume in UI'); */
               TabMirror.resumePainting();        
               UI.resize(true);
             });

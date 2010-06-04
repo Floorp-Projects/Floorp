@@ -584,18 +584,40 @@ iQ.fn = iQ.prototype = {
   animate: function(css, duration, callback) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     try {
+/*
+      this.css({
+        '-moz-transition-property': 'all',  
+        '-moz-transition-duration': '0.3s',  
+        '-moz-transition-timing-function': 'cubic-bezier(0.0, 0.35, .6, 1.4)'
+      });
+*/
+
       this.addClass(duration);
       iQ.animationCount++;
       
       var self = this;
       var cleanedUp = false;
       this.one('transitionend', function() {
-        if(!cleanedUp) {
-          iQ.animationCount--;
-          self.removeClass(duration);
-          cleanedUp = true;
-          if(iQ.isFunction(callback))
-            callback.apply(this);
+        try {
+/*           Utils.log('transition ended'); */
+          if(!cleanedUp) {
+            iQ.animationCount--;
+  
+/*
+            iQ(this).css({
+              '-moz-transition-property': '',  
+              '-moz-transition-duration': '',  
+              '-moz-transition-timing-function': ''
+            });
+*/
+      
+            self.removeClass(duration);
+            cleanedUp = true;
+            if(iQ.isFunction(callback))
+              callback.apply(this);
+          }
+        } catch(e) {
+          Utils.log(e);
         }
       });
       
@@ -690,7 +712,7 @@ iQ.fn = iQ.prototype = {
     
     var handler = function(e) {
       iQ(this).unbind(type, handler);
-      return func(e);
+      return func.apply(this, [e]);
     };
       
     return this.bind(type, handler);

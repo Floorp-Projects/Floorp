@@ -98,6 +98,7 @@ TabCanvas.prototype = {
 // A single tab in the browser and its visual representation in the tab candy window. 
 // Note that it implements the <Subscribable> interface.
 function Mirror(tab, manager) {
+/*   Utils.log('creating a mirror'); */
   this.tab = tab;
   this.manager = manager;
   
@@ -124,8 +125,10 @@ function Mirror(tab, manager) {
     this.triggerPaint();
   }
   
+/*   Utils.log('applying mirror'); */
   this.tab.mirror = this;
   this.manager._customize(this);
+/*   Utils.log('done creating mirror'); */
 }
 
 Mirror.prototype = iQ.extend(new Subscribable(), {  
@@ -216,6 +219,7 @@ TabMirror.prototype = {
   
   _heartbeat: function() {
     try {
+/*       Utils.log('heartbeat', this.paintingPaused); */
       var now = Utils.getMilliseconds();
       var count = Tabs.length;
       if(count && this.paintingPaused <= 0) {
@@ -225,7 +229,9 @@ TabMirror.prototype = {
           
         var tab = Tabs[this.heartbeatIndex];
         var mirror = tab.mirror; 
+/*         Utils.log('heartbeat mirror check'); */
         if(mirror) {
+/*           Utils.log('hasMirror'); */
           var iconUrl = tab.raw.linkedBrowser.mIconURL;
           if( iconUrl == null ){
             iconUrl = "chrome://tabcandy/content/candies/revision-a/img/default.png";
@@ -263,6 +269,7 @@ TabMirror.prototype = {
           }
           
           if(mirror.needsPaint) {
+/*             Utils.log('aboutToPaint'); */
             mirror.tabCanvas.paint();
             
             if(Utils.getMilliseconds() - mirror.needsPaint > 5000)
@@ -353,7 +360,7 @@ window.TabMirror = {
   // pausePainting can be called multiple times, but every call to 
   // pausePainting needs to be mirrored with a call to <resumePainting>. 
   pausePainting: function() {
-    this._private.paintingPaused++;
+/*     this._private.paintingPaused++; */
   },
   
   // Function: resumePainting
@@ -361,7 +368,7 @@ window.TabMirror = {
   // pausePainting three times in a row, you'll need to call resumePainting
   // three times before the TabMirror will start updating thumbnails again. 
   resumePainting: function() {
-    this._private.paintingPaused--;
+/*     this._private.paintingPaused--; */
   },
 
   // Function: isPaintingPaused
