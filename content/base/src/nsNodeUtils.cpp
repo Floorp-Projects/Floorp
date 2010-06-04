@@ -578,13 +578,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                          aCx, aOldScope, aNewScope, aNodesWithProperties,
                          clone, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (isDeepDocumentClone) {
-        NS_ASSERTION(child->IsNodeOfType(nsINode::eCONTENT),
-                     "A clone of a child of a node is not nsIContent?");
-
-        nsIContent* content = static_cast<nsIContent*>(child.get());
-        static_cast<nsDocument*>(clone.get())->RegisterNamedItems(content);
-      }
     }
   }
 

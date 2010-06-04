@@ -116,8 +116,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0xdf6c0752, 0xe780, 0x4576, \
-  { 0x95, 0x3c, 0x7e, 0xf1, 0xde, 0x9f, 0xd7, 0xf0 } }
+{ 0x3ee6a14b, 0x83b5, 0x4629, \
+  { 0x96, 0x9b, 0xe9, 0x84, 0x7c, 0x57, 0x24, 0x3c } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -670,6 +670,17 @@ public:
    */ 
   virtual nsScriptLoader* ScriptLoader() = 0;
 
+  /**
+   * Add/Remove an element to the document's id and name hashes
+   */
+  virtual void AddToIdTable(mozilla::dom::Element* aElement, nsIAtom* aId) = 0;
+  virtual void RemoveFromIdTable(mozilla::dom::Element* aElement,
+                                 nsIAtom* aId) = 0;
+  virtual void AddToNameTable(mozilla::dom::Element* aElement,
+                              nsIAtom* aName) = 0;
+  virtual void RemoveFromNameTable(mozilla::dom::Element* aElement,
+                                   nsIAtom* aName) = 0;
+
   //----------------------------------------------------------------------
 
   // Document notification API's
@@ -801,6 +812,10 @@ public:
   PRBool IsHTML() const
   {
     return mIsRegularHTML;
+  }
+  PRBool IsXUL() const
+  {
+    return mIsXUL;
   }
 
   virtual PRBool IsScriptEnabled() = 0;
@@ -1369,8 +1384,7 @@ public:
    * It prevents converting nsIDOMElement to mozill:dom::Element which is
    * already converted from mozilla::dom::Element.
    */
-  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId,
-                                                nsresult* aResult) = 0;
+  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId) = 0;
 
 protected:
   ~nsIDocument()
@@ -1462,6 +1476,7 @@ protected:
   PRPackedBool mShellIsHidden;
 
   PRPackedBool mIsRegularHTML;
+  PRPackedBool mIsXUL;
 
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
