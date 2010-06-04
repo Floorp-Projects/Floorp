@@ -1853,6 +1853,9 @@ struct JSContext
 
     DSTOffsetCache dstOffsetCache;
 
+    /* List of currently active non-escaping enumerators (for-in). */
+    JSObject *enumerators;
+
   private:
     /*
      * To go from a live generator frame (on the stack) to its generator object
