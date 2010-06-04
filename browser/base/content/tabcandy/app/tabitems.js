@@ -146,7 +146,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       $container.css(css);
     } else {
       TabMirror.pausePainting();
-      $container.animate(css, 'animate350', function() {
+      $container.animate(css, 'animate200', function() {
         TabMirror.resumePainting();
       }); // tabcandyBounce
 /*       }).dequeue(); */
