@@ -47,7 +47,6 @@
 #include "nsIScriptContext.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTObserverArray.h"
-#include "nsGUIEvent.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -55,7 +54,6 @@ class nsIWidget;
 struct nsPoint;
 struct EventTypeData;
 class nsEventTargetChainItem;
-class nsPIDOMWindow;
 
 typedef struct {
   nsRefPtr<nsIDOMEventListener> mListener;
@@ -181,8 +179,6 @@ public:
   NS_DECL_NSIDOM3EVENTTARGET
 
   static void Shutdown();
-
-  static nsIDOMEventGroup* GetSystemEventGroup();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventListenerManager,
                                            nsIEventListenerManager)
