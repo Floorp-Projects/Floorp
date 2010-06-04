@@ -1092,6 +1092,25 @@ js_IsCacheableNonGlobalScope(JSObject *obj)
     return cacheable;
 }
 
+#ifdef DEBUG
+/*
+ * Used in assertions only. False if obj is a special object which must be
+ * censored and thus can't be the value of 'this'.
+ */
+inline bool
+js_IsSaneThisObject(JSObject *obj)
+{
+    extern JS_FRIEND_DATA(JSClass) js_CallClass;
+    extern JS_FRIEND_DATA(JSClass) js_DeclEnvClass;
+
+    JSClass *clasp = obj->getClass();
+    return clasp != &js_CallClass &&
+           clasp != &js_BlockClass &&
+           clasp != &js_DeclEnvClass &&
+           clasp != &js_WithClass;
+}
+#endif
+
 /*
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
