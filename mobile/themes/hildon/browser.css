@@ -903,10 +903,10 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 .prompt-buttons > button,
 pageaction {
-  -moz-border-top-colors: rgb(255, 255, 255);
-  -moz-border-right-colors: rgb(215, 215, 215);
-  -moz-border-bottom-colors: rgb(215, 215, 215);
-  -moz-border-left-colors: rgb(255, 255, 255);
+  -moz-border-top-colors: rgb(235, 235, 235);
+  -moz-border-right-colors: rgb(205, 205, 205);
+  -moz-border-bottom-colors: rgb(205, 205, 205);
+  -moz-border-left-colors: rgb(235, 235, 235);
   background-color: rgb(235,235,235);
   border-style: solid;
   border-width: 1px !important;
