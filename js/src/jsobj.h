@@ -405,7 +405,7 @@ struct JSObject {
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        void *priv = fslots[JSSLOT_PRIVATE].asPrivateVoidPtr();
+        void *priv = fslots[JSSLOT_PRIVATE].asPrivateVoidPtrUnchecked();
         return priv;
     }
 
@@ -671,6 +671,8 @@ struct JSObject {
 
     inline void initArrayClass();
 };
+
+JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \

@@ -1380,7 +1380,7 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return (JSDHashNumber(uintptr_t(key->obj)) >> JSBOXEDWORD_TAGBITS) ^ key->id;
+    return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ key->id;
 }
 
 JS_PUBLIC_API(JSBool)

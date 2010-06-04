@@ -267,7 +267,7 @@ TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     JS_ASSERT(tarray);
 
     if (tarray->isArrayIndex(cx, id)) {
-        *propp = (JSProperty *) id;
+        *propp = (JSProperty *) 1;  /* non-null to indicate found */
         *objp = obj;
         return true;
     }
@@ -614,14 +614,14 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *vp,
+    obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                        PropertyOp getter, PropertyOp setter, uintN attrs)
     {
         if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
             return true;
 
-        Value v = *vp;
-        return obj_setProperty(cx, obj, id, &v);
+        Value tmp = *v;
+        return obj_setProperty(cx, obj, id, &tmp);
     }
 
     static JSBool

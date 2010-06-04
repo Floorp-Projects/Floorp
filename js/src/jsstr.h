@@ -289,7 +289,7 @@ struct JSString {
 #pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringOintStringTable_)
 #endif
 
-#ifndef _M_X64
+#ifndef JS_64BIT
     static JSString unitStringTable[];
     static JSString intStringTable[];
 #else
@@ -310,6 +310,8 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *intString(jsint i);
 };
+
+JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
 
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);

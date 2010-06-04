@@ -764,7 +764,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
-        if (!js_ValueToStringId(cx, IdToValue(id), &id))
+        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &id))
             return NULL;
         atom = JSID_TO_ATOM(id);
     } else {
@@ -803,7 +803,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     if (JSID_IS_INT(id)) {
         propid = id;
     } else {
-        if (!js_ValueToStringId(cx, IdToValue(id), &propid))
+        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &propid))
             return JS_FALSE;
         propid = js_CheckForStringIndex(propid);
     }
@@ -1451,7 +1451,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                    JSPropertyDesc *pd)
 {
-    pd->id = Jsvalify(IdToValue(sprop->id));
+    pd->id = ID_TO_JSVAL(sprop->id);
 
     JSBool wasThrowing = cx->throwing;
     AutoValueRooter lastException(cx, cx->exception);
@@ -1493,7 +1493,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
         JSScopeProperty *aprop;
         for (aprop = scope->lastProperty(); aprop; aprop = aprop->parent) {
             if (aprop != sprop && aprop->slot == sprop->slot) {
-                pd->alias = Jsvalify(IdToValue(aprop->id));
+                pd->alias = ID_TO_JSVAL(aprop->id);
                 break;
             }
         }
@@ -1679,12 +1679,8 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
     size_t nbytes;
 
     nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
-    if (ATOM_IS_STRING(atom)) {
-        nbytes += sizeof(JSString);
-        nbytes += (ATOM_TO_STRING(atom)->flatLength() + 1) * sizeof(jschar);
-    } else if (ATOM_IS_DOUBLE(atom)) {
-        nbytes += sizeof(jsdouble);
-    }
+    nbytes += sizeof(JSString);
+    nbytes += (ATOM_TO_STRING(atom)->flatLength() + 1) * sizeof(jschar);
     return nbytes;
 }
 
