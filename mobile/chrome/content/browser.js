@@ -486,6 +486,7 @@ var Browser = {
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
+    os.addObserver(FormSubmitObserver, "formsubmit", false);
 
     // clear out tabs the user hasn't touched lately on memory crunch
     os.addObserver(MemoryObserver, "memory-pressure", false);
@@ -645,6 +646,7 @@ var Browser = {
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(MemoryObserver, "memory-pressure");
     os.removeObserver(BrowserSearch, "browser-search-engine-modified");
+    os.removeObserver(FormSubmitObserver, "formsubmit");
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
@@ -652,7 +654,7 @@ var Browser = {
 
   initNewProfile: function initNewProfile() {
   },
-  
+
   getHomePage: function () {
     let url = "about:home";
     try {
@@ -2587,6 +2589,23 @@ const gSessionHistoryObserver = {
   }
 };
 
+var FormSubmitObserver = {
+  notify: function notify(aFormElement, aWindow, aActionURI, aCancelSubmit) {
+    let doc = aWindow.content.top.document;
+    let tab = Browser.getTabForDocument(doc);
+    if (tab)
+      tab.browser.lastSpec = null;
+  },
+
+  QueryInterface : function(aIID) {
+    if (!aIID.equals(Ci.nsIFormSubmitObserver) &&
+        !aIID.equals(Ci.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+
 var MemoryObserver = {
   observe: function mo_observe() {
     let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
@@ -3345,7 +3364,6 @@ Tab.prototype = {
 
     this._browser.mIconURL = faviconURI ? faviconURI.spec : "";
   },
-
 
   toString: function() {
     return "[Tab " + (this._browser ? this._browser.contentDocument.location.toString() : "(no browser)") + "]";
