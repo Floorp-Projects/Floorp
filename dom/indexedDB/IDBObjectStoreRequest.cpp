@@ -1746,7 +1746,8 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   (void)aConnection->GetLastInsertRowID(&mId);
 
   // Now we need to populate the index with data from the object store.
-  InsertDataFromObjectStore(aConnection);
+  PRUint16 rc = InsertDataFromObjectStore(aConnection);
+  NS_ENSURE_TRUE(rc == OK, rc);
 
   return OK;
 }
@@ -1758,11 +1759,11 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
   nsCAutoString columns;
   if (mAutoIncrement) {
     table.AssignLiteral("ai_object_data");
-    columns.AssignLiteral("id, data, key_value");
+    columns.AssignLiteral("id, data");
   }
   else {
     table.AssignLiteral("object_data");
-    columns.AssignLiteral("id, data");
+    columns.AssignLiteral("id, data, key_value");
   }
   nsCAutoString sql;
   sql.AppendASCII("SELECT ");
@@ -1774,12 +1775,18 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
   nsresult rv = aConnection->CreateStatement(sql, getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStore->Id());
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
   PRBool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     nsCOMPtr<mozIStorageStatement> insertStmt =
       mTransaction->IndexUpdateStatement(mAutoIncrement, mUnique);
     NS_ENSURE_TRUE(insertStmt, nsIIDBDatabaseException::UNKNOWN_ERR);
     mozStorageStatementScoper scoper(insertStmt);
+
+    rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"), mId);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
     rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
                                      stmt->AsInt64(0));
@@ -1812,6 +1819,9 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 
     rv = insertStmt->Execute();
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    fprintf(stderr, "### Added '%s' for the index with name '%s'\n",
+            NS_ConvertUTF16toUTF8(value).get(),
+            NS_ConvertUTF16toUTF8(mName).get());
   }
 
   return OK;

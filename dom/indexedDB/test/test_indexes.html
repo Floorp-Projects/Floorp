@@ -47,6 +47,7 @@
 
       let objectStore = event.result;
 
+      // First, add all our data to the object store.
       let addedData = 0;
       for (let i in objectStoreData) {
         request = objectStore.add(objectStoreData[i].value,
@@ -60,6 +61,7 @@
       }
       event = yield;
 
+      // Now create the index.
       addedData = 0;
       for (let i in indexData) {
         request = objectStore.createIndex(indexData[i].name,
@@ -77,6 +79,7 @@
 
       let objectStore = db.objectStore(objectStoreName);
 
+      // Check global properties to make sure they are correct.
       is(objectStore.indexNames.length, indexData.length, "Good index count");
       for (let i in indexData) {
         let found = false;
