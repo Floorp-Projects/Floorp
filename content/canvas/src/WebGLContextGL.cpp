@@ -100,107 +100,6 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
     MakeContextCurrent(); gl->f##glname(a1,a2,a3,a4,a5,a6); return NS_OK; \
 }
 
-/* Helper function taking a BaseInterfaceType pointer and check that it matches the required concrete
- * implementation type (if it's non-null), that it's not null/deleted unless we allowed it to,
- * and obtain a pointer to the concrete object.
- *
- * By default, null (respectively: deleted) aInterface pointers are not allowed, but if you pass a
- * non-null isNull (respectively: isDeleted) pointer, then they become allowed and the value at
- * isNull (respecively isDeleted) is overwritten. In case of a null pointer, the resulting 
- */
-
-template<class ConcreteObjectType, class BaseInterfaceType>
-static PRBool
-GetConcreteObject(BaseInterfaceType *aInterface,
-                  ConcreteObjectType **aConcreteObject,
-                  PRBool *isNull = 0,
-                  PRBool *isDeleted = 0)
-{
-    if (!aInterface) {
-        if (NS_LIKELY(isNull)) {
-            // non-null isNull means that the caller will accept a null arg
-            *isNull = PR_TRUE;
-            if(isDeleted) *isDeleted = PR_FALSE;
-            *aConcreteObject = 0;
-            return PR_TRUE;
-        } else {
-            WebGLContext::LogMessage("Null object passed to WebGL function");
-            return PR_FALSE;
-        }
-    }
-
-    if (isNull) {
-        *isNull = PR_FALSE;
-    }
-
-    nsresult rv;
-    nsCOMPtr<ConcreteObjectType> tmp(do_QueryInterface(aInterface, &rv));
-    if (NS_FAILED(rv)) {
-        return PR_FALSE;
-    }
-
-    *aConcreteObject = tmp;
-
-    if ((*aConcreteObject)->Deleted()) {
-        if (NS_LIKELY(isDeleted)) {
-            // non-null isDeleted means that the caller will accept a deleted arg
-            *isDeleted = PR_TRUE;
-            return PR_TRUE;
-        } else {
-            WebGLContext::LogMessage("Deleted object passed to WebGL function");
-            return PR_FALSE;
-        }
-    }
-
-    if (isDeleted)
-      *isDeleted = PR_FALSE;
-
-    return PR_TRUE;
-}
-
-/* Same as GetConcreteObject, and in addition gets the GL object name.
- * Null objects give the name 0.
- */
-template<class ConcreteObjectType, class BaseInterfaceType>
-static PRBool
-GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
-                           ConcreteObjectType **aConcreteObject,
-                           WebGLuint *aGLObjectName,
-                           PRBool *isNull = 0,
-                           PRBool *isDeleted = 0)
-{
-    PRBool result = GetConcreteObject(aInterface, aConcreteObject, isNull, isDeleted);
-    if (result == PR_FALSE) return PR_FALSE;
-    *aGLObjectName = *aConcreteObject ? (*aConcreteObject)->GLName() : 0;
-    return PR_TRUE;
-}
-
-/* Same as GetConcreteObjectAndGLName when you don't need the concrete object pointer.
- */
-template<class ConcreteObjectType, class BaseInterfaceType>
-static PRBool
-GetGLName(BaseInterfaceType *aInterface,
-          WebGLuint *aGLObjectName,
-          PRBool *isNull = 0,
-          PRBool *isDeleted = 0)
-{
-    ConcreteObjectType *aConcreteObject;
-    return GetConcreteObjectAndGLName(aInterface, &aConcreteObject, aGLObjectName, isNull, isDeleted);
-}
-
-/* Same as GetConcreteObject when you only want to check if the conversion succeeds.
- */
-template<class ConcreteObjectType, class BaseInterfaceType>
-static PRBool
-CheckConversion(BaseInterfaceType *aInterface,
-                PRBool *isNull = 0,
-                PRBool *isDeleted = 0)
-{
-  ConcreteObjectType *aConcreteObject;
-  return GetConcreteObject(aInterface, &aConcreteObject, isNull, isDeleted);
-}
-
-
 //
 //  WebGL API
 //
@@ -669,13 +568,9 @@ WebGLContext::CreateProgram(nsIWebGLProgram **retval)
 
     WebGLuint name = gl->fCreateProgram();
 
-    WebGLProgram *prog = new WebGLProgram(name);
-    if (prog) {
-        NS_ADDREF(*retval = prog);
-        mMapPrograms.Put(name, prog);
-    } else {
-        gl->fDeleteProgram(name);
-    }
+    WebGLProgram *prog = new WebGLProgram(this, name);
+    NS_ADDREF(*retval = prog);
+    mMapPrograms.Put(name, prog);
 
     return NS_OK;
 }
@@ -693,7 +588,7 @@ WebGLContext::CreateShader(WebGLenum type, nsIWebGLShader **retval)
 
     WebGLuint name = gl->fCreateShader(type);
 
-    WebGLShader *shader = new WebGLShader(name, type);
+    WebGLShader *shader = new WebGLShader(this, name, type);
     NS_ADDREF(*retval = shader);
     mMapShaders.Put(name, shader);
 
@@ -1514,13 +1409,9 @@ WebGLContext::CreateBuffer(nsIWebGLBuffer **retval)
     WebGLuint name;
     gl->fGenBuffers(1, &name);
 
-    WebGLBuffer *globj = new WebGLBuffer(name);
-    if (globj) {
-        NS_ADDREF(*retval = globj);
-        mMapBuffers.Put(name, globj);
-    } else {
-        gl->fDeleteBuffers(1, &name);
-    }
+    WebGLBuffer *globj = new WebGLBuffer(this, name);
+    NS_ADDREF(*retval = globj);
+    mMapBuffers.Put(name, globj);
 
     return NS_OK;
 }
@@ -1533,13 +1424,9 @@ WebGLContext::CreateTexture(nsIWebGLTexture **retval)
     WebGLuint name;
     gl->fGenTextures(1, &name);
 
-    WebGLTexture *globj = new WebGLTexture(name);
-    if (globj) {
-        NS_ADDREF(*retval = globj);
-        mMapTextures.Put(name, globj);
-    } else {
-        gl->fDeleteTextures(1, &name);
-    }
+    WebGLTexture *globj = new WebGLTexture(this, name);
+    NS_ADDREF(*retval = globj);
+    mMapTextures.Put(name, globj);
 
     return NS_OK;
 }
@@ -1892,7 +1779,7 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
 
     GLint intlocation = gl->fGetUniformLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
 
-    nsCOMPtr<WebGLUniformLocation> uloc = new WebGLUniformLocation(prog, intlocation);
+    nsCOMPtr<WebGLUniformLocation> uloc = new WebGLUniformLocation(this, prog, intlocation);
     *retval = uloc.forget().get();
 
     return NS_OK;
@@ -2307,7 +2194,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     WebGLUniformLocation *location_object;                              \
     if (!GetConcreteObject(ploc, &location_object))                     \
         return ErrorInvalidValue("Invalid uniform location parameter"); \
-    if(mCurrentProgram != location_object->Program())                   \
+    if (mCurrentProgram != location_object->Program())                  \
         return ErrorInvalidValue("This uniform location corresponds to another program"); \
     GLint location = location_object->Location();
 
@@ -2429,7 +2316,7 @@ WebGLContext::UseProgram(nsIWebGLProgram *pobj)
     WebGLuint progname;
     PRBool isNull;
     if (!GetConcreteObjectAndGLName(pobj, &prog, &progname, &isNull))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return ErrorInvalidOperation("UseProgram: invalid program object");
 
     MakeContextCurrent();
 
@@ -2451,7 +2338,7 @@ WebGLContext::ValidateProgram(nsIWebGLProgram *pobj)
 {
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return ErrorInvalidOperation("ValidateProgram: Invalid program object");
 
     MakeContextCurrent();
 
@@ -2468,13 +2355,9 @@ WebGLContext::CreateFramebuffer(nsIWebGLFramebuffer **retval)
     GLuint name;
     gl->fGenFramebuffers(1, &name);
 
-    WebGLFramebuffer *globj = new WebGLFramebuffer(name);
-    if (globj) {
-        NS_ADDREF(*retval = globj);
-        mMapFramebuffers.Put(name, globj);
-    } else {
-        gl->fDeleteFramebuffers(1, &name);
-    }
+    WebGLFramebuffer *globj = new WebGLFramebuffer(this, name);
+    NS_ADDREF(*retval = globj);
+    mMapFramebuffers.Put(name, globj);
 
     return NS_OK;
 }
@@ -2487,13 +2370,9 @@ WebGLContext::CreateRenderbuffer(nsIWebGLRenderbuffer **retval)
     GLuint name;
     gl->fGenRenderbuffers(1, &name);
 
-    WebGLRenderbuffer *globj = new WebGLRenderbuffer(name);
-    if (globj) {
-        NS_ADDREF(*retval = globj);
-        mMapRenderbuffers.Put(name, globj);
-    } else {
-        gl->fDeleteRenderbuffers(1, &name);
-    }
+    WebGLRenderbuffer *globj = new WebGLRenderbuffer(this, name);
+    NS_ADDREF(*retval = globj);
+    mMapRenderbuffers.Put(name, globj);
 
     return NS_OK;
 }
