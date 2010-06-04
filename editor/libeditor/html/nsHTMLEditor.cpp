@@ -516,133 +516,6 @@ nsHTMLEditor::BeginningOfDocument()
   return selection->Collapse(selNode, selOffset);
 }
 
-nsresult
-nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
-{
-  // NOTE: When you change this method, you should also change:
-  //   * editor/libeditor/html/tests/test_htmleditor_keyevent_handling.html
-
-  if (IsReadonly() || IsDisabled()) {
-    // When we're not editable, the events are handled on nsEditor, so, we can
-    // bypass nsPlaintextEditor.
-    return nsEditor::HandleKeyPressEvent(aKeyEvent);
-  }
-
-  // Don't handle events which do not belong to us (by making sure that the
-  // target of the event is actually editable).
-  // XXX we can remove this check after bug 389372
-  nsCOMPtr<nsIDOMEventTarget> target;
-  nsresult rv = aKeyEvent->GetTarget(getter_AddRefs(target));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
-  if (!IsModifiableNode(targetNode)) {
-    return NS_OK;
-  }
-
-  nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
-  NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
-  NS_ASSERTION(nativeKeyEvent->message == NS_KEY_PRESS,
-               "HandleKeyPressEvent gets non-keypress event");
-
-  switch (nativeKeyEvent->keyCode) {
-    case nsIDOMKeyEvent::DOM_VK_META:
-    case nsIDOMKeyEvent::DOM_VK_SHIFT:
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
-    case nsIDOMKeyEvent::DOM_VK_ALT:
-    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-    case nsIDOMKeyEvent::DOM_VK_DELETE:
-      // These keys are handled on nsEditor, so, we can bypass
-      // nsPlaintextEditor.
-      return nsEditor::HandleKeyPressEvent(aKeyEvent);
-    case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-      // This key is handled on nsPlaintextEditor.
-      return nsPlaintextEditor::HandleKeyPressEvent(aKeyEvent);
-    case nsIDOMKeyEvent::DOM_VK_TAB: {
-      if (IsPlaintextEditor()) {
-        // If this works as plain text editor, e.g., mail editor for plain
-        // text, should be handled on nsPlaintextEditor.
-        return nsPlaintextEditor::HandleKeyPressEvent(aKeyEvent);
-      }
-
-      if (IsTabbable()) {
-        return NS_OK; // let it be used for focus switching
-      }
-
-      if (nativeKeyEvent->isControl || nativeKeyEvent->isAlt ||
-          nativeKeyEvent->isMeta) {
-        return NS_OK;
-      }
-
-      nsCOMPtr<nsISelection> selection;
-      nsresult rv = GetSelection(getter_AddRefs(selection));
-      NS_ENSURE_SUCCESS(rv, rv);
-      PRInt32 offset;
-      nsCOMPtr<nsIDOMNode> node, blockParent;
-      rv = GetStartNodeAndOffset(selection, address_of(node), &offset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
-      PRBool isBlock = PR_FALSE;
-      NodeIsBlock(node, &isBlock);
-      if (isBlock) {
-        blockParent = node;
-      } else {
-        blockParent = GetBlockNodeParent(node);
-      }
-
-      if (!blockParent) {
-        break;
-      }
-
-      PRBool handled = PR_FALSE;
-      if (nsHTMLEditUtils::IsTableElement(blockParent)) {
-        rv = TabInTable(nativeKeyEvent->isShift, &handled);
-        if (handled) {
-          ScrollSelectionIntoView(PR_FALSE);
-        }
-      } else if (nsHTMLEditUtils::IsListItem(blockParent)) {
-        rv = Indent(nativeKeyEvent->isShift ?
-                      NS_LITERAL_STRING("outdent") :
-                      NS_LITERAL_STRING("indent"));
-        handled = PR_TRUE;
-      }
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (handled) {
-        return aKeyEvent->PreventDefault(); // consumed
-      }
-      if (nativeKeyEvent->isShift) {
-        return NS_OK; // don't type text for shift tabs
-      }
-      aKeyEvent->PreventDefault();
-      return TypedText(NS_LITERAL_STRING("\t"), eTypedText);
-    }
-    case nsIDOMKeyEvent::DOM_VK_RETURN:
-    case nsIDOMKeyEvent::DOM_VK_ENTER:
-      if (nativeKeyEvent->isControl || nativeKeyEvent->isAlt ||
-          nativeKeyEvent->isMeta) {
-        return NS_OK;
-      }
-      aKeyEvent->PreventDefault(); // consumed
-      if (nativeKeyEvent->isShift && !IsPlaintextEditor()) {
-        // only inserts a br node
-        return TypedText(EmptyString(), eTypedBR);
-      }
-      // uses rules to figure out what to insert
-      return TypedText(EmptyString(), eTypedBreak);
-  }
-
-  // NOTE: On some keyboard layout, some characters are inputted with Control
-  // key or Alt key, but at that time, widget sets FALSE to these keys.
-  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->isControl ||
-      nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
-    // we don't PreventDefault() here or keybindings like control-x won't work
-    return NS_OK;
-  }
-  aKeyEvent->PreventDefault();
-  nsAutoString str(nativeKeyEvent->charCode);
-  return TypedText(str, eTypedText);
-}
-
 /**
  * Returns true if the id represents an element of block type.
  * Can be used to determine if a new paragraph should be started.
@@ -1319,6 +1192,103 @@ nsHTMLEditor::UpdateBaseURL()
     return doc->SetBaseURI(doc->GetDocumentURI());
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
+{
+  PRUint32 keyCode, character;
+  PRBool   isShift, ctrlKey, altKey, metaKey;
+  nsresult res;
+
+  if (!aKeyEvent) return NS_ERROR_NULL_POINTER;
+
+  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
+      NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey)) &&
+      NS_SUCCEEDED(aKeyEvent->GetMetaKey(&metaKey)))
+  {
+    // this royally blows: because tabs come in from keyDowns instead
+    // of keyPress, and because GetCharCode refuses to work for keyDown
+    // i have to play games.
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB) character = '\t';
+    else aKeyEvent->GetCharCode(&character);
+    
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB)
+    {
+      if (!IsPlaintextEditor()) {
+        nsCOMPtr<nsISelection>selection;
+        res = GetSelection(getter_AddRefs(selection));
+        if (NS_FAILED(res)) return res;
+        PRInt32 offset;
+        nsCOMPtr<nsIDOMNode> node, blockParent;
+        res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+        if (NS_FAILED(res)) return res;
+        if (!node) return NS_ERROR_FAILURE;
+
+        PRBool isBlock = PR_FALSE;
+        NodeIsBlock(node, &isBlock);
+        if (isBlock) blockParent = node;
+        else blockParent = GetBlockNodeParent(node);
+        
+        if (blockParent)
+        {
+          PRBool bHandled = PR_FALSE;
+          
+          if (nsHTMLEditUtils::IsTableElement(blockParent))
+          {
+            res = TabInTable(isShift, &bHandled);
+            if (bHandled)
+              ScrollSelectionIntoView(PR_FALSE);
+          }
+          else if (nsHTMLEditUtils::IsListItem(blockParent))
+          {
+            nsAutoString indentstr;
+            if (isShift) indentstr.AssignLiteral("outdent");
+            else         indentstr.AssignLiteral("indent");
+            res = Indent(indentstr);
+            bHandled = PR_TRUE;
+          }
+          if (NS_FAILED(res)) return res;
+          if (bHandled)
+            return aKeyEvent->PreventDefault(); // consumed
+        }
+      }
+      if (isShift)
+        return NS_OK; // don't type text for shift tabs
+    }
+    else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
+             || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
+    {
+      aKeyEvent->PreventDefault();
+      nsString empty;
+      if (isShift && !IsPlaintextEditor())
+      {
+        return TypedText(empty, eTypedBR);  // only inserts a br node
+      }
+      else 
+      {
+        return TypedText(empty, eTypedBreak);  // uses rules to figure out what to insert
+      }
+    }
+    else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
+    {
+      aKeyEvent->PreventDefault();
+      // pass escape keypresses through as empty strings: needed forime support
+      nsString empty;
+      return TypedText(empty, eTypedText);
+    }
+    
+    // if we got here we either fell out of the tab case or have a normal character.
+    // Either way, treat as normal character.
+    if (character && !altKey && !ctrlKey && !metaKey)
+    {
+      aKeyEvent->PreventDefault();
+      nsAutoString key(character);
+      return TypedText(key, eTypedText);
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* This routine is needed to provide a bottleneck for typing for logging
