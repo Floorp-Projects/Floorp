@@ -814,7 +814,7 @@ int main()
 
         {
             JSAutoRequest ar(jscontext);
-            glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
+            glob = JS_NewGlobalObject(jscontext, &global_class);
             if (!glob)
                 DIE("FAILED to create global object");
             if (!JS_InitStandardClasses(jscontext, glob))

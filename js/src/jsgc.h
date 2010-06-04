@@ -518,6 +518,12 @@ TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
     TraceValues(trc, vec, vec + len, name);
 }
 
+JSCompartment *
+NewCompartment(JSContext *cx);
+
+void
+SweepCompartments(JSContext *cx);
+
 } /* namespace js */
 
 #endif /* jsgc_h___ */
