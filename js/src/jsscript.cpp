@@ -820,11 +820,11 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     size_t size, vectorSize;
     JSScript *script;
     uint8 *cursor;
+    unsigned constPadding = 0;
 
     size = sizeof(JSScript) +
-           sizeof(JSAtom *) * natoms +
-           length * sizeof(jsbytecode) +
-           nsrcnotes * sizeof(jssrcnote);
+           sizeof(JSAtom *) * natoms;
+    
     if (nobjects != 0)
         size += sizeof(JSObjectArray) + nobjects * sizeof(JSObject *);
     if (nupvars != 0)
@@ -833,8 +833,19 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         size += sizeof(JSObjectArray) + nregexps * sizeof(JSObject *);
     if (ntrynotes != 0)
         size += sizeof(JSTryNoteArray) + ntrynotes * sizeof(JSTryNote);
-    if (nconsts != 0)
-        size += sizeof(JSConstArray) + nconsts * sizeof(Value);
+
+    if (nconsts != 0) {
+        size += sizeof(JSConstArray);
+        /*
+         * Calculate padding assuming that consts go after the other arrays,
+         * but before the bytecode and source notes.
+         */
+        constPadding = (8 - (size % 8)) % 8;
+        size += constPadding + nconsts * sizeof(Value);
+    }
+
+    size += length * sizeof(jsbytecode) +
+            nsrcnotes * sizeof(jssrcnote);
 
     script = (JSScript *) cx->malloc(size);
     if (!script)
@@ -904,14 +915,6 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         cursor += vectorSize;
     }
 
-    if (nconsts != 0) {
-        script->consts()->length = nconsts;
-        script->consts()->vector = (Value *)cursor;
-        vectorSize = nconsts * sizeof(script->consts()->vector[0]);
-        memset(cursor, 0, vectorSize);
-        cursor += vectorSize;
-    }
-
     /*
      * NB: We allocate the vector of uint32 upvar cookies after all vectors of
      * pointers, to avoid misalignment on 64-bit platforms. See bug 514645.
@@ -920,6 +923,17 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         script->upvars()->length = nupvars;
         script->upvars()->vector = (uint32 *)cursor;
         vectorSize = nupvars * sizeof(script->upvars()->vector[0]);
+        memset(cursor, 0, vectorSize);
+        cursor += vectorSize;
+    }
+
+    /* Must go after other arrays; see constPadding definition. */
+    if (nconsts != 0) {
+        cursor += constPadding;
+        script->consts()->length = nconsts;
+        script->consts()->vector = (Value *)cursor;
+        JS_ASSERT((size_t)cursor % sizeof(double) == 0);
+        vectorSize = nconsts * sizeof(script->consts()->vector[0]);
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
