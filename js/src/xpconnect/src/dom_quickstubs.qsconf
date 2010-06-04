@@ -785,31 +785,6 @@ customMethodCalls = {
     'nsIDOMNSHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
         },
-    'nsIDOMDocument_': {
-        'thisType': 'nsDocument'
-        },
-    'nsIDOMDocument_GetElementById': {
-        'thisType': 'nsDocument',
-        'code': '    mozilla::dom::Element *result = self->GetElementById(arg0);'
-        },
-    'nsIDOMDocument_GetElementsByTagName': {
-        'thisType': 'nsDocument',
-        'code': '    nsRefPtr<nsContentList> result ='
-                'self->GetElementsByTagName(arg0);',
-        'canFail': False
-        },
-    'nsIDOMDocument_GetElementsByTagNameNS': {
-        'thisType': 'nsDocument',
-        'code': '    nsRefPtr<nsContentList> result ='
-                'self->GetElementsByTagNameNS(arg0, arg1);',
-        'canFail': False
-        },
-    'nsIDOMNSDocument_': {
-        'thisType': 'nsDocument'
-        },
-    'nsIDOM3Document_': {
-        'thisType': 'nsDocument'
-        },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
