@@ -1666,7 +1666,7 @@ nsBrowserAccess.prototype = {
           location = aOpener.location;
           referrer = gIOService.newURI(location, null, null);
         }
-        browser.loadURI(aURI.spec, loadflags, referrer, null, null);
+        browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
       }
       browser.focus();
     } catch(e) { }
