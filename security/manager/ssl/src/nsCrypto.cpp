@@ -2159,7 +2159,7 @@ nsCryptoRunnable::nsCryptoRunnable(nsCryptoRunArgs *args)
   NS_ASSERTION(args,"Passed nsnull to nsCryptoRunnable constructor.");
   m_args = args;
   NS_IF_ADDREF(m_args);
-  JS_AddNamedRoot(args->m_cx, &args->m_scope,"nsCryptoRunnable::mScope");
+  JS_AddNamedObjectRoot(args->m_cx, &args->m_scope,"nsCryptoRunnable::mScope");
 }
 
 nsCryptoRunnable::~nsCryptoRunnable()
@@ -2168,7 +2168,7 @@ nsCryptoRunnable::~nsCryptoRunnable()
 
   {
     JSAutoRequest ar(m_args->m_cx);
-    JS_RemoveRoot(m_args->m_cx, &m_args->m_scope);
+    JS_RemoveObjectRoot(m_args->m_cx, &m_args->m_scope);
   }
 
   NS_IF_RELEASE(m_args);

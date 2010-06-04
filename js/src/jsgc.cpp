@@ -111,19 +111,17 @@
 using namespace js;
 
 /*
- * Check that JSTRACE_XML follows JSTRACE_OBJECT, JSTRACE_DOUBLE and
- * JSTRACE_STRING.
+ * Check that JSTRACE_XML follows JSTRACE_OBJECT and JSTRACE_STRING.
  */
 JS_STATIC_ASSERT(JSTRACE_OBJECT == 0);
 JS_STATIC_ASSERT(JSTRACE_STRING == 1);
-JS_STATIC_ASSERT(JSTRACE_DOUBLE == 2);
-JS_STATIC_ASSERT(JSTRACE_XML    == 3);
+JS_STATIC_ASSERT(JSTRACE_XML    == 2);
 
 /*
  * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_STRING is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_DOUBLE + 1 == JSTRACE_XML);
+JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
 
 /*
  * Check consistency of external string constants from JSFinalizeGCThingKind.
@@ -861,8 +859,7 @@ js_GetGCThingTraceKind(void *thing)
         return JSTRACE_STRING;
 
     JSGCArenaInfo *ainfo = JSGCArenaInfo::fromGCThing(thing);
-    if (!ainfo->list)
-        return JSTRACE_DOUBLE;
+    JS_ASSERT(ainfo);
     return GetFinalizableArenaTraceKind(ainfo);
 }
 
@@ -1145,7 +1142,7 @@ js_FinishGC(JSRuntime *rt)
 JSBool
 js_AddRoot(JSContext *cx, Value *vp, const char *name)
 {
-    JSBool ok = js_AddRootRT(cx->runtime, vp, name);
+    JSBool ok = js_AddRootRT(cx->runtime, Jsvalify(vp), name);
     if (!ok)
         JS_ReportOutOfMemory(cx);
     return ok;
@@ -1160,8 +1157,8 @@ js_AddGCThingRoot(JSContext *cx, void **rp, const char *name)
     return ok;
 }
 
-JSBool
-js_AddRootRT(JSRuntime *rt, Value *vp, const char *name)
+JS_FRIEND_API(JSBool)
+js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 {
     /*
      * Due to the long-standing, but now removed, use of rt->gcLock across the
@@ -1177,7 +1174,7 @@ js_AddRootRT(JSRuntime *rt, Value *vp, const char *name)
     return !!rt->gcRootsHash.put(key, RootInfo(name, JS_GC_ROOT_VALUE_PTR));
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
 {
     /*
@@ -1194,7 +1191,7 @@ js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
     return !!rt->gcRootsHash.put(key, RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
     /*
@@ -1822,19 +1819,7 @@ MarkRaw(JSTracer *trc, void *thing, uint32 kind)
      * Optimize for string and double as their size is known and their tracing
      * is not recursive.
      */
-    switch (kind) {
-      case JSTRACE_DOUBLE: {
-        JSGCArenaInfo *ainfo = JSGCArenaInfo::fromGCThing(thing);
-        JS_ASSERT(!ainfo->list);
-        if (!ainfo->hasMarkedDoubles) {
-            ainfo->hasMarkedDoubles = true;
-            JSGCArena::fromGCThing(thing)->clearMarkBitmap();
-        }
-        MarkIfUnmarkedGCThing(thing);
-        goto out;
-      }
-
-      case JSTRACE_STRING:
+    if (kind == JSTRACE_STRING) {
         for (;;) {
             if (JSString::isStatic(thing))
                 goto out;

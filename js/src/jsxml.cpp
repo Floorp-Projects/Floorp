@@ -252,12 +252,12 @@ namespace_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-namespace_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
+namespace_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     JSObject *obj2;
 
-    JS_ASSERT(JSVAL_IS_OBJECT(*v));
-    obj2 = JSVAL_TO_OBJECT(*v);
+    JS_ASSERT(JSVAL_IS_OBJECT(v));
+    obj2 = JSVAL_TO_OBJECT(v);
     *bp = (!obj2 || obj2->getClass() != &js_NamespaceClass.base)
           ? JS_FALSE
           : js_EqualStrings(GetURI(obj), GetURI(obj2));
@@ -376,11 +376,11 @@ qname_identity(JSObject *qna, JSObject *qnb)
 }
 
 static JSBool
-qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
+qname_equality(JSContext *cx, JSObject *qn, Value v, JSBool *bp)
 {
     JSObject *obj2;
 
-    obj2 = v->asObjectOrNull();
+    obj2 = v.asObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &js_QNameClass.base)
           ? JS_FALSE
           : qname_identity(qn, obj2);
@@ -5011,7 +5011,7 @@ xml_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-xml_hasInstance(JSContext *cx, JSObject *obj, const Value *, JSBool *bp)
+xml_hasInstance(JSContext *cx, JSObject *obj, Value, JSBool *bp)
 {
     return JS_TRUE;
 }

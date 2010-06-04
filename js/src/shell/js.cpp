@@ -1316,7 +1316,6 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     } traceKindNames[] = {
         { "all",        -1                  },
         { "object",     JSTRACE_OBJECT      },
-        { "double",     JSTRACE_DOUBLE      },
         { "string",     JSTRACE_STRING      },
 #if JS_HAS_XML_SUPPORT
         { "xml",        JSTRACE_XML         },
@@ -2781,7 +2780,7 @@ split_getObjectOps(JSContext *cx, JSClass *clasp)
 }
 
 static JSBool
-split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 static JSObject *
 split_innerObject(JSContext *cx, JSObject *obj)
@@ -2812,13 +2811,13 @@ static JSExtendedClass split_global_class = {
 };
 
 static JSBool
-split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     *bp = JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(*v))
+    if (JSVAL_IS_PRIMITIVE(v))
         return JS_TRUE;
 
-    JSObject *obj2 = JSVAL_TO_OBJECT(*v);
+    JSObject *obj2 = JSVAL_TO_OBJECT(v);
     if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
         return JS_TRUE;
 

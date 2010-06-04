@@ -767,7 +767,7 @@ GetRTIdByIndex(JSContext *cx, uintN index)
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index)
 {
-  return ID_TO_VALUE(GetRTIdByIndex(cx, index));
+  return ID_TO_JSVAL(GetRTIdByIndex(cx, index));
 }
 
 inline

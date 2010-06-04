@@ -5534,7 +5534,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 }
 
 JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+js_HasInstance(JSContext *cx, JSObject *obj, Value v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)

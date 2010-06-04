@@ -1346,10 +1346,10 @@ DebugCheckWrapperClass(JSObject* obj)
 // Only use these macros if IS_WRAPPER_CLASS(obj->getClass()) is true.
 #define IS_WN_WRAPPER_OBJECT(obj)                                             \
     (DebugCheckWrapperClass(obj) &&                                           \
-     JSVAL_IS_VOID(obj->getSlot(JSSLOT_START(obj->getClass()))))
+     obj->getSlot(JSSLOT_START(obj->getClass())).isUndefined())
 #define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
     (DebugCheckWrapperClass(obj) &&                                           \
-     !JSVAL_IS_VOID(obj->getSlot(JSSLOT_START(obj->getClass()))))
+     !obj->getSlot(JSSLOT_START(obj->getClass())).isUndefined())
 
 // Use these macros if IS_WRAPPER_CLASS(obj->getClass()) might be false.
 // Avoid calling them if IS_WRAPPER_CLASS(obj->getClass()) can only be
@@ -2265,8 +2265,8 @@ extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
 static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
-  jsval v = obj->getSlot(JSSLOT_START(obj->getClass()));
-  return static_cast<XPCWrappedNativeProto*>(JSVAL_TO_PRIVATE(v));
+  const js::Value &v = obj->getSlot(JSSLOT_START(obj->getClass()));
+  return static_cast<XPCWrappedNativeProto*>(v.asPrivateVoidPtr());
 }
 
 
@@ -2646,7 +2646,7 @@ public:
 
     JSObject* GetWrapper()
     {
-        return (JSObject *) JSVAL_CLRTAG(mWrapperWord);
+        return (JSObject *) (mWrapperWord & FLAG_MASK);
     }
     void SetWrapper(JSObject *obj)
     {
@@ -2688,7 +2688,7 @@ protected:
     virtual ~XPCWrappedNative();
 
 private:
-    enum { CHROME_ONLY = JS_BIT(0), DOUBLE_WRAPPER = JS_BIT(1) };
+    enum { CHROME_ONLY = JS_BIT(0), DOUBLE_WRAPPER = JS_BIT(1), FLAG_MASK = (PRWord)~(PRWord)0x3 };
 
     void TraceOtherWrapper(JSTracer* trc);
     JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
