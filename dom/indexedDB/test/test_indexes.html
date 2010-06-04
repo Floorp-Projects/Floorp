@@ -13,6 +13,10 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
+      const CONSTRAINT_ERR =
+        Components.interfaces.nsIIDBDatabaseException.CONSTRAINT_ERR;
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
       const name = window.location.pathname;
       const description = "My Test Database";
 
@@ -28,7 +32,7 @@
       ];
 
       const indexData = [
-        { name: "name", keyPath: "name", unique: false },
+        { name: "name", keyPath: "name", unique: true },
         { name: "height", keyPath: "height", unique: false },
         { name: "weight", keyPath: "weight", unique: false }
       ];
@@ -77,7 +81,7 @@
       }
       yield;
 
-      let objectStore = db.objectStore(objectStoreName);
+      objectStore = db.objectStore(objectStoreName);
 
       // Check global properties to make sure they are correct.
       is(objectStore.indexNames.length, indexData.length, "Good index count");
@@ -103,6 +107,13 @@
       event = yield;
 
       is(event.result, "237-23-7732", "Correct key returned!");
+
+      objectStore = db.objectStore(objectStoreName, READ_WRITE);
+      request = objectStore.add({ name: "Bob", height: 62, weight: 170 },
+                                "237-23-7738");
+      request.onerror = new ExpectError(CONSTRAINT_ERR);
+      request.onsuccess = unexpectedSuccessHandler;
+      event = yield;
 
       finishTest();
       yield;
