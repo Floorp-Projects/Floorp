@@ -44,6 +44,7 @@ import android.content.*;
 import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
+import android.location.*;
 
 import android.util.Log;
 
@@ -58,10 +59,11 @@ public class GeckoEvent {
     public static final int KEY_EVENT = 1;
     public static final int MOTION_EVENT = 2;
     public static final int SENSOR_EVENT = 3;
-    public static final int IME_EVENT = 4;
-    public static final int DRAW = 5;
-    public static final int SIZE_CHANGED = 6;
-    public static final int ACTIVITY_STOPPING = 7;
+    public static final int LOCATION_EVENT = 4;
+    public static final int IME_EVENT = 5;
+    public static final int DRAW = 6;
+    public static final int SIZE_CHANGED = 7;
+    public static final int ACTIVITY_STOPPING = 8;
 
     public static final int IME_BATCH_END = 0;
     public static final int IME_BATCH_BEGIN = 1;
@@ -80,6 +82,7 @@ public class GeckoEvent {
     public int mKeyCode, mUnicodeChar;
     public int mCount, mCount2;
     public String mCharacters;
+    public Location mLocation;
 
     public int mNativeWindow;
 
@@ -114,6 +117,11 @@ public class GeckoEvent {
         mX = s.values[0] / SensorManager.GRAVITY_EARTH;
         mY = s.values[1] / SensorManager.GRAVITY_EARTH;
         mZ = s.values[2] / SensorManager.GRAVITY_EARTH;
+    }
+
+    public GeckoEvent(Location l) {
+        mType = LOCATION_EVENT;
+        mLocation = l;
     }
 
     public GeckoEvent(boolean batchEdit, String text) {

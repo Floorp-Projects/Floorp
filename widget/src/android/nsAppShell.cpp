@@ -41,6 +41,7 @@
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
+#include "nsIGeolocationProvider.h"
 
 #include "prenv.h"
 
@@ -67,6 +68,7 @@ PRLogModuleInfo *gWidgetLog = nsnull;
 #endif
 
 nsAccelerometerAndroid *gAccel = nsnull;
+nsIGeolocationUpdate *gLocationCallback = nsnull;
 
 nsAppShell *nsAppShell::gAppShell = nsnull;
 AndroidGeckoEvent *nsAppShell::gEarlyEvent = nsnull;
@@ -216,6 +218,16 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
     case AndroidGeckoEvent::SENSOR_EVENT:
         gAccel->AccelerationChanged(-curEvent->X(), curEvent->Y(), curEvent->Z());
+        break;
+
+    case AndroidGeckoEvent::LOCATION_EVENT:
+        if (!gLocationCallback)
+            break;
+
+        if (curEvent->GeoPosition())
+            gLocationCallback->Update(curEvent->GeoPosition());
+        else
+            NS_WARNING("Received location event without geoposition!");
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
