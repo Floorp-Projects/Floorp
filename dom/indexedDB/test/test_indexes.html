@@ -108,6 +108,15 @@
 
       is(event.result, "237-23-7732", "Correct key returned!");
 
+      request = objectStore.index("name").getObject("Bob");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result.name, "Bob", "Correct name returned!");
+      is(event.result.height, 60, "Correct height returned!");
+      is(event.result.weight, 120, "Correct weight returned!");
+
       objectStore = db.objectStore(objectStoreName, READ_WRITE);
       request = objectStore.add({ name: "Bob", height: 62, weight: 170 },
                                 "237-23-7738");

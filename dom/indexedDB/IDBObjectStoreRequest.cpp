@@ -244,7 +244,7 @@ private:
   nsRefPtr<IDBObjectStoreRequest> mObjectStore;
 };
 
-// Remove once nsIVariant can handle jsvals
+// Remove once XPIDL can handle jsvals
 class GetSuccessEvent : public IDBSuccessEvent
 {
 public:
