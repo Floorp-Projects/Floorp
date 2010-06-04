@@ -100,8 +100,7 @@ WeaveSvc.prototype = {
   _lock: Utils.lock,
   _catch: Utils.catch,
   _loggedIn: false,
-  _syncInProgress: false,
-  _keyGenEnabled: true,
+  keyGenEnabled: true,
 
   // object for caching public and private keys
   _keyPair: {},
@@ -183,9 +182,6 @@ WeaveSvc.prototype = {
   },
 
   get isLoggedIn() { return this._loggedIn; },
-
-  get keyGenEnabled() { return this._keyGenEnabled; },
-  set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
   // nextSync and nextHeartbeat are in milliseconds, but prefs can't hold that much
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
@@ -865,7 +861,7 @@ WeaveSvc.prototype = {
       if (meta && !meta.payload.syncID)
         this._log.warn("No sync id, server wipe needed");
 
-      if (!this._keyGenEnabled) {
+      if (!this.keyGenEnabled) {
         this._log.info("...and key generation is disabled.  Not wiping. " +
                        "Aborting sync.");
         Status.sync = DESKTOP_VERSION_OUT_OF_DATE;
@@ -932,7 +928,7 @@ WeaveSvc.prototype = {
         return false;
       }
 
-      if (!this._keyGenEnabled) {
+      if (!this.keyGenEnabled) {
         this._log.warn("Couldn't download keys from server, and key generation" +
                        "is disabled.  Aborting sync");
         Status.sync = NO_KEYS_NO_KEYGEN;
