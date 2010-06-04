@@ -14,8 +14,8 @@
  * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ *   Nokia.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,33 +34,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_DocumentRendererShmemChild
-#define mozilla_dom_DocumentRendererShmemChild
+#ifndef mozilla_dom_DocumentRendererNativeIDParent
+#define mozilla_dom_DocumentRendererNativeIDParent
 
-#include "mozilla/ipc/PDocumentRendererShmemChild.h"
-
-class nsIDOMWindow;
-class gfxMatrix;
+#include "mozilla/ipc/PDocumentRendererNativeIDParent.h"
+#include "nsICanvasRenderingContextInternal.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace ipc {
 
-class DocumentRendererShmemChild : public PDocumentRendererShmemChild
+class DocumentRendererNativeIDParent : public PDocumentRendererNativeIDParent
 {
 public:
-    DocumentRendererShmemChild();
-    virtual ~DocumentRendererShmemChild();
+    DocumentRendererNativeIDParent();
+    virtual ~DocumentRendererNativeIDParent();
 
-    bool RenderDocument(nsIDOMWindow *window, const PRInt32& x,
-                        const PRInt32& y, const PRInt32& w,
-                        const PRInt32& h, const nsString& aBGColor,
-                        const PRUint32& flags, const PRBool& flush,
-                        const gfxMatrix& aMatrix,
-                        Shmem& data);
+    void SetCanvas(nsICanvasRenderingContextInternal* aCanvas);
+    virtual bool Recv__delete__(const PRInt32& x, const PRInt32& y,
+                                const PRInt32& w, const PRInt32& h,
+                                const PRUint32& nativeID);
 
 private:
+    nsCOMPtr<nsICanvasRenderingContextInternal> mCanvas;
 
-    DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererShmemChild);
+    DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererNativeIDParent);
 };
 
 }

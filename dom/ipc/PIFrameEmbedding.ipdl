@@ -40,6 +40,7 @@
 include protocol PContentProcess;
 include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
+include protocol PDocumentRendererNativeID;
 include protocol PObjectWrapper;
 include protocol PContextWrapper;
 include protocol PGeolocationRequest;
@@ -63,6 +64,7 @@ rpc protocol PIFrameEmbedding
     manager PContentProcess;
     manages PDocumentRenderer;
     manages PDocumentRendererShmem;
+    manages PDocumentRendererNativeID;
     manages PContextWrapper;
     manages PGeolocationRequest;
     manages PContentDialog;
@@ -158,11 +160,12 @@ child:
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
 
     // @param matrix the transformation matrix the context we're going to draw into should have.
-    // @param bufw the width of @buf, in pixels
-    // @param bufh the height of @buf, in pixels
     PDocumentRendererShmem(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush,
-                           gfxMatrix matrix, PRInt32 bufw, PRInt32 bufh, Shmem buf);
+                           gfxMatrix matrix, Shmem buf);
 
+    // @param matrix the transformation matrix the context we're going to draw into should have.
+    PDocumentRendererNativeID(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush,
+                              gfxMatrix matrix, PRUint32 nativeID);
 };
 
 }

@@ -14,8 +14,8 @@
  * The Original Code is Fennec Electrolysis.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ *   Nokia.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -33,6 +33,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifdef MOZ_WIDGET_QT
+#include <QX11Info>
+#define DISPLAY QX11Info::display
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+#include <gdk/gdkx.h>
+#define DISPLAY GDK_DISPLAY
+#endif
 
 #include "base/basictypes.h"
 
@@ -54,18 +64,19 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"
-#ifdef MOZ_IPC
-#include "gfxSharedImageSurface.h"
-#endif
 
-#include "mozilla/ipc/DocumentRendererShmemChild.h"
+#include "mozilla/ipc/DocumentRendererNativeIDChild.h"
+
+#ifdef MOZ_X11
+#include "gfxXlibSurface.h"
+#endif
 
 using namespace mozilla::ipc;
 
-DocumentRendererShmemChild::DocumentRendererShmemChild()
+DocumentRendererNativeIDChild::DocumentRendererNativeIDChild()
 {}
 
-DocumentRendererShmemChild::~DocumentRendererShmemChild()
+DocumentRendererNativeIDChild::~DocumentRendererNativeIDChild()
 {}
 
 static void
@@ -103,13 +114,16 @@ FlushLayoutForTree(nsIDOMWindow* aWindow)
 }
 
 bool
-DocumentRendererShmemChild::RenderDocument(nsIDOMWindow *window, const PRInt32& x,
+DocumentRendererNativeIDChild::RenderDocument(nsIDOMWindow* window, const PRInt32& x,
                                       const PRInt32& y, const PRInt32& w,
                                       const PRInt32& h, const nsString& aBGColor,
                                       const PRUint32& flags, const PRBool& flush,
                                       const gfxMatrix& aMatrix,
-                                      Shmem& data)
+                                      const PRInt32& nativeID)
 {
+    if (!nativeID)
+        return false;
+
     if (flush)
         FlushLayoutForTree(window);
 
@@ -135,7 +149,27 @@ DocumentRendererShmemChild::RenderDocument(nsIDOMWindow *window, const PRInt32& 
     nsRect r(x, y, w, h);
 
     // Draw directly into the output array.
-    nsRefPtr<gfxASurface> surf = new gfxSharedImageSurface(data);
+    nsRefPtr<gfxASurface> surf;
+#ifdef MOZ_X11
+    // Initialize gfxXlibSurface from native XID by using toolkit functionality
+    // Would be nice to have gfxXlibSurface(nativeID) implementation
+    Display* dpy = DISPLAY();
+    int depth = DefaultDepth(dpy, DefaultScreen(dpy));
+    XVisualInfo vinfo;
+    int foundVisual = XMatchVisualInfo(dpy,
+                                       DefaultScreen(dpy),
+                                       depth,
+                                       TrueColor,
+                                       &vinfo);
+    if (!foundVisual)
+        return false;
+
+    surf = new gfxXlibSurface(dpy, nativeID, vinfo.visual);
+    XSync(dpy, False);
+#else
+    NS_ERROR("NativeID handler not implemented for your platform");
+#endif
+
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     ctx->SetMatrix(aMatrix);
 

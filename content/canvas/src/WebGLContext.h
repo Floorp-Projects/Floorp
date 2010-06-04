@@ -248,6 +248,9 @@ public:
     NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
                     PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
                     { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD Swap(PRUint32 nativeID,
+                    PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
+                    { return NS_ERROR_NOT_IMPLEMENTED; }
 
     nsresult SynthesizeGLError(GLenum err);
     nsresult SynthesizeGLError(GLenum err, const char *fmt, ...);

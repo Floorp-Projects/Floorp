@@ -40,6 +40,7 @@
 
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/ipc/DocumentRendererShmemParent.h"
+#include "mozilla/ipc/DocumentRendererNativeIDParent.h"
 #include "mozilla/dom/ContentProcessParent.h"
 #include "mozilla/jsipc/ContextWrapperParent.h"
 
@@ -68,6 +69,7 @@
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
+using mozilla::ipc::DocumentRendererNativeIDParent;
 using mozilla::dom::ContentProcessParent;
 using mozilla::jsipc::PContextWrapperParent;
 using mozilla::jsipc::ContextWrapperParent;
@@ -430,13 +432,29 @@ mozilla::ipc::PDocumentRendererShmemParent*
 TabParent::AllocPDocumentRendererShmem(const PRInt32& x,
         const PRInt32& y, const PRInt32& w, const PRInt32& h, const nsString& bgcolor,
         const PRUint32& flags, const bool& flush, const gfxMatrix& aMatrix,
-        const PRInt32& bufw, const PRInt32& bufh, Shmem &buf)
+        Shmem& buf)
 {
     return new DocumentRendererShmemParent();
 }
 
 bool
 TabParent::DeallocPDocumentRendererShmem(PDocumentRendererShmemParent* actor)
+{
+    delete actor;
+    return true;
+}
+
+mozilla::ipc::PDocumentRendererNativeIDParent*
+TabParent::AllocPDocumentRendererNativeID(const PRInt32& x,
+        const PRInt32& y, const PRInt32& w, const PRInt32& h, const nsString& bgcolor,
+        const PRUint32& flags, const bool& flush, const gfxMatrix& aMatrix,
+        const PRUint32& nativeID)
+{
+    return new DocumentRendererNativeIDParent();
+}
+
+bool
+TabParent::DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* actor)
 {
     delete actor;
     return true;
