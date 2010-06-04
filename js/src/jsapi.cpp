@@ -549,6 +549,9 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
+    if (!(defaultCompartment = new JSCompartment(this)))
+        return false;
+
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
 
@@ -632,6 +635,8 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(debuggerLock);
 #endif
     propertyTree.finish();
+    if (defaultCompartment)
+        delete defaultCompartment;
 }
 
 JS_PUBLIC_API(JSRuntime *)
@@ -2766,12 +2771,27 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 }
 
 JS_PUBLIC_API(JSObject *)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
+{
+    CHECK_REQUEST(cx);
+    JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, NULL, NULL);
+    if (obj && !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
+                                   PRIVATE_TO_JSVAL(cx->compartment)))
+        return false;
+    return obj;
+}
+
+JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return NewObject(cx, clasp, proto, parent);
+    JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
+    JSObject *obj = NewObject(cx, clasp, proto, parent);
+    JS_ASSERT_IF(obj, obj->getParent());
+    return obj;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2780,6 +2800,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
+    JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
     return NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 

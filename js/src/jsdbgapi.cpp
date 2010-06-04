@@ -1768,16 +1768,11 @@ JS_IsSystemObject(JSContext *cx, JSObject *obj)
     return obj->isSystem();
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent, JSBool system)
+JS_PUBLIC_API(JSBool)
+JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *obj;
-
-    obj = NewObject(cx, clasp, proto, parent);
-    if (obj && system)
-        obj->setSystem();
-    return obj;
+    obj->setSystem();
+    return true;
 }
 
 /************************************************************************/

@@ -3731,9 +3731,10 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 JS_END_EXTERN_C
 
 static jsval
-GetGlobalObjectSlot(JSContext *cx, JSObject *obj, uint32 index)
+GetGlobalObjectReservedSlot(JSContext *cx, JSObject *obj, uint32 index)
 {
     JSClass *clasp = obj->getClass();
+    JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     uint32 slot = JSSLOT_START(clasp) + index;
     return (slot < obj->numSlots()) ? obj->getSlot(slot) : JSVAL_VOID;
 }
@@ -3756,7 +3757,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
         return JS_TRUE;
     }
 
-    v = GetGlobalObjectSlot(cx, obj, key);
+    v = GetGlobalObjectReservedSlot(cx, obj, key);
     if (!JSVAL_IS_PRIMITIVE(v)) {
         *objp = JSVAL_TO_OBJECT(v);
         return JS_TRUE;
@@ -3780,7 +3781,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
         if (!init(cx, obj)) {
             ok = JS_FALSE;
         } else {
-            v = GetGlobalObjectSlot(cx, obj, key);
+            v = GetGlobalObjectReservedSlot(cx, obj, key);
             if (!JSVAL_IS_PRIMITIVE(v))
                 cobj = JSVAL_TO_OBJECT(v);
         }
@@ -5763,7 +5764,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
         }
         scope = scope->getGlobal();
         if (scope->getClass()->flags & JSCLASS_IS_GLOBAL) {
-            jsval v = GetGlobalObjectSlot(cx, scope, JSProto_LIMIT + protoKey);
+            jsval v = GetGlobalObjectReservedSlot(cx, scope, JSProto_LIMIT + protoKey);
             if (!JSVAL_IS_PRIMITIVE(v)) {
                 *protop = JSVAL_TO_OBJECT(v);
                 return true;
@@ -6158,6 +6159,8 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
         else if (IS_GC_MARKING_TRACER(trc))
             (void) clasp->mark(cx, obj, trc);
     }
+    if (clasp->flags & JSCLASS_IS_GLOBAL)
+        obj->getCompartment(cx)->marked = true;
 
     obj->traceProtoAndParent(trc);
 
@@ -6330,6 +6333,13 @@ js_ReportGetterOnlyAssignment(JSContext *cx)
                                         JSREPORT_STRICT_MODE_ERROR,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_GETTER_ONLY);
+}
+
+JSCompartment *
+JSObject::getCompartment(JSContext *cx) {
+    JSObject *obj = getGlobal();
+    jsval v = GetGlobalObjectReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT);
+    return (JSCompartment *) JSVAL_TO_PRIVATE(v);
 }
 
 JS_FRIEND_API(JSBool)
