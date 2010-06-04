@@ -3249,38 +3249,6 @@ nsGenericElement::DispatchDOMEvent(nsEvent* aEvent,
                                              aPresContext, aEventStatus);
 }
 
-nsIAtom*
-nsGenericElement::GetID() const
-{
-  if (!HasFlag(NODE_MAY_HAVE_ID)) {
-    return nsnull;
-  }
-
-  nsIAtom* IDName = GetIDAttributeName();
-  if (IDName) {
-    const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(IDName);
-    if (attrVal){
-      if (attrVal->Type() == nsAttrValue::eAtom) {
-        return attrVal->GetAtomValue();
-      }
-      if(attrVal->IsEmptyString()){
-        return nsnull;
-      }
-      // Check if the ID has been stored as a string.
-      // This would occur if the ID attribute name changed after 
-      // the ID was parsed. 
-      if (attrVal->Type() == nsAttrValue::eString) {
-        nsAutoString idVal(attrVal->GetStringValue());
-
-        // Create an atom from the value and set it into the attribute list. 
-        const_cast<nsAttrValue*>(attrVal)->ParseAtom(idVal);
-        return attrVal->GetAtomValue();
-      }
-    }
-  }
-  return nsnull;
-}
-
 const nsAttrValue*
 nsGenericElement::DoGetClasses() const
 {
@@ -3369,12 +3337,6 @@ nsGenericElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                          PRInt32 aModType) const
 {
   return nsChangeHint(0);
-}
-
-nsIAtom *
-nsGenericElement::GetIDAttributeName() const
-{
-  return mNodeInfo->GetIDAttributeAtom();
 }
 
 nsIAtom *
@@ -4732,15 +4694,6 @@ nsGenericElement::ParseAttribute(PRInt32 aNamespaceID,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
-  if (aNamespaceID == kNameSpaceID_None &&
-      aAttribute == GetIDAttributeName() && !aValue.IsEmpty()) {
-    SetFlags(NODE_MAY_HAVE_ID);
-    // Store id as an atom.  id="" means that the element has no id,
-    // not that it has an emptystring as the id.
-    aResult.ParseAtom(aValue);
-    return PR_TRUE;
-  }
-
   return PR_FALSE;
 }
 

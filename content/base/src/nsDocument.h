@@ -651,6 +651,17 @@ public:
   virtual nsScriptLoader* ScriptLoader();
 
   /**
+   * Add/Remove an element to the document's id and name hashes
+   */
+  virtual void AddToIdTable(mozilla::dom::Element* aElement, nsIAtom* aId);
+  virtual void RemoveFromIdTable(mozilla::dom::Element* aElement,
+                                 nsIAtom* aId);
+  virtual void AddToNameTable(mozilla::dom::Element* aElement,
+                              nsIAtom* aName);
+  virtual void RemoveFromNameTable(mozilla::dom::Element* aElement,
+                                   nsIAtom* aName);
+
+  /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
    * informed.
@@ -807,13 +818,6 @@ public:
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
 
-  // nsIMutationObserver
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
-
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
 
@@ -937,17 +941,10 @@ public:
     GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                            const nsAString& aLocalName);
 
-  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId,
-                                                nsresult *aResult);
+  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId);
 
 protected:
   friend class nsNodeUtils;
-  void RegisterNamedItems(nsIContent *aContent);
-  void UnregisterNamedItems(nsIContent *aContent);
-  void UpdateNameTableEntry(Element *aElement);
-  void UpdateIdTableEntry(Element *aElement);
-  void RemoveFromNameTable(Element *aElement);
-  void RemoveFromIdTable(Element *aElement);
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -966,8 +963,8 @@ protected:
                                   nsACString& aCharset);
 
   // Call this before the document does something that will unbind all content.
-  // That will stop us from resolving URIs for all links as they are removed.
-  void DestroyLinkMap();
+  // That will stop us from doing a lot of work as each element is removed.
+  void DestroyElementMaps();
 
   // Refreshes the hrefs of all the links in the document.
   void RefreshLinkHrefs();
