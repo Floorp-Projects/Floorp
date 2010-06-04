@@ -23,7 +23,6 @@
  * Contributor(s):
  *   Adobe AS3 Team
  *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Jacob Bramley <Jacob.Bramley@arm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,7 +65,12 @@ namespace nanojit
 // only d0-d6 are actually used; we'll use d7 as s14-s15 for i2d/u2f/etc.
 #define NJ_VFP_MAX_REGISTERS            8
 #define NJ_MAX_REGISTERS                (11 + NJ_VFP_MAX_REGISTERS)
-#define NJ_MAX_STACK_ENTRY              4096
+
+// fixme: bug 556175: this cant be over 1024, because
+// the ARM backend cannot support more than 12-bit displacements
+// in a single load/store instruction, for spilling.  see asm_spill().
+#define NJ_MAX_STACK_ENTRY              1024
+
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
 
@@ -225,7 +229,6 @@ verbose_only( extern const char* shiftNames[]; )
     void        asm_stkarg(LInsp p, int stkd);                                  \
     void        asm_cmpi(Register, int32_t imm);                                \
     void        asm_ldr_chk(Register d, Register b, int32_t off, bool chk);     \
-    int32_t     asm_str(Register rt, Register rr, int32_t off);                 \
     void        asm_cmp(LIns *cond);                                            \
     void        asm_cmpd(LIns *cond);                                           \
     void        asm_ld_imm(Register d, int32_t imm, bool chk = true);           \
@@ -607,8 +610,8 @@ enum {
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         underrunProtect(4);                                             \
         if (_off < 0) {                                                 \
-            NanoAssert(isU12(-(_off)));                                 \
-            *(--_nIns) = (NIns)( COND_AL | (0x55<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xfff)  ); \
+            NanoAssert(isU12(-_off));                                   \
+            *(--_nIns) = (NIns)( COND_AL | (0x55<<20) | ((_n)<<16) | ((_d)<<12) | ((-_off)&0xfff)  ); \
         } else {                                                        \
             NanoAssert(isU12(_off));                                    \
             *(--_nIns) = (NIns)( COND_AL | (0x5D<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xfff)  ); \
@@ -622,8 +625,8 @@ enum {
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         underrunProtect(4);                                             \
         if (_off < 0) {                                                 \
-            NanoAssert(isU8(-(_off)));                                  \
-            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xD)<<4) | (((-(_off))&0xf0)<<4) | ((-(_off))&0xf) ); \
+            NanoAssert(isU8(-_off));                                    \
+            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xD)<<4) | (((-_off)&0xf0)<<4) | ((-_off)&0xf) ); \
         } else {                                                        \
             NanoAssert(isU8(_off));                                     \
             *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_n)<<16) | ((_d)<<12) | ((0xD)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
@@ -638,8 +641,8 @@ enum {
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         underrunProtect(4);                                             \
         if (_off < 0) {                                                 \
-            NanoAssert(isU8(-(_off)));                                  \
-            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xB)<<4) | (((-(_off))&0xf0)<<4) | ((-(_off))&0xf) ); \
+            NanoAssert(isU8(-_off));                                    \
+            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xB)<<4) | (((-_off)&0xf0)<<4) | ((-_off)&0xf) ); \
         } else {                                                        \
             NanoAssert(isU8(_off));                                     \
             *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_n)<<16) | ((_d)<<12) | ((0xB)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
@@ -654,8 +657,8 @@ enum {
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         underrunProtect(4);                                             \
         if (_off < 0) {                                                 \
-            NanoAssert(isU8(-(_off)));                                  \
-            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xF)<<4) | (((-(_off))&0xf0)<<4) | ((-(_off))&0xf) ); \
+            NanoAssert(isU8(-_off));                                    \
+            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xF)<<4) | (((-_off)&0xf0)<<4) | ((-_off)&0xf) ); \
         } else {                                                        \
             NanoAssert(isU8(_off));                                     \
             *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_n)<<16) | ((_d)<<12) | ((0xF)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
@@ -666,7 +669,7 @@ enum {
 // Valid offset for STR and STRB is +/- 4095, STRH only has +/- 255
 #define STR(_d,_n,_off) do {                                            \
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
-        NanoAssert(isU12(_off) || isU12(-(_off)));                      \
+        NanoAssert(isU12(_off) || isU12(-_off));                        \
         underrunProtect(4);                                             \
         if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x50<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
         else            *(--_nIns) = (NIns)( COND_AL | (0x58<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
@@ -675,7 +678,7 @@ enum {
 
 #define STRB(_d,_n,_off) do {                                           \
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
-        NanoAssert(isU12(_off) || isU12(-(_off)));                      \
+        NanoAssert(isU12(_off) || isU12(-_off));                        \
         underrunProtect(4);                                             \
         if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x54<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
         else            *(--_nIns) = (NIns)( COND_AL | (0x5C<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
@@ -687,7 +690,7 @@ enum {
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         underrunProtect(4);                                             \
         if ((_off)<0) {                                                 \
-            NanoAssert(isU8(-(_off)));                                  \
+            NanoAssert(isU8(-_off));                                    \
             *(--_nIns) = (NIns)( COND_AL | (0x14<<20) | ((_n)<<16) | ((_d)<<12) | (((-(_off))&0xF0)<<4) | (0xB<<4) | ((-(_off))&0xF) ); \
         } else {                                                        \
             NanoAssert(isU8(_off));                                     \

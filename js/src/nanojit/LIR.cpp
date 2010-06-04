@@ -327,11 +327,6 @@ namespace nanojit
         return ins2(op, condition, toLabel);
     }
 
-    LInsp LirBufWriter::insBranchJov(LOpcode op, LInsp a, LInsp b, LInsp toLabel)
-    {
-        return ins3(op, a, b, toLabel);
-    }
-
     LIns* LirBufWriter::insJtbl(LIns* index, uint32_t size)
     {
         LInsJtbl* insJtbl = (LInsJtbl*) _buf->makeRoom(sizeof(LInsJtbl));
@@ -541,14 +536,6 @@ namespace nanojit
         case LIR_q2i:
             if (oprnd->isImmQ())
                 return insImmI(oprnd->immQlo());
-            break;
-        case LIR_i2q:
-            if (oprnd->isImmI())
-                return insImmQ(int64_t(int32_t(oprnd->immI())));
-            break;
-        case LIR_ui2uq:
-            if (oprnd->isImmI())
-                return insImmQ(uint64_t(uint32_t(oprnd->immI())));
             break;
 #endif
 #if NJ_SOFTFLOAT_SUPPORTED
@@ -811,11 +798,7 @@ namespace nanojit
                     return oprnd1;
                 case LIR_andi:
                 case LIR_muli:
-                case LIR_ltui: // unsigned < 0 -> always false
-                    // note that we know that oprnd2 == insImmI(0), so just return that
                     return oprnd2;
-                case LIR_gtui: // unsigned >= 0 -> always true
-                    return insImmI(1);
                 case LIR_eqi:
                     if (oprnd1->isop(LIR_ori) &&
                         oprnd1->oprnd2()->isImmI() &&
@@ -826,40 +809,19 @@ namespace nanojit
                 default:
                     ;
                 }
-            } else if (c == -1) {
+            } else if (c == -1 || (c == 1 && oprnd1->isCmp())) {
                 switch (v) {
                 case LIR_ori:
-                    // x | -1 = -1
+                    // x | -1 = -1, cmp | 1 = 1
                     return oprnd2;
                 case LIR_andi:
-                    // x & -1 = x
+                    // x & -1 = x, cmp & 1 = cmp
                     return oprnd1;
-                case LIR_gtui:
-                    // u32 > 0xffffffff -> always false
-                    return insImmI(0);
                 default:
                     ;
                 }
-            } else if (c == 1) {
-                if (oprnd1->isCmp()) {
-                    switch (v) {
-                    case LIR_ori:
-                        // cmp | 1 = 1
-                        // note that we know that oprnd2 == insImmI(1), so just return that
-                        return oprnd2;
-                    case LIR_andi:
-                        // cmp & 1 = cmp
-                        return oprnd1;
-                    case LIR_gtui:
-                        // (0|1) > 1 -> always false
-                        return insImmI(0);
-                    default:
-                        ;
-                    }
-                } else if (v == LIR_muli) {
-                    // x * 1 = x
-                    return oprnd1;
-                }
+            } else if (c == 1 && v == LIR_muli) {
+                return oprnd1;
             }
         }
 
@@ -925,31 +887,18 @@ namespace nanojit
         return out->insGuard(v, c, gr);
     }
 
-    // Simplify operator if possible.  Always return NULL if overflow is possible.
-
-    LIns* ExprFilter::simplifyOverflowArith(LOpcode op, LInsp *opnd1, LInsp *opnd2)
+    LIns* ExprFilter::insGuardXov(LOpcode op, LInsp oprnd1, LInsp oprnd2, GuardRecord *gr)
     {
-        LInsp oprnd1 = *opnd1;
-        LInsp oprnd2 = *opnd2;
-
         if (oprnd1->isImmI() && oprnd2->isImmI()) {
             int32_t c1 = oprnd1->immI();
             int32_t c2 = oprnd2->immI();
             double d = 0.0;
 
-            // The code below attempts to perform the operation while
-            // detecting overflow.  For multiplication, we may unnecessarily
-            // infer a possible overflow due to the insufficient integer
-            // range of the double type.
-
             switch (op) {
-            case LIR_addjovi:
             case LIR_addxovi:    d = double(c1) + double(c2);    break;
-            case LIR_subjovi:
             case LIR_subxovi:    d = double(c1) - double(c2);    break;
-            case LIR_muljovi:
             case LIR_mulxovi:    d = double(c1) * double(c2);    break;
-            default:             NanoAssert(0);                  break;
+            default:            NanoAssert(0);                  break;
             }
             int32_t r = int32_t(d);
             if (r == d)
@@ -957,20 +906,14 @@ namespace nanojit
 
         } else if (oprnd1->isImmI() && !oprnd2->isImmI()) {
             switch (op) {
-            case LIR_addjovi:
             case LIR_addxovi:
-            case LIR_muljovi:
             case LIR_mulxovi: {
-                // swap operands, moving const to rhs
+                // move const to rhs
                 LIns* t = oprnd2;
                 oprnd2 = oprnd1;
                 oprnd1 = t;
-                // swap actual arguments in caller as well
-                *opnd1 = oprnd1;
-                *opnd2 = oprnd2;
                 break;
             }
-            case LIR_subjovi:
             case LIR_subxovi:
                 break;
             default:
@@ -982,30 +925,18 @@ namespace nanojit
             int c = oprnd2->immI();
             if (c == 0) {
                 switch (op) {
-                case LIR_addjovi:
                 case LIR_addxovi:
-                case LIR_subjovi:
                 case LIR_subxovi:
                     return oprnd1;
-                case LIR_muljovi:
                 case LIR_mulxovi:
                     return oprnd2;
                 default:
                     ;
                 }
-            } else if (c == 1 && (op == LIR_muljovi || op == LIR_mulxovi)) {
+            } else if (c == 1 && op == LIR_mulxovi) {
                 return oprnd1;
             }
         }
-
-        return NULL;
-    }
-
-    LIns* ExprFilter::insGuardXov(LOpcode op, LInsp oprnd1, LInsp oprnd2, GuardRecord *gr)
-    {
-        LIns* simplified = simplifyOverflowArith(op, &oprnd1, &oprnd2);
-        if (simplified)
-            return simplified;
 
         return out->insGuardXov(op, oprnd1, oprnd2, gr);
     }
@@ -1036,15 +967,6 @@ namespace nanojit
             }
         }
         return out->insBranch(v, c, t);
-    }
-
-    LIns* ExprFilter::insBranchJov(LOpcode op, LInsp oprnd1, LInsp oprnd2, LIns* target)
-    {
-        LIns* simplified = simplifyOverflowArith(op, &oprnd1, &oprnd2);
-        if (simplified)
-            return simplified;
-
-        return out->insBranchJov(op, oprnd1, oprnd2, target);
     }
 
     LIns* ExprFilter::insLoad(LOpcode op, LIns* base, int32_t off, AccSet accSet) {
@@ -1394,18 +1316,12 @@ namespace nanojit
                 case LIR_addxovi:
                 case LIR_subxovi:
                 case LIR_mulxovi:
-                case LIR_addjovi:
-                case LIR_subjovi:
-                case LIR_muljovi:
                 CASE86(LIR_divi:)
                 case LIR_addd:
                 case LIR_subd:
                 case LIR_muld:
                 case LIR_divd:
                 CASE64(LIR_addq:)
-                CASE64(LIR_subq:)
-                CASE64(LIR_addjovq:)
-                CASE64(LIR_subjovq:)
                 case LIR_andi:
                 case LIR_ori:
                 case LIR_xori:
@@ -1786,19 +1702,8 @@ namespace nanojit
                 formatGuardXov(buf, i);
                 break;
 
-            case LIR_addjovi:
-            case LIR_subjovi:
-            case LIR_muljovi:
-            CASE64(LIR_addjovq:)
-            CASE64(LIR_subjovq:)
-                VMPI_snprintf(s, n, "%s = %s %s, %s ; ovf -> %s", formatRef(&b1, i), lirNames[op],
-                    formatRef(&b2, i->oprnd1()),
-                    formatRef(&b3, i->oprnd2()),
-                    i->oprnd3() ? formatRef(&b4, i->oprnd3()) : "unpatched");
-                break;
-
             case LIR_addi:       CASE64(LIR_addq:)
-            case LIR_subi:       CASE64(LIR_subq:)
+            case LIR_subi:
             case LIR_muli:
             CASE86(LIR_divi:)
             case LIR_addd:
@@ -1810,7 +1715,7 @@ namespace nanojit
             case LIR_xori:       CASE64(LIR_xorq:)
             case LIR_lshi:       CASE64(LIR_lshq:)
             case LIR_rshi:       CASE64(LIR_rshq:)
-            case LIR_rshui:      CASE64(LIR_rshuq:)
+            case LIR_rshui:       CASE64(LIR_rshuq:)
             case LIR_eqi:        CASE64(LIR_eqq:)
             case LIR_lti:        CASE64(LIR_ltq:)
             case LIR_lei:        CASE64(LIR_leq:)
@@ -2496,8 +2401,6 @@ namespace nanojit
         return ins;
     }
 
-    // There is no CseFilter::insBranchJov(), as LIR_*jov* are not CSEable.
-
     LInsp CseFilter::insCall(const CallInfo *ci, LInsp args[])
     {
         LInsp ins;
@@ -3023,7 +2926,6 @@ namespace nanojit
         case LIR_orq:
         case LIR_xorq:
         case LIR_addq:
-        case LIR_subq:
         case LIR_eqq:
         case LIR_ltq:
         case LIR_gtq:
@@ -3247,39 +3149,6 @@ namespace nanojit
         return out->insBranch(op, cond, to);
     }
 
-    LIns* ValidateWriter::insBranchJov(LOpcode op, LIns* a, LIns* b, LIns* to)
-    {
-        int nArgs = 2;
-        LTy formals[2];
-        LIns* args[2] = { a, b };
-
-        switch (op) {
-        case LIR_addjovi:
-        case LIR_subjovi:
-        case LIR_muljovi:
-            formals[0] = LTy_I;
-            formals[1] = LTy_I;
-            break;
-
-#ifdef NANOJIT_64BIT
-        case LIR_addjovq:
-        case LIR_subjovq:
-            formals[0] = LTy_Q;
-            formals[1] = LTy_Q;
-            break;
-#endif
-        default:
-            NanoAssert(0);
-        }
-
-        // We check that target is a label in ValidateReader because it may
-        // not have been set here.
-
-        typeCheckArgs(op, nArgs, formals, args);
-
-        return out->insBranchJov(op, a, b, to);
-    }
-
     LIns* ValidateWriter::insAlloc(int32_t size)
     {
         return out->insAlloc(size);
@@ -3311,15 +3180,6 @@ namespace nanojit
         case LIR_j:
             NanoAssert(ins->getTarget() && ins->oprnd2()->isop(LIR_label));
             break;
-
-        case LIR_addjovi:
-        case LIR_subjovi:
-        case LIR_muljovi:
-        CASE64(LIR_addjovq:)
-        CASE64(LIR_subjovq:)
-            NanoAssert(ins->getTarget() && ins->oprnd3()->isop(LIR_label));
-            break;
-
         case LIR_jtbl: {
             uint32_t tableSize = ins->getTableSize();
             NanoAssert(tableSize > 0);
