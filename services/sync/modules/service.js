@@ -99,6 +99,7 @@ WeaveSvc.prototype = {
 
   _lock: Utils.lock,
   _catch: Utils.catch,
+  _locked: false,
   _loggedIn: false,
   keyGenEnabled: true,
 
@@ -381,6 +382,7 @@ WeaveSvc.prototype = {
         break;
 
       case FIREFOX_ID:
+      case TEST_HARNESS_ID:
         engines = ["Bookmarks", "Form", "History", "Password", "Prefs", "Tab"];
         break;
 
