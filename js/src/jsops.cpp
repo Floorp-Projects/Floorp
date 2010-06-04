@@ -216,8 +216,10 @@ BEGIN_CASE(JSOP_STOP)
     }
 
     JS_ASSERT(regs.sp == StackBase(fp));
-    if ((fp->flags & JSFRAME_CONSTRUCTING) && JSVAL_IS_PRIMITIVE(fp->rval))
+    if ((fp->flags & JSFRAME_CONSTRUCTING) && JSVAL_IS_PRIMITIVE(fp->rval)) {
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(fp->thisv));
         fp->rval = fp->thisv;
+    }
     ok = JS_TRUE;
     if (inlineCallCount)
   inline_return:
@@ -268,8 +270,10 @@ BEGIN_CASE(JSOP_STOP)
          * passed in via |this|, and instrument this constructor invocation.
          */
         if (fp->flags & JSFRAME_CONSTRUCTING) {
-            if (JSVAL_IS_PRIMITIVE(fp->rval))
+            if (JSVAL_IS_PRIMITIVE(fp->rval)) {
+                JS_ASSERT(!JSVAL_IS_PRIMITIVE(fp->thisv));
                 fp->rval = fp->thisv;
+            }
             JS_RUNTIME_METER(cx->runtime, constructs);
         }
 
@@ -2066,6 +2070,8 @@ BEGIN_CASE(JSOP_APPLY)
                 *disp = newfp;
             }
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
+            JS_ASSERT_IF(!JSVAL_IS_PRIMITIVE(vp[1]),
+                         js_IsSaneThisObject(JSVAL_TO_OBJECT(vp[1])));
             newfp->thisv = vp[1];
             newfp->imacpc = NULL;
 
@@ -2172,6 +2178,29 @@ BEGIN_CASE(JSOP_SETCALL)
     goto error;
 END_CASE(JSOP_SETCALL)
 
+#define SLOW_PUSH_THISV(cx, obj)                                              \
+    JS_BEGIN_MACRO                                                            \
+        JSClass *clasp;                                                       \
+        JSObject *thisp = obj;                                                \
+        if (!thisp->getParent() ||                                            \
+            (clasp = thisp->getClass()) == &js_CallClass ||                   \
+            clasp == &js_BlockClass ||                                        \
+            clasp == &js_DeclEnvClass) {                                      \
+            /* Normal case: thisp is global or an activation record. */       \
+            /* Callee determines 'this'. */                                   \
+            thisp = NULL;                                                     \
+        } else {                                                              \
+            /* thisp is a With object or, even stranger, a plain nonglobal */ \
+            /* object on the scope chain. Call the thisObject hook now: */    \
+            /* since we are pushing a non-null thisv, the callee will */      \
+            /* assume 'this' was computed. */                                 \
+            thisp = thisp->thisObject(cx);                                    \
+            if (!thisp)                                                       \
+                goto error;                                                   \
+        }                                                                     \
+        PUSH_OPND(OBJECT_TO_JSVAL(thisp));                                    \
+    JS_END_MACRO
+
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
@@ -2184,19 +2213,31 @@ BEGIN_CASE(JSOP_CALLNAME)
         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
         if (entry->vword.isObject()) {
             rval = entry->vword.toJsval();
-            goto do_push_rval;
-        }
-
-        if (entry->vword.isSlot()) {
+        } else if (entry->vword.isSlot()) {
             slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
             rval = obj2->lockedGetSlot(slot);
-            goto do_push_rval;
+        } else {
+            JS_ASSERT(entry->vword.isSprop());
+            sprop = entry->vword.toSprop();
+            NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
         }
 
-        JS_ASSERT(entry->vword.isSprop());
-        sprop = entry->vword.toSprop();
-        goto do_native_get;
+        // Push results, the same as below, but with a property cache hit there
+        // is no need to test for the unusual and uncacheable case where the
+        // caller determines 'this'.
+#ifdef DEBUG
+        JSClass *clasp;
+        JS_ASSERT(!obj->getParent() ||
+                  (clasp = obj->getClass()) == &js_CallClass ||
+                  clasp == &js_BlockClass ||
+                  clasp == &js_DeclEnvClass);
+#endif
+        PUSH_OPND(rval);
+        if (op == JSOP_CALLNAME)
+            PUSH_OPND(JSVAL_NULL);
+        len = JSOP_NAME_LENGTH;
+        DO_NEXT_OP(len);
     }
 
     id = ATOM_TO_JSID(atom);
@@ -2221,15 +2262,13 @@ BEGIN_CASE(JSOP_CALLNAME)
             goto error;
     } else {
         sprop = (JSScopeProperty *)prop;
-  do_native_get:
         NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
         obj2->dropProperty(cx, (JSProperty *) sprop);
     }
 
-  do_push_rval:
     PUSH_OPND(rval);
     if (op == JSOP_CALLNAME)
-        PUSH_OPND(OBJECT_TO_JSVAL(obj));
+        SLOW_PUSH_THISV(cx, obj);
 }
 END_CASE(JSOP_NAME)
 
@@ -3694,7 +3733,7 @@ BEGIN_CASE(JSOP_XMLNAME)
         goto error;
     STORE_OPND(-1, rval);
     if (op == JSOP_CALLXMLNAME)
-        PUSH_OPND(OBJECT_TO_JSVAL(obj));
+        SLOW_PUSH_THISV(cx, obj);
 END_CASE(JSOP_XMLNAME)
 
 BEGIN_CASE(JSOP_DESCENDANTS)

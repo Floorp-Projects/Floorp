@@ -240,17 +240,6 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
     return JS_TRUE;
 }
 
-/* Some objects (e.g., With) delegate 'this' to another object. */
-static inline JSObject *
-CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
-{
-    JSObject *thisp = obj->thisObject(cx);
-    if (!thisp)
-        return NULL;
-    argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return thisp;
-}
-
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -269,36 +258,10 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
 JS_STATIC_INTERPRET JSObject *
 js_ComputeGlobalThis(JSContext *cx, jsval *argv)
 {
-    JSObject *thisp;
-
-    if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-        !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
-        thisp = cx->globalObject;
-    } else {
-        thisp = JSVAL_TO_OBJECT(argv[-2])->getGlobal();
-    }
-
-    return CallThisObjectHook(cx, thisp, argv);
-}
-
-static JSObject *
-ComputeThis(JSContext *cx, jsval *argv)
-{
-    JSObject *thisp;
-
-    JS_ASSERT(!JSVAL_IS_NULL(argv[-1]));
-    if (!JSVAL_IS_OBJECT(argv[-1])) {
-        if (!js_PrimitiveToObject(cx, &argv[-1]))
-            return NULL;
-        thisp = JSVAL_TO_OBJECT(argv[-1]);
-        return thisp;
-    } 
-
-    thisp = JSVAL_TO_OBJECT(argv[-1]);
-    if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
-        return js_ComputeGlobalThis(cx, argv);
-
-    return CallThisObjectHook(cx, thisp, argv);
+    JSObject *thisp = JSVAL_TO_OBJECT(argv[-2])->getGlobal()->thisObject(cx);
+    if (thisp)
+        argv[-1] = OBJECT_TO_JSVAL(thisp);
+    return thisp;
 }
 
 JSObject *
@@ -307,7 +270,28 @@ js_ComputeThis(JSContext *cx, jsval *argv)
     JS_ASSERT(argv[-1] != JSVAL_HOLE);  // check for SynthesizeFrame poisoning
     if (JSVAL_IS_NULL(argv[-1]))
         return js_ComputeGlobalThis(cx, argv);
-    return ComputeThis(cx, argv);
+    if (!JSVAL_IS_OBJECT(argv[-1])) {
+        if (!js_PrimitiveToObject(cx, &argv[-1]))
+            return NULL;
+        return JSVAL_TO_OBJECT(argv[-1]);
+    }
+
+    JSObject *obj = JSVAL_TO_OBJECT(argv[-1]);
+    JS_ASSERT(js_IsSaneThisObject(obj));
+    return obj;
+}
+
+JSObject *
+JSStackFrame::computeThisObject(JSContext *cx)
+{
+    JS_ASSERT(JSVAL_IS_PRIMITIVE(thisv));
+    JS_ASSERT(fun);
+
+    JSObject *obj = js_ComputeThis(cx, argv);
+    if (!obj)
+        return NULL;
+    thisv = OBJECT_TO_JSVAL(obj);
+    return obj;
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -518,26 +502,6 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         }
     }
 
-    if (flags & JSINVOKE_CONSTRUCT) {
-        JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
-    } else {
-        /*
-         * We must call js_ComputeThis in case we are not called from the
-         * interpreter, where a prior bytecode has computed an appropriate
-         * |this| already.
-         *
-         * But we need to compute |this| eagerly only for so-called "slow"
-         * (i.e., not fast) native functions. Fast natives must use either
-         * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
-         * the appropriate this-computing bytecode, e.g., JSOP_THIS.
-         */
-        if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-            if (!js_ComputeThis(cx, vp + 2))
-                return false;
-            flags |= JSFRAME_COMPUTED_THIS;
-        }
-    }
-
   start_call:
     if (native && fun && fun->isFastNative()) {
 #ifdef DEBUG_NOT_THROWING
@@ -567,7 +531,6 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
             nmissing = (minargs > argc ? minargs - argc : 0) + fun->u.n.extra;
             nvars = 0;
         }
-
     } else {
         nvars = nmissing = 0;
     }
@@ -634,6 +597,27 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
             return false;
     }
+
+    /*
+     * Compute |this|. Currently, this must happen after the frame is pushed
+     * and fp->scopeChain is correct because the thisObject hook may call
+     * JS_GetScopeChain.
+     */
+    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !JSVAL_IS_PRIMITIVE(vp[1]));
+    if (JSVAL_IS_OBJECT(vp[1]) && !(flags & JSINVOKE_CONSTRUCT)) {
+        /*
+         * We must call the thisObject hook in case we are not called from the
+         * interpreter, where a prior bytecode has computed an appropriate
+         * |this| already.
+         */
+        JSObject *thisp = JSVAL_TO_OBJECT(vp[1]);
+        thisp = thisp ? thisp : funobj->getGlobal();
+        thisp = thisp->thisObject(cx);
+        if (!thisp)
+            return false;
+        fp->thisv = vp[1] = OBJECT_TO_JSVAL(thisp);
+    }
+    JS_ASSERT_IF(!JSVAL_IS_PRIMITIVE(vp[1]), js_IsSaneThisObject(JSVAL_TO_OBJECT(vp[1])));
 
     /* Call the hook if present after we fully initialized the frame. */
     JSInterpreterHook hook = cx->debugHooks->callHook;
@@ -788,7 +772,7 @@ js_Execute(JSContext *cx, JSObject *const chain, JSScript *script,
         fp->argsobj = down->argsobj;
         fp->fun = (script->staticLevel > 0) ? down->fun : NULL;
         fp->thisv = down->thisv;
-        fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
+        fp->flags = flags;
         fp->argc = down->argc;
         fp->argv = down->argv;
         fp->annotation = down->annotation;
@@ -809,7 +793,7 @@ js_Execute(JSContext *cx, JSObject *const chain, JSScript *script,
         fp->argsobj = NULL;
         fp->fun = NULL;
         /* Ininitialize fp->thisv after pushExecuteFrame. */
-        fp->flags = flags | JSFRAME_COMPUTED_THIS;
+        fp->flags = flags;
         fp->argc = 0;
         fp->argv = NULL;
         fp->annotation = NULL;
@@ -2192,6 +2176,8 @@ js_Interpret(JSContext *cx)
     script = fp->script;
     JS_ASSERT(!script->isEmpty());
     JS_ASSERT(script->length > 1);
+    JS_ASSERT(JSVAL_IS_OBJECT(fp->thisv));
+    JS_ASSERT_IF(!fp->fun, !JSVAL_IS_NULL(fp->thisv));
 
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
