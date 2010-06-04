@@ -63,17 +63,6 @@ Observers.add("weave:engine:sync:start", engineObserver);
 Observers.add("weave:engine:sync:finish", engineObserver);
 
 
-function do_check_throws(func) {
-  var raised = false;
-  try {
-    func();
-  } catch (ex) {
-    raised = true;
-  }
-  do_check_true(raised);
-}
-
-
 function test_members() {
   _("Engine object members");
   let engine = new SteamEngine();
@@ -90,9 +79,14 @@ function test_score() {
   engine._tracker.score += 5;
   do_check_eq(engine.score, 5);
 
-  do_check_throws(function() {
-      engine.score = 10;
-  });
+  try {
+    engine.score = 10;
+  } catch(ex) {
+    // Setting an attribute that has a getter produces an error in
+    // Firefox <= 3.6 and is ignored in later versions.  Either way,
+    // the attribute's value won't change.
+  }
+  do_check_eq(engine.score, 5);
 }
 
 function test_resetClient() {
