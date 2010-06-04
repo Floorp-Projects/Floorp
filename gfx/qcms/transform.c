@@ -38,7 +38,7 @@ typedef uint16_t uint16_fract_t;
 float lut_interp_linear(double value, uint16_t *table, int length)
 {
 	int upper, lower;
-	value = value * (length - 1);
+	value = value * (length - 1); // scale to length of the array
 	upper = ceil(value);
 	lower = floor(value);
 	//XXX: can we be more performant here?
@@ -50,15 +50,60 @@ float lut_interp_linear(double value, uint16_t *table, int length)
 /* same as above but takes and returns a uint16_t value representing a range from 0..1 */
 uint16_t lut_interp_linear16(uint16_t input_value, uint16_t *table, int length)
 {
+	/* Start scaling input_value to the length of the array: 65535*(length-1).
+	 * We'll divide out the 65535 next */
 	uint32_t value = (input_value * (length - 1));
 	uint32_t upper = (value + 65534) / 65535; /* equivalent to ceil(value/65535) */
 	uint32_t lower = value / 65535;           /* equivalent to floor(value/65535) */
+	/* interp is the distance from upper to value scaled to 0..65535 */
 	uint32_t interp = value % 65535;
 
-	value = (table[upper]*(interp) + table[lower]*(65535 - interp))/65535;
+	value = (table[upper]*(interp) + table[lower]*(65535 - interp))/65535; // 0..65535*65535
 
 	return value;
 }
+
+/* same as above but takes an input_value from 0..PRECACHE_OUTPUT_MAX
+ * and returns a uint8_t value representing a range from 0..1 */
+static
+uint8_t lut_interp_linear_precache_output(uint32_t input_value, uint16_t *table, int length)
+{
+	/* Start scaling input_value to the length of the array: PRECACHE_OUTPUT_MAX*(length-1).
+	 * We'll divide out the PRECACHE_OUTPUT_MAX next */
+	uint32_t value = (input_value * (length - 1));
+
+	/* equivalent to ceil(value/PRECACHE_OUTPUT_MAX) */
+	uint32_t upper = (value + PRECACHE_OUTPUT_MAX-1) / PRECACHE_OUTPUT_MAX;
+	/* equivalent to floor(value/PRECACHE_OUTPUT_MAX) */
+	uint32_t lower = value / PRECACHE_OUTPUT_MAX;
+	/* interp is the distance from upper to value scaled to 0..PRECACHE_OUTPUT_MAX */
+	uint32_t interp = value % PRECACHE_OUTPUT_MAX;
+
+	/* the table values range from 0..65535 */
+	value = (table[upper]*(interp) + table[lower]*(PRECACHE_OUTPUT_MAX - interp)); // 0..(65535*PRECACHE_OUTPUT_MAX)
+
+	/* round and scale */
+	value += (PRECACHE_OUTPUT_MAX*65535/255)/2;
+        value /= (PRECACHE_OUTPUT_MAX*65535/255); // scale to 0..255
+	return value;
+}
+
+#if 0
+/* if we use a different representation i.e. one that goes from 0 to 0x1000 we can be more efficient
+ * because we can avoid the divisions and use a shifting instead */
+/* same as above but takes and returns a uint16_t value representing a range from 0..1 */
+uint16_t lut_interp_linear16(uint16_t input_value, uint16_t *table, int length)
+{
+	uint32_t value = (input_value * (length - 1));
+	uint32_t upper = (value + 4095) / 4096; /* equivalent to ceil(value/4096) */
+	uint32_t lower = value / 4096;           /* equivalent to floor(value/4096) */
+	uint32_t interp = value % 4096;
+
+	value = (table[upper]*(interp) + table[lower]*(4096 - interp))/4096; // 0..4096*4096
+
+	return value;
+}
+#endif
 
 void compute_curve_gamma_table_type1(float gamma_table[256], double gamma)
 {
@@ -707,7 +752,7 @@ static void qcms_transform_data_gray_out_precache(qcms_transform *transform, uns
 		float linear = transform->input_gamma_table_gray[device];
 
 		/* we could round here... */
-		gray = linear * 65535.;
+		gray = linear * PRECACHE_OUTPUT_MAX;
 
 		*dest++ = transform->output_table_r->data[gray];
 		*dest++ = transform->output_table_g->data[gray];
@@ -726,7 +771,7 @@ static void qcms_transform_data_graya_out_precache(qcms_transform *transform, un
 		float linear = transform->input_gamma_table_gray[device];
 
 		/* we could round here... */
-		gray = linear * 65535.;
+		gray = linear * PRECACHE_OUTPUT_MAX;
 
 		*dest++ = transform->output_table_r->data[gray];
 		*dest++ = transform->output_table_g->data[gray];
@@ -758,9 +803,9 @@ static void qcms_transform_data_rgb_out_lut_precache(qcms_transform *transform, 
 		out_linear_b = clamp_float(out_linear_b);
 
 		/* we could round here... */
-		r = out_linear_r * 65535.;
-		g = out_linear_g * 65535.;
-		b = out_linear_b * 65535.;
+		r = out_linear_r * PRECACHE_OUTPUT_MAX;
+		g = out_linear_g * PRECACHE_OUTPUT_MAX;
+		b = out_linear_b * PRECACHE_OUTPUT_MAX;
 
 		*dest++ = transform->output_table_r->data[r];
 		*dest++ = transform->output_table_g->data[g];
@@ -792,9 +837,9 @@ static void qcms_transform_data_rgba_out_lut_precache(qcms_transform *transform,
 		out_linear_b = clamp_float(out_linear_b);
 
 		/* we could round here... */
-		r = out_linear_r * 65535.;
-		g = out_linear_g * 65535.;
-		b = out_linear_b * 65535.;
+		r = out_linear_r * PRECACHE_OUTPUT_MAX;
+		g = out_linear_g * PRECACHE_OUTPUT_MAX;
+		b = out_linear_b * PRECACHE_OUTPUT_MAX;
 
 		*dest++ = transform->output_table_r->data[r];
 		*dest++ = transform->output_table_g->data[g];
@@ -988,27 +1033,26 @@ void qcms_transform_release(qcms_transform *t)
 static void compute_precache_pow(uint8_t *output, float gamma)
 {
 	uint32_t v = 0;
-	for (v = 0; v <= 0xffff; v++) {
+	for (v = 0; v < PRECACHE_OUTPUT_SIZE; v++) {
 		//XXX: don't do integer/float conversion... and round?
-		output[v] = 255. * pow(v/65535., gamma);
+		output[v] = 255. * pow(v/(double)PRECACHE_OUTPUT_MAX, gamma);
 	}
 }
 
 void compute_precache_lut(uint8_t *output, uint16_t *table, int length)
 {
 	uint32_t v = 0;
-	for (v = 0; v <= 0xffff; v++) {
-		//XXX: don't do integer/float conversion... round?
-		output[v] = lut_interp_linear16(v, table, length) >> 8;
+	for (v = 0; v < PRECACHE_OUTPUT_SIZE; v++) {
+		output[v] = lut_interp_linear_precache_output(v, table, length);
 	}
 }
 
 void compute_precache_linear(uint8_t *output)
 {
 	uint32_t v = 0;
-	for (v = 0; v <= 0xffff; v++) {
+	for (v = 0; v < PRECACHE_OUTPUT_SIZE; v++) {
 		//XXX: round?
-		output[v] = v >> 8;
+		output[v] = v / (PRECACHE_OUTPUT_SIZE/256);
 	}
 }
 
