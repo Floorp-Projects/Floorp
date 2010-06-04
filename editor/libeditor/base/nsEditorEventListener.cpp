@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsEditorEventListener.h"
 #include "nsEditor.h"
+#include "nsIPlaintextEditor.h"
 
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMEvent.h"
@@ -317,28 +318,142 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
 
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent)
+  {
+    //non-key event passed to keypress.  bad things.
+    return NS_OK;
+  }
+
+  // Don't handle events which do not belong to us (by making sure that the
+  // target of the event is actually editable).
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = keyEvent->GetTarget(getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
+  if (!mEditor->IsModifiableNode(targetNode))
+  {
+    return NS_OK;
+  }
+
   // DOM event handling happens in two passes, the client pass and the system
   // pass.  We do all of our processing in the system pass, to allow client
   // handlers the opportunity to cancel events and prevent typing in the editor.
   // If the client pass cancelled the event, defaultPrevented will be true
   // below.
 
-  nsCOMPtr<nsIDOMNSUIEvent> UIEvent = do_QueryInterface(aKeyEvent);
-  if(UIEvent) {
+  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
+  if(nsUIEvent) 
+  {
     PRBool defaultPrevented;
-    UIEvent->GetPreventDefault(&defaultPrevented);
-    if(defaultPrevented) {
+    nsUIEvent->GetPreventDefault(&defaultPrevented);
+    if(defaultPrevented)
       return NS_OK;
-    }
   }
 
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
-  if (!keyEvent) {
-    //non-key event passed to keypress.  bad things.
+  PRUint32 keyCode;
+  keyEvent->GetKeyCode(&keyCode);
+
+  // if we are readonly or disabled, then do nothing.
+  if (mEditor->IsReadonly() || mEditor->IsDisabled())
+  {
+    // consume backspace for disabled and readonly textfields, to prevent
+    // back in history, which could be confusing to users
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE)
+      aKeyEvent->PreventDefault();
+
     return NS_OK;
   }
 
-  return mEditor->HandleKeyPressEvent(keyEvent);
+  nsCOMPtr<nsIPlaintextEditor> textEditor =
+    do_QueryInterface(static_cast<nsIEditor*>(mEditor));
+  NS_ASSERTION(textEditor, "nsEditor must have nsIPlaintextEditor");
+
+  // if there is no charCode, then it's a key that doesn't map to a character,
+  // so look for special keys using keyCode.
+  if (0 != keyCode)
+  {
+    PRBool isAnyModifierKeyButShift;
+    nsresult rv;
+    rv = keyEvent->GetAltKey(&isAnyModifierKeyButShift);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!isAnyModifierKeyButShift)
+    {
+      rv = keyEvent->GetMetaKey(&isAnyModifierKeyButShift);
+      if (NS_FAILED(rv)) return rv;
+      
+      if (!isAnyModifierKeyButShift)
+      {
+        rv = keyEvent->GetCtrlKey(&isAnyModifierKeyButShift);
+        if (NS_FAILED(rv)) return rv;
+      }
+    }
+
+    switch (keyCode)
+    {
+      case nsIDOMKeyEvent::DOM_VK_META:
+      case nsIDOMKeyEvent::DOM_VK_SHIFT:
+      case nsIDOMKeyEvent::DOM_VK_CONTROL:
+      case nsIDOMKeyEvent::DOM_VK_ALT:
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK;
+        break;
+
+      case nsIDOMKeyEvent::DOM_VK_BACK_SPACE: 
+        if (isAnyModifierKeyButShift)
+          return NS_OK;
+
+        mEditor->DeleteSelection(nsIEditor::ePrevious);
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK;
+        break;
+ 
+      case nsIDOMKeyEvent::DOM_VK_DELETE:
+        /* on certain platforms (such as windows) the shift key
+           modifies what delete does (cmd_cut in this case).
+           bailing here to allow the keybindings to do the cut.*/
+        PRBool isShiftModifierKey;
+        rv = keyEvent->GetShiftKey(&isShiftModifierKey);
+        if (NS_FAILED(rv)) return rv;
+
+        if (isAnyModifierKeyButShift || isShiftModifierKey)
+           return NS_OK;
+        mEditor->DeleteSelection(nsIEditor::eNext);
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK; 
+        break;
+ 
+      case nsIDOMKeyEvent::DOM_VK_TAB:
+        if (mEditor->IsSingleLineEditor() || mEditor->IsPasswordEditor() ||
+            mEditor->IsFormWidget() || mEditor->IsInteractionAllowed()) {
+          return NS_OK; // let it be used for focus switching
+        }
+
+        if (isAnyModifierKeyButShift)
+          return NS_OK;
+
+        // else we insert the tab straight through
+        textEditor->HandleKeyPress(keyEvent);
+        // let HandleKeyPress consume the event
+        return NS_OK; 
+
+      case nsIDOMKeyEvent::DOM_VK_RETURN:
+      case nsIDOMKeyEvent::DOM_VK_ENTER:
+        if (isAnyModifierKeyButShift)
+          return NS_OK;
+
+        if (!mEditor->IsSingleLineEditor())
+        {
+          textEditor->HandleKeyPress(keyEvent);
+          aKeyEvent->PreventDefault(); // consumed
+        }
+        return NS_OK;
+    }
+  }
+
+  textEditor->HandleKeyPress(keyEvent);
+  return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
 }
 
 /**
