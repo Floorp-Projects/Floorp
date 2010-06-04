@@ -1,4 +1,5 @@
-let testURL = "chrome://mochikit/content/browser/mobile/chrome/browser_FormAssistant.html";
+let testURL = "chrome://mochikit/content/browser/browser_FormAssistant.html";
+testURL = testURL.replace("chrome://mochikit/content/browser/", "file:///home/steakdepapillon/Devel/fennec/mobilebase/mobile/_tests/testing/mochitest/browser/mobile/chrome/");
 let newTab = null;
 let container = null;
 
@@ -109,10 +110,41 @@ function testTabIndexNavigation() {
   FormHelper.close();
   is(container.hidden, true, "Form Assistant should be close");
 
-  // Close our tab when finished
-  Browser.closeTab(newTab);
+  navigateIntoNestedFrames();
+};
 
-  // We must finialize the tests
-  finish();
+function navigateIntoNestedFrames() {
+  let doc = newTab.browser.contentDocument;
+
+  let iframe = doc.createElement("iframe");
+  iframe.setAttribute("src", "data:text/html;charset=utf-8,%3Ciframe%20src%3D%22data%3Atext/html%3Bcharset%3Dutf-8%2C%253Cinput%253E%253Cbr%253E%253Cinput%253E%250A%22%3E%3C/iframe%3E");
+  iframe.setAttribute("width", "300");
+  iframe.setAttribute("height", "100");
+
+  iframe.addEventListener("load", function() {
+    iframe.removeEventListener("load", arguments.callee, false);
+
+    let elements = iframe.contentDocument
+                         .querySelector("iframe").contentDocument
+                         .getElementsByTagName("input");
+
+    FormHelper.open(elements[0]);
+    ok(FormHelper._getPrevious(), "It should be possible to access to the previous field");
+    ok(FormHelper._getNext(), "It should be possible to access to the next field");
+    FormHelper.goToNext();
+    ok(!FormHelper._getNext(), "It should not be possible to access to the next field");
+
+    doc.body.removeChild(iframe);
+
+    // Close the form assistant
+    FormHelper.close();
+
+    // Close our tab when finished
+    Browser.closeTab(newTab);
+
+    // We must finialize the tests
+    finish();
+  }, false);
+  doc.body.appendChild(iframe);
 };
 
