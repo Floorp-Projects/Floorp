@@ -56,7 +56,6 @@ _TEST_FILES = \
 		test_bug525389.html \
 		test_bug537046.html \
 		test_contenteditable_focus.html \
-		test_htmleditor_keyevent_handling.html \
 		test_select_all_without_body.html \
 		file_select_all_without_body.html \
 		$(NULL)
