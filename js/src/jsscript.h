@@ -86,6 +86,11 @@ typedef struct JSUpvarArray {
     uint32          length;     /* count of indexed upvar cookies */
 } JSUpvarArray;
 
+typedef struct JSConstArray {
+    js::Value       *vector;    /* array of indexed constant values */
+    uint32          length;
+} JSConstArray;
+
 namespace js {
 
 struct GlobalSlotArray {
@@ -140,6 +145,8 @@ struct JSScript {
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
     uint8           globalsOffset;  /* offset to the array of global slots or
+                                       0 if none */
+    uint8           constOffset;    /* offset to the array of constants or
                                        0 if none */
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
@@ -212,6 +219,11 @@ struct JSScript {
         return (js::GlobalSlotArray *) ((uint8 *)this + globalsOffset);
     }
 
+    JSConstArray *consts() {
+        JS_ASSERT(constOffset != 0);
+        return (JSConstArray *) ((uint8 *) this + constOffset);
+    }
+
     JSAtom *getAtom(size_t index) {
         JS_ASSERT(index < atomMap.length);
         return atomMap.vector[index];
@@ -238,6 +250,12 @@ struct JSScript {
     inline JSFunction *getFunction(size_t index);
 
     inline JSObject *getRegExp(size_t index);
+
+    const js::Value &getConst(size_t index) {
+        JSConstArray *arr = consts();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index];
+    }
 
     /*
      * The isEmpty method tells whether this script has code that computes any
@@ -362,7 +380,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
              uint32 nobjects, uint32 nupvars, uint32 nregexps,
-             uint32 ntrynotes, uint32 nglobals);
+             uint32 ntrynotes, uint32 nconsts, uint32 nglobals);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);

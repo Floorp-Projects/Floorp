@@ -49,7 +49,7 @@
 #define ARRAY_CAPACITY_MIN      7
 
 extern JSBool
-js_IdIsIndex(jsboxedword idw, jsuint *indexp);
+js_IdIsIndex(jsid id, jsuint *indexp);
 
 extern js::Class js_ArrayClass, js_SlowArrayClass;
 
@@ -201,7 +201,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
  * Utility to access the value from the id returned by array_lookupProperty.
  */
 JSBool
-js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
+js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
                              js::Value *vp);
 
 /* Array constructor native. Exposed only so the JIT can know its address. */

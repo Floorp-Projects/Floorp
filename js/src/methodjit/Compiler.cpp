@@ -452,8 +452,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DOUBLE)
           {
             uint32 index = fullAtomIndex(PC);
-            JSAtom *atom = script->getAtom(index);
-            double d = *ATOM_TO_DOUBLE(atom);
+            double d = script->getConst(index).asDouble();
             frame.push(Value(DoubleTag(d)));
           }
           END_CASE(JSOP_DOUBLE)

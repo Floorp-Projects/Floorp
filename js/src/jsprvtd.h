@@ -57,11 +57,35 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
+/* Internal identifier (jsid) macros. */
+
+#define JSID_IS_ATOM(id)            JSVAL_IS_STRING((jsval)(id))
+#define JSID_TO_ATOM(id)            ((JSAtom *)JSVAL_TO_STRING((jsval)(id)))
+#define JSID_TO_STRING(id)          ATOM_TO_STRING(JSID_TO_ATOM(id))
+#define ATOM_TO_JSID(atom)          ((jsid)STRING_TO_JSVAL((JSString *)atom))
+
+#define JSID_IS_INT(id)             JSVAL_IS_INT((jsval)(id))
+#define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
+#define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
+#define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
+#define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
+
+#define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
+#define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
+#define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
+#define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
+
+#define ID_TO_VALUE(id)             (Valueify(id))
+#define ID_TO_JSVAL(id)             ((jsval)(id))
+
 /*
  * Convenience constants.
  */
 #define JS_BITS_PER_UINT32_LOG2 5
 #define JS_BITS_PER_UINT32      32
+
+/* The alignment required of objects stored in GC arenas. */
+const uintN JS_GCTHING_ALIGN = 8;
 
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
