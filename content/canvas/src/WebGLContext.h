@@ -280,12 +280,16 @@ public:
     already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
     void MarkContextClean() { }
 
+    // a number that increments every time we have an event that causes
+    // all context resources to be lost.
+    PRUint32 Generation() { return mGeneration; }
 protected:
     nsHTMLCanvasElement* mCanvasElement;
 
     nsRefPtr<gl::GLContext> gl;
 
     PRInt32 mWidth, mHeight;
+    PRUint32 mGeneration;
 
     PRBool mInvalidated;
 
@@ -314,6 +318,32 @@ protected:
     nsresult DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
                                       gfxImageSurface **imageOut,
                                       PRBool flipY, PRBool premultiplyAlpha);
+
+    // Conversion from public nsI* interfaces to concrete objects
+    template<class ConcreteObjectType, class BaseInterfaceType>
+    PRBool GetConcreteObject(BaseInterfaceType *aInterface,
+                             ConcreteObjectType **aConcreteObject,
+                             PRBool *isNull = 0,
+                             PRBool *isDeleted = 0);
+
+    template<class ConcreteObjectType, class BaseInterfaceType>
+    PRBool GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
+                                      ConcreteObjectType **aConcreteObject,
+                                      WebGLuint *aGLObjectName,
+                                      PRBool *isNull = 0,
+                                      PRBool *isDeleted = 0);
+
+    template<class ConcreteObjectType, class BaseInterfaceType>
+    PRBool GetGLName(BaseInterfaceType *aInterface,
+                     WebGLuint *aGLObjectName,
+                     PRBool *isNull = 0,
+                     PRBool *isDeleted = 0);
+
+    template<class ConcreteObjectType, class BaseInterfaceType>
+    PRBool CheckConversion(BaseInterfaceType *aInterface,
+                           PRBool *isNull = 0,
+                           PRBool *isDeleted = 0);
+
 
     // the buffers bound to the current program's attribs
     nsTArray<WebGLVertexAttribData> mAttribBuffers;
@@ -383,6 +413,8 @@ protected:
     nsTArray<WebGLObjectBaseRefPtr *> mRefOwners;
 };
 
+// this class is a mixin for GL objects that have dimensions
+// that we need to track.
 class WebGLRectangleObject
 {
 protected:
@@ -416,17 +448,41 @@ protected:
     WebGLsizei mHeight;
 };
 
+// This class is a mixin for objects that are tied to a specific
+// context (which is to say, all of them).  They provide initialization
+// as well as comparison with the current context.
+class WebGLContextBoundObject
+{
+public:
+    WebGLContextBoundObject(WebGLContext *context) {
+        mContext = context;
+        mContextGeneration = context->Generation();
+    }
+
+    PRBool IsCompatibleWithContext(WebGLContext *other) {
+        return mContext == other &&
+            mContextGeneration == other->Generation();
+    }
+
+protected:
+    WebGLContext *mContext;
+    PRUint32 mContextGeneration;
+};
+
 #define WEBGLBUFFER_PRIVATE_IID \
     {0xd69f22e9, 0x6f98, 0x48bd, {0xb6, 0x94, 0x34, 0x17, 0xed, 0x06, 0x11, 0xab}}
 class WebGLBuffer :
     public nsIWebGLBuffer,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLBUFFER_PRIVATE_IID)
 
-    WebGLBuffer(WebGLuint name)
-        : mName(name), mDeleted(PR_FALSE), mByteLength(0), mTarget(LOCAL_GL_NONE), mData(nsnull)
+    WebGLBuffer(WebGLContext *context, WebGLuint name) :
+        WebGLContextBoundObject(context),
+        mName(name), mDeleted(PR_FALSE),
+        mByteLength(0), mTarget(LOCAL_GL_NONE), mData(nsnull)
     { }
 
     ~WebGLBuffer() {
@@ -510,13 +566,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
 class WebGLTexture :
     public nsIWebGLTexture,
     public WebGLZeroingObject,
-    public WebGLRectangleObject
+    public WebGLRectangleObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLTEXTURE_PRIVATE_IID)
 
-    WebGLTexture(WebGLuint name) :
-        mName(name), mDeleted(PR_FALSE) { }
+    WebGLTexture(WebGLContext *context, WebGLuint name) :
+        WebGLContextBoundObject(context),
+        mName(name), mDeleted(PR_FALSE)
+    { }
 
     void Delete() {
         if (mDeleted)
@@ -541,12 +600,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLTexture, WEBGLTEXTURE_PRIVATE_IID)
     {0x48cce975, 0xd459, 0x4689, {0x83, 0x82, 0x37, 0x82, 0x6e, 0xac, 0xe0, 0xa7}}
 class WebGLShader :
     public nsIWebGLShader,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLSHADER_PRIVATE_IID)
 
-    WebGLShader(WebGLuint name, WebGLenum stype) :
+    WebGLShader(WebGLContext *context, WebGLuint name, WebGLenum stype) :
+        WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE), mType(stype)
     { }
 
@@ -556,6 +617,7 @@ public:
         ZeroOwners();
         mDeleted = PR_TRUE;
     }
+
     PRBool Deleted() { return mDeleted; }
     WebGLuint GLName() { return mName; }
     WebGLenum ShaderType() { return mType; }
@@ -574,12 +636,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
     {0xb3084a5b, 0xa5b4, 0x4ee0, {0xa0, 0xf0, 0xfb, 0xdd, 0x64, 0xaf, 0x8e, 0x82}}
 class WebGLProgram :
     public nsIWebGLProgram,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLPROGRAM_PRIVATE_IID)
 
-    WebGLProgram(WebGLuint name) :
+    WebGLProgram(WebGLContext *context, WebGLuint name) :
+        WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE), mLinkStatus(PR_FALSE)
     { }
 
@@ -643,13 +707,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLProgram, WEBGLPROGRAM_PRIVATE_IID)
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
     public WebGLZeroingObject,
-    public WebGLRectangleObject
+    public WebGLRectangleObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLFRAMEBUFFER_PRIVATE_IID)
 
-    WebGLFramebuffer(WebGLuint name) :
-        mName(name), mDeleted(PR_FALSE) { }
+    WebGLFramebuffer(WebGLContext *context, WebGLuint name) :
+        WebGLContextBoundObject(context),
+        mName(name), mDeleted(PR_FALSE)
+    { }
 
     void Delete() {
         if (mDeleted)
@@ -674,13 +741,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLFramebuffer, WEBGLFRAMEBUFFER_PRIVATE_IID)
 class WebGLRenderbuffer :
     public nsIWebGLRenderbuffer,
     public WebGLZeroingObject,
-    public WebGLRectangleObject
+    public WebGLRectangleObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLRENDERBUFFER_PRIVATE_IID)
 
-    WebGLRenderbuffer(WebGLuint name) :
-        mName(name), mDeleted(PR_FALSE) { }
+    WebGLRenderbuffer(WebGLContext *context, WebGLuint name) :
+        WebGLContextBoundObject(context),
+        mName(name), mDeleted(PR_FALSE)
+    { }
 
     void Delete() {
         if (mDeleted)
@@ -704,13 +774,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
     {0x01a8a614, 0xb109, 0x42f1, {0xb4, 0x40, 0x8d, 0x8b, 0x87, 0x0b, 0x43, 0xa7}}
 class WebGLUniformLocation :
     public nsIWebGLUniformLocation,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLContextBoundObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLUNIFORMLOCATION_PRIVATE_IID)
 
-    WebGLUniformLocation(WebGLProgram *program, GLint location) :
-        mProgram(program), mLocation(location) { }
+    WebGLUniformLocation(WebGLContext *context, WebGLProgram *program, GLint location) :
+        WebGLContextBoundObject(context), mProgram(program), mLocation(location) { }
 
     WebGLProgram *Program() const { return mProgram; }
     GLint Location() const { return mLocation; }
@@ -726,6 +797,117 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLUniformLocation, WEBGLUNIFORMLOCATION_PRIVATE_IID)
+
+/**
+ ** Template implementations
+ **/
+
+/* Helper function taking a BaseInterfaceType pointer and check that
+ * it matches the required concrete implementation type (if it's
+ * non-null), that it's not null/deleted unless we allowed it to, and
+ * obtain a pointer to the concrete object.
+ *
+ * By default, null (respectively: deleted) aInterface pointers are
+ * not allowed, but if you pass a non-null isNull (respectively:
+ * isDeleted) pointer, then they become allowed and the value at
+ * isNull (respecively isDeleted) is overwritten. In case of a null
+ * pointer, the resulting
+ */
+
+template<class ConcreteObjectType, class BaseInterfaceType>
+PRBool
+WebGLContext::GetConcreteObject(BaseInterfaceType *aInterface,
+                                ConcreteObjectType **aConcreteObject,
+                                PRBool *isNull,
+                                PRBool *isDeleted)
+{
+    if (!aInterface) {
+        if (NS_LIKELY(isNull)) {
+            // non-null isNull means that the caller will accept a null arg
+            *isNull = PR_TRUE;
+            if(isDeleted) *isDeleted = PR_FALSE;
+            *aConcreteObject = 0;
+            return PR_TRUE;
+        } else {
+            LogMessage("Null object passed to WebGL function");
+            return PR_FALSE;
+        }
+    }
+
+    if (isNull)
+        *isNull = PR_FALSE;
+
+    nsresult rv;
+    nsCOMPtr<ConcreteObjectType> tmp(do_QueryInterface(aInterface, &rv));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    *aConcreteObject = tmp;
+
+    if (!(*aConcreteObject)->IsCompatibleWithContext(this)) {
+        // the object doesn't belong to this WebGLContext
+        LogMessage("Object from different WebGL context given as argument (or older generation of this one)");
+        return PR_FALSE;
+    }
+
+    if ((*aConcreteObject)->Deleted()) {
+        if (NS_LIKELY(isDeleted)) {
+            // non-null isDeleted means that the caller will accept a deleted arg
+            *isDeleted = PR_TRUE;
+            return PR_TRUE;
+        } else {
+            LogMessage("Deleted object passed to WebGL function");
+            return PR_FALSE;
+        }
+    }
+
+    if (isDeleted)
+      *isDeleted = PR_FALSE;
+
+    return PR_TRUE;
+}
+
+/* Same as GetConcreteObject, and in addition gets the GL object name.
+ * Null objects give the name 0.
+ */
+template<class ConcreteObjectType, class BaseInterfaceType>
+PRBool
+WebGLContext::GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
+                                         ConcreteObjectType **aConcreteObject,
+                                         WebGLuint *aGLObjectName,
+                                         PRBool *isNull,
+                                         PRBool *isDeleted)
+{
+    PRBool result = GetConcreteObject(aInterface, aConcreteObject, isNull, isDeleted);
+    if (result == PR_FALSE) return PR_FALSE;
+    *aGLObjectName = *aConcreteObject ? (*aConcreteObject)->GLName() : 0;
+    return PR_TRUE;
+}
+
+/* Same as GetConcreteObjectAndGLName when you don't need the concrete object pointer.
+ */
+template<class ConcreteObjectType, class BaseInterfaceType>
+PRBool
+WebGLContext::GetGLName(BaseInterfaceType *aInterface,
+                        WebGLuint *aGLObjectName,
+                        PRBool *isNull,
+                        PRBool *isDeleted)
+{
+    ConcreteObjectType *aConcreteObject;
+    return GetConcreteObjectAndGLName(aInterface, &aConcreteObject, aGLObjectName, isNull, isDeleted);
+}
+
+/* Same as GetConcreteObject when you only want to check if the conversion succeeds.
+ */
+template<class ConcreteObjectType, class BaseInterfaceType>
+PRBool
+WebGLContext::CheckConversion(BaseInterfaceType *aInterface,
+                              PRBool *isNull,
+                              PRBool *isDeleted)
+{
+    ConcreteObjectType *aConcreteObject;
+    return GetConcreteObject(aInterface, &aConcreteObject, isNull, isDeleted);
+}
 
 }
 
