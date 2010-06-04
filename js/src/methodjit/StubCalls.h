@@ -72,6 +72,8 @@ void JS_FASTCALL BitAnd(VMFrame &f);
 void JS_FASTCALL Lsh(VMFrame &f);
 void JS_FASTCALL Rsh(VMFrame &f);
 
+JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
+
 }}} /* namespace stubs,mjit,js */
 
 extern "C" void *
