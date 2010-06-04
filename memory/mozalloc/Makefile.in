@@ -84,6 +84,7 @@ EXPORTS_mozilla 	=			\
 	mozalloc_abort.h			\
 	mozalloc_macro_wrappers.h 		\
 	mozalloc_oom.h				\
+	mozalloc_undef_macro_wrappers.h		\
 	$(NULL)
 
 CPPSRCS 		=			\

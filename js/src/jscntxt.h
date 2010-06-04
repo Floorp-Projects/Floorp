@@ -45,6 +45,13 @@
  */
 #include <string.h>
 
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JS_UNDEFD_MOZALLOC_WRAPPERS
+/* The "anti-header" */
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsclist.h"
 #include "jslong.h"
@@ -3062,6 +3069,10 @@ NewIdArray(JSContext *cx, jsint length);
 #ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(pop)
+#endif
+
+#ifdef JS_UNDEFD_MOZALLOC_WRAPPERS
+#  include "mozilla/mozalloc_macro_wrappers.h"
 #endif
 
 #endif /* jscntxt_h___ */
