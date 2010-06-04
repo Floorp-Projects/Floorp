@@ -652,13 +652,9 @@ stubs::GetElem(VMFrame &f)
         return;
     }
 
-    if (!lval.isObject()) {
-        Value v;
-        if (!js_ValueToNonNullObject(cx, lval, &v));
-            THROW();
-        lval = v;
-    }
-    obj = &lval.asObject();
+    obj = ValueToObject(cx, &lval);
+    if (!obj)
+        THROW();
 
     if (rval.isInt32()) {
         if (obj->isDenseArray()) {
@@ -719,14 +715,9 @@ stubs::SetElem(VMFrame &f)
     JSObject *obj;
     jsid id;
 
-    if (!objval.isObject()) {
-        Value v;
-        if (!js_ValueToNonNullObject(cx, objval, &v))
-            THROW();
-        objval = v;
-        obj = &v.asObject();
-    }
-    obj = &objval.asObject();
+    obj = ValueToObject(cx, &objval);
+    if (!obj)
+        THROW();
 
     /* jsops.cpp:FETCH_ELEMENT_ID */
     int32_t i_;
