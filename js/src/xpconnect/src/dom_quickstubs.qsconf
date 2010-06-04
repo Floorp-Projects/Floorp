@@ -790,7 +790,7 @@ customMethodCalls = {
         },
     'nsIDOMDocument_GetElementById': {
         'thisType': 'nsDocument',
-        'code': '    mozilla::dom::Element *result = self->GetElementById(arg0, &rv);'
+        'code': '    mozilla::dom::Element *result = self->GetElementById(arg0);'
         },
     'nsIDOMDocument_GetElementsByTagName': {
         'thisType': 'nsDocument',
