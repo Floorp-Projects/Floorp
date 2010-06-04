@@ -54,23 +54,17 @@ interface nsIIDBIndexRequest : nsIIDBIndex
   nsIIDBRequest
   openObjectCursor([optional /* null */] in nsIIDBKeyRange range,
                    [optional /* nsIIDBCursor::NEXT */]
-                   in unsigned short direction);
+                   in unsigned short direction,
+                   [optional /* false */] in boolean preload);
 
   nsIIDBRequest
   openCursor([optional /* null */] in nsIIDBKeyRange range,
-             [optional /* nsIIDBCursor::NEXT */] in unsigned short direction);
-
-  nsIIDBRequest
-  put(in nsIVariant value,
-      [optional /* null */] in nsIVariant key,
-      [optional /* false */] in boolean noOverwrite);
+             [optional /* nsIIDBCursor::NEXT */] in unsigned short direction,
+             [optional /* false */] in boolean preload);
 
   nsIIDBRequest
   getObject(in nsIVariant key);
 
   nsIIDBRequest
   get(in nsIVariant key);
-
-  nsIIDBRequest
-  remove(in nsIVariant key);
 };

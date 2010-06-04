@@ -42,7 +42,10 @@
 
 #include "nsIIDBDatabaseException.h"
 
+#include "jsapi.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsJSON.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Storage.h"
 
@@ -72,15 +75,73 @@ public:
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
-private:
+protected:
   // In-params.
-  const nsString mValue;
+  nsString mValue;
   const PRInt64 mId;
   const bool mUnique;
   const bool mAutoIncrement;
 
+private:
   // Out-params.
   Key mKey;
+};
+
+class GetObjectHelper : public GetHelper
+{
+public:
+  GetObjectHelper(IDBTransactionRequest* aTransaction,
+                  IDBRequest* aRequest,
+                  const nsAString& aValue,
+                  PRInt64 aId,
+                  bool aUnique,
+                  bool aAutoIncrement)
+  : GetHelper(aTransaction, aRequest, aValue, aId, aUnique, aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+};
+
+// Remove once XPIDL can handle jsvals
+class GetObjectSuccessEvent : public IDBSuccessEvent
+{
+public:
+  GetObjectSuccessEvent(const nsAString& aValue)
+  : mValue(aValue),
+    mCachedValue(JSVAL_VOID),
+    mJSRuntime(nsnull)
+  { }
+
+  ~GetObjectSuccessEvent()
+  {
+    if (mJSRuntime) {
+      JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+    }
+  }
+
+  NS_IMETHOD GetResult(nsIVariant** aResult);
+
+  nsresult Init(IDBRequest* aRequest,
+                IDBTransactionRequest* aTransaction)
+  {
+    mSource = aRequest->GetGenerator();
+    mTransaction = aTransaction;
+
+    nsresult rv = InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,
+                            PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetTrusted(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+private:
+  nsString mValue;
+  jsval mCachedValue;
+  JSRuntime* mJSRuntime;
 };
 
 } // anonymous namespace
@@ -174,6 +235,7 @@ IDBIndexRequest::GetUnique(PRBool* aUnique)
 NS_IMETHODIMP
 IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aRange,
                                   PRUint16 aDirection,
+                                  PRBool aPreload,
                                   nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
@@ -184,18 +246,8 @@ IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aRange,
 NS_IMETHODIMP
 IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aRange,
                             PRUint16 aDirection,
+                            PRBool aPreload,
                             nsIIDBRequest** _retval)
-{
-  NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-IDBIndexRequest::Put(nsIVariant* aValue,
-                     nsIVariant* aKey,
-                     PRBool aOverwrite,
-                     nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
@@ -208,14 +260,23 @@ IDBIndexRequest::GetObject(nsIVariant* /* aKey */,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_WARNING("Using a slow path for GetObject! Fix this now!");
+  NS_WARNING("Using a slow path for Get! Fix this now!");
 
   nsString jsonValue;
   nsresult rv = IDBObjectStoreRequest::GetJSONFromArg0(jsonValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<GetObjectHelper> helper =
+    new GetObjectHelper(mObjectStore->Transaction(), request, jsonValue, mId,
+                        mUnique, mAutoIncrement);
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -241,15 +302,6 @@ IDBIndexRequest::Get(nsIVariant* /* aKey */,
 
   request.forget(_retval);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBIndexRequest::Remove(nsIVariant* aKey,
-                        nsIIDBRequest** _retval)
-{
-  NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 PRUint16
@@ -312,4 +364,98 @@ GetHelper::GetSuccessResult(nsIWritableVariant* aResult)
     NS_NOTREACHED("Unknown key type!");
   }
   return OK;
+}
+
+PRUint16
+GetObjectHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_ASSERTION(aConnection, "Passed a null connection!");
+
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->IndexGetObjectStatement(mUnique, mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"), mId);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (hasResult) {
+    rv = stmt->GetString(0, mValue);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+  else {
+    mValue.SetIsVoid(PR_TRUE);
+  }
+
+  return OK;
+}
+
+PRUint16
+GetObjectHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  nsRefPtr<GetObjectSuccessEvent> event(new GetObjectSuccessEvent(mValue));
+  nsresult rv = event->Init(mRequest, mTransaction);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool dummy;
+  aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
+  return OK;
+}
+
+// Remove once XPIDL supports jsvals!
+NS_IMETHODIMP
+GetObjectSuccessEvent::GetResult(nsIVariant** /* aResult */)
+{
+  // This is the slow path, need to do this better once XPIDL can pass raw
+  // jsvals.
+  NS_WARNING("Using a slow path for GetObject! Fix this now!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  jsval* retval;
+  rv = cc->GetRetValPtr(&retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mValue.IsVoid()) {
+    *retval = JSVAL_VOID;
+    return NS_OK;
+  }
+
+  if (!mJSRuntime) {
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSAutoRequest ar(cx);
+
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
+                                  "GetSuccessEvent::mCachedValue");
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIJSON> json(new nsJSON());
+    rv = json->DecodeToJSVal(mValue, cx, &mCachedValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mJSRuntime = rt;
+  }
+
+  *retval = mCachedValue;
+  cc->SetReturnValueWasSet(PR_TRUE);
+  return NS_OK;
 }
