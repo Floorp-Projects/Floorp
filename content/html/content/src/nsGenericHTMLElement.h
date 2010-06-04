@@ -501,10 +501,25 @@ protected:
   /**
    * Register or unregister an access key to this element based on the
    * accesskey attribute.
-   * @param aDoReg true to register, false to unregister
    */
+  void RegAccessKey()
+  {
+    if (HasFlag(NODE_HAS_ACCESSKEY)) {
+      RegUnRegAccessKey(PR_TRUE);
+    }
+  }
+
+  void UnregAccessKey()
+  {
+    if (HasFlag(NODE_HAS_ACCESSKEY)) {
+      RegUnRegAccessKey(PR_FALSE);
+    }
+  }
+
+private:
   void RegUnRegAccessKey(PRBool aDoReg);
 
+protected:
   /**
    * Determine whether an attribute is an event (onclick, etc.)
    * @param aName the attribute

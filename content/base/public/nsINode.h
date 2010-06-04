@@ -170,9 +170,12 @@ enum {
 
   // Set if the node is an element.
   NODE_IS_ELEMENT              = 0x00200000U,
+  
+  // Set if the node has the accesskey attribute set.
+  NODE_HAS_ACCESSKEY           = 0x00400000U,
 
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               22,
+  NODE_SCRIPT_TYPE_OFFSET =               23,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
