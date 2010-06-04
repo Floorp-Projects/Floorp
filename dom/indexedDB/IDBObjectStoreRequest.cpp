@@ -209,6 +209,16 @@ public:
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
+  struct IndexData
+  {
+    PRInt64 odid;
+    nsString odkey;
+    nsString value;
+  };
+
+  PRUint16 GetDataFromObjectStore(mozIStorageConnection* aConnection,
+                                  nsTArray<IndexData>& _retval);
+
   // In-params.
   nsString mName;
   nsString mKeyPath;
@@ -1602,6 +1612,8 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
 PRUint16
 CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
+  Savepoint savepoint(mTransaction);
+
   // Insert the data into the database.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
@@ -1635,18 +1647,60 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // Get the id of this object store, and store it for future use.
   (void)aConnection->GetLastInsertRowID(&mId);
 
-  /* Populate
-  JSContext* cx = nsnull;
+  // Now we need to populate the index with data from the object store.
+  nsTArray<IndexData> values;
+  GetDataFromObjectStore(aConnection, values);
+  // TODO insert the data from values into the db
 
-  for (i = 0; i < dataCount; i++) {
-    nsString value;
-    rv = IDBObjectStoreRequest::GetKeyPathValueFromJSON(data[dataCount],
-                                                        mKeyPath, &cx, value);
+  return OK;
+}
+
+PRUint16
+CreateIndexHelper::GetDataFromObjectStore(mozIStorageConnection* aConnection,
+                                          nsTArray<IndexData>& _retval)
+{
+  nsCAutoString table;
+  nsCAutoString columns;
+  if (mAutoIncrement) {
+    table.AssignLiteral("ai_object_data");
+    columns.AssignLiteral("id, data, key_value");
+  }
+  else {
+    table.AssignLiteral("object_data");
+    columns.AssignLiteral("id, data");
+  }
+  nsCAutoString sql;
+  sql.AppendASCII("SELECT ");
+  sql += columns;
+  sql.AppendASCII(" FROM ");
+  sql += table;
+  sql.AppendASCII(" WHERE object_store_id = :osid");
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(sql, getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool hasResult;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    IndexData data;
+    data.odid = stmt->AsInt64(0);
+    if (!mAutoIncrement) {
+      // XXX does this cause problems with the affinity?
+      rv = stmt->GetString(2, data.odkey);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    }
+
+    nsAutoString json;
+    rv = stmt->GetString(1, json);
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-    // Add value to index
+    JSContext* cx = nsnull;
+    rv = IDBObjectStoreRequest::GetKeyPathValueFromJSON(json, mKeyPath, &cx,
+                                                        data.value);
+    // XXX this should be a constraint error maybe?
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    _retval.AppendElement(data);
   }
-  */
+
   return OK;
 }
 
