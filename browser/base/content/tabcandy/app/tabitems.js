@@ -180,12 +180,12 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
   // ----------
   inStack: function(){
-    return $(this.container).hasClass("stacked");
+    return iQ(this.container).hasClass("stacked");
   },
 
   // ----------
   setZ: function(value) {
-    $(this.container).css({zIndex: value});
+    iQ(this.container).css({zIndex: value});
   },
     
   // ----------
@@ -198,12 +198,12 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------
   addClass: function(className) {
-    $(this.container).addClass(className);
+    iQ(this.container).addClass(className);
   },
   
   // ----------
   removeClass: function(className) {
-    $(this.container).removeClass(className);
+    iQ(this.container).removeClass(className);
   },
   
   // ----------
@@ -245,12 +245,12 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------  
   makeActive: function(){
-   $(this.container).find("canvas").addClass("focus")
+   iQ(this.container).find("canvas").addClass("focus")
   },
 
   // ----------    
   makeDeactive: function(){
-   $(this.container).find("canvas").removeClass("focus")
+   iQ(this.container).find("canvas").removeClass("focus")
   },
   
   // ----------
@@ -277,13 +277,14 @@ window.TabItems = {
     var self = this;
         
     function mod(mirror) {
-      var $div = $(mirror.el);
+      var $div = iQ(mirror.el);
+      var $$div = $(mirror.el);
       var tab = mirror.tab;
       
       if(window.Groups) {        
-        $div.data('isDragging', false);
-        $div.draggable(window.Groups.dragOptions);
-        $div.droppable(window.Groups.dropOptions);
+        $$div.data('isDragging', false);
+        $$div.draggable(window.Groups.dragOptions);
+        $$div.droppable(window.Groups.dropOptions);
       }
       
       $div.mousedown(function(e) {
@@ -297,18 +298,23 @@ window.TabItems = {
         if(!same)
           return;
         
-        if(e.target.className == "close") 
+        if(iQ(e.target).hasClass("close")) 
           tab.close();
         else {
           if(!$(this).data('isDragging'))
             self.zoomTo(this);
           else 
-            tab.raw.pos = $(this).position(); // TODO: is this necessary?
+            tab.raw.pos = iQ(this).position(); // TODO: is this necessary?
         }
       });
       
-      $("<div class='close'></div>").appendTo($div);
-      $("<div class='expander'></div>").appendTo($div);
+      $("<div>")
+        .addClass('close')
+        .appendTo($div); 
+        
+      $("<div>")
+        .addClass('expander')
+        .appendTo($div);
   
       if(tab == Utils.homeTab) 
         $div.hide();
@@ -330,13 +336,13 @@ window.TabItems = {
 
   // ----------  
   register: function(item) {
-    Utils.assert('only register once per item', $.inArray(item, this.items) == -1);
+    Utils.assert('only register once per item', iQ.inArray(item, this.items) == -1);
     this.items.push(item);
   },
   
   // ----------  
   unregister: function(item) {
-    var index = $.inArray(item, this.items);
+    var index = iQ.inArray(item, this.items);
     if(index != -1)
       this.items.splice(index, 1);  
   },
@@ -349,7 +355,8 @@ window.TabItems = {
   //
   zoomTo: function(tabEl){
     var self = this;
-    var item = $(tabEl).data('tabItem');
+    var $tabEl = iQ(tabEl);
+    var item = this.getItemByTabElement(tabEl);
     var childHitResult = { shouldZoom: true };
     if(item.parent)
       childHitResult = item.parent.childHit(item);
@@ -357,9 +364,9 @@ window.TabItems = {
     if(childHitResult.shouldZoom) {
       // Zoom in! 
       var orig = {
-        width: $(tabEl).width(),
-        height:  $(tabEl).height(),
-        pos: $(tabEl).position()
+        width: $tabEl.width(),
+        height:  $tabEl.height(),
+        pos: $tabEl.position()
       }
 
       var scale = window.innerWidth/orig.width;
@@ -367,15 +374,15 @@ window.TabItems = {
       var tab = Tabs.tab(tabEl);
       var mirror = tab.mirror;
       
-      var overflow = $("body").css("overflow");
-      $("body").css("overflow", "hidden");
+      var overflow = iQ("body").css("overflow");
+      iQ("body").css("overflow", "hidden");
       
       function onZoomDone(){
         try {
           UI.tabBar.show(false);              
           TabMirror.resumePainting();
           tab.focus();
-          $(tabEl).css({
+          $tabEl.css({
             top:   orig.pos.top,
             left:  orig.pos.left,
             width: orig.width,
@@ -386,8 +393,8 @@ window.TabItems = {
                  
           // If the tab is in a group set then set the active
           // group to the tab's parent. 
-          if( self.getItemByTab(tabEl).parent ){
-            var gID = self.getItemByTab(tabEl).parent.id;
+          if( item.parent ){
+            var gID = item.parent.id;
             var group = Groups.group(gID);
             Groups.setActiveGroup( group );
             group.setActiveTab( tabEl );                 
@@ -395,7 +402,7 @@ window.TabItems = {
           else
             Groups.setActiveGroup( null );
         
-          $("body").css("overflow", overflow); 
+          iQ("body").css("overflow", overflow); 
           
           if(childHitResult.callback)
             childHitResult.callback();             
@@ -422,14 +429,17 @@ window.TabItems = {
   },
     
   // ----------
-  getItemByTab: function(tab) {
-    return $(tab).data("tabItem");
+  // Function: getItemByTabElement
+  // Given the DOM element that contains the tab's representation on screen, 
+  // returns the <TabItem> it belongs to.
+  getItemByTabElement: function(tabElement) {
+    return iQ(tabElement).data("tabItem");
   },
   
   // ----------
   saveAll: function() {
     var items = this.getItems();
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       item.save();
     });
   },
@@ -438,7 +448,7 @@ window.TabItems = {
   reconstitute: function() {
     var items = this.getItems();
     var self = this;
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       if(!self.reconnect(item))
         Groups.newTab(item);
     });
