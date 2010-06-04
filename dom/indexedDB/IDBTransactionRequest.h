@@ -90,19 +90,28 @@ public:
   nsresult ReleaseSavepoint();
   void RollbackSavepoint();
 
-  already_AddRefed<mozIStorageStatement> AddStatement(bool aCreate,
-                                                      bool aOverwrite,
-                                                      bool aAutoIncrement);
+  already_AddRefed<mozIStorageStatement>
+  AddStatement(bool aCreate,
+               bool aOverwrite,
+               bool aAutoIncrement);
 
-  already_AddRefed<mozIStorageStatement> RemoveStatement(bool aAutoIncrement);
+  already_AddRefed<mozIStorageStatement>
+  RemoveStatement(bool aAutoIncrement);
 
-  already_AddRefed<mozIStorageStatement> GetStatement(bool aAutoIncrement);
+  already_AddRefed<mozIStorageStatement>
+  GetStatement(bool aAutoIncrement);
 
-  already_AddRefed<mozIStorageStatement> IndexGetStatement(bool aUnique,
-                                                           bool aAutoIncrement);
+  already_AddRefed<mozIStorageStatement>
+  IndexGetStatement(bool aUnique,
+                    bool aAutoIncrement);
 
-  already_AddRefed<mozIStorageStatement> IndexGetObjectStatement(bool aUnique,
-                                                                 bool aAutoIncrement);
+  already_AddRefed<mozIStorageStatement>
+  IndexGetObjectStatement(bool aUnique,
+                          bool aAutoIncrement);
+
+  already_AddRefed<mozIStorageStatement>
+  IndexUpdateStatement(bool aAutoIncrement,
+                       bool aUnique);
 
 #ifdef DEBUG
   bool TransactionIsOpen() const;
@@ -163,6 +172,10 @@ private:
   nsCOMPtr<mozIStorageStatement> mIndexGetObjectAIStmt;
   nsCOMPtr<mozIStorageStatement> mIndexGetObjectUniqueStmt;
   nsCOMPtr<mozIStorageStatement> mIndexGetObjectStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexUpdateUniqueAIStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexUpdateAIStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexUpdateUniqueStmt;
+  nsCOMPtr<mozIStorageStatement> mIndexUpdateStmt;
 
   // Only touched on the database thread.
   PRUint32 mSavepointCount;
