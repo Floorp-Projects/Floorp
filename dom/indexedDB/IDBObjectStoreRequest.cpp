@@ -66,6 +66,16 @@
 
 USING_INDEXEDDB_NAMESPACE
 
+BEGIN_INDEXEDDB_NAMESPACE
+
+struct IndexUpdateInfo
+{
+  IndexInfo info;
+  nsString value;
+};
+
+END_INDEXEDDB_NAMESPACE
+
 namespace {
 
 class AddHelper : public AsyncConnectionHelper
@@ -80,12 +90,12 @@ public:
             bool aAutoIncrement,
             bool aCreate,
             bool aOverwrite,
-            nsTArray<IndexInfo>& aIndexes)
+            nsTArray<IndexUpdateInfo>& aIndexUpdateInfo)
   : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
     mKeyPath(aKeyPath), mValue(aValue), mKey(aKey),
     mAutoIncrement(aAutoIncrement), mCreate(aCreate), mOverwrite(aOverwrite)
   {
-    mIndexes.SwapElements(aIndexes);
+    mIndexUpdateInfo.SwapElements(aIndexUpdateInfo);
   }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -103,7 +113,7 @@ private:
   const bool mAutoIncrement;
   const bool mCreate;
   const bool mOverwrite;
-  nsTArray<IndexInfo> mIndexes;
+  nsTArray<IndexUpdateInfo> mIndexUpdateInfo;
 };
 
 class GetHelper : public AsyncConnectionHelper
@@ -503,10 +513,11 @@ IDBObjectStoreRequest::~IDBObjectStoreRequest()
 }
 
 nsresult
-IDBObjectStoreRequest::GetJSONAndKeyForAdd(/* jsval aValue, */
-                                           nsIVariant* aKeyVariant,
-                                           nsString& aJSON,
-                                           Key& aKey)
+IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
+                                  nsIVariant* aKeyVariant,
+                                  nsString& aJSON,
+                                  Key& aKey,
+                                  nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
   // This is the slow path, need to do this better once XPIDL can have raw
   // jsvals as arguments.
@@ -571,7 +582,51 @@ IDBObjectStoreRequest::GetJSONAndKeyForAdd(/* jsval aValue, */
     return NS_ERROR_INVALID_ARG;
   }
 
+  // Figure out indexes and the index values to update here.
+  ObjectStoreInfo* objectStoreInfo = GetObjectStoreInfo();
+  NS_ENSURE_TRUE(objectStoreInfo, NS_ERROR_FAILURE);
+
+  PRUint32 indexesCount = objectStoreInfo->indexes.Length();
+  if (indexesCount && !JSVAL_IS_PRIMITIVE(clone.value())) {
+    // Not sure what to do if we have an index but the value isn't an object...
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(clone.value()), "Must have an object here!");
+
+  JSObject* cloneObj = JSVAL_TO_OBJECT(clone.value());
+
   nsCOMPtr<nsIJSON> json(new nsJSON());
+
+  for (PRUint32 indexesIndex = 0; indexesIndex < indexesCount; indexesIndex++) {
+    const IndexInfo& indexInfo = objectStoreInfo->indexes[indexesIndex];
+
+    const jschar* keyPathChars =
+      reinterpret_cast<const jschar*>(indexInfo.keyPath.BeginReading());
+    const size_t keyPathLen = indexInfo.keyPath.Length();
+
+    jsval keyPathValue;
+    JSBool ok = JS_GetUCProperty(cx, cloneObj, keyPathChars, keyPathLen,
+                                 &keyPathValue);
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    if (JSVAL_IS_VOID(keyPathValue)) {
+      // Not sure what to do if the object doesn't have a value for our index...
+      NS_NOTYETIMPLEMENTED("Implement me!");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    nsString value;
+    rv = json->EncodeFromJSVal(&keyPathValue, cx, value);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
+    NS_ENSURE_TRUE(updateInfo, NS_ERROR_OUT_OF_MEMORY);
+
+    updateInfo->info = indexInfo;
+    updateInfo->value = value;
+  }
 
   rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -692,8 +747,9 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
 
   nsString jsonValue;
   Key key;
+  nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
+  nsresult rv = GetAddInfo(aKey, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -702,23 +758,12 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // Obtain the list of indexes that we'll need to update.
-  nsTArray<IndexInfo> indexes;
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  if (!info) {
-    NS_ERROR("Unable to get info on object store!");
-    return NS_ERROR_UNEXPECTED;
-  }
-  for (nsTArray_base::size_type i = 0; i < info->indexes.Length(); i++) {
-    indexes.AppendElement(info->indexes[i]);
-  }
-
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, true, false, indexes);
+                  !!mAutoIncrement, true, false, updateInfo);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -743,8 +788,9 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
 
   nsString jsonValue;
   Key key;
+  nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
+  nsresult rv = GetAddInfo(aKey, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -769,7 +815,7 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, false, true, indexes);
+                  !!mAutoIncrement, false, true, updateInfo);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -794,8 +840,9 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 
   nsString jsonValue;
   Key key;
+  nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
+  nsresult rv = GetAddInfo(aKey, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -820,7 +867,7 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, true, true, indexes);
+                  !!mAutoIncrement, true, true, updateInfo);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1211,8 +1258,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   // Update our indexes if needed.
-  if (mIndexes.Length()) {
-    // TODO
+  if (mIndexUpdateInfo.Length()) {
     NS_NOTYETIMPLEMENTED("Implement me!");
   }
 

@@ -51,6 +51,7 @@ struct JSContext;
 BEGIN_INDEXEDDB_NAMESPACE
 
 struct ObjectStoreInfo;
+struct IndexUpdateInfo;
 
 class Key
 {
@@ -267,10 +268,11 @@ protected:
   IDBObjectStoreRequest();
   ~IDBObjectStoreRequest();
 
-  nsresult GetJSONAndKeyForAdd(/* jsval aValue, */
-                               nsIVariant* aKeyVariant,
-                               nsString& aJSON,
-                               Key& aKey);
+  nsresult GetAddInfo(/* jsval aValue, */
+                      nsIVariant* aKeyVariant,
+                      nsString& aJSON,
+                      Key& aKey,
+                      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
 private:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
