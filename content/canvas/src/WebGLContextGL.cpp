@@ -253,11 +253,16 @@ NS_IMETHODIMP
 WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 {
     WebGLuint progname, shadername;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
+    WebGLProgram *program;
+    WebGLShader *shader;
+    if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
         return ErrorInvalidOperation("AttachShader: invalid program");
 
-    if (!GetGLName<WebGLShader>(shobj, &shadername))
+    if (!GetConcreteObjectAndGLName(shobj, &shader, &shadername))
         return ErrorInvalidOperation("AttachShader: invalid shader");
+
+    if (!program->AttachShader(shader))
+        return ErrorInvalidOperation("AttachShader: shader is already attached");
 
     MakeContextCurrent();
 
@@ -678,17 +683,19 @@ WebGLContext::CreateProgram(nsIWebGLProgram **retval)
 NS_IMETHODIMP
 WebGLContext::CreateShader(WebGLenum type, nsIWebGLShader **retval)
 {
+    if (type != LOCAL_GL_VERTEX_SHADER &&
+        type != LOCAL_GL_FRAGMENT_SHADER)
+    {
+        return ErrorInvalidEnum("Invalid shader type specified");
+    }
+
     MakeContextCurrent();
 
     WebGLuint name = gl->fCreateShader(type);
 
-    WebGLShader *shader = new WebGLShader(name);
-    if (shader) {
-        NS_ADDREF(*retval = shader);
-        mMapShaders.Put(name, shader);
-    } else {
-        gl->fDeleteShader(name);
-    }
+    WebGLShader *shader = new WebGLShader(name, type);
+    NS_ADDREF(*retval = shader);
+    mMapShaders.Put(name, shader);
 
     return NS_OK;
 }
@@ -836,16 +843,21 @@ WebGLContext::DeleteShader(nsIWebGLShader *sobj)
 NS_IMETHODIMP
 WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 {
-    WebGLuint program, shader;
-    if (!GetGLName<WebGLProgram>(pobj, &program))
+    WebGLuint progname, shadername;
+    WebGLProgram *program;
+    WebGLShader *shader;
+    if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
         return ErrorInvalidOperation("DetachShader: invalid program");
 
-    if (!GetGLName<WebGLShader>(shobj, &shader))
+    if (!GetConcreteObjectAndGLName(shobj, &shader, &shadername))
         return ErrorInvalidOperation("DetachShader: invalid shader");
+
+    if (!program->DetachShader(shader))
+        return ErrorInvalidOperation("DetachShader: shader is not attached");
 
     MakeContextCurrent();
 
-    gl->fDetachShader(program, shader);
+    gl->fDetachShader(progname, shadername);
 
     return NS_OK;
 }
@@ -897,16 +909,17 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
         return ErrorInvalidValue("DrawArrays: overflow in first+count");
     }
 
+    // If there is no current program, this is silently ignored.
+    // Any checks below this depend on a program being available.
+    if (!mCurrentProgram)
+        return NS_OK;
+
     if (!ValidateBuffers(first+count))
         return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient data for given first and count");
 
     MakeContextCurrent();
 
-    //printf ("DrawArrays0: %04x\n", gl->fGetError());
-
     gl->fDrawArrays(mode, first, count);
-
-    //printf ("DrawArrays: %04x\n", gl->fGetError());
 
     Invalidate();
 
@@ -956,6 +969,11 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebG
 
     if (byteOffset + byteCount > mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
+
+    // If there is no current program, this is silently ignored.
+    // Any checks below this depend on a program being available.
+    if (!mCurrentProgram)
+        return NS_OK;
 
     WebGLuint maxIndex = 0;
     if (type == LOCAL_GL_UNSIGNED_SHORT)
@@ -2009,12 +2027,20 @@ NS_IMETHODIMP
 WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
 {
     GLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
+    WebGLProgram *program;
+    if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
         return ErrorInvalidOperation("LinkProgram: invalid program");
+
+    if (!program->HasBothShaderTypesAttached())
+        return ErrorInvalidOperation("LinkProgram: program does not have at least one vertex and fragment shader attached");
 
     MakeContextCurrent();
 
     gl->fLinkProgram(progname);
+
+    GLint ok;
+    gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+    program->SetLinkStatus(ok ? PR_TRUE : PR_FALSE);
 
     return NS_OK;
 }
@@ -2401,14 +2427,21 @@ WebGLContext::UseProgram(nsIWebGLProgram *pobj)
 {
     WebGLProgram *prog;
     WebGLuint progname;
-    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname))
+    PRBool isNull;
+    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname, &isNull))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     MakeContextCurrent();
 
-    gl->fUseProgram(progname);
-
-    mCurrentProgram = prog;
+    if (isNull) {
+        gl->fUseProgram(0);
+        mCurrentProgram = nsnull;
+    } else {
+        if (!prog->LinkStatus())
+            return ErrorInvalidOperation("UseProgram: program was not linked successfully");
+        gl->fUseProgram(progname);
+        mCurrentProgram = prog;
+    }
 
     return NS_OK;
 }
