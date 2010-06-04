@@ -594,7 +594,7 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
 
   PRUint32 indexesCount = objectStoreInfo->indexes.Length();
   if (indexesCount) {
-    if (!JSVAL_IS_PRIMITIVE(clone.value())) {
+    if (JSVAL_IS_PRIMITIVE(clone.value())) {
       // Not sure what to do if we have an index but the value isn't an object...
       NS_NOTYETIMPLEMENTED("Implement me!");
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -616,15 +616,15 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
                                  &keyPathValue);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
+    nsString value;
     if (JSVAL_IS_VOID(keyPathValue)) {
       // Not sure what to do if the object doesn't have a value for our index...
-      NS_NOTYETIMPLEMENTED("Implement me!");
-      return NS_ERROR_NOT_IMPLEMENTED;
+      NS_WARNING("Using an empty string for an index match failure!");
     }
-
-    nsString value;
-    rv = json->EncodeFromJSVal(&keyPathValue, cx, value);
-    NS_ENSURE_SUCCESS(rv, rv);
+    else {
+      rv = json->EncodeFromJSVal(&keyPathValue, cx, value);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
     NS_ENSURE_TRUE(updateInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -1857,6 +1857,7 @@ CreateIndexHelper::GetSuccessResult(nsIWritableVariant* aResult)
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
+  newInfo->id = mId;
   newInfo->name = mName;
   newInfo->keyPath = mKeyPath;
   newInfo->unique = mUnique;
