@@ -629,6 +629,30 @@ iQ.fn = iQ.prototype = {
   },
     
   // ----------
+  // Function: hide
+  hide: function() {
+    try {
+      this.css({display: 'none', opacity: 0});
+    } catch(e) {
+      Utils.log(e);
+    }
+    
+    return this;
+  },
+    
+  // ----------
+  // Function: show
+  show: function() {
+    try {
+      this.css({display: '', opacity: 1});
+    } catch(e) {
+      Utils.log(e);
+    }
+    
+    return this;
+  },
+    
+  // ----------
   // Function: bind
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
@@ -867,6 +891,22 @@ iQ.extend({
 		}
 
 		return ret;
+	},
+
+  // ----------
+  // Function: inArray
+	inArray: function( elem, array ) {
+		if ( array.indexOf ) {
+			return array.indexOf( elem );
+		}
+
+		for ( var i = 0, length = array.length; i < length; i++ ) {
+			if ( array[ i ] === elem ) {
+				return i;
+			}
+		}
+
+		return -1;
 	},
 
   // ----------

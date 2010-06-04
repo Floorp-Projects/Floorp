@@ -302,7 +302,7 @@ window.Page = {
           // Zoom out!
           var mirror = currentTab.mirror;
           var $tab = iQ(mirror.el);
-          var item = TabItems.getItemByTab(mirror.el);
+          var item = TabItems.getItemByTabElement(mirror.el);
           self.setActiveTab(item);
           
           var rotation = $tab.css("-moz-transform");
@@ -347,7 +347,7 @@ window.Page = {
         setTimeout(function() { // Marshal event from chrome thread to DOM thread
           UI.focused = false;
           Page.showChrome();
-          var item = TabItems.getItemByTab(Utils.activeTab);
+          var item = TabItems.getItemByTabElement(Utils.activeTab.mirror.el);
           if(item) 
             Groups.setActiveGroup(item.parent);
             
