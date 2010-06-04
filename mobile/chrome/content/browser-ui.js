@@ -851,7 +851,7 @@ var BrowserUI = {
       case "cmd_forceReload":
       {
         // Simulate a new page
-        browser.lastSpec = null;
+        browser.lastLocation = null;
 
         const reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
                             Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
