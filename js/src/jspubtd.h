@@ -238,6 +238,7 @@ JSValueMask32;
 #endif
 
 typedef VALUE_ALIGNMENT uint64 jsval;
+typedef VALUE_ALIGNMENT uint64 jsid;
 
 #define BUILD_JSVAL(mask32, payload) ((jsval)((((uint64)(uint32)(mask32)) << 32) | (uint32)(payload)))
 
@@ -249,7 +250,8 @@ typedef enum JSWhyMagic
                                   * to js_Enumerate, which really means the object can be
                                   * enumerated like a native object. */
     JS_NO_ITER_VALUE,            /* there is not a pending iterator value */
-    JS_GENERATOR_CLOSING         /* exception value thrown when closing a generator */
+    JS_GENERATOR_CLOSING,        /* exception value thrown when closing a generator */
+    JS_NO_CONSTANT               /* compiler sentinel value */
 } JSWhyMagic;
 
 #if !defined(IS_LITTLE_ENDIAN)
@@ -608,324 +610,6 @@ JSVAL_TRACE_KIND_IMPL(jsval_layout l)
     return (uint32)(l.s.mask32 == JSVAL_MASK32_STRING);
 }
 
-/*
- * Boxed word macros (private engine detail)
- *
- * N.B. jsboxedword and the JSBOXEDWORD macros are engine-private. Callers
- * should use only JSID macros (below) instead.
- *
- * The jsboxedword type is used by atoms and jsids. Eventually, the ability to
- * atomize any primitive will be removed and atoms will simply be unboxed,
- * interned JSString*s. However, jsids will always need boxing. Using a
- * one-word boxing scheme instead of the normal jsval 16-byte unboxed scheme
- * allows jsids to be passed by value without penalty, since jsids never are
- * doubles nor are jsids used to build typemaps for entering/leaving trace.
- */
-
-typedef jsword jsboxedword;
-
-#define JSBOXEDWORD_TYPE_OBJECT     0x0
-#define JSBOXEDWORD_TYPE_INT        0x1
-#define JSBOXEDWORD_TYPE_DOUBLE     0x2
-#define JSBOXEDWORD_TYPE_STRING     0x4
-#define JSBOXEDWORD_TYPE_SPECIAL    0x6
-
-/* Type tag bitfield length and derived macros. */
-#define JSBOXEDWORD_TAGBITS         3
-#define JSBOXEDWORD_TAGMASK         ((jsboxedword) JS_BITMASK(JSBOXEDWORD_TAGBITS))
-#define JSBOXEDWORD_ALIGN           JS_BIT(JSBOXEDWORD_TAGBITS)
-
-static const jsboxedword JSBOXEDWORD_NULL  = (jsboxedword)0x0;
-static const jsboxedword JSBOXEDWORD_FALSE = (jsboxedword)0x6;
-static const jsboxedword JSBOXEDWORD_TRUE  = (jsboxedword)0xe;
-static const jsboxedword JSBOXEDWORD_VOID  = (jsboxedword)0x16;
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_NULL(jsboxedword w)
-{
-    return w == JSBOXEDWORD_NULL;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_VOID(jsboxedword w)
-{
-    return w == JSBOXEDWORD_VOID;
-}
-
-static JS_ALWAYS_INLINE unsigned
-JSBOXEDWORD_TAG(jsboxedword w)
-{
-    return (unsigned)(w & JSBOXEDWORD_TAGMASK);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-JSBOXEDWORD_SETTAG(jsboxedword w, unsigned t)
-{
-    return w | t;
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-JSBOXEDWORD_CLRTAG(jsboxedword w)
-{
-    return w & ~(jsboxedword)JSBOXEDWORD_TAGMASK;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_DOUBLE(jsboxedword w)
-{
-    return JSBOXEDWORD_TAG(w) == JSBOXEDWORD_TYPE_DOUBLE;
-}
-
-static JS_ALWAYS_INLINE double *
-JSBOXEDWORD_TO_DOUBLE(jsboxedword w)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_DOUBLE(w));
-    return (double *)JSBOXEDWORD_CLRTAG(w);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-DOUBLE_TO_JSBOXEDWORD(double *d)
-{
-    JS_ASSERT(((JSUword)d & JSBOXEDWORD_TAGMASK) == 0);
-    return (jsboxedword)((JSUword)d | JSBOXEDWORD_TYPE_DOUBLE);
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_STRING(jsboxedword w)
-{
-    return JSBOXEDWORD_TAG(w) == JSBOXEDWORD_TYPE_STRING;
-}
-
-static JS_ALWAYS_INLINE JSString *
-JSBOXEDWORD_TO_STRING(jsboxedword w)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_STRING(w));
-    return (JSString *)JSBOXEDWORD_CLRTAG(w);
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_SPECIAL(jsboxedword w)
-{
-    return JSBOXEDWORD_TAG(w) == JSBOXEDWORD_TYPE_SPECIAL;
-}
-
-static JS_ALWAYS_INLINE jsint
-JSBOXEDWORD_TO_SPECIAL(jsboxedword w)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_SPECIAL(w));
-    return jsint(w >> JSBOXEDWORD_TAGBITS);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-SPECIAL_TO_JSBOXEDWORD(jsint i)
-{
-    return (i << JSBOXEDWORD_TAGBITS) | JSBOXEDWORD_TYPE_SPECIAL;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_BOOLEAN(jsboxedword w)
-{
-    return (w & ~((jsboxedword)1 << JSBOXEDWORD_TAGBITS)) == JSBOXEDWORD_TYPE_SPECIAL;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_TO_BOOLEAN(jsboxedword w)
-{
-    JS_ASSERT(w == JSBOXEDWORD_TRUE || w == JSBOXEDWORD_FALSE);
-    return JSBOXEDWORD_TO_SPECIAL(w);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-BOOLEAN_TO_JSBOXEDWORD(JSBool b)
-{
-    JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
-    return SPECIAL_TO_JSBOXEDWORD(b);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-STRING_TO_JSBOXEDWORD(JSString *str)
-{
-    JS_ASSERT(((JSUword)str & JSBOXEDWORD_TAGMASK) == 0);
-    return (jsboxedword)str | JSBOXEDWORD_TYPE_STRING;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_GCTHING(jsboxedword w)
-{
-    return !(w & JSBOXEDWORD_TYPE_INT) &&
-           JSBOXEDWORD_TAG(w) != JSBOXEDWORD_TYPE_SPECIAL;
-}
-
-static JS_ALWAYS_INLINE void *
-JSBOXEDWORD_TO_GCTHING(jsboxedword w)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_GCTHING(w));
-    return (void *)JSBOXEDWORD_CLRTAG(w);
-}
-
-static JS_ALWAYS_INLINE uint32
-JSBOXEDWORD_TRACE_KIND(jsboxedword w)
-{
-#ifdef DEBUG
-    unsigned tag = JSBOXEDWORD_TAG(w);
-    JS_ASSERT(tag == 0x0 || tag == 0x2 || tag == 0x4);
-#endif
-
-    /*
-     * We need to map:
-     *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX000 -> 00 (object)
-     *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX010 -> 10 (double)
-     *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX100 -> 01 (string)
-     */
-    return (w | ((w & 0x4) >> 2)) & 0x3;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_OBJECT(jsboxedword w)
-{
-    return JSBOXEDWORD_TAG(w) == JSBOXEDWORD_TYPE_OBJECT;
-}
-
-static JS_ALWAYS_INLINE JSObject *
-JSBOXEDWORD_TO_OBJECT(jsboxedword w)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_OBJECT(w));
-    return (JSObject *)JSBOXEDWORD_TO_GCTHING(w);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-OBJECT_TO_JSBOXEDWORD(JSObject *obj)
-{
-    JS_ASSERT(((JSUword)obj & JSBOXEDWORD_TAGMASK) == 0);
-    return (jsboxedword)obj | JSBOXEDWORD_TYPE_OBJECT;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_PRIMITIVE(jsboxedword w)
-{
-    return !JSBOXEDWORD_IS_OBJECT(w) || JSBOXEDWORD_IS_NULL(w);
-}
-
-/* Domain limits for the jsboxedword int type. */
-#define JSBOXEDWORD_INT_BITS          31
-#define JSBOXEDWORD_INT_POW2(n)       ((jsboxedword)1 << (n))
-#define JSBOXEDWORD_INT_MIN           (-JSBOXEDWORD_INT_POW2(30))
-#define JSBOXEDWORD_INT_MAX           (JSBOXEDWORD_INT_POW2(30) - 1)
-
-static JS_ALWAYS_INLINE JSBool
-INT32_FITS_IN_JSBOXEDWORD(jsint i)
-{
-    return ((jsuint)(i) - (jsuint)JSBOXEDWORD_INT_MIN <=
-            (jsuint)(JSBOXEDWORD_INT_MAX - JSBOXEDWORD_INT_MIN));
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSBOXEDWORD_IS_INT(jsboxedword w)
-{
-    return w & JSBOXEDWORD_TYPE_INT;
-}
-
-static JS_ALWAYS_INLINE jsint
-JSBOXEDWORD_TO_INT(jsboxedword v)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_INT(v));
-    return (jsint)(v >> 1);
-}
-
-static JS_ALWAYS_INLINE jsboxedword
-INT_TO_JSBOXEDWORD(jsint i)
-{
-    JS_ASSERT(INT32_FITS_IN_JSBOXEDWORD(i));
-    return (i << 1) | JSBOXEDWORD_TYPE_INT;
-}
-
-/*
- * Identifier (jsid) macros.
- */
-
-typedef jsboxedword jsid;
-struct JSAtom;
-
-static JS_ALWAYS_INLINE JSBool
-JSID_IS_ATOM(jsid id)
-{
-    return JSBOXEDWORD_IS_STRING((jsboxedword)id);
-}
-
-static JS_ALWAYS_INLINE JSAtom *
-JSID_TO_ATOM(jsid id)
-{
-    JS_ASSERT(JSID_IS_ATOM(id));
-    return (JSAtom *)id;
-}
-
-static JS_ALWAYS_INLINE JSString *
-JSID_TO_STRING(jsid id)
-{
-    JS_ASSERT(JSID_IS_ATOM(id));
-    return JSBOXEDWORD_TO_STRING(id);
-}
-
-static JS_ALWAYS_INLINE jsid
-ATOM_TO_JSID(JSAtom *atom)
-{
-    JS_ASSERT(JSBOXEDWORD_IS_STRING((jsboxedword)atom));
-    return (jsid)atom;
-}
-
-static JS_ALWAYS_INLINE JSBool
-INT32_FITS_IN_JSID(int32 i)
-{
-    return INT32_FITS_IN_JSBOXEDWORD(i);
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSID_IS_INT(jsid id)
-{
-    return JSBOXEDWORD_IS_INT((jsboxedword)id);
-}
-
-static JS_ALWAYS_INLINE int32
-JSID_TO_INT(jsid id)
-{
-    return JSBOXEDWORD_TO_INT((jsboxedword)id);
-}
-
-static JS_ALWAYS_INLINE jsid
-INT_TO_JSID(int32 i)
-{
-    return (jsid)INT_TO_JSBOXEDWORD(i);
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSID_IS_OBJECT(jsid id)
-{
-    return JSBOXEDWORD_IS_OBJECT((jsboxedword)id);
-}
-
-static JS_ALWAYS_INLINE JSObject *
-JSID_TO_OBJECT(jsid id)
-{
-    return JSBOXEDWORD_TO_OBJECT((jsboxedword)id);
-}
-
-static JS_ALWAYS_INLINE jsid
-OBJECT_TO_JSID(JSObject *obj)
-{
-    return (jsid)OBJECT_TO_JSBOXEDWORD(obj);
-}
-
-/* TODO: get JSID/JSBOXEDWORD story together. */
-/* Objects and strings (no doubles in jsids). */
-#define JSID_IS_GCTHING(id)           JSBOXEDWORD_IS_GCTHING(id)
-#define JSID_TO_GCTHING(id)           (JS_ASSERT(JSID_IS_GCTHING((id))),       \
-                                       JSBOXEDWORD_TO_GCTHING((jsboxedword)(id)))
-#define JSID_TRACE_KIND(id)           (JS_ASSERT(JSID_IS_GCTHING((id))),       \
-                                       JSBOXEDWORD_TRACE_KIND((jsboxedword)(id)))
-
-JS_PUBLIC_API(jsval)
-JSID_TO_JSVAL(jsid id);
-
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
 /*
@@ -936,7 +620,7 @@ JSID_TO_JSVAL(jsid id);
  * obj[id] can't be deleted (because it's permanent).
  */
 typedef JSBool
-(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -967,7 +651,7 @@ typedef JSBool
  */
 typedef JSBool
 (* JSNewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                     jsval *statep, jsid *idp);
+                     jsval *statep, jsval *idp);
 
 /*
  * The old-style JSClass.enumerate op should define all lazy properties not
@@ -989,7 +673,7 @@ typedef JSBool
  * NB: JSNewResolveOp provides a cheaper way to resolve lazy properties.
  */
 typedef JSBool
-(* JSResolveOp)(JSContext *cx, JSObject *obj, jsid id);
+(* JSResolveOp)(JSContext *cx, JSObject *obj, jsval id);
 
 /*
  * Like JSResolveOp, but flags provide contextual information as follows:
@@ -1021,7 +705,7 @@ typedef JSBool
  * *objp without a new JSClass flag.
  */
 typedef JSBool
-(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                    JSObject **objp);
 
 /*
@@ -1088,7 +772,7 @@ typedef JSObjectOps *
  * specialize access checks.
  */
 typedef JSBool
-(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
                     jsval *vp);
 
 /*
@@ -1194,7 +878,7 @@ typedef uint32
  *
  */
 typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *vp, JSBool *bp);
+(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 /*
  * A generic type for functions mapping an object to another object, or null
@@ -1377,16 +1061,16 @@ typedef JSBool
 typedef JSBool
 (* FastNative)(JSContext *cx, uintN argc, Value *vp);
 typedef JSBool
-(* PropertyOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+(* PropertyOp)(JSContext *cx, JSObject *obj, jsval id, Value *vp);
 typedef JSBool
 (* ConvertOp)(JSContext *cx, JSObject *obj, JSType type, Value *vp);
 typedef JSBool
 (* NewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                   Value *statep, jsid *idp);
+                   Value *statep, jsval *idp);
 typedef JSBool
 (* HasInstanceOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
 typedef JSBool
-(* CheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+(* CheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
                   Value *vp);
 typedef JSObjectOps *
 (* GetObjectOps)(JSContext *cx, Class *clasp);

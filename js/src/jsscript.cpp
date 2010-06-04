@@ -76,7 +76,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 
 /* static */ const JSScript JSScript::emptyScriptConst = {
     const_cast<jsbytecode*>(emptyScriptCode),
-    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, true, false, false, false,
+    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, 0, true, false, false, false,
     const_cast<jsbytecode*>(emptyScriptCode),
     {0, NULL}, NULL, 0, 0, 0, NULL
 };
@@ -92,7 +92,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     JSBool ok;
     jsbytecode *code;
     uint32 length, lineno, nslots, magic;
-    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nupvars, nregexps, i;
+    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nupvars, nregexps, nconsts, i;
     uint32 prologLength, version;
     JSPrincipals *principals;
     uint32 encodeable;
@@ -102,7 +102,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
 
     cx = xdr->cx;
     script = *scriptp;
-    nsrcnotes = ntrynotes = natoms = nobjects = nupvars = nregexps = 0;
+    nsrcnotes = ntrynotes = natoms = nobjects = nupvars = nregexps = nconsts = 0;
     filenameWasSaved = JS_FALSE;
     notes = NULL;
 
@@ -150,7 +150,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
              * the shorthand (0 length word) for us. Make a new mutable empty
              * script here and return it immediately.
              */
-            script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0);
+            script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0);
             if (!script)
                 return JS_FALSE;
 
@@ -190,6 +190,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
             nregexps = script->regexps()->length;
         if (script->trynotesOffset != 0)
             ntrynotes = script->trynotes()->length;
+        if (script->constOffset != 0)
+            nconsts = script->consts()->length;
     }
 
     if (!JS_XDRUint32(xdr, &prologLength))
@@ -213,12 +215,14 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         return JS_FALSE;
     if (!JS_XDRUint32(xdr, &nregexps))
         return JS_FALSE;
+    if (!JS_XDRUint32(xdr, &nconsts))
+        return JS_FALSE;
 
     AutoScriptRooter tvr(cx, NULL);
 
     if (xdr->mode == JSXDR_DECODE) {
         script = js_NewScript(cx, length, nsrcnotes, natoms, nobjects, nupvars,
-                              nregexps, ntrynotes, 0);
+                              nregexps, ntrynotes, nconsts, 0);
         if (!script)
             return JS_FALSE;
 
@@ -369,6 +373,11 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
                 tn->stackDepth = (uint16)kindAndDepth;
             }
         } while (tn != tnfirst);
+    }
+
+    for (i = 0; i != nconsts; ++i) {
+        if (!JS_XDRValue(xdr, Jsvalify(&script->consts()->vector[i])))
+            goto error;
     }
 
     xdr->script = oldscript;
@@ -810,16 +819,16 @@ JS_STATIC_ASSERT(sizeof(JSScript) + 2 * sizeof(JSObjectArray) +
 JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
              uint32 nobjects, uint32 nupvars, uint32 nregexps,
-             uint32 ntrynotes, uint32 nglobals)
+             uint32 ntrynotes, uint32 nconsts, uint32 nglobals)
 {
     size_t size, vectorSize;
     JSScript *script;
     uint8 *cursor;
+    unsigned constPadding = 0;
 
     size = sizeof(JSScript) +
-           sizeof(JSAtom *) * natoms +
-           length * sizeof(jsbytecode) +
-           nsrcnotes * sizeof(jssrcnote);
+           sizeof(JSAtom *) * natoms;
+    
     if (nobjects != 0)
         size += sizeof(JSObjectArray) + nobjects * sizeof(JSObject *);
     if (nupvars != 0)
@@ -830,6 +839,19 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         size += sizeof(JSTryNoteArray) + ntrynotes * sizeof(JSTryNote);
     if (nglobals != 0)
         size += sizeof(GlobalSlotArray) + nglobals * sizeof(GlobalSlotArray::Entry);
+
+    if (nconsts != 0) {
+        size += sizeof(JSConstArray);
+        /*
+         * Calculate padding assuming that consts go after the other arrays,
+         * but before the bytecode and source notes.
+         */
+        constPadding = (8 - (size % 8)) % 8;
+        size += constPadding + nconsts * sizeof(Value);
+    }
+
+    size += length * sizeof(jsbytecode) +
+            nsrcnotes * sizeof(jssrcnote);
 
     script = (JSScript *) cx->malloc(size);
     if (!script)
@@ -859,6 +881,10 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         JS_ASSERT((cursor - (uint8*)script) <= 0xFF);
         script->globalsOffset = (uint8)(cursor - (uint8 *)script);
         cursor += sizeof(GlobalSlotArray);
+    }
+    if (nconsts != 0) {
+        script->constOffset = (uint8)(cursor - (uint8 *)script);
+        cursor += sizeof(JSConstArray);
     }
 
     if (natoms != 0) {
@@ -915,6 +941,17 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         script->upvars()->length = nupvars;
         script->upvars()->vector = (uint32 *)cursor;
         vectorSize = nupvars * sizeof(script->upvars()->vector[0]);
+        memset(cursor, 0, vectorSize);
+        cursor += vectorSize;
+    }
+
+    /* Must go after other arrays; see constPadding definition. */
+    if (nconsts != 0) {
+        cursor += constPadding;
+        script->consts()->length = nconsts;
+        script->consts()->vector = (Value *)cursor;
+        JS_ASSERT((size_t)cursor % sizeof(double) == 0);
+        vectorSize = nconsts * sizeof(script->consts()->vector[0]);
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
@@ -1006,7 +1043,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script = js_NewScript(cx, prologLength + mainLength, nsrcnotes,
                           cg->atomList.count, cg->objectList.length,
                           cg->upvarList.count, cg->regexpList.length,
-                          cg->ntrynotes, cg->globalUses.length());
+                          cg->ntrynotes, cg->constList.length(),
+                          cg->globalUses.length());
     if (!script)
         return NULL;
 
@@ -1046,6 +1084,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->objectList.finish(script->objects());
     if (cg->regexpList.length != 0)
         cg->regexpList.finish(script->regexps());
+    if (cg->constList.length() != 0)
+        cg->constList.finish(script->consts());
     if (cg->flags & TCF_NO_SCRIPT_RVAL)
         script->noScriptRval = true;
     if (cg->hasSharps())
@@ -1201,9 +1241,7 @@ void
 js_TraceScript(JSTracer *trc, JSScript *script)
 {
     JSAtomMap *map = &script->atomMap;
-    uintN length = map->length;
-    jsboxedword *vector = (jsboxedword *)map->vector;
-    MarkBoxedWordRange(trc, length, vector, "atomMap");
+    MarkAtomRange(trc, map->length, map->vector, "atomMap");
 
     if (script->objectsOffset != 0) {
         JSObjectArray *objarray = script->objects();
@@ -1227,6 +1265,11 @@ js_TraceScript(JSTracer *trc, JSScript *script)
                 MarkRaw(trc, objarray->vector[i], JSTRACE_OBJECT);
             }
         } while (i != 0);
+    }
+
+    if (script->constOffset != 0) {
+        JSConstArray *constarray = script->consts();
+        MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
 
     if (script->u.object) {

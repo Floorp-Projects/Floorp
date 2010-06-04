@@ -5028,9 +5028,9 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             if (test)
                 continue;
             if (parsub->index == -1) {
-                Value undef = undefinedValue();
-                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), &undef,
-                                       NULL, NULL, JSPROP_ENUMERATE);
+                Value tmp = UndefinedTag();
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
+                                       &tmp, NULL, NULL, JSPROP_ENUMERATE);
             } else {
                 parstr = js_NewDependentString(cx, str,
                                                gData.cpbegin + parsub->index -
@@ -5041,8 +5041,8 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                     goto out;
                 }
                 Value tmp = StringTag(parstr);
-                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), &tmp,
-                                       NULL, NULL, JSPROP_ENUMERATE);
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
+                                       &tmp, NULL, NULL, JSPROP_ENUMERATE);
             }
             if (!ok)
                 goto out;

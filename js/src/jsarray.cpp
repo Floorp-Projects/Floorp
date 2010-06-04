@@ -160,22 +160,22 @@ INDEX_TOO_BIG(jsuint index)
  * an atomized string.
  */
 JSBool
-js_IdIsIndex(jsboxedword idw, jsuint *indexp)
+js_IdIsIndex(jsid id, jsuint *indexp)
 {
-    if (JSBOXEDWORD_IS_INT(idw)) {
+    if (JSID_IS_INT(id)) {
         jsint i;
-        i = JSBOXEDWORD_TO_INT(idw);
+        i = JSID_TO_INT(id);
         if (i < 0)
             return JS_FALSE;
         *indexp = (jsuint)i;
         return JS_TRUE;
     }
 
-    /* NB: idw should be a string, but jsxml.c may call us with an object idw. */
-    if (!JSBOXEDWORD_IS_STRING(idw))
+    /* NB: id should be a string, but jsxml.c may call us with an object id. */
+    if (!JSID_IS_ATOM(id))
         return JS_FALSE;
 
-    JSString *str = JSBOXEDWORD_TO_STRING(idw);
+    JSString *str = JSID_TO_STRING(id);
     jschar *cp = str->chars();
     if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
         jsuint index = JS7_UNDEC(*cp++);
@@ -272,7 +272,7 @@ js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
     JSString *str;
 
-    if (index <= JSBOXEDWORD_INT_MAX) {
+    if (index <= JSVAL_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return JS_TRUE;
     }
@@ -291,7 +291,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
     JSAtom *atom;
     JS_STATIC_ASSERT((jsuint)-1 == 4294967295U);
 
-    JS_ASSERT(index > JSBOXEDWORD_INT_MAX);
+    JS_ASSERT(index > JSVAL_INT_MAX);
 
     start = JS_ARRAY_END(buf);
     do {
@@ -314,7 +314,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
          clasp == &js_ObjectClass)) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom) {
-            *idp = JSBOXEDWORD_VOID;
+            *idp = JSVAL_VOID;
             return JS_TRUE;
         }
     } else {
@@ -425,7 +425,7 @@ static bool
 IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
           JSBool createAtom = JS_FALSE)
 {
-    if (index <= JSBOXEDWORD_INT_MAX) {
+    if (index <= JSVAL_INT_MAX) {
         *idp = INT_TO_JSID(int(index));
         return JS_TRUE;
     }
@@ -433,7 +433,7 @@ IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
     if (index <= jsuint(-1)) {
         if (!BigIndexToId(cx, obj, jsuint(index), createAtom, idp))
             return JS_FALSE;
-        if (hole && JSBOXEDWORD_IS_VOID(*idp))
+        if (hole && JSVAL_IS_VOID(*idp))
             *hole = JS_TRUE;
         return JS_TRUE;
     }
@@ -517,7 +517,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr(), JS_TRUE))
         return JS_FALSE;
-    JS_ASSERT(!JSBOXEDWORD_IS_VOID(idr.id()));
+    JS_ASSERT(!JSVAL_IS_VOID(idr.id()));
 
     Value tmp = v;
     return obj->setProperty(cx, idr.id(), &tmp);
@@ -544,7 +544,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr()))
         return JS_FALSE;
-    if (JSBOXEDWORD_IS_VOID(idr.id()))
+    if (JSVAL_IS_VOID(idr.id()))
         return JS_TRUE;
 
     Value junk;
@@ -690,7 +690,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         for (;;) {
             if (!JS_CHECK_OPERATION_LIMIT(cx) || !JS_NextProperty(cx, iter, &id))
                 return false;
-            if (JSBOXEDWORD_IS_VOID(id))
+            if (JSVAL_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
                 !obj->deleteProperty(cx, id, &junk)) {
@@ -728,7 +728,7 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         return js_LookupProperty(cx, obj, id, objp, propp);
 
     if (IsDenseArrayId(cx, obj, id)) {
-        *propp = (JSProperty *) id;
+        *propp = (JSProperty *) 1;  /* non-null to indicate found */
         *objp = obj;
         return JS_TRUE;
     }
@@ -745,15 +745,13 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 static void
 array_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 {
-    JS_ASSERT(IsDenseArrayId(cx, obj, (jsid) prop));
+    JS_ASSERT(obj->isDenseArray());
 }
 
 JSBool
-js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
-                             Value *vp)
+js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    jsid id = (jsid) prop;
-    JS_ASSERT(IsDenseArrayId(cx, obj, id));
+    JS_ASSERT(obj->isDenseArray());
 
     uint32 i;
     if (!js_IdIsIndex(id, &i)) {

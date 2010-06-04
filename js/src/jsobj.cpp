@@ -277,7 +277,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
 static JSHashNumber
 js_hash_object(const void *key)
 {
-    return JSHashNumber(uintptr_t(key) >> JSBOXEDWORD_TAGBITS);
+    return JSHashNumber(uintptr_t(key) >> JS_GCTHING_ALIGN);
 }
 
 static JSHashEntry *
@@ -657,7 +657,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * Convert id to a value and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
-        idstr = js_ValueToString(cx, IdToValue(id));
+        idstr = js_ValueToString(cx, ID_TO_VALUE(id));
         if (!idstr) {
             ok = JS_FALSE;
             obj2->dropProperty(cx, prop);
@@ -1430,7 +1430,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
         return JS_TRUE;
     generation = cx->resolvingTable->generation;
 
-    argv[0] = IdToValue(id);
+    argv[0] = ID_TO_VALUE(id);
     argv[1] = Valueify(old);
     argv[2] = Valueify(*nvp);
     ok = InternalCall(cx, obj, ObjectOrNullTag(callable), 3, argv, Valueify(nvp));
@@ -1911,7 +1911,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
              * to by a QName, actually appears as a string jsid -- but in the
              * interests of fidelity we pass object jsids through unchanged.
              */
-            aobj->setDenseArrayElement(i, IdToValue(id));
+            aobj->setDenseArrayElement(i, ID_TO_VALUE(id));
         }
     }
 
@@ -2047,7 +2047,7 @@ Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
 {
     if (throwError) {
         jsid idstr;
-        if (!js_ValueToStringId(cx, IdToValue(id), &idstr))
+        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &idstr))
            return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
                              JS_GetStringBytes(JSID_TO_STRING(idstr)));
@@ -2117,8 +2117,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
         if (!js_CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
             return JS_FALSE;
 
-        Value undef = undefinedValue();
-        return js_DefineProperty(cx, obj, desc.id, &undef,
+        Value tmp = UndefinedTag();
+        return js_DefineProperty(cx, obj, desc.id, &tmp,
                                  desc.getter(), desc.setter(), desc.attrs);
     }
 
@@ -3946,8 +3946,8 @@ js_CheckForStringIndex(jsid id)
     if (cp != end || (negative && index == 0))
         return id;
 
-    if (oldIndex < JSBOXEDWORD_INT_MAX / 10 ||
-        (oldIndex == JSBOXEDWORD_INT_MAX / 10 && c <= (JSBOXEDWORD_INT_MAX % 10))) {
+    if (oldIndex < JSVAL_INT_MAX / 10 ||
+        (oldIndex == JSVAL_INT_MAX / 10 && c <= (JSVAL_INT_MAX % 10))) {
         if (negative)
             index = 0 - index;
         id = INT_TO_JSID((jsint)index);
@@ -4792,7 +4792,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
 
             /* Ok, bad undefined property reference: whine about it. */
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
-                                          JSDVG_IGNORE_STACK, IdToValue(id),
+                                          JSDVG_IGNORE_STACK, ID_TO_VALUE(id),
                                           NULL, NULL, NULL)) {
                 return JS_FALSE;
             }
@@ -4870,7 +4870,7 @@ JSBool
 ReportReadOnly(JSContext* cx, jsid id, uintN flags)
 {
     return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, IdToValue(id), NULL,
+                                    JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
                                     NULL, NULL);
 }
 
@@ -5581,11 +5581,11 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 }
 
 JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const Value *vp, JSBool *bp)
+js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
-        return clasp->hasInstance(cx, obj, vp, bp);
+        return clasp->hasInstance(cx, obj, v, bp);
 #ifdef NARCISSUS
     {
         jsval fval, rval;
@@ -6280,8 +6280,6 @@ JS_FRIEND_API(void)
 DumpAtom(JSAtom *atom)
 {
     fprintf(stderr, "JSAtom* (%p) = ", (void *) atom);
-    if (!JSBOXEDWORD_IS_STRING(ATOM_KEY(atom)))
-        fprintf(stderr, "<non-string atom>\n");
     DumpString(ATOM_TO_STRING(atom));
 }
 
@@ -6347,7 +6345,7 @@ JS_FRIEND_API(void)
 DumpId(jsid id)
 {
     fprintf(stderr, "jsid %p = ", (void *) id);
-    dumpValue(IdToValue(id));
+    dumpValue(ID_TO_VALUE(id));
     fputc('\n', stderr);
 }
 

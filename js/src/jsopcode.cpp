@@ -132,16 +132,6 @@ const char *js_CodeName[] = {
 
 /************************************************************************/
 
-// Convert an atom to a double, also allowing the possibility that the 
-// atom is a double, which the standard ATOM_TO_JSVAL API does not.
-static jsval
-ExtAtomToJsval(const JSAtom *atom)
-{
-    return ATOM_IS_DOUBLE(atom) 
-         ? DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom))
-         : ATOM_TO_JSVAL(atom);
-}
-
 static ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
@@ -382,7 +372,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, 0);
         if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ExtAtomToJsval(atom);
+            v = ATOM_TO_JSVAL(atom);
         } else {
             if (type == JOF_OBJECT)
                 obj = script->getObject(index);
@@ -454,12 +444,12 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += UINT16_LEN;
         fprintf(fp, " offset %d npairs %u", (intN) off, (uintN) npairs);
         while (npairs) {
-            JS_GET_SCRIPT_ATOM(script, pc, GET_INDEX(pc2), atom);
+            uint16 constIndex = GET_INDEX(pc2);
             pc2 += INDEX_LEN;
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
 
-            bytes = ToDisassemblySource(cx, ExtAtomToJsval(atom));
+            bytes = ToDisassemblySource(cx, Jsvalify(script->getConst(constIndex)));
             if (!bytes)
                 return 0;
             fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
@@ -483,7 +473,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ExtAtomToJsval(atom);
+            v = ATOM_TO_JSVAL(atom);
         } else {
             obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
@@ -1580,8 +1570,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
           case JSOP_INT32:  d = i = GET_INT32(pc);  goto do_getelem;
 
           case JSOP_DOUBLE:
-            GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, atom);
-            d = *ATOM_TO_DOUBLE(atom);
+            GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, d);
             LOCAL_ASSERT(JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d));
             i = (jsint)d;
 
@@ -3899,7 +3888,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               do_getarg_prop:
                 atom = GetArgOrVarAtom(ss->printer, i);
                 LOCAL_ASSERT(atom);
-                LOCAL_ASSERT(ATOM_IS_STRING(atom));
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval || !PushOff(ss, STR2OFF(&ss->sprinter, lval), op))
                     return NULL;
@@ -4064,11 +4052,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_DOUBLE:
-                GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, atom);
-                val = DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom));
-                LOCAL_ASSERT(JSVAL_IS_DOUBLE(val));
+              {
+                double d;
+                GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, d);
+                val = DOUBLE_TO_JSVAL(d);
                 todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
                 break;
+              }
 
               case JSOP_STRING:
                 LOAD_ATOM(0);
@@ -4347,11 +4337,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
                         table[k].label = NULL;
                     }
-                    JS_GET_SCRIPT_ATOM(jp->script, pc, GET_INDEX(pc2), atom);
+                    uint16 constIndex = GET_INDEX(pc2);
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = ExtAtomToJsval(atom);
+                    table[k].key = Jsvalify(jp->script->getConst(constIndex));
                     table[k].offset = off2;
                 }
 
