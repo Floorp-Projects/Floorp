@@ -405,7 +405,7 @@ struct JSObject {
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        void *priv = fslots[JSSLOT_PRIVATE].asPrivateVoidPtr();
+        void *priv = fslots[JSSLOT_PRIVATE].asPrivateVoidPtrUnchecked();
         return priv;
     }
 

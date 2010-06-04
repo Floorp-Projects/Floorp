@@ -435,12 +435,12 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += UINT16_LEN;
         fprintf(fp, " offset %d npairs %u", (intN) off, (uintN) npairs);
         while (npairs) {
-            JS_GET_SCRIPT_ATOM(script, pc, GET_INDEX(pc2), atom);
+            uint16 constIndex = GET_INDEX(pc2);
             pc2 += INDEX_LEN;
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
 
-            bytes = ToDisassemblySource(cx, ATOM_TO_JSVAL(atom));
+            bytes = ToDisassemblySource(cx, Jsvalify(script->getConst(constIndex)));
             if (!bytes)
                 return 0;
             fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
@@ -4300,11 +4300,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
                         table[k].label = NULL;
                     }
-                    JS_GET_SCRIPT_ATOM(jp->script, pc, GET_INDEX(pc2), atom);
+                    uint16 constIndex = GET_INDEX(pc2);
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = ATOM_TO_JSVAL(atom);
+                    table[k].key = Jsvalify(jp->script->getConst(constIndex));
                     table[k].offset = off2;
                 }
 

@@ -186,7 +186,7 @@ struct JSScript {
 
     inline JSObject *getRegExp(size_t index);
 
-    js::Value getConst(size_t index) {
+    const js::Value &getConst(size_t index) {
         JSConstArray *arr = consts();
         JS_ASSERT(index < arr->length);
         return arr->vector[index];
