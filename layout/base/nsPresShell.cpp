@@ -850,6 +850,7 @@ public:
 
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
+  NS_IMETHOD CharacterExtendForBackspace();
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordExtendForDelete(PRBool aForward);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
@@ -2981,6 +2982,12 @@ NS_IMETHODIMP
 PresShell::CharacterExtendForDelete()
 {
   return mSelection->CharacterExtendForDelete();
+}
+
+NS_IMETHODIMP
+PresShell::CharacterExtendForBackspace()
+{
+  return mSelection->CharacterExtendForBackspace();
 }
 
 NS_IMETHODIMP 
