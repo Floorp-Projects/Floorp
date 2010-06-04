@@ -273,9 +273,9 @@ public:
     nsresult SynthesizeGLError(WebGLenum err);
     nsresult SynthesizeGLError(WebGLenum err, const char *fmt, ...);
 
-    nsresult ErrorInvalidEnum(const char *fmt, ...);
-    nsresult ErrorInvalidOperation(const char *fmt, ...);
-    nsresult ErrorInvalidValue(const char *fmt, ...);
+    nsresult ErrorInvalidEnum(const char *fmt = 0, ...);
+    nsresult ErrorInvalidOperation(const char *fmt = 0, ...);
+    nsresult ErrorInvalidValue(const char *fmt = 0, ...);
 
     already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
     void MarkContextClean() { }
@@ -537,6 +537,39 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLTexture, WEBGLTEXTURE_PRIVATE_IID)
 
+#define WEBGLSHADER_PRIVATE_IID \
+    {0x48cce975, 0xd459, 0x4689, {0x83, 0x82, 0x37, 0x82, 0x6e, 0xac, 0xe0, 0xa7}}
+class WebGLShader :
+    public nsIWebGLShader,
+    public WebGLZeroingObject
+{
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLSHADER_PRIVATE_IID)
+
+    WebGLShader(WebGLuint name, WebGLenum stype) :
+        mName(name), mDeleted(PR_FALSE), mType(stype)
+    { }
+
+    void Delete() {
+        if (mDeleted)
+            return;
+        ZeroOwners();
+        mDeleted = PR_TRUE;
+    }
+    PRBool Deleted() { return mDeleted; }
+    WebGLuint GLName() { return mName; }
+    WebGLenum ShaderType() { return mType; }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLSHADER
+protected:
+    WebGLuint mName;
+    PRBool mDeleted;
+    WebGLenum mType;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
+
 #define WEBGLPROGRAM_PRIVATE_IID \
     {0xb3084a5b, 0xa5b4, 0x4ee0, {0xa0, 0xf0, 0xfb, 0xdd, 0x64, 0xaf, 0x8e, 0x82}}
 class WebGLProgram :
@@ -547,7 +580,8 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLPROGRAM_PRIVATE_IID)
 
     WebGLProgram(WebGLuint name) :
-        mName(name), mDeleted(PR_FALSE) { }
+        mName(name), mDeleted(PR_FALSE), mLinkStatus(PR_FALSE)
+    { }
 
     void Delete() {
         if (mDeleted)
@@ -555,47 +589,54 @@ public:
         ZeroOwners();
         mDeleted = PR_TRUE;
     }
+
     PRBool Deleted() { return mDeleted; }
     WebGLuint GLName() { return mName; }
+    PRBool LinkStatus() { return mLinkStatus; }
+    void SetLinkStatus(PRBool val) { mLinkStatus = val; }
+
+    PRBool ContainsShader(WebGLShader *shader) {
+        return mAttachedShaders.Contains(shader);
+    }
+
+    // return true if the shader wasn't already attached
+    PRBool AttachShader(WebGLShader *shader) {
+        if (ContainsShader(shader))
+            return PR_FALSE;
+        mAttachedShaders.AppendElement(shader);
+        return PR_TRUE;
+    }
+
+    // return true if the shader was found and removed
+    PRBool DetachShader(WebGLShader *shader) {
+        return mAttachedShaders.RemoveElement(shader);
+    }
+
+    PRBool HasBothShaderTypesAttached() {
+        PRBool haveVertex = PR_FALSE;
+        PRBool haveFrag = PR_FALSE;
+        for (PRUint32 i = 0; i < mAttachedShaders.Length(); ++i) {
+            if (mAttachedShaders[i]->ShaderType() == LOCAL_GL_FRAGMENT_SHADER)
+                haveFrag = PR_TRUE;
+            else if (mAttachedShaders[i]->ShaderType() == LOCAL_GL_VERTEX_SHADER)
+                haveVertex = PR_TRUE;
+            if (haveFrag && haveVertex)
+                return PR_TRUE;
+        }
+
+        return PR_FALSE;
+    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLPROGRAM
 protected:
     WebGLuint mName;
-    PRBool mDeleted;
+    PRPackedBool mDeleted;
+    PRPackedBool mLinkStatus;
+    nsTArray<WebGLShader*> mAttachedShaders;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLProgram, WEBGLPROGRAM_PRIVATE_IID)
-
-#define WEBGLSHADER_PRIVATE_IID \
-    {0x48cce975, 0xd459, 0x4689, {0x83, 0x82, 0x37, 0x82, 0x6e, 0xac, 0xe0, 0xa7}}
-class WebGLShader :
-    public nsIWebGLShader,
-    public WebGLZeroingObject
-{
-public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLSHADER_PRIVATE_IID)
-
-    WebGLShader(WebGLuint name) :
-        mName(name), mDeleted(PR_FALSE) { }
-
-    void Delete() {
-        if (mDeleted)
-            return;
-        ZeroOwners();
-        mDeleted = PR_TRUE;
-    }
-    PRBool Deleted() { return mDeleted; }
-    WebGLuint GLName() { return mName; }
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLSHADER
-protected:
-    WebGLuint mName;
-    PRBool mDeleted;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
 
 #define WEBGLFRAMEBUFFER_PRIVATE_IID \
     {0x0052a16f, 0x4bc9, 0x4a55, {0x9d, 0xa3, 0x54, 0x95, 0xaa, 0x4e, 0x80, 0xb9}}
