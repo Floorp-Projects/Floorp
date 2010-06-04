@@ -439,8 +439,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       this.$titlebar.css(titlebarCSS);
       this.$content.css(contentCSS);
     } else {
+/*       Utils.log('pause in groups'); */
       TabMirror.pausePainting();
       iQ(this.container).animate(css, 'animate350', function() {
+/*         Utils.log('resume in groups'); */
         TabMirror.resumePainting();
       }); //easing: "tabcandyBounce"
 /*       }).dequeue(); */
