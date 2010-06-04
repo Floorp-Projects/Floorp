@@ -69,6 +69,8 @@ JSBool JS_FASTCALL Equal(VMFrame &f);
 JSBool JS_FASTCALL NotEqual(VMFrame &f);
 
 void JS_FASTCALL BitAnd(VMFrame &f);
+void JS_FASTCALL Lsh(VMFrame &f);
+void JS_FASTCALL Rsh(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */
 

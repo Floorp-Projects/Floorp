@@ -646,6 +646,30 @@ stubs::BitAnd(VMFrame &f)
     f.regs.sp[-2].setInt32(i);
 }
 
+void JS_FASTCALL
+stubs::Lsh(VMFrame &f)
+{
+    int32_t i, j;
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i))
+        THROW();
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+        THROW();
+    i = i << (j & 31);
+    f.regs.sp[-2].setInt32(i);
+}
+
+void JS_FASTCALL
+stubs::Rsh(VMFrame &f)
+{
+    int32_t i, j;
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i))
+        THROW();
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+        THROW();
+    i = i >> (j & 31);
+    f.regs.sp[-2].setInt32(i);
+}
+
 template <int32 N>
 static inline bool
 PostInc(VMFrame &f, Value *vp)

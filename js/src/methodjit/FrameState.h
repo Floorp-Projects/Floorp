@@ -123,6 +123,9 @@ class FrameState
 
         /* FrameEntry owning this register, or NULL if not owned by a frame. */
         FrameEntry *fe;
+
+        /* Hack - simplifies register allocation for pairs. */
+        FrameEntry *save;
         
         /* Part of the FrameEntry that owns the FE. */
         RematInfo::RematType type;
@@ -197,6 +200,11 @@ class FrameState
      * though it may explicitly free it.
      */
     inline RegisterID tempRegForData(FrameEntry *fe);
+
+    /*
+     * Same as above, except register must match identically.
+     */
+    inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg);
 
     /*
      * Allocates a register for a FrameEntry's data, such that the compiler
@@ -313,6 +321,18 @@ class FrameState
      * elements, then pop.
      */
     void popAfterSet();
+
+    /*
+     * Marks a register such that it cannot be spilled by the register
+     * allocator. Any pinned registers must be unpinned at the end of the op.
+     * Note: This function should only be used on registers tied to FEs.
+     */
+    inline void pinReg(RegisterID reg);
+
+    /*
+     * Unpins a previously pinned register.
+     */
+    inline void unpinReg(RegisterID reg);
 
     /*
      * Returns the current stack depth of the frame.
