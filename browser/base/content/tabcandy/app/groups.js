@@ -22,18 +22,18 @@ function isEventOverElement(event, el){
       isOver = true;
       break;
     }
-    $(hit).hide();
+    iQ(hit).hide();
     hiddenEls.push(hit);
   }
   
   var hidden;
-  [$(hidden).show() for([,hidden] in Iterator(hiddenEls))];
+  [iQ(hidden).show() for([,hidden] in Iterator(hiddenEls))];
   return isOver;
 }
 
 // ----------
 function dropAcceptFunction(el) { // ".tab", //".tab, .group",
-  var $el = $(el);
+  var $el = iQ(el);
   if($el.hasClass('tab')) {
     var item = Items.item($el);
     if(item && (!item.parent || !item.parent.expanded)) {
@@ -89,7 +89,8 @@ window.Group = function(listOfEls, options) {
 
   var $container = options.container; 
   if(!$container) {
-    $container = $('<div class="group" />')
+    $container = iQ('<div>')
+      .addClass('group')
       .css({position: 'absolute'})
       .css(rectToBe);
     
@@ -99,11 +100,11 @@ window.Group = function(listOfEls, options) {
   $container
     .css({zIndex: -100})
     .data('isDragging', false)
-    .appendTo("body")
-    .dequeue();
+    .appendTo("body");
+/*     .dequeue(); */
         
   // ___ New Tab Button   
-  this.$ntb = $("<div />")
+  this.$ntb = iQ("<div>")
     .appendTo($container);
     
   this.$ntb    
@@ -115,7 +116,8 @@ window.Group = function(listOfEls, options) {
   if( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
     
   // ___ Resizer
-  this.$resizer = $("<div class='resizer'/>")
+  this.$resizer = iQ("<div>")
+    .addClass('resizer')
     .css({
       position: "absolute",
       width: 16, height: 16,
@@ -126,29 +128,29 @@ window.Group = function(listOfEls, options) {
 
   // ___ Titlebar
   var html =
-    "<div class='titlebar'>" + 
-      "<div class='title-container'>" +
-        "<input class='name' value='" + (options.title || "") + "'/>" + 
-        "<div class='title-shield' />" + 
-      "</div>" + 
-      "<div class='close' />" + 
-    "</div>";
+    "<div class='title-container'>" +
+      "<input class='name' value='" + (options.title || "") + "'/>" + 
+      "<div class='title-shield' />" + 
+    "</div>" + 
+    "<div class='close' />";
        
-  this.$titlebar = $(html)        
+  this.$titlebar = iQ('<div>')
+    .addClass('titlebar')
+    .html(html)        
     .appendTo($container);
     
   this.$titlebar.css({
       position: "absolute",
     });
     
-  var $close = $('.close', this.$titlebar).click(function() {
+  var $close = iQ('.close', this.$titlebar).click(function() {
     self.closeAll();
   });
   
   // ___ Title 
-  this.$titleContainer = $('.title-container', this.$titlebar);
-  this.$title = $('.name', this.$titlebar);
-  this.$titleShield = $('.title-shield', this.$titlebar);
+  this.$titleContainer = iQ('.title-container', this.$titlebar);
+  this.$title = iQ('.name', this.$titlebar);
+  this.$titleShield = iQ('.title-shield', this.$titlebar);
   
   var titleUnfocus = function() {
     self.$titleShield.show();
@@ -158,13 +160,14 @@ window.Group = function(listOfEls, options) {
         .val(self.defaultName);
     } else {
       self.$title.css({"background":"none"})
-        .animate({"paddingLeft":1}, 340, "tabcandyBounce");
+        .animate({"paddingLeft":1}, 'animate350');//, "tabcandyBounce");
     }
   };
   
   var handleKeyPress = function(e){
     if( e.which == 13 ) { // return
-      self.$title.blur()
+      self.$title.get(0).blur();
+      self.$title
         .addClass("transparentBorder")
         .one("mouseout", function(){
           self.$title.removeClass("transparentBorder");
@@ -180,10 +183,10 @@ window.Group = function(listOfEls, options) {
     .blur(titleUnfocus)
     .focus(function() {
       if(self.locked.title) {
-        self.$title.blur();
+        self.$title.get(0).blur();
         return;
       }  
-      self.$title.select();
+      self.$title.get(0).select();
       if(!self.getTitle()) {
         self.$title
           .removeClass("defaultName")
@@ -215,7 +218,9 @@ window.Group = function(listOfEls, options) {
   }
     
   // ___ Content
-  this.$content = $('<div class="group-content"/>')
+  // TODO: I don't think we need this any more
+  this.$content = iQ('<div>')
+    .addClass('group-content')
     .css({
       left: 0,
       top: this.$titlebar.height(),
@@ -237,7 +242,7 @@ window.Group = function(listOfEls, options) {
     this.$debug.css({zIndex: -1000});
   
   // ___ Children
-  $.each(listOfEls, function(index, el) {  
+  iQ.each(listOfEls, function(index, el) {  
     self.add(el, null, options);
   });
 
@@ -263,7 +268,7 @@ window.Group = function(listOfEls, options) {
 };
 
 // ----------
-window.Group.prototype = $.extend(new Item(), new Subscribable(), {
+window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------
   defaultName: "name this group...",
 
@@ -338,10 +343,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   _getBoundingBox: function(els) {
     var el;
     var boundingBox = {
-      top:    min( [$(el).position().top  for([,el] in Iterator(els))] ),
-      left:   min( [$(el).position().left for([,el] in Iterator(els))] ),
-      bottom: max( [$(el).position().top  for([,el] in Iterator(els))] )  + $(els[0]).height(),
-      right:  max( [$(el).position().left for([,el] in Iterator(els))] ) + $(els[0]).width(),
+      top:    min( [iQ(el).position().top  for([,el] in Iterator(els))] ),
+      left:   min( [iQ(el).position().left for([,el] in Iterator(els))] ),
+      bottom: max( [iQ(el).position().top  for([,el] in Iterator(els))] )  + iQ(els[0]).height(),
+      right:  max( [iQ(el).position().left for([,el] in Iterator(els))] ) + iQ(els[0]).width(),
     };
     boundingBox.height = boundingBox.bottom - boundingBox.top;
     boundingBox.width  = boundingBox.right - boundingBox.left;
@@ -406,7 +411,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       contentCSS.height = rect.height - titleHeight; 
     }
       
-    if($.isEmptyObject(css))
+    if(iQ.isEmptyObject(css))
       return;
       
     var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
@@ -416,7 +421,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(css.width || css.height) {
       this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
     } else if(css.left || css.top) {
-      $.each(this._children, function(index, child) {
+      iQ.each(this._children, function(index, child) {
         var box = child.getBounds();
         child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
       });
@@ -424,22 +429,24 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           
     // ___ Update our representation
     if(immediately) {
+/*
       $(this.container).stop(true, true);
       this.$titlebar.stop(true, true);
       this.$content.stop(true, true);
+*/
 
-      $(this.container).css(css);
+      iQ(this.container).css(css);
       this.$titlebar.css(titlebarCSS);
       this.$content.css(contentCSS);
     } else {
       TabMirror.pausePainting();
-      $(this.container).animate(css, {
-        complete: function() {TabMirror.resumePainting();},
-        easing: "tabcandyBounce"
-      }).dequeue();
+      iQ(this.container).animate(css, 'animate350', function() {
+        TabMirror.resumePainting();
+      }); //easing: "tabcandyBounce"
+/*       }).dequeue(); */
       
-      this.$titlebar.animate(titlebarCSS).dequeue();        
-      this.$content.animate(contentCSS).dequeue();        
+      this.$titlebar.animate(titlebarCSS, 'animate350');//.dequeue();        
+      this.$content.animate(contentCSS, 'animate350'); //.dequeue();        
     }
     
     this.adjustTitleSize();
@@ -454,7 +461,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   
   // ----------
   setZ: function(value) {
-    $(this.container).css({zIndex: value});
+    iQ(this.container).css({zIndex: value});
 
     if(this.$debug) 
       this.$debug.css({zIndex: value + 1});
@@ -464,7 +471,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       var topZIndex = value + count + 1;
       var zIndex = topZIndex;
       var self = this;
-      $.each(this._children, function(index, child) {
+      iQ.each(this._children, function(index, child) {
         if(child == self.topChild)
           child.setZ(topZIndex + 1);
         else {
@@ -480,8 +487,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     this.removeAll();
     this._sendOnClose();
     Groups.unregister(this);
-    $(this.container).fadeOut(function() {
-      $(this).remove();
+    iQ(this.container).fadeOut(function() {
+      iQ(this).remove();
       Items.unsquish();
     });
 
@@ -491,8 +498,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------  
   closeAll: function() {
     if(this._children.length) {
-      var toClose = $.merge([], this._children);
-      $.each(toClose, function(index, child) {
+      var toClose = iQ.merge([], this._children);
+      iQ.each(toClose, function(index, child) {
         child.close();
       });
     } else if(!this.locked.close)
@@ -514,9 +521,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       var $el;
       if(a.isAnItem) {
         item = a;
-        $el = $(a.container);
+        $el = iQ(a.container);
       } else {
-        $el = $(a);
+        $el = iQ(a);
         item = Items.item($el);
       }    
       
@@ -531,7 +538,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       var self = this;
       
       var wasAlreadyInThisGroup = false;
-      var oldIndex = $.inArray(item, this._children);
+      var oldIndex = iQ.inArray(item, this._children);
       if(oldIndex != -1) {
         this._children.splice(oldIndex, 1); 
         wasAlreadyInThisGroup = true;
@@ -546,7 +553,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         var best = {dist: Infinity, item: null};
         var index = 0;
         var box;
-        $.each(self._children, function(index, child) {        
+        iQ.each(self._children, function(index, child) {        
           box = child.getBounds();
           if(box.bottom < dropPos.top || box.top > dropPos.top)
             return;
@@ -585,7 +592,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       if( this.isNewTabsGroup() ) $el.addClass("inNewTabGroup")
       
       if(!wasAlreadyInThisGroup) {
-        $el.droppable("disable");
+        $($el.get(0)).droppable("disable");
         item.groupData = {};
     
         item.addOnClose(this, function() {
@@ -627,16 +634,16 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
      
     if(a.isAnItem) {
       item = a;
-      $el = $(item.container);
+      $el = iQ(item.container);
     } else {
-      $el = $(a);  
+      $el = iQ(a);  
       item = Items.item($el);
     }
     
     if(typeof(options) == 'undefined')
       options = {};
     
-    var index = $.inArray(item, this._children);
+    var index = iQ.inArray(item, this._children);
     if(index != -1)
       this._children.splice(index, 1); 
     
@@ -648,7 +655,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     item.setRotation(0);
     item.setSize(item.defaultSize.x, item.defaultSize.y);
 
-    $el.droppable("enable");    
+    $($el.get(0)).droppable("enable");    
     item.removeOnClose(this);
     
     if(typeof(item.setResizable) == 'function')
@@ -664,8 +671,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   removeAll: function() {
     var self = this;
-    var toRemove = $.merge([], this._children);
-    $.each(toRemove, function(index, child) {
+    var toRemove = iQ.merge([], this._children);
+    iQ.each(toRemove, function(index, child) {
       self.remove(child, {dontArrange: true});
     });
   },
@@ -679,9 +686,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       height: box.height
     };
     
-    this.$ntb.stop(true, true);    
+/*     this.$ntb.stop(true, true);     */
     if(!immediately)
-      this.$ntb.animate(css, 320, "tabcandyBounce");
+      this.$ntb.animate(css, 'animate350'); //320, "tabcandyBounce");
     else
       this.$ntb.css(css);
   },
@@ -707,7 +714,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
-      Items.arrange(this._children, box, $.extend({}, options, {padding: 8, z: 99999}));
+      Items.arrange(this._children, box, iQ.extend({}, options, {padding: 8, z: 99999}));
     } else {
       var bb = this.getContentBounds();
       var count = this._children.length;
@@ -728,7 +735,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         this.topChild = null;
         
         var arrangeOptions = Utils.copy(options);
-        $.extend(arrangeOptions, {
+        iQ.extend(arrangeOptions, {
           pretend: true,
           count: count
         });
@@ -740,7 +747,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
         var rects = Items.arrange(this._children, bb, arrangeOptions);
         
-        $.each(this._children, function(index, child) {
+        iQ.each(this._children, function(index, child) {
           if(!child.locked.bounds) {
             child.setBounds(rects[index], !animate);
             child.setRotation(0);
@@ -802,14 +809,14 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
     var self = this;
     var children = [];
-    $.each(this._children, function(index, child) {
+    iQ.each(this._children, function(index, child) {
       if(child == self.topChild)
         children.unshift(child);
       else
         children.push(child);
     });
     
-    $.each(children, function(index, child) {
+    iQ.each(children, function(index, child) {
       if(!child.locked.bounds) {
         child.setZ(zIndex);
         zIndex--;
@@ -870,7 +877,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     // ___ we're stacked, and command is held down so expand
     Groups.setActiveGroup(self);
     var startBounds = child.getBounds();
-    var $tray = $("<div />").css({
+    var $tray = iQ("<div>").css({
       top: startBounds.top,
       left: startBounds.left,
       width: startBounds.width,
@@ -908,7 +915,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       child.addClass("stack-trayed");
     });
 
-    var $shield = $('<div />')
+    var $shield = iQ('<div>')
       .css({
         left: 0,
         top: 0,
@@ -952,7 +959,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           left: box.left,
           opacity: 0
         }, 350, "tabcandyBounce", function() {
-          $(this).remove();  
+          iQ(this).remove();  
         });
   
       this.expanded.$shield.remove();
@@ -988,7 +995,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       });
     }
     
-    $(container)
+    iQ(container)
       .mousedown(function(e){
         self._mouseDownLocation = new Point(e.clientX, e.clientY);
       })    
@@ -1073,39 +1080,41 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var doNextTab = function(tab){
       var group = Groups.getActiveGroup();
 
-      $(tab.container).css({opacity: 0});
-      anim = $("<div class='newTabAnimatee'/>").css({
-        top: tab.bounds.top+5,
-        left: tab.bounds.left+5,
-        width: tab.bounds.width-10,
-        height: tab.bounds.height-10,
-        zIndex: 999,
-        opacity: 0
-      })      
-      .appendTo("body")
-      .animate({
-        opacity: 1.0
-      },500)
-      .animate({
-        top: 0,
-        left: 0,
-        width: window.innerWidth,
-        height: window.innerHeight
-      }, 270, function(){
-        $(tab.container).css({opacity: 1});
-        newTab.focus();
-        Page.showChrome()
-        UI.navBar.urlBar.focus();
-        anim.remove();
-        // We need a timeout here so that there is a chance for the
-        // new tab to get made! Otherwise it won't appear in the list
-        // of the group's tab.
-        // TODO: This is probably a terrible hack that sets up a race
-        // condition. We need a better solution.
-        setTimeout(function(){
-          UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
-        }, 400);
-      });      
+      iQ(tab.container).css({opacity: 0});
+      anim = $("<div>")
+        .addClass('newTabAnimatee')
+        .css({
+          top: tab.bounds.top+5,
+          left: tab.bounds.left+5,
+          width: tab.bounds.width-10,
+          height: tab.bounds.height-10,
+          zIndex: 999,
+          opacity: 0
+        })      
+        .appendTo("body")
+        .animate({
+          opacity: 1.0
+        },500)
+        .animate({
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight
+        }, 270, function(){
+          $(tab.container).css({opacity: 1});
+          newTab.focus();
+          Page.showChrome()
+          UI.navBar.urlBar.focus();
+          anim.remove();
+          // We need a timeout here so that there is a chance for the
+          // new tab to get made! Otherwise it won't appear in the list
+          // of the group's tab.
+          // TODO: This is probably a terrible hack that sets up a race
+          // condition. We need a better solution.
+          setTimeout(function(){
+            UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+          }, 400);
+        });      
     }    
     
     // TODO: Because this happens as a callback, there is
@@ -1179,7 +1188,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 // Called to create a DragInfo in response to a jQuery-UI draggable "start" event.
 var DragInfo = function(element, event) {
   this.el = element;
-  this.$el = $(this.el);
+  this.$el = iQ(this.el);
   this.item = Items.item(this.el);
   this.parent = this.item.parent;
   this.startPosition = new Point(event.clientX, event.clientY);
@@ -1351,8 +1360,8 @@ window.Groups = {
     tolerance: "intersect",
     greedy: true,
     drop: function(e){
-      $target = $(e.target);  
-      $(this).removeClass("acceptsDrop");
+      $target = iQ(e.target);  
+      iQ(this).removeClass("acceptsDrop");
       var phantom = $target.data("phantomGroup")
       
       var group = drag.info.item.parent;
@@ -1364,7 +1373,7 @@ window.Groups = {
         group.add( drag.info.$el );      
     },
     over: function(e){
-      var $target = $(e.target);
+      var $target = iQ(e.target);
 
       function elToRect($el){
        return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
@@ -1377,22 +1386,28 @@ window.Groups = {
       var newLeft = unionRect.left + unionRect.width/2 - width/2;
       var newTop = unionRect.top + unionRect.height/2 - height/2;
 
-      $(".phantom").remove();
-      var phantom = $("<div class='group phantom group-content'/>").css({
-        width: width,
-        height: height,
-        position:"absolute",
-        top: newTop,
-        left: newLeft,
-        zIndex: -99
-      }).appendTo("body").hide().fadeIn();
+      iQ(".phantom").remove();
+      var phantom = iQ("<div>")
+        .addClass('group phantom group-content')
+        .css({
+          width: width,
+          height: height,
+          position:"absolute",
+          top: newTop,
+          left: newLeft,
+          zIndex: -99
+        })
+        .appendTo("body")
+        .hide()
+        .fadeIn();
+        
       $target.data("phantomGroup", phantom);      
     },
     out: function(e){      
-      var phantom = $(e.target).data("phantomGroup");
+      var phantom = iQ(e.target).data("phantomGroup");
       if(phantom) { 
         phantom.fadeOut(function(){
-          $(this).remove();
+          iQ(this).remove();
         });
       }
     }
@@ -1416,7 +1431,7 @@ window.Groups = {
   // ----------
   getStorageData: function() {
     var data = {nextID: this.nextID, groups: []};
-    $.each(this.groups, function(index, group) {
+    iQ.each(this.groups, function(index, group) {
       data.groups.push(group.getStorageData());
     });
     
@@ -1426,7 +1441,7 @@ window.Groups = {
   // ----------
   saveAll: function() {
     this.save();
-    $.each(this.groups, function(index, group) {
+    iQ.each(this.groups, function(index, group) {
       group.save();
     });
   },
@@ -1459,7 +1474,7 @@ window.Groups = {
               dontPush: true
             };
             
-            new Group([], $.extend({}, group, options)); 
+            new Group([], iQ.extend({}, group, options)); 
           }
         }
       }
@@ -1549,14 +1564,14 @@ window.Groups = {
   register: function(group) {
     Utils.assert('group', group);
 /*     Utils.log("registering", group); */
-    Utils.assert('only register once per group', $.inArray(group, this.groups) == -1);
+    Utils.assert('only register once per group', iQ.inArray(group, this.groups) == -1);
     this.groups.push(group);
 /*     Utils.log("groups: "+this.groups.length); */
   },
   
   // ----------  
   unregister: function(group) {
-    var index = $.inArray(group, this.groups);
+    var index = iQ.inArray(group, this.groups);
     if(index != -1)
       this.groups.splice(index, 1);  
     
@@ -1570,7 +1585,7 @@ window.Groups = {
   // Currently only supports group ids. 
   group: function(a) {
     var result = null;
-    $.each(this.groups, function(index, candidate) {
+    iQ.each(this.groups, function(index, candidate) {
       if(candidate.id == a) {
         result = candidate;
         return false;
@@ -1596,7 +1611,7 @@ window.Groups = {
         (totalHeight / rows) - padding);
     
     var i = 0;
-    $.each(this.groups, function(index, group) {
+    iQ.each(this.groups, function(index, group) {
       if(group.locked.bounds)
         return; 
         
@@ -1613,8 +1628,8 @@ window.Groups = {
   
   // ----------
   removeAll: function() {
-    var toRemove = $.merge([], this.groups);
-    $.each(toRemove, function(index, group) {
+    var toRemove = iQ.merge([], this.groups);
+    iQ.each(toRemove, function(index, group) {
       group.removeAll();
     });
   },
@@ -1625,7 +1640,7 @@ window.Groups = {
     if( group == null )
       group = this.getNewTabGroup();
     
-    var $el = $(tabItem.container);
+    var $el = iQ(tabItem.container);
     if(group) group.add($el);
   },
   
@@ -1731,7 +1746,8 @@ window.Groups = {
 Groups.init();
 
 // ##########
-$(".tab").data('isDragging', false)
+iQ(".tab").data('isDragging', false); 
+$('.tab')
   .draggable(window.Groups.dragOptions)
   .droppable(window.Groups.dropOptions);
 

@@ -461,15 +461,21 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: data
   data: function(key, value) {
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    var data = this[0].iQData;
-    if(value === undefined)
+    if(value === undefined) {
+      Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+      var data = this[0].iQData;
       return (data ? data[key] : null);
+    }
     
-    if(!data)
-      data = this[0].iQData = {};
-      
-    data[key] = value;
+  	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+      var data = elem.iQData;
+
+      if(!data)
+        data = elem.iQData = {};
+        
+      data[key] = value;
+    }
+    
     return this;    
   },
   
@@ -603,10 +609,13 @@ iQ.fn = iQ.prototype = {
     
   // ----------
   // Function: fadeOut
-  fadeOut: function() {
+  fadeOut: function(callback) {
     try {
+      Utils.assert('does not yet support duration', iQ.isFunction(callback) || callback === undefined);
       this.animate({opacity: 0}, 'animate350', function() {
         iQ(this).css({display: 'none'});
+        if(iQ.isFunction(callback))
+          callback.apply(this);
       });  
     } catch(e) {
       Utils.log(e);
@@ -958,7 +967,9 @@ iQ.extend({
     'mousemove',
     'click',
     'resize',
-    'change'
+    'change',
+    'blur',
+    'focus'
   ];
   
   iQ.each(events, function(index, event) {

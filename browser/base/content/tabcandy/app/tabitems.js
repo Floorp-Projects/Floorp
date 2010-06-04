@@ -282,7 +282,7 @@ window.TabItems = {
       var tab = mirror.tab;
       
       if(window.Groups) {        
-        $$div.data('isDragging', false);
+        $div.data('isDragging', false);
         $$div.draggable(window.Groups.dragOptions);
         $$div.droppable(window.Groups.dropOptions);
       }
@@ -301,7 +301,7 @@ window.TabItems = {
         if(iQ(e.target).hasClass("close")) 
           tab.close();
         else {
-          if(!$(this).data('isDragging'))
+          if(!iQ(this).data('isDragging'))
             self.zoomTo(this);
           else 
             tab.raw.pos = iQ(this).position(); // TODO: is this necessary?
