@@ -576,6 +576,7 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: animate
   animate: function(css, duration, callback) {
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     try {
       this.addClass(duration);
       iQ.animationCount++;
@@ -588,7 +589,7 @@ iQ.fn = iQ.prototype = {
           self.removeClass(duration);
           cleanedUp = true;
           if(iQ.isFunction(callback))
-            callback();
+            callback.apply(this);
         }
       });
       
@@ -597,6 +598,34 @@ iQ.fn = iQ.prototype = {
       Utils.log('iQ.fn.animate error', e);
     }
     
+    return this;
+  },
+    
+  // ----------
+  // Function: fadeOut
+  fadeOut: function() {
+    try {
+      this.animate({opacity: 0}, 'animate350', function() {
+        iQ(this).css({display: 'none'});
+      });  
+    } catch(e) {
+      Utils.log(e);
+    }
+    
+    return this;
+  },
+    
+  // ----------
+  // Function: fadeIn
+  fadeIn: function() {
+    try {
+      this.css({display: ''});
+      this.animate({opacity: 1}, 'animate350');  
+    } catch(e) {
+      Utils.log(e);
+    }
+    
+    return this;
   },
     
   // ----------
