@@ -280,6 +280,7 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
     Svc.Obs.add("weave:engine:score:updated", this);
+    Svc.Obs.add("weave:resource:status:401", this);
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -430,6 +431,9 @@ WeaveSvc.prototype = {
       case "weave:engine:score:updated":
         this._handleScoreUpdate();
         break;
+      case "weave:resource:status:401":
+        this._handleResource401(subject);
+        break;
       case "idle":
         this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, this._idleTime);
@@ -454,6 +458,21 @@ WeaveSvc.prototype = {
 
     this._log.trace("Global score updated: " + this.globalScore);
     this._checkSyncStatus();
+  },
+
+  _handleResource401: function _handleResource401(request) {
+    // Only handle 401s that are hitting the current cluster
+    let spec = request.resource.spec;
+    let cluster = this.clusterURL;
+    if (spec.indexOf(cluster) != 0)
+      return;
+
+    // Nothing to do if the cluster isn't changing
+    if (!this._setCluster())
+      return;
+
+    // Replace the old cluster with the new one to retry the request
+    request.newUri = this.clusterURL + spec.slice(cluster.length);
   },
 
   // gets cluster from central LDAP server and returns it, or null on error
