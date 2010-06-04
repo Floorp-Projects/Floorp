@@ -515,10 +515,6 @@ FrameState::storeLocal(FrameEntry *fe, uint32 n)
                 JS_NOT_REACHED("hello, plz fix this now");
             }
         }
-        if (localFe->type.inRegister())
-            forgetReg(localFe->type.reg());
-        if (localFe->data.inRegister())
-            forgetReg(localFe->data.reg());
     }
 
     localFe->resetUnsynced();
