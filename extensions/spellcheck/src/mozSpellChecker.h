@@ -88,7 +88,6 @@ protected:
   nsCString *mCurrentEngineContractId;
   nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
   PRBool mFromStart;
-  nsTArray<nsString> mIgnoreList;
 
   nsresult SetupDoc(PRInt32 *outBlockOffset);
 
