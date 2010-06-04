@@ -102,6 +102,8 @@ public:
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
   nsresult ModifyValueForNewKey();
+  nsresult UpdateIndexes(mozIStorageConnection* aConnection,
+                         PRInt64 aObjectDataId);
 
 private:
   // In-params.
@@ -1261,8 +1263,10 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   // Update our indexes if needed.
-  if (mIndexUpdateInfo.Length()) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
+  if (!mIndexUpdateInfo.IsEmpty()) {
+    PRInt64 objectDataId = mAutoIncrement ? mKey.IntValue() : LL_MININT;
+    rv = UpdateIndexes(aConnection, objectDataId);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
   rv = savepoint.Release();
@@ -1325,6 +1329,107 @@ AddHelper::ModifyValueForNewKey()
 
   rv = json->EncodeFromJSVal(clone.addr(), cx, mValue);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+AddHelper::UpdateIndexes(mozIStorageConnection* aConnection,
+                         PRInt64 aObjectDataId)
+{
+#ifdef DEBUG
+  NS_ASSERTION(aConnection, "Null pointer!");
+  if (mAutoIncrement) {
+    NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
+  }
+  else {
+    NS_ASSERTION(aObjectDataId == LL_MININT, "Bad objectData id!");
+  }
+#endif
+
+  PRUint32 indexCount = mIndexUpdateInfo.Length();
+  NS_ASSERTION(indexCount, "Don't call me!");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv;
+
+  if (!mAutoIncrement) {
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+                                        "SELECT id "
+                                        "FROM object_data "
+                                        "WHERE object_store_id = :osid "
+                                        "AND key_value = :key_value"
+                                      ), getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
+
+    NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+
+    if (mKey.IsInt()) {
+      rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
+    }
+    else if (mKey.IsString()) {
+      rv = stmt->BindStringByName(keyValue, mKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!hasResult) {
+      NS_ERROR("This is bad, we just added this value! Where'd it go?!");
+      return NS_ERROR_FAILURE;
+    }
+
+    aObjectDataId = stmt->AsInt64(0);
+  }
+
+  NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
+
+  for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
+    const IndexUpdateInfo& updateInfo = mIndexUpdateInfo[indexIndex];
+
+    stmt = mTransaction->IndexUpdateStatement(updateInfo.info.autoIncrement,
+                                              updateInfo.info.unique);
+    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+
+    mozStorageStatementScoper scoper2(stmt);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                               updateInfo.info.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
+                               aObjectDataId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_NAMED_LITERAL_CSTRING(objectDataKey, "object_data_key");
+
+    if (mKey.IsInt()) {
+      rv = stmt->BindInt64ByName(objectDataKey, mKey.IntValue());
+    }
+    else if (mKey.IsString()) {
+      rv = stmt->BindStringByName(objectDataKey, mKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), updateInfo.value);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
