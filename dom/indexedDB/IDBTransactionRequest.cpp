@@ -539,6 +539,71 @@ IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
   return result.forget();
 }
 
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
+                                            bool aUnique)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+
+  NS_ASSERTION(mConnection, "No connection!");
+
+  nsCOMPtr<mozIStorageStatement>& cachedStatement =
+    aAutoIncrement ?
+      aUnique ?
+        mIndexUpdateUniqueAIStmt :
+        mIndexUpdateAIStmt :
+      aUnique ?
+        mIndexUpdateUniqueStmt :
+        mIndexUpdateStmt;
+
+  nsCOMPtr<mozIStorageStatement> result(cachedStatement);
+
+  if (!result) {
+    nsCString query;
+    if (aAutoIncrement) {
+      if (aUnique) {
+        query.AssignLiteral(
+          "INSERT OR REPLACE INTO ai_unique_index_data (index_id, "
+                                                       "object_data_id, "
+                                                       "object_data_key, "
+                                                       "value) "
+          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+        );
+      }
+      else {
+        query.AssignLiteral(
+          "INSERT OR REPLACE INTO ai_index_data (index_id, object_data_id, "
+                                                "object_data_key, value) "
+          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+        );
+      }
+    }
+    else {
+      if (aUnique) {
+        query.AssignLiteral(
+          "INSERT OR REPLACE INTO unique_index_data (index_id, object_data_id, "
+                                                    "object_data_key, value) "
+          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+        );
+      }
+      else {
+        query.AssignLiteral(
+          "INSERT OR REPLACE INTO index_data (index_id, object_data_id, "
+                                             "object_data_key, value) "
+          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+        );
+      }
+    }
+
+    nsresult rv = mConnection->CreateStatement(query,
+                                               getter_AddRefs(cachedStatement));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    result = cachedStatement;
+  }
+  return result.forget();
+}
+
 void
 IDBTransactionRequest::CloseConnection()
 {
@@ -568,7 +633,11 @@ IDBTransactionRequest::CloseConnection()
       !runnable->AddDoomedObject(mIndexGetObjectUniqueAIStmt) ||
       !runnable->AddDoomedObject(mIndexGetObjectAIStmt) ||
       !runnable->AddDoomedObject(mIndexGetObjectUniqueStmt) ||
-      !runnable->AddDoomedObject(mIndexGetObjectStmt)) {
+      !runnable->AddDoomedObject(mIndexGetObjectStmt) ||
+      !runnable->AddDoomedObject(mIndexUpdateUniqueAIStmt) ||
+      !runnable->AddDoomedObject(mIndexUpdateAIStmt) ||
+      !runnable->AddDoomedObject(mIndexUpdateUniqueStmt) ||
+      !runnable->AddDoomedObject(mIndexUpdateStmt)) {
     NS_ERROR("Out of memory!");
   }
 
