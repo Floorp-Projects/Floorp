@@ -319,6 +319,10 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_GOTO)
 
+          BEGIN_CASE(JSOP_BITAND)
+            jsop_bitop(op);
+          END_CASE(JSOP_BITAND)
+
           BEGIN_CASE(JSOP_LT)
           BEGIN_CASE(JSOP_LE)
           BEGIN_CASE(JSOP_GT)
@@ -412,9 +416,10 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_GE)
 
-          BEGIN_CASE(JSOP_BITAND)
+          BEGIN_CASE(JSOP_LSH)
+          BEGIN_CASE(JSOP_RSH)
             jsop_bitop(op);
-          END_CASE(JSOP_BITAND)
+          END_CASE(JSOP_RSH)
 
           BEGIN_CASE(JSOP_VOID)
             frame.pop();

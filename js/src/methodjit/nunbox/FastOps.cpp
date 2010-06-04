@@ -72,11 +72,26 @@ mjit::Compiler::jsop_bitop(JSOp op)
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
+    VoidStub stub;
+    switch (op) {
+      case JSOP_BITAND:
+        stub = stubs::BitAnd;
+        break;
+      case JSOP_LSH:
+        stub = stubs::Lsh;
+        break;
+      case JSOP_RSH:
+        stub = stubs::Rsh;
+        break;
+      default:
+        JS_NOT_REACHED("wat");
+    }
+
     /* We only want to handle integers here. */
     if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_MASK32_INT32) ||
         (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_MASK32_INT32)) {
         prepareStubCall();
-        stubCall(stubs::BitAnd, Uses(2), Defs(1));
+        stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
         frame.pushSyncedType(JSVAL_MASK32_INT32);
         return;
@@ -100,7 +115,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
     if (stubNeeded) {
         stubcc.leave();
-        stubcc.call(stubs::BitAnd);
+        stubcc.call(stub);
     }
 
     if (lhs->isConstant() && rhs->isConstant()) {
@@ -110,9 +125,14 @@ mjit::Compiler::jsop_bitop(JSOp op)
         frame.popn(2);
         switch (op) {
           case JSOP_BITAND:
-            frame.push(Value(Int32Tag(L & R)));
+            frame.push(Int32Tag(L & R));
             return;
-
+          case JSOP_LSH:
+            frame.push(Int32Tag(L << R));
+            return;
+          case JSOP_RSH:
+            frame.push(Int32Tag(L >> R));
+            return;
           default:
             JS_NOT_REACHED("say wat");
         }
@@ -141,6 +161,67 @@ mjit::Compiler::jsop_bitop(JSOp op)
             masm.and32(rhsReg, reg);
         }
 
+        break;
+      }
+
+      case JSOP_LSH:
+      case JSOP_RSH:
+      {
+        /* Not commutative. */
+        if (rhs->isConstant()) {
+            int32 shift = rhs->getValue().asInt32() & 0x1F;
+
+            if (!shift) {
+                /*
+                 * Just pop RHS - leave LHS. ARM can't shift by 0.
+                 * Type of LHS should be learned already.
+                 */
+                masm.pop();
+                if (stubNeeded)
+                    stubcc.rejoin(2);
+                return;
+            }
+
+            reg = frame.ownRegForData(lhs);
+
+            switch (op) {
+              case JSOP_LSH:
+                masm.lshift32(Imm32(shift), reg);
+                break;
+              case JSOP_RSH:
+                masm.rshift32(Imm32(shift), reg);
+                break;
+              default:
+                JS_NOT_REACHED("NYI");
+            }
+        } else {
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+            /* Grosssssss! RHS _must_ be in ECX, on x86 */
+            RegisterID rr = frame.tempRegForData(rhs, JSC::X86Registers::ecx);
+#else
+            RegisterID rr = frame.tempRegForData(rhs);
+#endif
+
+            frame.pinReg(rr);
+            if (lhs->isConstant()) {
+                reg = frame.allocReg();
+                masm.move(Imm32(lhs->getValue().asInt32()), reg);
+            } else {
+                reg = frame.ownRegForData(lhs);
+            }
+            frame.unpinReg(rr);
+
+            switch (op) {
+              case JSOP_LSH:
+                masm.lshift32(rr, reg);
+                break;
+              case JSOP_RSH:
+                masm.rshift32(rr, reg);
+                break;
+              default:
+                JS_NOT_REACHED("NYI");
+            }
+        }
         break;
       }
 

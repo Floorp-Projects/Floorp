@@ -282,10 +282,41 @@ FrameState::tempRegForData(FrameEntry *fe)
     if (fe->data.inRegister())
         return fe->data.reg();
 
-    /* :XXX: X64 */
-
     RegisterID reg = alloc(fe, RematInfo::DATA, true);
     masm.loadData32(addressOf(fe), reg);
+    fe->data.setRegister(reg);
+    return reg;
+}
+
+inline JSC::MacroAssembler::RegisterID
+FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->isCopy())
+        fe = entryFor(fe->copyOf());
+
+    if (fe->data.inRegister()) {
+        RegisterID old = fe->data.reg();
+        if (old == reg)
+            return reg;
+
+        /* Keep the old register pinned. */
+        regstate[old].fe = NULL;
+        if (!freeRegs.hasReg(reg))
+            evictReg(reg);
+        else
+            freeRegs.takeReg(reg);
+        masm.move(old, reg);
+        freeReg(old);
+    } else {
+        if (!freeRegs.hasReg(reg))
+            evictReg(reg);
+        else
+            freeRegs.takeReg(reg);
+        masm.loadData32(addressOf(fe), reg);
+    }
+    regstate[reg] = RegisterState(fe, RematInfo::DATA, true);
     fe->data.setRegister(reg);
     return reg;
 }
@@ -370,6 +401,21 @@ FrameState::getLocal(uint32 slot)
     FrameEntry *fe = addToTracker(index);
     fe->resetSynced();
     return fe;
+}
+
+inline void
+FrameState::pinReg(RegisterID reg)
+{
+    JS_ASSERT(regstate[reg].fe);
+    regstate[reg].save = regstate[reg].fe;
+    regstate[reg].fe = NULL;
+}
+
+inline void
+FrameState::unpinReg(RegisterID reg)
+{
+    JS_ASSERT(!regstate[reg].fe);
+    regstate[reg].fe = regstate[reg].save;
 }
 
 } /* namspace mjit */
