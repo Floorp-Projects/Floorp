@@ -64,6 +64,7 @@
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
+#include "jsnativestack.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -74,7 +75,6 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jstracer.h"
-#include "jsnativestack.h"
 
 #include "jscntxtinlines.h"
 
@@ -538,6 +538,7 @@ JSThreadData::finish()
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
         JS_ASSERT(!scriptsToGC[i]);
     JS_ASSERT(!localRootStack);
+    JS_ASSERT(!conservativeGC.isEnabled());
 #endif
 
     if (dtoaState)
