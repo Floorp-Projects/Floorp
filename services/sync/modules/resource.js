@@ -265,6 +265,23 @@ Resource.prototype = {
     // Make a lazy getter to convert the json response into an object
     Utils.lazy2(ret, "obj", function() JSON.parse(ret));
 
+    // Notify if we get a 401 to maybe try again with a new uri
+    if (status == 401) {
+      // Create an object to allow observers to decide if we should try again
+      let subject = {
+        newUri: "",
+        resource: this,
+        response: ret
+      }
+      Observers.notify("weave:resource:status:401", subject);
+
+      // Do the same type of request but with the new uri
+      if (subject.newUri != "") {
+        this.uri = subject.newUri;
+        return this._request.apply(this, arguments);
+      }
+    }
+
     return ret;
   },
 
