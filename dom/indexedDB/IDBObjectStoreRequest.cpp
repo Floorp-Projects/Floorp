@@ -1749,6 +1749,8 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   PRUint16 rc = InsertDataFromObjectStore(aConnection);
   NS_ENSURE_TRUE(rc == OK, rc);
 
+  rv = savepoint.Release();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   return OK;
 }
 
@@ -1819,9 +1821,6 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 
     rv = insertStmt->Execute();
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-    fprintf(stderr, "### Added '%s' for the index with name '%s'\n",
-            NS_ConvertUTF16toUTF8(value).get(),
-            NS_ConvertUTF16toUTF8(mName).get());
   }
 
   return OK;
