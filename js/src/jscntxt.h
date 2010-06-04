@@ -976,6 +976,11 @@ const uint32 JSLRS_NULL_MARK = uint32(-1);
 #define NATIVE_ITER_CACHE_MASK  JS_BITMASK(NATIVE_ITER_CACHE_LOG2)
 #define NATIVE_ITER_CACHE_SIZE  JS_BIT(NATIVE_ITER_CACHE_LOG2)
 
+struct JSPendingProxyOperation {
+    JSPendingProxyOperation *next;
+    JSObject *object;
+};
+
 struct JSThreadData {
     JSGCFreeLists       gcFreeLists;
 
@@ -1032,6 +1037,9 @@ struct JSThreadData {
 
     /* Base address of the native stack for the current thread. */
     jsuword             *nativeStackBase;
+
+    /* List of currently pending operations on proxies. */
+    JSPendingProxyOperation *pendingProxyOperation;
 
     bool init();
     void finish();
