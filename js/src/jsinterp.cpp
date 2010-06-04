@@ -418,6 +418,21 @@ const uint16 js_PrimitiveTestFlags[] = {
     JSFUN_THISP_NUMBER      /* INT     */
 };
 
+class AutoPreserveEnumerators {
+    JSContext *cx;
+    JSObject *enumerators;
+
+  public:
+    AutoPreserveEnumerators(JSContext *cx) : cx(cx), enumerators(cx->enumerators)
+    {
+    }
+
+    ~AutoPreserveEnumerators()
+    {
+        cx->enumerators = enumerators;
+    }
+};
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -645,6 +660,7 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #endif
     } else {
         JS_ASSERT(script);
+        AutoPreserveEnumerators preserve(cx);
         ok = js_Interpret(cx);
     }
 
@@ -834,6 +850,7 @@ js_Execute(JSContext *cx, JSObject *const chain, JSScript *script,
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
+    AutoPreserveEnumerators preserve(cx);
     JSBool ok = js_Interpret(cx);
     if (result)
         *result = fp->rval;

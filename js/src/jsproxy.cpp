@@ -195,7 +195,7 @@ JSProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp)
     if (!enumerate(cx, proxy, &ida))
         return false;
     AutoIdArray idar(cx, ida);
-    return JSIdArrayToIterator(cx, flags, ida, vp);
+    return JSIdArrayToIterator(cx, proxy, flags, ida, vp);
 }
 
 void
