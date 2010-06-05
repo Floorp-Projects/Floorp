@@ -1715,17 +1715,18 @@ static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
  */
 static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
 {
-  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    if (aView->GetDimensions().Contains(aPt) &&
-        aView->GetVisibility() != nsViewVisibility_kHide) {
-      nsView* r = FindViewContaining(v, aPt - v->GetOffsetTo(aView));
-      if (r)
-        return r;
-      return v;
-    }
+  if (!aView->GetDimensions().Contains(aPt) ||
+      aView->GetVisibility() == nsViewVisibility_kHide) {
+    return nsnull;
   }
 
-  return nsnull;
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsView* r = FindViewContaining(v, aPt - v->GetOffsetTo(aView));
+    if (r)
+      return r;
+  }
+
+  return aView;
 }
 
 void
