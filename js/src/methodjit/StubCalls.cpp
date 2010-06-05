@@ -1378,7 +1378,7 @@ InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
                 (lobj = &lval.asObject()) &&
                 ((clasp = lobj->getClass())->flags & JSCLASS_IS_EXTENDED) &&
                 ((ExtendedClass *)clasp)->equality) {
-                if (!((ExtendedClass *)clasp)->equality(cx, lobj, &lval, &jscond))
+                if (!((ExtendedClass *)clasp)->equality(cx, lobj, lval, &jscond))
                     THROWV(false);
                 cond = (jscond == JS_TRUE) == op;
             } else {
