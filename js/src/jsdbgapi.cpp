@@ -856,10 +856,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             shortid = sprop->shortid;
             JS_UNLOCK_OBJ(cx, pobj);
         } else {
-            pobj->dropProperty(cx, prop);
-
             if (!pobj->getProperty(cx, propid, valroot.addr()) ||
-                !pobj->getAttributes(cx, propid, NULL, &attrs)) {
+                !pobj->getAttributes(cx, propid, &attrs)) {
                 return JS_FALSE;
             }
             getter = setter = NULL;
@@ -878,7 +876,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
 
     /*
      * At this point, prop/sprop exists in obj, obj is locked, and we must
-     * obj->dropProperty(cx, prop) before returning.
+     * unlock the object before returning.
      */
     ok = JS_TRUE;
     DBG_LOCK(rt);
@@ -930,7 +928,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     DBG_UNLOCK(rt);
 
 out:
-    obj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 

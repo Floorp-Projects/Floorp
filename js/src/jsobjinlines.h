@@ -52,6 +52,14 @@
 
 #include "jsscopeinlines.h"
 
+inline void
+JSObject::dropProperty(JSContext *cx, JSProperty *prop)
+{
+    JS_ASSERT(prop);
+    if (isNative())
+        JS_UNLOCK_OBJ(cx, this);
+}
+
 inline jsval
 JSObject::getSlotMT(JSContext *cx, uintN slot)
 {

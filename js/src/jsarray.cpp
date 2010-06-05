@@ -742,12 +742,6 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     return proto->lookupProperty(cx, id, objp, propp);
 }
 
-static void
-array_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
-{
-    JS_ASSERT(IsDenseArrayId(cx, obj, (jsid) prop));
-}
-
 JSBool
 js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
                              jsval *vp)
@@ -797,13 +791,11 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                                        &obj2, &prop) < 0)
             return JS_FALSE;
 
-        if (prop) {
-            if (obj2->isNative()) {
-                sprop = (JSScopeProperty *) prop;
-                if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
-                    return JS_FALSE;
-            }
-            obj2->dropProperty(cx, prop);
+        if (prop && obj2->isNative()) {
+            sprop = (JSScopeProperty *) prop;
+            if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
+                return JS_FALSE;
+            JS_UNLOCK_OBJ(cx, obj2);
         }
         return JS_TRUE;
     }
@@ -834,15 +826,23 @@ array_typeOf(JSContext *cx, JSObject *obj)
 /* The same as js_ObjectOps except for the .enumerate and .call hooks. */
 static JSObjectOps js_SlowArrayObjectOps = {
     NULL,
-    js_LookupProperty,      js_DefineProperty,
-    js_GetProperty,         js_SetProperty,
-    js_GetAttributes,       js_SetAttributes,
-    js_DeleteProperty,      js_DefaultValue,
-    js_Enumerate,           js_CheckAccess,
-    array_typeOf,           js_TraceObject,
-    NULL,                   NATIVE_DROP_PROPERTY,
-    NULL,                   js_Construct,
-    js_HasInstance,         js_Clear
+    js_LookupProperty,
+    js_DefineProperty,
+    js_GetProperty,
+    js_SetProperty,
+    js_GetAttributes,
+    js_SetAttributes,
+    js_DeleteProperty,
+    js_DefaultValue,
+    js_Enumerate,
+    js_CheckAccess,
+    array_typeOf,
+    js_TraceObject,
+    NULL,   /* thisObject */
+    NULL,   /* call */
+    js_Construct,
+    js_HasInstance,
+    js_Clear
 };
 
 static JSObjectOps *
@@ -1011,8 +1011,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 }
 
 static JSBool
-array_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                    uintN *attrsp)
+array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)
         ? JSPROP_PERMANENT : JSPROP_ENUMERATE;
@@ -1020,8 +1019,7 @@ array_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
 }
 
 static JSBool
-array_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                    uintN *attrsp)
+array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_CANT_SET_ARRAY_ATTRS);
@@ -1086,15 +1084,23 @@ static const JSObjectMap SharedArrayMap(&js_ArrayObjectOps, JSObjectMap::SHAPELE
 
 JSObjectOps js_ArrayObjectOps = {
     &SharedArrayMap,
-    array_lookupProperty, array_defineProperty,
-    array_getProperty,    array_setProperty,
-    array_getAttributes,  array_setAttributes,
-    array_deleteProperty, js_DefaultValue,
-    js_Enumerate,         js_CheckAccess,
-    array_typeOf,         array_trace,
-    NULL,                 array_dropProperty,
-    NULL,                 NULL,
-    js_HasInstance,       NULL
+    array_lookupProperty,
+    array_defineProperty,
+    array_getProperty,
+    array_setProperty,
+    array_getAttributes,
+    array_setAttributes,
+    array_deleteProperty,
+    js_DefaultValue,
+    js_Enumerate,
+    js_CheckAccess,
+    array_typeOf,
+    array_trace,
+    NULL,   /* thisObject */
+    NULL,   /* call */
+    NULL,   /* construct */
+    js_HasInstance,
+    NULL
 };
 
 static JSObjectOps *

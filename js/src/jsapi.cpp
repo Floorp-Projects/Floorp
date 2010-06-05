@@ -2912,7 +2912,6 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop, jsv
         return JS_TRUE;
     }
 
-    JSBool ok = JS_TRUE;
     if (obj2->isNative()) {
         JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
@@ -2927,14 +2926,14 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop, jsv
         *vp = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
                ? obj2->lockedGetSlot(sprop->slot)
                : JSVAL_TRUE;
+        JS_UNLOCK_OBJ(cx, obj2);
     } else if (obj2->isDenseArray()) {
-        ok = js_GetDenseArrayElementValue(cx, obj2, prop, vp);
+        return js_GetDenseArrayElementValue(cx, obj2, prop, vp);
     } else {
         /* XXX bad API: no way to return "defined but value unknown" */
         *vp = JSVAL_TRUE;
     }
-    obj2->dropProperty(cx, prop);
-    return ok;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3261,7 +3260,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
                                    sprop->shortid)
               != NULL);
     }
-    obj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 
@@ -3298,7 +3297,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
                                sprop->attributes(), sprop->getFlags() | JSScopeProperty::ALIAS,
                                sprop->shortid)
           != NULL);
-    obj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 
@@ -3308,7 +3307,6 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 {
     JSObject *obj2;
     JSProperty *prop;
-    JSBool ok;
 
     if (!LookupPropertyById(cx, obj, id, flags, &obj2, &prop))
         return JS_FALSE;
@@ -3325,36 +3323,36 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     }
 
     desc->obj = obj2;
+    if (obj2->isNative()) {
+        JSScopeProperty *sprop = (JSScopeProperty *) prop;
+        desc->attrs = sprop->attributes();
 
-    ok = obj2->getAttributes(cx, id, prop, &desc->attrs);
-    if (ok) {
-        if (obj2->isNative()) {
-            JSScopeProperty *sprop = (JSScopeProperty *) prop;
-
-            if (sprop->isMethod()) {
-                desc->getter = desc->setter = JS_PropertyStub;
-                desc->value = sprop->methodValue();
-            } else {
-                desc->getter = sprop->getter();
-                desc->setter = sprop->setter();
-                desc->value = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
-                              ? obj2->lockedGetSlot(sprop->slot)
-                              : JSVAL_VOID;
-            }
+        if (sprop->isMethod()) {
+            desc->getter = desc->setter = JS_PropertyStub;
+            desc->value = sprop->methodValue();
         } else {
-            if (obj->isProxy()) {
-                JSAutoResolveFlags rf(cx, flags);
-                return own
-                       ? JSProxy::getOwnPropertyDescriptor(cx, obj, id, desc)
-                       : JSProxy::getPropertyDescriptor(cx, obj, id, desc);
-            }
-            desc->getter = NULL;
-            desc->setter = NULL;
-            desc->value = JSVAL_VOID;
+            desc->getter = sprop->getter();
+            desc->setter = sprop->setter();
+            desc->value = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
+                          ? obj2->lockedGetSlot(sprop->slot)
+                          : JSVAL_VOID;
         }
+        JS_UNLOCK_OBJ(cx, obj2);
+    } else if (obj2->isProxy()) {
+        JS_ASSERT(obj == obj2);
+
+        JSAutoResolveFlags rf(cx, flags);
+        return own
+            ? JSProxy::getOwnPropertyDescriptor(cx, obj, id, desc)
+            : JSProxy::getPropertyDescriptor(cx, obj, id, desc);
+    } else {
+        if (!obj2->getAttributes(cx, id, &desc->attrs))
+            return false;
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->value = JSVAL_VOID;
     }
-    obj2->dropProperty(cx, prop);
-    return ok;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3433,20 +3431,20 @@ SetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN attrs, JS
 {
     JSObject *obj2;
     JSProperty *prop;
-    JSBool ok;
 
     if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
-        return JS_FALSE;
+        return false;
     if (!prop || obj != obj2) {
-        *foundp = JS_FALSE;
+        *foundp = false;
         if (prop)
             obj2->dropProperty(cx, prop);
-        return JS_TRUE;
+        return true;
     }
-
-    *foundp = JS_TRUE;
-    ok = obj->setAttributes(cx, id, prop, &attrs);
-    obj->dropProperty(cx, prop);
+    JSBool ok = obj->isNative()
+                ? js_SetNativeAttributes(cx, obj, (JSScopeProperty *) prop, attrs)
+                : obj->setAttributes(cx, id, &attrs);
+    if (ok)
+        *foundp = true;
     return ok;
 }
 
