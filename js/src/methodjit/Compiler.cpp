@@ -474,6 +474,21 @@ mjit::Compiler::generateMethod()
             jsop_binary(op, stubs::Mod);
           END_CASE(JSOP_MOD)
 
+          BEGIN_CASE(JSOP_NEG)
+          {
+            FrameEntry *top = frame.peek(-1);
+            if (top->isConstant() && top->getValue().isPrimitive()) {
+                double d;
+                ValueToNumber(cx, top->getValue(), &d);
+                d = -d;
+                frame.pop();
+                frame.push(DoubleTag(d));
+            } else {
+                jsop_neg();
+            }
+          }
+          END_CASE(JSOP_NEG)
+
           BEGIN_CASE(JSOP_VOID)
             frame.pop();
             frame.push(UndefinedTag());
