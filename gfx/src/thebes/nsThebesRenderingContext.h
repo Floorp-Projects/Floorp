@@ -140,7 +140,7 @@ public:
     NS_IMETHOD PopState(void);
     NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
     NS_IMETHOD SetLineStyle(nsLineStyle aLineStyle);
-    NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
+    NS_IMETHOD SetClipRegion(const nsIntRegion& aRegion, nsClipCombine aCombine);
     NS_IMETHOD SetColor(nscolor aColor);
     NS_IMETHOD GetColor(nscolor &aColor) const;
     NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLanguage,
