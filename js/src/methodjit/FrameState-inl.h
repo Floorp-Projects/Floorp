@@ -194,6 +194,19 @@ FrameState::pushSyncedType(JSValueMask32 tag)
 }
 
 inline void
+FrameState::pushSynced(JSValueMask32 tag, RegisterID reg)
+{
+    FrameEntry *fe = rawPush();
+
+    fe->resetUnsynced();
+    fe->type.sync();
+    fe->data.sync();
+    fe->setTypeTag(tag);
+    fe->data.setRegister(reg);
+    regstate[reg] = RegisterState(fe, RematInfo::DATA, true);
+}
+
+inline void
 FrameState::push(Address address)
 {
     FrameEntry *fe = rawPush();
