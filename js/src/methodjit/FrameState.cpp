@@ -278,8 +278,8 @@ FrameState::sync(Assembler &masm) const
             JS_ASSERT(backing != fe);
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
 
-            RegisterID reg;
             bool allocd = false;
+            RegisterID reg = Registers::ReturnReg;
             if (backing->type.inMemory() || backing->data.inMemory()) {
                 /* :TODO: this is not a valid assumption. */
                 JS_ASSERT(!avail.empty());
