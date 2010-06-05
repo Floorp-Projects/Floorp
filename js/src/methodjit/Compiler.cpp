@@ -479,6 +479,20 @@ mjit::Compiler::generateMethod()
             frame.push(UndefinedTag());
           END_CASE(JSOP_VOID)
 
+          BEGIN_CASE(JSOP_GETELEM)
+            prepareStubCall();
+            stubCall(stubs::GetElem, Uses(2), Defs(1));
+            frame.popn(2);
+            frame.pushSynced();
+          END_CASE(JSOP_GETELEM)
+
+          BEGIN_CASE(JSOP_SETELEM)
+            prepareStubCall();
+            stubCall(stubs::SetElem, Uses(3), Defs(1));
+            frame.popn(3);
+            frame.pushSynced();
+          END_CASE(JSOP_SETELEM);
+
           BEGIN_CASE(JSOP_CALLNAME)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
