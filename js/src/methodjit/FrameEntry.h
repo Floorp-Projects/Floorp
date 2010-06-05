@@ -86,9 +86,18 @@ class FrameEntry
         v_.s.mask32 = u32;
     }
 
+    void track(uint32 index) {
+        clear();
+        index_ = index;
+    }
+
     void clear() {
         copied = false;
         copy = NULL;
+    }
+
+    uint32 trackerIndex() {
+        return index_;
     }
 
     /*
@@ -143,6 +152,10 @@ class FrameEntry
         return copy;
     }
 
+    void setNotCopied() {
+        copied = false;
+    }
+
     /*
      * Set copy index.
      */
@@ -155,8 +168,9 @@ class FrameEntry
     RematInfo  type;
     RematInfo  data;
     jsval_layout v_;
+    uint32     index_;
     FrameEntry *copy;
-    bool        copied;
+    bool       copied;
 };
 
 } /* namespace mjit */

@@ -224,6 +224,9 @@ FrameState::assertValidRegisterState() const
         if (fe >= tos)
             continue;
 
+        JS_ASSERT(i == fe->trackerIndex());
+        JS_ASSERT_IF(fe->isCopy(),
+                     fe->trackerIndex() > fe->copyOf()->trackerIndex());
         JS_ASSERT_IF(fe->isCopy(), !fe->type.inRegister() && !fe->data.inRegister());
 
         if (fe->isCopy())
@@ -481,11 +484,17 @@ FrameState::pushLocal(uint32 n)
             fe->type.invalidate();
         fe->data.invalidate();
         if (localFe->isCopy()) {
-            fe->setCopyOf(localFe->copyOf());
+            localFe = localFe->copyOf();
+            fe->setCopyOf(localFe);
         } else {
             fe->setCopyOf(localFe);
             localFe->setCopied();
         }
+
+        /* Maintain tracker ordering guarantees for copies. */
+        JS_ASSERT(localFe->isCopied());
+        if (fe->trackerIndex() < localFe->trackerIndex())
+            swapInTracker(fe, localFe);
     }
 }
 
@@ -578,50 +587,45 @@ FrameState::storeLocal(uint32 n)
 
     /* Constants are easy to propagate. */
     if (top->isConstant()) {
-        localFe->clear();
+        localFe->setCopyOf(NULL);
+        localFe->setNotCopied();
         localFe->setConstant(Jsvalify(top->getValue()));
         return;
     }
 
     /*
-     * Sucky part, not going to optimize it yet. If |top| is a copy, and the
-     * backing FE is being tracked BELOW this slot, we must preserve the copy
-     * order invariants of the stack, and make this local a copy.
+     * When dealing with copies, there are two important invariants:
      *
-     * Right now, the only way to determine this ordering is to search the
-     * tracker.
+     * 1) The backing store precedes all copies in the tracker.
+     * 2) The backing store of a local is never a stack slot.
+     *
+     * If the top is a copy, and the second condition holds true, the local
+     * can be rewritten as a copy of the original backing slot. If the first
+     * condition does not hold, force it to hold by swapping in-place.
      */
-    uint32 searchPoint = InvalidIndex;
     FrameEntry *backing = top;
+    uint32 searchPoint = InvalidIndex;
     if (top->isCopy()) {
         backing = top->copyOf();
+        JS_ASSERT(backing->trackerIndex() < top->trackerIndex());
 
-        FrameEntry *tos = tosFe();
-        for (uint32 i = 0; i < tracker.nentries; i++) {
-            FrameEntry *fe = tracker[i];
-            if (fe >= tos)
-                continue;
-
-            /* Found the local first - break out. */
-            if (fe == localFe) {
-                searchPoint = i;
-                break;
-            }
-
-            /* Found the backing index first - make a copy. */
-            if (fe == backing) {
-                localFe->clear();
-                localFe->setCopyOf(backing);
-                if (backing->isTypeKnown())
-                    localFe->setTypeTag(backing->getTypeTag());
-                else
-                    localFe->type.invalidate();
-                localFe->data.invalidate();
-                return;
-            }
+        if (indexOfFe(backing) < uint32(spBase - base)) {
+            /* local.idx < backing.idx means local cannot be a copy yet */
+            if (localFe->trackerIndex() < backing->trackerIndex())
+                swapInTracker(backing, localFe);
+            localFe->setNotCopied();
+            localFe->setCopyOf(backing);
+            if (backing->isTypeKnown())
+                localFe->setTypeTag(backing->getTypeTag());
+            else
+                localFe->type.invalidate();
+            localFe->data.invalidate();
+            return;
         }
 
-        JS_ASSERT(searchPoint != InvalidIndex);
+        searchPoint = backing->trackerIndex();
+    } else if (top->trackerIndex() < localFe->trackerIndex()) {
+        swapInTracker(top, localFe);
     }
 
     /*
@@ -643,36 +647,10 @@ FrameState::storeLocal(uint32 n)
     if (!backing->isTypeKnown())
         backing->type.invalidate();
     backing->data.invalidate();
-    backing->clear();
+    backing->setNotCopied();
     backing->setCopyOf(localFe);
 
-    /*
-     * It is not possible that the top was not a copy, but has been copied
-     * itself.
-     */
-    JS_ASSERT_IF(searchPoint == InvalidIndex, !top->isCopied());
-    JS_ASSERT_IF(searchPoint == InvalidIndex, backing == top);
-
-    if (searchPoint != InvalidIndex) {
-        /*
-         * Go through and rewrite any copies of the backing fe to be copies of
-         * the new local.
-         */
-        JS_ASSERT(backing != top);
-
-        /*
-         * We're guaranteed to be able to start from searchPoint + 1 because
-         * we did not find the backing index in the earlier loop.
-         */
-        FrameEntry *tos = tosFe();
-        for (uint32 i = searchPoint + 1; i < tracker.nentries; i++) {
-            FrameEntry *fe = tracker[i];
-            if (fe >= tos)
-                continue;
-            if (fe->isCopy() && fe->copyOf() == backing)
-                fe->setCopyOf(localFe);
-        }
-    }
+    JS_ASSERT(searchPoint == InvalidIndex);
     JS_ASSERT(top->copyOf() == localFe);
 }
 
