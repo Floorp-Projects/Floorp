@@ -643,6 +643,18 @@ mjit::Compiler::generateMethod()
             frame.push(Value(Int32Tag(GET_INT32(PC))));
           END_CASE(JSOP_INT32)
 
+          BEGIN_CASE(JSOP_NEWARRAY)
+          {
+            prepareStubCall();
+            uint32 len = GET_UINT16(PC);
+            masm.move(Imm32(len), Registers::ArgReg1);
+            stubCall(stubs::NewArray, Uses(len), Defs(1));
+            frame.popn(len);
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_NONFUNOBJ, Registers::ReturnReg);
+          }
+          END_CASE(JSOP_NEWARRAY)
+
           BEGIN_CASE(JSOP_TRACE)
           END_CASE(JSOP_TRACE)
 
