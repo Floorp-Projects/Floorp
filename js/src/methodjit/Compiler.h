@@ -151,6 +151,7 @@ class Compiler
     STUB_CALL_TYPE(VoidPtrStubUInt32);
     STUB_CALL_TYPE(VoidPtrStub);
     STUB_CALL_TYPE(BoolStub);
+    STUB_CALL_TYPE(JSObjStubUInt32);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();
