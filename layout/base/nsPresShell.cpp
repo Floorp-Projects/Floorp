@@ -3649,8 +3649,7 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   nsPoint offset(0,0);
   if (mPresContext->IsScreen()) {
     // Get the widget to create the rendering context for and calculate
-    // the offset from the frame to it.  (Calculating the offset is important
-    // if the frame isn't the root frame.)
+    // the offset from the frame to it.
     nsPoint viewOffset;
     nsIView* view = aFrame->GetClosestView(&viewOffset);
     nsPoint widgetOffset;
@@ -5391,11 +5390,16 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             itemToInsert = new (aBuilder)nsDisplayClip(frame, frame, i, textRect);
           }
         }
-        else {
+        // Don't try to descend into subdocuments.
+        // If this ever changes we'd need to add handling for subdocuments with
+        // different zoom levels.
+        else if (content->GetCurrentDoc() ==
+                   aRange->GetStartParent()->GetCurrentDoc()) {
           // if the node is within the range, append it to the temporary list
           PRBool before, after;
-          nsRange::CompareNodeToRange(content, aRange, &before, &after);
-          if (!before && !after) {
+          nsresult rv =
+            nsRange::CompareNodeToRange(content, aRange, &before, &after);
+          if (NS_SUCCEEDED(rv) && !before && !after) {
             itemToInsert = i;
             surfaceRect.UnionRect(surfaceRect, i->GetBounds(aBuilder));
           }
@@ -5424,6 +5428,12 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
 
   return surfaceRect;
 }
+
+#ifdef DEBUG
+#include <stdio.h>
+
+static PRBool gDumpRangePaintList = PR_FALSE;
+#endif
 
 RangePaintInfo*
 PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
@@ -5482,7 +5492,21 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
                                                     ancestorRect, &info->mList);
   info->mBuilder.LeavePresShell(ancestorFrame, ancestorRect);
 
+#ifdef DEBUG
+  if (gDumpRangePaintList) {
+    fprintf(stderr, "CreateRangePaintInfo --- before ClipListToRange:\n");
+    nsFrame::PrintDisplayList(&(info->mBuilder), info->mList);
+  }
+#endif
+
   nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList, range);
+
+#ifdef DEBUG
+  if (gDumpRangePaintList) {
+    fprintf(stderr, "CreateRangePaintInfo --- after ClipListToRange:\n");
+    nsFrame::PrintDisplayList(&(info->mBuilder), info->mList);
+  }
+#endif
 
   // determine the offset of the reference frame for the display list
   // to the root frame. This will allow the coordinates used when painting
@@ -5658,8 +5682,8 @@ PresShell::RenderNode(nsIDOMNode* aNode,
       return nsnull;
 
     // move the region so that it is offset from the topleft corner of the surface
-    aRegion->MoveBy(-rrectPixels.x + (rrectPixels.x - pc->AppUnitsToDevPixels(area.x)),
-                    -rrectPixels.y + (rrectPixels.y - pc->AppUnitsToDevPixels(area.y)));
+    aRegion->MoveBy(-pc->AppUnitsToDevPixels(area.x),
+                    -pc->AppUnitsToDevPixels(area.y));
   }
 
   return PaintRangePaintInfo(&rangeItems, nsnull, aRegion, area, aPoint,
