@@ -547,11 +547,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
-          {
-            uint32 slot = GET_SLOTNO(PC);
-            FrameEntry *fe = frame.peek(-1);
-            frame.storeLocal(fe, slot);
-          }
+            frame.storeLocal(GET_SLOTNO(PC));
           END_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_UINT16)
