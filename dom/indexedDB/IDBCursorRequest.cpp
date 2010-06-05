@@ -46,6 +46,7 @@
 #include "nsIIDBDatabaseException.h"
 #include "nsIVariant.h"
 
+#include "mozilla/Storage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"

@@ -39,6 +39,7 @@
 
 #include "IDBTransactionRequest.h"
 
+#include "mozilla/Storage.h"
 #include "nsDOMClassInfo.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -54,6 +55,21 @@
 #define SAVEPOINT_INTERMEDIATE "intermediate"
 
 USING_INDEXEDDB_NAMESPACE
+
+namespace {
+
+PLDHashOperator
+DoomCachedStatements(const nsACString& aQuery,
+                     nsCOMPtr<mozIStorageStatement>& aStatement,
+                     void* aUserArg)
+{
+  CloseConnectionRunnable* runnable =
+    static_cast<CloseConnectionRunnable*>(aUserArg);
+  runnable->AddDoomedObject(aStatement);
+  return PL_DHASH_REMOVE;
+}
+
+} // anonymous namespace
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -89,6 +105,11 @@ IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
 
   if (!transaction->mObjectStoreNames.AppendElements(aObjectStoreNames)) {
     NS_ERROR("Out of memory!");
+    return nsnull;
+  }
+
+  if (!transaction->mCachedStatements.Init()) {
+    NS_ERROR("Failed to initialize hash!");
     return nsnull;
   }
 
@@ -249,359 +270,218 @@ IDBTransactionRequest::AddStatement(bool aCreate,
                                     bool aAutoIncrement)
 {
 #ifdef DEBUG
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
   if (!aCreate) {
     NS_ASSERTION(aOverwrite, "Bad param combo!");
   }
 #endif
 
-  NS_ASSERTION(mConnection, "No connection!");
-
-  nsCOMPtr<mozIStorageStatement>& cachedStatement =
-    aAutoIncrement ?
-      aCreate ?
-        aOverwrite ?
-          mAddOrModifyAutoIncrementStmt :
-          mAddAutoIncrementStmt :
-        mModifyAutoIncrementStmt :
-      aCreate ?
-        aOverwrite ?
-          mAddOrModifyStmt :
-          mAddStmt :
-        mModifyStmt;
-
-  nsCOMPtr<mozIStorageStatement> result(cachedStatement);
-
-  if (!result) {
-    nsCString query;
-    if (aAutoIncrement) {
-      if (aCreate) {
-        if (aOverwrite) {
-          query.AssignLiteral(
-            "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
-            "VALUES (:osid, :key_value, :data)"
-          );
-        }
-        else {
-          query.AssignLiteral(
-            "INSERT INTO ai_object_data (object_store_id, data) "
-            "VALUES (:osid, :data)"
-          );
-        }
-      }
-      else {
-        query.AssignLiteral(
-          "UPDATE ai_object_data "
-          "SET data = :data "
-          "WHERE object_store_id = :osid "
-          "AND id = :key_value"
+  if (aAutoIncrement) {
+    if (aCreate) {
+      if (aOverwrite) {
+        return GetCachedStatement(
+          "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
+          "VALUES (:osid, :key_value, :data)"
         );
       }
+      return GetCachedStatement(
+        "INSERT INTO ai_object_data (object_store_id, data) "
+        "VALUES (:osid, :data)"
+      );
     }
-    else {
-      if (aCreate) {
-        if (aOverwrite) {
-          query.AssignLiteral(
-            "INSERT OR REPLACE INTO object_data (object_store_id, key_value, "
-                                                "data) "
-            "VALUES (:osid, :key_value, :data)"
-          );
-        }
-        else {
-          query.AssignLiteral(
-            "INSERT INTO object_data (object_store_id, key_value, data) "
-            "VALUES (:osid, :key_value, :data)"
-          );
-        }
-      }
-      else {
-        query.AssignLiteral(
-          "UPDATE object_data "
-          "SET data = :data "
-          "WHERE object_store_id = :osid "
-          "AND key_value = :key_value"
-        );
-      }
-    }
-
-    nsresult rv = mConnection->CreateStatement(query,
-                                               getter_AddRefs(cachedStatement));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    result = cachedStatement;
+    return GetCachedStatement(
+      "UPDATE ai_object_data "
+      "SET data = :data "
+      "WHERE object_store_id = :osid "
+      "AND id = :key_value"
+    );
   }
-  return result.forget();
+  if (aCreate) {
+    if (aOverwrite) {
+      return GetCachedStatement(
+        "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data) "
+        "VALUES (:osid, :key_value, :data)"
+      );
+    }
+    return GetCachedStatement(
+      "INSERT INTO object_data (object_store_id, key_value, data) "
+      "VALUES (:osid, :key_value, :data)"
+    );
+  }
+  return GetCachedStatement(
+    "UPDATE object_data "
+    "SET data = :data "
+    "WHERE object_store_id = :osid "
+    "AND key_value = :key_value"
+  );
 }
 
 already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::RemoveStatement(bool aAutoIncrement)
 {
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mConnection, "No connection!");
-
-  nsCOMPtr<mozIStorageStatement> result;
-
-  nsresult rv;
   if (aAutoIncrement) {
-    if (!mRemoveAutoIncrementStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM ai_object_data "
-        "WHERE id = :key_value "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mRemoveAutoIncrementStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mRemoveAutoIncrementStmt;
+    return GetCachedStatement(
+      "DELETE FROM ai_object_data "
+      "WHERE id = :key_value "
+      "AND object_store_id = :osid"
+    );
   }
-  else {
-    if (!mRemoveStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM object_data "
-        "WHERE key_value = :key_value "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mRemoveStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mRemoveStmt;
-  }
-
-  return result.forget();
+  return GetCachedStatement(
+    "DELETE FROM object_data "
+    "WHERE key_value = :key_value "
+    "AND object_store_id = :osid"
+  );
 }
 
 already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::GetStatement(bool aAutoIncrement)
 {
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mConnection, "No connection!");
-
-  nsCOMPtr<mozIStorageStatement> result;
-
-  nsresult rv;
   if (aAutoIncrement) {
-    if (!mGetAutoIncrementStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT data "
-        "FROM ai_object_data "
-        "WHERE id = :id "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mGetAutoIncrementStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mGetAutoIncrementStmt;
+    return GetCachedStatement(
+      "SELECT data "
+      "FROM ai_object_data "
+      "WHERE id = :id "
+      "AND object_store_id = :osid"
+    );
   }
-  else {
-    if (!mGetStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT data "
-        "FROM object_data "
-        "WHERE key_value = :id "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mGetStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mGetStmt;
-  }
-
-  return result.forget();
+  return GetCachedStatement(
+    "SELECT data "
+    "FROM object_data "
+    "WHERE key_value = :id "
+    "AND object_store_id = :osid"
+  );
 }
 
 already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::IndexGetStatement(bool aUnique,
                                          bool aAutoIncrement)
 {
-  nsCOMPtr<mozIStorageStatement> result;
-
-  nsresult rv;
   if (aAutoIncrement) {
     if (aUnique) {
-      if (!mIndexGetUniqueAIStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT ai_object_data_id "
-          "FROM unique_ai_index_data "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetUniqueAIStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetUniqueAIStmt;
+      return GetCachedStatement(
+        "SELECT ai_object_data_id "
+        "FROM unique_ai_index_data "
+        "WHERE index_id = :index_id "
+        "AND value = :value"
+      );
     }
-    else {
-      if (!mIndexGetAIStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT ai_object_data_id "
-          "FROM ai_index_data "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetAIStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetAIStmt;
-    }
+    return GetCachedStatement(
+      "SELECT ai_object_data_id "
+      "FROM ai_index_data "
+      "WHERE index_id = :index_id "
+      "AND value = :value"
+    );
   }
-  else {
-    if (aUnique) {
-      if (!mIndexGetUniqueStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT object_data_key "
-          "FROM unique_index_data "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetUniqueStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetUniqueStmt;
-    }
-    else {
-      if (!mIndexGetStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT object_data_key "
-          "FROM index_data "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetStmt;
-    }
+  if (aUnique) {
+    return GetCachedStatement(
+      "SELECT object_data_key "
+      "FROM unique_index_data "
+      "WHERE index_id = :index_id "
+      "AND value = :value"
+    );
   }
-
-  return result.forget();
+  return GetCachedStatement(
+    "SELECT object_data_key "
+    "FROM index_data "
+    "WHERE index_id = :index_id "
+    "AND value = :value"
+  );
 }
 
 already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
                                                bool aAutoIncrement)
 {
-  nsCOMPtr<mozIStorageStatement> result;
-
-  nsresult rv;
   if (aAutoIncrement) {
     if (aUnique) {
-      if (!mIndexGetObjectUniqueAIStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT data "
-          "FROM ai_object_data "
-          "INNER JOIN unique_ai_index_data "
-          "ON object_data.id = unique_ai_index_data.ai_object_data_id "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetObjectUniqueAIStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetObjectUniqueAIStmt;
+      return GetCachedStatement(
+        "SELECT data "
+        "FROM ai_object_data "
+        "INNER JOIN unique_ai_index_data "
+        "ON object_data.id = unique_ai_index_data.ai_object_data_id "
+        "WHERE index_id = :index_id "
+        "AND value = :value"
+      );
     }
-    else {
-      if (!mIndexGetObjectAIStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT data "
-          "FROM ai_object_data "
-          "INNER JOIN ai_index_data "
-          "ON object_data.id = ai_index_data.ai_object_data_id "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetObjectAIStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetObjectAIStmt;
-    }
+    return GetCachedStatement(
+      "SELECT data "
+      "FROM ai_object_data "
+      "INNER JOIN ai_index_data "
+      "ON object_data.id = ai_index_data.ai_object_data_id "
+      "WHERE index_id = :index_id "
+      "AND value = :value"
+    );
   }
-  else {
-    if (aUnique) {
-      if (!mIndexGetObjectUniqueStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT data "
-          "FROM object_data "
-          "INNER JOIN unique_index_data "
-          "ON object_data.id = unique_index_data.object_data_id "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetObjectUniqueStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetObjectUniqueStmt;
-    }
-    else {
-      if (!mIndexGetObjectStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT data "
-          "FROM object_data "
-          "INNER JOIN index_data "
-          "ON object_data.id = index_data.object_data_id "
-          "WHERE index_id = :index_id "
-          "AND value = :value"
-        ), getter_AddRefs(mIndexGetObjectStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mIndexGetObjectStmt;
-    }
+  if (aUnique) {
+    return GetCachedStatement(
+      "SELECT data "
+      "FROM object_data "
+      "INNER JOIN unique_index_data "
+      "ON object_data.id = unique_index_data.object_data_id "
+      "WHERE index_id = :index_id "
+      "AND value = :value"
+    );
   }
-
-  return result.forget();
+  return GetCachedStatement(
+    "SELECT data "
+    "FROM object_data "
+    "INNER JOIN index_data "
+    "ON object_data.id = index_data.object_data_id "
+    "WHERE index_id = :index_id "
+    "AND value = :value"
+  );
 }
 
 already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
                                             bool aUnique)
 {
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  if (aAutoIncrement) {
+    if (aUnique) {
+      return GetCachedStatement(
+        "INSERT OR REPLACE INTO ai_unique_index_data "
+          "(index_id, object_data_id, id, value) "
+        "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+      );
+    }
+    return GetCachedStatement(
+      "INSERT OR REPLACE INTO ai_index_data "
+        "(index_id, object_data_id, id, value) "
+      "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+    );
+  }
+  if (aUnique) {
+    return GetCachedStatement(
+      "INSERT OR REPLACE INTO unique_index_data "
+        "(index_id, object_data_id, object_data_key, value) "
+      "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+    );
+  }
+  return GetCachedStatement(
+    "INSERT OR REPLACE INTO index_data ("
+      "index_id, object_data_id, object_data_key, value) "
+    "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+  );
+}
 
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::GetCachedStatement(const nsACString& aQuery)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!aQuery.IsEmpty(), "Empty sql statement!");
   NS_ASSERTION(mConnection, "No connection!");
 
-  nsCOMPtr<mozIStorageStatement>& cachedStatement =
-    aAutoIncrement ?
-      aUnique ?
-        mIndexUpdateUniqueAIStmt :
-        mIndexUpdateAIStmt :
-      aUnique ?
-        mIndexUpdateUniqueStmt :
-        mIndexUpdateStmt;
+  nsCOMPtr<mozIStorageStatement> stmt;
 
-  nsCOMPtr<mozIStorageStatement> result(cachedStatement);
-
-  if (!result) {
-    nsCString query;
-    if (aAutoIncrement) {
-      if (aUnique) {
-        query.AssignLiteral(
-          "INSERT OR REPLACE INTO ai_unique_index_data (index_id, "
-                                                       "object_data_id, "
-                                                       "id, "
-                                                       "value) "
-          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
-        );
-      }
-      else {
-        query.AssignLiteral(
-          "INSERT OR REPLACE INTO ai_index_data (index_id, object_data_id, "
-                                                "id, value) "
-          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
-        );
-      }
-    }
-    else {
-      if (aUnique) {
-        query.AssignLiteral(
-          "INSERT OR REPLACE INTO unique_index_data (index_id, object_data_id, "
-                                                    "object_data_key, value) "
-          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
-        );
-      }
-      else {
-        query.AssignLiteral(
-          "INSERT OR REPLACE INTO index_data (index_id, object_data_id, "
-                                             "object_data_key, value) "
-          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
-        );
-      }
-    }
-
-    nsresult rv = mConnection->CreateStatement(query,
-                                               getter_AddRefs(cachedStatement));
+  if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
+    nsresult rv = mConnection->CreateStatement(aQuery, getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    result = cachedStatement;
+    if (!mCachedStatements.Put(aQuery, stmt)) {
+      NS_ERROR("Out of memory?!");
+    }
   }
-  return result.forget();
+
+  return stmt.forget();
 }
 
 void
@@ -615,29 +495,10 @@ IDBTransactionRequest::CloseConnection()
 
   nsRefPtr<CloseConnectionRunnable> runnable(new CloseConnectionRunnable());
 
-  if (!runnable->AddDoomedObject(mConnection) ||
-      !runnable->AddDoomedObject(mAddStmt) ||
-      !runnable->AddDoomedObject(mAddAutoIncrementStmt) ||
-      !runnable->AddDoomedObject(mModifyStmt) ||
-      !runnable->AddDoomedObject(mModifyAutoIncrementStmt) ||
-      !runnable->AddDoomedObject(mAddOrModifyStmt) ||
-      !runnable->AddDoomedObject(mAddOrModifyAutoIncrementStmt) ||
-      !runnable->AddDoomedObject(mRemoveStmt) ||
-      !runnable->AddDoomedObject(mRemoveAutoIncrementStmt) ||
-      !runnable->AddDoomedObject(mGetStmt) ||
-      !runnable->AddDoomedObject(mGetAutoIncrementStmt) ||
-      !runnable->AddDoomedObject(mIndexGetUniqueAIStmt) ||
-      !runnable->AddDoomedObject(mIndexGetAIStmt) ||
-      !runnable->AddDoomedObject(mIndexGetUniqueStmt) ||
-      !runnable->AddDoomedObject(mIndexGetStmt) ||
-      !runnable->AddDoomedObject(mIndexGetObjectUniqueAIStmt) ||
-      !runnable->AddDoomedObject(mIndexGetObjectAIStmt) ||
-      !runnable->AddDoomedObject(mIndexGetObjectUniqueStmt) ||
-      !runnable->AddDoomedObject(mIndexGetObjectStmt) ||
-      !runnable->AddDoomedObject(mIndexUpdateUniqueAIStmt) ||
-      !runnable->AddDoomedObject(mIndexUpdateAIStmt) ||
-      !runnable->AddDoomedObject(mIndexUpdateUniqueStmt) ||
-      !runnable->AddDoomedObject(mIndexUpdateStmt)) {
+  mCachedStatements.Enumerate(DoomCachedStatements, runnable);
+  NS_ASSERTION(!mCachedStatements.Count(), "Statements left!");
+
+  if (!runnable->AddDoomedObject(mConnection)) {
     NS_ERROR("Out of memory!");
   }
 
