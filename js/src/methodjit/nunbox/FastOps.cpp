@@ -77,6 +77,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
       case JSOP_BITAND:
         stub = stubs::BitAnd;
         break;
+      case JSOP_BITXOR:
+        stub = stubs::BitXor;
+        break;
       case JSOP_LSH:
         stub = stubs::Lsh;
         break;
@@ -124,6 +127,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
         frame.popn(2);
         switch (op) {
+          case JSOP_BITXOR:
+            frame.push(Int32Tag(L ^ R));
+            break;
           case JSOP_BITAND:
             frame.push(Int32Tag(L & R));
             return;
@@ -141,6 +147,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
     RegisterID reg;
 
     switch (op) {
+      case JSOP_BITXOR:
       case JSOP_BITAND:
       {
         /* Commutative, and we're guaranteed both are ints. */
@@ -153,12 +160,21 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
         reg = frame.ownRegForData(lhs);
         if (rhs->isConstant()) {
-            masm.and32(Imm32(rhs->getValue().asInt32()), reg);
+            if (op == JSOP_BITAND)
+                masm.and32(Imm32(rhs->getValue().asInt32()), reg);
+            else if (op == JSOP_BITXOR)
+                masm.xor32(Imm32(rhs->getValue().asInt32()), reg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
-            masm.and32(masm.payloadOf(frame.addressOf(rhs)), reg);
+            if (op == JSOP_BITAND)
+                masm.and32(masm.payloadOf(frame.addressOf(rhs)), reg);
+            else if (op == JSOP_BITXOR)
+                masm.xor32(masm.payloadOf(frame.addressOf(rhs)), reg);
         } else {
             RegisterID rhsReg = frame.tempRegForData(rhs);
-            masm.and32(rhsReg, reg);
+            if (op == JSOP_BITAND)
+                masm.and32(rhsReg, reg);
+            else if (op == JSOP_BITXOR)
+                masm.xor32(rhsReg, reg);
         }
 
         break;
