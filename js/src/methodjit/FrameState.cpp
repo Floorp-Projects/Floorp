@@ -92,11 +92,11 @@ FrameState::takeReg(RegisterID reg)
 {
     if (freeRegs.hasReg(reg)) {
         freeRegs.takeReg(reg);
-        return;
+    } else {
+        JS_ASSERT(regstate[reg].fe);
+        evictReg(reg);
+        regstate[reg].fe = NULL;
     }
-
-    evictReg(reg);
-    regstate[reg].fe = NULL;
 }
 
 void
@@ -345,6 +345,8 @@ FrameState::syncAndKill(uint32 mask)
         FrameEntry *backing = fe;
         if (fe->isCopy())
             backing = entryFor(fe->copyOf());
+
+        JS_ASSERT_IF(i == 0, !fe->isCopy());
 
         if (!fe->data.synced()) {
             if (backing != fe && backing->data.inMemory())

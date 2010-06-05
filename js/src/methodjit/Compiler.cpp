@@ -549,6 +549,16 @@ mjit::Compiler::generateMethod()
             frame.push(NullTag());
           END_CASE(JSOP_NULL)
 
+          BEGIN_CASE(JSOP_THIS)
+            /*
+             * :FIXME: We don't know whether it's a funobj or not... but we
+             * DO know it's an object! This can help downstream opcodes.
+             */
+            prepareStubCall();
+            stubCall(stubs::This, Uses(0), Defs(1));
+            frame.pushSynced();
+          END_CASE(JSOP_THIS)
+
           BEGIN_CASE(JSOP_FALSE)
             frame.push(Value(BooleanTag(false)));
           END_CASE(JSOP_FALSE)
