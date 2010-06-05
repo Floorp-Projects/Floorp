@@ -768,7 +768,7 @@ stubs::CallName(VMFrame &f, uint32 index)
 }
 
 void JS_FASTCALL
-stubs::BitAnd(VMFrame &f)
+stubs::BitOr(VMFrame &f)
 {
     int32_t i, j;
 
@@ -776,7 +776,7 @@ stubs::BitAnd(VMFrame &f)
         !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
         THROW();
     }
-    i = i & j;
+    i = i | j;
     f.regs.sp[-2].setInt32(i);
 }
 
@@ -790,6 +790,19 @@ stubs::BitXor(VMFrame &f)
         THROW();
     }
     i = i ^ j;
+    f.regs.sp[-2].setInt32(i);
+}
+
+void JS_FASTCALL
+stubs::BitAnd(VMFrame &f)
+{
+    int32_t i, j;
+
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
+        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+        THROW();
+    }
+    i = i & j;
     f.regs.sp[-2].setInt32(i);
 }
 
