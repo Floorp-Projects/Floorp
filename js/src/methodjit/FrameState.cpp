@@ -485,75 +485,206 @@ FrameState::pushLocal(uint32 n)
         else
             fe->type.invalidate();
         fe->data.invalidate();
-        fe->setCopyOf(localIndex(n));
-        localFe->setCopied();
+        if (localFe->isCopy()) {
+            fe->setCopyOf(localFe->copyOf());
+        } else {
+            fe->setCopyOf(localIndex(n));
+            localFe->setCopied();
+        }
     }
 }
 
 void
-FrameState::storeLocal(FrameEntry *fe, uint32 n)
+FrameState::uncopy(FrameEntry *original)
 {
+    JS_ASSERT(original->isCopied());
+    uint32 origIndex = indexOfFe(original);
+
+    /* Find the first copy. */
+    uint32 firstCopy = InvalidIndex;
+    for (uint32 i = 0; i < tracker.nentries; i++) {
+        uint32 index = tracker[i];
+        if (index >= tos())
+            continue;
+        FrameEntry *fe = entryFor(index);
+        if (fe->isCopy() && fe->copyOf() == origIndex) {
+            firstCopy = i;
+            break;
+        }
+    }
+
+    if (firstCopy == InvalidIndex) {
+        original->copied = false;
+        return;
+    }
+
+    /* Mark all extra copies as copies of the new backing index. */
+    uint32 firstCopyIndex = tracker[firstCopy];
+    FrameEntry *fe = entryFor(firstCopyIndex);
+
+    fe->copy = false;
+    for (uint32 i = firstCopy + 1; i < tracker.nentries; i++) {
+        uint32 index = tracker[i];
+        if (index >= tos())
+            continue;
+
+        FrameEntry *other = entryFor(index);
+
+        /* The original must be tracked before copies. */
+        JS_ASSERT(other != original);
+
+        if (!other->isCopy() || other->copyOf() != origIndex)
+            continue;
+
+        other->setCopyOf(firstCopyIndex);
+        fe->setCopied();
+    }
+
+    /*
+     * Switch the new backing store to the old backing store. During
+     * this process we also necessarily make sure the copy can be
+     * synced.
+     */
+    if (!original->isTypeKnown()) {
+        /*
+         * If the copy is unsynced, and the original is in memory,
+         * give the original a register. We do this below too; it's
+         * okay if it's spilled.
+         */
+        if (original->type.inMemory() && !fe->type.synced())
+            tempRegForType(original);
+        fe->type.inherit(original->type);
+        if (fe->type.inRegister())
+            moveOwnership(fe->type.reg(), fe);
+    } else {
+        JS_ASSERT(fe->isTypeKnown());
+        JS_ASSERT(fe->getTypeTag() == original->getTypeTag());
+    }
+    if (original->data.inMemory() && !fe->data.synced())
+        tempRegForData(original);
+    fe->data.inherit(original->data);
+    if (fe->data.inRegister())
+        moveOwnership(fe->data.reg(), fe);
+}
+
+void
+FrameState::storeLocal(uint32 n)
+{
+    uint32 storeIndex = localIndex(n);
     FrameEntry *localFe = getLocal(n);
 
-    if (fe->isCopy()) {
-        FrameEntry *backing = entryFor(fe->copyOf());
-
-        /* x == x is a no-op. */
-        if (fe == backing)
-            return;
-
-        fe = backing;
+    /* Detect something like (x = x) which is a no-op. */
+    FrameEntry *top = peek(-1);
+    if (top->isCopy() && top->copyOf() == storeIndex) {
+        JS_ASSERT(localFe->isCopied());
+        return;
     }
 
-    if (localFe->isCopied()) {
-        /* Find any entry being backed by the local fe, and rewrite it. */
-        for (uint32 i = 0; i < tracker.nentries; i++) {
-            uint32 index = tracker[i];
-            FrameEntry *other = entryFor(index);
-            if (other->isCopy() && other->copyOf() == localIndex(n)) {
-                /* This is the first copy -- it's now the new backing index. */
-                JS_NOT_REACHED("hello, plz fix this now");
-            }
-        }
-    }
-
+    /* Completely invalidate the local variable. */
+    if (localFe->isCopied())
+        uncopy(localFe);
+    forgetRegs(localFe);
     localFe->resetUnsynced();
 
-    if (fe->isConstant()) {
-        /* Propagate constants. */
-        localFe->setConstant(Jsvalify(fe->getValue()));
-    } else {
-        RegisterID reg;
-
-        /* First, copy everything to the local fe. */
-        if (fe->isTypeKnown()) {
-            localFe->setTypeTag(fe->getTypeTag());
-        } else {
-            if (!fe->type.inRegister()) {
-                reg = tempRegForType(fe);
-                JS_ASSERT(reg == fe->type.reg());
-            } else {
-                reg = fe->type.reg();
-            }
-            localFe->type.setRegister(reg);
-            moveOwnership(reg, localFe);
-            fe->type.invalidate();
-            JS_ASSERT(regstate[reg].type == RematInfo::TYPE);
-        }
-        if (!fe->data.inRegister()) {
-            reg = tempRegForData(fe);
-            JS_ASSERT(reg == fe->data.reg());
-        } else {
-            reg = fe->data.reg();
-        }
-        localFe->data.setRegister(reg);
-        fe->data.invalidate();
-        moveOwnership(reg, localFe);
-        JS_ASSERT(regstate[reg].type == RematInfo::DATA);
-
-        localFe->setCopied();
-        fe->setCopyOf(localIndex(n));
+    /* Constants are easy to propagate. */
+    if (top->isConstant()) {
+        localFe->clear();
+        localFe->setConstant(Jsvalify(top->getValue()));
+        return;
     }
+
+    /*
+     * Sucky part, not going to optimize it yet. If |top| is a copy, and the
+     * backing FE is being tracked BELOW this slot, we must preserve the copy
+     * order invariants of the stack, and make this local a copy.
+     *
+     * Right now, the only way to determine this ordering is to search the
+     * tracker.
+     */
+    uint32 searchPoint = InvalidIndex;
+    FrameEntry *backing = top;
+    if (top->isCopy()) {
+        uint32 backingIndex = top->copyOf();
+        backing = entryFor(backingIndex);
+
+        for (uint32 i = 0; i < tracker.nentries; i++) {
+            uint32 index = tracker[i];
+            if (index >= tos())
+                continue;
+
+            /* Found the local first - break out. */
+            if (index == storeIndex) {
+                searchPoint = i;
+                break;
+            }
+
+            /* Found the backing index first - make a copy. */
+            if (index == backingIndex) {
+                localFe->clear();
+                localFe->setCopyOf(backingIndex);
+                if (backing->isTypeKnown())
+                    localFe->setTypeTag(backing->getTypeTag());
+                else
+                    localFe->type.invalidate();
+                localFe->data.invalidate();
+                return;
+            }
+        }
+
+        JS_ASSERT(searchPoint != InvalidIndex);
+    }
+
+    /*
+     * Move the backing store down - we spill registers here, but we could be
+     * smarter and re-use the type reg.
+     */
+    RegisterID reg = tempRegForData(backing);
+    localFe->data.setRegister(reg);
+    moveOwnership(reg, localFe);
+
+    if (backing->isTypeKnown()) {
+        localFe->setTypeTag(backing->getTypeTag());
+    } else {
+        RegisterID reg = tempRegForType(backing);
+        localFe->type.setRegister(reg);
+        moveOwnership(reg, localFe);
+    }
+
+    if (!backing->isTypeKnown())
+        backing->type.invalidate();
+    backing->data.invalidate();
+    backing->clear();
+    backing->setCopyOf(storeIndex);
+
+    /*
+     * It is not possible that the top was not a copy, but has been copied
+     * itself.
+     */
+    JS_ASSERT_IF(searchPoint == InvalidIndex, !top->isCopied());
+    JS_ASSERT_IF(searchPoint == InvalidIndex, backing == top);
+
+    if (searchPoint != InvalidIndex) {
+        /*
+         * Go through and rewrite any copies of the backing fe to be copies of
+         * the new local.
+         */
+        uint32 backingIndex = indexOfFe(backing);
+        JS_ASSERT(backing != top);
+
+        /*
+         * We're guaranteed to be able to start from searchPoint + 1 because
+         * we did not find the backing index in the earlier loop.
+         */
+        for (uint32 i = searchPoint + 1; i < tracker.nentries; i++) {
+            uint32 index = tracker[i];
+            if (index >= tos())
+                continue;
+            FrameEntry *fe = entryFor(index);
+            if (fe->isCopy() && fe->copyOf() == backingIndex)
+                fe->setCopyOf(storeIndex);
+        }
+    }
+    JS_ASSERT(top->copyOf() == storeIndex);
 }
 
 void
@@ -562,10 +693,7 @@ FrameState::popAfterSet()
     FrameEntry *top = peek(-1);
     FrameEntry *down = peek(-2);
 
-    if (down->type.inRegister())
-        forgetReg(down->type.reg());
-    if (down->data.inRegister())
-        forgetReg(down->data.reg());
+    forgetRegs(down);
 
     if (top->isConstant()) {
         down->setConstant(Jsvalify(top->getValue()));
