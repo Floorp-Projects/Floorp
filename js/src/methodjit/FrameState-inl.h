@@ -444,6 +444,25 @@ FrameState::swapInTracker(FrameEntry *lhs, FrameEntry *rhs)
     rhs->index_ = li;
 }
 
+inline uint32
+FrameState::localIndex(uint32 n)
+{
+    return nargs + n;
+}
+
+inline void
+FrameState::dup()
+{
+    FrameEntry *fe = peek(-1);
+    pushCopyOf(indexOfFe(fe));
+}
+
+inline void
+FrameState::pushLocal(uint32 n)
+{
+    pushCopyOf(localIndex(n));
+}
+
 } /* namspace mjit */
 } /* namspace js */
 
