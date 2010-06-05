@@ -6415,9 +6415,7 @@ js_DumpAtom(JSAtom *atom)
 void
 dumpValue(jsval val)
 {
-    if ((val & 0xfffffff0) == 0xdadadad0) {
-        fprintf(stderr, "**uninitialized** %p", (void *) val);
-    } else if (JSVAL_IS_NULL(val)) {
+    if (JSVAL_IS_NULL(val)) {
         fprintf(stderr, "null");
     } else if (JSVAL_IS_VOID(val)) {
         fprintf(stderr, "undefined");
@@ -6651,6 +6649,8 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
             fprintf(stderr, " none");
         if (fp->flags & JSFRAME_CONSTRUCTING)
             fprintf(stderr, " constructing");
+        if (fp->flags & JSFRAME_COMPUTED_THIS)
+            fprintf(stderr, " computed_this");
         if (fp->flags & JSFRAME_ASSIGNING)
             fprintf(stderr, " assigning");
         if (fp->flags & JSFRAME_DEBUGGER)
