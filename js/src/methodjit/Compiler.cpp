@@ -658,6 +658,21 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::DefFun, Uses(0), Defs(0));
           END_CASE(JSOP_DEFFUN)
 
+          BEGIN_CASE(JSOP_GETDSLOT)
+          BEGIN_CASE(JSOP_CALLDSLOT)
+          {
+            // :FIXME: x64
+            RegisterID reg = frame.allocReg();
+            masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+            masm.loadData32(Address(reg, int32(sizeof(Value)) * -2), reg);
+            masm.loadPtr(Address(reg, offsetof(JSObject, dslots)), reg);
+            frame.freeReg(reg);
+            frame.push(Address(reg, GET_UINT16(PC) * sizeof(Value)));
+            if (op == JSOP_CALLDSLOT)
+                frame.push(NullTag());
+          }
+          END_CASE(JSOP_CALLDSLOT)
+
           BEGIN_CASE(JSOP_UINT24)
             frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
           END_CASE(JSOP_UINT24)
