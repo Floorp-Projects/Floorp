@@ -599,7 +599,7 @@ FrameState::storeLocal(uint32 n)
         FrameEntry *tos = tosFe();
         for (uint32 i = 0; i < tracker.nentries; i++) {
             FrameEntry *fe = tracker[i];
-            if (fe >= tos);
+            if (fe >= tos)
                 continue;
 
             /* Found the local first - break out. */
