@@ -138,6 +138,9 @@ include marquee/reftest.list
 # native-theme/
 include native-theme/reftest.list
 
+# netwerk/
+include ../../netwerk/test/reftest/reftest.list
+
 # object/
 include object/reftest.list
 

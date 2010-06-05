@@ -40,8 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESERVICE_H_
-#define _MOZSTORAGESERVICE_H_
+#ifndef MOZSTORAGESERVICE_H
+#define MOZSTORAGESERVICE_H
 
 #include "nsCOMPtr.h"
 #include "nsICollation.h"
@@ -138,4 +138,4 @@ private:
 } // namespace storage
 } // namespace mozilla
 
-#endif /* _MOZSTORAGESERVICE_H_ */
+#endif /* MOZSTORAGESERVICE_H */

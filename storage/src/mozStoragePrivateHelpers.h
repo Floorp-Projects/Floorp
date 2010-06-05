@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _mozStoragePrivateHelpers_h_
-#define _mozStoragePrivateHelpers_h_
+#ifndef mozStoragePrivateHelpers_h
+#define mozStoragePrivateHelpers_h
 
 /**
  * This file contains convenience methods for mozStorage.
@@ -116,4 +116,4 @@ already_AddRefed<nsIRunnable> newCompletionEvent(
 } // namespace storage
 } // namespace mozilla
 
-#endif // _mozStoragePrivateHelpers_h_
+#endif // mozStoragePrivateHelpers_h

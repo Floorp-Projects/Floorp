@@ -47,6 +47,10 @@ MODULE		= test_toolkit_general
 
 XPCSHELL_TESTS = unit
 
-DIRS = browser chrome widgets
+DIRS = chrome widgets
+
+ifeq (browser,$(MOZ_BUILD_APP))
+DIRS += browser
+endif
 
 include $(topsrcdir)/config/rules.mk

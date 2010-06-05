@@ -54,6 +54,8 @@
 #ifndef nsIPresShell_h___
 #define nsIPresShell_h___
 
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
@@ -997,6 +999,12 @@ public:
   PRUint64 GetPaintCount() { return mPaintCount; }
   void IncrementPaintCount() { ++mPaintCount; }
 
+  /**
+   * Initialize and shut down static variables.
+   */
+  static void InitializeStatics();
+  static void ReleaseStatics();
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -1049,6 +1057,10 @@ protected:
 
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;
+
+  // Live pres shells, for memory and other tracking
+  typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;
+  static nsTHashtable<PresShellPtrKey> *sLiveShells;
 };
 
 /**

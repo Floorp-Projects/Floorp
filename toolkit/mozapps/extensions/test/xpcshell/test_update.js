@@ -19,7 +19,6 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 function run_test() {
-  return;
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Create and configure the HTTP server.
@@ -144,7 +143,15 @@ function check_test_2() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_neq(olda1, null);
     do_check_eq(olda1.version, "1.0");
-    restartManager(1);
+    do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
+
+    shutdownManager();
+
+    do_check_false(isExtensionInAddonsList(profileDir, olda1.id));
+
+    startupManager(1);
+
+    do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       do_check_neq(a1, null);
@@ -787,32 +794,52 @@ function run_test_14() {
   AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
     a8.applyBackgroundUpdates = false;
 
-    // Note that the background check will find a new update for both add-ons
-    // but only start installing one of them
-    prepare_test({}, [
-      "onNewInstall",
-      "onDownloadStarted",
-      "onNewInstall",
-      "onDownloadEnded"
-    ], continue_test_14);
+    // The background update check will find updates for both add-ons but only
+    // proceed to install one of them.
+    AddonManager.addInstallListener({
+      onNewInstall: function(aInstall) {
+        if (aInstall.existingAddon.id != "addon1@tests.mozilla.org" &&
+            aInstall.existingAddon.id != "addon8@tests.mozilla.org")
+          do_throw("Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
+      },
+
+      onDownloadStarted: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+      },
+
+      onDownloadEnded: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+      },
+
+      onDownloadFailed: function(aInstall) {
+        do_throw("Should not have seen onDownloadFailed event");
+      },
+
+      onDownloadCancelled: function(aInstall) {
+        do_throw("Should not have seen onDownloadCancelled event");
+      },
+
+      onInstallStarted: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+      },
+
+      onInstallEnded: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+        check_test_14(aInstall);
+      },
+
+      onInstallFailed: function(aInstall) {
+        do_throw("Should not have seen onInstallFailed event");
+      },
+
+      onInstallCancelled: function(aInstall) {
+        do_throw("Should not have seen onInstallCancelled event");
+      },
+    });
   
     // Fake a timer event
     gInternalManager.notify(null);
   });
-}
-
-function continue_test_14(install) {
-  do_check_neq(install.existingAddon, null);
-  do_check_eq(install.existingAddon.id, "addon1@tests.mozilla.org");
-
-  prepare_test({
-    "addon1@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onInstallStarted",
-    "onInstallEnded",
-  ], check_test_14);
 }
 
 function check_test_14(install) {

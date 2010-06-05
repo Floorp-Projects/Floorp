@@ -182,7 +182,7 @@
 #  define MALLOC_PAGEFILE_WRITE_SIZE 512
 #endif
 
-#ifdef MOZ_MEMORY_LINUX
+#if defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 #define	_GNU_SOURCE /* For mremap(2). */
 #define	issetugid() 0
 #if 0 /* Enable in order to test decommit code on Linux. */
@@ -316,7 +316,7 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 #endif
 #include <sys/time.h>
 #include <sys/types.h>
-#ifndef MOZ_MEMORY_SOLARIS
+#if !defined(MOZ_MEMORY_SOLARIS) && !defined(MOZ_MEMORY_ANDROID)
 #include <sys/sysctl.h>
 #endif
 #include <sys/uio.h>
@@ -606,7 +606,7 @@ static bool malloc_initialized = false;
 /* No init lock for Windows. */
 #elif defined(MOZ_MEMORY_DARWIN)
 static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
-#elif defined(MOZ_MEMORY_LINUX)
+#elif defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 static malloc_mutex_t init_lock = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
 #elif defined(MOZ_MEMORY)
 static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -1335,7 +1335,7 @@ malloc_mutex_init(malloc_mutex_t *mutex)
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
 	mutex->lock = OS_SPINLOCK_INIT;
-#elif defined(MOZ_MEMORY_LINUX)
+#elif defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 	pthread_mutexattr_t attr;
 	if (pthread_mutexattr_init(&attr) != 0)
 		return (true);
@@ -1399,7 +1399,7 @@ malloc_spin_init(malloc_spinlock_t *lock)
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
 	lock->lock = OS_SPINLOCK_INIT;
-#elif defined(MOZ_MEMORY_LINUX)
+#elif defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 	pthread_mutexattr_t attr;
 	if (pthread_mutexattr_init(&attr) != 0)
 		return (true);
@@ -5505,7 +5505,7 @@ MALLOC_OUT:
 #endif
 	}
 
-#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
+#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_ANDROID))
 	/* Prevent potential deadlock on malloc locks after fork. */
 	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
 #endif
@@ -5753,7 +5753,7 @@ malloc_shutdown()
 #  define ZONE_INLINE
 #endif
 
-/* Mangle standard interfaces on Darwin and Windows CE, 
+/* Mangle standard interfaces on Darwin and Android, 
    in order to avoid linking problems. */
 #if defined(MOZ_MEMORY_DARWIN)
 #define	malloc(a)	moz_malloc(a)
@@ -5761,6 +5761,25 @@ malloc_shutdown()
 #define	calloc(a, b)	moz_calloc(a, b)
 #define	realloc(a, b)	moz_realloc(a, b)
 #define	free(a)		moz_free(a)
+#endif
+
+#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC)
+inline void sys_free(void* ptr) {return free(ptr);}
+#define	malloc(a)	je_malloc(a)
+#define	valloc(a)	je_valloc(a)
+#define	calloc(a, b)	je_calloc(a, b)
+#define	realloc(a, b)	je_realloc(a, b)
+#define	free(a)		je_free(a)
+char    *je_strndup(const char *src, size_t len) {
+  char* dst = (char*)je_malloc(len + 1);
+  if(dst)
+    strncpy(dst, src, len + 1);
+  return dst;
+}
+char    *je_strdup(const char *src) {
+  size_t len = strlen(src);
+  return je_strndup(src, len );
+}
 #endif
 
 ZONE_INLINE
@@ -6040,9 +6059,13 @@ free(void *ptr)
 /*
  * Begin non-standard functions.
  */
-
+#ifdef MOZ_MEMORY_ANDROID
+size_t
+malloc_usable_size(void *ptr)
+#else
 size_t
 malloc_usable_size(const void *ptr)
+#endif
 {
 
 #ifdef MALLOC_VALIDATE
@@ -6429,10 +6452,12 @@ jemalloc_darwin_init(void)
  * passed an extra argument for the caller return address, which will be
  * ignored.
  */
+#ifndef WRAP_MALLOC
 void (*__free_hook)(void *ptr) = free;
 void *(*__malloc_hook)(size_t size) = malloc;
 void *(*__realloc_hook)(void *ptr, size_t size) = realloc;
 void *(*__memalign_hook)(size_t alignment, size_t size) = memalign;
+#endif
 
 #elif defined(RTLD_DEEPBIND)
 /*

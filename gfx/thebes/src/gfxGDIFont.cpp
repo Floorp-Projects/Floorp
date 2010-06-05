@@ -360,6 +360,7 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
         }
     }
 
-    fe->FillLogFont(&aLogFont, italic, weight, aSize);
+    fe->FillLogFont(&aLogFont, italic, weight, aSize, 
+                    (mAntialiasOption == kAntialiasSubpixel) ? PR_TRUE : PR_FALSE);
 }
 

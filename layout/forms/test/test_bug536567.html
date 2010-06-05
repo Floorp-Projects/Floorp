@@ -34,6 +34,7 @@ if ("@mozilla.org/privatebrowsing;1" in Cc) {
 }
 
 var tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
+var homeDir = dirSvc.get("Desk", Ci.nsILocalFile);
 prefSvc.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
 function newDir() {
@@ -50,6 +51,7 @@ var dirs = [];
 for(var i = 0; i < 6; i++) {
   dirs.push(newDir());
 }
+dirs.push(homeDir);
 var domains = ['http://mochi.test:8888', 'http://example.org:80', 'http://example.com:80'];
 /*
  * These tests take 3 args each:
@@ -59,9 +61,9 @@ var domains = ['http://mochi.test:8888', 'http://example.org:80', 'http://exampl
  *   as indicated by the comments)
  */
 var tests = [
-  [0, -1, 0],//-> 3
-  [1, -1, 1],//-> 4
-  [2, -1, 2],//-> 5
+  [0, 6, 0],//-> 3
+  [1, 6, 1],//-> 4
+  [2, 6, 2],//-> 5
   [0, 0, 3], //-> 6
   [1, 1, 1], //-> 8
   [2, 2, 2], //-> 9
@@ -70,9 +72,9 @@ var tests = [
   [1, 1, 1], //-> x
   [2, 2, 2], //-> x
   "clear history",
-  [0, -1, 0],//->15
-  [1, -1, 1],//->16
-  [2, -1, 2],//->17
+  [0, 6, 0],//->15
+  [1, 6, 1],//->16
+  [2, 6, 2],//->17
   "pb on",
   [0, 0, 3], //-> 18
   [1, 1, 4], //-> 19
@@ -89,9 +91,9 @@ var tests = [
   [1, 4, 4], //-> x
   [2, 3, 3], //-> x
   "clear history",
-  [0, -1, 0],
-  [1, -1, 1],
-  [2, -1, 2],
+  [0, 6, 0],
+  [1, 6, 1],
+  [2, 6, 2],
   "pb off"
 ];
 
@@ -128,7 +130,7 @@ function runTest() {
 
 function endTest() {
     prefSvc.clearUserPref("browser.privatebrowsing.keep_current_session");
-    for(var i = 0; i < dirs.length; i++) {
+    for(var i = 0; i < dirs.length - 1; i++) {
       dirs[i].remove(true);
     }
 
@@ -147,7 +149,7 @@ window.addEventListener("message", function(event) {
     }
   }
   if (test[1] == -1) {
-    is(event.data, '', 'test ' + testIndex + ' should be empty');
+    ok(false, "We should never get an unknown directory back");
   } else {
     is(returned, test[1], 'test ' + testIndex);
   }

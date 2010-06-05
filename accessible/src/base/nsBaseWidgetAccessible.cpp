@@ -107,7 +107,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessibleWrap)
 NS_IMETHODIMP
 nsLinkableAccessible::TakeFocus()
 {
-  nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
+  nsAccessible *actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->TakeFocus();
 
@@ -122,7 +122,7 @@ nsLinkableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 
   if (mIsLink) {
     *aState |= nsIAccessibleStates::STATE_LINKED;
-    nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
+    nsAccessible *actionAcc = GetActionAccessible();
     if (nsAccUtils::State(actionAcc) & nsIAccessibleStates::STATE_TRAVERSED)
       *aState |= nsIAccessibleStates::STATE_TRAVERSED;
   }
@@ -140,7 +140,7 @@ nsLinkableAccessible::GetValue(nsAString& aValue)
     return NS_OK;
 
   if (mIsLink) {
-    nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
+    nsAccessible *actionAcc = GetActionAccessible();
     if (actionAcc)
       return actionAcc->GetValue(aValue);
   }
@@ -183,8 +183,8 @@ nsLinkableAccessible::DoAction(PRUint8 aIndex)
 {
   if (aIndex != eAction_Jump)
     return NS_ERROR_INVALID_ARG;
-  
-  nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
+
+  nsAccessible *actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->DoAction(aIndex);
   
@@ -196,7 +196,7 @@ nsLinkableAccessible::GetKeyboardShortcut(nsAString& aKeyboardShortcut)
 {
   aKeyboardShortcut.Truncate();
 
-  nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
+  nsAccessible *actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->GetKeyboardShortcut(aKeyboardShortcut);
 
@@ -210,7 +210,7 @@ NS_IMETHODIMP
 nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 {
   if (mIsLink) {
-    nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
+    nsAccessible *actionAcc = GetActionAccessible();
     if (actionAcc) {
       nsCOMPtr<nsIAccessibleHyperLink> hyperLinkAcc = do_QueryObject(actionAcc);
       NS_ASSERTION(hyperLinkAcc,
@@ -261,7 +261,7 @@ nsLinkableAccessible::CacheActionContent()
   
     nsCOMPtr<nsIDOMNode> walkUpNode(do_QueryInterface(walkUpContent));
 
-    nsRefPtr<nsAccessible> walkUpAcc =
+    nsAccessible *walkUpAcc =
       GetAccService()->GetAccessibleInWeakShell(walkUpNode, mWeakShell);
 
     if (nsAccUtils::Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
@@ -279,8 +279,8 @@ nsLinkableAccessible::CacheActionContent()
   }
 }
 
-already_AddRefed<nsAccessible>
-nsLinkableAccessible::GetActionAccessible()
+nsAccessible *
+nsLinkableAccessible::GetActionAccessible() const
 {
   // Return accessible for the action content if it's different from node of
   // this accessible. If the action accessible is not null then it is used to

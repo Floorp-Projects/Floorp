@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=486646
+-->
+
+<head>
+  <title>Test for Bug 486646</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="use_large_cache.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+var videos = [];
+
+function loaded(e) {
+  var v = e.target;
+  ok(v.readyState >= v.HAVE_CURRENT_DATA,
+     "readyState must be >= HAVE_CURRENT_DATA for " + v._name);
+
+  var canvas = document.createElement("canvas");
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext("2d");
+  try {
+    ctx.drawImage(v, 0, 0);
+    ok(true, "Shouldn't throw exception while drawing to canvas from video for " + v._name);
+  } catch (ex) {
+    ok(false, "Shouldn't throw exception while drawing to canvas from video for " + v._name);
+  }
+
+  v._finished = true;
+  if (AllFinished(videos))
+    SimpleTest.finish();
+  return false;
+}
+
+for (var i=0; i<gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
+  var isVideo = /^video/.test(test.type) ? true : false;
+  if (!isVideo)
+    continue;
+  
+  var v = document.createElement('video');
+  if (!v.canPlayType(test.type))
+    continue;
+  v.src = test.name;
+  v._name = test.name;
+  v._finished = false;
+  v.autoplay = true;
+  v.style.display = "none";
+  v.addEventListener("ended", loaded, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
+
+</script>
+</pre>
+
+</body>
+</html>

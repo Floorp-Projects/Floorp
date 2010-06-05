@@ -110,7 +110,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10400
+MOZPNG=10401
 MOZZLIB=0x1230
 NSPR_VERSION=4
 NSS_VERSION=3
@@ -215,12 +215,12 @@ fi
 COMPILE_ENVIRONMENT=1
 MOZ_ARG_DISABLE_BOOL(compile-environment,
 [  --disable-compile-environment
-                           Disable compiler/library checks.],
+                          Disable compiler/library checks.],
     COMPILE_ENVIRONMENT= )
 AC_SUBST(COMPILE_ENVIRONMENT)
 
 MOZ_ARG_WITH_STRING(l10n-base,
-[  --with-l10n-base=DIR     path to l10n repositories],
+[  --with-l10n-base=DIR    path to l10n repositories],
     L10NBASEDIR=$withval)
 if test ! -z "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
@@ -246,27 +246,27 @@ dnl ========================================================
 
 MOZ_ARG_WITH_STRING(android-ndk,
 [  --with-android-ndk=DIR
-                           location where the Android NDK can be found],
+                          location where the Android NDK can be found],
     android_ndk=$withval)
 
 MOZ_ARG_WITH_STRING(android-toolchain,
 [  --with-android-toolchain=DIR
-                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+                          location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
     android_toolchain=$withval)
 
 MOZ_ARG_WITH_STRING(android-platform,
 [  --with-android-platform=DIR
-                           location of NDK platform dir, default NDK/build/platforms/android-5/arch-arm],
+                          location of NDK platform dir, default NDK/build/platforms/android-5/arch-arm],
     android_platform=$withval)
 
 MOZ_ARG_WITH_STRING(android-sdk,
 [  --with-android-sdk=DIR
-                           location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
+                          location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
     android_sdk=$withval)
 
 MOZ_ARG_WITH_STRING(android-tools,
 [  --with-android-tools=DIR
-                           location where the Android Tools can be found (base directory, e.g. .../android/tools)],
+                          location where the Android Tools can be found (base directory, e.g. .../android/tools)],
     android_tools=$withval)
 
 if test "$target" = "arm-android-eabi" ; then
@@ -359,12 +359,12 @@ case "$target" in
 
     MOZ_ARG_WITH_STRING(wince-sdk,
     [  --with-wince-sdk=WINCE_SDK_DIR
-                        The path to the Windows CE SDK],
+                          The path to the Windows CE SDK],
     WINCE_SDK_DIR=$withval)
 
     MOZ_ARG_WITH_STRING(ogles-sdk,
     [  --with-ogles-sdk=OGLES_SDK_DIR
-                        The path to the OGLES SDK],
+                          The path to the OGLES SDK],
     OGLES_SDK_DIR=$withval)
 
     AC_DEFINE(WINCE)
@@ -1104,7 +1104,7 @@ dnl ========================================================
 MACOS_SDK_DIR=
 NEXT_ROOT=
 MOZ_ARG_WITH_STRING(macos-sdk,
-[  --with-macos-sdk=dir   Location of platform SDK to use (Mac OS X only)],
+[  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
 
 dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
@@ -1565,9 +1565,6 @@ if test "$GNU_CC"; then
     if test "$GCC_USE_GNU_LD"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
-        LDFLAGS="$LDFLAGS -Wl,--gc-sections"
-        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
     fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
@@ -4566,7 +4563,9 @@ AC_CACHE_CHECK(for LC_MESSAGES,
 				ac_cv_i18n_lc_messages=no)])
 if test "$ac_cv_i18n_lc_messages" = yes; then
    AC_DEFINE(HAVE_I18N_LC_MESSAGES)
-fi 	
+fi
+
+AC_HAVE_FUNCS(localeconv)
 
 fi # SKIP_COMPILER_CHECKS
 
@@ -4613,6 +4612,7 @@ if test -n "$SKIP_COMPILER_CHECKS"; then
    dnl Windows has malloc.h
    AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
+   AC_DEFINE(HAVE_LOCALECONV)
 fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
@@ -4651,7 +4651,7 @@ AC_SUBST(LIBXUL_DIST)
 SYSTEM_LIBXUL=
 
 MOZ_ARG_WITH_BOOL(system-libxul,
-[  --with-system-libxul   Use system installed libxul SDK],
+[  --with-system-libxul    Use system installed libxul SDK],
     SYSTEM_LIBXUL=1)
 
 if test -n "$SYSTEM_LIBXUL" && test -z "$MOZ_ENABLE_LIBXUL"; then
@@ -4740,7 +4740,7 @@ dnl = use the one in the source tree (mozilla/security/nss)
 dnl ========================================================
 
 MOZ_ARG_WITH_BOOL(system-nss,
-[  --with-system-nss      Use system installed NSS],
+[  --with-system-nss       Use system installed NSS],
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
@@ -4935,7 +4935,8 @@ fi # SKIP_LIBRARY_CHECKS
 dnl system HunSpell Support
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(system-hunspell,
-[  --enable-system-hunspell  Use system hunspell (located with pkgconfig)],
+[  --enable-system-hunspell
+                          Use system hunspell (located with pkgconfig)],
     SYSTEM_HUNSPELL=1 )
 
 if test -n "$SYSTEM_HUNSPELL"; then
@@ -4949,12 +4950,14 @@ dnl Java SDK support
 dnl ========================================================
 JAVA_INCLUDE_PATH=
 MOZ_ARG_WITH_STRING(java-include-path,
-[  --with-java-include-path=dir   Location of Java SDK headers],
+[  --with-java-include-path=dir
+                          Location of Java SDK headers],
     JAVA_INCLUDE_PATH=$withval)
 
 JAVA_BIN_PATH=
 MOZ_ARG_WITH_STRING(java-bin-path,
-[  --with-java-bin-path=dir   Location of Java binaries (java, javac, jar)],
+[  --with-java-bin-path=dir
+                          Location of Java binaries (java, javac, jar)],
     JAVA_BIN_PATH=$withval)
 
 dnl ========================================================
@@ -4962,7 +4965,7 @@ dnl Use ARM userspace kernel helpers; tell NSPR to enable
 dnl their usage and use them in spidermonkey.
 dnl ========================================================
 MOZ_ARG_WITH_BOOL(arm-kuser,
-[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
+[  --with-arm-kuser        Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
     USE_ARM_KUSER=1,
     USE_ARM_KUSER=)
 if test -n "$USE_ARM_KUSER"; then
@@ -5017,6 +5020,7 @@ MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG=1
+MOZ_THUMB2=
 MOZ_TIMELINE=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -5328,7 +5332,8 @@ then
     MOZ_ENABLE_STARTUP_NOTIFICATION=
 
     MOZ_ARG_ENABLE_BOOL(startup-notification,
-    [  --enable-startup-notification       Enable startup-notification support (default: disabled) ],
+    [  --enable-startup-notification
+                          Enable startup-notification support (default: disabled) ],
         MOZ_ENABLE_STARTUP_NOTIFICATION=force,
         MOZ_ENABLE_STARTUP_NOTIFICATION=)
     if test "$MOZ_ENABLE_STARTUP_NOTIFICATION"
@@ -5424,7 +5429,8 @@ dnl ========================================================
 dnl = Trademarked Branding 
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(official-branding,
-[  --enable-official-branding Enable Official mozilla.org Branding
+[  --enable-official-branding
+                          Enable Official mozilla.org Branding
                           Do not distribute builds with
                           --enable-official-branding unless you have
                           permission to use trademarks per
@@ -5444,7 +5450,7 @@ if test -n "$MOZ_OFFICIAL_BRANDING"; then
 fi
 
 MOZ_ARG_WITH_STRING(branding,
-[  --with-branding=dir    Use branding from the specified directory.],
+[  --with-branding=dir     Use branding from the specified directory.],
     MOZ_BRANDING_DIRECTORY=$withval)
 
 REAL_BRANDING_DIRECTORY="${MOZ_BRANDING_DIRECTORY}"
@@ -5462,7 +5468,8 @@ dnl ========================================================
 dnl = Distribution ID
 dnl ========================================================
 MOZ_ARG_WITH_STRING(distribution-id,
-[  --with-distribution-id=ID  Set distribution-specific id (default=org.mozilla)],
+[  --with-distribution-id=ID
+                          Set distribution-specific id (default=org.mozilla)],
 [ val=`echo $withval`
     MOZ_DISTRIBUTION_ID="$val"])
 
@@ -5478,7 +5485,7 @@ dnl ========================================================
 dnl complex text support off by default
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(pango,
-[  --disable-pango Disable usage of Pango ],
+[  --disable-pango         Disable usage of Pango ],
     MOZ_PANGO=,
     MOZ_PANGO=1)
 
@@ -5631,7 +5638,7 @@ then
     MOZ_ENABLE_LIBNOTIFY=1
 
     MOZ_ARG_DISABLE_BOOL(libnotify,
-    [  --disable-libnotify       Disable libnotify support ],
+    [  --disable-libnotify     Disable libnotify support ],
     MOZ_ENABLE_LIBNOTIFY=,
     MOZ_ENABLE_LIBNOTIFY=1)
 
@@ -5717,7 +5724,7 @@ then
     MOZ_ENABLE_DBUS=1
 
     MOZ_ARG_DISABLE_BOOL(dbus,
-    [  --disable-dbus       Disable dbus support ],
+    [  --disable-dbus          Disable dbus support ],
         MOZ_ENABLE_DBUS=,
         MOZ_ENABLE_DBUS=1)
 
@@ -5803,7 +5810,7 @@ dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
-[  --disable-dbm       Disable building dbm],
+[  --disable-dbm           Disable building dbm],
     NSS_DISABLE_DBM=1,
     NSS_DISABLE_DBM=)
 
@@ -5854,7 +5861,7 @@ dnl ========================================================
 dnl Disable printing
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(printing,
-[  --disable-printing  Disable printing support],
+[  --disable-printing      Disable printing support],
     NS_PRINTING=,
     NS_PRINTING=1 )
 
@@ -5900,7 +5907,8 @@ dnl ========================================================
 dnl = Disable Fast Load
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(xpcom-fastload,
-[  --disable-xpcom-fastload           Disable XPCOM fastload support],
+[  --disable-xpcom-fastload
+                          Disable XPCOM fastload support],
     MOZ_NO_FAST_LOAD=1,
     MOZ_NO_FAST_LOAD=)
 
@@ -6069,20 +6077,38 @@ MOZ_ARG_ENABLE_BOOL(javaxpcom,
     MOZ_JAVAXPCOM=1,
     MOZ_JAVAXPCOM= )
 
-if test -n "${MOZ_JAVAXPCOM}"; then
-  case "$host_os" in
-    cygwin*|msvc*|mks*)
-      if test -n "$JAVA_HOME"; then
-        JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
-      fi
-      ;;
-    *mingw*)
-      if test -n "$JAVA_HOME"; then
-        JAVA_HOME=`cd "$JAVA_HOME" && pwd`
-      fi
-      ;;
-  esac
+case "$host_os" in
+  cygwin*|msvc*|mks*)
+    if test -n "$JAVA_HOME"; then
+      JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
+    fi
+    ;;
+  *mingw*)
+    if test -n "$JAVA_HOME"; then
+      JAVA_HOME=`cd "$JAVA_HOME" && pwd`
+    fi
+    ;;
+esac
 
+if test -n "${JAVA_BIN_PATH}"; then
+  dnl Look for javac and jar in the specified path.
+  JAVA_PATH="$JAVA_BIN_PATH"
+else
+  dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
+  JAVA_PATH="$JAVA_HOME/bin:$PATH"
+fi
+
+MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
+MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
+MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
+
+if test -n "${JAVA_BIN_PATH}" || test "$OS_TARGET" = Android; then
+  if test -z "$JAVA" || test "$JAVA" = ":" || test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+    AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory or use --with-java-bin-path={java-bin-dir}])
+  fi
+fi
+
+if test -n "${MOZ_JAVAXPCOM}"; then
   if test -n "${JAVA_INCLUDE_PATH}"; then
     dnl Make sure jni.h exists in the given include path.
     if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
@@ -6102,21 +6128,6 @@ if test -n "${MOZ_JAVAXPCOM}"; then
     if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
       AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
     fi
-  fi
-
-  if test -n "${JAVA_BIN_PATH}"; then
-    dnl Look for javac and jar in the specified path.
-    JAVA_PATH="$JAVA_BIN_PATH"
-  else
-    dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
-    JAVA_PATH="$JAVA_HOME/bin:$PATH"
-  fi
-
-  MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
-  MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
-  MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
-  if test -z "$JAVA" || test "$JAVA" = ":" || test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-    AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
   fi
 fi
 
@@ -6140,7 +6151,7 @@ i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
 esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
-[  --disable-crashreporter          Disable breakpad crash reporting],
+[  --disable-crashreporter Disable breakpad crash reporting],
     MOZ_CRASHREPORTER=,
     MOZ_CRASHREPORTER=1)
 
@@ -6158,7 +6169,8 @@ if test -n "$MOZ_CRASHREPORTER"; then
 fi
 
 MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
-[  --with-crashreporter-enable-percent=NN  Enable sending crash reports by default on NN% of users. (default=100)],
+[  --with-crashreporter-enable-percent=NN
+                          Enable sending crash reports by default on NN% of users. (default=100)],
 [ val=`echo $withval | sed 's/[^0-9]//g'`
     MOZ_CRASHREPORTER_ENABLE_PERCENT="$val"])
 
@@ -6361,7 +6373,7 @@ dnl ========================================================
 dnl SVG
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(svg,
-[  --disable-svg            Disable SVG support],
+[  --disable-svg           Disable SVG support],
     MOZ_SVG=,
     MOZ_SVG=1 )
 if test -n "$MOZ_SVG"; then
@@ -6373,7 +6385,7 @@ dnl SMIL
 dnl ========================================================
 MOZ_SMIL=1
 MOZ_ARG_DISABLE_BOOL(smil,
-[  --disable-smil           Disable SMIL animation support],
+[  --disable-smil          Disable SMIL animation support],
     MOZ_SMIL=,
     MOZ_SMIL=1 )
 # Automatically disable SMIL if SVG is disabled
@@ -6388,7 +6400,7 @@ dnl ========================================================
 dnl Build Freetype in the tree
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(tree-freetype,
-[  --enable-tree-freetype         Enable Tree FreeType],
+[  --enable-tree-freetype  Enable Tree FreeType],
     MOZ_TREE_FREETYPE=1,
     MOZ_TREE_FREETYPE= )
 if test -n "$MOZ_TREE_FREETYPE"; then
@@ -6463,7 +6475,7 @@ AC_SUBST(MOZ_UPDATER)
 # app update channel is 'default' when not supplied.
 MOZ_ARG_ENABLE_STRING([update-channel],
 [  --enable-update-channel=CHANNEL
-                           Select application update channel (default=default)],
+                          Select application update channel (default=default)],
     MOZ_UPDATE_CHANNEL=`echo $enableval | tr A-Z a-z`)
 
 if test -z "$MOZ_UPDATE_CHANNEL"; then
@@ -6474,7 +6486,7 @@ AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 # tools/update-packaging is not checked out by default.
 MOZ_ARG_ENABLE_BOOL(update-packaging,
 [  --enable-update-packaging
-                           Enable tools/update-packaging],
+                          Enable tools/update-packaging],
     MOZ_UPDATE_PACKAGING=1,
     MOZ_UPDATE_PACKAGING= )
 AC_SUBST(MOZ_UPDATE_PACKAGING)
@@ -6543,7 +6555,7 @@ dnl parental controls (for Windows Vista)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(parental-controls,
 [  --disable-parental-controls
-                           Do not build parental controls],
+                          Do not build parental controls],
    MOZ_DISABLE_PARENTAL_CONTROLS=1,
    MOZ_DISABLE_PARENTAL_CONTROLS=)
 if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
@@ -6563,7 +6575,7 @@ dnl ========================================================
 dnl = Disable feed handling components
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(feeds,
-[  --disable-feeds        Disable feed handling and processing components],
+[  --disable-feeds         Disable feed handling and processing components],
     MOZ_FEEDS=,
     MOZ_FEEDS=1 )
 if test -n "$MOZ_FEEDS"; then
@@ -6709,7 +6721,7 @@ dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(safe-browsing,
-[  --enable-safe-browsing        Enable safe browsing (anti-phishing) implementation],
+[  --enable-safe-browsing  Enable safe browsing (anti-phishing) implementation],
     MOZ_SAFE_BROWSING=1,
     MOZ_SAFE_BROWSING= )
 if test -n "$MOZ_SAFE_BROWSING"; then
@@ -6721,7 +6733,7 @@ dnl ========================================================
 dnl = Enable faststart component
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(faststart,
-[  --enable-faststart            Enable the faststart component],
+[  --enable-faststart      Enable the faststart component],
     MOZ_FASTSTART=1,
     MOZ_FASTSTART= )
 if test -n "$MOZ_FASTSTART"; then
@@ -6737,7 +6749,7 @@ if test -n "$MOZ_SAFE_BROWSING"; then
     MOZ_URL_CLASSIFIER=1
 fi
 MOZ_ARG_ENABLE_BOOL(url-classifier,
-[  --enable-url-classifier        Enable url classifier module],
+[  --enable-url-classifier Enable url classifier module],
     MOZ_URL_CLASSIFIER=1,
     MOZ_URL_CLASSIFIER= )
 if test -n "$MOZ_URL_CLASSIFIER"; then
@@ -6749,7 +6761,7 @@ dnl ========================================================
 dnl = Disable zipwriter
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(zipwriter,
-[  --disable-zipwriter             Disable zipwriter component],
+[  --disable-zipwriter     Disable zipwriter component],
     MOZ_ZIPWRITER=,
     MOZ_ZIPWRITER=1 )
 AC_SUBST(MOZ_ZIPWRITER)
@@ -6759,7 +6771,7 @@ dnl = Disable libconic
 dnl ========================================================
 MOZ_ENABLE_LIBCONIC=1
 MOZ_ARG_DISABLE_BOOL(libconic,
-[  --disable-libconic              Disable libconic],
+[  --disable-libconic      Disable libconic],
     MOZ_ENABLE_LIBCONIC=,
     MOZ_ENABLE_LIBCONIC=1 )
 
@@ -6784,7 +6796,7 @@ MAEMO_SDK_TARGET_VER=-1
 
 MOZ_ARG_WITH_STRING(maemo-version,
 [  --with-maemo-version=MAEMO_SDK_TARGET_VER
-                        Maemo SDK Version],
+                          Maemo SDK Version],
   MAEMO_SDK_TARGET_VER=$withval)
 
 case "$MAEMO_SDK_TARGET_VER" in
@@ -6848,6 +6860,10 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
 
+   if test "$MOZ_PLATFORM_MAEMO" -gt 5; then
+     MOZ_THUMB2=1
+   fi
+
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
    MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
    MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
@@ -6864,10 +6880,35 @@ if test $MOZ_PLATFORM_MAEMO; then
 fi
 
 dnl ========================================================
+dnl = Enable building the Thumb2 instruction set
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(thumb2,
+ [  --enable-thumb2         Enable Thumb2 instruction set],
+    MOZ_THUMB2=1,
+    MOZ_THUMB2=)
+
+if test -n "$MOZ_THUMB2"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+      else
+        AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
+fi
+
+dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(faststripe,
-[  --enable-faststripe  Use faststripe theme],
+[  --enable-faststripe     Use faststripe theme],
     MOZ_THEME_FASTSTRIPE=1,
     MOZ_THEME_FASTSTRIPE= )
 AC_SUBST(MOZ_THEME_FASTSTRIPE)
@@ -6929,6 +6970,14 @@ MOZ_ARG_ENABLE_STRING(debug,
   MOZ_DEBUG=)
 
 MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
+MOZ_ARG_WITH_STRING(debug-label,
+[  --with-debug-label=LABELS
+                          Define DEBUG_<value> for each comma-separated
+                          value given.],
+[ for option in `echo $withval | sed 's/,/ /g'`; do
+    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
+done])
+
  case "${target_os}" in
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
@@ -6963,7 +7012,8 @@ dnl ========================================================
 dnl enable mobile optimizations
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(mobile-optimize,
-[  --enable-mobile-optimize   Enable mobile optimizations],
+[  --enable-mobile-optimize
+                          Enable mobile optimizations],
     MOZ_GFX_OPTIMIZE_MOBILE=1)
 
 AC_SUBST(MOZ_GFX_OPTIMIZE_MOBILE)
@@ -7029,8 +7079,8 @@ dnl ========================================================
 dnl = Enable generation of debug symbols
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]    Enable debugging symbols
-                                   (using compiler flags DBG)],
+[  --enable-debug-symbols[=DBG]
+                          Enable debugging symbols (using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
       MOZ_DEBUG_SYMBOLS=1
       if test -n "$enableval" -a "$enableval" != "yes"; then
@@ -7051,7 +7101,8 @@ dnl ========================================================
 dnl = Disable any treating of compile warnings as errors
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
-[  --disable-warnings-as-errors       Disable treating of warnings as errors],
+[  --disable-warnings-as-errors
+                          Disable treating of warnings as errors],
     MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
     MOZ_DISABLE_WARNINGS_AS_ERRORS= )
 if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
@@ -7144,23 +7195,23 @@ if test "$MOZ_MEMORY"; then
   dnl The generic feature tests that determine how to compute ncpus are long and
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
-  case "${target_os}" in
-  darwin*)
+  case "${target}" in
+  *-darwin*)
     AC_DEFINE(MOZ_MEMORY_DARWIN)
     ;;
-  *freebsd*)
+  *-*freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *linux*)
+  *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     ;;
-  netbsd*)
+  *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  solaris*)
+  *-solaris*)
     AC_DEFINE(MOZ_MEMORY_SOLARIS)
     ;;
-  msvc*|mks*|cygwin*|mingw*)
+  *-msvc*|*-mks*|*-cygwin*|*-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     dnl This is sort of awful. Will revisit if we add support for more versions
     if test "$CC_VERSION" != "14.00.50727.762" -a "$CC_VERSION" != "15.00.30729.01"; then
@@ -7176,34 +7227,43 @@ if test "$MOZ_MEMORY"; then
     dnl cpu check
     case "${target_cpu}" in
     i*86)
-      _WIN32_CRT_CPU=intel
+      MOZ_CRT_CPU_ARCH=intel
+      ;;
+    x86_64)
+      MOZ_CRT_CPU_ARCH=amd64
       ;;
     *)
       AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
       ;;
     esac
 
+    AC_SUBST(MOZ_CRT_CPU_ARCH)
+
     if test ! -d "$WIN32_CRT_SRC_DIR"; then
       AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
     fi
     WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
     _objdir_win=`pwd -W`
-    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$_WIN32_CRT_CPU"
+    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
     MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
     ;;
-  *wince)
+  *-*wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     if test -z "$WINCE_WINDOWS_MOBILE"; then
       AC_DEFINE(MOZ_MEMORY_WINCE6)
     fi
     ;;
-  *winmo)
+  *-*winmo)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    ;;
+  *-android*)
+    AC_DEFINE(MOZ_MEMORY_LINUX)
+    AC_DEFINE(MOZ_MEMORY_ANDROID)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7233,8 +7293,8 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) -o $@'
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup"
+    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
 
@@ -7260,7 +7320,7 @@ dnl ========================================================
 dnl = Use GCTimer
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gctimer,
-[  --enable-gctimer       Enable GC timer (default=no)],
+[  --enable-gctimer        Enable GC timer (default=no)],
     MOZ_GCTIMER=1,
     MOZ_GCTIMER= )
 if test -n "$MOZ_GCTIMER"; then
@@ -7329,7 +7389,7 @@ dnl ========================================================
 dnl Zealous JavaScript GC
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gczeal,
-[  --enable-gczeal          Enable zealous JavaScript GCing],
+[  --enable-gczeal         Enable zealous JavaScript GCing],
     JS_GC_ZEAL=1,
     JS_GC_ZEAL= )
 if test -n "$JS_GC_ZEAL"; then
@@ -7342,7 +7402,7 @@ dnl ========================================================
 
 MOZ_ARG_WITH_STRING(static-checking,
 [  --with-static-checking=path/to/gcc_dehydra.so
-                            Enable static checking of code using GCC-dehydra],
+                          Enable static checking of code using GCC-dehydra],
     DEHYDRA_PATH=$withval,
     DEHYDRA_PATH= )
 
@@ -7404,7 +7464,7 @@ dnl = timing for identifying code bottlenecks
 dnl = NS_FUNCTION_TIMER is off by default.
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(functiontimer,
-[  --enable-functiontimer       Enable NS_FUNCTION_TIMER ],
+[  --enable-functiontimer  Enable NS_FUNCTION_TIMER ],
     NS_FUNCTION_TIMER=1,
     NS_FUNCTION_TIMER= )
 if test -n "$NS_FUNCTION_TIMER"; then
@@ -7441,7 +7501,7 @@ dnl ========================================================
 dnl = Support for Quantify (Windows)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(quantify,
-[  --enable-quantify      Enable Quantify support (Windows only) ],
+[  --enable-quantify       Enable Quantify support (Windows only) ],
     MOZ_QUANTIFY=1,
     MOZ_QUANTIFY= )
 
@@ -7627,7 +7687,7 @@ dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
 dnl Provide a switch to disable PGO even when called via profiledbuild.
 MOZ_ARG_DISABLE_BOOL(profile-guided-optimization,
 [  --disable-profile-guided-optimization
-                           Don't build with PGO even if called via make profiledbuild],
+                          Don't build with PGO even if called via make profiledbuild],
 MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=1,
 MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
 
@@ -8087,7 +8147,7 @@ MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
 
 MOZ_TREE_CAIRO=1
 MOZ_ARG_ENABLE_BOOL(system-cairo,
-[ --enable-system-cairo Use system cairo (located with pkgconfig)],
+[  --enable-system-cairo   Use system cairo (located with pkgconfig)],
 MOZ_TREE_CAIRO=,
 MOZ_TREE_CAIRO=1 )
 
@@ -8274,7 +8334,8 @@ dnl   do no use this in applications that can have more than
 dnl   one process accessing the profile directory.
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(profilelocking,
-[  --disable-profilelocking           Disable profile locking],
+[  --disable-profilelocking
+                          Disable profile locking],
     MOZ_PROFILELOCKING=,
     MOZ_PROFILELOCKING=1 )
 if test "$MOZ_PROFILELOCKING"; then
@@ -8342,7 +8403,7 @@ dnl
 dnl option to disable necko's wifi scanner
 dnl
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
-[  --disable-necko-wifi   Disable necko wifi scanner],
+[  --disable-necko-wifi    Disable necko wifi scanner],
     NECKO_WIFI=,
     NECKO_WIFI=1
 )
@@ -8969,6 +9030,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     fi
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
+    fi
+    if test -n "$MOZ_THUMB2"; then
+        ac_configure_args="$ac_configure_args --enable-thumb2"
     fi
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"

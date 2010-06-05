@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+	<title>EditArea documentation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="doc_style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div class='header'>
+		<h1>Customization - Creating a plugin</h1>
+	</div>
+	<div class='content'>
+	<h2>Creating your own plugins</h2>
+		<p>
+			Creating you own plugins for EditArea is fairly easy if you know the basics of HTML, CSS and Javascript. 
+			The most easy way is to copy the &quot;test&quot; directory and work from there. The &quot;test&quot; 
+			directory is a tutorial plugin that shows how to create a plugin. After you copy the template you need to 
+			change the red sections marked below to the name of your plugin this is needed so that plugins don't 
+			overlap in other words it gives the plugin a unique name. Notice that when you write a new plugin,
+			you have to end each javascript	instructions by ";", even if it's optionnal in javascript.
+		</p>
+
+		<p>If you want you may add plugin specific options/settings but remember to namespace them in the 
+			following format &quot;&lt;your plugin&gt;_&lt;option&gt;&quot; for example &quot;yourplugin_someoption&quot;.</p>
+		
+		<p>Specific callback functions that you don't need or doesn't do anything can be removed.</p>
+		
+		<p>If you want you can try the test plugin by adding the following parameters to the EditAreaLoader.init command.</p>
+		<pre>end_toolbar: "*,test_but, |,test_select",
+plugins: "test",</pre>
+		
+		<div class="separator"></div>
+		<h3>Plugin directory structure</h3>
+		<p>
+		<table class="btable">
+		<thead>
+			<th>File/Directory</td>	
+			<th>Description</td>	
+		</thead>
+		<tbody>
+			<tr><td>css</td><td>Plugin specific CSS files</td></tr>
+			<tr><td>images</td><td>Plugin specific images</td></tr>
+			<tr><td>langs</td><td>Plugin specific language files</td></tr>
+			<tr><td>&lt;your_plugin&gt;.js</td><td>Main plugin file</td></tr>
+			
+		</table>
+		</p>
+		<div class="separator"></div>
+		<h3>Plugin example source</h3>
+		<p>
+		The example below shows a simple empty plugin and all possible callbacks.
+		</p>
+		<p>
+		
+		<div class="example">
+		<pre>/**
+ * Plugin designed for test prupose. It add a button (that manage an alert) and a select (that allow to insert tags) in the toolbar.
+ * This plugin also disable the "f" key in the editarea, and load a CSS and a JS file
+ */  
+var EditArea_<span class='marked'>test</span>= {
+	/**
+	 * Get called once this file is loaded (editArea still not initialized)
+	 *
+	 * @return nothing	 
+	 */	 	 	
+	init: function(){	
+		//	alert("test init: "+ this._someInternalFunction(2, 3));
+		editArea.load_css(this.baseURL+"css/test.css");
+		editArea.load_script(this.baseURL+"test2.js");
+	}
+	/**
+	 * Returns the HTML code for a specific control string or false if this plugin doesn't have that control.
+	 * A control can be a button, select list or any other HTML item to present in the EditArea user interface.
+	 * Language variables such as {$lang_somekey} will also be replaced with contents from
+	 * the language packs.
+	 * 
+	 * @param {string} ctrl_name: the name of the control to add	  
+	 * @return HTML code for a specific control or false.
+	 * @type string	or boolean
+	 */	
+	,get_control_html: function(ctrl_name){
+		switch(ctrl_name){
+			case "<span class='marked'>test_but</span>":
+				// Control id, button img, isFileSpecific, command
+				return parent.editAreaLoader.get_button_html('<span class='marked'>test_but</span>', '<span class='marked'>test.gif</span>', '<span class='marked'>test_cmd</span>', false, this.baseURL);
+			case "<span class='marked'>test_select</span>":
+				html= "&lt;select id='<span class='marked'>test_select</span>' onchange='javascript:editArea.execCommand(\"<span class='marked'>test_select_change</span>\")'&gt;"
+					+"			&lt;option value='-1'&gt;<span class='marked'>{$test_select}</span>&lt;/option&gt;"
+					+"			&lt;option value='h1'&gt;h1&lt;/option&gt;"
+					+"			&lt;option value='h2'&gt;h2&lt;/option&gt;"
+					+"			&lt;option value='h3'&gt;h3&lt;/option&gt;"
+					+"			&lt;option value='h4'&gt;h4&lt;/option&gt;"
+					+"			&lt;option value='h5'&gt;h5&lt;/option&gt;"
+					+"			&lt;option value='h6'&gt;h6&lt;/option&gt;"
+					+"		&lt;/select&gt;";
+				return html;
+		}
+		return false;
+	}
+	/**
+	 * Get called once EditArea is fully loaded and initialised
+	 *	 
+	 * @return nothing
+	 */	 	 	
+	,onload: function(){ 
+		alert("test load");
+	}
+	
+	/**
+	 * Is called each time the user touch a keyboard key.
+	 *	 
+	 * @param (event) e: the keydown event
+	 * @return true - pass to next handler in chain, false - stop chain execution
+	 * @type boolean	 
+	 */
+	,onkeydown: function(e){
+		var str= String.fromCharCode(e.keyCode);
+		// desactivate the "f" character
+		if(str.toLowerCase()=="f"){
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Executes a specific command, this function handles plugin commands.
+	 *
+	 * @param {string} cmd: the name of the command being executed
+	 * @param {unknown} param: the parameter of the command	 
+	 * @return true - pass to next handler in chain, false - stop chain execution
+	 * @type boolean	
+	 */
+	,execCommand: function(cmd, param){
+		// Handle commands
+		switch(cmd){
+			case "<span class='marked'>test_select_change</span>":
+				var val= document.getElementById("test_select").value;
+				if(val!=-1)
+					parent.editAreaLoader.insertTags(editArea.id, "&lt;"+val+"&gt;", "&lt;/"+val+"&gt;");
+				document.getElementById("test_select").options[0].selected=true; 
+				return false;
+			case "<span class='marked'>test_cmd</span>":
+				alert("user clicked on test_cmd");
+				return false;
+		}
+		// Pass to next handler in chain
+		return true;
+	}
+	
+	/**
+	 * This is just an internal plugin method, prefix all internal methods with a _ character.
+	 * The prefix is needed so they doesn't collide with future EditArea callback functions.
+	 *
+	 * @param {string} a Some arg1.
+	 * @param {string} b Some arg2.
+	 * @return Some return.
+	 * @type unknown
+	 */
+	,_someInternalFunction : function(a, b) {
+		return a+b;
+	}
+};
+
+// Adds the plugin class to the list of available EditArea plugins
+editArea.add_plugin("<span class='marked'>test</span>", EditArea_<span class='marked'>test</span>);</pre>
+<br />
+	</div>
+	<div class='footer'>
+		<div class="indexlink"><a href="index.html">Index</a></div>	
+		<div class='copyright'>EditArea - &copy; Christophe Dolivet 2007-2008</div>
+		<br style="clear: both" />
+	</div>
+</body>
+</html>

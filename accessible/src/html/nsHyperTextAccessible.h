@@ -219,8 +219,8 @@ protected:
                           nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull,
                           nsIntRect *aBoundsRect = nsnull,
-                          nsIAccessible **aStartAcc = nsnull,
-                          nsIAccessible **aEndAcc = nsnull);
+                          nsAccessible **aStartAcc = nsnull,
+                          nsAccessible **aEndAcc = nsnull);
 
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
 
@@ -251,6 +251,18 @@ protected:
    * @return 1-based index for the line number with the caret
    */
   PRInt32 GetCaretLineNumber();
+
+  /**
+   * Return an accessible at the given hypertext offset.
+   *
+   * @param  aOffset       [out] the given hypertext offset
+   * @param  aAccIdx       [out] child index of returned accessible
+   * @param  aStartOffset  [out] start hypertext offset of returned accessible
+   * @param  aEndOffset    [out] end hypertext offset of returned accessible
+   */
+  nsAccessible *GetAccessibleAtOffset(PRInt32 aOffset, PRInt32 *aAccIdx,
+                                      PRInt32 *aStartOffset,
+                                      PRInt32 *aEndOffset);
 
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,

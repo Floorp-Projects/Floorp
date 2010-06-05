@@ -331,28 +331,6 @@ treechildren.gridlines::-moz-tree-row {
   border: none;
 }
 
-/* ::::: alternating background ::::: */
-
-treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {
-  background-color: -moz-oddtreerow;
-}
-
-treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected) {
-  background-color: -moz-mac-secondaryhighlight;
-}
-
-treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected) {
-  color: -moz-DialogText;
-}
-
-treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected, focus) {
-  background-color: Highlight;
-}
-
-treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected, focus) {
-  color: HighlightText;
-}
-
 /* ::::: editable tree ::::: */
 
 treechildren::-moz-tree-row(selected, editing) {

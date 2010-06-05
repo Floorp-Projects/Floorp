@@ -9,12 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<!-- When the page is loaded, we wait 2 seconds before launching the tests
-     because the focus events may not be finished when the page is loaded so
-     we have to wait or launch the tests when a focus events is thrown.
-     However, if autofocus is ignored, there will be no focus event so we can't
-     rely on that. -->
-<body onload="window.setTimeout(runTests, 2000);">
+<body onload="SimpleTest.executeSoon(runTests);">
 <script type="application/javascript">
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]

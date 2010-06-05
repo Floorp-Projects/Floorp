@@ -179,7 +179,7 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 }
 
 void
-nsIMEStateManager::ChangeIMEStateTo(PRUint32 aNewIMEState)
+nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState)
 {
   if (!sPresContext) {
     NS_WARNING("ISM doesn't know which editor has focus");
@@ -189,6 +189,18 @@ nsIMEStateManager::ChangeIMEStateTo(PRUint32 aNewIMEState)
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (!widget) {
     NS_WARNING("focused widget is not found");
+    return;
+  }
+
+  // Don't update IME state when enabled state isn't actually changed.
+  PRUint32 currentEnabledState;
+  nsresult rv = widget->GetIMEEnabled(&currentEnabledState);
+  if (NS_FAILED(rv)) {
+    return; // This platform doesn't support controling the IME state.
+  }
+  PRUint32 newEnabledState = aNewIMEState & nsIContent::IME_STATUS_MASK_ENABLED;
+  if (currentEnabledState ==
+        nsContentUtils::GetWidgetStatusFromIMEStatus(newEnabledState)) {
     return;
   }
 

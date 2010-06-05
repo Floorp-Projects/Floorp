@@ -42,6 +42,7 @@
 #include "nsThreadUtils.h"
 #include "WinTaskbar.h"
 #include "nsString.h"
+#include "nsIMM32Handler.h"
 
 // For skidmark code
 #include <windows.h> 
@@ -81,7 +82,7 @@ static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
   MSG msg1, msg2, *lpMsg;
   BOOL b1, b2;
   b1 = ::PeekMessageW(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
-  b2 = ::PeekMessageW(&msg2, NULL, WM_IME_SETCONTEXT, WM_IME_KEYUP, PM_NOREMOVE);
+  b2 = ::PeekMessageW(&msg2, NULL, NS_WM_IMEFIRST, NS_WM_IMELAST, PM_NOREMOVE);
   if (b1 || b2) {
     if (b1 && b2) {
       if (msg1.time < msg2.time)
@@ -92,6 +93,9 @@ static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
       lpMsg = &msg1;
     else
       lpMsg = &msg2;
+    if (!nsIMM32Handler::CanOptimizeKeyAndIMEMessages(lpMsg)) {
+      return false;
+    }
     return ::PeekMessageW(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
   }
 

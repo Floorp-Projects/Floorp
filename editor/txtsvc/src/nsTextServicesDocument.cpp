@@ -147,33 +147,24 @@ nsTextServicesDocument::Shutdown()
   NS_IF_RELEASE(sRangeHelper);
 }
 
-#define DEBUG_TEXT_SERVICES__DOCUMENT_REFCNT 1
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextServicesDocument)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTextServicesDocument)
 
-#ifdef DEBUG_TEXT_SERVICES__DOCUMENT_REFCNT
+NS_INTERFACE_MAP_BEGIN(nsTextServicesDocument)
+  NS_INTERFACE_MAP_ENTRY(nsITextServicesDocument)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITextServicesDocument)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsTextServicesDocument)
+NS_INTERFACE_MAP_END
 
-nsrefcnt nsTextServicesDocument::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt nsTextServicesDocument::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  if (--mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-
-#else
-
-NS_IMPL_ADDREF(nsTextServicesDocument)
-NS_IMPL_RELEASE(nsTextServicesDocument)
-
-#endif
-
-NS_IMPL_QUERY_INTERFACE1(nsTextServicesDocument, nsITextServicesDocument)
+NS_IMPL_CYCLE_COLLECTION_8(nsTextServicesDocument,
+                           mDOMDocument,
+                           mSelCon,
+                           mIterator,
+                           mPrevTextBlock,
+                           mNextTextBlock,
+                           mNotifier,
+                           mExtent,
+                           mTxtSvcFilter)
 
 NS_IMETHODIMP
 nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)

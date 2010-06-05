@@ -343,6 +343,7 @@ _TEST_FILES2 = \
 		test_bug475156.html \
 		bug475156.sjs \
 		test_bug544642.html \
+		test_bug564863.xhtml \
 		test_copypaste.html \
 		test_bug503481.html \
 		file_bug503481.sjs \
@@ -388,6 +389,10 @@ _TEST_FILES2 = \
 		test_bug562652.html \
 		test_bug562137.html \
 		file_bug562137.txt \
+		test_bug548193.html \
+		file_bug548193.sjs \
+		test_html_colors_quirks.html \
+		test_html_colors_standards.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

@@ -158,7 +158,7 @@ nsAccessNode::Init()
     if (presShell) {
       nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(presShell->GetDocument()));
       if (docNode) {
-        nsRefPtr<nsAccessible> accessible =
+        nsAccessible *accessible =
           GetAccService()->GetAccessibleInWeakShell(docNode, mWeakShell);
         docAcc = do_QueryObject(accessible);
       }
@@ -181,13 +181,10 @@ nsAccessNode::Init()
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
   if (content && content->IsInAnonymousSubtree()) {
     // Specific examples of where this is used: <input type="file"> and <xul:findbar>
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    docAcc->GetAccessibleInParentChain(mDOMNode, PR_TRUE,
-                                       getter_AddRefs(parentAccessible));
-    if (parentAccessible) {
-      PRInt32 childCountUnused;
-      parentAccessible->GetChildCount(&childCountUnused);
-    }
+    nsAccessible *parent = GetAccService()->GetContainerAccessible(mDOMNode,
+                                                                   PR_TRUE);
+    if (parent)
+      parent->EnsureChildren();
   }
 
 #ifdef DEBUG_A11Y
@@ -508,12 +505,8 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
   nsCOMPtr<nsIAccessNode> accessNode =
     GetAccService()->GetCachedAccessNode(aNode, mWeakShell);
 
-  if (!accessNode) {
-    nsRefPtr<nsAccessible> accessible =
-      GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
-
-    accessNode = accessible;
-  }
+  if (!accessNode)
+    accessNode = GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
 
   if (accessNode) {
     NS_ADDREF(*aAccessNode = accessNode);

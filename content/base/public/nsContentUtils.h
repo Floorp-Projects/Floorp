@@ -1351,12 +1351,6 @@ public:
   static PRBool URIIsLocalFile(nsIURI *aURI);
 
   /**
-   * If aContent is an HTML element with a DOM level 0 'name', then
-   * return the name. Otherwise return null.
-   */
-  static nsIAtom* IsNamedItem(Element* aElement);
-
-  /**
    * Get the application manifest URI for this document.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
    * document.

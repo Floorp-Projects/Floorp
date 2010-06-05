@@ -39,7 +39,6 @@
 
 #include "nsFormFillController.h"
 
-#include "nsStorageFormHistory.h"
 #include "nsIFormAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
 #include "nsString.h"
@@ -1210,16 +1209,10 @@ nsFormFillController::IsEventTrusted(nsIDOMEvent *aEvent)
   return isTrusted;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFormHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 
 static const nsModuleComponentInfo components[] =
 {
-  { "HTML Form History",
-    NS_FORMHISTORY_CID, 
-    NS_FORMHISTORY_CONTRACTID,
-    nsFormHistoryConstructor },
-
   { "HTML Form Fill Controller",
     NS_FORMFILLCONTROLLER_CID, 
     "@mozilla.org/satchel/form-fill-controller;1",

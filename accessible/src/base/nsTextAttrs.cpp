@@ -81,11 +81,11 @@ static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
 // nsTextAttrs
 
 nsTextAttrsMgr::nsTextAttrsMgr(nsHyperTextAccessible *aHyperTextAcc,
-                               nsIDOMNode *aHyperTextNode,
                                PRBool aIncludeDefAttrs,
-                               nsIDOMNode *aOffsetNode) :
-  mHyperTextAcc(aHyperTextAcc), mHyperTextNode(aHyperTextNode),
-  mIncludeDefAttrs(aIncludeDefAttrs), mOffsetNode(aOffsetNode)
+                               nsAccessible *aOffsetAcc,
+                               PRInt32 aOffsetAccIdx) :
+  mHyperTextAcc(aHyperTextAcc), mIncludeDefAttrs(aIncludeDefAttrs),
+  mOffsetAcc(aOffsetAcc), mOffsetAccIdx(aOffsetAccIdx)
 {
 }
 
@@ -94,33 +94,61 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
                               PRInt32 *aStartHTOffset,
                               PRInt32 *aEndHTOffset)
 {
-  // 1. Hyper text accessible and its DOM node must be specified always.
-  // 2. Offset DOM node and result hyper text offsets must be specifed in
+  // 1. Hyper text accessible must be specified always.
+  // 2. Offset accessible and result hyper text offsets must be specified in
   // the case of text attributes.
-  // 3. Offset DOM node and result hyper text offsets must not be specifed but
-  // include default text attributes flag and attributes list must be specified
-  // in the case of default text attributes.
-  NS_PRECONDITION(mHyperTextAcc && mHyperTextNode &&
-                  ((mOffsetNode && aStartHTOffset && aEndHTOffset) ||
-                  (!mOffsetNode && !aStartHTOffset && !aEndHTOffset &&
+  // 3. Offset accessible and result hyper text offsets must not be specified
+  // but include default text attributes flag and attributes list must be
+  // specified in the case of default text attributes.
+  NS_PRECONDITION(mHyperTextAcc &&
+                  ((mOffsetAcc && mOffsetAccIdx != -1 &&
+                    aStartHTOffset && aEndHTOffset) ||
+                  (!mOffsetAcc && mOffsetAccIdx == -1 &&
+                    !aStartHTOffset && !aEndHTOffset &&
                    mIncludeDefAttrs && aAttributes)),
                   "Wrong usage of nsTextAttrsMgr!");
 
-  nsCOMPtr<nsIDOMElement> hyperTextElm =
-    nsCoreUtils::GetDOMElementFor(mHyperTextNode);
-  nsCOMPtr<nsIDOMElement> offsetElm;
-  if (mOffsetNode)
-    offsetElm = nsCoreUtils::GetDOMElementFor(mOffsetNode);
+  // Embedded objects are combined into own range with empty attributes set.
+  if (mOffsetAcc && nsAccUtils::IsEmbeddedObject(mOffsetAcc)) {
+    for (PRInt32 childIdx = mOffsetAccIdx - 1; childIdx >= 0; childIdx--) {
+      nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
+      if (!nsAccUtils::IsEmbeddedObject(currAcc))
+        break;
 
+      (*aStartHTOffset)--;
+    }
+
+    PRInt32 childCount = mHyperTextAcc->GetChildCount();
+    for (PRInt32 childIdx = mOffsetAccIdx + 1; childIdx < childCount;
+         childIdx++) {
+      nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
+      if (!nsAccUtils::IsEmbeddedObject(currAcc))
+        break;
+
+      (*aEndHTOffset)++;
+    }
+
+    return NS_OK;
+  }
+
+  nsIDOMNode *hyperTextNode = mHyperTextAcc->GetDOMNode();
+  nsCOMPtr<nsIDOMElement> hyperTextElm =
+    nsCoreUtils::GetDOMElementFor(mHyperTextAcc->GetDOMNode());
   nsIFrame *rootFrame = nsCoreUtils::GetFrameFor(hyperTextElm);
+
+  nsIDOMNode *offsetNode = nsnull;
+  nsCOMPtr<nsIDOMElement> offsetElm;
   nsIFrame *frame = nsnull;
-  if (offsetElm)
+  if (mOffsetAcc) {
+    offsetNode = mOffsetAcc->GetDOMNode();
+    offsetElm = nsCoreUtils::GetDOMElementFor(offsetNode);
     frame = nsCoreUtils::GetFrameFor(offsetElm);
+  }
 
   nsTPtrArray<nsITextAttr> textAttrArray(10);
 
   // "language" text attribute
-  nsLangTextAttr langTextAttr(mHyperTextAcc, mHyperTextNode, mOffsetNode);
+  nsLangTextAttr langTextAttr(mHyperTextAcc, hyperTextNode, offsetNode);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&langTextAttr));
 
   // "color" text attribute
@@ -174,7 +202,7 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
   nsresult rv = NS_OK;
 
   // Expose text attributes range where they are applied if applicable.
-  if (mOffsetNode)
+  if (mOffsetAcc)
     rv = GetRange(textAttrArray, aStartHTOffset, aEndHTOffset);
 
   textAttrArray.Clear();
@@ -185,209 +213,66 @@ nsresult
 nsTextAttrsMgr::GetRange(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
                          PRInt32 *aStartHTOffset, PRInt32 *aEndHTOffset)
 {
-  nsCOMPtr<nsIDOMElement> rootElm =
-    nsCoreUtils::GetDOMElementFor(mHyperTextNode);
-  NS_ENSURE_STATE(rootElm);
+  PRUint32 attrLen = aTextAttrArray.Length();
 
-  nsCOMPtr<nsIDOMNode> tmpNode(mOffsetNode);
-  nsCOMPtr<nsIDOMNode> currNode(mOffsetNode);
+  // Navigate backward from anchor accessible to find start offset.
+  for (PRInt32 childIdx = mOffsetAccIdx - 1; childIdx >= 0; childIdx--) {
+    nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
 
-  PRUint32 len = aTextAttrArray.Length();
-
-  // Navigate backwards and forwards from current node to the root node to
-  // calculate range bounds for the text attribute. Navigation sequence is the
-  // following:
-  // 1. Navigate through the siblings.
-  // 2. If the traversed sibling has children then navigate from its leaf child
-  //    to it through whole tree of the traversed sibling.
-  // 3. Get the parent and cycle algorithm until the root node.
-
-  // Navigate backwards (find the start offset).
-  while (currNode && currNode != rootElm) {
-    nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(currNode));
-    NS_ENSURE_STATE(currElm);
-
-    if (currNode != mOffsetNode) {
-      PRBool stop = PR_FALSE;
-      for (PRUint32 idx = 0; idx < len; idx++) {
-        nsITextAttr *textAttr = aTextAttrArray[idx];
-        if (!textAttr->Equal(currElm)) {
-
-          PRInt32 startHTOffset = 0;
-          nsAccessible *startAcc = mHyperTextAcc->
-            DOMPointToHypertextOffset(tmpNode, -1, &startHTOffset);
-
-          if (!startAcc)
-            startHTOffset = 0;
-
-          if (startHTOffset > *aStartHTOffset)
-            *aStartHTOffset = startHTOffset;
-
-          stop = PR_TRUE;
-          break;
-        }
-      }
-      if (stop)
-        break;
-    }
-
-    currNode->GetPreviousSibling(getter_AddRefs(tmpNode));
-    if (tmpNode) {
-      // Navigate through the subtree of traversed children to calculate
-      // left bound of the range.
-      FindStartOffsetInSubtree(aTextAttrArray, tmpNode, currNode,
-                               aStartHTOffset);
-    }
-
-    currNode->GetParentNode(getter_AddRefs(tmpNode));
-    currNode.swap(tmpNode);
-  }
-
-  // Navigate forwards (find the end offset).
-  PRBool moveIntoSubtree = PR_TRUE;
-  currNode = mOffsetNode;
-
-  while (currNode && currNode != rootElm) {
-    nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(currNode));
-    NS_ENSURE_STATE(currElm);
-
-    // Stop new end offset searching if the given text attribute changes its
-    // value.
-    PRBool stop = PR_FALSE;
-    for (PRUint32 idx = 0; idx < len; idx++) {
-      nsITextAttr *textAttr = aTextAttrArray[idx];
-      if (!textAttr->Equal(currElm)) {
-
-        PRInt32 endHTOffset = 0;
-        mHyperTextAcc->DOMPointToHypertextOffset(currNode, -1, &endHTOffset);
-
-        if (endHTOffset < *aEndHTOffset)
-          *aEndHTOffset = endHTOffset;
-
-        stop = PR_TRUE;
-        break;
-      }
-    }
-
-    if (stop)
+    // Stop on embedded accessible since embedded accessibles are combined into
+    // own range.
+    if (nsAccUtils::IsEmbeddedObject(currAcc))
       break;
 
-    if (moveIntoSubtree) {
-      // Navigate through subtree of traversed node. We use 'moveIntoSubtree'
-      // flag to avoid traversing the same subtree twice.
-      currNode->GetFirstChild(getter_AddRefs(tmpNode));
-      if (tmpNode)
-        FindEndOffsetInSubtree(aTextAttrArray, tmpNode, aEndHTOffset);
+    nsCOMPtr<nsIDOMElement> currElm =
+      nsCoreUtils::GetDOMElementFor(currAcc->GetDOMNode());
+    NS_ENSURE_STATE(currElm);
+
+    PRBool offsetFound = PR_FALSE;
+    for (PRUint32 attrIdx = 0; attrIdx < attrLen; attrIdx++) {
+      nsITextAttr *textAttr = aTextAttrArray[attrIdx];
+      if (!textAttr->Equal(currElm)) {
+        offsetFound = PR_TRUE;
+        break;
+      }
     }
 
-    currNode->GetNextSibling(getter_AddRefs(tmpNode));
-    moveIntoSubtree = PR_TRUE;
-    if (!tmpNode) {
-      currNode->GetParentNode(getter_AddRefs(tmpNode));
-      moveIntoSubtree = PR_FALSE;
+    if (offsetFound)
+      break;
+
+    *(aStartHTOffset) -= nsAccUtils::TextLength(currAcc);
+  }
+
+  // Navigate forward from anchor accessible to find end offset.
+  PRInt32 childLen = mHyperTextAcc->GetChildCount();
+  for (PRInt32 childIdx = mOffsetAccIdx + 1; childIdx < childLen; childIdx++) {
+    nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
+    if (nsAccUtils::IsEmbeddedObject(currAcc))
+      break;
+
+    nsCOMPtr<nsIDOMElement> currElm =
+      nsCoreUtils::GetDOMElementFor(currAcc->GetDOMNode());
+    NS_ENSURE_STATE(currElm);
+
+    PRBool offsetFound = PR_FALSE;
+    for (PRUint32 attrIdx = 0; attrIdx < attrLen; attrIdx++) {
+      nsITextAttr *textAttr = aTextAttrArray[attrIdx];
+
+      // Alter the end offset when text attribute changes its value and stop
+      // the search.
+      if (!textAttr->Equal(currElm)) {
+        offsetFound = PR_TRUE;
+        break;
+      }
     }
 
-    currNode.swap(tmpNode);
+    if (offsetFound)
+      break;
+
+    (*aEndHTOffset) += nsAccUtils::TextLength(currAcc);
   }
 
   return NS_OK;
-}
-
-PRBool
-nsTextAttrsMgr::FindEndOffsetInSubtree(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
-                                       nsIDOMNode *aCurrNode,
-                                       PRInt32 *aHTOffset)
-{
-  if (!aCurrNode)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(aCurrNode));
-  if (!currElm)
-    return PR_FALSE;
-
-  // If the given text attribute (pointed by nsTextAttr object) changes its
-  // value on the traversed element then fit the end of range.
-  PRUint32 len = aTextAttrArray.Length();
-  for (PRUint32 idx = 0; idx < len; idx++) {
-    nsITextAttr *textAttr = aTextAttrArray[idx];
-    if (!textAttr->Equal(currElm)) {
-      PRInt32 endHTOffset = 0;
-      mHyperTextAcc->DOMPointToHypertextOffset(aCurrNode, -1, &endHTOffset);
-      if (endHTOffset < *aHTOffset)
-        *aHTOffset = endHTOffset;
-
-      return PR_TRUE;
-    }
-  }
-
-  // Deeply traverse into the tree to fit the end of range.
-  nsCOMPtr<nsIDOMNode> nextNode;
-  aCurrNode->GetFirstChild(getter_AddRefs(nextNode));
-  if (nextNode) {
-    PRBool res = FindEndOffsetInSubtree(aTextAttrArray, nextNode, aHTOffset);
-    if (res)
-      return res;
-  }
-
-  aCurrNode->GetNextSibling(getter_AddRefs(nextNode));
-  if (nextNode) {
-    if (FindEndOffsetInSubtree(aTextAttrArray, nextNode, aHTOffset))
-      return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-nsTextAttrsMgr::FindStartOffsetInSubtree(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
-                                         nsIDOMNode *aCurrNode,
-                                         nsIDOMNode *aPrevNode,
-                                         PRInt32 *aHTOffset)
-{
-  if (!aCurrNode)
-    return PR_FALSE;
-
-  // Find the closest element back to the traversed element.
-  nsCOMPtr<nsIDOMNode> nextNode;
-  aCurrNode->GetLastChild(getter_AddRefs(nextNode));
-  if (nextNode) {
-    if (FindStartOffsetInSubtree(aTextAttrArray, nextNode, aPrevNode, aHTOffset))
-      return PR_TRUE;
-  }
-
-  nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(aCurrNode));
-  if (!currElm)
-    return PR_FALSE;
-
-  // If the given text attribute (pointed by nsTextAttr object) changes its
-  // value on the traversed element then fit the start of range.
-  PRUint32 len = aTextAttrArray.Length();
-  for (PRUint32 idx = 0; idx < len; idx++) {
-    nsITextAttr *textAttr = aTextAttrArray[idx];
-    if (!textAttr->Equal(currElm)) {
-
-      PRInt32 startHTOffset = 0;
-      nsAccessible *startAcc = mHyperTextAcc->
-        DOMPointToHypertextOffset(aPrevNode, -1, &startHTOffset);
-
-      if (!startAcc)
-        startHTOffset = 0;
-
-      if (startHTOffset > *aHTOffset)
-        *aHTOffset = startHTOffset;
-
-      return PR_TRUE;
-    }
-  }
-
-  // Moving backwards to find the start of range.
-  aCurrNode->GetPreviousSibling(getter_AddRefs(nextNode));
-  if (nextNode) {
-    if (FindStartOffsetInSubtree(aTextAttrArray, nextNode, aCurrNode, aHTOffset))
-      return PR_TRUE;
-  }
-
-  return PR_FALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
