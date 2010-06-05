@@ -44,7 +44,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsViewManager.h"
-#include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsView.h"
 #include "nsISupportsArray.h"
@@ -652,7 +651,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
           childWidget->GetWindowClipRegion(&clipRects);
           for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
             nsRect rr = (clipRects[i] + bounds.TopLeft()).
-              ToAppUnits(mContext->AppUnitsPerDevPixel());
+              ToAppUnits(AppUnitsPerDevPixel());
             children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
             children.SimplifyInward(20);
           }
@@ -752,7 +751,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
 
             if (aView == mRootView)
               {
-                PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+                PRInt32 p2a = AppUnitsPerDevPixel();
                 SetWindowDimensions(NSIntPixelsToAppUnits(width, p2a),
                                     NSIntPixelsToAppUnits(height, p2a));
                 *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -959,7 +958,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         }
 
         if (nsnull != view) {
-          PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+          PRInt32 p2a = AppUnitsPerDevPixel();
 
           if ((aEvent->message == NS_MOUSE_MOVE &&
                static_cast<nsMouseEvent*>(aEvent)->reason ==
@@ -1540,7 +1539,7 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, const 
   rect += aView->ViewToWidgetOffset();
 
   // finally, convert to device coordinates.
-  return rect.ToOutsidePixels(mContext->AppUnitsPerDevPixel());
+  return rect.ToOutsidePixels(AppUnitsPerDevPixel());
 }
 
 NS_IMETHODIMP
@@ -1754,7 +1753,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 #endif
                                                        
   nsPoint pt;
-  PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+  PRInt32 p2a = AppUnitsPerDevPixel();
   pt.x = NSIntPixelsToAppUnits(mMouseLocation.x, p2a);
   pt.y = NSIntPixelsToAppUnits(mMouseLocation.y, p2a);
   // This could be a bit slow (traverses entire view hierarchy)
