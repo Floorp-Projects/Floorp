@@ -78,6 +78,11 @@ MACOS_SDK_DIR=
 NEXT_ROOT=
 MT=
 MOZ_OS2_HIGH_MEMORY=1
+MOZ_THUMB2=
+PROFILE_GEN_CFLAGS=
+PROFILE_GEN_LDFLAGS=
+PROFILE_USE_CFLAGS=
+PROFILE_USE_LDFLAGS=
 
 dnl Link in libraries necessary to resolve all symbols for shared libs
 RESOLVE_LINK_SYMBOLS=
@@ -171,8 +176,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fpic -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork -mthumb $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
@@ -637,6 +642,29 @@ else
     AC_MSG_RESULT([no])
 fi
 
+dnl ========================================================
+dnl Profile guided optimization
+dnl ========================================================
+dnl Test for profiling options
+dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
+
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
+
+AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
+AC_TRY_COMPILE([], [return 0;],
+               [ PROFILE_GEN_CFLAGS="-fprofile-generate"
+                 result="yes" ], result="no")
+AC_MSG_RESULT([$result])
+
+if test $result = "yes"; then
+   PROFILE_GEN_LDFLAGS="-fprofile-generate"
+   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freoder-blocks-and-partition"
+   PROFILE_USE_LDFLAGS="-fprofile-use"
+fi
+
+CFLAGS="$_SAVE_CFLAGS"
+
 dnl ===============================================================
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
@@ -879,6 +907,32 @@ AC_ARG_ENABLE(os2-high-mem,
       else
         MOZ_OS2_HIGH_MEMORY=1
       fi ])
+
+dnl ========================================================
+dnl = Enable building the Thumb2 instruction set
+dnl ========================================================
+AC_ARG_ENABLE(thumb2,
+ [  --enable-thumb2              Enable Thumb2 instruction set],
+ [ if test "$enableval" = "yes"; then
+     MOZ_THUMB2=1,
+   fi ])
+
+if test -n "$MOZ_THUMB2"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+      else
+        AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
+fi
 
 dnl ========================================================
 dnl Override of system specific host options
@@ -1506,7 +1560,7 @@ arm-android-eabi)
     CXXFLAGS="$CXXFLAGS -Wall"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
-    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) $(WRAP_MALLOC_LIB) -o $@'
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
     _OPTIMIZE_FLAGS=-O2
@@ -1537,7 +1591,7 @@ arm-android-eabi)
     CXXFLAGS="$CXXFLAGS -Wall"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
-    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) $(WRAP_MALLOC_LIB) -o $@'
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
     _OPTIMIZE_FLAGS=-O2
@@ -1623,10 +1677,33 @@ arm-android-eabi)
         DLL_SUFFIX=dll
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
-        _CC_MAJOR_VERSION=`echo $CC_VERSION | awk -F\. '{ print $1 }'`
-        _CC_MINOR_VERSION=`echo $CC_VERSION | awk -F\. '{ print $2 }'`
+        changequote(,)
+        _MSVC_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
+        changequote([,])
+
+        CC_VERSION=`"${CC}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $1 }'`
+        _CC_MINOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $2 }'`
+        _CC_RELEASE=`echo ${CC_VERSION} | awk -F\. '{ print $3 }'`
+        _CC_BUILD=`echo ${CC_VERSION} | awk -F\. '{ print $4 }'`
         MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
+
+        if test "$_CC_MAJOR_VERSION" = "14"; then
+           dnl -DYNAMICBASE is only supported on VC8SP1 or newer,
+           dnl so be very specific here!
+           dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762
+           if test $_CC_RELEASE -gt 50727; then
+              _USE_DYNAMICBASE=1
+           elif test $_CC_BUILD -ge 762; then
+              _USE_DYNAMICBASE=1
+           fi
+        elif test $_CC_MAJOR_VERSION -gt 15; then
+           _USE_DYNAMICBASE=1    
+        fi
+
+        if test -n "$_USE_DYNAMICBASE"; then
+           DLLFLAGS="$DLLFLAGS -DYNAMICBASE"
+        fi
 
         # Ensure that mt is Microsoft (R) Manifest Tool and not magnetic
         # tape manipulation utility (or something else)
@@ -1652,6 +1729,12 @@ arm-android-eabi)
         DLLFLAGS="$DLLFLAGS -OUT:\"\$@\""
         _DEBUG_FLAGS=-Zi
         _OPTIMIZE_FLAGS=-O2
+
+        PROFILE_GEN_CFLAGS="-GL"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+        PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
+        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+
         if test -z "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -Od"
         fi
@@ -2860,6 +2943,31 @@ cygwin*|msvc*|mks*)
 esac
 
 dnl ========================================================
+dnl = Use malloc wrapper lib
+dnl ========================================================
+AC_ARG_ENABLE(wrap-malloc,
+[  --enable-wrap-malloc    Wrap malloc calls (gnu linker only)],
+[     if test "$enableval" = "yes"; then
+	    _WRAP_MALLOC=1
+      fi ])
+
+if test -n "$_WRAP_MALLOC"; then
+    if test "$GNU_CC"; then
+       WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign"
+       DSO_LDOPTS="$DSO_LDOPTS $WRAP_MALLOC_CFLAGS"
+    else
+       AC_MSG_ERROR([--enable-wrap-malloc is not supported for non-GNU toolchains])
+    fi
+fi
+
+dnl ========================================================
+dnl = Location of malloc wrapper lib
+dnl ========================================================
+AC_ARG_WITH(wrap-malloc,
+[  --with-wrap-malloc=SHAREDLIB  Location of malloc wrapper library],
+    WRAP_MALLOC_LIB=$withval)
+
+dnl ========================================================
 dnl Substitution of found variables.
 dnl ========================================================
 AC_SUBST(SHELL_OVERRIDE)
@@ -2913,6 +3021,8 @@ AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(DLL_SUFFIX)
 AC_SUBST(ASM_SUFFIX)
+AC_SUBST(WRAP_MALLOC_CFLAGS)
+AC_SUBST(WRAP_MALLOC_LIB)
 AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
@@ -2935,6 +3045,11 @@ AC_SUBST(PERL)
 AC_SUBST(STRIP)
 AC_SUBST(FILTER)
 AC_SUBST(IMPLIB)
+
+AC_SUBST(PROFILE_GEN_CFLAGS)
+AC_SUBST(PROFILE_GEN_LDFLAGS)
+AC_SUBST(PROFILE_USE_CFLAGS)
+AC_SUBST(PROFILE_USE_LDFLAGS)
 
 AC_SUBST(OS_LIBS)
 AC_SUBST(RESOLVE_LINK_SYMBOLS)
