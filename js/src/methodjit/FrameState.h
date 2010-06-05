@@ -99,19 +99,19 @@ class FrameState
           : entries(NULL), nentries(0)
         { }
 
-        void add(uint32 index) {
-            entries[nentries++] = index;
+        void add(FrameEntry *fe) {
+            entries[nentries++] = fe;
         }
 
         void reset() {
             nentries = 0;
         }
 
-        uint32 operator [](uint32 n) const {
+        FrameEntry * operator [](uint32 n) const {
             return entries[n];
         }
 
-        uint32 *entries;
+        FrameEntry **entries;
         uint32 nentries;
     };
 
@@ -341,7 +341,8 @@ class FrameState
      */
     uint32 stackDepth() const { return sp - spBase; }
     uint32 frameDepth() const { return stackDepth() + script->nfixed; }
-    uint32 tos() const { return sp - base; }
+    //uint32 tos() const { return sp - base; }
+    inline FrameEntry *tosFe() const;
 
 #ifdef DEBUG
     void assertValidRegisterState() const;

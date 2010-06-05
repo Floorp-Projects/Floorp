@@ -66,7 +66,7 @@ FrameState::init(uint32 nargs)
 
     uint8 *cursor = (uint8 *)cx->malloc(sizeof(FrameEntry) * nslots +       // entries[]
                                         sizeof(FrameEntry *) * nslots +     // base[]
-                                        sizeof(uint32 *) * nslots           // tracker.entries[]
+                                        sizeof(FrameEntry *) * nslots       // tracker.entries[]
                                         );
     if (!cursor)
         return false;
@@ -82,7 +82,7 @@ FrameState::init(uint32 nargs)
     memset(base, 0, sizeof(FrameEntry *) * nslots);
     cursor += sizeof(FrameEntry *) * nslots;
 
-    tracker.entries = (uint32 *)cursor;
+    tracker.entries = (FrameEntry **)cursor;
 
     return true;
 }
@@ -163,7 +163,7 @@ FrameState::forgetEverything()
     sync(masm);
 
     for (uint32 i = 0; i < tracker.nentries; i++)
-        base[tracker[i]] = NULL;
+        base[indexOfFe(tracker[i])] = NULL;
 
     tracker.reset();
     freeRegs.reset();
@@ -178,7 +178,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     }
 
     if (fe->isCopy())
-        fe = entryFor(fe->copyOf());
+        fe = fe->copyOf();
 
     /* Cannot clobber the address's register. */
     JS_ASSERT(!freeRegs.hasReg(address.base));
@@ -218,15 +218,12 @@ FrameState::assertValidRegisterState() const
 {
     Registers checkedFreeRegs;
 
-    uint32 tos = uint32(sp - base);
-
+    FrameEntry *tos = tosFe();
     for (uint32 i = 0; i < tracker.nentries; i++) {
-        uint32 index = tracker[i];
-
-        if (index >= tos)
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
             continue;
 
-        FrameEntry *fe = entryFor(index);
         JS_ASSERT_IF(fe->isCopy(), !fe->type.inRegister() && !fe->data.inRegister());
 
         if (fe->isCopy())
@@ -250,13 +247,12 @@ FrameState::sync(Assembler &masm) const
 {
     Registers avail(freeRegs);
 
+    FrameEntry *tos = tosFe();
     for (uint32 i = 0; i < tracker.nentries; i++) {
-        uint32 index = tracker[i];
-
-        if (index >= tos())
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
             continue;
 
-        FrameEntry *fe = entryFor(index);
         Address address = addressOf(fe);
 
         if (!fe->isCopy()) {
@@ -275,7 +271,7 @@ FrameState::sync(Assembler &masm) const
             if (!fe->type.synced())
                 syncType(fe, addressOf(fe), masm);
         } else {
-            FrameEntry *backing = entryFor(fe->copyOf());
+            FrameEntry *backing = fe->copyOf();
             JS_ASSERT(backing != fe);
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
 
@@ -334,17 +330,16 @@ FrameState::syncAndKill(uint32 mask)
     Registers kill(mask);
 
     /* Backwards, so we can allocate registers to backing slots better. */
+    FrameEntry *tos = tosFe();
     for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
-        uint32 index = tracker[i];
-
-        if (index >= tos())
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
             continue;
 
-        FrameEntry *fe = entryFor(index);
         Address address = addressOf(fe);
         FrameEntry *backing = fe;
         if (fe->isCopy())
-            backing = entryFor(fe->copyOf());
+            backing = fe->copyOf();
 
         JS_ASSERT_IF(i == 0, !fe->isCopy());
 
@@ -380,13 +375,11 @@ FrameState::syncAndKill(uint32 mask)
 void
 FrameState::merge(Assembler &masm, uint32 iVD) const
 {
+    FrameEntry *tos = tosFe();
     for (uint32 i = 0; i < tracker.nentries; i++) {
-        uint32 index = tracker[i];
-
-        if (index >= tos())
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
             continue;
-
-        FrameEntry *fe = entryFor(index);
 
         /* Copies do not have registers. */
         if (fe->isCopy()) {
@@ -441,7 +434,7 @@ FrameState::ownRegForData(FrameEntry *fe)
     RegisterID reg;
     if (fe->isCopy()) {
         /* For now, just do an extra move. The reg must be mutable. */
-        FrameEntry *backing = entryFor(fe->copyOf());
+        FrameEntry *backing = fe->copyOf();
         if (!backing->data.inRegister()) {
             JS_ASSERT(backing->data.inMemory());
             tempRegForData(backing);
@@ -490,7 +483,7 @@ FrameState::pushLocal(uint32 n)
         if (localFe->isCopy()) {
             fe->setCopyOf(localFe->copyOf());
         } else {
-            fe->setCopyOf(localIndex(n));
+            fe->setCopyOf(localFe);
             localFe->setCopied();
         }
     }
@@ -500,16 +493,15 @@ void
 FrameState::uncopy(FrameEntry *original)
 {
     JS_ASSERT(original->isCopied());
-    uint32 origIndex = indexOfFe(original);
 
     /* Find the first copy. */
     uint32 firstCopy = InvalidIndex;
+    FrameEntry *tos = tosFe();
     for (uint32 i = 0; i < tracker.nentries; i++) {
-        uint32 index = tracker[i];
-        if (index >= tos())
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
             continue;
-        FrameEntry *fe = entryFor(index);
-        if (fe->isCopy() && fe->copyOf() == origIndex) {
+        if (fe->isCopy() && fe->copyOf() == original) {
             firstCopy = i;
             break;
         }
@@ -521,24 +513,21 @@ FrameState::uncopy(FrameEntry *original)
     }
 
     /* Mark all extra copies as copies of the new backing index. */
-    uint32 firstCopyIndex = tracker[firstCopy];
-    FrameEntry *fe = entryFor(firstCopyIndex);
+    FrameEntry *fe = tracker[firstCopy];
 
-    fe->copy = false;
+    fe->setCopyOf(NULL);
     for (uint32 i = firstCopy + 1; i < tracker.nentries; i++) {
-        uint32 index = tracker[i];
-        if (index >= tos())
+        FrameEntry *other = tracker[i];
+        if (other >= tos)
             continue;
-
-        FrameEntry *other = entryFor(index);
 
         /* The original must be tracked before copies. */
         JS_ASSERT(other != original);
 
-        if (!other->isCopy() || other->copyOf() != origIndex)
+        if (!other->isCopy() || other->copyOf() != original)
             continue;
 
-        other->setCopyOf(firstCopyIndex);
+        other->setCopyOf(fe);
         fe->setCopied();
     }
 
@@ -572,12 +561,11 @@ FrameState::uncopy(FrameEntry *original)
 void
 FrameState::storeLocal(uint32 n)
 {
-    uint32 storeIndex = localIndex(n);
     FrameEntry *localFe = getLocal(n);
 
     /* Detect something like (x = x) which is a no-op. */
     FrameEntry *top = peek(-1);
-    if (top->isCopy() && top->copyOf() == storeIndex) {
+    if (top->isCopy() && top->copyOf() == localFe) {
         JS_ASSERT(localFe->isCopied());
         return;
     }
@@ -606,24 +594,24 @@ FrameState::storeLocal(uint32 n)
     uint32 searchPoint = InvalidIndex;
     FrameEntry *backing = top;
     if (top->isCopy()) {
-        uint32 backingIndex = top->copyOf();
-        backing = entryFor(backingIndex);
+        backing = top->copyOf();
 
+        FrameEntry *tos = tosFe();
         for (uint32 i = 0; i < tracker.nentries; i++) {
-            uint32 index = tracker[i];
-            if (index >= tos())
+            FrameEntry *fe = tracker[i];
+            if (fe >= tos);
                 continue;
 
             /* Found the local first - break out. */
-            if (index == storeIndex) {
+            if (fe == localFe) {
                 searchPoint = i;
                 break;
             }
 
             /* Found the backing index first - make a copy. */
-            if (index == backingIndex) {
+            if (fe == backing) {
                 localFe->clear();
-                localFe->setCopyOf(backingIndex);
+                localFe->setCopyOf(backing);
                 if (backing->isTypeKnown())
                     localFe->setTypeTag(backing->getTypeTag());
                 else
@@ -656,7 +644,7 @@ FrameState::storeLocal(uint32 n)
         backing->type.invalidate();
     backing->data.invalidate();
     backing->clear();
-    backing->setCopyOf(storeIndex);
+    backing->setCopyOf(localFe);
 
     /*
      * It is not possible that the top was not a copy, but has been copied
@@ -670,23 +658,22 @@ FrameState::storeLocal(uint32 n)
          * Go through and rewrite any copies of the backing fe to be copies of
          * the new local.
          */
-        uint32 backingIndex = indexOfFe(backing);
         JS_ASSERT(backing != top);
 
         /*
          * We're guaranteed to be able to start from searchPoint + 1 because
          * we did not find the backing index in the earlier loop.
          */
+        FrameEntry *tos = tosFe();
         for (uint32 i = searchPoint + 1; i < tracker.nentries; i++) {
-            uint32 index = tracker[i];
-            if (index >= tos())
+            FrameEntry *fe = tracker[i];
+            if (fe >= tos)
                 continue;
-            FrameEntry *fe = entryFor(index);
-            if (fe->isCopy() && fe->copyOf() == backingIndex)
-                fe->setCopyOf(storeIndex);
+            if (fe->isCopy() && fe->copyOf() == backing)
+                fe->setCopyOf(localFe);
         }
     }
-    JS_ASSERT(top->copyOf() == storeIndex);
+    JS_ASSERT(top->copyOf() == localFe);
 }
 
 void
