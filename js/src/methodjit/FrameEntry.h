@@ -88,7 +88,7 @@ class FrameEntry
 
     void clear() {
         copied = false;
-        copy = false;
+        copy = NULL;
     }
 
     /*
@@ -135,30 +135,28 @@ class FrameEntry
     }
 
     bool isCopy() const {
-        return copy;
+        return !!copy;
     }
 
-    uint32 copyOf() const {
+    FrameEntry *copyOf() const {
         JS_ASSERT(isCopy());
-        return index_;
+        return copy;
     }
 
     /*
      * Set copy index.
      */
-    void setCopyOf(uint32 index) {
+    void setCopyOf(FrameEntry *fe) {
         JS_ASSERT(!isCopied());
-        index_ = index;
-        copy = true;
+        copy = fe;
     }
 
   private:
     RematInfo  type;
     RematInfo  data;
     jsval_layout v_;
-    uint32     index_;
-    bool       copied;
-    bool       copy;
+    FrameEntry *copy;
+    bool        copied;
     FrameEntry *prev;
 };
 

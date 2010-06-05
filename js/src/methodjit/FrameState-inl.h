@@ -46,10 +46,11 @@ inline FrameEntry *
 FrameState::addToTracker(uint32 index)
 {
     JS_ASSERT(!base[index]);
-    tracker.add(index);
-    base[index] = &entries[index];
-    entries[index].clear();
-    return base[index];
+    FrameEntry *fe = &entries[index];
+    base[index] = fe;
+    fe->clear();
+    tracker.add(fe);
+    return fe;
 }
 
 inline FrameEntry *
@@ -255,7 +256,7 @@ FrameState::tempRegForType(FrameEntry *fe)
 {
     JS_ASSERT(!fe->type.isConstant());
     if (fe->isCopy())
-        fe = entryFor(fe->copyOf());
+        fe = fe->copyOf();
 
     if (fe->type.inRegister())
         return fe->type.reg();
@@ -274,7 +275,7 @@ FrameState::tempRegForData(FrameEntry *fe)
     JS_ASSERT(!fe->data.isConstant());
 
     if (fe->isCopy())
-        fe = entryFor(fe->copyOf());
+        fe = fe->copyOf();
 
     if (fe->data.inRegister())
         return fe->data.reg();
@@ -291,7 +292,7 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
     JS_ASSERT(!fe->data.isConstant());
 
     if (fe->isCopy())
-        fe = entryFor(fe->copyOf());
+        fe = fe->copyOf();
 
     if (fe->data.inRegister()) {
         RegisterID old = fe->data.reg();
@@ -422,6 +423,12 @@ FrameState::forgetRegs(FrameEntry *fe)
         forgetReg(fe->type.reg());
     if (fe->data.inRegister())
         forgetReg(fe->data.reg());
+}
+
+inline FrameEntry *
+FrameState::tosFe() const
+{
+    return &entries[uint32(sp - base)];
 }
 
 } /* namspace mjit */
