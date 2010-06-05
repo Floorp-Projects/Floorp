@@ -50,7 +50,8 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsAutoPtr.h"
-#include "mozilla/Storage.h"
+#include "nsHashKeys.h"
+#include "nsInterfaceHashtable.h"
 
 class nsIThread;
 
@@ -113,6 +114,18 @@ public:
   IndexUpdateStatement(bool aAutoIncrement,
                        bool aUnique);
 
+  already_AddRefed<mozIStorageStatement>
+  GetCachedStatement(const nsACString& aQuery);
+
+  template<int N>
+  already_AddRefed<mozIStorageStatement>
+  GetCachedStatement(const char (&aQuery)[N])
+  {
+    nsCString query;
+    query.AssignLiteral(aQuery);
+    return GetCachedStatement(query);
+  }
+
 #ifdef DEBUG
   bool TransactionIsOpen() const;
   bool IsWriteAllowed() const;
@@ -152,30 +165,11 @@ private:
   nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
 
+  nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
+    mCachedStatements;
+
   // Only touched on the database thread.
   nsCOMPtr<mozIStorageConnection> mConnection;
-  nsCOMPtr<mozIStorageStatement> mAddStmt;
-  nsCOMPtr<mozIStorageStatement> mAddAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mModifyStmt;
-  nsCOMPtr<mozIStorageStatement> mModifyAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mAddOrModifyStmt;
-  nsCOMPtr<mozIStorageStatement> mAddOrModifyAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mRemoveStmt;
-  nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mGetStmt;
-  nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetUniqueAIStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetAIStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetUniqueStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetObjectUniqueAIStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetObjectAIStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetObjectUniqueStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexGetObjectStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexUpdateUniqueAIStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexUpdateAIStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexUpdateUniqueStmt;
-  nsCOMPtr<mozIStorageStatement> mIndexUpdateStmt;
 
   // Only touched on the database thread.
   PRUint32 mSavepointCount;

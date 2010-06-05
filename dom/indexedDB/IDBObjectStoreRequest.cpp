@@ -1358,13 +1358,15 @@ AddHelper::UpdateIndexes(mozIStorageConnection* aConnection,
   nsresult rv;
 
   if (!mAutoIncrement) {
-    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-                                        "SELECT id "
-                                        "FROM object_data "
-                                        "WHERE object_store_id = :osid "
-                                        "AND key_value = :key_value"
-                                      ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
+    stmt = mTransaction->GetCachedStatement(
+      "SELECT id "
+      "FROM object_data "
+      "WHERE object_store_id = :osid "
+      "AND key_value = :key_value"
+    );
+    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+
+    mozStorageStatementScoper scoper(stmt);
 
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1459,6 +1461,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetStatement(mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
@@ -1514,6 +1517,7 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->RemoveStatement(mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
@@ -1626,11 +1630,12 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(query, getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (!mLeftKey.IsUnset()) {
@@ -1733,15 +1738,17 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   Savepoint savepoint(mTransaction);
 
   // Insert the data into the database.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->GetCachedStatement(
     "INSERT INTO object_store_index (name, key_path, unique_index, "
       "object_store_id, object_store_autoincrement) "
     "VALUES (:name, :key_path, :unique, :osid, :os_auto_increment)"
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  );
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"), mKeyPath);
@@ -1793,11 +1800,14 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
   sql.AppendASCII(" FROM ");
   sql += table;
   sql.AppendASCII(" WHERE object_store_id = :osid");
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(sql, getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStore->Id());
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(sql);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
+                                      mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   PRBool hasResult;
@@ -1805,7 +1815,8 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     nsCOMPtr<mozIStorageStatement> insertStmt =
       mTransaction->IndexUpdateStatement(mAutoIncrement, mUnique);
     NS_ENSURE_TRUE(insertStmt, nsIIDBDatabaseException::UNKNOWN_ERR);
-    mozStorageStatementScoper scoper(insertStmt);
+
+    mozStorageStatementScoper scoper2(insertStmt);
 
     rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"), mId);
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -1910,14 +1921,16 @@ RemoveIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM object_store_index "
-    "WHERE name = :name "
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->GetCachedStatement(
+      "DELETE FROM object_store_index "
+      "WHERE name = :name "
+    );
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
