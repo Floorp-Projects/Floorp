@@ -157,7 +157,6 @@ class FrameEntry
     jsval_layout v_;
     FrameEntry *copy;
     bool        copied;
-    FrameEntry *prev;
 };
 
 } /* namespace mjit */
