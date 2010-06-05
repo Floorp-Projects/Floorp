@@ -2821,8 +2821,6 @@ alpha*-*-osf*)
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
-
-    dnl MOZ_MEMORY=1
     ;;
 
 esac
@@ -4881,18 +4879,6 @@ MOZ_ARG_WITH_STRING(java-bin-path,
     JAVA_BIN_PATH=$withval)
 
 dnl ========================================================
-dnl Use ARM userspace kernel helpers; tell NSPR to enable
-dnl their usage and use them in spidermonkey.
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(arm-kuser,
-[  --with-arm-kuser        Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
-    USE_ARM_KUSER=1,
-    USE_ARM_KUSER=)
-if test -n "$USE_ARM_KUSER"; then
-   AC_DEFINE(USE_ARM_KUSER)
-fi
-
-dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -4908,6 +4894,7 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
+MOZ_INSTALLER=1
 MOZ_IPC=1
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
@@ -4953,10 +4940,12 @@ MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
+NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
+USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
@@ -4983,6 +4972,22 @@ case "$target_os" in
         if test -n "$NS_ENABLE_TSF"; then
             AC_DEFINE(NS_ENABLE_TSF)
         fi
+        ;;
+esac
+
+case "${target}" in
+    arm-android-eabi)
+        NSS_DISABLE_DBM=1
+        USE_ARM_KUSER=1
+        MOZ_INSTALLER=
+        MOZ_CRASHREPORTER=
+        NS_PRINTING=
+        NECKO_WIFI=
+        MOZ_PLUGINS=
+        MOZ_THUMB2=1
+        MOZ_THEME_FASTSTRIPE=1
+        MOZ_TREE_FREETYPE=1
+        MOZ_MEMORY=1
         ;;
 esac
 
@@ -5242,6 +5247,17 @@ if test "$COMPILE_ENVIRONMENT"; then
 fi # COMPILE_ENVIRONMENT
 
 AC_SUBST(MOZ_FS_LAYOUT)
+
+dnl ========================================================
+dnl Use ARM userspace kernel helpers; tell NSPR to enable
+dnl their usage and use them in spidermonkey.
+dnl ========================================================
+MOZ_ARG_WITH_BOOL(arm-kuser,
+[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
+    USE_ARM_KUSER=1,)
+if test -n "$USE_ARM_KUSER"; then
+   AC_DEFINE(USE_ARM_KUSER)
+fi
 
 dnl ========================================================
 dnl = startup-notification support module
@@ -5723,16 +5739,14 @@ dnl = Disable plugin support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(plugins,
 [  --disable-plugins       Disable plugins support],
-    MOZ_PLUGINS=,
-    MOZ_PLUGINS=1)
+    MOZ_PLUGINS=,)
 
 dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
-[  --disable-dbm           Disable building dbm],
-    NSS_DISABLE_DBM=1,
-    NSS_DISABLE_DBM=)
+[  --disable-dbm       Disable building dbm],
+    NSS_DISABLE_DBM=1,)
 
 dnl bi-directional support always on
 IBMBIDI=1
@@ -5782,8 +5796,7 @@ dnl Disable printing
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(printing,
 [  --disable-printing      Disable printing support],
-    NS_PRINTING=,
-    NS_PRINTING=1 )
+    NS_PRINTING=,)
 
 if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
     AC_MSG_WARN([Printing does not work with Qt at this time. Omitting printing support.])
@@ -5794,7 +5807,6 @@ if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
     AC_DEFINE(NS_PRINT_PREVIEW)
 fi
-
 dnl ========================================================
 dnl use native unicode converters
 dnl ========================================================
@@ -5843,8 +5855,7 @@ dnl = Disable Ogg Codecs
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(ogg,
 [  --disable-ogg           Disable Ogg Codec support],
-    MOZ_OGG=,
-    MOZ_OGG=1)
+    MOZ_OGG=,)
 
 AC_SUBST(MOZ_OGG)
 
@@ -5880,8 +5891,7 @@ dnl = Disable Wave decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(wave,
 [  --disable-wave          Disable Wave decoder support],
-    MOZ_WAVE=,
-    MOZ_WAVE=1)
+    MOZ_WAVE=,)
 
 AC_SUBST(MOZ_WAVE)
 
@@ -5994,8 +6004,7 @@ esac
 MOZ_ARG_ENABLE_BOOL(javaxpcom,
 [  --enable-javaxpcom
                           Enable Java-XPCOM bridge],
-    MOZ_JAVAXPCOM=1,
-    MOZ_JAVAXPCOM= )
+    MOZ_JAVAXPCOM=1,)
 
 case "$host_os" in
   cygwin*|msvc*|mks*)
@@ -6072,8 +6081,7 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
 [  --disable-crashreporter Disable breakpad crash reporting],
-    MOZ_CRASHREPORTER=,
-    MOZ_CRASHREPORTER=1)
+    MOZ_CRASHREPORTER=,)
 
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
@@ -6350,8 +6358,7 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
-    MOZ_INSTALLER=,
-    MOZ_INSTALLER=1 )
+    MOZ_INSTALLER=,)
 if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     # Disable installer for Windows builds that use the new toolkit if NSIS
     # isn't in the path.
@@ -8399,9 +8406,7 @@ dnl option to disable necko's wifi scanner
 dnl
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
 [  --disable-necko-wifi    Disable necko wifi scanner],
-    NECKO_WIFI=,
-    NECKO_WIFI=1
-)
+    NECKO_WIFI=,)
 
 if test "$OS_ARCH" = "OS2"; then
   dnl OS/2 implementation of Necko-WiFi support will be added in bug 506566
