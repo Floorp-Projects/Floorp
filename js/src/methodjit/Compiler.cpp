@@ -660,6 +660,16 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::EndInit, Uses(0), Defs(0));
           END_CASE(JSOP_ENDINIT)
 
+          BEGIN_CASE(JSOP_INITELEM)
+          {
+            JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
+            prepareStubCall();
+            masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
+            stubCall(stubs::InitElem, Uses(2), Defs(0));
+            frame.popn(2);
+          }
+          END_CASE(JSOP_INITELEM)
+
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)
