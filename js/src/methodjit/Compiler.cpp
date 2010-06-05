@@ -360,6 +360,7 @@ mjit::Compiler::generateMethod()
             frame.dup2();
           END_CASE(JSOP_DUP2)
 
+          BEGIN_CASE(JSOP_BITOR)
           BEGIN_CASE(JSOP_BITXOR)
           BEGIN_CASE(JSOP_BITAND)
             jsop_bitop(op);
