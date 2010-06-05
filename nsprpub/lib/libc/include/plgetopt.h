@@ -122,13 +122,14 @@ PR_EXTERN(void) PL_DestroyOptState(PLOptState *opt);
  * For a long option name, 
  * - opt->longOptIndex will contain the non-negative index of the 
  *   PLLongOpt structure in the caller's array of PLLongOpt structures 
- 8   corresponding to the long option name, and 
+ *   corresponding to the long option name, and 
  * For a single-character or long option, 
  * - opt->longOption will contain the value of the single-character option
  *   name, or the value of the longOption from the PLLongOpt structure
  *   for that long option.  See notes below.
  * - opt->value will point to the argument option string, or will
- *   be NULL if no argument option string was given.
+ *   be NULL if option does not require argument.  If option requires
+ *   argument but it is not provided, PL_OPT_BAD is returned.
  * When opt->option is non-zero, 
  * - opt->longOptIndex will be -1
  * When this function returns PL_OPT_EOL, or PL_OPT_BAD, the contents of
