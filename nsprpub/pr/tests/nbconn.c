@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 		 *	1. successful connection: a server thread accepts a connection
 		 *	   from the main thread
 		 *	2. unsuccessful connection: the main thread tries to connect to a
-		 *	   non-existent port and expects to get an error
+		 *	   nonexistent port and expects to get an error
 		 */
 		rv = connection_success_test();
 		if (rv == 0)
@@ -447,7 +447,7 @@ def_exit:
 }
 
 /*
- * test for connection to a non-existent port using a non-blocking socket
+ * test for connection to a nonexistent port using a non-blocking socket
  */
 static PRIntn
 connection_failure_test()
