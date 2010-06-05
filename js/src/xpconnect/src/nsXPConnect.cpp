@@ -692,7 +692,7 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
 #endif
         tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
     }
-    else if(kind != JSTRACE_DOUBLE && kind != JSTRACE_STRING)
+    else if(kind != JSTRACE_STRING)
     {
         JS_TraceChildren(trc, thing, kind);
     }
@@ -735,7 +735,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(traceKind == JSTRACE_OBJECT)
     {
         obj = static_cast<JSObject*>(p);
-        clazz = obj->getClass();
+        clazz = obj->getJSClass();
 
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
@@ -785,7 +785,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if(traceKind == JSTRACE_OBJECT)
         {
             JSObject *obj = static_cast<JSObject*>(p);
-            JSClass *clazz = obj->getClass();
+            JSClass *clazz = obj->getJSClass();
             if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
             {
                 XPCWrappedNative* wn;
@@ -845,7 +845,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                     JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
                                 clazz->name, si->GetJSClass()->name);
                 }
-                else if(clazz == &js_ScriptClass)
+                else if(clazz == Jsvalify(&js_ScriptClass))
                 {
                     JSScript* script = (JSScript*) xpc_GetJSPrivate(obj);
                     if(script->filename)
@@ -859,7 +859,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                         JS_snprintf(name, sizeof(name), "JS Object (Script)");
                     }
                 }
-                else if(clazz == &js_FunctionClass)
+                else if(clazz == Jsvalify(&js_FunctionClass))
                 {
                     JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
                     JSString* str = JS_GetFunctionId(fun);
@@ -886,7 +886,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         {
             static const char trace_types[JSTRACE_LIMIT][7] = {
                 "Object",
-                "Double",
                 "String",
                 "Xml"
             };
@@ -1958,7 +1957,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(NS_FAILED(rv))
         return UnexpectedFailure(rv);
 
-    if(!IS_PROTO_CLASS(protoJSObject->getClass()))
+    if(!IS_PROTO_CLASS(protoJSObject->getJSClass()))
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
     XPCWrappedNativeScope* scope =
@@ -2532,7 +2531,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     {
         JSObject *possibleOuter = objectscope->GetGlobalJSObject();
-        OBJ_TO_INNER_OBJECT(aJSContext, possibleOuter);
+        Innerize(aJSContext, &possibleOuter);
         if(!possibleOuter)
             return NS_ERROR_FAILURE;
 
@@ -2844,38 +2843,7 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    printf("Dumping 0x%p. Value tag is %u.\n", (void *) val, (PRUint32) JSVAL_TAG(val));
-    if(JSVAL_IS_NULL(val)) {
-        printf("Value is null\n");
-    }
-    else if(JSVAL_IS_OBJECT(val)) {
-        printf("Value is an object\n");
-        JSObject* obj = JSVAL_TO_OBJECT(val);
-        DumpJSObject(obj);
-    }
-    else if(JSVAL_IS_NUMBER(val)) {
-        printf("Value is a number: ");
-        if(JSVAL_IS_INT(val))
-          printf("Integer %i\n", JSVAL_TO_INT(val));
-        else if(JSVAL_IS_DOUBLE(val))
-          printf("Floating-point value %f\n", *JSVAL_TO_DOUBLE(val));
-    }
-    else if(JSVAL_IS_STRING(val)) {
-        printf("Value is a string: ");
-        JSString* string = JSVAL_TO_STRING(val);
-        char* bytes = JS_GetStringBytes(string);
-        printf("<%s>\n", bytes);
-    }
-    else if(JSVAL_IS_BOOLEAN(val)) {
-        printf("Value is boolean: ");
-        printf(JSVAL_TO_BOOLEAN(val) ? "true" : "false");
-    }
-    else if(JSVAL_IS_VOID(val)) {
-        printf("Value is undefined\n");
-    }
-    else {
-        printf("No idea what this value is.\n");
-    }
+    js::DumpValue(js::Valueify(val));
 }
 JS_END_EXTERN_C
 

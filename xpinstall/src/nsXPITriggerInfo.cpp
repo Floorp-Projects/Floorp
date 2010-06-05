@@ -195,7 +195,7 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
 
     if ( mCx && !JSVAL_IS_NULL(mCbval) ) {
         JS_BeginRequest(mCx);
-        JS_RemoveRoot( mCx, &mCbval );
+        JS_RemoveValueRoot(mCx, &mCbval );
         JS_EndRequest(mCx);
     }
 
@@ -219,7 +219,7 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 
     if ( !JSVAL_IS_NULL(mCbval) ) {
         JS_BeginRequest(mCx);
-        JS_AddRoot( mCx, &mCbval );
+        JS_AddValueRoot(mCx, &mCbval );
         JS_EndRequest(mCx);
     }
 }
@@ -227,7 +227,7 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 XPITriggerEvent::~XPITriggerEvent()
 {
     JS_BeginRequest(cx);
-    JS_RemoveRoot(cx, &cbval);
+    JS_RemoveValueRoot(cx, &cbval);
     JS_EndRequest(cx);
 }
 
@@ -328,7 +328,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 
             event->cbval    = mCbval;
             JS_BeginRequest(event->cx);
-            JS_AddNamedRoot(event->cx, &event->cbval,
+            JS_AddNamedValueRoot(event->cx, &event->cbval,
                             "XPITriggerEvent::cbval" );
             JS_EndRequest(event->cx);
 
