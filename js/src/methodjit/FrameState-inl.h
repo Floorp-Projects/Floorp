@@ -458,9 +458,18 @@ FrameState::dup()
 }
 
 inline void
+FrameState::dup2()
+{
+    FrameEntry *lhs = peek(-2);
+    FrameEntry *rhs = peek(-1);
+    pushCopyOf(indexOfFe(lhs));
+    pushCopyOf(indexOfFe(rhs));
+}
+
+inline void
 FrameState::pushLocal(uint32 n)
 {
-    pushCopyOf(localIndex(n));
+    pushCopyOf(indexOfFe(getLocal(n)));
 }
 
 } /* namspace mjit */
