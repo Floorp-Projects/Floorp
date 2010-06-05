@@ -131,6 +131,35 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
     return NS_OK;
 }
 
+#define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
+
+class FontPrefsObserver : public nsIObserver
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(FontPrefsObserver, nsIObserver)
+
+NS_IMETHODIMP
+FontPrefsObserver::Observe(nsISupports *aSubject,
+                           const char *aTopic,
+                           const PRUnichar *someData)
+{
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
+    if (!branch || someData == nsnull) {
+        NS_ERROR("font pref observer code broken");
+        return NS_ERROR_UNEXPECTED;
+    }
+    
+    gfxPlatform::GetPlatform()->FontsPrefsChanged(branch, 
+        NS_ConvertUTF16toUTF8(someData).get());
+
+    return NS_OK;
+}
+
+
 
 // this needs to match the list of pref font.default.xx entries listed in all.js!
 // the order *must* match the order in eFontPrefLang
@@ -169,6 +198,10 @@ static const char *gPrefLangNames[] = {
     "x-user-def"
 };
 
+gfxPlatform::gfxPlatform()
+{
+    mAllowDownloadableFonts = UNINITIALIZED_VALUE;
+}
 
 gfxPlatform*
 gfxPlatform::GetPlatform()
@@ -238,9 +271,14 @@ gfxPlatform::Init()
 
     /* Create and register our CMS Override observer. */
     gPlatform->overrideObserver = new SRGBOverrideObserver();
+    FontPrefsObserver *fontPrefObserver = new FontPrefsObserver();
+
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs)
+    if (prefs) {
         prefs->AddObserver(CMForceSRGBPrefName, gPlatform->overrideObserver, PR_TRUE);
+        prefs->AddObserver(GFX_DOWNLOADABLE_FONTS_ENABLED, fontPrefObserver, PR_FALSE);
+        prefs->AddObserver("gfx.font_rendering.", fontPrefObserver, PR_FALSE);
+    }
 
     return NS_OK;
 }
@@ -331,26 +369,28 @@ gfxPlatform::UpdateFontList()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
+PRBool 
+gfxPlatform::GetBoolPref(const char *aPref, PRBool aDefault)
+{
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+        PRBool allow;
+        nsresult rv = prefs->GetBoolPref(aPref, &allow);
+        if (NS_SUCCEEDED(rv))
+            return allow;
+    }
+
+    return aDefault;
+}
 
 PRBool
 gfxPlatform::DownloadableFontsEnabled()
 {
-    static PRBool initialized = PR_FALSE;
-    static PRBool allowDownloadableFonts = PR_FALSE;
-
-    if (initialized == PR_FALSE) {
-        initialized = PR_TRUE;
-        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefs) {
-            PRBool allow;
-            nsresult rv = prefs->GetBoolPref(GFX_DOWNLOADABLE_FONTS_ENABLED, &allow);
-            if (NS_SUCCEEDED(rv))
-                allowDownloadableFonts = allow;
-        }
+    if (mAllowDownloadableFonts == UNINITIALIZED_VALUE) {
+        mAllowDownloadableFonts = GetBoolPref(GFX_DOWNLOADABLE_FONTS_ENABLED, PR_FALSE);
     }
 
-    return allowDownloadableFonts;
+    return mAllowDownloadableFonts;
 }
 
 gfxFontEntry*
@@ -1047,7 +1087,7 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
             ch = SURROGATE_TO_UCS4(ch, aString[i+1]);
             surrogatePair = PR_TRUE;
         }
-        if (i > 0 && gc->Get(aString[i]) == nsIUGenCategory::kMark) {
+        if (i > 0 && gc->Get(ch) == nsIUGenCategory::kMark) {
             gfxTextRun::CompressedGlyph g;
             aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
         }
@@ -1058,3 +1098,15 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
         }
     }
 }
+
+void
+gfxPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
+{
+    NS_ASSERTION(aPref != nsnull, "null pref branch");
+    if (!strcmp(GFX_DOWNLOADABLE_FONTS_ENABLED, aPref)) {
+        mAllowDownloadableFonts = UNINITIALIZED_VALUE;
+    }
+}
+
+
+

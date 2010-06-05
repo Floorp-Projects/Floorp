@@ -221,14 +221,16 @@ protected:
   nsIView* mInnerView;
   PRPackedBool mIsInline;
   PRPackedBool mPostedReflowCallback;
-  bool mDidCreateDoc;
+  PRPackedBool mDidCreateDoc;
+  PRPackedBool mCallingShow;
 };
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
   : nsLeafFrame(aContext)
   , mIsInline(PR_FALSE)
   , mPostedReflowCallback(PR_FALSE)
-  , mDidCreateDoc(false)
+  , mDidCreateDoc(PR_FALSE)
+  , mCallingShow(PR_FALSE)
 {
 }
 
@@ -327,19 +329,31 @@ inline PRInt32 ConvertOverflow(PRUint8 aOverflow)
 void
 nsSubDocumentFrame::ShowViewer()
 {
+  if (mCallingShow) {
+    return;
+  }
+
   if (!PresContext()->IsDynamic()) {
     // We let the printing code take care of loading the document; just
     // create a widget for it to use
     (void) CreateViewAndWidget(eContentTypeContent);
   } else {
-    nsFrameLoader* frameloader = FrameLoader();
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
       nsIntSize margin = GetMarginAttributes();
       const nsStyleDisplay* disp = GetStyleDisplay();
-      mDidCreateDoc = frameloader->Show(margin.width, margin.height,
-                                        ConvertOverflow(disp->mOverflowX),
-                                        ConvertOverflow(disp->mOverflowY),
-                                        this);
+      nsWeakFrame weakThis(this);
+      mCallingShow = PR_TRUE;
+      PRBool didCreateDoc =
+        frameloader->Show(margin.width, margin.height,
+                          ConvertOverflow(disp->mOverflowX),
+                          ConvertOverflow(disp->mOverflowY),
+                          this);
+      if (!weakThis.IsAlive()) {
+        return;
+      }
+      mCallingShow = PR_FALSE;
+      mDidCreateDoc = didCreateDoc;
     }
   }
 }
@@ -825,7 +839,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
 void
 nsSubDocumentFrame::HideViewer()
 {
-  if (mFrameLoader && mDidCreateDoc)
+  if (mFrameLoader && (mDidCreateDoc || mCallingShow))
     mFrameLoader->Hide();
 }
 
@@ -882,8 +896,8 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
   }
 
   nsSubDocumentFrame* other = static_cast<nsSubDocumentFrame*>(aOther);
-  if (!mFrameLoader || !mDidCreateDoc || !other->mFrameLoader ||
-      !other->mDidCreateDoc) {
+  if (!mFrameLoader || !mDidCreateDoc || mCallingShow ||
+      !other->mFrameLoader || !other->mDidCreateDoc) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -898,20 +912,25 @@ void
 nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
 {
   nsSubDocumentFrame* other = static_cast<nsSubDocumentFrame*>(aOther);
+  nsWeakFrame weakThis(this);
+  nsWeakFrame weakOther(aOther);
   ShowViewer();
   other->ShowViewer();
 
   // Now make sure we reflow both frames, in case their contents
   // determine their size.
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
-  other->PresContext()->PresShell()->
-    FrameNeedsReflow(other, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
-
   // And repaint them, for good measure, in case there's nothing
   // interesting that happens during reflow.
-  InvalidateOverflowRect();
-  other->InvalidateOverflowRect();
+  if (weakThis.IsAlive()) {
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+    InvalidateOverflowRect();
+  }
+  if (weakOther.IsAlive()) {
+    other->PresContext()->PresShell()->
+      FrameNeedsReflow(other, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+    other->InvalidateOverflowRect();
+  }
 }
 
 nsIView*

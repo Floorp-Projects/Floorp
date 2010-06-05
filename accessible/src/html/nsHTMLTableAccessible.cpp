@@ -335,7 +335,7 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
       nsCOMPtr<nsIDOMNode> headerCellNode;
       for (PRUint32 idx = 0; idx < count; idx++) {
         headerCellNode = do_QueryElementAt(headerCellElms, idx, &rv);
-        nsRefPtr<nsAccessible> headerCell =
+        nsAccessible *headerCell =
           GetAccService()->GetAccessibleInWeakShell(headerCellNode, mWeakShell);
 
         if (headerCell &&
@@ -343,7 +343,7 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
              nsAccUtils::Role(headerCell) == nsIAccessibleRole::ROLE_ROWHEADER ||
              aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells &&
              nsAccUtils::Role(headerCell) == nsIAccessibleRole::ROLE_COLUMNHEADER))
-          headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell.get()),
+          headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
                                      PR_FALSE);
       }
     }
@@ -738,9 +738,9 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
 
       if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
           startColIndex == columnIndex && isSelected) {
-        nsRefPtr<nsAccessible> cell =
+        nsAccessible *cell =
           GetAccService()->GetAccessibleInWeakShell(cellElement, mWeakShell);
-        selCells->AppendElement(static_cast<nsIAccessible*>(cell.get()), PR_FALSE);
+        selCells->AppendElement(static_cast<nsIAccessible*>(cell), PR_FALSE);
       }
     }
   }
@@ -911,10 +911,10 @@ nsHTMLTableAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   nsresult rv = GetCellAt(aRow, aColumn, *getter_AddRefs(cellElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<nsAccessible> cellAcc =
+  nsAccessible *cell =
     GetAccService()->GetAccessibleInWeakShell(cellElement, mWeakShell);
-  if (cellAcc)
-    CallQueryInterface(cellAcc, aTableCellAccessible);
+  if (cell)
+    CallQueryInterface(cell, aTableCellAccessible);
 
   return NS_OK;
 }

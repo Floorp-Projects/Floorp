@@ -1300,12 +1300,13 @@ void nsDocLoader::FireOnStateChange(nsIWebProgress *aProgress,
    */
   nsCOMPtr<nsIWebProgressListener> listener;
   PRInt32 count = mListenerInfoList.Count();
+  PRInt32 notifyMask = (aStateFlags >> 16) & nsIWebProgress::NOTIFY_STATE_ALL;
 
   while (--count >= 0) {
     nsListenerInfo *info;
 
     info = static_cast<nsListenerInfo*>(mListenerInfoList.SafeElementAt(count));
-    if (!info || !(info->mNotifyMask & (aStateFlags >>16))) {
+    if (!info || !(info->mNotifyMask & notifyMask)) {
       continue;
     }
 

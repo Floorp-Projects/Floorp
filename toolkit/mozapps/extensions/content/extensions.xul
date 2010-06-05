@@ -96,7 +96,7 @@
 
   <hbox flex="1">
     <!-- left pane -->
-    <vbox id="right-pane">
+    <vbox id="left-pane">
 
       <!-- category list -->
       <richlistbox id="categories" flex="1">

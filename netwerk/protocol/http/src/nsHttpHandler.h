@@ -104,6 +104,7 @@ public:
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
     PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
+    PRUint8        GetQoSBits()              { return mQoSBits; }
     
     PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
@@ -274,6 +275,8 @@ private:
     // intended to protect the user against spoofing attempts that use
     // the userpass field of the URL to obscure the actual origin server.
     PRUint8  mPhishyUserPassLength;
+
+    PRUint8  mQoSBits;
 
     PRPackedBool mPipeliningOverSSL;
 

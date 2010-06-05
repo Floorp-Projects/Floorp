@@ -54,6 +54,19 @@ LIBRARY_NAME	= mozalloc
 FORCE_SHARED_LIB= 1
 DIST_INSTALL 	= 1
 
+ifdef MOZ_MEMORY
+ifneq (,$(findstring mozalloc,$(WRAP_MALLOC_LIB)))
+EXTRA_DSO_LDOPTS += $(DIST)/lib/libjemalloc.a
+WRAP_MALLOC_LIB=
+WRAP_MALLOC_CFLAGS=
+DEFINES += -DWRAP_MALLOC
+CSRCS = wraps.c
+ifeq (,$(filter-out Linux,$(OS_TARGET)))
+EXTRA_DSO_LDOPTS += -lpthread
+endif
+endif
+endif
+
 ifeq (,$(filter-out WINCE,$(OS_ARCH)))
 # mozalloc gets its allocation methods from the shunt, which gets their 
 # implementation by direcly linking with jemalloc.obj

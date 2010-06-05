@@ -198,23 +198,24 @@ menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
 
 /* ::::: checked menuitems ::::: */
 
-menuitem[checked="true"] > .menu-iconic-left,
+:not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left,
 :not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left {
   -moz-margin-start: -15px;
   -moz-padding-start: 15px;
   background: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 10, 11, 0) bottom left no-repeat transparent;
 }
 
-menuitem[checked="true"] > .menu-iconic-left:-moz-locale-dir(rtl),
+:not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left:-moz-locale-dir(rtl),
 :not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left:-moz-locale-dir(rtl) {
   background-position: bottom right;
 }
 
-menuitem[checked="true"][_moz-menuactive="true"] > .menu-iconic-left,
+:not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"] > .menu-iconic-left,
 :not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"] > .menu-iconic-left {
   background-image: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 20, 11, 10);
 }
 
+menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,
 menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
   content: '\2713'; /* a checkmark */
   display: block;

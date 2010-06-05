@@ -81,10 +81,15 @@ extensions/talkback@mozilla.org/components/qfaservices.xpt
 extensions/talkback@mozilla.org/install.rdf
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
+greprefs/all.js
+greprefs/security-prefs.js
+greprefs/xpinstall.js
 install.rdf
 modules/JSON.jsm
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
+res/arrow.gif
+res/arrowd.gif
 res/broken-image.gif
 res/broken-image.png
 res/charsetData.properties
@@ -699,9 +704,6 @@ xpicleanup@BIN_SUFFIX@
   components/xultmpl.xpt
   components/zipwriter.xpt
   extensions/inspector@mozilla.org/chrome/chromelist.txt
-  greprefs/all.js
-  greprefs/security-prefs.js
-  greprefs/xpinstall.js
   init.d/README
   libwidget.rsrc
   plugins/Default Plugin.plugin/Contents/Info.plist

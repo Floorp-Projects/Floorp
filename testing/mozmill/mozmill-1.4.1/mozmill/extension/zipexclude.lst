@@ -1,0 +1,3 @@
+*.svn*
+*.DS_Store*
+zipexclude.lst

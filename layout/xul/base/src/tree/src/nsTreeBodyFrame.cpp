@@ -1549,8 +1549,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
       currX += mIndentation*level;
     remainingWidth -= mIndentation*level;
 
-    if (isRTL && aX > currX + remainingWidth ||
-        !isRTL && aX < currX) {
+    if ((isRTL && aX > currX + remainingWidth) ||
+        (!isRTL && aX < currX)) {
       // The user clicked within the indentation.
       return nsCSSAnonBoxes::moztreecell;
     }

@@ -88,6 +88,9 @@ PRLogModuleInfo* gFTPLog = nsnull;
 #define IDLE_TIMEOUT_PREF     "network.ftp.idleConnectionTimeout"
 #define IDLE_CONNECTION_LIMIT 8 /* TODO pref me */
 
+#define QOS_DATA_PREF         "network.ftp.data.qos"
+#define QOS_CONTROL_PREF      "network.ftp.control.qos"
+
 nsFtpProtocolHandler *gFtpHandler = nsnull;
 
 //-----------------------------------------------------------------------------
@@ -95,6 +98,8 @@ nsFtpProtocolHandler *gFtpHandler = nsnull;
 nsFtpProtocolHandler::nsFtpProtocolHandler()
     : mIdleTimeout(-1)
     , mSessionId(0)
+    , mControlQoSBits(0x00)
+    , mDataQoSBits(0x00)
 {
 #if defined(PR_LOGGING)
     if (!gFTPLog)
@@ -134,6 +139,21 @@ nsFtpProtocolHandler::Init()
 
         rv = branch->AddObserver(IDLE_TIMEOUT_PREF, this, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
+
+	PRInt32 val;
+	rv = branch->GetIntPref(QOS_DATA_PREF, &val);
+	if (NS_SUCCEEDED(rv))
+	    mDataQoSBits = (PRUint8) NS_CLAMP(val, 0, 0xff);
+
+	rv = branch->AddObserver(QOS_DATA_PREF, this, PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = branch->GetIntPref(QOS_CONTROL_PREF, &val);
+	if (NS_SUCCEEDED(rv))
+	    mControlQoSBits = (PRUint8) NS_CLAMP(val, 0, 0xff);
+
+	rv = branch->AddObserver(QOS_CONTROL_PREF, this, PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
     }
 
     nsCOMPtr<nsIObserverService> observerService =
@@ -184,6 +204,8 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
                              nsIURI **result)
 {
     nsCAutoString spec(aSpec);
+    spec.Trim(" \t\n\r"); // Match NS_IsAsciiWhitespace instead of HTML5
+
     char *fwdPtr = spec.BeginWriting();
 
     // now unescape it... %xx reduced inline to resulting character
@@ -378,10 +400,18 @@ nsFtpProtocolHandler::Observe(nsISupports *aSubject,
             NS_ERROR("no prefbranch");
             return NS_ERROR_UNEXPECTED;
         }
-        PRInt32 timeout;
-        nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &timeout);
+        PRInt32 val;
+        nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &val);
         if (NS_SUCCEEDED(rv))
-            mIdleTimeout = timeout;
+            mIdleTimeout = val;
+
+	rv = branch->GetIntPref(QOS_DATA_PREF, &val);
+	if (NS_SUCCEEDED(rv))
+	    mDataQoSBits = (PRUint8) NS_CLAMP(val, 0, 0xff);
+
+	rv = branch->GetIntPref(QOS_CONTROL_PREF, &val);
+	if (NS_SUCCEEDED(rv))
+	    mControlQoSBits = (PRUint8) NS_CLAMP(val, 0, 0xff);
     } else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
         ClearAllConnections();
     } else if (!strcmp(aTopic, "net:clear-active-logins")) {

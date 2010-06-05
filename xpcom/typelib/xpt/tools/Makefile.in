@@ -60,6 +60,10 @@ endif
 
 LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
 
+ifdef WRAP_MALLOC_CFLAGS
+LIBS		+= -lmozalloc
+endif
+
 USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk

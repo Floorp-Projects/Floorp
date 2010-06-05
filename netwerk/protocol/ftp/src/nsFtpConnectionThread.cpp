@@ -1473,6 +1473,8 @@ nsFtpState::R_pasv() {
         if (NS_FAILED(rv))
             return FTP_ERROR;
         mDataTransport = strans;
+
+        strans->SetQoSBits(gFtpHandler->GetDataQoSBits());
         
         LOG(("FTP:(%x) created DT (%s:%x)\n", this, host.get(), port));
         

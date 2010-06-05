@@ -47,10 +47,6 @@ MODULE = xulapp
 LIBRARY_NAME = xulapp_s
 LIBXUL_LIBRARY = 1
 
-
-
-
-
 FORCE_STATIC_LIB = 1
 
 XPIDLSRCS = \
@@ -78,7 +74,7 @@ CPPSRCS += nsSplashScreenDummy.cpp
 endif
 endif
 
-DEFINES += -DIMPL_XREAPI
+DEFINES += -DIMPL_XREAPI -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
 
 ifndef BUILD_STATIC_LIBS
 CPPSRCS += nsEmbedFunctions.cpp
@@ -131,6 +127,10 @@ endif
 
 ifdef MOZ_X11
 CPPSRCS += nsX11ErrorHandler.cpp
+endif
+
+ifeq ($(OS_TARGET),Android)
+CPPSRCS += nsAndroidStartup.cpp
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)

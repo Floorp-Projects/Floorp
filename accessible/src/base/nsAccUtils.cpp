@@ -552,46 +552,46 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
   // Get accessible from selection's focus DOM point (the DOM point where
   // selection is ended).
 
-  nsCOMPtr<nsIDOMNode> focusNode;
-  aSelection->GetFocusNode(getter_AddRefs(focusNode));
-  if (!focusNode)
+  nsCOMPtr<nsIDOMNode> focusDOMNode;
+  aSelection->GetFocusNode(getter_AddRefs(focusDOMNode));
+  if (!focusDOMNode)
     return nsnull;
 
   PRInt32 focusOffset = 0;
   aSelection->GetFocusOffset(&focusOffset);
 
-  nsCOMPtr<nsIDOMNode> resultNode =
+  nsCOMPtr<nsINode> focusNode(do_QueryInterface(focusDOMNode));
+  nsCOMPtr<nsINode> resultNode =
     nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
 
   // Get text accessible containing the result node.
   while (resultNode) {
     // Make sure to get the correct starting node for selection events inside
     // XBL content trees.
-    nsCOMPtr<nsIDOMNode> relevantNode;
-    GetAccService()->GetRelevantContentNodeFor(resultNode, 
-                                               getter_AddRefs(relevantNode));
-    if (relevantNode)
-      resultNode.swap(relevantNode);
+    nsCOMPtr<nsIDOMNode> resultDOMNode(do_QueryInterface(resultNode));
+    nsCOMPtr<nsIDOMNode> relevantDOMNode;
+    GetAccService()->GetRelevantContentNodeFor(resultDOMNode,
+                                               getter_AddRefs(relevantDOMNode));
+    if (relevantDOMNode) {
+      resultNode = do_QueryInterface(relevantDOMNode);
+      resultDOMNode.swap(relevantDOMNode);
+    }
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(resultNode);
-    if (!content || !content->IsNodeOfType(nsINode::eTEXT)) {
-      nsCOMPtr<nsIAccessible> accessible;
-      GetAccService()->GetAccessibleFor(resultNode, getter_AddRefs(accessible));
+    if (!resultNode || !resultNode->IsNodeOfType(nsINode::eTEXT)) {
+      nsAccessible *accessible = GetAccService()->GetAccessible(resultDOMNode);
       if (accessible) {
         nsIAccessibleText *textAcc = nsnull;
         CallQueryInterface(accessible, &textAcc);
         if (textAcc) {
           if (aNode)
-            NS_ADDREF(*aNode = resultNode);
+            resultDOMNode.forget(aNode);
 
           return textAcc;
         }
       }
     }
 
-    nsCOMPtr<nsIDOMNode> parentNode;
-    resultNode->GetParentNode(getter_AddRefs(parentNode));
-    resultNode.swap(parentNode);
+    resultNode = resultNode->GetParent();
   }
 
   NS_NOTREACHED("No nsIAccessibleText for selection change event!");
@@ -820,15 +820,13 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
 }
 #endif
 
-PRInt32
-nsAccUtils::TextLength(nsIAccessible *aAccessible)
+PRUint32
+nsAccUtils::TextLength(nsAccessible *aAccessible)
 {
   if (!IsText(aAccessible))
     return 1;
-  
-  nsRefPtr<nsAccessNode> accNode = do_QueryObject(aAccessible);
-  
-  nsIFrame *frame = accNode->GetFrame();
+
+  nsIFrame *frame = aAccessible->GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
     // Ensure that correct text length is calculated (with non-rendered
     // whitespace chars not counted).
@@ -837,18 +835,21 @@ nsAccUtils::TextLength(nsIAccessible *aAccessible)
       PRUint32 length;
       nsresult rv = nsHyperTextAccessible::
         ContentToRenderedOffset(frame, content->TextLength(), &length);
-      return NS_SUCCEEDED(rv) ? static_cast<PRInt32>(length) : -1;
+      if (NS_FAILED(rv)) {
+        NS_NOTREACHED("Failed to get rendered offset!");
+        return 0;
+      }
+
+      return length;
     }
   }
-  
+
   // For list bullets (or anything other accessible which would compute its own
   // text. They don't have their own frame.
   // XXX In the future, list bullets may have frame and anon content, so 
   // we should be able to remove this at that point
-  nsRefPtr<nsAccessible> acc(do_QueryObject(aAccessible));
-
   nsAutoString text;
-  acc->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
+  aAccessible->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
   return text.Length();
 }
 

@@ -9,18 +9,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<!-- When the page is loaded, we wait 2 seconds before launching the tests
-     because the focus events may not be finished when the page is loaded so
-     we have to wait or launch the tests when a focus events is thrown.
-     However, if autofocus is ignored, there will be no focus event so we can't
-     rely on that. -->
-<body onload="setTimeout(runTests, 2000);">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=546995">Mozilla Bug 546995</a>
 <p id="display"></p>
 <script type="application/javascript">
   document.body.focus();
   is(document.activeElement, document.body,
-     "The document body should have te focus");
+     "The document body should have the focus");
 </script>
 <div id='content'>
   <input id='i' autofocus>
@@ -32,13 +27,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
 
 SimpleTest.waitForExplicitFinish();
 
-function runTests()
-{
-  is(document.activeElement, document.getElementById('i'),
-     "The input element should be focused");
+document.getElementById('i').addEventListener("focus", function(aEvent) {
+  aEvent.target.removeEventListener("focus", arguments.callee, false);
 
+  ok(true, "The input element has been focused");
   SimpleTest.finish();
-}
+  }, false);
 
 </script>
 </pre>

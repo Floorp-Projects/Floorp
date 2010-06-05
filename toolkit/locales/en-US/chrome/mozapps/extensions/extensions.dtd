@@ -86,10 +86,8 @@
 
 
 <!ENTITY showMore.label                       "Show more">
-<!ENTITY showMore.accesskey                   "m">
 <!ENTITY showMore.tooltip                     "Show more details">
 <!ENTITY showLess.label                       "Show less">
-<!ENTITY showLess.accesskey                   "l">
 <!ENTITY showLess.tooltip                     "Show fewer details">
 
 <!ENTITY search.filter.label                  "Show:">
