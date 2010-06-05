@@ -73,6 +73,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
+#include "jsscriptinlines.h"
 
 #include "prmjtime.h"
 
