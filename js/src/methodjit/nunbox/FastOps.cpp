@@ -91,6 +91,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
         break;
       default:
         JS_NOT_REACHED("wat");
+        return;
     }
 
     /* We only want to handle integers here. */
