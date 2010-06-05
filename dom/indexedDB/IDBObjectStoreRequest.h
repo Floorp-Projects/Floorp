@@ -230,7 +230,7 @@ public:
   GetKeyPathValueFromJSON(const nsAString& aJSON,
                           const nsAString& aKeyPath,
                           JSContext** aCx,
-                          nsAString& aValue);
+                          Key& aValue);
 
   bool TransactionIsOpen() const
   {

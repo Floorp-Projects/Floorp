@@ -71,7 +71,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 struct IndexUpdateInfo
 {
   IndexInfo info;
-  nsString value;
+  Key value;
 };
 
 END_INDEXEDDB_NAMESPACE
@@ -411,7 +411,7 @@ nsresult
 IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
                                                const nsAString& aKeyPath,
                                                JSContext** aCx,
-                                               nsAString& aValue)
+                                               Key& aValue)
 {
   NS_ASSERTION(!aJSON.IsEmpty(), "Empty JSON!");
   NS_ASSERTION(!aKeyPath.IsEmpty(), "Empty keyPath!");
@@ -443,8 +443,31 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
                                value.addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = json->EncodeFromJSVal(value.addr(), *aCx, aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (JSVAL_IS_VOID(value.value())) {
+    // Not sure what to do if the object doesn't have a value for our index...
+    aValue = Key::UNSETKEY;
+  }
+  else if (JSVAL_IS_INT(value.value())) {
+    aValue = JSVAL_TO_INT(value.value());
+  }
+  else if (JSVAL_IS_DOUBLE(value.value())) {
+    aValue = *JSVAL_TO_DOUBLE(value.value());
+  }
+  else if (JSVAL_IS_STRING(value.value())) {
+    JSString* str = JSVAL_TO_STRING(value.value());
+    size_t len = JS_GetStringLength(str);
+    if (len) {
+      const PRUnichar* chars =
+        reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+      aValue = nsDependentString(chars, len);
+    }
+    else {
+      aValue = EmptyString();
+    }
+  }
+  else {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   return NS_OK;
 }
@@ -561,8 +584,6 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
     cloneObj = JSVAL_TO_OBJECT(clone.value());
   }
 
-  nsCOMPtr<nsIJSON> json(new nsJSON());
-
   for (PRUint32 indexesIndex = 0; indexesIndex < indexesCount; indexesIndex++) {
     const IndexInfo& indexInfo = objectStoreInfo->indexes[indexesIndex];
 
@@ -575,14 +596,32 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
                                  &keyPathValue);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    nsString value;
+    Key value;
     if (JSVAL_IS_VOID(keyPathValue)) {
-      // Not sure what to do if the object doesn't have a value for our index...
-      NS_WARNING("Using an empty string for an index match failure!");
+      // No value here, continue.
+      continue;
+    }
+
+    if (JSVAL_IS_INT(keyPathValue)) {
+      value = JSVAL_TO_INT(keyPathValue);
+    }
+    else if (JSVAL_IS_DOUBLE(keyPathValue)) {
+      value = *JSVAL_TO_DOUBLE(keyPathValue);
+    }
+    else if (JSVAL_IS_STRING(keyPathValue)) {
+      JSString* str = JSVAL_TO_STRING(keyPathValue);
+      size_t len = JS_GetStringLength(str);
+      if (len) {
+        const PRUnichar* chars =
+          reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+        value = nsDependentString(chars, len);
+      }
+      else {
+        value = EmptyString();
+      }
     }
     else {
-      rv = json->EncodeFromJSVal(&keyPathValue, cx, value);
-      NS_ENSURE_SUCCESS(rv, rv);
+      return NS_ERROR_INVALID_ARG;
     }
 
     IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
@@ -592,6 +631,7 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
     updateInfo->value = value;
   }
 
+  nsCOMPtr<nsIJSON> json(new nsJSON());
   rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -921,6 +961,11 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
   }
   else {
     aDirection = nsIIDBCursor::NEXT;
+  }
+
+  if (aDirection != nsIIDBCursor::NEXT) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   if (aPreload) {
@@ -1383,7 +1428,20 @@ AddHelper::UpdateIndexes(mozIStorageConnection* aConnection,
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), updateInfo.value);
+    NS_NAMED_LITERAL_CSTRING(value, "value");
+
+    if (updateInfo.value.IsInt()) {
+      rv = stmt->BindInt64ByName(value, updateInfo.value.IntValue());
+    }
+    else if (updateInfo.value.IsString()) {
+      rv = stmt->BindStringByName(value, updateInfo.value.StringValue());
+    }
+    else if (updateInfo.value.IsUnset()) {
+      rv = stmt->BindStringByName(value, updateInfo.value.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->Execute();
@@ -1630,6 +1688,9 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       rv = stmt->GetString(0, pair->key.ToString());
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
     }
+    else {
+      NS_NOTREACHED("Bad SQLite type!");
+    }
 
 #ifdef DEBUG
     {
@@ -1768,14 +1829,28 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     rv = stmt->GetString(1, json);
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-    nsString value;
+    Key key;
     JSContext* cx = nsnull;
     rv = IDBObjectStoreRequest::GetKeyPathValueFromJSON(json, mKeyPath, &cx,
-                                                        value);
+                                                        key);
     // XXX this should be a constraint error maybe?
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-    rv = insertStmt->BindStringByName(NS_LITERAL_CSTRING("value"), value);
+    NS_NAMED_LITERAL_CSTRING(value, "value");
+
+    if (key.IsUnset()) {
+      continue;
+    }
+
+    if (key.IsInt()) {
+      rv = insertStmt->BindInt64ByName(value, key.IntValue());
+    }
+    else if (key.IsString()) {
+      rv = insertStmt->BindStringByName(value, key.StringValue());
+    }
+    else {
+      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+    }
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
     rv = insertStmt->Execute();
