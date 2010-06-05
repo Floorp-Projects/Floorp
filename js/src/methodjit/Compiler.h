@@ -140,6 +140,7 @@ class Compiler
     void jsop_globalinc(JSOp op, uint32 index);
     void jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_neg();
+    void jsop_objtostr();
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \

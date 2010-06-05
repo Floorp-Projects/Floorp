@@ -706,6 +706,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           END_CASE(JSOP_TRACE)
 
+          BEGIN_CASE(JSOP_OBJTOSTR)
+            jsop_objtostr();
+          END_CASE(JSOP_OBJTOSTR)
+
           BEGIN_CASE(JSOP_GETGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
           END_CASE(JSOP_GETGLOBAL)
