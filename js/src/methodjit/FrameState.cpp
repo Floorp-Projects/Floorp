@@ -470,31 +470,31 @@ FrameState::ownRegForData(FrameEntry *fe)
 }
 
 void
-FrameState::pushLocal(uint32 n)
+FrameState::pushCopyOf(uint32 index)
 {
-    FrameEntry *localFe = getLocal(n);
+    FrameEntry *backing = entryFor(index);
     FrameEntry *fe = rawPush();
     fe->resetUnsynced();
-    if (localFe->isConstant()) {
-        fe->setConstant(Jsvalify(localFe->getValue()));
+    if (backing->isConstant()) {
+        fe->setConstant(Jsvalify(backing->getValue()));
     } else {
-        if (localFe->isTypeKnown())
-            fe->setTypeTag(localFe->getTypeTag());
+        if (backing->isTypeKnown())
+            fe->setTypeTag(backing->getTypeTag());
         else
             fe->type.invalidate();
         fe->data.invalidate();
-        if (localFe->isCopy()) {
-            localFe = localFe->copyOf();
-            fe->setCopyOf(localFe);
+        if (backing->isCopy()) {
+            backing = backing->copyOf();
+            fe->setCopyOf(backing);
         } else {
-            fe->setCopyOf(localFe);
-            localFe->setCopied();
+            fe->setCopyOf(backing);
+            backing->setCopied();
         }
 
         /* Maintain tracker ordering guarantees for copies. */
-        JS_ASSERT(localFe->isCopied());
-        if (fe->trackerIndex() < localFe->trackerIndex())
-            swapInTracker(fe, localFe);
+        JS_ASSERT(backing->isCopied());
+        if (fe->trackerIndex() < backing->trackerIndex())
+            swapInTracker(fe, backing);
     }
 }
 
