@@ -820,8 +820,7 @@ proxy_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-proxy_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                    uintN *attrsp)
+proxy_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     AutoDescriptor desc(cx);
     if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, &desc))
@@ -831,8 +830,7 @@ proxy_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
 }
 
 static JSBool
-proxy_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                    uintN *attrsp)
+proxy_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     /* Lookup the current property descriptor so we have setter/getter/value. */
     AutoDescriptor desc(cx);
@@ -883,12 +881,6 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
     }
 }
 
-static void
-proxy_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
-{
-    JS_ASSERT(obj->isProxy());
-}
-
 static JSType
 proxy_TypeOf_obj(JSContext *cx, JSObject *obj)
 {
@@ -901,15 +893,23 @@ static const JSObjectMap SharedObjectProxyMap(&js_ObjectProxyObjectOps, JSObject
 
 JSObjectOps js_ObjectProxyObjectOps = {
     &SharedObjectProxyMap,
-    proxy_LookupProperty, proxy_DefineProperty,
-    proxy_GetProperty,    proxy_SetProperty,
-    proxy_GetAttributes,  proxy_SetAttributes,
-    proxy_DeleteProperty, js_DefaultValue,
-    js_Enumerate,         js_CheckAccess,
-    proxy_TypeOf_obj,     proxy_TraceObject,
-    NULL,                 proxy_DropProperty,
-    NULL,                 NULL,
-    js_HasInstance,       NULL
+    proxy_LookupProperty,
+    proxy_DefineProperty,
+    proxy_GetProperty,
+    proxy_SetProperty,
+    proxy_GetAttributes,
+    proxy_SetAttributes,
+    proxy_DeleteProperty,
+    js_DefaultValue,
+    js_Enumerate,
+    js_CheckAccess,
+    proxy_TypeOf_obj,
+    proxy_TraceObject,
+    NULL,   /* thisObject */
+    NULL,   /* call */
+    NULL,   /* construct */
+    js_HasInstance,
+    NULL
 };
 
 static JSObjectOps *
@@ -987,15 +987,23 @@ static const JSObjectMap SharedFunctionProxyMap(&js_FunctionProxyObjectOps, JSOb
 
 JSObjectOps js_FunctionProxyObjectOps = {
     &SharedFunctionProxyMap,
-    proxy_LookupProperty, proxy_DefineProperty,
-    proxy_GetProperty,    proxy_SetProperty,
-    proxy_GetAttributes,  proxy_SetAttributes,
-    proxy_DeleteProperty, js_DefaultValue,
-    js_Enumerate,         js_CheckAccess,
-    proxy_TypeOf_fun,     proxy_TraceObject,
-    NULL,                 proxy_DropProperty,
-    proxy_Call,           proxy_Construct,
-    proxy_HasInstance,    NULL
+    proxy_LookupProperty,
+    proxy_DefineProperty,
+    proxy_GetProperty,
+    proxy_SetProperty,
+    proxy_GetAttributes,
+    proxy_SetAttributes,
+    proxy_DeleteProperty,
+    js_DefaultValue,
+    js_Enumerate,
+    js_CheckAccess,
+    proxy_TypeOf_fun,
+    proxy_TraceObject,
+    NULL,   /* thisObject */
+    proxy_Call,
+    proxy_Construct,
+    proxy_HasInstance,
+    NULL
 };
 
 static JSObjectOps *

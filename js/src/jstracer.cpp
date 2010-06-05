@@ -7861,23 +7861,23 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
         LIns *obj_ins;
         CHECK_STATUS_A(traverseScopeChain(chainHead, head_ins, obj, obj_ins));
 
-        JSScopeProperty* sprop = (JSScopeProperty*) prop;
-
         if (obj2 != obj) {
             obj2->dropProperty(cx, prop);
             RETURN_STOP_A("prototype property");
         }
+
+        JSScopeProperty* sprop = (JSScopeProperty*) prop;
         if (!isValidSlot(obj->scope(), sprop)) {
-            obj2->dropProperty(cx, prop);
+            JS_UNLOCK_OBJ(cx, obj2);
             return ARECORD_STOP;
         }
         if (!lazilyImportGlobalSlot(sprop->slot)) {
-            obj2->dropProperty(cx, prop);
+            JS_UNLOCK_OBJ(cx, obj2);
             RETURN_STOP_A("lazy import of global slot failed");
         }
         vp = &obj->getSlotRef(sprop->slot);
         ins = get(vp);
-        obj2->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, obj2);
         nr.tracked = true;
         return ARECORD_CONTINUE;
     }
@@ -7885,7 +7885,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
     if (obj == obj2 && obj->getClass() == &js_CallClass) {
         AbortableRecordingStatus status =
             InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
-        obj->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, obj);
         return status;
     }
 
@@ -9205,10 +9205,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             }
 
             if (prop) {
-                if (!obj2->isNative()) {
-                    obj2->dropProperty(cx, prop);
+                if (!obj2->isNative())
                     RETURN_STOP_A("property found on non-native object");
-                }
                 entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2,
                                                    (JSScopeProperty*) prop);
                 JS_ASSERT(entry);

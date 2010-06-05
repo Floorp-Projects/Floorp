@@ -4687,41 +4687,29 @@ xml_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-FoundProperty(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-              JSBool *foundp)
-{
-    if (!prop)
-        return HasProperty(cx, obj, ID_TO_VALUE(id), foundp);
-
-    *foundp = JS_TRUE;
-    return JS_TRUE;
-}
-
-static JSBool
-xml_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                  uintN *attrsp)
+xml_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
+    if (!HasProperty(cx, obj, ID_TO_VALUE(id), &found))
+        return false;
 
-    if (!FoundProperty(cx, obj, id, prop, &found))
-        return JS_FALSE;
     *attrsp = found ? JSPROP_ENUMERATE : 0;
     return JS_TRUE;
 }
 
 static JSBool
-xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                  uintN *attrsp)
+xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
+    if (!HasProperty(cx, obj, ID_TO_VALUE(id), &found))
+        return false;
 
-    if (!FoundProperty(cx, obj, id, prop, &found))
-        return JS_FALSE;
     if (found) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_SET_XML_ATTRS);
+        return false;
     }
-    return !found;
+    return true;
 }
 
 static JSBool
@@ -5047,15 +5035,23 @@ out:
 /* Use NULL for objectMap so XML objects satisfy obj->isNative() tests. */
 JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     NULL,
-    xml_lookupProperty,         xml_defineProperty,
-    xml_getProperty,            xml_setProperty,
-    xml_getAttributes,          xml_setAttributes,
-    xml_deleteProperty,         xml_defaultValue,
-    xml_enumerate,              js_CheckAccess,
-    xml_typeOf,                 js_TraceObject,
-    NULL,                       NULL,
-    NULL,                       NULL,
-    xml_hasInstance,            xml_clear
+    xml_lookupProperty,
+    xml_defineProperty,
+    xml_getProperty,
+    xml_setProperty,
+    xml_getAttributes,
+    xml_setAttributes,
+    xml_deleteProperty,
+    xml_defaultValue,
+    xml_enumerate,
+    js_CheckAccess,
+    xml_typeOf,
+    js_TraceObject,
+    NULL,   /* thisObject */
+    NULL,   /* call */
+    NULL,   /* construct */
+    xml_hasInstance,
+    xml_clear
 };
 
 static JSObjectOps *
@@ -7054,7 +7050,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     sprop = (JSScopeProperty *) prop;
     JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
     cval = pobj->getSlotMT(cx, sprop->slot);
-    pobj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, pobj);
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
     /* Set default settings. */
