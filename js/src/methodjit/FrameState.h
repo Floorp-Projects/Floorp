@@ -108,6 +108,7 @@ class FrameState
         }
 
         FrameEntry * operator [](uint32 n) const {
+            JS_ASSERT(n < nentries);
             return entries[n];
         }
 
@@ -341,7 +342,6 @@ class FrameState
      */
     uint32 stackDepth() const { return sp - spBase; }
     uint32 frameDepth() const { return stackDepth() + script->nfixed; }
-    //uint32 tos() const { return sp - base; }
     inline FrameEntry *tosFe() const;
 
 #ifdef DEBUG
@@ -362,6 +362,7 @@ class FrameState
     inline void syncData(const FrameEntry *fe, Address to, Assembler &masm) const;
     inline FrameEntry *getLocal(uint32 slot);
     inline void forgetRegs(FrameEntry *fe);
+    inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
 
     /*
      * "Uncopies" the backing store of a FrameEntry that has been copied. The
