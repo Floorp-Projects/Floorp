@@ -1604,3 +1604,12 @@ stubs::Mod(VMFrame &f)
     }
 }
 
+JSObject *JS_FASTCALL
+stubs::NewArray(VMFrame &f, uint32 len)
+{
+    JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len, JS_TRUE);
+    if (!obj)
+        THROWV(NULL);
+    return obj;
+}
+
