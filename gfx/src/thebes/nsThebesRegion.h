@@ -67,12 +67,13 @@ public:
     PRBool ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD GetRects (nsRegionRectSet **aRects);
     NS_IMETHOD FreeRects (nsRegionRectSet *aRects);
+    nsIntRegion GetUnderlyingRegion() const;
     NS_IMETHOD GetNativeRegion (void *&aRegion) const;
     NS_IMETHOD GetRegionComplexity (nsRegionComplexity &aComplexity) const;
     NS_IMETHOD GetNumRects (PRUint32 *aRects) const;
 
 protected:
-    nsRegion mRegion;
+    nsIntRegion mRegion;
 };
 
 #endif
