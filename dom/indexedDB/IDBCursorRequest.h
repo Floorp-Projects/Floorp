@@ -49,6 +49,7 @@ class nsIRunnable;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+class IDBIndexRequest;
 class IDBRequest;
 class IDBObjectStoreRequest;
 class IDBTransactionRequest;
@@ -57,6 +58,12 @@ struct KeyValuePair
 {
   Key key;
   nsString value;
+};
+
+struct KeyKeyPair
+{
+  Key key;
+  Key value;
 };
 
 class ContinueRunnable;
@@ -79,14 +86,43 @@ public:
          PRUint16 aDirection,
          nsTArray<KeyValuePair>& aData);
 
-  
+  static
+  already_AddRefed<IDBCursorRequest>
+  Create(IDBRequest* aRequest,
+         IDBTransactionRequest* aTransaction,
+         IDBIndexRequest* aIndex,
+         PRUint16 aDirection,
+         nsTArray<KeyKeyPair>& aData);
+
+  static
+  already_AddRefed<IDBCursorRequest>
+  Create(IDBRequest* aRequest,
+         IDBTransactionRequest* aTransaction,
+         IDBIndexRequest* aIndex,
+         PRUint16 aDirection,
+         nsTArray<KeyValuePair>& aData);
+
+  enum Type
+  {
+    OBJECTSTORE = 0,
+    INDEX,
+    INDEXOBJECT
+  };
+
 protected:
   IDBCursorRequest();
   ~IDBCursorRequest();
 
+  static
+  already_AddRefed<IDBCursorRequest>
+  CreateCommon(IDBRequest* aRequest,
+               IDBTransactionRequest* aTransaction,
+               PRUint16 aDirection);
+
   nsRefPtr<IDBRequest> mRequest;
   nsRefPtr<IDBTransactionRequest> mTransaction;
   nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBIndexRequest> mIndex;
 
   PRUint16 mDirection;
 
@@ -96,7 +132,10 @@ protected:
   JSRuntime* mJSRuntime;
 
   PRUint32 mDataIndex;
+
+  Type mType;
   nsTArray<KeyValuePair> mData;
+  nsTArray<KeyKeyPair> mKeyData;
 };
 
 END_INDEXEDDB_NAMESPACE

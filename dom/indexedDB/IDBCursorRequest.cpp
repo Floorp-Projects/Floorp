@@ -54,6 +54,7 @@
 
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
+#include "IDBIndexRequest.h"
 #include "IDBObjectStoreRequest.h"
 #include "IDBTransactionRequest.h"
 #include "Savepoint.h"
@@ -139,24 +140,95 @@ IDBCursorRequest::Create(IDBRequest* aRequest,
                          PRUint16 aDirection,
                          nsTArray<KeyValuePair>& aData)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aRequest, "Null pointer!");
-  NS_ASSERTION(aTransaction, "Null pointer!");
   NS_ASSERTION(aObjectStore, "Null pointer!");
 
-  nsRefPtr<IDBCursorRequest> cursor(new IDBCursorRequest());
-  cursor->mRequest = aRequest;
-  cursor->mTransaction = aTransaction;
+  nsRefPtr<IDBCursorRequest> cursor =
+    IDBCursorRequest::CreateCommon(aRequest, aTransaction, aDirection);
+
   cursor->mObjectStore = aObjectStore;
-  cursor->mDirection = aDirection;
 
   if (!cursor->mData.SwapElements(aData)) {
     NS_ERROR("Out of memory?!");
     return nsnull;
   }
-  NS_ASSERTION(!cursor->mData.IsEmpty(), "Should ever have an empty set!");
+  NS_ASSERTION(!cursor->mData.IsEmpty(), "Should never have an empty set!");
 
   cursor->mDataIndex = cursor->mData.Length() - 1;
+  cursor->mType = OBJECTSTORE;
+
+  return cursor.forget();
+}
+
+// static
+already_AddRefed<IDBCursorRequest>
+IDBCursorRequest::Create(IDBRequest* aRequest,
+                         IDBTransactionRequest* aTransaction,
+                         IDBIndexRequest* aIndex,
+                         PRUint16 aDirection,
+                         nsTArray<KeyKeyPair>& aData)
+{
+  NS_ASSERTION(aIndex, "Null pointer!");
+
+  nsRefPtr<IDBCursorRequest> cursor =
+    IDBCursorRequest::CreateCommon(aRequest, aTransaction, aDirection);
+
+  cursor->mObjectStore = aIndex->ObjectStore();
+  cursor->mIndex = aIndex;
+
+  if (!cursor->mKeyData.SwapElements(aData)) {
+    NS_ERROR("Out of memory?!");
+    return nsnull;
+  }
+  NS_ASSERTION(!cursor->mKeyData.IsEmpty(), "Should never have an empty set!");
+
+  cursor->mDataIndex = cursor->mKeyData.Length() - 1;
+  cursor->mType = INDEX;
+
+  return cursor.forget();
+}
+
+// static
+already_AddRefed<IDBCursorRequest>
+IDBCursorRequest::Create(IDBRequest* aRequest,
+                         IDBTransactionRequest* aTransaction,
+                         IDBIndexRequest* aIndex,
+                         PRUint16 aDirection,
+                         nsTArray<KeyValuePair>& aData)
+{
+  NS_ASSERTION(aIndex, "Null pointer!");
+
+  nsRefPtr<IDBCursorRequest> cursor =
+    IDBCursorRequest::CreateCommon(aRequest, aTransaction, aDirection);
+
+  cursor->mObjectStore = aIndex->ObjectStore();
+  cursor->mIndex = aIndex;
+
+  if (!cursor->mData.SwapElements(aData)) {
+    NS_ERROR("Out of memory?!");
+    return nsnull;
+  }
+  NS_ASSERTION(!cursor->mData.IsEmpty(), "Should never have an empty set!");
+
+  cursor->mDataIndex = cursor->mData.Length() - 1;
+  cursor->mType = INDEXOBJECT;
+
+  return cursor.forget();
+}
+
+// static
+already_AddRefed<IDBCursorRequest>
+IDBCursorRequest::CreateCommon(IDBRequest* aRequest,
+                               IDBTransactionRequest* aTransaction,
+                               PRUint16 aDirection)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aRequest, "Null pointer!");
+  NS_ASSERTION(aTransaction, "Null pointer!");
+
+  nsRefPtr<IDBCursorRequest> cursor(new IDBCursorRequest());
+  cursor->mRequest = aRequest;
+  cursor->mTransaction = aTransaction;
+  cursor->mDirection = aDirection;
 
   return cursor.forget();
 }
@@ -166,7 +238,8 @@ IDBCursorRequest::IDBCursorRequest()
   mCachedValue(JSVAL_VOID),
   mHaveCachedValue(false),
   mJSRuntime(nsnull),
-  mDataIndex(0)
+  mDataIndex(0),
+  mType(OBJECTSTORE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -212,7 +285,9 @@ IDBCursorRequest::GetKey(nsIVariant** aKey)
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const Key& key = mData[mDataIndex].key;
+    const Key& key = mType == INDEX ?
+                     mKeyData[mDataIndex].key :
+                     mData[mDataIndex].key;
     NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
     if (key.IsString()) {
@@ -242,9 +317,41 @@ IDBCursorRequest::GetKey(nsIVariant** aKey)
 }
 
 NS_IMETHODIMP
-IDBCursorRequest::GetValue(nsIVariant** /* aValue */)
+IDBCursorRequest::GetValue(nsIVariant** aValue)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsresult rv;
+
+  if (mType == INDEX) {
+    nsCOMPtr<nsIWritableVariant> variant =
+      do_CreateInstance(NS_VARIANT_CONTRACTID);
+    if (!variant) {
+      NS_ERROR("Couldn't create variant!");
+      return NS_ERROR_FAILURE;
+    }
+
+    const Key& value = mKeyData[mDataIndex].value;
+    NS_ASSERTION(!value.IsUnset() && !value.IsNull(), "Bad key!");
+    if (value.IsInt()) {
+      rv = variant->SetAsInt64(value.IntValue());
+    }
+    else if (value.IsString()) {
+      rv = variant->SetAsAString(value.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = variant->SetWritable(PR_FALSE);;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsIWritableVariant* result;
+    variant.forget(&result);
+    *aValue = result;
+    return NS_OK;
+  }
 
   NS_WARNING("Using a slow path for GetValue! Fix this now!");
 
@@ -252,7 +359,7 @@ IDBCursorRequest::GetValue(nsIVariant** /* aValue */)
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
 
   nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  rv = xpc->GetCurrentNativeCallContext(&cc);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
 
@@ -271,7 +378,7 @@ IDBCursorRequest::GetValue(nsIVariant** /* aValue */)
       JSRuntime* rt = JS_GetRuntime(cx);
 
       JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                    "IDBCursorRequest::mCachedValue");
+                                   "IDBCursorRequest::mCachedValue");
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       mJSRuntime = rt;
@@ -313,6 +420,11 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
     }
   }
 
+  if (mType != OBJECTSTORE && !key.IsUnset()) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
   NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
@@ -332,6 +444,11 @@ IDBCursorRequest::Update(nsIVariant* aValue,
                          nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (mType != OBJECTSTORE) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   if (!mObjectStore->TransactionIsOpen()) {
     return NS_ERROR_UNEXPECTED;
@@ -474,6 +591,11 @@ NS_IMETHODIMP
 IDBCursorRequest::Remove(nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (mType != OBJECTSTORE) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   if (!mObjectStore->TransactionIsOpen()) {
     return NS_ERROR_UNEXPECTED;
@@ -630,7 +752,12 @@ ContinueRunnable::Run()
   mCursor->mCachedValue = JSVAL_VOID;
   mCursor->mHaveCachedValue = false;
 
-  mCursor->mData.RemoveElementAt(mCursor->mDataIndex);
+  if (mCursor->mType == IDBCursorRequest::INDEX) {
+    mCursor->mKeyData.RemoveElementAt(mCursor->mDataIndex);
+  }
+  else {
+    mCursor->mData.RemoveElementAt(mCursor->mDataIndex);
+  }
   if (mCursor->mDataIndex) {
     mCursor->mDataIndex--;
   }
@@ -642,13 +769,22 @@ ContinueRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  if (mCursor->mData.IsEmpty()) {
+  PRBool empty = mCursor->mType == IDBCursorRequest::INDEX ?
+                 mCursor->mKeyData.IsEmpty() :
+                 mCursor->mData.IsEmpty();
+
+  if (empty) {
     rv = variant->SetAsEmpty();
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     if (!mKey.IsUnset()) {
       NS_ASSERTION(!mKey.IsNull(), "Huh?!");
+
+      if (mCursor->mType != IDBCursorRequest::OBJECTSTORE) {
+        NS_NOTYETIMPLEMENTED("Implement me!");
+        return NS_ERROR_NOT_IMPLEMENTED;
+      }
 
       NS_WARNING("Using a slow O(n) search for continue(key), do something "
                  "smarter!");
