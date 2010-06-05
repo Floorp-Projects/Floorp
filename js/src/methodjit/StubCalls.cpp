@@ -624,6 +624,139 @@ stubs::Name(VMFrame &f, uint32 index)
 }
 
 void JS_FASTCALL
+stubs::GetElem(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    Value lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    const Value *copyFrom;
+
+    JSObject *obj;
+    jsid id;
+    int i;
+
+    if (lval.isString() && rval.isInt32()) {
+        Value retval;
+        JSString *str = lval.asString();
+        i = rval.asInt32();
+
+        if ((size_t)i >= str->length())
+            THROW();
+
+        str = JSString::getUnitString(cx, str, (size_t)i);
+        if (!str)
+            THROW();
+        f.regs.sp[-2].setString(str);
+        return;
+    }
+
+    obj = ValueToObject(cx, &lval);
+    if (!obj)
+        THROW();
+
+    if (rval.isInt32()) {
+        if (obj->isDenseArray()) {
+            jsuint idx = jsuint(rval.asInt32());
+            
+            if (idx < obj->getArrayLength() &&
+                idx < obj->getDenseArrayCapacity()) {
+                copyFrom = obj->addressOfDenseArrayElement(idx);
+                if (!copyFrom->isMagic())
+                    goto end_getelem;
+                /* Otherwise, fall to getProperty(). */
+            }
+        } else if (obj->isArguments()
+#ifdef JS_TRACER
+                   && !GetArgsPrivateNative(obj)
+#endif
+                  ) {
+            uint32 arg = uint32(rval.asInt32());
+
+            if (arg < obj->getArgsLength()) {
+                JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
+                if (afp) {
+                    copyFrom = &afp->argv[arg];
+                    goto end_getelem;
+                }
+
+                copyFrom = obj->addressOfArgsElement(arg);
+                if (!copyFrom->isMagic())
+                    goto end_getelem;
+                /* Otherwise, fall to getProperty(). */
+            }
+        }
+        id = INT_TO_JSID(rval.asInt32());
+
+    } else {
+        if (!js_InternNonIntElementId(cx, obj, rval, &id))
+            THROW();
+    }
+
+    if (!obj->getProperty(cx, id, &rval))
+        THROW();
+    copyFrom = &rval;
+
+  end_getelem:
+    f.regs.sp[-2] = *copyFrom;
+}
+
+void JS_FASTCALL
+stubs::SetElem(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    Value &objval = regs.sp[-3];
+    Value &idval  = regs.sp[-2];
+    Value retval  = regs.sp[-1];
+    
+    JSObject *obj;
+    jsid id;
+
+    obj = ValueToObject(cx, &objval);
+    if (!obj)
+        THROW();
+
+    /* jsops.cpp:FETCH_ELEMENT_ID */
+    int32_t i_;
+    if (ValueFitsInInt32(idval, &i_)) {
+        id = INT_TO_JSID(i_);
+    } else if (!js_InternNonIntElementId(cx, obj, idval, &id, &regs.sp[-2])) {
+        THROW();
+    }
+
+    if (obj->isDenseArray() && JSID_IS_INT(id)) {
+        jsuint length = obj->getDenseArrayCapacity();
+        jsint i = JSID_TO_INT(id);
+        
+        if ((jsuint)i < length) {
+            if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
+                if (js_PrototypeHasIndexedProperties(cx, obj))
+                    goto mid_setelem;
+                if ((jsuint)i >= obj->getArrayLength())
+                    obj->setDenseArrayLength(i + 1);
+                obj->incDenseArrayCountBy(1);
+            }
+            obj->setDenseArrayElement(i, regs.sp[-1]);
+            goto end_setelem;
+        }
+    }
+
+  mid_setelem:
+    if (!obj->setProperty(cx, id, &regs.sp[-1]))
+        THROW();
+
+  end_setelem:
+    /* :FIXME: Moving the assigned object into the lowest stack slot
+     * is a temporary hack. What we actually want is an implementation
+     * of popAfterSet() that allows popping more than one value;
+     * this logic can then be handled in Compiler.cpp. */
+    regs.sp[-3] = retval;
+}
+
+void JS_FASTCALL
 stubs::CallName(VMFrame &f, uint32 index)
 {
     JSObject *obj = NameOp(f, index);
