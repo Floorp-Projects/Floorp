@@ -160,7 +160,7 @@ FrameState::evictSomething(uint32 mask)
 void
 FrameState::forgetEverything()
 {
-    sync(masm);
+    syncAndKill(Registers::AvailRegs);
 
     for (uint32 i = 0; i < tracker.nentries; i++)
         base[indexOfFe(tracker[i])] = NULL;
