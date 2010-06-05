@@ -1621,3 +1621,13 @@ stubs::This(VMFrame &f)
     f.regs.sp[0] = f.fp->thisv;
 }
 
+void JS_FASTCALL
+stubs::Neg(VMFrame &f)
+{
+    double d;
+    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
+        THROW();
+    d = -d;
+    f.regs.sp[-1].setNumber(d);
+}
+

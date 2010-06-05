@@ -81,6 +81,7 @@ void JS_FASTCALL Sub(VMFrame &f);
 void JS_FASTCALL Mul(VMFrame &f);
 void JS_FASTCALL Div(VMFrame &f);
 void JS_FASTCALL Mod(VMFrame &f);
+void JS_FASTCALL Neg(VMFrame &f);
 
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 
