@@ -1631,3 +1631,15 @@ stubs::Neg(VMFrame &f)
     f.regs.sp[-1].setNumber(d);
 }
 
+void JS_FASTCALL
+stubs::ObjToStr(VMFrame &f)
+{
+    const Value &ref = f.regs.sp[-1];
+    if (ref.isObject()) {
+        JSString *str = js_ValueToString(f.cx, ref);
+        if (!str)
+            THROW();
+        f.regs.sp[-1].setString(str);
+    }
+}
+

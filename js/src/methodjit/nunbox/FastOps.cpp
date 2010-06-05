@@ -493,3 +493,12 @@ mjit::Compiler::jsop_neg()
     frame.pushSynced();
 }
 
+void
+mjit::Compiler::jsop_objtostr()
+{
+    prepareStubCall();
+    stubCall(stubs::ObjToStr, Uses(1), Defs(1));
+    frame.pop();
+    frame.pushSynced();
+}
+
