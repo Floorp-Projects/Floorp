@@ -1713,6 +1713,13 @@ JS_AddObjectRoot(JSContext *cx, JSObject **rp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_AddGCThingRoot(JSContext *cx, void **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, NULL);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_AddNamedValueRoot(JSContext *cx, jsval *vp, const char *name)
 {
     CHECK_REQUEST(cx);
@@ -1734,21 +1741,10 @@ JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_AddNamedValueRootRT(JSRuntime *rt, jsval *vp, const char *name)
+JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name)
 {
-    return js_AddRootRT(rt, Valueify(vp), name);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_AddNamedStringRootRT(JSRuntime *rt, JSString **rp, const char *name)
-{
-    return js_AddGCThingRootRT(rt, (void **)rp, name);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_AddNamedObjectRootRT(JSRuntime *rt, JSObject **rp, const char *name)
-{
-    return js_AddGCThingRootRT(rt, (void **)rp, name);
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, name);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1773,21 +1769,10 @@ JS_RemoveObjectRoot(JSContext *cx, JSObject **rp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp)
+JS_RemoveGCThingRoot(JSContext *cx, void **rp)
 {
-    return js_RemoveRoot(rt, (void *)vp);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp)
-{
-    return js_RemoveRoot(rt, (void *)rp);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp)
-{
-    return js_RemoveRoot(rt, (void *)rp);
+    CHECK_REQUEST(cx);
+    return js_RemoveRoot(cx->runtime, (void *)rp);
 }
 
 JS_PUBLIC_API(void)
@@ -1938,10 +1923,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                : "string";
         break;
 
-      case JSTRACE_DOUBLE:
-        name = "double";
-        break;
-
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
         name = "xml";
@@ -1990,10 +1971,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
 
           case JSTRACE_STRING:
             js_PutEscapedString(buf, bufsize, (JSString *)thing, 0);
-            break;
-
-          case JSTRACE_DOUBLE:
-            JS_snprintf(buf, bufsize, "%g", *(jsdouble *)thing);
             break;
 
 #if JS_HAS_XML_SUPPORT
@@ -2540,11 +2517,12 @@ JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
     return ValueToId(cx, Valueify(v), idp);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
     *vp = ID_TO_JSVAL(id);
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2612,7 +2590,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-    return js_HasInstance(cx, obj, Valueify(&v), bp);
+    return js_HasInstance(cx, obj, Valueify(v), bp);
 }
 
 JS_PUBLIC_API(void *)

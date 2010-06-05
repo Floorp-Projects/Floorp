@@ -788,7 +788,7 @@ typedef JSBool
  * *bp otherwise.
  */
 typedef JSBool
-(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 /*
  * Deprecated function type for JSClass.mark. All new code should define
@@ -842,10 +842,10 @@ extern JSMarkOp js_WrongTypeForClassTracer;
  * JS_TraceChildren on the passed thing. In this case the callback must be
  * prepared to deal with cycles in the traversal graph.
  *
- * kind argument is one of JSTRACE_OBJECT, JSTRACE_DOUBLE, JSTRACE_STRING or
- * a tag denoting internal implementation-specific traversal kind. In the
- * latter case the only operations on thing that the callback can do is to call
- * JS_TraceChildren or DEBUG-only JS_PrintTraceThingInfo.
+ * kind argument is one of JSTRACE_OBJECT, JSTRACE_STRING or a tag denoting
+ * internal implementation-specific traversal kind. In the latter case the only
+ * operations on thing that the callback can do is to call JS_TraceChildren or
+ * DEBUG-only JS_PrintTraceThingInfo.
  */
 typedef void
 (* JSTraceCallback)(JSTracer *trc, void *thing, uint32 kind);
@@ -878,7 +878,7 @@ typedef uint32
  *
  */
 typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+(* JSEqualityOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 /*
  * A generic type for functions mapping an object to another object, or null
@@ -1068,14 +1068,14 @@ typedef JSBool
 (* NewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                    Value *statep, jsval *idp);
 typedef JSBool
-(* HasInstanceOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
+(* HasInstanceOp)(JSContext *cx, JSObject *obj, Value v, JSBool *bp);
 typedef JSBool
 (* CheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
                   Value *vp);
 typedef JSObjectOps *
 (* GetObjectOps)(JSContext *cx, Class *clasp);
 typedef JSBool
-(* EqualityOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
+(* EqualityOp)(JSContext *cx, JSObject *obj, Value v, JSBool *bp);
 
 /*
  * Since jsval and Value are layout-compatible, pointers to otherwise-identical

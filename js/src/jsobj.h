@@ -274,6 +274,10 @@ struct JSObject {
         return clasp;
     }
 
+    JSClass *getJSClass() const {
+        return Jsvalify(clasp);
+    }
+
     bool hasClass(const js::Class *c) const {
         return c == clasp;
     }
@@ -1159,7 +1163,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
              js::Value *rval);
 
 extern JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
+js_HasInstance(JSContext *cx, JSObject *obj, js::Value v, JSBool *bp);
 
 extern JSBool
 js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,

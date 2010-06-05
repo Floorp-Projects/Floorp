@@ -826,7 +826,7 @@ END_CASE(JSOP_BITAND)
 #define EXTENDED_EQUALITY_OP(OP)                                              \
     if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&             \
         ((ExtendedClass *)clasp)->equality) {                                 \
-        if (!((ExtendedClass *)clasp)->equality(cx, l, &rval, &cond))         \
+        if (!((ExtendedClass *)clasp)->equality(cx, l, rval, &cond))          \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
@@ -4012,7 +4012,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     }
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!obj->map->ops->hasInstance(cx, obj, &lref, &cond))
+    if (!obj->map->ops->hasInstance(cx, obj, lref, &cond))
         goto error;
     regs.sp--;
     regs.sp[-1].setBoolean(cond);
