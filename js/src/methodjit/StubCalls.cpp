@@ -1613,3 +1613,11 @@ stubs::NewArray(VMFrame &f, uint32 len)
     return obj;
 }
 
+void JS_FASTCALL
+stubs::This(VMFrame &f)
+{
+    if (!f.fp->getThisObject(f.cx))
+        THROW();
+    f.regs.sp[0] = f.fp->thisv;
+}
+
