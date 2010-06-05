@@ -561,6 +561,19 @@ mjit::Compiler::generateMethod()
             frame.pop();
           END_CASE(JSOP_POP)
 
+          BEGIN_CASE(JSOP_NEW)
+          {
+            JaegerSpew(JSpew_Insns, " --- NEW OPERATOR --- \n");
+            frame.forgetEverything();
+            uint32 argc = GET_ARGC(PC);
+            masm.move(Imm32(argc), Registers::ArgReg1);
+            dispatchCall(stubs::New);
+            frame.popn(argc + 2);
+            frame.pushSynced();
+            JaegerSpew(JSpew_Insns, " --- END NEW OPERATOR --- \n");
+          }
+          END_CASE(JSOP_NEW)
+
           BEGIN_CASE(JSOP_GETARG)
           BEGIN_CASE(JSOP_CALLARG)
           {

@@ -1062,6 +1062,46 @@ stubs::Call(VMFrame &f, uint32 argc)
     return NULL;
 }
 
+void * JS_FASTCALL
+stubs::New(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
+    Value *vp = f.regs.sp - (argc + 2);
+
+    if (vp[0].isFunObj()) {
+        JSObject *funobj = &vp[0].asFunObj();
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        if (fun->isInterpreted()) {
+            jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+            if (!funobj->getProperty(cx, id, &vp[1]))
+                THROWV(NULL);
+
+            JSObject *proto = vp[1].isObject() ? &vp[1].asObject() : NULL;
+            JSObject *obj2 = NewObject(cx, &js_ObjectClass, proto, funobj->getParent());
+            if (!obj2)
+                THROWV(NULL);
+
+            if (fun->u.i.script->isEmpty()) {
+                vp[0].setNonFunObj(*obj2);
+                f.regs.sp = vp + 1;
+                return NULL;
+            }
+
+            vp[1].setNonFunObj(*obj2);
+            void *pret;
+            if (!InlineCall(f, JSFRAME_CONSTRUCTING, &pret, argc))
+                THROWV(NULL);
+            return pret;
+        }
+    }
+
+    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc), JS_FALSE))
+        THROWV(NULL);
+
+    f.regs.sp = vp + 1;
+    return NULL;
+}
+
 void JS_FASTCALL
 stubs::DefFun(VMFrame &f, uint32 index)
 {
