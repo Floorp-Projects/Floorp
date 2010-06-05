@@ -795,7 +795,7 @@ public:
                                               gfxContext* aThebesContext);
 
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
-                                                   nsIRegion* aRegion,
+                                                   nsIntRegion* aRegion,
                                                    nsIntPoint& aPoint,
                                                    nsIntRect* aScreenRect);
 
@@ -1030,7 +1030,7 @@ protected:
   already_AddRefed<gfxASurface>
   PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                       nsISelection* aSelection,
-                      nsIRegion* aRegion,
+                      nsIntRegion* aRegion,
                       nsRect aArea,
                       nsIntPoint& aPoint,
                       nsIntRect* aScreenRect);
@@ -5497,7 +5497,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
 already_AddRefed<gfxASurface>
 PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                                nsISelection* aSelection,
-                               nsIRegion* aRegion,
+                               nsIntRegion* aRegion,
                                nsRect aArea,
                                nsIntPoint& aPoint,
                                nsIntRect* aScreenRect)
@@ -5568,8 +5568,13 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   deviceContext->CreateRenderingContextInstance(*getter_AddRefs(rc));
   rc->Init(deviceContext, surface);
 
-  if (aRegion)
-    rc->SetClipRegion(*aRegion, nsClipCombine_kReplace);
+  if (aRegion) {
+    // Convert aRegion from CSS pixels to dev pixels
+    nsIntRegion region =
+      aRegion->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel())
+        .ToOutsidePixels(pc->AppUnitsPerDevPixel());
+    rc->SetClipRegion(region, nsClipCombine_kReplace);
+  }
 
   if (resize)
     rc->Scale(scale, scale);
@@ -5616,7 +5621,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 
 already_AddRefed<gfxASurface>
 PresShell::RenderNode(nsIDOMNode* aNode,
-                      nsIRegion* aRegion,
+                      nsIntRegion* aRegion,
                       nsIntPoint& aPoint,
                       nsIntRect* aScreenRect)
 {
@@ -5643,9 +5648,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
 
   if (aRegion) {
     // combine the area with the supplied region
-    nsIntRect rrectPixels;
-    aRegion->GetBoundingBox(&rrectPixels.x, &rrectPixels.y,
-                            &rrectPixels.width, &rrectPixels.height);
+    nsIntRect rrectPixels = aRegion->GetBounds();
 
     nsRect rrect = rrectPixels.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
     area.IntersectRect(area, rrect);
@@ -5655,7 +5658,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
       return nsnull;
 
     // move the region so that it is offset from the topleft corner of the surface
-    aRegion->Offset(-rrectPixels.x + (rrectPixels.x - pc->AppUnitsToDevPixels(area.x)),
+    aRegion->MoveBy(-rrectPixels.x + (rrectPixels.x - pc->AppUnitsToDevPixels(area.x)),
                     -rrectPixels.y + (rrectPixels.y - pc->AppUnitsToDevPixels(area.y)));
   }
 
