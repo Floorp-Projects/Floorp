@@ -352,6 +352,10 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_IFEQ)
 
+          BEGIN_CASE(JSOP_DUP)
+            frame.dup();
+          END_CASE(JSOP_DUP)
+
           BEGIN_CASE(JSOP_BITAND)
             jsop_bitop(op);
           END_CASE(JSOP_BITAND)

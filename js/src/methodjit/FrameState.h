@@ -338,6 +338,11 @@ class FrameState
     inline void unpinReg(RegisterID reg);
 
     /*
+     * Dups the top item on the stack.
+     */
+    inline void dup();
+
+    /*
      * Returns the current stack depth of the frame.
      */
     uint32 stackDepth() const { return sp - spBase; }
@@ -363,6 +368,8 @@ class FrameState
     inline FrameEntry *getLocal(uint32 slot);
     inline void forgetRegs(FrameEntry *fe);
     inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
+    inline uint32 localIndex(uint32 n);
+    void pushCopyOf(uint32 index);
 
     /*
      * "Uncopies" the backing store of a FrameEntry that has been copied. The
@@ -371,10 +378,6 @@ class FrameState
      * were moved to a copy.
      */
     void uncopy(FrameEntry *original);
-
-    uint32 localIndex(uint32 n) {
-        return nargs + n;
-    }
 
     FrameEntry *entryFor(uint32 index) const {
         JS_ASSERT(base[index]);
