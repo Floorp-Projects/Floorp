@@ -37,6 +37,23 @@
         { name: "weight", keyPath: "weight", unique: false }
       ];
 
+      const objectStoreDataNameSort = [
+        { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
+        { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
+        { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
+        { key: "237-23-7737", value: { name: "Pat", height: 65 } },
+        { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } },
+        { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } }
+      ];
+
+      const objectStoreDataWeightSort = [
+        { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
+        { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
+        { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } },
+        { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
+        { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
+      ];
+
       let request = indexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
@@ -116,6 +133,64 @@
       is(event.result.name, "Bob", "Correct name returned!");
       is(event.result.height, 60, "Correct height returned!");
       is(event.result.weight, 120, "Correct weight returned!");
+
+      let keyIndex = 0;
+
+      request = objectStore.index("name").openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      keyIndex = 0;
+
+      request = objectStore.index("weight").openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
+             "Correct key");
+          is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
+             "Correct value");
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
+             "Correct key");
+          is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
+             "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, objectStoreData.length - 1, "Saw all the expected keys");
 
       objectStore = db.objectStore(objectStoreName, READ_WRITE);
       request = objectStore.add({ name: "Bob", height: 62, weight: 170 },

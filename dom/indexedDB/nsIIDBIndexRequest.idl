@@ -51,16 +51,18 @@ interface nsIVariant;
 [scriptable, uuid(8c21dfc3-62fa-470e-bc92-7d115b0fac97)]
 interface nsIIDBIndexRequest : nsIIDBIndex
 {
+  [optional_argc]
+  nsIIDBRequest
+  openCursor([optional /* null */] in nsIIDBKeyRange range,
+             [optional /* nsIIDBCursor::NEXT */] in unsigned short direction,
+             [optional /* false */] in boolean preload);
+
+  [optional_argc]
   nsIIDBRequest
   openObjectCursor([optional /* null */] in nsIIDBKeyRange range,
                    [optional /* nsIIDBCursor::NEXT */]
                    in unsigned short direction,
                    [optional /* false */] in boolean preload);
-
-  nsIIDBRequest
-  openCursor([optional /* null */] in nsIIDBKeyRange range,
-             [optional /* nsIIDBCursor::NEXT */] in unsigned short direction,
-             [optional /* false */] in boolean preload);
 
   nsIIDBRequest
   getObject(in nsIVariant key);
