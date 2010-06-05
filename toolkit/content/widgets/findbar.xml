@@ -404,7 +404,8 @@
 
         // Make sure the FAYT keypress listener is attached by initializing the
         // browser property
-        setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
+        if (this.getAttribute("browserid"))
+          setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
       ]]></constructor>
 
       <destructor><![CDATA[

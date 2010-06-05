@@ -8,22 +8,34 @@ function test() {
   testWindow = OpenBrowserWindow();
   testWindow.addEventListener("load", function() {
     testWindow.removeEventListener("load", arguments.callee, true);
-    ok(true, "Load listener called");
     executeSoon(function() {
-      ok(!testWindow.gFindBarInitialized, "find bar is not yet initialized");
+      ok(true, "Load listener called");
       testWindow.gBrowser.selectedBrowser.addEventListener("pageshow", function () {
         ok(true, "Pageshow listener called");
         testWindow.gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
         waitForFocus(onFocus, testWindow.content);
       }, true);
-      testWindow.content.location = "data:text/html,<h1>A Page</h1>";
+      testWindow.content.location = "data:text/html,<h1 id='h1'>Select Me</h1>";
     });
   }, false);
 }
 
+function selectText() {
+  let elt = testWindow.content.document.getElementById("h1");
+  let selection = testWindow.content.getSelection();
+  let range = testWindow.content.document.createRange();
+  range.setStart(elt, 0);
+  range.setEnd(elt, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+
 function onFocus() {
-  EventUtils.synthesizeKey("/", {});
-  ok(testWindow.gFindBarInitialized, "find bar is now initialized");
+  ok(!testWindow.gFindBarInitialized, "find bar is not yet initialized");
+  selectText();
+  testWindow.gFindBar.onFindCommand();
+  ok(testWindow.gFindBar._findField.value == "Select Me", "Findbar is initialized with selection");
   testWindow.gFindBar.close();
   testWindow.close();
   finish();
