@@ -48,7 +48,7 @@ FrameState::addToTracker(uint32 index)
     JS_ASSERT(!base[index]);
     FrameEntry *fe = &entries[index];
     base[index] = fe;
-    fe->clear();
+    fe->track(tracker.nentries);
     tracker.add(fe);
     return fe;
 }
@@ -429,6 +429,19 @@ inline FrameEntry *
 FrameState::tosFe() const
 {
     return &entries[uint32(sp - base)];
+}
+
+inline void
+FrameState::swapInTracker(FrameEntry *lhs, FrameEntry *rhs)
+{
+    uint32 li = lhs->trackerIndex();
+    uint32 ri = rhs->trackerIndex();
+    JS_ASSERT(tracker[li] == lhs);
+    JS_ASSERT(tracker[ri] == rhs);
+    tracker.entries[ri] = lhs;
+    tracker.entries[li] = rhs;
+    lhs->index_ = ri;
+    rhs->index_ = li;
 }
 
 } /* namspace mjit */
