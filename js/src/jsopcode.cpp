@@ -371,8 +371,12 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_REGEXP:
         index = js_GetIndexFromBytecode(cx, script, pc, 0);
         if (type == JOF_ATOM) {
-            JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ATOM_TO_JSVAL(atom);
+            if (op == JSOP_DOUBLE) {
+                v = Jsvalify(script->getConst(index));
+            } else {
+                JS_GET_SCRIPT_ATOM(script, pc, index, atom);
+                v = ATOM_TO_JSVAL(atom);
+            }
         } else {
             if (type == JOF_OBJECT)
                 obj = script->getObject(index);
