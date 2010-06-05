@@ -1091,6 +1091,7 @@ nsHTMLInputElement::GetTextEditor()
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->GetEditor();
+  }
   return nsnull;
 }
 
@@ -1100,6 +1101,7 @@ nsHTMLInputElement::GetSelectionController()
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->GetSelectionController();
+  }
   return nsnull;
 }
 
@@ -1109,6 +1111,7 @@ nsHTMLInputElement::GetConstFrameSelection()
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->GetConstFrameSelection();
+  }
   return nsnull;
 }
 
@@ -1118,6 +1121,7 @@ nsHTMLInputElement::BindToFrame(nsTextControlFrame* aFrame)
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->BindToFrame(aFrame);
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -1136,6 +1140,7 @@ nsHTMLInputElement::CreateEditor()
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->PrepareEditor();
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -1145,6 +1150,7 @@ nsHTMLInputElement::GetRootEditorNode()
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->GetRootNode();
+  }
   return nsnull;
 }
 
@@ -1154,6 +1160,7 @@ nsHTMLInputElement::GetPlaceholderNode()
   nsTextEditorState *state = GetEditorState();
   if (state) {
     return state->GetPlaceholderNode();
+  }
   return nsnull;
 }
 
