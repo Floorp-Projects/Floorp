@@ -61,6 +61,7 @@
 #include "jsstrinlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
+#include "jsatominlines.h"
 
 #include "jsautooplen.h"
 
