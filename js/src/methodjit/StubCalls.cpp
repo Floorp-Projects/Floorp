@@ -1264,3 +1264,169 @@ stubs::NotEqual(VMFrame &f)
     return InlineEqualityOp(f, false, true);
 }
 
+static inline bool
+DefaultValue(VMFrame &f, JSType hint, Value &v, int n)
+{
+    JS_ASSERT(v.isObject());
+    if (!v.asObject().defaultValue(f.cx, hint, &f.regs.sp[n]))
+        return false;
+    v = f.regs.sp[n];
+    return true;
+}
+
+void JS_FASTCALL
+stubs::Add(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+    Value rval = regs.sp[-1];
+    Value lval = regs.sp[-2];
+
+    if (BothInt32(lval, rval)) {
+        int32_t l = lval.asInt32(), r = rval.asInt32();
+        int32_t sum = l + r;
+        regs.sp--;
+        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000)))
+            regs.sp[-1].setDouble(double(l) + double(r));
+        else
+            regs.sp[-1].setInt32(sum);
+    } else
+#if JS_HAS_XML_SUPPORT
+    if (lval.isNonFunObj() && lval.asObject().isXML() &&
+        rval.isNonFunObj() && rval.asObject().isXML()) {
+        if (!js_ConcatenateXML(cx, &lval.asObject(), &rval.asObject(), &rval))
+            THROW();
+        regs.sp--;
+        regs.sp[-1] = rval;
+    } else
+#endif
+    {
+        if (lval.isObject() && !DefaultValue(f, JSTYPE_VOID, lval, -2))
+            THROW();
+        if (rval.isObject() && !DefaultValue(f, JSTYPE_VOID, rval, -1))
+            THROW();
+        bool lIsString, rIsString;
+        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
+            JSString *lstr, *rstr;
+            if (lIsString) {
+                lstr = lval.asString();
+            } else {
+                lstr = js_ValueToString(cx, lval);
+                if (!lstr)
+                    THROW();
+                regs.sp[-2].setString(lstr);
+            }
+            if (rIsString) {
+                rstr = rval.asString();
+            } else {
+                rstr = js_ValueToString(cx, rval);
+                if (!rstr)
+                    THROW();
+                regs.sp[-1].setString(rstr);
+            }
+            JSString *str = js_ConcatStrings(cx, lstr, rstr);
+            if (!str)
+                THROW();
+            regs.sp--;
+            regs.sp[-1].setString(str);
+        } else {
+            double l, r;
+            if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
+                THROW();
+            l += r;
+            regs.sp--;
+            regs.sp[-1].setNumber(l);
+        }
+    }
+}
+
+
+void JS_FASTCALL
+stubs::Sub(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+    double d1, d2;
+    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
+        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+        THROW();
+    }
+    double d = d1 - d2;
+    regs.sp[-2].setNumber(d);
+}
+
+void JS_FASTCALL
+stubs::Mul(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+    double d1, d2;
+    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
+        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+        THROW();
+    }
+    double d = d1 * d2;
+    regs.sp[-2].setNumber(d);
+}
+
+void JS_FASTCALL
+stubs::Div(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSRuntime *rt = cx->runtime;
+    JSFrameRegs &regs = f.regs;
+
+    double d1, d2;
+    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
+        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+        THROW();
+    }
+    if (d2 == 0) {
+        const Value *vp;
+#ifdef XP_WIN
+        /* XXX MSVC miscompiles such that (NaN == 0) */
+        if (JSDOUBLE_IS_NaN(d2))
+            vp = &rt->NaNValue;
+        else
+#endif
+        if (d1 == 0 || JSDOUBLE_IS_NaN(d1))
+            vp = &rt->NaNValue;
+        else if (JSDOUBLE_IS_NEG(d1) != JSDOUBLE_IS_NEG(d2))
+            vp = &rt->negativeInfinityValue;
+        else
+            vp = &rt->positiveInfinityValue;
+        regs.sp[-2] = *vp;
+    } else {
+        d1 /= d2;
+        regs.sp[-2].setNumber(d1);
+    }
+}
+
+void JS_FASTCALL
+stubs::Mod(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    Value &lref = regs.sp[-2];
+    Value &rref = regs.sp[-1];
+    int32_t l, r;
+    if (lref.isInt32() && rref.isInt32() &&
+        (l = lref.asInt32()) >= 0 && (r = rref.asInt32()) > 0) {
+        int32_t mod = l % r;
+        regs.sp[-2].setInt32(mod);
+    } else {
+        double d1, d2;
+        if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
+            !ValueToNumber(cx, regs.sp[-1], &d2)) {
+            THROW();
+        }
+        if (d2 == 0) {
+            regs.sp[-2].setDouble(js_NaN);
+        } else {
+            d1 = js_fmod(d1, d2);
+            regs.sp[-2].setDouble(d1);
+        }
+    }
+}
+

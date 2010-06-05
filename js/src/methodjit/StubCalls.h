@@ -71,6 +71,11 @@ JSBool JS_FASTCALL NotEqual(VMFrame &f);
 void JS_FASTCALL BitAnd(VMFrame &f);
 void JS_FASTCALL Lsh(VMFrame &f);
 void JS_FASTCALL Rsh(VMFrame &f);
+void JS_FASTCALL Add(VMFrame &f);
+void JS_FASTCALL Sub(VMFrame &f);
+void JS_FASTCALL Mul(VMFrame &f);
+void JS_FASTCALL Div(VMFrame &f);
+void JS_FASTCALL Mod(VMFrame &f);
 
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 
