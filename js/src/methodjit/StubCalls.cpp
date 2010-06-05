@@ -1656,3 +1656,50 @@ stubs::ObjToStr(VMFrame &f)
     }
 }
 
+JSObject * JS_FASTCALL
+stubs::NewInitArray(VMFrame &f)
+{
+    JSObject *obj = js_NewArrayObject(f.cx, 0, NULL);
+    if (!obj)
+        THROWV(NULL);
+    return obj;
+}
+
+JSObject * JS_FASTCALL
+stubs::NewInitObject(VMFrame &f, uint32 empty)
+{
+    JSContext *cx = f.cx;
+
+    JSObject *obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
+    if (!obj)
+        THROWV(NULL);
+
+    if (!empty) {
+        JS_LOCK_OBJ(cx, obj);
+        JSScope *scope = js_GetMutableScope(cx, obj);
+        if (!scope) {
+            JS_UNLOCK_OBJ(cx, obj);
+            THROWV(NULL);
+        }
+
+        /*
+         * We cannot assume that js_GetMutableScope above creates a scope
+         * owned by cx and skip JS_UNLOCK_SCOPE. A new object debugger
+         * hook may add properties to the newly created object, suspend
+         * the current request and share the object with other threads.
+         */
+        JS_UNLOCK_SCOPE(cx, scope);
+    }
+
+    return obj;
+}
+
+void JS_FASTCALL
+stubs::EndInit(VMFrame &f)
+{
+    JS_ASSERT(f.regs.sp - f.fp->base() >= 1);
+    const Value &lref = f.regs.sp[-1];
+    JS_ASSERT(lref.isObject());
+    f.cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = &lref.asObject();
+}
+

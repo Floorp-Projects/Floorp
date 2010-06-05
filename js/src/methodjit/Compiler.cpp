@@ -636,6 +636,29 @@ mjit::Compiler::generateMethod()
             frame.push(Value(Int32Tag((int32_t) GET_UINT16(PC))));
           END_CASE(JSOP_UINT16)
 
+          BEGIN_CASE(JSOP_NEWINIT)
+          {
+            jsint i = GET_INT8(PC);
+            JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
+
+            prepareStubCall();
+            if (i == JSProto_Array) {
+                stubCall(stubs::NewInitArray, Uses(0), Defs(1));
+            } else {
+                JSOp next = JSOp(PC[JSOP_NEWINIT_LENGTH]);
+                masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
+                stubCall(stubs::NewInitObject, Uses(0), Defs(1));
+            }
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_NONFUNOBJ, Registers::ReturnReg);
+          }
+          END_CASE(JSOP_NEWINIT)
+
+          BEGIN_CASE(JSOP_ENDINIT)
+            prepareStubCall();
+            stubCall(stubs::EndInit, Uses(0), Defs(0));
+          END_CASE(JSOP_ENDINIT)
+
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)

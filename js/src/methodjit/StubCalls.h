@@ -48,7 +48,11 @@ namespace mjit {
 namespace stubs {
 
 void JS_FASTCALL This(VMFrame &f);
+JSObject * JS_FASTCALL NewInitArray(VMFrame &f);
+JSObject * JS_FASTCALL NewInitObject(VMFrame &f, uint32 empty);
 JSObject * JS_FASTCALL NewArray(VMFrame &f, uint32 len);
+void JS_FASTCALL EndInit(VMFrame &f);
+
 void * JS_FASTCALL Call(VMFrame &f, uint32 argc);
 void * JS_FASTCALL New(VMFrame &f, uint32 argc);
 void * JS_FASTCALL Return(VMFrame &f);
