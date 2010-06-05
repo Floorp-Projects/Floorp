@@ -68,6 +68,7 @@
 #define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
 #define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
 #define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
+#define INT_JSID_TO_VALUE(id)       (js::Valueify((jsval)(id)))
 #define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
 
 #define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
@@ -75,7 +76,7 @@
 #define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
 #define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
 
-#define ID_TO_VALUE(id)             (Valueify(id))
+#define ID_TO_VALUE(id)             (js::Valueify(id))
 #define ID_TO_JSVAL(id)             ((jsval)(id))
 
 /*

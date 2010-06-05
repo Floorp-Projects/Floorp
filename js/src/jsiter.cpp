@@ -666,9 +666,9 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 }
 
 static JSBool
-stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+stopiter_hasInstance(JSContext *cx, JSObject *obj, Value v, JSBool *bp)
 {
-    *bp = js_ValueIsStopIteration(*v);
+    *bp = js_ValueIsStopIteration(v);
     return JS_TRUE;
 }
 

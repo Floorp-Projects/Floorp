@@ -170,7 +170,8 @@ JSVAL_TO_OBJECT(jsval v)
     return JSVAL_TO_OBJECT_IMPL(l);
 }
 
-/* N.B. Not cheap; uses public API instead of obj->isFunction()! */
+/* TODO: This is unnecessarily expensive. If this gets hot, do something dirty
+ * to achieve obj->isFunction(). */
 static JS_ALWAYS_INLINE jsval
 OBJECT_TO_JSVAL(JSObject *obj)
 {
@@ -901,6 +902,9 @@ JS_AddStringRoot(JSContext *cx, JSString **rp);
 extern JS_PUBLIC_API(JSBool)
 JS_AddObjectRoot(JSContext *cx, JSObject **rp);
 
+extern JS_PUBLIC_API(JSBool)
+JS_AddGCThingRoot(JSContext *cx, void **rp);
+
 #ifdef NAME_ALL_GC_ROOTS
 #define JS_DEFINE_TO_TOKEN(def) #def
 #define JS_DEFINE_TO_STRING(def) JS_DEFINE_TO_TOKEN(def)
@@ -919,13 +923,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedValueRootRT(JSRuntime *rt, jsval *vp, const char *name);
-
-extern JS_PUBLIC_API(JSBool)
-JS_AddNamedStringRootRT(JSRuntime *rt, JSString **rp, const char *name);
-
-extern JS_PUBLIC_API(JSBool)
-JS_AddNamedObjectRootRT(JSRuntime *rt, JSObject **rp, const char *name);
+JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveValueRoot(JSContext *cx, jsval *vp);
@@ -937,13 +935,18 @@ extern JS_PUBLIC_API(JSBool)
 JS_RemoveObjectRoot(JSContext *cx, JSObject **rp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp);
+JS_RemoveGCThingRoot(JSContext *cx, void **rp);
 
-extern JS_PUBLIC_API(JSBool)
-JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp);
+/* TODO: remove these APIs */
 
-extern JS_PUBLIC_API(JSBool)
-JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp);
+extern JS_FRIEND_API(JSBool)
+js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name);
+
+extern JS_FRIEND_API(JSBool)
+js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name);
+
+extern JS_FRIEND_API(JSBool)
+js_RemoveRoot(JSRuntime *rt, void *rp);
 
 /*
  * The last GC thing of each type (object, string, double, external string
@@ -1144,9 +1147,6 @@ JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg);
 /* Trace kinds to pass to JS_Tracing. */
 #define JSTRACE_OBJECT  0
 #define JSTRACE_STRING  1
-
-/* Engine private; not the trace kind of any jsval. */
-#define JSTRACE_DOUBLE  2
 
 /*
  * Use the following macros to check if a particular jsval is a traceable
@@ -1577,7 +1577,7 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 
 /*

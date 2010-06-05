@@ -2812,7 +2812,7 @@ nsXPCComponents_Utils::LookupMethod()
     if(NS_FAILED(rv))
         return rv;
 
-    OBJ_TO_INNER_OBJECT(cx, obj);
+    Innerize(cx, &obj);
     if(!obj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
@@ -3113,7 +3113,7 @@ sandbox_setProto(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSObject *pobj = JSVAL_TO_OBJECT(*vp);
     if (pobj) {
-        if (pobj->getClass() == &XPCCrossOriginWrapper::XOWClass.base &&
+        if (pobj->getJSClass() == &XPCCrossOriginWrapper::XOWClass.base &&
             !XPCWrapper::RewrapObject(cx, obj, pobj,
                                       XPCWrapper::XPCNW_EXPLICIT, vp)) {
             return JS_FALSE;
@@ -3223,7 +3223,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
                                                    nsnull, nsnull);
     if (!sandbox)
         return NS_ERROR_XPC_UNEXPECTED;
-    js::AutoValueRooter tvr(cx, sandbox);
+    js::AutoObjectRooter tvr(cx, sandbox);
 
     nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(prinOrSop));
 
@@ -3567,7 +3567,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 #endif
 
     sandbox = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, sandbox);
-    if (!sandbox || sandbox->getClass() != &SandboxClass) {
+    if (!sandbox || sandbox->getJSClass() != &SandboxClass) {
         return NS_ERROR_INVALID_ARG;
     }
 
