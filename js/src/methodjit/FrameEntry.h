@@ -165,12 +165,13 @@ class FrameEntry
     }
 
   private:
+    jsval_layout v_;
     RematInfo  type;
     RematInfo  data;
-    jsval_layout v_;
     uint32     index_;
     FrameEntry *copy;
     bool       copied;
+    char       padding[7];
 };
 
 } /* namespace mjit */

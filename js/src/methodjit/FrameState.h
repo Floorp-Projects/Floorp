@@ -153,6 +153,11 @@ class FrameState
     inline void pushSyncedType(JSValueMask32 tag);
 
     /*
+     * Pushes a slot that has a known, synced type and payload.
+     */
+    inline void pushSynced(JSValueMask32 tag, RegisterID reg);
+
+    /*
      * Pushes a constant value.
      */
     inline void push(const Value &v);

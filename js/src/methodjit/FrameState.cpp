@@ -43,6 +43,9 @@
 using namespace js;
 using namespace js::mjit;
 
+/* Because of Value alignment */
+JS_STATIC_ASSERT(sizeof(FrameEntry) % 8 == 0);
+
 FrameState::FrameState(JSContext *cx, JSScript *script, Assembler &masm)
   : cx(cx), script(script), masm(masm), entries(NULL)
 {
