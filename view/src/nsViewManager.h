@@ -49,9 +49,6 @@
 #include "nsView.h"
 #include "nsIViewObserver.h"
 
-//Uncomment the following line to enable generation of viewmanager performance data.
-//#define NS_VM_PERF_METRICS 1
-
 
 /**
    Invalidation model:
@@ -131,8 +128,6 @@ public:
                           PRInt32 zindex);
 
   NS_IMETHOD  RemoveChild(nsIView *parent);
-
-  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord aX, nscoord aY);
 
   NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY);
 
@@ -265,7 +260,7 @@ public: // NOT in nsIViewManager, so private to the view module
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   PRBool IsRootVM() const { return this == RootViewManager(); }
 
-  nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent);
+  nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent);
 
   virtual nsresult WillBitBlit(nsIView* aView, const nsRect& aRect,
                                nsPoint aScrollAmount);
@@ -317,9 +312,6 @@ private:
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers
-
-  //Rendering context used to cleanup the blending buffers
-  static nsIRenderingContext* gCleanupContext;
 
   //list of view managers
   static nsVoidArray       *gViewManagers;
