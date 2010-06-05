@@ -59,7 +59,8 @@ typedef struct JSFrameRegs {
 /* JS stack frame flags. */
 enum JSFrameFlags {
     JSFRAME_CONSTRUCTING       =  0x01, /* frame is for a constructor invocation */
-    JSFRAME_OVERRIDE_ARGS      =  0x02, /* overridden arguments local variable */
+    JSFRAME_COMPUTED_THIS      =  0x02, /* frame.thisv was computed already and
+                                           JSVAL_IS_OBJECT(thisv) */
     JSFRAME_ASSIGNING          =  0x04, /* a complex (not simplex JOF_ASSIGNING) op
                                            is currently assigning to a property */
     JSFRAME_DEBUGGER           =  0x08, /* frame for JS_EvaluateInStackFrame */
@@ -67,6 +68,7 @@ enum JSFrameFlags {
     JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
     JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
+    JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -87,22 +89,7 @@ struct JSStackFrame
                                            JSVAL_OBJECT */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
-
-    /*
-     * The value of |this| in this stack frame, or JSVAL_NULL if |this| is to
-     * be computed lazily on demand.
-     *
-     * thisv is eagerly initialized for non-function-call frames and qualified
-     * method calls, but lazily initialized in most unqualified function calls.
-     * See getThisObject().
-     *
-     * Usually if argv != NULL then thisv == argv[-1], but natives may assign
-     * to argv[-1]. Also, obj_eval can trigger a special case where two stack
-     * frames have the same argv. If one of the frames fills in both argv[-1]
-     * and thisv, the other frame's thisv is left null.
-     */
-    jsval               thisv;
-
+    jsval               thisv;          /* "this" pointer if in method */
     uintN               argc;           /* actual argument count */
     jsval               *argv;          /* base of argument stack slots */
     jsval               rval;           /* function return value */
@@ -224,9 +211,6 @@ struct JSStackFrame
         }
         return false;
     }
-
-private:
-    JSObject *computeThisObject(JSContext *cx);
 };
 
 namespace js {
@@ -273,9 +257,10 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
 
 /*
  * For a call with arguments argv including argv[-1] (nominal |this|) and
- * argv[-2] (callee) replace null |this| with callee's parent and replace
- * primitive values with the equivalent wrapper objects. argv[-1] must not be
- * JSVAL_VOID or an activation object.
+ * argv[-2] (callee) replace null |this| with callee's parent, replace
+ * primitive values with the equivalent wrapper objects and censor activation
+ * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
+ * must not be a JSVAL_VOID.
  */
 extern JSObject *
 js_ComputeThis(JSContext *cx, jsval *argv);
@@ -464,7 +449,14 @@ JS_END_EXTERN_C
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
-    return JSVAL_IS_PRIMITIVE(thisv) ? computeThisObject(cx) : JSVAL_TO_OBJECT(thisv);
+    if (flags & JSFRAME_COMPUTED_THIS)
+        return JSVAL_TO_OBJECT(thisv);  /* JSVAL_COMPUTED_THIS invariant */
+    JSObject* obj = js_ComputeThis(cx, argv);
+    if (!obj)
+        return NULL;
+    thisv = OBJECT_TO_JSVAL(obj);
+    flags |= JSFRAME_COMPUTED_THIS;
+    return obj;
 }
 
 #endif /* jsinterp_h___ */
