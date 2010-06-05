@@ -1390,7 +1390,7 @@ var gDownloadingPage = {
       return;
 
     this.removeDownloadListener();
- },
+  },
 
   /**
    * When the user closes the Wizard UI by clicking the Hide button
