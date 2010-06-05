@@ -521,12 +521,13 @@ public:
   virtual Type GetType() { return TYPE_GENERIC; }
   /**
    * This is called after we've constructed a display list for event handling.
-   * When this is called, we've already ensured that aPt is in the item's bounds.
+   * When this is called, we've already ensured that aRect intersects the
+   * item's bounds.
    * 
    * @param aState must point to a HitTestState. If you don't have one,
    * just create one with the default constructor and pass it in.
-   * @return the frame that the point is considered over, or nsnull if
-   * this is not over any frame
+   * @param aOutFrames each item appends the frame(s) in this display item that
+   * the rect is considered over (if any) to aOutFrames.
    */
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {}
