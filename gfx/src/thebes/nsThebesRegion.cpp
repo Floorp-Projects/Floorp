@@ -60,7 +60,7 @@ void nsThebesRegion::SetTo (const nsIRegion &aRegion)
 
 void nsThebesRegion::SetTo (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  mRegion = nsRect (aX, aY, aWidth, aHeight);
+  mRegion = nsIntRect (aX, aY, aWidth, aHeight);
 }
 
 void nsThebesRegion::Intersect (const nsIRegion &aRegion)
@@ -71,7 +71,7 @@ void nsThebesRegion::Intersect (const nsIRegion &aRegion)
 
 void nsThebesRegion::Intersect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  mRegion.And (mRegion, nsRect (aX, aY, aWidth, aHeight));
+  mRegion.And (mRegion, nsIntRect (aX, aY, aWidth, aHeight));
 }
 
 void nsThebesRegion::Union (const nsIRegion &aRegion)
@@ -82,7 +82,7 @@ void nsThebesRegion::Union (const nsIRegion &aRegion)
 
 void nsThebesRegion::Union (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  mRegion.Or (mRegion, nsRect (aX, aY, aWidth, aHeight));
+  mRegion.Or (mRegion, nsIntRect (aX, aY, aWidth, aHeight));
 }
 
 void nsThebesRegion::Subtract (const nsIRegion &aRegion)
@@ -93,7 +93,7 @@ void nsThebesRegion::Subtract (const nsIRegion &aRegion)
 
 void nsThebesRegion::Subtract (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  mRegion.Sub (mRegion, nsRect (aX, aY, aWidth, aHeight));
+  mRegion.Sub (mRegion, nsIntRect (aX, aY, aWidth, aHeight));
 }
 
 PRBool nsThebesRegion::IsEmpty (void)
@@ -109,7 +109,7 @@ PRBool nsThebesRegion::IsEqual (const nsIRegion &aRegion)
 
 void nsThebesRegion::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  nsRect BoundRect;
+  nsIntRect BoundRect;
   BoundRect = mRegion.GetBounds();
   *aX = BoundRect.x;
   *aY = BoundRect.y;
@@ -124,8 +124,8 @@ void nsThebesRegion::Offset (PRInt32 aXOffset, PRInt32 aYOffset)
 
 PRBool nsThebesRegion::ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  nsRegion TmpRegion;
-  TmpRegion.And (mRegion, nsRect (aX, aY, aWidth, aHeight));
+  nsIntRegion TmpRegion;
+  TmpRegion.And (mRegion, nsIntRect (aX, aY, aWidth, aHeight));
   return (!TmpRegion.IsEmpty ());
 }
 
@@ -157,9 +157,9 @@ nsThebesRegion::GetRects (nsRegionRectSet **aRects)
   *aRects = pRegionSet;
 
 
-  nsRegionRectIterator ri (mRegion);
+  nsIntRegionRectIterator ri (mRegion);
   nsRegionRect* pDest = &pRegionSet->mRects [0];
-  const nsRect* pSrc;
+  const nsIntRect* pSrc;
 
   while ((pSrc = ri.Next ()))
   {
@@ -182,6 +182,11 @@ nsThebesRegion::FreeRects (nsRegionRectSet *aRects)
 
   delete [] reinterpret_cast<PRUint8*>(aRects);
   return NS_OK;
+}
+
+nsIntRegion nsThebesRegion::GetUnderlyingRegion () const
+{
+  return mRegion;
 }
 
 NS_IMETHODIMP
