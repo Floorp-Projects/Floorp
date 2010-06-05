@@ -162,7 +162,6 @@ struct JSObjectOps {
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
-    JSPropertyRefOp     dropProperty;
     JSNative            call;
     JSNative            construct;
     JSHasInstanceOp     hasInstance;
@@ -646,14 +645,12 @@ struct JSObject {
         return map->ops->setProperty(cx, this, id, vp);
     }
 
-    JSBool getAttributes(JSContext *cx, jsid id, JSProperty *prop,
-                         uintN *attrsp) {
-        return map->ops->getAttributes(cx, this, id, prop, attrsp);
+    JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
+        return map->ops->getAttributes(cx, this, id, attrsp);
     }
 
-    JSBool setAttributes(JSContext *cx, jsid id, JSProperty *prop,
-                         uintN *attrsp) {
-        return map->ops->setAttributes(cx, this, id, prop, attrsp);
+    JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp) {
+        return map->ops->setAttributes(cx, this, id, attrsp);
     }
 
     JSBool deleteProperty(JSContext *cx, jsid id, jsval *rval) {
@@ -685,10 +682,7 @@ struct JSObject {
         return map->ops->thisObject ? map->ops->thisObject(cx, this) : this;
     }
 
-    void dropProperty(JSContext *cx, JSProperty *prop) {
-        if (map->ops->dropProperty)
-            map->ops->dropProperty(cx, this, prop);
-    }
+    inline void dropProperty(JSContext *cx, JSProperty *prop);
 
     JSCompartment *getCompartment(JSContext *cx);
 
@@ -1178,12 +1172,18 @@ extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
-js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                 uintN *attrsp);
+js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
-js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                 uintN *attrsp);
+js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+
+/*
+ * Change attributes for the given native property. The caller must ensure
+ * that obj is locked and this function always unlocks obj on return.
+ */
+extern JSBool
+js_SetNativeAttributes(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+                       uintN attrs);
 
 extern JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
@@ -1262,15 +1262,6 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
 extern void
 js_Clear(JSContext *cx, JSObject *obj);
-
-#ifdef JS_THREADSAFE
-#define NATIVE_DROP_PROPERTY js_DropProperty
-
-extern void
-js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
-#else
-#define NATIVE_DROP_PROPERTY NULL
-#endif
 
 extern bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);

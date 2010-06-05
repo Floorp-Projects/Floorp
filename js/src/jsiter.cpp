@@ -701,12 +701,14 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
                         JSProperty *prop;
                         if (!proto.object()->lookupProperty(cx, id, obj2.addr(), &prop))
                             return false;
-                        if (obj2.object()) {
+                        if (prop) {
                             uintN attrs;
-                            JSBool ok = obj2.object()->getAttributes(cx, id, prop, &attrs);
-                            obj2.object()->dropProperty(cx, prop);
-                            if (!ok)
+                            if (obj2.object()->isNative()) {
+                                attrs = ((JSScopeProperty *) prop)->attributes();
+                                JS_UNLOCK_OBJ(cx, obj2.object());
+                            } else if (!obj2.object()->getAttributes(cx, id, &attrs)) {
                                 return false;
+                            }
                             if (attrs & JSPROP_ENUMERATE)
                                 continue;
                         }

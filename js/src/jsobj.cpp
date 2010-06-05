@@ -106,15 +106,23 @@ using namespace js;
 
 JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     NULL,
-    js_LookupProperty,      js_DefineProperty,
-    js_GetProperty,         js_SetProperty,
-    js_GetAttributes,       js_SetAttributes,
-    js_DeleteProperty,      js_DefaultValue,
-    js_Enumerate,           js_CheckAccess,
-    js_TypeOf,              js_TraceObject,
-    NULL,                   NATIVE_DROP_PROPERTY,
-    js_Call,                js_Construct,
-    js_HasInstance,         js_Clear
+    js_LookupProperty,
+    js_DefineProperty,
+    js_GetProperty,
+    js_SetProperty,
+    js_GetAttributes,
+    js_SetAttributes,
+    js_DeleteProperty,
+    js_DefaultValue,
+    js_Enumerate,
+    js_CheckAccess,
+    js_TypeOf,
+    js_TraceObject,
+    NULL,   /* thisObject */
+    js_Call,
+    js_Construct,
+    js_HasInstance,
+    js_Clear
 };
 
 JSClass js_ObjectClass = {
@@ -291,7 +299,6 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                     setter.set(sprop->setterValue());
                 JS_UNLOCK_OBJ(cx, obj2);
             } else {
-                obj2->dropProperty(cx, prop);
                 hasGetter = hasSetter = false;
             }
             if (hasSetter) {
@@ -642,8 +649,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                     valcnt++;
                 }
                 JS_UNLOCK_OBJ(cx, obj2);
-            } else {
-                obj2->dropProperty(cx, prop);
             }
             if (doGet) {
                 valcnt = 1;
@@ -1593,10 +1598,7 @@ JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSObject *pobj;
-    uintN attrs;
     JSProperty *prop;
-    JSBool ok;
-
     if (!obj->lookupProperty(cx, id, &pobj, &prop))
         return JS_FALSE;
 
@@ -1616,19 +1618,24 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      * technique used to satisfy ECMA requirements; users should not be able
      * to distinguish a shared permanent proto-property from a local one.
      */
-    if (pobj != obj &&
-        !(pobj->isNative() &&
-          ((JSScopeProperty *)prop)->isSharedPermanent())) {
-        pobj->dropProperty(cx, prop);
-        *vp = JSVAL_FALSE;
-        return JS_TRUE;
+    bool shared;
+    uintN attrs;
+    if (pobj->isNative()) {
+        JSScopeProperty *sprop = (JSScopeProperty *) prop;
+        shared = sprop->isSharedPermanent();
+        attrs = sprop->attributes();
+        JS_UNLOCK_OBJ(cx, pobj);
+    } else {
+        shared = false;
+        if (!pobj->getAttributes(cx, id, &attrs))
+            return false;
     }
-
-    ok = pobj->getAttributes(cx, id, prop, &attrs);
-    pobj->dropProperty(cx, prop);
-    if (ok)
-        *vp = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
-    return ok;
+    if (pobj != obj && !shared) {
+        *vp = JSVAL_FALSE;
+        return true;
+    }
+    *vp = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
+    return true;
 }
 
 #if OLD_GETTER_SETTER_METHODS
@@ -1723,8 +1730,8 @@ obj_lookupGetter(JSContext *cx, uintN argc, jsval *vp)
             sprop = (JSScopeProperty *) prop;
             if (sprop->hasGetterValue())
                 *vp = sprop->getterValue();
+            JS_UNLOCK_OBJ(cx, pobj);
         }
-        pobj->dropProperty(cx, prop);
     }
     return JS_TRUE;
 }
@@ -1748,8 +1755,8 @@ obj_lookupSetter(JSContext *cx, uintN argc, jsval *vp)
             sprop = (JSScopeProperty *) prop;
             if (sprop->hasSetterValue())
                 *vp = sprop->setterValue();
+            JS_UNLOCK_OBJ(cx, pobj);
         }
-        pobj->dropProperty(cx, prop);
     }
     return JS_TRUE;
 }
@@ -1833,30 +1840,27 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return true;
     }
 
-    uintN attrs;
-    if (!pobj->getAttributes(cx, id, prop, &attrs)) {
-        pobj->dropProperty(cx, prop);
-        return false;
-    }
-
     jsval roots[] = { JSVAL_VOID, JSVAL_VOID, JSVAL_VOID };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
-    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        if (obj->isNative()) {
-            JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+    unsigned attrs;
+    bool doGet = true;
+    if (pobj->isNative()) {
+        JSScopeProperty *sprop = (JSScopeProperty *) prop;
+        attrs = sprop->attributes();
+        if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+            doGet = false;
             if (attrs & JSPROP_GETTER)
                 roots[0] = sprop->getterValue();
             if (attrs & JSPROP_SETTER)
                 roots[1] = sprop->setterValue();
         }
-
-        pobj->dropProperty(cx, prop);
-    } else {
-        pobj->dropProperty(cx, prop);
-
-        if (!obj->getProperty(cx, id, &roots[2]))
-            return false;
+        JS_UNLOCK_OBJ(cx, pobj);
+    } else if (!pobj->getAttributes(cx, id, &attrs)) {
+        return false;
     }
+
+    if (doGet && !obj->getProperty(cx, id, &roots[2]))
+        return false;
 
     return js_NewPropertyDescriptorObject(cx, id,
                                           attrs,
@@ -2930,23 +2934,21 @@ with_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                   uintN *attrsp)
+with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSObject *proto = obj->getProto();
     if (!proto)
-        return js_GetAttributes(cx, obj, id, prop, attrsp);
-    return proto->getAttributes(cx, id, prop, attrsp);
+        return js_GetAttributes(cx, obj, id, attrsp);
+    return proto->getAttributes(cx, id, attrsp);
 }
 
 static JSBool
-with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                   uintN *attrsp)
+with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSObject *proto = obj->getProto();
     if (!proto)
-        return js_SetAttributes(cx, obj, id, prop, attrsp);
-    return proto->setAttributes(cx, id, prop, attrsp);
+        return js_SetAttributes(cx, obj, id, attrsp);
+    return proto->setAttributes(cx, id, attrsp);
 }
 
 static JSBool
@@ -3004,15 +3006,23 @@ with_ThisObject(JSContext *cx, JSObject *obj)
 
 JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     NULL,
-    with_LookupProperty,    js_DefineProperty,
-    with_GetProperty,       with_SetProperty,
-    with_GetAttributes,     with_SetAttributes,
-    with_DeleteProperty,    with_DefaultValue,
-    with_Enumerate,         with_CheckAccess,
-    with_TypeOf,            js_TraceObject,
-    with_ThisObject,        NATIVE_DROP_PROPERTY,
-    NULL,                   NULL,
-    NULL,                   js_Clear
+    with_LookupProperty,
+    js_DefineProperty,
+    with_GetProperty,
+    with_SetProperty,
+    with_GetAttributes,
+    with_SetAttributes,
+    with_DeleteProperty,
+    with_DefaultValue,
+    with_Enumerate,
+    with_CheckAccess,
+    with_TypeOf,
+    js_TraceObject,
+    with_ThisObject,
+    NULL,   /* call */
+    NULL,   /* construct */
+    NULL,   /* hasInstance */
+    js_Clear
 };
 
 static JSObjectOps *
@@ -3864,16 +3874,14 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         return JS_FALSE;
     }
     v = JSVAL_VOID;
-    if (prop)  {
-        if (pobj->isNative()) {
-            sprop = (JSScopeProperty *) prop;
-            if (SPROP_HAS_VALID_SLOT(sprop, pobj->scope())) {
-                v = pobj->lockedGetSlot(sprop->slot);
-                if (JSVAL_IS_PRIMITIVE(v))
-                    v = JSVAL_VOID;
-            }
+    if (prop && pobj->isNative()) {
+        sprop = (JSScopeProperty *) prop;
+        if (SPROP_HAS_VALID_SLOT(sprop, pobj->scope())) {
+            v = pobj->lockedGetSlot(sprop->slot);
+            if (JSVAL_IS_PRIMITIVE(v))
+                v = JSVAL_VOID;
         }
-        pobj->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, pobj);
     }
     *vp = v;
     return JS_TRUE;
@@ -4233,7 +4241,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             if (!sprop)
                 goto error;
         } else if (prop) {
-            /* NB: call JSObject::dropProperty, as pobj might not be native. */
             pobj->dropProperty(cx, prop);
             prop = NULL;
             sprop = NULL;
@@ -4674,7 +4681,6 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
         if (prop) {
             if (!pobj->isNative()) {
                 JS_ASSERT(!obj->getParent());
-                pobj->dropProperty(cx, prop);
                 return obj;
             }
             JS_ASSERT_IF(obj->getParent(), pobj->getClass() == obj->getClass());
@@ -4909,10 +4915,8 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
         return JS_TRUE;
     }
 
-    if (!obj2->isNative()) {
-        obj2->dropProperty(cx, prop);
+    if (!obj2->isNative())
         return obj2->getProperty(cx, id, vp);
-    }
 
     sprop = (JSScopeProperty *) prop;
 
@@ -5025,10 +5029,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     if (protoIndex < 0)
         return JS_FALSE;
     if (prop) {
-        if (!pobj->isNative()) {
-            pobj->dropProperty(cx, prop);
+        if (!pobj->isNative())
             prop = NULL;
-        }
     } else {
         /* We should never add properties to lexical blocks.  */
         JS_ASSERT(obj->getClass() != &js_BlockClass);
@@ -5231,58 +5233,46 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JSBool
-js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                 uintN *attrsp)
+js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    JSBool noprop, ok;
-    JSScopeProperty *sprop;
-
-    noprop = !prop;
-    if (noprop) {
-        if (!js_LookupProperty(cx, obj, id, &obj, &prop))
-            return JS_FALSE;
-        if (!prop) {
-            *attrsp = 0;
-            return JS_TRUE;
-        }
-        if (!obj->isNative()) {
-            ok = obj->getAttributes(cx, id, prop, attrsp);
-            obj->dropProperty(cx, prop);
-            return ok;
-        }
+    JSProperty *prop;
+    if (!js_LookupProperty(cx, obj, id, &obj, &prop))
+        return false;
+    if (!prop) {
+        *attrsp = 0;
+        return true;
     }
-    sprop = (JSScopeProperty *)prop;
+    if (!obj->isNative())
+        return obj->getAttributes(cx, id, attrsp);
+
+    JSScopeProperty *sprop = (JSScopeProperty *)prop;
     *attrsp = sprop->attributes();
-    if (noprop)
-        obj->dropProperty(cx, prop);
-    return JS_TRUE;
+    JS_UNLOCK_OBJ(cx, obj);
+    return true;
 }
 
 JSBool
-js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                 uintN *attrsp)
+js_SetNativeAttributes(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+                       uintN attrs)
 {
-    JSBool noprop, ok;
-    JSScopeProperty *sprop;
-
-    noprop = !prop;
-    if (noprop) {
-        if (!js_LookupProperty(cx, obj, id, &obj, &prop))
-            return JS_FALSE;
-        if (!prop)
-            return JS_TRUE;
-        if (!obj->isNative()) {
-            ok = obj->setAttributes(cx, id, prop, attrsp);
-            obj->dropProperty(cx, prop);
-            return ok;
-        }
-    }
-    sprop = (JSScopeProperty *)prop;
-    sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, *attrsp, 0,
+    JS_ASSERT(obj->isNative());
+    sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, attrs, 0,
                                          sprop->getter(), sprop->setter());
-    if (noprop)
-        obj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, obj);
     return (sprop != NULL);
+}
+
+JSBool
+js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    JSProperty *prop;
+    if (!js_LookupProperty(cx, obj, id, &obj, &prop))
+        return false;
+    if (!prop)
+        return true;
+    return obj->isNative()
+           ? js_SetNativeAttributes(cx, obj, (JSScopeProperty *) prop, *attrsp)
+           : obj->setAttributes(cx, id, attrsp);
 }
 
 JSBool
@@ -5313,8 +5303,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
                 sprop = (JSScopeProperty *)prop;
                 if (sprop->isSharedPermanent())
                     *rval = JSVAL_FALSE;
+                JS_UNLOCK_OBJ(cx, proto);
             }
-            proto->dropProperty(cx, prop);
             if (*rval == JSVAL_FALSE)
                 return JS_TRUE;
         }
@@ -5329,14 +5319,14 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     sprop = (JSScopeProperty *)prop;
     if (!sprop->configurable()) {
-        obj->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, obj);
         *rval = JSVAL_FALSE;
         return JS_TRUE;
     }
 
     /* XXXbe called with obj locked */
     if (!obj->getClass()->delProperty(cx, obj, SPROP_USERID(sprop), rval)) {
-        obj->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, obj);
         return JS_FALSE;
     }
 
@@ -5345,7 +5335,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
         GC_POKE(cx, obj->lockedGetSlot(sprop->slot));
 
     ok = scope->removeProperty(cx, id);
-    obj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, obj);
 
     return ok && js_SuppressDeletedProperty(cx, obj, id);
 }
@@ -5508,8 +5498,6 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         }
 
         if (!pobj->isNative()) {
-            pobj->dropProperty(cx, prop);
-
             /* Avoid diverging for non-natives that reuse js_CheckAccess. */
             if (pobj->map->ops->checkAccess == js_CheckAccess) {
                 if (!writing) {
@@ -5528,7 +5516,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                   ? pobj->lockedGetSlot(sprop->slot)
                   : JSVAL_VOID;
         }
-        pobj->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, pobj);
     }
 
     /*
