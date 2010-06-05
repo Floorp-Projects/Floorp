@@ -10,6 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463162
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463162">Mozilla Bug 463162</a>
@@ -43,16 +44,35 @@ function onMetaData(id) {
     SimpleTest.finish();
 }
 
+]]>
+</script>
+
+<video id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce/><source type="bad" src="
+404"/></video>
+<video id='a2' onerror="onError(event, 'a2');" onloadedmetadata="onMetaData('a2');"><source/></video>
+<video id='a3' onerror="onError(event, 'a3');" onloadedmetadata="onMetaData('a3');"><html:source/></video>
+<video id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source/><source type="bad" src="404"/></video>
+
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+function setSource(id, res) {
+  var v = document.getElementById(id);
+  v.firstChild.src = res.name;
+  v.firstChild.type = res.type;
+}
+
+var t = getPlayableVideo(gSmallTests);
+
+setSource('a1', t);
+setSource('a2', t);
+setSource('a3', t);
+setSource('a4', t);
+
 SimpleTest.waitForExplicitFinish();
 
 ]]>
 </script>
-
-
-<audio id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/><source type="bad" src="404"/></audio>
-<audio id='a2' onerror="onError(event, 'a2');" onloadedmetadata="onMetaData('a2');"><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a3' onerror="onError(event, 'a3');" onloadedmetadata="onMetaData('a3');"><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/><source type="bad" src="404"/></audio>
 
 <pre id="test">
 

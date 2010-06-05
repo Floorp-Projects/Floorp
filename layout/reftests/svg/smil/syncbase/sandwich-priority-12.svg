@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('a').beginElementAt(1);
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test of animation sandwich priority based on syncbase dependencies.
+
+    This case includes a complex cycle that should nevertheless produce
+    consistent results.
+
+    If this fails, it will fail intermittently. The test is not so much
+    concerned with which colour should win (there are other tests for that) but
+    simply with determinancy.
+   -->
+  <rect width="100" height="100" fill="orange">
+    <set attributeName="fill" id="a" to="green" begin="b.begin; 3s"/>
+    <set attributeName="fill" id="b" to="red" begin="a.begin"/>
+  </rect>
+</svg>

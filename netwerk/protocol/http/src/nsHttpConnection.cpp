@@ -462,6 +462,8 @@ nsHttpConnection::CreateTransport(PRUint8 caps)
     
     strans->SetConnectionFlags(tmpFlags); 
 
+    strans->SetQoSBits(gHttpHandler->GetQoSBits());
+
     // NOTE: these create cyclical references, which we break inside
     //       nsHttpConnection::Close
     rv = strans->SetEventSink(this, nsnull);

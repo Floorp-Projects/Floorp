@@ -513,7 +513,6 @@ var xml = <prefs>
 <pref><name>image.animation_mode</name></pref>
 <pref><name>network.http.sendRefererHeader</name></pref>
 <pref><name>font.default.x-central-euro</name></pref>
-<pref><name>plugin.default_plugin_disabled</name></pref>
 <pref><name>network.protocol-handler.external.ms-help</name></pref>
 <pref><name>font.default.x-geor</name></pref>
 <pref><name>browser.download.manager.openDelay</name></pref>

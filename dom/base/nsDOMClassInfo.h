@@ -492,6 +492,8 @@ protected:
                                 JSObject *obj, JSString *str,
                                 PRBool *did_resolve);
 
+  static PRBool sResolving;
+
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);

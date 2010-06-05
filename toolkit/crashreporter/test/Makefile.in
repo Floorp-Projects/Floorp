@@ -77,6 +77,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq (browser,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
   browser/aboutcrashes_utils.js \
   browser/crashreport.sjs \
@@ -90,3 +91,10 @@ libs::  $(_BROWSER_FILES)
 	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
 	$(INSTALL) $(SHARED_LIBRARY) \
           $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
+else
+
+libs::
+	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
+	$(INSTALL) $(SHARED_LIBRARY) \
+          $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
+endif

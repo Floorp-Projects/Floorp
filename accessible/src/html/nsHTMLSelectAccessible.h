@@ -244,7 +244,7 @@ protected:
   /**
    * Return focused option accessible.
    */
-  already_AddRefed<nsAccessible> GetFocusedOptionAccessible();
+  nsAccessible *GetFocusedOptionAccessible();
 
 private:
   nsRefPtr<nsHTMLComboboxListAccessible> mListAccessible;

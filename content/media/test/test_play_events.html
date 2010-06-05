@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: play() method</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+var videos = [];
+
+var tokens = {
+  0:                ["play"],
+  "play":           ["canplay"],
+  "canplay":        ["playing"],
+  "playing":        ["canplay", "canplaythrough"],
+  "canplaythrough": ["canplay", "canplaythrough"]
+};
+
+function gotPlayEvent(event) {
+  var v = event.target;
+  ok(tokens[v._state].indexOf(event.type) >= 0,
+     "Check expected event got " + event.type + " at " + v._state + " for " + v.src);
+  v._state = event.type;
+}
+
+function ended(event) {
+  var v = event.target;
+  v._finished = true;
+  is(v._state, "canplaythrough", "Last event should be canplaythrough for " + v.src);
+  if (AllFinished(videos)) {
+    SimpleTest.finish();
+  }
+}
+
+for (var i=0; i<gSmallTests.length; ++i) {
+  var v = document.createElement('video');
+  var test = gSmallTests[i];
+  if (!v.canPlayType(test.type))
+    continue;
+  v._state = 0;
+  v._finished = false;
+
+  ["play", "canplay", "playing", "canplaythrough"].forEach(function (e) {
+    v.addEventListener(e, gotPlayEvent, false);
+  });
+
+  v.addEventListener("ended", ended, false);
+
+  v.src = test.name;
+  document.body.appendChild(v); // Causes load.
+  v.play();
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

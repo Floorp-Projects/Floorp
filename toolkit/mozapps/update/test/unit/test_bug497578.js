@@ -64,8 +64,8 @@ function run_test() {
 
   // Enable automatic app update so that after the failed partial is found the
   // complete update will start to download automatically.
-  gPref.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
-  gPref.setBoolPref("browser.privatebrowsing.autostart", true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
+  Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
   setDefaultPrefs();

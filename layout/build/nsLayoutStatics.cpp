@@ -284,7 +284,8 @@ nsLayoutStatics::Initialize()
 
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
-  
+  nsIPresShell::InitializeStatics();
+
   nsCrossSiteListenerProxy::Startup();
 
   rv = nsFrameList::Init();
@@ -380,6 +381,8 @@ nsLayoutStatics::Shutdown()
 
   nsXMLHttpRequest::ShutdownACCache();
   
+  nsIPresShell::ReleaseStatics();
+
   nsHtml5Module::ReleaseStatics();
 
   nsRegion::ShutdownStatic();

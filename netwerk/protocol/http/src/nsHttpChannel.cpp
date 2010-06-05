@@ -5104,7 +5104,7 @@ nsHttpChannel::GetPriority(PRInt32 *value)
 NS_IMETHODIMP
 nsHttpChannel::SetPriority(PRInt32 value)
 {
-    PRInt16 newValue = CLAMP(value, PR_INT16_MIN, PR_INT16_MAX);
+    PRInt16 newValue = NS_CLAMP(value, PR_INT16_MIN, PR_INT16_MAX);
     if (mPriority == newValue)
         return NS_OK;
     mPriority = newValue;

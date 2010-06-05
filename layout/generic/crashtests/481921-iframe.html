@@ -1,0 +1,12 @@
+<html>
+	<body onload="dotest(); setTimeout('location.reload()', 200)">
+		<script language="javascript">
+			var count=0;
+			var fileloc = "481921.ogg";
+			function dotest(){
+				oggenv.innerHTML = "video test for " + fileloc + "<br><video src=\"" + fileloc + "\" autoplay=\"true\" height=100></video>";
+			}
+		</script>
+		<span id="oggenv"></span><br>
+	</body>
+</html>
