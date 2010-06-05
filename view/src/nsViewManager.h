@@ -48,6 +48,7 @@
 #include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIViewObserver.h"
+#include "nsIDeviceContext.h"
 
 
 /**
@@ -276,6 +277,12 @@ public: // NOT in nsIViewManager, so private to the view module
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
   void PostPendingUpdate() { RootViewManager()->mHasPendingUpdates = PR_TRUE; }
+
+  PRInt32 AppUnitsPerDevPixel() const
+  {
+    return mContext->AppUnitsPerDevPixel();
+  }
+
 private:
   nsCOMPtr<nsIDeviceContext> mContext;
   nsIViewObserver   *mObserver;
