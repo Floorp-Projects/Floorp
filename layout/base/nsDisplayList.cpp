@@ -1348,7 +1348,7 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
 
 #endif
 
-/* Returns the delta specified by the -moz-tranform-origin property.
+/* Returns the delta specified by the -moz-transform-origin property.
  * This is a positive delta, meaning that it indicates the direction to move
  * to get from (0, 0) of the frame to the transform origin.
  */
