@@ -126,6 +126,8 @@ class Compiler
     /* Emitting helpers. */
     void restoreFrameRegs();
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
+    void iterNext();
+    void iterMore();
 
     /* Opcode handlers. */
     void jsop_bindname(uint32 index);
