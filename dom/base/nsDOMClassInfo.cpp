@@ -7302,17 +7302,32 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
-    if (nodeIsElement &&
-        node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-      nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
+    if (nodeIsElement) {
+      if (node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+        nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
-      if (form_control) {
-        nsCOMPtr<nsIDOMHTMLFormElement> form;
-        form_control->GetForm(getter_AddRefs(form));
+        if (form_control) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          form_control->GetForm(getter_AddRefs(form));
 
-        if (form) {
-          // Found a form, use it.
-          native_parent = form;
+          if (form) {
+            // Found a form, use it.
+            native_parent = form;
+          }
+        }
+      // Legend isn't an HTML form control but should have its fieldset form
+      // as scope parent at least for backward compatibility.
+      } else if (node->AsElement()->IsHTML() &&
+                 node->AsElement()->Tag() == nsGkAtoms::legend) {
+        nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(node));
+
+        if (legend) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          legend->GetForm(getter_AddRefs(form));
+
+          if (form) {
+            native_parent = form;
+          }
         }
       }
     }

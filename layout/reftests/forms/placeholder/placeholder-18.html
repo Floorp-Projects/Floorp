@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: placeholder should appear with dynamic DOM modifications -->
+  <script type="text/javascript">
+    function setPlaceholder()
+    {
+      var i = document.getElementById('p1');
+      i.focus();
+      i.blur();
+      i.value = "not empty";
+      i.value = "";
+      i.value = "my value";
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload="setPlaceholder(); disableReftestWait();">
+    <input type="text" id="p1" value="" placeholder="my placeholder">
+  </body>
+</html>
