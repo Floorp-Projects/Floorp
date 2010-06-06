@@ -1801,3 +1801,36 @@ stubs::GetUpvar(VMFrame &f, uint32 cookie)
     f.regs.sp[0] = js_GetUpvar(f.cx, staticLevel, cookie);
 }
 
+JSObject * JS_FASTCALL
+stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
+{
+    /*
+     * Define a local function (i.e., one nested at the top level of another
+     * function), parented by the current scope chain, stored in a local
+     * variable slot that the compiler allocated.  This is an optimization over
+     * JSOP_DEFFUN that avoids requiring a call object for the outer function's
+     * activation.
+     */
+    JS_ASSERT(fun->isInterpreted());
+    JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
+    JSObject *obj = FUN_OBJECT(fun);
+
+    if (FUN_NULL_CLOSURE(fun)) {
+        obj = CloneFunctionObject(f.cx, fun, f.fp->scopeChain);
+        if (!obj)
+            THROWV(NULL);
+    } else {
+        JSObject *parent = js_GetScopeChain(f.cx, f.fp);
+        if (!parent)
+            THROWV(NULL);
+
+        if (obj->getParent() != parent) {
+            obj = CloneFunctionObject(f.cx, fun, parent);
+            if (!obj)
+                THROWV(NULL);
+        }
+    }
+
+    return obj;
+}
+
