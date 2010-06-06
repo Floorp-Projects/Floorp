@@ -528,6 +528,22 @@ mjit::Compiler::generateMethod()
             frame.push(UndefinedTag());
           END_CASE(JSOP_VOID)
 
+          BEGIN_CASE(JSOP_INCNAME)
+            jsop_nameinc(op, stubs::IncName, fullAtomIndex(PC));
+          END_CASE(JSOP_INCNAME)
+
+          BEGIN_CASE(JSOP_DECNAME)
+            jsop_nameinc(op, stubs::DecName, fullAtomIndex(PC));
+          END_CASE(JSOP_DECNAME)
+
+          BEGIN_CASE(JSOP_NAMEINC)
+            jsop_nameinc(op, stubs::NameInc, fullAtomIndex(PC));
+          END_CASE(JSOP_NAMEINC)
+
+          BEGIN_CASE(JSOP_NAMEDEC)
+            jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
+          END_CASE(JSOP_NAMEDEC)
+
           BEGIN_CASE(JSOP_GETELEM)
             prepareStubCall();
             stubCall(stubs::GetElem, Uses(2), Defs(1));
@@ -1172,6 +1188,16 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     prepareStubCall();
     stubCall(stub, Uses(2), Defs(1));
     frame.popn(2);
+    frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
+{
+    JSAtom *atom = script->getAtom(index);
+    prepareStubCall();
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    stubCall(stub, Uses(0), Defs(1));
     frame.pushSynced();
 }
 

@@ -134,6 +134,7 @@ class Compiler
     void jsop_binary(JSOp op, VoidStub stub);
     void emitReturn();
     void dispatchCall(VoidPtrStubUInt32 stub);
+    void jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
@@ -157,6 +158,7 @@ class Compiler
     STUB_CALL_TYPE(JSObjStubUInt32);
     STUB_CALL_TYPE(JSObjStubFun);
     STUB_CALL_TYPE(JSObjStubJSObj);
+    STUB_CALL_TYPE(VoidStubAtom);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();
