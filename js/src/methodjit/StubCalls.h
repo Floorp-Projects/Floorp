@@ -110,6 +110,7 @@ JSBool JS_FASTCALL IterMore(VMFrame &f);
 void JS_FASTCALL EndIter(VMFrame &f);
 
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
+JSString * JS_FASTCALL TypeOf(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */
 
