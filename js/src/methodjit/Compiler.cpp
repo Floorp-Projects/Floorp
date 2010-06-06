@@ -646,6 +646,21 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_GETARG)
 
+          BEGIN_CASE(JSOP_SETARG)
+          {
+            uint32 slot = GET_SLOTNO(PC);
+            FrameEntry *top = frame.peek(-1);
+
+            bool popped = PC[JSOP_SETARG_LENGTH] == JSOP_POP;
+
+            RegisterID reg = frame.allocReg();
+            masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+            Address address = Address(reg, slot * sizeof(Value));
+            frame.storeTo(top, address, popped);
+            frame.freeReg(reg);
+          }
+          END_CASE(JSOP_SETARG)
+
           BEGIN_CASE(JSOP_GETLOCAL)
           {
             uint32 slot = GET_SLOTNO(PC);
