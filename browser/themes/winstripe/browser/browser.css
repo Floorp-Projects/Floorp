@@ -1445,11 +1445,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   color: MenuText;
 }
 
-/* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */
-#identity-popup:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: 3px;
-}
-
 #identity-popup-container {
   min-width: 280px;
   padding: 9px;
