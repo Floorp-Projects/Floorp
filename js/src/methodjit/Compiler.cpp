@@ -656,6 +656,16 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_AND)
 
+          BEGIN_CASE(JSOP_ITER)
+          {
+            prepareStubCall();
+            masm.move(Imm32(PC[1]), Registers::ArgReg1);
+            stubCall(stubs::Iter, Uses(1), Defs(1));
+            frame.pop();
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_ITER)
+
           BEGIN_CASE(JSOP_POP)
             frame.pop();
           END_CASE(JSOP_POP)
