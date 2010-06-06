@@ -739,6 +739,16 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::EndInit, Uses(0), Defs(0));
           END_CASE(JSOP_ENDINIT)
 
+          BEGIN_CASE(JSOP_INITPROP)
+          {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::InitProp, Uses(1), Defs(0));
+            frame.pop();
+          }
+          END_CASE(JSOP_INITPROP)
+
           BEGIN_CASE(JSOP_INITELEM)
           {
             JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
