@@ -1793,3 +1793,11 @@ stubs::InitElem(VMFrame &f, uint32 last)
     }
 }
 
+void JS_FASTCALL
+stubs::GetUpvar(VMFrame &f, uint32 cookie)
+{
+    /* :FIXME: We can do better, this stub isn't needed. */
+    uint32 staticLevel = f.fp->script->staticLevel;
+    f.regs.sp[0] = js_GetUpvar(f.cx, staticLevel, cookie);
+}
+

@@ -730,6 +730,22 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_CALLDSLOT)
 
+          BEGIN_CASE(JSOP_GETUPVAR)
+          BEGIN_CASE(JSOP_CALLUPVAR)
+          {
+            uint32 index = GET_UINT16(PC);
+            JSUpvarArray *uva = script->upvars();
+            JS_ASSERT(index < uva->length);
+
+            prepareStubCall();
+            masm.move(Imm32(uva->vector[index]), Registers::ArgReg1);
+            stubCall(stubs::GetUpvar, Uses(0), Defs(1));
+            frame.pushSynced();
+            if (op == JSOP_CALLUPVAR)
+                frame.push(NullTag());
+          }
+          END_CASE(JSOP_CALLUPVAR)
+
           BEGIN_CASE(JSOP_UINT24)
             frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
           END_CASE(JSOP_UINT24)
