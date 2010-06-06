@@ -164,6 +164,7 @@ class Compiler
     STUB_CALL_TYPE(JSObjStubJSObj);
     STUB_CALL_TYPE(VoidStubAtom);
     STUB_CALL_TYPE(JSStrStub);
+    STUB_CALL_TYPE(JSStrStubUInt32);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();
