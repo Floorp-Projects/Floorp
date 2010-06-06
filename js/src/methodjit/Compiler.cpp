@@ -40,6 +40,7 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
+#include "jsiter.h"
 #include "jslibmath.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -347,12 +348,18 @@ mjit::Compiler::generateMethod()
                 Assembler::Condition cond = (op == JSOP_IFEQ)
                                             ? Assembler::Zero
                                             : Assembler::NonZero;
-                j = masm.branch32(cond, Registers::ReturnReg, Registers::ReturnReg);
+                j = masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
                 frame.pop();
                 jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
             }
           }
-          END_CASE(JSOP_IFEQ)
+          END_CASE(JSOP_IFNE)
+
+          BEGIN_CASE(JSOP_FORLOCAL)
+            iterNext();
+            frame.storeLocal(GET_SLOTNO(PC));
+            frame.pop();
+          END_CASE(JSOP_FORLOCAL)
 
           BEGIN_CASE(JSOP_DUP)
             frame.dup();
@@ -648,8 +655,8 @@ mjit::Compiler::generateMethod()
             masm.setupVMFrame();
             masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
             Assembler::Condition cond = (op == JSOP_OR)
-                                        ? Assembler::NotEqual
-                                        : Assembler::Equal;
+                                        ? Assembler::NonZero
+                                        : Assembler::Zero;
             Jump j = masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
             jumpInScript(j, target);
             frame.pop();
@@ -665,6 +672,18 @@ mjit::Compiler::generateMethod()
             frame.pushSynced();
           }
           END_CASE(JSOP_ITER)
+
+          BEGIN_CASE(JSOP_MOREITER)
+            /* This MUST be fused with IFNE or IFNEX. */
+            iterMore();
+            break;
+          END_CASE(JSOP_MOREITER)
+
+          BEGIN_CASE(JSOP_ENDITER)
+            prepareStubCall();
+            stubCall(stubs::EndIter, Uses(1), Defs(0));
+            frame.pop();
+          END_CASE(JSOP_ENDITER)
 
           BEGIN_CASE(JSOP_POP)
             frame.pop();
@@ -1243,5 +1262,113 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     stubCall(stub, Uses(0), Defs(1));
     frame.pushSynced();
+}
+
+/*
+ * This big nasty function emits a fast-path for native iterators, producing
+ * a temporary value on the stack for FORLOCAL,ARG,GLOBAL,etc ops to use.
+ */
+void
+mjit::Compiler::iterNext()
+{
+    FrameEntry *fe = frame.peek(-1);
+    RegisterID reg = frame.tempRegForData(fe);
+
+    /* Is it worth trying to pin this longer? Prolly not. */
+    frame.pinReg(reg);
+    RegisterID T1 = frame.allocReg();
+    frame.unpinReg(reg);
+
+    /* Test clasp */
+    masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
+    Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
+    stubcc.linkExit(notFast);
+
+    /* Get private from iter obj. :FIXME: X64 */
+    Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
+    masm.loadData32(privSlot, T1);
+
+    RegisterID T2 = frame.allocReg();
+    RegisterID T3 = frame.allocReg();
+
+    /* Get cursor. */
+    masm.loadPtr(Address(T1, offsetof(NativeIterator, props_cursor)), T2);
+
+    /* Test type. */
+    Jump isString = masm.branch32(Assembler::Equal,
+                                  masm.payloadOf(Address(T2, 0)),
+                                  Imm32(int32(JSVAL_MASK32_STRING)));
+
+    /* Test if for-each. */
+    masm.load32(Address(T1, offsetof(NativeIterator, flags)), T3);
+    masm.and32(Imm32(JSITER_FOREACH), T3);
+    notFast = masm.branchTest32(Assembler::Zero, T3, T3);
+    stubcc.linkExit(notFast);
+    isString.linkTo(masm.label(), &masm);
+
+    /* It's safe to increase the cursor now. */
+    masm.addPtr(Imm32(sizeof(Value)), T2, T3);
+    masm.storePtr(T3, Address(T1, offsetof(NativeIterator, props_cursor)));
+
+    /* Done with T1 and T3! */
+    frame.freeReg(T1);
+    frame.freeReg(T3);
+
+    stubcc.leave();
+    stubcc.call(stubs::IterNext);
+
+    /* Now... */
+    frame.freeReg(T2);
+    frame.push(Address(T2, 0));
+
+    /* Join with the stub call. */
+    stubcc.rejoin(1);
+}
+
+void
+mjit::Compiler::iterMore()
+{
+    FrameEntry *fe= frame.peek(-1);
+    RegisterID reg = frame.tempRegForData(fe);
+
+    frame.pinReg(reg);
+    RegisterID T1 = frame.allocReg();
+    frame.unpinReg(reg);
+
+    /* Test clasp */
+    masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
+    Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
+    stubcc.linkExit(notFast);
+
+    /* Get private from iter obj. :FIXME: X64 */
+    Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
+    masm.loadData32(privSlot, T1);
+
+    /* Get props_cursor, test */
+    RegisterID T2 = frame.allocReg();
+    frame.forgetEverything();
+    masm.loadPtr(Address(T1, offsetof(NativeIterator, props_cursor)), T2);
+    masm.loadPtr(Address(T1, offsetof(NativeIterator, props_end)), T1);
+    Jump j = masm.branchPtr(Assembler::LessThan, T2, T1);
+
+    jsbytecode *target = &PC[JSOP_MOREITER_LENGTH];
+    JSOp next = JSOp(*target);
+    JS_ASSERT(next == JSOP_IFNE || next == JSOP_IFNEX);
+
+    target += (next == JSOP_IFNE)
+              ? GET_JUMP_OFFSET(target)
+              : GET_JUMPX_OFFSET(target);
+    jumpInScript(j, target);
+
+    stubcc.leave();
+    stubcc.call(stubs::IterMore);
+    stubcc.rejoin(0);
+    j = stubcc.masm.branchTest32(Assembler::NonZero, Registers::ReturnReg, Registers::ReturnReg);
+    stubcc.jumpInScript(j, target);
+
+    PC += JSOP_MOREITER_LENGTH;
+    PC += js_CodeSpec[next].length;
+
+    stubcc.rejoin(0);
 }
 

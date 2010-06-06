@@ -2120,3 +2120,38 @@ stubs::InitProp(VMFrame &f, JSAtom *atom)
     InitPropOrMethod(f, atom, JSOP_INITPROP);
 }
 
+void JS_FASTCALL
+stubs::IterNext(VMFrame &f)
+{
+    JS_ASSERT(f.regs.sp - 1 >= f.fp->base());
+    JS_ASSERT(f.regs.sp[-1].isObject());
+
+    JSObject *iterobj = &f.regs.sp[-1].asObject();
+    f.regs.sp[0].setNull();
+    f.regs.sp++;
+    if (!js_IteratorNext(f.cx, iterobj, &f.regs.sp[-1]))
+        THROW();
+}
+
+JSBool JS_FASTCALL
+stubs::IterMore(VMFrame &f)
+{
+    JS_ASSERT(f.regs.sp - 1 >= f.fp->base());
+    JS_ASSERT(f.regs.sp[-1].isObject());
+
+    Value v;
+    JSObject *iterobj = &f.regs.sp[-1].asObject();
+    if (!js_IteratorMore(f.cx, iterobj, &v))
+        THROWV(JS_FALSE);
+
+    return v.asBoolean();
+}
+
+void JS_FASTCALL
+stubs::EndIter(VMFrame &f)
+{
+    JS_ASSERT(f.regs.sp - 1 >= f.fp->base());
+    if (!js_CloseIterator(f.cx, f.regs.sp[-1]))
+        THROW();
+}
+
