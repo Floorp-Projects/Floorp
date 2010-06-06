@@ -418,6 +418,21 @@ const uint16 js_PrimitiveTestFlags[] = {
     JSFUN_THISP_NUMBER      /* INT     */
 };
 
+class AutoPreserveEnumerators {
+    JSContext *cx;
+    JSObject *enumerators;
+
+  public:
+    AutoPreserveEnumerators(JSContext *cx) : cx(cx), enumerators(cx->enumerators)
+    {
+    }
+
+    ~AutoPreserveEnumerators()
+    {
+        cx->enumerators = enumerators;
+    }
+};
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -645,6 +660,7 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #endif
     } else {
         JS_ASSERT(script);
+        AutoPreserveEnumerators preserve(cx);
         ok = js_Interpret(cx);
     }
 
@@ -834,6 +850,7 @@ js_Execute(JSContext *cx, JSObject *const chain, JSScript *script,
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
+    AutoPreserveEnumerators preserve(cx);
     JSBool ok = js_Interpret(cx);
     if (result)
         *result = fp->rval;
@@ -873,21 +890,21 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     JS_ASSERT_IF(attrs == JSPROP_INITIALIZER, !propp);
 
     if (!obj->lookupProperty(cx, id, &obj2, &prop))
-        return JS_FALSE;
+        return false;
     if (!prop)
-        return JS_TRUE;
+        return true;
+    if (obj2->isNative()) {
+        oldAttrs = ((JSScopeProperty *) prop)->attributes();
 
-    /* Use prop as a speedup hint to obj->getAttributes. */
-    if (!obj2->getAttributes(cx, id, prop, &oldAttrs)) {
-        obj2->dropProperty(cx, prop);
-        return JS_FALSE;
+        /* If our caller doesn't want prop, unlock obj2. */
+        if (!propp)
+            JS_UNLOCK_OBJ(cx, obj2);
+    } else {
+        if (!obj2->getAttributes(cx, id, &oldAttrs))
+            return false;
     }
 
-    /*
-     * If our caller doesn't want prop, drop it (we don't need it any longer).
-     */
     if (!propp) {
-        obj2->dropProperty(cx, prop);
         prop = NULL;
     } else {
         *objp = obj2;
@@ -986,8 +1003,8 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
             !JSVAL_IS_NULL(rval)) {
             JSObject *lobj, *robj;
 
-            lobj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(lval));
-            robj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(rval));
+            lobj = JSVAL_TO_OBJECT(lval)->wrappedObject(cx);
+            robj = JSVAL_TO_OBJECT(rval)->wrappedObject(cx);
             lval = OBJECT_TO_JSVAL(lobj);
             rval = OBJECT_TO_JSVAL(robj);
         }

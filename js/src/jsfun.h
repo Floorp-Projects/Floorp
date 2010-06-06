@@ -173,6 +173,9 @@ struct JSFunction : public JSObject
         return u.i.nvars;
     }
 
+    /* uint16 representation bounds number of call object dynamic slots. */
+    enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };
+
     uintN countArgsAndVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return nargs + u.i.nvars;
@@ -340,7 +343,6 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
  * with #if/#error in jsfun.c.
  */
 #define JSV2F_CONSTRUCT         JSINVOKE_CONSTRUCT
-#define JSV2F_ITERATOR          JSINVOKE_ITERATOR
 #define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *

@@ -2,7 +2,7 @@
 
 test.jar:
 # test chrome with flags and path expansion
-% content test %one xpcnativewrappers=no
+% content test %one
 # test locale with variable substitution and path expansion
 % locale @AB_CD@ %three
 # test overlays
