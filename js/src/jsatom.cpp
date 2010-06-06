@@ -138,18 +138,24 @@ const char *const js_common_atom_names[] = {
     js_eval_str,                /* evalAtom                     */
     js_fileName_str,            /* fileNameAtom                 */
     js_get_str,                 /* getAtom                      */
+    js_global_str,              /* globalAtom                   */
+    js_ignoreCase_str,          /* ignoreCaseAtom               */
     js_index_str,               /* indexAtom                    */
     js_input_str,               /* inputAtom                    */
     js_iterator_str,            /* iteratorAtom                 */
+    js_lastIndex_str,           /* lastIndexAtom                */
     js_length_str,              /* lengthAtom                   */
     js_lineNumber_str,          /* lineNumberAtom               */
     js_message_str,             /* messageAtom                  */
+    js_multiline_str,           /* multilineAtom                */
     js_name_str,                /* nameAtom                     */
     js_next_str,                /* nextAtom                     */
     js_noSuchMethod_str,        /* noSuchMethodAtom             */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
+    js_source_str,              /* sourceAtom                   */
     js_stack_str,               /* stackAtom                    */
+    js_sticky_str,              /* stickyAtom                   */
     js_toLocaleString_str,      /* toLocaleStringAtom           */
     js_toSource_str,            /* toSourceAtom                 */
     js_toString_str,            /* toStringAtom                 */
@@ -224,12 +230,16 @@ const char js_eval_str[]            = "eval";
 const char js_fileName_str[]        = "fileName";
 const char js_get_str[]             = "get";
 const char js_getter_str[]          = "getter";
+const char js_global_str[]          = "global";
+const char js_ignoreCase_str[]      = "ignoreCase";
 const char js_index_str[]           = "index";
 const char js_input_str[]           = "input";
 const char js_iterator_str[]        = "__iterator__";
+const char js_lastIndex_str[]       = "lastIndex";
 const char js_length_str[]          = "length";
 const char js_lineNumber_str[]      = "lineNumber";
 const char js_message_str[]         = "message";
+const char js_multiline_str[]       = "multiline";
 const char js_name_str[]            = "name";
 const char js_next_str[]            = "next";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
@@ -237,7 +247,9 @@ const char js_object_str[]          = "object";
 const char js_proto_str[]           = "__proto__";
 const char js_setter_str[]          = "setter";
 const char js_set_str[]             = "set";
+const char js_source_str[]          = "source";
 const char js_stack_str[]           = "stack";
+const char js_sticky_str[]          = "sticky";
 const char js_toSource_str[]        = "toSource";
 const char js_toString_str[]        = "toString";
 const char js_toLocaleString_str[]  = "toLocaleString";
