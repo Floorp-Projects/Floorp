@@ -723,7 +723,8 @@ mjit::Compiler::generateMethod()
                 PC += JSOP_SETNAME_LENGTH + JSOP_POP_LENGTH;
                 break;
             }
-            frame.popAfterSet();
+            frame.popn(2);
+            frame.pushSynced();
           END_CASE(JSOP_SETNAME)
 
           BEGIN_CASE(JSOP_DEFFUN)
