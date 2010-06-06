@@ -761,6 +761,17 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_DEFLOCALFUN)
 
+          BEGIN_CASE(JSOP_REGEXP)
+          {
+            JSObject *regex = script->getRegExp(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(regex), Registers::ArgReg1);
+            stubCall(stubs::RegExp, Uses(0), Defs(1));
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_NONFUNOBJ, Registers::ReturnReg);
+          }
+          END_CASE(JSOP_REGEXP)
+
           BEGIN_CASE(JSOP_GETUPVAR)
           BEGIN_CASE(JSOP_CALLUPVAR)
           {

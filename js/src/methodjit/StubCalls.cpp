@@ -1834,3 +1834,24 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     return obj;
 }
 
+JSObject * JS_FASTCALL
+stubs::RegExp(VMFrame &f, JSObject *regex)
+{
+    /*
+     * Push a regexp object cloned from the regexp literal object mapped by the
+     * bytecode at pc. ES5 finally fixed this bad old ES3 design flaw which was
+     * flouted by many browser-based implementations.
+     *
+     * We avoid the js_GetScopeChain call here and pass fp->scopeChain as
+     * js_GetClassPrototype uses the latter only to locate the global.
+     */
+    JSObject *proto;
+    if (!js_GetClassPrototype(f.cx, f.fp->scopeChain, JSProto_RegExp, &proto))
+        THROWV(NULL);
+    JS_ASSERT(proto);
+    JSObject *obj = js_CloneRegExpObject(f.cx, regex, proto);
+    if (!obj)
+        THROWV(NULL);
+    return obj;
+}
+
