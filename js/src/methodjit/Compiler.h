@@ -143,6 +143,7 @@ class Compiler
     void jsop_neg();
     void jsop_bitnot();
     void jsop_objtostr();
+    void jsop_not();
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
