@@ -102,6 +102,8 @@ void JS_FASTCALL Mod(VMFrame &f);
 void JS_FASTCALL Neg(VMFrame &f);
 void JS_FASTCALL ObjToStr(VMFrame &f);
 
+void JS_FASTCALL Iter(VMFrame &f, uint32 flags);
+
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */
