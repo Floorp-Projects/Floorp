@@ -89,10 +89,9 @@ nsCSSRule::SetParentRule(nsICSSGroupRule* aRule)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   // The nsIStyleRule contract is not appropriate for all CSS rules.
   NS_NOTREACHED("nsCSSRule::MapRuleInfoInto");
-  return NS_OK;
 }

@@ -346,22 +346,26 @@ nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
   // so the item to be extracted should never be a directory
   PR_ASSERT(!item->IsDirectory());
 
-  nsresult rv;
+  Bytef outbuf[ZIP_BUFLEN];
 
-  //-- extract the file using the appropriate method
-  switch(item->Compression())
-  {
-    case STORED:
-      rv = CopyItemToDisk(item, aFd);
+  nsZipCursor cursor(item, this, outbuf, ZIP_BUFLEN, true);
+
+  nsresult rv = NS_OK;
+
+  while (true) {
+    PRUint32 count = 0;
+    PRUint8* buf = cursor.Read(&count);
+    if (!buf) {
+      rv = NS_ERROR_FILE_CORRUPTED;
       break;
-
-    case DEFLATED:
-      rv = InflateItem(item, aFd);
+    } else if (count == 0) {
       break;
+    }
 
-    default:
-      //-- unsupported compression type
-      rv = NS_ERROR_NOT_IMPLEMENTED;
+    if (aFd && PR_Write(aFd, buf, count) < (READTYPE)count) {
+      rv = NS_ERROR_FILE_DISK_FULL;
+      break;
+    }
   }
 
   //-- delete the file on errors, or resolve symlink if needed
@@ -697,97 +701,6 @@ PRUint8* nsZipArchive::GetData(nsZipItem* aItem)
   return data + offset;
 }
 
-//---------------------------------------------
-// nsZipArchive::CopyItemToDisk
-//---------------------------------------------
-nsresult
-nsZipArchive::CopyItemToDisk(nsZipItem *item, PRFileDesc* outFD)
-{
-  PR_ASSERT(item);
-
-  //-- get to the start of file's data
-  const PRUint8* itemData = GetData(item);
-  if (!itemData)
-    return NS_ERROR_FILE_CORRUPTED;
-
-  if (outFD && PR_Write(outFD, itemData, item->Size()) < (READTYPE)item->Size())
-  {
-    //-- Couldn't write all the data (disk full?)
-    return NS_ERROR_FILE_DISK_FULL;
-  }
-
-  //-- Calculate crc
-  PRUint32 crc = crc32(0L, (const unsigned char*)itemData, item->Size());
-  //-- verify crc32
-  if (crc != item->CRC32())
-      return NS_ERROR_FILE_CORRUPTED;
-
-  return NS_OK;
-}
-
-
-//---------------------------------------------
-// nsZipArchive::InflateItem
-//---------------------------------------------
-nsresult nsZipArchive::InflateItem(nsZipItem * item, PRFileDesc* outFD)
-/*
- * This function inflates an archive item to disk, to the
- * file specified by outFD. If outFD is zero, the extracted data is
- * not written, only checked for CRC, so this is in effect same as 'Test'.
- */
-{
-  PR_ASSERT(item);
-  //-- allocate deflation buffers
-  Bytef outbuf[ZIP_BUFLEN];
-
-  //-- set up the inflate
-  z_stream    zs;
-  nsresult status = gZlibInit(&zs);
-  if (status != NS_OK)
-    return NS_ERROR_FAILURE;
-
-  //-- inflate loop
-  zs.avail_in = item->Size();
-  zs.next_in = (Bytef*)GetData(item);
-  if (!zs.next_in)
-    return NS_ERROR_FILE_CORRUPTED;
-
-  PRUint32  crc = crc32(0L, Z_NULL, 0);
-  int zerr = Z_OK;
-  while (zerr == Z_OK)
-  {
-    zs.next_out = outbuf;
-    zs.avail_out = ZIP_BUFLEN;
-
-    zerr = inflate(&zs, Z_PARTIAL_FLUSH);
-    if (zerr != Z_OK && zerr != Z_STREAM_END)
-    {
-      status = (zerr == Z_MEM_ERROR) ? NS_ERROR_OUT_OF_MEMORY : NS_ERROR_FILE_CORRUPTED;
-      break;
-    }
-    PRUint32 count = zs.next_out - outbuf;
-
-    //-- incrementally update crc32
-    crc = crc32(crc, (const unsigned char*)outbuf, count);
-
-    if (outFD && PR_Write(outFD, outbuf, count) < (READTYPE)count)
-    {
-      status = NS_ERROR_FILE_DISK_FULL;
-      break;
-    }
-  } // while
-
-  //-- free zlib internal state
-  inflateEnd(&zs);
-
-  //-- verify crc32
-  if ((status == NS_OK) && (crc != item->CRC32()))
-  {
-    status = NS_ERROR_FILE_CORRUPTED;
-  }
-  return status;
-}
-
 //------------------------------------------
 // nsZipArchive constructor and destructor
 //------------------------------------------
@@ -1004,3 +917,94 @@ bool nsZipItem::IsSymlink()
 }
 #endif
 
+nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, PRUint8* aBuf, PRUint32 aBufSize, bool doCRC) :
+  mItem(item),
+  mBuf(aBuf),
+  mBufSize(aBufSize),
+  mDoCRC(doCRC)
+{
+  if (mItem->Compression() == DEFLATED) {
+    nsresult status = gZlibInit(&mZs);
+    NS_ASSERTION(status == NS_OK, "Zlib failed to initialize");
+    NS_ASSERTION(aBuf, "Must pass in a buffer for DEFLATED nsZipItem");
+  }
+  
+  mZs.avail_in = item->Size();
+  mZs.next_in = (Bytef*)aZip->GetData(item);
+  
+  if (doCRC)
+    mCRC = crc32(0L, Z_NULL, 0);
+}
+
+nsZipCursor::~nsZipCursor()
+{
+  if (mItem->Compression() == DEFLATED) {
+    inflateEnd(&mZs);
+  }
+}
+
+PRUint8* nsZipCursor::Read(PRUint32 *aBytesRead) {
+  int zerr;
+  PRUint8 *buf = nsnull;
+  bool verifyCRC = true;
+
+  if (!mZs.next_in)
+    return nsnull;
+
+  switch (mItem->Compression()) {
+  case STORED:
+    *aBytesRead = mZs.avail_in;
+    buf = mZs.next_in;
+    mZs.next_in += mZs.avail_in;
+    mZs.avail_in = 0;
+    break;
+  case DEFLATED:
+    buf = mBuf;
+    mZs.next_out = buf;
+    mZs.avail_out = mBufSize;
+    
+    zerr = inflate(&mZs, Z_PARTIAL_FLUSH);
+    if (zerr != Z_OK && zerr != Z_STREAM_END)
+      return nsnull;
+    
+    *aBytesRead = mZs.next_out - buf;
+    verifyCRC = (zerr == Z_STREAM_END);
+    break;
+  default:
+    return nsnull;
+  }
+
+  if (mDoCRC) {
+    mCRC = crc32(mCRC, (const unsigned char*)buf, *aBytesRead);
+    if (verifyCRC && mCRC != mItem->CRC32())
+      return nsnull;
+  }
+  return buf;
+}
+
+nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName, bool doCRC) :
+  mReturnBuf(nsnull)
+{
+  // make sure the ziparchive hangs around
+  mZipHandle = aZip->GetFD();
+  
+  nsZipItem* item = aZip->GetItem(aEntryName);
+  if (!item)
+    return;
+
+  PRUint32 size = 0;
+  if (item->Compression() == DEFLATED) {
+    size = item->RealSize();
+    mAutoBuf = new PRUint8[size];
+  }
+
+  nsZipCursor cursor(item, aZip, mAutoBuf, size, doCRC);
+  mReturnBuf = cursor.Read(&mReadlen);
+  if (!mReturnBuf)
+    return;
+
+  if (mReadlen != item->RealSize()) {
+    NS_ASSERTION(mReadlen == item->RealSize(), "nsZipCursor underflow");
+    mReturnBuf = nsnull;
+  }
+}

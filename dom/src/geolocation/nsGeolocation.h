@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsGeoLocation_h
+#define nsGeoLocation_h
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -223,3 +225,5 @@ private:
   // owning back pointer.
   nsRefPtr<nsGeolocationService> mService;
 };
+
+#endif /* nsGeoLocation_h */
