@@ -1904,9 +1904,11 @@ PresShell::Destroy()
   }
 
   nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
+#ifdef MOZ_SMIL
   if (mDocument->HasAnimationController()) {
     mDocument->GetAnimationController()->StopSampling(rd);
   }
+#endif // MOZ_SMIL
 
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction

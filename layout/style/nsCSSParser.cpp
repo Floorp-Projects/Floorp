@@ -817,7 +817,9 @@ CSSParserImpl::Reset()
   NS_ASSERTION(! mScannerInited, "resetting with scanner active");
   SetStyleSheet(nsnull);
   SetQuirkMode(PR_FALSE);
+#ifdef MOZ_SVG
   SetSVGMode(PR_FALSE);
+#endif // MOZ_SVG
   SetChildLoader(nsnull);
 }
 
