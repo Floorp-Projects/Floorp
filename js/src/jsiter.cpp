@@ -686,10 +686,13 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 {
     JSObject *iterobj = cx->enumerators;
     while (iterobj) {
+      again:
         NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
-            for (jsid *idp = ni->props_cursor; idp < ni->props_end; ++idp) {
+            jsid *props_cursor = ni->props_cursor;
+            jsid *props_end = ni->props_end;
+            for (jsid *idp = props_cursor; idp < props_end; ++idp) {
                 if (*idp == id) {
                     /*
                      * Check whether another property along the prototype chain
@@ -715,14 +718,21 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
                     }
 
                     /*
+                     * If lookupProperty or getAttributes above removed a property from
+                     * ni, start over.
+                     */
+                    if (props_end != ni->props_end || props_cursor != ni->props_cursor)
+                        goto again;
+
+                    /*
                      * No property along the prototype chain steppeded in to take the
                      * property's place, so go ahead and delete id from the list.
                      * If it is the next property to be enumerated, just skip it.
                      */
-                    if (idp == ni->props_cursor) {
+                    if (idp == props_cursor) {
                         ni->props_cursor++;
                     } else {
-                        memmove(idp, idp + 1, (ni->props_end - (idp + 1)) * sizeof(jsid));
+                        memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
                         ni->props_end--;
                     }
                     break;
