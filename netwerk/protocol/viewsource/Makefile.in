@@ -36,14 +36,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
-DIRS		= public src
+MODULE         = necko
+LIBRARY_NAME   = nkviewsource_s
+LIBXUL_LIBRARY = 1
+XPIDL_MODULE   = necko_viewsource
+GRE_MODULE     = 1
+
+FORCE_STATIC_LIB = 1
+
+XPIDLSRCS = \
+  nsIViewSourceChannel.idl \
+  $(NULL)
+
+CPPSRCS = \
+  nsViewSourceHandler.cpp \
+  nsViewSourceChannel.cpp \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../../base/src \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
