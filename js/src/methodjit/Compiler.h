@@ -146,6 +146,7 @@ class Compiler
     void jsop_bitnot();
     void jsop_objtostr();
     void jsop_not();
+    void jsop_typeof();
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
@@ -162,6 +163,7 @@ class Compiler
     STUB_CALL_TYPE(JSObjStubFun);
     STUB_CALL_TYPE(JSObjStubJSObj);
     STUB_CALL_TYPE(VoidStubAtom);
+    STUB_CALL_TYPE(JSStrStub);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();

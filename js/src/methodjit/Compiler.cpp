@@ -534,6 +534,10 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_NEG)
 
+          BEGIN_CASE(JSOP_TYPEOF)
+            jsop_typeof();
+          END_CASE(JSOP_TYPEOF)
+
           BEGIN_CASE(JSOP_VOID)
             frame.pop();
             frame.push(UndefinedTag());
