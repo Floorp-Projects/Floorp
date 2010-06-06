@@ -932,6 +932,18 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           END_CASE(JSOP_TRACE)
 
+          BEGIN_CASE(JSOP_CONCATN)
+          {
+            uint32 argc = GET_ARGC(PC);
+            prepareStubCall();
+            masm.move(Imm32(argc), Registers::ArgReg1);
+            stubCall(stubs::ConcatN, Uses(argc), Defs(1));
+            frame.popn(argc);
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_STRING, Registers::ReturnReg);
+          }
+          END_CASE(JSOP_CONCATN)
+
           BEGIN_CASE(JSOP_OBJTOSTR)
             jsop_objtostr();
           END_CASE(JSOP_OBJTOSTR)
