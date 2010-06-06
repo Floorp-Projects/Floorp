@@ -2155,3 +2155,12 @@ stubs::EndIter(VMFrame &f)
         THROW();
 }
 
+JSString * JS_FASTCALL
+stubs::TypeOf(VMFrame &f)
+{
+    const Value &ref = f.regs.sp[-1];
+    JSType type = JS_TypeOfValue(f.cx, Jsvalify(ref));
+    JSAtom *atom = f.cx->runtime->atomState.typeAtoms[type];
+    return ATOM_TO_STRING(atom);
+}
+

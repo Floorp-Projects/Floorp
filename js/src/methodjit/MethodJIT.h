@@ -190,8 +190,9 @@ typedef void * (JS_FASTCALL *VoidPtrStubUInt32)(VMFrame &, uint32);
 typedef JSObject * (JS_FASTCALL *JSObjStub)(VMFrame &);
 typedef JSObject * (JS_FASTCALL *JSObjStubUInt32)(VMFrame &, uint32);
 typedef JSObject * (JS_FASTCALL *JSObjStubFun)(VMFrame &, JSFunction *);
-typedef JSObject * (JS_FASTCALL *JSObjStubJSObj)(VMFrame &f, JSObject *);
-typedef void (JS_FASTCALL *VoidStubAtom)(VMFrame &f, JSAtom *);
+typedef JSObject * (JS_FASTCALL *JSObjStubJSObj)(VMFrame &, JSObject *);
+typedef void (JS_FASTCALL *VoidStubAtom)(VMFrame &, JSAtom *);
+typedef JSString * (JS_FASTCALL *JSStrStub)(VMFrame &);
 
 #define JS_UNJITTABLE_METHOD (reinterpret_cast<void*>(-1))
 

@@ -649,3 +649,48 @@ mjit::Compiler::jsop_not()
     stubcc.rejoin(1);
 }
 
+void
+mjit::Compiler::jsop_typeof()
+{
+    FrameEntry *fe = frame.peek(-1);
+
+    if (fe->isTypeKnown()) {
+        JSRuntime *rt = cx->runtime;
+
+        JSAtom *atom = NULL;
+        switch (fe->getTypeTag()) {
+          case JSVAL_MASK32_STRING:
+            atom = rt->atomState.typeAtoms[JSTYPE_STRING];
+            break;
+          case JSVAL_MASK32_UNDEFINED:
+            atom = rt->atomState.typeAtoms[JSTYPE_VOID];
+            break;
+          case JSVAL_MASK32_NULL:
+            atom = rt->atomState.typeAtoms[JSTYPE_OBJECT];
+            break;
+          case JSVAL_MASK32_FUNOBJ:
+          case JSVAL_MASK32_NONFUNOBJ:
+            atom = NULL;
+            break;
+          case JSVAL_MASK32_BOOLEAN:
+            atom = rt->atomState.typeAtoms[JSTYPE_BOOLEAN];
+            break;
+          default:
+            atom = rt->atomState.typeAtoms[JSTYPE_NUMBER];
+            break;
+        }
+
+        if (atom) {
+            frame.pop();
+            frame.push(StringTag(ATOM_TO_STRING(atom)));
+            return;
+        }
+    }
+
+    prepareStubCall();
+    stubCall(stubs::TypeOf, Uses(1), Defs(1));
+    frame.pop();
+    frame.takeReg(Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_MASK32_STRING, Registers::ReturnReg);
+}
+
