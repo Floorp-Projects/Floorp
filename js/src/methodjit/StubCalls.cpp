@@ -1855,3 +1855,25 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
     return obj;
 }
 
+JSObject * JS_FASTCALL
+stubs::Lambda(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = FUN_OBJECT(fun);
+
+    JSObject *parent;
+    if (FUN_NULL_CLOSURE(fun)) {
+        parent = f.fp->scopeChain;
+    } else {
+        parent = js_GetScopeChain(f.cx, f.fp);
+        if (!parent)
+            THROWV(NULL);
+    }
+
+    obj = CloneFunctionObject(f.cx, fun, parent);
+    if (!obj)
+        THROWV(NULL);
+
+    return obj;
+}
+
+
