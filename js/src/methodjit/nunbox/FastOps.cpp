@@ -67,6 +67,44 @@ mjit::Compiler::jsop_bindname(uint32 index)
 }
 
 void
+mjit::Compiler::jsop_bitnot()
+{
+    FrameEntry *top = frame.peek(-1);
+
+    /* We only want to handle integers here. */
+    if (top->isTypeKnown() && top->getTypeTag() != JSVAL_MASK32_INT32) {
+        prepareStubCall();
+        stubCall(stubs::BitNot, Uses(1), Defs(1));
+        frame.pop();
+        frame.pushSyncedType(JSVAL_MASK32_INT32);
+        return;
+    }
+           
+    /* Test the type. */
+    bool stubNeeded = false;
+    if (!top->isTypeKnown()) {
+        RegisterID reg = frame.tempRegForType(top);
+        Jump intFail = masm.testInt32(Assembler::NotEqual, reg);
+        stubcc.linkExit(intFail);
+        frame.learnType(top, JSVAL_MASK32_INT32);
+        stubNeeded = true;
+    }
+
+    if (stubNeeded) {
+        stubcc.leave();
+        stubcc.call(stubs::BitNot);
+    }
+
+    RegisterID reg = frame.ownRegForData(top);
+    masm.not32(reg);
+    frame.pop();
+    frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+
+    if (stubNeeded)
+        stubcc.rejoin(1);
+}
+
+void
 mjit::Compiler::jsop_bitop(JSOp op)
 {
     FrameEntry *rhs = frame.peek(-1);

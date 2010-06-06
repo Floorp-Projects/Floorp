@@ -81,6 +81,7 @@ JSBool JS_FASTCALL NotEqual(VMFrame &f);
 void JS_FASTCALL BitOr(VMFrame &f);
 void JS_FASTCALL BitXor(VMFrame &f);
 void JS_FASTCALL BitAnd(VMFrame &f);
+void JS_FASTCALL BitNot(VMFrame &f);
 void JS_FASTCALL Lsh(VMFrame &f);
 void JS_FASTCALL Rsh(VMFrame &f);
 void JS_FASTCALL Add(VMFrame &f);
