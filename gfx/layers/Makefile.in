@@ -77,7 +77,7 @@ CPPSRCS = \
         $(NULL)
  
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifndef WINCE
+ifdef MOZ_ENABLE_D3D9_LAYER
 EXPORTS += LayerManagerD3D9.h
 
 CPPSRCS += \

@@ -41,44 +41,21 @@
 #include "nsStackFrame.h"
 #include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIEditor.h"
 #include "nsITextControlFrame.h"
-#include "nsIFontMetrics.h"
-#include "nsWeakReference.h" //for service and presshell pointers
-#include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
 #include "nsStubMutationObserver.h"
-#include "nsThreadUtils.h"
+#include "nsITextControlElement.h"
 
 class nsIEditor;
 class nsISelectionController;
-class nsTextInputSelectionImpl;
-class nsTextInputListener;
 class nsIDOMCharacterData;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
-class nsTextInputSelectionImpl;
-class nsTextControlFrame;
 class EditorInitializerEntryTracker;
-
-class nsAnonDivObserver : public nsStubMutationObserver
-{
-public:
-  nsAnonDivObserver(nsTextControlFrame* aTextControl)
-  : mTextControl(aTextControl) {}
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
-private:
-  nsTextControlFrame* mTextControl;
-};
+class nsTextEditorState;
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
@@ -145,10 +122,6 @@ public:
 
   // Utility methods to set current widget state
 
-  // Be careful when using this method.
-  // Calling it may cause |this| to be deleted.
-  // In that case the method returns an error value.
-  nsresult SetValue(const nsAString& aValue);
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsFrameList&    aChildList);
 
@@ -163,17 +136,14 @@ public:
 //==== NSITEXTCONTROLFRAME
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor);
-  NS_IMETHOD    OwnsValue(PRBool* aOwnsValue);
-  NS_IMETHOD    GetValue(nsAString& aValue, PRBool aIgnoreWrap) const;
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength);
   NS_IMETHOD    CheckFireOnChange();
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-  virtual nsISelectionController* GetOwnedSelectionController();
-  virtual nsFrameSelection* GetOwnedFrameSelection()
-    { return mFrameSel; }
+  NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon);
+  virtual nsFrameSelection* GetOwnedFrameSelection();
 
   nsresult GetPhonetic(nsAString& aPhonetic);
 
@@ -198,26 +168,6 @@ public:
   NS_DECL_QUERYFRAME
 
 public: //for methods who access nsTextControlFrame directly
-  /**
-   * Find out whether this is a single line text control.  (text or password)
-   * @return whether this is a single line text control
-   */
-  PRBool IsSingleLineTextControl() const;
-  /**
-   * Find out whether this control is a textarea.
-   * @return whether this is a textarea text control
-   */
-  PRBool IsTextArea() const;
-  /**
-   * Find out whether this control edits plain text.  (Currently always true.)
-   * @return whether this is a plain text control
-   */
-  PRBool IsPlainTextControl() const;
-  /**
-   * Find out whether this is a password control (input type=password)
-   * @return whether this is a password ontrol
-   */
-  PRBool IsPasswordTextControl() const;
   void FireOnInput();
   void SetValueChanged(PRBool aValueChanged);
   /** Called when the frame is focused, to remember the value for onChange. */
@@ -233,17 +183,92 @@ public: //for methods who access nsTextControlFrame directly
     return mFireChangeEventState;
   }    
 
-  /* called to free up native keybinding services */
-  static NS_HIDDEN_(void) ShutDown();
-
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
 
-  void ClearValueCache() { mCachedValue.Truncate(); }
+  class ValueSetter {
+  public:
+    ValueSetter(nsTextControlFrame* aFrame,
+                PRBool aHasFocusValue)
+      : mFrame(aFrame)
+      , mInited(PR_FALSE)
+    {
+      NS_ASSERTION(aFrame, "Should pass a valid frame");
+
+      // This method isn't used for user-generated changes, except for calls
+      // from nsFileControlFrame which sets mFireChangeEventState==true and
+      // restores it afterwards (ie. we want 'change' events for those changes).
+      // Focused value must be updated to prevent incorrect 'change' events,
+      // but only if user hasn't changed the value.
+      mFocusValueInit = !mFrame->mFireChangeEventState && aHasFocusValue;
+    }
+    void Cancel() {
+      mInited = PR_FALSE;
+    }
+    void Init() {
+      // Since this code does not handle user-generated changes to the text,
+      // make sure we don't fire oninput when the editor notifies us.
+      // (mNotifyOnInput must be reset before we return).
+
+      // To protect against a reentrant call to SetValue, we check whether
+      // another SetValue is already happening for this frame.  If it is,
+      // we must wait until we unwind to re-enable oninput events.
+      mOuterTransaction = mFrame->mNotifyOnInput;
+      if (mOuterTransaction)
+        mFrame->mNotifyOnInput = PR_FALSE;
+
+      mInited = PR_TRUE;
+    }
+    ~ValueSetter() {
+      if (!mInited)
+        return;
+
+      if (mOuterTransaction)
+        mFrame->mNotifyOnInput = PR_TRUE;
+
+      if (mFocusValueInit) {
+        // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
+        mFrame->InitFocusedValue();
+      }
+    }
+
+  private:
+    nsTextControlFrame* mFrame;
+    PRPackedBool mFocusValueInit;
+    PRPackedBool mOuterTransaction;
+    PRPackedBool mInited;
+  };
+  friend class ValueSetter;
+
+#define DEFINE_TEXTCTRL_FORWARDER(type, name)                                  \
+  type name() {                                                                \
+    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent()); \
+    NS_ASSERTION(txtCtrl, "Content not a text control element");               \
+    return txtCtrl->name();                                                    \
+  }
+#define DEFINE_TEXTCTRL_CONST_FORWARDER(type, name)                            \
+  type name() const {                                                          \
+    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent()); \
+    NS_ASSERTION(txtCtrl, "Content not a text control element");               \
+    return txtCtrl->name();                                                    \
+  }
+
+  DEFINE_TEXTCTRL_CONST_FORWARDER(PRBool, IsSingleLineTextControl)
+  DEFINE_TEXTCTRL_CONST_FORWARDER(PRBool, IsTextArea)
+  DEFINE_TEXTCTRL_CONST_FORWARDER(PRBool, IsPlainTextControl)
+  DEFINE_TEXTCTRL_CONST_FORWARDER(PRBool, IsPasswordTextControl)
+  DEFINE_TEXTCTRL_FORWARDER(PRInt32, GetCols)
+  DEFINE_TEXTCTRL_FORWARDER(PRInt32, GetWrapCols)
+  DEFINE_TEXTCTRL_FORWARDER(PRInt32, GetRows)
+
+#undef DEFINE_TEXTCTRL_CONST_FORWARDER
+#undef DEFINE_TEXTCTRL_FORWARDER
+
 protected:
   class EditorInitializer;
   friend class EditorInitializer;
+  friend class nsTextEditorState; // needs access to UpdateValueDisplay
 
   class EditorInitializer : public nsRunnable {
   public:
@@ -257,7 +282,7 @@ protected:
           mWeakFrame.GetFrame()->PresContext()->GetPresShell();
         PRBool observes = shell->ObservesNativeAnonMutationsForPrint();
         shell->ObserveNativeAnonMutationsForPrint(PR_TRUE);
-        mFrame->EnsureEditorInitializedInternal();
+        mFrame->EnsureEditorInitialized();
         shell->ObserveNativeAnonMutationsForPrint(observes);
       }
       return NS_OK;
@@ -326,24 +351,6 @@ protected:
    */
   void PreDestroy();
 
-  // Helper methods
-  /**
-   * Get the cols attribute (if textarea) or a default
-   * @return the number of columns to use
-   */
-  PRInt32 GetCols();
-
-  /**
-   * Get the column index to wrap at, or -1 if we shouldn't wrap
-   */
-  PRInt32 GetWrapCols();
-
-  /**
-   * Get the rows attribute (if textarea) or a default
-   * @return the number of rows to use
-   */
-  PRInt32 GetRows();
-
   // Compute our intrinsic size.  This does not include any borders, paddings,
   // etc.  Just the size of our actual area for the text (and the scrollbars,
   // for <textarea>).
@@ -357,29 +364,20 @@ private:
   nsresult SelectAllOrCollapseToEndOfText(PRBool aSelect);
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
 
-  // placeholder methods
-  nsresult CreatePlaceholderDiv(nsTArray<nsIContent*>& aElements, nsNodeInfoManager* pNodeInfoManager);
-  nsresult ShowPlaceholder();
-  nsresult HidePlaceholder();
-  nsresult SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
-  nsresult UpdatePlaceholderText(PRBool aNotify); 
+  // accessors for the notify on input flag
+  PRBool GetNotifyOnInput() const { return mNotifyOnInput; }
+  void SetNotifyOnInput(PRBool val) { mNotifyOnInput = val; }
 
-  // This method performs the actual tasks of initializing the editor.
-  // EnsureEditorInitialized is a wrapper of this method which wraps it with
-  // a weak frame check.
-  virtual nsresult EnsureEditorInitializedInternal();
+  /**
+   * Return the root DOM element, and implicitly initialize the editor if needed.
+   */
+  nsresult GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement);
 
 private:
-  nsCOMPtr<nsIContent> mValueDiv;
-  nsCOMPtr<nsIContent> mPlaceholderDiv;
-
-  nsCOMPtr<nsIEditor> mEditor;
-
   // these packed bools could instead use the high order bits on mState, saving 4 bytes 
   PRPackedBool mUseEditor;
   PRPackedBool mIsProcessing;
   PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
-  PRPackedBool mDidPreDestroy; // has PreDestroy been called
   // Calls to SetValue will be treated as user values (i.e. trigger onChange
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   PRPackedBool mFireChangeEventState;
@@ -390,12 +388,7 @@ private:
   friend class EditorInitializerEntryTracker;
 #endif
 
-  nsRefPtr<nsTextInputSelectionImpl> mSelCon;
-  nsCOMPtr<nsFrameSelection> mFrameSel;
-  nsTextInputListener* mTextListener;
   nsString mFocusedValue;
-  nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
-  nsRefPtr<nsAnonDivObserver> mMutationObserver;
   nsRevocableEventPtr<ScrollOnFocusEvent> mScrollEvent;
 };
 

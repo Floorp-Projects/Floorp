@@ -41,6 +41,7 @@
 #include <jni.h>
 #include <android/log.h>
 
+#include "nsGeoPosition.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"
@@ -322,6 +323,21 @@ public:
     };
 };
 
+class AndroidLocation : public WrappedJavaObject
+{
+public:
+    static void InitLocationClass(JNIEnv *jEnv);
+    static nsGeoPosition* CreateGeoPosition(JNIEnv *jenv, jobject jobj);
+    static jclass jLocationClass;
+    static jmethodID jGetLatitudeMethod;
+    static jmethodID jGetLongitudeMethod;
+    static jmethodID jGetAltitudeMethod;
+    static jmethodID jGetAccuracyMethod;
+    static jmethodID jGetBearingMethod;
+    static jmethodID jGetSpeedMethod;
+    static jmethodID jGetTimeMethod;
+};
+
 class AndroidGeckoEvent : public WrappedJavaObject
 {
 public:
@@ -359,6 +375,7 @@ public:
     int UnicodeChar() { return mUnicodeChar; }
     int Count() { return mCount; }
     int Count2() { return mCount2; }
+    nsGeoPosition* GeoPosition() { return mGeoPosition; }
 
 protected:
     int mAction;
@@ -373,6 +390,7 @@ protected:
     int mCount, mCount2;
     float mX, mY, mZ;
     nsString mCharacters;
+    nsRefPtr<nsGeoPosition> mGeoPosition;
 
     void ReadP0Field(JNIEnv *jenv);
     void ReadP1Field(JNIEnv *jenv);
@@ -398,6 +416,7 @@ protected:
     static jfieldID jCountField;
     static jfieldID jCount2Field;
     static jfieldID jUnicodeCharField;
+    static jfieldID jLocationField;
 
 public:
     enum {
@@ -405,10 +424,11 @@ public:
         KEY_EVENT = 1,
         MOTION_EVENT = 2,
         SENSOR_EVENT = 3,
-        IME_EVENT = 4,
-        DRAW = 5,
-        SIZE_CHANGED = 6,
-        ACTIVITY_STOPPING = 7,
+        LOCATION_EVENT = 4,
+        IME_EVENT = 5,
+        DRAW = 6,
+        SIZE_CHANGED = 7,
+        ACTIVITY_STOPPING = 8,
         dummy_java_enum_list_end
     };
 

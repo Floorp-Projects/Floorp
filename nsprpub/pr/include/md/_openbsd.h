@@ -69,7 +69,7 @@
 #define HAVE_DLL
 #define USE_DLFCN
 #define _PR_HAVE_SOCKADDR_LEN
-#define _PR_NO_LARGE_FILES
+#define _PR_HAVE_LARGE_OFF_T
 #define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL

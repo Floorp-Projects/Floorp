@@ -169,7 +169,9 @@
 #include "gfxWindowsPlatform.h"
 #include "Layers.h"
 #ifndef WINCE
+#ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
+#endif
 #include "LayerManagerOGL.h"
 #endif
 
@@ -2944,16 +2946,18 @@ nsWindow::GetLayerManager()
       }
       
       if (allowAcceleration) {
-        if (preferOpenGL) {
-          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
-            new mozilla::layers::LayerManagerOGL(this);
+#ifdef MOZ_ENABLE_D3D9_LAYER
+        if (!preferOpenGL) {
+          nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
+            new mozilla::layers::LayerManagerD3D9(this);
           if (layerManager->Initialize()) {
             mLayerManager = layerManager;
           }
         }
+#endif
         if (!mLayerManager) {
-          nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
-            new mozilla::layers::LayerManagerD3D9(this);
+          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+            new mozilla::layers::LayerManagerOGL(this);
           if (layerManager->Initialize()) {
             mLayerManager = layerManager;
           }

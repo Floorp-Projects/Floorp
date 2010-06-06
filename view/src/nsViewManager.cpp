@@ -44,8 +44,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsViewManager.h"
-#include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsView.h"
 #include "nsISupportsArray.h"
@@ -60,12 +58,9 @@
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
-#include "gfxContext.h"
 #include "nsIPluginWidget.h"
 
-static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
-static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 /**
    XXX TODO XXX
@@ -86,10 +81,6 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 */
 
 #define NSCOORD_NONE      PR_INT32_MIN
-
-#ifdef NS_VM_PERF_METRICS
-#include "nsITimeRecorder.h"
-#endif
 
 //-------------- Begin Invalidate Event Definition ------------------------
 
@@ -136,7 +127,6 @@ nsViewManager::PostInvalidateEvent()
 #undef DEBUG_MOUSE_LOCATION
 
 PRInt32 nsViewManager::mVMCount = 0;
-nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
 
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
@@ -153,13 +143,6 @@ nsViewManager::nsViewManager()
     gViewManagers = new nsVoidArray;
   }
  
-  if (gCleanupContext == nsnull) {
-    /* XXX: This should use a device to create a matching |nsIRenderingContext| object */
-    CallCreateInstance(kRenderingContextCID, &gCleanupContext);
-    NS_ASSERTION(gCleanupContext,
-                 "Wasn't able to create a graphics context for cleanup");
-  }
-
   gViewManagers->AppendElement(this);
 
   ++mVMCount;
@@ -205,14 +188,6 @@ nsViewManager::~nsViewManager()
     NS_ASSERTION(gViewManagers != nsnull, "About to delete null gViewManagers");
     delete gViewManagers;
     gViewManagers = nsnull;
-
-    // Cleanup all of the offscreen drawing surfaces if the last view manager
-    // has been destroyed and there is something to cleanup
-
-    // Note: A global rendering context is needed because it is not possible 
-    // to create a nsIRenderingContext during the shutdown of XPCOM. The last
-    // viewmanager is typically destroyed during XPCOM shutdown.
-    NS_IF_RELEASE(gCleanupContext);
   }
 
   mObserver = nsnull;
@@ -676,7 +651,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
           childWidget->GetWindowClipRegion(&clipRects);
           for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
             nsRect rr = (clipRects[i] + bounds.TopLeft()).
-              ToAppUnits(mContext->AppUnitsPerDevPixel());
+              ToAppUnits(AppUnitsPerDevPixel());
             children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
             children.SimplifyInward(20);
           }
@@ -776,7 +751,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
 
             if (aView == mRootView)
               {
-                PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+                PRInt32 p2a = AppUnitsPerDevPixel();
                 SetWindowDimensions(NSIntPixelsToAppUnits(width, p2a),
                                     NSIntPixelsToAppUnits(height, p2a));
                 *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -983,7 +958,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         }
 
         if (nsnull != view) {
-          PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+          PRInt32 p2a = AppUnitsPerDevPixel();
 
           if ((aEvent->message == NS_MOUSE_MOVE &&
                static_cast<nsMouseEvent*>(aEvent)->reason ==
@@ -1024,32 +999,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
 #endif
           }
 
-          //Calculate the proper offset for the view we're going to
-          nsPoint offset(0, 0);
-
-          if (view != baseView) {
-            //Get offset from root of baseView
-            nsView *parent;
-            for (parent = baseView; parent; parent = parent->GetParent())
-              parent->ConvertToParentCoords(&offset.x, &offset.y);
-
-            //Subtract back offset from root of view
-            for (parent = view; parent; parent = parent->GetParent())
-              parent->ConvertFromParentCoords(&offset.x, &offset.y);
-          }
-
-          // Dispatch the event
-          nsRect baseViewDimensions;
-          baseView->GetDimensions(baseViewDimensions);
-
-          nsPoint pt;
-          pt.x = baseViewDimensions.x + 
-            NSFloatPixelsToAppUnits(float(aEvent->refPoint.x) + 0.5f, p2a);
-          pt.y = baseViewDimensions.y + 
-            NSFloatPixelsToAppUnits(float(aEvent->refPoint.y) + 0.5f, p2a);
-          pt += offset;
-
-          *aStatus = HandleEvent(view, pt, aEvent);
+          *aStatus = HandleEvent(view, aEvent);
         }
     
         break;
@@ -1059,8 +1009,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
   return NS_OK;
 }
 
-nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsPoint aPoint,
-                                         nsGUIEvent* aEvent) {
+nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent)
+{
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
 
@@ -1241,15 +1191,6 @@ NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
       parent->RemoveChild(child);
     }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
-{
-  nsView* view = static_cast<nsView*>(aView);
-
-  nsPoint pt = view->GetPosition();
-  MoveViewTo(view, aX + pt.x, aY + pt.y);
   return NS_OK;
 }
 
@@ -1598,7 +1539,7 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, const 
   rect += aView->ViewToWidgetOffset();
 
   // finally, convert to device coordinates.
-  return rect.ToOutsidePixels(mContext->AppUnitsPerDevPixel());
+  return rect.ToOutsidePixels(AppUnitsPerDevPixel());
 }
 
 NS_IMETHODIMP
@@ -1773,17 +1714,18 @@ static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
  */
 static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
 {
-  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    if (aView->GetDimensions().Contains(aPt) &&
-        aView->GetVisibility() != nsViewVisibility_kHide) {
-      nsView* r = FindViewContaining(v, aPt - v->GetOffsetTo(aView));
-      if (r)
-        return r;
-      return v;
-    }
+  if (!aView->GetDimensions().Contains(aPt) ||
+      aView->GetVisibility() == nsViewVisibility_kHide) {
+    return nsnull;
   }
 
-  return nsnull;
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsView* r = FindViewContaining(v, aPt - v->GetOffsetTo(aView));
+    if (r)
+      return r;
+  }
+
+  return aView;
 }
 
 void
@@ -1811,7 +1753,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 #endif
                                                        
   nsPoint pt;
-  PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+  PRInt32 p2a = AppUnitsPerDevPixel();
   pt.x = NSIntPixelsToAppUnits(mMouseLocation.x, p2a);
   pt.y = NSIntPixelsToAppUnits(mMouseLocation.y, p2a);
   // This could be a bit slow (traverses entire view hierarchy)

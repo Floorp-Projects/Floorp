@@ -59,6 +59,7 @@ jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jCount2Field = 0;
+jfieldID AndroidGeckoEvent::jLocationField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -69,6 +70,15 @@ jfieldID AndroidRect::jBottomField = 0;
 jfieldID AndroidRect::jLeftField = 0;
 jfieldID AndroidRect::jRightField = 0;
 jfieldID AndroidRect::jTopField = 0;
+
+jclass AndroidLocation::jLocationClass = 0;
+jmethodID AndroidLocation::jGetLatitudeMethod = 0;
+jmethodID AndroidLocation::jGetLongitudeMethod = 0;
+jmethodID AndroidLocation::jGetAltitudeMethod = 0;
+jmethodID AndroidLocation::jGetAccuracyMethod = 0;
+jmethodID AndroidLocation::jGetBearingMethod = 0;
+jmethodID AndroidLocation::jGetSpeedMethod = 0;
+jmethodID AndroidLocation::jGetTimeMethod = 0;
 
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
@@ -95,6 +105,7 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidGeckoEvent::InitGeckoEventClass(jEnv);
     AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
     AndroidPoint::InitPointClass(jEnv);
+    AndroidLocation::InitLocationClass(jEnv);
 }
 
 void
@@ -122,6 +133,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jUnicodeCharField = getField("mUnicodeChar", "I");
     jCountField = getField("mCount", "I");
     jCount2Field = getField("mCount2", "I");
+    jLocationField = getField("mLocation", "Landroid/location/Location;");
 }
 
 void
@@ -134,6 +146,38 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jBeginDrawingMethod = getMethod("beginDrawing", "()I");
     jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
+}
+
+void
+AndroidLocation::InitLocationClass(JNIEnv *jEnv)
+{
+    initInit();
+
+    jLocationClass = getClassGlobalRef("android/location/Location");
+    jGetLatitudeMethod = getMethod("getLatitude", "()D");
+    jGetLongitudeMethod = getMethod("getLongitude", "()D");
+    jGetAltitudeMethod = getMethod("getAltitude", "()D");
+    jGetAccuracyMethod = getMethod("getAccuracy", "()F");
+    jGetBearingMethod = getMethod("getBearing", "()F");
+    jGetSpeedMethod = getMethod("getSpeed", "()F");
+    jGetTimeMethod = getMethod("getTime", "()J");
+}
+
+nsGeoPosition*
+AndroidLocation::CreateGeoPosition(JNIEnv *jenv, jobject jobj)
+{
+    double latitude  = jenv->CallDoubleMethod(jobj, jGetLatitudeMethod);
+    double longitude = jenv->CallDoubleMethod(jobj, jGetLongitudeMethod);
+    double altitude  = jenv->CallDoubleMethod(jobj, jGetAltitudeMethod);
+    float  accuracy  = jenv->CallFloatMethod (jobj, jGetAccuracyMethod);
+    float  bearing   = jenv->CallFloatMethod (jobj, jGetBearingMethod);
+    float  speed     = jenv->CallFloatMethod (jobj, jGetSpeedMethod);
+    long long time   = jenv->CallLongMethod  (jobj, jGetTimeMethod);
+
+    return new nsGeoPosition(latitude, longitude,
+                             altitude, accuracy,
+                             accuracy, bearing,
+                             speed,    time);
 }
 
 void
@@ -258,6 +302,12 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             mY = jenv->GetFloatField(jobj, jYField);
             mZ = jenv->GetFloatField(jobj, jZField);
             break;
+
+        case LOCATION_EVENT: {
+            jobject location = jenv->GetObjectField(jobj, jLocationField);
+            mGeoPosition = AndroidLocation::CreateGeoPosition(jenv, location);
+            break;
+        }
 
         default:
             break;

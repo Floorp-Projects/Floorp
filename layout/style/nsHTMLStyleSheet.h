@@ -119,9 +119,9 @@ private:
     NS_DECL_ISUPPORTS
 
     // nsIStyleRule interface
-    NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+    virtual void MapRuleInfoInto(nsRuleData* aRuleData);
   #ifdef DEBUG
-    NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+    virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   #endif
 
     nscolor             mColor;
@@ -137,9 +137,9 @@ private:
     NS_DECL_ISUPPORTS
 
     // nsIStyleRule interface
-    NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+    virtual void MapRuleInfoInto(nsRuleData* aRuleData);
   #ifdef DEBUG
-    NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+    virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   #endif
   };
 
@@ -150,7 +150,7 @@ private:
   public:
     TableTHRule() {}
 
-    NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+    virtual void MapRuleInfoInto(nsRuleData* aRuleData);
   };
 
   nsCOMPtr<nsIURI>        mURL;

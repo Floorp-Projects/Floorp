@@ -218,7 +218,7 @@ ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
          nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_START_IMAGE_LOADS);
 }
 
-nsresult
+void
 nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 {
     // If we have no data for these structs, then return immediately.
@@ -226,7 +226,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
     // have to worry much less (although still some) about the speed of
     // the rest of the function.
     if (!(aRuleData->mSIDs & mStyleBits))
-        return NS_OK;
+        return;
 
     nsIDocument* doc = aRuleData->mPresContext->Document();
 
@@ -358,8 +358,6 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
         }
     }
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
-
-    return NS_OK;
 }
 
 const void*
