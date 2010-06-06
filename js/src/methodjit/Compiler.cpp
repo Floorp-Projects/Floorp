@@ -493,6 +493,10 @@ mjit::Compiler::generateMethod()
             jsop_binary(op, stubs::Mod);
           END_CASE(JSOP_MOD)
 
+          BEGIN_CASE(JSOP_NOT)
+            jsop_not();
+          END_CASE(JSOP_NOT)
+
           BEGIN_CASE(JSOP_BITNOT)
           {
             FrameEntry *top = frame.peek(-1);

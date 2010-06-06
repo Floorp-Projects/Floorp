@@ -335,7 +335,6 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
 inline bool
 FrameState::shouldAvoidTypeRemat(FrameEntry *fe)
 {
-    JS_ASSERT(!fe->isCopy());
     return fe->type.inMemory();
 }
 
@@ -401,6 +400,14 @@ FrameState::testInt32(Assembler::Condition cond, FrameEntry *fe)
     if (shouldAvoidTypeRemat(fe))
         return masm.testInt32(cond, addressOf(fe));
     return masm.testInt32(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
+FrameState::testBoolean(Assembler::Condition cond, FrameEntry *fe)
+{
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testBoolean(cond, addressOf(fe));
+    return masm.testBoolean(cond, tempRegForType(fe));
 }
 
 inline FrameEntry *

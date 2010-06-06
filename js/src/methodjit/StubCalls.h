@@ -101,6 +101,7 @@ void JS_FASTCALL Div(VMFrame &f);
 void JS_FASTCALL Mod(VMFrame &f);
 void JS_FASTCALL Neg(VMFrame &f);
 void JS_FASTCALL ObjToStr(VMFrame &f);
+void JS_FASTCALL Not(VMFrame &f);
 
 void JS_FASTCALL Iter(VMFrame &f, uint32 flags);
 
