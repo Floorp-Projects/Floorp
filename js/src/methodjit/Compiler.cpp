@@ -307,8 +307,10 @@ mjit::Compiler::generateMethod()
             /* Safe point! */
             FrameEntry *fe = frame.peek(-1);
             frame.storeTo(fe, Address(Assembler::FpReg, offsetof(JSStackFrame, rval)), true);
-            emitReturn();
             frame.pop();
+            /* :TODO: We only have to forget things that are closed over... */
+            frame.forgetEverything();
+            emitReturn();
           }
           END_CASE(JSOP_RETURN)
 
@@ -729,6 +731,20 @@ mjit::Compiler::generateMethod()
                 frame.push(NullTag());
           }
           END_CASE(JSOP_CALLDSLOT)
+
+          BEGIN_CASE(JSOP_DEFLOCALFUN)
+          {
+            uint32 slot = GET_SLOTNO(PC);
+            JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
+            prepareStubCall();
+            masm.move(ImmPtr(fun), Registers::ArgReg1);
+            stubCall(stubs::DefLocalFun, Uses(0), Defs(0));
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_FUNOBJ, Registers::ReturnReg);
+            frame.storeLocal(slot);
+            frame.pop();
+          }
+          END_CASE(JSOP_DEFLOCALFUN)
 
           BEGIN_CASE(JSOP_GETUPVAR)
           BEGIN_CASE(JSOP_CALLUPVAR)
