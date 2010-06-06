@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "jsbool.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -568,5 +569,83 @@ mjit::Compiler::jsop_objtostr()
     stubCall(stubs::ObjToStr, Uses(1), Defs(1));
     frame.pop();
     frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_not()
+{
+    FrameEntry *top = frame.peek(-1);
+
+    if (top->isConstant()) {
+        const Value &v = top->getValue();
+        frame.pop();
+        frame.push(BooleanTag(!js_ValueToBoolean(v)));
+        return;
+    }
+
+    if (top->isTypeKnown()) {
+        uint32 mask = top->getTypeTag();
+        switch (mask) {
+          case JSVAL_MASK32_INT32:
+          case JSVAL_MASK32_BOOLEAN:
+          {
+            /* :FIXME: X64 */
+            /* :FIXME: Faster to xor 1, zero-extend */
+            RegisterID reg = frame.ownRegForData(top);
+            Jump t = masm.branchTest32(Assembler::NotEqual, reg, reg);
+            masm.move(Imm32(1), reg);
+            Jump d = masm.jump();
+            t.linkTo(masm.label(), &masm);
+            masm.move(Imm32(0), reg);
+            d.linkTo(masm.label(), &masm);
+            frame.pop();
+            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, reg);
+            break;
+          }
+
+          case JSVAL_MASK32_NONFUNOBJ:
+          case JSVAL_MASK32_FUNOBJ:
+          {
+            frame.pop();
+            frame.push(BooleanTag(false));
+            break;
+          }
+
+          default:
+          {
+            /* :FIXME: overkill to spill everything - can use same xor trick too */
+            RegisterID reg = Registers::ReturnReg;
+            prepareStubCall();
+            stubCall(stubs::ValueToBoolean, Uses(0), Defs(0));
+            frame.takeReg(reg);
+            Jump t = masm.branchTest32(Assembler::NotEqual, reg, reg);
+            masm.move(Imm32(1), reg);
+            Jump d = masm.jump();
+            t.linkTo(masm.label(), &masm);
+            masm.move(Imm32(0), reg);
+            d.linkTo(masm.label(), &masm);
+            frame.pop();
+            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, reg);
+            break;
+          }
+        }
+
+        return;
+    }
+
+    /* Fast-path here is boolean. */
+    Jump boolFail = frame.testBoolean(Assembler::NotEqual, top);
+    stubcc.linkExit(boolFail);
+    frame.learnType(top, JSVAL_MASK32_BOOLEAN);
+
+    stubcc.leave();
+    stubcc.call(stubs::Not);
+
+    RegisterID reg = frame.ownRegForData(top);
+    masm.xor32(Imm32(1), reg);
+    frame.pop();
+    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, reg);
+
+    stubcc.rejoin(1);
 }
 

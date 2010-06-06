@@ -325,6 +325,12 @@ class FrameState
     inline Jump testInt32(Assembler::Condition cond, FrameEntry *fe);
 
     /*
+     * Helper function. Tests if a slot's type is an integer. Condition should
+     * be Equal or NotEqual.
+     */
+    inline Jump testBoolean(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
      * Marks a register such that it cannot be spilled by the register
      * allocator. Any pinned registers must be unpinned at the end of the op.
      * Note: This function should only be used on registers tied to FEs.

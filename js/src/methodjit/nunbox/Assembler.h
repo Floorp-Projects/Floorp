@@ -107,6 +107,14 @@ class Assembler : public BaseAssembler
     Jump testInt32(Assembler::Condition cond, Address address) {
         return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_INT32));
     }
+
+    Jump testBoolean(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, ImmTag(JSVAL_MASK32_BOOLEAN));
+    }
+
+    Jump testBoolean(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_BOOLEAN));
+    }
 };
 
 } /* namespace js */
