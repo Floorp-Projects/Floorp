@@ -1876,4 +1876,133 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     return obj;
 }
 
+/* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
+static JS_ALWAYS_INLINE bool
+CanIncDecWithoutOverflow(int32_t i)
+{
+    return (i > JSVAL_INT_MIN) && (i < JSVAL_INT_MAX);
+}
+
+template <int32 N, bool POST>
+static inline bool
+ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp;
+
+    f.regs.sp[0].setNull();
+    f.regs.sp++;
+    if (!obj->getProperty(cx, id, &f.regs.sp[-1]))
+        return false;
+
+    Value &ref = f.regs.sp[-1];
+    int32_t tmp;
+    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.asInt32()))) {
+        if (POST)
+            ref.asInt32Ref() = tmp + N;
+        else
+            ref.asInt32Ref() = tmp += N;
+        fp->flags |= JSFRAME_ASSIGNING;
+        JSBool ok = obj->setProperty(cx, id, &ref);
+        fp->flags &= ~JSFRAME_ASSIGNING;
+        if (!ok)
+            return false;
+
+        /*
+         * We must set regs.sp[-1] to tmp for both post and pre increments
+         * as the setter overwrites regs.sp[-1].
+         */
+        ref.setInt32(tmp);
+    } else {
+        Value v;
+        double d;
+        if (!ValueToNumber(cx, ref, &d))
+            return false;
+        if (POST) {
+            ref.setDouble(d);
+            d += N;
+        } else {
+            d += N;
+            ref.setDouble(d);
+        }
+        v.setDouble(d);
+        fp->flags |= JSFRAME_ASSIGNING;
+        JSBool ok = obj->setProperty(cx, id, &v);
+        fp->flags &= ~JSFRAME_ASSIGNING;
+        if (!ok)
+            return false;
+    }
+
+    return true;
+}
+
+template <int32 N, bool POST>
+static inline bool
+NameIncDec(VMFrame &f, JSAtom *origAtom)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp;
+
+    JSAtom *atom;
+    JSObject *obj2;
+    JSProperty *prop;
+    PropertyCacheEntry *entry;
+    JSObject *obj = fp->scopeChain;
+    JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
+    if (!atom) {
+        if (obj == obj2 && entry->vword.isSlot()) {
+            uint32 slot = entry->vword.toSlot();
+            JS_ASSERT(slot < obj->scope()->freeslot);
+            Value &rref = obj->getSlotRef(slot);
+            int32_t tmp;
+            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
+                int32_t inc = tmp + N;
+                if (!POST)
+                    tmp = inc;
+                rref.asInt32Ref() = inc;
+                f.regs.sp[0].setInt32(tmp);
+                return true;
+            }
+        }
+        atom = origAtom;
+    }
+
+    jsid id = ATOM_TO_JSID(atom);
+    if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+        return false;
+    if (!prop) {
+        ReportAtomNotDefined(cx, atom);
+        return false;
+    }
+    obj2->dropProperty(cx, prop);
+    return ObjIncOp<N, POST>(f, obj, id);
+}
+
+void JS_FASTCALL
+stubs::NameInc(VMFrame &f, JSAtom *atom)
+{
+    if (!NameIncDec<1, true>(f, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::NameDec(VMFrame &f, JSAtom *atom)
+{
+    if (!NameIncDec<-1, true>(f, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::IncName(VMFrame &f, JSAtom *atom)
+{
+    if (!NameIncDec<1, false>(f, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::DecName(VMFrame &f, JSAtom *atom)
+{
+    if (!NameIncDec<-1, false>(f, atom))
+        THROW();
+}
 
