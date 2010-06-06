@@ -662,32 +662,4 @@ FrameState::storeLocal(uint32 n)
     JS_ASSERT(top->copyOf() == localFe);
 }
 
-void
-FrameState::popAfterSet()
-{
-    FrameEntry *top = peek(-1);
-    FrameEntry *down = peek(-2);
-
-    forgetRegs(down);
-
-    if (top->isConstant()) {
-        down->setConstant(Jsvalify(top->getValue()));
-    } else {
-        down->type.unsync();
-        if (top->isTypeKnown()) {
-            down->setTypeTag(top->getTypeTag());
-        } else {
-            down->type.inherit(top->type);
-            if (top->type.inRegister())
-                moveOwnership(top->type.reg(), down);
-        }
-        down->data.unsync();
-        down->data.inherit(top->data);
-        if (top->data.inRegister())
-            moveOwnership(top->data.reg(), down);
-    }
-
-    /* It is now okay to just decrement sp. */
-    sp--;
-}
 

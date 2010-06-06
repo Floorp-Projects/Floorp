@@ -325,12 +325,6 @@ class FrameState
     inline Jump testInt32(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Special helper for pop-after-set opcodes, which swap the top two stack
-     * elements, then pop.
-     */
-    void popAfterSet();
-
-    /*
      * Marks a register such that it cannot be spilled by the register
      * allocator. Any pinned registers must be unpinned at the end of the op.
      * Note: This function should only be used on registers tied to FEs.
