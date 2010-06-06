@@ -667,6 +667,22 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_AND)
 
+          BEGIN_CASE(JSOP_STRICTEQ)
+            prepareStubCall();
+            stubCall(stubs::StrictEq, Uses(2), Defs(1));
+            frame.popn(2);
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+          END_CASE(JSOP_STRICTEQ)
+
+          BEGIN_CASE(JSOP_STRICTNE)
+            prepareStubCall();
+            stubCall(stubs::StrictNe, Uses(2), Defs(1));
+            frame.popn(2);
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+          END_CASE(JSOP_STRICTNE)
+
           BEGIN_CASE(JSOP_ITER)
           {
             prepareStubCall();
