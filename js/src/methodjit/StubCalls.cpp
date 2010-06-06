@@ -2006,3 +2006,11 @@ stubs::DecName(VMFrame &f, JSAtom *atom)
         THROW();
 }
 
+void JS_FASTCALL
+stubs::Iter(VMFrame &f, uint32 flags)
+{
+    if (!js_ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
+        THROW();
+    JS_ASSERT(!f.regs.sp[-1].isPrimitive());
+}
+
