@@ -71,6 +71,7 @@
 #include "jsarray.h"
 #include "jstask.h"
 #include "jsvector.h"
+#include "prmjtime.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -982,6 +983,11 @@ const uint32 JSLRS_NULL_MARK = uint32(-1);
 #define NATIVE_ITER_CACHE_MASK  JS_BITMASK(NATIVE_ITER_CACHE_LOG2)
 #define NATIVE_ITER_CACHE_SIZE  JS_BIT(NATIVE_ITER_CACHE_LOG2)
 
+struct JSPendingProxyOperation {
+    JSPendingProxyOperation *next;
+    JSObject *object;
+};
+
 struct JSThreadData {
     JSGCFreeLists       gcFreeLists;
 
@@ -1039,6 +1045,9 @@ struct JSThreadData {
     /* Base address of the native stack for the current thread. */
     jsuword             *nativeStackBase;
 
+    /* List of currently pending operations on proxies. */
+    JSPendingProxyOperation *pendingProxyOperation;
+
     bool init();
     void finish();
     void mark(JSTracer *trc);
@@ -1057,7 +1066,6 @@ struct JSThread {
                         JSThread *,
                         js::DefaultHasher<void *>,
                         js::SystemAllocPolicy> Map;
-
 
     /* Linked list of all contexts in use on this thread. */
     JSCList             contextList;
@@ -1082,6 +1090,12 @@ struct JSThread {
      * Protected by rt->gcLock.
      */
     bool                gcWaiting;
+
+    /*
+     * Number of JSContext instances that are in requests on this thread. For
+     * such instances JSContext::requestDepth > 0 holds.
+     */
+    uint32              contextsInRequests;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -1135,39 +1149,6 @@ typedef struct JSPropertyTreeEntry {
 } JSPropertyTreeEntry;
 
 
-/* Caching Class.prototype lookups for the standard classes. */
-struct JSClassProtoCache {
-    void purge() { js::PodArrayZero(entries); }
-
-#ifdef JS_PROTO_CACHE_METERING
-    struct Stats {
-        int32       probe, hit;
-    };
-# define PROTO_CACHE_METER(cx, x)                                             \
-    ((void) (JS_ATOMIC_INCREMENT(&(cx)->runtime->classProtoCacheStats.x)))
-#else
-# define PROTO_CACHE_METER(cx, x)  ((void) 0)
-#endif
-
-  private:
-    struct GlobalAndProto {
-        JSObject    *global;
-        JSObject    *proto;
-    };
-
-    GlobalAndProto  entries[JSProto_LIMIT - JSProto_Object];
-
-#ifdef __GNUC__
-# pragma GCC visibility push(default)
-#endif
-    friend JSBool js_GetClassPrototype(JSContext *cx, JSObject *scope,
-                                       JSProtoKey protoKey, JSObject **protop,
-                                       JSClass *clasp);
-#ifdef __GNUC__
-# pragma GCC visibility pop
-#endif
-};
-
 namespace js {
 
 typedef Vector<JSGCChunkInfo *, 32, SystemAllocPolicy> GCChunks;
@@ -1190,7 +1171,21 @@ typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
                 
 } /* namespace js */
 
+struct JSCompartment {
+    JSRuntime *rt;
+    bool marked;
+
+    JSCompartment(JSRuntime *cx);
+    ~JSCompartment();
+};
+
 struct JSRuntime {
+    /* Default compartment. */
+    JSCompartment       *defaultCompartment;
+
+    /* List of compartments (protected by the GC lock). */
+    js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> compartments;
+
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
 
@@ -1436,6 +1431,7 @@ struct JSRuntime {
 
     JSEmptyScope          *emptyArgumentsScope;
     JSEmptyScope          *emptyBlockScope;
+    JSEmptyScope          *emptyCallScope;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
@@ -1519,10 +1515,6 @@ struct JSRuntime {
 #ifdef JS_FUNCTION_METERING
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
-#endif
-
-#ifdef JS_PROTO_CACHE_METERING
-    JSClassProtoCache::Stats classProtoCacheStats;
 #endif
 
     JSRuntime();
@@ -1649,19 +1641,6 @@ struct JSContext
     /* JSRuntime contextList linkage. */
     JSCList             link;
 
-#if JS_HAS_XML_SUPPORT
-    /*
-     * Bit-set formed from binary exponentials of the XML_* tiny-ids defined
-     * for boolean settings in jsxml.c, plus an XSF_CACHE_VALID bit.  Together
-     * these act as a cache of the boolean XML.ignore* and XML.prettyPrinting
-     * property values associated with this context's global object.
-     */
-    uint8               xmlSettingFlags;
-    uint8               padding;
-#else
-    uint16              padding;
-#endif
-
     /*
      * Classic Algol "display" static link optimization.
      */
@@ -1707,6 +1686,9 @@ struct JSContext
 
     /* Data shared by threads in an address space. */
     JSRuntime *const    runtime;
+
+    /* GC heap compartment. */
+    JSCompartment       *compartment;
 
     /* Currently executing frame, set by stack operations. */
     JS_REQUIRES_STACK
@@ -1892,7 +1874,10 @@ struct JSContext
 #endif
     }
 
-    JSClassProtoCache    classProtoCache;
+    DSTOffsetCache dstOffsetCache;
+
+    /* List of currently active non-escaping enumerators (for-in). */
+    JSObject *enumerators;
 
   private:
     /*
@@ -2131,6 +2116,10 @@ InvokeArgsGuard::~InvokeArgsGuard()
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
+# define CHECK_REQUEST(cx)                                                  \
+    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread)
+#else
+# define CHECK_REQUEST(cx)       ((void)0)
 #endif
 
 static inline uintN
@@ -2148,6 +2137,24 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 }
 
 namespace js {
+
+class AutoNewCompartment {
+    JSContext *cx;
+    JSCompartment *compartment;
+  public:
+    JS_FRIEND_API(AutoNewCompartment(JSContext *cx));
+    JS_FRIEND_API(~AutoNewCompartment());
+
+    JS_FRIEND_API(bool) init();
+};
+
+class AutoCompartment {
+    JSContext *cx;
+    JSCompartment *compartment;
+  public:
+    JS_FRIEND_API(AutoCompartment(JSContext *cx, JSObject *obj));
+    JS_FRIEND_API(~AutoCompartment());
+};
 
 class AutoGCRooter {
   public:
@@ -2711,29 +2718,6 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
  */
 extern JS_FRIEND_API(JSContext *)
 js_NextActiveContext(JSRuntime *, JSContext *);
-
-#ifdef JS_THREADSAFE
-
-/*
- * Count the number of contexts entered requests on the current thread.
- */
-extern uint32
-js_CountThreadRequests(JSContext *cx);
-
-/*
- * This is a helper for code at can potentially run outside JS request to
- * ensure that the GC is not running when the function returns.
- *
- * This function must be called with the GC lock held.
- */
-extern void
-js_WaitForGC(JSRuntime *rt);
-
-#else /* !JS_THREADSAFE */
-
-# define js_WaitForGC(rt)    ((void) 0)
-
-#endif
 
 /*
  * JSClass.resolve and watchpoint recursion damping machinery.

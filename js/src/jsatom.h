@@ -308,6 +308,7 @@ struct JSAtomState {
     JSAtom              *hasAtom;
     JSAtom              *hasOwnAtom;
     JSAtom              *enumerateOwnAtom;
+    JSAtom              *iterateAtom;
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {

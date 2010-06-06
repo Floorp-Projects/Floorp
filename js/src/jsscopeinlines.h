@@ -61,8 +61,7 @@ JSScope::getEmptyScope(JSContext *cx, JSClass *clasp)
 {
     if (emptyScope) {
         JS_ASSERT(clasp == emptyScope->clasp);
-        emptyScope->hold();
-        return emptyScope;
+        return emptyScope->hold();
     }
     return createEmptyScope(cx, clasp);
 }

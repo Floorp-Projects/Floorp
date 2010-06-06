@@ -191,11 +191,12 @@ const char *const js_common_atom_names[] = {
     "delete",                   /* deleteAtom                   */
     "getOwnPropertyNames",      /* getOwnPropertyNames          */
     "enumerate",                /* enumerateAtom                */
-    "fix",
+    "fix",                      /* fixAtom                      */
 
     "has",                      /* hasAtom                      */
     "hasOwn",                   /* hasOwnAtom                   */
-    "enumerateOwn"              /* enumerateOwnAtom             */
+    "enumerateOwn",             /* enumerateOwnAtom             */
+    "iterate"                   /* iterateAtom                  */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
@@ -805,6 +806,8 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     JSString str;
     JSAtom *atom;
 
+    CHECK_REQUEST(cx);
+
     /*
      * Avoiding the malloc in js_InflateString on shorter strings saves us
      * over 20,000 malloc calls on mozilla browser startup. This compares to
@@ -840,6 +843,7 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 {
     JSString str;
 
+    CHECK_REQUEST(cx);
     str.initFlat((jschar *)chars, length);
     return js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
 }

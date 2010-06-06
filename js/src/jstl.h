@@ -271,6 +271,18 @@ struct AlignedStorage
     void *addr() { return u.bytes; }
 };
 
+template <class T>
+struct AlignedStorage2
+{
+    union U {
+        char bytes[sizeof(T)];
+        uint64 _;
+    } u;
+
+    const T *addr() const { return (const T *)u.bytes; }
+    T *addr() { return (T *)u.bytes; }
+};
+
 /*
  * Small utility for lazily constructing objects without using dynamic storage.
  * When a LazilyConstructed<T> is constructed, it is |empty()|, i.e., no value
@@ -278,14 +290,17 @@ struct AlignedStorage
  * LazilyConstructed<T> is destroyed. Upon calling |construct|, a T object will
  * be constructed with the given arguments and that object will be destroyed
  * when the owning LazilyConstructed<T> is destroyed.
+ *
+ * N.B. GCC seems to miss some optimizations with LazilyConstructed and may
+ * generate extra branches/loads/stores. Use with caution on hot paths.
  */
 template <class T>
 class LazilyConstructed
 {
-    AlignedStorage<sizeof(T)> storage;
+    AlignedStorage2<T> storage;
     bool constructed;
 
-    T &asT() { return *reinterpret_cast<T *>(storage.addr()); }
+    T &asT() { return *storage.addr(); }
 
   public:
     LazilyConstructed() { constructed = false; }
@@ -332,6 +347,10 @@ class LazilyConstructed
 };
 
 
+/*
+ * N.B. GCC seems to miss some optimizations with Conditionally and may
+ * generate extra branches/loads/stores. Use with caution on hot paths.
+ */
 template <class T>
 class Conditionally {
     LazilyConstructed<T> t;
