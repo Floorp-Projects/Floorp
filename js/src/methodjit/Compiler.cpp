@@ -732,6 +732,17 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::DefFun, Uses(0), Defs(0));
           END_CASE(JSOP_DEFFUN)
 
+          BEGIN_CASE(JSOP_LAMBDA)
+          {
+            JSFunction *fun = script->getFunction(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(fun), Registers::ArgReg1);
+            stubCall(stubs::Lambda, Uses(0), Defs(1));
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_FUNOBJ, Registers::ReturnReg);
+          }
+          END_CASE(JSOP_LAMBDA)
+
           BEGIN_CASE(JSOP_GETDSLOT)
           BEGIN_CASE(JSOP_CALLDSLOT)
           {
