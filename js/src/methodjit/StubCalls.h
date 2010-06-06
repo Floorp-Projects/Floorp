@@ -84,6 +84,7 @@ void JS_FASTCALL BitAnd(VMFrame &f);
 void JS_FASTCALL BitNot(VMFrame &f);
 void JS_FASTCALL Lsh(VMFrame &f);
 void JS_FASTCALL Rsh(VMFrame &f);
+void JS_FASTCALL Ursh(VMFrame &f);
 void JS_FASTCALL Add(VMFrame &f);
 void JS_FASTCALL Sub(VMFrame &f);
 void JS_FASTCALL Mul(VMFrame &f);

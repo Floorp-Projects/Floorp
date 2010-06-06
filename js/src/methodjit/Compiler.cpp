@@ -464,6 +464,13 @@ mjit::Compiler::generateMethod()
             jsop_bitop(op);
           END_CASE(JSOP_RSH)
 
+          BEGIN_CASE(JSOP_URSH)
+            prepareStubCall();
+            stubCall(stubs::Ursh, Uses(2), Defs(1));
+            frame.popn(2);
+            frame.pushSynced();
+          END_CASE(JSOP_URSH)
+
           BEGIN_CASE(JSOP_ADD)
             jsop_binary(op, stubs::Add);
           END_CASE(JSOP_ADD)
