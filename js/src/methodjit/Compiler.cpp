@@ -484,6 +484,21 @@ mjit::Compiler::generateMethod()
             jsop_binary(op, stubs::Mod);
           END_CASE(JSOP_MOD)
 
+          BEGIN_CASE(JSOP_BITNOT)
+          {
+            FrameEntry *top = frame.peek(-1);
+            if (top->isConstant() && top->getValue().isPrimitive()) {
+                int32_t i;
+                ValueToECMAInt32(cx, top->getValue(), &i);
+                i = ~i;
+                frame.pop();
+                frame.push(Int32Tag(i));
+            } else {
+                jsop_bitnot();
+            }
+          }
+          END_CASE(JSOP_BITNOT)
+
           BEGIN_CASE(JSOP_NEG)
           {
             FrameEntry *top = frame.peek(-1);

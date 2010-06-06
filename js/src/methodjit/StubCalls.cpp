@@ -813,6 +813,17 @@ stubs::BitAnd(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::BitNot(VMFrame &f)
+{
+    int32_t i;
+
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &i))
+        THROW();
+    i = ~i;
+    f.regs.sp[-1].setInt32(i);
+}
+
+void JS_FASTCALL
 stubs::Lsh(VMFrame &f)
 {
     int32_t i, j;
