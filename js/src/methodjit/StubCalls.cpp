@@ -2180,3 +2180,18 @@ stubs::StrictNe(VMFrame &f)
     return StrictlyEqual(f.cx, lhs, rhs) != true;
 }
 
+JSString * JS_FASTCALL
+stubs::ConcatN(VMFrame &f, uint32 argc)
+{
+    JSCharBuffer buf(f.cx);
+    for (Value *vp = f.regs.sp - argc; vp < f.regs.sp; vp++) {
+        JS_ASSERT(vp->isPrimitive());
+        if (!js_ValueToCharBuffer(f.cx, *vp, buf))
+            THROWV(NULL);
+    }
+    JSString *str = js_NewStringFromCharBuffer(f.cx, buf);
+    if (!str)
+        THROWV(NULL);
+    return str;
+}
+
