@@ -5089,93 +5089,58 @@ SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
     return JS_NewNumberValue(cx, lastIndex, obj->addressOfRegExpLastIndex());
 }
 
-static JSBool
-regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    jsint slot;
-    JSRegExp *re;
+#define DEFINE_GETTER(name, code)                                              \
+    static JSBool                                                              \
+    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    {                                                                          \
+        while (obj->getClass() != &js_RegExpClass) {                           \
+            obj = obj->getProto();                                             \
+            if (!obj)                                                          \
+                return true;                                                   \
+        }                                                                      \
+        JS_LOCK_OBJ(cx, obj);                                                  \
+        JSRegExp *re = (JSRegExp *) obj->getPrivate();                         \
+        code;                                                                  \
+        JS_UNLOCK_OBJ(cx, obj);                                                \
+        return true;                                                           \
+    }
 
-    if (!JSVAL_IS_INT(id))
-        return JS_TRUE;
+/* lastIndex is stored in the object, re = re silences the compiler warning. */
+DEFINE_GETTER(lastIndex_getter,  re = re; *vp = obj->getRegExpLastIndex())
+DEFINE_GETTER(source_getter,     *vp = STRING_TO_JSVAL(re->source))
+DEFINE_GETTER(global_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_GLOB) != 0))
+DEFINE_GETTER(ignoreCase_getter, *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0))
+DEFINE_GETTER(multiline_getter,  *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0))
+DEFINE_GETTER(sticky_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_STICKY) != 0))
+
+static JSBool
+lastIndex_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
     while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
         if (!obj)
-            return JS_TRUE;
+            return true;
     }
-    slot = JSVAL_TO_INT(id);
-    if (slot == REGEXP_LAST_INDEX) {
-        *vp = obj->getRegExpLastIndex();
-        return JS_TRUE;
-    }
-
-    JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) obj->getPrivate();
-    if (re) {
-        switch (slot) {
-          case REGEXP_SOURCE:
-            *vp = STRING_TO_JSVAL(re->source);
-            break;
-          case REGEXP_GLOBAL:
-            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_GLOB) != 0);
-            break;
-          case REGEXP_IGNORE_CASE:
-            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0);
-            break;
-          case REGEXP_MULTILINE:
-            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
-            break;
-          case REGEXP_STICKY:
-            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_STICKY) != 0);
-            break;
-        }
-    }
-    JS_UNLOCK_OBJ(cx, obj);
-    return JS_TRUE;
-}
-
-static JSBool
-regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    JSBool ok;
-    jsint slot;
     jsdouble lastIndex;
-
-    ok = JS_TRUE;
-    if (!JSVAL_IS_INT(id))
-        return ok;
-    while (obj->getClass() != &js_RegExpClass) {
-        obj = obj->getProto();
-        if (!obj)
-            return JS_TRUE;
-    }
-    slot = JSVAL_TO_INT(id);
-    if (slot == REGEXP_LAST_INDEX) {
-        if (!JS_ValueToNumber(cx, *vp, &lastIndex))
-            return JS_FALSE;
-        lastIndex = js_DoubleToInteger(lastIndex);
-        ok = SetRegExpLastIndex(cx, obj, lastIndex);
-    }
-    return ok;
+    if (!JS_ValueToNumber(cx, *vp, &lastIndex))
+        return false;
+    lastIndex = js_DoubleToInteger(lastIndex);
+    return SetRegExpLastIndex(cx, obj, lastIndex);
 }
 
 #define REGEXP_PROP_ATTRS     (JSPROP_PERMANENT | JSPROP_SHARED)
 #define RO_REGEXP_PROP_ATTRS  (REGEXP_PROP_ATTRS | JSPROP_READONLY)
 
-#define G regexp_getProperty
-#define S regexp_setProperty
-
 static JSPropertySpec regexp_props[] = {
-    {"source",     REGEXP_SOURCE,      RO_REGEXP_PROP_ATTRS,G,S},
-    {"global",     REGEXP_GLOBAL,      RO_REGEXP_PROP_ATTRS,G,S},
-    {"ignoreCase", REGEXP_IGNORE_CASE, RO_REGEXP_PROP_ATTRS,G,S},
-    {"lastIndex",  REGEXP_LAST_INDEX,  REGEXP_PROP_ATTRS,G,S},
-    {"multiline",  REGEXP_MULTILINE,   RO_REGEXP_PROP_ATTRS,G,S},
-    {"sticky",     REGEXP_STICKY,      RO_REGEXP_PROP_ATTRS,G,S},
+    {"source",     0, RO_REGEXP_PROP_ATTRS, source_getter,     NULL},
+    {"global",     0, RO_REGEXP_PROP_ATTRS, global_getter,     NULL},
+    {"ignoreCase", 0, RO_REGEXP_PROP_ATTRS, ignoreCase_getter, NULL},
+    {"lastIndex",  0, REGEXP_PROP_ATTRS,    lastIndex_getter,
+                                            lastIndex_setter},
+    {"multiline",  0, RO_REGEXP_PROP_ATTRS, multiline_getter,  NULL},
+    {"sticky",     0, RO_REGEXP_PROP_ATTRS, sticky_getter,     NULL},
     {0,0,0,0,0}
 };
-
-#undef G
-#undef S
 
 /*
  * RegExp class static properties and their Perl counterparts:
@@ -5187,14 +5152,6 @@ static JSPropertySpec regexp_props[] = {
  *  RegExp.leftContext          $`
  *  RegExp.rightContext         $'
  */
-enum regexp_static_tinyid {
-    REGEXP_STATIC_INPUT         = -1,
-    REGEXP_STATIC_MULTILINE     = -2,
-    REGEXP_STATIC_LAST_MATCH    = -3,
-    REGEXP_STATIC_LAST_PAREN    = -4,
-    REGEXP_STATIC_LEFT_CONTEXT  = -5,
-    REGEXP_STATIC_RIGHT_CONTEXT = -6
-};
 
 void
 js_InitRegExpStatics(JSContext *cx)
@@ -5247,122 +5204,89 @@ js_FreeRegExpStatics(JSContext *cx)
     JS_FinishArenaPool(&cx->regexpPool);
 }
 
-static JSBool
-regexp_static_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    jsint slot;
-    JSRegExpStatics *res;
-    JSString *str;
-    JSSubString *sub;
-
-    res = &cx->regExpStatics;
-    if (!JSVAL_IS_INT(id))
-        return JS_TRUE;
-    slot = JSVAL_TO_INT(id);
-    switch (slot) {
-      case REGEXP_STATIC_INPUT:
-        *vp = res->input ? STRING_TO_JSVAL(res->input)
-                         : JS_GetEmptyStringValue(cx);
-        return JS_TRUE;
-      case REGEXP_STATIC_MULTILINE:
-        *vp = BOOLEAN_TO_JSVAL(res->multiline);
-        return JS_TRUE;
-      case REGEXP_STATIC_LAST_MATCH:
-        sub = &res->lastMatch;
-        break;
-      case REGEXP_STATIC_LAST_PAREN:
-        sub = &res->lastParen;
-        break;
-      case REGEXP_STATIC_LEFT_CONTEXT:
-        sub = &res->leftContext;
-        break;
-      case REGEXP_STATIC_RIGHT_CONTEXT:
-        sub = &res->rightContext;
-        break;
-      default:
-        sub = (size_t(slot) < res->parens.length()) ? &res->parens[slot] : &js_EmptySubString;
-        break;
+#define DEFINE_STATIC_GETTER(name, code)                                       \
+    static JSBool                                                              \
+    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    {                                                                          \
+        JSRegExpStatics *res = &cx->regExpStatics;                             \
+        code;                                                                  \
     }
-    str = js_NewStringCopyN(cx, sub->chars, sub->length);
+
+static bool
+MakeString(JSContext *cx, JSSubString *sub, jsval *vp) {
+    JSString *str = js_NewStringCopyN(cx, sub->chars, sub->length);
     if (!str)
-        return JS_FALSE;
+        return false;
     *vp = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
-regexp_static_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+DEFINE_STATIC_GETTER(static_input_getter,
+                     *vp = res->input
+                           ? STRING_TO_JSVAL(res->input)
+                           : JS_GetEmptyStringValue(cx);
+                     return true)
+DEFINE_STATIC_GETTER(static_multiline_getter,    *vp = BOOLEAN_TO_JSVAL(res->multiline); return true)
+DEFINE_STATIC_GETTER(static_lastMatch_getter,    return MakeString(cx, &res->lastMatch, vp))
+DEFINE_STATIC_GETTER(static_lastParen_getter,    return MakeString(cx, &res->lastParen, vp))
+DEFINE_STATIC_GETTER(static_leftContext_getter,  return MakeString(cx, &res->leftContext, vp))
+DEFINE_STATIC_GETTER(static_rightContext_getter, return MakeString(cx, &res->rightContext, vp))
+
+static bool
+Paren(JSContext *cx, JSRegExpStatics *res, size_t n, jsval *vp)
 {
-    JSRegExpStatics *res;
-
-    if (!JSVAL_IS_INT(id))
-        return JS_TRUE;
-    res = &cx->regExpStatics;
-    /* XXX use if-else rather than switch to keep MSVC1.52 from crashing */
-    if (JSVAL_TO_INT(id) == REGEXP_STATIC_INPUT) {
-        if (!JSVAL_IS_STRING(*vp) &&
-            !JS_ConvertValue(cx, *vp, JSTYPE_STRING, vp)) {
-            return JS_FALSE;
-        }
-        res->input = JSVAL_TO_STRING(*vp);
-    } else if (JSVAL_TO_INT(id) == REGEXP_STATIC_MULTILINE) {
-        if (!JSVAL_IS_BOOLEAN(*vp) &&
-            !JS_ConvertValue(cx, *vp, JSTYPE_BOOLEAN, vp)) {
-            return JS_FALSE;
-        }
-        res->multiline = JSVAL_TO_BOOLEAN(*vp);
-    }
-    return JS_TRUE;
+    return MakeString(cx, n < res->parens.length() ? &res->parens[n] : &js_EmptySubString, vp);
 }
+
+DEFINE_STATIC_GETTER(static_paren1_getter,       return Paren(cx, res, 0, vp))
+DEFINE_STATIC_GETTER(static_paren2_getter,       return Paren(cx, res, 1, vp))
+DEFINE_STATIC_GETTER(static_paren3_getter,       return Paren(cx, res, 2, vp))
+DEFINE_STATIC_GETTER(static_paren4_getter,       return Paren(cx, res, 3, vp))
+DEFINE_STATIC_GETTER(static_paren5_getter,       return Paren(cx, res, 4, vp))
+DEFINE_STATIC_GETTER(static_paren6_getter,       return Paren(cx, res, 5, vp))
+DEFINE_STATIC_GETTER(static_paren7_getter,       return Paren(cx, res, 6, vp))
+DEFINE_STATIC_GETTER(static_paren8_getter,       return Paren(cx, res, 7, vp))
+DEFINE_STATIC_GETTER(static_paren9_getter,       return Paren(cx, res, 8, vp))
+
+#define DEFINE_STATIC_SETTER(name, code)                                       \
+    static JSBool                                                              \
+    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    {                                                                          \
+        JSRegExpStatics *res = &cx->regExpStatics;                             \
+        code;                                                                  \
+        return true;                                                           \
+    }
+
+DEFINE_STATIC_SETTER(static_input_setter,
+                     if (!JSVAL_IS_STRING(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_STRING, vp))
+                         return false;
+                     res->input = JSVAL_TO_STRING(*vp))
+DEFINE_STATIC_SETTER(static_multiline_setter,
+                     if (!JSVAL_IS_BOOLEAN(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_BOOLEAN, vp))
+                         return false;
+                     res->multiline = JSVAL_TO_BOOLEAN(*vp))
+
 #define REGEXP_STATIC_PROP_ATTRS    (REGEXP_PROP_ATTRS | JSPROP_ENUMERATE)
 #define RO_REGEXP_STATIC_PROP_ATTRS (REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY)
 
 static JSPropertySpec regexp_static_props[] = {
-    {"input",
-     REGEXP_STATIC_INPUT,
-     REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_setProperty},
-    {"multiline",
-     REGEXP_STATIC_MULTILINE,
-     REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_setProperty},
-    {"lastMatch",
-     REGEXP_STATIC_LAST_MATCH,
-     RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"lastParen",
-     REGEXP_STATIC_LAST_PAREN,
-     RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"leftContext",
-     REGEXP_STATIC_LEFT_CONTEXT,
-     RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"rightContext",
-     REGEXP_STATIC_RIGHT_CONTEXT,
-     RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-
-    /* XXX should have block scope and local $1, etc. */
-    {"$1", 0, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$2", 1, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$3", 2, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$4", 3, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$5", 4, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$6", 5, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$7", 6, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$8", 7, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-    {"$9", 8, RO_REGEXP_STATIC_PROP_ATTRS,
-     regexp_static_getProperty,    regexp_static_getProperty},
-
+    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter,
+                                                     static_input_setter},
+    {"multiline",    0, REGEXP_STATIC_PROP_ATTRS,    static_multiline_getter,
+                                                     static_multiline_setter},
+    {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL},
+    {"lastParen",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastParen_getter,    NULL},
+    {"leftContext",  0, RO_REGEXP_STATIC_PROP_ATTRS, static_leftContext_getter,  NULL},
+    {"rightContext", 0, RO_REGEXP_STATIC_PROP_ATTRS, static_rightContext_getter, NULL},
+    {"$1",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren1_getter,       NULL},
+    {"$2",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren2_getter,       NULL},
+    {"$3",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren3_getter,       NULL},
+    {"$4",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren4_getter,       NULL},
+    {"$5",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren5_getter,       NULL},
+    {"$6",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren6_getter,       NULL},
+    {"$7",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren7_getter,       NULL},
+    {"$8",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren8_getter,       NULL},
+    {"$9",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren9_getter,       NULL},
     {0,0,0,0,0}
 };
 

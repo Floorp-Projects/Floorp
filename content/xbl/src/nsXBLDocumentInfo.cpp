@@ -324,7 +324,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   // we must apparently override that with our own (although it isn't clear 
   // why - see bug 339647)
   JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
-  mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
+  mJSObject = ::JS_NewGlobalObject(cx, &gSharedGlobalClass);
   if (!mJSObject)
     return nsnull;
 

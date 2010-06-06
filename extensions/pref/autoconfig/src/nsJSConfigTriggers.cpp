@@ -161,7 +161,7 @@ nsresult CentralizedAdminPrefManagerInit()
         static_cast<nsIXPCSecurityManager*>(new AutoConfigSecMan());
     xpc->SetSecurityManagerForJSContext(autoconfig_cx, secman, 0);
 
-    autoconfig_glob = JS_NewObject(autoconfig_cx, &global_class, NULL, NULL);
+    autoconfig_glob = JS_NewGlobalObject(autoconfig_cx, &global_class);
     if (autoconfig_glob) {
         if (JS_InitStandardClasses(autoconfig_cx, autoconfig_glob)) {
             // XPCONNECT enable this JS context
