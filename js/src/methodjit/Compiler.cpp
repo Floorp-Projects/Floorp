@@ -632,6 +632,26 @@ mjit::Compiler::generateMethod()
             frame.push(Value(BooleanTag(true)));
           END_CASE(JSOP_TRUE)
 
+          BEGIN_CASE(JSOP_OR)
+          BEGIN_CASE(JSOP_AND)
+          {
+            JS_STATIC_ASSERT(JSOP_OR_LENGTH == JSOP_AND_LENGTH);
+            jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
+
+            /* :FIXME: Can we do better and only spill on the taken path? */
+            frame.forgetEverything();
+            masm.fixScriptStack(frame.frameDepth());
+            masm.setupVMFrame();
+            masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
+            Assembler::Condition cond = (op == JSOP_OR)
+                                        ? Assembler::NotEqual
+                                        : Assembler::Equal;
+            Jump j = masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
+            jumpInScript(j, target);
+            frame.pop();
+          }
+          END_CASE(JSOP_AND)
+
           BEGIN_CASE(JSOP_POP)
             frame.pop();
           END_CASE(JSOP_POP)
