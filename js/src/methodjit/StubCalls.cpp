@@ -847,6 +847,21 @@ stubs::Rsh(VMFrame &f)
     f.regs.sp[-2].setInt32(i);
 }
 
+void JS_FASTCALL
+stubs::Ursh(VMFrame &f)
+{
+    uint32_t u;
+    if (!ValueToECMAUint32(f.cx, f.regs.sp[-2], &u))
+        THROW();
+    int32_t j;
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+        THROW();
+
+    u >>= (j & 31);
+
+	f.regs.sp[-2].setNumber(uint32(u));
+}
+
 template <int32 N>
 static inline bool
 PostInc(VMFrame &f, Value *vp)
