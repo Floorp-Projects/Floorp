@@ -148,23 +148,18 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 inline JSBool
 xpc_qsInt32ToJsval(JSContext *cx, PRInt32 i, jsval *rv)
 {
-    if(INT_FITS_IN_JSVAL(i))
-    {
-        *rv = INT_TO_JSVAL(i);
-        return JS_TRUE;
-    }
-    return JS_NewDoubleValue(cx, i, rv);
+    *rv = INT_TO_JSVAL(i);
+    return JS_TRUE;
 }
 
 inline JSBool
 xpc_qsUint32ToJsval(JSContext *cx, PRUint32 u, jsval *rv)
 {
     if(u <= JSVAL_INT_MAX)
-    {
         *rv = INT_TO_JSVAL(u);
-        return JS_TRUE;
-    }
-    return JS_NewDoubleValue(cx, u, rv);
+    else
+        *rv = DOUBLE_TO_JSVAL(u);
+    return JS_TRUE;
 }
 
 #ifdef HAVE_LONG_LONG
