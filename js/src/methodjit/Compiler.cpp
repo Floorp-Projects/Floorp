@@ -562,34 +562,22 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
             jsop_this();
-            prepareStubCall();
-            stubCall(stubs::GetProp, Uses(1), Defs(1));
-            frame.pop();
-            frame.pushSynced();
+            jsop_getprop_slow();
           END_CASE(JSOP_GETTHISPROP);
 
           BEGIN_CASE(JSOP_GETARGPROP)
             /* Push arg onto stack. */
             jsop_getarg(GET_SLOTNO(PC));
-            prepareStubCall();
-            stubCall(stubs::GetProp, Uses(1), Defs(1));
-            frame.pop();
-            frame.pushSynced();
+            jsop_getprop_slow();
           END_CASE(JSOP_GETARGPROP)
 
           BEGIN_CASE(JSOP_GETLOCALPROP)
             frame.pushLocal(GET_SLOTNO(PC));
-            prepareStubCall();
-            stubCall(stubs::GetProp, Uses(1), Defs(1));
-            frame.pop();
-            frame.pushSynced();
+            jsop_getprop_slow();
           END_CASE(JSOP_GETLOCALPROP)
 
           BEGIN_CASE(JSOP_GETPROP)
-            prepareStubCall();
-            stubCall(stubs::GetProp, Uses(1), Defs(1));
-            frame.pop();
-            frame.pushSynced();
+            jsop_getprop_slow();
           END_CASE(JSOP_GETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
@@ -1240,6 +1228,15 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
                                    Registers::ReturnReg);
         jumpInScript(j, target);
     }
+}
+
+void
+mjit::Compiler::jsop_getprop_slow()
+{
+    prepareStubCall();
+    stubCall(stubs::GetProp, Uses(1), Defs(1));
+    frame.pop();
+    frame.pushSynced();
 }
 
 void
