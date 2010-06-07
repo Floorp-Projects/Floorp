@@ -58,7 +58,7 @@ IPDLDIRS =  \
   dom/plugins  \
   dom/ipc  \
   netwerk/ipc  \
-  netwerk/protocol/http/src  \
+  netwerk/protocol/http  \
   netwerk/cookie  \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
