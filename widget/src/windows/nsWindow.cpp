@@ -6917,6 +6917,10 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
 
   if (topWindow->mIsVisible)
     style |= WS_VISIBLE;
+  if (topWindow->mSizeMode == nsSizeMode_Maximized)
+    style |= WS_MAXIMIZE;
+  else if (topWindow->mSizeMode == nsSizeMode_Minimized)
+    style |= WS_MINIMIZE;
 
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
