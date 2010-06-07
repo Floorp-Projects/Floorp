@@ -2040,9 +2040,9 @@ Assembler::asm_str(Register rt, Register rr, int32_t offset)
             STR(rt, IP, -((-offset) & 0xfff));
             asm_sub_imm(IP, rr, (-offset) & ~0xfff);
         } else {
-            int32_t adj = -((-offset) & 0xfff);
-            asm_add_imm(IP, rr, adj);
-            STR(rt, rr, offset-adj);
+            int32_t adj = ((-offset) & ~0xfff);
+            asm_add_imm(rr, rr, adj);
+            STR(rt, rr, offset+adj);
             asm_sub_imm(rr, rr, adj);
         }
     }
