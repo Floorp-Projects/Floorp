@@ -197,6 +197,7 @@ INSTALLED_HEADERS = \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
+		jsgcchunk.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
