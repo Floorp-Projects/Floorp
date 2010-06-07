@@ -156,11 +156,11 @@
 
       let chromeWin = getChromeWin();
       let allPageURLs = [];
+
+      let list = document.getElementById("recentTabs");
       
       let tabs = data.windows[0].tabs;
-      let count = Math.min(5, tabs.length);
-      let list = document.getElementById("recentTabs");
-      for (let i=0; i<count; i++) {
+      for (let i=0; i<tabs.length; i++) {
         let url = tabs[i].url;
         if (url.indexOf("about:") == 0)
           continue;
