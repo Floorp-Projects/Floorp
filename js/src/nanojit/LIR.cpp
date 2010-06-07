@@ -814,7 +814,7 @@ namespace nanojit
                 case LIR_ltui: // unsigned < 0 -> always false
                     // note that we know that oprnd2 == insImmI(0), so just return that
                     return oprnd2;
-                case LIR_gtui: // unsigned >= 0 -> always true
+                case LIR_geui: // unsigned >= 0 -> always true
                     return insImmI(1);
                 case LIR_eqi:
                     if (oprnd1->isop(LIR_ori) &&
@@ -837,6 +837,9 @@ namespace nanojit
                 case LIR_gtui:
                     // u32 > 0xffffffff -> always false
                     return insImmI(0);
+                case LIR_leui:
+                    // u32 <= 0xffffffff -> always true
+                    return insImmI(1);
                 default:
                     ;
                 }
