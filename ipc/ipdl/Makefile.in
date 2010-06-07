@@ -59,7 +59,7 @@ IPDLDIRS =  \
   dom/ipc  \
   netwerk/ipc  \
   netwerk/protocol/http/src  \
-  netwerk/cookie/src  \
+  netwerk/cookie  \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
   js/ipc  \
