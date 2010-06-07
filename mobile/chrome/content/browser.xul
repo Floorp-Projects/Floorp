@@ -497,18 +497,6 @@
       <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();" autoedit="true"/>
     </vbox>
 
-    <!-- save/open dialog -->
-    <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">
-      <label id="helperapp-prompt" value="&helperApp.prompt;"/>
-      <label id="helperapp-target" value="" crop="center"/>
-      <separator/>
-      <hbox pack="center">
-        <button id="helperapp-open" class="button-dark" label="&helperApp.open;" oncommand="HelperAppDialog.open();"/>
-        <button id="helperapp-save" class="button-dark" label="&helperApp.save;" oncommand="HelperAppDialog.save();"/>
-        <button id="helperapp-nothing" class="button-dark" label="&helperApp.nothing;" oncommand="HelperAppDialog.hide();"/>
-      </hbox>
-    </vbox>
-
     <vbox id="context-popup" hidden="true" class="dialog-dark" top="0" left="0">
       <hbox id="context-header">
         <label id="context-hint" crop="center" flex="1"/>
