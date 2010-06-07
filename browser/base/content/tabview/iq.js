@@ -581,49 +581,58 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: animate
-  animate: function(css, duration, callback) {
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+  // Uses CSS transitions to animate the element. 
+  // 
+  // Parameters: 
+  //   css - an object map of the CSS properties to change
+  //   options - an object with various properites (see below)
+  //
+  // Possible "options" properties: 
+  //   duration - how long to animate, in milliseconds
+  //   easing - easing function to use. Possibilities include 'tabcandyBounce', 'easeInQuad'. 
+  //     Default is 'ease'. 
+  //   complete - function to call once the animation is done, takes nothing in, but "this"
+  //     is set to the element that was animated. 
+  animate: function(css, options) {
     try {
-/*
-      this.css({
-        '-moz-transition-property': 'all',  
-        '-moz-transition-duration': '0.3s',  
-        '-moz-transition-timing-function': 'cubic-bezier(0.0, 0.35, .6, 1.4)'
-      });
-*/
+      Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
 
-      this.addClass(duration);
-      iQ.animationCount++;
+      if(!options)
+        options = {};
+      
+      var easings = {
+        tabcandyBounce: 'cubic-bezier(0.0, 0.35, .6, 1.4)', 
+        easeInQuad: 'ease-in' // TODO: make it a real easeInQuad, or decide we don't care
+      };
+      
+      var duration = (options.duration || 400);
+      var easing = (easings[options.easing] || 'ease');
+
+      this.css({
+        '-moz-transition-property': 'all', // TODO: just animate the properties we're changing  
+        '-moz-transition-duration': (duration / 1000) + 's',  
+        '-moz-transition-timing-function': easing
+      });
+
+      this.css(css);
       
       var self = this;
-      var cleanedUp = false;
-      this.one('transitionend', function() {
+      setTimeout(function() {
         try {
-/*           Utils.log('transition ended'); */
-          if(!cleanedUp) {
-            iQ.animationCount--;
+          self.css({
+            '-moz-transition-property': 'none',  
+            '-moz-transition-duration': '',  
+            '-moz-transition-timing-function': ''
+          });
   
-/*
-            iQ(this).css({
-              '-moz-transition-property': '',  
-              '-moz-transition-duration': '',  
-              '-moz-transition-timing-function': ''
-            });
-*/
-      
-            self.removeClass(duration);
-            cleanedUp = true;
-            if(iQ.isFunction(callback))
-              callback.apply(this);
-          }
+          if(iQ.isFunction(options.complete))
+            options.complete.apply(self);
         } catch(e) {
           Utils.log(e);
-        }
-      });
-      
-      this.css(css);
+        }      
+      }, duration);
     } catch(e) {
-      Utils.log('iQ.fn.animate error', e);
+      Utils.log(e);
     }
     
     return this;
