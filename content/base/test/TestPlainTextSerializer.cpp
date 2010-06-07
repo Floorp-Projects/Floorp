@@ -45,11 +45,12 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringGlue.h"
 #include "nsParserCIID.h"
+#include "nsIDocumentEncoder.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 void
-ConvertBufToPlainText(nsString &aConBuf)
+ConvertBufToPlainText(nsString &aConBuf, int aFlag)
 {
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID);
   if (parser) {
@@ -59,7 +60,7 @@ ConvertBufToPlainText(nsString &aConBuf)
       nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
       if (textSink) {
         nsAutoString convertedText;
-        textSink->Initialize(&convertedText, 0, 72);
+        textSink->Initialize(&convertedText, aFlag, 72);
         parser->SetContentSink(sink);
         parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
         aConBuf = convertedText;
@@ -68,19 +69,99 @@ ConvertBufToPlainText(nsString &aConBuf)
   }
 }
 
+// Test for ASCII with format=flowed; delsp=yes
+nsresult
+TestASCIIWithFlowedDelSp()
+{
+  nsString test;
+  nsString result;
+
+  test.AssignLiteral("<html><body>"
+                     "Firefox Firefox Firefox Firefox "
+                     "Firefox Firefox Firefox Firefox "
+                     "Firefox Firefox Firefox Firefox"
+                     "</body></html>");
+
+  ConvertBufToPlainText(test, nsIDocumentEncoder::OutputFormatted |
+                              nsIDocumentEncoder::OutputCRLineBreak |
+                              nsIDocumentEncoder::OutputLFLineBreak |
+                              nsIDocumentEncoder::OutputFormatFlowed |
+                              nsIDocumentEncoder::OutputFormatDelSp);
+
+  // create result case
+  result.AssignLiteral("Firefox Firefox Firefox Firefox "
+                       "Firefox Firefox Firefox Firefox "
+                       "Firefox  \r\nFirefox Firefox Firefox\r\n");
+
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to ASCII text serialization with format=flowed; delsp=yes");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to ASCII text serialization with format=flowed; delsp=yes");
+
+  return NS_OK;
+}
+
+// Test for CJK with format=flowed; delsp=yes
+nsresult
+TestCJKWithFlowedDelSp()
+{
+  nsString test;
+  nsString result;
+
+  test.AssignLiteral("<html><body>");
+  for (PRUint32 i = 0; i < 40; i++) {
+    // Insert Kanji (U+5341)
+    test.Append(0x5341);
+  }
+  test.AppendLiteral("</body></html>");
+
+  ConvertBufToPlainText(test, nsIDocumentEncoder::OutputFormatted |
+                              nsIDocumentEncoder::OutputCRLineBreak |
+                              nsIDocumentEncoder::OutputLFLineBreak |
+                              nsIDocumentEncoder::OutputFormatFlowed |
+                              nsIDocumentEncoder::OutputFormatDelSp);
+
+  // create result case
+  for (PRUint32 i = 0; i < 36; i++) {
+    result.Append(0x5341);
+  }
+  result.Append(NS_LITERAL_STRING(" \r\n"));
+  for (PRUint32 i = 0; i < 4; i++) {
+    result.Append(0x5341);
+  }
+  result.Append(NS_LITERAL_STRING("\r\n"));
+
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to CJK text serialization with format=flowed; delsp=yes");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to CJK text serialization with format=flowed; delsp=yes");
+
+  return NS_OK;
+}
+
 nsresult
 TestPlainTextSerializer()
 {
   nsString test;
   test.AppendLiteral("<html><base>base</base><head><span>span</span></head>"
                      "<body>body</body></html>");
-  ConvertBufToPlainText(test);
+  ConvertBufToPlainText(test, 0);
   if (!test.EqualsLiteral("basespanbody")) {
     fail("Wrong html to text serialization");
     return NS_ERROR_FAILURE;
   }
 
   passed("HTML to text serialization test");
+
+  nsresult rv = TestASCIIWithFlowedDelSp();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestCJKWithFlowedDelSp();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Add new tests here...
   return NS_OK;

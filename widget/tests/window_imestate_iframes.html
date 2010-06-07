@@ -153,11 +153,11 @@ function runTests()
     }
     description += aTestingCaseDescription + ": ";
     is(fm.focusedElement, aNextFocusedNode,
-       description + "didn't move focus expectedly");
+       description + "didn't move focus as expected");
     is(utils.IMEStatus,
        aIMEShouldBeEnabled ?
          utils.IME_STATUS_ENABLED : utils.IME_STATUS_DISABLED,
-       description + "didn't set IME state expectedly");
+       description + "didn't set IME state as expected");
   }
 
   function testMouseClick(aNextFocusedNode, aWillFireFocusEvent,
@@ -170,11 +170,41 @@ function runTests()
     synthesizeMouse(iframe, 10, 80, { });
     var description = "Click test: " + aTestingCaseDescription + ": ";
     is(fm.focusedElement, !aWillAllNodeLostFocus ? aNextFocusedNode : null,
-       description + "didn't move focus expectedly");
+       description + "didn't move focus as expected");
     is(utils.IMEStatus,
        aIMEShouldBeEnabled ?
          utils.IME_STATUS_ENABLED : utils.IME_STATUS_DISABLED,
-       description + "didn't set IME state expectedly");
+       description + "didn't set IME state as expected");
+  }
+
+  function testOnEditorFlagChange(aDescription, aIsInDesignMode)
+  {
+    const kReadonly =
+      Components.interfaces.nsIPlaintextEditor.eEditorReadonlyMask;
+    var description = "testOnEditorFlagChange: " + aDescription;
+    resetFocusToParentHTML(description);
+    var htmlEditor =
+      iframe.contentWindow.
+        QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+        getInterface(Components.interfaces.nsIWebNavigation).
+        QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+    var e = aIsInDesignMode ? root : editor;
+    e.focus();
+    is(fm.focusedElement, e,
+       description + ": focus() of editor didn't move focus as expected");
+    is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+       description + ": IME isn't enabled when the editor gets focus");
+    var flags = htmlEditor.flags;
+    htmlEditor.flags |= kReadonly;
+    is(fm.focusedElement, e,
+       description + ": when editor becomes readonly, focus moved unexpectedly");
+    is(utils.IMEStatus, utils.IME_STATUS_DISABLED,
+       description + ": when editor becomes readonly, IME is still enabled");
+    htmlEditor.flags = flags;
+    is(fm.focusedElement, e,
+       description + ": when editor becomes read-write, focus moved unexpectedly");
+    is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+       description + ": when editor becomes read-write, IME is still disabled");
   }
 
   // hide all iframes
@@ -233,6 +263,8 @@ function runTests()
 
   testMouseClick(editor, true, false, prev, true, true, "iframe_html");
 
+  testOnEditorFlagChange("html[contentediable=true]", false);
+
   iframe.style.display = "none";
 
   // designMode should behave like <html contenteditable="true"></html>
@@ -265,6 +297,8 @@ function runTests()
 
   testMouseClick(editor, false, true, prev, true, true, "iframe_designMode");
 
+  testOnEditorFlagChange("html in designMode", true);
+
   iframe.style.display = "none";
 
   // When there is no HTML element but the BODY element is editable,
@@ -294,6 +328,8 @@ function runTests()
   resetFocusToInput("after parent html <-> body[contenteditable=true]");
 
   testMouseClick(editor, true, false, prev, true, true, "iframe_body");
+
+  testOnEditorFlagChange("body[contentediable=true]", false);
 
   iframe.style.display = "none";
 
@@ -328,6 +364,8 @@ function runTests()
   resetFocusToInput("after parent html <-> html (has p[contentediable=true])");
 
   testMouseClick(root, false, true, prev, true, false, "iframe_p");
+
+  testOnEditorFlagChange("p[contenteditable=true]", false);
 
   iframe.style.display = "none";
 

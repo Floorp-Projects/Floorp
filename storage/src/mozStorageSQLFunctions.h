@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _mozStorageSQLFunctions_h_
-#define _mozStorageSQLFunctions_h_
+#ifndef mozStorageSQLFunctions_h
+#define mozStorageSQLFunctions_h
 
 #include "sqlite3.h"
 #include "nscore.h"
@@ -106,4 +106,4 @@ NS_HIDDEN_(void) levenshteinDistanceFunction(sqlite3_context *aCtx,
 } // namespace storage
 } // namespace mozilla
 
-#endif // _mozStorageSQLFunctions_h_
+#endif // mozStorageSQLFunctions_h

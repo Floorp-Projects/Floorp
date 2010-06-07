@@ -5,6 +5,7 @@
 // This verifies that add-ons can be installed from XPI files
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 do_load_httpd_js();
 var testserver;
@@ -60,6 +61,8 @@ function run_test_1() {
     let file = do_get_addon("test_install1");
     let uri = Services.io.newFileURI(file).spec;
     do_check_eq(install.addon.getResourceURL("install.rdf"), "jar:" + uri + "!/install.rdf");
+    do_check_eq(install.addon.iconURL, "jar:" + uri + "!/icon.png");
+    do_check_eq(install.iconURL, null);
 
     AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
@@ -95,6 +98,9 @@ function check_test_1() {
     AddonManager.getAddonsWithOperationsByTypes(null, function(pendingAddons) {
       do_check_eq(pendingAddons.length, 1);
       do_check_eq(pendingAddons[0].id, "addon1@tests.mozilla.org");
+      let iconFile = NetUtil.newURI(pendingAddons[0].iconURL)
+                            .QueryInterface(AM_Ci.nsIFileURL).file;
+      do_check_true(iconFile.exists());
 
       restartManager(1);
 
@@ -147,6 +153,7 @@ function run_test_2() {
     do_check_eq(install.version, "1.0");
     do_check_eq(install.name, "Test 2");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+    do_check_eq(install.iconURL, null);
 
     AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
@@ -176,6 +183,7 @@ function check_test_2(install) {
   do_check_eq(install.name, "Real Test 2");
   do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
   do_check_eq(install.addon.install, install);
+  do_check_eq(install.iconURL, null);
 
   // Pause the install here and start it again in run_test_3
   do_execute_soon(function() { run_test_3(install); });

@@ -102,10 +102,6 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
-<!-- This is still used for dragDropSecurityCheck and transferUtils.  Since we
-     rely on the new Drag and Drop API these dependencies should be removed. -->
-<script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
@@ -471,10 +467,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
-                 bookmarkhistoryplaceholder="&urlbar.bookmarkhistory.emptyText;"
-                 bookmarkplaceholder="&urlbar.bookmark.emptyText;"
-                 historyplaceholder="&urlbar.history.emptyText;"
-                 noneplaceholder="&urlbar.none.emptyText;"
+                 placeholder="&urlbar.placeholder;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletesearchparam="enable-actions"
@@ -640,6 +633,7 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&tabCmd.label;"
                      command="cmd_newNavigatorTab"
+                     onclick="checkForMiddleClick(this, event);"
                      tooltiptext="&newTabButton.tooltip;"
                      ondrop="newTabButtonObserver.onDrop(event)"
                      ondragover="newTabButtonObserver.onDragOver(event)"

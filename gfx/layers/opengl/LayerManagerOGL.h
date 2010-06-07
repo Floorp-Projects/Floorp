@@ -231,7 +231,7 @@ public:
     BindQuadVBO();
     QuadVBOVerticesAttrib(aVertAttribIndex);
 
-    if (aTexCoordAttribIndex != -1) {
+    if (aTexCoordAttribIndex != GLuint(-1)) {
       if (aFlipped)
         QuadVBOFlippedTexCoordsAttrib(aTexCoordAttribIndex);
       else
@@ -246,7 +246,7 @@ public:
 
     mGLContext->fDisableVertexAttribArray(aVertAttribIndex);
 
-    if (aTexCoordAttribIndex != -1) {
+    if (aTexCoordAttribIndex != GLuint(-1)) {
       mGLContext->fDisableVertexAttribArray(aTexCoordAttribIndex);
     }
   }
@@ -352,7 +352,7 @@ class LayerOGL
 {
 public:
   LayerOGL(LayerManagerOGL *aManager)
-    : mOGLManager(aManager), mNextSibling(nsnull)
+    : mOGLManager(aManager)
   { }
 
   enum LayerType {
@@ -364,14 +364,6 @@ public:
   };
   
   virtual LayerType GetType() = 0;
-
-  LayerOGL *GetNextSibling() {
-    return mNextSibling;
-  }
-
-  void SetNextSibling(LayerOGL *aSibling) {
-    mNextSibling = aSibling;
-  }
 
   virtual LayerOGL *GetFirstChildOGL() {
     return nsnull;
@@ -387,7 +379,6 @@ public:
   GLContext *gl() const { return mOGLManager->gl(); }
 protected:
   LayerManagerOGL *mOGLManager;
-  LayerOGL *mNextSibling;
 };
 
 #ifdef DEBUG

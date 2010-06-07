@@ -32,52 +32,13 @@
 #ifndef _JEMALLOC_H_
 #define _JEMALLOC_H_
 
-/* grab size_t */
-#ifdef _MSC_VER
-#include <crtdefs.h>
-#else
-#include <stddef.h>
-#endif
+#include "jemalloc_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef unsigned char jemalloc_bool;
-
 extern const char *_malloc_options;
-
-/*
- * jemalloc_stats() is not a stable interface.  When using jemalloc_stats_t, be
- * sure that the compiled results of jemalloc.c are in sync with this header
- * file.
- */
-typedef struct {
-	/*
-	 * Run-time configuration settings.
-	 */
-	jemalloc_bool	opt_abort;	/* abort(3) on error? */
-	jemalloc_bool	opt_junk;	/* Fill allocated/free memory with 0xa5/0x5a? */
-	jemalloc_bool	opt_utrace;	/* Trace all allocation events? */
-	jemalloc_bool	opt_sysv;	/* SysV semantics? */
-	jemalloc_bool	opt_xmalloc;	/* abort(3) on OOM? */
-	jemalloc_bool	opt_zero;	/* Fill allocated memory with 0x0? */
-	size_t	narenas;	/* Number of arenas. */
-	size_t	balance_threshold; /* Arena contention rebalance threshold. */
-	size_t	quantum;	/* Allocation quantum. */
-	size_t	small_max;	/* Max quantum-spaced allocation size. */
-	size_t	large_max;	/* Max sub-chunksize allocation size. */
-	size_t	chunksize;	/* Size of each virtual memory mapping. */
-	size_t	dirty_max;	/* Max dirty pages per arena. */
-
-	/*
-	 * Current memory usage statistics.
-	 */
-	size_t	mapped;		/* Bytes mapped (not necessarily committed). */
-	size_t	committed;	/* Bytes committed (readable/writable). */
-	size_t	allocated;	/* Bytes allocted (in use by application). */
-	size_t	dirty;		/* Bytes dirty (committed unused pages). */
-} jemalloc_stats_t;
 
 /* Darwin and Linux already have memory allocation functions */
 #if (!defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_LINUX))

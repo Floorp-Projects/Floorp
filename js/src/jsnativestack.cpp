@@ -43,8 +43,16 @@
 #ifdef XP_WIN
 # include <windows.h>
 
+#elif defined(XP_OS2)
+# define INCL_DOSPROCESS
+# include <os2.h>
+
 #elif defined(XP_MACOSX) || defined(DARWIN) || defined(XP_UNIX)
 # include <pthread.h>
+
+# if defined(__FreeBSD__)
+#  include <pthread_np.h>
+# endif
 
 #else
 # error "Unsupported platform"
@@ -114,7 +122,7 @@ GetNativeStackBase()
 void *
 GetNativeStackBaseImpl()
 {
-# if defined(_WIN32) && defined(_MSC_VER)
+# if defined(_M_IX86) && defined(_MSC_VER)
     /*
      * offset 0x18 from the FS segment register gives a pointer to
      * the thread information block for the current thread
@@ -126,7 +134,7 @@ GetNativeStackBaseImpl()
     }
     return static_cast<void*>(pTib->StackBase);
 
-# elif defined(_WIN64) && defined(_MSC_VER)
+# elif defined(_M_X64) && defined(_MSC_VER)
     PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
     return reinterpret_cast<void*>(pTib->StackBase);
 
@@ -138,7 +146,19 @@ GetNativeStackBaseImpl()
 # endif
 }
 
-#else /* !XP_WIN */
+#elif defined(XP_OS2)
+
+void *
+GetNativeStackBaseImpl()
+{
+    PTIB  ptib;
+    PPIB  ppib;
+
+    DosGetInfoBlocks(&ptib, &ppib);
+    return ptib->tib_pstacklimit;
+}
+
+#else /* XP_UNIX */
 
 void *
 GetNativeStackBaseImpl()
@@ -150,13 +170,13 @@ GetNativeStackBaseImpl()
 # else
     pthread_attr_t sattr;
     pthread_attr_init(&sattr);
-#  if defined(PTHREAD_NP_H) || defined(NETBSD)
-    /* e.g. on FreeBSD 5.4, neundorf@kde.org */
+#  if defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(NETBSD)
+    /* e.g. on FreeBSD 4.8 or newer, neundorf@kde.org */
     pthread_attr_get_np(thread, &sattr);
 #  else
     /*
-     * FIXME: this function is non-portable; other POSIX systems may have
-     * different np alternatives
+     * FIXME: this function is non-portable;
+     * other POSIX systems may have different np alternatives
      */
     pthread_getattr_np(thread, &sattr);
 #  endif

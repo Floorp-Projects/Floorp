@@ -35,44 +35,40 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
-LIBRARY_NAME	= necko
+MODULE         = necko
+LIBRARY_NAME   = necko
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= necko
-GRE_MODULE	= 1
+IS_COMPONENT   = 1
+MODULE_NAME    = necko
+GRE_MODULE     = 1
 LIBXUL_LIBRARY = 1
 
-
-CPPSRCS		= nsNetModule.cpp
-EXPORTS		= nsNetCID.h
+CPPSRCS = nsNetModule.cpp
+EXPORTS = nsNetCID.h
 
 SHARED_LIBRARY_LIBS = \
-		../base/src/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
-		../dns/src/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
-		../socket/base/$(LIB_PREFIX)neckosocket_s.$(LIB_SUFFIX) \
-		../streamconv/src/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
-		../streamconv/converters/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
-		../mime/src/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
-		../cache/src/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
-		../protocol/about/src/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
-		$(NULL)
+  ../base/src/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
+  ../dns/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
+  ../socket/$(LIB_PREFIX)neckosocket_s.$(LIB_SUFFIX) \
+  ../streamconv/src/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
+  ../streamconv/converters/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
+  ../mime/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
+  ../cache/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
+  ../protocol/about/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
+  $(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
+    ../protocol/$(d)/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
+  $(NULL)
 
 ifdef MOZ_IPC
 SHARED_LIBRARY_LIBS += ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX)
 endif
-
-SHARED_LIBRARY_LIBS += \
-		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
-			../protocol/$(d)/src/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
-		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
     SHARED_LIBRARY_LIBS += \
@@ -94,18 +90,18 @@ ifdef MOZ_ENABLE_LIBCONIC
         ../system/maemo/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../base/src \
-		-I$(srcdir)/../dns/src \
-		-I$(srcdir)/../socket/base \
-		-I$(srcdir)/../streamconv/src \
-		-I$(srcdir)/../streamconv/converters \
-		-I$(srcdir)/../mime/src \
-		-I$(srcdir)/../cache/src \
-		-I$(srcdir)/../protocol/about/src \
-		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
-			-I$(srcdir)/../protocol/$(d)/src) \
-		$(NULL)
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../base/src \
+  -I$(srcdir)/../dns \
+  -I$(srcdir)/../socket \
+  -I$(srcdir)/../streamconv/src \
+  -I$(srcdir)/../streamconv/converters \
+  -I$(srcdir)/../mime \
+  -I$(srcdir)/../cache \
+  -I$(srcdir)/../protocol/about \
+  $(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
+    -I$(srcdir)/../protocol/$(d)) \
+  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
     LOCAL_INCLUDES += -I$(srcdir)/../system/win32
@@ -125,16 +121,16 @@ endif
 
 ifdef NECKO_COOKIES
 SHARED_LIBRARY_LIBS += \
-		../cookie/src/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
-                $(NULL)
-LOCAL_INCLUDES	+= -I$(srcdir)/../cookie/src
+  ../cookie/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
+  $(NULL)
+LOCAL_INCLUDES += -I$(srcdir)/../cookie
 endif
 
 ifdef NECKO_WIFI
 SHARED_LIBRARY_LIBS += \
-		../wifi/src/$(LIB_PREFIX)neckowifi_s.$(LIB_SUFFIX) \
-                $(NULL)
-LOCAL_INCLUDES	+= -I$(srcdir)/../wifi/src
+  ../wifi/$(LIB_PREFIX)neckowifi_s.$(LIB_SUFFIX) \
+  $(NULL)
+LOCAL_INCLUDES += -I$(srcdir)/../wifi
 
 ifeq ($(OS_ARCH),SunOS)
 OS_LIBS += $(GLIB_LIBS)
@@ -148,25 +144,25 @@ DEFINES += -DNECKO_OFFLINE_CACHE
 endif
 
 EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(ZLIB_LIBS) \
-		$(NULL)
+  $(LIBS_DIR) \
+  $(EXTRA_DSO_LIBS) \
+  $(MOZ_UNICHARUTIL_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(ZLIB_LIBS) \
+  $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += \
-		-framework SystemConfiguration \
-		$(TK_LIBS) \
-	$(NULL)
+  -framework SystemConfiguration \
+  $(TK_LIBS) \
+  $(NULL)
 endif
 
 ifdef MOZ_ENABLE_LIBCONIC
 EXTRA_DSO_LDOPTS += \
-		$(LIBCONIC_LIBS) \
-		$(MOZ_DBUS_LIBS) \
-		$(NULL)
+  $(LIBCONIC_LIBS) \
+  $(MOZ_DBUS_LIBS) \
+  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),AIX)
@@ -178,11 +174,11 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
+OS_LIBS += $(call EXPAND_LIBNAME,ole32 shell32)
 endif
 
 ifeq ($(OS_ARCH),WINCE)
-OS_LIBS	+= $(call EXPAND_LIBNAME,cellcore ws2)
+OS_LIBS += $(call EXPAND_LIBNAME,cellcore ws2)
 endif
 
 DEFINES += -DIMPL_NS_NET

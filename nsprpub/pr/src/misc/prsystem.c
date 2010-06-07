@@ -284,6 +284,20 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
     long pageCount = sysconf(_SC_PHYS_PAGES);
     bytes = (PRUint64) pageSize * pageCount;
 
+#elif defined(NETBSD)
+
+    int mib[2];
+    int rc;
+    uint64_t memSize;
+    size_t len = sizeof(memSize);
+
+    mib[0] = CTL_HW;
+    mib[1] = HW_PHYSMEM64;
+    rc = sysctl(mib, 2, &memSize, &len, NULL, 0);
+    if (-1 != rc)  {
+        bytes = memSize;
+    }
+
 #elif defined(HPUX)
 
     struct pst_static info;

@@ -379,6 +379,13 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_ATOM(atom)        INS_CONSTSTR(ATOM_TO_STRING(atom))
 #define INS_NULL()            INS_CONSTPTR(NULL)
 #define INS_VOID()            INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))
+#define INS_HOLE()            INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_HOLE(jsval v)
+{
+    return v == JSVAL_HOLE;
+}
 
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
@@ -1048,9 +1055,11 @@ GetPromotedType(jsval v)
             return TT_FUNCTION;
         return TT_OBJECT;
     }
-    /* N.B. void is JSVAL_SPECIAL. */
+    /* N.B. void and hole are JSVAL_SPECIAL. */
     if (JSVAL_IS_VOID(v))
         return TT_VOID;
+    if (JSVAL_IS_HOLE(v))
+        return TT_MAGIC;
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
@@ -1072,9 +1081,11 @@ getCoercedType(jsval v)
             return TT_FUNCTION;
         return TT_OBJECT;
     }
-    /* N.B. void is JSVAL_SPECIAL. */
+    /* N.B. void and hole are JSVAL_SPECIAL. */
     if (JSVAL_IS_VOID(v))
         return TT_VOID;
+    if (JSVAL_IS_HOLE(v))
+        return TT_MAGIC;
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
@@ -2631,6 +2642,12 @@ ValueToNative(JSContext* cx, jsval v, TraceType type, double* slot)
         debug_only_print0(LC_TMTracer, "undefined ");
         return;
 
+      case TT_MAGIC:
+        JS_ASSERT(JSVAL_IS_HOLE(v));
+        *(JSBool*)slot = JSVAL_TO_SPECIAL(JSVAL_HOLE);
+        debug_only_print0(LC_TMTracer, "hole ");
+        return;
+
       case TT_FUNCTION: {
         JS_ASSERT(tag == JSVAL_OBJECT);
         JSObject* obj = JSVAL_TO_OBJECT(v);
@@ -2808,6 +2825,11 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
       case TT_VOID:
         v = JSVAL_VOID;
         debug_only_print0(LC_TMTracer, "undefined ");
+        break;
+
+      case TT_MAGIC:
+        v = JSVAL_HOLE;
+        debug_only_print0(LC_TMTracer, "hole ");
         break;
 
       case TT_FUNCTION: {
@@ -3356,6 +3378,8 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
             ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else if (t == TT_VOID) {
             ins = INS_VOID();
+        } else if (t == TT_MAGIC) {
+            ins = INS_HOLE();
         } else {
             ins = lir->insLoad(LIR_ldp, base, offset, accSet);
         }
@@ -3857,6 +3881,9 @@ TraceRecorder::determineSlotType(jsval* vp)
     } else if (JSVAL_IS_VOID(*vp)) {
         /* N.B. void is JSVAL_SPECIAL. */
         m = TT_VOID;
+    } else if (JSVAL_IS_HOLE(*vp)) {
+        /* N.B. hole is JSVAL_SPECIAL. */
+        m = TT_MAGIC;
     } else {
         JS_ASSERT(JSVAL_IS_STRING(*vp) || JSVAL_IS_SPECIAL(*vp));
         JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
@@ -6079,7 +6106,7 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
         debug_only_printf(LC_TMTracer, "null != tag%u ", tag);
         return false;
       case TT_SPECIAL:
-        /* N.B. void is JSVAL_SPECIAL. */
+        /* N.B. void and hole are JSVAL_SPECIAL. */
         if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp))
             return true;
         debug_only_printf(LC_TMTracer, "bool != tag%u ", tag);
@@ -6088,6 +6115,11 @@ IsEntryTypeCompatible(jsval* vp, TraceType* m)
         if (JSVAL_IS_VOID(*vp))
             return true;
         debug_only_printf(LC_TMTracer, "undefined != tag%u ", tag);
+        return false;
+      case TT_MAGIC:
+        if (JSVAL_IS_HOLE(*vp))
+            return true;
+        debug_only_printf(LC_TMTracer, "hole != tag%u ", tag);
         return false;
       default:
         JS_ASSERT(*m == TT_FUNCTION);
@@ -6594,7 +6626,8 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
                       op == JSOP_INSTANCEOF ||
                       op == JSOP_ITER || op == JSOP_MOREITER || op == JSOP_ENDITER ||
                       op == JSOP_FORARG || op == JSOP_FORLOCAL ||
-                      op == JSOP_FORNAME || op == JSOP_FORPROP || op == JSOP_FORELEM);
+                      op == JSOP_FORNAME || op == JSOP_FORPROP || op == JSOP_FORELEM ||
+                      op == JSOP_DELPROP || op == JSOP_DELELEM);
 
             /*
              * JSOP_SETELEM can be coalesced with a JSOP_POP in the interpeter.
@@ -7022,11 +7055,21 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
         return MONITOR_NOT_RECORDING;
 
 #ifdef MOZ_TRACEVIS
-      case MISMATCH_EXIT:  tvso.r = R_MISMATCH_EXIT;  return false;
-      case OOM_EXIT:       tvso.r = R_OOM_EXIT;       return false;
-      case TIMEOUT_EXIT:   tvso.r = R_TIMEOUT_EXIT;   return false;
-      case DEEP_BAIL_EXIT: tvso.r = R_DEEP_BAIL_EXIT; return false;
-      case STATUS_EXIT:    tvso.r = R_STATUS_EXIT;    return false;
+      case MISMATCH_EXIT:
+        tvso.r = R_MISMATCH_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case OOM_EXIT:
+        tvso.r = R_OOM_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case TIMEOUT_EXIT:
+        tvso.r = R_TIMEOUT_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case DEEP_BAIL_EXIT:
+        tvso.r = R_DEEP_BAIL_EXIT;
+        return MONITOR_NOT_RECORDING;
+      case STATUS_EXIT:
+        tvso.r = R_STATUS_EXIT;
+        return MONITOR_NOT_RECORDING;
 #endif
 
       default:
@@ -7274,14 +7317,28 @@ static bool arm_has_iwmmxt = false;
 static bool arm_tests_initialized = false;
 
 #ifdef ANDROID
-// android doesn't have Elf32_auxv_t defined in elf.h, but it does have /proc/self/auxv
-typedef struct {
-    uint32_t a_type;
-    union {
-       uint32_t a_val;
-    } a_un;
-} Elf32_auxv_t;
-#endif
+// we're actually reading /proc/cpuinfo, but oh well
+static void
+arm_read_auxv()
+{
+  char buf[1024];
+  char* pos;
+  const char* ver_token = "CPU architecture: ";
+  FILE* f = fopen("/proc/cpuinfo", "r");
+  fread(buf, sizeof(char), 1024, f);
+  fclose(f);
+  pos = strstr(buf, ver_token);
+  if (pos) {
+    int ver = *(pos + strlen(ver_token)) - '0';
+    arm_arch = ver;
+  }
+  arm_has_neon = strstr(buf, "neon") != NULL;
+  arm_has_vfp = strstr(buf, "vfp") != NULL;
+  arm_has_iwmmxt = strstr(buf, "iwmmxt") != NULL;
+  arm_tests_initialized = true;
+}
+
+#else
 
 static void
 arm_read_auxv()
@@ -7333,6 +7390,8 @@ arm_read_auxv()
 
     arm_tests_initialized = true;
 }
+
+#endif
 
 static unsigned int
 arm_check_arch()
@@ -7828,23 +7887,23 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
         LIns *obj_ins;
         CHECK_STATUS_A(traverseScopeChain(chainHead, head_ins, obj, obj_ins));
 
-        JSScopeProperty* sprop = (JSScopeProperty*) prop;
-
         if (obj2 != obj) {
             obj2->dropProperty(cx, prop);
             RETURN_STOP_A("prototype property");
         }
+
+        JSScopeProperty* sprop = (JSScopeProperty*) prop;
         if (!isValidSlot(obj->scope(), sprop)) {
-            obj2->dropProperty(cx, prop);
+            JS_UNLOCK_OBJ(cx, obj2);
             return ARECORD_STOP;
         }
         if (!lazilyImportGlobalSlot(sprop->slot)) {
-            obj2->dropProperty(cx, prop);
+            JS_UNLOCK_OBJ(cx, obj2);
             RETURN_STOP_A("lazy import of global slot failed");
         }
         vp = &obj->getSlotRef(sprop->slot);
         ins = get(vp);
-        obj2->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, obj2);
         nr.tracked = true;
         return ARECORD_CONTINUE;
     }
@@ -7852,7 +7911,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
     if (obj == obj2 && obj->getClass() == &js_CallClass) {
         AbortableRecordingStatus status =
             InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
-        obj->dropProperty(cx, prop);
+        JS_UNLOCK_OBJ(cx, obj);
         return status;
     }
 
@@ -9172,10 +9231,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             }
 
             if (prop) {
-                if (!obj2->isNative()) {
-                    obj2->dropProperty(cx, prop);
+                if (!obj2->isNative())
                     RETURN_STOP_A("property found on non-native object");
-                }
                 entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2,
                                                    (JSScopeProperty*) prop);
                 JS_ASSERT(entry);
@@ -9382,6 +9439,10 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
         if (JSVAL_IS_VOID(v)) {
             guard(true, lir->ins2(LIR_eqp, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
             return INS_VOID();
+        }
+        if (JSVAL_IS_HOLE(v)) {
+            guard(true, lir->ins2(LIR_eqp, v_ins, INS_CONSTWORD(JSVAL_HOLE)), exit);
+            return INS_HOLE();
         }
         guard(true,
               lir->ins2(LIR_eqp,
@@ -11034,16 +11095,87 @@ TraceRecorder::record_JSOP_DELNAME()
     return ARECORD_STOP;
 }
 
+JSBool JS_FASTCALL
+DeleteIntKey(JSContext* cx, JSObject* obj, int32 i)
+{
+    jsval v = JSVAL_FALSE;
+    jsid id = INT_TO_JSID(i);
+    if (!obj->deleteProperty(cx, id, &v))
+        SetBuiltinError(cx);
+    return JSVAL_TO_BOOLEAN(v);
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, 0, ACC_STORE_ANY)
+
+JSBool JS_FASTCALL
+DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str)
+{
+    jsval v = JSVAL_FALSE;
+    jsid id;
+
+    /*
+     * NB: JSOP_DELPROP does not need js_ValueToStringId to atomize, but (see
+     * jsatominlines.h) that helper early-returns if the computed property name
+     * string is already atomized, and we are *not* on a perf-critical path!
+     */
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) || !obj->deleteProperty(cx, id, &v))
+        SetBuiltinError(cx);
+    return JSVAL_TO_BOOLEAN(v);
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, DeleteStrKey, CONTEXT, OBJECT, STRING, 0, ACC_STORE_ANY)
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELPROP()
 {
-    return ARECORD_STOP;
+    jsval& lval = stackval(-1);
+    if (JSVAL_IS_PRIMITIVE(lval))
+        RETURN_STOP_A("JSOP_DELPROP on primitive base expression");
+
+    JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
+    JS_ASSERT(ATOM_IS_STRING(atom));
+
+    enterDeepBailCall();
+    LIns* args[] = { INS_ATOM(atom), get(&lval), cx_ins };
+    LIns* rval_ins = lir->insCall(&DeleteStrKey_ci, args);
+
+    LIns* status_ins = lir->insLoad(LIR_ldi,
+                                    lirbuf->state,
+                                    offsetof(TracerState, builtinStatus), ACC_OTHER);
+    pendingGuardCondition = lir->insEqI_0(status_ins);
+    leaveDeepBailCall();
+
+    set(&lval, rval_ins);
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELELEM()
 {
-    return ARECORD_STOP;
+    jsval& lval = stackval(-2);
+    if (JSVAL_IS_PRIMITIVE(lval))
+        RETURN_STOP_A("JSOP_DELELEM on primitive base expression");
+
+    jsval& idx = stackval(-1);
+    LIns* rval_ins;
+
+    enterDeepBailCall();
+    if (isInt32(idx)) {
+        LIns* args[] = { makeNumberInt32(get(&idx)), get(&lval), cx_ins };
+        rval_ins = lir->insCall(&DeleteIntKey_ci, args);
+    } else if (JSVAL_IS_STRING(idx)) {
+        LIns* args[] = { get(&idx), get(&lval), cx_ins };
+        rval_ins = lir->insCall(&DeleteStrKey_ci, args);
+    } else {
+        RETURN_STOP_A("JSOP_DELELEM on non-int, non-string index");
+    }
+
+    LIns* status_ins = lir->insLoad(LIR_ldi,
+                                    lirbuf->state,
+                                    offsetof(TracerState, builtinStatus), ACC_OTHER);
+    pendingGuardCondition = lir->insEqI_0(status_ins);
+    leaveDeepBailCall();
+
+    set(&lval, rval_ins);
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -12394,6 +12526,7 @@ TraceRecorder::stackLoad(LIns* base, AccSet accSet, uint8 type)
       case TT_INT32:
       case TT_SPECIAL:
       case TT_VOID:
+      case TT_MAGIC:
         loadOp = LIR_ldi;
         break;
       case TT_JSVAL:
@@ -13108,7 +13241,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
         JS_ASSERT_IF(!JSVAL_IS_BOOLEAN(*vp), *vp == JSVAL_HOLE);
-        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eqi, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
+        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eqi, v_ins, INS_HOLE()), exit);
 
         /* Don't let the hole value escape. Turn it into an undefined. */
         if (*vp == JSVAL_HOLE) {
@@ -13945,7 +14078,12 @@ TraceRecorder::record_JSOP_BINDNAME()
     // Find the target object.
     JSAtom *atom = atoms[GET_INDEX(cx->regs->pc)];
     jsid id = ATOM_TO_JSID(atom);
+    JSContext *localCx = cx;
     JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
+    if (!obj2)
+        RETURN_ERROR_A("error in js_FindIdentifierBase");
+    if (!TRACE_RECORDER(localCx))
+        return ARECORD_ABORTED;
     if (obj2 != globalObj && obj2->getClass() != &js_CallClass)
         RETURN_STOP_A("BINDNAME on non-global, non-call object");
 
@@ -14008,15 +14146,16 @@ TraceRecorder::record_JSOP_IN()
     JSProperty* prop;
     JSBool ok = obj->lookupProperty(cx, id, &obj2, &prop);
 
+    if (!ok)
+        RETURN_ERROR_A("obj->lookupProperty failed in JSOP_IN");
+
     /* lookupProperty can reenter the interpreter and kill |this|. */
     if (!localtm.recorder) {
         if (prop)
             obj2->dropProperty(localcx, prop);
-        return ARECORD_STOP;
+        return ARECORD_ABORTED;
     }
 
-    if (!ok)
-        RETURN_ERROR_A("obj->lookupProperty failed in JSOP_IN");
     bool cond = prop != NULL;
     if (prop)
         obj2->dropProperty(cx, prop);
@@ -15211,7 +15350,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE)));
+    stack(0, INS_HOLE());
     return ARECORD_CONTINUE;
 }
 

@@ -2152,17 +2152,6 @@
                 onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
 
-      <method name="dragDropSecurityCheck">
-        <parameter name="aEvent"/>
-        <parameter name="aDragSession"/>
-        <parameter name="aUri"/>
-        <body>
-          <![CDATA[
-            nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, aUri);
-          ]]>
-        </body>
-      </method>
-
       <method name="_handleKeyEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -2173,6 +2162,23 @@
 
           if (aEvent.altKey)
             return;
+
+          // We need to take care of FAYT-watching as long as the findbar
+          // isn't initialized.  The checks on aEvent are copied from
+          // _shouldFastFind (see findbar.xml).
+          if (!gFindBarInitialized &&
+              !(aEvent.ctrlKey || aEvent.metaKey) &&
+              !aEvent.getPreventDefault()) {
+            let charCode = aEvent.charCode;
+            if (charCode) {
+              let char = String.fromCharCode(charCode);
+              if (char == "'" || char == "/" ||
+                  Services.prefs.getBoolPref("accessibility.typeaheadfind")) {
+                gFindBar._onBrowserKeypress(aEvent);
+                return;
+              }
+            }
+          }
 
 #ifdef XP_MACOSX
           if (!aEvent.metaKey)
@@ -2424,6 +2430,7 @@
         <children/>
         <xul:toolbarbutton class="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
+                           onclick="checkForMiddleClick(this, event);"
                            tooltiptext="&newTabButton.tooltip;"/>
       </xul:arrowscrollbox>
     </content>
@@ -2511,10 +2518,6 @@
       <field name="_dragOverDelay">350</field>
       <field name="_dragTime">0</field>
 
-      <field name="_supportedLinkDropTypes"><![CDATA[
-        ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
-      ]]></field>
-
       <field name="_container" readonly="true"><![CDATA[
         this.parentNode && this.parentNode.localName == "toolbar" ? this.parentNode : this;
       ]]></field>
@@ -2592,7 +2595,7 @@
             // of the tabstrip, we need to ensure that we stay
             // completely scrolled to the right side
             var tabStrip = this.mTabstrip;
-            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >=
+            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >
                 tabStrip.scrollSize)
               tabStrip.scrollByPixels(-1);
           } catch (e) {}
@@ -2708,11 +2711,9 @@
             }
           }
 
-          for (let i = 0; i < this._supportedLinkDropTypes.length; i++) {
-            if (types.contains(this._supportedLinkDropTypes[i])) {
-              // Here we need to to do this manually
-              return dt.effectAllowed = dt.dropEffect = "link";
-            }
+          if (browserDragAndDrop.canDropLink(event)) {
+            // Here we need to do this manually
+            return dt.effectAllowed = dt.dropEffect = "link";
           }
           return dt.effectAllowed = "none";
         ]]></body>
@@ -2960,33 +2961,13 @@
           // it triggers will correctly update our URL bar.
           this.tabbrowser.selectedTab = newTab;
         } else {
-          let url;
-          for (let i = 0; i < this._supportedLinkDropTypes.length; i++) {
-            let dataType = this._supportedLinkDropTypes[i];
-            // uri-list: for now, support dropping of the first URL
-            // only
-            let isURLList = dataType == "text/uri-list";
-            let urlData = isURLList ?
-                          dt.mozGetDataAt("URL", 0) : dt.mozGetDataAt(dataType, 0);
-            if (urlData) {
-              url = transferUtils.retrieveURLFromData(urlData, isURLList ? "text/plain" : dataType);
-              break;
-            }
-          }
-          NS_ASSERT(url, "In the drop event, at least one mime-type should match our supported types");
+          let url = browserDragAndDrop.drop(event, { });
 
           // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
           // Also disallow dropping javascript: or data: urls--bail out
           if (!url || !url.length || url.indexOf(" ", 0) != -1 ||
               /^\s*(javascript|data):/.test(url))
             return;
-
-          // XXXmano: temporary fix until dragDropSecurityCheck make the
-          // drag-session an optional paramter
-          let dragService = Cc["@mozilla.org/widget/dragservice;1"].
-                            getService(Ci.nsIDragService);
-          let dragSession = dragService.getCurrentSession();
-          nsDragAndDrop.dragDropSecurityCheck(event, dragSession, url);
 
           let bgLoad = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
 

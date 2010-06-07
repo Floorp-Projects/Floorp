@@ -72,7 +72,7 @@ public:
   PRBool Initialize();
 
   /*
-   * Sets the clipping region for this layer manager. This is important on 
+   * Sets the clipping region for this layer manager. This is important on
    * windows because using OGL we no longer have GDI's native clipping. Therefor
    * widget must tell us what part of the screen is being invalidated,
    * and we should clip to this.
@@ -102,7 +102,7 @@ public:
   const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
 
   void SetRoot(Layer* aLayer);
-  
+
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
 
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
@@ -140,7 +140,7 @@ private:
 
   /* Widget associated with this layer manager */
   nsIWidget *mWidget;
-  /* 
+  /*
    * Context target, NULL when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
@@ -170,7 +170,7 @@ private:
 
   /* Callback info for current transaction */
   CallbackInfo mCurrentCallbackInfo;
-  
+
   /*
    * Region we're clipping our current drawing to.
    */
@@ -214,7 +214,7 @@ public:
 
   enum LayerType { TYPE_THEBES, TYPE_CONTAINER, TYPE_IMAGE, TYPE_COLOR,
                    TYPE_CANVAS };
-  
+
   virtual LayerType GetType() = 0;
 
   virtual LayerD3D9 *GetFirstChildD3D9() { return nsnull; }

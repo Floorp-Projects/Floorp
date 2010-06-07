@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="editable"><content><div contenteditable="true" xmlns="http://www.w3.org/1999/xhtml"></div></content></binding>
+</bindings>
+
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  while (document.documentElement.firstChild) document.documentElement.removeChild(document.documentElement.firstChild);
+  
+  document.addEventListener("DOMSubtreeModified", function(){}, false);
+  document.addEventListener("DOMNodeInsertedIntoDocument", function(){}, false);
+  document.documentElement.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "body"));
+  document.body.style.MozBinding = 'url(#editable)';
+}
+
+]]>
+</script></head>
+
+<body onload="boom();"></body>
+</html>

@@ -87,7 +87,7 @@
       <description id="copyright">
         <label
         class="text-link" href="about:license"
-        >&licenseLinkText;</label>&licenseLinkSuffix;&logoTrademark;
+        >&licenseLinkText;</label>&licenseLinkSuffix;&trademarkInfo;
       </description>
       <textbox id="userAgent" multiline="true" readonly="true" flex="1"/>
     </vbox>

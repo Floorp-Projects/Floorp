@@ -67,6 +67,11 @@
 
 #include "nsITimelineService.h"
 
+#ifdef MOZ_OMNIJAR
+#include "mozilla/Omnijar.h"
+#include "nsZipArchive.h"
+#endif
+
 // Definitions
 #define INITIAL_PREF_FILES 10
 
@@ -684,14 +689,11 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
 // Initialize default preference JavaScript buffers from
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
-static nsresult pref_InitInitialObjects()
+static nsresult pref_InitDefaults()
 {
-  nsCOMPtr<nsIFile> aFile;
   nsCOMPtr<nsIFile> greprefsFile;
   nsCOMPtr<nsIFile> defaultPrefDir;
   nsresult          rv;
-
-  // first we parse the GRE default prefs. This also works if we're not using a GRE, 
 
   rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -732,6 +734,53 @@ static nsresult pref_InitInitialObjects()
   if (NS_FAILED(rv)) {
     NS_WARNING("Error parsing application default preferences.");
   }
+
+  return NS_OK;
+}
+
+#ifdef MOZ_OMNIJAR
+static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
+{
+  nsZipItemPtr<char> manifest(jarReader, name, true);
+  NS_ENSURE_TRUE(manifest.Buffer(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefParseState ps;
+  PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  nsresult rv = PREF_ParseBuf(&ps, manifest, manifest.Length());
+  PREF_FinalizeParseState(&ps);
+
+  return rv;
+}
+
+static nsresult pref_InitAppDefaultsFromOmnijar()
+{
+  nsresult rv;
+
+  nsZipArchive* jarReader = mozilla::OmnijarReader();
+  if (!jarReader)
+    return pref_InitDefaults();
+
+  rv = pref_ReadPrefFromJar(jarReader, "greprefs.js");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = pref_ReadPrefFromJar(jarReader, "defaults/prefs.js");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+#endif
+
+static nsresult pref_InitInitialObjects()
+{
+  nsresult rv;
+
+  // first we parse the GRE default prefs. This also works if we're not using a GRE, 
+#ifdef MOZ_OMNIJAR
+  rv = pref_InitAppDefaultsFromOmnijar();
+#else
+  rv = pref_InitDefaults();
+#endif
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);
   NS_ENSURE_SUCCESS(rv, rv);

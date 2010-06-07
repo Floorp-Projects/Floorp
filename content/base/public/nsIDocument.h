@@ -62,6 +62,7 @@
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
 #endif // MOZ_SMIL
+#include "nsIScriptGlobalObject.h"
 
 class nsIContent;
 class nsPresContext;
@@ -72,7 +73,6 @@ class nsIStyleSheet;
 class nsIStyleRule;
 class nsCSSStyleSheet;
 class nsIViewManager;
-class nsIScriptGlobalObject;
 class nsIDOMEvent;
 class nsIDOMEventTarget;
 class nsIDeviceContext;
@@ -116,8 +116,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0xeb847679, 0x3b48, 0x411c, \
-  { 0xa9, 0xb8, 0x8a, 0xdc, 0xdb, 0xc6, 0x47, 0xb8 } }
+{ 0x3ee6a14b, 0x83b5, 0x4629, \
+  { 0x96, 0x9b, 0xe9, 0x84, 0x7c, 0x57, 0x24, 0x3c } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -629,8 +629,13 @@ public:
    * for event/script handling. Do not process any events/script if the method
    * returns null, but aHasHadScriptHandlingObject is true.
    */
-  virtual nsIScriptGlobalObject*
-    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const = 0;
+  nsIScriptGlobalObject*
+    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const
+  {
+    aHasHadScriptHandlingObject = mHasHadScriptHandlingObject;
+    return mScriptGlobalObject ? mScriptGlobalObject.get() :
+                                 GetScriptHandlingObjectInternal();
+  }
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
 
   /**
@@ -664,6 +669,17 @@ public:
    * Get the script loader for this document
    */ 
   virtual nsScriptLoader* ScriptLoader() = 0;
+
+  /**
+   * Add/Remove an element to the document's id and name hashes
+   */
+  virtual void AddToIdTable(mozilla::dom::Element* aElement, nsIAtom* aId) = 0;
+  virtual void RemoveFromIdTable(mozilla::dom::Element* aElement,
+                                 nsIAtom* aId) = 0;
+  virtual void AddToNameTable(mozilla::dom::Element* aElement,
+                              nsIAtom* aName) = 0;
+  virtual void RemoveFromNameTable(mozilla::dom::Element* aElement,
+                                   nsIAtom* aName) = 0;
 
   //----------------------------------------------------------------------
 
@@ -796,6 +812,10 @@ public:
   PRBool IsHTML() const
   {
     return mIsRegularHTML;
+  }
+  PRBool IsXUL() const
+  {
+    return mIsXUL;
   }
 
   virtual PRBool IsScriptEnabled() = 0;
@@ -1364,8 +1384,7 @@ public:
    * It prevents converting nsIDOMElement to mozill:dom::Element which is
    * already converted from mozilla::dom::Element.
    */
-  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId,
-                                                nsresult* aResult) = 0;
+  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId) = 0;
 
 protected:
   ~nsIDocument()
@@ -1383,6 +1402,9 @@ protected:
 
   // Never ever call this. Only call GetInnerWindow!
   virtual nsPIDOMWindow *GetInnerWindowInternal() = 0;
+
+  // Never ever call this. Only call GetScriptHandlingObject!
+  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const = 0;
 
   /**
    * These methods should be called before and after dispatching
@@ -1454,6 +1476,7 @@ protected:
   PRPackedBool mShellIsHidden;
 
   PRPackedBool mIsRegularHTML;
+  PRPackedBool mIsXUL;
 
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
@@ -1487,6 +1510,14 @@ protected:
 
   // True while this document is being cloned to a static document.
   PRPackedBool mCreatingStaticClone;
+
+  // True if document has ever had script handling object.
+  PRPackedBool mHasHadScriptHandlingObject;
+
+  // The document's script global object, the object from which the
+  // document can get its script context and scope. This is the
+  // *inner* window object.
+  nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
 
   // If mIsStaticDocument is true, mOriginalDocument points to the original
   // document.

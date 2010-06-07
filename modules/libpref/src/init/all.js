@@ -558,7 +558,7 @@ pref("javascript.options.strict",           false);
 #ifdef DEBUG
 pref("javascript.options.strict.debug",     true);
 #endif
-pref("javascript.options.relimit",          false);
+pref("javascript.options.relimit",          true);
 pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       true);
 // This preference limits the memory usage of javascript.
@@ -695,6 +695,25 @@ pref("network.http.pipelining.maxrequests" , 4);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
+
+// On networks deploying QoS, it is recommended that these be lockpref()'d,
+// since inappropriate marking can easily overwhelm bandwidth reservations
+// for certain services (i.e. EF for VoIP, AF4x for interactive video,
+// AF3x for broadcast/streaming video, etc)
+
+// default value for HTTP
+// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
+// Section 4.8 "High-Throughput Data Service Class"
+pref("network.http.qos", 0);
+// ditto for Gopher
+pref("network.gopher.qos", 0);
+
+// default values for FTP
+// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
+// Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
+// per Section 4.7 "Low-Latency Data Service Class".
+pref("network.ftp.data.qos", 0);
+pref("network.ftp.control.qos", 0);
 
 // </http>
 
@@ -1608,6 +1627,14 @@ pref("font.size.fixed.zh-HK", 16);
 
 // We have special support for Monotype Symbol on Windows.
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+
+// cleartype settings - false implies default system settings 
+
+// use cleartype rendering for downloadable fonts (win xp only)
+pref("gfx.font_rendering.cleartype.use_for_downloadable_fonts", true);
+
+// use cleartype rendering for all fonts always (win xp only)
+pref("gfx.font_rendering.cleartype.always_use_for_content", false);
 
 pref("ui.key.menuAccessKeyFocuses", true);
 

@@ -114,13 +114,6 @@
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[
-          // Cleanup old result if exists.
-          let oldResult = this.result;
-          if (oldResult) {
-            oldResult.removeObserver(this.view);
-            oldResult.root.containerOpen = false;
-          }
-
           let result = PlacesUtils.history
                                   .executeQueries(queries, queries.length,
                                                   options);
@@ -132,6 +125,10 @@
           }
 
           let treeView = new PlacesTreeView(this.flatList, callback);
+
+          // Observer removal is done within the view itself.  When the tree
+          // goes away, treeboxobject calls view.setTree(null), which then
+          // calls removeObserver.
           result.addObserver(treeView, false);
           this.view = treeView;
           if (!this._controller) {

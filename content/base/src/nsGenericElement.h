@@ -379,7 +379,6 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
   virtual already_AddRefed<nsINodeList> GetChildren(PRInt32 aChildType);
-  virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -451,7 +450,6 @@ public:
   void ListAttributes(FILE* out) const;
 #endif
 
-  virtual nsIAtom* GetID() const;
   virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   virtual nsICSSStyleRule* GetInlineStyleRule();
@@ -994,15 +992,29 @@ protected:
   }
 
   /**
-   * GetContentsAsText will take all the textnodes that are children
-   * of |this| and concatenate the text in them into aText.  It
-   * completely ignores any non-text-node children of |this|; in
-   * particular it does not descend into any children of |this| that
-   * happen to be container elements.
-   *
-   * @param aText the resulting text [OUT]
+   * Add/remove this element to the documents id cache
    */
-  void GetContentsAsText(nsAString& aText);
+  void AddToIdTable(nsIAtom* aId) {
+    NS_ASSERTION(HasFlag(NODE_HAS_ID), "Node lacking NODE_HAS_ID flag");
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc && (!IsInAnonymousSubtree() || doc->IsXUL())) {
+      doc->AddToIdTable(this, aId);
+    }
+  }
+  void RemoveFromIdTable() {
+    if (HasFlag(NODE_HAS_ID)) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        nsIAtom* id = DoGetID();
+        // id can be null during mutation events evilness. Also, XUL elements
+        // loose their proto attributes during cc-unlink, so this can happen
+        // during cc-unlink too.
+        if (id) {
+          doc->RemoveFromIdTable(this, DoGetID());
+        }
+      }
+    }
+  }
 
   /**
    * Functions to carry out event default actions for links of all types

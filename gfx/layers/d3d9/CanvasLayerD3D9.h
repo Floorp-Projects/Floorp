@@ -57,7 +57,7 @@ public:
       mTexture(0),
       mGLBufferIsPremultiplied(PR_FALSE),
       mNeedsYFlip(PR_FALSE)
-  { 
+  {
       mImplData = static_cast<LayerD3D9*>(this);
   }
 

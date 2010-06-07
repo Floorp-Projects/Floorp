@@ -1372,6 +1372,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3813,7 +3815,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLUniformLocation, nsIWebGLUniformLocation)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUniformLocation)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
@@ -5139,6 +5145,10 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSObject *innerObj;
     if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
+      if (sResolving) {
+        return NS_OK;
+      }
+
 #ifdef DEBUG_SH_FORWARDING
       printf(" --- Forwarding add to inner window %p\n", (void *)innerWin);
 #endif
@@ -6265,6 +6275,9 @@ ContentWindowGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return ::JS_GetProperty(cx, obj, "content", rval);
 }
 
+PRBool
+nsWindowSH::sResolving = PR_FALSE;
+
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
@@ -6334,18 +6347,44 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #endif
 
       jsid interned_id;
-      JSObject *pobj = NULL;
-      jsval val;
+      JSPropertyDescriptor desc;
 
-      *_retval = (::JS_ValueToId(cx, id, &interned_id) &&
-                  ::JS_LookupPropertyWithFlagsById(cx, innerObj, interned_id,
-                                                   flags, &pobj, &val));
+      *_retval = (JS_ValueToId(cx, id, &interned_id) &&
+                  JS_GetPropertyDescriptorById(cx, innerObj, interned_id,
+                                               flags, &desc));
 
-      if (*_retval && pobj) {
+      if (*_retval && desc.obj) {
 #ifdef DEBUG_SH_FORWARDING
         printf(" --- Resolve on inner window found property.\n");
 #endif
-        *objp = pobj;
+
+        // The JS engine assumes that the object that we return in objp is on
+        // our prototype chain. As a result, for an assignment, it wants to
+        // shadow the property by defining one on our object (unless the
+        // property has a setter). This confuses our code and, for fast
+        // expandos, we end up overriding the fast expando with a slow one. So
+        // detect when we're about to get a new property from the JS engine
+        // that would shadow a fast expando and define it ourselves, sending
+        // ourselves a signal via sResolving that we are doing this. Note that
+        // we only care about fast expandos on the innerObj itself, things
+        // found further up the prototype chain need to fend for themselves.
+        if ((flags & JSRESOLVE_ASSIGNING) &&
+            !(desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) &&
+            desc.obj == innerObj) {
+          PRBool oldResolving = sResolving;
+          sResolving = PR_TRUE;
+
+          *_retval = JS_DefinePropertyById(cx, obj, interned_id, JSVAL_VOID,
+                                           nsnull, nsnull,
+                                           desc.attrs & JSPROP_ENUMERATE);
+
+          sResolving = oldResolving;
+          if (!*_retval) {
+            return NS_OK;
+          }
+        }
+
+        *objp = desc.obj;
       }
 
       return NS_OK;
@@ -6589,6 +6628,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
     // here) since we must define window.location to prevent the
     // getter from being overriden (for security reasons).
+
+    // Note: Because we explicitly don't forward to the inner window
+    // above, we have to ensure here that our window has a current
+    // inner window so that the location object we return will work.
+
+    if (win->IsOuterWindow()) {
+      win->EnsureInnerWindow();
+    }
 
     nsCOMPtr<nsIDOMLocation> location;
     rv = win->GetLocation(getter_AddRefs(location));
@@ -7255,17 +7302,32 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
-    if (nodeIsElement &&
-        node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-      nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
+    if (nodeIsElement) {
+      if (node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+        nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
-      if (form_control) {
-        nsCOMPtr<nsIDOMHTMLFormElement> form;
-        form_control->GetForm(getter_AddRefs(form));
+        if (form_control) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          form_control->GetForm(getter_AddRefs(form));
 
-        if (form) {
-          // Found a form, use it.
-          native_parent = form;
+          if (form) {
+            // Found a form, use it.
+            native_parent = form;
+          }
+        }
+      // Legend isn't an HTML form control but should have its fieldset form
+      // as scope parent at least for backward compatibility.
+      } else if (node->AsElement()->IsHTML() &&
+                 node->AsElement()->Tag() == nsGkAtoms::legend) {
+        nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(node));
+
+        if (legend) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          legend->GetForm(getter_AddRefs(form));
+
+          if (form) {
+            native_parent = form;
+          }
         }
       }
     }

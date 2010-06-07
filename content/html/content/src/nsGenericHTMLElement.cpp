@@ -110,6 +110,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
+#include "nsITextControlElement.h"
 
 #include "nsThreadUtils.h"
 
@@ -913,7 +914,7 @@ nsGenericHTMLElement::UpdateEditableState()
     return;
   }
 
-  nsGenericElement::UpdateEditableState();
+  nsStyledElement::UpdateEditableState();
 }
 
 nsresult
@@ -927,6 +928,10 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
+    if (HasFlag(NODE_HAS_NAME)) {
+      aDocument->
+        AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
+    }
     if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue) {
       nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(aDocument);
       if (htmlDocument) {
@@ -948,7 +953,7 @@ nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     }
   }
 
-  nsGenericElement::UnbindFromTree(aDeep, aNullParent);
+  nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsHTMLFormElement*
@@ -1161,8 +1166,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     SetFlags(NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR);
   }
 
-  nsresult rv = nsGenericElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                          aNotify);
+  nsresult rv = nsStyledElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                         aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (contentEditable) {
@@ -1185,7 +1190,12 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::contenteditable) {
+    if (aAttribute == nsGkAtoms::name) {
+      // Have to do this before clearing flag. See RemoveFromNameTable
+      RemoveFromNameTable();
+      UnsetFlags(NODE_HAS_NAME);
+    }
+    else if (aAttribute == nsGkAtoms::contenteditable) {
       contentEditable = PR_TRUE;
       contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
     }
@@ -1222,6 +1232,15 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 
 //----------------------------------------------------------------------
 
+static PRBool
+CanHaveName(nsIAtom* aTag)
+{
+  return aTag == nsGkAtoms::img ||
+         aTag == nsGkAtoms::form ||
+         aTag == nsGkAtoms::applet ||
+         aTag == nsGkAtoms::embed ||
+         aTag == nsGkAtoms::object;
+}
 
 PRBool
 nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
@@ -1238,10 +1257,22 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntWithBounds(aValue, -32768, 32767);
     }
 
-    if (aAttribute == nsGkAtoms::name && !aValue.IsEmpty()) {
+    if (aAttribute == nsGkAtoms::name) {
       // Store name as an atom.  name="" means that the element has no name,
       // not that it has an emptystring as the name.
+      RemoveFromNameTable();
+      if (aValue.IsEmpty()) {
+        UnsetFlags(NODE_HAS_NAME);
+        return PR_FALSE;
+      }
+
       aResult.ParseAtom(aValue);
+
+      if (CanHaveName(Tag())) {
+        SetFlags(NODE_HAS_NAME);
+        AddToNameTable(aResult.GetAtomValue());
+      }
+      
       return PR_TRUE;
     }
 
@@ -2501,6 +2532,8 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // Save state before doing anything
   SaveState();
+  
+  RemoveFromNameTable();
 
   if (mForm) {
     // Might need to unset mForm
@@ -2653,7 +2686,6 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   // It's easier to test the types that _cannot_ be disabled
   return
     type != NS_FORM_LABEL &&
-    type != NS_FORM_LEGEND &&
     type != NS_FORM_FIELDSET &&
     type != NS_FORM_OBJECT &&
     type != NS_FORM_OUTPUT;
@@ -2677,13 +2709,19 @@ nsGenericHTMLFormElement::IsTextControl(PRBool aExcludePassword) const
 }
 
 PRBool
+nsGenericHTMLFormElement::IsSingleLineTextControlInternal(PRBool aExcludePassword,
+                                                          PRInt32 aType) const
+{
+  return aType == NS_FORM_INPUT_TEXT ||
+         aType == NS_FORM_INPUT_SEARCH ||
+         aType == NS_FORM_INPUT_TEL ||
+         (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
+}
+
+PRBool
 nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
 {
-  PRInt32 type = GetType();
-  return type == NS_FORM_INPUT_TEXT ||
-         type == NS_FORM_INPUT_SEARCH ||
-         type == NS_FORM_INPUT_TEL ||
-         (!aExcludePassword && type == NS_FORM_INPUT_PASSWORD);
+  return IsSingleLineTextControlInternal(aExcludePassword, GetType());
 }
 
 PRBool
@@ -2694,10 +2732,7 @@ nsGenericHTMLFormElement::IsLabelableControl() const
   PRInt32 type = GetType();
   return type != NS_FORM_FIELDSET &&
          type != NS_FORM_LABEL &&
-         type != NS_FORM_OPTION &&
-         type != NS_FORM_OPTGROUP &&
-         type != NS_FORM_OBJECT &&
-         type != NS_FORM_LEGEND;
+         type != NS_FORM_OBJECT;
 }
 
 PRInt32
@@ -3145,12 +3180,10 @@ nsGenericHTMLElement::GetEditorInternal(nsIEditor** aEditor)
 {
   *aEditor = nsnull;
 
-  nsIFormControlFrame *fcFrame = GetFormControlFrame(PR_FALSE);
-  if (fcFrame) {
-    nsITextControlFrame *textFrame = do_QueryFrame(fcFrame);
-    if (textFrame) {
-      return textFrame->GetEditor(aEditor);
-    }
+  nsCOMPtr<nsITextControlElement> textCtrl = do_QueryInterface(this);
+  if (textCtrl) {
+    *aEditor = textCtrl->GetTextEditor();
+    NS_IF_ADDREF(*aEditor);
   }
 
   return NS_OK;

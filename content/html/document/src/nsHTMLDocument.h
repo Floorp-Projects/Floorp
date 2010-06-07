@@ -240,10 +240,9 @@ public:
 
   virtual NS_HIDDEN_(void) RemovedFromDocShell();
 
-  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId,
-                                                nsresult *aResult)
+  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId)
   {
-    return nsDocument::GetElementById(aElementId, aResult);
+    return nsDocument::GetElementById(aElementId);
   }
 
 protected:

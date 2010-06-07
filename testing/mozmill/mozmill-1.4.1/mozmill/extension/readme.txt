@@ -1,0 +1,3 @@
+MozMill Firefox Extension
+
+All kinds of great info goes here...

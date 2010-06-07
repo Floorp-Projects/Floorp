@@ -45,7 +45,7 @@
 #include "nsLayoutUtils.h"
 #include "nsMappedAttributes.h"
 #include "nsIForm.h"
-#include "nsIFormSubmission.h"
+#include "nsFormSubmission.h"
 #include "nsIFormProcessor.h"
 
 #include "nsIDOMHTMLOptGroupElement.h"
