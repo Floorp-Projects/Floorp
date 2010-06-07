@@ -360,7 +360,7 @@ window.TabMirror = {
   // pausePainting can be called multiple times, but every call to 
   // pausePainting needs to be mirrored with a call to <resumePainting>. 
   pausePainting: function() {
-/*     this._private.paintingPaused++; */
+    this._private.paintingPaused++;
   },
   
   // Function: resumePainting
@@ -368,7 +368,7 @@ window.TabMirror = {
   // pausePainting three times in a row, you'll need to call resumePainting
   // three times before the TabMirror will start updating thumbnails again. 
   resumePainting: function() {
-/*     this._private.paintingPaused--; */
+    this._private.paintingPaused--;
   },
 
   // Function: isPaintingPaused

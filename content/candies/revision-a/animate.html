@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
+<head>
+  <title>TabCandy Animation Tests</title>
+  <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+  <link rel="icon" href="chrome://tabcandy/content/tabcandy.png"/>
+</head>
+
+<body>
+  <script type="text/javascript;version=1.8" src="../../js/optional/stacktrace.js"></script>
+  <script type="text/javascript;version=1.8" src="../../js/core/iq.js"></script>
+  <script type="text/javascript;version=1.8" src="../../js/core/utils.js"></script>
+  <script type="text/javascript;version=1.8">
+    
+    Utils.log('it begins! -----------');
+    
+    function animate($elem, css, callback) {
+      $elem.css({
+        '-moz-transition-property': 'left, top, width',  
+        '-moz-transition-duration': '2s',  
+        '-moz-transition-timing-function': 'linear'
+      });
+        
+/*
+      $elem.bind('transitionend', function() {
+        try {
+          Utils.log('transition ended');
+        } catch(e) {
+          Utils.log(e);
+        }
+      });
+*/
+      
+      var callbacks = ($elem.data('callbacks') || []);
+      callbacks.push(callback);
+      $elem.data('callbacks', callbacks);
+      $elem.css(css);
+/*
+      setTimeout(function() {
+        $elem.css({
+          '-moz-transition-duration': '0s'
+        });
+      }, 1);
+*/
+    }
+      
+    var $div2 = iQ('<div>')
+      .css({
+        position: 'absolute', 
+        left: 200,
+        top: 200,
+        width: 100,
+        height: 100,
+        'background-color': 'blue'
+      })
+      .appendTo('body');
+      
+    var $div = iQ('<div>')
+      .css({
+        position: 'absolute', 
+        left: 10,
+        top: 10,
+        width: 100,
+        height: 100,
+        'background-color': 'red'
+      })
+      .appendTo('body');
+      
+    $div.bind('transitionend', function(e) {
+      try {
+        var callbacks = iQ(this).data('callbacks');
+        var callback = callbacks.shift();
+        if(callback)
+          callback.apply(this);
+          
+        iQ(this).data('callbacks', callbacks);
+        Utils.log('transition ended', e.propertyName, e.elapsedTime);
+      } catch(e) {
+        Utils.log(e);
+      }
+    });
+    
+    animate($div, {
+      left: 10,
+      top: 10
+    }, function() {
+      Utils.log('first animation done');
+    });
+
+    setTimeout(function() {
+      $div.css({
+        '-moz-transition-duration': '0s'
+      });
+/*
+      animate($div, {
+        left: 400,
+        top: 10,
+        width: 200
+      }, function() {
+        Utils.log('second animation done');
+      });
+*/
+    }, 1000);
+    
+/*
+    setInterval(function() {
+      Utils.log('now', $div.css('left'));
+    }, 10);
+*/
+    
+  </script>  
+</body>
+</html>

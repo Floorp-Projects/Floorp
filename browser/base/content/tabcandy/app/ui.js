@@ -315,7 +315,6 @@ window.Page = {
           var overflow = iQ("body").css("overflow");
           iQ("body").css("overflow", "hidden");
           
-/*           Utils.log('pause in ui'); */
           TabMirror.pausePainting();
           $tab.css({
               top: 0, left: 0,
@@ -329,19 +328,21 @@ window.Page = {
             $tab.animate({
               top: pos.top, left: pos.left,
               width: w, height: h
-            },'animate350', function() { 
-              $tab.css({
-                zIndex: z,
-                '-moz-transform': rotation
-              });
-              iQ("body").css("overflow", overflow);
-              var activeGroup = Groups.getActiveGroup();
-              if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
-      
-              window.Groups.setActiveGroup(null);
-/*               Utils.log('resume in UI'); */
-              TabMirror.resumePainting();        
-              UI.resize(true);
+            }, {
+              duration: 350,
+              complete: function() { 
+                $tab.css({
+                  zIndex: z,
+                  '-moz-transform': rotation
+                });
+                iQ("body").css("overflow", overflow);
+                var activeGroup = Groups.getActiveGroup();
+                if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
+        
+                window.Groups.setActiveGroup(null);
+                TabMirror.resumePainting();        
+                UI.resize(true);
+              }
             });
           }, 1);
         }
@@ -396,8 +397,11 @@ window.Page = {
         height: 0,
         top: phantom.position().top + phantom.height()/2,
         left: phantom.position().left + phantom.width()/2
-      }, 'animate300', function(){
-        phantom.remove();
+      }, {
+        duration: 300,
+        complete: function() {
+          phantom.remove();
+        }
       });
     }
     

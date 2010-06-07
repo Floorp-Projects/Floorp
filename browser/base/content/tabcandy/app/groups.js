@@ -50,8 +50,6 @@ function dropAcceptFunction(el) { // ".tab", //".tab, .group",
 // Note that it implements the <Subscribable> interface.
 window.Group = function(listOfEls, options) {
   try {
-/*     Utils.log("in Group ctor"); */
-/*     Utils.log("options: " + options.toSource()); */
   if(typeof(options) == 'undefined')
     options = {};
 
@@ -159,8 +157,14 @@ window.Group = function(listOfEls, options) {
         .addClass("defaultName")
         .val(self.defaultName);
     } else {
-      self.$title.css({"background":"none"})
-        .animate({"paddingLeft":1}, 'animate350');//, "tabcandyBounce");
+      self.$title
+        .css({"background":"none"})
+        .animate({
+          "paddingLeft": 1
+        }, {
+          duration: 350,
+          easing: 'tabcandyBounce'
+        });
     }
   };
   
@@ -439,16 +443,23 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       this.$titlebar.css(titlebarCSS);
       this.$content.css(contentCSS);
     } else {
-/*       Utils.log('pause in groups'); */
       TabMirror.pausePainting();
-      iQ(this.container).animate(css, 'animate350', function() {
-/*         Utils.log('resume in groups'); */
-        TabMirror.resumePainting();
-      }); //easing: "tabcandyBounce"
-/*       }).dequeue(); */
+      iQ(this.container).animate(css, {
+        duration: 350, 
+        easing: 'tabcandyBounce', 
+        complete: function() {
+          TabMirror.resumePainting();
+        }
+      });
+  /*       }).dequeue(); */
       
-      this.$titlebar.animate(titlebarCSS, 'animate350');//.dequeue();        
-      this.$content.animate(contentCSS, 'animate350'); //.dequeue();        
+      this.$titlebar.animate(titlebarCSS, {
+        duration: 350
+      });//.dequeue();        
+      
+      this.$content.animate(contentCSS, {
+        duration: 350
+      }); //.dequeue();        
     }
     
     this.adjustTitleSize();
@@ -690,7 +701,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     
 /*     this.$ntb.stop(true, true);     */
     if(!immediately)
-      this.$ntb.animate(css, 'animate350'); //320, "tabcandyBounce");
+      this.$ntb.animate(css, {
+        duration: 320,
+        easing: 'tabcandyBounce'
+      });
     else
       this.$ntb.css(css);
   },
@@ -906,12 +920,17 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     if( pos.top+overlayHeight > window.innerHeight ) pos.top = window.innerHeight-overlayHeight-20;
     if( pos.left+overlayWidth > window.innerWidth )  pos.left = window.innerWidth-overlayWidth-20;
     
-    $tray.animate({
-      width:  overlayWidth,
-      height: overlayHeight,
-      top: pos.top,
-      left: pos.left
-    }, 350, "tabcandyBounce").addClass("overlay");
+    $tray
+      .animate({
+        width:  overlayWidth,
+        height: overlayHeight,
+        top: pos.top,
+        left: pos.left
+      }, {
+        duration: 350, 
+        easing: 'tabcandyBounce'
+      })
+      .addClass("overlay");
 
     this._children.forEach(function(child){
       child.addClass("stack-trayed");
@@ -960,8 +979,12 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           top: box.top,
           left: box.left,
           opacity: 0
-        }, 350, "tabcandyBounce", function() {
-          iQ(this).remove();  
+        }, {
+          duration: 350,
+          easing: 'tabcandyBounce',
+          complete: function() {
+            iQ(this).remove();  
+          }
         });
   
       this.expanded.$shield.remove();
@@ -1096,26 +1119,31 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         .appendTo("body")
         .animate({
           opacity: 1.0
-        },500)
+        }, {
+          duration: 500
+        })
         .animate({
           top: 0,
           left: 0,
           width: window.innerWidth,
           height: window.innerHeight
-        }, 270, function(){
-          $(tab.container).css({opacity: 1});
-          newTab.focus();
-          Page.showChrome()
-          UI.navBar.urlBar.focus();
-          anim.remove();
-          // We need a timeout here so that there is a chance for the
-          // new tab to get made! Otherwise it won't appear in the list
-          // of the group's tab.
-          // TODO: This is probably a terrible hack that sets up a race
-          // condition. We need a better solution.
-          setTimeout(function(){
-            UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
-          }, 400);
+        }, {
+          duration: 270, 
+          complete: function(){
+            $(tab.container).css({opacity: 1});
+            newTab.focus();
+            Page.showChrome()
+            UI.navBar.urlBar.focus();
+            anim.remove();
+            // We need a timeout here so that there is a chance for the
+            // new tab to get made! Otherwise it won't appear in the list
+            // of the group's tab.
+            // TODO: This is probably a terrible hack that sets up a race
+            // condition. We need a better solution.
+            setTimeout(function(){
+              UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+            }, 400);
+          }
         });      
     }    
     
@@ -1565,10 +1593,8 @@ window.Groups = {
   // ----------  
   register: function(group) {
     Utils.assert('group', group);
-/*     Utils.log("registering", group); */
     Utils.assert('only register once per group', iQ.inArray(group, this.groups) == -1);
     this.groups.push(group);
-/*     Utils.log("groups: "+this.groups.length); */
   },
   
   // ----------  
