@@ -559,6 +559,39 @@ mjit::Compiler::generateMethod()
             jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
           END_CASE(JSOP_NAMEDEC)
 
+          BEGIN_CASE(JSOP_GETTHISPROP)
+            /* Push thisv onto stack. */
+            jsop_this();
+            prepareStubCall();
+            stubCall(stubs::GetProp, Uses(1), Defs(1));
+            frame.pop();
+            frame.pushSynced();
+          END_CASE(JSOP_GETTHISPROP);
+
+          BEGIN_CASE(JSOP_GETARGPROP)
+            /* Push arg onto stack. */
+            jsop_getarg(GET_SLOTNO(PC));
+            prepareStubCall();
+            stubCall(stubs::GetProp, Uses(1), Defs(1));
+            frame.pop();
+            frame.pushSynced();
+          END_CASE(JSOP_GETARGPROP)
+
+          BEGIN_CASE(JSOP_GETLOCALPROP)
+            frame.pushLocal(GET_SLOTNO(PC));
+            prepareStubCall();
+            stubCall(stubs::GetProp, Uses(1), Defs(1));
+            frame.pop();
+            frame.pushSynced();
+          END_CASE(JSOP_GETLOCALPROP)
+
+          BEGIN_CASE(JSOP_GETPROP)
+            prepareStubCall();
+            stubCall(stubs::GetProp, Uses(1), Defs(1));
+            frame.pop();
+            frame.pushSynced();
+          END_CASE(JSOP_GETPROP)
+
           BEGIN_CASE(JSOP_GETELEM)
             prepareStubCall();
             stubCall(stubs::GetElem, Uses(2), Defs(1));
@@ -630,13 +663,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_NULL)
 
           BEGIN_CASE(JSOP_THIS)
-            /*
-             * :FIXME: We don't know whether it's a funobj or not... but we
-             * DO know it's an object! This can help downstream opcodes.
-             */
-            prepareStubCall();
-            stubCall(stubs::This, Uses(0), Defs(1));
-            frame.pushSynced();
+            jsop_this();
           END_CASE(JSOP_THIS)
 
           BEGIN_CASE(JSOP_FALSE)
@@ -725,11 +752,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETARG)
           BEGIN_CASE(JSOP_CALLARG)
           {
-            RegisterID reg = frame.allocReg();
-            uint32 index = GET_SLOTNO(PC);
-            masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
-            frame.freeReg(reg);
-            frame.push(Address(reg, index * sizeof(Value)));
+            jsop_getarg(GET_SLOTNO(PC));
             if (op == JSOP_CALLARG)
                 frame.push(NullTag());
           }
@@ -813,9 +836,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETNAME)
+          BEGIN_CASE(JSOP_SETPROP)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::SetName, Uses(2), Defs(1));
+            JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
             if (JSOp(PC[JSOP_SETNAME_LENGTH]) == JSOP_POP &&
                 !analysis[&PC[JSOP_SETNAME_LENGTH]].nincoming) {
                 frame.popn(2);
@@ -1215,6 +1240,27 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
                                    Registers::ReturnReg);
         jumpInScript(j, target);
     }
+}
+
+void
+mjit::Compiler::jsop_getarg(uint32 index)
+{
+    RegisterID reg = frame.allocReg();
+    masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+    frame.freeReg(reg);
+    frame.push(Address(reg, index * sizeof(Value)));
+}
+
+void
+mjit::Compiler::jsop_this()
+{
+    /*
+     * :FIXME: We don't know whether it's a funobj or not... but we
+     * DO know it's an object! This can help downstream opcodes.
+     */
+    prepareStubCall();
+    stubCall(stubs::This, Uses(0), Defs(1));
+    frame.pushSynced();
 }
 
 void

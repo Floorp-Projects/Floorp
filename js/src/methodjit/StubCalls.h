@@ -63,6 +63,7 @@ void * JS_FASTCALL Return(VMFrame &f);
 JSObject * JS_FASTCALL BindName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
+void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL SetElem(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f, uint32 index);
