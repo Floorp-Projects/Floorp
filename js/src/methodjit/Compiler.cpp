@@ -934,6 +934,11 @@ mjit::Compiler::generateMethod()
             goto done;
           END_CASE(JSOP_STOP)
 
+          BEGIN_CASE(JSOP_CALLLOCAL)
+            frame.pushLocal(GET_SLOTNO(PC));
+            frame.push(NullTag());
+          END_CASE(JSOP_CALLLOCAL)
+
           BEGIN_CASE(JSOP_INT8)
             frame.push(Value(Int32Tag(GET_INT8(PC))));
           END_CASE(JSOP_INT8)
