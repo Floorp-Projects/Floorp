@@ -48,6 +48,7 @@
         windowtype="Preferences:ConfigManager"
         width="750"
         height="500"
+        disablefastfind="true"
         onunload="onConfigUnload();"
         onload="onConfigLoad();">
 

@@ -123,6 +123,7 @@ _BROWSER_FILES = \
                  browser_bug555224.js \
                  browser_bug556061.js \
                  browser_bug563588.js \
+                 browser_bug569342.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
