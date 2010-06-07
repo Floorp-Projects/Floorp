@@ -63,7 +63,7 @@ CPPSRCS =               \
   $(NULL)
 
 LOCAL_INCLUDES +=                  \
-  -I$(srcdir)/../protocol/http/src \
+  -I$(srcdir)/../protocol/http \
   -I$(srcdir)/../base/src          \
   $(NULL)
 
