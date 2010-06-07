@@ -101,6 +101,7 @@ CPPSRCS = \
   nsHttpNTLMAuth.cpp \
   nsHttpTransaction.cpp \
   nsHttpHandler.cpp \
+  HttpBaseChannel.cpp \
   nsHttpChannel.cpp \
   nsHttpPipeline.cpp \
   nsHttpActivityDistributor.cpp \
