@@ -27,11 +27,6 @@
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">
 
-<!ENTITY helperApp.prompt          "What would you like to do with">
-<!ENTITY helperApp.open            "Open">
-<!ENTITY helperApp.save            "Save">
-<!ENTITY helperApp.nothing         "Nothing">
-
 <!ENTITY formHelper.previous       "Previous">
 <!ENTITY formHelper.next           "Next">
 <!ENTITY formHelper.done           "Done">

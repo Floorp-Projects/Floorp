@@ -54,12 +54,57 @@ HelperAppLauncherDialog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
   show: function hald_show(aLauncher, aContext, aReason) {
-    this._launcher = aLauncher;
-    this._context  = aContext;
+    let window = aContext.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowInternal);
 
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    let browser = wm.getMostRecentWindow("navigator:browser");
-    browser.HelperAppDialog.show(aLauncher);
+    let sbs = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+    let bundle = sbs.createBundle("chrome://browser/locale/browser.properties");
+
+    let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+    let flags = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
+        (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+        (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+
+    let title = bundle.GetStringFromName("helperApp.title");
+    let message = bundle.GetStringFromName("helperApp.prompt");
+    message += "\n  " + aLauncher.suggestedFileName;
+    
+    let type = aLauncher.MIMEInfo.description;
+    if (type == "") {
+      try {
+        type = aLauncher.MIMEInfo.primaryExtension.toUpperCase();
+      } catch (e) {
+        type = aLauncher.MIMEInfo.MIMEType;
+      }
+    }
+    message += "\n  " + type;
+
+    let open = bundle.GetStringFromName("helperApp.open");
+    let save = bundle.GetStringFromName("helperApp.save");
+    let nothing = bundle.GetStringFromName("helperApp.nothing");
+
+    // Check to see if we can open this file or not
+    if (aLauncher.MIMEInfo.hasDefaultHandler) {
+      flags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
+
+      let choice = prompter.confirmEx(window,
+                                      title, message,
+                                      flags, save, open, nothing,
+                                      null, {});
+
+      if (choice == 0)
+        aLauncher.saveToDisk(null, false);
+      else if (choice == 1)
+        aLauncher.launchWithApplication(null, false);
+    } else {
+      let choice = prompter.confirmEx(window,
+                                      title, message,
+                                      flags, save, nothing, null,
+                                      null, {});
+
+      if (choice == 0)
+        aLauncher.saveToDisk(null, false);
+    }
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
