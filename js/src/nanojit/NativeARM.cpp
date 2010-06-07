@@ -2391,7 +2391,7 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     return at;
 }
 
-void Assembler::asm_branch_xov(LOpcode op, NIns* target)
+NIns* Assembler::asm_branch_ov(LOpcode op, NIns* target)
 {
     // Because MUL can't set the V flag, we use SMULL and CMP to set the Z flag
     // to detect overflow on multiply. Thus, if we have a LIR_mulxovi, we must
@@ -2400,6 +2400,7 @@ void Assembler::asm_branch_xov(LOpcode op, NIns* target)
 
     // Emit a suitable branch instruction.
     B_cond(cc, target);
+    return _nIns;
 }
 
 void

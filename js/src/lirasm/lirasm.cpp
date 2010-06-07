@@ -329,9 +329,11 @@ private:
     LIns *assemble_ret(ReturnType rt);
     LIns *assemble_guard(bool isCond);
     LIns *assemble_guard_xov();
+    LIns *assemble_jump_jov();
     void bad(const string &msg);
     void nyi(const string &opname);
     void extract_any_label(string &lab, char lab_delim);
+    void resolve_forward_jumps(string &lab, LIns *ins);
     void endFragment();
 };
 
@@ -745,7 +747,6 @@ FragmentAssembler::createGuardRecord(LasmSideExit *exit)
     return rec;
 }
 
-
 LIns *
 FragmentAssembler::assemble_guard(bool isCond)
 {
@@ -778,6 +779,29 @@ FragmentAssembler::assemble_guard_xov()
     mReturnTypeBits |= RT_GUARD;
 
     return mLir->insGuardXov(mOpcode, ref(mTokens[0]), ref(mTokens[1]), guard);
+}
+
+LIns *
+FragmentAssembler::assemble_jump_jov()
+{
+    need(3);
+
+    LIns *a = ref(mTokens[0]);
+    LIns *b = ref(mTokens[1]);
+    string name = mTokens[2];
+
+    if (mLabels.find(name) != mLabels.end()) {
+        LIns *target = ref(name);
+        return mLir->insBranchJov(mOpcode, a, b, target);
+    } else {
+        LIns *ins = mLir->insBranchJov(mOpcode, a, b, NULL);
+#ifdef __SUNPRO_CC
+        mFwdJumps.insert(make_pair<const string, LIns *>(name, ins));
+#else
+        mFwdJumps.insert(make_pair(name, ins));
+#endif
+        return ins;
+    }
 }
 
 void
@@ -859,6 +883,22 @@ FragmentAssembler::extract_any_label(string &lab, char lab_delim)
 }
 
 void
+FragmentAssembler::resolve_forward_jumps(string &lab, LIns *ins)
+{
+    typedef multimap<string, LIns *> mulmap;
+#ifdef __SUNPRO_CC
+    typedef mulmap::iterator ci;
+#else
+    typedef mulmap::const_iterator ci;
+#endif
+    pair<ci, ci> range = mFwdJumps.equal_range(lab);
+    for (ci i = range.first; i != range.second; ++i) {
+        i->second->setTarget(ins);
+    }
+    mFwdJumps.erase(lab);
+}
+
+void
 FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, const LirToken *firstToken)
 {
     LirToken token;
@@ -897,17 +937,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
         /* Save label and do any back-patching of deferred forward-jumps. */
         if (!lab.empty()) {
             ins = mLir->ins0(LIR_label);
-            typedef multimap<string, LIns *> mulmap;
-#ifdef __SUNPRO_CC
-            typedef mulmap::iterator ci;
-#else
-            typedef mulmap::const_iterator ci;
-#endif
-            pair<ci, ci> range = mFwdJumps.equal_range(lab);
-            for (ci i = range.first; i != range.second; ++i) {
-                i->second->setTarget(ins);
-            }
-            mFwdJumps.erase(lab);
+            resolve_forward_jumps(lab, ins);
             lab.clear();
         }
         extract_any_label(lab, '=');
@@ -1101,6 +1131,14 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             ins = assemble_guard_xov();
             break;
 
+          case LIR_addjovi:
+          case LIR_subjovi:
+          case LIR_muljovi:
+          CASE64(LIR_addjovq:)
+          CASE64(LIR_subjovq:)
+            ins = assemble_jump_jov();
+            break;
+
           case LIR_calli:
           CASESF(LIR_hcalli:)
           case LIR_calld:
@@ -1117,6 +1155,12 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_label:
+            ins = mLir->ins0(LIR_label);
+            if (!lab.empty()) {
+                resolve_forward_jumps(lab, ins);
+            }
+            break;
+
           case LIR_file:
           case LIR_line:
           case LIR_xtbl:
