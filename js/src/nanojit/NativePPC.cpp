@@ -545,8 +545,9 @@ namespace nanojit
         return _nIns;
     }
 
-    void Assembler::asm_branch_xov(LOpcode, NIns*) {
-        TODO(asm_branch_xov);
+    NIns* Assembler::asm_branch_ov(LOpcode, NIns*) {
+        TODO(asm_branch_ov);
+        return _nIns;
     }
 
     void Assembler::asm_cmp(LOpcode condop, LIns *a, LIns *b, ConditionRegister cr) {

@@ -1216,6 +1216,8 @@ namespace nanojit
             return;
         }
 
+        // Changes to the logic below will likely need to be propagated to Assembler::asm_jov().
+
         countlir_jcc();
         LInsp to = ins->getTarget();
         LabelState *label = _labels.get(to);
@@ -1237,6 +1239,37 @@ namespace nanojit
                 intersectRegisterState(label->regs);
             }
             NIns *branch = asm_branch(branchOnFalse, cond, 0);
+            _patches.put(branch,to);
+        }
+    }
+
+    void Assembler::asm_jov(LInsp ins, InsList& pending_lives)
+    {
+        // The caller is responsible for countlir_* profiling, unlike
+        // asm_jcc above.  The reason for this is that asm_jov may not be
+        // be called if the instruction is dead, and it is our convention
+        // to count such instructions anyway.
+        LOpcode op = ins->opcode();
+        LInsp to = ins->getTarget();
+        LabelState *label = _labels.get(to);
+        if (label && label->addr) {
+            // forward jump to known label.  need to merge with label's register state.
+            unionRegisterState(label->regs);
+            asm_branch_ov(op, label->addr);
+        }
+        else {
+            // back edge.
+            handleLoopCarriedExprs(pending_lives);
+            if (!label) {
+                // evict all registers, most conservative approach.
+                evictAllActiveRegs();
+                _labels.add(to, 0, _allocator);
+            }
+            else {
+                // evict all registers, most conservative approach.
+                intersectRegisterState(label->regs);
+            }
+            NIns *branch = asm_branch_ov(op, 0);
             _patches.put(branch,to);
         }
     }
@@ -1507,6 +1540,7 @@ namespace nanojit
 
 #if defined NANOJIT_64BIT
                 case LIR_addq:
+                case LIR_subq:
                 case LIR_andq:
                 case LIR_lshq:
                 case LIR_rshuq:
@@ -1767,7 +1801,7 @@ namespace nanojit
 
                 case LIR_addxovi:
                 case LIR_subxovi:
-                case LIR_mulxovi: {
+                case LIR_mulxovi:
                     verbose_only( _thisfrag->nStaticExits++; )
                     countlir_xcc();
                     countlir_alu();
@@ -1775,11 +1809,37 @@ namespace nanojit
                     ins->oprnd2()->setResultLive();
                     if (ins->isExtant()) {
                         NIns* exit = asm_exit(ins); // does intersectRegisterState()
-                        asm_branch_xov(op, exit);
+                        asm_branch_ov(op, exit);
                         asm_arith(ins);
                     }
                     break;
-                }
+
+                case LIR_addjovi:
+                case LIR_subjovi:
+                case LIR_muljovi:
+                    countlir_jcc();
+                    countlir_alu();
+                    ins->oprnd1()->setResultLive();
+                    ins->oprnd2()->setResultLive();
+                    if (ins->isExtant()) {
+                        asm_jov(ins, pending_lives);
+                        asm_arith(ins);
+                    }
+                    break;
+
+#ifdef NANOJIT_64BIT
+                case LIR_addjovq:
+                case LIR_subjovq:
+                    countlir_jcc();
+                    countlir_alu();
+                    ins->oprnd1()->setResultLive();
+                    ins->oprnd2()->setResultLive();
+                    if (ins->isExtant()) {
+                        asm_jov(ins, pending_lives);
+                        asm_qbinop(ins);
+                    }
+                    break;
+#endif
 
                 case LIR_eqd:
                 case LIR_led:
