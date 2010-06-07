@@ -2270,6 +2270,16 @@ class AutoValueRooter : private AutoGCRooter
         return &val;
     }
 
+    const jsval &jsval_value() const {
+        JS_ASSERT(tag == JSVAL);
+        return Jsvalify(val);
+    }
+
+    jsval *jsval_addr() {
+        JS_ASSERT(tag == JSVAL);
+        return Jsvalify(&val);
+    }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
@@ -2338,6 +2348,14 @@ class AutoArrayRooter : private AutoGCRooter {
     AutoArrayRooter(JSContext *cx, size_t len, Value *vec
                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, len), array(vec)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(tag >= 0);
+    }
+
+    AutoArrayRooter(JSContext *cx, size_t len, jsval *vec
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, len), array(Valueify(vec))
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(tag >= 0);

@@ -170,19 +170,13 @@ JSVAL_TO_OBJECT(jsval v)
     return JSVAL_TO_OBJECT_IMPL(l);
 }
 
-/* TODO: This is unnecessarily expensive. If this gets hot, do something dirty
- * to achieve obj->isFunction(). */
 static JS_ALWAYS_INLINE jsval
 OBJECT_TO_JSVAL(JSObject *obj)
 {
-    extern JS_PUBLIC_API(JSBool)
-    JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
-
     if (!obj)
         return JSVAL_NULL;
-
-    JSValueMask32 mask = JS_ObjectIsFunction(NULL, obj) ? JSVAL_MASK32_FUNOBJ
-                                                        : JSVAL_MASK32_NONFUNOBJ;
+    JSValueMask32 mask = JS_OBJ_IS_FUN_IMPL(obj) ? JSVAL_MASK32_FUNOBJ
+                                                 : JSVAL_MASK32_NONFUNOBJ;
     return OBJECT_TO_JSVAL_IMPL(mask, obj).asBits;
 }
 
@@ -3031,8 +3025,8 @@ class Value
     Value(FunObjOrUndefinedTag arg)    { setFunObjOrUndefined(arg.obj); }
     Value(NonFunObjOrNullTag arg)      { setNonFunObjOrNull(arg.obj); }
     inline Value(NumberTag arg);
-    inline Value(ObjectTag arg);
-    inline Value(ObjectOrNullTag arg);
+    inline Value(ObjectTag arg)        { setObject(arg.obj); }
+    inline Value(ObjectOrNullTag arg)  { setObjectOrNull(arg.obj); }
 
     /* Change to a Value of a single type */
 
@@ -3069,12 +3063,12 @@ class Value
     }
 
     void setFunObj(JSObject &arg) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg));
+        JS_ASSERT(JS_OBJ_IS_FUN_IMPL(&arg));
         data = OBJECT_TO_JSVAL_IMPL(JSVAL_MASK32_FUNOBJ, &arg);
     }
 
     void setNonFunObj(JSObject &arg) {
-        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg));
+        JS_ASSERT(!JS_OBJ_IS_FUN_IMPL(&arg));
         data = OBJECT_TO_JSVAL_IMPL(JSVAL_MASK32_NONFUNOBJ, &arg);
     }
 
@@ -3098,25 +3092,35 @@ class Value
     inline void setNumber(double d);
 
     void setFunObjOrNull(JSObject *arg) {
-        JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
+        JS_ASSERT_IF(arg, JS_OBJ_IS_FUN_IMPL(arg));
         JSValueMask32 mask = arg ? JSVAL_MASK32_FUNOBJ : JSVAL_MASK32_NULL;
         data = OBJECT_TO_JSVAL_IMPL(mask, arg);
     }
 
     void setFunObjOrUndefined(JSObject *arg) {
-        JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
+        JS_ASSERT_IF(arg, JS_OBJ_IS_FUN_IMPL(arg));
         JSValueMask32 mask = arg ? JSVAL_MASK32_FUNOBJ : JSVAL_MASK32_UNDEFINED;
         data = OBJECT_TO_JSVAL_IMPL(mask, arg);
     }
 
     void setNonFunObjOrNull(JSObject *arg) {
-        JS_ASSERT_IF(arg, !JS_ObjectIsFunction(NULL, arg));
+        JS_ASSERT_IF(arg, !JS_OBJ_IS_FUN_IMPL(arg));
         JSValueMask32 mask = arg ? JSVAL_MASK32_NONFUNOBJ : JSVAL_MASK32_NULL;
         data = OBJECT_TO_JSVAL_IMPL(mask, arg);
     }
 
-    inline void setObject(JSObject &arg);
-    inline void setObjectOrNull(JSObject *arg);
+    inline void setObject(JSObject &arg) {
+        JSValueMask32 mask = JS_OBJ_IS_FUN_IMPL(&arg) ? JSVAL_MASK32_FUNOBJ
+                                                      : JSVAL_MASK32_NONFUNOBJ;
+        data = OBJECT_TO_JSVAL_IMPL(mask, &arg);
+    }
+
+    inline void setObjectOrNull(JSObject *arg) {
+        JSValueMask32 mask = arg ? JS_OBJ_IS_FUN_IMPL(arg) ? JSVAL_MASK32_FUNOBJ
+                                                           : JSVAL_MASK32_NONFUNOBJ
+                                 : JSVAL_MASK32_NULL;
+	    data = OBJECT_TO_JSVAL_IMPL(mask, arg);
+    }
 
     /* Query a Value's type */
 
