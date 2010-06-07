@@ -290,16 +290,16 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
 
   *vp = OBJECT_TO_JSVAL(wrapperObj);
 
-  js::AutoValueRooter exposedProps(cx, JSVAL_VOID);
+  js::AutoValueRooter exposedProps(cx, js::undefinedValue());
 
-  if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), exposedProps.addr())) {
+  if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), exposedProps.jsval_addr())) {
     return JS_FALSE;
   }
 
   if (!JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sWrappedObjSlot, v) ||
       !JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sFlagsSlot, JSVAL_ZERO) ||
       !JS_SetReservedSlot(cx, wrapperObj, sExposedPropsSlot,
-                          exposedProps.value())) {
+                          exposedProps.jsval_value())) {
     return JS_FALSE;
   }
 
@@ -323,7 +323,7 @@ ThrowException(nsresult rv, JSContext *cx)
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)
 {
-  JSClass *clasp = obj->getClass();
+  JSClass *clasp = obj->getJSClass();
   if (!(clasp->flags & JSCLASS_IS_EXTENDED)) {
     return obj;
   }
@@ -347,7 +347,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (obj->getClass() != &COWClass.base) {
+  while (obj->getJSClass() != &COWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -716,7 +716,7 @@ XPC_COW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
-  if (!wrappedObj->getClass()->convert(cx, wrappedObj, type, vp)) {
+  if (!wrappedObj->getJSClass()->convert(cx, wrappedObj, type, vp)) {
     return JS_FALSE;
   }
 
@@ -761,7 +761,7 @@ XPC_COW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   XPCWrappedNative *me = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
   obj = me->GetFlatJSObject();
   test = other->GetFlatJSObject();
-  return ((JSExtendedClass *)obj->getClass())->
+  return ((JSExtendedClass *)obj->getJSClass())->
     equality(cx, obj, OBJECT_TO_JSVAL(test), bp);
 }
 

@@ -522,7 +522,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     }
     else
     {
-        setter = Jsvalify(js_GetterOnlyPropertyStub);
+        setter = js_GetterOnlyPropertyStub;
     }
 
     AutoResolveName arn(ccx, idval);
@@ -1334,7 +1334,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         // helper. Short circuit this call to
         // js_ObjectOps.enumerate().
 
-        return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
+        return js_ObjectOps.enumerate(cx, obj, enum_op, js::Valueify(statep), idp);
     }
 
     MORPH_SLIM_WRAPPER(cx, obj);
@@ -1402,7 +1402,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     // else call js_ObjectOps.enumerate...
 
-    return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
+    return js_ObjectOps.enumerate(cx, obj, enum_op, js::Valueify(statep), idp);
 }
 
 static JSType
@@ -1484,7 +1484,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     if(!XPCPerThreadData::IsMainThread(cx))
         return obj;
 
-    OBJ_TO_OUTER_OBJECT(cx, obj);
+    Outerize(cx, &obj);
     if(!obj)
         return nsnull;
 
@@ -1517,7 +1517,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     nsIPrincipal *principal = secMan->GetCxSubjectPrincipalAndFrame(cx, &fp);
 
-    js::AutoValueRooter retval(cx, obj);
+    js::AutoValueRooter retval(cx, js::ObjectTag(*obj));
 
     if(principal && fp)
     {
@@ -1534,7 +1534,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
         }
 
         nsresult rv = xpc->GetWrapperForObject(cx, obj, scope, principal, flags,
-                                               retval.addr());
+                                               retval.jsval_addr());
         if(NS_FAILED(rv))
         {
             XPCThrower::Throw(rv, cx);
@@ -1542,7 +1542,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
         }
     }
 
-    return JSVAL_TO_OBJECT(retval.value());
+    return JSVAL_TO_OBJECT(retval.jsval_value());
 }
 
 JSObjectOps *
@@ -1562,7 +1562,7 @@ JSBool xpc_InitWrappedNativeJSOps()
     if(!XPC_WN_NoCall_JSOps.lookupProperty)
     {
         memcpy(&XPC_WN_NoCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
-        XPC_WN_NoCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
+        XPC_WN_NoCall_JSOps.enumerate = js::Valueify(XPC_WN_JSOp_Enumerate);
         XPC_WN_NoCall_JSOps.call = nsnull;
         XPC_WN_NoCall_JSOps.construct = nsnull;
         XPC_WN_NoCall_JSOps.typeOf = XPC_WN_JSOp_TypeOf_Object;
@@ -1570,7 +1570,7 @@ JSBool xpc_InitWrappedNativeJSOps()
         XPC_WN_NoCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;
 
         memcpy(&XPC_WN_WithCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
-        XPC_WN_WithCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
+        XPC_WN_WithCall_JSOps.enumerate = js::Valueify(XPC_WN_JSOp_Enumerate);
         XPC_WN_WithCall_JSOps.typeOf = XPC_WN_JSOp_TypeOf_Function;
         XPC_WN_WithCall_JSOps.clear = XPC_WN_JSOp_Clear;
         XPC_WN_WithCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;

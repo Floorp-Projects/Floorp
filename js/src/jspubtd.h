@@ -1105,5 +1105,29 @@ static inline EqualityOp       Valueify(JSEqualityOp f);    /* Same type as JSHa
 static inline JSEqualityOp     Jsvalify(EqualityOp f);      /* Same type as HasInstanceOp */
 
 }  /* namespace js */
+
+typedef js::Class JSFunctionClassType;
+
+#else  /* !defined(__cplusplus) */
+
+typedef JSClass JSFunctionClassType;
+
 #endif /* __cplusplus */
+
+extern JS_FRIEND_DATA(JSFunctionClassType) js_FunctionClass;
+
+typedef struct JSPretendObject
+{
+    void                *_;
+    JSFunctionClassType *clasp;
+} JSPretendObject;
+
+static JS_ALWAYS_INLINE JSBool
+JS_OBJ_IS_FUN_IMPL(JSObject *obj)
+{
+    return ((JSPretendObject *)obj)->clasp == &js_FunctionClass;
+}
+
+
+
 #endif /* jspubtd_h___ */
