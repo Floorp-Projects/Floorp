@@ -34,6 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsGeoLocation_h
+#define nsGeoLocation_h
+
 #ifdef MOZ_IPC
 #include "mozilla/dom/PGeolocationRequestChild.h"
 // Microsoft's API Name hackery sucks
@@ -240,3 +243,4 @@ private:
   nsRefPtr<nsGeolocationService> mService;
 };
 
+#endif /* nsGeoLocation_h */

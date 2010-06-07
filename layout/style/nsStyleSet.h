@@ -66,9 +66,9 @@ struct RuleProcessorData;
 class nsEmptyStyleRule : public nsIStyleRule
 {
   NS_DECL_ISUPPORTS
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 };
 
@@ -389,6 +389,7 @@ class nsStyleSet
 
 };
 
+#ifdef _IMPL_NS_LAYOUT
 inline
 void nsRuleNode::AddRef()
 {
@@ -404,4 +405,6 @@ void nsRuleNode::Release()
     mPresContext->StyleSet()->RuleNodeUnused();
   }
 }
+#endif
+
 #endif

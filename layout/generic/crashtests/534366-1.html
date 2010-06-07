@@ -1,0 +1,38 @@
+<html>
+<head>
+<style type="text/css">
+
+body { font-family: monospace; width: 4ch; }
+body::first-line { }
+body *::before { content: 'w';}
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var de = document.documentElement;
+  var body = document.body;
+
+  var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  var r1 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mrow");
+  var mmm = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mmultiscripts");
+
+  body.appendChild(span);
+  r1.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "mrow"));
+  body.appendChild(r1);
+  body.appendChild(mmm);
+  de.offsetHeight;
+  r1.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", 'mrow'));
+  de.offsetHeight;
+  mmm.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", 'mrow'));
+  de.offsetHeight;
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</head>
+<body></body>
+</html>

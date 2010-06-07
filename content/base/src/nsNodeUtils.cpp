@@ -269,8 +269,22 @@ nsNodeUtils::LastRelease(nsINode* aNode)
 
   if (aNode->IsElement()) {
     nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+    Element* elem = aNode->AsElement();
     if (ownerDoc) {
-      ownerDoc->ClearBoxObjectFor(aNode->AsElement());
+      ownerDoc->ClearBoxObjectFor(elem);
+    }
+    
+    NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
+                 !ownerDoc ||
+                 !ownerDoc->BindingManager() ||
+                 !ownerDoc->BindingManager()->GetBinding(elem),
+                 "Non-forced node has binding on destruction");
+
+    // if NODE_FORCE_XBL_BINDINGS is set, the node might still have a binding
+    // attached
+    if (aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) &&
+        ownerDoc && ownerDoc->BindingManager()) {
+      ownerDoc->BindingManager()->RemovedFromDocument(elem, ownerDoc);
     }
   }
 
@@ -564,13 +578,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                          aCx, aOldScope, aNewScope, aNodesWithProperties,
                          clone, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (isDeepDocumentClone) {
-        NS_ASSERTION(child->IsNodeOfType(nsINode::eCONTENT),
-                     "A clone of a child of a node is not nsIContent?");
-
-        nsIContent* content = static_cast<nsIContent*>(child.get());
-        static_cast<nsDocument*>(clone.get())->RegisterNamedItems(content);
-      }
     }
   }
 

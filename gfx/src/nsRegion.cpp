@@ -1289,10 +1289,11 @@ void nsRegion::MoveBy (nsPoint aPt)
   }
 }
 
-nsIntRegion nsRegion::ToOutsidePixels(nscoord aAppUnitsPerPixel) const {
+nsIntRegion nsRegion::ToOutsidePixels (nscoord aAppUnitsPerPixel) const
+{
   nsIntRegion result;
   nsRegionRectIterator rgnIter(*this);
-  const nsRect *currentRect;
+  const nsRect* currentRect;
   while ((currentRect = rgnIter.Next())) {
     nsIntRect deviceRect = currentRect->ToOutsidePixels(aAppUnitsPerPixel);
     result.Or(result, deviceRect);
@@ -1604,4 +1605,16 @@ void nsRegion::SimpleSubtract (const nsRegion& aRegion)
   }
 
   Optimize();
+}
+
+nsRegion nsIntRegion::ToAppUnits (nscoord aAppUnitsPerPixel) const
+{
+  nsRegion result;
+  nsIntRegionRectIterator rgnIter(*this);
+  const nsIntRect* currentRect;
+  while ((currentRect = rgnIter.Next())) {
+    nsRect appRect = currentRect->ToAppUnits(aAppUnitsPerPixel);
+    result.Or(result, appRect);
+  }
+  return result;
 }

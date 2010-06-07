@@ -74,16 +74,20 @@ enum nsDOMClassInfoID {
  *          to that interface from the *canonical* nsISupports!
  */
 #define DOMCI_CASTABLE_INTERFACES(_extra)                                     \
-DOMCI_CASTABLE_INTERFACE(nsINode, 0, _extra)                                  \
-DOMCI_CASTABLE_INTERFACE(nsIContent, 1, _extra)                               \
-DOMCI_CASTABLE_INTERFACE(nsIDocument, 2, _extra)                              \
-DOMCI_CASTABLE_INTERFACE(nsINodeList, 3, _extra)                              \
-DOMCI_CASTABLE_INTERFACE(nsICSSDeclaration, 4, _extra)                        \
-DOMCI_CASTABLE_INTERFACE(nsGenericTextNode, 5, _extra)
+DOMCI_CASTABLE_INTERFACE(nsINode, nsINode, 0, _extra)                         \
+DOMCI_CASTABLE_INTERFACE(nsIContent, nsIContent, 1, _extra)                   \
+DOMCI_CASTABLE_INTERFACE(nsIDocument, nsIDocument, 2, _extra)                 \
+DOMCI_CASTABLE_INTERFACE(nsINodeList, nsINodeList, 3, _extra)                 \
+DOMCI_CASTABLE_INTERFACE(nsICSSDeclaration, nsICSSDeclaration, 4, _extra)     \
+DOMCI_CASTABLE_INTERFACE(nsGenericTextNode, nsGenericTextNode, 5, _extra)     \
+DOMCI_CASTABLE_INTERFACE(nsDocument, nsIDocument, 6, _extra)                  \
+DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsGenericHTMLElement, 7,       \
+                         _extra)                                              \
+DOMCI_CASTABLE_INTERFACE(nsHTMLDocument, nsIDocument, 8, _extra)
 
 // Make sure all classes mentioned in DOMCI_CASTABLE_INTERFACES
 // have been declared.
-#define DOMCI_CASTABLE_INTERFACE(_interface, _u1, _u2) class _interface;
+#define DOMCI_CASTABLE_INTERFACE(_interface, _u1, _u2, _u3) class _interface;
 DOMCI_CASTABLE_INTERFACES(unused)
 #undef DOMCI_CASTABLE_INTERFACE
 
@@ -135,7 +139,7 @@ template <typename Interface> struct DOMCI_CastableTo {
 /**
  * Here we calculate the bitmap for a given class.
  */
-#define DOMCI_CASTABLE_INTERFACE(_interface, _bit, _class)                    \
+#define DOMCI_CASTABLE_INTERFACE(_interface, _base, _bit, _class)             \
   (DOMCI_CASTABLE_TO(_interface, _class) ? 1 << _bit : 0) +
 
 #define DOMCI_DATA(_dom_class, _class)                                        \

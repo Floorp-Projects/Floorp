@@ -53,7 +53,6 @@ class nsFileControlFrame : public nsBlockFrame,
 {
 public:
   nsFileControlFrame(nsStyleContext* aContext);
-  virtual ~nsFileControlFrame();
 
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame*   aParent,
@@ -168,11 +167,6 @@ protected:
    * @see nsFileControlFrame::CreateAnonymousContent
    */
   nsCOMPtr<nsIContent> mBrowse;
-  /**
-   * The current value, stored during those rare in-between periods where the
-   * file frame is there but the input frame is not.
-   */
-  nsString*           mCachedState;
 
   /**
    * Our mouse listener.  This makes sure we don't get used after destruction.

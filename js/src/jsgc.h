@@ -227,6 +227,22 @@ extern bool
 js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
                                      uint32 slot, JSObject *pobj);
 
+#ifdef JS_THREADSAFE
+/*
+ * This is a helper for code at can potentially run outside JS request to
+ * ensure that the GC is not running when the function returns.
+ *
+ * This function must be called with the GC lock held.
+ */
+extern void
+js_WaitForGC(JSRuntime *rt);
+
+#else /* !JS_THREADSAFE */
+
+# define js_WaitForGC(rt)    ((void) 0)
+
+#endif
+
 extern void
 js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
 
@@ -501,6 +517,12 @@ TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
 {
     TraceValues(trc, vec, vec + len, name);
 }
+
+JSCompartment *
+NewCompartment(JSContext *cx);
+
+void
+SweepCompartments(JSContext *cx);
 
 } /* namespace js */
 

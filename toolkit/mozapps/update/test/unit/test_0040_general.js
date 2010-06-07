@@ -190,9 +190,8 @@ function run_test_pt7() {
   var url = URL_PREFIX + "%CHANNEL%/";
   dump("Testing: url constructed with %CHANNEL% - " + url + "\n");
   setUpdateURLOverride(url);
-  var defaults = getDefaultPrefBranch();
-  defaults.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1", "test_partner1");
-  defaults.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2", "test_partner2");
+  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1", "test_partner1");
+  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2", "test_partner2");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -251,7 +250,7 @@ function run_test_pt10() {
   var url = URL_PREFIX + "%DISTRIBUTION%/";
   dump("Testing: url constructed with %DISTRIBUTION% - " + url + "\n");
   setUpdateURLOverride(url);
-  getDefaultPrefBranch().setCharPref(PREF_DISTRIBUTION_ID, "test_distro");
+  gDefaultPrefBranch.setCharPref(PREF_DISTRIBUTION_ID, "test_distro");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -266,7 +265,7 @@ function run_test_pt11() {
   var url = URL_PREFIX + "%DISTRIBUTION_VERSION%/";
   dump("Testing: url constructed with %DISTRIBUTION_VERSION% - " + url + "\n");
   setUpdateURLOverride(url);
-  getDefaultPrefBranch().setCharPref(PREF_DISTRIBUTION_VERSION, "test_distro_version");
+  gDefaultPrefBranch.setCharPref(PREF_DISTRIBUTION_VERSION, "test_distro_version");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 

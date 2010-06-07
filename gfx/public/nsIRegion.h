@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsRect.h"
+#include "nsRegion.h"
 
 enum nsRegionComplexity
 {
@@ -248,6 +249,11 @@ public:
    *
    **/
   NS_IMETHOD FreeRects(nsRegionRectSet *aRects) = 0;
+
+  /**
+   * Get the underlying nsIntRegion that this nsIRegion represents.
+   **/
+  virtual nsIntRegion GetUnderlyingRegion() const = 0;
 
   /**
    * Get the native region that this nsIRegion represents.

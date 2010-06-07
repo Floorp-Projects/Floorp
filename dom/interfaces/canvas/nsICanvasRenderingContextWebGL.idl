@@ -43,24 +43,14 @@ interface nsIDOMHTMLCanvasElement;
 
 // XXX should we comment out these typedefs in the C++ header?
 
-typedef unsigned long  GLenum;
-typedef octet  GLboolean;
-typedef unsigned long  GLbitfield;
-typedef short          GLshort;
-typedef long           GLint;
-typedef long           GLsizei;
-typedef octet          GLubyte;
-typedef unsigned short GLushort;
-typedef unsigned long  GLuint;
-typedef float          GLfloat;
-typedef float          GLclampf;
-typedef long           GLfixed;
-
-// XPIDL doesn't have a signed byte?
-//typedef signed octet GLbyte;
-
-//typedef unsigned long  GLintptr;
-//typedef long  GLsizeiptr;
+typedef unsigned long  WebGLenum;
+typedef boolean        WebGLboolean;
+typedef unsigned long  WebGLbitfield;
+typedef long           WebGLint;
+typedef long           WebGLsizei;
+typedef unsigned long  WebGLuint;
+typedef float          WebGLfloat;
+typedef float          WebGLclampf;
 
 %{C++
 namespace js {
@@ -82,25 +72,25 @@ struct TypedArray;
 [scriptable, uuid(3b43762a-8305-11de-98ab-000c29206271)]
 interface nsIWebGLTexture : nsISupports
 {
-  [noscript] attribute GLuint name;
+  [noscript] attribute WebGLuint name;
 };
 
 [scriptable, uuid(9eca9c32-8305-11de-b89b-000c29206271)]
 interface nsIWebGLBuffer : nsISupports
 {
-  [noscript] attribute GLuint name;
+  [noscript] attribute WebGLuint name;
 };
 
 [scriptable, uuid(a6a19e74-8305-11de-9ce9-000c29206271)]
 interface nsIWebGLProgram : nsISupports
 {
-  [noscript] attribute GLuint name;
+  [noscript] attribute WebGLuint name;
 };
 
 [scriptable, uuid(ac7440a4-8305-11de-807b-000c29206271)]
 interface nsIWebGLShader : nsISupports
 {
-  [noscript] attribute GLuint name;
+  [noscript] attribute WebGLuint name;
 };
 
 [scriptable, uuid(beea4b38-3094-4e8d-b6e6-8b21d07e8994)]
@@ -113,21 +103,27 @@ interface nsIWebGLShaderArray : nsISupports
 [scriptable, uuid(bce8be60-8305-11de-9f3c-000c29206271)]
 interface nsIWebGLFramebuffer : nsISupports
 {
-  [noscript] attribute GLuint name;
+  [noscript] attribute WebGLuint name;
 };
 
 [scriptable, uuid(c82eacd0-8305-11de-9de9-000c29206271)]
 interface nsIWebGLRenderbuffer : nsISupports
 {
-  [noscript] attribute GLuint name;
+  [noscript] attribute WebGLuint name;
 };
 
 [scriptable, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
 interface nsIWebGLActiveInfo : nsISupports
 {
-    readonly attribute GLint size;
-    readonly attribute GLenum type;
+    readonly attribute WebGLint size;
+    readonly attribute WebGLenum type;
     readonly attribute DOMString name;
+};
+
+[scriptable, uuid(d38b0467-623e-4c82-9140-5f14a3bd1bad)]
+interface nsIWebGLUniformLocation : nsISupports
+{
+    [noscript] attribute WebGLint location;
 };
 
 
@@ -579,274 +575,261 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //  METHODS
   //
   void present();
-  long sizeInBytes(in GLenum type);
+  long sizeInBytes(in WebGLenum type);
 
-  void activeTexture (in GLenum texture);
-  void attachShader (in nsIWebGLProgram program, in nsIWebGLShader shader);
-  void bindAttribLocation (in nsIWebGLProgram program, in GLuint index, in DOMString name);
-  void bindBuffer (in GLenum target, in nsIWebGLBuffer buffer);
-  void bindFramebuffer (in GLenum target, in nsIWebGLFramebuffer framebuffer);
-  void bindRenderbuffer (in GLenum target, in nsIWebGLRenderbuffer renderbuffer);
-  void bindTexture (in GLenum target, in nsIWebGLTexture texture);
-  void blendColor (in GLclampf red, in GLclampf green, in GLclampf blue, in GLclampf alpha);
-  void blendEquation (in GLenum mode);
-  void blendEquationSeparate (in GLenum modeRGB, in GLenum modeAlpha);
-  void blendFunc (in GLenum sfactor, in GLenum dfactor);
-  void blendFuncSeparate (in GLenum srcRGB, in GLenum dstRGB, in GLenum srcAlpha, in GLenum dstAlpha);
+  void activeTexture(in WebGLenum texture);
+  void attachShader(in nsIWebGLProgram program, in nsIWebGLShader shader);
+  void bindAttribLocation(in nsIWebGLProgram program, in WebGLuint index, in DOMString name);
+  void bindBuffer(in WebGLenum target, in nsIWebGLBuffer buffer);
+  void bindFramebuffer(in WebGLenum target, in nsIWebGLFramebuffer framebuffer);
+  void bindRenderbuffer(in WebGLenum target, in nsIWebGLRenderbuffer renderbuffer);
+  void bindTexture(in WebGLenum target, in nsIWebGLTexture texture);
+  void blendColor(in WebGLclampf red, in WebGLclampf green, in WebGLclampf blue, in WebGLclampf alpha);
+  void blendEquation(in WebGLenum mode);
+  void blendEquationSeparate(in WebGLenum modeRGB, in WebGLenum modeAlpha);
+  void blendFunc(in WebGLenum sfactor, in WebGLenum dfactor);
+  void blendFuncSeparate(in WebGLenum srcRGB, in WebGLenum dstRGB, in WebGLenum srcAlpha, in WebGLenum dstAlpha);
 
-  // Modified: void glBufferData (GLenum target, long size, const void* data, GLenum usage);
+  // Modified: void glBufferData(WebGLenum target, long size, const void* data, WebGLenum usage);
   void bufferData([optional] in long dummy);
-  [noscript] void bufferData_size (in GLenum target, in GLsizei size, in GLenum usage);
-  [noscript] void bufferData_buf (in GLenum target, in WebGLArrayBufferPtr data, in GLenum usage);
-  [noscript] void bufferData_array (in GLenum target, in WebGLArrayPtr data, in GLenum usage);
+  [noscript] void bufferData_size(in WebGLenum target, in WebGLsizei size, in WebGLenum usage);
+  [noscript] void bufferData_buf(in WebGLenum target, in WebGLArrayBufferPtr data, in WebGLenum usage);
+  [noscript] void bufferData_array(in WebGLenum target, in WebGLArrayPtr data, in WebGLenum usage);
 
   void bufferSubData([optional] in long dummy);
-  [noscript] void bufferSubData_buf (in GLenum target, in long offset, in WebGLArrayBufferPtr data);
-  [noscript] void bufferSubData_array (in GLenum target, in long offset, in WebGLArrayPtr data);
+  [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLArrayBufferPtr data);
+  [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLArrayPtr data);
 
-  GLenum checkFramebufferStatus (in GLenum target);
-  void clear (in GLbitfield mask);
-  void clearColor (in GLclampf red, in GLclampf green, in GLclampf blue, in GLclampf alpha);
-  void clearDepth (in GLclampf depth);
-  void clearStencil (in GLint s);
-  void colorMask (in GLboolean red, in GLboolean green, in GLboolean blue, in GLboolean alpha);
-  void compileShader (in nsIWebGLShader shader);
+  WebGLenum checkFramebufferStatus(in WebGLenum target);
+  void clear(in WebGLbitfield mask);
+  void clearColor(in WebGLclampf red, in WebGLclampf green, in WebGLclampf blue, in WebGLclampf alpha);
+  void clearDepth(in WebGLclampf depth);
+  void clearStencil(in WebGLint s);
+  void colorMask(in WebGLboolean red, in WebGLboolean green, in WebGLboolean blue, in WebGLboolean alpha);
+  void compileShader(in nsIWebGLShader shader);
 
-  void copyTexImage2D (in GLenum target, in GLint level, in GLenum internalformat, 
-                       in GLint x, in GLint y, in GLsizei width, in GLsizei height, in GLint border);
-  void copyTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, 
-                          in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+  void copyTexImage2D(in WebGLenum target, in WebGLint level, in WebGLenum internalformat, 
+                      in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height, in WebGLint border);
+  void copyTexSubImage2D(in WebGLenum target, in WebGLint level, in WebGLint xoffset, in WebGLint yoffset, 
+                         in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
 
   nsIWebGLBuffer createBuffer();
-  nsIWebGLProgram createProgram ();
+  nsIWebGLProgram createProgram();
   nsIWebGLFramebuffer createFramebuffer();
   nsIWebGLRenderbuffer createRenderbuffer();
-  nsIWebGLShader createShader (in GLenum type);
+  nsIWebGLShader createShader(in WebGLenum type);
   nsIWebGLTexture createTexture();
 
-  void cullFace (in GLenum mode);
+  void cullFace(in WebGLenum mode);
 
-  void deleteBuffer (in nsIWebGLBuffer buffer);
-  void deleteProgram (in nsIWebGLProgram program);
-  void deleteFramebuffer (in nsIWebGLFramebuffer framebuffer);
-  void deleteRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
-  void deleteShader (in nsIWebGLShader shader);
-  void deleteTexture (in nsIWebGLTexture texture);
+  void deleteBuffer(in nsIWebGLBuffer buffer);
+  void deleteProgram(in nsIWebGLProgram program);
+  void deleteFramebuffer(in nsIWebGLFramebuffer framebuffer);
+  void deleteRenderbuffer(in nsIWebGLRenderbuffer renderbuffer);
+  void deleteShader(in nsIWebGLShader shader);
+  void deleteTexture(in nsIWebGLTexture texture);
 
-  void depthFunc (in GLenum func);
-  void depthMask (in GLboolean flag);
-  void depthRange (in GLclampf zNear, in GLclampf zFar);
-  void detachShader (in nsIWebGLProgram program, in nsIWebGLShader shader);
-  void disable (in GLenum cap);
-  void disableVertexAttribArray (in GLuint index);
-  void drawArrays (in GLenum mode, in GLint first, in GLsizei count);
+  void depthFunc(in WebGLenum func);
+  void depthMask(in WebGLboolean flag);
+  void depthRange(in WebGLclampf zNear, in WebGLclampf zFar);
+  void detachShader(in nsIWebGLProgram program, in nsIWebGLShader shader);
+  void disable(in WebGLenum cap);
+  void disableVertexAttribArray(in WebGLuint index);
+  void drawArrays(in WebGLenum mode, in WebGLint first, in WebGLsizei count);
 
-  // Modified: void glDrawElements (GLenum mode, GLsizei count, GLenum type, const void* indices);
-  void drawElements (in GLenum mode, in GLuint count, in GLenum type, in GLuint offset);
+  // Modified: void glDrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, const void* indices);
+  void drawElements(in WebGLenum mode, in WebGLuint count, in WebGLenum type, in WebGLuint offset);
 
-  void enable (in GLenum cap);
-  void enableVertexAttribArray (in GLuint index);
-  void finish ();
-  void flush ();
-  void framebufferRenderbuffer (in GLenum target, in GLenum attachment, in GLenum renderbuffertarget, 
-                                  in nsIWebGLRenderbuffer renderbuffer);
-  void framebufferTexture2D (in GLenum target, in GLenum attachment, in GLenum textarget, 
-                               in nsIWebGLTexture texture, in GLint level);
-  void frontFace (in GLenum mode);
+  void enable(in WebGLenum cap);
+  void enableVertexAttribArray(in WebGLuint index);
+  void finish();
+  void flush();
+  void framebufferRenderbuffer(in WebGLenum target, in WebGLenum attachment, in WebGLenum renderbuffertarget, 
+                               in nsIWebGLRenderbuffer renderbuffer);
+  void framebufferTexture2D(in WebGLenum target, in WebGLenum attachment, in WebGLenum textarget, 
+                            in nsIWebGLTexture texture, in WebGLint level);
+  void frontFace(in WebGLenum mode);
 
-  void generateMipmap (in GLenum target);
+  void generateMipmap(in WebGLenum target);
 
   nsIWebGLActiveInfo getActiveAttrib(in nsIWebGLProgram program, in PRUint32 index);
   nsIWebGLActiveInfo getActiveUniform(in nsIWebGLProgram program, in PRUint32 index);
 
   // TBD
-  // void glGetAttachedShaders (GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders);
-  //nsIWebGLShaderArray glGetAttachedShaders(in GLuint program);
+  // void glGetAttachedShaders(WebGLuint program, WebGLsizei maxcount, WebGLsizei* count, WebGLuint* shaders);
+  //nsIWebGLShaderArray glGetAttachedShaders(in WebGLuint program);
 
-  GLint getAttribLocation (in nsIWebGLProgram program, in DOMString name);
+  WebGLint getAttribLocation(in nsIWebGLProgram program, in DOMString name);
 
-  // Modified
-  //GLboolean getBoolean(in GLenum pname);
-  // NOTYET nsIWebGLBooleanArray getBooleanv(in GLenum pname);
-  //GLfloat getFloat(in GLenum pname);
-  //nsIWebGLArray getFloatv(in GLenum pname);
-  //GLint getInteger(in GLenum pname);
-  //nsIWebGLIntArray getIntegerv(in GLenum pname);
-  // js only
-  void getParameter (in GLenum pname);
+  void getParameter(in WebGLenum pname);
 
-  // Modified: void glGetBufferParameteriv (GLenum target, GLenum pname, GLint* params);
-  void getBufferParameter (in GLenum target, in GLenum pname);
+  // Modified: void glGetBufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
+  void getBufferParameter(in WebGLenum target, in WebGLenum pname);
 
-  GLenum getError ();
+  WebGLenum getError();
 
-  // Modified: void glGetFramebufferAttachmentParameteriv (GLenum target, GLenum attachment, GLenum pname, GLint* params);
-  void getFramebufferAttachmentParameter (in GLenum target, in GLenum attachment, in GLenum pname);
+  // Modified: void glGetFramebufferAttachmentParameteriv(WebGLenum target, WebGLenum attachment, WebGLenum pname, WebGLint* params);
+  void getFramebufferAttachmentParameter(in WebGLenum target, in WebGLenum attachment, in WebGLenum pname);
 
-  // Modified: void glGetProgramiv (nsIWebGLProgram program, GLenum pname, GLint* params);
-  void getProgramParameter (in nsIWebGLProgram program, in GLenum pname);
+  // Modified: void glGetProgramiv(nsIWebGLProgram program, WebGLenum pname, WebGLint* params);
+  void getProgramParameter(in nsIWebGLProgram program, in WebGLenum pname);
 
-  // Modified: void glGetProgramInfoLog (GLuint program, GLsizei bufsize, GLsizei* length, char* infolog);
-  DOMString getProgramInfoLog (in nsIWebGLProgram program);
+  // Modified: void glGetProgramInfoLog(WebGLuint program, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
+  DOMString getProgramInfoLog(in nsIWebGLProgram program);
 
-  // Modified: void glGetRenderbufferParameteriv (GLenum target, GLenum pname, GLint* params);
-  //nsIWebGLIntArray getRenderbufferParameteriv (in GLenum target, in GLenum pname);
-  void getRenderbufferParameter (in GLenum target, in GLenum pname);
+  // Modified: void glGetRenderbufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
+  //nsIWebGLIntArray getRenderbufferParameteriv(in WebGLenum target, in WebGLenum pname);
+  void getRenderbufferParameter(in WebGLenum target, in WebGLenum pname);
 
-  void getShaderParameter (in nsIWebGLShader shader, in GLenum pname);
+  void getShaderParameter(in nsIWebGLShader shader, in WebGLenum pname);
 
-  // Modified: void glGetShaderInfoLog (GLuint shader, GLsizei bufsize, GLsizei* length, char* infolog);
-  DOMString getShaderInfoLog (in nsIWebGLShader shader);
+  // Modified: void glGetShaderInfoLog(WebGLuint shader, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
+  DOMString getShaderInfoLog(in nsIWebGLShader shader);
 
   // TBD
-  //void glGetShaderPrecisionFormat (GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision);
+  //void glGetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, WebGLint* range, WebGLint* precision);
 
-  DOMString getShaderSource (in nsIWebGLShader shader);
-  DOMString getString (in GLenum name);
+  DOMString getShaderSource(in nsIWebGLShader shader);
+  DOMString getString(in WebGLenum name);
 
-  void getTexParameter (in GLenum target, in GLenum pname);
+  void getTexParameter(in WebGLenum target, in WebGLenum pname);
 
-  // FIXME: This is problematic. We don't implicitly know how big the returned data buffer
-  // needs to be like in the other glGet* calls. The only way to find out is to iterate 
-  // through all the active uniforms with glGetActiveUniform() looking for the corresponding
-  // 'location'. This will give us the type and size of the data. Since this is a get call
-  // maybe that's ok?
-  void getUniform (in nsIWebGLProgram program, in GLint location);
+  void getUniform (in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
 
-  GLint getUniformLocation (in nsIWebGLProgram program, in DOMString name);
+  nsIWebGLUniformLocation getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
-  void getVertexAttrib (in GLuint index, in GLenum pname);
+  void getVertexAttrib(in WebGLuint index, in WebGLenum pname);
 
   // TBD
-  // void glGetVertexAttribPointerv (GLuint index, GLenum pname, void** pointer);
-  GLuint getVertexAttribOffset(in GLuint index, in GLenum pname);
+  // void glGetVertexAttribPointerv(WebGLuint index, WebGLenum pname, void** pointer);
+  WebGLuint getVertexAttribOffset(in WebGLuint index, in WebGLenum pname);
 
-  void hint (in GLenum target, in GLenum mode);
+  void hint(in WebGLenum target, in WebGLenum mode);
 
-  GLboolean isBuffer (in nsIWebGLBuffer buffer);
-  GLboolean isFramebuffer (in nsIWebGLFramebuffer framebuffer);
-  GLboolean isProgram (in nsIWebGLProgram program);
-  GLboolean isRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
-  GLboolean isShader (in nsIWebGLShader shader);
-  GLboolean isTexture (in nsIWebGLTexture texture);
+  WebGLboolean isBuffer(in nsIWebGLBuffer buffer);
+  WebGLboolean isFramebuffer(in nsIWebGLFramebuffer framebuffer);
+  WebGLboolean isProgram(in nsIWebGLProgram program);
+  WebGLboolean isRenderbuffer(in nsIWebGLRenderbuffer renderbuffer);
+  WebGLboolean isShader(in nsIWebGLShader shader);
+  WebGLboolean isTexture(in nsIWebGLTexture texture);
 
-  GLboolean isEnabled (in GLenum cap);
-  void lineWidth (in GLfloat width);
-  void linkProgram (in nsIWebGLProgram program);
-  void pixelStorei (in GLenum pname, in GLint param);
-  void polygonOffset (in GLfloat factor, in GLfloat units);
+  WebGLboolean isEnabled(in WebGLenum cap);
+  void lineWidth(in WebGLfloat width);
+  void linkProgram(in nsIWebGLProgram program);
+  void pixelStorei(in WebGLenum pname, in WebGLint param);
+  void polygonOffset(in WebGLfloat factor, in WebGLfloat units);
 
   // TBD
-  //ZZ void glReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels);
-  void readPixels (in GLint x, in GLint y, in GLsizei width, in GLsizei height, in GLenum format, in GLenum type);
+  //ZZ void glReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height, WebGLenum format, WebGLenum type, void* pixels);
+  void readPixels(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height, in WebGLenum format, in WebGLenum type);
 
-  //void glReleaseShaderCompiler ();
+  //void glReleaseShaderCompiler();
 
-  void renderbufferStorage (in GLenum target, in GLenum internalformat, in GLsizei width, in GLsizei height);
-  void sampleCoverage (in GLclampf value, in GLboolean invert);
-  void scissor (in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+  void renderbufferStorage(in WebGLenum target, in WebGLenum internalformat, in WebGLsizei width, in WebGLsizei height);
+  void sampleCoverage(in WebGLclampf value, in WebGLboolean invert);
+  void scissor(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
 
-  // Modified: void glShaderSource (GLuint shader, GLsizei count, const char** string, const GLint* length);
-  void shaderSource (in nsIWebGLShader shader, in DOMString source);
+  // Modified: void glShaderSource(WebGLuint shader, WebGLsizei count, const char** string, const WebGLint* length);
+  void shaderSource(in nsIWebGLShader shader, in DOMString source);
 
-  void stencilFunc (in GLenum func, in GLint ref, in GLuint mask);
-  void stencilFuncSeparate (in GLenum face, in GLenum func, in GLint ref, in GLuint mask);
-  void stencilMask (in GLuint mask);
-  void stencilMaskSeparate (in GLenum face, in GLuint mask);
-  void stencilOp (in GLenum fail, in GLenum zfail, in GLenum zpass);
-  void stencilOpSeparate (in GLenum face, in GLenum fail, in GLenum zfail, in GLenum zpass);
+  void stencilFunc(in WebGLenum func, in WebGLint ref, in WebGLuint mask);
+  void stencilFuncSeparate(in WebGLenum face, in WebGLenum func, in WebGLint ref, in WebGLuint mask);
+  void stencilMask(in WebGLuint mask);
+  void stencilMaskSeparate(in WebGLenum face, in WebGLuint mask);
+  void stencilOp(in WebGLenum fail, in WebGLenum zfail, in WebGLenum zpass);
+  void stencilOpSeparate(in WebGLenum face, in WebGLenum fail, in WebGLenum zfail, in WebGLenum zpass);
 
   void texImage2D([optional] in long dummy);
-  [noscript] void texImage2D_buf (in GLenum target, in GLint level, in GLenum internalformat,
-                                  in GLsizei width, in GLsizei height,
-                                  in GLint border, in GLenum format, in GLenum type, in WebGLArrayBufferPtr pixels);
-  [noscript] void texImage2D_array (in GLenum target, in GLint level, in GLenum internalformat,
-                                    in GLsizei width, in GLsizei height,
-                                    in GLint border, in GLenum format, in GLenum type, in WebGLArrayPtr pixels);
+  [noscript] void texImage2D_buf(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+                                 in WebGLsizei width, in WebGLsizei height,
+                                 in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+  [noscript] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+                                   in WebGLsizei width, in WebGLsizei height,
+                                   in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
-  [noscript] void texImage2D_dom (in GLenum target, in GLint level, in nsIDOMElement element,
-                                  [optional] in GLboolean premultiply, [optional] in GLboolean asPremultipliedAlpha);
+  [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in nsIDOMElement element,
+                                 [optional] in WebGLboolean premultiply, [optional] in WebGLboolean asPremultipliedAlpha);
 
 
   void texSubImage2D([optional] in long dummy);
-  [noscript] void texSubImage2D_buf (in GLenum target, in GLint level,
-                                     in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height,
-                                     in GLenum format, in GLenum type, in WebGLArrayBufferPtr pixels);
-  [noscript] void texSubImage2D_array (in GLenum target, in GLint level,
-                                       in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height,
-                                       in GLenum format, in GLenum type, in WebGLArrayPtr pixels);
+  [noscript] void texSubImage2D_buf(in WebGLenum target, in WebGLint level,
+                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
+                                    in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+  [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
+                                      in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
+                                      in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
-  [noscript] void texSubImage2D_dom (in GLenum target, in GLint level,
-                                     in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height,
-                                     in nsIDOMElement element,
-                                     [optional] in GLboolean premultiply, [optional] in GLboolean asPremultipliedAlpha);
+  [noscript] void texSubImage2D_dom(in WebGLenum target, in WebGLint level,
+                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
+                                    in nsIDOMElement element,
+                                    [optional] in WebGLboolean premultiply, [optional] in WebGLboolean asPremultipliedAlpha);
 
   // Modified: This replaces glTexParameterf, glTexParameterfv, glTexParameteri and glTexParameteriv
-  void texParameterf (in GLenum target, in GLenum pname, in GLfloat param);
-  void texParameteri (in GLenum target, in GLenum pname, in GLint param);
-  //void glTexParameter (in GLenum target, in GLenum pname, in nsIWebGLArray params);
+  void texParameterf(in WebGLenum target, in WebGLenum pname, in WebGLfloat param);
+  void texParameteri(in WebGLenum target, in WebGLenum pname, in WebGLint param);
+  //void glTexParameter(in WebGLenum target, in WebGLenum pname, in nsIWebGLArray params);
 
   // Modified: All the glUniform*v forms below are modified by replacing 'count' and 'v' with a nsIWebGLArray
-  void uniform1f (in GLint location, in GLfloat x);
-  void uniform1i (in GLint location, in GLint x);
-  void uniform2f (in GLint location, in GLfloat x, in GLfloat y);
-  void uniform2i (in GLint location, in GLint x, in GLint y);
-  void uniform3f (in GLint location, in GLfloat x, in GLfloat y, in GLfloat z);
-  void uniform3i (in GLint location, in GLint x, in GLint y, in GLint z);
-  void uniform4f (in GLint location, in GLfloat x, in GLfloat y, in GLfloat z, in GLfloat w);
-  void uniform4i (in GLint location, in GLint x, in GLint y, in GLint z, in GLint w);
+  void uniform1f (in nsIWebGLUniformLocation location, in WebGLfloat x);
+  void uniform1i (in nsIWebGLUniformLocation location, in WebGLint x);
+  void uniform2f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y);
+  void uniform2i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y);
+  void uniform3f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z);
+  void uniform3i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y, in WebGLint z);
+  void uniform4f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z, in WebGLfloat w);
+  void uniform4i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y, in WebGLint z, in WebGLint w);
 
-  void uniform1fv ([optional] in long dummy);
-  void uniform1iv ([optional] in long dummy);
-  void uniform2fv ([optional] in long dummy);
-  void uniform2iv ([optional] in long dummy);
-  void uniform3fv ([optional] in long dummy);
-  void uniform3iv ([optional] in long dummy);
-  void uniform4fv ([optional] in long dummy);
-  void uniform4iv ([optional] in long dummy);
+  void uniform1fv([optional] in long dummy);
+  void uniform1iv([optional] in long dummy);
+  void uniform2fv([optional] in long dummy);
+  void uniform2iv([optional] in long dummy);
+  void uniform3fv([optional] in long dummy);
+  void uniform3iv([optional] in long dummy);
+  void uniform4fv([optional] in long dummy);
+  void uniform4iv([optional] in long dummy);
 
-  [noscript] void uniform1fv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform1iv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform2fv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform2iv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform3fv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform3iv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform4fv_array (in GLint location, in WebGLArrayPtr v);
-  [noscript] void uniform4iv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform1fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform1iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform2fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform2iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform3fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform3iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform4fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform4iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
 
   // Modified. These are modified by replacing 'count' and 'value' with a WebGLArrayPtr
-  void uniformMatrix2fv ([optional] in long dummy);
-  void uniformMatrix3fv ([optional] in long dummy);
-  void uniformMatrix4fv ([optional] in long dummy);
+  void uniformMatrix2fv([optional] in long dummy);
+  void uniformMatrix3fv([optional] in long dummy);
+  void uniformMatrix4fv([optional] in long dummy);
 
-  [noscript] void uniformMatrix2fv_array (in GLint location, in GLboolean transpose, in WebGLArrayPtr value);
-  [noscript] void uniformMatrix3fv_array (in GLint location, in GLboolean transpose, in WebGLArrayPtr value);
-  [noscript] void uniformMatrix4fv_array (in GLint location, in GLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix2fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix3fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix4fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
 
   // Added API using top entry from the passed nsIWebGLMatrixStack
-  //ZZ void glUniformMatrix (in GLint location, in GLboolean transpose, in nsIWebGLMatrixStack value);
+  //ZZ void glUniformMatrix(in WebGLint location, in WebGLboolean transpose, in nsIWebGLMatrixStack value);
 
-  void useProgram (in nsIWebGLProgram program);
-  void validateProgram (in nsIWebGLProgram program);
+  void useProgram(in nsIWebGLProgram program);
+  void validateProgram(in nsIWebGLProgram program);
 
   // Modified: All the glVertexAttrib*v forms below are modified by replacing 'values' with a WebGLArrayPtr
-  void vertexAttrib1f (in GLuint indx, in GLfloat x);
-  void vertexAttrib2f (in GLuint indx, in GLfloat x, in GLfloat y);
-  void vertexAttrib3f (in GLuint indx, in GLfloat x, in GLfloat y, in GLfloat z);
-  void vertexAttrib4f (in GLuint indx, in GLfloat x, in GLfloat y, in GLfloat z, in GLfloat w);
+  void vertexAttrib1f(in WebGLuint indx, in WebGLfloat x);
+  void vertexAttrib2f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y);
+  void vertexAttrib3f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z);
+  void vertexAttrib4f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z, in WebGLfloat w);
 
-  void vertexAttrib1fv ([optional] in long dummy);
-  void vertexAttrib2fv ([optional] in long dummy);
-  void vertexAttrib3fv ([optional] in long dummy);
-  void vertexAttrib4fv ([optional] in long dummy);
+  void vertexAttrib1fv([optional] in long dummy);
+  void vertexAttrib2fv([optional] in long dummy);
+  void vertexAttrib3fv([optional] in long dummy);
+  void vertexAttrib4fv([optional] in long dummy);
 
-  [noscript] void vertexAttrib1fv_array (in GLuint indx, in WebGLArrayPtr values);
-  [noscript] void vertexAttrib2fv_array (in GLuint indx, in WebGLArrayPtr values);
-  [noscript] void vertexAttrib3fv_array (in GLuint indx, in WebGLArrayPtr values);
-  [noscript] void vertexAttrib4fv_array (in GLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib1fv_array(in WebGLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib2fv_array(in WebGLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib3fv_array(in WebGLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib4fv_array(in WebGLuint indx, in WebGLArrayPtr values);
 
   // size is number of elements per attrib; offset, stride are in bytes
-  void vertexAttribPointer (in GLuint idx, in GLint size, in GLenum type, in GLboolean normalized, in GLuint stride, in GLuint offset);
+  void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLuint stride, in WebGLuint offset);
 
-  void viewport (in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+  void viewport(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
 };

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495319
+-->
+
+<head>
+  <title>Bug 495319 - playing back small audio files should fire timeupdate</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495319">Mozilla Bug 495319</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var videos = [];
+
+function timeupdate(e) {
+  e.target._timeupdateCount++;
+}
+
+function ended(e) {
+  var v = e.target;
+  ok(v._timeupdateCount > 0, v._name + " - should see at least one timeupdate: " + v.currentTime);
+  e.target._finished = true;
+  if (AllFinished(videos))
+    SimpleTest.finish();
+}
+
+for (var i=0; i<gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  if (!v.canPlayType(test.type))
+    continue;
+  v.src = test.name;
+  v._name = test.name;
+  v._timeupdateCount = 0;
+  v._finished = false;
+  v.autoplay = true;
+  v.addEventListener("ended", ended, false);
+  v.addEventListener("timeupdate", timeupdate, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
+</script>
+</pre>
+</body>
+</html>

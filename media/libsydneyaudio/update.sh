@@ -16,3 +16,4 @@ patch -p3 <bug526411_latency.patch
 patch -p3 <sydney_aix.patch
 patch -p3 <bug562488_oss_destroy_crash.patch
 patch -p3 <bug564734-win32-drain.patch
+patch -p3 <sydney_android.patch

@@ -75,10 +75,21 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
-NS_IMPL_ISUPPORTS3(mozHunspell,
-                   mozISpellCheckingEngine,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(mozHunspell)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(mozHunspell)
+
+NS_INTERFACE_MAP_BEGIN(mozHunspell)
+  NS_INTERFACE_MAP_ENTRY(mozISpellCheckingEngine)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozISpellCheckingEngine)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozHunspell)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_3(mozHunspell,
+                           mPersonalDictionary,
+                           mEncoder,
+                           mDecoder)
 
 nsresult
 mozHunspell::Init()

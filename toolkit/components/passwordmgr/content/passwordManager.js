@@ -370,3 +370,21 @@ function _filterPasswords()
 
   document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsSpielFiltered");
 }
+
+function CopyPassword() {
+  // Copy selected signon's password to clipboard
+  var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
+                  getService(Components.interfaces.nsIClipboardHelper);
+  var row = document.getElementById("signonsTree").currentIndex;
+  var password = signonsTreeView.getCellText(row, {id : "passwordCol" });
+  clipboard.copyString(password);
+}
+
+function UpdateCopyPassword() {
+  var singleSelection = (signonsTreeView.selection.count == 1);
+  var menuitem = document.getElementById("context-copypassword");
+  if (singleSelection)
+    menuitem.removeAttribute("disabled");
+  else
+    menuitem.setAttribute("disabled", "true");
+}

@@ -61,7 +61,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
   nsIDOMNode fixupNode(in nsIDOMNode aNode, out boolean aSerializeCloneKids);
 };
 
-[scriptable, uuid(196a3aee-006e-4f8f-a420-e1c1b0958a26)]
+[scriptable, uuid(794a81f6-bde6-4f76-9f5e-0ea0911a2d9f)]
 interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
@@ -214,7 +214,7 @@ interface nsIDocumentEncoder : nsISupports
    * This flag suppresses that behavior.
    */
   const unsigned long OutputDontRewriteEncodingDeclaration = (1 << 18);
-  
+ 
   /**
    * When using the HTML or XHTML serializer, skip elements that are not
    * visible when this flag is set.  Elements are not visible when they
@@ -222,6 +222,13 @@ interface nsIDocumentEncoder : nsISupports
    */
   const unsigned long SkipInvisibleContent = (1 << 19);
   
+  /**
+   * Output for delsp=yes (RFC 3676). This is used with OutputFormatFlowed
+   * when converting to text for mail sending.
+   * PlainText output only.
+   */
+  const unsigned long OutputFormatDelSp  = (1 << 20);
+ 
   /**
    * Initialize with a pointer to the document and the mime type.
    * @param aDocument Document to encode.

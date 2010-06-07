@@ -49,7 +49,7 @@ function testPaste(name, element, expected) {
 
 SimpleTest.waitForExplicitFinish();
 
-addLoadEvent(function() {
+SimpleTest.waitForFocus(function() {
 setTimeout(function() {
 var testString = "\n  hello hello  \n  world\nworld  \n";
 var expectedResults = {
@@ -68,15 +68,21 @@ var expectedResults = {
 };
 
 // Put a multi-line string in the clipboard
-var clip = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                     .getService(Components.interfaces.nsIClipboardHelper);
-clip.copyString(testString);
+SimpleTest.waitForClipboard(testString, function() {
+  var clip = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                       .getService(Components.interfaces.nsIClipboardHelper);
+  clip.copyString(testString);
+}, function() {
+  for (let [item, expected] in Iterator(expectedResults)) {
+     testPaste(item, $(item), expected);
+  }
 
-for (let [item, expected] in Iterator(expectedResults)) {
-   testPaste(item, $(item), expected);
-}
+  SimpleTest.finish();
+}, function() {
+  ok(false, "Could not copy the string to clipboard, giving up");
 
-SimpleTest.finish();
+  SimpleTest.finish();
+});
 }, 0);
 });
 

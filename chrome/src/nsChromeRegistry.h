@@ -137,6 +137,99 @@ protected:
     CONTENT_ACCESSIBLE = 1 << 2
   };
 
+  class nsProviderArray
+  {
+  public:
+    nsProviderArray() :
+      mArray(1) { }
+    ~nsProviderArray()
+      { Clear(); }
+
+    // When looking up locales and skins, the "selected" locale is not always
+    // available. This enum identifies what kind of match is desired/found.
+    enum MatchType {
+      EXACT = 0,
+      LOCALE = 1, // "en-GB" is selected, we found "en-US"
+      ANY = 2
+    };
+
+    nsIURI* GetBase(const nsACString& aPreferred, MatchType aType);
+    const nsACString& GetSelected(const nsACString& aPreferred, MatchType aType);
+    void    SetBase(const nsACString& aProvider, nsIURI* base);
+    void    EnumerateToArray(nsTArray<nsCString> *a);
+    void    Clear();
+
+  private:
+    ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
+
+    nsVoidArray mArray;
+  };
+
+  struct PackageEntry : public PLDHashEntryHdr
+  {
+    PackageEntry(const nsACString& package);
+    ~PackageEntry() { }
+
+    // Available flags
+    enum {
+      // This is a "platform" package (e.g. chrome://global-platform/).
+      // Appends one of win/ unix/ mac/ to the base URI.
+      PLATFORM_PACKAGE = 1 << 0,
+
+      // Content script may access files in this package
+      CONTENT_ACCESSIBLE = 1 << 1
+    };
+
+    nsCString        package;
+    nsCOMPtr<nsIURI> baseURI;
+    PRUint32         flags;
+    nsProviderArray  locales;
+    nsProviderArray  skins;
+  };
+
+private:
+  static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
+  static PRBool        MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
+                                const void *key);
+  static void          ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
+  static PRBool        InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                                 const void *key);
+
+  static const PLDHashTableOps kTableOps;
+
+public:
+  class OverlayListEntry : public nsURIHashKey
+  {
+  public:
+    typedef nsURIHashKey::KeyType        KeyType;
+    typedef nsURIHashKey::KeyTypePointer KeyTypePointer;
+
+    OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
+    OverlayListEntry(OverlayListEntry& toCopy) : nsURIHashKey(toCopy),
+                                                 mArray(toCopy.mArray) { }
+    ~OverlayListEntry() { }
+
+    void AddURI(nsIURI* aURI);
+
+    nsCOMArray<nsIURI> mArray;
+  };
+
+  class OverlayListHash
+  {
+  public:
+    OverlayListHash() { }
+    ~OverlayListHash() { }
+
+    PRBool Init() { return mTable.Init(); }
+    void Add(nsIURI* aBase, nsIURI* aOverlay);
+    void Clear() { mTable.Clear(); }
+    const nsCOMArray<nsIURI>* GetArray(nsIURI* aBase);
+
+  private:
+    nsTHashtable<OverlayListEntry> mTable;
+  };
+
+private:
   PRBool mInitialized;
 
   // "Override" table (chrome URI string -> real URI)

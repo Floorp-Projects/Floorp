@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#if defined(_WIN32) && defined(_M_IX86)
+#if defined(_WIN32) && (defined(_M_IX86) || defined(_M_X64))
 // This is the .cpp file where the globals live
 #define DHW_IMPLEMENT_GLOBALS
 #include <stdio.h>
@@ -49,7 +49,7 @@
 #include "nscore.h"
 #include "nsDebugHelpWin32.h"
 #else
-#error "nsDebugHelpWin32.cpp should only be built in Win32 x86 builds"
+#error "nsDebugHelpWin32.cpp should only be built in Win32 x86/x64 builds"
 #endif
 
 
@@ -84,7 +84,11 @@ dhwEnsureImageHlpInitialized()
     dhw##name_ = (typename_) ::GetProcAddress(module, #name_); \
     if(!dhw##name_) return PR_FALSE;
 
+#ifdef _WIN64
+    INIT_PROC(ENUMERATELOADEDMODULES64, EnumerateLoadedModules64);
+#else
     INIT_PROC(ENUMERATELOADEDMODULES, EnumerateLoadedModules);
+#endif
     INIT_PROC(IMAGEDIRECTORYENTRYTODATA, ImageDirectoryEntryToData);
 
 #undef INIT_PROC
@@ -208,10 +212,17 @@ DHWImportHooker::~DHWImportHooker()
         PR_Unlock(gLock);
 }    
 
+#ifdef _WIN64
+static BOOL CALLBACK ModuleEnumCallback(PCSTR ModuleName,
+                                        DWORD64 ModuleBase,
+                                        ULONG ModuleSize,
+                                        PVOID UserContext)
+#else
 static BOOL CALLBACK ModuleEnumCallback(PCSTR ModuleName,
                                         ULONG ModuleBase,
                                         ULONG ModuleSize,
                                         PVOID UserContext)
+#endif
 {
     //printf("Module Name %s\n",ModuleName);
     DHWImportHooker* self = (DHWImportHooker*) UserContext;
@@ -226,8 +237,13 @@ DHWImportHooker::PatchAllModules()
     // constness of the first parameter of PENUMLOADED_MODULES_CALLBACK
     // varies over SDK versions (from non-const to const over time).
     // See bug 391848 and bug 415426.
+#ifdef _WIN64
+    return dhwEnumerateLoadedModules64(::GetCurrentProcess(),
+               (PENUMLOADED_MODULES_CALLBACK64)ModuleEnumCallback, this);
+#else
     return dhwEnumerateLoadedModules(::GetCurrentProcess(), 
                (PENUMLOADED_MODULES_CALLBACK)ModuleEnumCallback, this);
+#endif
 }    
                                 
 PRBool 

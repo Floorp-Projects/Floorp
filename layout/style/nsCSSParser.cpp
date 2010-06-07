@@ -302,7 +302,6 @@ protected:
   PRBool CheckEndProperty();
   nsSubstring* NextIdent();
   void SkipUntil(PRUnichar aStopSymbol);
-  void SkipUntilStack(nsAutoTArray<PRUnichar, 16> &aStack);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
   void SkipRuleSet(PRBool aInsideBraces);
   PRBool SkipAtRule();
@@ -818,7 +817,9 @@ CSSParserImpl::Reset()
   NS_ASSERTION(! mScannerInited, "resetting with scanner active");
   SetStyleSheet(nsnull);
   SetQuirkMode(PR_FALSE);
+#ifdef MOZ_SVG
   SetSVGMode(PR_FALSE);
+#endif // MOZ_SVG
   SetChildLoader(nsnull);
 }
 
@@ -1356,28 +1357,9 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
 
   if ((eCSSToken_String != mToken.mType && eCSSToken_URL != mToken.mType) ||
       !ExpectSymbol(')', PR_TRUE)) {
-    // in the failure case, we have to match parentheses, as if this
-    // weren't treated as a URL token by the tokenization
-
-    nsAutoTArray<PRUnichar, 16> stack;
-    stack.AppendElement(')');
-    if (eCSSToken_URL == mToken.mType || eCSSToken_InvalidURL == mToken.mType) {
-      for (PRUint32 i = 0, iEnd = mToken.mIdent.Length(); i < iEnd; ++i) {
-        PRUnichar symbol = mToken.mIdent[i];
-        NS_ASSERTION(symbol != '(' && symbol != ')',
-                     "should not be in eCSSToken_URL");
-        if ('[' == symbol) {
-          stack.AppendElement(']');
-        } else if ('{' == symbol) {
-          stack.AppendElement('}');
-        } else if ((']' == symbol && stack[stack.Length() - 1] == '[') ||
-                   ('}' == symbol && stack[stack.Length() - 1] == '{')) {
-          stack.RemoveElementAt(stack.Length() - 1);
-        }
-      }
-    }
-    SkipUntilStack(stack);
-
+    // in the failure case, we do not have to match parentheses, since
+    // this is now an invalid URL token.
+    SkipUntil(')');
     return PR_FALSE;
   }
 
@@ -1899,7 +1881,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
 PRBool
 CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsCOMPtr<nsMediaList> media = new nsMediaList();
+  nsRefPtr<nsMediaList> media = new nsMediaList();
   if (!media) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -2015,7 +1997,7 @@ CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
 PRBool
 CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsCOMPtr<nsMediaList> media = new nsMediaList();
+  nsRefPtr<nsMediaList> media = new nsMediaList();
   if (!media) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -2273,24 +2255,18 @@ CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
 void
 CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
 {
+  nsCSSToken* tk = &mToken;
   nsAutoTArray<PRUnichar, 16> stack;
   stack.AppendElement(aStopSymbol);
-  SkipUntilStack(stack);
-}
-
-void
-CSSParserImpl::SkipUntilStack(nsAutoTArray<PRUnichar, 16>& aStack)
-{
-  nsCSSToken* tk = &mToken;
   for (;;) {
     if (!GetToken(PR_TRUE)) {
       break;
     }
     if (eCSSToken_Symbol == tk->mType) {
       PRUnichar symbol = tk->mSymbol;
-      PRUint32 stackTopIndex = aStack.Length() - 1;
-      if (symbol == aStack.ElementAt(stackTopIndex)) {
-        aStack.RemoveElementAt(stackTopIndex);
+      PRUint32 stackTopIndex = stack.Length() - 1;
+      if (symbol == stack.ElementAt(stackTopIndex)) {
+        stack.RemoveElementAt(stackTopIndex);
         if (stackTopIndex == 0) {
           break;
         }
@@ -2299,14 +2275,14 @@ CSSParserImpl::SkipUntilStack(nsAutoTArray<PRUnichar, 16>& aStack)
       // highly unlikely we're dealing with a legitimate style sheet
       // anyway.
       } else if ('{' == symbol) {
-        aStack.AppendElement('}');
+        stack.AppendElement('}');
       } else if ('[' == symbol) {
-        aStack.AppendElement(']');
+        stack.AppendElement(']');
       } else if ('(' == symbol) {
-        aStack.AppendElement(')');
+        stack.AppendElement(')');
       }
     } else if (eCSSToken_Function == tk->mType) {
-      aStack.AppendElement(')');
+      stack.AppendElement(')');
     }
   }
 }

@@ -2743,7 +2743,7 @@ MethodWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
 
-    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, rval);
+    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, rval);
 }
 
 /* void lookupMethod (); */
@@ -3219,8 +3219,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
     if(NS_FAILED(rv))
         return NS_ERROR_XPC_UNEXPECTED;
 
-    JSObject *sandbox = JS_NewObjectWithGivenProto(cx, &SandboxClass,
-                                                   nsnull, nsnull);
+    JSObject *sandbox = JS_NewGlobalObject(cx, &SandboxClass);
     if (!sandbox)
         return NS_ERROR_XPC_UNEXPECTED;
     js::AutoValueRooter tvr(cx, sandbox);

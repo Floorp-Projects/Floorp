@@ -9,53 +9,67 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448534
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448535">Mozilla Bug 448534</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var v;
-var played = false;
-var completed = false;
 
-function loaded() {
-  if (completed)
+var videos = [];
+
+function loaded(event) {
+  var v = event.target;
+  if (v._finished)
     return false;
-
-  v = document.getElementById('v');
   v.play();
   return false;
 }
 
-function started() {
-  if (completed)
+function started(event) {
+  var v = event.target;
+  if (v._finished)
     return false;
-  ok(v, "'v' global should be initialized"); 
   ok(!v.paused, "Video should not be paused while playing");
   v.parentNode.removeChild(v);
-  played = true;
+  v._played = true;
   return false;
 }
 
-function stopped() {
-  if (completed)
+function stopped(event) {
+  var v = event.target;
+  if (v._finished)
     return false;
-
-  completed = true;
-  ok(v, "'v' global should be initialized");   
+  v._finished = true;
   ok(v.paused, "Video should be paused after removing from the Document");
-  SimpleTest.finish();
+  if (AllFinished(videos))
+    SimpleTest.finish();
   return false;
 }
 
-SimpleTest.waitForExplicitFinish();
+
+for (var i=0; i<gSmallTests.length; ++i) {
+  var v = document.createElement('video');
+  var test = gSmallTests[i];
+  if (!v.canPlayType(test.type))
+    continue;
+  v.src = test.name;
+  v._played = false;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", loaded, false);
+  v.addEventListener("play", started, false);
+  v.addEventListener("pause", stopped, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
 </script>
 </pre>
-<!-- Ogg video obtained from Theora test suite: http://v2v.cc/~j/theora_testsuite/ -->
-<video id='v' 
-       src='320x240.ogv' 
-       onloadedmetadata='return loaded();'
-       onplay='return started();' 
-       onpause='return stopped();'></video>
 </body>
 </html>

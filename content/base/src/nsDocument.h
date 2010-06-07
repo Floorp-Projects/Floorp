@@ -95,13 +95,7 @@
 #include "nsGkAtoms.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
-
-// Put these here so all document impls get them automatically
-#include "nsHTMLStyleSheet.h"
-#include "nsHTMLCSSStyleSheet.h"
-
 #include "nsStyleSet.h"
-#include "nsXMLEventsManager.h"
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
@@ -135,6 +129,9 @@ struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
 class nsChildContentList;
+class nsXMLEventsManager;
+class nsHTMLStyleSheet;
+class nsHTMLCSSStyleSheet;
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -644,8 +641,6 @@ public:
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
-  virtual nsIScriptGlobalObject*
-    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const;
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
   virtual nsIScriptGlobalObject* GetScopeObject();
@@ -654,6 +649,17 @@ public:
    * Get the script loader for this document
    */
   virtual nsScriptLoader* ScriptLoader();
+
+  /**
+   * Add/Remove an element to the document's id and name hashes
+   */
+  virtual void AddToIdTable(mozilla::dom::Element* aElement, nsIAtom* aId);
+  virtual void RemoveFromIdTable(mozilla::dom::Element* aElement,
+                                 nsIAtom* aId);
+  virtual void AddToNameTable(mozilla::dom::Element* aElement,
+                              nsIAtom* aName);
+  virtual void RemoveFromNameTable(mozilla::dom::Element* aElement,
+                                   nsIAtom* aName);
 
   /**
    * Add a new observer of document change notifications. Whenever
@@ -812,13 +818,6 @@ public:
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
 
-  // nsIMutationObserver
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
-
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
 
@@ -942,17 +941,10 @@ public:
     GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                            const nsAString& aLocalName);
 
-  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId,
-                                                nsresult *aResult);
+  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId);
 
 protected:
   friend class nsNodeUtils;
-  void RegisterNamedItems(nsIContent *aContent);
-  void UnregisterNamedItems(nsIContent *aContent);
-  void UpdateNameTableEntry(Element *aElement);
-  void UpdateIdTableEntry(Element *aElement);
-  void RemoveFromNameTable(Element *aElement);
-  void RemoveFromIdTable(Element *aElement);
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -971,8 +963,8 @@ protected:
                                   nsACString& aCharset);
 
   // Call this before the document does something that will unbind all content.
-  // That will stop us from resolving URIs for all links as they are removed.
-  void DestroyLinkMap();
+  // That will stop us from doing a lot of work as each element is removed.
+  void DestroyElementMaps();
 
   // Refreshes the hrefs of all the links in the document.
   void RefreshLinkHrefs();
@@ -1011,6 +1003,7 @@ protected:
 
   virtual nsPIDOMWindow *GetWindowInternal();
   virtual nsPIDOMWindow *GetInnerWindowInternal();
+  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
@@ -1050,11 +1043,6 @@ protected:
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
 
-  // The document's script global object, the object from which the
-  // document can get its script context and scope. This is the
-  // *inner* window object.
-  nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
-
   // If document is created for example using
   // document.implementation.createDocument(...), mScriptObject points to
   // the script global object of the original document.
@@ -1085,8 +1073,6 @@ protected:
   PRPackedBool mIsGoingAway:1;
   // True if the document is being destroyed.
   PRPackedBool mInDestructor:1;
-  // True if document has ever had script handling object.
-  PRPackedBool mHasHadScriptHandlingObject:1;
 
   // True if this document has ever had an HTML or SVG <title> element
   // bound to it

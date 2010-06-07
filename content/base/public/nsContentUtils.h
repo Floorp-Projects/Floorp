@@ -1351,12 +1351,6 @@ public:
   static PRBool URIIsLocalFile(nsIURI *aURI);
 
   /**
-   * If aContent is an HTML element with a DOM level 0 'name', then
-   * return the name. Otherwise return null.
-   */
-  static nsIAtom* IsNamedItem(Element* aElement);
-
-  /**
    * Get the application manifest URI for this document.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
    * document.
@@ -1620,6 +1614,14 @@ public:
    */
   static already_AddRefed<mozilla::layers::LayerManager>
   LayerManagerForDocument(nsIDocument *aDoc);
+
+  /**
+   * Determine whether a content node is focused or not,
+   *
+   * @param aContent the content node to check
+   * @return true if the content node is focused, false otherwise.
+   */
+  static PRBool IsFocusedContent(nsIContent *aContent);
 
 private:
 

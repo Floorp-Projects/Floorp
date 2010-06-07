@@ -65,12 +65,17 @@ LOCAL_INCLUDES = \
 		$(NULL)
 
 ifdef WINCE_WINDOWS_MOBILE
-CPPSRCS         += WinMobileLocationProvider.cpp
+CPPSRCS         += WinMobileLocationProvider.cpp nsGeoPosition.cpp
 endif
 
 ifdef MOZ_MAEMO_LIBLOCATION
-CPPSRCS         += MaemoLocationProvider.cpp
+CPPSRCS         += MaemoLocationProvider.cpp nsGeoPosition.cpp
 LOCAL_INCLUDES	+= $(MOZ_PLATFORM_MAEMO_CFLAGS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS         += AndroidLocationProvider.cpp nsGeoPosition.cpp
+EXPORTS         += nsGeoPosition.h
 endif
 
 EXTRA_COMPONENTS = \

@@ -9,9 +9,8 @@ function init1()
   targetIframe = document.createElementNS('http://www.w3.org/1999/xhtml', 'iframe');
   targetIframe.src = "data:text/html,";
   targetIframe.setAttribute("style", "width: 300px; height: 200px; border: 1px dotted green;");
+  targetIframe.addEventListener("load", init2, false);
   document.body.appendChild(targetIframe);
-  
-  setTimeout(init2, 100);
 }
 
 
@@ -26,7 +25,7 @@ function init2()
   targetDocument.body.appendChild(targetDocument.adoptNode(div, true));
       
   targetDocument.designMode = 'on';
-  setTimeout(init3, 100);
+  setTimeout(init3, 0);
 }
 
 

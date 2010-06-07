@@ -57,6 +57,7 @@ class nsIURI;
 class nsIFrameFrame;
 class nsIView;
 class nsIInProcessContentFrameMessageManager;
+class AutoResetInShow;
 
 #ifdef MOZ_IPC
 namespace mozilla {
@@ -76,6 +77,8 @@ class QX11EmbedContainer;
 
 class nsFrameLoader : public nsIFrameLoader
 {
+  friend class AutoResetInShow;
+
 protected:
   nsFrameLoader(nsIContent *aOwner) :
     mOwnerContent(aOwner),
@@ -83,7 +86,9 @@ protected:
     mIsTopLevelContent(PR_FALSE),
     mDestroyCalled(PR_FALSE),
     mNeedsAsyncDestroy(PR_FALSE),
-    mInSwap(PR_FALSE)
+    mInSwap(PR_FALSE),
+    mInShow(PR_FALSE),
+    mHideCalled(PR_FALSE)
 #ifdef MOZ_IPC
     , mDelayRemoteDialogs(PR_FALSE)
     , mRemoteWidgetCreated(PR_FALSE)
@@ -120,9 +125,9 @@ public:
    * Called from the layout frame associated with this frame loader;
    * this notifies us to hook up with the widget and view.
    */
-  bool Show(PRInt32 marginWidth, PRInt32 marginHeight,
-            PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
-            nsIFrameFrame* frame);
+  PRBool Show(PRInt32 marginWidth, PRInt32 marginHeight,
+              PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
+              nsIFrameFrame* frame);
 
   /**
    * Called from the layout frame associated with this frame loader, when
@@ -196,6 +201,8 @@ private:
   PRPackedBool mDestroyCalled : 1;
   PRPackedBool mNeedsAsyncDestroy : 1;
   PRPackedBool mInSwap : 1;
+  PRPackedBool mInShow : 1;
+  PRPackedBool mHideCalled : 1;
 
 #ifdef MOZ_IPC
   PRPackedBool mDelayRemoteDialogs : 1;
@@ -211,6 +218,7 @@ private:
   QX11EmbedContainer* mRemoteSocket;
 #endif
 #endif
+
 };
 
 #endif

@@ -355,7 +355,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     nsAutoPtr<SoundData> sound(mReader->mAudioQueue.PopFront());
     {
       MonitorAutoEnter mon(mDecoder->GetMonitor());
-      NS_ASSERTION(IsPlaying(), "Should be playing");
+      NS_WARN_IF_FALSE(IsPlaying(), "Should be playing");
       // Awaken the decode loop if it's waiting for space to free up in the
       // audio queue.
       mDecoder->GetMonitor().NotifyAll();

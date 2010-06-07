@@ -350,6 +350,83 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     }
 };
 
+SimpleTest.waitForClipboard_polls = 0;
+
+/*
+ * Polls the clipboard waiting for the expected value. A known value different than
+ * the expected value is put on the clipboard first (and also polled for) so we
+ * can be sure the value we get isn't just the expected value because it was already
+ * on the clipboard. This only uses the global clipboard and only for text/unicode
+ * values.
+ *
+ * @param aExpectedVal
+ *        The string value that is expected to be on the clipboard
+ * @param aSetupFn
+ *        A function responsible for setting the clipboard to the expected value,
+ *        called after the known value setting succeeds.
+ * @param aSuccessFn
+ *        A function called when the expected value is found on the clipboard.
+ * @param aFailureFn
+ *        A function called if the expected value isn't found on the clipboard
+ *        within 5s. It can also be called if the known value can't be found.
+ */
+SimpleTest.waitForClipboard = function(aExpectedVal, aSetupFn, aSuccessFn, aFailureFn) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var cbSvc = Components.classes["@mozilla.org/widget/clipboard;1"].
+                getService(Components.interfaces.nsIClipboard);
+
+    // reset for the next use
+    function reset() {
+        SimpleTest.waitForClipboard_polls = 0;
+    }
+
+    function wait(expectedVal, successFn, failureFn) {
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        if (++SimpleTest.waitForClipboard_polls > 50) {
+            // Log the failure.
+            SimpleTest.ok(false, "Timed out while polling clipboard for pasted data. " +
+                                 "Expected " + expectedVal);
+            reset();
+            failureFn();
+            return;
+        }
+
+        var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
+                       createInstance(Components.interfaces.nsITransferable);
+        xferable.addDataFlavor("text/unicode");
+        cbSvc.getData(xferable, cbSvc.kGlobalClipboard);
+        var data = {};
+        try {
+            xferable.getTransferData("text/unicode", data, {});
+            data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+        } catch (e) {}
+
+        if (data == expectedVal) {
+            // Don't show the success message when waiting for preExpectedVal
+            if (data != preExpectedVal)
+                SimpleTest.ok(true,
+                              "Clipboard has the correct value (" + expectedVal + ")");
+            reset();
+            successFn();
+        } else {
+            setTimeout(function() wait(expectedVal, successFn, failureFn), 100);
+        }
+    }
+
+    // First we wait for a known value != aExpectedVal
+    var preExpectedVal = aExpectedVal + "-waitForClipboard-known-value";
+    var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
+                      getService(Components.interfaces.nsIClipboardHelper);
+    cbHelperSvc.copyString(preExpectedVal);
+    wait(preExpectedVal, function() {
+        // Call the original setup fn
+        aSetupFn();
+        wait(aExpectedVal, aSuccessFn, aFailureFn);
+    }, aFailureFn);
+}
+
 /**
  * Executes a function shortly after the call, but lets the caller continue
  * working (or finish).

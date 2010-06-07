@@ -74,7 +74,9 @@ function test()
     '</body>\n' +
     '</html>\n';
 
-  options('relimit');
+  if (!options().match(/relimit/)) {
+    options('relimit');
+  }
 
   try
   {

@@ -926,8 +926,9 @@ JS_InitCTypesClass(JSContext* cx, JSObject* global)
     return false;
 
   if (!JS_DefineProperty(cx, global, "ctypes", OBJECT_TO_JSVAL(ctypes),
-         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+                         JS_PropertyStub, JS_PropertyStub, JSPROP_READONLY | JSPROP_PERMANENT)) {
     return false;
+  }
 
   if (!InitTypeClasses(cx, ctypes))
     return false;

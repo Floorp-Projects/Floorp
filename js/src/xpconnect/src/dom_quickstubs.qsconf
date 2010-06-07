@@ -493,6 +493,7 @@ irregularFilenames = {
     'nsIWebGLFramebuffer': 'nsICanvasRenderingContextWebGL',
     'nsIWebGLRenderbuffer': 'nsICanvasRenderingContextWebGL',
     'nsIWebGLActiveInfo': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLUniformLocation': 'nsICanvasRenderingContextWebGL',
     }
 
 customIncludes = [
@@ -501,8 +502,11 @@ customIncludes = [
     'nsIDocument.h',
     'nsINodeList.h',
     'nsCSSPropertiesQS.h',
+    'nsDocument.h',
     'nsGenericDOMDataNode.h',
     'nsGenericElement.h',
+    'nsGenericHTMLElement.h',
+    'nsHTMLDocument.h',
     'nsDOMQS.h',
     ]
 
@@ -565,12 +569,12 @@ CUSTOM_QS_TN = {
 customMethodCalls = {
     'nsIDOMNode_GetNextSibling': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetSibling(1);',
+        'code': '    nsINode *result = self->GetNextSibling();',
         'canFail': False
         },
     'nsIDOMNode_GetFirstChild': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetChildAt(0);',
+        'code': '    nsINode *result = self->GetFirstChild();',
         'canFail': False
         },
     'nsIDOMNode_GetChildNodes': {
@@ -579,7 +583,7 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetPreviousSibling': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetSibling(-1);',
+        'code': '    nsINode *result = self->GetPreviousSibling();',
         'canFail': False
         },
     'nsIDOMNode_GetLastChild': {
@@ -626,16 +630,38 @@ customMethodCalls = {
                 '    if(NS_FAILED(rv))\n'
                 '        result = nsnull;'
         },
+    'nsIDOMNode_GetNodeType': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
     'nsIDOMNodeList_Item': {
         'thisType': 'nsINodeList',
         'code': '    nsINode *result = self->GetNodeAt(arg0);',
         'canFail': False
         },
+    'nsIDOMHTMLDocument_': {
+        'thisType': 'nsHTMLDocument'
+        },
     'nsIDOMHTMLDocument_Write': {
+        'thisType': 'nsHTMLDocument',
         'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write'
         },
     'nsIDOMHTMLDocument_Writeln': {
+        'thisType': 'nsHTMLDocument',
         'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln'
+        },
+    'nsIDOMHTMLDocument_GetBody': {
+        'thisType': 'nsHTMLDocument',
+        'code': '    nsIContent *result = self->GetBody(&rv);'
+        },
+    'nsIDOMHTMLDocument_GetElementsByName': {
+        'thisType': 'nsHTMLDocument',
+        'code': '    nsRefPtr<nsContentList> result = '
+                'self->GetElementsByName(arg0);',
+        'canFail': False
+        },
+    'nsIDOMNSHTMLDocument_': {
+        'thisType': 'nsHTMLDocument'
         },
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
@@ -646,13 +672,7 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCSS2Properties_': CSS2Properties_,
     'nsIDOMNSCSS2Properties_': CSS2Properties_,
-    'nsIDOMNSElement_GetClientRects': {
-        'thisType': 'nsGenericElement'
-        },
-    'nsIDOMNSElement_GetBoundingClientRect': {
-        'thisType': 'nsGenericElement'
-        },
-    'nsIDOMNSElement_GetElementsByClassName': {
+    'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
     'nsIDOMNSElement_GetScrollWidth': {
@@ -693,6 +713,9 @@ customMethodCalls = {
         'code': '    PRBool result = self->MozMatchesSelector(arg0);',
         'canFail': False
         },
+    'nsIDOM3Text_': {
+        'thisType': 'nsGenericTextNode'
+        },
     'nsIDOM3Text_IsElementContentWhitespace': {
         'thisType': 'nsGenericTextNode',
         'code': '    PRBool result = self->IsElementContentWhitespace();',
@@ -702,9 +725,6 @@ customMethodCalls = {
         'thisType': 'nsGenericTextNode',
         'code': '    nsIContent* result = '
                 'self->ReplaceWholeText(PromiseFlatString(arg0), &rv);'
-        },
-    'nsIDOM3Text_WholeText': {
-        'thisType': 'nsGenericTextNode'
         },
     'nsIDOMNodeSelector_QuerySelector': {
         'thisType': 'nsINode',
@@ -717,6 +737,9 @@ customMethodCalls = {
                 '    rv = nsGenericElement::doQuerySelectorAll(self, '
                 'arg0, getter_AddRefs(result));'
         },
+    'nsIDOM3Node_': {
+        'thisType': 'nsINode'
+        },
     'nsIDOM3Node_GetBaseURI': {
         'thisType': 'nsINode',
         'canFail': False
@@ -728,9 +751,6 @@ customMethodCalls = {
     'nsIDOM3Node_GetTextContent': {
         'thisType': 'nsINode',
         'canFail': False
-        },
-    'nsIDOM3Node_SetTextContent': {
-        'thisType': 'nsINode'
         },
     'nsIDOM3Node_IsSameNode': {
         'thisType': 'nsINode',
@@ -757,16 +777,42 @@ customMethodCalls = {
         'code': '    PRBool result = self->IsEqualNode(arg0);',
         'canFail': False
         },
-    'nsIDOM3Node_GetFeature': {
-        'thisType': 'nsINode'
-        },
     'nsIDOM3Node_GetUserData': {
         'thisType': 'nsINode',
         'code': '    nsIVariant *result = self->GetUserData(arg0);',
         'canFail': False
         },
-    'nsIDOM3Node_SetUserData': {
-        'thisType': 'nsINode'
+    'nsIDOMNSHTMLElement_': {
+        'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMDocument_': {
+        'thisType': 'nsDocument'
+        },
+    'nsIDOMDocument_GetElementById': {
+        'thisType': 'nsDocument',
+        'code': '    mozilla::dom::Element *result = self->GetElementById(arg0);',
+        'canFail': False
+        },
+    'nsIDOMDocument_GetElementsByTagName': {
+        'thisType': 'nsDocument',
+        'code': '    nsRefPtr<nsContentList> result ='
+                'self->GetElementsByTagName(arg0);',
+        'canFail': False
+        },
+    'nsIDOMDocument_GetElementsByTagNameNS': {
+        'thisType': 'nsDocument',
+        'code': '    nsRefPtr<nsContentList> result ='
+                'self->GetElementsByTagNameNS(arg0, arg1);',
+        'canFail': False
+        },
+    'nsIDOMNSDocument_': {
+        'thisType': 'nsDocument'
+        },
+    'nsIDOM3Document_': {
+        'thisType': 'nsDocument'
+        },
+    'nsIDOMElement_': {
+        'thisType': 'nsGenericElement'
         },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,

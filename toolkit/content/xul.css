@@ -253,6 +253,18 @@ toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
 }
 
+toolbox[customizing="true"] > toolbar[customizable="true"][collapsed="true"] {
+  /* Some apps, e.g. Firefox, use 'collapsed' to hide toolbars.
+     Override it while customizing. */
+  visibility: visible;
+}
+
+toolbox[customizing="true"] > toolbar[customizable="true"][hidden="true"] {
+  /* Some apps, e.g. SeaMonkey, use 'hidden' to hide toolbars.
+     Override it while customizing. */
+  display: -moz-box;
+}
+
 %ifdef XP_MACOSX
 toolbar[type="menubar"] {
   min-height: 0 !important;
@@ -266,7 +278,8 @@ toolbar[type="menubar"][autohide="true"] {
   overflow: hidden;
 }
 
-toolbar[type="menubar"][autohide="true"][inactive="true"] {
+toolbar[type="menubar"][autohide="true"][inactive="true"]:not([customizable="true"]),
+toolbox:not([customizing="true"]) > toolbar[type="menubar"][autohide="true"][inactive="true"][customizable="true"] {
   min-height: 0 !important;
   height: 0 !important;
   -moz-appearance: none !important;

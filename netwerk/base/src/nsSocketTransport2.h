@@ -272,6 +272,9 @@ private:
     // socket timeouts are not protected by any lock.
     PRUint16 mTimeouts[2];
 
+    // QoS setting for socket
+    PRUint8 mQoSBits;
+
     //
     // mFD access methods: called with mLock held.
     //

@@ -52,6 +52,7 @@
 #endif
 
 #include "prmem.h"
+#include "prenv.h"
 
 #include "nsIServiceManager.h"
 
@@ -1052,8 +1053,12 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
         gfxASurface::gfxImageFormat format = GetImageFormat();
 
-        surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
-            (gfxIntSize(width, height), format);
+        if (PR_GetEnv("MOZ_CANVAS_IMAGE_SURFACE")) {
+            surface = new gfxImageSurface(gfxIntSize(width, height), format);
+        } else {
+            surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
+                (gfxIntSize(width, height), format);
+        }
 
         if (surface && surface->CairoStatus() != 0)
             surface = NULL;

@@ -65,7 +65,6 @@
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIPresShell.h"
-#include "nsIViewManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
@@ -134,7 +133,6 @@ extern nsIParserService *sParserService;
 nsEditor::nsEditor()
 :  mModCount(0)
 ,  mPresShellWeak(nsnull)
-,  mViewManager(nsnull)
 ,  mUpdateCount(0)
 ,  mSpellcheckCheckboxState(eTriUnset)
 ,  mPlaceHolderTxn(nsnull)
@@ -166,8 +164,6 @@ nsEditor::~nsEditor()
   mTxnMgr = nsnull;
 
   delete mPhonetic;
- 
-  NS_IF_RELEASE(mViewManager);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEditor)
@@ -245,15 +241,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
   document->AddMutationObserver(this);
 
-  // Set up the DTD
-  // XXX - in the long run we want to get this from the document, but there
-  // is no way to do that right now.  So we leave it null here and set
-  // up a nav html dtd in nsHTMLEditor::Init
-
-  mViewManager = ps->GetViewManager();
-  if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
-  NS_ADDREF(mViewManager);
-
   mUpdateCount=0;
 
   /* initialize IME stuff */
@@ -280,6 +267,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 #endif
 
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
+
+  // Make sure that the editor will be destroyed properly
+  mDidPreDestroy = PR_FALSE;
 
   return NS_OK;
 }
@@ -318,7 +308,9 @@ nsEditor::PostCreate()
 nsresult
 nsEditor::CreateEventListeners()
 {
-  NS_ENSURE_TRUE(!mEventListener, NS_ERROR_ALREADY_INITIALIZED);
+  // Don't create the handler twice
+  if (mEventListener)
+    return NS_OK;
   mEventListener = do_QueryInterface(
     static_cast<nsIDOMKeyListener*>(new nsEditorEventListener()));
   NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
@@ -458,14 +450,16 @@ nsEditor::SetFlags(PRUint32 aFlags)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Might be changing editable state, so, we need to reset current IME state
-  // if we're focused.
+  // if we're focused and the flag change causes IME state change.
   if (HasFocus()) {
     // Use "enable" for the default value because if IME is disabled
     // unexpectedly, it makes serious a11y problem.
     PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
     rv = GetPreferredIMEState(&newState);
     if (NS_SUCCEEDED(rv)) {
-      nsIMEStateManager::ChangeIMEStateTo(newState);
+      // NOTE: When the enabled state isn't going to be modified, this method
+      // is going to do nothing.
+      nsIMEStateManager::UpdateIMEState(newState);
     }
   }
 
@@ -4175,7 +4169,14 @@ nsresult nsEditor::BeginUpdateViewBatch()
     }
 
     // Turn off view updating.
-    mBatch.BeginUpdateViewBatch(mViewManager);
+    nsCOMPtr<nsIPresShell> ps;
+    GetPresShell(getter_AddRefs(ps));
+    if (ps) {
+      nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
+      if (viewManager) {
+        mBatch.BeginUpdateViewBatch(viewManager);
+      }
+    }
   }
 
   mUpdateCount++;
@@ -4217,7 +4218,10 @@ nsresult nsEditor::EndUpdateViewBatch()
     GetFlags(&flags);
 
     // Turn view updating back on.
-    if (mViewManager)
+    nsCOMPtr<nsIViewManager> viewManager;
+    if (presShell)
+      viewManager = presShell->GetViewManager();
+    if (viewManager)
     {
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
