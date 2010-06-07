@@ -610,7 +610,7 @@ static jsrefcount destroyChunkCount = 0;
 inline void *
 GetGCChunk(JSRuntime *rt)
 {
-    void *p = AllocGCChunk();
+    void *p = rt->gcChunkAllocator->alloc();
 #ifdef MOZ_GCTIMER
     if (p)
         JS_ATOMIC_INCREMENT(&newChunkCount);
@@ -630,7 +630,7 @@ ReleaseGCChunk(JSRuntime *rt, jsuword chunk)
 #endif
     JS_ASSERT(rt->gcStats.nchunks != 0);
     METER(rt->gcStats.nchunks--);
-    FreeGCChunk(p);
+    rt->gcChunkAllocator->free(p);
 }
 
 static JSGCArena *

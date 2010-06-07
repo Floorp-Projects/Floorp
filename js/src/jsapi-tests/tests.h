@@ -141,7 +141,7 @@ public:
             cx = NULL;
         }
         if (rt) {
-            JS_DestroyRuntime(rt);
+            destroyRuntime();
             rt = NULL;
         }
     }
@@ -212,6 +212,12 @@ public:
 protected:
     virtual JSRuntime * createRuntime() {
         return JS_NewRuntime(8L * 1024 * 1024);
+    }
+
+    virtual void destroyRuntime() {
+        JS_ASSERT(!cx);
+        JS_ASSERT(rt);
+        JS_DestroyRuntime(rt);
     }
 
     static void reportError(JSContext *cx, const char *message, JSErrorReport *report) {

@@ -59,6 +59,7 @@
 #include "jsdhash.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
+#include "jsgcchunk.h"
 #include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsobj.h"
@@ -1271,6 +1272,14 @@ struct JSRuntime {
 #ifdef JS_THREADSAFE
     JSBackgroundThread  gcHelperThread;
 #endif
+
+    js::GCChunkAllocator    *gcChunkAllocator;
+    
+    void setCustomGCChunkAllocator(js::GCChunkAllocator *allocator) {
+        JS_ASSERT(allocator);
+        JS_ASSERT(state == JSRTS_DOWN);
+        gcChunkAllocator = allocator;
+    }
 
     /*
      * The trace operation and its data argument to trace embedding-specific
