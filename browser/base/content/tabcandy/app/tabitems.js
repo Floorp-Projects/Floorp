@@ -145,13 +145,15 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 /*       $container.stop(true, true); */
       $container.css(css);
     } else {
-/*       Utils.log('pause in tab, setBounds'); */
       TabMirror.pausePainting();
-      $container.animate(css, 'animate200', function() {
-/*         Utils.log('resume in tab, setBounds'); */
-        TabMirror.resumePainting();
-      }); // tabcandyBounce
-/*       }).dequeue(); */
+      $container.animate(css, {
+        duration: 200,
+        easing: 'tabcandyBounce',
+        complete: function() {
+          TabMirror.resumePainting();
+        }
+      });
+  /*       }).dequeue(); */
     }
 
     if(css.fontSize && !this.inStack()) {
@@ -282,7 +284,6 @@ window.TabItems = {
       var $div = iQ(mirror.el);
       var $$div = $(mirror.el);
       var tab = mirror.tab;
-/*       Utils.log('mod', tab.url); */
       
       if(window.Groups) {        
         $div.data('isDragging', false);
@@ -384,7 +385,6 @@ window.TabItems = {
         try {
           UI.tabBar.show(false);              
           TabMirror.resumePainting();
-/*           Utils.log('resume in tab, onZoomDone'); */
           tab.focus();
           $tabEl.css({
             top:   orig.pos.top,
@@ -415,7 +415,6 @@ window.TabItems = {
         }
       }
 
-/*       Utils.log('pause in tab, onZoomDone'); */
       TabMirror.pausePainting();
       iQ(tabEl)
         .addClass("front")
@@ -424,7 +423,11 @@ window.TabItems = {
           left:   0,
           width:  orig.width*scale,
           height: orig.height*scale
-          }, 'animate200', onZoomDone);//, "easeInQuad"
+        }, {
+          duration: 200,
+          easing: 'easeInQuad',
+          complete: onZoomDone
+        });
     }    
   },
 
