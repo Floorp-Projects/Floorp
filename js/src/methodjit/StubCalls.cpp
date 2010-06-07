@@ -317,7 +317,7 @@ ValueToObject(JSContext *cx, Value *vp)
     return &vp->asObject();
 }
 
-#define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp)                               \
+#define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp,onerr)                         \
     JS_BEGIN_MACRO                                                            \
         if (sprop->hasDefaultGetter()) {                                      \
             /* Fast path for Object instance properties. */                   \
@@ -329,7 +329,7 @@ ValueToObject(JSContext *cx, Value *vp)
                 (vp)->setUndefined();                                         \
         } else {                                                              \
             if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
-                return NULL;                                                  \
+                onerr;                                                        \
         }                                                                     \
     JS_END_MACRO
 
@@ -608,7 +608,7 @@ NameOp(VMFrame &f, uint32 index)
     } else {
         sprop = (JSScopeProperty *)prop;
   do_native_get:
-        NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
+        NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval, return NULL);
         obj2->dropProperty(cx, (JSProperty *) sprop);
     }
 
@@ -2011,6 +2011,62 @@ stubs::DecName(VMFrame &f, JSAtom *atom)
 {
     if (!NameIncDec<-1, false>(f, atom))
         THROW();
+}
+
+void JS_FASTCALL
+stubs::GetProp(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    Value *vp = &f.regs.sp[-1];
+    JSObject *obj = ValueToObject(f.cx, vp);
+    if (!obj)
+        THROW();
+
+    Value rval;
+    do {
+        /*
+         * We do not impose the method read barrier if in an imacro,
+         * assuming any property gets it does (e.g., for 'toString'
+         * from JSOP_NEW) will not be leaked to the calling script.
+         */
+        JSObject *aobj = js_GetProtoIfDenseArray(obj);
+
+        PropertyCacheEntry *entry;
+        JSObject *obj2;
+        JSAtom *atom;
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+        if (!atom) {
+            if (entry->vword.isFunObj()) {
+                rval.setFunObj(entry->vword.toFunObj());
+            } else if (entry->vword.isSlot()) {
+                uint32 slot = entry->vword.toSlot();
+                JS_ASSERT(slot < obj2->scope()->freeslot);
+                rval = obj2->lockedGetSlot(slot);
+            } else {
+                JS_ASSERT(entry->vword.isSprop());
+                JSScopeProperty *sprop = entry->vword.toSprop();
+                NATIVE_GET(cx, obj, obj2, sprop,
+                        f.fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
+                        &rval, THROW());
+            }
+            break;
+        }
+
+        jsid id = ATOM_TO_JSID(atom);
+        if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                ? !js_GetPropertyHelper(cx, obj, id,
+                    f.fp->imacpc
+                    ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                    : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
+                    &rval)
+                : !obj->getProperty(cx, id, &rval)) {
+            THROW();
+        }
+    } while(0);
+
+    regs.sp[-1] = rval;
 }
 
 void JS_FASTCALL

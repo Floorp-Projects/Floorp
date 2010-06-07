@@ -133,6 +133,8 @@ class Compiler
     void jsop_bindname(uint32 index);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
+    void jsop_getarg(uint32 index);
+    void jsop_this();
     void jsop_binary(JSOp op, VoidStub stub);
     void emitReturn();
     void dispatchCall(VoidPtrStubUInt32 stub);
