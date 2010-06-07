@@ -61,9 +61,8 @@ HelperAppLauncherDialog.prototype = {
     let bundle = sbs.createBundle("chrome://browser/locale/browser.properties");
 
     let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
-    let flags = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
-        (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-        (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+    let flags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+                (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
 
     let title = bundle.GetStringFromName("helperApp.title");
     let message = bundle.GetStringFromName("helperApp.prompt");
