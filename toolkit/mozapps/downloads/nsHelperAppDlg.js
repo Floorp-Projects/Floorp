@@ -970,8 +970,14 @@ nsUnknownContentTypeDialog.prototype = {
     if (file instanceof Components.interfaces.nsILocalFileWin) {
       try {
         return file.getVersionInfoField("FileDescription");
-      } catch (ex) {
-      }
+      } catch (e) {}
+    }
+#endif
+#ifdef XP_MACOSX
+    if (file instanceof Components.interfaces.nsILocalFileMac) {
+      try {
+        return file.bundleDisplayName;
+      } catch (e) {}
     }
 #endif
     return file.leafName;
