@@ -73,6 +73,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
+#include "jsscriptinlines.h"
 
 #include "prmjtime.h"
 
@@ -1877,6 +1878,9 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_SetOptions(cx, oldopts);
     if (!script)
         return JS_FALSE;
+
+    if (script->isEmpty())
+        return JS_TRUE;
 
     obj = JS_NewScriptObject(cx, script);
     if (!obj)
