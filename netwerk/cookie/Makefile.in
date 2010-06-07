@@ -82,6 +82,8 @@ CPPSRCS += \
 		CookieServiceParent.cpp \
 		CookieServiceChild.cpp \
 		$(NULL)
+
+XPCSHELL_TESTS += test/unit_ipc
 endif
 endif
 
