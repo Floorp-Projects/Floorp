@@ -5966,8 +5966,8 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     if (f->script == cx->fp->script) {
         if (f->recursion >= Recursion_Unwinds) {
             Blacklist(cx->fp->script->code);
-            AbortRecording(cx, "Inner tree is an unsupported type of recursion");
-            return ARECORD_ABORTED;
+            //AbortRecording(cx, "Inner tree is an unsupported type of recursion");
+            return ARECORD_CONTINUE;
         }
         f->recursion = Recursion_Disallowed;
     }
