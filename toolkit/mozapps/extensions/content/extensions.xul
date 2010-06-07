@@ -106,7 +106,7 @@
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
                       name="&view.discover.label;"/>
-        <richlistitem id="category-languages" value="addons://list/language"
+        <richlistitem id="category-languages" value="addons://list/locale"
                       class="category"
                       name="&view.languages.label;" hidden="true"/>
         <richlistitem id="category-searchengines"
