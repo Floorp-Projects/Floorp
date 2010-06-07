@@ -678,10 +678,7 @@ nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
   if (NS_FAILED(rv))
     return PR_FALSE;
 
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (nsACString&) package,
-                                                    PL_DHASH_LOOKUP));
-
-  return PL_DHASH_ENTRY_IS_LIVE(entry);
+  PRUint32 flags;
+  rv = GetFlagsFromPackage(package, &flags);
+  return NS_SUCCEEDED(rv) && (flags & XPCNATIVEWRAPPERS);
 }
