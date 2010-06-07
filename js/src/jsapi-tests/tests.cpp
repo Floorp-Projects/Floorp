@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
             JSAPITestString messages = test->messages();
             printf("%s | %s | %.*s\n",
                    (test->knownFail ? "TEST-KNOWN-FAIL" : "TEST-UNEXPECTED-FAIL"),
-                   name, messages.length(), messages.begin());
+                   name, (int) messages.length(), messages.begin());
             if (!test->knownFail)
                 failures++;
         }

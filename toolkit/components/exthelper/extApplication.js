@@ -669,7 +669,8 @@ extApplication.prototype = {
   _quitWithFlags: function app__quitWithFlags(aFlags) {
     let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                                .createInstance(Components.interfaces.nsISupportsPRBool);
-    this._obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+    let quitType = aFlags & Components.interfaces.nsIAppStartup.eRestart ? "restart" : null;
+    this._obs.notifyObservers(cancelQuit, "quit-application-requested", quitType);
     if (cancelQuit.data)
       return false; // somebody canceled our quit request
 

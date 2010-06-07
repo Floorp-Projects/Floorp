@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script>
+function runtest() {
+  var i = document.getElementById("i");
+  i.style.display = "";
+  i.style.display = "none";
+  document.documentElement.offsetLeft;
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="runtest();">
+<iframe id="i" style="display: none;" src="data:text/html,text">
+</body>
+</html>

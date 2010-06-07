@@ -48,19 +48,30 @@
  ** at least -- on OSX, there are sometimes other zones in use).
  **/
 
-/* Because of the way that jemalloc is linked on linux, we can't
- * get to jemalloc_stats().  So just do this on Windows until
- * that's fixed.
- */
-#if defined(MOZ_MEMORY) && defined(XP_WIN)
-#define HAVE_JEMALLOC_STATS 1
-#else
-#undef HAVE_JEMALLOC_STATS
-#endif
+#if defined(MOZ_MEMORY)
+#  if defined(XP_WIN) || defined(SOLARIS)
+#    define HAVE_JEMALLOC_STATS 1
+#    include "jemalloc.h"
+#  elif defined(XP_LINUX)
+#    define HAVE_JEMALLOC_STATS 1
+#    include "jemalloc_types.h"
+// jemalloc is directly linked into firefox-bin; libxul doesn't link
+// with it.  So if we tried to use jemalloc_stats directly here, it
+// wouldn't be defined.  Instead, we don't include the jemalloc header
+// and weakly link against jemalloc_stats.
+//
+// NB: we don't null-check this symbol at runtime because we expect it
+// to have been resolved.  If it hasn't, the crash jumping to NULL
+// will indicate the bug.
+extern "C" {
+extern void jemalloc_stats(jemalloc_stats_t* stats)
+  NS_VISIBILITY_DEFAULT __attribute__((weak));
+}
+#  endif  // XP_LINUX
+#endif  // MOZ_MEMORY
 
-#if defined(HAVE_JEMALLOC_STATS)
-#define HAVE_MALLOC_REPORTERS 1
-#include "jemalloc.h"
+#if HAVE_JEMALLOC_STATS
+#  define HAVE_MALLOC_REPORTERS 1
 
 PRInt64 getMallocMapped(void *) {
     jemalloc_stats_t stats;

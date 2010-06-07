@@ -23,8 +23,9 @@
 
 <script>
 function load() {
-  // Our parent should have a look at us in 1 sec so focus events can be thrown.
-  setTimeout("parent.gGen.next()", 1000);
+  // When the function will be executed, the focus events from autofocus should
+  // have been processed.
+  setTimeout(parent.gGen.next(), 0);
 }
 </script>
 

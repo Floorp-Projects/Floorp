@@ -417,6 +417,13 @@ bool TestDataStructuresParent::RecvTest16(
     return true;
 }
 
+bool TestDataStructuresParent::RecvTest17(const nsTArray<Op>& sa)
+{
+    test_assert(sa.Length() == 1 && Op::TSetAttrs == sa[0].type(),
+                "wrong value");
+    return true;
+}
+
 //-----------------------------------------------------------------------------
 // child
 
@@ -451,6 +458,7 @@ TestDataStructuresChild::RecvStart()
     Test14();
     Test15();
     Test16();
+    Test17();
 
     for (uint32 i = 0; i < nactors; ++i)
         if (!PTestDataStructuresSubChild::Send__delete__(mKids[i]))
@@ -869,6 +877,22 @@ TestDataStructuresChild::Test16()
     assert_arrays_equal(oau[3].get_ArrayOfActors()[0]
                         .get_ArrayOfPTestDataStructuresSubChild(),
                         mKids);
+
+    printf("  passed %s\n", __FUNCTION__);
+}
+
+void
+TestDataStructuresChild::Test17()
+{
+    Attrs attrs;
+    attrs.common() = CommonAttrs(true);
+    attrs.specific() = BarAttrs(1.0f);
+
+    nsTArray<Op> ops;
+    ops.AppendElement(SetAttrs(NULL, mKids[0], attrs));
+
+    if (!SendTest17(ops))
+        fail("sending Test17");
 
     printf("  passed %s\n", __FUNCTION__);
 }

@@ -40,6 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozISpellI18NManager.h"
+#include "nsCycleCollectionParticipant.h"
 
 #define MOZ_SPELLI18NMANAGER_CONTRACTID "@mozilla.org/spellchecker/i18nmanager;1"
 #define MOZ_SPELLI18NMANAGER_CID         \
@@ -50,8 +51,9 @@
 class mozSpellI18NManager : public mozISpellI18NManager
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_MOZISPELLI18NMANAGER
+  NS_DECL_CYCLE_COLLECTION_CLASS(mozSpellI18NManager)
 
   mozSpellI18NManager();
   virtual ~mozSpellI18NManager();

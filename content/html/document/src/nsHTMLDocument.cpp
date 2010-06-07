@@ -2635,26 +2635,18 @@ FindNamedItems(nsIAtom* aName, nsIContent *aContent,
   NS_ASSERTION(!aEntry->IsInvalidName(),
                "Entry that should never have a list passed to FindNamedItems()!");
 
-  if (!aContent->IsElement()) {
-    // non-elements are not named items nor can they have children.
-    return;
+  if (aContent->HasFlag(NODE_HAS_NAME)) {
+    NS_ASSERTION(nsGenericHTMLElement::FromContent(aContent),
+                 "Only HTML Elements should have a name");
+  
+    nsGenericHTMLElement* elm = static_cast<nsGenericHTMLElement*>(aContent);
+    if (elm->GetParsedAttr(nsGkAtoms::name)->GetAtomValue() == aName) {
+      aEntry->AddNameElement(elm);
+    }
   }
 
-  Element* element = aContent->AsElement();
-
-  if (aName == nsContentUtils::IsNamedItem(element)) {
-    aEntry->AddNameElement(element);
-  }
-
-  if (!aEntry->GetIdElement() &&
-      // Maybe this node has the right id?
-      aName == element->GetID()) {
-    aEntry->AddIdElement(element);
-  }
-
-  PRUint32 i, count = element->GetChildCount();
-  for (i = 0; i < count; ++i) {
-    FindNamedItems(aName, element->GetChildAt(i), aEntry);
+  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
+    FindNamedItems(aName, iter, aEntry);
   }
 }
 
@@ -2677,27 +2669,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
     return NS_OK;
   }
 
-  // Now we know we _might_ have items.  Before looking at
-  // entry->mNameContentList, make sure to flush out content (see
-  // bug 69826).
-  // This is a perf killer while the document is loading!
-
-  // Make sure to stash away the current generation so we can check whether the
-  // table changes when we flush.
-  PRUint32 generation = mIdentifierMap.GetGeneration();
-  
-  // If we already have an entry->mNameContentList, we need to flush out
-  // notifications too, so that it will get updated properly.
-  FlushPendingNotifications(entry->HasNameContentList() ?
-                            Flush_ContentAndNotify : Flush_Content);
-
-  if (generation != mIdentifierMap.GetGeneration()) {
-    // Table changed, so the entry pointer is no longer valid; look up the
-    // entry again, adding if necessary (the adding may be necessary in case
-    // the flush actually deleted entries).
-    entry = mIdentifierMap.PutEntry(name);
-    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-  }
+  // Now we know we _might_ have items.
 
   if (!entry->HasNameContentList()) {
 #ifdef DEBUG_jst

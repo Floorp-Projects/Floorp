@@ -415,13 +415,12 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj);
 
 /*
- * Call JS_NewObject(cx, clasp, proto, parent) and, if system is true, mark the
- * result as a system object, that is an object for which JS_IsSystemObject
- * returns true.
+ * Mark an object as being a system object. This should be called immediately
+ * after allocating the object. A system object is an object for which
+ * JS_IsSystemObject returns true.
  */
-extern JS_PUBLIC_API(JSObject *)
-JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent, JSBool system);
+extern JS_PUBLIC_API(JSBool)
+JS_MakeSystemObject(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 

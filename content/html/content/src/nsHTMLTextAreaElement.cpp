@@ -49,7 +49,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "nsIFormSubmission.h"
+#include "nsFormSubmission.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -77,6 +77,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsISupportsPrimitives.h"
 
+#include "nsTextEditorState.h"
+
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 #define NS_NO_CONTENT_DISPATCH (1 << 0)
@@ -90,7 +92,6 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
 {
 public:
   nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
-  virtual ~nsHTMLTextAreaElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -126,8 +127,29 @@ public:
   virtual PRBool RestoreState(nsPresState* aState);
 
   // nsITextControlElemet
-  NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
+  NS_IMETHOD_(PRBool) IsSingleLineTextControl() const;
+  NS_IMETHOD_(PRBool) IsTextArea() const;
+  NS_IMETHOD_(PRBool) IsPlainTextControl() const;
+  NS_IMETHOD_(PRBool) IsPasswordTextControl() const;
+  NS_IMETHOD_(PRInt32) GetCols();
+  NS_IMETHOD_(PRInt32) GetWrapCols();
+  NS_IMETHOD_(PRInt32) GetRows();
+  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue);
+  NS_IMETHOD_(PRBool) ValueChanged() const;
+  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, PRBool aIgnoreWrap) const;
+  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, PRBool aUserInput);
+  NS_IMETHOD_(nsIEditor*) GetTextEditor();
+  NS_IMETHOD_(nsISelectionController*) GetSelectionController();
+  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection();
+  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame);
+  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
+  NS_IMETHOD CreateEditor();
+  NS_IMETHOD_(nsIContent*) GetRootEditorNode();
+  NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
+  NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
+  NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
+  NS_IMETHOD_(void) InitializeKeyboardEventListeners();
 
   // nsIContent
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -172,9 +194,9 @@ public:
                                            nsGenericHTMLFormElement)
 
 protected:
+  using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
+
   nsCOMPtr<nsIControllers> mControllers;
-  /** The current value.  This is null if the frame owns the value. */
-  char*                    mValue;
   /** Whether or not the value has changed since its default value was given. */
   PRPackedBool             mValueChanged;
   /** Whether or not we are already handling select event. */
@@ -184,6 +206,8 @@ protected:
   PRPackedBool             mDoneAddingChildren;
   /** Whether our disabled state has changed from the default **/
   PRPackedBool             mDisabledChanged;
+  /** The state of the text editor (selection controller and the editor) **/
+  nsRefPtr<nsTextEditorState> mState;
   
   NS_IMETHOD SelectAll(nsPresContext* aPresContext);
   /**
@@ -196,7 +220,6 @@ protected:
   void GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap);
 
   nsresult SetValueInternal(const nsAString& aValue,
-                            nsITextControlFrame* aFrame,
                             PRBool aUserInput);
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
@@ -223,20 +246,13 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo,
                                              PRBool aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
-    mValue(nsnull),
     mValueChanged(PR_FALSE),
     mHandlingSelect(PR_FALSE),
     mDoneAddingChildren(!aFromParser),
-    mDisabledChanged(PR_FALSE)
+    mDisabledChanged(PR_FALSE),
+    mState(new nsTextEditorState(this))
 {
   AddMutationObserver(this);
-}
-
-nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
-{
-  if (mValue) {
-    nsMemory::Free(mValue);
-  }
 }
 
 
@@ -248,6 +264,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTextAreaElement,
                                                   nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mControllers)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mState, nsTextEditorState)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
@@ -397,79 +414,78 @@ nsHTMLTextAreaElement::GetValue(nsAString& aValue)
 void
 nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
 {
-  // Get the frame.
-  // No need to flush here, if there is no frame yet for this textarea
-  // there won't be a value in it we don't already have even if we
-  // force the frame to be created.
-  nsIFrame* primaryFrame = GetPrimaryFrame();
-  nsITextControlFrame* textControlFrame = nsnull;
-  if (primaryFrame) {
-    textControlFrame = do_QueryFrame(primaryFrame);
-  }
+  mState->GetValue(aValue, aIgnoreWrap);
+}
 
-  // If the frame exists and owns the value, get it from the frame.  Otherwise
-  // get it from content.
-  PRBool frameOwnsValue = PR_FALSE;
-  if (textControlFrame) {
-    textControlFrame->OwnsValue(&frameOwnsValue);
-  }
-  if (frameOwnsValue) {
-    textControlFrame->GetValue(aValue, aIgnoreWrap);
-  } else {
-    if (!mValueChanged || !mValue) {
-      GetDefaultValue(aValue);
-    } else {
-      CopyUTF8toUTF16(mValue, aValue);
-    }
-  }
+NS_IMETHODIMP_(nsIEditor*)
+nsHTMLTextAreaElement::GetTextEditor()
+{
+  return mState->GetEditor();
+}
+
+NS_IMETHODIMP_(nsISelectionController*)
+nsHTMLTextAreaElement::GetSelectionController()
+{
+  return mState->GetSelectionController();
+}
+
+NS_IMETHODIMP_(nsFrameSelection*)
+nsHTMLTextAreaElement::GetConstFrameSelection()
+{
+  return mState->GetConstFrameSelection();
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::TakeTextFrameValue(const nsAString& aValue)
+nsHTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame)
 {
-  if (mValue) {
-    nsMemory::Free(mValue);
-  }
-  nsString value(aValue);
-  nsContentUtils::PlatformToDOMLineBreaks(value);
-  mValue = ToNewUTF8String(value);
-  return NS_OK;
+  return mState->BindToFrame(aFrame);
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame)
+{
+  mState->UnbindFromFrame(aFrame);
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::CreateEditor()
+{
+  return mState->PrepareEditor();
+}
+
+NS_IMETHODIMP_(nsIContent*)
+nsHTMLTextAreaElement::GetRootEditorNode()
+{
+  return mState->GetRootNode();
+}
+
+NS_IMETHODIMP_(nsIContent*)
+nsHTMLTextAreaElement::GetPlaceholderNode()
+{
+  return mState->GetPlaceholderNode();
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::UpdatePlaceholderText(PRBool aNotify)
+{
+  mState->UpdatePlaceholderText(aNotify);
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::SetPlaceholderClass(PRBool aVisible, PRBool aNotify)
+{
+  mState->SetPlaceholderClass(aVisible, aNotify);
 }
 
 nsresult
 nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
-                                        nsITextControlFrame* aFrame,
                                         PRBool aUserInput)
 {
-  nsITextControlFrame* textControlFrame = aFrame;
-  nsIFormControlFrame* formControlFrame = textControlFrame;
-  if (!textControlFrame) {
-    // No need to flush here, if there is no frame for this yet forcing
-    // creation of one will not do us any good
-    formControlFrame = GetFormControlFrame(PR_FALSE);
-
-    if (formControlFrame) {
-      textControlFrame = do_QueryFrame(formControlFrame);
-    }
-  }
-
-  PRBool frameOwnsValue = PR_FALSE;
-  if (textControlFrame) {
-    textControlFrame->OwnsValue(&frameOwnsValue);
-  }
-  if (frameOwnsValue) {
-    formControlFrame->SetFormProperty(
-      aUserInput ? nsGkAtoms::userInput : nsGkAtoms::value, aValue);
-  }
-  else {
-    if (mValue) {
-      nsMemory::Free(mValue);
-    }
-    mValue = ToNewUTF8String(aValue);
-    NS_ENSURE_TRUE(mValue, NS_ERROR_OUT_OF_MEMORY);
-
-    SetValueChanged(PR_TRUE);
-  }
+  // Need to set the value changed flag here, so that
+  // nsTextControlFrame::UpdateValueDisplay retrieves the correct value
+  // if needed.
+  SetValueChanged(PR_TRUE);
+  mState->SetValue(aValue, aUserInput);
 
   return NS_OK;
 }
@@ -477,7 +493,7 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
-  return SetValueInternal(aValue, nsnull, PR_FALSE);
+  return SetValueInternal(aValue, PR_FALSE);
 }
 
 NS_IMETHODIMP 
@@ -486,7 +502,7 @@ nsHTMLTextAreaElement::SetUserInput(const nsAString& aValue)
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
-  SetValueInternal(aValue, nsnull, PR_TRUE);
+  SetValueInternal(aValue, PR_TRUE);
   return NS_OK;
 }
 
@@ -494,9 +510,8 @@ NS_IMETHODIMP
 nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 {
   mValueChanged = aValueChanged;
-  if (!aValueChanged && mValue) {
-    nsMemory::Free(mValue);
-    mValue = nsnull;
+  if (!aValueChanged && !mState->IsEmpty()) {
+    mState->EmptyValue();
   }
   return NS_OK;
 }
@@ -1003,3 +1018,101 @@ nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsHTMLTextAreaElement::IsSingleLineTextControl() const
+{
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLTextAreaElement::IsTextArea() const
+{
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLTextAreaElement::IsPlainTextControl() const
+{
+  // need to check our HTML attribute and/or CSS.
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLTextAreaElement::IsPasswordTextControl() const
+{
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRInt32)
+nsHTMLTextAreaElement::GetCols()
+{
+  const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::cols);
+  if (attr) {
+    PRInt32 cols = attr->Type() == nsAttrValue::eInteger ?
+                   attr->GetIntegerValue() : 0;
+    // XXX why a default of 1 char, why hide it
+    return (cols <= 0) ? 1 : cols;
+  }
+
+  return DEFAULT_COLS;
+}
+
+NS_IMETHODIMP_(PRInt32)
+nsHTMLTextAreaElement::GetWrapCols()
+{
+  // wrap=off means -1 for wrap width no matter what cols is
+  nsHTMLTextWrap wrapProp;
+  nsITextControlElement::GetWrapPropertyEnum(this, wrapProp);
+  if (wrapProp == nsITextControlElement::eHTMLTextWrap_Off) {
+    // do not wrap when wrap=off
+    return -1;
+  }
+
+  // Otherwise we just wrap at the given number of columns
+  return GetCols();
+}
+
+
+NS_IMETHODIMP_(PRInt32)
+nsHTMLTextAreaElement::GetRows()
+{
+  const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::rows);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
+    PRInt32 rows = attr->GetIntegerValue();
+    return (rows <= 0) ? DEFAULT_ROWS_TEXTAREA : rows;
+  }
+
+  return DEFAULT_ROWS_TEXTAREA;
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue)
+{
+  GetDefaultValue(aValue);
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLTextAreaElement::ValueChanged() const
+{
+  return mValueChanged;
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::GetTextEditorValue(nsAString& aValue,
+                                          PRBool aIgnoreWrap) const
+{
+  mState->GetValue(aValue, aIgnoreWrap);
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::SetTextEditorValue(const nsAString& aValue,
+                                          PRBool aUserInput)
+{
+  mState->SetValue(aValue, aUserInput);
+}
+
+NS_IMETHODIMP_(void)
+nsHTMLTextAreaElement::InitializeKeyboardEventListeners()
+{
+  mState->InitializeKeyboardEventListeners();
+}

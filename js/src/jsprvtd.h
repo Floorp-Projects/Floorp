@@ -69,6 +69,7 @@
 #define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
 #define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
 #define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
+#define INT_FITS_IN_JSID(i)         INT_FITS_IN_JSVAL(i)
 
 #define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
 #define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
@@ -324,7 +325,7 @@ typedef struct JSDebugHooks {
  * If JSLookupPropOp succeeds and returns with *propp non-null, that pointer
  * may be passed as the prop parameter to a JSAttributesOp, as a short-cut
  * that bypasses id re-lookup.  In any case, a non-null *propp result after a
- * successful lookup must be dropped via JSObjectOps.dropProperty.
+ * successful lookup must be dropped via JSObject::dropProperty.
  *
  * NB: successful return with non-null *propp means the implementation may
  * have locked *objp and added a reference count associated with *propp, so
@@ -355,14 +356,11 @@ typedef JSBool
 (* JSPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /*
- * Get or set attributes of the property obj[id].  Return false on error or
- * exception, true with current attributes in *attrsp.  If prop is non-null,
- * it must come from the *propp out parameter of a prior JSDefinePropOp or
- * JSLookupPropOp call.
+ * Get or set attributes of the property obj[id]. Return false on error or
+ * exception, true with current attributes in *attrsp.
  */
 typedef JSBool
-(* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                   uintN *attrsp);
+(* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 /*
  * JSObjectOps.checkAccess type: check whether obj[id] may be accessed per
@@ -372,15 +370,6 @@ typedef JSBool
 typedef JSBool
 (* JSCheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                       jsval *vp, uintN *attrsp);
-
-/*
- * A generic type for functions taking a context, object, and property, with
- * no return value.  Used by JSObjectOps.dropProperty currently (see above,
- * JSDefinePropOp and JSLookupPropOp, for the object-locking protocol in which
- * dropProperty participates).
- */
-typedef void
-(* JSPropertyRefOp)(JSContext *cx, JSObject *obj, JSProperty *prop);
 
 /*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes

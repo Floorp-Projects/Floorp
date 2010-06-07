@@ -47,6 +47,18 @@
        xpcnw_expected.sort().toString(),
        'enumeration over XPCNWs walks the prototype chain');
 
+    var for_each_expected = [];
+    for each (let i in new XPCNativeWrapper(location))
+        for_each_expected.push(typeof i);
+
+    var for_each_answer = [];
+    for each (let i in Iterator(new XPCNativeWrapper(location)))
+        for_each_answer.push(typeof i);
+
+    is(for_each_answer.sort().toString(),
+       for_each_expected.sort().toString(),
+       'wrapper iterators are properly iterators');
+
     let sjow_answer = [];
     let (obj = { a: 3, next:1 }) {
         for (let i in XPCSafeJSObjectWrapper({ __proto__: obj}))

@@ -1,5 +1,7 @@
 include protocol PTestDataStructuresSub;
 
+using mozilla::null_t;
+
 namespace mozilla {
 namespace _foo {
 
@@ -66,6 +68,23 @@ struct WithUnions {
     Actors[] aa;
     Unions[] au;
 };
+
+struct CommonAttrs { bool dummy; };
+struct FooAttrs { int dummy; };
+struct BarAttrs { float dummy; };
+union SpecificAttrs {
+    FooAttrs;
+    BarAttrs;
+};
+struct Attrs {
+    CommonAttrs common;
+    SpecificAttrs specific;
+};
+struct SetAttrs {
+    PTestDataStructuresSub x;
+    Attrs attrs;
+};
+union Op { null_t; SetAttrs; };
 
 } // namespace _foo
 } // namespace mozilla
@@ -156,6 +175,8 @@ parent:
     sync Test16(WithUnions i)
         returns (WithUnions o);
 
+    sync Test17(Op[] ops);
+
 state START:
     send Start goto TEST1;
 
@@ -170,11 +191,12 @@ state TEST8:   recv Test8 goto TEST9;
 state TEST9:   recv Test9 goto TEST10;
 state TEST10:  recv Test10 goto TEST11;
 state TEST11:  recv Test11 goto TEST12;
-state TEST12:  recv Test11 goto TEST13;
-state TEST13:  recv Test11 goto TEST14;
-state TEST14:  recv Test11 goto TEST15;
-state TEST15:  recv Test11 goto TEST16;
-state TEST16:  recv Test11 goto DEAD;
+state TEST12:  recv Test12 goto TEST13;
+state TEST13:  recv Test13 goto TEST14;
+state TEST14:  recv Test14 goto TEST15;
+state TEST15:  recv Test15 goto TEST16;
+state TEST16:  recv Test16 goto TEST17;
+state TEST17:  recv Test17 goto DEAD;
 
 state DEAD:
     recv __delete__;

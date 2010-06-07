@@ -74,7 +74,7 @@
 #define UNLIKELY(x)  (x)
 #endif
 
-#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC)
+#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC_WITH_JEMALLOC)
 #include "jemalloc.h"
 #define malloc(a)     je_malloc(a)
 #define valloc(a)     je_valloc(a)
@@ -83,6 +83,7 @@
 #define free(a)       je_free(a)
 #define strdup(a)     je_strdup(a)
 #define strndup(a, b) je_strndup(a, b)
+#define posix_memalign(a, b, c)  je_posix_memalign(a, b, c)
 #endif
 
 void
@@ -229,6 +230,22 @@ moz_valloc(size_t size)
 }
 #endif // if defined(HAVE_VALLOC)
 
+size_t
+moz_malloc_usable_size(void *ptr)
+{
+    if (!ptr)
+        return 0;
+
+#if defined(MOZ_MEMORY)
+    return malloc_usable_size(ptr);
+#elif defined(XP_MACOSX)
+    return malloc_size(ptr);
+#elif defined(XP_WIN)
+    return _msize(ptr);
+#else
+    return 0;
+#endif
+}
 
 namespace mozilla {
 

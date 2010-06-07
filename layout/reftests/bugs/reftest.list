@@ -1429,6 +1429,14 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 556661-1.html 556661-1-ref.html
 == 557736-1.html 557736-1-ref.html
 == 559284-1.html 559284-1-ref.html
+== 561981-1.html 561981-1-ref.html
+== 561981-2.html 561981-2-ref.html
+== 561981-3.html 561981-3-ref.html
+== 561981-4.html 561981-4-ref.html
+== 561981-5.html 561981-5-ref.html
+== 561981-6.html 561981-6-ref.html
+== 561981-7.html 561981-7-ref.html
+== 561981-8.html 561981-8-ref.html
 == 562835-1.html 562835-ref.html
 == 562835-2.html 562835-ref.html
 == 564054-1.html 564054-1-ref.html

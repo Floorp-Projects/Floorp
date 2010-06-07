@@ -1664,7 +1664,6 @@ def _generateCxxUnion(ud):
     maybedtorvar = ExprVar('MaybeDestroy')
     assertsanityvar = ExprVar('AssertSanity')
     tnonevar = ExprVar('T__None')
-    tfirstvar = ExprVar('T__First')
     tlastvar = ExprVar('T__Last')
 
     def callAssertSanity(uvar=None, expectTypeVar=None):
@@ -1700,7 +1699,6 @@ def _generateCxxUnion(ud):
     typeenum.addId(firstid, 1)
     for c in ud.components[1:]:
         typeenum.addId(c.enum())
-    typeenum.addId(tfirstvar.name, firstid)
     typeenum.addId(tlastvar.name, ud.components[-1].enum())
     cls.addstmts([ StmtDecl(Decl(typeenum,'')),
                    Whitespace.NL ])
@@ -1774,7 +1772,7 @@ def _generateCxxUnion(ud):
     sanity = MethodDefn(MethodDecl(
         assertsanityvar.name, ret=Type.VOID, const=1, force_inline=1))
     sanity.addstmts([
-        _abortIfFalse(ExprBinary(tfirstvar, '<=', mtypevar),
+        _abortIfFalse(ExprBinary(tnonevar, '<=', mtypevar),
                       'invalid type tag'),
         _abortIfFalse(ExprBinary(mtypevar, '<=', tlastvar),
                       'invalid type tag') ])
@@ -1827,6 +1825,8 @@ def _generateCxxUnion(ud):
                                         '.', c.getConstTypeName())))),
                 StmtBreak()
             ]))
+    copyswitch.addcase(CaseLabel(tnonevar.name),
+                       StmtBlock([ StmtBreak() ]))
     copyswitch.addcase(
         DefaultLabel(),
         StmtBlock([ _runtimeAbort('unreached'), StmtReturn() ]))
@@ -1880,6 +1880,9 @@ def _generateCxxUnion(ud):
             StmtBreak()
         ])
         opeqswitch.addcase(CaseLabel(c.enum()), case)
+    opeqswitch.addcase(CaseLabel(tnonevar.name),
+                       StmtBlock([ StmtExpr(callMaybeDestroy(rhstypevar)),
+                                   StmtBreak() ]))
     opeqswitch.addcase(
         DefaultLabel(),
         StmtBlock([ _runtimeAbort('unreached'), StmtBreak() ]))

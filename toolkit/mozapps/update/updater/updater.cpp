@@ -551,7 +551,7 @@ static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
   struct stat ss;
 
   AutoFile sfile = NS_tfopen(spath, NS_T("rb"));
-  if (sfile == NULL || fstat(fileno(sfile), &ss)) {
+  if (sfile == NULL || fstat(fileno((FILE*)sfile), &ss)) {
     LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile.get(), spath, errno));
     return READ_ERROR;
   }
@@ -905,7 +905,7 @@ int
 PatchFile::LoadSourceFile(FILE* ofile)
 {
   struct stat os;
-  int rv = fstat(fileno(ofile), &os);
+  int rv = fstat(fileno((FILE*)ofile), &os);
   if (rv)
     return READ_ERROR;
 
@@ -1798,7 +1798,7 @@ int DoUpdate()
     return READ_ERROR;
 
   struct stat ms;
-  rv = fstat(fileno(mfile), &ms);
+  rv = fstat(fileno((FILE*)mfile), &ms);
   if (rv)
     return READ_ERROR;
 

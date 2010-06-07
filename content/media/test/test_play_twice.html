@@ -30,6 +30,8 @@ function startTests() {
       continue;
 
     v.src = test.name;
+    v.name = test.name;
+    v.playingCount = 0;
     var check = function(test, v) { return function() {
       checkMetadata(test.name, v, test);
     }}(test, v);
@@ -44,6 +46,8 @@ function startTests() {
       is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
       ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
       ok(v.ended, test.name + " checking playback has ended");
+      ok(v.playingCount > 0, "Expect at least one playing event");
+      v.playingCount = 0;
       if (v._playedOnce) {
         --testsWaiting;
         if (testsWaiting == 0) {
@@ -65,8 +69,13 @@ function startTests() {
         setTimeout(startTests, 0);
       }
     }}(test, v);
+    var checkPlaying = function(test, v) { return function() {
+      is(test.name, v.name, "Should be testing file we think we're testing...");
+      v.playingCount++;
+    }}(test, v);
     v.addEventListener("load", noLoad, false);
     v.addEventListener("loadedmetadata", check, false);
+    v.addEventListener("playing", checkPlaying, false);
 
     // We should get "ended" and "suspend" events for every resource
     v.addEventListener("ended", checkEnded, false);

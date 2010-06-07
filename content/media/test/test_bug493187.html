@@ -10,36 +10,65 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493187
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="use_large_cache.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=493187">Mozilla Bug 493187</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var v;
-var startedSeek = false;
-var completed = false;
 
-function start() {
-  v = document.getElementById('v');
-  v.currentTime = 1.0;
+var videos = [];
+
+function start(e) {
+  e.target.currentTime = e.target.duration / 4;
 }
 
-function startSeeking() {
-  startedSeek = true;
+function startSeeking(e) {
+  e.target._seeked = true;
 }
 
-function canPlayThrough() {
-  if (startedSeek && !completed) {
-    ok(true, "Got canplaythrough after seek");
-    completed = true;
-    SimpleTest.finish();
+function canPlayThrough(e) {
+  var v = e.target;
+  if (v._seeked && !v._finished) {
+    ok(true, "Got canplaythrough after seek for " + v._name);
+    v._finished = true;
+    if (AllFinished(videos))
+      SimpleTest.finish();
   }
 }
 
-SimpleTest.waitForExplicitFinish();
+for (var i=0; i<gSeekTests.length; ++i) {
+  var test = gSeekTests[i];
+
+  // TODO: Bug 568402, there's a bug in the WAV backend where we sometimes
+  // don't send canplaythrough events after seeking. Once that is fixed,
+  // we should remove this guard below so that we run this test for audio.
+  var isVideo = /^video/.test(test.type) ? true : false;
+  if (!isVideo)
+    continue;
+
+  var v = document.createElement('video');
+  if (!v.canPlayType(test.type))
+    continue;
+  v.src = test.name;
+  v._name = test.name;
+  v._seeked = false;
+  v._finished = false;
+  v.autobuffer = true;
+  v.addEventListener("loadedmetadata", start, false);
+  v.addEventListener("canplaythrough", canPlayThrough, false);
+  v.addEventListener("seeking", startSeeking, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
 </script>
 </pre>
-<video id='v' src='seek.ogv' oncanplaythrough='canPlayThrough()' onseeking='startSeeking()'
-       autobuffer onloadedmetadata='start()'></video>
 </body>
 </html>

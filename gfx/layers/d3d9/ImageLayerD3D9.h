@@ -77,7 +77,7 @@ public:
   ImageLayerD3D9(LayerManagerD3D9 *aManager)
     : ImageLayer(aManager, NULL)
     , LayerD3D9(aManager)
-  { 
+  {
     mImplData = static_cast<LayerD3D9*>(this);
   }
 
@@ -120,7 +120,7 @@ public:
   PRBool HasData() { return mHasData; }
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
-  
+
   nsAutoArrayPtr<PRUint8> mBuffer;
   LayerManagerD3D9 *mManager;
   Data mData;

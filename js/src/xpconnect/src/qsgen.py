@@ -1003,6 +1003,8 @@ traceReturnTypeMap = {
         ["jsdouble ", "DOUBLE", "0"],
     'double':
         ["jsdouble ", "DOUBLE", "0"],
+    'octet':
+        ["uint32 ", "UINT32", "0"]
     }
 
 # This list extends the above list, but includes types that

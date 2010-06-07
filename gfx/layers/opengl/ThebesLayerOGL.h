@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-/
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,15 +67,10 @@ public:
                            const nsIntPoint& aOffset);
 
   /** ThebesLayerOGL */
-  const nsIntRect &GetVisibleRect();
+  nsIntRect GetVisibleRect() { return mVisibleRegion.GetBounds(); }
   const nsIntRect &GetInvalidatedRect();
 
 private:
-  /** 
-   * Visible rectangle, this is used to know the size and position of the quad
-   * when doing the rendering of this layer.
-   */
-  nsIntRect mVisibleRect;
   /**
    * Currently invalidated rectangular area.
    */

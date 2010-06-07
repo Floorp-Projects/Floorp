@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef NS_SVGAELEMENT_H_
+#define NS_SVGAELEMENT_H_
+
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
@@ -108,3 +111,5 @@ protected:
   nsSVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
+
+#endif // NS_SVGAELEMENT_H_

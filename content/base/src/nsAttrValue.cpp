@@ -1142,6 +1142,10 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
 {
   ResetIfSet();
 
+  // FIXME (partially, at least): HTML5's algorithm says we shouldn't do
+  // the whitespace compression, trimming, or the test for emptiness.
+  // (I'm a little skeptical that we shouldn't do the whitespace
+  // trimming; WebKit also does it.)
   nsAutoString colorStr(aString);
   colorStr.CompressWhitespace(PR_TRUE, PR_TRUE);
   if (colorStr.IsEmpty()) {
@@ -1152,8 +1156,8 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   // No color names begin with a '#'; in standards mode, all acceptable
   // numeric colors do.
   if (colorStr.First() == '#') {
-    colorStr.Cut(0, 1);
-    if (NS_HexToRGB(colorStr, &color)) {
+    nsDependentString withoutHash(colorStr.get() + 1, colorStr.Length() - 1);
+    if (NS_HexToRGB(withoutHash, &color)) {
       SetColorValue(color, aString);
       return PR_TRUE;
     }
@@ -1164,15 +1168,18 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
     }
   }
 
-  if (aDocument->GetCompatibilityMode() != eCompatibility_NavQuirks) {
-    return PR_FALSE;
+  // FIXME (maybe): HTML5 says we should handle system colors.  This
+  // means we probably need another storage type, since we'd need to
+  // handle dynamic changes.  However, I think this is a bad idea:
+  // http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2010-May/026449.html
+
+  // Use NS_LooseHexToRGB as a fallback if nothing above worked.
+  if (NS_LooseHexToRGB(colorStr, &color)) {
+    SetColorValue(color, aString);
+    return PR_TRUE;
   }
 
-  // In compatibility mode, try LooseHexToRGB as a fallback for either
-  // of the above two possibilities.
-  NS_LooseHexToRGB(colorStr, &color);
-  SetColorValue(color, aString);
-  return PR_TRUE;
+  return PR_FALSE;
 }
 
 PRBool nsAttrValue::ParseFloatValue(const nsAString& aString)

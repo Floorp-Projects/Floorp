@@ -202,7 +202,7 @@ fi
 COMPILE_ENVIRONMENT=1
 MOZ_ARG_ENABLE_BOOL(compile-environment,
 [  --disable-compile-environment
-                           Disable compiler/library checks.],
+                          Disable compiler/library checks.],
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
 
@@ -212,18 +212,17 @@ dnl = here, so that the compiler checks can succeed
 dnl ========================================================
 
 MOZ_ARG_WITH_STRING(android-ndk,
-[  --with-android-ndk=DIR
-                           location where the Android NDK can be found],
+[  --with-android-ndk=DIR  location where the Android NDK can be found],
     android_ndk=$withval)
 
 MOZ_ARG_WITH_STRING(android-toolchain,
 [  --with-android-toolchain=DIR
-                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+                          location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
     android_toolchain=$withval)
 
 MOZ_ARG_WITH_STRING(android-platform,
 [  --with-android-platform=DIR
-                           location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+                          location of platform dir, default NDK/build/platforms/android-5/arch-arm],
     android_platform=$withval)
 
 if test "$target" = "arm-android-eabi" ; then
@@ -360,7 +359,7 @@ if test "$target" != "$host"; then
     *symbian*)
         AC_ARG_WITH(symbian-sdk,
         [  --with-symbian-sdk=SYMBIAN_SDK_DIR
-                              The path to the Symbian SDK],
+                          The path to the Symbian SDK],
         SYMBIAN_SDK_DIR=$withval)
 
         OS_EXE_CFLAGS="$OS_EXE_CFLAGS -D__EXE__"
@@ -888,7 +887,7 @@ dnl ========================================================
 MACOS_SDK_DIR=
 NEXT_ROOT=
 MOZ_ARG_WITH_STRING(macos-sdk,
-[  --with-macos-sdk=dir   Location of platform SDK to use (Mac OS X only)],
+[  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
 
 dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
@@ -1993,7 +1992,8 @@ ia64*-hpux*)
 
     MOZ_ARG_DISABLE_BOOL(windows-mobile-components,
     [  --disable-windows-mobile-components
-         Disable Windows Mobile specific components from CE build],
+                          Disable Windows Mobile specific components from
+                          CE build],
     WINCE_WINDOWS_MOBILE=,
     WINCE_WINDOWS_MOBILE=1)
  
@@ -2599,7 +2599,7 @@ sparc*-*)
 esac
 
 MOZ_ARG_DISABLE_BOOL(tracejit,
-[  --disable-tracejit           Disable tracing JIT support],
+[  --disable-tracejit      Disable tracing JIT support],
   ENABLE_TRACEJIT=)
 
 if test "$ENABLE_TRACEJIT"; then
@@ -3974,7 +3974,8 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 MOZ_ARG_WITH_STRING(nspr-cflags,
-[  --with-nspr-cflags=FLAGS Pass FLAGS to CC when building code that uses NSPR.
+[  --with-nspr-cflags=FLAGS
+                          Pass FLAGS to CC when building code that uses NSPR.
                           Use this when there's no accurate nspr-config
                           script available.  This is the case when building
                           SpiderMonkey as part of the Mozilla tree: the
@@ -4022,7 +4023,7 @@ dnl Use ARM userspace kernel helpers; tell NSPR to enable
 dnl their usage and use them in spidermonkey.
 dnl ========================================================
 MOZ_ARG_WITH_BOOL(arm-kuser,
-[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
+[  --with-arm-kuser        Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
     USE_ARM_KUSER=1,
     USE_ARM_KUSER=)
 if test -n "$USE_ARM_KUSER"; then
@@ -4053,7 +4054,7 @@ dnl ========================================================
 dnl = Enable building the Thumb2 instruction set
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(thumb2,
- [  --enable-thumb2              Enable Thumb2 instruction set],
+ [  --enable-thumb2         Enable Thumb2 instruction set],
     MOZ_THUMB2=1,)
 
 if test -n "$MOZ_THUMB2"; then
@@ -4234,8 +4235,8 @@ dnl ========================================================
 dnl = Enable generation of debug symbols
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]    Enable debugging symbols
-                                   (using compiler flags DBG)],
+[  --enable-debug-symbols[=DBG]
+                          Enable debugging symbols (using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
       MOZ_DEBUG_SYMBOLS=1
       if test -n "$enableval" -a "$enableval" != "yes"; then
@@ -4256,7 +4257,7 @@ dnl ========================================================
 dnl Enable Narcissus
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(narcissus,
-[  --enable-narcissus          Build with Narcissus code enabled],
+[  --enable-narcissus      Build with Narcissus code enabled],
     NARCISSUS=1,
     NARCISSUS= )
 if test -n "$NARCISSUS"; then
@@ -4367,7 +4368,7 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup"
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign"
     MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
@@ -4413,7 +4414,7 @@ dnl ========================================================
 dnl = Use GCTimer
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gctimer,
-[  --enable-gctimer       Enable GC timer (default=no)],
+[  --enable-gctimer        Enable GC timer (default=no)],
     MOZ_GCTIMER=1,
     MOZ_GCTIMER= )
 if test -n "$MOZ_GCTIMER"; then
@@ -4482,7 +4483,7 @@ dnl ========================================================
 dnl Zealous GC
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gczeal,
-[  --enable-gczeal          Enable zealous GCing],
+[  --enable-gczeal         Enable zealous GCing],
     JS_GC_ZEAL=1,
     JS_GC_ZEAL= )
 if test -n "$JS_GC_ZEAL"; then
@@ -4495,7 +4496,7 @@ dnl ========================================================
 
 MOZ_ARG_WITH_STRING(static-checking,
 [  --with-static-checking=path/to/gcc_dehydra.so
-                            Enable static checking of code using GCC-dehydra],
+                          Enable static checking of code using GCC-dehydra],
     DEHYDRA_PATH=$withval,
     DEHYDRA_PATH= )
 
@@ -4547,7 +4548,7 @@ dnl ========================================================
 dnl = Support for Quantify (Windows)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(quantify,
-[  --enable-quantify      Enable Quantify support (Windows only) ],
+[  --enable-quantify       Enable Quantify support (Windows only) ],
     MOZ_QUANTIFY=1,
     MOZ_QUANTIFY= )
 
@@ -4645,7 +4646,7 @@ dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
 dnl Provide a switch to disable PGO even when called via profiledbuild.
 MOZ_ARG_DISABLE_BOOL(profile-guided-optimization,
 [  --disable-profile-guided-optimization
-                           Don't build with PGO even if called via make profiledbuild],
+                          Don't build with PGO even if called via make profiledbuild],
 MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=1,
 MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
 
@@ -4937,7 +4938,7 @@ dnl ========================================================
 dnl = Link js shell to system readline
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(readline,
-[  --enable-readline  Link js shell to system readline library],
+[  --enable-readline       Link js shell to system readline library],
     JS_WANT_READLINE=1,
     JS_WANT_READLINE= )
 

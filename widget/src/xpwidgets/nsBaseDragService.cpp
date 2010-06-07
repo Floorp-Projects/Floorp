@@ -520,12 +520,17 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   }
 
   // otherwise, just draw the node
-  nsCOMPtr<nsIRegion> clipRegion;
-  if (aRegion)
-    aRegion->GetRegion(getter_AddRefs(clipRegion));
+  nsIntRegion clipRegion;
+  if (aRegion) {
+    nsCOMPtr<nsIRegion> clipIRegion;
+    aRegion->GetRegion(getter_AddRefs(clipIRegion));
+    if (clipIRegion) {
+      clipRegion = clipIRegion->GetUnderlyingRegion();
+    }
+  }
 
   nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
-  nsRefPtr<gfxASurface> surface = presShell->RenderNode(dragNode, clipRegion,
+  nsRefPtr<gfxASurface> surface = presShell->RenderNode(dragNode, &clipRegion,
                                                         pnt, aScreenDragRect);
 
   // if an image was specified, reposition the drag rectangle to

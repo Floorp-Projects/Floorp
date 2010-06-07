@@ -1,0 +1,102 @@
+<html>
+
+<head>
+  <title>Accessible state change event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function makeEditableDoc(aDocNode, aIsEnabled)
+    {
+      this.DOMNode = aDocNode;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_STATE_CHANGE, getAccessible(this.DOMNode))
+      ];
+
+      this.invoke = function editabledoc_invoke() {
+        // Note: this should fire an EVENT_STATE_CHANGE
+        this.DOMNode.designMode = 'on';
+      };
+
+      this.check = function editabledoc_check(aEvent) {
+
+        testStates(aDocNode, 0, EXT_STATE_EDITABLE);
+
+        var event = null;
+        try {
+          var event = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
+        } catch (e) {
+          ok(false, "State change event was expected");
+        }
+
+        if (!event) { return; }
+
+        ok(event.isExtraState(), "Extra state change was expected");
+        is(event.state, EXT_STATE_EDITABLE, "Wrong state of statechange event");
+        ok(event.isEnabled(), "Expected editable state to be enabled");
+      }
+
+      this.getID = function editabledoc_getID() {
+        return prettyName(aDocNode) + " editable state changed";
+      };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    // var gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // Test delayed editable state change
+      var doc = document.getElementById("iframe").contentDocument;
+      gQueue.push(new makeEditableDoc(doc));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=564471"
+     title="Make state change events async">
+    Mozilla Bug 564471
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="testContainer">
+    <iframe id="iframe"></iframe>
+  </div>
+  <div id="eventdump"></div>
+</body>
+</html>

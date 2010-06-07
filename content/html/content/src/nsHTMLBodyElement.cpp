@@ -69,9 +69,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleRule interface
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
   nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
@@ -132,11 +132,11 @@ BodyRule::~BodyRule()
 
 NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
 
-NS_IMETHODIMP
+/* virtual */ void
 BodyRule::MapRuleInfoInto(nsRuleData* aData)
 {
   if (!aData || !(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) || !aData->mMarginData || !mPart)
-    return NS_OK; // We only care about margins.
+    return; // We only care about margins.
 
   PRInt32 bodyMarginWidth  = -1;
   PRInt32 bodyMarginHeight = -1;
@@ -261,14 +261,12 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
     }
   }
-  return NS_OK;
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+/* virtual */ void
 BodyRule::List(FILE* out, PRInt32 aIndent) const
 {
-  return NS_OK;
 }
 #endif
 

@@ -1243,7 +1243,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
                 if (!JS_SealObject(cx, obj, JS_TRUE))
                     return JS_FALSE;
-                gobj = JS_NewObject(cx, &global_class, NULL, NULL);
+                gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)
                     return JS_FALSE;
                 if (!JS_SetPrototype(cx, gobj, obj))

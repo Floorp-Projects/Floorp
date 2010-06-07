@@ -199,8 +199,50 @@ function shutdownManager() {
   gInternalManager.observe(null, "xpcom-shutdown", null);
   gInternalManager = null;
 
+  // Load the add-ons list as it was after application shutdown
+  loadAddonsList(false);
+
   // Clear any crash report annotations
   gAppInfo.annotations = {};
+
+  let dbfile = gProfD.clone();
+  dbfile.append("extensions.sqlite");
+
+  // If there is no database then it cannot be locked.
+  if (!dbfile.exists())
+    return;
+
+  let thr = AM_Cc["@mozilla.org/thread-manager;1"].
+            getService(AM_Ci.nsIThreadManager).
+            mainThread;
+
+  // Wait until we can open a connection to the database
+  let db = null;
+  while (!db) {
+    // Poll for database
+    try {
+      db = Services.storage.openUnsharedDatabase(dbfile);
+    }
+    catch (e) {
+      if (thr.hasPendingEvents())
+        thr.processNextEvent(false);
+    }
+  }
+
+  // Wait until we can write to the database
+  while (db) {
+    // Poll for write access
+    try {
+      db.executeSimpleSQL("PRAGMA user_version = 1");
+      db.executeSimpleSQL("PRAGMA user_version = 0");
+      db.close();
+      db = null;
+    }
+    catch (e) {
+      if (thr.hasPendingEvents())
+        thr.processNextEvent(false);
+    }
+  }
 }
 
 function loadAddonsList(aAppChanged) {

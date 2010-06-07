@@ -87,6 +87,20 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
     Init(csurf, PR_TRUE);
 }
 
+already_AddRefed<gfxASurface>
+gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
+                                       const gfxIntSize& aSize)
+{
+    cairo_surface_t *surface =
+        cairo_quartz_surface_create_cg_layer(mSurface, aSize.width, aSize.height);
+    if (cairo_surface_status(surface)) {
+        cairo_surface_destroy(surface);
+        return nsnull;
+    }
+
+    return Wrap(surface);
+}
+
 CGContextRef
 gfxQuartzSurface::GetCGContextWithClip(gfxContext *ctx)
 {

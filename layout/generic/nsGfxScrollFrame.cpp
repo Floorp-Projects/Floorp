@@ -566,13 +566,7 @@ nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
     return PR_FALSE;
 
   if (mInner.mIsRoot) {
-    // For viewports, try getting a hint from global history
-    // as to whether we had a vertical scrollbar last time.
-    PRBool hint;
-    nsresult rv = mInner.GetVScrollbarHintFromGlobalHistory(&hint);
-    if (NS_SUCCEEDED(rv))
-      return hint;
-    // No hint. Assume that there will be a scrollbar; it seems to me
+    // Assume that there will be a scrollbar; it seems to me
     // that 'most pages' do have a scrollbar, and anyway, it's cheaper
     // to do an extra reflow for the pages that *don't* need a
     // scrollbar (because on average they will have less content).
@@ -866,11 +860,6 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
 
   if (!InInitialReflow() && !mInner.mHadNonInitialReflow) {
     mInner.mHadNonInitialReflow = PR_TRUE;
-    if (mInner.mIsRoot) {
-      // For viewports, record whether we needed a vertical scrollbar
-      // after the first non-initial reflow.
-      mInner.SaveVScrollbarStateToGlobalHistory();
-    }
   }
 
   if (mInner.mIsRoot && oldScrolledAreaBounds != newScrolledAreaBounds) {
@@ -1297,8 +1286,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mIsXUL(aIsXUL),
     mSupppressScrollbarUpdate(PR_FALSE),
     mSkippedScrollbarLayout(PR_FALSE),
-    mDidLoadHistoryVScrollbarHint(PR_FALSE),
-    mHistoryVScrollbarHint(PR_FALSE),
     mHadNonInitialReflow(PR_FALSE),
     mHorizontalOverflow(PR_FALSE),
     mVerticalOverflow(PR_FALSE),
@@ -3321,59 +3308,6 @@ static nsIURI* GetDocURI(nsIFrame* aFrame)
   if (!doc)
     return nsnull;
   return doc->GetDocumentURI();
-}
-
-void
-nsGfxScrollFrameInner::SaveVScrollbarStateToGlobalHistory()
-{
-  NS_ASSERTION(mIsRoot, "Only use this on viewports");
-
-  // If the hint is the same as the one we loaded, don't bother
-  // saving it
-  if (mDidLoadHistoryVScrollbarHint &&
-      (mHistoryVScrollbarHint == mHasVerticalScrollbar))
-    return;
-
-  nsIURI* uri = GetDocURI(mOuter);
-  if (!uri)
-    return;
-
-  nsCOMPtr<nsIGlobalHistory3> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
-  if (!history)
-    return;
-  
-  PRUint32 flags = 0;
-  if (mHasVerticalScrollbar) {
-    flags |= NS_GECKO_FLAG_NEEDS_VERTICAL_SCROLLBAR;
-  }
-  history->SetURIGeckoFlags(uri, flags);
-  // if it fails, we don't care
-}
-
-nsresult
-nsGfxScrollFrameInner::GetVScrollbarHintFromGlobalHistory(PRBool* aVScrollbarNeeded)
-{
-  NS_ASSERTION(mIsRoot, "Only use this on viewports");
-  NS_ASSERTION(!mDidLoadHistoryVScrollbarHint,
-               "Should only load a hint once, it can be expensive");
-
-  nsIURI* uri = GetDocURI(mOuter);
-  if (!uri)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIGlobalHistory3> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
-  if (!history)
-    return NS_ERROR_FAILURE;
-  
-  PRUint32 flags;
-  nsresult rv = history->GetURIGeckoFlags(uri, &flags);
-  if (NS_FAILED(rv))
-    return rv;
-
-  *aVScrollbarNeeded = (flags & NS_GECKO_FLAG_NEEDS_VERTICAL_SCROLLBAR) != 0;
-  mDidLoadHistoryVScrollbarHint = PR_TRUE;
-  mHistoryVScrollbarHint = *aVScrollbarNeeded;
-  return NS_OK;
 }
 
 nsPresState*

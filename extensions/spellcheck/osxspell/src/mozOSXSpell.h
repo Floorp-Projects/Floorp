@@ -45,6 +45,7 @@
 #include "mozIPersonalDictionary.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 // Use the same contract ID as the Hunspell spellchecker so we get picked up
 // instead on Mac OS X but we have our own CID. 
@@ -57,8 +58,9 @@
 class mozOSXSpell : public mozISpellCheckingEngine
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_MOZISPELLCHECKINGENGINE
+  NS_DECL_CYCLE_COLLECTION_CLASS(mozOSXSpell)
 
   mozOSXSpell();
 

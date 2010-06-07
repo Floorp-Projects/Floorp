@@ -55,10 +55,10 @@ CRT_OBJ_DIR = $(CURDIR)/crtsrc
 MOZ_CRT_DLL_NAME = mozcrt19
 MOZ_CRTCPP_DLL_NAME = mozcpp19
 MOZ_CRT_STATIC_LIBS = libcmt libcpmt
-MOZ_CRT_DLL = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRT_DLL_NAME).dll
-MOZ_CRT_IMPORT_LIB = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRT_DLL_NAME).lib
-MOZ_CRTCPP_DLL = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRTCPP_DLL_NAME).dll
-MOZ_CRTCPP_IMPORT_LIB = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRTCPP_DLL_NAME).lib
+MOZ_CRT_DLL = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRT_DLL_NAME).dll
+MOZ_CRT_IMPORT_LIB = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRT_DLL_NAME).lib
+MOZ_CRTCPP_DLL = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRTCPP_DLL_NAME).dll
+MOZ_CRTCPP_IMPORT_LIB = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRTCPP_DLL_NAME).lib
 
 # copy the CRT DLLs to dist/bin,
 # copy the import libs to dist/lib
@@ -69,15 +69,15 @@ libs:: $(MOZ_CRT_DLL) $(MOZ_CRT_IMPORT_LIB)
 $(MOZ_CRT_IMPORT_LIB): $(MOZ_CRT_DLL)
 
 define EXTRACT_CMD
-cd $(CRT_OBJ_DIR)/intel/$(i)_lib && lib "-extract:..\\build\\intel\\$(i)_obj\\unhandld.obj" eh.lib
+cd $(CRT_OBJ_DIR)/$(MOZ_CRT_CPU_ARCH)/$(i)_lib && lib "-extract:..\\build\\$(MOZ_CRT_CPU_ARCH)\\$(i)_obj\\unhandld.obj" eh.lib
 
 endef # don't touch the blank line. actually, don't touch anything in this file.
 
 # patch if necessary
 ifeq ($(CC_VERSION), 14.00.50727.762)
-CRTDIFF=crtvc8sp1.diff
+CRTDIFF=crtvc8sp1-$(MOZ_CRT_CPU_ARCH).diff
 else
-CRTDIFF=crtvc9sp1.diff
+CRTDIFF=crtvc9sp1-$(MOZ_CRT_CPU_ARCH).diff
 endif
 
 $(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/$(CRTDIFF)
@@ -92,8 +92,8 @@ $(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/$(CRTDIFF)
 
 $(MOZ_CRT_DLL): \
   $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h \
-  $(srcdir)/rb.h
-	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/rb.h \
+  $(srcdir)/jemalloc_types.h $(srcdir)/rb.h
+	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/jemalloc_types.h $(srcdir)/rb.h \
 	$(CRT_OBJ_DIR)
 # this pretty much sucks, but nmake and make don't play well together
 	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
@@ -101,11 +101,11 @@ $(MOZ_CRT_DLL): \
 # that  not all the standard symbols are exported; looks like MSFT
 # never updated the sample.def files; could probably fix if someone
 # were ever bored enough. :-)
-	rm -f $(addsuffix .lib, $(addprefix $(CRT_OBJ_DIR)/build/intel/, $(MOZ_CRT_STATIC_LIBS)))
-	rm -f $(addsuffix .pdb, $(addprefix $(CRT_OBJ_DIR)/build/intel/, $(MOZ_CRT_STATIC_LIBS)))
+	rm -f $(addsuffix .lib, $(addprefix $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/, $(MOZ_CRT_STATIC_LIBS)))
+	rm -f $(addsuffix .pdb, $(addprefix $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/, $(MOZ_CRT_STATIC_LIBS)))
 
 # but still export jemalloc.h
-EXPORTS = jemalloc.h
+EXPORTS = jemalloc.h jemalloc_types.h
 
 else # Not Windows
 
@@ -127,7 +127,7 @@ DIST_INSTALL = 1
 FORCE_STATIC_LIB= 1
 endif
 
-EXPORTS = jemalloc.h
+EXPORTS = jemalloc.h jemalloc_types.h
 CSRCS   = jemalloc.c
 
 #XXX: PGO on Linux causes problems here

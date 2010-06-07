@@ -165,6 +165,7 @@ CPPSRCS		= \
 		jstask.cpp \
 		jstypedarray.cpp \
 		jsutil.cpp \
+		jswrapper.cpp \
 		jsxdrapi.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
@@ -234,8 +235,10 @@ INSTALLED_HEADERS = \
 		jstl.h \
 		jshashtable.h \
 		jsversion.h \
+		jswrapper.h \
 		jsxdrapi.h \
 		jsxml.h \
+		prmjtime.h \
 		$(NULL)
 
 ifdef ENABLE_TRACEJIT

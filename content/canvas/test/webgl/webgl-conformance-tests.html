@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>
+WebGL Conformance Test Runner.
+</title>
+<style>
+  html, body {
+      border: 0;
+      margin: 0;
+      height: 100%;
+      height: 100%;
+      text-align: center;
+      font-family: monospace;
+    }
+  table {
+    width: 100%;
+    height: 100%;
+  }
+  .timeout { }
+  .success { }
+  .fail { }
+  .testpage { border: 1px solid black; background-color: #ccc; }
+  .testpagesuccess { border: 1px solid black; background-color: #8F8; }
+  .testpagefail { border: 1px solid black; background-color: #F88; }
+  .testpagetimeout { border: 1px solid black; background-color: #FC8; }
+  .nowebgl { font-weight: bold; color: red; }
+</style>
+<script type="text/javascript" src="resources/webgl-test-harness.js"></script>
+<script>
+function start() {
+
+  function create3DContext(canvas)
+  {
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+    }
+    var context = null;
+    try {
+        context = canvas.getContext("experimental-webgl");
+    } catch(e) {
+    }
+    if (!context) {
+      try {
+        context = canvas.getContext("webkit-3d");
+      } catch(e) {
+      }
+    }
+    if (!context) {
+      try {
+        context = canvas.getContext("moz-webgl");
+      } catch(e) {
+      }
+    }
+    return context;
+  }
+
+  var reportType = WebGLTestHarnessModule.TestHarness.reportType;
+
+  var Page = function(reporter, url) {
+    this.reporter = reporter;
+    this.url = url;
+    this.totalTests = 0;
+    this.totalSuccessful = 0;
+    this.totalTimeouts = 0;
+
+    var li = reporter.localDoc.createElement('li');
+    var div = reporter.localDoc.createElement('div');
+    var check = reporter.localDoc.createElement('input');
+    check.type = 'checkbox';
+    check.checked = true;
+    div.appendChild(check);
+    var button = reporter.localDoc.createElement('input');
+    button.type = 'button';
+    button.value = 'run';
+    button.onclick = function() {
+      reporter.runTest(url);
+    };
+    if (reporter.noWebGL) {
+      button.disabled = true;
+    }
+    div.appendChild(button);
+    var a = reporter.localDoc.createElement('a');
+    a.href = url;
+    var node = reporter.localDoc.createTextNode(url);
+    a.appendChild(node);
+    div.appendChild(a);
+    li.setAttribute('class', 'testpage');
+    li.appendChild(div);
+    var ul = reporter.localDoc.createElement('ul');
+    var node = reporter.localDoc.createTextNode('');
+    li.appendChild(ul);
+    div.appendChild(node);
+    this.totalsElem = node;
+    this.resultElem = ul;
+    this.elem = li;
+    this.check = check;
+  };
+
+  Page.prototype.addResult = function(msg, success) {
+    ++this.totalTests;
+    if (success === undefined) {
+      ++this.totalTimeouts;
+      var result = "timeout";
+      var css = "timeout";
+    } else if (success) {
+      ++this.totalSuccessful;
+      var result = "success";
+      var css = "success";
+      // don't report success.
+      return;
+    } else {
+      var result = "failed";
+      var css = "fail";
+    }
+
+    var node = this.reporter.localDoc.createTextNode(result + ': ' + msg);
+    var li = this.reporter.localDoc.createElement('li');
+    li.appendChild(node);
+    li.setAttribute('class', css);
+    this.resultElem.appendChild(li);
+  };
+
+  Page.prototype.startPage = function() {
+    this.totalTests = 0;
+    this.totalSuccessful = 0;
+    this.totalTimeouts = 0;
+    // remove previous results.
+    while (this.resultElem.hasChildNodes()) {
+      this.resultElem.removeChild(this.resultElem.childNodes[0]);
+    }
+    this.totalsElem.textContent = '';
+    return this.check.checked;
+  };
+
+  Page.prototype.finishPage = function(success) {
+    var msg = ' (' + this.totalSuccessful + ' of ' +
+              this.totalTests + ' passed)';
+    if (success === undefined) {
+      var css = 'testpagetimeout';
+      msg = '(*timeout*)';
+      ++this.totalTests;
+      ++this.totalTimeouts;
+    } else if (this.totalSuccessful != this.totalTests) {
+      var css = 'testpagefail';
+    } else {
+      var css = 'testpagesuccess';
+    }
+    this.elem.setAttribute('class', css);
+    this.totalsElem.textContent = msg;
+  };
+
+  var Reporter = function() {
+    this.localDoc = document;
+    this.resultElem = document.getElementById("results");
+    this.fullResultsElem = document.getElementById("fullresults");
+    var node = this.localDoc.createTextNode('');
+    this.fullResultsElem.appendChild(node);
+    this.fullResultsNode = node;
+    this.iframe = document.getElementById("testframe");
+    this.currentPageElem = null;
+    this.totalPages = 0;
+    this.pagesByURL = {};
+    var canvas = document.getElementById("webglcheck");
+    var ctx = create3DContext(canvas);
+    this.noWebGL = !ctx;
+  };
+
+  Reporter.prototype.runTest = function(url) {
+    var page = this.pagesByURL[url];
+    page.startPage();
+    this.currentPage = page;
+    this.iframe.src = url;
+    return result;
+  };
+
+  Reporter.prototype.addPage = function(url) {
+    var page = new Page(this, url, this.resultElem);
+    this.resultElem.appendChild(page.elem);
+    ++this.totalPages;
+    this.pagesByURL[url] = page;
+  };
+
+  Reporter.prototype.startPage = function(url) {
+    var page = this.pagesByURL[url];
+    this.currentPage = page;
+    return page.startPage();
+  };
+
+  Reporter.prototype.addResult = function(msg, success) {
+    if (this.currentPage != null) {
+      this.currentPage.addResult(msg, success);
+    }
+  };
+
+  Reporter.prototype.finishPage = function(success) {
+    if (this.currentPage != null) {
+      this.currentPage.finishPage(success);
+      this.currentPage = null;
+    }
+  };
+
+  Reporter.prototype.displayFinalResults = function() {
+    var totalTests = 0;
+    var totalSuccessful = 0;
+    var totalTimeouts = 0;
+    for (var url in this.pagesByURL) {
+      var page = this.pagesByURL[url];
+      totalTests += page.totalTests;
+      totalSuccessful += page.totalSuccessful;
+      totalTimeouts += page.totalTimeouts;
+    }
+    var timeout = '';
+    if (totalTimeouts > 0) {
+      timeout = ', ' + totalTimeouts + ' timed out';
+    }
+    var msg = ' (' + totalSuccessful + ' of ' +
+              totalTests + ' passed' + timeout + ')';
+    this.fullResultsNode.textContent = msg;
+  };
+
+  Reporter.prototype.reportFunc = function(type, msg, success) {
+    switch (type) {
+      case reportType.ADD_PAGE:
+        return this.addPage(msg);
+      case reportType.START_PAGE:
+        return this.startPage(msg);
+      case reportType.TEST_RESULT:
+        return this.addResult(msg, success);
+      case reportType.FINISH_PAGE:
+        return this.finishPage(success);
+      case reportType.FINISHED_ALL_TESTS:
+        return this.displayFinalResults();
+      default:
+        throw 'unhandled';
+        break;
+    };
+  };
+
+  var reporter = new Reporter();
+  var iframe = document.getElementById("testframe");
+  var testHarness = new WebGLTestHarnessModule.TestHarness(
+      iframe,
+      'test_list.txt',
+      function(type, msg, success) {
+        return reporter.reportFunc(type, msg, success);
+      });
+  window.webglTestHarness = testHarness;
+  var button = document.getElementById("runTestsButton");
+  button.onclick = function() {
+    testHarness.runTests();
+  };
+  if (reporter.noWebGL) {
+    button.disabled = true;
+    var elem = document.getElementById("nowebgl");
+    elem.style.display = "";
+  }
+}
+</script>
+</head>
+<body onload="start()">
+<table border="2">
+<tr style="height: 300px;">
+<td>
+<table>
+<tr><td><img src="http://www.khronos.org/img/api_logos/webgl-logo.png" /><br />WebGL Conformance Test Runner<br/><input type="button" value="run tests" id="runTestsButton"/>
+<div id="nowebgl" class="nowebgl" style="display: none;">This browser does not appear to support WebGL</div></td></tr>
+<tr><td><div style="border: 1px">Results: <span id="fullresults"></span></div>
+<canvas id="webglcheck" style="display: none;"></canvas></td></tr>
+</table>
+</td>
+<td>
+<iframe id="testframe" scrolling="yes" width="100%" height="100%"></iframe>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+<div style="text-align: left; width: 100%; height: 100%; overflow: auto;">
+<div><ul id="results"></ul></div>
+</div>
+</td>
+</tr>
+</table>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-/
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,8 +54,6 @@ public:
     mImplData = static_cast<LayerOGL*>(this);
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
-
   // LayerOGL Implementation
   virtual LayerType GetType();
 
@@ -63,9 +61,6 @@ public:
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
-
-protected:
-  nsIntRegion mVisibleRegion;
 };
 
 } /* layers */

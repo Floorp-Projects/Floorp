@@ -71,7 +71,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "prmem.h"
 
 #include "LayerManagerOGL.h"
-#ifndef WINCE
+#ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
 
@@ -687,7 +687,7 @@ DDRAW_FAILED:
           SetClippingRegion(event.region);
         result = DispatchWindowEvent(&event, eventStatus);
         break;
-#ifndef WINCE
+#ifdef MOZ_ENABLE_D3D9_LAYER
       case LayerManager::LAYERS_D3D9:
         static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager())->
           SetClippingRegion(event.region);

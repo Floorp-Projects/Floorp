@@ -73,7 +73,8 @@ DumpLayerAndChildren(LayerOGL *l, int advance = 0)
   l = l->GetFirstChildOGL();
   while (l) {
     DumpLayerAndChildren(l, advance+1);
-    l = l->GetNextSibling();
+    Layer *genl =  l->GetLayer()->GetNextSibling();
+    l = genl ? static_cast<LayerOGL*>(genl->ImplData()) : nsnull;
   }
 }
 

@@ -314,11 +314,16 @@ nsAccReorderEvent::HasAccessibleInReasonSubtree()
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,
                              nsIAccessibleStateChangeEvent)
 
+// Note: we pass in eAllowDupes to the base class because we don't currently
+// support correct state change coalescence (XXX Bug 569356). Also we need to
+// decide how to coalesce events created via accessible (instead of node).
 nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
-                        PRBool aIsEnabled):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible),
+                        PRBool aIsEnabled, PRBool aIsAsynch,
+                        EIsFromUserInput aIsFromUserInput):
+  nsAccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, aIsAsynch,
+             aIsFromUserInput, eAllowDupes),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
 }
@@ -379,12 +384,20 @@ nsAccStateChangeEvent::IsEnabled(PRBool *aIsEnabled)
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
                              nsIAccessibleTextChangeEvent)
 
+// Note: we pass in eAllowDupes to the base class because we don't support text
+// events coalescence. We fire delayed text change events in nsDocAccessible but
+// we continue to base the event off the accessible object rather than just the
+// node. This means we won't try to create an accessible based on the node when
+// we are ready to fire the event and so we will no longer assert at that point
+// if the node was removed from the document. Either way, the AT won't work with
+// a defunct accessible so the behaviour should be equivalent.
+// XXX revisit this when coalescence is faster (eCoalesceFromSameSubtree)
 nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
                        PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted,
                        PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput) :
   nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
-             aAccessible, aIsAsynch, aIsFromUserInput),
+             aAccessible, aIsAsynch, aIsFromUserInput, eAllowDupes),
   mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
 #ifdef XP_WIN

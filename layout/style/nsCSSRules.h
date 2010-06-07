@@ -60,7 +60,7 @@ class nsMediaList;
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
 NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet); \
 NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule); \
-NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 #define DECL_STYLE_RULE_INHERIT  \
 DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
@@ -80,7 +80,7 @@ protected:
 
   // to help implement nsIStyleRule
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
 public:
@@ -124,7 +124,7 @@ public:
 
   // nsIStyleRule methods
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
   // nsICSSRule methods
@@ -166,7 +166,7 @@ public:
 
   // nsIStyleRule methods
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
   // nsICSSRule methods
@@ -255,7 +255,7 @@ public:
 
   // nsIStyleRule methods
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
   // nsICSSRule methods
