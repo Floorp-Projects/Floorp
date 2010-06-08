@@ -227,10 +227,10 @@ public:
             if (!JS_ReportPendingException(cx))
                 JS_ClearPendingException(cx);
         }
-        JS_AddNamedRoot(cx, &mStr, "Value ToString helper");
+        JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
     ~ToString() {
-        JS_RemoveRoot(cx, &mStr);
+        JS_RemoveStringRoot(cx, &mStr);
     }
     JSBool threw() { return !mStr; }
     jsval getJSVal() { return STRING_TO_JSVAL(mStr); }
@@ -3263,10 +3263,10 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         goto fail;
     for (i = 0; i < n; i++) {
         sd.results[i] = JSVAL_VOID;
-        ok = JS_AddRoot(cx, &sd.results[i]);
+        ok = JS_AddValueRoot(cx, &sd.results[i]);
         if (!ok) {
             while (i-- > 0)
-                JS_RemoveRoot(cx, &sd.results[i]);
+                JS_RemoveValueRoot(cx, &sd.results[i]);
             free(sd.results);
             sd.results = NULL;
             goto fail;
@@ -3283,14 +3283,14 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         sd.threads[i].cx = NULL;
         sd.threads[i].fn = JSVAL_NULL;
 
-        ok = JS_AddRoot(cx, &sd.threads[i].fn);
+        ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
         if (ok && !JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn)) {
-            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             ok = JS_FALSE;
         }
         if (!ok) {
             while (i-- > 0)
-                JS_RemoveRoot(cx, &sd.threads[i].fn);
+                JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             free(sd.threads);
             sd.threads = NULL;
             goto fail;
@@ -3358,7 +3358,7 @@ out:
         JSContext *acx;
 
         for (i = 0; i < n; i++) {
-            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             acx = sd.threads[i].cx;
             if (acx) {
                 JS_SetContextThread(acx);
@@ -3369,7 +3369,7 @@ out:
     }
     if (sd.results) {
         for (i = 0; i < n; i++)
-            JS_RemoveRoot(cx, &sd.results[i]);
+            JS_RemoveValueRoot(cx, &sd.results[i]);
         free(sd.results);
     }
     if (sd.cvar)
@@ -4199,13 +4199,13 @@ its_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
   }
 
-  if (!JS_AddRoot(cx, val)) {
+  if (!JS_AddValueRoot(cx, val)) {
       delete val;
       return JS_FALSE;
   }
 
   if (!JS_SetPrivate(cx, obj, (void*)val)) {
-      JS_RemoveRoot(cx, val);
+      JS_RemoveValueRoot(cx, val);
       delete val;
       return JS_FALSE;
   }
@@ -4437,7 +4437,7 @@ its_finalize(JSContext *cx, JSObject *obj)
         fprintf(gOutFile, "finalizing it\n");
     rootedVal = (jsval *) JS_GetPrivate(cx, obj);
     if (rootedVal) {
-      JS_RemoveRoot(cx, rootedVal);
+      JS_RemoveValueRoot(cx, rootedVal);
       JS_SetPrivate(cx, obj, NULL);
       delete rootedVal;
     }
@@ -5016,7 +5016,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
         JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
     };
     ShellWorkerHooks hooks;
-    if (!JS_AddNamedRoot(cx, &gWorkers, "Workers") ||
+    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
         !js::workers::init(cx, &hooks, glob, &gWorkers)) {
         return 1;
     }
@@ -5026,7 +5026,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 
 #ifdef JS_THREADSAFE
     js::workers::finish(cx, gWorkers);
-    JS_RemoveRoot(cx, &gWorkers);
+    JS_RemoveObjectRoot(cx, &gWorkers);
     if (result == 0)
         result = gExitCode;
 #endif

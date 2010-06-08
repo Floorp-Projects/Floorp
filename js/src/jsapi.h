@@ -898,41 +898,101 @@ extern JS_PUBLIC_API(JSBool)
 JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
 /*
- * A JS GC root is a pointer to a JSObject *, JSString *, or jsdouble * that
- * itself points into the GC heap (more recently, we support this extension:
- * a root may be a pointer to a jsval v for which JSVAL_IS_GCTHING(v) is true).
+ * A GC root is a pointer to a jsval, JSObject * or JSString * that itself
+ * points into the GC heap. JS_AddValueRoot takes a pointer to a jsval and
+ * JS_AddGCThingRoot takes a pointer to a JSObject * or JString *.
  *
- * Therefore, you never pass JSObject *obj to JS_AddRoot(cx, obj).  You always
- * call JS_AddRoot(cx, &obj), passing obj by reference.  And later, before obj
- * or the structure it is embedded within goes out of scope or is freed, you
- * must call JS_RemoveRoot(cx, &obj).
+ * Note that, since JS_Add*Root stores the address of a variable (of type
+ * jsval, JSString *, or JSObject *), that variable must live until
+ * JS_Remove*Root is called to remove that variable. For example, after:
  *
- * Also, use JS_AddNamedRoot(cx, &structPtr->memberObj, "structPtr->memberObj")
- * in preference to JS_AddRoot(cx, &structPtr->memberObj), in order to identify
+ *   void some_function() {
+ *     jsval v;
+ *     JS_AddNamedRootedValue(cx, &v, "name");
+ *
+ * the caller must perform
+ *
+ *     JS_RemoveRootedValue(cx, &v);
+ *
+ * before some_function() returns.
+ *
+ * Also, use JS_AddNamed*Root(cx, &structPtr->memberObj, "structPtr->memberObj")
+ * in preference to JS_Add*Root(cx, &structPtr->memberObj), in order to identify
  * roots by their source callsites.  This way, you can find the callsite while
- * debugging if you should fail to do JS_RemoveRoot(cx, &structPtr->memberObj)
+ * debugging if you should fail to do JS_Remove*Root(cx, &structPtr->memberObj)
  * before freeing structPtr's memory.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_AddRoot(JSContext *cx, void *rp);
+JS_AddValueRoot(JSContext *cx, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddStringRoot(JSContext *cx, JSString **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddObjectRoot(JSContext *cx, JSObject **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddDoubleRoot(JSContext *cx, jsdouble **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddGCThingRoot(JSContext *cx, void **rp);
 
 #ifdef NAME_ALL_GC_ROOTS
 #define JS_DEFINE_TO_TOKEN(def) #def
 #define JS_DEFINE_TO_STRING(def) JS_DEFINE_TO_TOKEN(def)
-#define JS_AddRoot(cx,rp) JS_AddNamedRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddValueRoot(cx,vp) JS_AddNamedValueRoot((cx), (vp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddStringRoot(cx,rp) JS_AddNamedStringRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddObjectRoot(cx,rp) JS_AddNamedObjectRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddDoubleRoot(cx,rp) JS_AddNamedDoubleRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddGCThingRoot(cx,rp) JS_AddNamedGCThingRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
 #endif
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedRoot(JSContext *cx, void *rp, const char *name);
+JS_AddNamedValueRoot(JSContext *cx, jsval *vp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedRootRT(JSRuntime *rt, void *rp, const char *name);
+JS_AddNamedStringRoot(JSContext *cx, JSString **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveRoot(JSContext *cx, void *rp);
+JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveRootRT(JSRuntime *rt, void *rp);
+JS_AddNamedDoubleRoot(JSContext *cx, jsdouble **rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveValueRoot(JSContext *cx, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveStringRoot(JSContext *cx, JSString **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveObjectRoot(JSContext *cx, JSObject **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveDoubleRoot(JSContext *cx, jsdouble **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveGCThingRoot(JSContext *cx, void **rp);
+
+/* TODO: remove these APIs */
+
+extern JS_FRIEND_API(JSBool)
+js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name);
+
+extern JS_FRIEND_API(JSBool)
+js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name);
+
+extern JS_FRIEND_API(JSBool)
+js_RemoveRoot(JSRuntime *rt, void *rp);
+
+/*
+ * This symbol may be used by embedders to detect the change from the old
+ * JS_AddRoot(JSContext *, void *) APIs to the new ones above.
+ */
+#define JS_TYPED_ROOTING_API
 
 /*
  * The last GC thing of each type (object, string, double, external string
@@ -960,7 +1020,7 @@ JS_ClearNewbornRoots(JSContext *cx);
  * Scoped local root management allows native functions, getter/setters, etc.
  * to avoid worrying about the newborn root pigeon-holes, overloading local
  * roots allocated in argv and *rval, or ending up having to call JS_Add*Root
- * and JS_RemoveRoot to manage global roots temporarily.
+ * and JS_Remove*Root to manage global roots temporarily.
  *
  * Instead, calling JS_EnterLocalRootScope and JS_LeaveLocalRootScope around
  * the body of the native hook causes the engine to allocate a local root for
@@ -2222,13 +2282,13 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
  *
  *    JSScript *script = JS_CompileFile(cx, global, filename);
  *    JSObject *scrobj = JS_NewScriptObject(cx, script);
- *    JS_AddNamedRoot(cx, &scrobj, "scrobj");
+ *    JS_AddNamedObjectRoot(cx, &scrobj, "scrobj");
  *    do {
  *        jsval result;
  *        JS_ExecuteScript(cx, global, script, &result);
  *        JS_GC();
  *    } while (!JSVAL_IS_BOOLEAN(result) || JSVAL_TO_BOOLEAN(result));
- *    JS_RemoveRoot(cx, &scrobj);
+ *    JS_RemoveObjectRoot(cx, &scrobj);
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);
