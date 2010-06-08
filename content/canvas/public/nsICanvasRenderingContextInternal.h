@@ -115,7 +115,7 @@ public:
   // store, this will set it to that state. Note that if you have drawn
   // anything into this canvas before changing the shmem state, it will be
   // lost.
-  NS_IMETHOD SetIsShmem(PRBool isShmem) = 0;
+  NS_IMETHOD SetIsIPC(PRBool isIPC) = 0;
 
   // Swap this back buffer with the front, and copy its contents to the new
   // back. x, y, w, and h specify the area of |back| that is dirty.

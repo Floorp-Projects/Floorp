@@ -47,7 +47,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(5ef1c2ee-4b3a-4015-8e38-c27ddb306c39)]
+[scriptable, uuid(56cee121-df62-49b6-b76d-71189441c98e)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
@@ -73,6 +73,6 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 
   // A Mozilla-only extension to get a canvas context backed by double-buffered
   // shared memory. Only privileged callers can call this.
-  nsISupports MozGetShmemContext(in DOMString contextId);
+  nsISupports MozGetIPCContext(in DOMString contextId);
 };
 
