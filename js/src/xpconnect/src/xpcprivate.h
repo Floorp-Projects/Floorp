@@ -445,6 +445,7 @@ public:
 public:
     // These get non-addref'd pointers
     static nsXPConnect*  GetXPConnect();
+    static nsXPConnect*  FastGetXPConnect() { return gSelf ? gSelf : GetXPConnect(); }
     static XPCJSRuntime* GetRuntimeInstance();
     XPCJSRuntime* GetRuntime() {return mRuntime;}
 

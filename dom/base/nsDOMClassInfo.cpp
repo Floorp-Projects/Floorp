@@ -7065,7 +7065,7 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  JSObject *winObj = win->GetGlobalJSObject();
+  JSObject *winObj = win->FastGetGlobalJSObject();
   if (!winObj) {
     NS_ASSERTION(origWin->IsOuterWindow(), "What window is this?");
     *_retval = obj;
@@ -7100,7 +7100,7 @@ nsWindowSH::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
       return NS_ERROR_UNEXPECTED;
     }
 
-    *_retval = inner->GetGlobalJSObject();
+    *_retval = inner->FastGetGlobalJSObject();
   }
 
   return NS_OK;
