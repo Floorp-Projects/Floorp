@@ -694,6 +694,8 @@ iQ.fn = iQ.prototype = {
     
   // ----------
   // Function: bind
+  // Binds the given function to the given event type. Also wraps the function 
+  // in a try/catch block that does a Utils.log on any errors.
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
 
