@@ -78,6 +78,7 @@ void JS_FASTCALL PropInc(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL PropDec(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL IncProp(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL DecProp(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL CallProp(VMFrame &f, JSAtom *atom);
 
 void JS_FASTCALL DefFun(VMFrame &f, uint32 index);
 JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
