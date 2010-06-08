@@ -2238,7 +2238,7 @@ js_InvokeOperationCallback(JSContext *cx)
      * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
-    JS_ATOMIC_UNSET_MASK(&cx->interruptFlags,
+    JS_ATOMIC_CLEAR_MASK(&cx->interruptFlags,
                          JSContext::INTERRUPT_OPERATION_CALLBACK);
 
     /*
