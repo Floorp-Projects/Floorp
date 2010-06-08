@@ -225,6 +225,10 @@ ValueIsLength(JSContext *cx, jsval* vp)
     length = (jsuint) d;
     if (d != (jsdouble) length)
         goto error;
+    if (!js_NewNumberInRootedValue(cx, d, vp)) {
+        *vp = JSVAL_NULL;
+        return 0;
+    }
     return length;
 
   error:
