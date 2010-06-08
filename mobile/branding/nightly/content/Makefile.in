@@ -21,7 +21,5 @@ LINUX_BRANDING_FILES = \
 
 export::
 	$(NSINSTALL) -D $(DIST)/branding
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	cp $(addprefix $(srcdir)/, $(LINUX_BRANDING_FILES)) $(DIST)/branding/
 	$(NSINSTALL) -D $(DIST)/install
-endif
