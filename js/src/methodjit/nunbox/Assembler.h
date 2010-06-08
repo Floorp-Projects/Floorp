@@ -95,7 +95,7 @@ class Assembler : public BaseAssembler
         jsval_layout jv;
         jv.asBits = Jsvalify(v);
 
-        store32(ImmTag(jv.s.mask32), tagOf(address));
+        store32(ImmTag(jv.s.u.mask32), tagOf(address));
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
