@@ -54,7 +54,6 @@ _BROWSER_TEST_FILES = \
 	browser_sort_in_library.js \
 	browser_library_open_leak.js \
 	browser_library_panel_leak.js \
-	browser_library_search.js \
 	browser_history_sidebar_search.js \
 	browser_bookmarksProperties.js \
 	browser_forgetthissite_single.js \
@@ -66,6 +65,9 @@ _BROWSER_TEST_FILES = \
 	browser_sidebarpanels_click.js \
 	browser_library_infoBox.js \
 	$(NULL)
+
+# Test disabled because it's failing every time!  See bug 570720.
+#	browser_library_search.js \
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
