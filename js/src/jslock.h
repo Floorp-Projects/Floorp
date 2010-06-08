@@ -314,10 +314,10 @@ js_AtomicSetMask(jsword *w, jsword mask);
  * compare and swap.
  */
 extern void
-js_AtomicUnsetMask(jsword *w, jsword mask);
+js_AtomicClearMask(jsword *w, jsword mask);
 
 #define JS_ATOMIC_SET_MASK(w, mask) js_AtomicSetMask(w, mask)
-#define JS_ATOMIC_UNSET_MASK(w, mask) js_AtomicUnsetMask(w, mask)
+#define JS_ATOMIC_CLEAR_MASK(w, mask) js_AtomicClearMask(w, mask)
 
 #else
 
@@ -328,7 +328,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 }
 
 #define JS_ATOMIC_SET_MASK(w, mask) (*(w) |= (mask))
-#define JS_ATOMIC_UNSET_MASK(w, mask) (*(w) &= ~(mask))
+#define JS_ATOMIC_CLEAR_MASK(w, mask) (*(w) &= ~(mask))
 
 #endif /* JS_THREADSAFE */
 
