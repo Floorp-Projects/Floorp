@@ -159,7 +159,7 @@ _TEST_FILES += \
 endif
 endif
 
-# Ogg sample files
+# sample files
 _TEST_FILES += \
 		320x240.ogv \
 		448636.ogv \
@@ -193,6 +193,7 @@ _TEST_FILES += \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
+		seek.webm \
 		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \
