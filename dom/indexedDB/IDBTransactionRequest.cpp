@@ -433,31 +433,61 @@ IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
 
 already_AddRefed<mozIStorageStatement>
 IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
-                                            bool aUnique)
+                                            bool aUnique,
+                                            bool aOverwrite)
 {
+  // XXX we may not want to replace!
   if (aAutoIncrement) {
     if (aUnique) {
+      if (aOverwrite) {
+        return GetCachedStatement(
+          "INSERT OR REPLACE INTO ai_unique_index_data "
+            "(index_id, object_data_id, id, value) "
+          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+        );
+      }
       return GetCachedStatement(
-        "INSERT OR REPLACE INTO ai_unique_index_data "
+        "INSERT INTO ai_unique_index_data "
+          "(index_id, object_data_id, id, value) "
+        "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+      );
+    }
+    if (aOverwrite) {
+      return GetCachedStatement(
+        "INSERT OR REPLACE INTO ai_index_data "
           "(index_id, object_data_id, id, value) "
         "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
       );
     }
     return GetCachedStatement(
-      "INSERT OR REPLACE INTO ai_index_data "
+      "INSERT INTO ai_index_data "
         "(index_id, object_data_id, id, value) "
       "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
     );
   }
   if (aUnique) {
+    if (aOverwrite) {
+      return GetCachedStatement(
+        "INSERT OR REPLACE INTO unique_index_data "
+          "(index_id, object_data_id, object_data_key, value) "
+        "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+      );
+    }
     return GetCachedStatement(
-      "INSERT OR REPLACE INTO unique_index_data "
+      "INSERT INTO unique_index_data "
         "(index_id, object_data_id, object_data_key, value) "
       "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
     );
   }
+  if (aOverwrite) {
+    return GetCachedStatement(
+      "INSERT INTO index_data ("
+        "index_id, object_data_id, object_data_key, value) "
+      "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+    );
+  }
   return GetCachedStatement(
-    "INSERT OR REPLACE INTO index_data ("
+    "INSERT INTO index_data ("
       "index_id, object_data_id, object_data_key, value) "
     "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
   );
