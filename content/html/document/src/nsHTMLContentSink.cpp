@@ -529,10 +529,9 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
   if (aNodeType == eHTMLTag_userdefined) {
-    NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
-    ToLowerCase(tmp);
-
-    nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+    nsAutoString lower;
+    nsContentUtils::ASCIIToLower(aNode.GetText(), lower);
+    nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
     nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_XHTML);
   }
   else if (mNodeInfoCache[aNodeType]) {
