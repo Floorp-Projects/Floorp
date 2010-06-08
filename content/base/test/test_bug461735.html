@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=461735
 <script type="application/javascript">
 window.onerror = function(message, uri, line) {
   is(message, "Script error.", "Should have empty error message");
-  is(uri, "http://example.com/tests/content/base/test/bug461735-post-redirect.js", "Unexpected error location URI");
+  is(uri, "", "Should have empty error location URI");
   is(line, 0, "Shouldn't have a line here");
 }
 </script>
