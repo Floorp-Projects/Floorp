@@ -475,6 +475,10 @@ public:
             NS_WARNING("Not same origin error!");
             errorevent.errorMsg = xoriginMsg.get();
             errorevent.lineNr = 0;
+            // FIXME: once the principal of the script is not tied to
+            // the filename, we can stop using the post-redirect
+            // filename if we want and remove this line.
+            errorevent.fileName = nsnull;
           }
 
           nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
