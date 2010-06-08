@@ -1171,7 +1171,8 @@ js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
     js_WaitForGC(rt);
 
     void *key = vp;
-    return !!rt->gcRootsHash.put(key, RootInfo(name, JS_GC_ROOT_VALUE_PTR));
+    return !!rt->gcRootsHash.put((void *)vp,
+                                 RootInfo(name, JS_GC_ROOT_VALUE_PTR));
 }
 
 JS_FRIEND_API(JSBool)
@@ -1187,8 +1188,8 @@ js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
 
-    void *key = rp;
-    return !!rt->gcRootsHash.put(key, RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
+    return !!rt->gcRootsHash.put((void *)rp,
+                                 RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
 
 JS_FRIEND_API(JSBool)
@@ -1903,9 +1904,9 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
 #ifdef DEBUG
     void *ptr;
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR) {
-        ptr = entry.key;
+        ptr = *reinterpret_cast<void **>(entry.key);
     } else {
-        Value *vp = static_cast<Value *>(entry.key);
+        Value *vp = reinterpret_cast<Value *>(entry.key);
         ptr = vp->isGCThing() ? vp->asGCThing() : NULL;
     }
 
@@ -1941,9 +1942,9 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
 
     JS_SET_TRACING_NAME(trc, entry.value.name ? entry.value.name : "root");
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        MarkGCThingRaw(trc, entry.key);
+        MarkGCThingRaw(trc, *reinterpret_cast<void **>(entry.key));
     else
-        MarkValueRaw(trc, *static_cast<Value *>(entry.key));
+        MarkValueRaw(trc, *reinterpret_cast<Value *>(entry.key));
 }
 
 static JSDHashOperator
