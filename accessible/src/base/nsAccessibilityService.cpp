@@ -1218,6 +1218,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // elements return the image frame as their primary frame. The main content
     // for the image frame is the image content. If the frame is not an image
     // frame or the node is not an area element then null is returned.
+    // This setup will change when bug 135040 is fixed.
     return GetAreaAccessible(weakFrame.GetFrame(), aNode, aWeakShell);
   }
 
