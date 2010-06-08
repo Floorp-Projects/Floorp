@@ -1443,9 +1443,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved
             return JS_TRUE;
 
         JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
-        jsval v;
-        if (!js_GetReservedSlot(cx, obj, key, &v))
-            return JS_FALSE;
+        jsval v = obj->getReservedSlot(key);
         if (!JSVAL_IS_PRIMITIVE(v))
             return JS_TRUE;
 
@@ -4083,8 +4081,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     JSObject *tmp;
     JSFastNative native;
 
-    if (!js_GetReservedSlot(cx, JSVAL_TO_OBJECT(*vp), 0, &fsv))
-        return JS_FALSE;
+    fsv = JSVAL_TO_OBJECT(*vp)->getReservedSlot(0);
     fs = (JSFunctionSpec *) JSVAL_TO_PRIVATE(fsv);
     JS_ASSERT((~fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) == 0);
 
@@ -4139,8 +4136,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
     JSFunctionSpec *fs;
     JSObject *tmp;
 
-    if (!js_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &fsv))
-        return JS_FALSE;
+    fsv = JSVAL_TO_OBJECT(argv[-2])->getReservedSlot(0);
     fs = (JSFunctionSpec *) JSVAL_TO_PRIVATE(fsv);
     JS_ASSERT((fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) ==
               JSFUN_GENERIC_NATIVE);
