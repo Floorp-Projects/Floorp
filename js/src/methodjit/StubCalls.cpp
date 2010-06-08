@@ -1679,6 +1679,14 @@ stubs::NewArray(VMFrame &f, uint32 len)
 }
 
 void JS_FASTCALL
+stubs::Interrupt(VMFrame &f)
+{
+    if (!js_HandleExecutionInterrupt(f.cx)) {
+        THROW();
+    }
+}
+
+void JS_FASTCALL
 stubs::This(VMFrame &f)
 {
     if (!f.fp->getThisObject(f.cx))

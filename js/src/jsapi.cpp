@@ -4879,12 +4879,13 @@ JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx)
 {
     /*
-     * Use JS_ATOMIC_SET in the hope that it will make sure the write
+     * Use JS_ATOMIC_SET_MASK in the hope that it will make sure the write
      * will become immediately visible to other processors polling
-     * cx->operationCallbackFlag. Note that we only care about
-     * visibility here, not read/write ordering.
+     * cx->interruptFlag. Note that we only care about visibility here,
+     * not read/write ordering.
      */
-    JS_ATOMIC_SET(&cx->operationCallbackFlag, 1);
+    JS_ATOMIC_SET_MASK(const_cast<jsword*>(&cx->interruptFlags),
+                       JSContext::INTERRUPT_OPERATION_CALLBACK);
 }
 
 JS_PUBLIC_API(void)
