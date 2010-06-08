@@ -1036,7 +1036,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         var activeTab = self.getActiveTab();
         if( activeTab ) TabItems.zoomTo(activeTab)
         // TODO: This should also accept TabItems
-        else TabItems.zoomTo(self.getChild(0).tab.mirror.el);
+        else if(self.getChild(0))
+          TabItems.zoomTo(self.getChild(0).tab.mirror.el);
     });
     
     $(container).droppable({
@@ -1106,7 +1107,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       var group = Groups.getActiveGroup();
 
       iQ(tab.container).css({opacity: 0});
-      anim = $("<div>")
+      var $anim = iQ("<div>")
         .addClass('newTabAnimatee')
         .css({
           top: tab.bounds.top+5,
@@ -1120,31 +1121,33 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         .animate({
           opacity: 1.0
         }, {
-          duration: 500
-        })
-        .animate({
-          top: 0,
-          left: 0,
-          width: window.innerWidth,
-          height: window.innerHeight
-        }, {
-          duration: 270, 
-          complete: function(){
-            $(tab.container).css({opacity: 1});
-            newTab.focus();
-            Page.showChrome()
-            UI.navBar.urlBar.focus();
-            anim.remove();
-            // We need a timeout here so that there is a chance for the
-            // new tab to get made! Otherwise it won't appear in the list
-            // of the group's tab.
-            // TODO: This is probably a terrible hack that sets up a race
-            // condition. We need a better solution.
-            setTimeout(function(){
-              UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
-            }, 400);
+          duration: 500, 
+          complete: function() {
+            $anim.animate({
+              top: 0,
+              left: 0,
+              width: window.innerWidth,
+              height: window.innerHeight
+            }, {
+              duration: 270, 
+              complete: function(){
+                iQ(tab.container).css({opacity: 1});
+                newTab.focus();
+                Page.showChrome()
+                UI.navBar.urlBar.focus();
+                $anim.remove();
+                // We need a timeout here so that there is a chance for the
+                // new tab to get made! Otherwise it won't appear in the list
+                // of the group's tab.
+                // TODO: This is probably a terrible hack that sets up a race
+                // condition. We need a better solution.
+                setTimeout(function(){
+                  UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+                }, 400);
+              }
+            });      
           }
-        });      
+        });
     }    
     
     // TODO: Because this happens as a callback, there is

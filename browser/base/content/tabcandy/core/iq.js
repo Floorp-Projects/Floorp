@@ -697,18 +697,27 @@ iQ.fn = iQ.prototype = {
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
 
-/*
     var handler = function(e) {
       try {
-        return func(e);
+        return func.apply(this, [e]);
       } catch(e) {
         Utils.log(e);
       }
     };
-*/
 
   	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      elem.addEventListener(type, func, false);
+      if(!elem.iQEventData)
+        elem.iQEventData = {};
+        
+      if(!elem.iQEventData[type])
+        elem.iQEventData[type] = [];
+        
+      elem.iQEventData[type].push({
+        original: func, 
+        modified: handler
+      });
+      
+      elem.addEventListener(type, handler, false);
     }
     
     return this; 
@@ -733,7 +742,19 @@ iQ.fn = iQ.prototype = {
     Utils.assert('Must provide a function', iQ.isFunction(func));
     
   	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      elem.removeEventListener(type, func, false);
+      var handler = func;
+      if(elem.iQEventData && elem.iQEventData[type]) {
+        for(var a = 0, count = elem.iQEventData[type].length; a < count; a++) {
+          var pair = elem.iQEventData[type][a];
+          if(pair.original == func) {
+            handler = pair.modified; 
+            elem.iQEventData[type].splice(a, 1);
+            break;
+          }
+        }
+      }
+      
+      elem.removeEventListener(type, handler, false);
     }
     
     return this; 
@@ -995,6 +1016,7 @@ iQ.extend({
     'keydown',
     'mouseup',
     'mousedown',
+    'mouseover',
     'mousemove',
     'click',
     'resize',
