@@ -459,11 +459,24 @@ js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
  * The caller must call JS_free on the result after a succsesful call.
  */
 extern char *
-js_DecompileValueGenerator(JSContext *cx, intN spindex, const js::Value &v,
+js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback);
 
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
+
+#ifdef __cplusplus
+namespace js {
+
+static inline char *
+DecompileValueGenerator(JSContext *cx, intN spindex, Value v,
+                        JSString *fallback)
+{
+    return js_DecompileValueGenerator(cx, spindex, Jsvalify(v), fallback);
+}
+
+}
+#endif
 
 /*
  * Given bytecode address pc in script's main program code, return the operand

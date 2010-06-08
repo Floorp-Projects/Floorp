@@ -547,17 +547,33 @@ mjit::Compiler::generateMethod()
             jsop_nameinc(op, stubs::IncName, fullAtomIndex(PC));
           END_CASE(JSOP_INCNAME)
 
+          BEGIN_CASE(JSOP_INCPROP)
+            jsop_propinc(op, stubs::IncProp, fullAtomIndex(PC));
+          END_CASE(JSOP_INCPROP)
+
           BEGIN_CASE(JSOP_DECNAME)
             jsop_nameinc(op, stubs::DecName, fullAtomIndex(PC));
           END_CASE(JSOP_DECNAME)
+
+          BEGIN_CASE(JSOP_DECPROP)
+            jsop_propinc(op, stubs::DecProp, fullAtomIndex(PC));
+          END_CASE(JSOP_DECPROP)
 
           BEGIN_CASE(JSOP_NAMEINC)
             jsop_nameinc(op, stubs::NameInc, fullAtomIndex(PC));
           END_CASE(JSOP_NAMEINC)
 
+          BEGIN_CASE(JSOP_PROPINC)
+            jsop_propinc(op, stubs::PropInc, fullAtomIndex(PC));
+          END_CASE(JSOP_PROPINC)
+
           BEGIN_CASE(JSOP_NAMEDEC)
             jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
           END_CASE(JSOP_NAMEDEC)
+
+          BEGIN_CASE(JSOP_PROPDEC)
+            jsop_propinc(op, stubs::PropDec, fullAtomIndex(PC));
+          END_CASE(JSOP_PROPDEC)
 
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
@@ -825,6 +841,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETPROP)
+          BEGIN_CASE(JSOP_SETMETHOD)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::SetName, Uses(2), Defs(1));
@@ -921,6 +938,11 @@ mjit::Compiler::generateMethod()
             emitReturn();
             goto done;
           END_CASE(JSOP_STOP)
+
+          BEGIN_CASE(JSOP_CALLLOCAL)
+            frame.pushLocal(GET_SLOTNO(PC));
+            frame.push(NullTag());
+          END_CASE(JSOP_CALLLOCAL)
 
           BEGIN_CASE(JSOP_INT8)
             frame.push(Value(Int32Tag(GET_INT8(PC))));
@@ -1349,6 +1371,17 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     prepareStubCall();
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     stubCall(stub, Uses(0), Defs(1));
+    frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
+{
+    JSAtom *atom = script->getAtom(index);
+    prepareStubCall();
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    stubCall(stub, Uses(1), Defs(1));
+    frame.pop();
     frame.pushSynced();
 }
 
