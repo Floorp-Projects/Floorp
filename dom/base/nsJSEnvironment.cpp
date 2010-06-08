@@ -477,8 +477,11 @@ public:
             errorevent.lineNr = 0;
             // FIXME: once the principal of the script is not tied to
             // the filename, we can stop using the post-redirect
-            // filename if we want and remove this line.
-            errorevent.fileName = nsnull;
+            // filename if we want and remove this line.  Note that
+            // apparently we can't handle null filenames in the error
+            // event dispatching code.
+            static PRUnichar nullFilename[] = { PRUnichar(0) };
+            errorevent.fileName = nullFilename;
           }
 
           nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
