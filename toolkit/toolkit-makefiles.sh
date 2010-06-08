@@ -314,6 +314,10 @@ MAKEFILES_libvorbis="
   media/libvorbis/include/vorbis/Makefile
 "
 
+MAKEFILES_libvpx="
+  media/libvpx/Makefile
+"
+
 MAKEFILES_libtheora="
   media/libtheora/Makefile
   media/libtheora/lib/Makefile
@@ -327,10 +331,17 @@ MAKEFILES_libogg="
   media/libogg/include/Makefile
   media/libogg/include/ogg/Makefile
 "
+
 MAKEFILES_libsydneyaudio="
   media/libsydneyaudio/Makefile
   media/libsydneyaudio/include/Makefile
   media/libsydneyaudio/src/Makefile
+"
+
+MAKEFILES_libnestegg="
+  media/libnestegg/Makefile
+  media/libnestegg/include/Makefile
+  media/libnestegg/src/Makefile
 "
 
 MAKEFILES_plugin="
@@ -1194,12 +1205,25 @@ if [ "$MOZ_MEDIA" ]; then
  "
 fi
 
-if [ "$MOZ_OGG" ]; then
+if [ "$MOZ_VORBIS" ]; then
  add_makefiles "
    $MAKEFILES_libvorbis
+ "
+fi
+
+if [ "$MOZ_OGG" ]; then
+ add_makefiles "
    $MAKEFILES_libtheora
    $MAKEFILES_libogg
    content/media/ogg/Makefile
+ "
+fi
+
+if [ "$MOZ_WEBM" ]; then
+ add_makefiles "
+   $MAKEFILES_libvpx
+   $MAKEFILES_libnestegg
+   content/media/webm/Makefile
  "
 fi
 
