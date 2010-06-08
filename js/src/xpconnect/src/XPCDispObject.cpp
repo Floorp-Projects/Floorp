@@ -400,12 +400,12 @@ JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& ifa
     jsval val;
     if(!JS_GetReservedSlot(ccx, funobj, 1, &val))
         return JS_FALSE;
-    if(!JSVAL_IS_INT(val))
+    if(!JSVAL_MAY_BE_PRIVATE(val))
         return JS_FALSE;
     iface = reinterpret_cast<XPCNativeInterface*>(JSVAL_TO_PRIVATE(val));
     if(!JS_GetReservedSlot(ccx, funobj, 0, &val))
         return JS_FALSE;
-    if(!JSVAL_IS_INT(val))
+    if(!JSVAL_MAY_BE_PRIVATE(val))
         return JS_FALSE;
     member = reinterpret_cast<XPCDispInterface::Member*>(JSVAL_TO_PRIVATE(val));
     return JS_TRUE;
