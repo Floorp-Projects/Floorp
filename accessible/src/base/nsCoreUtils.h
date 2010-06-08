@@ -228,6 +228,26 @@ public:
     GetDocShellTreeItemFor(nsIDOMNode *aNode);
 
   /**
+   * Return true if document is loading.
+   */
+  static PRBool IsDocumentBusy(nsIDocument *aDocument);
+
+  /**
+   * Return true if the given document is root document.
+   */
+  static PRBool IsRootDocument(nsIDocument *aDocument);
+
+  /**
+   * Return true if the given document is content document (not chrome).
+   */
+  static PRBool IsContentDocument(nsIDocument *aDocument);
+
+  /**
+   * Return true if the given document is an error page.
+   */
+  static PRBool IsErrorPage(nsIDocument *aDocument);
+
+  /**
    * Retrun frame for the given DOM element.
    */
   static nsIFrame* GetFrameFor(nsIDOMElement *aElm);

@@ -183,7 +183,7 @@ nsAccEvent::GetDocAccessible()
 {
   nsINode *node = GetNode();
   if (node)
-    return nsAccessNode::GetDocAccessibleFor(node->GetOwnerDoc());
+    return GetAccService()->GetDocAccessible(node->GetOwnerDoc());
 
   return nsnull;
 }

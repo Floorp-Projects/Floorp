@@ -39,9 +39,10 @@
 #ifndef _nsDocAccessible_H_
 #define _nsDocAccessible_H_
 
+#include "nsIAccessibleDocument.h"
+
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsEventShell.h"
-#include "nsIAccessibleDocument.h"
 
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
@@ -112,10 +113,32 @@ public:
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
   virtual nsAccessible* GetParent();
 
+#ifdef DEBUG_ACCDOCMGR
+  virtual nsresult HandleAccEvent(nsAccEvent *aAccEvent);
+#endif
+
   // nsIAccessibleText
   NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
 
   // nsDocAccessible
+
+  nsIDocument *GetDOMDocument() const { return mDocument; }
+
+  /**
+   * Return true if associated DOM document was loaded and isn't unloading.
+   */
+  PRBool IsContentLoaded() const
+  {
+    return mDocument && mDocument->IsVisible() &&
+      (mDocument->IsShowing() || mIsLoaded);
+  }
+
+  /**
+   * Marks as loaded, used for error pages as workaround since they do not
+   * receive pageshow event and as consequence nsIDocument::IsShowing() returns
+   * false.
+   */
+  void MarkAsLoaded() { mIsLoaded = PR_TRUE; }
 
   /**
    * Non-virtual method to fire a delayed event after a 0 length timeout.
@@ -180,23 +203,12 @@ public:
   void RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode);
 
   /**
-   * Fire document load events.
-   *
-   * @param  aEventType  [in] nsIAccessibleEvent constant
-   */
-  virtual void FireDocLoadEvents(PRUint32 aEventType);
-
-  /**
    * Process the event when the queue of pending events is untwisted. Fire
    * accessible events as result of the processing.
    */
   void ProcessPendingEvent(nsAccEvent* aEvent);
 
 protected:
-  /**
-   * Iterates through sub documents and shut them down.
-   */
-  void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsresult AddEventListeners();
@@ -204,12 +216,15 @@ protected:
     void AddScrollListener();
     void RemoveScrollListener();
 
-    /**
-     * For any accessibles in this subtree, invalidate their knowledge of
-     * their children. Only weak references are destroyed, not accessibles.
-     * @param aStartNode  The root of the subrtee to invalidate accessible child refs in
-     */
-    void InvalidateChildrenInSubtree(nsIDOMNode *aStartNode);
+  /**
+   * Invalidate parent-child relations for any cached accessible in the DOM
+   * subtree. Accessible objects aren't destroyed.
+   *
+   * @param aStartNode  [in] the root of the subrtee to invalidate accessible
+   *                      child/parent refs in
+   */
+  void InvalidateChildrenInSubtree(nsIDOMNode *aStartNode);
+
     void RefreshNodes(nsIDOMNode *aStartNode);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
@@ -300,12 +315,15 @@ protected:
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
-    PRPackedBool mIsContentLoaded;
-    PRPackedBool mIsLoadCompleteFired;
 
 protected:
 
   nsRefPtr<nsAccEventQueue> mEventQueue;
+
+  /**
+   * Specifies if the document was loaded, used for error pages only.
+   */
+  PRPackedBool mIsLoaded;
 
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
