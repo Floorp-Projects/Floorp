@@ -98,7 +98,7 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
 
     if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
        !JS_GetReservedSlot(ccx, funobj, 1, &memberVal) ||
-       !JSVAL_IS_INT(ifaceVal) || !JSVAL_IS_INT(memberVal))
+       !JSVAL_MAY_BE_PRIVATE(ifaceVal) || !JSVAL_MAY_BE_PRIVATE(memberVal))
     {
         return JS_FALSE;
     }
