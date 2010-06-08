@@ -4908,8 +4908,10 @@ MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
 MOZ_SYDNEYAUDIO=
+MOZ_VORBIS=
 MOZ_WAVE=1
 MOZ_MEDIA=
+MOZ_WEBM=1
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -5852,15 +5854,14 @@ dnl ========================================================
 dnl = Disable Ogg Codecs
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(ogg,
-[  --disable-ogg           Disable Ogg Codec support],
+[  --disable-ogg           Disable support for OGG media (Theora video and Vorbis audio)],
     MOZ_OGG=,)
-
-AC_SUBST(MOZ_OGG)
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
+    MOZ_VORBIS=1
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5885,13 +5886,26 @@ if test -n "$MOZ_OGG"; then
 fi
 
 dnl ========================================================
+dnl = Disable VP8 decoder support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(vp8,
+[  --disable-webm         Disable support for WebM media (VP8 video and Vorbis audio)],
+    MOZ_WEBM=,
+    MOZ_WEBM=1)
+
+if test -n "$MOZ_WEBM"; then
+    AC_DEFINE(MOZ_WEBM)
+    MOZ_SYDNEYAUDIO=1
+    MOZ_MEDIA=1
+    MOZ_VORBIS=1
+fi
+
+dnl ========================================================
 dnl = Disable Wave decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(wave,
 [  --disable-wave          Disable Wave decoder support],
     MOZ_WAVE=,)
-
-AC_SUBST(MOZ_WAVE)
 
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
@@ -5903,16 +5917,16 @@ dnl ========================================================
 dnl = Handle dependent SYDNEYAUDIO and MEDIA defines
 dnl ========================================================
 
-AC_SUBST(MOZ_SYDNEYAUDIO)
-
 if test -n "$MOZ_SYDNEYAUDIO"; then
     AC_DEFINE(MOZ_SYDNEYAUDIO)
 fi
 
-AC_SUBST(MOZ_MEDIA)
-
 if test -n "$MOZ_MEDIA"; then
     AC_DEFINE(MOZ_MEDIA)
+fi
+
+if test -n "$MOZ_VORBIS"; then
+    AC_DEFINE(MOZ_VORBIS)
 fi
 
 dnl ========================================================
@@ -5929,7 +5943,6 @@ linux*)
       ;;
    esac
 fi
-AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl Splashscreen
@@ -8744,6 +8757,14 @@ AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(MOZ_NSS_PATCH)
+
+AC_SUBST(MOZ_MEDIA)
+AC_SUBST(MOZ_SYDNEYAUDIO)
+AC_SUBST(MOZ_WAVE)
+AC_SUBST(MOZ_VORBIS)
+AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_OGG)
+AC_SUBST(MOZ_ALSA_LIBS)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
