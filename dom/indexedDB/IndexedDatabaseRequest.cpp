@@ -42,7 +42,7 @@
 #include "nsIIDBDatabaseException.h"
 #include "nsILocalFile.h"
 
-#include "mozilla/Storage.h"
+#include "mozilla/storage.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
