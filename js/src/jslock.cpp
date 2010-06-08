@@ -278,13 +278,13 @@ js_AtomicSetMask(jsword *w, jsword mask)
 }
 
 void
-js_AtomicUnsetMask(jsword *w, jsword mask)
+js_AtomicClearMask(jsword *w, jsword mask)
 {
     jsword ov, nv;
 
     do {
         ov = *w;
-        nv = ov &= (~mask);
+        nv = ov & ~mask;
     } while (!js_CompareAndSwap(w, ov, nv));
 }
 
