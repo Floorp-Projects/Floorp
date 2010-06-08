@@ -1283,7 +1283,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
 
 /***************************************************************************/
 
-JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
+extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
 static JSObjectOps XPC_WN_WithCall_JSOps;
 static JSObjectOps XPC_WN_NoCall_JSOps;
