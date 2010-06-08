@@ -296,7 +296,7 @@ window.TabItems = {
           self.lastMouseDownTarget = e.target;
       });
         
-      $div.mouseup(function(e) { 
+      $div.mouseup(function(e) {
         var same = (e.target == self.lastMouseDownTarget);
         self.lastMouseDownTarget = null;
         if(!same)
