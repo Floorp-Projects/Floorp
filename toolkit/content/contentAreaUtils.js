@@ -750,13 +750,17 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
 function getPostData(aDocument)
 {
   try {
-    var sessionHistory = aDocument.defaultView
-                                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIWebNavigation)
-                                  .sessionHistory;
-    return sessionHistory.getEntryAtIndex(sessionHistory.index, false)
-                         .QueryInterface(Components.interfaces.nsISHEntry)
-                         .postData;
+    // Find the session history entry corresponding to the given document. In
+    // the current implementation, nsIWebPageDescriptor.currentDescriptor always
+    // returns a session history entry.
+    var sessionHistoryEntry =
+        aDocument.defaultView
+                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                 .getInterface(Components.interfaces.nsIWebNavigation)
+                 .QueryInterface(Components.interfaces.nsIWebPageDescriptor)
+                 .currentDescriptor
+                 .QueryInterface(Components.interfaces.nsISHEntry);
+    return sessionHistoryEntry.postData;
   }
   catch (e) {
   }
