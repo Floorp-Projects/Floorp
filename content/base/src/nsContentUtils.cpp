@@ -5784,6 +5784,10 @@ MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
   // need to match *all* of the classes
   ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
   PRInt32 length = info->mClasses.Count();
+  if (!length) {
+    // If we actually had no classes, don't match.
+    return PR_FALSE;
+  }
   PRInt32 i;
   for (i = 0; i < length; ++i) {
     if (!classAttr->Contains(info->mClasses.ObjectAt(i),
@@ -5802,19 +5806,15 @@ DestroyClassNameArray(void* aData)
   delete info;
 }
 
-// static
-nsresult
-nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
-                                       const nsAString& aClasses,
-                                       nsIDOMNodeList** aReturn)
+static void*
+AllocClassMatchingInfo(nsINode* aRootNode,
+                       const nsString* aClasses)
 {
-  NS_PRECONDITION(aRootNode, "Must have root node");
-  
   nsAttrValue attrValue;
-  attrValue.ParseAtomArray(aClasses);
+  attrValue.ParseAtomArray(*aClasses);
   // nsAttrValue::Equals is sensitive to order, so we'll send an array
   ClassMatchingInfo* info = new ClassMatchingInfo;
-  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(info, nsnull);
 
   if (attrValue.Type() == nsAttrValue::eAtomArray) {
     info->mClasses.AppendObjects(*(attrValue.GetAtomArrayValue()));
@@ -5822,27 +5822,27 @@ nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
     info->mClasses.AppendObject(attrValue.GetAtomValue());
   }
 
-  nsBaseContentList* elements;
-  if (info->mClasses.Count() > 0) {
-    info->mCaseTreatment =
-      aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
-        eCompatibility_NavQuirks ?
-          eIgnoreCase : eCaseMatters;
+  info->mCaseTreatment =
+    aRootNode->GetOwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks ?
+    eIgnoreCase : eCaseMatters;
+  return info;
+}
 
-    elements =
-      NS_GetFuncStringContentList(aRootNode, MatchClassNames,
-                                  DestroyClassNameArray, info,
-                                  aClasses).get();
-  } else {
-    delete info;
-    info = nsnull;
-    elements = new nsBaseContentList();
-    NS_IF_ADDREF(elements);
-  }
-  if (!elements) {
-    delete info;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+// static
+
+nsresult
+nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
+                                       const nsAString& aClasses,
+                                       nsIDOMNodeList** aReturn)
+{
+  NS_PRECONDITION(aRootNode, "Must have root node");
+  
+  nsContentList* elements =
+    NS_GetFuncStringContentList(aRootNode, MatchClassNames,
+                                DestroyClassNameArray,
+                                AllocClassMatchingInfo,
+                                aClasses).get();
+  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   // Transfer ownership
   *aReturn = elements;
