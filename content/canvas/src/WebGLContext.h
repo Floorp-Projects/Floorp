@@ -221,28 +221,33 @@ struct WebGLVertexAttribData {
     GLenum type;
     PRBool enabled;
 
-    GLuint actualStride() const {
-        if (stride) return stride;
-        GLuint componentSize = 0;
+    GLuint componentSize() const {
         switch(type) {
             case LOCAL_GL_BYTE:
-                componentSize = sizeof(GLbyte);
+                return sizeof(GLbyte);
                 break;
             case LOCAL_GL_UNSIGNED_BYTE:
-                componentSize = sizeof(GLubyte);
+                return sizeof(GLubyte);
                 break;
             case LOCAL_GL_SHORT:
-                componentSize = sizeof(GLshort);
+                return sizeof(GLshort);
                 break;
             case LOCAL_GL_UNSIGNED_SHORT:
-                componentSize = sizeof(GLushort);
+                return sizeof(GLushort);
                 break;
             // XXX case LOCAL_GL_FIXED:
             case LOCAL_GL_FLOAT:
-                componentSize = sizeof(GLfloat);
+                return sizeof(GLfloat);
                 break;
+            default:
+                NS_ERROR("Should never get here!");
+                return 0;
         }
-        return size * componentSize;
+    }
+
+    GLuint actualStride() const {
+        if (stride) return stride;
+        return size * componentSize();
     }
 };
 
