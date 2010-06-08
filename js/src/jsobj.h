@@ -348,6 +348,8 @@ struct JSObject {
     inline jsval getSlotMT(JSContext *cx, uintN slot);
     inline void setSlotMT(JSContext *cx, uintN slot, jsval value);
 
+    inline jsval getReservedSlot(uintN index) const;
+
     JSObject *getProto() const {
         return JSVAL_TO_OBJECT(fslots[JSSLOT_PROTO]);
     }
@@ -1266,7 +1268,7 @@ js_Clear(JSContext *cx, JSObject *obj);
 extern bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
-bool
+extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v);
 
 /*
