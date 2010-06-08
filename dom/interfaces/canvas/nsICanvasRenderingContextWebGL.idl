@@ -638,7 +638,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void drawArrays(in WebGLenum mode, in WebGLint first, in WebGLsizei count);
 
   // Modified: void glDrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, const void* indices);
-  void drawElements(in WebGLenum mode, in WebGLuint count, in WebGLenum type, in WebGLuint offset);
+  void drawElements(in WebGLenum mode, in WebGLsizei count, in WebGLenum type, in WebGLint offset);
 
   void enable(in WebGLenum cap);
   void enableVertexAttribArray(in WebGLuint index);
