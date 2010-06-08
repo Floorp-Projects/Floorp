@@ -326,8 +326,8 @@ SharedLookupSetter(JSContext *cx, uintN argc, jsval *vp)
 }
 
 // XXX Hack! :-/
-JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp);
-JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp);
+JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp);
+JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
 
 static JSBool
 DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
@@ -343,7 +343,8 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    JSFastNative forward = wantGetter ? js_obj_defineGetter : js_obj_defineSetter;
+    JSFastNative forward = wantGetter ? Jsvalify(js_obj_defineGetter)
+                                      : Jsvalify(js_obj_defineSetter);
     jsval id = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     if(!JSVAL_IS_STRING(id))
         return forward(cx, argc, vp);

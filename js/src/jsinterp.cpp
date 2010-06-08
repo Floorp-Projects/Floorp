@@ -1322,7 +1322,7 @@ js_TraceOpcode(JSContext *cx)
         if (ndefs != 0 &&
             ndefs < regs->sp - fp->slots()) {
             for (n = -ndefs; n < 0; n++) {
-                char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n], NULL);
+                char *bytes = DecompileValueGenerator(cx, n, regs->sp[n], NULL);
                 if (bytes) {
                     fprintf(tracefp, "%s %s",
                             (n == -ndefs) ? "  output:" : ",",
@@ -1357,7 +1357,7 @@ js_TraceOpcode(JSContext *cx)
     nuses = js_GetStackUses(&js_CodeSpec[op], op, regs->pc);
     if (nuses != 0) {
         for (n = -nuses; n < 0; n++) {
-            char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n], NULL);
+            char *bytes = DecompileValueGenerator(cx, n, regs->sp[n], NULL);
             if (bytes) {
                 fprintf(tracefp, "%s %s",
                         (n == -nuses) ? "  inputs:" : ",",

@@ -5613,17 +5613,8 @@ CloneSimpleValues(JSContext* cx,
   *wasCloned = PR_TRUE;
 
   // No cloning necessary for these non-GC'd jsvals.
-  if (!JSVAL_IS_GCTHING(val) || JSVAL_IS_NULL(val)) {
+  if (!JSVAL_IS_GCTHING(val)) {
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
-  }
-
-  // Clone doubles.
-  if (JSVAL_IS_DOUBLE(val)) {
-    jsval newVal;
-    if (!JS_NewDoubleValue(cx, *JSVAL_TO_DOUBLE(val), &newVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return SetPropertyOnValueOrObject(cx, newVal, rval, robj, rid);
   }
 
   // We'll use immutable strings to prevent copying if we can.
@@ -5756,7 +5747,7 @@ nsContentUtils::CreateStructuredClone(JSContext* cx,
   }
 
   jsval output = OBJECT_TO_JSVAL(obj);
-  js::AutoValueRooter tvr(cx, output);
+  js::AutoObjectRooter tvr(cx, obj);
 
   CloneStack stack(cx);
   if (!stack.Push(val, OBJECT_TO_JSVAL(obj),

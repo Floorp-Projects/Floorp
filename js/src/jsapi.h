@@ -64,41 +64,39 @@ JS_BEGIN_EXTERN_C
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_NULL_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_VOID(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_UNDEFINED_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_INT(jsval v)
 {
-    jsval_layout l = { v };
-    return l.s.mask32 == JSVAL_MASK32_INT32;
+    jsval_layout l;
+    l.asBits = v;
+    return l.s.u.mask32 == JSVAL_MASK32_INT32;
 }
 
 static JS_ALWAYS_INLINE jsint
 JSVAL_TO_INT(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_INT(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return l.s.payload.i32;
 }
 
 #define JSVAL_INT_BITS          32
 #define JSVAL_INT_MIN           ((jsint)0x80000000)
 #define JSVAL_INT_MAX           ((jsint)0x7fffffff)
-
-static JS_ALWAYS_INLINE bool
-INT_FITS_IN_JSVAL(jsint i)
-{
-    return JS_TRUE;
-}
 
 static JS_ALWAYS_INLINE jsval
 INT_TO_JSVAL(int32 i)
@@ -109,15 +107,17 @@ INT_TO_JSVAL(int32 i)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_DOUBLE_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsdouble
 JSVAL_TO_DOUBLE(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return l.asDouble;
 }
 
@@ -127,25 +127,36 @@ DOUBLE_TO_JSVAL(jsdouble d)
     return DOUBLE_TO_JSVAL_IMPL(d).asBits;
 }
 
+static JS_ALWAYS_INLINE jsval
+UINT_TO_JSVAL(uint32 i)
+{
+    if (i <= JSVAL_INT_MAX)
+        return INT_TO_JSVAL((int32)i);
+    return DOUBLE_TO_JSVAL((jsdouble)i);
+}
+
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NUMBER(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_NUMBER_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_STRING(jsval v)
 {
-    jsval_layout l = { v };
-    return l.s.mask32 == JSVAL_MASK32_STRING;
+    jsval_layout l;
+    l.asBits = v;
+    return l.s.u.mask32 == JSVAL_MASK32_STRING;
 }
 
 static JS_ALWAYS_INLINE JSString *
 JSVAL_TO_STRING(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_STRING(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return JSVAL_TO_STRING_IMPL(l);
 }
 
@@ -158,40 +169,45 @@ STRING_TO_JSVAL(JSString *str)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_OBJECT_OR_NULL_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSObject *
 JSVAL_TO_OBJECT(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_OBJECT(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return JSVAL_TO_OBJECT_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsval
 OBJECT_TO_JSVAL(JSObject *obj)
 {
+    JSValueMask32 mask;
     if (!obj)
         return JSVAL_NULL;
-    JSValueMask32 mask = JS_OBJ_IS_FUN_IMPL(obj) ? JSVAL_MASK32_FUNOBJ
-                                                 : JSVAL_MASK32_NONFUNOBJ;
+    mask = JS_OBJ_IS_FUN_IMPL(obj) ? JSVAL_MASK32_FUNOBJ
+                                   : JSVAL_MASK32_NONFUNOBJ;
     return OBJECT_TO_JSVAL_IMPL(mask, obj).asBits;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_BOOLEAN(jsval v)
 {
-    jsval_layout l = { v };
-    return l.s.mask32 == JSVAL_MASK32_BOOLEAN;
+    jsval_layout l;
+    l.asBits = v;
+    return l.s.u.mask32 == JSVAL_MASK32_BOOLEAN;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_TO_BOOLEAN(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return l.s.payload.boo;
 }
 
@@ -204,22 +220,25 @@ BOOLEAN_TO_JSVAL(JSBool b)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_PRIMITIVE(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_PRIMITIVE_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_GCTHING(jsval v)
 {
-    jsval_layout l = { v };
+    jsval_layout l;
+    l.asBits = v;
     return JSVAL_IS_GCTHING_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE void *
 JSVAL_TO_GCTHING(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_GCTHING(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return JSVAL_TO_GCTHING_IMPL(l);
 }
 
@@ -234,8 +253,9 @@ PRIVATE_TO_JSVAL(void *ptr)
 static JS_ALWAYS_INLINE void *
 JSVAL_TO_PRIVATE(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return JSVAL_TO_PRIVATE_IMPL(l);
 }
 
@@ -1159,8 +1179,9 @@ JSVAL_TO_TRACEABLE(jsval v)
 static JS_ALWAYS_INLINE uint32
 JSVAL_TRACE_KIND(jsval v)
 {
+    jsval_layout l;
     JS_ASSERT(JSVAL_IS_GCTHING(v));
-    jsval_layout l = { v };
+    l.asBits = v;
     return JSVAL_TRACE_KIND_IMPL(l);
 }
 
@@ -3137,7 +3158,7 @@ class Value
     }
 
     bool isInt32() const {
-        return data.s.mask32 == JSVAL_MASK32_INT32;
+        return data.s.u.mask32 == JSVAL_MASK32_INT32;
     }
 
     bool isInt32(int32 i32) const {
@@ -3153,15 +3174,15 @@ class Value
     }
 
     bool isString() const {
-        return data.s.mask32 == JSVAL_MASK32_STRING;
+        return data.s.u.mask32 == JSVAL_MASK32_STRING;
     }
 
     bool isNonFunObj() const {
-        return data.s.mask32 == JSVAL_MASK32_NONFUNOBJ;
+        return data.s.u.mask32 == JSVAL_MASK32_NONFUNOBJ;
     }
 
     bool isFunObj() const {
-        return data.s.mask32 == JSVAL_MASK32_FUNOBJ;
+        return data.s.u.mask32 == JSVAL_MASK32_FUNOBJ;
     }
 
     bool isObject() const {
@@ -3181,7 +3202,7 @@ class Value
     }
 
     bool isBoolean() const {
-        return data.s.mask32 == JSVAL_MASK32_BOOLEAN;
+        return data.s.u.mask32 == JSVAL_MASK32_BOOLEAN;
     }
 
     bool isTrue() const {
@@ -3193,7 +3214,7 @@ class Value
     }
 
     bool isMagic() const {
-        return data.s.mask32 == JSVAL_MASK32_MAGIC;
+        return data.s.u.mask32 == JSVAL_MASK32_MAGIC;
     }
 
     bool isMagic(JSWhyMagic why) const {
@@ -3409,12 +3430,6 @@ static JS_ALWAYS_INLINE JSClass *         Jsvalify(Class *c)           { return 
 static JS_ALWAYS_INLINE Class *           Valueify(JSClass *c)         { return (Class *)c; }
 static JS_ALWAYS_INLINE JSExtendedClass * Jsvalify(ExtendedClass *c)   { return (JSExtendedClass *)c; }
 static JS_ALWAYS_INLINE ExtendedClass *   Valueify(JSExtendedClass *c) { return (ExtendedClass *)c; }
-
-static const PropertyOp PropertyStub     = (PropertyOp)JS_PropertyStub;
-static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
-static const JSResolveOp ResolveStub     = JS_ResolveStub;
-static const ConvertOp ConvertStub       = (ConvertOp)JS_ConvertStub;
-static const JSFinalizeOp FinalizeStub   = JS_FinalizeStub;
 
 } /* namespace js */
 #endif  /* __cplusplus */

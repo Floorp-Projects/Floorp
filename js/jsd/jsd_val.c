@@ -203,12 +203,12 @@ jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
     return JSVAL_TO_INT(val);
 }
 
-jsdouble*
+jsdouble
 jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
     if(!JSVAL_IS_DOUBLE(jsdval->val))
         return 0;
-    return JSVAL_PTR_TO_DOUBLE_PTR(&jsdval->val);
+    return JSVAL_TO_DOUBLE(jsdval->val);
 }
 
 JSString*
@@ -341,14 +341,14 @@ static JSDProperty* _newProperty(JSDContext* jsdc, JSPropertyDesc* pd,
     jsdprop->flags = pd->flags | additionalFlags;
     jsdprop->slot = pd->slot;
 
-    if(!(jsdprop->name = jsd_NewValue(jsdc, JSID_TO_JSVAL(pd->id))))
+    if(!(jsdprop->name = jsd_NewValue(jsdc, ID_TO_JSVAL(pd->id))))
         goto new_prop_fail;
 
     if(!(jsdprop->val = jsd_NewValue(jsdc, pd->value)))
         goto new_prop_fail;
 
     if((jsdprop->flags & JSDPD_ALIAS) &&
-       !(jsdprop->alias = jsd_NewValue(jsdc, JSID_TO_JSVAL(pd->alias))))
+       !(jsdprop->alias = jsd_NewValue(jsdc, ID_TO_JSVAL(pd->alias))))
         goto new_prop_fail;
 
     return jsdprop;
@@ -548,10 +548,10 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     JS_EndRequest(cx);
 
     nameval = STRING_TO_JSVAL(name);
-    if (!JS_ValueToId(cx, &nameval, &pd.id))
+    if (!JS_ValueToId(cx, nameval, &pd.id))
         return NULL;
     pd.slot = pd.spare = 0;
-    pd.alias = JSID_NULL;
+    pd.alias = JSVAL_NULL;
     pd.flags |= (attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0
         | (attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0
         | (attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0;

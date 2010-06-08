@@ -457,7 +457,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant)
     } else if (JSVAL_IS_INT(val)) {
       INT32_TO_NPVARIANT(JSVAL_TO_INT(val), *variant);
     } else if (JSVAL_IS_DOUBLE(val)) {
-      DOUBLE_TO_NPVARIANT(*JSVAL_TO_DOUBLE(val), *variant);
+      DOUBLE_TO_NPVARIANT(JSVAL_TO_DOUBLE(val), *variant);
     } else if (JSVAL_IS_STRING(val)) {
       JSString *jsstr = JSVAL_TO_STRING(val);
       nsDependentString str((PRUnichar *)::JS_GetStringChars(jsstr),
@@ -856,7 +856,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
   AutoJSExceptionReporter reporter(cx);
 
   jsval v = NPVariantToJSVal(npp, cx, value);
-  js::AutoValueRooter tvr(cx, v);
+  js::AutoValueRooter tvr(cx, js::Valueify(v));
 
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
@@ -2314,7 +2314,7 @@ NPObjectMember_Mark(JSContext *cx, JSObject *obj, void *arg)
     return 0;
 
   if (!JSVAL_IS_PRIMITIVE(memberPrivate->fieldValue)) {
-    ::JS_MarkGCThing(cx, JSVAL_TO_OBJECT(memberPrivate->fieldValue),
+    ::JS_MarkGCThing(cx, memberPrivate->fieldValue,
                      "NPObject Member => fieldValue", arg);
   }
 
@@ -2322,7 +2322,7 @@ NPObjectMember_Mark(JSContext *cx, JSObject *obj, void *arg)
   // NPObject, so make sure to mark the NPObject wrapper to keep the
   // NPObject alive as long as this NPObjectMember is alive.
   if (memberPrivate->npobjWrapper) {
-    ::JS_MarkGCThing(cx, memberPrivate->npobjWrapper,
+    ::JS_MarkGCThing(cx, OBJECT_TO_JSVAL(memberPrivate->npobjWrapper),
                      "NPObject Member => npobjWrapper", arg);
   }
 
