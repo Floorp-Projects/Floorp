@@ -104,13 +104,6 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
 //  WebGL API
 //
 
-/* readonly attribute nsIDOMHTMLCanvasElement canvas; */
-NS_IMETHODIMP
-WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **aCanvas)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 /* void present (); */
 NS_IMETHODIMP
