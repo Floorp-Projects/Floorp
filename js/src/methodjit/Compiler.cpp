@@ -596,6 +596,13 @@ mjit::Compiler::generateMethod()
             jsop_getprop_slow();
           END_CASE(JSOP_GETPROP)
 
+          BEGIN_CASE(JSOP_LENGTH)
+            prepareStubCall();
+            stubCall(stubs::Length, Uses(1), Defs(1));
+            frame.pop();
+            frame.pushSynced();
+          END_CASE(JSOP_LENGTH)
+
           BEGIN_CASE(JSOP_GETELEM)
             prepareStubCall();
             stubCall(stubs::GetElem, Uses(2), Defs(1));
