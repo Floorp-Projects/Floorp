@@ -156,7 +156,7 @@ class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
 class TraceRecorder;
-class TraceMonitor;
+struct TraceMonitor;
 class StackSpace;
 class CallStack;
 
