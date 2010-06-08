@@ -3082,7 +3082,7 @@ nsContentUtils::GetContentPolicy()
 
 // static
 nsresult
-nsAutoGCRoot::AddJSGCRoot(void* aPtr, const char* aName)
+nsAutoGCRoot::AddJSGCRoot(void* aPtr, RootType aRootType, const char* aName)
 {
   if (!sJSScriptRuntime) {
     nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
@@ -3098,7 +3098,10 @@ nsAutoGCRoot::AddJSGCRoot(void* aPtr, const char* aName)
   }
 
   PRBool ok;
-  ok = ::JS_AddNamedRootRT(sJSScriptRuntime, aPtr, aName);
+  if (aRootType == RootType_JSVal)
+    ok = ::js_AddRootRT(sJSScriptRuntime, (jsval *)aPtr, aName);
+  else
+    ok = ::js_AddGCThingRootRT(sJSScriptRuntime, (void **)aPtr, aName);
   if (!ok) {
     NS_WARNING("JS_AddNamedRootRT failed");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3109,14 +3112,17 @@ nsAutoGCRoot::AddJSGCRoot(void* aPtr, const char* aName)
 
 /* static */
 nsresult
-nsAutoGCRoot::RemoveJSGCRoot(void* aPtr)
+nsAutoGCRoot::RemoveJSGCRoot(void* aPtr, RootType aRootType)
 {
   if (!sJSScriptRuntime) {
     NS_NOTREACHED("Trying to remove a JS GC root when none were added");
     return NS_ERROR_UNEXPECTED;
   }
 
-  ::JS_RemoveRootRT(sJSScriptRuntime, aPtr);
+  if (aRootType == RootType_JSVal)
+    ::js_RemoveRoot(sJSScriptRuntime, (jsval *)aPtr);
+  else
+    ::js_RemoveRoot(sJSScriptRuntime, (JSObject **)aPtr);
 
   return NS_OK;
 }

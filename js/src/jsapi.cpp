@@ -1770,37 +1770,110 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 }
 
 #undef JS_AddRoot
+
 JS_PUBLIC_API(JSBool)
-JS_AddRoot(JSContext *cx, void *rp)
+JS_AddValueRoot(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_AddRoot(cx, rp, NULL);
+    return js_AddRoot(cx, vp, NULL);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_AddNamedRootRT(JSRuntime *rt, void *rp, const char *name)
-{
-    return js_AddRootRT(rt, rp, name);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_RemoveRoot(JSContext *cx, void *rp)
+JS_AddStringRoot(JSContext *cx, JSString **rp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx->runtime, rp);
+    return js_AddGCThingRoot(cx, (void **)rp, NULL);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_RemoveRootRT(JSRuntime *rt, void *rp)
-{
-    return js_RemoveRoot(rt, rp);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_AddNamedRoot(JSContext *cx, void *rp, const char *name)
+JS_AddObjectRoot(JSContext *cx, JSObject **rp)
 {
     CHECK_REQUEST(cx);
-    return js_AddRoot(cx, rp, name);
+    return js_AddGCThingRoot(cx, (void **)rp, NULL);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddDoubleRoot(JSContext *cx, jsdouble **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, NULL);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddGCThingRoot(JSContext *cx, void **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, NULL);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddNamedValueRoot(JSContext *cx, jsval *vp, const char *name)
+{
+    CHECK_REQUEST(cx);
+    return js_AddRoot(cx, vp, name);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddNamedStringRoot(JSContext *cx, JSString **rp, const char *name)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, name);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, name);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddNamedDoubleRoot(JSContext *cx, jsdouble **rp, const char *name)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, name);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name)
+{
+    CHECK_REQUEST(cx);
+    return js_AddGCThingRoot(cx, (void **)rp, name);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_RemoveValueRoot(JSContext *cx, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    return js_RemoveRoot(cx->runtime, (void *)vp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_RemoveStringRoot(JSContext *cx, JSString **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_RemoveRoot(cx->runtime, (void *)rp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_RemoveObjectRoot(JSContext *cx, JSObject **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_RemoveRoot(cx->runtime, (void *)rp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_RemoveDoubleRoot(JSContext *cx, jsdouble **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_RemoveRoot(cx->runtime, (void *)rp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_RemoveGCThingRoot(JSContext *cx, void **rp)
+{
+    CHECK_REQUEST(cx);
+    return js_RemoveRoot(cx->runtime, (void *)rp);
 }
 
 JS_PUBLIC_API(void)
@@ -5329,7 +5402,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
-            JS_RemoveRoot(cx, &state->exception);
+            JS_RemoveValueRoot(cx, &state->exception);
         cx->free(state);
     }
 }

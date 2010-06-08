@@ -1129,16 +1129,25 @@ js_FinishGC(JSRuntime *rt)
 }
 
 JSBool
-js_AddRoot(JSContext *cx, void *rp, const char *name)
+js_AddRoot(JSContext *cx, jsval *vp, const char *name)
 {
-    JSBool ok = js_AddRootRT(cx->runtime, rp, name);
+    JSBool ok = js_AddRootRT(cx->runtime, vp, name);
     if (!ok)
         JS_ReportOutOfMemory(cx);
     return ok;
 }
 
 JSBool
-js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
+js_AddGCThingRoot(JSContext *cx, void **rp, const char *name)
+{
+    JSBool ok = js_AddGCThingRootRT(cx->runtime, rp, name);
+    if (!ok)
+        JS_ReportOutOfMemory(cx);
+    return ok;
+}
+
+static JSBool
+AddRoot(JSRuntime *rt, void *rp, const char *name)
 {
     js::GCRoots *roots = &rt->gcRootsHash;
 
@@ -1154,11 +1163,23 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
     return !!roots->put(rp, name);
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
+js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
+{
+    return AddRoot(rt, vp, name);
+}
+
+JS_FRIEND_API(JSBool)
+js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
+{
+    return AddRoot(rt, rp, name);
+}
+
+JS_FRIEND_API(JSBool)
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
     /*
-     * Due to the JS_RemoveRootRT API, we may be called outside of a request.
+     * Due to the JS_RemoveRoot API, we may be called outside of a request.
      * Same synchronization drill as above in js_AddRoot.
      */
     AutoLockGC lock(rt);
