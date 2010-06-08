@@ -288,7 +288,7 @@ class PrimitiveValue
     static bool test(JSFunction *fun, const Value &v) {
         uint32 mask = Masks[(fun->flags >> THISP_SHIFT) & THISP_MASK];
         return (((mask & DOUBLE_MASK) != 0) & v.isDouble()) |
-               ((mask & v.data.s.mask32) > JSVAL_MASK32_CLEAR);
+               ((mask & v.data.s.u.mask32) > JSVAL_MASK32_CLEAR);
     }
 };
 

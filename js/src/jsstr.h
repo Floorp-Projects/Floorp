@@ -49,7 +49,7 @@
  * allocated from the malloc heap.
  */
 #include <ctype.h>
-#include "jspubtd.h"
+#include "jsapi.h"
 #include "jsprvtd.h"
 #include "jshashtable.h"
 #include "jslock.h"
