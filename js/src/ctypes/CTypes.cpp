@@ -99,7 +99,7 @@ namespace CType {
   static JSBool CreateArray(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool HasInstance(JSContext* cx, JSObject* obj, const jsval* vp, JSBool* bp);
+  static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
 }
 
 namespace PointerType {
@@ -3077,7 +3077,7 @@ CType::ToSource(JSContext* cx, uintN argc, jsval *vp)
 }
 
 JSBool
-CType::HasInstance(JSContext* cx, JSObject* obj, const jsval* vp, JSBool* bp)
+CType::HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
 
@@ -3088,10 +3088,10 @@ CType::HasInstance(JSContext* cx, JSObject* obj, const jsval* vp, JSBool* bp)
   JS_ASSERT(JS_GET_CLASS(cx, prototype) == &sCDataProtoClass);
 
   *bp = JS_FALSE;
-  if (JSVAL_IS_PRIMITIVE(*vp))
+  if (JSVAL_IS_PRIMITIVE(v))
     return JS_TRUE;
 
-  JSObject* proto = JSVAL_TO_OBJECT(*vp);
+  JSObject* proto = JSVAL_TO_OBJECT(v);
   while ((proto = JS_GetPrototype(cx, proto))) {
     if (proto == prototype) {
       *bp = JS_TRUE;

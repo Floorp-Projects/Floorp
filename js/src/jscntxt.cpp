@@ -2138,7 +2138,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
     char *bytes;
     JSBool ok;
 
-    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    bytes = DecompileValueGenerator(cx, spindex, v, fallback);
     if (!bytes)
         return JS_FALSE;
 
@@ -2176,8 +2176,8 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
     bytes = NULL;
     if (v.isFunObj()) {
         atom = GET_FUNCTION_PRIVATE(cx, &v.asFunObj())->atom;
-        bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                           v, ATOM_TO_STRING(atom));
+        bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                        v, ATOM_TO_STRING(atom));
         if (!bytes)
             return;
     }
@@ -2197,7 +2197,7 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
     JS_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);
     JS_ASSERT(js_ErrorFormatString[errorNumber].argCount <= 3);
-    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    bytes = js::DecompileValueGenerator(cx, spindex, v, fallback);
     if (!bytes)
         return JS_FALSE;
 

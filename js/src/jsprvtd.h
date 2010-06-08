@@ -86,7 +86,7 @@
 #define JS_BITS_PER_UINT32      32
 
 /* The alignment required of objects stored in GC arenas. */
-const uintN JS_GCTHING_ALIGN = 8;
+static const uintN JS_GCTHING_ALIGN = 8;
 
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
@@ -420,6 +420,12 @@ static inline CheckAccessIdOp     Valueify(JSCheckAccessIdOp f)   { return (Chec
 static inline JSCheckAccessIdOp   Jsvalify(CheckAccessIdOp f)     { return (JSCheckAccessIdOp)f; }
 static inline PropertyIdOp        Valueify(JSPropertyIdOp f);     /* Same type as JSPropertyOp */
 static inline JSPropertyIdOp      Jsvalify(PropertyIdOp f);       /* Same type as PropertyOp */
+
+static const PropertyOp    PropertyStub  = (PropertyOp)JS_PropertyStub;
+static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
+static const JSResolveOp   ResolveStub   = JS_ResolveStub;
+static const ConvertOp     ConvertStub   = (ConvertOp)JS_ConvertStub;
+static const JSFinalizeOp  FinalizeStub  = JS_FinalizeStub;
 
 }  /* namespace js */
 #endif /* __cplusplus */

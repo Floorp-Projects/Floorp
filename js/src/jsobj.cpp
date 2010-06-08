@@ -1768,7 +1768,7 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (vp[2].isPrimitive()) {
-        char *bytes = js_DecompileValueGenerator(cx, 0 - argc, vp[2], NULL);
+        char *bytes = DecompileValueGenerator(cx, 0 - argc, vp[2], NULL);
         if (!bytes)
             return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2507,7 +2507,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
 
     const Value &v = vp[2];
     if (!v.isObjectOrNull()) {
-        char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
             return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
@@ -6212,7 +6212,7 @@ js_ReportGetterOnlyAssignment(JSContext *cx)
 }
 
 JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GETTER_ONLY);
     return JS_FALSE;

@@ -1535,7 +1535,7 @@ FindObjectClass(JSObject* aGlobalObject)
     proto = obj->getProto();
   } while (proto);
 
-  sObjectClass = obj->getClass();
+  sObjectClass = obj->getJSClass();
 }
 
 static void
@@ -6861,7 +6861,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // we must take care to check those warnings here.
       JSString *str = JSVAL_TO_STRING(id);
       if ((!(flags & JSRESOLVE_QUALIFIED) &&
-           !js_CheckUndeclaredVarAssignment(cx, id)) ||
+           !js_CheckUndeclaredVarAssignment(cx, str)) ||
           !::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                  ::JS_GetStringLength(str), JSVAL_VOID,
                                  JS_PropertyStub, JS_PropertyStub,
@@ -8570,7 +8570,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  while (obj->getClass() != &sHTMLDocumentAllClass) {
+  while (obj->getJSClass() != &sHTMLDocumentAllClass) {
     obj = obj->getProto();
 
     if (!obj) {
