@@ -2388,7 +2388,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
     JSObject* origObj = aObj;
 #endif
     
-    const JSClass *jsClass = aObj->getClass();
+    js::Class *jsClass = aObj->getClass();
 
     // A common case seen in this code is that we enter this function
     // with aObj being a Function object, whose parent is a Call

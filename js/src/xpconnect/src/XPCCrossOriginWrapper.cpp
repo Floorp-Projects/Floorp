@@ -125,7 +125,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (obj->getClass() != &XPCCrossOriginWrapper::XOWClass.base) {
+  while (obj->getJSClass() != &XPCCrossOriginWrapper::XOWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -237,7 +237,7 @@ CanAccessWrapper(JSContext *cx, JSObject *outerObj, JSObject *wrappedObj,
     JSObject *innerParent = wrappedObj->getParent();
     if (!innerParent) {
       innerParent = wrappedObj;
-      OBJ_TO_INNER_OBJECT(cx, innerParent);
+      Innerize(cx, &innerParent);
       if (!innerParent) {
         return NS_ERROR_FAILURE;
       }
@@ -360,7 +360,7 @@ RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
   }
 
   XPCWrappedNative *wn = nsnull;
-  if (obj->getClass() == &XOWClass.base &&
+  if (obj->getJSClass() == &XOWClass.base &&
       outerObj->getParent() != obj->getParent()) {
     *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, obj));
   } else if (!(wn = XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj))) {
@@ -381,7 +381,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
   JSObject *wrappedObj;
   if (JSVAL_IS_PRIMITIVE(*vp) ||
       !(wrappedObj = JSVAL_TO_OBJECT(*vp)) ||
-      wrappedObj->getClass() == &XOWClass.base) {
+      wrappedObj->getJSClass() == &XOWClass.base) {
     return JS_TRUE;
   }
 
@@ -395,7 +395,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
   // The parent must be the inner global object for its scope.
   parent = JS_GetGlobalForObject(cx, parent);
 
-  JSClass *clasp = parent->getClass();
+  JSClass *clasp = parent->getJSClass();
   if (clasp->flags & JSCLASS_IS_EXTENDED) {
     JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
     if (xclasp->innerObject) {
@@ -420,7 +420,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
 
   outerObj = map->Find(wrappedObj);
   if (outerObj) {
-    NS_ASSERTION(outerObj->getClass() == &XOWClass.base,
+    NS_ASSERTION(outerObj->getJSClass() == &XOWClass.base,
                               "What crazy object are we getting here?");
 #ifdef DEBUG_mrbkap_off
     printf("But found a wrapper in the map %p!\n", (void *)outerObj);
@@ -557,7 +557,7 @@ WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp)
   }
 
   JSObject *wrappedObj = JSVAL_TO_OBJECT(*vp);
-  JSClass *clasp = wrappedObj->getClass();
+  JSClass *clasp = wrappedObj->getJSClass();
   if (ClassNeedsXOW(clasp->name)) {
     return WrapObject(cx, JS_GetGlobalForObject(cx, outerObj), vp);
   }
@@ -587,7 +587,7 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (!JSVAL_IS_PRIMITIVE(*vp)) {
     JSObject *addedObj = JSVAL_TO_OBJECT(*vp);
-    if (addedObj->getClass() == &XOWClass.base &&
+    if (addedObj->getJSClass() == &XOWClass.base &&
         addedObj->getParent() != obj->getParent()) {
       *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, addedObj));
       if (!WrapObject(cx, obj->getParent(), vp, nsnull)) {
@@ -832,7 +832,7 @@ XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
 static JSObject *
 GetUXPCObject(JSContext *cx, JSObject *obj)
 {
-  NS_ASSERTION(obj->getClass() == &XOWClass.base, "wrong object");
+  NS_ASSERTION(obj->getJSClass() == &XOWClass.base, "wrong object");
 
   jsval v;
   if (!JS_GetReservedSlot(cx, obj, sFlagsSlot, &v)) {
@@ -857,7 +857,7 @@ GetUXPCObject(JSContext *cx, JSObject *obj)
     return nsnull;
   }
 
-  js::AutoValueRooter tvr(cx, uxpco);
+  js::AutoObjectRooter tvr(cx, uxpco);
 
   jsval wrappedObj, parentScope;
   if (!JS_GetReservedSlot(cx, obj, sWrappedObjSlot, &wrappedObj) ||
@@ -1002,7 +1002,7 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_FALSE;
   }
 
-  if (!wrappedObj->getClass()->convert(cx, wrappedObj, type, vp)) {
+  if (!wrappedObj->getJSClass()->convert(cx, wrappedObj, type, vp)) {
     return JS_FALSE;
   }
 
@@ -1138,7 +1138,7 @@ XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_FALSE;
   }
 
-  JSClass *clasp = iface->getClass();
+  JSClass *clasp = iface->getJSClass();
 
   *bp = JS_FALSE;
   if (!clasp->hasInstance) {
@@ -1169,7 +1169,7 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   }
 
   JSObject *test = JSVAL_TO_OBJECT(v);
-  if (test->getClass() == &XOWClass.base) {
+  if (test->getJSClass() == &XOWClass.base) {
     if (!JS_GetReservedSlot(cx, test, sWrappedObjSlot, &v)) {
       return JS_FALSE;
     }
@@ -1196,7 +1196,7 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   XPCWrappedNative *me = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
   obj = me->GetFlatJSObject();
   test = other->GetFlatJSObject();
-  return ((JSExtendedClass *)obj->getClass())->
+  return ((JSExtendedClass *)obj->getJSClass())->
     equality(cx, obj, OBJECT_TO_JSVAL(test), bp);
 }
 
