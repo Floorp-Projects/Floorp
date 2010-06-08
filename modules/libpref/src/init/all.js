@@ -161,6 +161,9 @@ pref("media.ogg.enabled", true);
 #ifdef MOZ_WAVE
 pref("media.wave.enabled", true);
 #endif
+#ifdef MOZ_WEBM
+pref("media.webm.enabled", true);
+#endif
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
