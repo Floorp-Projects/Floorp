@@ -299,6 +299,7 @@ protected:
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool ValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
+    static PRBool ValidateCapabilityEnum(WebGLenum cap);
 
     void Invalidate();
 

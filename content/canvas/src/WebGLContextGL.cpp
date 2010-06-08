@@ -760,9 +760,6 @@ GL_SAME_METHOD_2(DepthRangef, DepthRange, float, float)
 GL_SAME_METHOD_2(DepthRange, DepthRange, float, float)
 #endif
 
-// XXX arg check!
-GL_SAME_METHOD_1(Disable, Disable, WebGLenum)
-
 NS_IMETHODIMP
 WebGLContext::DisableVertexAttribArray(WebGLuint index)
 {
@@ -884,8 +881,25 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebG
     return NS_OK;
 }
 
-// XXX definitely need to validate this
-GL_SAME_METHOD_1(Enable, Enable, PRUint32)
+NS_IMETHODIMP WebGLContext::Enable(WebGLenum cap)
+{
+    if (!ValidateCapabilityEnum(cap))
+        return ErrorInvalidEnum("Enable: invalid capability enum");
+
+    MakeContextCurrent();
+    gl->fEnable(cap);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLContext::Disable(WebGLenum cap)
+{
+    if (!ValidateCapabilityEnum(cap))
+        return ErrorInvalidEnum("Disable: invalid capability enum");
+
+    MakeContextCurrent();
+    gl->fDisable(cap);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::EnableVertexAttribArray(WebGLuint index)
@@ -1939,13 +1953,17 @@ WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::IsEnabled(WebGLenum k, WebGLboolean *retval)
+WebGLContext::IsEnabled(WebGLenum cap, WebGLboolean *retval)
 {
+    if(!ValidateCapabilityEnum(cap)) {
+        *retval = 0; // as per the OpenGL ES spec
+        return ErrorInvalidEnum("IsEnabled: invalid capability enum");
+    }
+
     MakeContextCurrent();
-    *retval = gl->fIsEnabled(k);
+    *retval = gl->fIsEnabled(cap);
     return NS_OK;
 }
-
 
 GL_SAME_METHOD_1(LineWidth, LineWidth, float)
 
