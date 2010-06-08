@@ -1,4 +1,8 @@
-browser[remote] {
+browser[remote="false"] {
+  -moz-binding: url("chrome://browser/content/bindings/browser.xml#local-browser");
+}
+
+browser[remote="true"] {
   -moz-binding: url("chrome://browser/content/bindings/browser.xml#remote-browser");
 }
 
