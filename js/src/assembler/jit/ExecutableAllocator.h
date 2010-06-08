@@ -30,6 +30,7 @@
 #include <limits>
 #include <wtf/Assertions.h>
 
+#include "jsapi.h"
 #include "jsprvtd.h"
 #include "jsvector.h"
 

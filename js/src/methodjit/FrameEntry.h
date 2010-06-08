@@ -72,7 +72,7 @@ class FrameEntry
     }
 
     JSValueMask32 getTypeTag() const {
-        return v_.s.mask32;
+        return v_.s.u.mask32;
     }
 
     uint32 getPayload32() const {
@@ -83,7 +83,7 @@ class FrameEntry
   private:
     void setTypeTag(JSValueMask32 u32) {
         type.setConstant();
-        v_.s.mask32 = u32;
+        v_.s.u.mask32 = u32;
     }
 
     void track(uint32 index) {

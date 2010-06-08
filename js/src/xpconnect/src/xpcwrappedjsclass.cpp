@@ -1687,7 +1687,7 @@ pre_call_clean_up:
     {
         if(!JSVAL_IS_PRIMITIVE(fval))
         {
-            success = js::Invoke(cx, args, 0);
+            success = js::InvokeFriendAPI(cx, args, 0);
         }
         else
         {

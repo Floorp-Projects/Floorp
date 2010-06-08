@@ -3,7 +3,7 @@
 #include "nsIJSRuntimeService.h"
 
 PRBool
-NativeJSContext::AddGCRoot(void *aPtr, const char *aName)
+NativeJSContext::AddGCRoot(JSObject **aPtr, const char *aName)
 {
   NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
 

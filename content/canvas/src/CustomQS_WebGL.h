@@ -69,7 +69,7 @@ nsICanvasRenderingContextWebGL_BufferData(JSContext *cx, uintN argc, jsval *vp)
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 3)
@@ -135,7 +135,7 @@ nsICanvasRenderingContextWebGL_BufferSubData(JSContext *cx, uintN argc, jsval *v
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 3)
@@ -205,7 +205,7 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 3)
@@ -307,7 +307,7 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 7)
@@ -408,7 +408,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_iv(JSContext *cx, uintN argc, js
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 2)
@@ -440,7 +440,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_iv(JSContext *cx, uintN argc, js
             return JS_FALSE;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 1);
@@ -478,7 +478,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_fv(JSContext *cx, uintN argc, js
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 2)
@@ -510,7 +510,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_fv(JSContext *cx, uintN argc, js
             return JS_FALSE;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 1);
@@ -548,7 +548,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv(JSContext *cx, uintN ar
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 3)
@@ -584,7 +584,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv(JSContext *cx, uintN ar
             return JS_FALSE;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 2);
@@ -619,7 +619,7 @@ helper_nsICanvasRenderingContextWebGL_VertexAttrib_x_fv(JSContext *cx, uintN arg
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     if (argc < 2)
@@ -651,7 +651,7 @@ helper_nsICanvasRenderingContextWebGL_VertexAttrib_x_fv(JSContext *cx, uintN arg
             return JS_FALSE;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 1);
@@ -794,7 +794,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_iv_tn(JSContext *cx, JSObject *o
             return JSVAL_VOID;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowMethodFailedWithDetails(cx, NS_ERROR_FAILURE, "nsICanvasRenderingContextWebGL", "uniformNiv");
@@ -849,7 +849,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_fv_tn(JSContext *cx, JSObject *o
             return JSVAL_VOID;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowMethodFailedWithDetails(cx, NS_ERROR_FAILURE, "nsICanvasRenderingContextWebGL", "uniformNfv");
@@ -904,7 +904,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv_tn(JSContext *cx, JSObj
             return JSVAL_VOID;
         }
 
-        *obj_tvr.addr() = OBJECT_TO_JSVAL(nobj);
+        *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
         wa = js::TypedArray::fromJSObject(nobj);
     } else {
         xpc_qsThrowMethodFailedWithDetails(cx, NS_ERROR_FAILURE, "nsICanvasRenderingContextWebGL", "uniformMatrixNfv");
