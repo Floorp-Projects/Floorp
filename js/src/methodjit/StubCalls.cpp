@@ -2164,6 +2164,33 @@ stubs::CallProp(VMFrame &f, JSAtom *atom)
 }
 
 void JS_FASTCALL
+stubs::Length(VMFrame &f)
+{
+    JSFrameRegs &regs = f.regs;
+    Value *vp = &regs.sp[-1];
+
+    if (vp->isString()) {
+        vp->setInt32(vp->asString()->length());
+        return;
+    } else if (vp->isObject()) {
+        JSObject *obj = &vp->asObject();
+        if (obj->isArray()) {
+            jsuint length = obj->getArrayLength();
+            regs.sp[-1].setDouble(length);
+            return;
+        } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
+            uint32 length = obj->getArgsLength();
+            JS_ASSERT(length < INT32_MAX);
+            regs.sp[-1].setInt32(int32_t(length));
+            return;
+        }
+    }
+
+    if (!InlineGetProp(f))
+        THROW();
+}
+
+void JS_FASTCALL
 stubs::Iter(VMFrame &f, uint32 flags)
 {
     if (!js_ValueToIterator(f.cx, flags, &f.regs.sp[-1]))

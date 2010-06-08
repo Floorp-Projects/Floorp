@@ -67,6 +67,7 @@ void JS_FASTCALL Name(VMFrame &f, uint32 index);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL SetElem(VMFrame &f);
+void JS_FASTCALL Length(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f, uint32 index);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);
 
