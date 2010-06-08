@@ -50,24 +50,8 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="remote-browser" extends="chrome://global/content/bindings/browser.xml#browser">
+  <binding id="local-browser" extends="chrome://global/content/bindings/browser.xml#browser">
     <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIFrameMessageListener">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            throw "accessibleType: Supports Remote?";
-          ]]>
-        </getter>
-      </property>
-
-      <property name="autoscrollEnabled">
-        <getter>
-          <![CDATA[
-            throw "autoscrollEnabled: Supports Remote?";
-          ]]>
-        </getter>
-      </property>
-
       <field name="_searchEngines">[]</field>
       <property name="searchEngines"
                 onget="return this._searchEngines"
@@ -78,75 +62,15 @@
                 onget="return gIOService.newURI(this._documentURI, null, null)"
                 readonly="true"/>
 
-      <!-- XXX
-      <property name="docShell"
-                onget="throw 'docShell: Not Remotable'"
-                readonly="true"/>
-      -->
-
       <property name="messageManager"
                 onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;"
                 readonly="true"/>
 
       <field name="_contentTitle">null</field>
-      <field name="_contentDocument"><![CDATA[
-        ({
-          get title() { return this._browser._contentTitle; },
-          get location() { return null; },
-          set location(aURI) { this._browser.loadURI(aURI, null, null); },
-          get nodePrincipal() { throw "nodePrincipal: Not Remotable"; },
-
-          _browser: this,
-        })
-      ]]></field>
 
       <field name="_ios">
          Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
       </field>
-
-      <!-- XXX
-      <field name="_webNavigation"><![CDATA[
-        ({
-          canGoBack: false,
-          canGoForward: false,
-          goBack: function() { this._sendSyncMessage("WebNavigation:GoBack", {}); },
-          goForward: function() { this._sendSyncMessage("WebNavigation:GoForward", {}); },
-          gotoIndex: function(aIndex) { this._sendSyncMessage("WebNavigation:GotoIndex", {index: aIndex}); },
-          loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
-            this._currentURI = this._browser._ios.newURI(aURI, null, null);
-            this._browser._contentTitle = "";
-            this._sendSyncMessage("WebNavigation:LoadURI", {uri: aURI, flags: aLoadFlags});
-          },
-          reload: function(aReloadFlags) { this._sendSyncMessage("WebNavigation:Reload", {flags: aReloadFlags}); },
-          stop: function(aStopFlags) { this._sendSyncMessage("WebNavigation:Stop", {flags: aStopFlags}); },
-          get document() { return this._browser._contentDocument; },
-          get currentURI() {
-            if (!this._currentURI)
-               this._currentURI = this._browser._ios.newURI("about:blank", null, null);
-
-            return this._currentURI;
-          },
-          set currentURI(aURI) { this.loadURI(aURI.spec, null, null, null); },
-          referringURI: null,
-          get sessionHistory() { throw "sessionHistory: Not Remoteable"; },
-
-          _currentURI: null,
-          _browser: this,
-          _sendSyncMessage: function(aMessage, aData) {
-            try {
-              this._browser.messageManager.sendAsyncMessage(aMessage, aData);
-            }
-            catch (e) {
-              Components.utils.reportError(e);
-            }
-         }
-        })
-      ]]></field>
-
-      <property name="webNavigation"
-                onget="return this._webNavigation;"
-                readonly="true"/>
-      -->
 
       <method name="receiveMessage">
         <parameter name="aMessage"/>
@@ -216,26 +140,223 @@
         ]]></body>
       </method>
 
-      <field name="_webBrowserFind">null</field>
+      <field name="_webProgress"><![CDATA[
+        ({
+          // We only need the onLocationChange for the local-browser and we don't need
+          // to support holding listeners and firing notifications.
+          _init: function() {
+            this._browser.messageManager.addMessageListener("WebProgress:LocationChange", this);
+          },
 
-      <property name="webBrowserFind"
-                readonly="true">
-        <getter>
+          receiveMessage: function(aMessage) {
+            let json = aMessage.json;
+            switch (aMessage.name) {
+              case "WebProgress:LocationChange":
+                if (json.isRootWindow) {
+                  this._browser._documentURI = json.documentURI;
+                  this._browser._searchEngines = [];
+                }
+                break;
+            }
+
+            return {};
+          }
+        })
+      ]]></field>
+
+      <method name="onPageShow">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            this.attachFormFill();
+            if (this.pageReport) {
+              var json = aMessage.json;
+              var i = 0;
+              while (i < this.pageReport.length) {
+                // Filter out irrelevant reports.
+                if (this.pageReport[i].requestingWindowId == json.windowId)
+                  i++;
+                else
+                  this.pageReport.splice(i, 1);
+              }
+              if (this.pageReport.length == 0) {
+                this.pageReport = null;
+                this.updatePageReport();
+              }
+            }
+         ]]>
+        </body>
+      </method>
+
+      <method name="onPageHide">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            if (this.pageReport) {
+              this.pageReport = null;
+              this.updatePageReport();
+            }
+            // Delete the feeds cache if we're hiding the topmost page
+            // (as opposed to one of its iframes).
+            // XXX e10s contentDocument is not accessible, we need to use
+            // outerWindowID
+            if (this.feeds && aMessage.target == this.contentDocument)
+              this.feeds = null;
+            if (!this.docShell || !this.fastFind)
+              return;
+
+            var tabBrowser = this.getTabBrowser();
+            if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
+              this.fastFind.setDocShell(this.docShell);
+
+            if (this._scrollable)
+              this._autoScrollPopup.hidePopup();
+         ]]>
+        </body>
+      </method>
+
+      <method name="onPopupBlocked">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            if (!this.pageReport) {
+              this.pageReport = [];
+            }
+
+            let json = aMessage.json;
+            // XXX Replacing requestingWindow && requestingDocument affects
+            // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#500
+            var obj = {
+              requestingWindowId: json.windowId,
+              popupWindowURI: gIOService.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
+              popupWindowFeatures: json.popupWindowFeatures,
+              popupWindowName: json.popupWindowName
+            };
+
+            this.pageReport.push(obj);
+            this.pageReport.reported = false;
+            this.updatePageReport();
+          ]]>
+        </body>
+      </method>
+
+      <constructor>
         <![CDATA[
-          return this._webBrowserFind;
+          try {
+            if (!this.hasAttribute("disablehistory")) {
+              var os = Components.classes["@mozilla.org/observer-service;1"]
+                                 .getService(Components.interfaces.nsIObserverService);
+              os.addObserver(this, "browser:purge-session-history", false);
+              // wire up session history
+              this.webNavigation.sessionHistory = 
+                      Components.classes["@mozilla.org/browser/shistory;1"]
+                                .createInstance(Components.interfaces.nsISHistory);
+              // enable global history
+              this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+            }
+          }
+          catch (e) {
+            Components.utils.reportError(e);
+          }
+          try {
+            var securityUI = this.securityUI;
+          }
+          catch (e) {
+          }
+
+          messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
+          messageManager.addMessageListener("DOMContentLoaded", this);
+          messageManager.addMessageListener("DOMTitleChanged", this);
+          messageManager.addMessageListener("DOMLinkAdded", this);
+
+          // Listen for first load for lazy attachment to form fill controller
+          messageManager.addMessageListener("pageshow", this);
+          messageManager.addMessageListener("pagehide", this);
+          messageManager.addMessageListener("DOMPopupBlocked", this);
+
+          this._webProgress._init();
         ]]>
+      </constructor>
+
+    </implementation>
+
+  </binding>
+
+  <binding id="remote-browser" extends="#local-browser">
+    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIFrameMessageListener">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            throw "accessibleType: Supports Remote?";
+          ]]>
         </getter>
       </property>
 
-      <field name="_fastFind">null</field>
-      <property name="fastFind"
-                readonly="true">
+      <property name="autoscrollEnabled">
         <getter>
-        <![CDATA[
-          return this._fastFind;
-        ]]>
+          <![CDATA[
+            throw "autoscrollEnabled: Supports Remote?";
+          ]]>
         </getter>
       </property>
+
+      <property name="docShell"
+                onget="throw 'docShell: Not Remotable'"
+                readonly="true"/>
+
+      <field name="_contentTitle">null</field>
+      <field name="_contentDocument"><![CDATA[
+        ({
+          get title() { return this._browser._contentTitle; },
+          get location() { return null; },
+          set location(aURI) { this._browser.loadURI(aURI, null, null); },
+          get nodePrincipal() { throw "nodePrincipal: Not Remotable"; },
+
+          _browser: this,
+        })
+      ]]></field>
+
+      <field name="_webNavigation"><![CDATA[
+        ({
+          canGoBack: false,
+          canGoForward: false,
+          goBack: function() { this._sendSyncMessage("WebNavigation:GoBack", {}); },
+          goForward: function() { this._sendSyncMessage("WebNavigation:GoForward", {}); },
+          gotoIndex: function(aIndex) { this._sendSyncMessage("WebNavigation:GotoIndex", {index: aIndex}); },
+          loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+            this._currentURI = this._browser._ios.newURI(aURI, null, null);
+            this._browser._contentTitle = "";
+            this._sendSyncMessage("WebNavigation:LoadURI", {uri: aURI, flags: aLoadFlags});
+          },
+          reload: function(aReloadFlags) { this._sendSyncMessage("WebNavigation:Reload", {flags: aReloadFlags}); },
+          stop: function(aStopFlags) { this._sendSyncMessage("WebNavigation:Stop", {flags: aStopFlags}); },
+          get document() { return this._browser._contentDocument; },
+          get currentURI() {
+            if (!this._currentURI)
+               this._currentURI = this._browser._ios.newURI("about:blank", null, null);
+
+            return this._currentURI;
+          },
+          set currentURI(aURI) { this.loadURI(aURI.spec, null, null, null); },
+          referringURI: null,
+          get sessionHistory() { throw "sessionHistory: Not Remoteable"; },
+
+          _currentURI: null,
+          _browser: this,
+          _sendSyncMessage: function(aMessage, aData) {
+            try {
+              this._browser.messageManager.sendAsyncMessage(aMessage, aData);
+            }
+            catch (e) {
+              Components.utils.reportError(e);
+            }
+         }
+        })
+      ]]></field>
+
+      <property name="webNavigation"
+                onget="return this._webNavigation;"
+                readonly="true"/>
 
       <field name="_webProgress"><![CDATA[
         ({
@@ -305,9 +426,9 @@
 
               case "WebProgress:LocationChange":
                 let currentURI = this._browser._ios.newURI(json.location, null, null);
-                // XXX this._browser._webNavigation._currentURI = currentURI;
-                // XXX this._browser._webNavigation.canGoBack = json.canGoBack;
-                // XXX this._browser._webNavigation.canGoForward = json.canGoForward;
+                this._browser._webNavigation._currentURI = currentURI;
+                this._browser._webNavigation.canGoBack = json.canGoBack;
+                this._browser._webNavigation.canGoForward = json.canGoForward;
 
                 args = [
                   { isRootWindow: json.isRootWindow, browser: this._browser },
@@ -354,8 +475,6 @@
           },
 
           _notify: function(aFlags, aName, aArguments) {
-            // XXX do nothing yet
-            return;
             this._listeners.forEach(function(item) {
               if (item.flags & aFlags)
                 item.listener[aName].apply(item.listener, aArguments);
@@ -364,7 +483,6 @@
         })
       ]]></field>
 
-      <!-- XXX
       <property name="webProgress"
                 readonly="true"
                 onget="return this._webProgress"/>
@@ -392,318 +510,6 @@
       <property name="documentCharsetInfo"
                 onget="throw 'documentCharsetInfo: Not Remoteable'"
                 readonly="true"/>
-      -->
-
-      <method name="attachFormFill">
-        <body>
-          <![CDATA[
-          if (!this.mFormFillAttached && this.hasAttribute("autocompletepopup")) {
-            // hoop up the form fill autocomplete controller
-            var controller = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].
-                               getService(Components.interfaces.nsIFormFillController);
-
-            var popup = document.getElementById(this.getAttribute("autocompletepopup"));
-            if (popup) {
-              controller.attachToBrowser(this.docShell, popup.QueryInterface(Components.interfaces.nsIAutoCompletePopup));
-              this.mFormFillAttached = true;
-            }
-          }
-          ]]>
-        </body>
-      </method>
-
-      <method name="detachFormFill">
-        <body>
-          <![CDATA[
-          if (this.mFormFillAttached) {
-            // hoop up the form fill autocomplete controller
-            var controller = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].
-                               getService(Components.interfaces.nsIFormFillController);
-            controller.detachFromBrowser(this.docShell);
-            
-            this.mFormFillAttached = false;
-          }
-          ]]>
-        </body>
-      </method>
-      
-      <method name="findChildShell">
-        <parameter name="aDocShell"/>
-        <parameter name="aSoughtURI"/>
-        <body>
-          <![CDATA[
-            if (aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation)
-                         .currentURI.spec == aSoughtURI.spec)
-              return aDocShell;
-            var node = aDocShell.QueryInterface(
-                                   Components.interfaces.nsIDocShellTreeNode);
-            for (var i = 0; i < node.childCount; ++i) {
-              var docShell = node.getChildAt(i);
-              docShell = this.findChildShell(docShell, aSoughtURI);
-              if (docShell)
-                return docShell;
-            }
-            return null;
-          ]]>
-        </body>
-      </method>
-
-      <method name="onPageShow">
-        <parameter name="aMessage"/>
-        <body>
-          <![CDATA[
-            this.attachFormFill();
-            if (this.pageReport) {
-              var json = aMessage.json;
-              var i = 0;
-              while (i < this.pageReport.length) {
-                // Filter out irrelevant reports.
-                if (this.pageReport[i].requestingWindowId == json.windowId)
-                  i++;
-                else
-                  this.pageReport.splice(i, 1);
-              }
-              if (this.pageReport.length == 0) {
-                this.pageReport = null;
-                this.updatePageReport();
-              }
-            }
-         ]]>
-        </body>
-      </method>
-
-      <method name="onPageHide">
-        <parameter name="aMessage"/>
-        <body>
-          <![CDATA[
-            if (this.pageReport) {
-              this.pageReport = null;
-              this.updatePageReport();
-            }
-            // Delete the feeds cache if we're hiding the topmost page
-            // (as opposed to one of its iframes).
-            // XXX e10s contentDocument is not accessible, we need to use
-            // outerWindowID
-            if (this.feeds && aMessage.target == this.contentDocument)
-              this.feeds = null;
-            if (!this.docShell || !this.fastFind)
-              return;
-
-            var tabBrowser = this.getTabBrowser();
-            if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
-              this.fastFind.setDocShell(this.docShell);
-
-            if (this._scrollable)
-              this._autoScrollPopup.hidePopup();
-         ]]>
-        </body>
-      </method>
-
-      <method name="updatePageReport">
-        <body>
-          <![CDATA[
-            var event = document.createEvent("Events");
-            event.initEvent("DOMUpdatePageReport", true, true);
-            this.dispatchEvent(event);
-          ]]>
-        </body>
-      </method>
-
-      <method name="onPopupBlocked">
-        <parameter name="aMessage"/>
-        <body>
-          <![CDATA[
-            if (!this.pageReport) {
-              this.pageReport = [];
-            }
-
-            let json = aMessage.json;
-            // XXX Replacing requestingWindow && requestingDocument affects
-            // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#500
-            var obj = {
-              requestingWindowId: json.windowId,
-              popupWindowURI: gIOService.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
-              popupWindowFeatures: json.popupWindowFeatures,
-              popupWindowName: json.popupWindowName
-            };
-
-            this.pageReport.push(obj);
-            this.pageReport.reported = false;
-            this.updatePageReport();
-          ]]>
-        </body>
-      </method>
-
-      <field name="pageReport">null</field>
-
-      <property name="securityUI">
-        <getter>
-          <![CDATA[
-            if (!this.docShell.securityUI) {
-              const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
-              if (!this.hasAttribute("disablesecurity") &&
-                  SECUREBROWSERUI_CONTRACTID in Components.classes) {
-                var securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID]
-                                           .createInstance(Components.interfaces.nsISecureBrowserUI);
-                securityUI.init(this.contentWindow);
-              }
-            }
-
-            return this.docShell.securityUI;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            this.docShell.securityUI = val;
-          ]]>
-        </setter>
-      </property>
-
-      <constructor>
-        <![CDATA[
-          try {
-            if (!this.hasAttribute("disablehistory")) {
-              var os = Components.classes["@mozilla.org/observer-service;1"]
-                                 .getService(Components.interfaces.nsIObserverService);
-              os.addObserver(this, "browser:purge-session-history", false);
-              // wire up session history
-              this.webNavigation.sessionHistory = 
-                      Components.classes["@mozilla.org/browser/shistory;1"]
-                                .createInstance(Components.interfaces.nsISHistory);
-              // enable global history
-              this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-            }
-          }
-          catch (e) {
-            Components.utils.reportError(e);
-          }
-          try {
-            var securityUI = this.securityUI;
-          }
-          catch (e) {
-          }
-
-          messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
-          messageManager.addMessageListener("DOMContentLoaded", this);
-          messageManager.addMessageListener("DOMTitleChanged", this);
-          messageManager.addMessageListener("DOMLinkAdded", this);
-
-          // Listen for first load for lazy attachment to form fill controller
-          messageManager.addMessageListener("pageshow", this);
-          messageManager.addMessageListener("pagehide", this);
-          messageManager.addMessageListener("DOMPopupBlocked", this);
-
-          this._webProgress._init();
-        ]]>
-      </constructor>
-
-      <destructor>
-        <![CDATA[
-          this.destroy();
-        ]]>
-      </destructor>
-
-      <!-- This is necessary because the destructor doesn't always get called when
-           we are removed from a tabbrowser. This will be explicitly called by tabbrowser -->
-      <method name="destroy">
-        <body>
-          <![CDATA[
-          if (this.mDestroyed)
-            return;
-          this.mDestroyed = true;
-
-          if (!this.hasAttribute("disablehistory")) {
-            var os = Components.classes["@mozilla.org/observer-service;1"]
-                               .getService(Components.interfaces.nsIObserverService);
-            try {
-              os.removeObserver(this, "browser:purge-session-history");
-            } catch (ex) {
-              // It's not clear why this sometimes throws an exception.
-            }
-          }
-
-          this.detachFormFill();
-          
-          this._fastFind = null;
-          this._webBrowserFind = null;
-          
-          // The feeds cache can keep the document inside this browser alive.
-          this.feeds = null;
-
-          this.lastURI = null;
-
-          if (this._autoScrollNeedsCleanup) {
-            // we polluted the global scope, so clean it up
-            this._autoScrollPopup.parentNode.removeChild(this._autoScrollPopup);
-          }
-          ]]>
-        </body>
-      </method>
-      
-      <method name="observe">
-        <parameter name="aSubject"/>
-        <parameter name="aTopic"/>
-        <parameter name="aState"/>
-        <body>
-          <![CDATA[
-            if (aTopic != "browser:purge-session-history" || !this.sessionHistory)
-              return;
-              
-            // place the entry at current index at the end of the history list, so it won't get removed
-            if (this.sessionHistory.index < this.sessionHistory.count - 1) {
-              var indexEntry = this.sessionHistory.getEntryAtIndex(this.sessionHistory.index, false);
-              this.sessionHistory.QueryInterface(Components.interfaces.nsISHistoryInternal);
-              indexEntry.QueryInterface(Components.interfaces.nsISHEntry);
-              this.sessionHistory.addEntry(indexEntry, true);
-            }
-            
-            var purge = this.sessionHistory.count;
-            if (this.currentURI != "about:blank")
-              --purge; // Don't remove the page the user's staring at from shistory
-            
-            if (purge > 0)
-              this.sessionHistory.PurgeHistory(purge);
-          ]]>
-        </body>
-      </method>
-
-      <method name="swapDocShells">
-        <parameter name="aOtherBrowser"/>
-        <body>
-        <![CDATA[
-          // We need to swap fields that are tied to our docshell or related to
-          // the loaded page
-          // Fields which are built as a result of notifactions (pageshow/hide,
-          // DOMLinkAdded/Removed, onStateChange) should not be swapped here,
-          // because these notifications are dispatched again once the docshells
-          // are swapped.
-          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation"];
-
-          var ourTabBrowser = this.getTabBrowser();
-
-          // _fastFind is tied to the docshell if we don't have a tabbrowser
-          if ((ourTabBrowser != null) !=
-              (aOtherBrowser.getTabBrowser() != null))
-            throw "Unable to perform swap on <browsers> if one is in a <tabbrowser> and one is not";
-
-          if (!ourTabBrowser)
-            fieldsToSwap.push("_fastFind");
-
-          var ourFieldValues = {};
-          var otherFieldValues = {};
-          for each (var field in fieldsToSwap) {
-            ourFieldValues[field] = this[field];
-            otherFieldValues[field] = aOtherBrowser[field];
-          }
-          this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-              .swapFrameLoaders(aOtherBrowser);
-          for each (var field in fieldsToSwap) {
-            this[field] = otherFieldValues[field];
-            aOtherBrowser[field] = ourFieldValues[field];
-          }
-        ]]>
-        </body>
-      </method>
     </implementation>
 
   </binding>
