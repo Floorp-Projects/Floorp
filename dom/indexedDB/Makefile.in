@@ -44,8 +44,8 @@ VPATH  = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = dom
-LIBRARY_NAME = domindexedDB_s
-XPIDL_MODULE = domindexedDB
+LIBRARY_NAME = dom_indexeddb_s
+XPIDL_MODULE = dom_indexeddb
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
