@@ -367,8 +367,8 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::MozGetShmemContext(const nsAString& aContextId,
-                                        nsISupports **aContext)
+nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
+                                      nsISupports **aContext)
 {
 #ifdef MOZ_IPC
   if(!nsContentUtils::IsCallerTrustedForRead()) {
@@ -387,7 +387,7 @@ nsHTMLCanvasElement::MozGetShmemContext(const nsAString& aContextId,
     if (NS_FAILED(rv))
       return rv;
 
-    mCurrentContext->SetIsShmem(PR_TRUE);
+    mCurrentContext->SetIsIPC(PR_TRUE);
 
     rv = UpdateContext();
     if (NS_FAILED(rv)) {
