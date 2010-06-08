@@ -2647,8 +2647,6 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT((!parent || !parent->isFunction()) &&
-              "Functions may not be set as the parents of objects.");
     return js_SetProtoOrParent(cx, obj, JSSLOT_PARENT, parent, JS_FALSE);
 }
 
@@ -3035,7 +3033,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
 
         /* Peek at the native property's slot value, without doing a Get. */
         if (SPROP_HAS_VALID_SLOT(sprop, obj2->scope()))
-            *vp = obj->lockedGetSlot(sprop->slot);
+            *vp = obj2->lockedGetSlot(sprop->slot);
         else
             vp->setBoolean(true);
     } else if (obj2->isDenseArray()) {
