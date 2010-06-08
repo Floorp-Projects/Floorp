@@ -2247,7 +2247,7 @@ Interpret(JSContext *cx)
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (!JS_CHECK_OPERATION_LIMIT(cx))                                    \
+        if (cx->interruptFlags && !js_HandleExecutionInterrupt(cx))           \
             goto error;                                                       \
     JS_END_MACRO
 
