@@ -597,7 +597,9 @@ public:
 
     void orl_rr(RegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "orl        %s, %s\n",
+                       nameIReg(4,src), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_OR_EvGv, src, dst);
     }
 
