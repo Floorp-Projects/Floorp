@@ -100,6 +100,19 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
     MakeContextCurrent(); gl->f##glname(a1,a2,a3,a4,a5,a6); return NS_OK; \
 }
 
+already_AddRefed<WebGLUniformLocation> WebGLProgram::GetUniformLocationObject(GLint glLocation)
+{
+    WebGLUniformLocation *existingLocationObject;
+    if (mMapUniformLocations.Get(glLocation, &existingLocationObject)) {
+        NS_ADDREF(existingLocationObject);
+        return existingLocationObject;
+    } else {
+        nsRefPtr<WebGLUniformLocation> loc = new WebGLUniformLocation(mContext, this, glLocation);
+        mMapUniformLocations.Put(glLocation, loc);
+        return loc.forget();
+    }
+}
+
 //
 //  WebGL API
 //
@@ -1760,6 +1773,9 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc)
     if (location->Program() != prog)
         return ErrorInvalidValue("GetUniform: this uniform location corresponds to another program");
 
+    if (location->ProgramGeneration() != prog->Generation())
+        return ErrorInvalidValue("GetUniform: this uniform location is obsolete since the program has been relinked");
+
     NativeJSContext js;
     if (NS_FAILED(js.error))
         return js.error;
@@ -1832,8 +1848,8 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
 
     GLint intlocation = gl->fGetUniformLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
 
-    nsCOMPtr<WebGLUniformLocation> uloc = new WebGLUniformLocation(this, prog, intlocation);
-    *retval = uloc.forget().get();
+    nsRefPtr<nsIWebGLUniformLocation> loc = prog->GetUniformLocationObject(intlocation);
+    *retval = loc.forget().get();
 
     return NS_OK;
 }
@@ -1981,6 +1997,8 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
     MakeContextCurrent();
 
     gl->fLinkProgram(progname);
+    if (!program->NextGeneration())
+        return NS_ERROR_FAILURE;
 
     GLint ok;
     gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
@@ -2253,6 +2271,8 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         return ErrorInvalidValue("Invalid uniform location parameter"); \
     if (mCurrentProgram != location_object->Program())                  \
         return ErrorInvalidValue("This uniform location corresponds to another program"); \
+    if (mCurrentProgram->Generation() != location_object->ProgramGeneration())            \
+        return ErrorInvalidValue("This uniform location is obsolete since the program has been relinked"); \
     GLint location = location_object->Location();
 
 #define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
