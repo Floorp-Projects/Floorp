@@ -8,6 +8,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
@@ -19,6 +21,11 @@
   <script type="application/javascript">
   function doTest()
   {
+    //XXX We send a useless mouse move to the image to force it to setup its
+    // image map, because flushing layout won't do it. Hopefully bug 135040
+    // will make this not suck.
+    synthesizeMouse($("imagemap"), 10, 10, { type: "mousemove" });
+
     var accTree = {
       role: ROLE_IMAGE_MAP,
       children: [
