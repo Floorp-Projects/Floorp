@@ -355,7 +355,7 @@ ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
 
 #define XPC_NW_BYPASS_TEST(cx, obj, hook, args)                               \
   XPC_NW_BYPASS_BASE(cx, obj,                                                 \
-    JSClass *clasp_ = obj->getClass();                                        \
+    JSClass *clasp_ = obj->getJSClass();                                      \
     return !clasp_->hook || clasp_->hook args;                                \
   )
 
@@ -715,7 +715,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     }
 
     JSObject *funobj = JS_GetFunctionObject(fun);
-    funobj->setParent(obj);
+    funobj->setParent(js::ObjectOrNullTag(obj));
 
     return JS_DefineProperty(cx, obj, "toString", OBJECT_TO_JSVAL(funobj),
                              nsnull, nsnull, 0);
@@ -789,7 +789,7 @@ XPC_NW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_FALSE;
   }
 
-  XPC_NW_BYPASS(cx, obj, convert, (cx, obj, type, vp));
+  XPC_NW_BYPASS(cx, obj, convert, (cx, obj, type, js::Valueify(vp)));
   return JS_TRUE;
 }
 
@@ -831,7 +831,7 @@ XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
 
   JSObject *wrapperJSObject = wrappedNative->GetFlatJSObject();
 
-  JSClass *clazz = wrapperJSObject->getClass();
+  JSClass *clazz = wrapperJSObject->getJSClass();
   return !clazz->checkAccess ||
     clazz->checkAccess(cx, wrapperJSObject, id, mode, vp);
 }
