@@ -46,7 +46,6 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      disablefastfind="true"
       id="addons-page" title="&addons.windowTitle;">
 
   <script type="application/javascript"
