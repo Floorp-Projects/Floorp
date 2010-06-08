@@ -803,14 +803,20 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
             return ErrorInvalidEnum("DrawArrays: invalid mode");
     }
 
-    if (first < 0 || count < 0 || first+count < first || first+count < count) {
-        return ErrorInvalidValue("DrawArrays: overflow in first+count");
-    }
+    if (first < 0 || count < 0)
+        return ErrorInvalidValue("DrawArrays: negative first or count");
+
+    // If count is 0, there's nothing to do.
+    if (count == 0)
+        return NS_OK;
 
     // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram)
         return NS_OK;
+
+    if (first+count < first || first+count < count)
+        return ErrorInvalidOperation("DrawArrays: overflow in first+count");
 
     if (!ValidateBuffers(first+count))
         return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient data for given first and count");
@@ -825,10 +831,8 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 }
 
 NS_IMETHODIMP
-WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebGLuint byteOffset)
+WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, WebGLint byteOffset)
 {
-    int elementSize = 0;
-
     switch (mode) {
         case LOCAL_GL_TRIANGLES:
         case LOCAL_GL_TRIANGLE_STRIP:
@@ -842,42 +846,47 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLuint count, WebGLenum type, WebG
             return ErrorInvalidEnum("DrawElements: invalid mode");
     }
 
-    switch (type) {
-        case LOCAL_GL_UNSIGNED_SHORT:
-            elementSize = 2;
-            if (byteOffset % 2 != 0)
-                 return ErrorInvalidValue("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
-            break;
+    if (count < 0 || byteOffset < 0)
+        return ErrorInvalidValue("DrawElements: negative count or offset");
 
-        case LOCAL_GL_UNSIGNED_BYTE:
-            elementSize = 1;
-            break;
+    WebGLuint byteCount;
+    if (type == LOCAL_GL_UNSIGNED_SHORT) {
+        byteCount = WebGLuint(count) << 1;
+        if (byteCount >> 1 != WebGLuint(count))
+            return ErrorInvalidValue("DrawElements: overflow in byteCount");
 
-        default:
-            return ErrorInvalidEnum("DrawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
+        if (byteOffset % 2 != 0)
+            return ErrorInvalidValue("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
+    } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
+        byteCount = count;
+    } else {
+        return ErrorInvalidEnum("DrawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
 
-    if (!mBoundElementArrayBuffer)
-        return ErrorInvalidOperation("DrawElements: must have element array buffer binding");
-
-    WebGLuint byteCount = count*elementSize;
-
-    if (count < 0 || byteOffset+byteCount < byteOffset || byteOffset+byteCount < byteCount)
-        return ErrorInvalidValue("DrawElements: overflow in byteOffset+byteCount");
-
-    if (byteOffset + byteCount > mBoundElementArrayBuffer->ByteLength())
-        return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
+    // If count is 0, there's nothing to do.
+    if (count == 0)
+        return NS_OK;
 
     // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram)
         return NS_OK;
 
+    if (!mBoundElementArrayBuffer)
+        return ErrorInvalidOperation("DrawElements: must have element array buffer binding");
+
+    if (byteOffset+byteCount < byteOffset || byteOffset+byteCount < byteCount)
+        return ErrorInvalidOperation("DrawElements: overflow in byteOffset+byteCount");
+
+    if (byteOffset + byteCount > mBoundElementArrayBuffer->ByteLength())
+        return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
+
     WebGLuint maxIndex = 0;
-    if (type == LOCAL_GL_UNSIGNED_SHORT)
+    if (type == LOCAL_GL_UNSIGNED_SHORT) {
         maxIndex = mBoundElementArrayBuffer->FindMaximum<GLushort>(count, byteOffset);
-    else if (type == LOCAL_GL_UNSIGNED_BYTE)
+    } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
         maxIndex = mBoundElementArrayBuffer->FindMaximum<GLubyte>(count, byteOffset);
+    }
 
     // maxIndex+1 because ValidateBuffers expects the number of elements needed
     if (!ValidateBuffers(maxIndex+1)) {
@@ -1032,16 +1041,21 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
 
     GLint len = 0;
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &len);
-    if (len == 0)
-        return NS_ERROR_FAILURE; // XXX GL error?  This really shouldn't happen.
+    if (len == 0) {
+        // is this an error?  can you have a program with no attributes?
+        *retval = nsnull;
+        return NS_OK;
+    }
 
     nsAutoArrayPtr<char> name(new char[len+1]);
     PRInt32 attrsize = 0;
     PRUint32 attrtype = 0;
 
     gl->fGetActiveAttrib(progname, index, len+1, &len, (GLint*) &attrsize, (WebGLuint*) &attrtype, name);
-    if (attrsize == 0 || attrtype == 0)
-        return NS_ERROR_FAILURE;
+    if (attrsize == 0 || attrtype == 0) {
+        *retval = nsnull;
+        return NS_OK;
+    }
 
     JSObjectHelper retobj(&js);
     retobj.DefineProperty("size", attrsize);
