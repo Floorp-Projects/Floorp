@@ -299,6 +299,11 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
   return videoData;
 }
 
+PRInt64 nsBuiltinDecoderReader::FindEndTime(PRInt64 aEndOffset)
+{
+  return -1;
+}
+
 template<class Data>
 Data* nsBuiltinDecoderReader::DecodeToFirstData(DecodeFn aDecodeFn,
                                                 MediaQueue<Data>& aQueue)
