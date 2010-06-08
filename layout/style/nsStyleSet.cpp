@@ -424,10 +424,6 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                        // because aParentContext has one, then aRuleNode
                        // should be used.)
                        nsRuleNode* aVisitedRuleNode,
-                       // NB: ReparentStyleContext and
-                       // ResolveStyleByAddingRules pass bogus values
-                       // that work based on what this function is known
-                       // to do with aIsLink and aIsVisitedLink
                        PRBool aIsLink,
                        PRBool aIsVisitedLink,
                        nsIAtom* aPseudoTag,
@@ -854,9 +850,8 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
   }
 
   return GetContext(aBaseContext->GetParent(), ruleNode, visitedRuleNode,
-                    // bogus values for aIsLink and aIsVisitedLink that
-                    // we know will make GetContext do the right thing.
-                    PR_TRUE, aBaseContext->RelevantLinkVisited(),
+                    aBaseContext->IsLinkContext(),
+                    aBaseContext->RelevantLinkVisited(),
                     aBaseContext->GetPseudo(),
                     aBaseContext->GetPseudoType());
 }
@@ -1153,14 +1148,22 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   nsRuleNode* ruleNode = aStyleContext->GetRuleNode();
   nsRuleNode* visitedRuleNode = nsnull;
   nsStyleContext* visitedContext = aStyleContext->GetStyleIfVisited();
+  // Reparenting a style context just changes where we inherit from,
+  // not what rules we match or what our DOM looks like.  In
+  // particular, it doesn't change whether this is a style context for
+  // a link.
   if (visitedContext) {
      visitedRuleNode = visitedContext->GetRuleNode();
+     if (visitedRuleNode == ruleNode) {
+       // We don't want to force creation of an if-visited style
+       // context if it's not actually needed.
+       visitedRuleNode = nsnull;
+     }
   }
 
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
-                    // bogus values for aIsLink and aIsVisitedLink that
-                    // we know will make GetContext do the right thing.
-                    PR_TRUE, aStyleContext->RelevantLinkVisited(),
+                    aStyleContext->IsLinkContext(),
+                    aStyleContext->RelevantLinkVisited(),
                     pseudoTag, pseudoType);
 }
 
