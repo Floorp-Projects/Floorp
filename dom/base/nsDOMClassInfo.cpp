@@ -2108,7 +2108,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
   DOM_CLASSINFO_MAP_END
