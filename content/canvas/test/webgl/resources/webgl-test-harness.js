@@ -149,7 +149,9 @@ var TestHarness = function(iframe, filelistUrl, reportFunc) {
   this.window = window;
   this.iframe = iframe;
   this.reportFunc = reportFunc;
-  var files = getFileList('test_list.txt');
+  var files = window.gWebGLTestFileList;
+  if (!files)
+    files = getFileList('test_list.txt');
   this.files = [];
   for (var ii = 0; ii < files.length; ++ii) {
     this.files.push(new TestFile(files[ii]));
