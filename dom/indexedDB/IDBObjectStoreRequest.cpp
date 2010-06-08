@@ -1270,6 +1270,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (!mIndexUpdateInfo.IsEmpty()) {
     PRInt64 objectDataId = mAutoIncrement ? mKey.IntValue() : LL_MININT;
     rv = UpdateIndexes(aConnection, objectDataId);
+    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+    }
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
@@ -1404,7 +1407,8 @@ AddHelper::UpdateIndexes(mozIStorageConnection* aConnection,
     const IndexUpdateInfo& updateInfo = mIndexUpdateInfo[indexIndex];
 
     stmt = mTransaction->IndexUpdateStatement(updateInfo.info.autoIncrement,
-                                              updateInfo.info.unique);
+                                              updateInfo.info.unique,
+                                              mOverwrite);
     NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
 
     mozStorageStatementScoper scoper2(stmt);
@@ -1813,7 +1817,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
   PRBool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     nsCOMPtr<mozIStorageStatement> insertStmt =
-      mTransaction->IndexUpdateStatement(mAutoIncrement, mUnique);
+      mTransaction->IndexUpdateStatement(mAutoIncrement, mUnique, false);
     NS_ENSURE_TRUE(insertStmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
     mozStorageStatementScoper scoper2(insertStmt);

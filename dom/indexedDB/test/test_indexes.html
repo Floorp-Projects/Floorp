@@ -192,6 +192,7 @@
 
       is(keyIndex, objectStoreData.length - 1, "Saw all the expected keys");
 
+      // Check that the name index enforces its unique constraint.
       objectStore = db.objectStore(objectStoreName, READ_WRITE);
       request = objectStore.add({ name: "Bob", height: 62, weight: 170 },
                                 "237-23-7738");
