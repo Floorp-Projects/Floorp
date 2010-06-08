@@ -932,7 +932,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         /* Officially push |fp|. |frame|'s destructor pops. */
         cx->stack().pushExecuteFrame(cx, frame, gen->savedRegs, NULL);
 
-        ok = Interpret(cx);
+        ok = RunScript(cx, fp->script, fp->fun, fp->scopeChain);
 
         /* Restore call/args/block objects. */
         cx->leaveGenerator(gen);
