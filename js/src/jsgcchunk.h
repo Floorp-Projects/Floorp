@@ -40,8 +40,8 @@
 #ifndef jsgchunk_h__
 #define jsgchunk_h__
 
+#include "jsapi.h"
 #include "jsprvtd.h"
-#include "jspubtd.h"
 #include "jsutil.h"
 
 namespace js {
