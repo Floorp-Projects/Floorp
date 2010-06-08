@@ -638,7 +638,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
         return NULL;
 
     jp->objectStack = arr;
-    if (!js_AddRoot(cx, &jp->objectStack, "JSON parse stack"))
+    if (!JS_AddNamedObjectRoot(cx, &jp->objectStack, "JSON parse stack"))
         goto bad;
 
     jp->statep = jp->stateStack;

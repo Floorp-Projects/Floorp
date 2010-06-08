@@ -82,7 +82,7 @@ public:
    */
   JSBool Hold(JSRuntime* aRt) {
     if (!mHeld) {
-      if (JS_AddNamedRootRT(aRt, &mGCThing, "nsAutoJSValHolder")) {
+      if (js_AddGCThingRootRT(aRt, &mGCThing, "nsAutoJSValHolder")) {
         mRt = aRt;
         mHeld = JS_TRUE;
       } else {
@@ -102,7 +102,7 @@ public:
     jsval oldval = mVal;
 
     if (mHeld) {
-      JS_RemoveRootRT(mRt, &mGCThing); // infallible
+      js_RemoveRoot(mRt, &mGCThing); // infallible
       mHeld = JS_FALSE;
     }
 
