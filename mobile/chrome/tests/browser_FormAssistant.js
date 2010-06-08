@@ -1,5 +1,4 @@
-let testURL = "chrome://mochikit/content/browser/browser_FormAssistant.html";
-testURL = testURL.replace("chrome://mochikit/content/browser/", "file:///home/steakdepapillon/Devel/fennec/mobilebase/mobile/_tests/testing/mochitest/browser/mobile/chrome/");
+let testURL = "chrome://mochikit/content/browser/mobile/chrome/browser_FormAssistant.html";
 let newTab = null;
 let container = null;
 

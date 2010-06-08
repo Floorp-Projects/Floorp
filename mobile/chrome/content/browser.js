@@ -358,6 +358,13 @@ var Browser = {
   startup: function startup() {
     var self = this;
 
+    try {
+      messageManager.loadFrameScript("chrome://browser/content/content.js", true);
+    } catch (e) {
+      // XXX whatever is calling startup needs to dump errors!
+      dump("###########" + e + "\n");
+    }
+
     let needOverride = Util.needHomepageOverride();
     if (needOverride == "new profile")
       this.initNewProfile();
@@ -498,7 +505,6 @@ var Browser = {
 
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("command", this._handleContentCommand, true);
-    browsers.addEventListener("MozApplicationManifest", OfflineApps, false);
     browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
     // Login Manager
@@ -566,6 +572,8 @@ var Browser = {
 
     // Force commonly used border-images into the image cache
     ImagePreloader.cache();
+
+    messageManager.addMessageListener("MozApplicationManifest", OfflineApps);
 
     this._pluginObserver = new PluginObserver(bv);
 
@@ -2880,11 +2888,11 @@ var OfflineApps = {
     return this._pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
   },
 
-  offlineAppRequested: function(aDocument) {
+  offlineAppRequested: function(aRequest) {
     if (!gPrefService.getBoolPref("browser.offline-apps.notify"))
       return;
 
-    let currentURI = aDocument.documentURIObject;
+    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
 
     // don't bother showing UI if the user has already made a decision
     if (this._pm.testExactPermission(currentURI, "offline-app") != Ci.nsIPermissionManager.UNKNOWN_ACTION)
@@ -2906,7 +2914,7 @@ var OfflineApps = {
     let notification = notificationBox.getNotificationWithValue(notificationID);
     let strings = Elements.browserBundle;
     if (notification) {
-      notification.documents.push(aDocument);
+      notification.documents.push(aRequest);
     } else {
       let buttons = [{
         label: strings.getString("offlineApps.allow"),
@@ -2932,39 +2940,36 @@ var OfflineApps = {
       let message = strings.getFormattedString("offlineApps.available", [host]);
       notification = notificationBox.appendNotification(message, notificationID,
                                                         "", priority, buttons);
-      notification.documents = [aDocument];
+      notification.documents = [aRequest];
     }
   },
 
-  allowSite: function(aDocument) {
-    this._pm.add(aDocument.documentURIObject, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+  allowSite: function(aRequest) {
+    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
+    this._pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will start
     // fetching immediately.  This one time we need to do it ourselves.
-    this._startFetching(aDocument);
+    this._startFetching(aRequest);
   },
 
-  disallowSite: function(aDocument) {
-    this._pm.add(aDocument.documentURIObject, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
+  disallowSite: function(aRequest) {
+    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
+    this._pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
   },
 
-  _startFetching: function(aDocument) {
-    if (!aDocument.documentElement)
-      return;
-
-    let manifest = aDocument.documentElement.getAttribute("manifest");
-    if (!manifest)
-      return;
-
-    let manifestURI = gIOService.newURI(manifest, aDocument.characterSet, aDocument.documentURIObject);
+  _startFetching: function(aRequest) {
+    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
+    let manifestURI = gIOService.newURI(aRequest.manifest, aRequest.charset, currentURI);
 
     let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject);
+    updateService.scheduleUpdate(manifestURI, currentURI);
   },
 
-  handleEvent: function(aEvent) {
-    if (aEvent.type == "MozApplicationManifest")
-      this.offlineAppRequested(aEvent.originalTarget.defaultView.document);
+  receiveMessage: function(aMessage) {
+    if (aMessage.name == "MozApplicationManifest") {
+      this.offlineAppRequested(aMessage.json);
+    }
   }
 };
 
@@ -3187,6 +3192,7 @@ Tab.prototype = {
 
     browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden;");
     browser.setAttribute("type", "content");
+    browser.setAttribute("remote", "false");
 
     // Append the browser to the document, which should start the page load
     document.getElementById("browsers").appendChild(browser);

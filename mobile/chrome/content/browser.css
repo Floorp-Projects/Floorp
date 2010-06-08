@@ -1,17 +1,17 @@
-/*browser[remote] {*/
-/*  -moz-binding: url("chrome://browser/content/bindings/browser.xml#remote-browser");*/
-/*}*/
+browser[remote] {
+  -moz-binding: url("chrome://browser/content/bindings/browser.xml#remote-browser");
+}
 
 #urlbar-edit {
-    -moz-binding: url("chrome://browser/content/bindings.xml#autocomplete-aligned");
+  -moz-binding: url("chrome://browser/content/bindings.xml#autocomplete-aligned");
 }
 
 #tabs {
-    -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
+  -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
 }
 
 box[type="documenttab"] {
-    -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
+  -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
 }
 
 settings {
