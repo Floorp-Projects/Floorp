@@ -70,6 +70,7 @@ _TEST_FILES = \
 		allowed.sjs \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
+		can_play_type_webm.js \
 		cancellable_request.sjs \
 		dynamic_redirect.sjs \
 		file_access_controls.html \
@@ -238,6 +239,16 @@ _TEST_FILES += \
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
+		$(NULL)
+endif
+
+ifdef MOZ_WEBM
+_TEST_FILES += \
+		test_can_play_type_webm.html \
+		$(NULL)
+else
+_TEST_FILES += \
+		test_can_play_type_no_webm.html \
 		$(NULL)
 endif
 
