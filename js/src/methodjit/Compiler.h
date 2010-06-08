@@ -140,6 +140,7 @@ class Compiler
     void emitReturn();
     void dispatchCall(VoidPtrStubUInt32 stub);
     void jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
+    void jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
