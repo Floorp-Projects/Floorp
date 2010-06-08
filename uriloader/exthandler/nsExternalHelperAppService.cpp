@@ -540,7 +540,11 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { VIDEO_OGG, "ogg", "Ogg Video" },
   { APPLICATION_OGG, "ogg", "Ogg Video"},
   { AUDIO_OGG, "oga", "Ogg Audio" },
-  { AUDIO_WAV, "wav", "Waveform Audio" }
+#ifdef MOZ_WEBM
+  { VIDEO_WEBM, "webm", "Web Media Video" },
+  { AUDIO_WEBM, "webm", "Web Media Audio" },
+#endif
+  { AUDIO_WAV, "wav", "Waveform Audio" },
 };
 
 #undef MAC_TYPE
