@@ -112,7 +112,8 @@ public:
 
   already_AddRefed<mozIStorageStatement>
   IndexUpdateStatement(bool aAutoIncrement,
-                       bool aUnique);
+                       bool aUnique,
+                       bool aOverwrite);
 
   already_AddRefed<mozIStorageStatement>
   GetCachedStatement(const nsACString& aQuery);
