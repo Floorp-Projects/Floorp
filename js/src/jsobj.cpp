@@ -3740,15 +3740,6 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 
 JS_END_EXTERN_C
 
-static jsval
-GetGlobalObjectReservedSlot(JSContext *cx, JSObject *obj, uint32 index)
-{
-    JSClass *clasp = obj->getClass();
-    JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
-    uint32 slot = JSSLOT_START(clasp) + index;
-    return (slot < obj->numSlots()) ? obj->getSlot(slot) : JSVAL_VOID;
-}
-
 JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp)
@@ -3767,7 +3758,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
         return JS_TRUE;
     }
 
-    v = GetGlobalObjectReservedSlot(cx, obj, key);
+    v = obj->getReservedSlot(key);
     if (!JSVAL_IS_PRIMITIVE(v)) {
         *objp = JSVAL_TO_OBJECT(v);
         return JS_TRUE;
@@ -3791,7 +3782,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
         if (!init(cx, obj)) {
             ok = JS_FALSE;
         } else {
-            v = GetGlobalObjectReservedSlot(cx, obj, key);
+            v = obj->getReservedSlot(key);
             if (!JSVAL_IS_PRIMITIVE(v))
                 cobj = JSVAL_TO_OBJECT(v);
         }
@@ -5752,7 +5743,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
         }
         scope = scope->getGlobal();
         if (scope->getClass()->flags & JSCLASS_IS_GLOBAL) {
-            jsval v = GetGlobalObjectReservedSlot(cx, scope, JSProto_LIMIT + protoKey);
+            jsval v = scope->getReservedSlot(JSProto_LIMIT + protoKey);
             if (!JSVAL_IS_PRIMITIVE(v)) {
                 *protop = JSVAL_TO_OBJECT(v);
                 return true;
@@ -6326,7 +6317,8 @@ js_ReportGetterOnlyAssignment(JSContext *cx)
 JSCompartment *
 JSObject::getCompartment(JSContext *cx) {
     JSObject *obj = getGlobal();
-    jsval v = GetGlobalObjectReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT);
+    JS_ASSERT(obj->getClass()->flags & JSCLASS_IS_GLOBAL);
+    jsval v = obj->getReservedSlot(JSRESERVED_GLOBAL_COMPARTMENT);
     return (JSCompartment *) JSVAL_TO_PRIVATE(v);
 }
 
