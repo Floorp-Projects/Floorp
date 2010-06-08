@@ -259,6 +259,12 @@ JSVAL_TO_PRIVATE(jsval v)
     return JSVAL_TO_PRIVATE_IMPL(l);
 }
 
+static JS_ALWAYS_INLINE JSBool
+JSVAL_MAY_BE_PRIVATE(jsval v)
+{
+    return JSVAL_IS_DOUBLE(v);
+}
+
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
                                  ? JS_LockGCThing(cx, JSVAL_TO_GCTHING(v))    \

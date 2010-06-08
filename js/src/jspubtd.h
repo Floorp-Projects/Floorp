@@ -375,7 +375,7 @@ PRIVATE_TO_JSVAL_IMPL(void *ptr)
 {
     jsval_layout l;
     JS_ASSERT(((uint32)ptr & 1) == 0);
-    l.s.u.tag.nanBits = 0;
+    l.s.u.mask32 = 0;
     l.s.payload.ptr = ptr;
     return l;
 }
