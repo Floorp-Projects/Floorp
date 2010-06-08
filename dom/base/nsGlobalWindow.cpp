@@ -9769,7 +9769,6 @@ nsNavigator::nsNavigator(nsIDocShell *aDocShell)
 
 nsNavigator::~nsNavigator()
 {
-  sPrefInternal_id = JSVAL_VOID;
 }
 
 //*****************************************************************************
@@ -9783,7 +9782,6 @@ DOMCI_DATA(Navigator, nsNavigator)
 NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMJSNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
@@ -10194,148 +10192,6 @@ nsNavigator::TaintEnabled(PRBool *aReturn)
 {
   *aReturn = PR_FALSE;
   return NS_OK;
-}
-
-jsval
-nsNavigator::sPrefInternal_id = JSVAL_VOID;
-
-NS_IMETHODIMP
-nsNavigator::Preference()
-{
-  // XXXjst: We could get rid of this GetCurrentNativeCallContext()
-  // call if this method returned a variant...
-  nsAXPCNativeCallContext *ncc = nsnull;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  PRUint32 argc;
-
-  ncc->GetArgc(&argc);
-
-  if (argc == 0) {
-    // No arguments means there's nothing to be done here.
-
-    return NS_OK;
-  }
-
-  jsval *argv = nsnull;
-
-  ncc->GetArgvPtr(&argv);
-  NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
-
-  JSContext *cx = nsnull;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  //--Check to see if the caller is allowed to access prefs
-  if (sPrefInternal_id == JSVAL_VOID) {
-    sPrefInternal_id =
-      STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
-  }
-
-  PRUint32 action;
-  if (argc == 1) {
-    action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
-  } else {
-    action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
-  }
-
-  rv = nsContentUtils::GetSecurityManager()->
-    CheckPropertyAccess(cx, nsnull, "Navigator", sPrefInternal_id, action);
-  if (NS_FAILED(rv)) {
-    return NS_OK;
-  }
-
-  nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
-  NS_ENSURE_STATE(prefBranch);
-
-  JSString *str = ::JS_ValueToString(cx, argv[0]);
-  NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
-
-  jsval *retval = nsnull;
-
-  rv = ncc->GetRetValPtr(&retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char *prefStr = ::JS_GetStringBytes(str);
-  if (argc == 1) {
-    PRInt32 prefType;
-
-    prefBranch->GetPrefType(prefStr, &prefType);
-
-    switch (prefType) {
-    case nsIPrefBranch::PREF_STRING:
-      {
-        nsXPIDLCString prefCharVal;
-        rv = prefBranch->GetCharPref(prefStr, getter_Copies(prefCharVal));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        JSString *retStr = ::JS_NewStringCopyZ(cx, prefCharVal);
-        NS_ENSURE_TRUE(retStr, NS_ERROR_OUT_OF_MEMORY);
-
-        *retval = STRING_TO_JSVAL(retStr);
-
-        break;
-      }
-
-    case nsIPrefBranch::PREF_INT:
-      {
-        PRInt32 prefIntVal;
-        rv = prefBranch->GetIntPref(prefStr, &prefIntVal);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        *retval = INT_TO_JSVAL(prefIntVal);
-
-        break;
-      }
-
-    case nsIPrefBranch::PREF_BOOL:
-      {
-        PRBool prefBoolVal;
-
-        rv = prefBranch->GetBoolPref(prefStr, &prefBoolVal);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        *retval = BOOLEAN_TO_JSVAL(prefBoolVal);
-
-        break;
-      }
-    default:
-      {
-        // Nothing we can do here...
-
-        return ncc->SetReturnValueWasSet(PR_FALSE);
-      }
-    }
-
-    ncc->SetReturnValueWasSet(PR_TRUE);
-  } else {
-    if (JSVAL_IS_STRING(argv[1])) {
-      JSString *valueJSStr = ::JS_ValueToString(cx, argv[1]);
-      NS_ENSURE_TRUE(valueJSStr, NS_ERROR_OUT_OF_MEMORY);
-
-      rv = prefBranch->SetCharPref(prefStr, ::JS_GetStringBytes(valueJSStr));
-    } else if (JSVAL_IS_INT(argv[1])) {
-      jsint valueInt = JSVAL_TO_INT(argv[1]);
-
-      rv = prefBranch->SetIntPref(prefStr, (PRInt32)valueInt);
-    } else if (JSVAL_IS_BOOLEAN(argv[1])) {
-      JSBool valueBool = JSVAL_TO_BOOLEAN(argv[1]);
-
-      rv = prefBranch->SetBoolPref(prefStr, (PRBool)valueBool);
-    } else if (JSVAL_IS_NULL(argv[1])) {
-      rv = prefBranch->DeleteBranch(prefStr);
-    }
-  }
-
-  return rv;
 }
 
 void

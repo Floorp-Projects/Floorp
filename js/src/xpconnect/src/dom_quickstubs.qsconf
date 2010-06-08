@@ -55,7 +55,6 @@ members = [
     #   - nsIDOMCrypto.{generateCRMFRequest,signText}
     #   - nsIDOMLocation.reload
     #   - nsIDOMNSHistory.go
-    #   - nsIDOMJSNavigator.preference
     #   - nsIDOMJSPluginArray.refresh
     #   - nsIDOMWindowInternal.postMessage
     #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
