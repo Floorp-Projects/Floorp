@@ -2199,8 +2199,7 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
     nameStart = (uriEnd + 1);
     if (nameEnd)  {
       const PRUnichar *prefixStart = nameEnd + 1;
-      *aPrefix = NS_NewAtom(NS_ConvertUTF16toUTF8(prefixStart,
-                                                  pos - prefixStart));
+      *aPrefix = NS_NewAtom(Substring(prefixStart, pos));
     }
     else {
       nameEnd = pos;
@@ -2213,8 +2212,7 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
     nameEnd = pos;
     *aPrefix = nsnull;
   }
-  *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
-                                                 nameEnd - nameStart));
+  *aLocalName = NS_NewAtom(Substring(nameStart, nameEnd));
 }
 
 // static

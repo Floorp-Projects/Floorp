@@ -745,7 +745,6 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
   PRInt8 sign = 1;
   PRInt32 i = 0, j = aString.Length();
   PRUnichar c;
-  nsAutoString unit;
   PRBool floatingPointFound = PR_FALSE;
   c = *iter;
   if (PRUnichar('-') == c) { sign = -1; iter++; i++; }
@@ -773,9 +772,8 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
     iter++;
     i++;
   }
-  unit = Substring(aString, aString.Length() - (j-i), j-i);
   *aValue = value * sign;
-  *aUnit = NS_NewAtom(unit); 
+  *aUnit = NS_NewAtom(StringTail(aString, j-i)); 
 }
 
 void
