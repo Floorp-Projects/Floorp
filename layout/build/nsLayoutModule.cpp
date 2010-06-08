@@ -148,7 +148,6 @@
 #include "nsPrincipal.h"
 #include "nsSystemPrincipal.h"
 #include "nsNullPrincipal.h"
-#include "nsPrefsCID.h"
 #include "nsNetCID.h"
 
 #define NS_EDITORCOMMANDTABLE_CID \
@@ -1626,19 +1625,6 @@ static const nsModuleComponentInfo gXPConnectComponents[] = {
     { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
       NS_SCRIPTSECURITYMANAGER_CID, 
       NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-      Construct_nsIScriptSecurityManager,
-      RegisterSecurityNameSet,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsIClassInfo::MAIN_THREAD_ONLY
-    },
-
-    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
-      NS_SCRIPTSECURITYMANAGER_CID, 
-      NS_GLOBAL_PREF_SECURITY_CHECK,
       Construct_nsIScriptSecurityManager,
       RegisterSecurityNameSet,
       nsnull,
