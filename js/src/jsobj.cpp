@@ -2909,84 +2909,57 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         flags = js_InferFlags(cx, flags);
     flags |= JSRESOLVE_WITH;
     JSAutoResolveFlags rf(cx, flags);
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_LookupProperty(cx, obj, id, objp, propp);
-    return proto->lookupProperty(cx, id, objp, propp);
+    return obj->getProto()->lookupProperty(cx, id, objp, propp);
 }
 
 static JSBool
 with_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_GetProperty(cx, obj, id, vp);
-    return proto->getProperty(cx, id, vp);
+    return obj->getProto()->getProperty(cx, id, vp);
 }
 
 static JSBool
 with_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_SetProperty(cx, obj, id, vp);
-    return proto->setProperty(cx, id, vp);
+    return obj->getProto()->setProperty(cx, id, vp);
 }
 
 static JSBool
 with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_GetAttributes(cx, obj, id, attrsp);
-    return proto->getAttributes(cx, id, attrsp);
+    return obj->getProto()->getAttributes(cx, id, attrsp);
 }
 
 static JSBool
 with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_SetAttributes(cx, obj, id, attrsp);
-    return proto->setAttributes(cx, id, attrsp);
+    return obj->getProto()->setAttributes(cx, id, attrsp);
 }
 
 static JSBool
 with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_DeleteProperty(cx, obj, id, rval);
-    return proto->deleteProperty(cx, id, rval);
+    return obj->getProto()->deleteProperty(cx, id, rval);
 }
 
 static JSBool
 with_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_DefaultValue(cx, obj, hint, vp);
-    return proto->defaultValue(cx, hint, vp);
+    return obj->getProto()->defaultValue(cx, hint, vp);
 }
 
 static JSBool
 with_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                jsval *statep, jsid *idp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_Enumerate(cx, obj, enum_op, statep, idp);
-    return proto->enumerate(cx, enum_op, statep, idp);
+    return obj->getProto()->enumerate(cx, enum_op, statep, idp);
 }
 
 static JSBool
 with_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                  jsval *vp, uintN *attrsp)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return js_CheckAccess(cx, obj, id, mode, vp, attrsp);
-    return proto->checkAccess(cx, id, mode, vp, attrsp);
+    return obj->getProto()->checkAccess(cx, id, mode, vp, attrsp);
 }
 
 static JSType
@@ -2998,10 +2971,7 @@ with_TypeOf(JSContext *cx, JSObject *obj)
 static JSObject *
 with_ThisObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = obj->getProto();
-    if (!proto)
-        return obj;
-    return proto->thisObject(cx);
+    return obj->getWithThis();
 }
 
 JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
@@ -3033,7 +3003,7 @@ with_getObjectOps(JSContext *cx, JSClass *clasp)
 
 JSClass js_WithClass = {
     "With",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     with_getObjectOps,
@@ -3050,6 +3020,13 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
         return NULL;
     obj->setPrivate(js_FloatingFrameIfGenerator(cx, cx->fp));
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
+
+    AutoObjectRooter tvr(cx, obj);
+    JSObject *thisp = proto->thisObject(cx);
+    if (!thisp)
+        return NULL;
+    obj->setWithThis(thisp);
+
     return obj;
 }
 
