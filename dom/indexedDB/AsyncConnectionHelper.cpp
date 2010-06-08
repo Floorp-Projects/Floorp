@@ -41,7 +41,7 @@
 
 #include "nsIIDBDatabaseException.h"
 
-#include "mozilla/Storage.h"
+#include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
