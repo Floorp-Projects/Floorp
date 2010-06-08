@@ -42,7 +42,7 @@
 #include "nsIIDBDatabaseException.h"
 #include "nsIIDBTransactionRequest.h"
 
-#include "mozilla/Storage.h"
+#include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"

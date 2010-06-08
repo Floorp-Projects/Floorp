@@ -45,7 +45,7 @@
 
 #include "nsDOMClassInfo.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Storage.h"
+#include "mozilla/storage.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBCursorRequest.h"
