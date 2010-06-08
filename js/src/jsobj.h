@@ -590,6 +590,12 @@ struct JSObject {
     inline void setProxyPrivate(jsval priv);
 
     /*
+     * With object-specific getters and setters.
+     */
+    inline JSObject *getWithThis() const;
+    inline void setWithThis(JSObject *thisp);
+
+    /*
      * Back to generic stuff.
      */
 
@@ -792,13 +798,15 @@ extern JSClass  js_BlockClass;
  * whose activation they were created (or null if the with or block object
  * outlives the frame).
  */
-#define JSSLOT_BLOCK_DEPTH      (JSSLOT_PRIVATE + 1)
+static const uint32 JSSLOT_BLOCK_DEPTH = JSSLOT_PRIVATE + 1;
 
 static inline bool
 OBJ_IS_CLONED_BLOCK(JSObject *obj)
 {
     return obj->getProto() != NULL;
 }
+
+static const uint32 JSSLOT_WITH_THIS = JSSLOT_PRIVATE + 2;
 
 extern JSBool
 js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);

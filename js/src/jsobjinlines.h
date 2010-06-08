@@ -476,6 +476,18 @@ JSObject::setQNameLocalName(jsval name)
     fslots[JSSLOT_QNAME_LOCAL_NAME] = name;
 }
 
+inline JSObject *
+JSObject::getWithThis() const
+{
+    return JSVAL_TO_OBJECT(fslots[JSSLOT_WITH_THIS]);
+}
+
+inline void
+JSObject::setWithThis(JSObject *thisp)
+{
+    fslots[JSSLOT_WITH_THIS] = OBJECT_TO_JSVAL(thisp);
+}
+
 inline void
 JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                 jsval privateSlotValue)
