@@ -913,6 +913,18 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_REGEXP)
 
+          BEGIN_CASE(JSOP_CALLPROP)
+          {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::CallProp, Uses(1), Defs(2));
+            frame.pop();
+            frame.pushSynced();
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_CALLPROP)
+
           BEGIN_CASE(JSOP_GETUPVAR)
           BEGIN_CASE(JSOP_CALLUPVAR)
           {
