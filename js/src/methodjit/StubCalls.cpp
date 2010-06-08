@@ -2065,8 +2065,8 @@ stubs::DecName(VMFrame &f, JSAtom *atom)
         THROW();
 }
 
-void JS_FASTCALL
-stubs::GetProp(VMFrame &f)
+static bool JS_FASTCALL
+InlineGetProp(VMFrame &f)
 {
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
@@ -2074,7 +2074,7 @@ stubs::GetProp(VMFrame &f)
     Value *vp = &f.regs.sp[-1];
     JSObject *obj = ValueToObject(f.cx, vp);
     if (!obj)
-        THROW();
+        return false;
 
     Value rval;
     do {
@@ -2101,7 +2101,7 @@ stubs::GetProp(VMFrame &f)
                 JSScopeProperty *sprop = entry->vword.toSprop();
                 NATIVE_GET(cx, obj, obj2, sprop,
                         f.fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                        &rval, THROW());
+                        &rval, return false);
             }
             break;
         }
@@ -2114,11 +2114,53 @@ stubs::GetProp(VMFrame &f)
                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                     &rval)
                 : !obj->getProperty(cx, id, &rval)) {
-            THROW();
+            return false;
         }
     } while(0);
 
     regs.sp[-1] = rval;
+    return true;
+}
+
+void JS_FASTCALL
+stubs::GetProp(VMFrame &f)
+{
+    if (!InlineGetProp(f))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::CallProp(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    /* Overwrite stack head with rval. */
+    Value lval = regs.sp[-1];
+    if (!InlineGetProp(f))
+        THROW();
+    Value rval = regs.sp[-1];
+
+    f.regs.sp++;
+    f.regs.sp[-1] = lval;
+
+    /* Wrap primitive lval in object clothing if necessary */
+    if (lval.isPrimitive()) {
+        /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
+        if (!rval.isFunObj() ||
+            !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()),
+                                  lval)) {
+            if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
+                THROW();
+        }
+    }
+#if JS_HAS_NO_SUCH_METHOD
+    if (JS_UNLIKELY(rval.isUndefined())) {
+        regs.sp[-2].setString(ATOM_TO_STRING(atom));
+        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+            THROW();
+    }
+#endif /* JS_HAS_NO_SUCH_METHOD */
 }
 
 void JS_FASTCALL
