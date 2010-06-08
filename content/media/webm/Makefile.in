@@ -34,66 +34,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = content
-LIBRARY_NAME = gkconmedia_s
-LIBXUL_LIBRARY = 1
+MODULE		= content
+LIBRARY_NAME	= gkconwebm_s
+LIBXUL_LIBRARY 	= 1
 
-EXPORTS = \
-  nsMediaDecoder.h \
-  nsMediaStream.h \
-  nsMediaCache.h \
-  nsBuiltinDecoder.h \
-  nsBuiltinDecoderStateMachine.h \
-  nsBuiltinDecoderReader.h \
-  VideoUtils.h \
-  $(NULL)
 
-CPPSRCS = \
-  nsMediaDecoder.cpp \
-  nsMediaCache.cpp \
-  nsMediaStream.cpp \
-  nsBuiltinDecoder.cpp \
-  nsBuiltinDecoderStateMachine.cpp \
-  nsBuiltinDecoderReader.cpp \
-  $(NULL)
+EXPORTS		+= \
+		nsWebMDecoder.h \
+		$(NULL)
 
-ifdef MOZ_SYDNEYAUDIO
-EXPORTS += \
-  nsAudioStream.h \
-  $(NULL)
-CPPSRCS += \
-  nsAudioStream.cpp \
-  $(NULL)
-endif
-
-ifdef MOZ_OGG
-PARALLEL_DIRS += ogg
-endif
-
-ifdef MOZ_WAVE
-PARALLEL_DIRS += wave
-endif
-
-ifdef MOZ_WEBM
-PARALLEL_DIRS += webm
-endif
-
-ifdef ENABLE_TESTS
-PARALLEL_DIRS += test
-endif
+CPPSRCS		= \
+		nsWebMDecoder.cpp \
+		nsWebMReader.cpp \
+		$(NULL)
 
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += \
-  -I$(srcdir)/../base/src \
-  -I$(srcdir)/../html/content/src \
-  $(NULL)
+INCLUDES	+= \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../html/content/src \
+		$(NULL)

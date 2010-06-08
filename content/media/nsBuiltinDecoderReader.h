@@ -433,8 +433,8 @@ public:
                                    PRInt64& aOutStartTime);
 
   // Returns the end time of the last page which occurs before aEndOffset.
-  // This will not read past aEndOffset. Returns -1 on failure.
-  virtual PRInt64 FindEndTime(PRInt64 aEndOffset) = 0;
+  // This will not read past aEndOffset. Returns -1 on failure. 
+  virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
   // Moves the decode head to aTime milliseconds. aStartTime and aEndTime
   // denote the start and end times of the media.
