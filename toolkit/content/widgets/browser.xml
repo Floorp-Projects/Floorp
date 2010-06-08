@@ -182,8 +182,11 @@
               catch (e) {
               }
             }
-            try {
+
+            if (!(aFlags & this.webNavigation.LOAD_FLAGS_FROM_EXTERNAL))
               this.userTypedClear++;
+
+            try {
               this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
             } finally {
               if (this.userTypedClear)
