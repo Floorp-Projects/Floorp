@@ -640,40 +640,6 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
     return NewObjectWithGivenProto(cx, clasp, proto, parent, objectSize);
 }
 
-JS_ALWAYS_INLINE
-Value::Value(ObjectTag arg)
-{
-	JSValueMask32 mask = arg.obj.isFunction() ? JSVAL_MASK32_FUNOBJ
-                                              : JSVAL_MASK32_NONFUNOBJ;
-	data = OBJECT_TO_JSVAL_IMPL(mask, &arg.obj);
-}
-
-JS_ALWAYS_INLINE
-Value::Value(ObjectOrNullTag arg)
-{
-    JSValueMask32 mask = arg.obj ? arg.obj->isFunction() ? JSVAL_MASK32_FUNOBJ
-                                                         : JSVAL_MASK32_NONFUNOBJ
-                                 : JSVAL_MASK32_NULL;
-	data = OBJECT_TO_JSVAL_IMPL(mask, arg.obj);
-}
-
-JS_ALWAYS_INLINE void
-Value::setObject(JSObject &arg)
-{
-    JSValueMask32 mask = arg.isFunction() ? JSVAL_MASK32_FUNOBJ
-                                          : JSVAL_MASK32_NONFUNOBJ;
-	data = OBJECT_TO_JSVAL_IMPL(mask, &arg);
-}
-
-JS_ALWAYS_INLINE void
-Value::setObjectOrNull(JSObject *arg)
-{
-    JSValueMask32 mask = arg ? arg->isFunction() ? JSVAL_MASK32_FUNOBJ
-                                                 : JSVAL_MASK32_NONFUNOBJ
-                      		 : JSVAL_MASK32_NULL;
-	data = OBJECT_TO_JSVAL_IMPL(mask, arg);
-}
-
 } /* namespace js */
 
 #endif /* jsobjinlines_h___ */

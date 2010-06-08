@@ -228,7 +228,7 @@ FindObjectPrincipals(JSContext *cx, JSObject *safeObj, JSObject *innerObj)
 static inline JSObject *
 FindSafeObject(JSObject *obj)
 {
-  while (obj->getClass() != &SJOWClass.base) {
+  while (obj->getJSClass() != &SJOWClass.base) {
     obj = obj->getProto();
 
     if (!obj) {
@@ -406,7 +406,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
     // parent we pass in here, the construct hook will ensure we get
     // the right parent for the wrapper.
     JSObject *safeObj = JSVAL_TO_OBJECT(*rval);
-    if (safeObj->getClass() == &SJOWClass.base &&
+    if (safeObj->getJSClass() == &SJOWClass.base &&
         JS_GetGlobalForObject(cx, obj) != JS_GetGlobalForObject(cx, safeObj)) {
       // Check to see if the new object we just wrapped is accessible
       // from the unsafe object we got the new object through. If not,
@@ -573,7 +573,7 @@ public:
 private:
   JSContext *cx;
   JSRegExpStatics statics;
-  js::AutoValueRooter tvr;
+  js::AutoStringRooter tvr;
   uint32 options;
   JSStackFrame *fp;
 };
@@ -752,7 +752,7 @@ XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
     return JS_FALSE;
   }
 
-  JSClass *clazz = unsafeObj->getClass();
+  JSClass *clazz = unsafeObj->getJSClass();
   return !clazz->checkAccess ||
     clazz->checkAccess(cx, unsafeObj, id, mode, vp);
 }
@@ -991,7 +991,7 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  js::AutoObjectRooter tvr(cx, wrapperIter);
 
   // Initialize the wrapper.
   return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, unsafeObj,
