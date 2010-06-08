@@ -249,6 +249,10 @@ public:
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();
   virtual JSObject *GetGlobalJSObject();
+  JSObject *FastGetGlobalJSObject()
+  {
+    return mJSObject;
+  }
 
   virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
 

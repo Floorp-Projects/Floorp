@@ -1423,7 +1423,7 @@ nsGlobalWindow::GetGlobalJSObject()
 {
   NS_ASSERTION(mJSObject == GetScriptGlobal(nsIProgrammingLanguage::JAVASCRIPT),
                "GetGlobalJSObject confused?");
-  return mJSObject;
+  return FastGetGlobalJSObject();
 }
 
 
