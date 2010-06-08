@@ -4912,6 +4912,9 @@ MOZ_VORBIS=
 MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_WEBM=1
+VPX_AS=
+VPX_ASFLAGS=
+VPX_X86_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -5898,6 +5901,47 @@ if test -n "$MOZ_WEBM"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
     MOZ_VORBIS=1
+
+    dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
+    dnl For Win32 (MSVC) we must use MASM.
+    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a "$GNU_CC" != "yes"; then
+        AC_MSG_CHECKING([for MASM assembler])
+        AC_CHECK_PROGS(VPX_AS, ml, "")
+        if test -n "$VPX_AS"; then
+          VPX_X86_ASM=1
+          VPX_AS='$(topsrcdir)/media/libvpx/yasm2masm-as.sh'
+        else
+            AC_MSG_ERROR([Need MASM (ml.exe) in order to assemble libvpx optimized assembly. Either disable webm (reconfigure with --disable-webm) or install MASM. MASM is included in the Windows 7 SDK, or you can download MASM directly from http://www.microsoft.com/downloads/details.aspx?familyid=7a1c9da0-0510-44a2-b042-7ef370530c64&displaylang=en])
+        fi
+    else 
+
+      dnl For Darwin x86, Darwin x86_64, and Linux x86 we can use YASM.
+      AC_MSG_CHECKING([for YASM assembler])
+      AC_CHECK_PROGS(VPX_AS, yasm, "")
+      if test -n "$VPX_AS"; then
+        dnl We have YASM, see if we have assembly on this platform.  
+        case "$OS_ARCH:$OS_TEST" in
+        Linux:x86|Linux:i?86)
+          VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+          VPX_X86_ASM=1
+        ;;
+        Darwin:i?86)
+          VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        Darwin:x86_64)
+          VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        esac
+      fi # end have YASM
+    fi # end !WINNT
+
+    if test -n "$VPX_X86_ASM"; then
+      AC_DEFINE(VPX_X86_ASM)
+    else
+      AC_MSG_WARN([No assembler or assembly support for libvpx, using unoptimized C routines.])
+    fi
 fi
 
 dnl ========================================================
@@ -8765,6 +8809,9 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
+AC_SUBST(VPX_AS)
+AC_SUBST(VPX_ASFLAGS)
+AC_SUBST(VPX_X86_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
