@@ -841,6 +841,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETPROP)
+          BEGIN_CASE(JSOP_SETMETHOD)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::SetName, Uses(2), Defs(1));
