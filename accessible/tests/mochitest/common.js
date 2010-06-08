@@ -197,7 +197,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
     elm = aAccOrElmOrID;
 
   } else {
-    var elm = document.getElementById(aAccOrElmOrID);
+    elm = document.getElementById(aAccOrElmOrID);
     if (!elm) {
       ok(false, "Can't get DOM element for " + aAccOrElmOrID);
       return null;
