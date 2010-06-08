@@ -209,16 +209,11 @@ nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc,
 {
   NS_ENSURE_ARG(aDoc);
 
-  nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(aDoc));
-  nsCOMPtr<nsIAccessibleDocument> accDoc =
-    nsAccessNode::GetDocAccessibleFor(docNode);
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(aDoc));
+  nsDocAccessible *docAccessible = GetAccService()->GetDocAccessible(document);
 
   // Don't fire events until document is loaded.
-  if (!accDoc)
-    return NS_OK;
-
-  nsCOMPtr<nsIAccessible> accForDoc(do_QueryInterface(accDoc));
-  if (nsAccUtils::State(accForDoc) & nsIAccessibleStates::STATE_BUSY)
+  if (!docAccessible || !docAccessible->IsContentLoaded())
     return NS_OK;
 
   nsCOMPtr<nsISelection2> sel2(do_QueryInterface(aSel));

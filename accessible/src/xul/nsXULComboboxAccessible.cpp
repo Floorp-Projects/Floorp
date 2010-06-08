@@ -41,6 +41,7 @@
 #include "nsXULComboboxAccessible.h"
 
 #include "nsAccessibilityService.h"
+#include "nsCoreUtils.h"
 
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
