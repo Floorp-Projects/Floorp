@@ -170,35 +170,6 @@ var BrowserUI = {
     }
   },
 
-  _linkAdded : function(aEvent) {
-    let link = aEvent.originalTarget;
-    if (!link || !link.href)
-      return;
-
-    if (/\bicon\b/i(link.rel)) {
-      // Must have an owner document and not be in a frame
-      var ownerDoc = link.ownerDocument;
-      if (!ownerDoc || ownerDoc.defaultView.frameElement)
-        return;
-
-      let tab = Browser.getTabForDocument(ownerDoc);
-      tab.setIcon(link.href);
-      // If the link changes after pageloading, update it right away.
-      // otherwise we wait until the pageload finishes
-      if ((tab.browser == Browser.selectedBrowser) && !tab.isLoading())
-        this._updateIcon(tab.browser.mIconURL);
-    }
-    else if (/\bsearch\b/i(link.rel)) {
-      var type = link.type && link.type.toLowerCase();
-      type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
-      if (type == "application/opensearchdescription+xml" && link.title && /^(?:https?|ftp):/i.test(link.href)) {
-        var engine = { title: link.title, href: link.href };
-
-        BrowserSearch.addPageSearchEngine(engine, link.ownerDocument);
-      }
-    }
-  },
-
   _updateButtons : function(aBrowser) {
     let back = document.getElementById("cmd_back");
     let forward = document.getElementById("cmd_forward");
