@@ -103,3 +103,20 @@ WebGLContext::ValidateBuffers(PRUint32 count)
     return PR_TRUE;
 }
 
+PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap)
+{
+    switch (cap) {
+        case LOCAL_GL_BLEND:
+        case LOCAL_GL_CULL_FACE:
+        case LOCAL_GL_DEPTH_TEST:
+        case LOCAL_GL_DITHER:
+        case LOCAL_GL_POLYGON_OFFSET_FILL:
+        case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
+        case LOCAL_GL_SAMPLE_COVERAGE:
+        case LOCAL_GL_SCISSOR_TEST:
+        case LOCAL_GL_STENCIL_TEST:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
