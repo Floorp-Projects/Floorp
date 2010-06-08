@@ -1698,9 +1698,6 @@ nsBrowserAccess.prototype = {
 };
 
 const BrowserSearch = {
-  engines: null,
-  _allEngines: [],
-
   observe: function bs_observe(aSubject, aTopic, aData) {
     if (aTopic != "browser-search-engine-modified")
       return;
@@ -1728,11 +1725,6 @@ const BrowserSearch = {
     }
   },
 
-  get _currentEngines() {
-    let doc = getBrowser().contentDocument;
-    return this._allEngines.filter(function(element) element.doc === doc, this);
-  },
-
   get searchService() {
     delete this.searchService;
     return this.searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
@@ -1744,35 +1736,17 @@ const BrowserSearch = {
     return this._engines = this.searchService.getVisibleEngines({ });
   },
 
-  addPageSearchEngine: function (aEngine, aDocument) {
-    // Clean the engine referenced for document that didn't exist anymore
-    let browsers = Browser.browsers;
-    this._allEngines = this._allEngines.filter(function(element) {
-       return browsers.some(function (browser) browser.contentDocument == element.doc);
-    }, this);
-
-    // Prevent duplicate
-    if (!this._allEngines.some(function (e) {
-        return (e.engine.title == aEngine.title) && (e.doc == aDocument);
-    })) this._allEngines.push( {engine:aEngine, doc:aDocument});
-  },
-
   updatePageSearchEngines: function() {
     PageActions.removeItems("search");
 
-    // Check to see whether we've already added an engine with this title in
-    // the search list
-    let newEngines = this._currentEngines.filter(function(element) {
-      return !this.engines.some(function (e) e.name == element.engine.title);
-    }, this);
-
-    if (newEngines.length == 0)
+    let items = Browser.selectedBrowser.searchEngines;
+    if (!items.length)
       return;
 
     // XXX limit to the first search engine for now
     let kMaxSearchEngine = 1;
     for (let i = 0; i < kMaxSearchEngine; i++) {
-      let engine = newEngines[i].engine;
+      let engine = items[i];
       let item = PageActions.appendItem("search",
                                         Elements.browserBundle.getString("pageactions.search.addNew"),
                                         engine.title);
