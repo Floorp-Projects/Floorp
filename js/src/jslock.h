@@ -309,7 +309,15 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv);
 extern void
 js_AtomicSetMask(jsword *w, jsword mask);
 
+/*
+ * Atomically bitwise-and the complement of the mask into the word *w using
+ * compare and swap.
+ */
+extern void
+js_AtomicUnsetMask(jsword *w, jsword mask);
+
 #define JS_ATOMIC_SET_MASK(w, mask) js_AtomicSetMask(w, mask)
+#define JS_ATOMIC_UNSET_MASK(w, mask) js_AtomicUnsetMask(w, mask)
 
 #else
 
@@ -320,6 +328,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 }
 
 #define JS_ATOMIC_SET_MASK(w, mask) (*(w) |= (mask))
+#define JS_ATOMIC_UNSET_MASK(w, mask) (*(w) &= ~(mask))
 
 #endif /* JS_THREADSAFE */
 

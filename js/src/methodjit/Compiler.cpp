@@ -943,6 +943,19 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_NEWARRAY)
 
           BEGIN_CASE(JSOP_TRACE)
+          {
+            if (analysis[PC].nincoming > 0) {
+                RegisterID cxreg = frame.allocReg();
+                masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxreg);
+                Address flag(cxreg, offsetof(JSContext, interruptFlags));
+                Jump jump = masm.branchTest32(Assembler::NonZero, flag);
+                frame.freeReg(cxreg);
+                stubcc.linkExit(jump);
+                stubcc.leave();
+                stubcc.call(stubs::Interrupt);
+                stubcc.rejoin(0);
+            }
+          }
           END_CASE(JSOP_TRACE)
 
           BEGIN_CASE(JSOP_CONCATN)

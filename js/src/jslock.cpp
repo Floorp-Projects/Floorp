@@ -277,6 +277,17 @@ js_AtomicSetMask(jsword *w, jsword mask)
     } while (!js_CompareAndSwap(w, ov, nv));
 }
 
+void
+js_AtomicUnsetMask(jsword *w, jsword mask)
+{
+    jsword ov, nv;
+
+    do {
+        ov = *w;
+        nv = ov &= (~mask);
+    } while (!js_CompareAndSwap(w, ov, nv));
+}
+
 #ifndef NSPR_LOCK
 
 struct JSFatLock {
