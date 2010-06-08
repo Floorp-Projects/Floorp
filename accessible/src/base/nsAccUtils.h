@@ -45,11 +45,16 @@
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTable.h"
-#include "nsARIAMap.h"
 
+#include "nsARIAMap.h"
+#include "nsAccessibilityService.h"
+#include "nsCoreUtils.h"
+
+#include "nsIContent.h"
+#include "nsIDocShell.h"
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
-#include "nsIContent.h"
+#include "nsIPresShell.h"
 #include "nsPoint.h"
 
 class nsAccessNode;
@@ -143,6 +148,38 @@ public:
    * Return PR_TRUE if the ARIA property is defined, otherwise PR_FALSE
    */
   static PRBool HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom);
+
+  /**
+   * Return document accessible for the given presshell.
+   */
+  static nsDocAccessible *GetDocAccessibleFor(nsIWeakReference *aWeakShell)
+  {
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
+    return presShell ?
+      GetAccService()->GetDocAccessible(presShell->GetDocument()) : nsnull;
+  }
+
+  /**
+   * Return document accessible for the given DOM node.
+   */
+  static nsDocAccessible *GetDocAccessibleFor(nsIDOMNode *aNode)
+  {
+    nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
+    return presShell ?
+      GetAccService()->GetDocAccessible(presShell->GetDocument()) : nsnull;
+  }
+
+  /**
+   * Return document accessible for the given docshell.
+   */
+  static nsDocAccessible *GetDocAccessibleFor(nsIDocShellTreeItem *aContainer)
+  {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+    nsCOMPtr<nsIPresShell> presShell;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    return presShell ?
+      GetAccService()->GetDocAccessible(presShell->GetDocument()) : nsnull;
+  }
 
   /**
    * Return true if the given DOM node contains accessible children.

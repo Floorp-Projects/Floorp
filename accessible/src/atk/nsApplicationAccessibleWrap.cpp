@@ -437,7 +437,7 @@ mai_util_remove_key_event_listener (guint remove_listener)
 AtkObject *
 mai_util_get_root(void)
 {
-    if (nsAccessibilityService::gIsShutdown) {
+    if (nsAccessibilityService::IsShutdown()) {
         // We've shutdown, try to use gail instead
         // (to avoid assert in spi_atk_tidy_windows())
         if (gail_get_root)
