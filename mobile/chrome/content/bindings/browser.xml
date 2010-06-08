@@ -55,7 +55,7 @@
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            throw "Supports Remote?";
+            throw "accessibleType: Supports Remote?";
           ]]>
         </getter>
       </property>
@@ -63,7 +63,7 @@
       <property name="autoscrollEnabled">
         <getter>
           <![CDATA[
-            throw "Supports Remote?";
+            throw "autoscrollEnabled: Supports Remote?";
           ]]>
         </getter>
       </property>
@@ -73,9 +73,16 @@
                 onget="return this._searchEngines"
                 readonly="true"/>
 
-      <property name="docShell"
-                onget="throw 'Not Remotable'"
+      <field name="_documentURI">null</field>
+      <property name="documentURI"
+                onget="return gIOService.newURI(this._documentURI, null, null)"
                 readonly="true"/>
+
+      <!-- XXX
+      <property name="docShell"
+                onget="throw 'docShell: Not Remotable'"
+                readonly="true"/>
+      -->
 
       <property name="messageManager"
                 onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;"
@@ -87,7 +94,7 @@
           get title() { return this._browser._contentTitle; },
           get location() { return null; },
           set location(aURI) { this._browser.loadURI(aURI, null, null); },
-          get nodePrincipal() { throw "Not Remotable"; },
+          get nodePrincipal() { throw "nodePrincipal: Not Remotable"; },
 
           _browser: this,
         })
@@ -97,6 +104,7 @@
          Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
       </field>
 
+      <!-- XXX
       <field name="_webNavigation"><![CDATA[
         ({
           canGoBack: false,
@@ -120,7 +128,7 @@
           },
           set currentURI(aURI) { this.loadURI(aURI.spec, null, null, null); },
           referringURI: null,
-          get sessionHistory() { throw "Not Remoteable"; },
+          get sessionHistory() { throw "sessionHistory: Not Remoteable"; },
 
           _currentURI: null,
           _browser: this,
@@ -138,48 +146,44 @@
       <property name="webNavigation"
                 onget="return this._webNavigation;"
                 readonly="true"/>
+      -->
 
       <method name="receiveMessage">
         <parameter name="aMessage"/>
         <body><![CDATA[
           switch (aMessage.name) {
-            case "DOMContentLoaded": {
+            case "DOMContentLoaded":
               let data = aMessage.json;
               if (this.mIconURL == "") {
-                let documentURI = gIOService.newURI(data.location, null, null);
-                this.mIconURL = documentURI.prePath + "/favicon.ico";
+                this.mIconURL = this.documentURI.prePath + "/favicon.ico";
               }
               break;
-            }
-            case "DOMTitleChanged": {
-              this._contentTitle = aMessage.json.title;
 
-              let event = document.createEvent("Events");
-              event.initEvent("DOMTitleChanged", true, true);
-              this.dispatchEvent(event);
+            case "DOMPopupBlocked":
+              this.onPopupBlocked(aMessage);
               break;
-            }
-            case "DOMWillOpenModalDialog": {
-              let event = document.createEvent("Events");
-              event.initEvent("DOMWillOpenModalDialog", true, true);
-              this.dispatchEvent(event);
+
+            case "pageshow":
+              this.onPageShow(aMessage);
               break;
-            }
-            case "DOMWindowClose": {
-              let event = document.createEvent("Events");
-              event.initEvent("DOMWindowClose", true, true);
-              this.dispatchEvent(event);
+
+            case "pagehide":
+              this.onPageHide(aMessage);
               break;
-            }
-            case "DOMLinkAdded": {
+
+            case "DOMTitleChanged":
+              this._contentTitle = aMessage.json.title;
+              break;
+
+            case "DOMLinkAdded":
               let link = aMessage.json;
-              if (!link.isRootDocument)
+              if (link.location != this._documentURI)
                 return;
 
               let linkType = this._getLinkType(link);
               switch(linkType) {
                 case "icon":
-                  let iconURI = gIOService.newURI(link.href, link.characterSet, null);
+                  let iconURI = gIOService.newURI(link.href, link.charset, null);
                   if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
                     gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
                     this.mIconURL = iconURI.spec;
@@ -190,7 +194,6 @@
                   break;
               }
               break;
-            }
          }
         ]]></body>
       </method>
@@ -265,74 +268,81 @@
             function hasFilter(item) {
               return item.listener != aListener;
             }
-        
+
             this._listeners = this._listeners.filter(hasFilter);
           },
-          get DOMWindow() { throw "Not Remoteable" },
+          get DOMWindow() { throw "DOMWindow: Not Remoteable" },
           isLoadingDocument: false,
-          
+
           receiveMessage: function(aMessage) {
             let args;
+            let json = aMessage.json;
             switch (aMessage.name) {
               case "WebProgress:StateChange":
                 args = [
-                  { isRootWindow: aMessage.json.isRootWindow, browser: this.browser },
+                  { isRootWindow: json.isRootWindow, browser: this._browser },
                   {},
-                  aMessage.json.stateFlags,
-                  aMessage.json.status
+                  json.stateFlags,
+                  json.status
                 ];
-                this._notify(aMessage.json.notifyFlags, "onStateChange", args);
+
+                this._notify(json.notifyFlags, "onStateChange", args);
                 break;
- 
+
               case "WebProgress:ProgressChange":
                 args = [
-                  { isRootWindow: aMessage.json.isRootWindow, browser: this.browser },
+                  { isRootWindow: json.isRootWindow, browser: this._browser },
                   {},
-                  aMessage.json.curSelf,
-                  aMessage.json.maxSelf,
-                  aMessage.json.curTotal,
-                  aMessage.json.maxTotal
+                  json.curSelf,
+                  json.maxSelf,
+                  json.curTotal,
+                  json.maxTotal
                 ];
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_PROGRESS,
                              "onProgressChange",
                              args);
                 break;
- 
+
               case "WebProgress:LocationChange":
-                let currentURI = this._browser._ios.newURI(aMessage.json.location, null, null);
-                this._browser._webNavigation._currentURI = currentURI;
-                this._browser._webNavigation.canGoBack = aMessage.json.canGoBack;
-                this._browser._webNavigation.canGoForward = aMessage.json.canGoForward;
+                let currentURI = this._browser._ios.newURI(json.location, null, null);
+                // XXX this._browser._webNavigation._currentURI = currentURI;
+                // XXX this._browser._webNavigation.canGoBack = json.canGoBack;
+                // XXX this._browser._webNavigation.canGoForward = json.canGoForward;
 
                 args = [
-                  { isRootWindow: aMessage.json.isRootWindow, browser: this.browser },
+                  { isRootWindow: json.isRootWindow, browser: this._browser },
                   {},
                   currentURI
                 ];
+
+                if (json.isRootWindow) {
+                  this._browser._documentURI = json.documentURI;
+                  this._browser._searchEngines = [];
+                }
+
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
                              args);
 
-                this._browser._searchEngines = [];
                 break;
- 
+
               case "WebProgress:StatusChange":
                 args = [
-                  { isRootWindow: aMessage.json.isRootWindow, browser: this.browser },
+                  { isRootWindow: json.isRootWindow, browser: this._browser },
                   {},
-                  aMessage.json.status,
-                  aMessage.json.message
+                  json.status,
+                  json.message
                 ];
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_STATUS,
                              "onStatusChange",
                              args);
                 break;
- 
+
               case "WebProgress:SecurityChange":
                 args = [
-                  { isRootWindow: aMessage.json.isRootWindow, browser: this.browser, identity: aMessage.json.identity },
+                  { isRootWindow: json.isRootWindow, browser: this._browser, identity: json.identity },
                   {},
-                  aMessage.json.state
+                  json.state
                 ];
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
                              "onSecurityChange",
@@ -342,8 +352,10 @@
 
             return {};
           },
-          
+
           _notify: function(aFlags, aName, aArguments) {
+            // XXX do nothing yet
+            return;
             this._listeners.forEach(function(item) {
               if (item.flags & aFlags)
                 item.listener[aName].apply(item.listener, aArguments);
@@ -352,6 +364,7 @@
         })
       ]]></field>
 
+      <!-- XXX
       <property name="webProgress"
                 readonly="true"
                 onget="return this._webProgress"/>
@@ -361,24 +374,25 @@
                 onget="throw 'Not Remoteable'"/>
 
       <property name="sessionHistory"
-                onget="throw 'Not Remoteable'"
+                onget="throw 'sessionHistory: Not Remoteable'"
                 readonly="true"/>
 
       <property name="markupDocumentViewer"
-                onget="throw 'Not Remoteable'"
+                onget="throw 'markupDocumentViewer: Not Remoteable'"
                 readonly="true"/>
 
       <property name="contentViewerEdit"
-                onget="throw 'Not Remoteable'"
+                onget="throw 'contentViewerEdit: Not Remoteable'"
                 readonly="true"/>
 
       <property name="contentViewerFile"
-                onget="throw 'Not Remoteable'"
+                onget="throw 'contentViewerFile: Not Remoteable'"
                 readonly="true"/>
 
       <property name="documentCharsetInfo"
-                onget="throw 'Not Remoteable'"
+                onget="throw 'documentCharsetInfo: Not Remoteable'"
                 readonly="true"/>
+      -->
 
       <method name="attachFormFill">
         <body>
@@ -435,17 +449,16 @@
       </method>
 
       <method name="onPageShow">
-        <parameter name="aEvent"/>
+        <parameter name="aMessage"/>
         <body>
           <![CDATA[
             this.attachFormFill();
             if (this.pageReport) {
+              var json = aMessage.json;
               var i = 0;
               while (i < this.pageReport.length) {
                 // Filter out irrelevant reports.
-                if (this.pageReport[i].requestingWindow &&
-                    (this.pageReport[i].requestingWindow.document ==
-                     this.pageReport[i].requestingDocument))
+                if (this.pageReport[i].requestingWindowId == json.windowId)
                   i++;
                 else
                   this.pageReport.splice(i, 1);
@@ -460,7 +473,7 @@
       </method>
 
       <method name="onPageHide">
-        <parameter name="aEvent"/>
+        <parameter name="aMessage"/>
         <body>
           <![CDATA[
             if (this.pageReport) {
@@ -469,10 +482,13 @@
             }
             // Delete the feeds cache if we're hiding the topmost page
             // (as opposed to one of its iframes).
-            if (this.feeds && aEvent.target == this.contentDocument)
+            // XXX e10s contentDocument is not accessible, we need to use
+            // outerWindowID
+            if (this.feeds && aMessage.target == this.contentDocument)
               this.feeds = null;
             if (!this.docShell || !this.fastFind)
               return;
+
             var tabBrowser = this.getTabBrowser();
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
@@ -494,25 +510,27 @@
       </method>
 
       <method name="onPopupBlocked">
-        <parameter name="evt"/>
+        <parameter name="aMessage"/>
         <body>
           <![CDATA[
             if (!this.pageReport) {
-              this.pageReport = new Array();
+              this.pageReport = [];
             }
 
-            var obj = { requestingWindow: evt.requestingWindow,
-                        // Record the current document in the requesting window
-                        // before it can change.
-                        requestingDocument: evt.requestingWindow.document,
-                        popupWindowURI: evt.popupWindowURI,
-                        popupWindowFeatures: evt.popupWindowFeatures,
-                        popupWindowName: evt.popupWindowName };
+            let json = aMessage.json;
+            // XXX Replacing requestingWindow && requestingDocument affects
+            // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#500
+            var obj = {
+              requestingWindowId: json.windowId,
+              popupWindowURI: gIOService.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
+              popupWindowFeatures: json.popupWindowFeatures,
+              popupWindowName: json.popupWindowName
+            };
 
             this.pageReport.push(obj);
             this.pageReport.reported = false;
             this.updatePageReport();
-          ]]> 
+          ]]>
         </body>
       </method>
 
@@ -530,7 +548,7 @@
                 securityUI.init(this.contentWindow);
               }
             }
-            
+
             return this.docShell.securityUI;
           ]]>
         </getter>
@@ -565,23 +583,20 @@
           catch (e) {
           }
 
-          // Listen for first load for lazy attachment to form fill controller
-          this.addEventListener("pageshow", this.onPageShow, true);
-          this.addEventListener("pagehide", this.onPageHide, true);
-          this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
-
           messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
-          //messageManager.addMessageListener("pageshow", this.onPageShow);
-          //messageManager.addMessageListener("pagehide", this.onPageShow);
-          //messageManager.addMessageListener("DOMPopupBlocked", this.onPopupBlocked);
           messageManager.addMessageListener("DOMContentLoaded", this);
           messageManager.addMessageListener("DOMTitleChanged", this);
           messageManager.addMessageListener("DOMLinkAdded", this);
 
-          this.webProgress._init();
+          // Listen for first load for lazy attachment to form fill controller
+          messageManager.addMessageListener("pageshow", this);
+          messageManager.addMessageListener("pagehide", this);
+          messageManager.addMessageListener("DOMPopupBlocked", this);
+
+          this._webProgress._init();
         ]]>
       </constructor>
-      
+
       <destructor>
         <![CDATA[
           this.destroy();
@@ -616,10 +631,6 @@
           this.feeds = null;
 
           this.lastURI = null;
-
-          this.removeEventListener("pageshow", this.onPageShow, true);
-          this.removeEventListener("pagehide", this.onPageHide, true);
-          this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
 
           if (this._autoScrollNeedsCleanup) {
             // we polluted the global scope, so clean it up

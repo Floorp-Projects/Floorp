@@ -1,5 +1,5 @@
 // This stays here because otherwise it's hard to tell if there's a parsing error
-dump("###################################### frame-content loaded\n");
+dump("###################################### content loaded\n");
 
 // how many milliseconds before the mousedown and the overlay of an element
 const kTapOverlayTimeout = 200;
@@ -211,21 +211,35 @@ Coalescer.prototype = {
     this.flush();
   },
 
-  handleEvent: function handleEvent(e) {
-    if (e.type == "MozAfterPaint") {
-      var win = e.originalTarget;
-      var scrollOffset = Util.getScrollOffset(win);
-      this.dirty(scrollOffset, e.clientRects);
-    } else if (e.type == "MozScrolledAreaChanged") {
-      // XXX if it's possible to get a scroll area change with the same values,
-      // it would be optimal if this didn't send the same message twice.
-      var doc = e.originalTarget;
-      var win = doc.defaultView;
-      var scrollOffset = Util.getScrollOffset(win);
-      if (win.parent != win)
-	// We are only interested in root scroll pane changes
-	return;
-      this.sizeChange(scrollOffset, e.x, e.y, e.width, e.height);
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "MozAfterPaint": {
+        let win = aEvent.originalTarget;
+        let scrollOffset = Util.getScrollOffset(win);
+        this.dirty(scrollOffset, aEvent.clientRects);
+        break;
+      }
+      case "MozScrolledAreaChanged": {
+        // XXX if it's possible to get a scroll area change with the same values,
+        // it would be optimal if this didn't send the same message twice.
+        let doc = aEvent.originalTarget;
+        let win = doc.defaultView;
+        let scrollOffset = Util.getScrollOffset(win);
+        if (win.parent != win) // We are only interested in root scroll pane changes
+	  return;
+        this.sizeChange(scrollOffset, aEvent.x, aEvent.y, aEvent.width, aEvent.height);
+        break;
+      }
+      case "MozApplicationManifest": {
+        let doc = aEvent.originalTarget;
+
+        sendAsyncMessage("MozApplicationManifest", {
+          location: doc.documentURIObject.spec,
+          manifest: doc.documentElement.getAttribute("manifest"),
+          charset: doc.characterSet
+        });
+        break;
+      }
     }
   },
 
@@ -668,6 +682,7 @@ function Content() {
   this._coalescer = new Coalescer();
   addEventListener("MozAfterPaint", this._coalescer, false);
   addEventListener("MozScrolledAreaChanged", this._coalescer, false);
+  addEventListener("MozApplicationManifest", this._coalescer, false);
 
   this._progressController = new ProgressController(this);
   this._progressController.start();

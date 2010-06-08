@@ -40,6 +40,7 @@ let WebProgressListener = {
     let location = aLocationURI ? aLocationURI.spec : "";
     let json = {
       isRootWindow: aWebProgress.DOMWindow == content,
+      documentURI: aWebProgress.DOMWindow.document.documentURIObject.spec,
       location: location,
       canGoBack: docShell.canGoBack,
       canGoForward: docShell.canGoForward
@@ -198,43 +199,82 @@ let DOMEvents =  {
     addEventListener("DOMLinkAdded", this, false);
     addEventListener("DOMWillOpenModalDialog", this, false);
     addEventListener("DOMWindowClose", this, false);
+    addEventListener("DOMPopupBlocked", this, false);
+    addEventListener("pageshow", this, false);
+    addEventListener("pagehide", this, false);
   },
 
   handleEvent: function(aEvent) {
+    let document = content.document;
     switch (aEvent.type) {
       case "DOMContentLoaded":
-        let documentURIObject = content.document.documentURIObject;
-        if (documentURIObject.spec == "about:blank")
+        if (document.documentURIObject.spec == "about:blank")
           return;
 
-        sendAsyncMessage("DOMContentLoaded", { location: documentURIObject.spec });
+        sendAsyncMessage("DOMContentLoaded", { });
         break;
+
+      case "pageshow":
+      case "pagehide": {
+        let util = aEvent.target.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                            .getInterface(Ci.nsIDOMWindowUtils);
+
+        let json = {
+          windowId: util.outerWindowID,
+          persisted: aEvent.persisted
+        };
+
+        sendAsyncMessage(aEvent.type, json);
+        break;
+      }
+
+      case "DOMPopupBlocked": {
+        let util = aEvent.requestingWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                          .getInterface(Ci.nsIDOMWindowUtils);
+        let json = {
+          windowId: util.outerWindowID,
+          popupWindowURI: {
+            spec: aEvent.popupWindowURI.spec,
+            charset: aEvent.popupWindowURI.originCharset
+          },
+          popupWindowFeatures: aEvent.popupWindowFeatures,
+          popupWindowName: aEvent.popupWindowName
+        };
+
+        sendAsyncMessage("DOMPopupBlocked", json);
+        break;
+      }
+
       case "DOMTitleChanged":
-        sendAsyncMessage("DOMTitleChanged", { title: content.document.title });
+        sendAsyncMessage("DOMTitleChanged", { title: document.title });
         break;
-      case "DOMWillOpenModalDialog":
-        sendAsyncMessage("DOMWillOpenModalDialog", { });
-        break;
-      case "DOMWindowClose":
-        sendAsyncMessage("DOMWindowClose", { });
-        break;
+
       case "DOMLinkAdded":
-        let link = aEvent.originalTarget;
-        let ownerDoc = link.ownerDocument;
-        if (!link.href || !ownerDoc)
+        let target = aEvent.originalTarget;
+        if (!target.href || target.disabled)
           return;
 
         let json = {
-          title: link.title,
-          href: link.href,
-          rel: link.rel,
-          type: link.type,
-          isRootDocument: ownerDoc.defaultView.frameElement ? false : true,
-          characterSet: content.document.characterSet,
-          disabled: link.disabled
+          location: document.documentURIObject.spec,
+          href: target.href,
+          charset: document.characterSet,
+          title: target.title,
+          rel: target.rel,
+          type: target.type
         };
 
         sendAsyncMessage("DOMLinkAdded", json);
+        break;
+
+      case "DOMWillOpenModalDialog":
+      case "DOMWindowClose":
+        let retvals = sendSyncMessage(aEvent.type, { });
+        for (rv in retvals) {
+          if (rv.preventDefault) {
+            aEvent.preventDefault();
+            break;
+          }
+        }
         break;
     }
   }
