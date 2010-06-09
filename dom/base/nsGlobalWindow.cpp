@@ -4103,7 +4103,7 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
   // have to convert \r to \n so that printing to the console works
-  char *c = cstr, *cEnd = cstr + aStr.Length();
+  char *c = cstr, *cEnd = cstr + strlen(cstr);
   while (c < cEnd) {
     if (*c == '\r')
       *c = '\n';
