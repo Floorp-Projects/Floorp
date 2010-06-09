@@ -2473,3 +2473,24 @@ stubs::Arguments(VMFrame &f)
         THROW();
 }
 
+JSBool JS_FASTCALL
+stubs::InstanceOf(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    const Value &rref = regs.sp[-1];
+    JSObject *obj;
+    if (rref.isPrimitive() ||
+        !(obj = &rref.asObject())->map->ops->hasInstance) {
+        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
+                            -1, rref, NULL);
+        THROWV(JS_FALSE);
+    }
+    const Value &lref = regs.sp[-2];
+    JSBool cond = JS_FALSE;
+    if (!obj->map->ops->hasInstance(cx, obj, lref, &cond))
+        THROWV(JS_FALSE);
+    return cond;
+}
+
