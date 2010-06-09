@@ -220,18 +220,38 @@ CSRCS += woff.c
 
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
+GL_PROVIDER = Null
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifndef WINCE
-CPPSRCS += GLContextProviderWGL.cpp
-else
-CPPSRCS += GLContextProviderNull.cpp
+GL_PROVIDER = WGL
 endif
-else
+endif
+
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS += GLContextProviderCGL.mm
-else
-CPPSRCS += GLContextProviderNull.cpp
+GL_PROVIDER = CGL
 endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_PLATFORM_MAEMO
+GL_PROVIDER = EGL
+endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+GL_PROVIDER = EGL
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+GL_PROVIDER = EGL
+endif
+
+# Mac is a special snowflake
+ifeq ($(GL_PROVIDER),CGL)
+CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
+else
+CPPSRCS += GLContextProvider$(GL_PROVIDER).cpp
 endif
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
