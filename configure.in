@@ -6485,7 +6485,10 @@ MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
     MOZ_UPDATER=,
     MOZ_UPDATER=1 )
-AC_SUBST(MOZ_UPDATER)
+
+if test -n "$MOZ_UPDATER"; then
+    AC_DEFINE(MOZ_UPDATER)
+fi
 
 # app update channel is 'default' when not supplied.
 MOZ_ARG_ENABLE_STRING([update-channel],
@@ -8670,6 +8673,7 @@ AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
+AC_SUBST(MOZ_UPDATER)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
