@@ -8785,6 +8785,20 @@ GetDocumentAllHelper(JSContext *cx, JSObject *obj)
   return obj;
 }
 
+static inline void *
+FlagsToPrivate(PRUint32 flags)
+{
+  JS_ASSERT((flags & (1 << 31)) == 0);
+  return (void *)(flags << 1);
+}
+
+static inline PRUint32
+PrivateToFlags(void *priv)
+{
+  JS_ASSERT(size_t(priv) <= PR_UINT32_MAX && (size_t(priv) & 1) == 0);
+  return (PRUint32)(size_t(priv) >> 1);
+}
+
 JSBool
 nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
                                                jsval id, jsval *vp)
@@ -8803,7 +8817,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  PRUint32 flags = JSVAL_TO_INT(PRIVATE_TO_JSVAL(::JS_GetPrivate(cx, helper)));
+  PRUint32 flags = PrivateToFlags(::JS_GetPrivate(cx, helper));
 
   if (flags & JSRESOLVE_DETECTING || !(flags & JSRESOLVE_QUALIFIED)) {
     // document.all is either being detected, e.g. if (document.all),
@@ -9034,9 +9048,7 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // to the helper as its private data.
         // TODO: fix
         JS_ASSERT(false && "Relying on dirty private = int details");
-        if (helper &&
-            !::JS_SetPrivate(cx, helper,
-                             JSVAL_TO_PRIVATE(INT_TO_JSVAL(flags)))) {
+        if (helper && !::JS_SetPrivate(cx, helper, FlagsToPrivate(flags))) {
           nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
 
           return NS_ERROR_UNEXPECTED;
