@@ -491,6 +491,22 @@ FrameState::pushLocal(uint32 n)
     pushCopyOf(indexOfFe(getLocal(n)));
 }
 
+inline void
+FrameState::leaveBlock(uint32 n)
+{
+    popn(n);
+}
+
+inline void
+FrameState::enterBlock(uint32 n)
+{
+    /* expect that tracker has 0 entries, for now. */
+    JS_ASSERT(!tracker.nentries);
+    JS_ASSERT(uint32(sp + n - locals) <= script->nslots);
+
+    sp += n;
+}
+
 } /* namspace mjit */
 } /* namspace js */
 

@@ -909,7 +909,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LINENO)
 
           BEGIN_CASE(JSOP_DEFFUN)
-            JS_ASSERT(frame.stackDepth() == 0);
+            prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::DefFun, Uses(0), Defs(0));
           END_CASE(JSOP_DEFFUN)
@@ -1019,6 +1019,34 @@ mjit::Compiler::generateMethod()
             emitReturn();
             goto done;
           END_CASE(JSOP_STOP)
+
+          BEGIN_CASE(JSOP_ENTERBLOCK)
+          {
+            // If this is an exception entry point, then jsl_InternalThrow has set
+            // VMFrame::fp to the correct fp for the entry point. We need to copy
+            // that value here to FpReg so that FpReg also has the correct sp.
+            // Otherwise, we would simply be using a stale FpReg value.
+            if (analysis[PC].exceptionEntry)
+                restoreFrameRegs();
+
+            /* For now, don't bother doing anything for this opcode. */
+            JSObject *obj = script->getObject(fullAtomIndex(PC));
+            frame.forgetEverything();
+            masm.move(ImmPtr(obj), Registers::ArgReg1);
+            uint32 n = js_GetEnterBlockStackDefs(cx, script, PC);
+            stubCall(stubs::EnterBlock, Uses(0), Defs(n));
+            frame.enterBlock(n);
+          }
+          END_CASE(JSOP_ENTERBLOCK)
+
+          BEGIN_CASE(JSOP_LEAVEBLOCK)
+          {
+            uint32 n = js_GetVariableStackUses(op, PC);
+            prepareStubCall();
+            stubCall(stubs::LeaveBlock, Uses(n), Defs(0));
+            frame.leaveBlock(n);
+          }
+          END_CASE(JSOP_LEAVEBLOCK)
 
           BEGIN_CASE(JSOP_CALLLOCAL)
             frame.pushLocal(GET_SLOTNO(PC));
