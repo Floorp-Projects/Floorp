@@ -506,6 +506,9 @@ DDRAW_FAILED:
               thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
             }
             thebesContext->Clip();
+            thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+            thebesContext->Paint();
+            thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
           }
 #ifdef WINCE
           thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
