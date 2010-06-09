@@ -416,8 +416,12 @@ CSPRep.prototype = {
       var dirv = SD[dir];
       if (dirv === SD.ALLOW) continue;
       if (!this._directives[dirv]) {
-        // implicit directive, make explicit
-        this._directives[dirv] = allowDir.clone();
+        // implicit directive, make explicit.
+        // All but frame-ancestors directive inherit from 'allow' (bug 555068)
+        if (dirv === SD.FRAME_ANCESTORS)
+          this._directives[dirv] = CSPSourceList.fromString("*");
+        else
+          this._directives[dirv] = allowDir.clone();
         this._directives[dirv]._isImplicit = true;
       }
     }
