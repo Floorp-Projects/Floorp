@@ -865,6 +865,9 @@ mjit::Compiler::generateMethod()
             frame.pushSynced();
           END_CASE(JSOP_SETNAME)
 
+          BEGIN_CASE(JSOP_LINENO)
+          END_CASE(JSOP_LINENO)
+
           BEGIN_CASE(JSOP_DEFFUN)
             JS_ASSERT(frame.stackDepth() == 0);
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
