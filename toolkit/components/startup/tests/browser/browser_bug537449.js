@@ -105,13 +105,8 @@ function test() {
     Watcher.allowClose = true;
     ok(Watcher.seen, "Should have seen a prompt dialog");
     ok(!window.closed, "Shouldn't have closed the window");
-    var chromeURL = Services.prefs.getCharPref("browser.chromeURL");
-    var argString = Cc["@mozilla.org/supports-string;1"]
-                    .createInstance(Ci.nsISupportsString);
-    argString.data = "about:blank";
 
-    var win2 = Services.ww.openWindow(null, chromeURL, "_blank",
-                                      "chrome,dialog=no,all", argString);
+    var win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
     ok(win2 != null, "Should have been able to open a new window");
     win2.addEventListener("load", function() {
       win2.removeEventListener("load", arguments.callee, false);
