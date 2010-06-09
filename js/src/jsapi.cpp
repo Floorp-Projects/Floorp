@@ -2673,7 +2673,6 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
 JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
-    JS_ASSERT(JSID_IS_OBJECT((jsid)obj));
     *idp = OBJECT_TO_JSID(obj);
     return JS_TRUE;
 }
