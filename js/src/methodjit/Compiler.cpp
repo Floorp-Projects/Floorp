@@ -902,6 +902,9 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_LAMBDA)
 
+          BEGIN_CASE(JSOP_TRY)
+          END_CASE(JSOP_TRY)
+
           BEGIN_CASE(JSOP_GETDSLOT)
           BEGIN_CASE(JSOP_CALLDSLOT)
           {
