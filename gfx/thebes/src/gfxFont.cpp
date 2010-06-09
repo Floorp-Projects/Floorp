@@ -167,6 +167,7 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(Name(), aStyle);
+
     if (!font) {
         gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
         if (!newFont)

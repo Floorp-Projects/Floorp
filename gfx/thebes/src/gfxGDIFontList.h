@@ -300,8 +300,7 @@ protected:
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
                      PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData);
 
-    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType,
-                         PRBool aUseCleartype);
+    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
 

@@ -168,7 +168,7 @@ public:
         mName(aName), mItalic(PR_FALSE), mFixedPitch(PR_FALSE),
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
         mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
-        mStandardFace(aIsStandardFace),
+        mIsLocalUserFont(PR_FALSE), mStandardFace(aIsStandardFace),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCmapInitialized(PR_FALSE),
@@ -186,6 +186,7 @@ public:
     PRInt16 Stretch() const { return mStretch; }
 
     PRBool IsUserFont() const { return mIsUserFont; }
+    PRBool IsLocalUserFont() const { return mIsLocalUserFont; }
     PRBool IsFixedPitch() const { return mFixedPitch; }
     PRBool IsItalic() const { return mItalic; }
     PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
@@ -226,6 +227,7 @@ public:
     PRPackedBool     mIsValid     : 1;
     PRPackedBool     mIsBadUnderlineFont : 1;
     PRPackedBool     mIsUserFont  : 1;
+    PRPackedBool     mIsLocalUserFont  : 1;
     PRPackedBool     mStandardFace : 1;
     PRPackedBool     mSymbolFont  : 1;
 
@@ -250,6 +252,7 @@ protected:
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
         mIsBadUnderlineFont(PR_FALSE),
         mIsUserFont(PR_FALSE),
+        mIsLocalUserFont(PR_FALSE),
         mStandardFace(PR_FALSE),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
@@ -481,6 +484,14 @@ public:
     // This gets called when the timeout has expired on a zero-refcount
     // font; we just delete it.
     virtual void NotifyExpired(gfxFont *aFont);
+
+    // Cleans out the hashtable and removes expired fonts waiting for cleanup.
+    // Other gfxFont objects may be still in use but they will be pushed
+    // into the expiration queues and removed.
+    void Flush() {
+        mFonts.Clear();
+        AgeAllGenerations();
+    }
 
 protected:
     void DestroyFont(gfxFont *aFont);
