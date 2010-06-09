@@ -142,6 +142,8 @@
 
       <field name="_webProgress"><![CDATA[
         ({
+          _browser: this,
+
           // We only need the onLocationChange for the local-browser and we don't need
           // to support holding listeners and firing notifications.
           _init: function() {
