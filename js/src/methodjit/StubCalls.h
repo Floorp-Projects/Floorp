@@ -129,6 +129,7 @@ void JS_FASTCALL ForName(VMFrame &f, JSAtom *atom);
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 JSString * JS_FASTCALL TypeOf(VMFrame &f);
 JSBool JS_FASTCALL InstanceOf(VMFrame &f);
+void JS_FASTCALL ArgCnt(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */
 

@@ -2083,7 +2083,7 @@ stubs::PropDec(VMFrame &f, JSAtom *atom)
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-1]);
     if (!obj)
         THROW();
-    if (!ObjIncOp<-11, true>(f, obj, ATOM_TO_JSID(atom)))
+    if (!ObjIncOp<-1, true>(f, obj, ATOM_TO_JSID(atom)))
         THROW();
     f.regs.sp[-2] = f.regs.sp[-1];
 }
@@ -2492,5 +2492,19 @@ stubs::InstanceOf(VMFrame &f)
     if (!obj->map->ops->hasInstance(cx, obj, lref, &cond))
         THROWV(JS_FALSE);
     return cond;
+}
+
+
+void JS_FASTCALL
+stubs::ArgCnt(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSRuntime *rt = cx->runtime;
+    JSStackFrame *fp = f.fp;
+
+    jsid id = ATOM_TO_JSID(rt->atomState.lengthAtom);
+    f.regs.sp++;
+    if (!js_GetArgsProperty(cx, fp, id, &f.regs.sp[-1]))
+        THROW();
 }
 
