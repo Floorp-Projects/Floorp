@@ -222,6 +222,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------  
   setResizable: function(value){
+    return;
     var self = this;
     
     var $resizer = $('.expander', this.container);
@@ -287,8 +288,8 @@ window.TabItems = {
       
       if(window.Groups) {        
         $div.data('isDragging', false);
-        $$div.draggable(window.Groups.dragOptions);
-        $$div.droppable(window.Groups.dropOptions);
+        $div.draggable(window.Groups.dragOptions);
+/*         $div.droppable(window.Groups.dropOptions); */
       }
       
       $div.mousedown(function(e) {
@@ -312,11 +313,11 @@ window.TabItems = {
         }
       });
       
-      $("<div>")
+      iQ("<div>")
         .addClass('close')
         .appendTo($div); 
         
-      $("<div>")
+      iQ("<div>")
         .addClass('expander')
         .appendTo($div);
   

@@ -605,7 +605,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       if( this.isNewTabsGroup() ) $el.addClass("inNewTabGroup")
       
       if(!wasAlreadyInThisGroup) {
-        $($el.get(0)).droppable("disable");
+        iQ($el.get(0)).droppable("disable");
         item.groupData = {};
     
         item.addOnClose(this, function() {
@@ -668,7 +668,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     item.setRotation(0);
     item.setSize(item.defaultSize.x, item.defaultSize.y);
 
-    $($el.get(0)).droppable("enable");    
+    iQ($el.get(0)).droppable("enable");    
     item.removeOnClose(this);
     
     if(typeof(item.setResizable) == 'function')
@@ -1003,10 +1003,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var self = this;
     
     if(!this.locked.bounds) {
-      $(container).draggable({
-        scroll: false,
-        containment: '#bg',
-        cancel: '.close, .name',
+      iQ(container).draggable({
+        cancelClass: 'close name',
         start: function(e, ui){
           drag.info = new DragInfo(this, e);
         },
@@ -1040,11 +1038,11 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           TabItems.zoomTo(self.getChild(0).tab.mirror.el);
     });
     
-    $(container).droppable({
+    iQ(container).droppable({
       tolerance: "intersect",
       over: function(){
         if( !self.isNewTabsGroup() )
-          $(this).addClass("acceptsDrop");
+          iQ(this).addClass("acceptsDrop");
       },
       out: function(){
         var group = drag.info.item.parent;
@@ -1052,10 +1050,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           group.remove(drag.info.$el, {dontClose: true});
         }
           
-        $(this).removeClass("acceptsDrop");
+        iQ(this).removeClass("acceptsDrop");
       },
       drop: function(event){
-        $(this).removeClass("acceptsDrop");
+        iQ(this).removeClass("acceptsDrop");
         self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
       },
       accept: dropAcceptFunction
@@ -1064,6 +1062,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
   // ----------  
   setResizable: function(value){
+    return;
     var self = this;
     
     if(value) {
@@ -1372,9 +1371,7 @@ var drag = {
 window.Groups = {
   // ----------  
   dragOptions: {
-    scroll: false,
-    containment: '#bg',
-    cancel: '.close',
+    cancelClass: 'close',
     start: function(e, ui) {
       drag.info = new DragInfo(this, e);
     },
@@ -1775,11 +1772,5 @@ window.Groups = {
 
 // ----------
 Groups.init();
-
-// ##########
-iQ(".tab").data('isDragging', false); 
-$('.tab')
-  .draggable(window.Groups.dragOptions)
-  .droppable(window.Groups.dropOptions);
 
 })();
