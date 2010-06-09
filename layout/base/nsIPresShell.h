@@ -97,7 +97,7 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 
 typedef short SelectionType;
-typedef PRUint32 nsFrameState;
+typedef PRUint64 nsFrameState;
 
 namespace mozilla {
 namespace dom {
