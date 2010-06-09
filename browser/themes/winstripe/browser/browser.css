@@ -972,7 +972,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   background: -moz-linear-gradient(left, transparent, transparent 1px,
                                          rgba(50%,50%,50%,.1) 1px, rgba(50%,50%,50%,.1));
   background-position: -6px 0;
-  -moz-background-size: 200%;
+  background-size: 200%;
   margin: 0;
   padding: 0;
   -moz-border-image: url(tabbrowser/tab.png) 3 5 3 6 / 3px 5px 3px 6px;

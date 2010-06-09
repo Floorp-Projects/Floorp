@@ -172,14 +172,14 @@ nsCSSDeclaration::AppendStorageToString(nsCSSProperty aProperty,
               aProperty == eCSSProperty__moz_transform_origin) &&
              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
              pair->mXValue.GetUnit() != eCSSUnit_Initial) ||
-            (aProperty == eCSSProperty__moz_background_size &&
+            (aProperty == eCSSProperty_background_size &&
              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
              pair->mXValue.GetUnit() != eCSSUnit_Initial &&
              pair->mXValue.GetUnit() != eCSSUnit_Enumerated)) {
           // Only output a Y value if it's different from the X value,
           // or if it's a background-position value other than 'initial'
           // or 'inherit', or if it's a -moz-transform-origin value other
-          // than 'initial' or 'inherit', or if it's a -moz-background-size
+          // than 'initial' or 'inherit', or if it's a background-size
           // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
           aResult.Append(PRUnichar(' '));
           AppendCSSValueToString(aProperty, pair->mYValue, aResult);
@@ -977,7 +977,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       const nsCSSValueList *origin =
         * data->ValueListStorageFor(eCSSProperty_background_origin);
       const nsCSSValuePairList *size =
-        * data->ValuePairListStorageFor(eCSSProperty__moz_background_size);
+        * data->ValuePairListStorageFor(eCSSProperty_background_size);
       for (;;) {
         if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
             size->mYValue.GetUnit() != eCSSUnit_Auto) {
