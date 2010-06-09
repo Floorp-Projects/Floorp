@@ -6431,6 +6431,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
          haveRepeat = PR_FALSE,
          haveAttach = PR_FALSE,
          havePosition = PR_FALSE,
+         haveOrigin = PR_FALSE,
          haveSomething = PR_FALSE;
   while (GetToken(PR_TRUE)) {
     nsCSSTokenType tt = mToken.mType;
@@ -6448,7 +6449,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
           keyword == eCSSKeyword__moz_initial) {
         if (haveSomething || !aFirstItem)
           return PR_FALSE;
-        haveColor = haveImage = haveRepeat = haveAttach = havePosition =
+        haveColor = haveImage = haveRepeat = haveAttach = havePosition = haveOrigin =
           PR_TRUE;
         GetToken(PR_TRUE); // undo the UngetToken above
         nsCSSValue val;
@@ -6506,11 +6507,6 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         if (!ParseBoxPositionValues(aItem.mPosition, PR_FALSE)) {
           return PR_FALSE;
         }
-#if 0
-    // This is commented out for now until we change
-    // -moz-background-clip to background-clip, -moz-background-origin
-    // to background-origin, change their value names to *-box, and add
-    // support for content-box on background-clip.
       } else if (nsCSSProps::FindKeyword(keyword,
                    nsCSSProps::kBackgroundOriginKTable, dummy)) {
         if (haveOrigin)
@@ -6528,7 +6524,6 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
                          NS_STYLE_BG_ORIGIN_CONTENT);
         aItem.mClip = aItem.mOrigin;
-#endif
       } else {
         if (haveColor)
           return PR_FALSE;
