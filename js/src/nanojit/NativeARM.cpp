@@ -1473,14 +1473,18 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                 Register baseReg = rb;
                 intptr_t baseOffset = dr;
 
-                if (!isS8(dr)) {
+                // VFP cannot do non-word-aligned accesses, even with a
+                // register base.
+                NanoAssert((dr%4) == 0);
+
+                if (!isS8(dr/4)) {
                     baseReg = IP;
                     baseOffset = 0;
                 }
 
                 FSTD(rv, baseReg, baseOffset);
 
-                if (!isS8(dr)) {
+                if (!isS8(dr/4)) {
                     asm_add_imm(IP, rb, dr);
                 }
 
@@ -1522,14 +1526,18 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                 Register baseReg = rb;
                 intptr_t baseOffset = dr;
 
-                if (!isS8(dr)) {
+                // VFP cannot do non-word-aligned accesses, even with a
+                // register base.
+                NanoAssert((dr%4) == 0);
+
+                if (!isS8(dr/4)) {
                     baseReg = IP;
                     baseOffset = 0;
                 }
 
                 FSTS(S14, baseReg, baseOffset);
 
-                if (!isS8(dr)) {
+                if (!isS8(dr/4)) {
                     asm_add_imm(IP, rb, dr);
                 }
 
