@@ -353,6 +353,9 @@ public:
     void Set(void *aObject)
     {
         NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
+        if (!aObject) {
+          return;
+        }
 
         nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
                                                        this,
