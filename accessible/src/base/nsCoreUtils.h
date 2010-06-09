@@ -157,13 +157,6 @@ public:
                               nsINode *aPossibleDescendantNode);
 
   /**
-   * Are the first node and the second siblings?
-   *
-   * @return PR_TRUE if aDOMNode1 and aDOMNode2 have same parent
-   */
-   static PRBool AreSiblings(nsINode *aNode1, nsINode *aNode2);
-
-  /**
    * Helper method to scroll range into view, used for implementation of
    * nsIAccessibleText::scrollSubstringTo().
    *
