@@ -152,6 +152,22 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (mWidth == width && mHeight == height)
         return NS_OK;
 
+    if (gl) {
+        // hey we already have something
+        if (gl->Resize(gfxIntSize(width, height))) {
+
+            mWidth = width;
+            mHeight = height;
+
+            gl->fViewport(0, 0, mWidth, mHeight);
+            gl->fClearColor(0, 0, 0, 0);
+            gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+
+            // great success!
+            return NS_OK;
+        }
+    }
+
     LogMessage("Canvas 3D: creating PBuffer...");
 
     GLContextProvider::ContextFormat format(GLContextProvider::ContextFormat::BasicRGBA32);
