@@ -2715,7 +2715,7 @@ ProgressController.prototype = {
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     // ignore notification that aren't about the main document (iframes, etc)
-    if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
+    if (aWebProgress.windowId != this._tab.browser.contentWindowId && this._tab.browser.contentWindowId)
       return;
 
     // If you want to observe other state flags, be sure they're listed in the
@@ -2748,7 +2748,7 @@ ProgressController.prototype = {
   /** This method is called to indicate a change to the current location. */
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
     // ignore notification that aren't about the main document (iframes, etc)
-    if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
+    if (aWebProgress.windowId != this._tab.browser.contentWindowId)
       return;
 
     let spec = aLocationURI ? aLocationURI.spec : "";

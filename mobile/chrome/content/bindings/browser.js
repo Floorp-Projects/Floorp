@@ -17,53 +17,53 @@ let WebProgressListener = {
       notifyFlags |= Ci.nsIWebProgress.NOTIFY_STATE_WINDOW;
 
     let json = {
-      isRootWindow: aWebProgress.DOMWindow == content,
+      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       stateFlags: aStateFlags,
       status: aStatus,
       notifyFlags: notifyFlags
     };
-    sendAsyncMessage("WebProgress:StateChange", json);
+    sendSyncMessage("WebProgress:StateChange", json);
   },
 
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
     let json = {
-      isRootWindow: aWebProgress.DOMWindow == content,
+      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       curSelf: aCurSelf,
       maxSelf: aMaxSelf,
       curTotal: aCurTotal,
       maxTotal: aMaxTotal
     };
-    sendAsyncMessage("WebProgress:ProgressChange", json);
+    sendSyncMessage("WebProgress:ProgressChange", json);
   },
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
     let location = aLocationURI ? aLocationURI.spec : "";
     let json = {
-      isRootWindow: aWebProgress.DOMWindow == content,
+      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       documentURI: aWebProgress.DOMWindow.document.documentURIObject.spec,
       location: location,
       canGoBack: docShell.canGoBack,
       canGoForward: docShell.canGoForward
     };
-    sendAsyncMessage("WebProgress:LocationChange", json);
+    sendSyncMessage("WebProgress:LocationChange", json);
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
     let json = {
-      isRootWindow: aWebProgress.DOMWindow == content,
+      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       status: aStatus,
       message: aMessage
     };
-    sendAsyncMessage("WebProgress:StatusChange", json);
+    sendSyncMessage("WebProgress:StatusChange", json);
   },
 
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
     let json = {
-      isRootWindow: aWebProgress.DOMWindow == content,
+      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       identity: this._getIdentityData(),
       state: aState
     };
-    sendAsyncMessage("WebProgress:SecurityChange", json);
+    sendSyncMessage("WebProgress:SecurityChange", json);
   },
 
   QueryInterface: function QueryInterface(aIID) {
@@ -211,7 +211,7 @@ let DOMEvents =  {
         if (document.documentURIObject.spec == "about:blank")
           return;
 
-        sendAsyncMessage("DOMContentLoaded", { });
+        sendSyncMessage("DOMContentLoaded", { });
         break;
 
       case "pageshow":
@@ -224,7 +224,7 @@ let DOMEvents =  {
           persisted: aEvent.persisted
         };
 
-        sendAsyncMessage(aEvent.type, json);
+        sendSyncMessage(aEvent.type, json);
         break;
       }
 
@@ -241,12 +241,12 @@ let DOMEvents =  {
           popupWindowName: aEvent.popupWindowName
         };
 
-        sendAsyncMessage("DOMPopupBlocked", json);
+        sendSyncMessage("DOMPopupBlocked", json);
         break;
       }
 
       case "DOMTitleChanged":
-        sendAsyncMessage("DOMTitleChanged", { title: document.title });
+        sendSyncMessage("DOMTitleChanged", { title: document.title });
         break;
 
       case "DOMLinkAdded":
@@ -263,7 +263,7 @@ let DOMEvents =  {
           type: target.type
         };
 
-        sendAsyncMessage("DOMLinkAdded", json);
+        sendSyncMessage("DOMLinkAdded", json);
         break;
 
       case "DOMWillOpenModalDialog":
