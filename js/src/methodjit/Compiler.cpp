@@ -1016,6 +1016,17 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_NEWARRAY)
 
+          BEGIN_CASE(JSOP_LAMBDA_FC)
+          {
+            JSFunction *fun = script->getFunction(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(fun), Registers::ArgReg1);
+            stubCall(stubs::FlatLambda, Uses(0), Defs(1));
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_MASK32_FUNOBJ, Registers::ReturnReg);
+          }
+          END_CASE(JSOP_LAMBDA_FC)
+
           BEGIN_CASE(JSOP_TRACE)
           {
             if (analysis[PC].nincoming > 0) {
