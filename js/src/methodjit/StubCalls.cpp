@@ -2456,3 +2456,12 @@ stubs::Throw(VMFrame &f)
     THROW();
 }
 
+JSObject * JS_FASTCALL
+stubs::FlatLambda(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    if (!obj)
+        THROWV(NULL);
+    return obj;
+}
+
