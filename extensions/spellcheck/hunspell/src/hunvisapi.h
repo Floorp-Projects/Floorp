@@ -11,12 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  * 
- * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
- * and László Németh (Hunspell). Portions created by the Initial Developers
- * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
+ * The Initial Developers of the Original Code is Caolan McNamara.
+ * Portions created by the Initial Developer are Copyright (C) 2010 the
+ * Initial Developer. All Rights Reserved.
  * 
- * Contributor(s): László Németh (nemethl@gyorsposta.hu)
- *                 Caolan McNamara (caolanm@redhat.com)
+ * Contributor(s): Caolan McNamara (caolanm@redhat.com)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -32,30 +31,21 @@
  *
  ******* END LICENSE BLOCK *******/
 
-/* string replacement list class */
-#ifndef _REPLIST_HXX_
-#define _REPLIST_HXX_
+#ifndef _HUNSPELL_VISIBILITY_H_
+#define _HUNSPELL_VISIBILITY_H_
 
-#include "hunvisapi.h"
+#if defined(HUNSPELL_STATIC)
+#  define LIBHUNSPELL_DLL_EXPORTED
+#elif defined(_MSC_VER)
+#  if defined(BUILDING_LIBHUNSPELL)
+#    define LIBHUNSPELL_DLL_EXPORTED __declspec(dllexport)
+#  else
+#    define LIBHUNSPELL_DLL_EXPORTED __declspec(dllimport)
+#  endif
+#elif BUILDING_LIBHUNSPELL && 1
+#  define LIBHUNSPELL_DLL_EXPORTED __attribute__((__visibility__("default")))
+#else
+#  define LIBHUNSPELL_DLL_EXPORTED
+#endif
 
-#include "w_char.hxx"
-
-class LIBHUNSPELL_DLL_EXPORTED RepList
-{
-protected:
-    replentry ** dat;
-    int size;
-    int pos;
-
-public:
-    RepList(int n);
-    ~RepList();
-
-    int get_pos();
-    int add(char * pat1, char * pat2);
-    replentry * item(int n);
-    int near(const char * word);
-    int match(const char * word, int n);
-    int conv(const char * word, char * dest);
-};
 #endif
