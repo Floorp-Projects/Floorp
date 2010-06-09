@@ -79,10 +79,9 @@ var gCSSProperties = {
 		domProp: "MozBackgroundClip",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX Need to add support for "content" -- important for symmetry when handling background shorthand */
 		initial_values: [ "border" ],
-		other_values: [ "padding", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "content", "margin", "border border" ]
+		other_values: [ "content", "padding", "border, padding", "padding, padding, padding", "border, border" ],
+		invalid_values: [ "margin", "border border" ]
 	},
 	"-moz-background-inline-policy": {
 		domProp: "MozBackgroundInlinePolicy",
