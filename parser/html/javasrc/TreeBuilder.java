@@ -60,6 +60,11 @@ import org.xml.sax.SAXParseException;
 public abstract class TreeBuilder<T> implements TokenHandler,
         TreeBuilderState<T> {
     
+    /**
+     * Array version of U+FFFD.
+     */
+    private static final @NoLength char[] REPLACEMENT_CHARACTER = { '\uFFFD' };
+    
     // Start dispatch groups
 
     final static int OTHER = 0;
@@ -839,8 +844,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             needToDropLF = false;
         }
 
+        if (inForeign) {
+            accumulateCharacters(buf, start, length);
+            return;
+        }
         // optimize the most common case
-        // XXX should there be an IN FOREIGN check here?
         switch (mode) {
             case IN_BODY:
             case IN_CELL:
@@ -1203,6 +1211,16 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 if (start < end) {
                     accumulateCharacters(buf, start, end - start);
                 }
+        }
+    }
+
+    /**
+     * @see nu.validator.htmlparser.common.TokenHandler#zeroOriginatingReplacementCharacter()
+     */
+    @Override public void zeroOriginatingReplacementCharacter()
+            throws SAXException {
+        if (inForeign || mode == TEXT) {
+            characters(REPLACEMENT_CHARACTER, 0, 1);
         }
     }
 

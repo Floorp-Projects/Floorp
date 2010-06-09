@@ -70,6 +70,7 @@ class nsHtml5Portability;
 class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
+    static PRUnichar REPLACEMENT_CHARACTER[];
     static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
@@ -100,6 +101,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, PRBool forceQuirks);
     void comment(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void characters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
+    void zeroOriginatingReplacementCharacter();
     void eof();
     void endTokenization();
     void startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, PRBool selfClosing);
@@ -239,6 +241,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 };
 
 #ifdef nsHtml5TreeBuilder_cpp__
+PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
 jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #endif
 
