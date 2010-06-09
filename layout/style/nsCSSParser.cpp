@@ -5363,9 +5363,9 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty_background_position:
     return ParseBackgroundPosition();
   case eCSSProperty_background_attachment:
-  case eCSSProperty__moz_background_clip:
+  case eCSSProperty_background_clip:
   case eCSSProperty_background_image:
-  case eCSSProperty__moz_background_origin:
+  case eCSSProperty_background_origin:
   case eCSSProperty_background_repeat:
     return ParseBackgroundList(aPropID);
   case eCSSProperty__moz_background_size:
@@ -5753,7 +5753,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundAttachmentKTable);
-  case eCSSProperty__moz_background_clip:
+  case eCSSProperty_background_clip:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundOriginKTable);
@@ -5767,7 +5767,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty__moz_background_inline_policy:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundInlinePolicyKTable);
-  case eCSSProperty__moz_background_origin:
+  case eCSSProperty_background_origin:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundOriginKTable);
@@ -6325,8 +6325,8 @@ CSSParserImpl::ParseBackground()
     { &BackgroundItem::mImage,      eCSSProperty_background_image },
     { &BackgroundItem::mRepeat,     eCSSProperty_background_repeat },
     { &BackgroundItem::mAttachment, eCSSProperty_background_attachment },
-    { &BackgroundItem::mClip,       eCSSProperty__moz_background_clip },
-    { &BackgroundItem::mOrigin,     eCSSProperty__moz_background_origin }
+    { &BackgroundItem::mClip,       eCSSProperty_background_clip },
+    { &BackgroundItem::mOrigin,     eCSSProperty_background_origin }
   };
   nsCSSValueList *simpleHeads[NS_ARRAY_LENGTH(simpleValues)];
   nsCSSValueList **simpleTails[NS_ARRAY_LENGTH(simpleValues)];
@@ -6394,8 +6394,8 @@ CSSParserImpl::ParseBackground()
     mTempData.SetPropertyBit(eCSSProperty_background_repeat);
     mTempData.SetPropertyBit(eCSSProperty_background_attachment);
     mTempData.SetPropertyBit(eCSSProperty_background_position);
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
+    mTempData.SetPropertyBit(eCSSProperty_background_clip);
+    mTempData.SetPropertyBit(eCSSProperty_background_origin);
     mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
     return PR_TRUE;
   }
@@ -6517,7 +6517,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
           return PR_FALSE;
         haveOrigin = PR_TRUE;
         if (!ParseSingleValueProperty(aItem.mOrigin,
-                                      eCSSProperty__moz_background_origin)) {
+                                      eCSSProperty_background_origin)) {
           NS_NOTREACHED("should be able to parse");
           return PR_FALSE;
         }

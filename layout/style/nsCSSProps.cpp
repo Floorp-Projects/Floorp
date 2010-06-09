@@ -531,9 +531,9 @@ PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER);
 PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING);
 PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT);
 const PRInt32 nsCSSProps::kBackgroundOriginKTable[] = {
-  eCSSKeyword_border,     NS_STYLE_BG_ORIGIN_BORDER,
-  eCSSKeyword_padding,    NS_STYLE_BG_ORIGIN_PADDING,
-  eCSSKeyword_content,    NS_STYLE_BG_ORIGIN_CONTENT,
+  eCSSKeyword_border_box, NS_STYLE_BG_ORIGIN_BORDER,
+  eCSSKeyword_padding_box, NS_STYLE_BG_ORIGIN_PADDING,
+  eCSSKeyword_content_box, NS_STYLE_BG_ORIGIN_CONTENT,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1579,8 +1579,8 @@ static const nsCSSProperty gBackgroundSubpropTable[] = {
   eCSSProperty_background_repeat,
   eCSSProperty_background_attachment,
   eCSSProperty_background_position,
-  eCSSProperty__moz_background_clip,
-  eCSSProperty__moz_background_origin,
+  eCSSProperty_background_clip,
+  eCSSProperty_background_origin,
   eCSSProperty__moz_background_size,
   eCSSProperty_UNKNOWN
 };
