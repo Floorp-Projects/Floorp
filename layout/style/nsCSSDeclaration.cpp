@@ -973,9 +973,9 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       const nsCSSValuePairList *position =
         * data->ValuePairListStorageFor(eCSSProperty_background_position);
       const nsCSSValueList *clip =
-        * data->ValueListStorageFor(eCSSProperty__moz_background_clip);
+        * data->ValueListStorageFor(eCSSProperty_background_clip);
       const nsCSSValueList *origin =
-        * data->ValueListStorageFor(eCSSProperty__moz_background_origin);
+        * data->ValueListStorageFor(eCSSProperty_background_origin);
       const nsCSSValuePairList *size =
         * data->ValuePairListStorageFor(eCSSProperty__moz_background_size);
       for (;;) {
@@ -1022,7 +1022,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
           }
 
           aValue.Append(PRUnichar(' '));
-          AppendCSSValueToString(eCSSProperty__moz_background_clip,
+          AppendCSSValueToString(eCSSProperty_background_clip,
                                  clip->mValue, aValue);
 #else
           aValue.Truncate();

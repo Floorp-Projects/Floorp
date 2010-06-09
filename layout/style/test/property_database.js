@@ -71,17 +71,17 @@ var gCSSProperties = {
 		other_values: [ "radio", "menulist" ],
 		invalid_values: []
 	},
-	"-moz-background-clip": {
+	"background-clip": {
 		/*
 		 * When we rename this to 'background-clip', we also
 		 * need to rename the values to match the spec.
 		 */
-		domProp: "MozBackgroundClip",
+		domProp: "backgroundClip",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "border" ],
-		other_values: [ "content", "padding", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "margin", "border border" ]
+		initial_values: [ "border-box" ],
+		other_values: [ "content-box", "padding-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+		invalid_values: [ "margin-box", "border-box border-box" ]
 	},
 	"-moz-background-inline-policy": {
 		domProp: "MozBackgroundInlinePolicy",
@@ -91,13 +91,13 @@ var gCSSProperties = {
 		other_values: ["bounding-box", "each-box" ],
 		invalid_values: []
 	},
-	"-moz-background-origin": {
-		domProp: "MozBackgroundOrigin",
+	"background-origin": {
+		domProp: "backgroundOrigin",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "padding" ],
-		other_values: [ "border", "content", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "margin", "padding padding" ]
+		initial_values: [ "padding-box" ],
+		other_values: [ "border-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+		invalid_values: [ "margin-box", "padding-box padding-box" ]
 	},
 	"-moz-background-size": {
 		domProp: "MozBackgroundSize",
@@ -788,7 +788,7 @@ var gCSSProperties = {
 		domProp: "background",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "-moz-background-clip", "-moz-background-origin", "-moz-background-size" ],
+		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "background-clip", "background-origin", "-moz-background-size" ],
 		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent" ],
 		other_values: [
 				/* without multiple backgrounds */

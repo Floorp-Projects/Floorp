@@ -48,7 +48,7 @@ wizardpage {
   -moz-border-radius: @toolbarbuttonCornerRadius@;
   -moz-box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
-  -moz-background-origin: border;
+  background-origin: border-box;
 }
 
 .wizard-buttons button:hover:active:not([disabled="true"]) {
