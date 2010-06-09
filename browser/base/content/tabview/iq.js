@@ -643,10 +643,15 @@ iQ.fn = iQ.prototype = {
   fadeOut: function(callback) {
     try {
       Utils.assert('does not yet support duration', iQ.isFunction(callback) || callback === undefined);
-      this.animate({opacity: 0}, 'animate350', function() {
-        iQ(this).css({display: 'none'});
-        if(iQ.isFunction(callback))
-          callback.apply(this);
+      this.animate({
+        opacity: 0
+      }, {
+        duration: 400,
+        complete: function() {
+          iQ(this).css({display: 'none'});
+          if(iQ.isFunction(callback))
+            callback.apply(this);
+        }
       });  
     } catch(e) {
       Utils.log(e);
@@ -660,7 +665,11 @@ iQ.fn = iQ.prototype = {
   fadeIn: function() {
     try {
       this.css({display: ''});
-      this.animate({opacity: 1}, 'animate350');  
+      this.animate({
+        opacity: 1
+      }, {
+        duration: 400
+      });  
     } catch(e) {
       Utils.log(e);
     }
@@ -760,6 +769,163 @@ iQ.fn = iQ.prototype = {
     }
     
     return this; 
+  },
+
+  // ----------
+  // Function: draggable
+  draggable: function(options) {
+    try {
+      if(!options)
+        options = {};
+        
+      var cancelClasses = [];
+      if(typeof(options.cancelClass) == 'string')
+        cancelClasses = options.cancelClass.split(' ');
+        
+      var startMouse;
+      var startPos;
+      var elem;
+      var $elem;
+      var startSent;
+      var startEvent;
+      var droppables;
+      var $dropTarget;
+      
+      // ___ mousemove
+      var handleMouseMove = function(e) {
+        var mouse = new Point(e.pageX, e.pageY);
+        var newPos = {
+          left: startPos.x + (mouse.x - startMouse.x), 
+          top: startPos.y + (mouse.y - startMouse.y)
+        };
+
+        $elem.css(newPos);
+        var bounds = $elem.bounds();
+        var $newDropTarget = null;
+        iQ.each(droppables, function(index, droppable) {
+          if(bounds.intersects(droppable.bounds)) {
+            var $possibleDropTarget = iQ(droppable.element);
+            var accept = true;
+            if($possibleDropTarget != $dropTarget) {
+              var dropOptions = $possibleDropTarget.data('iq-droppable');
+              if(dropOptions && iQ.isFunction(dropOptions.accept))
+                accept = dropOptions.accept.apply($possibleDropTarget.get(0), [elem]);
+            }
+            
+            if(accept) {
+              $newDropTarget = $possibleDropTarget;
+              return false;
+            }
+          }
+        });
+
+        if($newDropTarget != $dropTarget) {
+          var dropOptions;
+          if($dropTarget) {
+            dropOptions = $dropTarget.data('iq-droppable');
+            if(dropOptions && iQ.isFunction(dropOptions.out))
+              dropOptions.out.apply($dropTarget.get(0), [e]);
+          }
+          
+          $dropTarget = $newDropTarget; 
+
+          if($dropTarget) {
+            dropOptions = $dropTarget.data('iq-droppable');
+            if(dropOptions && iQ.isFunction(dropOptions.over))
+              dropOptions.over.apply($dropTarget.get(0), [e]);
+          }
+        }
+          
+        if(!startSent) {
+          if(iQ.isFunction(options.start))
+            options.start.apply(elem, [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
+          
+          startSent = true;
+        }
+
+        if(iQ.isFunction(options.drag))
+          options.drag.apply(elem, [e, {position: newPos}]);
+          
+        e.preventDefault();
+      };
+        
+      // ___ mouseup
+      var handleMouseUp = function(e) {
+        iQ(window)
+          .unbind('mousemove', handleMouseMove)
+          .unbind('mouseup', handleMouseUp);
+          
+        if($dropTarget) {
+          var dropOptions = $dropTarget.data('iq-droppable');
+          if(dropOptions && iQ.isFunction(dropOptions.drop))
+            dropOptions.drop.apply($dropTarget.get(0), [e]);
+        }
+
+        if(startSent && iQ.isFunction(options.stop))
+          options.stop.apply(elem, [e]);
+          
+        e.preventDefault();    
+      };
+      
+      // ___ mousedown
+      this.mousedown(function(e) {
+        var cancel = false;
+        var $target = iQ(e.target);
+        iQ.each(cancelClasses, function(index, class) {
+          if($target.hasClass(class)) {
+            cancel = true;
+            return false;
+          }
+        });
+        
+        if(cancel) {
+          e.preventDefault();
+          return;
+        }
+          
+        elem = this;
+        $elem = iQ(this);
+        var pos = $elem.position();
+        startMouse = new Point(e.pageX, e.pageY);
+        startPos = new Point(pos.left, pos.top);
+        startEvent = e;
+        startSent = false;
+        $dropTarget = null;
+        
+        droppables = [];
+        iQ('.iq-droppable').each(function() {
+          droppables.push({
+            element: this, 
+            bounds: iQ(this).bounds()
+          });
+        });
+
+        iQ(window)
+          .mousemove(handleMouseMove)
+          .mouseup(handleMouseUp);          
+                    
+        e.preventDefault();
+      });
+    } catch(e) {
+      Utils.log(e);
+    }  
+  },
+  
+  // ----------
+  // Function: droppable
+  droppable: function(options) {
+    try {
+      if(options == 'enable')
+        this.addClass('iq-droppable');
+      else if(options == 'disable')
+        this.removeClass('iq-droppable');
+      else {
+        this.addClass('iq-droppable');
+        this.data('iq-droppable', options);
+      }
+    } catch(e) {
+      Utils.log(e);
+    }
   }
 };
 
