@@ -849,6 +849,12 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_INITELEM)
 
+          BEGIN_CASE(JSOP_FORNAME)
+            prepareStubCall();
+            masm.move(ImmPtr(script->getAtom(fullAtomIndex(PC))), Registers::ArgReg1);
+            stubCall(stubs::ForName, Uses(0), Defs(0));
+          END_CASE(JSOP_FORNAME)
+
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)
