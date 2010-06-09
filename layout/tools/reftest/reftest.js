@@ -294,35 +294,8 @@ function getStreamContent(inputStream)
   return streamBuf;
 }
 
-function ReadTopManifest(aFileURL)
-{
-    gURLs = new Array();
-    var url = gIOService.newURI(aFileURL, null, null);
-    if (!url)
-      throw "Expected a file or http URL for the manifest.";
-    ReadManifest(url);
-}
-
-// Note: If you materially change the reftest manifest parsing,
-// please keep the parser in print-manifest-dirs.py in sync.
-function ReadManifest(aURL)
-{
-    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
-                     .getService(CI.nsIScriptSecurityManager);
-
-    var listURL = aURL;
-    var channel = gIOService.newChannelFromURI(aURL);
-    var inputStream = channel.open();
-    if (channel instanceof Components.interfaces.nsIHttpChannel
-        && channel.responseStatus != 200) {
-      dump("REFTEST TEST-UNEXPECTED-FAIL | | HTTP ERROR : " + 
-        channel.responseStatus + "\n");
-    }
-    var streamBuf = getStreamContent(inputStream);
-    inputStream.close();
-    var lines = streamBuf.split(/(\n|\r|\r\n)/);
-
-    // Build the sandbox for fails-if(), etc., condition evaluation.
+// Build the sandbox for fails-if(), etc., condition evaluation.
+function BuildConditionSandbox(aURL) {
     var sandbox = new Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
@@ -381,6 +354,40 @@ function ReadManifest(aURL)
       getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
       getIntPref:  function(p) { return this._prefs.getIntPref(p) }
     }
+
+    return sandbox;
+}
+
+function ReadTopManifest(aFileURL)
+{
+    gURLs = new Array();
+    var url = gIOService.newURI(aFileURL, null, null);
+    if (!url)
+      throw "Expected a file or http URL for the manifest.";
+    ReadManifest(url);
+}
+
+// Note: If you materially change the reftest manifest parsing,
+// please keep the parser in print-manifest-dirs.py in sync.
+function ReadManifest(aURL)
+{
+    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
+                     .getService(CI.nsIScriptSecurityManager);
+
+    var listURL = aURL;
+    var channel = gIOService.newChannelFromURI(aURL);
+    var inputStream = channel.open();
+    if (channel instanceof Components.interfaces.nsIHttpChannel
+        && channel.responseStatus != 200) {
+      dump("REFTEST TEST-UNEXPECTED-FAIL | | HTTP ERROR : " + 
+        channel.responseStatus + "\n");
+    }
+    var streamBuf = getStreamContent(inputStream);
+    inputStream.close();
+    var lines = streamBuf.split(/(\n|\r|\r\n)/);
+
+    // Build the sandbox for fails-if(), etc., condition evaluation.
+    var sandbox = BuildConditionSandbox(aURL);
 
     var lineNo = 0;
     var urlprefix = "";
