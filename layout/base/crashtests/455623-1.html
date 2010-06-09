@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var i = document.getElementById("i");
+  i.contentDocument.designMode = "on";
+  i.previousSibling.data += "x\n";
+  i.style.counterReset = "c";
+}
+
+</script>
+</head>
+
+<body onload="boom();">&#x202E;<iframe id="i" src="data:text/html,a"></body>
+
+</html>
