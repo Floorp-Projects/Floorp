@@ -1005,17 +1005,16 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                      "should have returned early for real inherit/initial");
         if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
             origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
-#if 0
-    // This is commented out for now until we change
-    // -moz-background-clip to background-clip, -moz-background-origin
-    // to background-origin, change their value names to *-box, and add
-    // support for content-box on background-clip.
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
                            NS_STYLE_BG_ORIGIN_BORDER);
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
                            NS_STYLE_BG_ORIGIN_PADDING);
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
                            NS_STYLE_BG_ORIGIN_CONTENT);
+          // The shorthand only has a single clip/origin value which
+          // sets both properties.  So if they're different (and
+          // non-default), we can't represent the state using the
+          // shorthand.
           if (clip->mValue != origin->mValue) {
             aValue.Truncate();
             return NS_OK;
@@ -1024,10 +1023,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
           aValue.Append(PRUnichar(' '));
           AppendCSSValueToString(eCSSProperty_background_clip,
                                  clip->mValue, aValue);
-#else
-          aValue.Truncate();
-          return NS_OK;
-#endif
         }
 
         image = image->mNext;

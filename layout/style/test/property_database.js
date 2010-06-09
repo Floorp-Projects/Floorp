@@ -823,15 +823,9 @@ var gCSSProperties = {
 				"fixed repeat-y top left url(404.png), repeat-x green",
 				"url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green) black",
 				/* test cases with clip+origin in the shorthand */
-	// This is commented out for now until we change
-	// -moz-background-clip to background-clip, -moz-background-origin
-	// to background-origin, change their value names to *-box, and add
-	// support for content-box on background-clip.
-	/*
 				"url(404.png) green padding-box",
 				"url(404.png) border-box transparent",
 				"content-box url(404.png) blue",
-	*/
 		],
 		invalid_values: [
 			/* mixes with keywords have to be in correct order */
