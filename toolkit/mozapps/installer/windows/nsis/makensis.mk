@@ -53,12 +53,13 @@ TOOLKIT_NSIS_FILES_CONV = \
 	version.nsh \
 	$(NULL)
 
-TOOLKIT_NSIS_FILES = \
+CUSTOM_NSIS_PLUGINS = \
+	AccessControl.dll \
 	AppAssocReg.dll \
+	ApplicationID.dll \
 	nsProcess.dll \
 	ShellLink.dll \
 	UAC.dll \
-	ApplicationID.dll \
 	$(NULL)
 
 $(CONFIG_DIR)/setup.exe::
@@ -66,7 +67,7 @@ $(CONFIG_DIR)/setup.exe::
 	  iconv -f UTF-8 -t UTF-16LE $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/$$i | \
 	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > $(CONFIG_DIR)/$$i; \
 	done
-	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSIS) installer.nsi
 # Support for building the uninstaller when repackaging locales
@@ -92,7 +93,7 @@ uninstaller::
 	  iconv -f UTF-8 -t UTF-16LE $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/$$i | \
 	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > $(CONFIG_DIR)/$$i; \
 	done
-	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSIS) uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
