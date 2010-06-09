@@ -2465,3 +2465,11 @@ stubs::FlatLambda(VMFrame &f, JSFunction *fun)
     return obj;
 }
 
+void JS_FASTCALL
+stubs::Arguments(VMFrame &f)
+{
+    f.regs.sp++;
+    if (!js_GetArgsValue(f.cx, f.fp, &f.regs.sp[-1]))
+        THROW();
+}
+
