@@ -77,7 +77,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
   browser/aboutcrashes_utils.js \
   browser/crashreport.sjs \

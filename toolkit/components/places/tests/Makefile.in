@@ -73,7 +73,7 @@ DIRS = \
 	mochitest/bug_461710 \
 	$(NULL)
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 	DIRS += browser
 endif
 
