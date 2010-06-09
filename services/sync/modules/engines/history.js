@@ -43,7 +43,6 @@ const Cu = Components.utils;
 const GUID_ANNO = "weave/guid";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
@@ -150,48 +149,13 @@ HistoryStore.prototype = {
   // See bug 320831 for why we use SQL here
   _getVisits: function HistStore__getVisits(uri) {
     this._visitStm.params.url = uri;
-    let [exec, execCb] = Sync.withCb(this._visitStm.executeAsync, this._visitStm);
-    return exec({
-      visits: [],
-      handleResult: function handleResult(results) {
-        let row;
-        while ((row = results.getNextRow()) != null) {
-          this.visits.push({
-            date: row.getResultByName("date"),
-            type: row.getResultByName("type")
-          });
-        }
-      },
-      handleError: function handleError(error) {
-        execCb.throw(error);
-      },
-      handleCompletion: function handleCompletion(reason) {
-        execCb(this.visits);
-      }
-    });
+    return Utils.queryAsync(this._visitStm, ["date", "type"]);
   },
 
   // See bug 468732 for why we use SQL here
   _findURLByGUID: function HistStore__findURLByGUID(guid) {
     this._urlStm.params.guid = guid;
-    let [exec, execCb] = Sync.withCb(this._urlStm.executeAsync, this._urlStm);
-    return exec({
-      handleResult: function(results) {
-        // Save the one result and its columns
-        let row = results.getNextRow();
-        this.urlInfo = {
-          url: row.getResultByName("url"),
-          title: row.getResultByName("title"),
-          frecency: row.getResultByName("frecency"),
-        };
-      },
-      handleError: function(error) {
-        execCb.throw(error);
-      },
-      handleCompletion: function(reason) {
-        execCb(this.urlInfo);
-      }
-    });
+    return Utils.queryAsync(this._urlStm, ["url", "title", "frecency"])[0];
   },
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
@@ -204,23 +168,11 @@ HistoryStore.prototype = {
     this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
     this._allUrlStm.params.max_results = 5000;
 
-    let [exec, execCb] = Sync.withCb(this._allUrlStm.executeAsync, this._allUrlStm);
-    return exec({
-      ids: {},
-      handleResult: function handleResult(results) {
-        let row;
-        while ((row = results.getNextRow()) != null) {
-          let url = row.getResultByName("url");
-          this.ids[GUIDForUri(url, true)] = url;
-        }
-      },
-      handleError: function handleError(error) {
-        execCb.throw(error);
-      },
-      handleCompletion: function handleCompletion(reason) {
-        execCb(this.ids);
-      }
-    });
+    let urls = Utils.queryAsync(this._allUrlStm, "url");
+    return urls.reduce(function(ids, item) {
+      ids[GUIDForUri(item.url, true)] = item.url;
+      return ids;
+    }, {});
   },
 
   create: function HistStore_create(record) {

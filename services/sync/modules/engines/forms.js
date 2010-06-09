@@ -49,34 +49,21 @@ Cu.import("resource://weave/type_records/forms.js");
 
 let FormWrapper = {
   getAllEntries: function getAllEntries() {
-    let entries = [];
     // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
     let query = this.createStatement(
-      "SELECT fieldname, value FROM moz_formhistory " +
+      "SELECT fieldname name, value FROM moz_formhistory " +
       "ORDER BY 1.0 * (lastUsed - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) / " +
         "((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * " +
         "timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) DESC " +
       "LIMIT 500");
-    while (query.executeStep()) {
-      entries.push({
-        name: query.row.fieldname,
-        value: query.row.value
-      });
-    }
-    return entries;
+    return Utils.queryAsync(query, ["name", "value"]);
   },
 
   getEntry: function getEntry(guid) {
     let query = this.createStatement(
-      "SELECT fieldname, value FROM moz_formhistory WHERE guid = :guid");
+      "SELECT fieldname name, value FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
-    if (!query.executeStep())
-      return;
-
-    return {
-      name: query.row.fieldname,
-      value: query.row.value
-    };
+    return Utils.queryAsync(query, ["name", "value"])[0];
   },
 
   getGUID: function getGUID(name, value) {
@@ -86,11 +73,11 @@ let FormWrapper = {
       "WHERE fieldname = :name AND value = :value");
     getQuery.params.name = name;
     getQuery.params.value = value;
-    getQuery.executeStep();
 
     // Give the guid if we found one
-    if (getQuery.row.guid != null)
-      return getQuery.row.guid;
+    let item = Utils.queryAsync(getQuery, "guid")[0];
+    if (item != null)
+      return item.guid;
 
     // We need to create a guid for this entry
     let setQuery = this.createStatement(
@@ -100,7 +87,7 @@ let FormWrapper = {
     setQuery.params.guid = guid;
     setQuery.params.name = name;
     setQuery.params.value = value;
-    setQuery.execute();
+    Utils.queryAsync(setQuery);
 
     return guid;
   },
@@ -109,7 +96,7 @@ let FormWrapper = {
     let query = this.createStatement(
       "SELECT 1 FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
-    return query.executeStep();
+    return Utils.queryAsync(query).length == 1;
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
@@ -117,7 +104,7 @@ let FormWrapper = {
       "UPDATE moz_formhistory SET guid = :newGUID WHERE guid = :oldGUID");
     query.params.oldGUID = oldGUID;
     query.params.newGUID = newGUID;
-    query.execute();
+    Utils.queryAsync(query);
   },
 
   createStatement: function createStatement(query) {
