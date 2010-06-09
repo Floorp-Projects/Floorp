@@ -3075,12 +3075,10 @@ class Value
     }
 
     void setDouble(double d) {
-        ASSERT_DOUBLE_ALIGN();
         data = DOUBLE_TO_JSVAL_IMPL(d);
     }
 
     double &asDoubleRef() {
-        ASSERT_DOUBLE_ALIGN();
         JS_ASSERT(isDouble());
         return data.asDouble;
     }
@@ -3271,7 +3269,6 @@ class Value
 
     double asDouble() const {
         JS_ASSERT(isDouble());
-        ASSERT_DOUBLE_ALIGN();
         return data.asDouble;
     }
 
