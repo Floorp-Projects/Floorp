@@ -12,7 +12,6 @@ function run_test() {
 
   _("Empty out the formhistory table");
   let r0 = Utils.queryAsync(c("DELETE FROM moz_formhistory"));
-  do_check_true(isAsync);
   do_check_eq(r0.length, 0);
 
   _("Make sure there's nothing there");
@@ -66,4 +65,7 @@ function run_test() {
 
   _("Cleaning up");
   Utils.queryAsync(c("DELETE FROM moz_formhistory"));
+
+  _("Make sure the timeout got to run before this function ends");
+  do_check_true(isAsync);
 }
