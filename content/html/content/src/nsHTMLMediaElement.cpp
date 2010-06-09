@@ -945,7 +945,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
   return NS_OK;
 }
 
-nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),

@@ -244,7 +244,7 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIFileControlElement
 {
 public:
-  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
+  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -543,7 +543,7 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
 nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
-                                       PRBool aFromParser)
+                                       PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kInputDefaultType->value),
     mBitField(0)

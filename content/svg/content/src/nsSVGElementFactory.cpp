@@ -67,7 +67,7 @@ nsresult
 NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
-                    PRBool aFromParser);
+                    PRUint32 aFromParser);
 nsresult
 NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -94,7 +94,7 @@ nsresult
 NS_NewSVGDescElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
-                       PRBool aFromParser);
+                       PRUint32 aFromParser);
 nsresult
 NS_NewSVGUseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -179,7 +179,7 @@ NS_NewSVGSetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
-                 PRBool aFromParser)
+                 PRUint32 aFromParser)
 {
   NS_PRECONDITION(NS_SVGEnabled(),
                   "creating an SVG element while SVG disabled");
