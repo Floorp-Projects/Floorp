@@ -597,6 +597,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETLOCALPROP)
 
           BEGIN_CASE(JSOP_GETPROP)
+          BEGIN_CASE(JSOP_GETXPROP)
             jsop_getprop_slow();
           END_CASE(JSOP_GETPROP)
 
