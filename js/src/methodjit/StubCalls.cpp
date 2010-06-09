@@ -2371,6 +2371,12 @@ stubs::InitProp(VMFrame &f, JSAtom *atom)
 }
 
 void JS_FASTCALL
+stubs::InitMethod(VMFrame &f, JSAtom *atom)
+{
+    InitPropOrMethod(f, atom, JSOP_INITMETHOD);
+}
+
+void JS_FASTCALL
 stubs::IterNext(VMFrame &f)
 {
     JS_ASSERT(f.regs.sp - 1 >= f.fp->base());
