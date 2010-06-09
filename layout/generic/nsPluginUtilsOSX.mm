@@ -99,6 +99,8 @@ PRBool NS_NPAPI_CocoaWindowIsMain(void* aWindow)
 
 NPError NS_NPAPI_ShowCocoaContextMenu(void* menu, nsIWidget* widget, NPCocoaEvent* event)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (!menu || !widget || !event)
     return NPERR_GENERIC_ERROR;
 
@@ -149,6 +151,8 @@ NPError NS_NPAPI_ShowCocoaContextMenu(void* menu, nsIWidget* widget, NPCocoaEven
   [NSMenu popUpContextMenu:cocoaMenu withEvent:cocoaEvent forView:cocoaView];
 
   return NPERR_NO_ERROR;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NPERR_GENERIC_ERROR);
 }
 
 NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
