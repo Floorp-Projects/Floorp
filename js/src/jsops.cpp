@@ -2373,6 +2373,7 @@ BEGIN_CASE(JSOP_APPLY)
             if (status == mjit::Compile_Okay) {
                 if (!mjit::JaegerShot(cx))
                     goto error;
+                interpReturnOK = true;
                 goto inline_return;
             }
 

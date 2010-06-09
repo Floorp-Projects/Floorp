@@ -3294,6 +3294,7 @@ class Value
 
     JSObject &asObject() const {
         JS_ASSERT(isObject());
+        JS_ASSERT(JSVAL_TO_OBJECT_IMPL(data));
         return *JSVAL_TO_OBJECT_IMPL(data);
     }
 
