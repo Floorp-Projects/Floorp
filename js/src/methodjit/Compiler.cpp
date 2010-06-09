@@ -870,6 +870,12 @@ mjit::Compiler::generateMethod()
             frame.pushSynced();
           END_CASE(JSOP_SETNAME)
 
+          BEGIN_CASE(JSOP_THROW)
+            prepareStubCall();
+            stubCall(stubs::Throw, Uses(1), Defs(0));
+            frame.pop();
+          END_CASE(JSOP_THROW)
+
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
 

@@ -2405,3 +2405,14 @@ stubs::ConcatN(VMFrame &f, uint32 argc)
     return str;
 }
 
+void JS_FASTCALL
+stubs::Throw(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+
+    JS_ASSERT(!cx->throwing);
+    cx->throwing = JS_TRUE;
+    cx->exception = f.regs.sp[-1];
+    THROW();
+}
+
