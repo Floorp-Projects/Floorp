@@ -298,7 +298,6 @@ function getStreamContent(inputStream)
 function BuildConditionSandbox(aURL) {
     var sandbox = new Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
-    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
     sandbox.isDebugBuild = gDebug.isDebugBuild;
     sandbox.xulRuntime = {widgetToolkit: xr.widgetToolkit, OS: xr.OS};
 
@@ -309,6 +308,15 @@ function BuildConditionSandbox(aURL) {
     } catch(e) {
       sandbox.xulRuntime.XPCOMABI = "";
     }
+
+    // Backwards compatibility from when we preprocessed autoconf.mk.
+    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
+
+    // Shortcuts for widget toolkits.
+    sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
+    sandbox.gtk2Widget = xr.widgetToolkit == "gtk2";
+    sandbox.qtWidget = xr.widgetToolkit == "qt";
+    sandbox.winWidget = xr.widgetToolkit == "windows";
 
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
