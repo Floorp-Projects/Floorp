@@ -435,7 +435,13 @@ PRBool nsWindow::OnPaint(HDC aDC)
               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
           {
             if (!mD2DWindowSurface) {
-              mD2DWindowSurface = new gfxD2DSurface(mWnd);
+              gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR;
+#if defined(MOZ_XUL)
+              if (mTransparencyMode != eTransparencyOpaque) {
+                content = gfxASurface::CONTENT_COLOR_ALPHA;
+              }
+#endif
+              mD2DWindowSurface = new gfxD2DSurface(mWnd, content);
             }
             targetSurface = mD2DWindowSurface;
           }
