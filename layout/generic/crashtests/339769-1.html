@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function foo()
+{
+  var div = document.getElementById("div");
+  div.parentNode.removeChild(div);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(foo, 0);">
+
+  <div id="div" style="display: inline;"><p>x</p></div>
+
+  <iframe src='data:text/html,<html><body><input value="q">'></iframe>
+
+</body>
+</html>
