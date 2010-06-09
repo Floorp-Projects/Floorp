@@ -52,11 +52,6 @@
                                        NS_FRAME_STATE_BIT(31))
 #define COL_TYPE_OFFSET               28
 
-#define COL_CONSTRAINT_BITS           (NS_FRAME_STATE_BIT(24) | \
-                                       NS_FRAME_STATE_BIT(25) | \
-                                       NS_FRAME_STATE_BIT(26))
-#define COL_CONSTRAINT_OFFSET         24
-
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) :
   nsSplittableFrame(aContext)
 {
