@@ -2330,8 +2330,8 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
    *   background-repeat
    *   background-attachment
    *   background-position
-   *   background-clip (-moz-background-clip)
-   *   background-origin (-moz-background-origin)
+   *   background-clip
+   *   background-origin
    *   background-size (-moz-background-size)
    *   background-break (-moz-background-inline-policy)
    *

@@ -450,9 +450,9 @@ CSS_PROP_BACKGROUND(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BACKGROUND(
-    -moz-background-clip,
-    _moz_background_clip,
-    MozBackgroundClip,
+    background-clip,
+    background_clip,
+    BackgroundClip,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
@@ -499,9 +499,9 @@ CSS_PROP_BACKGROUND(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BACKGROUND(
-    -moz-background-origin,
-    _moz_background_origin,
-    MozBackgroundOrigin,
+    background-origin,
+    background_origin,
+    BackgroundOrigin,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,

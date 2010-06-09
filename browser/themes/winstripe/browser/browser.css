@@ -192,7 +192,7 @@ menuitem.bookmark-item {
   background: rgba(151,152,153,.05)
               -moz-linear-gradient(rgba(251,252,253,.95), rgba(246,247,248,.47) 49%, 
                                    rgba(231,232,233,.45) 51%, rgba(225,226,229,.3));
-  -moz-background-clip: padding;
+  background-clip: padding-box;
   -moz-border-radius: 4.5px;
   border: 1px solid;
   border-color: rgba(0,0,0,.12) rgba(0,0,0,.19) rgba(0,0,0,.38);
@@ -582,7 +582,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-appearance: none;
   margin: 1px 3px;
   padding: 2px;
-  -moz-background-clip: padding;
+  background-clip: padding-box;
   border: 1px solid;
   border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
   -moz-border-radius: 4px;
