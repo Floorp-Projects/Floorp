@@ -83,7 +83,7 @@
 #define CROP_START  "start"
 #define CROP_END    "end"
 
-#define NS_STATE_NEED_LAYOUT 0x01000000
+#define NS_STATE_NEED_LAYOUT NS_FRAME_STATE_BIT(24)
 
 class nsAccessKeyInfo
 {

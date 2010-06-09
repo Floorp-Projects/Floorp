@@ -54,18 +54,18 @@ class nsAnonymousBlockFrame;
 // the post access key text). The offsets of the 3 text frame children
 // are set in nsCSSFrameConstructor
 
-#define NS_INLINE_FRAME_HARD_TEXT_OFFSETS            0x00100000
+#define NS_INLINE_FRAME_HARD_TEXT_OFFSETS            NS_FRAME_STATE_BIT(20)
 
 /**  In Bidi left (or right) margin/padding/border should be applied to left
  *  (or right) most frame (or a continuation frame).
  *  This state value shows if this frame is left (or right) most continuation
  *  or not.
  */
-#define NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET     0x00200000
+#define NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET     NS_FRAME_STATE_BIT(21)
 
-#define NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST     0x00400000
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST     NS_FRAME_STATE_BIT(22)
 
-#define NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST    0x00800000
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST    NS_FRAME_STATE_BIT(23)
 
 /**
  * Inline frame class.
