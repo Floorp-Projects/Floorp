@@ -91,6 +91,72 @@ NS_IMPL_ISUPPORTS1(Foo, IFoo)
 typedef nsCOMArray<IFoo> Array;
 
 
+// {0e70a320-be02-11d1-8031-006008159b5a}
+#define NS_IBAR_IID \
+  {0x0e70a320, 0xbe02, 0x11d1,    \
+    {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+class IBar : public nsISupports {
+public:
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBAR_IID)
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IBar, NS_IBAR_IID)
+
+class Bar : public IBar {
+public:
+
+  Bar(nsCOMArray<IBar>& aArray, PRInt32 aIndex);
+  ~Bar();
+
+  // nsISupports implementation
+  NS_DECL_ISUPPORTS
+
+  static PRInt32 sReleaseCalled;
+
+private:
+  nsCOMArray<IBar>& mArray;
+  PRInt32 mIndex;
+};
+
+PRInt32 Bar::sReleaseCalled = 0;
+
+typedef nsCOMArray<IBar> Array2;
+
+Bar::Bar(Array2& aArray, PRInt32 aIndex)
+  : mArray(aArray)
+  , mIndex(aIndex)
+{
+}
+
+Bar::~Bar()
+{
+  if (mArray.RemoveObjectAt(mIndex)) {
+    fail("We should never manage to remove the object here");
+  }
+}
+
+NS_IMPL_ADDREF(Bar)
+NS_IMPL_QUERY_INTERFACE1(Bar, IBar)
+
+NS_IMETHODIMP_(nsrefcnt)
+Bar::Release(void)
+{
+  ++Bar::sReleaseCalled;
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD(_class);
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "Bar");
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+
 int main(int argc, char **argv)
 {
   ScopedXPCOM xpcom("nsCOMArrayTests");
@@ -140,6 +206,60 @@ int main(int argc, char **argv)
       rv = 1;
 	  break;
     }
+  }
+
+  PRInt32 base;
+  {
+    Array2 arr2;
+
+    IBar *ninthObject;
+    for (PRInt32 i = 0; i < 20; ++i) {
+      nsCOMPtr<IBar> bar = new Bar(arr2, i);
+      if (i == 8) {
+        ninthObject = bar;
+      }
+      arr2.AppendObject(bar);
+    }
+
+    base = Bar::sReleaseCalled;
+
+    arr2.SetCount(10);
+    if (Bar::sReleaseCalled != base + 10) {
+      fail("Release called multiple times for SetCount");
+    }
+
+    arr2.RemoveObjectAt(9);
+    if (Bar::sReleaseCalled != base + 11) {
+      fail("Release called multiple times for RemoveObjectAt");
+    }
+
+    arr2.RemoveObject(ninthObject);
+    if (Bar::sReleaseCalled != base + 12) {
+      fail("Release called multiple times for RemoveObject");
+    }
+
+    arr2.Clear();
+    if (Bar::sReleaseCalled != base + 20) {
+      fail("Release called multiple times for Clear");
+    }
+  }
+
+  Bar::sReleaseCalled = 0;
+
+  {
+    Array2 arr2;
+
+    for (PRInt32 i = 0; i < 20; ++i) {
+      nsCOMPtr<IBar> bar  = new Bar(arr2, i);
+      arr2.AppendObject(bar);
+    }
+
+    base = Bar::sReleaseCalled;
+
+    // Let arr2 be destroyed
+  }
+  if (Bar::sReleaseCalled != base + 20) {
+    fail("Release called multiple times for nsCOMArray::~nsCOMArray");
   }
 
   return rv;
