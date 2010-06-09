@@ -99,8 +99,8 @@ var gCSSProperties = {
 		other_values: [ "border-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
 		invalid_values: [ "margin-box", "padding-box padding-box" ]
 	},
-	"-moz-background-size": {
-		domProp: "MozBackgroundSize",
+	"background-size": {
+		domProp: "backgroundSize",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto", "auto auto" ],
@@ -788,7 +788,7 @@ var gCSSProperties = {
 		domProp: "background",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "background-clip", "background-origin", "-moz-background-size" ],
+		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "background-clip", "background-origin", "background-size" ],
 		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent" ],
 		other_values: [
 				/* without multiple backgrounds */

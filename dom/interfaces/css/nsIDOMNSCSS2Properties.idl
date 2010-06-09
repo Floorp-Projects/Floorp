@@ -258,7 +258,7 @@ interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
            attribute DOMString        MozWindowShadow;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBackgroundSize;
+           attribute DOMString        backgroundSize;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTransitionProperty;
