@@ -91,7 +91,7 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsStubMutationObserver
 {
 public:
-  nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
+  nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -244,7 +244,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 
 
 nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo,
-                                             PRBool aFromParser)
+                                             PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mValueChanged(PR_FALSE),
     mHandlingSelect(PR_FALSE),

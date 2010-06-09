@@ -966,14 +966,14 @@ protected:
  */
 #define NS_IMPL_NS_NEW_HTML_ELEMENT(_elementName)                            \
 nsGenericHTMLElement*                                                        \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
+NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo);                       \
 }
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)               \
 nsGenericHTMLElement*                                                        \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
+NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
 }
@@ -1305,12 +1305,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)              \
 nsGenericHTMLElement*                                             \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
-                                  PRBool aFromParser = PR_FALSE);
+                                  PRUint32 aFromParser = 0);
 
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(_elementName)    \
 inline nsGenericHTMLElement*                                      \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
-                                  PRBool aFromParser = PR_FALSE)  \
+                                  PRUint32 aFromParser = 0)       \
 {                                                                 \
   return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);         \
 }

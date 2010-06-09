@@ -138,7 +138,7 @@ protected:
 };
 
 nsGenericHTMLElement*
-NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
 {
   /*
    * nsHTMLOptionElement's will be created without a nsINodeInfo passed in

@@ -138,10 +138,10 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
-typedef nsGenericHTMLElement* (*contentCreatorCallback)(nsINodeInfo*, PRBool aFromParser);
+typedef nsGenericHTMLElement* (*contentCreatorCallback)(nsINodeInfo*, PRUint32 aFromParser);
 
 nsGenericHTMLElement*
-NS_NewHTMLNOTUSEDElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+NS_NewHTMLNOTUSEDElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
   return nsnull;
@@ -557,7 +557,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
-                  PRBool aFromParser)
+                  PRUint32 aFromParser)
 {
   *aResult = nsnull;
 
@@ -578,7 +578,7 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
 
 already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(PRUint32 aNodeType, nsINodeInfo *aNodeInfo,
-                  PRBool aFromParser)
+                  PRUint32 aFromParser)
 {
   NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
                aNodeType == eHTMLTag_userdefined,

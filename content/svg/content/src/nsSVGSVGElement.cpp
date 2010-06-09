@@ -193,7 +193,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo, PRBool aFromParser)
+nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo, PRUint32 aFromParser)
   : nsSVGSVGElementBase(aNodeInfo),
     mCoordCtx(nsnull),
     mViewportWidth(0),
