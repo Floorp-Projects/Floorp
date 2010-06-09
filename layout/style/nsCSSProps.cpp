@@ -520,12 +520,6 @@ const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const PRInt32 nsCSSProps::kBackgroundClipKTable[] = {
-  eCSSKeyword_border,     NS_STYLE_BG_CLIP_BORDER,
-  eCSSKeyword_padding,    NS_STYLE_BG_CLIP_PADDING,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 const PRInt32 nsCSSProps::kBackgroundInlinePolicyKTable[] = {
   eCSSKeyword_each_box,     NS_STYLE_BG_INLINE_POLICY_EACH_BOX,
   eCSSKeyword_continuous,   NS_STYLE_BG_INLINE_POLICY_CONTINUOUS,
@@ -533,6 +527,9 @@ const PRInt32 nsCSSProps::kBackgroundInlinePolicyKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER);
+PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING);
+PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT);
 const PRInt32 nsCSSProps::kBackgroundOriginKTable[] = {
   eCSSKeyword_border,     NS_STYLE_BG_ORIGIN_BORDER,
   eCSSKeyword_padding,    NS_STYLE_BG_ORIGIN_PADDING,

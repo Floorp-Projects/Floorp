@@ -1014,8 +1014,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                            NS_STYLE_BG_ORIGIN_BORDER);
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
                            NS_STYLE_BG_ORIGIN_PADDING);
-          // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
-          //                  NS_STYLE_BG_ORIGIN_CONTENT);
+          PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
+                           NS_STYLE_BG_ORIGIN_CONTENT);
           if (clip->mValue != origin->mValue) {
             aValue.Truncate();
             return NS_OK;

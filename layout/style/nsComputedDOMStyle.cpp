@@ -1356,7 +1356,7 @@ nsComputedDOMStyle::GetBackgroundClip(nsIDOMCSSValue** aValue)
 {
   return GetBackgroundList(&nsStyleBackground::Layer::mClip,
                            &nsStyleBackground::mClipCount,
-                           nsCSSProps::kBackgroundClipKTable,
+                           nsCSSProps::kBackgroundOriginKTable,
                            aValue);
 }
 

@@ -119,11 +119,10 @@ e.setAttribute("style", "background: red; -moz-background-clip: padding");
 is(e.style.background, "", "should not have background shorthand (clip:padding)");
 e.setAttribute("style", "background: red; -moz-background-origin: content");
 is(e.style.background, "", "should not have background shorthand (origin:content)");
-// -moz-background-clip:content not yet supported
-//e.setAttribute("style", "background: red; -moz-background-clip: content");
-//is(e.style.background, "", "should not have background shorthand (clip:content)");
-//e.setAttribute("style", "background: red; -moz-background-clip: content; -moz-background-origin: content;");
-//isnot(e.style.background, "", "should have background shorthand (clip:content;origin:content)");
+e.setAttribute("style", "background: red; -moz-background-clip: content");
+is(e.style.background, "", "should not have background shorthand (clip:content)");
+e.setAttribute("style", "background: red; -moz-background-clip: content; -moz-background-origin: content;");
+isnot(e.style.background, "", "should have background shorthand (clip:content;origin:content)");
 e.setAttribute("style", "background: red; -moz-background-size: 100% 100%");
 is(e.style.background, "", "should not have background shorthand (size:100% 100%)");
 e.setAttribute("style", "background: red; -moz-background-size: 100% auto");

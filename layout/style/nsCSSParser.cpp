@@ -5756,7 +5756,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty__moz_background_clip:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBackgroundClipKTable);
+                        nsCSSProps::kBackgroundOriginKTable);
   case eCSSProperty_background_color:
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
@@ -6512,15 +6512,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
     // to background-origin, change their value names to *-box, and add
     // support for content-box on background-clip.
       } else if (nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kBackgroundClipKTable, dummy)) {
-        // For now, we use the background-clip table rather than have a special
-        // background-origin table, because we don't support 'content-box' on
-        // background-origin.
-        NS_ASSERTION(
-          nsCSSProps::kBackgroundClipKTable[0] == eCSSKeyword_border &&
-          nsCSSProps::kBackgroundClipKTable[2] == eCSSKeyword_padding &&
-          nsCSSProps::kBackgroundClipKTable[4] == eCSSKeyword_UNKNOWN,
-          "need to rewrite this code");
+                   nsCSSProps::kBackgroundOriginKTable, dummy)) {
         if (haveOrigin)
           return PR_FALSE;
         haveOrigin = PR_TRUE;
@@ -6533,8 +6525,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
                          NS_STYLE_BG_ORIGIN_BORDER);
         PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
                          NS_STYLE_BG_ORIGIN_PADDING);
-        // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
-        //                  NS_STYLE_BG_ORIGIN_CONTENT);
+        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
+                         NS_STYLE_BG_ORIGIN_CONTENT);
         // When we support 'no-clip', this needs to be conditional on haveClip:
         aItem.mClip = aItem.mOrigin;
       // We'd support 'no-clip' as an additional |else| here.
