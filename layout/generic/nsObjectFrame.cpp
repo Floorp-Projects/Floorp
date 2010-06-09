@@ -1581,6 +1581,11 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       nsIntRect dirtyPixels = aDirtyRect.ToOutsidePixels(appUnitsPerDevPixel);
       nsIntRect clipPixels;
       clipPixels.IntersectRect(contentPixels, dirtyPixels);
+
+      // Don't invoke the drawing code if the clip is empty.
+      if (clipPixels.IsEmpty())
+        return;
+
       gfxRect nativeClipRect(clipPixels.x, clipPixels.y,
                              clipPixels.width, clipPixels.height);
       gfxContext* ctx = aRenderingContext.ThebesContext();
@@ -3618,8 +3623,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     return;
 
   if (!mIOSurface || 
-     (mIOSurface->GetWidth() != aWidth || 
-      mIOSurface->GetHeight() != aHeight)) {
+     (mIOSurface->GetWidth() != (size_t)aWidth || 
+      mIOSurface->GetHeight() != (size_t)aHeight)) {
     if (mIOSurface) {
       delete mIOSurface;
     }
