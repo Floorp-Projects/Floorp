@@ -122,6 +122,7 @@ void JS_FASTCALL Iter(VMFrame &f, uint32 flags);
 void JS_FASTCALL IterNext(VMFrame &f);
 JSBool JS_FASTCALL IterMore(VMFrame &f);
 void JS_FASTCALL EndIter(VMFrame &f);
+void JS_FASTCALL ForName(VMFrame &f, JSAtom *atom);
 
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 JSString * JS_FASTCALL TypeOf(VMFrame &f);

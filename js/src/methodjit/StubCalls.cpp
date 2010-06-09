@@ -624,6 +624,46 @@ stubs::Name(VMFrame &f, uint32 index)
         THROW();
 }
 
+static inline bool
+IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
+{
+    if (iterobj->getClass() == &js_IteratorClass.base) {
+        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        JS_ASSERT(ni->props_cursor < ni->props_end);
+        *rval = *ni->props_cursor;
+        if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
+            ni->props_cursor++;
+            return true;
+        }
+        /* Take the slow path if we have to stringify a numeric property name. */
+    }
+    return js_IteratorNext(cx, iterobj, rval);
+}
+
+void JS_FASTCALL
+stubs::ForName(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    JS_ASSERT(regs.sp - 1 >= f.fp->base());
+    jsid id = ATOM_TO_JSID(atom);
+    JSObject *obj, *obj2;
+    JSProperty *prop;
+    if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+        THROW();
+    if (prop)
+        obj2->dropProperty(cx, prop);
+    {
+        AutoValueRooter tvr(cx);
+        JS_ASSERT(regs.sp[-1].isObject());
+        if (!IteratorNext(cx, &regs.sp[-1].asObject(), tvr.addr()))
+            THROW();
+        if (!obj->setProperty(cx, id, tvr.addr()))
+            THROW();
+    }
+}
+
 void JS_FASTCALL
 stubs::GetElem(VMFrame &f)
 {
