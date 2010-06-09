@@ -2203,21 +2203,94 @@ stubs::GetProp(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::CallProp(VMFrame &f, JSAtom *atom)
+stubs::CallProp(VMFrame &f, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
-    /* Overwrite stack head with rval. */
-    Value lval = regs.sp[-1];
-    if (!InlineGetProp(f))
-        THROW();
-    Value rval = regs.sp[-1];
+    Value lval;
+    lval = regs.sp[-1];
 
-    f.regs.sp++;
-    f.regs.sp[-1] = lval;
+    Value objv;
+    if (lval.isObject()) {
+        objv = lval;
+    } else {
+        JSProtoKey protoKey;
+        if (lval.isString()) {
+            protoKey = JSProto_String;
+        } else if (lval.isNumber()) {
+            protoKey = JSProto_Number;
+        } else if (lval.isBoolean()) {
+            protoKey = JSProto_Boolean;
+        } else {
+            JS_ASSERT(lval.isNull() || lval.isUndefined());
+            js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
+            THROW();
+        }
+        JSObject *pobj;
+        if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
+            THROW();
+        objv.setNonFunObj(*pobj);
+    }
 
-    /* Wrap primitive lval in object clothing if necessary */
+    JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
+    Value rval;
+
+    PropertyCacheEntry *entry;
+    JSObject *obj2;
+    JSAtom *atom;
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+    if (!atom) {
+        if (entry->vword.isFunObj()) {
+            rval.setFunObj(entry->vword.toFunObj());
+        } else if (entry->vword.isSlot()) {
+            uint32 slot = entry->vword.toSlot();
+            JS_ASSERT(slot < obj2->scope()->freeslot);
+            rval = obj2->lockedGetSlot(slot);
+        } else {
+            JS_ASSERT(entry->vword.isSprop());
+            JSScopeProperty *sprop = entry->vword.toSprop();
+            NATIVE_GET(cx, &objv.asObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
+                       THROW());
+        }
+        regs.sp++;
+        regs.sp[-2] = rval;
+        regs.sp[-1] = lval;
+        goto end_callprop;
+    }
+
+    /*
+     * Cache miss: use the immediate atom that was loaded for us under
+     * PropertyCache::test.
+     */
+    jsid id;
+    id = ATOM_TO_JSID(origAtom);
+
+    regs.sp++;
+    regs.sp[-1].setNull();
+    if (lval.isObject()) {
+        if (!js_GetMethod(cx, &objv.asObject(), id,
+                          JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                          ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                          : JSGET_NO_METHOD_BARRIER,
+                          &rval)) {
+            THROW();
+        }
+        regs.sp[-1] = objv;
+        regs.sp[-2] = rval;
+    } else {
+        JS_ASSERT(objv.asObject().map->ops->getProperty == js_GetProperty);
+        if (!js_GetPropertyHelper(cx, &objv.asObject(), id,
+                                  JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
+                                  &rval)) {
+            THROW();
+        }
+        regs.sp[-1] = lval;
+        regs.sp[-2] = rval;
+    }
+
+  end_callprop:
+    /* Wrap primitive lval in object clothing if necessary. */
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         if (!rval.isFunObj() ||
@@ -2229,11 +2302,11 @@ stubs::CallProp(VMFrame &f, JSAtom *atom)
     }
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isUndefined())) {
-        regs.sp[-2].setString(ATOM_TO_STRING(atom));
+        regs.sp[-2].setString(ATOM_TO_STRING(origAtom));
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     }
-#endif /* JS_HAS_NO_SUCH_METHOD */
+#endif
 }
 
 void JS_FASTCALL
