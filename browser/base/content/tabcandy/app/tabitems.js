@@ -222,14 +222,12 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------  
   setResizable: function(value){
-    return;
     var self = this;
     
-    var $resizer = $('.expander', this.container);
+    var $resizer = iQ('.expander', this.container);
     if(value) {
       $resizer.fadeIn();
-      $(this.container).resizable({
-        handles: "se",
+      iQ(this.container).resizable({
         aspectRatio: true,
         minWidth: TabItems.minTabWidth,
         minHeight: TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth),
@@ -244,7 +242,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       });
     } else {
       $resizer.fadeOut();
-      $(this.container).resizable('destroy');
+      iQ(this.container).resizable('destroy');
     }
   },
   
@@ -283,13 +281,12 @@ window.TabItems = {
         
     function mod(mirror) {
       var $div = iQ(mirror.el);
-      var $$div = $(mirror.el);
       var tab = mirror.tab;
       
       if(window.Groups) {        
         $div.data('isDragging', false);
         $div.draggable(window.Groups.dragOptions);
-/*         $div.droppable(window.Groups.dropOptions); */
+        $div.droppable(window.Groups.dropOptions);
       }
       
       $div.mousedown(function(e) {

@@ -1028,7 +1028,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         
         var location = new Point(e.clientX, e.clientY);
       
-        if( location.distance(self._mouseDownLocation) > 1.0 ) return;
+        if( !self._mouseDownLocation || location.distance(self._mouseDownLocation) > 1.0 ) 
+          return;
         // Don't zoom in to the last tab for the new tab group.
         if( self.isNewTabsGroup() ) return;
         var activeTab = self.getActiveTab();
@@ -1036,10 +1037,11 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         // TODO: This should also accept TabItems
         else if(self.getChild(0))
           TabItems.zoomTo(self.getChild(0).tab.mirror.el);
+          
+        self._mouseDownLocation = null;
     });
     
     iQ(container).droppable({
-      tolerance: "intersect",
       over: function(){
         if( !self.isNewTabsGroup() )
           iQ(this).addClass("acceptsDrop");
@@ -1062,13 +1064,11 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
   // ----------  
   setResizable: function(value){
-    return;
     var self = this;
     
     if(value) {
       this.$resizer.fadeIn();
-      $(this.container).resizable({
-        handles: "se",
+      iQ(this.container).resizable({
         aspectRatio: false,
         minWidth: 90,
         minHeight: 90,
@@ -1083,7 +1083,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       });
     } else {
       this.$resizer.fadeOut();
-      $(this.container).resizable('disable');
+      iQ(this.container).resizable('destroy');
     }
   },
   
@@ -1387,10 +1387,8 @@ window.Groups = {
   // ----------  
   dropOptions: {
     accept: dropAcceptFunction,
-    tolerance: "intersect",
-    greedy: true,
     drop: function(e){
-      $target = iQ(e.target);  
+      $target = iQ(this);  
       iQ(this).removeClass("acceptsDrop");
       var phantom = $target.data("phantomGroup")
       
@@ -1403,7 +1401,7 @@ window.Groups = {
         group.add( drag.info.$el );      
     },
     over: function(e){
-      var $target = iQ(e.target);
+      var $target = iQ(this);
 
       function elToRect($el){
        return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
@@ -1434,7 +1432,7 @@ window.Groups = {
       $target.data("phantomGroup", phantom);      
     },
     out: function(e){      
-      var phantom = iQ(e.target).data("phantomGroup");
+      var phantom = iQ(this).data("phantomGroup");
       if(phantom) { 
         phantom.fadeOut(function(){
           iQ(this).remove();

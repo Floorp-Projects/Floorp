@@ -336,10 +336,10 @@ input.defaultName:hover{
 	opacity: .2;  
 }
 
-.ui-resizable { }
-.ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
-.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
-.ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
+.iq-resizable { }
+.iq-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
+.iq-resizable-disabled .iq-resizable-handle, .iq-resizable-autohide .iq-resizable-handle { display: none; }
+.iq-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
 
 /* Utils
 ----------------------------------*/
