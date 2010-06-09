@@ -245,9 +245,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
                  * Just pop RHS - leave LHS. ARM can't shift by 0.
                  * Type of LHS should be learned already.
                  */
-                masm.pop();
+                frame.pop();
                 if (stubNeeded)
-                    stubcc.rejoin(2);
+                    stubcc.rejoin(1);
                 return;
             }
 
