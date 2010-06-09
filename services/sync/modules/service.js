@@ -502,7 +502,7 @@ WeaveSvc.prototype = {
             node = null;
           return node;
         default:
-          this._log.debug("Unexpected response code: " + node.status);
+          fail = "Unexpected response code: " + node.status;
           break;
       }
     } catch (e) {
