@@ -112,7 +112,7 @@ public:
 private:
 
   /**
-   * Start pending events procesing asyncroniously.
+   * Start pending events processing asynchronously.
    */
   void PrepareFlush();
   
@@ -125,7 +125,7 @@ private:
   NS_DECL_RUNNABLEMETHOD(nsAccEventQueue, Flush)
 
   /**
-   * Coalesce redurant events from the queue.
+   * Coalesce redundant events from the queue.
    */
   void CoalesceEvents();
 
@@ -156,8 +156,25 @@ private:
   void CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
                                          nsAccEvent *aDescendantAccEvent);
 
+  /**
+   * Indicates whether events flush is run.
+   */
   PRBool mProcessingStarted;
+
+  /**
+   * The document accessible reference owning this queue.
+   */
   nsRefPtr<nsDocAccessible> mDocument;
+
+  /**
+   * The number of events processed currently. Used to avoid event coalescence
+   * with new events appended to the queue because of events handling.
+   */
+  PRInt32 mFlushingEventsCount;
+
+  /**
+   * Pending events array.
+   */
   nsTArray<nsRefPtr<nsAccEvent> > mEvents;
 };
 

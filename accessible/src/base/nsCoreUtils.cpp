@@ -327,14 +327,6 @@ nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
   return PR_FALSE;
 }
 
-PRBool
-nsCoreUtils::AreSiblings(nsINode *aNode1, nsINode *aNode2)
-{
-  NS_ENSURE_TRUE(aNode1 && aNode2, PR_FALSE);
-
-  return aNode1->GetNodeParent() == aNode2->GetNodeParent();
-}
-
 nsresult
 nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
                                nsIDOMNode *aStartNode, PRInt32 aStartIndex,
