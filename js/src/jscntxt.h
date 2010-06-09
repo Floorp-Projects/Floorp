@@ -1726,7 +1726,7 @@ struct JSContext
     JSPackedBool        insideGCMarkCallback;
 
     /* Exception state -- the exception member is a GC root by definition. */
-    JSPackedBool        throwing;           /* is there a pending exception? */
+    JSBool              throwing;           /* is there a pending exception? */
     js::Value           exception;          /* most-recently-thrown exception */
 
     /* Limit pointer for checking native stack consumption during recursion. */
