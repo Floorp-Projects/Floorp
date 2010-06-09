@@ -2191,6 +2191,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mKeyDownHandled = PR_FALSE;
     mKeyPressHandled = NO;
     mKeyPressSent = NO;
+    mPendingDisplay = NO;
 
     // initialization for NSTextInput
     mMarkedRange.location = NSNotFound;
@@ -2349,7 +2350,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mPendingFullDisplay = YES;
-  [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+  if (!mPendingDisplay) {
+    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+    mPendingDisplay = YES;
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2361,7 +2365,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mPendingDirtyRects)
     mPendingDirtyRects = [[NSMutableArray alloc] initWithCapacity:1];
   [mPendingDirtyRects addObject:[NSValue valueWithRect:invalidRect]];
-  [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+  if (!mPendingDisplay) {
+    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+    mPendingDisplay = YES;
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2374,13 +2381,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mPendingFullDisplay) {
     [self setNeedsDisplay:YES];
   }
-  else {
+  else if (mPendingDirtyRects) {
     unsigned int count = [mPendingDirtyRects count];
     for (unsigned int i = 0; i < count; ++i) {
       [self setNeedsDisplayInRect:[[mPendingDirtyRects objectAtIndex:i] rectValue]];
     }
   }
   mPendingFullDisplay = NO;
+  mPendingDisplay = NO;
   [mPendingDirtyRects release];
   mPendingDirtyRects = nil;
 
