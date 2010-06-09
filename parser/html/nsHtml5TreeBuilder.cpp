@@ -190,6 +190,10 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
     }
     needToDropLF = PR_FALSE;
   }
+  if (inForeign) {
+    accumulateCharacters(buf, start, length);
+    return;
+  }
   switch(mode) {
     case NS_HTML5TREE_BUILDER_IN_BODY:
     case NS_HTML5TREE_BUILDER_IN_CELL:
@@ -410,6 +414,14 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
         accumulateCharacters(buf, start, end - start);
       }
     }
+  }
+}
+
+void 
+nsHtml5TreeBuilder::zeroOriginatingReplacementCharacter()
+{
+  if (inForeign || mode == NS_HTML5TREE_BUILDER_TEXT) {
+    characters(REPLACEMENT_CHARACTER, 0, 1);
   }
 }
 
