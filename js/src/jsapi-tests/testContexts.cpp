@@ -71,6 +71,7 @@ BEGIN_TEST(testContexts_bug561444)
 	d->ok = true;
     }
 END_TEST(testContexts_bug561444)
+#endif
 
 BEGIN_TEST(testContexts_bug563735)
 {
@@ -111,6 +112,6 @@ BEGIN_TEST(testContexts_bug570764)
 	JS_DestroyContext(cx2);
     }
     JS_DestroyRuntime(rt2);
+    return true;
 }
 END_TEST(testContexts_bug570764)
-#endif
