@@ -68,10 +68,10 @@ $(CONFIG_DIR)/setup.exe::
 	done
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
-	cd $(CONFIG_DIR) && makensisu.exe installer.nsi
+	cd $(CONFIG_DIR) && $(MAKENSIS) installer.nsi
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
-	cd $(CONFIG_DIR) && makensisu.exe uninstaller.nsi
+	cd $(CONFIG_DIR) && $(MAKENSIS) uninstaller.nsi
 endif
 
 $(CONFIG_DIR)/7zSD.sfx:
@@ -94,6 +94,6 @@ uninstaller::
 	done
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
-	cd $(CONFIG_DIR) && makensisu.exe uninstaller.nsi
+	cd $(CONFIG_DIR) && $(MAKENSIS) uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
 	cp $(CONFIG_DIR)/helper.exe $(DIST)/bin/uninstall
