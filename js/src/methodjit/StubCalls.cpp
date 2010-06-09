@@ -83,7 +83,7 @@ using namespace JSC;
         return v;       \
     } while (0)
 
-JSObject * JS_FASTCALL
+void JS_FASTCALL
 mjit::stubs::BindName(VMFrame &f)
 {
     PropertyCacheEntry *entry;
@@ -96,14 +96,14 @@ mjit::stubs::BindName(VMFrame &f)
     JSContext *cx = f.cx;
     JSObject *obj = f.fp->scopeChain->getParent();
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
-    if (!atom)
-        return obj;
-
-    jsid id = ATOM_TO_JSID(atom);
-    obj = js_FindIdentifierBase(cx, f.fp->scopeChain, id);
-    if (!obj)
-        THROWV(NULL);
-    return obj;
+    if (atom) {
+        jsid id = ATOM_TO_JSID(atom);
+        obj = js_FindIdentifierBase(cx, f.fp->scopeChain, id);
+        if (!obj)
+            THROW();
+    }
+    f.regs.sp++;
+    f.regs.sp[-1].setNonFunObj(*obj);
 }
 
 static bool
