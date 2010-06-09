@@ -49,7 +49,8 @@ function test() {
   let win = OpenBrowserWindow();
   Services.obs.addObserver(function(subject, topic, data) {
     Services.obs.removeObserver(arguments.callee, "browser-delayed-startup-finished");
-    var win = subject.QueryInterface(Ci.nsIDOMWindow);
+    var notifiedWin = subject.QueryInterface(Ci.nsIDOMWindow);
+    is(win, notifiedWin, "sanity check");
 
     let cmd = win.document.getElementById("Tools:PrivateBrowsing");
     ok(!cmd.hasAttribute("disabled"),
