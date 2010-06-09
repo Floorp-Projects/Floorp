@@ -240,18 +240,19 @@ mjit::Compiler::jsop_bitop(JSOp op)
         if (rhs->isConstant()) {
             int32 shift = rhs->getValue().asInt32() & 0x1F;
 
+            reg = frame.ownRegForData(lhs);
+
             if (!shift) {
                 /*
                  * Just pop RHS - leave LHS. ARM can't shift by 0.
                  * Type of LHS should be learned already.
                  */
-                frame.pop();
+                frame.popn(2);
+                frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
                 if (stubNeeded)
                     stubcc.rejoin(1);
                 return;
             }
-
-            reg = frame.ownRegForData(lhs);
 
             switch (op) {
               case JSOP_LSH:

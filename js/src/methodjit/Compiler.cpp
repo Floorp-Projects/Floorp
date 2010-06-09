@@ -1083,6 +1083,16 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_CONCATN)
 
+          BEGIN_CASE(JSOP_INITMETHOD)
+          {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::InitMethod, Uses(1), Defs(0));
+            frame.pop();
+          }
+          END_CASE(JSOP_INITMETHOD)
+
           BEGIN_CASE(JSOP_OBJTOSTR)
             jsop_objtostr();
           END_CASE(JSOP_OBJTOSTR)
@@ -1577,7 +1587,6 @@ mjit::Compiler::iterMore()
 
     stubcc.leave();
     stubcc.call(stubs::IterMore);
-    stubcc.rejoin(0);
     j = stubcc.masm.branchTest32(Assembler::NonZero, Registers::ReturnReg, Registers::ReturnReg);
     stubcc.jumpInScript(j, target);
 
