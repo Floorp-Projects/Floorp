@@ -147,6 +147,7 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   // rects that were invalidated during a draw, so have pending drawing
   NSMutableArray* mPendingDirtyRects;
   BOOL mPendingFullDisplay;
+  BOOL mPendingDisplay;
 
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
