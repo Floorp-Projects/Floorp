@@ -1074,7 +1074,10 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_OBJTOSTR)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
+          BEGIN_CASE(JSOP_CALLGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
+            if (op == JSOP_CALLGLOBAL)
+                frame.push(NullTag());
           END_CASE(JSOP_GETGLOBAL)
 
           BEGIN_CASE(JSOP_SETGLOBAL)
