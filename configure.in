@@ -5915,7 +5915,8 @@ if test -n "$MOZ_WEBM"; then
         fi
     else 
 
-      dnl For Darwin x86, Darwin x86_64, and Linux x86 we can use YASM.
+      dnl For Darwin x86, Darwin x86_64, Linux x86, and WINNT x86_64
+      dhl we can use YASM.
       AC_MSG_CHECKING([for YASM assembler])
       AC_CHECK_PROGS(VPX_AS, yasm, "")
       if test -n "$VPX_AS"; then
@@ -5933,9 +5934,13 @@ if test -n "$MOZ_WEBM"; then
           VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
           VPX_X86_ASM=1
         ;;
+        WINNT:x86_64)
+          VPX_ASFLAGS="-f x64 -rnasm -pnasm"
+          VPX_X86_ASM=1
+        ;;
         esac
       fi # end have YASM
-    fi # end !WINNT
+    fi # end !WINNT_x86_MSVC
 
     if test -n "$VPX_X86_ASM"; then
       AC_DEFINE(VPX_X86_ASM)

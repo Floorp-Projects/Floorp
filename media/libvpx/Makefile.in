@@ -192,9 +192,11 @@ ASFILES += \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
+ifneq ($(OS_TEST),x86_64)
 ASFILES += \
   safeseh.asm \
   $(NULL)
+endif
 endif
 
 endif
