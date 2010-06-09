@@ -234,7 +234,7 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
     }
 
     if (format == CAIRO_FORMAT_A8 || format == CAIRO_FORMAT_A1) {
-	float decode[] = {1.0, 0.0};
+	CGFloat decode[] = {1.0, 0.0};
 	image = CGImageMaskCreate (width, height,
 				   bitsPerComponent,
 				   bitsPerPixel,
