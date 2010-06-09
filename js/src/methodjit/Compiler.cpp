@@ -295,6 +295,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NOP)
           END_CASE(JSOP_NOP)
 
+          BEGIN_CASE(JSOP_PUSH)
+            frame.push(UndefinedTag());
+          END_CASE(JSOP_PUSH)
+
           BEGIN_CASE(JSOP_POPV)
           {
             FrameEntry *fe = frame.peek(-1);
