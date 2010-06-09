@@ -2991,7 +2991,13 @@ gfxASurface *nsWindow::GetThebesSurface()
 #ifdef CAIRO_HAS_D2D_SURFACE
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
-    return (new gfxD2DSurface(mWnd));
+    gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR;
+#if defined(MOZ_XUL)
+    if (mTransparencyMode != eTransparencyOpaque) {
+      content = gfxASurface::CONTENT_COLOR_ALPHA;
+    }
+#endif
+    return (new gfxD2DSurface(mWnd, content));
   } else {
 #endif
     return (new gfxWindowsSurface(mWnd));
