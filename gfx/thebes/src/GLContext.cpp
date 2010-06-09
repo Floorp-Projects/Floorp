@@ -194,12 +194,16 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fDepthRange, { "DepthRange", NULL } },
 #endif
         { (PRFuncPtr*) &fDisable, { "Disable", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fDisableClientState, { "DisableClientState", NULL } },
+#endif
         { (PRFuncPtr*) &fDisableVertexAttribArray, { "DisableVertexAttribArray", "DisableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fDrawArrays, { "DrawArrays", NULL } },
         { (PRFuncPtr*) &fDrawElements, { "DrawElements", NULL } },
         { (PRFuncPtr*) &fEnable, { "Enable", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fEnableClientState, { "EnableClientState", NULL } },
+#endif
         { (PRFuncPtr*) &fEnableVertexAttribArray, { "EnableVertexAttribArray", "EnableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fFinish, { "Finish", NULL } },
         { (PRFuncPtr*) &fFlush, { "Flush", NULL } },
@@ -217,7 +221,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fGetError, { "GetError", NULL } },
         { (PRFuncPtr*) &fGetProgramiv, { "GetProgramiv", "GetProgramivARB", NULL } },
         { (PRFuncPtr*) &fGetProgramInfoLog, { "GetProgramInfoLog", "GetProgramInfoLogARB", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fTexCoordPointer, { "TexCoordPointer", NULL } },
+#endif
         { (PRFuncPtr*) &fTexParameteri, { "TexParameteri", NULL } },
         { (PRFuncPtr*) &fTexParameterf, { "TexParameterf", NULL } },
         { (PRFuncPtr*) &fGetString, { "GetString", NULL } },
@@ -238,7 +244,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fLinkProgram, { "LinkProgram", "LinkProgramARB", NULL } },
         { (PRFuncPtr*) &fPixelStorei, { "PixelStorei", NULL } },
         { (PRFuncPtr*) &fPolygonOffset, { "PolygonOffset", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fReadBuffer,  { "ReadBuffer", NULL } },
+#endif
         { (PRFuncPtr*) &fReadPixels, { "ReadPixels", NULL } },
         { (PRFuncPtr*) &fSampleCoverage, { "SampleCoverage", NULL } },
         { (PRFuncPtr*) &fScissor, { "Scissor", NULL } },
@@ -248,7 +256,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fStencilMaskSeparate, { "StencilMaskSeparate", "StencilMaskSeparateEXT", NULL } },
         { (PRFuncPtr*) &fStencilOp, { "StencilOp", NULL } },
         { (PRFuncPtr*) &fStencilOpSeparate, { "StencilOpSeparate", "StencilOpSeparateEXT", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fTexEnvf, { "TexEnvf",  NULL } },
+#endif
         { (PRFuncPtr*) &fTexImage2D, { "TexImage2D", NULL } },
         { (PRFuncPtr*) &fTexSubImage2D, { "TexSubImage2D", NULL } },
         { (PRFuncPtr*) &fUniform1f, { "Uniform1f", NULL } },
@@ -281,7 +291,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fVertexAttrib2fv, { "VertexAttrib2fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib3fv, { "VertexAttrib3fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib4fv, { "VertexAttrib4fv", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fVertexPointer, { "VertexPointer", NULL } },
+#endif
         { (PRFuncPtr*) &fViewport, { "Viewport", NULL } },
         { (PRFuncPtr*) &fCompileShader, { "CompileShader", NULL } },
         { (PRFuncPtr*) &fCopyTexImage2D, { "CopyTexImage2D", NULL } },
