@@ -188,9 +188,8 @@ FrameState::pushSyncedType(JSValueMask32 tag)
 {
     FrameEntry *fe = rawPush();
 
-    fe->type.unsync();
+    fe->resetSynced();
     fe->setTypeTag(tag);
-    fe->data.setMemory();
 }
 
 inline void
