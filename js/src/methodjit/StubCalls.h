@@ -60,6 +60,7 @@ JSString * JS_FASTCALL ConcatN(VMFrame &f, uint32 argc);
 void * JS_FASTCALL Call(VMFrame &f, uint32 argc);
 void * JS_FASTCALL New(VMFrame &f, uint32 argc);
 void * JS_FASTCALL Return(VMFrame &f);
+void JS_FASTCALL Throw(VMFrame &f);
 
 JSObject * JS_FASTCALL BindName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, uint32 index);
