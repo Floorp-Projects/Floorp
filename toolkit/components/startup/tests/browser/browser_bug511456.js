@@ -93,7 +93,13 @@ function test() {
 
   Services.wm.addListener(Watcher);
 
-  var win2 = OpenBrowserWindow();
+  var chromeURL = Services.prefs.getCharPref("browser.chromeURL");
+  var argString = Cc["@mozilla.org/supports-string;1"]
+                  .createInstance(Ci.nsISupportsString);
+  argString.data = "about:blank";
+
+  var win2 = Services.ww.openWindow(null, chromeURL, "_blank",
+                                    "chrome,dialog=no,all", argString);
   win2.addEventListener("load", function() {
     win2.removeEventListener("load", arguments.callee, false);
     gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
