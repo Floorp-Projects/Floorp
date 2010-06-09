@@ -6433,26 +6433,26 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     # the path.
     REQ_NSIS_MAJOR_VER=2
     MIN_NSIS_MINOR_VER=33
-    MOZ_PATH_PROGS(MAKENSIS, $MAKENSIS makensisu-2.46 makensisu makensis)
-    if test -z "$MAKENSIS" || test "$MAKENSIS" = ":"; then
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
+    if test -z "$MAKENSISU" || test "$MAKENSISU" = ":"; then
         AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
     fi
     changequote(,)
-    MAKENSIS_VER=`"$MAKENSIS" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
+    MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
     changequote([,])
-    if test ! "$MAKENSIS_VER" == ""; then
-        MAKENSIS_MAJOR_VER=`echo $MAKENSIS_VER | $AWK -F\. '{ print $1 }'`
-        MAKENSIS_MINOR_VER=`echo $MAKENSIS_VER | $AWK -F\. '{ print $2 }'`
+    if test ! "$MAKENSISU_VER" == ""; then
+        MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
+        MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
     fi
     AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
-    if test "$MAKENSIS_VER" == "" ||
-       test ! "$MAKENSIS_MAJOR_VER" == "$REQ_NSIS_MAJOR_VER" ||
-       test ! "$MAKENSIS_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+    if test "$MAKENSISU_VER" == "" ||
+       test ! "$MAKENSISU_MAJOR_VER" == "$REQ_NSIS_MAJOR_VER" ||
+       test ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
         AC_MSG_RESULT([no])
         AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
     fi
     AC_MSG_RESULT([yes])
-    MAKENSIS="${CYGWIN_WRAPPER} $MAKENSIS"
+    MAKENSISU="${CYGWIN_WRAPPER} $MAKENSISU"
 
     # The Windows build for NSIS requires the iconv command line utility to
     # convert the charset of the locale files.
@@ -8717,7 +8717,7 @@ AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
-AC_SUBST(MAKENSIS)
+AC_SUBST(MAKENSISU)
 
 AC_SUBST(WINCE)
 AC_SUBST(WINCE_SDK_DIR)
