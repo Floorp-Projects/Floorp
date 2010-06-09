@@ -142,7 +142,7 @@ typedef PRUint32 nsSplittableType;
  * Frame state bits. Any bits not listed here are reserved for future
  * extensions, but must be stored by the frames.
  */
-typedef PRUint32 nsFrameState;
+typedef PRUint64 nsFrameState;
 
 #define NS_FRAME_STATE_BIT(n_) (nsFrameState(1) << (n_))
 
@@ -262,7 +262,8 @@ enum {
   // Bits 20-31 of the frame state are reserved for implementations.
   NS_FRAME_IMPL_RESERVED =                      nsFrameState(0xFFF00000),
 
-  // The lower 20 bits of the frame state are reserved by this API.
+  // The lower 20 bits and upper 32 bits of the frame state are reserved
+  // by this API.
   NS_FRAME_RESERVED =                           ~NS_FRAME_IMPL_RESERVED,
 
   // Box layout bits
