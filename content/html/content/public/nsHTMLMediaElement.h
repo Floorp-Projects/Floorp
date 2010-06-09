@@ -67,7 +67,7 @@ public:
     CANPLAY_YES
   };
 
-  nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = 0);
+  nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
   virtual ~nsHTMLMediaElement();
 
   /**
