@@ -627,7 +627,7 @@ mjit::Compiler::generateMethod()
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::CallName, Uses(0), Defs(2));
             frame.pushSynced();
-            frame.pushSyncedType(JSVAL_MASK32_NONFUNOBJ);
+            frame.pushSynced();
           END_CASE(JSOP_CALLNAME)
 
           BEGIN_CASE(JSOP_CALL)
@@ -961,6 +961,14 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_UINT24)
             frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
           END_CASE(JSOP_UINT24)
+
+          BEGIN_CASE(JSOP_CALLELEM)
+            prepareStubCall();
+            stubCall(stubs::CallElem, Uses(2), Defs(2));
+            frame.popn(2);
+            frame.pushSynced();
+            frame.pushSynced();
+          END_CASE(JSOP_CALLELEM)
 
           BEGIN_CASE(JSOP_STOP)
             /* Safe point! */
