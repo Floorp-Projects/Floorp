@@ -88,6 +88,7 @@ JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL RegExp(VMFrame &f, JSObject *regex);
 JSObject * JS_FASTCALL Lambda(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL FlatLambda(VMFrame &f, JSFunction *fun);
+void JS_FASTCALL Arguments(VMFrame &f);
 
 void JS_FASTCALL VpInc(VMFrame &f, Value *vp);
 void JS_FASTCALL VpDec(VMFrame &f, Value *vp);

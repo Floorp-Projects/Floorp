@@ -365,6 +365,12 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_IFNE)
 
+          BEGIN_CASE(JSOP_ARGUMENTS)
+            prepareStubCall();
+            stubCall(stubs::Arguments, Uses(0), Defs(1));
+            frame.pushSynced();
+          END_CASE(JSOP_ARGUMENTS)
+
           BEGIN_CASE(JSOP_FORLOCAL)
             iterNext();
             frame.storeLocal(GET_SLOTNO(PC));
