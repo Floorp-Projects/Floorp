@@ -458,7 +458,7 @@ CSS_PROP_BACKGROUND(
     Color,
     mBackClip,
     eCSSType_ValueList,
-    kBackgroundClipKTable,
+    kBackgroundOriginKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BACKGROUND(
