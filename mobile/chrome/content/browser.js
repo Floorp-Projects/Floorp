@@ -359,6 +359,7 @@ var Browser = {
     var self = this;
 
     try {
+      messageManager.loadFrameScript("chrome://browser/content/Util.js", true);
       messageManager.loadFrameScript("chrome://browser/content/content.js", true);
     } catch (e) {
       // XXX whatever is calling startup needs to dump errors!
@@ -573,6 +574,7 @@ var Browser = {
     // Force commonly used border-images into the image cache
     ImagePreloader.cache();
 
+    messageManager.addMessageListener("FennecViewportMetadata", this);
     messageManager.addMessageListener("MozApplicationManifest", OfflineApps);
 
     this._pluginObserver = new PluginObserver(bv);
@@ -737,13 +739,22 @@ var Browser = {
     return null;
   },
 
-  getTabAtIndex: function(index) {
+  getTabForBrowser: function getTabForBrowser(aBrowser) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser == aBrowser)
+        return tabs[i];
+    }
+    return null;
+  },
+
+  getTabAtIndex: function getTabAtIndex(index) {
     if (index > this._tabs.length || index < 0)
       return null;
     return this._tabs[index];
   },
 
-  getTabFromChrome: function(chromeTab) {
+  getTabFromChrome: function getTabFromChrome(chromeTab) {
     for (var t = 0; t < this._tabs.length; t++) {
       if (this._tabs[t].chromeTab == chromeTab)
         return this._tabs[t];
@@ -1382,6 +1393,15 @@ var Browser = {
 
   forceChromeReflow: function forceChromeReflow() {
     let dummy = getComputedStyle(document.documentElement, "").width;
+  },
+
+  receiveMessage: function receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "FennecViewportMetadata":
+        let tab = Browser.getTabForBrowser(aMessage.target);
+        tab.updateViewportMetadata(aMessage.json);
+        break;
+    }
   }
 };
 
@@ -3009,12 +3029,11 @@ Tab.prototype = {
   },
 
   /** Update browser styles when the viewport metadata changes. */
-  updateViewportMetadata: function updateViewportMetadata() {
+  updateViewportMetadata: function updateViewportMetadata(metaData) {
     let browser = this._browser;
     if (!browser)
       return;
 
-    let metaData = Util.getViewportMetadata(this._browser);
     this._browserViewportState.metaData = metaData;
 
     // Remove any previous styles.
@@ -3101,16 +3120,10 @@ Tab.prototype = {
         Browser.scrollBrowserToContent();
       }
     }
-
-    this._browserViewportState.metaData = null;
-    this.updateViewportSize();
   },
 
   endLoading: function endLoading() {
     if (!this._loading) throw "Not Loading!";
-
-    if (!this._browserViewportState.metaData)
-      this.updateViewportMetadata();
 
     this.setIcon(this._browser.mIconURL);
     this._loading = false;

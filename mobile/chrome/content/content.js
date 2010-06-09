@@ -760,7 +760,6 @@ Content.prototype = {
   stopLoading: function stopLoading() {
     this._loading = false;
     this._coalescer.stopCoalescing();
-    sendMessage("FennecMetadata", Util.getViewportMetadata(content));
   },
 
   isSelected: function isSelected() {
@@ -768,5 +767,110 @@ Content.prototype = {
   }
 };
 
-
 let contentObject = new Content();
+
+let ViewportHandler = {
+  metadata: null,
+
+  init: function init() {
+    addEventListener("DOMContentLoaded", this, false);
+    addEventListener("DOMMetaAdded", this, false);
+    addEventListener("pageshow", this, false);
+
+    this.progresscontroller = new ProgressController(this)
+    this.progresscontroller.start();
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "DOMMetaAdded":
+        let target = aEvent.originalTarget;
+        let isRootDocument = (target.ownerDocument == content.document);
+        if (isRootDocument && target.name == "viewport")
+          this.updateMetadata();
+        break;
+
+      case "DOMContentLoaded":
+      case "pageshow":
+        if (!this.metadata)
+          this.updateMetadata();
+        break;
+    }
+  },
+
+  startLoading: function() {
+    this.metadata = null;
+    sendAsyncMessage("FennecViewportMetadata", {});
+  },
+
+  stopLoading: function() {
+  },
+
+  updateMetadata: function notify() {
+    this.metadata = this.getViewportMetadata();
+    sendAsyncMessage("FennecViewportMetadata", this.metadata);
+  },
+
+  getViewportMetadata: function getViewportMetadata() {
+    let dpiScale = gPrefService.getIntPref("zoom.dpiScale") / 100;
+
+    let doctype = content.document.doctype;
+    if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
+      return { defaultZoom: dpiScale, autoSize: true };
+
+    let windowUtils = Util.getWindowUtils(content);
+    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+    if (handheldFriendly == "true")
+      return { defaultZoom: dpiScale, autoSize: true };
+
+    if (content.document instanceof XULDocument)
+      return { defaultZoom: 1.0, autoSize: true, allowZoom: false };
+
+    // viewport details found here
+    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
+    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
+
+    // Note: These values will be NaN if parseFloat or parseInt doesn't find a number.
+    // Remember that NaN is contagious: Math.max(1, NaN) == Math.min(1, NaN) == NaN.
+    let viewportScale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
+    let viewportMinScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
+    let viewportMaxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
+    let viewportWidthStr = windowUtils.getDocumentMetadata("viewport-width");
+    let viewportHeightStr = windowUtils.getDocumentMetadata("viewport-height");
+
+    viewportScale = Util.clamp(viewportScale, kViewportMinScale, kViewportMaxScale);
+    viewportMinScale = Util.clamp(viewportMinScale, kViewportMinScale, kViewportMaxScale);
+    viewportMaxScale = Util.clamp(viewportMaxScale, kViewportMinScale, kViewportMaxScale);
+
+    // If initial scale is 1.0 and width is not set, assume width=device-width
+    let autoSize = (viewportWidthStr == "device-width" ||
+                    viewportHeightStr == "device-height" ||
+                    (viewportScale == 1.0 && !viewportWidthStr));
+
+    let viewportWidth = Util.clamp(parseInt(viewportWidthStr), kViewportMinWidth, kViewportMaxWidth);
+    let viewportHeight = Util.clamp(parseInt(viewportHeightStr), kViewportMinHeight, kViewportMaxHeight);
+
+    // Zoom level is the final (device pixel : CSS pixel) ratio for content.
+    // Since web content specifies scale as (reference pixel : CSS pixel) ratio,
+    // multiply the requested scale by a constant (device pixel : reference pixel)
+    // factor to account for high DPI devices.
+    //
+    // See bug 561445 or any of the examples of chrome/tests/browser_viewport_XX.html
+    // for more information and examples.
+    let defaultZoom = viewportScale * dpiScale;
+    let minZoom = viewportMinScale * dpiScale;
+    let maxZoom = viewportMaxScale * dpiScale;
+
+    return {
+      defaultZoom: defaultZoom,
+      minZoom: minZoom,
+      maxZoom: maxZoom,
+      width: viewportWidth,
+      height: viewportHeight,
+      autoSize: autoSize,
+      allowZoom: windowUtils.getDocumentMetadata("viewport-user-scalable") != "no"
+    };
+  },
+};
+
+ViewportHandler.init();
