@@ -309,7 +309,7 @@ class nsHTMLScriptElement : public nsGenericHTMLElement,
                             public nsScriptElement
 {
 public:
-  nsHTMLScriptElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
+  nsHTMLScriptElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser);
   virtual ~nsHTMLScriptElement();
 
   // nsISupports
@@ -362,7 +362,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
 
 nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo,
-                                         PRBool aFromParser)
+                                         PRUint32 aFromParser)
   : nsGenericHTMLElement(aNodeInfo)
 {
   mDoneAddingChildren = !aFromParser;
