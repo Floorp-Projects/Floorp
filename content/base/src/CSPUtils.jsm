@@ -178,7 +178,7 @@ CSPRep.fromString = function(aStr, self) {
         try {
           var uri = gIoService.newURI(uriStrings[i],null,null);
           if (self) {
-            if (gETLDService.getBaseDomain(uri) === 
+            if (gETLDService.getBaseDomain(uri) ===
                 gETLDService.getBaseDomain(selfUri)) {
               okUriStrings.push(uriStrings[i]);
             } else {
@@ -187,7 +187,20 @@ CSPRep.fromString = function(aStr, self) {
             }
           }
         } catch(e) {
-          CSPWarning("couldn't parse report URI: " + dirvalue);
+          switch (e.result) {
+            case Components.results.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS:
+            case Components.results.NS_ERROR_HOST_IS_IP_ADDRESS:
+              if (uri.host === selfUri.host) {
+                okUriStrings.push(uriStrings[i]);
+              } else {
+                CSPWarning("page on " + selfUri.host + " cannot send reports to " + uri.host);
+              }
+              break;
+
+            default:
+              CSPWarning("couldn't parse report URI: " + uriStrings[i]);
+              break;
+          }
         }
       }
       aCSPR._directives[UD.REPORT_URI] = okUriStrings.join(' ');
