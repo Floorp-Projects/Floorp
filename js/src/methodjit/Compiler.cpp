@@ -942,6 +942,12 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_CALLDSLOT)
 
+          BEGIN_CASE(JSOP_ARGCNT)
+            prepareStubCall();
+            stubCall(stubs::ArgCnt, Uses(0), Defs(1));
+            frame.pushSynced();
+          END_CASE(JSOP_ARGCNT)
+
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
             uint32 slot = GET_SLOTNO(PC);
