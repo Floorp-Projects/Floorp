@@ -108,12 +108,16 @@ FrameState::evictReg(RegisterID reg)
     FrameEntry *fe = regstate[reg].fe;
 
     if (regstate[reg].type == RematInfo::TYPE) {
-        syncType(fe, addressOf(fe), masm);
-        fe->type.sync();
+        if (!fe->type.synced()) {
+            syncType(fe, addressOf(fe), masm);
+            fe->type.sync();
+        }
         fe->type.setMemory();
     } else {
-        syncData(fe, addressOf(fe), masm);
-        fe->data.sync();
+        if (!fe->data.synced()) {
+            syncData(fe, addressOf(fe), masm);
+            fe->data.sync();
+        }
         fe->data.setMemory();
     }
 }
