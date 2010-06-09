@@ -70,7 +70,6 @@ class nsTableColFrame;
  *  frame, or the block has first-letter style but has no first letter, this
  *  bit is not set. This bit is set on the first continuation only.
  */
-#define NS_BLOCK_NO_AUTO_MARGINS          NS_FRAME_STATE_BIT(21)
 #define NS_BLOCK_MARGIN_ROOT              NS_FRAME_STATE_BIT(22)
 #define NS_BLOCK_FLOAT_MGR                NS_FRAME_STATE_BIT(23)
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE   NS_FRAME_STATE_BIT(29)
@@ -78,8 +77,7 @@ class nsTableColFrame;
 #define NS_BLOCK_HAS_FIRST_LETTER_CHILD   NS_FRAME_STATE_BIT(31)
 // These are the bits that get inherited from a block frame to its
 // next-in-flows and are not private to blocks
-#define NS_BLOCK_FLAGS_MASK               (NS_BLOCK_NO_AUTO_MARGINS | \
-                                           NS_BLOCK_MARGIN_ROOT | \
+#define NS_BLOCK_FLAGS_MASK               (NS_BLOCK_MARGIN_ROOT | \
                                            NS_BLOCK_FLOAT_MGR | \
                                            NS_BLOCK_HAS_FIRST_LETTER_STYLE | \
                                            NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
