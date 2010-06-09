@@ -2332,7 +2332,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
    *   background-position
    *   background-clip
    *   background-origin
-   *   background-size (-moz-background-size)
+   *   background-size
    *   background-break (-moz-background-inline-policy)
    *
    * (background-color applies to the entire element and not to individual
