@@ -191,6 +191,12 @@ class FrameState
     inline void popn(uint32 n);
 
     /*
+     * Temporarily increase and decrease local variable depth.
+     */
+    inline void enterBlock(uint32 n);
+    inline void leaveBlock(uint32 n);
+
+    /*
      * Pushes a copy of a local variable.
      */
     void pushLocal(uint32 n);

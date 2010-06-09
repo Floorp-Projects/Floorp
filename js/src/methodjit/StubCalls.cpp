@@ -2514,3 +2514,73 @@ stubs::ArgCnt(VMFrame &f)
         THROW();
 }
 
+void JS_FASTCALL
+stubs::EnterBlock(VMFrame &f, JSObject *obj)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+    JSStackFrame *fp = f.fp;
+
+    JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
+    JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
+    Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+    JS_ASSERT(regs.sp < vp);
+    JS_ASSERT(vp <= fp->slots() + fp->script->nslots);
+    SetValueRangeToUndefined(regs.sp, vp);
+    regs.sp = vp;
+
+#ifdef DEBUG
+    JS_ASSERT(fp->blockChain == obj->getParent());
+
+    /*
+     * The young end of fp->scopeChain may omit blocks if we haven't closed
+     * over them, but if there are any closure blocks on fp->scopeChain, they'd
+     * better be (clones of) ancestors of the block we're entering now;
+     * anything else we should have popped off fp->scopeChain when we left its
+     * static scope.
+     */
+    JSObject *obj2 = fp->scopeChain;
+    Class *clasp;
+    while ((clasp = obj2->getClass()) == &js_WithClass)
+        obj2 = obj2->getParent();
+    if (clasp == &js_BlockClass &&
+        obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
+        JSObject *youngestProto = obj2->getProto();
+        JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
+        JSObject *parent = obj;
+        while ((parent = parent->getParent()) != youngestProto)
+            JS_ASSERT(parent);
+    }
+#endif
+
+    fp->blockChain = obj;
+}
+
+void JS_FASTCALL
+stubs::LeaveBlock(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp;
+
+#ifdef DEBUG
+    JS_ASSERT(fp->blockChain->getClass() == &js_BlockClass);
+    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain);
+
+    JS_ASSERT(blockDepth <= StackDepth(fp->script));
+#endif
+    /*
+     * If we're about to leave the dynamic scope of a block that has been
+     * cloned onto fp->scopeChain, clear its private data, move its locals from
+     * the stack into the clone, and pop it off the chain.
+     */
+    JSObject *obj = fp->scopeChain;
+    if (obj->getProto() == fp->blockChain) {
+        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        if (!js_PutBlockObject(cx, JS_TRUE))
+            THROW();
+    }
+
+    /* Pop the block chain, too.  */
+    fp->blockChain = fp->blockChain->getParent();
+}
+

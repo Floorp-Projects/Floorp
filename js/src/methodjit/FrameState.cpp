@@ -609,19 +609,22 @@ FrameState::storeLocal(uint32 n)
      * When dealing with copies, there are two important invariants:
      *
      * 1) The backing store precedes all copies in the tracker.
-     * 2) The backing store of a local is never a stack slot.
+     * 2) The backing store of a local is never a stack slot, UNLESS the local
+     *    variable itself is a stack slot (blocks) that precesed the stack
+     *    slot.
      *
      * If the top is a copy, and the second condition holds true, the local
      * can be rewritten as a copy of the original backing slot. If the first
      * condition does not hold, force it to hold by swapping in-place.
      */
     FrameEntry *backing = top;
-    uint32 searchPoint = InvalidIndex;
     if (top->isCopy()) {
         backing = top->copyOf();
         JS_ASSERT(backing->trackerIndex() < top->trackerIndex());
 
-        if (indexOfFe(backing) < uint32(spBase - base)) {
+        uint32 backingIndex = indexOfFe(backing);
+        uint32 tol = uint32(spBase - base);
+        if (backingIndex < tol || backingIndex < localIndex(n)) {
             /* local.idx < backing.idx means local cannot be a copy yet */
             if (localFe->trackerIndex() < backing->trackerIndex())
                 swapInTracker(backing, localFe);
@@ -635,10 +638,42 @@ FrameState::storeLocal(uint32 n)
             return;
         }
 
-        searchPoint = backing->trackerIndex();
-    } else if (top->trackerIndex() < localFe->trackerIndex()) {
-        swapInTracker(top, localFe);
+        /*
+         * If control flow lands here, then there was a bytecode sequence like
+         *
+         *  ENTERBLOCK 2
+         *  GETLOCAL 1
+         *  SETLOCAL 0
+         *
+         * The problem is slot N can't be backed by M if M could be popped
+         * before N. We want a guarantee that when we pop M, even if it was
+         * copied, it has no outstanding copies.
+         * 
+         * Because of |let| expressions, it's kind of hard to really know
+         * whether a region on the stack will be popped all at once. Bleh!
+         *
+         * This should be rare except in browser code (and maybe even then),
+         * but even so there's a quick workaround. We take all copies of the
+         * backing fe, and redirect them to be copies of the destination.
+         */
+        FrameEntry *tos = tosFe();
+        for (uint32 i = backing->trackerIndex() + 1; i < tracker.nentries; i++) {
+            FrameEntry *fe = tracker[i];
+            if (fe >= tos)
+                continue;
+            if (fe->isCopy() && fe->copyOf() == backing)
+                fe->setCopyOf(localFe);
+        }
     }
+    backing->setNotCopied();
+    
+    /*
+     * This is valid from the top->isCopy() path because we're guaranteed a
+     * consistent ordering - all copies of |backing| are tracked after 
+     * |backing|. Transitively, only one swap is needed.
+     */
+    if (backing->trackerIndex() < localFe->trackerIndex())
+        swapInTracker(backing, localFe);
 
     /*
      * Move the backing store down - we spill registers here, but we could be
@@ -662,7 +697,6 @@ FrameState::storeLocal(uint32 n)
     backing->setNotCopied();
     backing->setCopyOf(localFe);
 
-    JS_ASSERT(searchPoint == InvalidIndex);
     JS_ASSERT(top->copyOf() == localFe);
 }
 
