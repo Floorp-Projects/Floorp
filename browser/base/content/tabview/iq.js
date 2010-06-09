@@ -44,7 +44,7 @@
 
 // ##########
 // Title: iq.js
-// jQuery, hacked down to just the bits we need.
+// jQuery, hacked down to just the bits we need, with a bunch of other stuff added.
 (function( window, undefined ) {
 
 var iQ = function(selector, context) {
@@ -789,10 +789,11 @@ iQ.fn = iQ.prototype = {
       var startSent;
       var startEvent;
       var droppables;
-      var $dropTarget;
+      var dropTarget;
       
       // ___ mousemove
       var handleMouseMove = function(e) {
+        // positioning 
         var mouse = new Point(e.pageX, e.pageY);
         var newPos = {
           left: startPos.x + (mouse.x - startMouse.x), 
@@ -800,42 +801,8 @@ iQ.fn = iQ.prototype = {
         };
 
         $elem.css(newPos);
-        var bounds = $elem.bounds();
-        var $newDropTarget = null;
-        iQ.each(droppables, function(index, droppable) {
-          if(bounds.intersects(droppable.bounds)) {
-            var $possibleDropTarget = iQ(droppable.element);
-            var accept = true;
-            if($possibleDropTarget != $dropTarget) {
-              var dropOptions = $possibleDropTarget.data('iq-droppable');
-              if(dropOptions && iQ.isFunction(dropOptions.accept))
-                accept = dropOptions.accept.apply($possibleDropTarget.get(0), [elem]);
-            }
-            
-            if(accept) {
-              $newDropTarget = $possibleDropTarget;
-              return false;
-            }
-          }
-        });
 
-        if($newDropTarget != $dropTarget) {
-          var dropOptions;
-          if($dropTarget) {
-            dropOptions = $dropTarget.data('iq-droppable');
-            if(dropOptions && iQ.isFunction(dropOptions.out))
-              dropOptions.out.apply($dropTarget.get(0), [e]);
-          }
-          
-          $dropTarget = $newDropTarget; 
-
-          if($dropTarget) {
-            dropOptions = $dropTarget.data('iq-droppable');
-            if(dropOptions && iQ.isFunction(dropOptions.over))
-              dropOptions.over.apply($dropTarget.get(0), [e]);
-          }
-        }
-          
+        // drag events
         if(!startSent) {
           if(iQ.isFunction(options.start))
             options.start.apply(elem, [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
@@ -846,6 +813,43 @@ iQ.fn = iQ.prototype = {
         if(iQ.isFunction(options.drag))
           options.drag.apply(elem, [e, {position: newPos}]);
           
+        // drop events
+        var bounds = $elem.bounds();
+        var newDropTarget = null;
+        iQ.each(droppables, function(index, droppable) {
+          if(bounds.intersects(droppable.bounds)) {
+            var possibleDropTarget = droppable.element;
+            var accept = true;
+            if(possibleDropTarget != dropTarget) {
+              var dropOptions = iQ(possibleDropTarget).data('iq-droppable');
+              if(dropOptions && iQ.isFunction(dropOptions.accept))
+                accept = dropOptions.accept.apply(possibleDropTarget, [elem]);
+            }
+            
+            if(accept) {
+              newDropTarget = possibleDropTarget;
+              return false;
+            }
+          }
+        });
+
+        if(newDropTarget != dropTarget) {
+          var dropOptions;
+          if(dropTarget) {
+            dropOptions = iQ(dropTarget).data('iq-droppable');
+            if(dropOptions && iQ.isFunction(dropOptions.out))
+              dropOptions.out.apply(dropTarget, [e]);
+          }
+          
+          dropTarget = newDropTarget; 
+
+          if(dropTarget) {
+            dropOptions = iQ(dropTarget).data('iq-droppable');
+            if(dropOptions && iQ.isFunction(dropOptions.over))
+              dropOptions.over.apply(dropTarget, [e]);
+          }
+        }
+          
         e.preventDefault();
       };
         
@@ -855,10 +859,10 @@ iQ.fn = iQ.prototype = {
           .unbind('mousemove', handleMouseMove)
           .unbind('mouseup', handleMouseUp);
           
-        if($dropTarget) {
-          var dropOptions = $dropTarget.data('iq-droppable');
+        if(dropTarget) {
+          var dropOptions = iQ(dropTarget).data('iq-droppable');
           if(dropOptions && iQ.isFunction(dropOptions.drop))
-            dropOptions.drop.apply($dropTarget.get(0), [e]);
+            dropOptions.drop.apply(dropTarget, [e]);
         }
 
         if(startSent && iQ.isFunction(options.stop))
@@ -869,6 +873,9 @@ iQ.fn = iQ.prototype = {
       
       // ___ mousedown
       this.mousedown(function(e) {
+        if(Utils.isRightClick(e))
+          return;
+        
         var cancel = false;
         var $target = iQ(e.target);
         iQ.each(cancelClasses, function(index, class) {
@@ -890,14 +897,16 @@ iQ.fn = iQ.prototype = {
         startPos = new Point(pos.left, pos.top);
         startEvent = e;
         startSent = false;
-        $dropTarget = null;
+        dropTarget = null;
         
         droppables = [];
         iQ('.iq-droppable').each(function() {
-          droppables.push({
-            element: this, 
-            bounds: iQ(this).bounds()
-          });
+          if(this != elem) {
+            droppables.push({
+              element: this, 
+              bounds: iQ(this).bounds()
+            });
+          }
         });
 
         iQ(window)
@@ -921,8 +930,91 @@ iQ.fn = iQ.prototype = {
         this.removeClass('iq-droppable');
       else {
         this.addClass('iq-droppable');
-        this.data('iq-droppable', options);
+        this.data('iq-droppable', options || {});
       }
+    } catch(e) {
+      Utils.log(e);
+    }
+  },
+  
+  // ----------
+  // Function: resizable
+  resizable: function(options) {
+    try {
+      iQ('.iq-resizable-handle', this).remove();
+
+      if(options == 'destroy') {
+        this.removeClass('iq-resizable');
+      } else {
+        if(!options)
+          options = {};
+          
+        this.addClass('iq-resizable');
+
+        var startMouse;
+        var startSize;
+        var elem;
+        var $elem;
+        
+        // ___ mousemove
+        var handleMouseMove = function(e) {
+          var mouse = new Point(e.pageX, e.pageY);
+          var newSize = {
+            width: Math.max(options.minWidth || 0, startSize.x + (mouse.x - startMouse.x)), 
+            height: Math.max(options.minHeight || 0, startSize.y + (mouse.y - startMouse.y))
+          };
+
+          if(options.aspectRatio) {
+            if(startAspect < 1)
+              newSize.height = newSize.width * startAspect;
+            else
+              newSize.width = newSize.height / startAspect;
+          }
+                        
+          $elem.css(newSize);
+  
+          if(iQ.isFunction(options.resize))
+            options.resize.apply(elem, [e]);
+            
+          e.preventDefault();
+          e.stopPropagation();
+        };
+          
+        // ___ mouseup
+        var handleMouseUp = function(e) {
+          iQ(window)
+            .unbind('mousemove', handleMouseMove)
+            .unbind('mouseup', handleMouseUp);
+            
+          if(iQ.isFunction(options.stop))
+            options.stop.apply(elem, [e]);
+            
+          e.preventDefault();    
+          e.stopPropagation();
+        };
+        
+        // ___ handle + mousedown
+        iQ('<div>')
+          .addClass('iq-resizable-handle iq-resizable-se')
+          .appendTo(this)
+          .mousedown(function(e) {
+            if(Utils.isRightClick(e))
+              return;
+            
+            elem = this.parentNode;
+            $elem = iQ(elem);
+            startMouse = new Point(e.pageX, e.pageY);
+            startSize = new Point($elem.width(), $elem.height());
+            startAspect = startSize.y / startSize.x;
+            
+            iQ(window)
+              .mousemove(handleMouseMove)
+              .mouseup(handleMouseUp);          
+                        
+            e.preventDefault();
+            e.stopPropagation();
+          });
+        }
     } catch(e) {
       Utils.log(e);
     }
