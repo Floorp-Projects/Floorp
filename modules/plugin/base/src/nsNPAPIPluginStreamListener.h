@@ -85,7 +85,7 @@ protected:
   void* mNotifyData;
   char* mStreamBuffer;
   char* mNotifyURL;
-  nsNPAPIPluginInstance* mInst;
+  nsNPAPIPluginInstance* mInst; // weak, can be NULL
   NPStream mNPStream;
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
