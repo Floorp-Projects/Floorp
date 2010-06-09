@@ -32,6 +32,7 @@
  *
  ***** END LICENSE BLOCK ***** */
 
+#include <signal.h>
 #include "nanojit.h"
 
 #ifdef SOLARIS
