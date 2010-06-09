@@ -814,7 +814,10 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
+          BEGIN_CASE(JSOP_SETLOCALPOP)
             frame.storeLocal(GET_SLOTNO(PC));
+            if (op == JSOP_SETLOCALPOP)
+                frame.pop();
           END_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_UINT16)
@@ -904,6 +907,18 @@ mjit::Compiler::generateMethod()
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
           END_CASE(JSOP_INSTANCEOF)
+
+          BEGIN_CASE(JSOP_EXCEPTION)
+          {
+            RegisterID reg = frame.allocReg();
+            masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), reg);
+            masm.store32(Imm32(JS_FALSE), Address(reg, offsetof(JSContext, throwing)));
+
+            Address excn(reg, offsetof(JSContext, exception));
+            frame.freeReg(reg);
+            frame.push(excn);
+          }
+          END_CASE(JSOP_EXCEPTION)
 
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
