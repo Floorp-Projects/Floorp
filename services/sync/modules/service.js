@@ -113,6 +113,9 @@ WeaveSvc.prototype = {
     if (value) {
       // Make sure all uses of this new username is lowercase
       value = value.toLowerCase();
+      // Tab characters are stripped from URIs, so make sure that the
+      // username doesn't contain any tabs.
+      value = value.replace("\t", "", "g");
       Svc.Prefs.set("username", value);
     }
     else

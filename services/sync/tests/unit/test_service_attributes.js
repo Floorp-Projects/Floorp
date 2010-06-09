@@ -23,10 +23,11 @@ function test_urlsAndIdentities() {
     do_check_eq(Weave.Service.metaURL, undefined);
 
     _("The 'username' attribute is normalized to lower case, updates preferences and identities.");
-    Weave.Service.username = "JohnDoe";
-    do_check_eq(Svc.Prefs.get("username"), "johndoe");
-    do_check_eq(ID.get("WeaveID").username, "johndoe");
-    do_check_eq(ID.get("WeaveCryptoID").username, "johndoe");
+    Weave.Service.username = "TarZan";
+    do_check_eq(Weave.Service.username, "tarzan");
+    do_check_eq(Svc.Prefs.get("username"), "tarzan");
+    do_check_eq(ID.get("WeaveID").username, "tarzan");
+    do_check_eq(ID.get("WeaveCryptoID").username, "tarzan");
 
     // Since we don't have a cluster URL yet, these will still not be defined.
     do_check_eq(Weave.Service.infoURL, undefined);
@@ -34,6 +35,14 @@ function test_urlsAndIdentities() {
     do_check_eq(Weave.Service.metaURL, undefined);
     do_check_eq(PubKeys.defaultKeyUri, undefined);
     do_check_eq(PrivKeys.defaultKeyUri, undefined);
+
+    _("Tabs are stripped from the 'username' attribute as they can't be part of a URI.");
+    Weave.Service.username = "jo\thn\tdoe";
+
+    do_check_eq(Weave.Service.username, "johndoe");
+    do_check_eq(Svc.Prefs.get("username"), "johndoe");
+    do_check_eq(ID.get("WeaveID").username, "johndoe");
+    do_check_eq(ID.get("WeaveCryptoID").username, "johndoe");
 
     _("The 'clusterURL' attribute updates preferences and cached URLs.");
     Weave.Service.serverURL = "http://weave.server/";
