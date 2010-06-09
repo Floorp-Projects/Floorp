@@ -6527,9 +6527,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
                          NS_STYLE_BG_ORIGIN_PADDING);
         PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
                          NS_STYLE_BG_ORIGIN_CONTENT);
-        // When we support 'no-clip', this needs to be conditional on haveClip:
         aItem.mClip = aItem.mOrigin;
-      // We'd support 'no-clip' as an additional |else| here.
 #endif
       } else {
         if (haveColor)
