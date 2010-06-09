@@ -627,11 +627,9 @@ VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
 
   nsStyleContext* childStyleIfVisited = aContext->GetStyleIfVisited();
-  // Since we have different rules for :link and :visited in our ua/user sheets,
-  // we know that either childStyleIfVisited has
-  // aContext->GetParent()->GetStyleIfVisited() as the parent or it has a
-  // different rulenode from aContext _and_ has aContext->GetParent() as the
-  // parent.
+  // Either childStyleIfVisited has aContext->GetParent()->GetStyleIfVisited()
+  // as the parent or it has a different rulenode from aContext _and_ has
+  // aContext->GetParent() as the parent.
   if (childStyleIfVisited &&
       !((childStyleIfVisited->GetRuleNode() != aContext->GetRuleNode() &&
          childStyleIfVisited->GetParent() == aContext->GetParent()) ||
