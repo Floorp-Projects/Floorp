@@ -44,6 +44,7 @@ const Cu = Components.utils;
 Cu.import("resource://weave/ext/Preferences.js");
 Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/ext/StringBundle.js");
+Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/log4moz.js");
 
@@ -144,6 +145,33 @@ let Utils = {
       if (batchEx!= null)
         throw batchEx;
     };
+  },
+
+  queryAsync: function(query, names) {
+    // Allow array of names, single name, and no name
+    if (!Utils.isArray(names))
+      names = names == null ? [] : [names];
+
+    // Synchronously asyncExecute fetching all results by name
+    let [exec, execCb] = Sync.withCb(query.executeAsync, query);
+    return exec({
+      items: [],
+      handleResult: function handleResult(results) {
+        let row;
+        while ((row = results.getNextRow()) != null) {
+          this.items.push(names.reduce(function(item, name) {
+            item[name] = row.getResultByName(name);
+            return item;
+          }, {}));
+        }
+      },
+      handleError: function handleError(error) {
+        execCb.throw(error);
+      },
+      handleCompletion: function handleCompletion(reason) {
+        execCb(this.items);
+      }
+    });
   },
 
   // Generates a brand-new globally unique identifier (GUID).
