@@ -62,6 +62,10 @@
 #define GLAPI
 #endif
 
+#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID)
+#define USE_GLES2 1
+#endif
+
 typedef char realGLboolean;
 
 namespace mozilla {
