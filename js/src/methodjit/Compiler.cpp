@@ -246,6 +246,19 @@ mjit::Compiler::finishThisUp()
     return Compile_Okay;
 }
 
+#ifdef DEBUG
+#define SPEW_OPCODE()                                                         \
+    JS_BEGIN_MACRO                                                            \
+        if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
+            JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
+            js_Disassemble1(cx, script, PC, PC - script->code,                \
+                            JS_TRUE, stdout);                                 \
+        }                                                                     \
+    JS_END_MACRO;
+#else
+#define SPEW_OPCODE()
+#endif /* DEBUG */
+
 #define BEGIN_CASE(name)        case name:
 #define END_CASE(name)                      \
     JS_BEGIN_MACRO                          \
@@ -277,14 +290,7 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
-#ifdef DEBUG
-        if (IsJaegerSpewChannelActive(JSpew_JSOps)) {
-            JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());
-            js_Disassemble1(cx, script, PC, PC - script->code,
-                            JS_TRUE, stdout);
-        }
-#endif
-
+        SPEW_OPCODE();
         JS_ASSERT(frame.stackDepth() == opinfo.stackDepth);
 
     /**********************
@@ -466,8 +472,10 @@ mjit::Compiler::generateMethod()
             JS_STATIC_ASSERT(JSOP_NE_LENGTH == JSOP_GE_LENGTH);
 
             PC += JSOP_GE_LENGTH;
-            if (fused != JSOP_NOP)
+            if (fused != JSOP_NOP) {
+                SPEW_OPCODE();
                 PC += JSOP_IFNE_LENGTH;
+            }
             break;
           }
           END_CASE(JSOP_GE)
