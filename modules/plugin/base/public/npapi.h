@@ -257,7 +257,8 @@ typedef enum {
 #endif
   NPDrawingModelCoreGraphics = 1,
   NPDrawingModelOpenGL = 2,
-  NPDrawingModelCoreAnimation = 3
+  NPDrawingModelCoreAnimation = 3,
+  NPDrawingModelInvalidatingCoreAnimation = 4
 } NPDrawingModel;
 
 typedef enum {
@@ -392,6 +393,7 @@ typedef enum {
   , NPNVsupportsCoreGraphicsBool = 2001
   , NPNVsupportsOpenGLBool = 2002
   , NPNVsupportsCoreAnimationBool = 2003
+  , NPNVsupportsInvalidatingCoreAnimationBool = 2004
 #ifndef NP_NO_CARBON
   , NPNVsupportsCarbonBool = 3000 /* TRUE if the browser supports the Carbon event model */
 #endif
