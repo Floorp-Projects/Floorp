@@ -2517,7 +2517,6 @@ stubs::ArgCnt(VMFrame &f)
 void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
-    JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
     JSStackFrame *fp = f.fp;
 
@@ -2530,6 +2529,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
     regs.sp = vp;
 
 #ifdef DEBUG
+    JSContext *cx = f.cx;
     JS_ASSERT(fp->blockChain == obj->getParent());
 
     /*

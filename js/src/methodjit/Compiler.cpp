@@ -910,6 +910,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_EXCEPTION)
           {
+            JS_STATIC_ASSERT(sizeof(cx->throwing) == 4);
             RegisterID reg = frame.allocReg();
             masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), reg);
             masm.store32(Imm32(JS_FALSE), Address(reg, offsetof(JSContext, throwing)));
