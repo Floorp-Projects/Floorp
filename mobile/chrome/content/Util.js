@@ -85,6 +85,18 @@ let Util = {
     dump("\n");
   },
 
+  getWindowUtils: function getWindowUtils(aWindow) {
+    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+  },
+
+  getScrollOffset: function getScrollOffset(aWindow) {
+    var cwu = Util.getWindowUtils(aWindow);
+    var scrollX = {};
+    var scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+    return new Point(scrollX.value, scrollY.value);
+  },
+
   /** Executes aFunc after other events have been processed. */
   executeSoon: function executeSoon(aFunc) {
     let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
@@ -120,69 +132,6 @@ let Util = {
   makeURLAbsolute: function makeURLAbsolute(base, url) {
     // Note:  makeURI() will throw if url is not a valid URI
     return makeURI(url, null, makeURI(base)).spec;
-  },
-
-  getViewportMetadata: function getViewportMetadata(browser) {
-    let dpiScale = gPrefService.getIntPref("zoom.dpiScale") / 100;
-
-    let doctype = browser.contentDocument.doctype;
-    if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return { defaultZoom: dpiScale, autoSize: true };
-
-    let windowUtils = browser.contentWindow
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    if (handheldFriendly == "true")
-      return { defaultZoom: dpiScale, autoSize: true };
-
-    if (browser.contentDocument instanceof XULDocument)
-      return { defaultZoom: 1.0, autoSize: true, allowZoom: false };
-
-    // viewport details found here
-    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
-    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
-    
-    // Note: These values will be NaN if parseFloat or parseInt doesn't find a number.
-    // Remember that NaN is contagious: Math.max(1, NaN) == Math.min(1, NaN) == NaN.
-    let viewportScale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
-    let viewportMinScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
-    let viewportMaxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
-    let viewportWidthStr = windowUtils.getDocumentMetadata("viewport-width");
-    let viewportHeightStr = windowUtils.getDocumentMetadata("viewport-height");
-
-    viewportScale = Util.clamp(viewportScale, kViewportMinScale, kViewportMaxScale);
-    viewportMinScale = Util.clamp(viewportMinScale, kViewportMinScale, kViewportMaxScale);
-    viewportMaxScale = Util.clamp(viewportMaxScale, kViewportMinScale, kViewportMaxScale);
-
-    // If initial scale is 1.0 and width is not set, assume width=device-width
-    let autoSize = (viewportWidthStr == "device-width" ||
-                    viewportHeightStr == "device-height" ||
-                    (viewportScale == 1.0 && !viewportWidthStr));
-
-    let viewportWidth = Util.clamp(parseInt(viewportWidthStr), kViewportMinWidth, kViewportMaxWidth);
-    let viewportHeight = Util.clamp(parseInt(viewportHeightStr), kViewportMinHeight, kViewportMaxHeight);
-
-    // Zoom level is the final (device pixel : CSS pixel) ratio for content.
-    // Since web content specifies scale as (reference pixel : CSS pixel) ratio,
-    // multiply the requested scale by a constant (device pixel : reference pixel)
-    // factor to account for high DPI devices.
-    //
-    // See bug 561445 or any of the examples of chrome/tests/browser_viewport_XX.html
-    // for more information and examples.
-    let defaultZoom = viewportScale * dpiScale;
-    let minZoom = viewportMinScale * dpiScale;
-    let maxZoom = viewportMaxScale * dpiScale;
-
-    return {
-      defaultZoom: defaultZoom,
-      minZoom: minZoom,
-      maxZoom: maxZoom,
-      width: viewportWidth,
-      height: viewportHeight,
-      autoSize: autoSize,
-      allowZoom: windowUtils.getDocumentMetadata("viewport-user-scalable") != "no"
-    };
   },
 
   clamp: function(num, min, max) {
@@ -249,9 +198,79 @@ let Util = {
     gIOService.offline = false;
 #endif
   },
+
+  /** Capitalize first letter of a string. */
+  capitalize: function(str) {
+    return str.charAt(0).toUpperCase() + str.substring(1);
+  },
   
   isPortrait: function isPortrait() {
     return (window.innerWidth < 500);
+  }
+};
+
+
+/**
+ * Helper class to nsITimer that adds a little more pizazz.  Callback can be an
+ * object with a notify method or a function.
+ */
+Util.Timeout = function(aCallback) {
+  this._callback = aCallback;
+  this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  this._active = false;
+}
+
+Util.Timeout.prototype = {
+  /** Timer callback. Don't call this manually. */
+  notify: function notify() {
+    this._active = false;
+    if (this._callback.notify)
+      this._callback.notify();
+    else
+      this._callback.apply(null);
+  },
+
+  /** Do the callback once.  Cancels other timeouts on this object. */
+  once: function once(aDelay, aCallback) {
+    if (aCallback)
+      this._callback = aCallback;
+    this.clear();
+    this._timer.initWithCallback(this, aDelay, this._timer.TYPE_ONE_SHOT);
+    this._active = true;
+    return this;
+  },
+
+  /** Do the callback every aDelay msecs. Cancels other timeouts on this object. */
+  interval: function interval(aDelay, aCallback) {
+    if (aCallback)
+      this._callback = aCallback;
+    this.clear();
+    this._timer.initWithCallback(this, aDelay, this._timer.TYPE_REPEATING_SLACK);
+    this._active = true;
+    return this;
+  },
+
+  /** Clear any pending timeouts. */
+  clear: function clear() {
+    if (this._active) {
+      this._timer.cancel();
+      this._active = false;
+    }
+    return this;
+  },
+
+  /** If there is a pending timeout, call it and cancel the timeout. */
+  flush: function flush() {
+    if (this._active) {
+      this.clear();
+      this.notify();
+    }
+    return this;
+  },
+
+  /** Return true iff we are waiting for a callback. */
+  isPending: function isPending() {
+    return this._active;
   }
 };
 
