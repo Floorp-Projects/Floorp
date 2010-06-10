@@ -16,6 +16,10 @@
 /* 32 bit Linux. */
 #include "vpx_config_x86-linux-gcc.h"
 
+#elif defined(_MSC_VER) && defined(_M_X64)
+/* 64 bit Windows */
+#include "vpx_config_x86_64-win64-vs8.h"
+
 #else
 #error VPX_X86_ASM is defined, but assembly not supported on this platform!
 #endif

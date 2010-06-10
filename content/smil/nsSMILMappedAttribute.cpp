@@ -66,8 +66,7 @@ nsSMILMappedAttribute::ValueFromString(const nsAString& aStr,
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
-  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr,
-                                      PR_TRUE, aValue);
+  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue);
   if (aValue.IsNull()) {
     return NS_ERROR_FAILURE;
   }
@@ -87,8 +86,8 @@ nsSMILMappedAttribute::GetBaseValue() const
                                      baseStringValue);
   nsSMILValue baseValue;
   if (success) {
-    nsSMILCSSValueType::ValueFromString(mPropID, mElement, baseStringValue,
-                                        PR_TRUE, baseValue);
+    nsSMILCSSValueType::ValueFromString(mPropID, mElement,
+                                        baseStringValue, baseValue);
   } else {
     // Attribute is unset -- use computed value.
     // FIRST: Temporarily clear animated value, to make sure it doesn't pollute

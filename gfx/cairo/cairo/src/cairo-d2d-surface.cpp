@@ -451,13 +451,17 @@ _cairo_d2d_surface_push_clip(cairo_d2d_surface_t *d2dsurf)
 	    }
 	    D2D1_RECT_F bounds;
 	    d2dsurf->clipMask->GetBounds(D2D1::IdentityMatrix(), &bounds);
+            D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
+	    if (d2dsurf->base.content == CAIRO_CONTENT_COLOR) {
+		options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
+	    }
 	    d2dsurf->rt->PushLayer(D2D1::LayerParameters(bounds,
 							 d2dsurf->clipMask,
 							 D2D1_ANTIALIAS_MODE_ALIASED,
 							 D2D1::IdentityMatrix(),
 							 1.0,
 							 0,
-							 D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE),
+							 options),
 				   d2dsurf->clipLayer);
 	}
 	if (d2dsurf->clipRect) {
@@ -2132,7 +2136,8 @@ _cairo_d2d_getextents(void		       *surface,
 /** Helper functions. */
 
 cairo_surface_t*
-cairo_d2d_surface_create_for_hwnd(HWND wnd)
+cairo_d2d_surface_create_for_hwnd(HWND wnd,
+				  cairo_content_t content)
 {
     if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
 	/**
@@ -2145,7 +2150,7 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     new (newSurf) cairo_d2d_surface_t();
 
-    _cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_COLOR);
+    _cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
     _cairo_surface_clipper_init(&newSurf->clipper, _cairo_d2d_surface_clipper_intersect_clip_path);
 
     RECT rc;
@@ -2229,10 +2234,10 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
     size.height = sizePixels.height * dpiY;
 
     props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
-								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
-								       dpiX,
-								       dpiY,
-								       D2D1_RENDER_TARGET_USAGE_NONE);
+					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
+					 dpiX,
+					 dpiY,
+					 D2D1_RENDER_TARGET_USAGE_NONE);
     hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(newSurf->backBuf,
 								   props,
 								   &newSurf->rt);
@@ -2241,7 +2246,7 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
     }
 
     bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
-									       D2D1_ALPHA_MODE_PREMULTIPLIED));
+				      D2D1_ALPHA_MODE_PREMULTIPLIED));
     
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
@@ -2321,7 +2326,7 @@ cairo_d2d_surface_create(cairo_format_t format,
     }
 
     props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
-								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
+					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
     hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
 								   props,
 								   &newSurf->rt);
@@ -2331,7 +2336,7 @@ cairo_d2d_surface_create(cairo_format_t format,
     }
 
     bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
-									       alpha));
+				      alpha));
     hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
 					 dxgiSurface,
 					 &bitProps,
