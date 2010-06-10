@@ -73,10 +73,6 @@ ifneq (,$(filter windows gtk2 cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
 
-ifdef MOZ_UPDATER
-DEFINES += -DMOZ_UPDATER=1
-endif
-
 ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 ifneq ($(OS_ARCH),WINCE)
 DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1

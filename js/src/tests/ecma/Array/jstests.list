@@ -26,3 +26,4 @@ script 15.4.5.1-1.js
 script 15.4.5.1-2.js
 script 15.4.5.2-1.js
 script 15.4.5.2-2.js
+script array-length-set-on-nonarray.js

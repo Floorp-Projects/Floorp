@@ -75,6 +75,7 @@ WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
       gl(nsnull),
       mWidth(0), mHeight(0),
+      mGeneration(0),
       mInvalidated(PR_FALSE),
       mActiveTexture(0),
       mSynthesizedGLError(LOCAL_GL_NO_ERROR)
@@ -104,6 +105,19 @@ WebGLContext::Invalidate()
     mCanvasElement->InvalidateFrame();
 }
 
+/* readonly attribute nsIDOMHTMLCanvasElement canvas; */
+NS_IMETHODIMP
+WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
+{
+    if (mCanvasElement == nsnull) {
+        *canvas = nsnull;
+        return NS_OK;
+    }
+
+    NS_ADDREF(*canvas = static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
+    return NS_OK;
+}
+
 //
 // nsICanvasRenderingContextInternal
 //
@@ -129,8 +143,30 @@ WebGLContext::SetCanvasElement(nsHTMLCanvasElement* aParentCanvas)
 NS_IMETHODIMP
 WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 {
+    // If incrementing the generation would cause overflow,
+    // don't allow it.  Allowing this would allow us to use
+    // resource handles created from older context generations.
+    if (mGeneration + 1 == 0)
+        return NS_ERROR_FAILURE;
+
     if (mWidth == width && mHeight == height)
         return NS_OK;
+
+    if (gl) {
+        // hey we already have something
+        if (gl->Resize(gfxIntSize(width, height))) {
+
+            mWidth = width;
+            mHeight = height;
+
+            gl->fViewport(0, 0, mWidth, mHeight);
+            gl->fClearColor(0, 0, 0, 0);
+            gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+
+            // great success!
+            return NS_OK;
+        }
+    }
 
     LogMessage("Canvas 3D: creating PBuffer...");
 
@@ -149,6 +185,37 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     }
 
+    // We just blew away all the resources by creating a new context; reset everything,
+    // and let ValidateGL set up the correct dimensions again.
+
+    mActiveTexture = 0;
+    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+
+    mAttribBuffers.Clear();
+
+    mUniformTextures.Clear();
+    mBound2DTextures.Clear();
+    mBoundCubeMapTextures.Clear();
+
+    mBoundArrayBuffer = nsnull;
+    mBoundElementArrayBuffer = nsnull;
+    mCurrentProgram = nsnull;
+
+    mFramebufferColorAttachments.Clear();
+    mFramebufferDepthAttachment = nsnull;
+    mFramebufferStencilAttachment = nsnull;
+
+    mBoundFramebuffer = nsnull;
+    mBoundRenderbuffer = nsnull;
+
+    mMapTextures.Clear();
+    mMapBuffers.Clear();
+    mMapPrograms.Clear();
+    mMapShaders.Clear();
+    mMapFramebuffers.Clear();
+    mMapRenderbuffers.Clear();
+
+    // Now check the GL implementation, checking limits along the way
     if (!ValidateGL()) {
         LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
         return NS_ERROR_FAILURE;
@@ -159,26 +226,16 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     mWidth = width;
     mHeight = height;
 
-    // Make sure that we clear this out, otherwise
-    // we'll end up displaying random memory
-#if 0
-    int err = glGetError();
-    if (err) {
-        printf ("error before MakeContextCurrent! 0x%04x\n", err);
-    }
-#endif
+    // increment the generation number
+    mGeneration++;
 
     MakeContextCurrent();
+
+    // Make sure that we clear this out, otherwise
+    // we'll end up displaying random memory
     gl->fViewport(0, 0, mWidth, mHeight);
     gl->fClearColor(0, 0, 0, 0);
     gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
-
-#if 0
-    err = glGetError();
-    if (err) {
-        printf ("error after MakeContextCurrent! 0x%04x\n", err);
-    }
-#endif
 
     return NS_OK;
 }
@@ -418,6 +475,18 @@ NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderbuffer)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLUniformLocation)
+NS_IMPL_RELEASE(WebGLUniformLocation)
+
+DOMCI_DATA(WebGLUniformLocation, WebGLUniformLocation)
+
+NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
+  NS_INTERFACE_MAP_ENTRY(WebGLUniformLocation)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLUniformLocation)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
+NS_INTERFACE_MAP_END
+
 #define NAME_NOT_SUPPORTED(base) \
 NS_IMETHODIMP base::GetName(WebGLuint *aName) \
 { return NS_ERROR_NOT_IMPLEMENTED; } \
@@ -430,3 +499,13 @@ NAME_NOT_SUPPORTED(WebGLProgram)
 NAME_NOT_SUPPORTED(WebGLShader)
 NAME_NOT_SUPPORTED(WebGLFramebuffer)
 NAME_NOT_SUPPORTED(WebGLRenderbuffer)
+
+/* [noscript] attribute WebGLint location; */
+NS_IMETHODIMP WebGLUniformLocation::GetLocation(WebGLint *aLocation)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP WebGLUniformLocation::SetLocation(WebGLint aLocation)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

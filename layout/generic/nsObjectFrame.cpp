@@ -750,6 +750,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     // only happen with a plugin in a XUL popup.
     if (parentWidget == GetWindow()) {
       mWidget->Show(PR_TRUE);
+#ifdef XP_MACOSX
+      // On Mac, we need to invalidate ourselves since even windowed
+      // plugins are painted through Thebes and we need to ensure
+      // the Thebes layer containing the plugin is updated.
+      Invalidate(GetContentRect() - GetPosition());
+#endif
     }
   }
 
@@ -779,9 +785,6 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     pluginWidget->SetPluginEventModel(mInstanceOwner->GetEventModel());
 
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
-      NPWindow* window;
-      mInstanceOwner->GetWindow(window);
-
       mInstanceOwner->SetupCARefresh();
     }
 #endif
@@ -1567,7 +1570,9 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
   // delegate all painting to the plugin instance.
   if (mInstanceOwner) {
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics ||
-        mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
+        mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
+        mInstanceOwner->GetDrawingModel() == 
+                                  NPDrawingModelInvalidatingCoreAnimation) {
       PRInt32 appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
       // Clip to the content area where the plugin should be drawn. If
       // we don't do this, the plugin can draw outside its bounds.
@@ -1575,6 +1580,11 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       nsIntRect dirtyPixels = aDirtyRect.ToOutsidePixels(appUnitsPerDevPixel);
       nsIntRect clipPixels;
       clipPixels.IntersectRect(contentPixels, dirtyPixels);
+
+      // Don't invoke the drawing code if the clip is empty.
+      if (clipPixels.IsEmpty())
+        return;
+
       gfxRect nativeClipRect(clipPixels.x, clipPixels.y,
                              clipPixels.width, clipPixels.height);
       gfxContext* ctx = aRenderingContext.ThebesContext();
@@ -1641,7 +1651,9 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 #endif
 
       mInstanceOwner->BeginCGPaint();
-      if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
+      if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
+          mInstanceOwner->GetDrawingModel() == 
+                                   NPDrawingModelInvalidatingCoreAnimation) {
         // CoreAnimation is updated, render the layer and perform a readback.
         mInstanceOwner->RenderCoreAnimation(cgContext, window->width, window->height);
       } else {
@@ -1718,9 +1730,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
           pluginEvent.event = mDoublePassEvent;
           pluginEvent.wParam = 0;
           pluginEvent.lParam = 0;
-          PRBool eventHandled = PR_FALSE;
-
-          inst->HandleEvent(&pluginEvent, &eventHandled);
+          inst->HandleEvent(&pluginEvent, nsnull);
         }
       }
 #endif
@@ -1781,9 +1791,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
             pluginEvent.event = WM_WINDOWPOSCHANGED;
             pluginEvent.wParam = 0;
             pluginEvent.lParam = (uint32)&winpos;
-            PRBool eventHandled = PR_FALSE;
-
-            inst->HandleEvent(&pluginEvent, &eventHandled);
+            inst->HandleEvent(&pluginEvent, nsnull);
           }
 
           inst->SetWindow(window);
@@ -3612,8 +3620,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     return;
 
   if (!mIOSurface || 
-     (mIOSurface->GetWidth() != aWidth || 
-      mIOSurface->GetHeight() != aHeight)) {
+     (mIOSurface->GetWidth() != (size_t)aWidth || 
+      mIOSurface->GetHeight() != (size_t)aHeight)) {
     if (mIOSurface) {
       delete mIOSurface;
     }
@@ -3673,7 +3681,8 @@ void* nsPluginInstanceOwner::GetPluginPortCopy()
     return &mQDPluginPortCopy;
 #endif
   if (GetDrawingModel() == NPDrawingModelCoreGraphics || 
-      GetDrawingModel() == NPDrawingModelCoreAnimation)
+      GetDrawingModel() == NPDrawingModelCoreAnimation ||
+      GetDrawingModel() == NPDrawingModelInvalidatingCoreAnimation)
     return &mCGPluginPortCopy;
   return nsnull;
 }
@@ -3708,7 +3717,8 @@ void* nsPluginInstanceOwner::SetPluginPortAndDetectChange()
       mPluginPortChanged = PR_TRUE;
     }
   } else if (drawingModel == NPDrawingModelCoreGraphics || 
-             drawingModel == NPDrawingModelCoreAnimation)
+             drawingModel == NPDrawingModelCoreAnimation ||
+             drawingModel == NPDrawingModelInvalidatingCoreAnimation)
 #endif
   {
 #ifndef NP_NO_CARBON
@@ -3783,8 +3793,7 @@ void nsPluginInstanceOwner::ScrollPositionWillChange(nscoord aX, nscoord aY)
 
       void* window = FixUpPluginWindow(ePluginPaintDisable);
       if (window) {
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(&scrollEvent, &eventHandled);
+        mInstance->HandleEvent(&scrollEvent, nsnull);
       }
       pluginWidget->EndDrawPlugin();
     }
@@ -3807,8 +3816,7 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 
       void* window = FixUpPluginWindow(ePluginPaintEnable);
       if (window) {
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(&scrollEvent, &eventHandled);
+        mInstance->HandleEvent(&scrollEvent, nsnull);
       }
       pluginWidget->EndDrawPlugin();
     }
@@ -4401,9 +4409,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
 
 #if 0
   /* we've sent the event via XSendEvent so don't send it directly to the plugin */
-  PRBool eventHandled = PR_FALSE;
-  mInstance->HandleEvent(&pluginEvent, &eventHandled);
-  if (eventHandled)
+  PRInt16 response = kNPEventNotHandled;
+  mInstance->HandleEvent(&pluginEvent, &response);
+  if (response == kNPEventHandled)
     rv = nsEventStatus_eConsumeNoDefault;
 #endif
 
@@ -4564,13 +4572,17 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     ::DeactivateTSMDocument(::TSMGetActiveDocument());
 #endif
 
-  PRBool eventHandled = PR_FALSE;
+  PRInt16 response = kNPEventNotHandled;
   void* window = FixUpPluginWindow(ePluginPaintEnable);
   if (window || (eventModel == NPEventModelCocoa)) {
-    mInstance->HandleEvent(event, &eventHandled);
+    mInstance->HandleEvent(event, &response);
   }
 
-  if (eventHandled &&
+  if (eventModel == NPEventModelCocoa && response == kNPEventStartIME) {
+    pluginWidget->StartComplexTextInputForCurrentEvent();
+  }
+
+  if ((response == kNPEventHandled || response == kNPEventStartIME) &&
       !(anEvent.eventStructType == NS_MOUSE_EVENT &&
         anEvent.message == NS_MOUSE_BUTTON_DOWN &&
         static_cast<const nsMouseEvent&>(anEvent).button == nsMouseEvent::eLeftButton &&
@@ -4678,9 +4690,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   }
 
   if (pPluginEvent) {
-    PRBool eventHandled = PR_FALSE;
-    mInstance->HandleEvent(pPluginEvent, &eventHandled);
-    if (eventHandled)
+    PRInt16 response = kNPEventNotHandled;
+    mInstance->HandleEvent(pPluginEvent, &response);
+    if (response == kNPEventHandled)
       rv = nsEventStatus_eConsumeNoDefault;
   }
 #endif
@@ -4879,10 +4891,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   event.serial = 0;
   event.send_event = False;
 
-  PRBool eventHandled = PR_FALSE;
-  mInstance->HandleEvent(&pluginEvent, &eventHandled);
-  if (eventHandled)
-      rv = nsEventStatus_eConsumeNoDefault;
+  PRInt16 response = kNPEventNotHandled;
+  mInstance->HandleEvent(&pluginEvent, &response);
+  if (response == kNPEventHandled)
+    rv = nsEventStatus_eConsumeNoDefault;
 #endif
 
   return rv;
@@ -5005,8 +5017,7 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
       updateEvent.what = updateEvt;
       updateEvent.message = UInt32(window);
 
-      PRBool eventHandled = PR_FALSE;
-      mInstance->HandleEvent(&updateEvent, &eventHandled);
+      mInstance->HandleEvent(&updateEvent, nsnull);
     } else if (GetEventModel() == NPEventModelCocoa)
 #endif
     {
@@ -5020,8 +5031,7 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
       updateEvent.data.draw.width = aDirtyRect.Width();
       updateEvent.data.draw.height = aDirtyRect.Height();
 
-      PRBool eventHandled = PR_FALSE;
-      mInstance->HandleEvent(&updateEvent, &eventHandled);
+      mInstance->HandleEvent(&updateEvent, nsnull);
     }
     pluginWidget->EndDrawPlugin();
   }
@@ -5038,8 +5048,7 @@ void nsPluginInstanceOwner::Paint(const RECT& aDirty, HDC aDC)
   pluginEvent.event = WM_PAINT;
   pluginEvent.wParam = WPARAM(aDC);
   pluginEvent.lParam = LPARAM(&aDirty);
-  PRBool eventHandled = PR_FALSE;
-  mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  mInstance->HandleEvent(&pluginEvent, nsnull);
 }
 #endif
 
@@ -5065,9 +5074,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
   pluginEvent.event = WM_PAINT;
   pluginEvent.wParam = (uint32)aHPS;
   pluginEvent.lParam = (uint32)&rectl;
-  PRBool eventHandled = PR_FALSE;
-  mInstance->HandleEvent(&pluginEvent, &eventHandled);
-
+  mInstance->HandleEvent(&pluginEvent, nsnull);
 }
 #endif
 
@@ -5406,10 +5413,9 @@ nsPluginInstanceOwner::NativeImageDraw(NPRect* invalidRect)
   if (invalidRect)
     memset(mSharedXImage->data, 0, mPluginSize.width * mPluginSize.height * 2);
 
-  PRBool eventHandled = PR_FALSE;
-  mInstance->HandleEvent(&pluginEvent, &eventHandled);
-
-  if (!eventHandled)
+  PRInt16 response = kNPEventNotHandled;
+  mInstance->HandleEvent(&pluginEvent, &response);
+  if (response == kNPEventNotHandled)
     return;
 
   // Setup the clip rectangle
@@ -5586,8 +5592,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
     exposeEvent.major_code = 0;
     exposeEvent.minor_code = 0;
 
-    PRBool eventHandled = PR_FALSE;
-    mInstance->HandleEvent(&pluginEvent, &eventHandled);
+    mInstance->HandleEvent(&pluginEvent, nsnull);
 #ifdef MOZ_COMPOSITED_PLUGINS
   }
   else {
@@ -5640,8 +5645,7 @@ void nsPluginInstanceOwner::SendIdleEvent()
         if (!mWidgetVisible)
           idleEvent.where.h = idleEvent.where.v = 20000;
 
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(&idleEvent, &eventHandled);
+        mInstance->HandleEvent(&idleEvent, nsnull);
       }
 
       pluginWidget->EndDrawPlugin();
@@ -5759,7 +5763,8 @@ void* nsPluginInstanceOwner::GetPluginPortFromWidget()
 #endif
 #ifdef XP_MACOSX
     if (GetDrawingModel() == NPDrawingModelCoreGraphics || 
-        GetDrawingModel() == NPDrawingModelCoreAnimation)
+        GetDrawingModel() == NPDrawingModelCoreAnimation ||
+        GetDrawingModel() == NPDrawingModelInvalidatingCoreAnimation)
       result = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT_CG);
     else
 #endif
@@ -5864,13 +5869,12 @@ PRBool nsPluginInstanceOwner::UpdateVisibility(PRBool aVisible)
   if (!mInstance)
     return PR_TRUE;
 
-  PRBool handled;
   NPEvent pluginEvent;
   XVisibilityEvent& visibilityEvent = pluginEvent.xvisibility;
   visibilityEvent.type = VisibilityNotify;
   visibilityEvent.display = 0;
   visibilityEvent.state = aVisible ? VisibilityUnobscured : VisibilityFullyObscured;
-  mInstance->HandleEvent(&pluginEvent, &handled);
+  mInstance->HandleEvent(&pluginEvent, nsnull);
 
   mWidgetVisible = PR_TRUE;
   return PR_TRUE;
@@ -5932,7 +5936,8 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     mPluginWindow->y = -static_cast<NP_Port*>(pluginPort)->porty;
   }
   else if (drawingModel == NPDrawingModelCoreGraphics || 
-           drawingModel == NPDrawingModelCoreAnimation)
+           drawingModel == NPDrawingModelCoreAnimation ||
+           drawingModel == NPDrawingModelInvalidatingCoreAnimation)
 #endif
   {
     // This would be a lot easier if we could use obj-c here,

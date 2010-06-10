@@ -239,6 +239,44 @@ static pixman_bool_t arm_has_neon = FALSE;
 static pixman_bool_t arm_has_iwmmxt = FALSE;
 static pixman_bool_t arm_tests_initialized = FALSE;
 
+#ifdef ANDROID
+
+/* on Android, we can't reliably access /proc/self/auxv,
+ * so instead read the text version in /proc/cpuinfo and
+ * parse that instead.
+ */
+
+static void
+pixman_arm_read_auxv()
+{
+    char buf[1024];
+    char* pos;
+    const char* ver_token = "CPU architecture: ";
+    FILE* f = fopen("/proc/cpuinfo", "r");
+    if (!f) {
+	arm_tests_initialized = TRUE;
+	return;
+    }
+
+    fread(buf, sizeof(char), 1024, f);
+    fclose(f);
+    pos = strstr(buf, ver_token);
+    if (pos) {
+	char vchar = *(pos + strlen(ver_token));
+	if (vchar >= '0' && vchar <= '9') {
+	    int ver = vchar - '0';
+	    arm_has_v7 = ver >= 7;
+	    arm_has_v6 = ver >= 6;
+	}
+    }
+    arm_has_neon = strstr(buf, "neon") != NULL;
+    arm_has_vfp = strstr(buf, "vfp") != NULL;
+    arm_has_iwmmxt = strstr(buf, "iwmmxt") != NULL;
+    arm_tests_initialized = TRUE;
+}
+
+#else
+
 static void
 pixman_arm_read_auxv ()
 {
@@ -280,6 +318,7 @@ pixman_arm_read_auxv ()
 
     arm_tests_initialized = TRUE;
 }
+#endif
 
 #if defined(USE_ARM_SIMD)
 pixman_bool_t

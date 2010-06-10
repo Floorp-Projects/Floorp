@@ -1267,8 +1267,7 @@ nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
                                                     & (nsACString&) package,
                                                     PL_DHASH_LOOKUP));
 
-  return PL_DHASH_ENTRY_IS_LIVE(entry) &&
-         entry->flags & PackageEntry::XPCNATIVEWRAPPERS;
+  return PL_DHASH_ENTRY_IS_LIVE(entry);
 }
 
 nsresult
@@ -1611,7 +1610,6 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
   nsresult rv;
 
   NS_NAMED_LITERAL_STRING(kPlatform, "platform");
-  NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
   NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
   NS_NAMED_LITERAL_STRING(kApplication, "application");
   NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
@@ -1712,11 +1710,10 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       EnsureLowerCase(package);
 
-      // NOTE: We check for platform and xpcnativewrappers modifiers on
-      // content packages, but they are *applied* to content|skin|locale.
+      // NOTE: We check for platform modifiers on content packages, but they
+      // are *applied* to content|skin|locale.
 
       PRBool platform = PR_FALSE;
-      PRBool xpcNativeWrappers = PR_TRUE;
       PRBool contentAccessible = PR_FALSE;
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
@@ -1731,7 +1728,6 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         ToLowerCase(wtoken);
 
         if (CheckFlag(kPlatform, wtoken, platform) ||
-            CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers) ||
             CheckFlag(kContentAccessible, wtoken, contentAccessible) ||
             CheckStringFlag(kApplication, wtoken, appID, stApp) ||
             CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
@@ -1773,8 +1769,6 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       if (platform)
         entry->flags |= PackageEntry::PLATFORM_PACKAGE;
-      if (xpcNativeWrappers)
-        entry->flags |= PackageEntry::XPCNATIVEWRAPPERS;
       if (contentAccessible)
         entry->flags |= PackageEntry::CONTENT_ACCESSIBLE;
       if (xpc) {
@@ -1782,7 +1776,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         urlp.Append(package);
         urlp.Append('/');
 
-        rv = xpc->FlagSystemFilenamePrefix(urlp.get(), xpcNativeWrappers);
+        rv = xpc->FlagSystemFilenamePrefix(urlp.get(), true);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

@@ -39,7 +39,7 @@
 
 #include "nsDOMClassInfoID.h"
 
-#define DEFINE_UNWRAP_CAST(_interface, _bit)                                  \
+#define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
 NS_SPECIALIZE_TEMPLATE                                                        \
 inline JSBool                                                                 \
 xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
@@ -56,7 +56,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                                                 &rv);                         \
     if(!native)                                                               \
         return xpc_qsThrow(cx, rv);                                           \
-    *ppThis = static_cast<_interface*>(native);                               \
+    *ppThis = static_cast<_interface*>(static_cast<_base*>(native));          \
     return JS_TRUE;                                                           \
 }                                                                             \
                                                                               \
@@ -72,12 +72,12 @@ xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
     nsISupports *native = castNativeArgFromWrapper(cx, v, _bit, ppArgRef, vp, \
                                                    &rv);                      \
     if(NS_SUCCEEDED(rv))                                                      \
-        *ppArg = static_cast<_interface*>(native);                            \
+        *ppArg = static_cast<_interface*>(static_cast<_base*>(native));       \
     return rv;                                                                \
 }
 
-#define DOMCI_CASTABLE_INTERFACE(_interface, _bit, _extra)                    \
-  DEFINE_UNWRAP_CAST(_interface, _bit)
+#define DOMCI_CASTABLE_INTERFACE(_interface, _base, _bit, _extra)             \
+  DEFINE_UNWRAP_CAST(_interface, _base, _bit)
 
 DOMCI_CASTABLE_INTERFACES(unused)
 
@@ -137,6 +137,12 @@ xpc_qsUnwrapArg<nsGenericElement>(JSContext *cx,
     if(NS_SUCCEEDED(rv) && !castToElement(content, val, ppArg, vp))
         rv = NS_ERROR_XPC_BAD_CONVERT_JS;
     return rv;
+}
+
+inline nsISupports*
+ToSupports(nsContentList *p)
+{
+    return static_cast<nsINodeList*>(p);
 }
 
 #endif /* nsDOMQS_h__ */

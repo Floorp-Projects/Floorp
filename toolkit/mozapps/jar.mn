@@ -1,5 +1,5 @@
 toolkit.jar:
-% content mozapps %content/mozapps/ xpcnativewrappers=yes
+% content mozapps %content/mozapps/
 * content/mozapps/downloads/helperApps.js                       (downloads/content/helperApps.js)
 * content/mozapps/downloads/unknownContentType.xul              (downloads/content/unknownContentType.xul)
 * content/mozapps/downloads/downloads.xul                       (downloads/content/downloads.xul)

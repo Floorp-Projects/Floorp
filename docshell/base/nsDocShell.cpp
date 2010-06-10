@@ -369,8 +369,8 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
   if (!content->IsHTML())
     return;
   nsIAtom *nameAtom = content->Tag();
-  if (!nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("a")) &&
-      !nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("area")))
+  if (!nameAtom->Equals(NS_LITERAL_STRING("a")) &&
+      !nameAtom->Equals(NS_LITERAL_STRING("area")))
     return;
 
   nsCOMPtr<nsIAtom> pingAtom = do_GetAtom("ping");

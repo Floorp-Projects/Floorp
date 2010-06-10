@@ -2,7 +2,7 @@
 #include "LayerManagerOGL.h"
 #include "BasicLayers.h"
 #include "ImageLayers.h"
-#if defined(XP_WIN) && !defined(WINCE)
+#ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
 
@@ -13,7 +13,7 @@ void XXXNeverCalled_Layers()
 {
   BasicLayerManager(nsnull);
   LayerManagerOGL(nsnull);
-#if defined(XP_WIN) && !defined(WINCE)
+#ifdef MOZ_ENABLE_D3D9_LAYER
   LayerManagerD3D9(nsnull);
 #endif
 }

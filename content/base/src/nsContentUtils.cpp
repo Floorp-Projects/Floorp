@@ -178,6 +178,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
 #include "BasicLayers.h"
+#include "nsFocusManager.h"
+#include "nsTextEditorState.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -1047,6 +1049,8 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sSameOriginChecker);
   
   nsAutoGCRoot::Shutdown();
+
+  nsTextEditorState::ShutDown();
 }
 
 // static
@@ -2195,8 +2199,7 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
     nameStart = (uriEnd + 1);
     if (nameEnd)  {
       const PRUnichar *prefixStart = nameEnd + 1;
-      *aPrefix = NS_NewAtom(NS_ConvertUTF16toUTF8(prefixStart,
-                                                  pos - prefixStart));
+      *aPrefix = NS_NewAtom(Substring(prefixStart, pos));
     }
     else {
       nameEnd = pos;
@@ -2209,8 +2212,7 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
     nameEnd = pos;
     *aPrefix = nsnull;
   }
-  *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
-                                                 nameEnd - nameStart));
+  *aLocalName = NS_NewAtom(Substring(nameStart, nameEnd));
 }
 
 // static
@@ -4896,35 +4898,6 @@ nsAutoGCRoot::Shutdown()
   NS_IF_RELEASE(sJSRuntimeService);
 }
 
-nsIAtom*
-nsContentUtils::IsNamedItem(Element* aElement)
-{
-  // Only the content types reflected in Level 0 with a NAME
-  // attribute are registered. Images, layers and forms always get
-  // reflected up to the document. Applets and embeds only go
-  // to the closest container (which could be a form).
-  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aElement);
-  if (!elm) {
-    return nsnull;
-  }
-
-  nsIAtom* tag = elm->Tag();
-  if (tag != nsGkAtoms::img    &&
-      tag != nsGkAtoms::form   &&
-      tag != nsGkAtoms::applet &&
-      tag != nsGkAtoms::embed  &&
-      tag != nsGkAtoms::object) {
-    return nsnull;
-  }
-
-  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
-  if (val && val->Type() == nsAttrValue::eAtom) {
-    return val->GetAtomValue();
-  }
-
-  return nsnull;
-}
-
 /* static */
 nsIInterfaceRequestor*
 nsContentUtils::GetSameOriginChecker()
@@ -5809,6 +5782,10 @@ MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
   // need to match *all* of the classes
   ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
   PRInt32 length = info->mClasses.Count();
+  if (!length) {
+    // If we actually had no classes, don't match.
+    return PR_FALSE;
+  }
   PRInt32 i;
   for (i = 0; i < length; ++i) {
     if (!classAttr->Contains(info->mClasses.ObjectAt(i),
@@ -5827,19 +5804,15 @@ DestroyClassNameArray(void* aData)
   delete info;
 }
 
-// static
-nsresult
-nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
-                                       const nsAString& aClasses,
-                                       nsIDOMNodeList** aReturn)
+static void*
+AllocClassMatchingInfo(nsINode* aRootNode,
+                       const nsString* aClasses)
 {
-  NS_PRECONDITION(aRootNode, "Must have root node");
-  
   nsAttrValue attrValue;
-  attrValue.ParseAtomArray(aClasses);
+  attrValue.ParseAtomArray(*aClasses);
   // nsAttrValue::Equals is sensitive to order, so we'll send an array
   ClassMatchingInfo* info = new ClassMatchingInfo;
-  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(info, nsnull);
 
   if (attrValue.Type() == nsAttrValue::eAtomArray) {
     info->mClasses.AppendObjects(*(attrValue.GetAtomArrayValue()));
@@ -5847,27 +5820,27 @@ nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
     info->mClasses.AppendObject(attrValue.GetAtomValue());
   }
 
-  nsBaseContentList* elements;
-  if (info->mClasses.Count() > 0) {
-    info->mCaseTreatment =
-      aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
-        eCompatibility_NavQuirks ?
-          eIgnoreCase : eCaseMatters;
+  info->mCaseTreatment =
+    aRootNode->GetOwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks ?
+    eIgnoreCase : eCaseMatters;
+  return info;
+}
 
-    elements =
-      NS_GetFuncStringContentList(aRootNode, MatchClassNames,
-                                  DestroyClassNameArray, info,
-                                  aClasses).get();
-  } else {
-    delete info;
-    info = nsnull;
-    elements = new nsBaseContentList();
-    NS_IF_ADDREF(elements);
-  }
-  if (!elements) {
-    delete info;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+// static
+
+nsresult
+nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
+                                       const nsAString& aClasses,
+                                       nsIDOMNodeList** aReturn)
+{
+  NS_PRECONDITION(aRootNode, "Must have root node");
+  
+  nsContentList* elements =
+    NS_GetFuncStringContentList(aRootNode, MatchClassNames,
+                                DestroyClassNameArray,
+                                AllocClassMatchingInfo,
+                                aClasses).get();
+  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   // Transfer ownership
   *aReturn = elements;
@@ -5980,6 +5953,15 @@ mozAutoRemovableBlockerRemover::~mozAutoRemovableBlockerRemover()
       mObserver->BeginUpdate(mDocument, UPDATE_CONTENT_MODEL);
     }
   }
+}
+
+// static
+PRBool
+nsContentUtils::IsFocusedContent(nsIContent* aContent)
+{
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+
+  return fm && fm->GetFocusedContent() == aContent;
 }
 
 void nsContentUtils::RemoveNewlines(nsString &aString)

@@ -274,14 +274,6 @@ CanAccessWrapper(JSContext *cx, JSObject *outerObj, JSObject *wrappedObj,
     *privilegeEnabled = JS_FALSE;
   }
 
-  // If we somehow end up being called from chrome, just allow full access.
-  // This can happen from components with xpcnativewrappers=no.
-  // Note that this is just an optimization to avoid getting the
-  // object principal in this case, since Subsumes() would return true.
-  if (isSystem) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIPrincipal> objectPrin;
   rv = ssm->GetObjectPrincipal(cx, wrappedObj, getter_AddRefs(objectPrin));
   if (NS_FAILED(rv)) {

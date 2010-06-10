@@ -1329,6 +1329,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
+#if defined(MOZ_MEDIA)
   NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLSourceElement, nsElementSH,
@@ -1337,6 +1338,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+#endif
 
   NS_DEFINE_CLASSINFO_DATA(ProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1381,6 +1383,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(WebGLFramebuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
@@ -2139,7 +2143,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
   DOM_CLASSINFO_MAP_END
@@ -3747,6 +3750,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   DOM_CLASSINFO_MAP_END
 
+#if defined (MOZ_MEDIA)
   DOM_CLASSINFO_MAP_BEGIN(HTMLVideoElement, nsIDOMHTMLVideoElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLVideoElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
@@ -3765,6 +3769,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAudioElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
+#endif
 
   DOM_CLASSINFO_MAP_BEGIN(ProgressEvent, nsIDOMProgressEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
@@ -3846,7 +3851,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLUniformLocation, nsIWebGLUniformLocation)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLUniformLocation)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
@@ -7389,17 +7398,32 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
-    if (nodeIsElement &&
-        node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-      nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
+    if (nodeIsElement) {
+      if (node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+        nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
-      if (form_control) {
-        nsCOMPtr<nsIDOMHTMLFormElement> form;
-        form_control->GetForm(getter_AddRefs(form));
+        if (form_control) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          form_control->GetForm(getter_AddRefs(form));
 
-        if (form) {
-          // Found a form, use it.
-          native_parent = form;
+          if (form) {
+            // Found a form, use it.
+            native_parent = form;
+          }
+        }
+      // Legend isn't an HTML form control but should have its fieldset form
+      // as scope parent at least for backward compatibility.
+      } else if (node->AsElement()->IsHTML() &&
+                 node->AsElement()->Tag() == nsGkAtoms::legend) {
+        nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(node));
+
+        if (legend) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          legend->GetForm(getter_AddRefs(form));
+
+          if (form) {
+            native_parent = form;
+          }
         }
       }
     }

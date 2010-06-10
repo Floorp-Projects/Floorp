@@ -1,0 +1,2 @@
+recursive-include docs *
+recursive-include mozmill/extension *

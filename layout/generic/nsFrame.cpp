@@ -4315,8 +4315,7 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
     nsITextControlFrame *tcf = do_QueryFrame(frame);
     if (tcf) {
-      NS_IF_ADDREF(*aSelCon = tcf->GetOwnedSelectionController());
-      return NS_OK;
+      return tcf->GetOwnedSelectionController(aSelCon);
     }
     frame = frame->GetParent();
   }
@@ -6420,7 +6419,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     nsHTMLReflowState parentReflowState(aPresContext, parentFrame,
                                         aRenderingContext,
                                         parentSize);
-    parentFrame->RemoveStateBits(0xffffffff);
+    parentFrame->RemoveStateBits(~nsFrameState(0));
     parentFrame->AddStateBits(savedState);
 
     // This may not do very much useful, but it's probably worth trying.

@@ -76,6 +76,11 @@ public:
 
 private:
     SCRIPT_CACHE mScriptCache;
+
+    enum {
+        kUnicodeVS17 = gfxFontUtils::kUnicodeVS17,
+        kUnicodeVS256 = gfxFontUtils::kUnicodeVS256
+    };
 };
 
 #endif /* GFX_UNISCRIBESHAPER_H */

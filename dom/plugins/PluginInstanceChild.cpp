@@ -358,6 +358,11 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 
+    case NPNVsupportsInvalidatingCoreAnimationBool: {
+        *((NPBool*)aValue) = true;
+        return NPERR_NO_ERROR;
+    }
+
     case NPNVsupportsCocoaBool: {
         *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;

@@ -284,7 +284,8 @@ nsLayoutStatics::Initialize()
 
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
-  
+  nsIPresShell::InitializeStatics();
+
   nsCrossSiteListenerProxy::Startup();
 
   rv = nsFrameList::Init();
@@ -359,7 +360,6 @@ nsLayoutStatics::Shutdown()
   nsJSRuntime::Shutdown();
   nsGlobalWindow::ShutDown();
   nsDOMClassInfo::ShutDown();
-  nsTextControlFrame::ShutDown();
   nsListControlFrame::Shutdown();
   nsXBLWindowKeyHandler::ShutDown();
   nsAutoCopyListener::Shutdown();
@@ -380,6 +380,8 @@ nsLayoutStatics::Shutdown()
 
   nsXMLHttpRequest::ShutdownACCache();
   
+  nsIPresShell::ReleaseStatics();
+
   nsHtml5Module::ReleaseStatics();
 
   nsRegion::ShutdownStatic();

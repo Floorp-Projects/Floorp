@@ -89,11 +89,12 @@ ThebesLayerOGL::~ThebesLayerOGL()
 void
 ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
 {
-  if (aRegion.GetBounds() == mVisibleRect)
+  if (aRegion.IsEqual(mVisibleRegion))
     return;
 
-  mVisibleRect = aRegion.GetBounds();
-  mInvalidatedRect = mVisibleRect;
+  ThebesLayer::SetVisibleRegion(aRegion);
+
+  mInvalidatedRect = mVisibleRegion.GetBounds();
 
   mOGLManager->MakeCurrent();
 
@@ -110,8 +111,8 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
   gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                     0,
                     LOCAL_GL_RGBA,
-                    mVisibleRect.width,
-                    mVisibleRect.height,
+                    mInvalidatedRect.width,
+                    mInvalidatedRect.height,
                     0,
                     LOCAL_GL_RGBA,
                     LOCAL_GL_UNSIGNED_BYTE,
@@ -125,7 +126,7 @@ ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
 {
   nsIntRegion invalidatedRegion;
   invalidatedRegion.Or(aRegion, mInvalidatedRect);
-  invalidatedRegion.And(invalidatedRegion, mVisibleRect);
+  invalidatedRegion.And(invalidatedRegion, mVisibleRegion);
   mInvalidatedRect = invalidatedRegion.GetBounds();
 }
 
@@ -133,12 +134,6 @@ LayerOGL::LayerType
 ThebesLayerOGL::GetType()
 {
   return TYPE_THEBES;
-}
-
-const nsIntRect&
-ThebesLayerOGL::GetVisibleRect()
-{
-  return mVisibleRect;
 }
 
 void
@@ -152,6 +147,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   bool needsTextureBind = true;
+  nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
   if (!mInvalidatedRect.IsEmpty()) {
     gfxASurface::gfxImageFormat imageFormat;
@@ -209,8 +205,8 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
     gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                          0,
-                         mInvalidatedRect.x - mVisibleRect.x,
-                         mInvalidatedRect.y - mVisibleRect.y,
+                         mInvalidatedRect.x - visibleRect.x,
+                         mInvalidatedRect.y - visibleRect.y,
                          mInvalidatedRect.width,
                          mInvalidatedRect.height,
                          LOCAL_GL_RGBA,
@@ -231,7 +227,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     : mOGLManager->GetBGRALayerProgram();
 
   program->Activate();
-  program->SetLayerQuadRect(mVisibleRect);
+  program->SetLayerQuadRect(visibleRect);
   program->SetLayerOpacity(GetOpacity());
   program->SetLayerTransform(mTransform);
   program->SetRenderOffset(aOffset);

@@ -639,7 +639,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                                          stdout=subprocess.PIPE)
         logsource = stackFixerProcess.stdout
 
-      if self.IS_DEBUG_BUILD and self.IS_MAC:
+      if self.IS_DEBUG_BUILD and self.IS_MAC and False:
         # Import fix_macosx_stack.py from utilityPath
         sys.path.insert(0, utilityPath)
         import fix_macosx_stack as stackFixerModule

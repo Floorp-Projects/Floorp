@@ -45,7 +45,8 @@
 class THEBES_API gfxD2DSurface : public gfxASurface {
 public:
 
-    gfxD2DSurface(HWND wnd);
+    gfxD2DSurface(HWND wnd,
+                  gfxContentType aContent);
 
     gfxD2DSurface(const gfxIntSize& size,
                   gfxImageFormat imageFormat = ImageFormatRGB24);

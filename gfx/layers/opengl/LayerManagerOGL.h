@@ -231,7 +231,7 @@ public:
     BindQuadVBO();
     QuadVBOVerticesAttrib(aVertAttribIndex);
 
-    if (aTexCoordAttribIndex != -1) {
+    if (aTexCoordAttribIndex != GLuint(-1)) {
       if (aFlipped)
         QuadVBOFlippedTexCoordsAttrib(aTexCoordAttribIndex);
       else
@@ -246,7 +246,7 @@ public:
 
     mGLContext->fDisableVertexAttribArray(aVertAttribIndex);
 
-    if (aTexCoordAttribIndex != -1) {
+    if (aTexCoordAttribIndex != GLuint(-1)) {
       mGLContext->fDisableVertexAttribArray(aTexCoordAttribIndex);
     }
   }

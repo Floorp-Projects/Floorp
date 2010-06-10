@@ -224,7 +224,9 @@ struct JSScope : public JSObjectMap
 #endif
     JSObject        *object;            /* object that owns this scope */
     uint32          freeslot;           /* index of next free slot in object */
+  protected:
     uint8           flags;              /* flags, see below */
+  public:
     int8            hashShift;          /* multiplicative hash shift */
 
     uint16          spare;              /* reserved */
@@ -423,9 +425,10 @@ struct JSScope : public JSObjectMap
      * properties without magic getters and setters), and its scope->shape
      * evolves whenever a function value changes.
      */
-    bool branded()              { JS_ASSERT(!generic()); return flags & BRANDED; }
+    bool branded()              { return flags & BRANDED; }
 
     bool brand(JSContext *cx, uint32 slot, jsval v) {
+        JS_ASSERT(!generic());
         JS_ASSERT(!branded());
         generateOwnShape(cx);
         if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
@@ -435,7 +438,17 @@ struct JSScope : public JSObjectMap
     }
 
     bool generic()              { return flags & GENERIC; }
-    void setGeneric()           { flags |= GENERIC; }
+
+    /*
+     * Here and elsewhere "unbrand" means "make generic". We never actually
+     * clear the BRANDED bit on any object. Once branded, there's no point in
+     * being generic, since the shape has already evolved unpredictably. So
+     * obj->unbrand() on a branded object does nothing.
+     */
+    void unbrand(JSContext *cx) {
+        if (!branded())
+            flags |= GENERIC;
+    }
 
     bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
     void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
@@ -504,7 +517,8 @@ struct JSScope : public JSObjectMap
     enum {
         EMPTY_ARGUMENTS_SHAPE = 1,
         EMPTY_BLOCK_SHAPE     = 2,
-        LAST_RESERVED_SHAPE   = 2
+        EMPTY_CALL_SHAPE      = 3,
+        LAST_RESERVED_SHAPE   = 3
     };
 };
 
@@ -515,10 +529,11 @@ struct JSEmptyScope : public JSScope
 
     JSEmptyScope(JSContext *cx, const JSObjectOps *ops, JSClass *clasp);
 
-    void hold() {
+    JSEmptyScope *hold() {
         /* The method is only called for already held objects. */
         JS_ASSERT(nrefs >= 1);
         JS_ATOMIC_INCREMENT(&nrefs);
+        return this;
     }
 
     void drop(JSContext *cx) {

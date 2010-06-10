@@ -467,10 +467,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
-                 bookmarkhistoryplaceholder="&urlbar.bookmarkhistory.emptyText;"
-                 bookmarkplaceholder="&urlbar.bookmark.emptyText;"
-                 historyplaceholder="&urlbar.history.emptyText;"
-                 noneplaceholder="&urlbar.none.emptyText;"
+                 placeholder="&urlbar.placeholder;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletesearchparam="enable-actions"

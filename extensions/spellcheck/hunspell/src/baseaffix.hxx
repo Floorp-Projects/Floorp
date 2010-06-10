@@ -18,6 +18,7 @@
  * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
  *                 David Einstein (deinst@world.std.com)
  *                 László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  *                 Davide Prina
  *                 Giuseppe Modugno
  *                 Gianluca Turconi
@@ -57,10 +58,10 @@
 #ifndef _BASEAFF_HXX_
 #define _BASEAFF_HXX_
 
-class AffEntry
-{
-public:
+#include "hunvisapi.h"
 
+class LIBHUNSPELL_DLL_EXPORTED AffEntry
+{
 protected:
     char *         appnd;
     char *         strip;

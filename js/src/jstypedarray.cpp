@@ -313,15 +313,6 @@ TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
 }
 
 void
-TypedArray::obj_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
-{
-#ifdef DEBUG
-    TypedArray *tarray = fromJSObject(obj);
-    JS_ASSERT_IF(tarray, tarray->isArrayIndex(cx, (jsid) prop));
-#endif
-}
-
-void
 TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 {
     TypedArray *tarray = fromJSObject(obj);
@@ -333,8 +324,7 @@ TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 }
 
 JSBool
-TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                              uintN *attrsp)
+TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
               ? JSPROP_PERMANENT | JSPROP_READONLY
@@ -343,8 +333,7 @@ TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty 
 }
 
 JSBool
-TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                              uintN *attrsp)
+TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_CANT_SET_ARRAY_ATTRS);
@@ -557,8 +546,8 @@ class TypedArrayTemplate
                     sprop = (JSScopeProperty *) prop;
                     if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
                         return false;
+                    JS_UNLOCK_OBJ(cx, obj2);
                 }
-                obj2->dropProperty(cx, prop);
             }
         }
 
@@ -1185,10 +1174,11 @@ class TypedArrayTemplate
         }
 
         jsval argv = INT_TO_JSVAL(bytes);
-        JSObject *obj = JS_ConstructObjectWithArguments(cx, &ArrayBuffer::jsclass, NULL, NULL,
-                                                        1, &argv);
-        if (!obj)
+        AutoValueRooter tvr(cx);
+        if (!ArrayBuffer::create(cx, NULL, 1, &argv, tvr.addr()))
             return false;
+
+        JSObject *obj = JSVAL_TO_OBJECT(tvr.value());
 
         bufferJS = obj;
         buffer = ArrayBuffer::fromJSObject(obj);
@@ -1322,10 +1312,11 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     js_CheckAccess,                                                            \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \
-    NULL,                                                                      \
-    _typedArray::obj_dropProperty,                                             \
-    NULL, NULL, NULL,                                                          \
-    NULL                                                                       \
+    NULL,   /* thisObject */                                                   \
+    NULL,   /* call */                                                         \
+    NULL,   /* construct */                                                    \
+    NULL,   /* hasInstance */                                                  \
+    NULL    /* clear */                                                        \
 };                                                                             \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
     JS_FN("slice", _typedArray::fun_slice, 2, 0),                              \

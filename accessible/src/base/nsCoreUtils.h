@@ -150,18 +150,14 @@ public:
    *                                   aPossibleDescendantNode
    * @param  aPossibleDescendantNode [in] node to test for descendant-ness of
    *                                   aPossibleAncestorNode
+   * @param  aRootNode               [in, optional] the root node that search
+   *                                   search should be performed within
    * @return PR_TRUE                  if aPossibleAncestorNode is an ancestor of
    *                                   aPossibleDescendantNode
    */
    static PRBool IsAncestorOf(nsINode *aPossibleAncestorNode,
-                              nsINode *aPossibleDescendantNode);
-
-  /**
-   * Are the first node and the second siblings?
-   *
-   * @return PR_TRUE if aDOMNode1 and aDOMNode2 have same parent
-   */
-   static PRBool AreSiblings(nsINode *aNode1, nsINode *aNode2);
+                              nsINode *aPossibleDescendantNode,
+                              nsINode *aRootNode = nsnull);
 
   /**
    * Helper method to scroll range into view, used for implementation of
@@ -226,6 +222,26 @@ public:
    */
   static already_AddRefed<nsIDocShellTreeItem>
     GetDocShellTreeItemFor(nsIDOMNode *aNode);
+
+  /**
+   * Return true if document is loading.
+   */
+  static PRBool IsDocumentBusy(nsIDocument *aDocument);
+
+  /**
+   * Return true if the given document is root document.
+   */
+  static PRBool IsRootDocument(nsIDocument *aDocument);
+
+  /**
+   * Return true if the given document is content document (not chrome).
+   */
+  static PRBool IsContentDocument(nsIDocument *aDocument);
+
+  /**
+   * Return true if the given document is an error page.
+   */
+  static PRBool IsErrorPage(nsIDocument *aDocument);
 
   /**
    * Retrun frame for the given DOM element.

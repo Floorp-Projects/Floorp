@@ -99,6 +99,8 @@
 #include "mozilla/Services.h"
 
 #include "nsIEventListenerService.h"
+#include "nsIFrameMessageManager.h"
+
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
@@ -148,7 +150,6 @@
 #include "nsPrincipal.h"
 #include "nsSystemPrincipal.h"
 #include "nsNullPrincipal.h"
-#include "nsPrefsCID.h"
 #include "nsNetCID.h"
 
 #define NS_EDITORCOMMANDTABLE_CID \
@@ -436,6 +437,7 @@ nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
+nsresult NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult);
 
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -534,6 +536,7 @@ MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXML
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
+MAKE_CTOR(CreateGlobalMessageManager,     nsIChromeFrameMessageManager,NS_NewGlobalMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
@@ -1605,6 +1608,11 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
       NS_EVENTLISTENERSERVICE_CONTRACTID,
       CreateEventListenerService },
 
+    { "Global Message Manager",
+      NS_GLOBALMESSAGEMANAGER_CID,
+      NS_GLOBALMESSAGEMANAGER_CONTRACTID,
+      CreateGlobalMessageManager },
+
     { "Channel Policy",
       NSCHANNELPOLICY_CID,
       NSCHANNELPOLICY_CONTRACTID,
@@ -1626,19 +1634,6 @@ static const nsModuleComponentInfo gXPConnectComponents[] = {
     { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
       NS_SCRIPTSECURITYMANAGER_CID, 
       NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-      Construct_nsIScriptSecurityManager,
-      RegisterSecurityNameSet,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsIClassInfo::MAIN_THREAD_ONLY
-    },
-
-    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
-      NS_SCRIPTSECURITYMANAGER_CID, 
-      NS_GLOBAL_PREF_SECURITY_CHECK,
       Construct_nsIScriptSecurityManager,
       RegisterSecurityNameSet,
       nsnull,

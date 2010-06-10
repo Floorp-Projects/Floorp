@@ -60,6 +60,8 @@ const PREF_APP_PARTNER_BRANCH           = "app.partner.";
 const PREF_DISTRIBUTION_ID              = "distribution.id";
 const PREF_DISTRIBUTION_VERSION         = "distribution.version";
 
+const PREF_EXTENSIONS_UPDATE_URL         = "extensions.update.url";
+
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
 const NS_GRE_DIR                   = "GreD";
@@ -87,6 +89,13 @@ const MODE_WRONLY   = 0x02;
 const MODE_CREATE   = 0x08;
 const MODE_APPEND   = 0x10;
 const MODE_TRUNCATE = 0x20;
+
+const PR_RDWR        = 0x04;
+const PR_CREATE_FILE = 0x08;
+const PR_APPEND      = 0x10;
+const PR_TRUNCATE    = 0x20;
+const PR_SYNC        = 0x40;
+const PR_EXCL        = 0x80;
 
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
@@ -126,6 +135,12 @@ __defineGetter__("gUP", function() {
 __defineGetter__("gDefaultPrefBranch", function() {
   delete this.gDefaultPrefBranch;
   return this.gDefaultPrefBranch = Services.prefs.getDefaultBranch(null);
+});
+
+__defineGetter__("gZipW", function() {
+  delete this.gZipW;
+  return this.gZipW = AUS_Cc["@mozilla.org/zipwriter;1"].
+                      createInstance(AUS_Ci.nsIZipWriter);
 });
 
 /* Initializes the update service stub */

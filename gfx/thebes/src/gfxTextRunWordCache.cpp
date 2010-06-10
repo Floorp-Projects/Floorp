@@ -122,6 +122,13 @@ public:
      */
     void RemoveTextRun(gfxTextRun *aTextRun);
 
+    void Flush() {
+        mCache.Clear(); 
+#ifdef DEBUG
+        mGeneration++;
+#endif
+    }
+
 #ifdef DEBUG
     PRUint32 mGeneration;
     void Dump();
@@ -1009,4 +1016,12 @@ gfxTextRunWordCache::RemoveTextRun(gfxTextRun *aTextRun)
     if (!gTextRunWordCache)
         return;
     gTextRunWordCache->RemoveTextRun(aTextRun);
+}
+
+void
+gfxTextRunWordCache::Flush()
+{
+    if (!gTextRunWordCache)
+        return;
+    gTextRunWordCache->Flush();
 }

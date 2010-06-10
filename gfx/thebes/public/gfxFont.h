@@ -168,23 +168,13 @@ public:
         mName(aName), mItalic(PR_FALSE), mFixedPitch(PR_FALSE),
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
         mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
-        mStandardFace(aIsStandardFace),
+        mIsLocalUserFont(PR_FALSE), mStandardFace(aIsStandardFace),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
-        mCmapInitialized(PR_FALSE), mUserFontData(nsnull),
+        mCmapInitialized(PR_FALSE),
+        mUVSOffset(0), mUVSData(nsnull),
+        mUserFontData(nsnull),
         mFamily(aFamily)
-    { }
-
-    gfxFontEntry(const gfxFontEntry& aEntry) : 
-        mName(aEntry.mName), mItalic(aEntry.mItalic), 
-        mFixedPitch(aEntry.mFixedPitch), mIsProxy(aEntry.mIsProxy), 
-        mIsValid(aEntry.mIsValid), mIsBadUnderlineFont(aEntry.mIsBadUnderlineFont),
-        mIsUserFont(aEntry.mIsUserFont),
-        mStandardFace(aEntry.mStandardFace),
-        mSymbolFont(aEntry.mSymbolFont),
-        mWeight(aEntry.mWeight), mCmapInitialized(aEntry.mCmapInitialized),
-        mCharacterMap(aEntry.mCharacterMap), mUserFontData(aEntry.mUserFontData),
-        mFamily(aEntry.mFamily)
     { }
 
     virtual ~gfxFontEntry();
@@ -196,6 +186,7 @@ public:
     PRInt16 Stretch() const { return mStretch; }
 
     PRBool IsUserFont() const { return mIsUserFont; }
+    PRBool IsLocalUserFont() const { return mIsLocalUserFont; }
     PRBool IsFixedPitch() const { return mFixedPitch; }
     PRBool IsItalic() const { return mItalic; }
     PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
@@ -204,11 +195,13 @@ public:
     inline PRBool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
             return PR_TRUE;
-            
+
         return TestCharacterMap(ch);
     }
 
     virtual PRBool TestCharacterMap(PRUint32 aCh);
+    nsresult InitializeUVSMap();
+    PRUint16 GetUVSGlyph(PRUint32 aCh, PRUint32 aVS);
     virtual nsresult ReadCMAP();
 
     virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -234,6 +227,7 @@ public:
     PRPackedBool     mIsValid     : 1;
     PRPackedBool     mIsBadUnderlineFont : 1;
     PRPackedBool     mIsUserFont  : 1;
+    PRPackedBool     mIsLocalUserFont  : 1;
     PRPackedBool     mStandardFace : 1;
     PRPackedBool     mSymbolFont  : 1;
 
@@ -242,6 +236,8 @@ public:
 
     PRPackedBool     mCmapInitialized;
     gfxSparseBitSet  mCharacterMap;
+    PRUint32         mUVSOffset;
+    nsAutoArrayPtr<PRUint8> mUVSData;
     gfxUserFontData* mUserFontData;
 
 protected:
@@ -256,10 +252,12 @@ protected:
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
         mIsBadUnderlineFont(PR_FALSE),
         mIsUserFont(PR_FALSE),
+        mIsLocalUserFont(PR_FALSE),
         mStandardFace(PR_FALSE),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCmapInitialized(PR_FALSE),
+        mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
         mFamily(nsnull)
     { }
@@ -274,6 +272,10 @@ protected:
     }
 
     gfxFontFamily *mFamily;
+
+private:
+    gfxFontEntry(const gfxFontEntry&);
+    gfxFontEntry& operator=(const gfxFontEntry&);
 };
 
 
@@ -482,6 +484,14 @@ public:
     // This gets called when the timeout has expired on a zero-refcount
     // font; we just delete it.
     virtual void NotifyExpired(gfxFont *aFont);
+
+    // Cleans out the hashtable and removes expired fonts waiting for cleanup.
+    // Other gfxFont objects may be still in use but they will be pushed
+    // into the expiration queues and removed.
+    void Flush() {
+        mFonts.Clear();
+        AgeAllGenerations();
+    }
 
 protected:
     void DestroyFont(gfxFont *aFont);
@@ -923,6 +933,13 @@ public:
         if (!mIsValid)
             return PR_FALSE;
         return mFontEntry->HasCharacter(ch); 
+    }
+
+    PRUint16 GetUVSGlyph(PRUint32 aCh, PRUint32 aVS) {
+        if (!mIsValid) {
+            return 0;
+        }
+        return mFontEntry->GetUVSGlyph(aCh, aVS); 
     }
 
     // Default implementation simply calls mShaper->InitTextRun().

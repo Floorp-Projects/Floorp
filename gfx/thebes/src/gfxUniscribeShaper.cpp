@@ -76,14 +76,14 @@ public:
     UniscribeItem(gfxContext *aContext, HDC aDC,
                   gfxUniscribeShaper *aShaper,
                   const PRUnichar *aString, PRUint32 aLength,
-                  SCRIPT_ITEM *aItem) :
+                  SCRIPT_ITEM *aItem, PRUint32 aIVS) :
         mContext(aContext), mDC(aDC),
         mShaper(aShaper),
         mItemString(aString), mItemLength(aLength), 
         mAlternativeString(nsnull), mScriptItem(aItem),
         mScript(aItem->a.eScript),
         mNumGlyphs(0), mMaxGlyphs(ESTIMATE_MAX_GLYPHS(aLength)),
-        mFontSelected(PR_FALSE)
+        mFontSelected(PR_FALSE), mIVS(aIVS)
     {
         NS_ASSERTION(mMaxGlyphs < 65535, "UniscribeItem is too big, ScriptShape() will fail!");
     }
@@ -164,6 +164,20 @@ public:
                 sa.eScript = SCRIPT_UNDEFINED;
                 NS_WARNING("Uniscribe says font does not support script needed");
                 continue;
+            }
+
+            // Prior to Windows 7, Uniscribe didn't support Ideographic Variation
+            // Selectors. Replace the UVS glyph manually.
+            if (mIVS) {
+                PRUint32 lastChar = str[mItemLength - 1];
+                if (NS_IS_LOW_SURROGATE(lastChar)
+                    && NS_IS_HIGH_SURROGATE(str[mItemLength - 2])) {
+                    lastChar = SURROGATE_TO_UCS4(str[mItemLength - 2], lastChar);
+                }
+                PRUint16 glyphId = mShaper->GetFont()->GetUVSGlyph(lastChar, mIVS);
+                if (glyphId) {
+                    mGlyphs[mNumGlyphs - 1] = glyphId;
+                }
             }
 
             return rv;
@@ -375,6 +389,7 @@ private:
 
     int mMaxGlyphs;
     int mNumGlyphs;
+    PRUint32 mIVS;
 
     PRPackedBool mFontSelected;
 };
@@ -554,11 +569,34 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
     int numItems = us.Itemize();
 
     SaveDC(aDC);
+    PRUint32 ivs = 0;
     for (int i = 0; i < numItems; ++i) {
+        int iCharPos = us.ScriptItem(i)->iCharPos;
+        int iCharPosNext = us.ScriptItem(i+1)->iCharPos;
+
+        if (ivs) {
+            iCharPos += 2;
+            if (iCharPos >= iCharPosNext) {
+                ivs = 0;
+                continue;
+            }
+        }
+
+        if (i+1 < numItems && aRunStart + iCharPosNext <= aRunLength - 2
+            && aString[aRunStart + iCharPosNext] == H_SURROGATE(kUnicodeVS17)
+            && PRUint32(aString[aRunStart + iCharPosNext + 1]) - L_SURROGATE(kUnicodeVS17)
+            <= L_SURROGATE(kUnicodeVS256) - L_SURROGATE(kUnicodeVS17)) {
+
+            ivs = SURROGATE_TO_UCS4(aString[aRunStart + iCharPosNext],
+                                    aString[aRunStart + iCharPosNext + 1]);
+        } else {
+            ivs = 0;
+        }
+
         UniscribeItem item(aContext, aDC, this,
-                           aString + aRunStart + us.ScriptItem(i)->iCharPos,
-                           us.ScriptItem(i+1)->iCharPos - us.ScriptItem(i)->iCharPos,
-                           us.ScriptItem(i));
+                           aString + aRunStart + iCharPos,
+                           iCharPosNext - iCharPos,
+                           us.ScriptItem(i), ivs);
         if (!item.AllocateBuffers()) {
             result = PR_FALSE;
             break;

@@ -48,7 +48,7 @@ ul {
   padding: 3em;
   -moz-padding-start: 30px;
   background: url("chrome://global/skin/icons/warning-large.png") left 0 no-repeat -moz-Field;
-  -moz-background-origin: content;
+  background-origin: content-box;
 }
 
 #errorPageContainer.certerror {

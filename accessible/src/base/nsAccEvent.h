@@ -198,7 +198,8 @@ class nsAccStateChangeEvent: public nsAccEvent,
 public:
   nsAccStateChangeEvent(nsIAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
-                        PRBool aIsEnabled);
+                        PRBool aIsEnabled, PRBool aIsAsynch = PR_FALSE,
+                        EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   nsAccStateChangeEvent(nsIDOMNode *aNode,
                         PRUint32 aState, PRBool aIsExtraState,
@@ -220,7 +221,8 @@ class nsAccTextChangeEvent: public nsAccEvent,
                             public nsIAccessibleTextChangeEvent
 {
 public:
-  nsAccTextChangeEvent(nsIAccessible *aAccessible, PRInt32 aStart, PRUint32 aLength,
+  nsAccTextChangeEvent(nsIAccessible *aAccessible, PRInt32 aStart,
+                       PRUint32 aLength, nsAString& aModifiedText,
                        PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE,
                        EIsFromUserInput aIsFromUserInput = eAutoDetect);
 

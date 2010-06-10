@@ -49,6 +49,10 @@
 #include <io.h>
 #endif
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 const char*
 NS_strspnp(const char *delims, const char *str)
 {
@@ -278,6 +282,15 @@ printf_stderr(const char *fmt, ...)
   va_end(args);
 
   fclose(fp);
+}
+#elif defined(ANDROID)
+void
+printf_stderr(const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  __android_log_vprint(ANDROID_LOG_INFO, "Gecko", fmt, args);
+  va_end(args);
 }
 #else
 void

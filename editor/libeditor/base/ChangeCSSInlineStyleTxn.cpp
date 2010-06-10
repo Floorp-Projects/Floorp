@@ -44,6 +44,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+#include "nsGkAtoms.h"
 
 #define kNullCh (PRUnichar('\0'))
 
@@ -325,10 +326,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 PRBool
 ChangeCSSInlineStyleTxn::AcceptsMoreThanOneValue(nsIAtom *aCSSProperty)
 {
-  nsIAtom * textDecorationAtom = NS_NewAtom("text-decoration");
-  PRBool res = (textDecorationAtom == aCSSProperty);
-  NS_IF_RELEASE(textDecorationAtom);
-  return res;
+  return aCSSProperty == nsGkAtoms::text_decoration;
 }
 
 // adds the value aNewValue to the list of white-space separated values aValues

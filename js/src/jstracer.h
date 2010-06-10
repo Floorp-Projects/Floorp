@@ -342,16 +342,17 @@ enum TraceType_
 : int8_t
 #endif
 {
-    TT_OBJECT         = 0, /* pointer to JSObject whose class is not js_FunctionClass */
-    TT_INT32          = 1, /* 32-bit signed integer */
-    TT_DOUBLE         = 2, /* pointer to jsdouble */
-    TT_JSVAL          = 3, /* arbitrary jsval */
-    TT_STRING         = 4, /* pointer to JSString */
-    TT_NULL           = 5, /* null */
-    TT_SPECIAL        = 6, /* true, false, hole, or areturn (0, 1, 6, or 8) */
-    TT_VOID           = 7, /* undefined (2) */
-    TT_FUNCTION       = 8, /* pointer to JSObject whose class is js_FunctionClass */
-    TT_IGNORE         = 9
+    TT_OBJECT        =  0, /* pointer to JSObject whose class is not js_FunctionClass */
+    TT_INT32         =  1, /* 32-bit signed integer */
+    TT_DOUBLE        =  2, /* pointer to jsdouble */
+    TT_JSVAL         =  3, /* arbitrary jsval */
+    TT_STRING        =  4, /* pointer to JSString */
+    TT_NULL          =  5, /* null */
+    TT_SPECIAL       =  6, /* true, false, hole, or areturn (0, 1, 6, or 8) */
+    TT_VOID          =  7, /* undefined (2) */
+    TT_FUNCTION      =  8, /* pointer to JSObject whose class is js_FunctionClass */
+    TT_MAGIC         =  9, /* a 'magic' value, aka a hole */
+    TT_IGNORE        = 10
 }
 #if defined(__GNUC__) && defined(USE_TRACE_TYPE_ENUM)
 __attribute__((packed))

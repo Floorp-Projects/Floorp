@@ -213,6 +213,10 @@
 
 #include "mozilla/FunctionTimer.h"
 
+#ifdef ANDROID
+#include "AndroidBridge.h"
+#endif
+
 #ifdef WINCE
 class WindowsMutex {
 public:
@@ -1749,8 +1753,11 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 
   SaveToEnv("MOZ_LAUNCHED_CHILD=1");
 
+#if defined(ANDROID)
+  mozilla::AndroidBridge::Bridge()->ScheduleRestart();
+#else
 #if defined(XP_MACOSX)
-  SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+  CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #else
   nsCOMPtr<nsILocalFile> lf;
@@ -1801,6 +1808,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 #endif // XP_OS2 series
 #endif // WP_WIN
 #endif // WP_MACOSX
+#endif // ANDROID
 
   return NS_ERROR_LAUNCHED_CHILD_PROCESS;
 }
@@ -1955,7 +1963,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
 #ifdef XP_MACOSX
-    SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+    CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
 #endif
 
 #ifdef XP_WIN
@@ -2045,7 +2053,7 @@ ImportProfiles(nsIToolkitProfileService* aPService,
       xpcom.RegisterProfileService();
 
 #ifdef XP_MACOSX
-      SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+      CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
 #endif
 
       nsCOMPtr<nsIProfileMigrator> migrator
@@ -3115,7 +3123,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #if defined(MOZ_WIDGET_QT)
     const char* qgraphicssystemARG = NULL;
-    ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG);
+    ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG, PR_FALSE);
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
     QApplication app(gArgc, gArgv);
@@ -3563,14 +3571,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
             NS_ENSURE_TRUE(cmdLine, 1);
 
-            SetupMacCommandLine(gArgc, gArgv, PR_FALSE);
+            CommandLineServiceMac::SetupMacCommandLine(gArgc, gArgv, PR_FALSE);
 
             rv = cmdLine->Init(gArgc, gArgv,
                                workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
             NS_ENSURE_SUCCESS(rv, 1);
-#endif
-#ifdef MOZ_WIDGET_COCOA
-            // Prepare Cocoa's form of Apple Event handling.
+            
+            // Set up ability to respond to system (Apple) events.
             SetupMacApplicationDelegate();
 #endif
 
@@ -3606,7 +3613,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                                      PromiseFlatCString(profileName).get());
 #endif /* MOZ_ENABLE_XREMOTE */
 
-            // enable win32 DDE responses and Mac appleevents responses
             nativeApp->Enable();
           }
 
@@ -3662,7 +3668,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef XP_MACOSX
-          SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+          CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
 #endif
         }
       }

@@ -36,14 +36,16 @@
 function runTest() {
   ok(true, "Entering runTest - cleanup");
 
+  SimpleTest.waitForExplicitFinish();
+
   closeUpdateWindow();
 
   resetPrefs();
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
 
-  var dir = getCurrentProcessDir();
-  var file = dir.clone();
+  let dir = getCurrentProcessDir();
+  let file = dir.clone();
   file.append(FILE_UPDATE_ACTIVE);
   ok(!file.exists(), file.path + " should not exist");
 
@@ -61,6 +63,22 @@ function runTest() {
   file = dir.clone();
   file.append(FILE_UPDATE_ARCHIVE);
   ok(!file.exists(), file.path + " should not exist");
+
+  let addonPrepDir = Services.dirsvc.get(NS_APP_USER_PROFILE_50_DIR,
+                                         AUS_Ci.nsILocalFile);
+  addonPrepDir.append(ADDON_PREP_DIR);
+  // Not being able to remove the directory used to create the test add-ons
+  // will not adversely affect subsequent tests so wrap it in a try lock and
+  // don't test whether its removal was successful.
+  try {
+    removeDirRecursive(addonPrepDir);
+  }
+  catch (e) {
+    debugDump("removeDirRecursive failed to remove the " + ADDON_PREP_DIR +
+              " from the profile. " + e);
+  }
+
+  resetAddons(SimpleTest.finish);
 }
 
 ]]>

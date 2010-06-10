@@ -17,6 +17,7 @@
  * 
  * Contributor(s): Björn Jacke (bjoern.jacke@gmx.de)
  *                 László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,17 +44,10 @@
  *
  ******* END LICENSE BLOCK *******/
 
-#ifndef MOZILLA_CLIENT
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
-#include <cctype>
-#else
 #include <stdlib.h> 
 #include <string.h>
 #include <stdio.h> 
 #include <ctype.h>
-#endif
 
 #include "csutil.hxx"
 #include "phonet.hxx"
@@ -76,15 +70,15 @@ void init_phonet_hash(phonetable & parms)
     }
   }
 
-  // like strcpy but safe if the strings overlap
-  //   but only if dest < src
-  static inline void strmove(char * dest, char * src) {
-    while (*src) 
-      *dest++ = *src++;
-    *dest = '\0';
-  }
+// like strcpy but safe if the strings overlap
+//   but only if dest < src
+static inline void strmove(char * dest, char * src) {
+  while (*src) 
+    *dest++ = *src++;
+  *dest = '\0';
+}
 
-int myisalpha(char ch) {
+static int myisalpha(char ch) {
   if ((unsigned char) ch < 128) return isalpha(ch);
   return 1;
 }
