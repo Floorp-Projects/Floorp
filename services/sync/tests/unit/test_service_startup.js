@@ -10,6 +10,7 @@ function run_test() {
   Observers.add("weave:service:ready", function (subject, data) {
     observerCalled = true;
   });
+  Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
   Svc.Prefs.set("username", "johndoe");
 
   try {
@@ -20,7 +21,8 @@ function run_test() {
 
     _("Engines are registered.");
     let engines = Weave.Engines.getAll();
-    do_check_true(!!engines.length);
+    do_check_true(Utils.deepEquals([engine.name for each (engine in engines)],
+                                   ['tabs', 'bookmarks', 'forms', 'history']));
 
     _("Identities are registered.");
     do_check_eq(ID.get('WeaveID').username, "johndoe");

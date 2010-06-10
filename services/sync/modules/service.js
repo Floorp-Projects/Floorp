@@ -379,19 +379,26 @@ WeaveSvc.prototype = {
    */
   _registerEngines: function WeaveSvc__registerEngines() {
     let engines = [];
-    switch (Svc.AppInfo.ID) {
-      case FENNEC_ID:
-        engines = ["Tab", "Bookmarks", "Form", "History", "Password"];
-        break;
+    // Applications can provide this preference (comma-separated list)
+    // to specify which engines should be registered on startup.
+    let pref = Svc.Prefs.get("registerEngines");
+    if (pref) {
+      engines = pref.split(",");
+    } else {
+      // Fallback for the add-on case
+      switch (Svc.AppInfo.ID) {
+        case FENNEC_ID:
+          engines = ["Tab", "Bookmarks", "Form", "History", "Password"];
+          break;
 
-      case FIREFOX_ID:
-      case TEST_HARNESS_ID:
-        engines = ["Bookmarks", "Form", "History", "Password", "Prefs", "Tab"];
-        break;
+        case FIREFOX_ID:
+          engines = ["Bookmarks", "Form", "History", "Password", "Prefs", "Tab"];
+          break;
 
-      case SEAMONKEY_ID:
-        engines = ["Form", "History", "Password", "Tab"];
-        break;
+        case SEAMONKEY_ID:
+          engines = ["Form", "History", "Password", "Tab"];
+          break;
+      }
     }
 
     // Grab the actual engine and register them
