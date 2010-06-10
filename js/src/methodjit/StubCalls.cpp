@@ -2657,3 +2657,71 @@ stubs::LeaveBlock(VMFrame &f)
     fp->blockChain = fp->blockChain->getParent();
 }
 
+void * JS_FASTCALL
+stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
+{
+    jsbytecode *jpc = pc;
+    JSScript *script = f.fp->script;
+
+    /* This is correct because the compiler adjusts the stack beforehand. */
+    Value lval = f.regs.sp[-1];
+
+    if (!lval.isPrimitive()) {
+        ptrdiff_t offs = (pc + GET_JUMP_OFFSET(pc)) - script->code;
+        JS_ASSERT(script->nmap[offs]);
+        return script->nmap[offs];
+    }
+
+    JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
+    
+    pc += JUMP_OFFSET_LEN;
+    uint32 npairs = GET_UINT16(pc);
+    pc += UINT16_LEN;
+
+    JS_ASSERT(npairs);
+
+    if (lval.isString()) {
+        JSString *str = lval.asString();
+        for (uint32 i = 1; i <= npairs; i++) {
+            Value rval = script->getConst(GET_INDEX(pc));
+            pc += INDEX_LEN;
+            if (rval.isString()) {
+                JSString *rhs = rval.asString();
+                if (rhs == str || js_EqualStrings(str, rhs)) {
+                    ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
+                    JS_ASSERT(script->nmap[offs]);
+                    return script->nmap[offs];
+                }
+            }
+            pc += JUMP_OFFSET_LEN;
+        }
+    } else if (lval.isNumber()) {
+        double d = lval.asNumber();
+        for (uint32 i = 1; i <= npairs; i++) {
+            Value rval = script->getConst(GET_INDEX(pc));
+            pc += INDEX_LEN;
+            if (rval.isNumber() && d == rval.asNumber()) {
+                ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
+                JS_ASSERT(script->nmap[offs]);
+                return script->nmap[offs];
+            }
+            pc += JUMP_OFFSET_LEN;
+        }
+    } else {
+        for (uint32 i = 1; i <= npairs; i++) {
+            Value rval = script->getConst(GET_INDEX(pc));
+            pc += INDEX_LEN;
+            if (lval == rval) {
+                ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
+                JS_ASSERT(script->nmap[offs]);
+                return script->nmap[offs];
+            }
+            pc += JUMP_OFFSET_LEN;
+        }
+    }
+
+    ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(jpc)) - script->code;
+    JS_ASSERT(script->nmap[offs]);
+    return script->nmap[offs];
+}
+
