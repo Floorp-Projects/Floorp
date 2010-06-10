@@ -531,14 +531,13 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
         nestegg_free_packet(next_packet);
         return PR_FALSE;
       }
+      mVideoPackets.PushFront(next_packet);
     } else {
       r = nestegg_duration(mContext, &next_tstamp);
       if (r == -1) {
-        nestegg_free_packet(next_packet);
         return PR_FALSE;
       }
     }
-    mVideoPackets.PushFront(next_packet);
   }
 
   PRInt64 tstamp_ms = tstamp / NS_PER_MS;
