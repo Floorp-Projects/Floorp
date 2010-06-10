@@ -141,8 +141,12 @@ PrefStore.prototype = {
     try {
       Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
       ltm = ltm.LightweightThemeManager;
-      enabledBefore = this._prefs.getBoolPref("lightweightThemes.isThemeSelected");
-      prevTheme = ltm.currentTheme;
+
+      let enabledPref = "lightweightThemes.isThemeSelected";
+      if (this._prefs.getPrefType(enabledPref) == this._prefs.PREF_BOOL) {
+        enabledBefore = this._prefs.getBoolPref(enabledPref);
+        prevTheme = ltm.currentTheme;
+      }
     } catch(ex) {
       ltmExists = false;
     } // LightweightThemeManager only exists in Firefox 3.6+
