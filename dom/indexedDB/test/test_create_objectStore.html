@@ -27,12 +27,12 @@
         { name: "6", keyPath: "foo" }
       ];
 
-      let request = indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      ok(event.source === indexedDB, "event.source is correct");
+      ok(event.source === mozIndexedDB, "event.source is correct");
       let db = event.result;
 
       let count = db.objectStoreNames.length;

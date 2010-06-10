@@ -17,14 +17,14 @@
       const description = "My Test Database";
       const objectStore =  { name: "Objects", keyPath: "id", autoIncr: true };
 
-      let request = indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       let db1 = event.result;
 
-      request = indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

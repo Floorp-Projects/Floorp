@@ -23,7 +23,7 @@
 
       is(keys.length, sortedKeys.length, "Good key setup");
 
-      let request = indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
@@ -78,7 +78,7 @@
 
       keyIndex = 4;
 
-      let range = indexedDB.makeBoundKeyRange(2000, "q");
+      let range = mozIndexedDB.makeBoundKeyRange(2000, "q");
       request = objectStore.openCursor(range);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
