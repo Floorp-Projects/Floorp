@@ -943,6 +943,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     mContext = nsnull;            // Forces Release
   }
   mChromeEventHandler = nsnull; // Forces Release
+  mParentTarget = nsnull;
 
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
 
@@ -1197,6 +1198,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameElement)
 
@@ -1230,6 +1232,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameElement)
 
@@ -2399,16 +2402,19 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  nsPIDOMEventTarget* chromeTarget = mChromeEventHandler;
-  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
-  if (flo) {
-    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-    if (fl) {
-      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
-      chromeTarget = t ? t : chromeTarget;
+  if (!mParentTarget) {
+    nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
+    if (flo) {
+      nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+      if (fl) {
+        mParentTarget = fl->GetTabChildGlobalAsEventTarget();
+      }
+    }
+    if (!mParentTarget) {
+      mParentTarget = mChromeEventHandler;
     }
   }
-  aVisitor.mParentTarget = chromeTarget;
+  aVisitor.mParentTarget = mParentTarget;
   return NS_OK;
 }
 
