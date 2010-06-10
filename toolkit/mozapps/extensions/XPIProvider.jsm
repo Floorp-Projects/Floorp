@@ -360,6 +360,8 @@ function loadManifestFromRDF(aUri, aStream) {
   });
   if (!addon.id || !addon.version)
     throw new Error("No ID or version in install manifest");
+  if (!gIDTest.test(addon.id))
+    throw new Error("Illegal add-on ID " + addon.id);
 
   if (!addon.type) {
     addon.type = addon.internalName ? "theme" : "extension";
@@ -3554,12 +3556,23 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = aInstallLocation;
   this.sourceURL = aUrl;
+  this.hash = aHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
   this.existingAddon = aExistingAddon;
+  this.error = 0;
 
   if (aUrl instanceof Ci.nsIFileURL) {
     this.file = aUrl.file.QueryInterface(Ci.nsILocalFile);
+
+    if (!this.file.exists()) {
+      WARN("XPI file " + this.file.path + " does not exist");
+      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_NETWORK_FAILURE;
+      aCallback(this);
+      return;
+    }
+
     this.state = AddonManager.STATE_DOWNLOADED;
     this.progress = this.file.fileSize;
     this.maxProgress = this.file.fileSize;
@@ -3572,11 +3585,25 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
       fis.init(this.file, -1, -1, false);
       crypto.updateFromStream(fis, this.file.fileSize);
       let hash = crypto.finish(true);
-      if (hash != this.hash)
-        throw new Error("Hash mismatch");
+      if (hash != this.hash) {
+        WARN("Hash mismatch");
+        this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
+        aCallback(this);
+        return;
+      }
     }
 
-    this.loadManifest();
+    try {
+      this.loadManifest();
+    }
+    catch (e) {
+      WARN("Invalid XPI: " + e);
+      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_CORRUPT_FILE;
+      aCallback(this);
+      return;
+    }
 
     let self = this;
     XPIDatabase.getVisibleAddonForID(this.addon.id, function(aAddon) {
@@ -3614,7 +3641,6 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
     this.iconURL = aIconURL;
     this.progress = 0;
     this.maxProgress = -1;
-    this.hash = aHash;
 
     XPIProvider.installs.push(this);
     AddonManagerPrivate.callInstallListeners("onNewInstall", this.listeners,
@@ -3647,6 +3673,7 @@ AddonInstall.prototype = {
   addon: null,
 
   state: null,
+  error: null,
   progress: null,
   maxProgress: null,
 
@@ -3841,10 +3868,10 @@ AddonInstall.prototype = {
       catch (e) {
         WARN("Unknown hash algorithm " + alg);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
         XPIProvider.removeActiveInstall(this);
         AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                                 this.listeners, this.wrapper,
-                                                 AddonManager.ERROR_INCORRECT_HASH);
+                                                 this.listeners, this.wrapper);
         return;
       }
     }
@@ -3863,29 +3890,40 @@ AddonInstall.prototype = {
                     createInstance(Ci.nsIFileOutputStream);
       this.stream.init(this.file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                        FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE, 0);
+    }
+    catch (e) {
+      WARN("Failed to start download: " + e);
+      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_FILE_ACCESS;
+      XPIProvider.removeActiveInstall(this);
+      AddonManagerPrivate.callInstallListeners("onDownloadFailed",
+                                               this.listeners, this.wrapper);
+      return;
+    }
 
-      let listener = Cc["@mozilla.org/network/stream-listener-tee;1"].
-                     createInstance(Ci.nsIStreamListenerTee);
-      listener.init(this, this.stream);
+    let listener = Cc["@mozilla.org/network/stream-listener-tee;1"].
+                   createInstance(Ci.nsIStreamListenerTee);
+    listener.init(this, this.stream);
+    try {
       this.channel = NetUtil.newChannel(this.sourceURL);
       if (this.loadGroup)
         this.channel.loadGroup = this.loadGroup;
-
-      Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
 
       // Verify that we don't end up on an insecure channel if we haven't got a
       // hash to verify with (see bug 537761 for discussion)
       if (!this.hash)
         this.channel.notificationCallbacks = new BadCertHandler();
       this.channel.asyncOpen(listener, null);
+
+      Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
     }
     catch (e) {
       WARN("Failed to start download: " + e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_NETWORK_FAILURE;
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                               this.listeners, this.wrapper,
-                                               AddonManager.ERROR_NETWORK_FAILURE);
+                                               this.listeners, this.wrapper);
     }
   },
 
@@ -4015,9 +4053,10 @@ AddonInstall.prototype = {
   downloadFailed: function(aReason, aError) {
     WARN("Download failed: " + aError + "\n");
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+    this.error = aReason;
     XPIProvider.removeActiveInstall(this);
     AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
-                                             this.wrapper, aReason);
+                                             this.wrapper);
     try {
       this.file.remove(true);
     }
@@ -4205,10 +4244,11 @@ AddonInstall.prototype = {
       if (stagedAddon.exists())
         stagedAddon.remove(true);
       this.state = AddonManager.STATE_INSTALL_FAILED;
+      this.error = AddonManager.ERROR_FILE_ACCESS;
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallFailed",
                                                this.listeners,
-                                               this.wrapper, e);
+                                               this.wrapper);
     }
     finally {
       // If the file was downloaded then delete it
@@ -4299,8 +4339,8 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
  *         The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
-  ["name", "type", "version", "iconURL", "infoURL", "file", "state", "progress",
-   "maxProgress", "certificate", "certName"].forEach(function(aProp) {
+  ["name", "type", "version", "iconURL", "infoURL", "file", "state", "error",
+   "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function() aInstall[aProp]);
   }, this);
 

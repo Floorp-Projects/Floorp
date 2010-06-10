@@ -616,7 +616,6 @@
       </method>
 
       <method name="onDownloadFailed">
-        <parameter name="aError"/>
         <body><![CDATA[
           this.refreshState();
         ]]></body>
@@ -643,7 +642,6 @@
       </method>
 
       <method name="onInstallFailed">
-        <parameter name="aError"/>
         <body><![CDATA[
           this.refreshState();
         ]]></body>

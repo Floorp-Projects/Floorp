@@ -53,8 +53,8 @@ function run_install_tests(callback) {
           return false;
         },
 
-        onDownloadFailed: function(install, status) {
-          is(status, expectedStatus, message);
+        onDownloadFailed: function(install) {
+          is(install.error, expectedStatus, message);
           run_next_install_test();
         }
       });
