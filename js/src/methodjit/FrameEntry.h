@@ -51,6 +51,7 @@ namespace mjit {
 class FrameEntry
 {
     friend class FrameState;
+    friend struct SyncRegs;
 
   public:
     bool isConstant() const {
