@@ -92,6 +92,8 @@ class FrameState
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Imm32 Imm32;
 
+    friend struct SyncRegs;
+
     static const uint32 InvalidIndex = 0xFFFFFFFF;
 
     struct Tracker {
@@ -386,6 +388,7 @@ class FrameState
     inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
     inline uint32 localIndex(uint32 n);
     void pushCopyOf(uint32 index);
+    void syncFancy(Assembler &masm, Registers avail, uint32 resumeAt) const;
 
     /*
      * "Uncopies" the backing store of a FrameEntry that has been copied. The
