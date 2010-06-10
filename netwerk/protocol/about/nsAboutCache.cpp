@@ -330,7 +330,7 @@ nsAboutCache::ParseURI(nsIURI * uri, nsCString &deviceID)
 }
 
 
-NS_METHOD
+nsresult
 nsAboutCache::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsAboutCache* about = new nsAboutCache();

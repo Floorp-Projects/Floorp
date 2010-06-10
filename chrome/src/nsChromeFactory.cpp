@@ -36,8 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -49,21 +48,26 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
 
-// The list of components we register
-static const nsModuleComponentInfo components[] = 
-{
-    { "Chrome Registry", 
-      NS_CHROMEREGISTRY_CID,
-      NS_CHROMEREGISTRY_CONTRACTID, 
-      nsChromeRegistryConstructor
-    },
+NS_DEFINE_NAMED_CID(NS_CHROMEREGISTRY_CID);
+NS_DEFINE_NAMED_CID(NS_CHROMEPROTOCOLHANDLER_CID);
 
-    { "Chrome Protocol Handler", 
-      NS_CHROMEPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", 
-      nsChromeProtocolHandlerConstructor
-    }
+static const mozilla::Module::CIDEntry kChromeCIDs[] = {
+    { &kNS_CHROMEREGISTRY_CID, false, NULL, nsChromeRegistryConstructor },
+    { &kNS_CHROMEPROTOCOLHANDLER_CID, false, NULL, nsChromeProtocolHandlerConstructor },
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsChromeModule, components)
+static const mozilla::Module::ContractIDEntry kChromeContracts[] = {
+    { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", &kNS_CHROMEPROTOCOLHANDLER_CID },
+    { NULL }
+};
+
+static const mozilla::Module kChromeModule = {
+    mozilla::Module::kVersion,
+    kChromeCIDs,
+    kChromeContracts
+};
+
+NSMODULE_DEFN(nsChromeModule) = &kChromeModule;
 

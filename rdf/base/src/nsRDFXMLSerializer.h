@@ -63,7 +63,7 @@ class nsRDFXMLSerializer : public nsIRDFXMLSerializer,
                            public nsIRDFXMLSource
 {
 public:
-    static NS_IMETHODIMP
+    static nsresult
     Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     NS_DECL_ISUPPORTS

@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"

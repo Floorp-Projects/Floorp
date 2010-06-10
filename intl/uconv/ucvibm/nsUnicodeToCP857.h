@@ -58,7 +58,7 @@
 /**
  * A character set converter from Unicode to CP857.
  */
-NS_METHOD
+nsresult
 nsUnicodeToCP857Constructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult);
 

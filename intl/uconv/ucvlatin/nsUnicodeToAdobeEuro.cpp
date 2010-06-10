@@ -48,7 +48,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "adobeeuro.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToAdobeEuroConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult) 
 {
