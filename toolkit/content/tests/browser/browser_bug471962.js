@@ -40,7 +40,7 @@
  * sent to the address of the inner page.
  */
 function test() {
-  /*
+
   // --- Testing support library ---
 
   // Import the toolkit test support library in the scope of the current test.
@@ -55,20 +55,14 @@ function test() {
   const kBaseUrl =
         "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/";
 
-  function pageShown(event)
-  {
-    if (event.target.location != "about:blank")
-      testRunner.continueTest();
-  }
-
   function FramePostData_TestGenerator() {
     // Display the outer page, and wait for it to be loaded. Loading the URI
     // doesn't generally raise any exception, but if an error page is
     // displayed, an exception will occur later during the test.
-    gBrowser.addEventListener("pageshow", pageShown, false);
+    gBrowser.addEventListener("pageshow", testRunner.continueTest, false);
     gBrowser.loadURI(kBaseUrl + "post_form_outer.sjs");
     yield;
-    gBrowser.removeEventListener("pageshow", pageShown, false);
+    gBrowser.removeEventListener("pageshow", testRunner.continueTest, false);
 
     try {
       // Submit the form in the outer page, then wait for both the outer
@@ -146,9 +140,5 @@ function test() {
 
   // --- Run the test ---
 
- testRunner.runTest(FramePostData_TestGenerator);
-*/
-  // Disable this generator-using test until bug 565199 is fixed.
-  ok(true, true);
-    
+  testRunner.runTest(FramePostData_TestGenerator);
 }
