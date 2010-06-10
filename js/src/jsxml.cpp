@@ -455,12 +455,10 @@ static JSObject *
 NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
             JSClass *clasp = &js_QNameClass.base)
 {
-    JSObject *obj;
-
-    obj = NewObject(cx, clasp, NULL, NULL);
-    JS_ASSERT(obj->isQName());
+    JSObject *obj = NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return NULL;
+    JS_ASSERT(obj->isQName());
     InitXMLQName(obj, uri, prefix, localName);
     METER(xml_stats.qname);
     return obj;
