@@ -59,7 +59,7 @@
  *   6. if folder scope was clicked, searches again and ensures folder scope
  *      remains selected.
  */
- 
+
 const TEST_URL = "http://dummy.mozilla.org/";
 
 // Add your tests here.  Each is a function that's called by testHelper().
@@ -224,11 +224,15 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
     if (getSelectedScopeButtonId() == "scopeBarHistory" ||
         getSelectedScopeButtonId() == "scopeBarAll" ||
         aFolderId == PlacesUtils.bookmarks.unfiledBookmarksFolder) {
-      // Check that search has returned a valid result.
-      contentTree.view.selection.select(0);
-      var foundNode = contentTree.selectedNode;
-      isnot(foundNode, null, "Found a valid node");
-      is(foundNode.uri, TEST_URL);
+      // Check that the target node exists in the tree's search results.
+      var node = null;
+      for (var i = 0; i < contentTree.view.rowCount; i++) {
+        node = contentTree.view.nodeForTreeIndex(i);
+        if (node.uri === TEST_URL)
+          break;
+      }
+      isnot(node, null, "At least the target node should be in the tree");
+      is(node.uri, TEST_URL, "URI of node should match target URL");
     }
   }
   else {
