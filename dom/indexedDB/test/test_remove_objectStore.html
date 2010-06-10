@@ -19,7 +19,7 @@
       const description = "My Test Database";
       const objectStoreName = "Objects";
 
-      let request = mozIndexedDB.open(name, description);
+      let request = moz_indexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
