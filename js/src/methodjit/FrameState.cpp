@@ -252,13 +252,218 @@ FrameState::assertValidRegisterState() const
 }
 #endif
 
+namespace js {
+namespace mjit {
+
+struct SyncRegInfo {
+    FrameEntry *fe;
+    RematInfo::RematType type;
+};
+
+/*
+ * While emitting sync code from the fast path to the slow path, we may get
+ * a situation where a copy's backing store has no register. If we run into
+ * this situation, the structure below is used to allocate registers.
+ *
+ * While walking the tracer, we remember all registers that have been sunk,
+ * and can thus be clobbered. These are given out on a first-come, first-serve
+ * basis. If none are available, one is evicted (explained later).
+ *
+ * After allocating a register, it is forced into the FrameEntry's RematInfo,
+ * _despite_ this whole process being immutable with respect to the tracker.
+ * This is so further copies of the FE can easily re-use the register.
+ *
+ * Once the backing store is reached (guaranteed to be after all copies,
+ * thanks to the tracker ordering), the registers are placed back into the
+ * free bucket. Here we necessarily undo the mucking from above. If the FE
+ * never actually owned the register, we restore the fact that it was really
+ * in memory.
+ */
+struct SyncRegs {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+    SyncRegs(const FrameState &frame, Assembler &masm, Registers avail)
+      : frame(frame), masm(masm), avail(avail)
+    {
+        memset(regs, 0, sizeof(regs));
+    }
+
+    void giveTypeReg(FrameEntry *fe) {
+        JS_ASSERT(fe->isCopied());
+        RegisterID reg = allocFor(fe, RematInfo::TYPE);
+        masm.loadTypeTag(frame.addressOf(fe), reg);
+        fe->type.setRegister(reg);
+    }
+
+    void giveDataReg(FrameEntry *fe) {
+        JS_ASSERT(fe->isCopied());
+        RegisterID reg = allocFor(fe, RematInfo::DATA);
+        masm.loadData32(frame.addressOf(fe), reg);
+        fe->data.setRegister(reg);
+    }
+
+    void forget(FrameEntry *fe) {
+        JS_ASSERT(!fe->isCopy());
+        if (fe->type.inRegister()) {
+            if (forgetReg(fe, RematInfo::TYPE, fe->type.reg()))
+                fe->type.setMemory();
+        }
+        if (fe->data.inRegister()) {
+            if (forgetReg(fe, RematInfo::DATA, fe->data.reg()))
+                fe->data.setMemory();
+        }
+    }
+
+  private:
+    RegisterID allocFor(FrameEntry *fe, RematInfo::RematType type) {
+        RegisterID reg;
+        if (!avail.empty())
+            reg = avail.takeAnyReg();
+        else
+            reg = evict();
+
+        regs[reg].fe = fe;
+        regs[reg].type = type;
+
+        return reg;
+    }
+
+    RegisterID evict() {
+        /*
+         * Worst case. This register is backed by a synced FE that might back
+         * copies. Evicting it could result in a load.
+         */
+        uint32 worst = FrameState::InvalidIndex;
+
+        /*
+         * Next best case. This register backs an unsynced FE on the fast
+         * path, and clobbering it will emit a store early.
+         */
+        uint32 nbest = FrameState::InvalidIndex;
+
+        for (uint32 i = 0; i < Assembler::TotalRegisters; i++) {
+            RegisterID reg = RegisterID(i);
+            if (!(Registers::maskReg(reg) & Registers::AvailRegs))
+                continue;
+
+            worst = i;
+
+            FrameEntry *myFe = regs[reg].fe;
+            if (!myFe) {
+                FrameEntry *fe = frame.regstate[reg].fe;
+                if (!fe)
+                    continue;
+
+                nbest = i;
+
+                if (frame.regstate[reg].type == RematInfo::TYPE && fe->type.synced())
+                    return reg;
+                else if (frame.regstate[reg].type == RematInfo::DATA && fe->data.synced())
+                    return reg;
+            }
+        }
+
+        /*
+         * :TODO: :FIXME: :XXX: This assumption is not valid, but right now
+         * nothing triggers it. Yay?
+         */
+        JS_NOT_REACHED("wat");
+    }
+
+    /* Returns true if had an fe */
+    bool forgetReg(FrameEntry *checkFe, RematInfo::RematType type, RegisterID reg) {
+        /*
+         * Unchecked, because evict() can steal registers of synced FEs before
+         * the tracker has a chance to put them in the free list. This is
+         * harmless, and just avoids an assert.
+         */
+        avail.putRegUnchecked(reg);
+
+        /*
+         * It is necessary to check the type as well, for example an FE could
+         * have its type synced to EDI, and data unsynced. EDI could be
+         * evicted, but we only want to reset data, not type.
+         *
+         * The control flow could be better here, maybe this check should be
+         * in forgetRegs?
+         */
+        FrameEntry *fe = regs[reg].fe;
+        if (!fe || fe != checkFe || regs[reg].type != type)
+            return false;
+
+        regs[reg].fe = NULL;
+
+        return true;
+    }
+
+    const FrameState &frame;
+    Assembler &masm;
+    SyncRegInfo regs[Assembler::TotalRegisters];
+    Registers avail;
+};
+
+} } /* namespace js, mjit */
+
+void
+FrameState::syncFancy(Assembler &masm, Registers avail, uint32 resumeAt) const
+{
+    SyncRegs sr(*this, masm, avail);
+
+    FrameEntry *tos = tosFe();
+    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
+            continue;
+
+        Address address = addressOf(fe);
+
+        if (!fe->isCopy()) {
+            sr.forget(fe);
+
+            if (!fe->data.synced()) {
+                syncData(fe, address, masm);
+                if (fe->isConstant())
+                    continue;
+            }
+            if (!fe->type.synced())
+                syncType(fe, addressOf(fe), masm);
+        } else {
+            FrameEntry *backing = fe->copyOf();
+            JS_ASSERT(backing != fe);
+            JS_ASSERT(!backing->isConstant() && !fe->isConstant());
+
+            if (!fe->type.synced()) {
+                /* :TODO: we can do better, the type is learned for all copies. */
+                if (fe->isTypeKnown()) {
+                    //JS_ASSERT(fe->getTypeTag() == backing->getTypeTag());
+                    masm.storeTypeTag(ImmTag(fe->getTypeTag()), address);
+                } else {
+                    if (!backing->type.inRegister())
+                        sr.giveTypeReg(backing);
+                    masm.storeTypeTag(backing->type.reg(), address);
+                }
+            }
+
+            if (!fe->data.synced()) {
+                if (!backing->data.inRegister())
+                    sr.giveDataReg(backing);
+                masm.storeData32(backing->data.reg(), address);
+            }
+        }
+    }
+}
+
 void
 FrameState::sync(Assembler &masm) const
 {
+    /*
+     * Keep track of free registers using a bitmask. If we have to drop into
+     * syncFancy(), then this mask will help avoid eviction.
+     */
     Registers avail(freeRegs);
 
     FrameEntry *tos = tosFe();
-    for (uint32 i = 0; i < tracker.nentries; i++) {
+    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
             continue;
@@ -285,19 +490,14 @@ FrameState::sync(Assembler &masm) const
             JS_ASSERT(backing != fe);
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
 
-            bool allocd = false;
-            RegisterID reg = Registers::ReturnReg;
-            if (backing->type.inMemory() || backing->data.inMemory()) {
-                /* :TODO: this is not a valid assumption. */
-                JS_ASSERT(!avail.empty());
-
-                /*
-                 * It's not valid to alter the state of an fe here, not yet. So
-                 * we don't bother optimizing copies of the same local variable
-                 * if each one needs a load from memory.
-                 */
-                reg = avail.takeAnyReg();
-                allocd = true;
+            /*
+             * If the copy is backed by something not in a register, fall back
+             * to a slower sync algorithm.
+             */
+            if ((!fe->type.synced() && !fe->type.inRegister()) ||
+                (!fe->data.synced() && !fe->data.inRegister())) {
+                syncFancy(masm, avail, i);
+                return;
             }
 
             if (!fe->type.synced()) {
@@ -306,30 +506,12 @@ FrameState::sync(Assembler &masm) const
                     //JS_ASSERT(fe->getTypeTag() == backing->getTypeTag());
                     masm.storeTypeTag(ImmTag(fe->getTypeTag()), address);
                 } else {
-                    RegisterID r;
-                    if (backing->type.inRegister()) {
-                        r = backing->type.reg();
-                    } else {
-                        masm.loadTypeTag(addressOf(backing), reg);
-                        r = reg;
-                    }
-                    masm.storeTypeTag(r, address);
+                    masm.storeTypeTag(backing->type.reg(), address);
                 }
             }
 
-            if (!fe->data.synced()) {
-                RegisterID r;
-                if (backing->data.inRegister()) {
-                    r = backing->data.reg();
-                } else {
-                    masm.loadData32(addressOf(backing), reg);
-                    r = reg;
-                }
-                masm.storeData32(r, address);
-            }
-
-            if (allocd)
-                avail.putReg(reg);
+            if (!fe->data.synced())
+                masm.storeData32(backing->data.reg(), address);
         }
     }
 }
