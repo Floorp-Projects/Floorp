@@ -3857,8 +3857,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
          * We cannot clone this object, so fail (we used to return funobj, bad
          * idea, but we changed incompatibly to teach any abusers a lesson!).
          */
-        Value v;
-        v.setObject(*funobj);
+        Value v = ObjectTag(*funobj);
         js_ReportIsNotFunction(cx, &v, 0);
         return NULL;
     }
@@ -4096,8 +4095,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            Value priv;
-            priv.setPrivate(fs);
+            Value priv = PrivateTag(fs);
             if (!js_SetReservedSlot(cx, FUN_OBJECT(fun), 0, priv))
                 return JS_FALSE;
         }
