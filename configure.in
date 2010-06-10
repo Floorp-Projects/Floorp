@@ -5913,7 +5913,7 @@ if test -n "$MOZ_WEBM"; then
         AC_CHECK_PROGS(VPX_AS, ml, "")
         if test -n "$VPX_AS"; then
           VPX_X86_ASM=1
-          VPX_AS='$(topsrcdir)/media/libvpx/yasm2masm-as.sh'
+          VPX_AS='sh $(topsrcdir)/media/libvpx/yasm2masm-as.sh'
         else
             AC_MSG_ERROR([Need MASM (ml.exe) in order to assemble libvpx optimized assembly. Either disable webm (reconfigure with --disable-webm) or install MASM. MASM is included in the Windows 7 SDK, or you can download MASM directly from http://www.microsoft.com/downloads/details.aspx?familyid=7a1c9da0-0510-44a2-b042-7ef370530c64&displaylang=en])
         fi
