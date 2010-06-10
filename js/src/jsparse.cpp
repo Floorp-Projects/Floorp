@@ -953,8 +953,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
             JS_ASSERT(prop);
             JS_ASSERT(((JSScopeProperty*)prop)->slot == globalScope.globalFreeSlot + i);
-
-            globalObj->dropProperty(cx, prop);
         }
     }
 
