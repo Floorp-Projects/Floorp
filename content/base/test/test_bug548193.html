@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSP JSON violation report</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+// This is used to watch requests go out so we can see if the report is
+// sent correctly
+function examiner() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                        .getService(Components.interfaces.nsIObserverService);
+  obsvc.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    // subject should be an nsURI
+    if(!subject.QueryInterface)
+      return;
+
+    const reportURI = "http://mochi.test:8888/csp-report.cgi";
+
+    if (topic === "http-on-modify-request") {
+      var uri = subject.QueryInterface(Components.interfaces.nsIHttpChannel).URI;
+      if (uri.asciiSpec !== reportURI) return;
+
+      // Verify that the report was properly formatted.
+      // We'll parse the report text as JSON and verify that the properties
+      // have expected values.
+      var reportText = "{}";
+      try {
+        var uploadStream = subject.QueryInterface(Components.interfaces.nsIUploadChannel).uploadStream;
+
+        if (uploadStream) {
+          // get the bytes from the request body
+          var binstream = Components.classes["@mozilla.org/binaryinputstream;1"]
+                                    .createInstance(Components.interfaces.nsIBinaryInputStream);
+          binstream.setInputStream(uploadStream);
+
+          var segments = [];
+          for (var count = uploadStream.available(); count; count = uploadStream.available())
+            segments.push(binstream.readBytes(count));
+
+          var reportText = segments.join("");
+        }
+      }
+      catch(e) {}
+
+      var reportObj = JSON.parse(reportText);
+
+      // test for the proper values in the report object
+      window.checkResults(reportObj);
+
+      // finish up
+      window.examiner.remove();
+      SimpleTest.finish();
+    }
+  },
+
+  // remove the listener
+  remove: function() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                          .getService(Components.interfaces.nsIObserverService);
+    obsvc.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+// content file that triggers a violation report
+var testFile = "file_bug548193.sjs";
+
+window.checkResults = function(reportObj) {
+  var cspReport = reportObj["csp-report"];
+  // correct violating request
+  is(cspReport["request"],
+     "GET http://mochi.test:8888/tests/content/base/test/" + testFile + " HTTP/1.1",
+     "Incorrect violating request");
+  // correct blocked-uri
+  is(cspReport["blocked-uri"],
+     "http://example.org/tests/content/base/test/file_CSP.sjs?testid=img_bad&type=img/png",
+     "Incorrect blocked uri");
+  // correct violated-directive
+  is(cspReport["violated-directive"], "allow http://mochi.test:8888",
+     "Incorrect violated directive");
+  // not practical to test request-headers as header names and values will
+  // change with the trunk
+}
+
+window.examiner = new examiner();
+
+SimpleTest.waitForExplicitFinish();
+
+// load the resource which will generate a CSP violation report
+document.getElementById("cspframe").src = testFile;
+
+</script>
+</pre>
+</body>
+</html>

@@ -54,6 +54,8 @@
 #ifndef nsIPresShell_h___
 #define nsIPresShell_h___
 
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
@@ -81,7 +83,7 @@ class nsFrameManager;
 class nsILayoutHistoryState;
 class nsIReflowCallback;
 class nsIDOMNode;
-class nsIRegion;
+class nsIntRegion;
 class nsIStyleSheet;
 class nsCSSFrameConstructor;
 class nsISelection;
@@ -96,6 +98,12 @@ class nsDisplayListBuilder;
 
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 // Flags to pass to SetCapturingContent
 //
@@ -119,8 +127,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x84f1a428, 0x6bbe, 0x4958, \
-  { 0xa1, 0x08, 0x8a, 0xe0, 0x78, 0xb8, 0x63, 0xf4 } }
+  { 0x7ae0e29f, 0x4d2e, 0x4acd, \
+    { 0xb5, 0x74, 0xb6, 0x40, 0x8a, 0xca, 0xb8, 0x4d } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -424,8 +432,8 @@ public:
    */
   virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
 
-  void PostRecreateFramesFor(nsIContent* aContent);
-  void RestyleForAnimation(nsIContent* aContent);
+  void PostRecreateFramesFor(mozilla::dom::Element* aElement);
+  void RestyleForAnimation(mozilla::dom::Element* aElement);
 
   /**
    * Determine if it is safe to flush all pending notifications
@@ -831,12 +839,12 @@ public:
 
   /**
    * Renders a node aNode to a surface and returns it. The aRegion may be used
-   * to clip the rendering. This region is measured in device pixels from the
+   * to clip the rendering. This region is measured in CSS pixels from the
    * edge of the presshell area. The aPoint, aScreenRect and aSurface
    * arguments function in a similar manner as RenderSelection.
    */
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
-                                                   nsIRegion* aRegion,
+                                                   nsIntRegion* aRegion,
                                                    nsIntPoint& aPoint,
                                                    nsIntRect* aScreenRect) = 0;
 
@@ -984,6 +992,19 @@ public:
     return gCaptureInfo.mPreventDrag && gCaptureInfo.mContent;
   }
 
+  /**
+   * Keep track of how many times this presshell has been rendered to
+   * a window.
+   */
+  PRUint64 GetPaintCount() { return mPaintCount; }
+  void IncrementPaintCount() { ++mPaintCount; }
+
+  /**
+   * Initialize and shut down static variables.
+   */
+  static void InitializeStatics();
+  static void ReleaseStatics();
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -1003,6 +1024,10 @@ protected:
 #ifdef NS_DEBUG
   nsIFrame*                 mDrawEventTargetFrame;
 #endif
+
+  // Count of the number of times this presshell has been painted to
+  // a window
+  PRUint64                  mPaintCount;
 
   PRInt16                   mSelectionFlags;
 
@@ -1032,6 +1057,10 @@ protected:
 
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;
+
+  // Live pres shells, for memory and other tracking
+  typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;
+  static nsTHashtable<PresShellPtrKey> *sLiveShells;
 };
 
 /**

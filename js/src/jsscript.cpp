@@ -68,6 +68,7 @@
 #endif
 #include "methodjit/MethodJIT.h"
 
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 using namespace js;

@@ -321,12 +321,12 @@ class NS_STACK_CLASS nsWSRunObject
     // together, the above represent the point at which we are building up ws info.
     
     PRBool  mPRE;                         // true if we are in preformatted whitespace context
-    nsCOMPtr<nsIDOMNode> mStartNode;      // node/offet where ws starts
+    nsCOMPtr<nsIDOMNode> mStartNode;      // node/offset where ws starts
     PRInt32 mStartOffset;                 // ...
     PRInt16 mStartReason;                 // reason why ws starts (eText, eOtherBlock, etc)
     nsCOMPtr<nsIDOMNode> mStartReasonNode;// the node that implicated by start reason
     
-    nsCOMPtr<nsIDOMNode> mEndNode;        // node/offet where ws ends
+    nsCOMPtr<nsIDOMNode> mEndNode;        // node/offset where ws ends
     PRInt32 mEndOffset;                   // ...
     PRInt16 mEndReason;                   // reason why ws ends (eText, eOtherBlock, etc)
     nsCOMPtr<nsIDOMNode> mEndReasonNode;  // the node that implicated by end reason

@@ -259,7 +259,7 @@ _handle_union(const T *str, const T *expr, PRBool case_insensitive,
     if (!e2)
         return ABORTED;
     for (sx = 1; ; ++sx) {
-        /* Here, expr[sx] is one character past the preceeding '(' or '|'. */
+        /* Here, expr[sx] is one character past the preceding '(' or '|'. */
         /* Copy everything up to the next delimiter to e2 */
         count = ::_scan_and_copy(expr + sx, T(')'), T('|'), e2);
         if (count == ABORTED || !count) {

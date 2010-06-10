@@ -46,7 +46,7 @@ var tests =
             null, start_objHandler, null),
    new Test("http://localhost:4444/functionHandler",
             null, start_functionHandler, null),
-   new Test("http://localhost:4444/non-existent-path",
+   new Test("http://localhost:4444/nonexistent-path",
             null, start_non_existent_path, null),
    new Test("http://localhost:4444/lotsOfHeaders",
             null, start_lots_of_headers, null),

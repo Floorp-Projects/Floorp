@@ -34,8 +34,13 @@ var tests = [
     nextTest();
     // Click the top scroll arrow.
     var x = scroller.getBoundingClientRect().width - 5;
-    synthesizeMouse(scroller, x, 5, { type : "mousedown" }, window);
-    synthesizeMouse(scroller, x, 5, { type: "mouseup" }, window);
+    var y = 5;
+    // On MacOSX the top scroll arrow can be below the slider just above
+    // the bottom scroll arrow.
+    if (navigator.platform.indexOf("Mac") >= 0)
+      y = scroller.getBoundingClientRect().height - 40;
+    synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
+    synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);
   },
   function() {
     ok(true, "Clicking the top scroll arrow should scroll.");
@@ -59,7 +64,7 @@ var tests = [
     nextTest();
     // Click the scrollbar.
     var x = scroller.getBoundingClientRect().width - 5;
-    var y = scroller.getBoundingClientRect().height - 60;
+    var y = scroller.getBoundingClientRect().height - 50;
     synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
     synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);
   },

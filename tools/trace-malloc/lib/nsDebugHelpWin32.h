@@ -36,12 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Win32 x86 code for stack walking, symbol resolution, and function hooking */
+/* Win32 x86/x64 code for stack walking, symbol resolution, and function hooking */
 
 #ifndef __nsDebugHelpWin32_h__
 #define __nsDebugHelpWin32_h__
 
-#if defined(_WIN32) && defined(_M_IX86)
+#if defined(_WIN32) && (defined(_M_IX86) || defined(_M_X64))
   #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
   #endif
@@ -49,7 +49,7 @@
   #include <imagehlp.h>
   #include <crtdbg.h>
 #else
-  #error "nsDebugHelpWin32.h should only be included in Win32 x86 builds"
+  #error "nsDebugHelpWin32.h should only be included in Win32 x86/x64 builds"
 #endif
 
 // XXX temporary hack...
@@ -122,8 +122,13 @@ DHW_DECLARE_FUN_TYPE_AND_GLOBAL(SYMGETSYMFROMADDRPROC, SymGetSymFromAddr, \
 
 #endif
 
+#ifndef _WIN64
 DHW_DECLARE_FUN_TYPE_AND_GLOBAL(ENUMERATELOADEDMODULES, EnumerateLoadedModules, \
                                 BOOL, __stdcall, (HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID));
+#else
+DHW_DECLARE_FUN_TYPE_AND_GLOBAL(ENUMERATELOADEDMODULES64, EnumerateLoadedModules64, \
+                                BOOL, __stdcall, (HANDLE, PENUMLOADED_MODULES_CALLBACK64, PVOID));
+#endif
 
 DHW_DECLARE_FUN_TYPE_AND_GLOBAL(IMAGEDIRECTORYENTRYTODATA, ImageDirectoryEntryToData, \
                                 PVOID, __stdcall, (PVOID, BOOL, USHORT, PULONG));

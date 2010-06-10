@@ -19,7 +19,7 @@
 #define NO_NSPR_10_SUPPORT_SAVE
 #endif
 
-#include "nspr/prtypes.h"
+#include "prtypes.h"
 
 #ifdef NO_NSPR_10_SUPPORT_SAVE
 #undef NO_NSPR_10_SUPPORT_SAVE
@@ -31,7 +31,7 @@
 #define _WIN32_SAVE
 #endif
 
-#include "nspr/obsolete/protypes.h"
+#include "obsolete/protypes.h"
 
 #define _INT32
 #define _UINT32
@@ -390,6 +390,9 @@ inline Dest bit_cast(const Source& source) {
 namespace base {
 enum LinkerInitialized { LINKER_INITIALIZED };
 }  // base
+
+
+#include "nscore.h"             // pick up mozalloc operator new() etc.
 
 
 #endif  // BASE_BASICTYPES_H_

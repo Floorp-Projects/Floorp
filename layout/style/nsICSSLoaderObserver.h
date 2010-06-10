@@ -43,10 +43,10 @@
 #include "nsISupports.h"
 
 #define NS_ICSSLOADEROBSERVER_IID     \
-{ 0xf5e8eb0f, 0x4c44, 0x49d5,       \
-{0xb1, 0xe9, 0xab, 0x39, 0x23, 0x93, 0xc0, 0xf8} }
+{ 0x7eb90c74, 0xea0c, 0x4df5,       \
+{0xa1, 0x5f, 0x95, 0xf0, 0x6a, 0x98, 0xb9, 0x40} }
 
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 
 class nsICSSLoaderObserver : public nsISupports {
 public:
@@ -67,7 +67,7 @@ public:
    *        as CSS, and doesn't indicate anything about the status of any child
    *        sheets of aSheet.
    */
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus) = 0;
 };
 

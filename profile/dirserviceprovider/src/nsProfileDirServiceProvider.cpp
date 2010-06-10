@@ -45,7 +45,6 @@
 #include "nsISupportsUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
 
 // File Name Defines
 
@@ -128,7 +127,7 @@ nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir,
 
   if (mNotifyObservers) {
     nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+             do_GetService("@mozilla.org/observer-service;1");
     if (!observerService)
       return NS_ERROR_FAILURE;
 
@@ -159,7 +158,7 @@ nsProfileDirServiceProvider::Shutdown()
     return NS_OK;
 
   nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
+           do_GetService("@mozilla.org/observer-service;1");
   if (!observerService)
     return NS_ERROR_FAILURE;
 

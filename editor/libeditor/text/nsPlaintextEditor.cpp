@@ -84,6 +84,8 @@
 #include "nsITransferable.h"
 #include "nsCopySupport.h"
 
+#include "mozilla/FunctionTimer.h"
+
 // prototype for rules creation shortcut
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
 
@@ -143,6 +145,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsEditor)
 NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc, 
                                  nsIPresShell   *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
 {
+  NS_TIME_FUNCTION;
+
   NS_PRECONDITION(aDoc && aPresShell, "bad arg");
   if (!aDoc || !aPresShell)
     return NS_ERROR_NULL_POINTER;
@@ -681,6 +685,9 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsresult result;
 
   // delete placeholder txns merge.
@@ -738,6 +745,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   PRInt32 theAction = nsTextEditRules::kInsertText;
   PRInt32 opID = kOpInsertText;
   if (mInIMEMode) 
@@ -780,6 +790,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
 NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertBreak, nsIEditor::eNext);
@@ -870,6 +883,9 @@ nsPlaintextEditor::BeginComposition()
 
   if (IsPasswordEditor())  {
     if (mRules) {
+      // Protect the edit rules object from dying
+      nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
       nsIEditRules *p = mRules.get();
       nsTextEditRules *textEditRules = static_cast<nsTextEditRules *>(p);
       textEditRules->ResetIMETextPWBuf();
@@ -890,6 +906,9 @@ nsPlaintextEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
   
   if (!mRules)
     return NS_ERROR_NOT_INITIALIZED;
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
   
   return mRules->DocumentIsEmpty(aDocumentIsEmpty);
 }
@@ -1092,6 +1111,9 @@ nsPlaintextEditor::SetNewlineHandling(PRInt32 aNewlineHandling)
 NS_IMETHODIMP 
 nsPlaintextEditor::Undo(PRUint32 aCount)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsAutoUpdateViewBatch beginViewBatching(this);
 
   ForceCompositionEnd();
@@ -1116,6 +1138,9 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
 NS_IMETHODIMP 
 nsPlaintextEditor::Redo(PRUint32 aCount)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsAutoUpdateViewBatch beginViewBatching(this);
 
   ForceCompositionEnd();
@@ -1264,6 +1289,9 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
                                   PRUint32 aFlags,
                                   nsAString& aOutputString)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsString resultString;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
   ruleInfo.outString = &resultString;
@@ -1392,6 +1420,9 @@ NS_IMETHODIMP
 nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                                      nsIDOMNode **aNodeInserted)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // We have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer = new nsInternetCiter();
 
@@ -1623,6 +1654,9 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString,
 NS_IMETHODIMP
 nsPlaintextEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
   if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
@@ -1634,6 +1668,9 @@ nsPlaintextEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection
 NS_IMETHODIMP
 nsPlaintextEditor::EndOperation()
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // post processing
   nsresult res = NS_OK;
   if (mRules) res = mRules->AfterEdit(mAction, mDirection);
@@ -1646,6 +1683,9 @@ NS_IMETHODIMP
 nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   // is doc empty?
   PRBool bDocIsEmpty;

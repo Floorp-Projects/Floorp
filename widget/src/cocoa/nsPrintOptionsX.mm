@@ -61,7 +61,6 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->ReadPageFormatFromPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsX::ReadPageFormatFromPrefs() failed");
   
   return rv;
 }

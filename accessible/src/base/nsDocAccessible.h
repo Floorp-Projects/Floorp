@@ -257,9 +257,9 @@ protected:
    * @param  aIsFromUserInput      [in] the event is known to be from user input
    */
   already_AddRefed<nsAccEvent>
-    CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
+    CreateTextChangeEventForNode(nsAccessible *aContainerAccessible,
                                  nsIDOMNode *aNode,
-                                 nsIAccessible *aAccessible,
+                                 nsAccessible *aAccessible,
                                  PRBool aIsInserting,
                                  PRBool aIsAsynch,
                                  EIsFromUserInput aIsFromUserInput = eAutoDetect);

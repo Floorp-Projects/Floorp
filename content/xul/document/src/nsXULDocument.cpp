@@ -113,7 +113,7 @@
 #include "nsContentUtils.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSLoader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -127,7 +127,7 @@
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -187,10 +187,10 @@ struct BroadcastListener {
     nsCOMPtr<nsIAtom> mAttribute;
 };
 
-nsIContent*
-nsRefMapEntry::GetFirstContent()
+Element*
+nsRefMapEntry::GetFirstElement()
 {
-    return static_cast<nsIContent*>(mRefContentList.SafeElementAt(0));
+    return static_cast<Element*>(mRefContentList.SafeElementAt(0));
 }
 
 void
@@ -202,17 +202,17 @@ nsRefMapEntry::AppendAll(nsCOMArray<nsIContent>* aElements)
 }
 
 PRBool
-nsRefMapEntry::AddContent(nsIContent* aContent)
+nsRefMapEntry::AddElement(Element* aElement)
 {
-    if (mRefContentList.IndexOf(aContent) >= 0)
+    if (mRefContentList.IndexOf(aElement) >= 0)
         return PR_TRUE;
-    return mRefContentList.AppendElement(aContent);
+    return mRefContentList.AppendElement(aElement);
 }
 
 PRBool
-nsRefMapEntry::RemoveContent(nsIContent* aContent)
+nsRefMapEntry::RemoveElement(Element* aElement)
 {
-    mRefContentList.RemoveElement(aContent);
+    mRefContentList.RemoveElement(aElement);
     return mRefContentList.Count() == 0;
 }
 
@@ -238,6 +238,7 @@ nsXULDocument::nsXULDocument(void)
     mCharacterSet.AssignLiteral("UTF-8");
 
     mDefaultElementType = kNameSpaceID_XUL;
+    mIsXUL = PR_TRUE;
 
     mDelayFrameLoaderInitialization = PR_TRUE;
 }
@@ -580,7 +581,7 @@ nsXULDocument::EndLoad()
 
     if (isChrome) {
         nsCOMPtr<nsIXULOverlayProvider> reg =
-            do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+            mozilla::services::GetXULOverlayProviderService();
 
         if (reg) {
             nsCOMPtr<nsISimpleEnumerator> overlays;
@@ -978,11 +979,8 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
     // See if we need to update our ref map.
     if (aAttribute == nsGkAtoms::ref ||
         (aAttribute == nsGkAtoms::id && !aContent->GetIDAttributeName())) {
-        RemoveElementFromRefMap(aContent);
+        RemoveElementFromRefMap(aContent->AsElement());
     }
-    
-    nsXMLDocument::AttributeWillChange(aDocument, aContent, aNameSpaceID,
-                                       aAttribute, aModType);
 }
 
 void
@@ -994,10 +992,6 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 
     // XXXbz once we change AttributeChanged to take Element, we can nix this line
     Element* aElement = aElementContent->AsElement();
-
-    // Do this here so that all the exit paths below don't leave this undone
-    nsXMLDocument::AttributeChanged(aDocument, aElement, aNameSpaceID,
-                                    aAttribute, aModType);
 
     // XXXbz check aNameSpaceID, dammit!
     // See if we need to update our ref map.
@@ -1089,20 +1083,17 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 void
 nsXULDocument::ContentAppended(nsIDocument* aDocument,
                                nsIContent* aContainer,
+                               nsIContent* aFirstNewContent,
                                PRInt32 aNewIndexInContainer)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
     
     // Update our element map
-    PRUint32 count = aContainer->GetChildCount();
-
     nsresult rv = NS_OK;
-    for (PRUint32 i = aNewIndexInContainer; i < count && NS_SUCCEEDED(rv);
-         ++i) {
-        rv = AddSubtreeToDocument(aContainer->GetChildAt(i));
+    for (nsIContent* cur = aFirstNewContent; cur && NS_SUCCEEDED(rv);
+         cur = cur->GetNextSibling()) {
+        rv = AddSubtreeToDocument(cur);
     }
-
-    nsXMLDocument::ContentAppended(aDocument, aContainer, aNewIndexInContainer);
 }
 
 void
@@ -1114,8 +1105,6 @@ nsXULDocument::ContentInserted(nsIDocument* aDocument,
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
     AddSubtreeToDocument(aChild);
-
-    nsXMLDocument::ContentInserted(aDocument, aContainer, aChild, aIndexInContainer);
 }
 
 void
@@ -1127,27 +1116,12 @@ nsXULDocument::ContentRemoved(nsIDocument* aDocument,
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
     RemoveSubtreeFromDocument(aChild);
-
-    nsXMLDocument::ContentRemoved(aDocument, aContainer, aChild, aIndexInContainer);
 }
 
 //----------------------------------------------------------------------
 //
 // nsIXULDocument interface
 //
-
-NS_IMETHODIMP
-nsXULDocument::AddElementForID(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-    if (!aElement->IsElement())
-        return NS_ERROR_UNEXPECTED;
-
-    UpdateIdTableEntry(aElement->AsElement());
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULDocument::GetElementsForID(const nsAString& aID,
@@ -1323,7 +1297,7 @@ nsXULDocument::Persist(const nsAString& aID,
     nsresult rv;
 
     nsCOMPtr<nsIDOMElement> domelement;
-    rv = GetElementById(aID, getter_AddRefs(domelement));
+    rv = nsDocument::GetElementById(aID, getter_AddRefs(domelement));
     if (NS_FAILED(rv)) return rv;
 
     if (! domelement)
@@ -1660,33 +1634,32 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULDocument::GetElementById(const nsAString& aId,
-                              nsIDOMElement** aReturn)
+Element*
+nsXULDocument::GetElementById(const nsAString& aId)
 {
-    NS_ENSURE_ARG_POINTER(aReturn);
-    *aReturn = nsnull;
-
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(aId);
-    if (!atom)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIAtom> atom(do_GetAtom(aId));
+    if (!atom) {
+        // This can only fail due OOM if the atom doesn't exist, in which
+        // case there couldn't possibly exist an entry for it.
+        return nsnull;
+    }
 
     if (!CheckGetElementByIdArg(atom))
-        return NS_OK;
+        return nsnull;
 
     nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
     if (entry) {
         Element* element = entry->GetIdElement();
         if (element)
-            return CallQueryInterface(element, aReturn);
+            return element;
     }
     nsRefMapEntry* refEntry = mRefMap.GetEntry(atom);
     if (refEntry) {
-        NS_ASSERTION(refEntry->GetFirstContent(),
+        NS_ASSERTION(refEntry->GetFirstElement(),
                      "nsRefMapEntries should have nonempty content lists");
-        return CallQueryInterface(refEntry->GetFirstContent(), aReturn);
+        return refEntry->GetFirstElement();
     }
-    return NS_OK;
+    return nsnull;
 }
 
 nsresult
@@ -1699,7 +1672,10 @@ nsXULDocument::AddElementToDocumentPre(Element* aElement)
     // 1. Add the element to the resource-to-element map. Also add it to
     // the id map, since it seems this can be called when creating
     // elements from prototypes.
-    UpdateIdTableEntry(aElement);
+    nsIAtom* id = aElement->GetID();
+    if (id) {
+        AddToIdTable(aElement, id);
+    }
     rv = AddElementToRefMap(aElement);
     if (NS_FAILED(rv)) return rv;
 
@@ -1834,7 +1810,10 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     // Also remove it from the id map, since we added it in
     // AddElementToDocumentPre().
     RemoveElementFromRefMap(aElement);
-    RemoveFromIdTable(aElement);
+    nsIAtom* id = aElement->GetID();
+    if (id) {
+        RemoveFromIdTable(aElement, id);
+    }
 
     // 3. If the element is a 'command updater', then remove the
     // element from the document's command dispatcher.
@@ -1898,7 +1877,7 @@ nsXULDocument::GetTemplateBuilderFor(nsIContent* aContent,
 }
 
 static void
-GetRefMapAttribute(nsIContent* aElement, nsAutoString* aValue)
+GetRefMapAttribute(Element* aElement, nsAutoString* aValue)
 {
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, *aValue);
     if (aValue->IsEmpty() && !aElement->GetIDAttributeName()) {
@@ -1907,7 +1886,7 @@ GetRefMapAttribute(nsIContent* aElement, nsAutoString* aValue)
 }
 
 nsresult
-nsXULDocument::AddElementToRefMap(nsIContent* aElement)
+nsXULDocument::AddElementToRefMap(Element* aElement)
 {
     // Look at the element's 'ref' attribute, and if set,
     // add an entry in the resource-to-element map to the element.
@@ -1920,7 +1899,7 @@ nsXULDocument::AddElementToRefMap(nsIContent* aElement)
         nsRefMapEntry *entry = mRefMap.PutEntry(atom);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
-        if (!entry->AddContent(aElement))
+        if (!entry->AddElement(aElement))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1928,7 +1907,7 @@ nsXULDocument::AddElementToRefMap(nsIContent* aElement)
 }
 
 void
-nsXULDocument::RemoveElementFromRefMap(nsIContent* aElement)
+nsXULDocument::RemoveElementFromRefMap(Element* aElement)
 {
     // Remove the element from the resource-to-element map.
     nsAutoString value;
@@ -1940,7 +1919,7 @@ nsXULDocument::RemoveElementFromRefMap(nsIContent* aElement)
         nsRefMapEntry *entry = mRefMap.GetEntry(atom);
         if (!entry)
             return;
-        if (entry->RemoveContent(aElement)) {
+        if (entry->RemoveElement(aElement)) {
             mRefMap.RemoveEntry(atom);
         }
     }
@@ -2471,8 +2450,6 @@ nsXULDocument::PrepareToWalk()
         rv = AppendChildTo(root, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
         
-        // Add the root element to the XUL document's ID-to-element map.
-        UpdateIdTableEntry(root);
         rv = AddElementToRefMap(root);
         if (NS_FAILED(rv)) return rv;
 
@@ -2626,7 +2603,8 @@ nsXULDocument::AddChromeOverlays()
     /* overlays only apply to chrome, skip all content URIs */
     if (!IsChromeURI(docUri)) return NS_OK;
 
-    nsCOMPtr<nsIXULOverlayProvider> chromeReg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+    nsCOMPtr<nsIXULOverlayProvider> chromeReg =
+        mozilla::services::GetXULOverlayProviderService();
     // In embedding situations, the chrome registry may not provide overlays,
     // or even exist at all; that's OK.
     NS_ENSURE_TRUE(chromeReg, NS_OK);
@@ -3153,7 +3131,7 @@ nsXULDocument::DoneWalking()
     // XXXldb This is where we should really be setting the chromehidden
     // attribute.
 
-    PRUint32 count = mOverlaySheets.Count();
+    PRUint32 count = mOverlaySheets.Length();
     for (PRUint32 i = 0; i < count; ++i) {
         AddStyleSheet(mOverlaySheets[i]);
     }
@@ -3263,7 +3241,7 @@ nsXULDocument::DoneWalking()
 }
 
 NS_IMETHODIMP
-nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+nsXULDocument::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus)
 {
@@ -3893,7 +3871,7 @@ nsXULDocument::AddPrototypeSheets()
     for (PRInt32 i = 0; i < sheets.Count(); i++) {
         nsCOMPtr<nsIURI> uri = sheets[i];
 
-        nsCOMPtr<nsICSSStyleSheet> incompleteSheet;
+        nsRefPtr<nsCSSStyleSheet> incompleteSheet;
         rv = CSSLoader()->LoadSheet(uri,
                                     mCurrentPrototype->DocumentPrincipal(),
                                     EmptyCString(), this,
@@ -3904,7 +3882,7 @@ nsXULDocument::AddPrototypeSheets()
         // from LoadSheet (and thus exit the loop).
         if (NS_SUCCEEDED(rv)) {
             ++mPendingSheets;
-            if (!mOverlaySheets.AppendObject(incompleteSheet)) {
+            if (!mOverlaySheets.AppendElement(incompleteSheet)) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }
@@ -4636,7 +4614,7 @@ nsXULDocument::IsDocumentRightToLeft()
     // otherwise, get the locale from the chrome registry and
     // look up the intl.uidirection.<locale> preference
     nsCOMPtr<nsIXULChromeRegistry> reg =
-        do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+        mozilla::services::GetXULChromeRegistryService();
     if (!reg)
         return PR_FALSE;
 

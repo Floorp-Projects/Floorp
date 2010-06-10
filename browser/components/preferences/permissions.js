@@ -208,12 +208,6 @@ var gPermissionManager = {
                        .getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "perm-changed", false);
 
-    if (this._type == "install") {
-      var enumerator = this._pm.enumerator;
-      if (!enumerator.hasMoreElements())
-        this._updatePermissions();
-    }
-
     this._loadPermissions();
     
     urlField.focus();
@@ -361,43 +355,6 @@ var gPermissionManager = {
                              aPermission.capability);
       this._permissions.push(p);
     }  
-  },
-  
-  _updatePermissions: function ()
-  {
-    try {
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService);
-      var pbi = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
-      var prefList = [["xpinstall.whitelist.add", nsIPermissionManager.ALLOW_ACTION],
-                      ["xpinstall.whitelist.add.36", nsIPermissionManager.ALLOW_ACTION],
-                      ["xpinstall.blacklist.add", nsIPermissionManager.DENY_ACTION]];
-
-      for (var i = 0; i < prefList.length; ++i) {
-        try {
-          // this pref is a comma-delimited list of hosts
-          var hosts = pbi.getCharPref(prefList[i][0]);
-        } catch(ex) {
-          continue;
-        }
-
-        if (!hosts)
-          continue;
-
-        hostList = hosts.split(",");
-        var capability = prefList[i][1];
-        for (var j = 0; j < hostList.length; ++j) {
-          // trim leading and trailing spaces
-          var host = hostList[j].replace(/^\s*/,"").replace(/\s*$/,"");
-          try {
-            var uri = ioService.newURI("http://" + host, null, null);
-            this._pm.add(uri, this._type, capability);
-          } catch(ex) { }
-        }
-        pbi.setCharPref(prefList[i][0], "");
-      }
-    } catch(ex) { }
   },
   
   setHost: function (aHost)

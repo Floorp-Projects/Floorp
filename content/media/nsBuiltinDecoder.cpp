@@ -47,9 +47,7 @@
 #include "VideoUtils.h"
 #include "nsBuiltinDecoder.h"
 
-using mozilla::Monitor;
-using mozilla::MonitorAutoEnter;
-using mozilla::MonitorAutoExit;
+using namespace mozilla;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gBuiltinDecoderLog;

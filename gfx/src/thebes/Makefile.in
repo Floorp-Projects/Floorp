@@ -99,6 +99,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS		= nsSystemFontsMac.mm
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS		+= nsSystemFontsAndroid.cpp
+endif
+
 EXPORTS         += nsIThebesFontMetrics.h
 
 LOCAL_INCLUDES	= \

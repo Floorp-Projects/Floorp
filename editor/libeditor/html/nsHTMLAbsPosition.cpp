@@ -313,7 +313,9 @@ nsHTMLEditor::HideGrabber()
 
   // get the presshell's document observer interface.
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  // We allow the pres shell to be null; when it is, we presume there
+  // are no document observers to notify, but we still want to
+  // UnbindFromTree.
 
   nsCOMPtr<nsIDOMNode> parentNode;
   res = mGrabber->GetParentNode(getter_AddRefs(parentNode));
@@ -498,7 +500,7 @@ nsHTMLEditor::SetFinalPosition(PRInt32 aX, PRInt32 aY)
 }
 
 void
-nsHTMLEditor::AddPositioningOffet(PRInt32 & aX, PRInt32 & aY)
+nsHTMLEditor::AddPositioningOffset(PRInt32 & aX, PRInt32 & aY)
 {
   // Get the positioning offset
   nsresult res;
@@ -542,7 +544,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
                                   NS_LITERAL_STRING("absolute"),
                                   PR_FALSE);
 
-    AddPositioningOffet(x, y);
+    AddPositioningOffset(x, y);
     SnapToGrid(x, y);
     SetElementPosition(aElement, x, y);
 

@@ -191,6 +191,26 @@ public:
 
     void ClearPrefFonts() { mPrefFonts.Clear(); }
 
+    // ClearType is not always enabled even when available (e.g. Windows XP)
+    // if either of these prefs are enabled and apply, use ClearType rendering
+    PRBool UseClearTypeForDownloadableFonts();
+    PRBool UseClearTypeAlways();
+
+    // OS version in 16.16 major/minor form
+    // based on http://msdn.microsoft.com/en-us/library/ms724834(VS.85).aspx
+    enum {
+        kWindowsUnknown = 0,
+        kWindows2000 = 0x50000,
+        kWindowsXP = 0x50001,
+        kWindowsServer2003 = 0x50002,
+        kWindowsVista = 0x60000,
+        kWindows7 = 0x60001
+    };
+
+    static PRInt32 WindowsOSVersion();
+
+    virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
+
 #ifdef CAIRO_HAS_DWRITE_FONT
     IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
 #endif
@@ -203,6 +223,9 @@ protected:
     void InitDisplayCaps();
 
     RenderMode mRenderMode;
+
+    PRBool mUseClearTypeForDownloadableFonts;
+    PRBool mUseClearTypeAlways;
 
 private:
     void Init();

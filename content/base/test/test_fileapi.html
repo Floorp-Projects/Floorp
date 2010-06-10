@@ -254,7 +254,7 @@ r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "reuse-as-abort r
 expectedTestCount++;
 
 
-// Test reading from non-existing files
+// Test reading from nonexistent files
 r = new FileReader();
 var didThrow = false;
 try {
@@ -264,7 +264,7 @@ try {
 }
 // Once this test passes, we shoud test that onerror gets called and
 // that the FileReader object is in the right state during that call.
-todo(!didThrow, "shouldn't throw when opening non-existing file, should fire error instead");
+todo(!didThrow, "shouldn't throw when opening nonexistent file, should fire error instead");
 
 
 function getLoadHandler(expectedResult, expectedLength, testName) {

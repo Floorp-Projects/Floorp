@@ -1,0 +1,54 @@
+include protocol PTestHandle;
+
+using mozilla::void_t;
+using mozilla::null_t;
+
+namespace mozilla {
+namespace _ipdltest {
+
+union Key {
+//    int;
+//    double;
+    nsString;
+};
+
+struct KeyValue {
+    Key key;
+    JSONVariant value;
+};
+
+union JSONVariant {
+    void_t;
+    null_t;
+    bool;
+    int;
+    double;
+    nsString;
+    PTestHandle;
+    KeyValue[];
+    JSONVariant[];
+};
+
+sync protocol PTestJSON {
+    manages PTestHandle;
+
+child:
+    async Start();
+
+parent:
+    async PTestHandle();
+    sync Test(JSONVariant i)
+        returns (JSONVariant o);
+    async __delete__();
+
+state START:
+    send Start goto TEST;
+
+state TEST:
+    recv PTestHandle goto TEST;
+    recv Test goto TEST;
+    recv __delete__;
+};
+
+} // namespace mozilla
+} // namespace _ipdltest

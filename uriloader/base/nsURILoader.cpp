@@ -80,6 +80,19 @@
 
 #include "nsDocLoader.h"
 
+#include "mozilla/FunctionTimer.h"
+#ifdef NS_FUNCTION_TIMER
+#define TIME_URILOADER_FUNCTION(req)                         \
+    nsCAutoString name__("N/A");                             \
+    (req)->GetName(name__);                                  \
+    NS_TIME_FUNCTION_FMT("%s (line %d) (request: %s)",       \
+                         MOZ_FUNCTION_NAME,                  \
+                         __LINE__,                           \
+                         name__.get())
+#else
+#define TIME_URILOADER_FUNCTION(req) do {} while(0)
+#endif
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsURILoader::mLog = nsnull;
 #endif
@@ -224,6 +237,8 @@ nsresult nsDocumentOpenInfo::Prepare()
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
+  TIME_URILOADER_FUNCTION(request);
+
   LOG(("[0x%p] nsDocumentOpenInfo::OnStartRequest", this));
   
   nsresult rv = NS_OK;
@@ -297,6 +312,8 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
 NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
                                                   nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
 {
+  TIME_URILOADER_FUNCTION(request);
+
   // if we have retarged to the end stream listener, then forward the call....
   // otherwise, don't do anything
 
@@ -310,6 +327,8 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISuppor
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
                                                 nsresult aStatus)
 {
+  TIME_URILOADER_FUNCTION(request);
+
   LOG(("[0x%p] nsDocumentOpenInfo::OnStopRequest", this));
   
   if ( m_targetStreamListener)
@@ -332,6 +351,8 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
 
 nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * aCtxt)
 {
+  TIME_URILOADER_FUNCTION(request);
+
   LOG(("[0x%p] nsDocumentOpenInfo::DispatchContent for type '%s'", this, mContentType.get()));
 
   NS_PRECONDITION(!m_targetStreamListener,
@@ -609,6 +630,8 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
                                 const nsACString& aSrcContentType,
                                 const nsACString& aOutContentType)
 {
+  TIME_URILOADER_FUNCTION(request);
+
   LOG(("[0x%p] nsDocumentOpenInfo::ConvertData from '%s' to '%s'", this,
        PromiseFlatCString(aSrcContentType).get(),
        PromiseFlatCString(aOutContentType).get()));
@@ -665,6 +688,8 @@ PRBool
 nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
                                        nsIChannel* aChannel)
 {
+  TIME_URILOADER_FUNCTION(aChannel);
+
   LOG(("[0x%p] nsDocumentOpenInfo::TryContentListener; mFlags = 0x%x",
        this, mFlags));
 
@@ -809,6 +834,8 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
 {
   NS_ENSURE_ARG_POINTER(channel);
 
+  TIME_URILOADER_FUNCTION(channel);
+
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsCOMPtr<nsIURI> uri;
@@ -855,6 +882,8 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
 {
   NS_ASSERTION(channel, "Trying to open a null channel!");
   NS_ASSERTION(aWindowContext, "Window context must not be null");
+
+  TIME_URILOADER_FUNCTION(channel);
 
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {

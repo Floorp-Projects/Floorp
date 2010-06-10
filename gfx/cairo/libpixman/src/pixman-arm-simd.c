@@ -28,72 +28,390 @@
 #endif
 
 #include "pixman-private.h"
-#include "pixman-arm-simd-asm.h"
+#include "pixman-arm-common.h"
 
-static const pixman_fast_path_t arm_simd_fast_path_array[] =
+#if 0 /* This code was moved to 'pixman-arm-simd-asm.S' */
+
+void
+pixman_composite_add_8000_8000_asm_armv6 (int32_t  width,
+                                          int32_t  height,
+                                          uint8_t *dst_line,
+                                          int32_t  dst_stride,
+                                          uint8_t *src_line,
+                                          int32_t  src_stride)
 {
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_a8r8g8b8, arm_composite_over_8888_n_8888  },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_x8r8g8b8, arm_composite_over_8888_n_8888  },
+    uint8_t *dst, *src;
+    int32_t w;
+    uint8_t s, d;
 
-    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       arm_composite_add_8000_8000     },
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
 
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, arm_composite_over_n_8_8888     },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, arm_composite_over_n_8_8888     },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, arm_composite_over_n_8_8888     },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, arm_composite_over_n_8_8888     },
+	/* ensure both src and dst are properly aligned before doing 32 bit reads
+	 * we'll stay in this loop if src and dst have differing alignments
+	 */
+	while (w && (((unsigned long)dst & 3) || ((unsigned long)src & 3)))
+	{
+	    s = *src;
+	    d = *dst;
+	    asm ("uqadd8 %0, %1, %2" : "+r" (d) : "r" (s));
+	    *dst = d;
 
-    { PIXMAN_OP_SRC,  PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   arm_composite_src_8888_0565    },
-    { PIXMAN_OP_SRC,  PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_b5g6r5,   arm_composite_src_8888_0565    },
+	    dst++;
+	    src++;
+	    w--;
+	}
+
+	while (w >= 4)
+	{
+	    asm ("uqadd8 %0, %1, %2"
+		 : "=r" (*(uint32_t*)dst)
+		 : "r" (*(uint32_t*)src), "r" (*(uint32_t*)dst));
+	    dst += 4;
+	    src += 4;
+	    w -= 4;
+	}
+
+	while (w)
+	{
+	    s = *src;
+	    d = *dst;
+	    asm ("uqadd8 %0, %1, %2" : "+r" (d) : "r" (s));
+	    *dst = d;
+
+	    dst++;
+	    src++;
+	    w--;
+	}
+    }
+
+}
+
+void
+pixman_composite_over_8888_8888_asm_armv6 (int32_t   width,
+                                           int32_t   height,
+                                           uint32_t *dst_line,
+                                           int32_t   dst_stride,
+                                           uint32_t *src_line,
+                                           int32_t   src_stride)
+{
+    uint32_t    *dst;
+    uint32_t    *src;
+    int32_t w;
+    uint32_t component_half = 0x800080;
+    uint32_t upper_component_mask = 0xff00ff00;
+    uint32_t alpha_mask = 0xff;
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
+
+/* #define inner_branch */
+	asm volatile (
+	    "cmp %[w], #0\n\t"
+	    "beq 2f\n\t"
+	    "1:\n\t"
+	    /* load src */
+	    "ldr r5, [%[src]], #4\n\t"
+#ifdef inner_branch
+	    /* We can avoid doing the multiplication in two cases: 0x0 or 0xff.
+	     * The 0x0 case also allows us to avoid doing an unecessary data
+	     * write which is more valuable so we only check for that
+	     */
+	    "cmp r5, #0\n\t"
+	    "beq 3f\n\t"
+
+	    /* = 255 - alpha */
+	    "sub r8, %[alpha_mask], r5, lsr #24\n\t"
+
+	    "ldr r4, [%[dest]] \n\t"
+
+#else
+	    "ldr r4, [%[dest]] \n\t"
+
+	    /* = 255 - alpha */
+	    "sub r8, %[alpha_mask], r5, lsr #24\n\t"
+#endif
+	    "uxtb16 r6, r4\n\t"
+	    "uxtb16 r7, r4, ror #8\n\t"
+
+	    /* multiply by 257 and divide by 65536 */
+	    "mla r6, r6, r8, %[component_half]\n\t"
+	    "mla r7, r7, r8, %[component_half]\n\t"
+
+	    "uxtab16 r6, r6, r6, ror #8\n\t"
+	    "uxtab16 r7, r7, r7, ror #8\n\t"
+
+	    /* recombine the 0xff00ff00 bytes of r6 and r7 */
+	    "and r7, r7, %[upper_component_mask]\n\t"
+	    "uxtab16 r6, r7, r6, ror #8\n\t"
+
+	    "uqadd8 r5, r6, r5\n\t"
+
+#ifdef inner_branch
+	    "3:\n\t"
+
+#endif
+	    "str r5, [%[dest]], #4\n\t"
+	    /* increment counter and jmp to top */
+	    "subs	%[w], %[w], #1\n\t"
+	    "bne	1b\n\t"
+	    "2:\n\t"
+	    : [w] "+r" (w), [dest] "+r" (dst), [src] "+r" (src)
+	    : [component_half] "r" (component_half), [upper_component_mask] "r" (upper_component_mask),
+	      [alpha_mask] "r" (alpha_mask)
+	    : "r4", "r5", "r6", "r7", "r8", "cc", "memory"
+	    );
+    }
+}
+
+void
+pixman_composite_over_8888_n_8888_asm_armv6 (int32_t   width,
+                                             int32_t   height,
+                                             uint32_t *dst_line,
+                                             int32_t   dst_stride,
+                                             uint32_t *src_line,
+                                             int32_t   src_stride,
+                                             uint32_t  mask)
+{
+    uint32_t *dst;
+    uint32_t *src;
+    int32_t w;
+    uint32_t component_half = 0x800080;
+    uint32_t alpha_mask = 0xff;
+
+    mask = (mask) >> 24;
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
+
+/* #define inner_branch */
+	asm volatile (
+	    "cmp %[w], #0\n\t"
+	    "beq 2f\n\t"
+	    "1:\n\t"
+	    /* load src */
+	    "ldr r5, [%[src]], #4\n\t"
+#ifdef inner_branch
+	    /* We can avoid doing the multiplication in two cases: 0x0 or 0xff.
+	     * The 0x0 case also allows us to avoid doing an unecessary data
+	     * write which is more valuable so we only check for that
+	     */
+	    "cmp r5, #0\n\t"
+	    "beq 3f\n\t"
+
+#endif
+	    "ldr r4, [%[dest]] \n\t"
+
+	    "uxtb16 r6, r5\n\t"
+	    "uxtb16 r7, r5, ror #8\n\t"
+
+	    /* multiply by alpha (r8) then by 257 and divide by 65536 */
+	    "mla r6, r6, %[mask_alpha], %[component_half]\n\t"
+	    "mla r7, r7, %[mask_alpha], %[component_half]\n\t"
+
+	    "uxtab16 r6, r6, r6, ror #8\n\t"
+	    "uxtab16 r7, r7, r7, ror #8\n\t"
+
+	    "uxtb16 r6, r6, ror #8\n\t"
+	    "uxtb16 r7, r7, ror #8\n\t"
+
+	    /* recombine */
+	    "orr r5, r6, r7, lsl #8\n\t"
+
+	    "uxtb16 r6, r4\n\t"
+	    "uxtb16 r7, r4, ror #8\n\t"
+
+	    /* 255 - alpha */
+	    "sub r8, %[alpha_mask], r5, lsr #24\n\t"
+
+	    /* multiply by alpha (r8) then by 257 and divide by 65536 */
+	    "mla r6, r6, r8, %[component_half]\n\t"
+	    "mla r7, r7, r8, %[component_half]\n\t"
+
+	    "uxtab16 r6, r6, r6, ror #8\n\t"
+	    "uxtab16 r7, r7, r7, ror #8\n\t"
+
+	    "uxtb16 r6, r6, ror #8\n\t"
+	    "uxtb16 r7, r7, ror #8\n\t"
+
+	    /* recombine */
+	    "orr r6, r6, r7, lsl #8\n\t"
+
+	    "uqadd8 r5, r6, r5\n\t"
+
+#ifdef inner_branch
+	    "3:\n\t"
+
+#endif
+	    "str r5, [%[dest]], #4\n\t"
+	    /* increment counter and jmp to top */
+	    "subs	%[w], %[w], #1\n\t"
+	    "bne	1b\n\t"
+	    "2:\n\t"
+	    : [w] "+r" (w), [dest] "+r" (dst), [src] "+r" (src)
+	    : [component_half] "r" (component_half), [mask_alpha] "r" (mask),
+	      [alpha_mask] "r" (alpha_mask)
+	    : "r4", "r5", "r6", "r7", "r8", "r9", "cc", "memory"
+	    );
+    }
+}
+
+void
+pixman_composite_over_n_8_8888_asm_armv6 (int32_t   width,
+                                          int32_t   height,
+                                          uint32_t *dst_line,
+                                          int32_t   dst_stride,
+                                          uint32_t  src,
+                                          int32_t   unused,
+                                          uint8_t  *mask_line,
+                                          int32_t   mask_stride)
+{
+    uint32_t  srca;
+    uint32_t *dst;
+    uint8_t  *mask;
+    int32_t w;
+
+    srca = src >> 24;
+
+    uint32_t component_mask = 0xff00ff;
+    uint32_t component_half = 0x800080;
+
+    uint32_t src_hi = (src >> 8) & component_mask;
+    uint32_t src_lo = src & component_mask;
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
+	w = width;
+
+/* #define inner_branch */
+	asm volatile (
+	    "cmp %[w], #0\n\t"
+	    "beq 2f\n\t"
+	    "1:\n\t"
+	    /* load mask */
+	    "ldrb r5, [%[mask]], #1\n\t"
+#ifdef inner_branch
+	    /* We can avoid doing the multiplication in two cases: 0x0 or 0xff.
+	     * The 0x0 case also allows us to avoid doing an unecessary data
+	     * write which is more valuable so we only check for that
+	     */
+	    "cmp r5, #0\n\t"
+	    "beq 3f\n\t"
+
+#endif
+	    "ldr r4, [%[dest]] \n\t"
+
+	    /* multiply by alpha (r8) then by 257 and divide by 65536 */
+	    "mla r6, %[src_lo], r5, %[component_half]\n\t"
+	    "mla r7, %[src_hi], r5, %[component_half]\n\t"
+
+	    "uxtab16 r6, r6, r6, ror #8\n\t"
+	    "uxtab16 r7, r7, r7, ror #8\n\t"
+
+	    "uxtb16 r6, r6, ror #8\n\t"
+	    "uxtb16 r7, r7, ror #8\n\t"
+
+	    /* recombine */
+	    "orr r5, r6, r7, lsl #8\n\t"
+
+	    "uxtb16 r6, r4\n\t"
+	    "uxtb16 r7, r4, ror #8\n\t"
+
+	    /* we could simplify this to use 'sub' if we were
+	     * willing to give up a register for alpha_mask
+	     */
+	    "mvn r8, r5\n\t"
+	    "mov r8, r8, lsr #24\n\t"
+
+	    /* multiply by alpha (r8) then by 257 and divide by 65536 */
+	    "mla r6, r6, r8, %[component_half]\n\t"
+	    "mla r7, r7, r8, %[component_half]\n\t"
+
+	    "uxtab16 r6, r6, r6, ror #8\n\t"
+	    "uxtab16 r7, r7, r7, ror #8\n\t"
+
+	    "uxtb16 r6, r6, ror #8\n\t"
+	    "uxtb16 r7, r7, ror #8\n\t"
+
+	    /* recombine */
+	    "orr r6, r6, r7, lsl #8\n\t"
+
+	    "uqadd8 r5, r6, r5\n\t"
+
+#ifdef inner_branch
+	    "3:\n\t"
+
+#endif
+	    "str r5, [%[dest]], #4\n\t"
+	    /* increment counter and jmp to top */
+	    "subs	%[w], %[w], #1\n\t"
+	    "bne	1b\n\t"
+	    "2:\n\t"
+	    : [w] "+r" (w), [dest] "+r" (dst), [src] "+r" (src), [mask] "+r" (mask)
+	    : [component_half] "r" (component_half),
+	      [src_hi] "r" (src_hi), [src_lo] "r" (src_lo)
+	    : "r4", "r5", "r6", "r7", "r8", "cc", "memory");
+    }
+}
+
+#endif
+
+PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (armv6, add_8000_8000,
+                                   uint8_t, 1, uint8_t, 1)
+PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (armv6, over_8888_8888,
+                                   uint32_t, 1, uint32_t, 1)
+
+PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (armv6, over_8888_n_8888,
+                                     uint32_t, 1, uint32_t, 1)
+
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (armv6, over_n_8_8888,
+                                      uint8_t, 1, uint32_t, 1)
+
+static const pixman_fast_path_t arm_simd_fast_paths[] =
+{
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, a8r8g8b8, armv6_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, x8r8g8b8, armv6_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, a8b8g8r8, armv6_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, x8b8g8r8, armv6_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, solid, a8r8g8b8, armv6_composite_over_8888_n_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, solid, x8r8g8b8, armv6_composite_over_8888_n_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, solid, a8b8g8r8, armv6_composite_over_8888_n_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, solid, x8b8g8r8, armv6_composite_over_8888_n_8888),
+
+    PIXMAN_STD_FAST_PATH (ADD, a8, null, a8, armv6_composite_add_8000_8000),
+
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, a8r8g8b8, armv6_composite_over_n_8_8888),
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, x8r8g8b8, armv6_composite_over_n_8_8888),
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, a8b8g8r8, armv6_composite_over_n_8_8888),
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, x8b8g8r8, armv6_composite_over_n_8_8888),
 
     { PIXMAN_OP_NONE },
 };
-
-const pixman_fast_path_t *const arm_simd_fast_paths = arm_simd_fast_path_array;
-
-static void
-arm_simd_composite (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    pixman_image_t *         src,
-                    pixman_image_t *         mask,
-                    pixman_image_t *         dest,
-                    int32_t                  src_x,
-                    int32_t                  src_y,
-                    int32_t                  mask_x,
-                    int32_t                  mask_y,
-                    int32_t                  dest_x,
-                    int32_t                  dest_y,
-                    int32_t                  width,
-                    int32_t                  height)
-{
-    if (_pixman_run_fast_path (arm_simd_fast_paths, imp,
-                               op, src, mask, dest,
-                               src_x, src_y,
-                               mask_x, mask_y,
-                               dest_x, dest_y,
-                               width, height))
-    {
-	return;
-    }
-
-    _pixman_implementation_composite (imp->delegate, op,
-                                      src, mask, dest,
-                                      src_x, src_y,
-                                      mask_x, mask_y,
-                                      dest_x, dest_y,
-                                      width, height);
-}
 
 pixman_implementation_t *
 _pixman_implementation_create_arm_simd (void)
 {
     pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
-    pixman_implementation_t *imp = _pixman_implementation_create (general);
-
-    imp->composite = arm_simd_composite;
+    pixman_implementation_t *imp = _pixman_implementation_create (general, arm_simd_fast_paths);
 
     return imp;
 }

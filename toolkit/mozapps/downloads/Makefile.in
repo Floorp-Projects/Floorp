@@ -48,6 +48,7 @@ EXTRA_PP_COMPONENTS = nsHelperAppDlg.js
 
 EXTRA_JS_MODULES = \
   DownloadLastDir.jsm \
+  DownloadPaths.jsm \
   DownloadUtils.jsm \
   $(NULL)
 

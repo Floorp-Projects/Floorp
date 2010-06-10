@@ -136,7 +136,7 @@ var gUpdateWizard = {
   },
 
   // Displays a list of items that had an error during the update check. We
-  // don't display the actual error that occured since
+  // don't display the actual error that occurred since
   // nsIAddonUpdateCheckListener doesn't return the error details.
   showUpdateCheckErrors: function ()
   {

@@ -436,16 +436,16 @@ LoginManagerPrompter.prototype = {
           var canRememberLogin = (aSavePassword ==
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
                                  this._pwmgr.getLoginSavingEnabled(hostname);
-  
+
           // if checkBoxLabel is null, the checkbox won't be shown at all.
           if (canRememberLogin)
               checkBoxLabel = this._getLocalizedString("rememberPassword");
-  
+
           if (!aPassword.value) {
               // Look for existing logins.
               var foundLogins = this._pwmgr.findLogins({}, hostname, null,
                                                        realm);
-  
+
               // XXX Like the original code, we can't deal with multiple
               // account selection (bug 227632). We can deal with finding the
               // account based on the supplied username - but in this case we'll

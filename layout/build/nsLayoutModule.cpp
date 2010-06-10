@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "xpcmodule.h"
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
 #include "nsContentDLF.h"
@@ -142,6 +143,13 @@
 #include "nsTextServicesDocument.h"
 #include "nsTextServicesCID.h"
 #endif
+
+#include "nsScriptSecurityManager.h"
+#include "nsPrincipal.h"
+#include "nsSystemPrincipal.h"
+#include "nsNullPrincipal.h"
+#include "nsPrefsCID.h"
+#include "nsNetCID.h"
 
 #define NS_EDITORCOMMANDTABLE_CID \
 { 0x4f5e62b8, 0xd659, 0x4156, { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 }}
@@ -261,7 +269,6 @@ NS_IMETHODIMP
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
-static nsresult Initialize(nsIModule* aSelf);
 static void Shutdown();
 
 #ifdef MOZ_XTF
@@ -921,8 +928,68 @@ CSPServiceUnregistration(nsIComponentManager *aCompMgr,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(CSPService)
 
+XPCONNECT_FACTORIES
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrincipal)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
+    nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNullPrincipal, Init)
+
+NS_DECL_CLASSINFO(nsPrincipal)
+NS_DECL_CLASSINFO(nsSystemPrincipal)
+NS_DECL_CLASSINFO(nsNullPrincipal)
+
+static NS_IMETHODIMP
+Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
+                                   void **aResult)
+{
+    if (!aResult)
+        return NS_ERROR_NULL_POINTER;
+    *aResult = nsnull;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsScriptSecurityManager *obj = nsScriptSecurityManager::GetScriptSecurityManager();
+    if (!obj) 
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(obj->QueryInterface(aIID, aResult)))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+static NS_METHOD 
+RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
+                        nsIFile *aPath,
+                        const char *registryLocation,
+                        const char *componentType,
+                        const nsModuleComponentInfo *info)
+{
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsXPIDLCString previous;
+    rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY,
+                                  "PrivilegeManager",
+                                  NS_SECURITYNAMESET_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = catman->AddCategoryEntry("app-startup", "Script Security Manager",
+                                  "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                                  PR_TRUE, PR_TRUE,
+                                  getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return rv;
+}
+
 // The list of components we register
-static const nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gLayoutComponents[] = {
 #ifdef DEBUG
   { "Frame utility",
     NS_FRAME_UTIL_CID,
@@ -1544,4 +1611,214 @@ static const nsModuleComponentInfo gComponents[] = {
       nsChannelPolicyConstructor }
 };
 
-NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)
+static nsModuleInfo const kLayoutModuleInfo = {
+    NS_MODULEINFO_VERSION,
+    "nsLayoutModule",
+    gLayoutComponents,
+    (sizeof(gLayoutComponents) / sizeof(gLayoutComponents[0])),
+    Initialize,
+    nsnull
+};
+
+static const nsModuleComponentInfo gXPConnectComponents[] = {
+    XPCONNECT_COMPONENTS,
+
+    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
+      NS_SCRIPTSECURITYMANAGER_CID, 
+      NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+      Construct_nsIScriptSecurityManager,
+      RegisterSecurityNameSet,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
+    },
+
+    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
+      NS_SCRIPTSECURITYMANAGER_CID, 
+      NS_GLOBAL_PREF_SECURITY_CHECK,
+      Construct_nsIScriptSecurityManager,
+      RegisterSecurityNameSet,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
+    },
+
+    { NS_SCRIPTSECURITYMANAGER_CLASSNAME,
+      NS_SCRIPTSECURITYMANAGER_CID,
+      NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID,
+      Construct_nsIScriptSecurityManager,
+      RegisterSecurityNameSet,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
+    },
+
+
+
+    { NS_PRINCIPAL_CLASSNAME, 
+      NS_PRINCIPAL_CID, 
+      NS_PRINCIPAL_CONTRACTID,
+      nsPrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsPrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsPrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
+    },
+
+    { NS_SYSTEMPRINCIPAL_CLASSNAME, 
+      NS_SYSTEMPRINCIPAL_CID, 
+      NS_SYSTEMPRINCIPAL_CONTRACTID,
+      nsSystemPrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsSystemPrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsSystemPrincipal),
+      nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY |
+      nsIClassInfo::EAGER_CLASSINFO
+    },
+
+    { NS_NULLPRINCIPAL_CLASSNAME, 
+      NS_NULLPRINCIPAL_CID, 
+      NS_NULLPRINCIPAL_CONTRACTID,
+      nsNullPrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsNullPrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsNullPrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
+    },
+
+    { "Security Script Name Set",
+      NS_SECURITYNAMESET_CID,
+      NS_SECURITYNAMESET_CONTRACTID,
+      nsSecurityNameSetConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
+    }
+};
+
+void
+XPConnectModuleDtor(nsIModule *self)
+{
+  xpcModuleDtor(self);
+
+  nsScriptSecurityManager::Shutdown();
+}
+
+static nsModuleInfo const kXPConnectModuleInfo = {
+    NS_MODULEINFO_VERSION,
+    "XPConnectModule",
+    gXPConnectComponents,
+    (sizeof(gXPConnectComponents) / sizeof(gXPConnectComponents[0])),
+    xpcModuleCtor,
+    XPConnectModuleDtor
+};
+
+// XPConnect is initialized early, because it has an XPCOM component loader.
+// Initializing nsLayoutStatics at that point leads to recursive initialization,
+// because it instantiates a bunch of other components. To get around that we
+// use two nsGenericModules, each with their own initialiser. nsLayoutStatics is
+// initialized for the module for layout components, but not for the module for
+// XPConnect components. nsLayoutModule forwards to the two nsGenericModules.
+class nsLayoutModule : public nsIModule
+{
+public:
+  nsLayoutModule(nsIModule *aXPConnectModule, nsIModule *aLayoutModule)
+    : mXPConnectModule(aXPConnectModule),
+      mLayoutModule(aLayoutModule)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+
+  // nsIModule
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr,
+                                          const nsCID & aClass,
+                                          const nsIID & aIID,
+                                          void **aResult NS_OUTPARAM)
+  {
+    nsresult rv = mXPConnectModule->GetClassObject(aCompMgr, aClass, aIID,
+                                                   aResult);
+    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
+      rv = mLayoutModule->GetClassObject(aCompMgr, aClass, aIID, aResult);
+    }
+    return rv;
+  }
+  NS_SCRIPTABLE NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr,
+                                        nsIFile *aLocation,
+                                        const char *aLoaderStr,
+                                        const char *aType)
+  {
+    nsresult rv = mXPConnectModule->RegisterSelf(aCompMgr, aLocation,
+                                                 aLoaderStr, aType);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mLayoutModule->RegisterSelf(aCompMgr, aLocation, aLoaderStr, aType);
+    }
+    return rv;
+  }
+  NS_SCRIPTABLE NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr,
+                                          nsIFile *aLocation,
+                                          const char *aLoaderStr)
+  {
+    nsresult rv = mXPConnectModule->UnregisterSelf(aCompMgr, aLocation,
+                                                   aLoaderStr);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mLayoutModule->UnregisterSelf(aCompMgr, aLocation, aLoaderStr);
+    }
+    return rv;
+  }
+  NS_SCRIPTABLE NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr,
+                                     PRBool *aResult NS_OUTPARAM)
+  {
+    nsresult rv = mXPConnectModule->CanUnload(aCompMgr, aResult);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mLayoutModule->CanUnload(aCompMgr, aResult);
+    }
+    return rv;
+  }
+
+private:
+  nsCOMPtr<nsIModule> mXPConnectModule;
+  nsCOMPtr<nsIModule> mLayoutModule;
+};
+
+NS_IMPL_ISUPPORTS1(nsLayoutModule, nsIModule)
+
+NSGETMODULE_ENTRY_POINT(nsLayoutModule)(nsIComponentManager *aServMgr,
+                                        nsIFile *aLocation,
+                                        nsIModule **aResult)
+{
+    nsCOMPtr<nsIModule> xpconnectModule;
+    nsresult rv = NS_NewGenericModule2(&kXPConnectModuleInfo,
+                                       getter_AddRefs(xpconnectModule));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIModule> layoutModule;
+    rv = NS_NewGenericModule2(&kLayoutModuleInfo, getter_AddRefs(layoutModule));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(*aResult = new nsLayoutModule(xpconnectModule, layoutModule));
+
+    return NS_OK;
+}

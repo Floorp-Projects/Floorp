@@ -62,6 +62,7 @@
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
 #endif // MOZ_SMIL
+#include "nsIScriptGlobalObject.h"
 
 class nsIContent;
 class nsPresContext;
@@ -70,9 +71,8 @@ class nsIDocShell;
 class nsStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 class nsIViewManager;
-class nsIScriptGlobalObject;
 class nsIDOMEvent;
 class nsIDOMEventTarget;
 class nsIDeviceContext;
@@ -116,8 +116,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x56d981ce, 0x7f03, 0x4d90, \
-  { 0xb2, 0x40, 0x72, 0x08, 0xb6, 0x28, 0x73, 0x06 } }
+{ 0x3ee6a14b, 0x83b5, 0x4629, \
+  { 0x96, 0x9b, 0xe9, 0x84, 0x7c, 0x57, 0x24, 0x3c } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -136,6 +136,8 @@ class Element;
 class nsIDocument : public nsINode
 {
 public:
+  typedef mozilla::dom::Element Element;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -241,10 +243,17 @@ public:
    * unless it's overridden by SetBaseURI, HTML <base> tags, etc.).  The
    * returned URI could be null if there is no document URI.
    */
-  nsIURI* GetBaseURI() const
+  nsIURI* GetDocBaseURI() const
   {
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
+  virtual already_AddRefed<nsIURI> GetBaseURI() const
+  {
+    nsCOMPtr<nsIURI> uri = GetDocBaseURI();
+
+    return uri.forget();
+  }
+
   virtual nsresult SetBaseURI(nsIURI* aURI) = 0;
 
   /**
@@ -296,8 +305,8 @@ public:
    * @return PR_TRUE to keep the callback in the callback set, PR_FALSE
    * to remove it.
    */
-  typedef PRBool (* IDTargetObserver)(nsIContent* aOldContent,
-                                      nsIContent* aNewContent, void* aData);
+  typedef PRBool (* IDTargetObserver)(Element* aOldElement,
+                                      Element* aNewelement, void* aData);
 
   /**
    * Add an IDTargetObserver for a specific ID. The IDTargetObserver
@@ -306,8 +315,8 @@ public:
    * for each ID.
    * @return the content currently associated with the ID.
    */
-  virtual nsIContent* AddIDTargetObserver(nsIAtom* aID,
-                                          IDTargetObserver aObserver, void* aData) = 0;
+  virtual Element* AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+                                       void* aData) = 0;
   /**
    * Remove the (aObserver, aData) pair for a specific ID, if registered.
    */
@@ -473,31 +482,31 @@ public:
   /**
    * Return the root element for this document.
    */
-  mozilla::dom::Element *GetRootElement() const
+  Element *GetRootElement() const
   {
     return (mCachedRootElement &&
             mCachedRootElement->GetNodeParent() == this) ?
-           reinterpret_cast<mozilla::dom::Element*>(mCachedRootElement.get()) :
+           reinterpret_cast<Element*>(mCachedRootElement.get()) :
            GetRootElementInternal();
   }
 protected:
-  virtual mozilla::dom::Element *GetRootElementInternal() const = 0;
+  virtual Element *GetRootElementInternal() const = 0;
 
 public:
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
-  mozilla::dom::Element* GetHtmlElement();
+  Element* GetHtmlElement();
   // Returns the first child of GetHtmlContent which has the given tag,
   // or nsnull if that doesn't exist.
-  mozilla::dom::Element* GetHtmlChildElement(nsIAtom* aTag);
+  Element* GetHtmlChildElement(nsIAtom* aTag);
   // Get the canonical <body> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <body> isn't there)
-  mozilla::dom::Element* GetBodyElement() {
+  Element* GetBodyElement() {
     return GetHtmlChildElement(nsGkAtoms::body);
   }
   // Get the canonical <head> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <head> isn't there)
-  mozilla::dom::Element* GetHeadElement() {
+  Element* GetHeadElement() {
     return GetHtmlChildElement(nsGkAtoms::head);
   }
   
@@ -620,8 +629,13 @@ public:
    * for event/script handling. Do not process any events/script if the method
    * returns null, but aHasHadScriptHandlingObject is true.
    */
-  virtual nsIScriptGlobalObject*
-    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const = 0;
+  nsIScriptGlobalObject*
+    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const
+  {
+    aHasHadScriptHandlingObject = mHasHadScriptHandlingObject;
+    return mScriptGlobalObject ? mScriptGlobalObject.get() :
+                                 GetScriptHandlingObjectInternal();
+  }
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
 
   /**
@@ -656,6 +670,17 @@ public:
    */ 
   virtual nsScriptLoader* ScriptLoader() = 0;
 
+  /**
+   * Add/Remove an element to the document's id and name hashes
+   */
+  virtual void AddToIdTable(mozilla::dom::Element* aElement, nsIAtom* aId) = 0;
+  virtual void RemoveFromIdTable(mozilla::dom::Element* aElement,
+                                 nsIAtom* aId) = 0;
+  virtual void AddToNameTable(mozilla::dom::Element* aElement,
+                              nsIAtom* aName) = 0;
+  virtual void RemoveFromNameTable(mozilla::dom::Element* aElement,
+                                   nsIAtom* aName) = 0;
+
   //----------------------------------------------------------------------
 
   // Document notification API's
@@ -663,7 +688,8 @@ public:
   /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
-   * informed.
+   * informed.  An observer that is already observing the document must
+   * not be added without being removed first.
    */
   virtual void AddObserver(nsIDocumentObserver* aObserver) = 0;
 
@@ -786,6 +812,10 @@ public:
   PRBool IsHTML() const
   {
     return mIsRegularHTML;
+  }
+  PRBool IsXUL() const
+  {
+    return mIsXUL;
   }
 
   virtual PRBool IsScriptEnabled() = 0;
@@ -1277,7 +1307,7 @@ public:
    * DO NOT USE FOR UNTRUSTED CONTENT.
    */
   virtual nsresult LoadChromeSheetSync(nsIURI* aURI, PRBool aIsAgentSheet,
-                                       nsICSSStyleSheet** aSheet) = 0;
+                                       nsCSSStyleSheet** aSheet) = 0;
 
   /**
    * Returns true if the locale used for the document specifies a direction of
@@ -1343,6 +1373,19 @@ public:
    */
   virtual void RegisterFileDataUri(nsACString& aUri) = 0;
 
+  virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
+  virtual void ScrollToRef() = 0;
+  virtual void ResetScrolledToRefAlready() = 0;
+  virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue) = 0;
+
+  /**
+   * This method is similar to GetElementById() from nsIDOMDocument but it
+   * returns a mozilla::dom::Element instead of a nsIDOMElement.
+   * It prevents converting nsIDOMElement to mozill:dom::Element which is
+   * already converted from mozilla::dom::Element.
+   */
+  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId) = 0;
+
 protected:
   ~nsIDocument()
   {
@@ -1360,6 +1403,9 @@ protected:
   // Never ever call this. Only call GetInnerWindow!
   virtual nsPIDOMWindow *GetInnerWindowInternal() = 0;
 
+  // Never ever call this. Only call GetScriptHandlingObject!
+  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const = 0;
+
   /**
    * These methods should be called before and after dispatching
    * a mutation event.
@@ -1368,6 +1414,11 @@ protected:
   virtual void WillDispatchMutationEvent(nsINode* aTarget) = 0;
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
+
+  virtual Element* GetNameSpaceElement()
+  {
+    return GetRootElement();
+  }
 
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
@@ -1425,6 +1476,7 @@ protected:
   PRPackedBool mShellIsHidden;
 
   PRPackedBool mIsRegularHTML;
+  PRPackedBool mIsXUL;
 
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
@@ -1458,6 +1510,14 @@ protected:
 
   // True while this document is being cloned to a static document.
   PRPackedBool mCreatingStaticClone;
+
+  // True if document has ever had script handling object.
+  PRPackedBool mHasHadScriptHandlingObject;
+
+  // The document's script global object, the object from which the
+  // document can get its script context and scope. This is the
+  // *inner* window object.
+  nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
 
   // If mIsStaticDocument is true, mOriginalDocument points to the original
   // document.

@@ -29,38 +29,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Revision 1 (March 4, 2004):
- * Initial proposal.
- *
- * Revision 2 (March 10, 2004):
- * All calls into script were made asynchronous.  Results are
- * provided via the NPScriptResultFunctionPtr callback.
- *
- * Revision 3 (March 10, 2004):
- * Corrected comments to not refer to class retain/release FunctionPtrs.
- *
- * Revision 4 (March 11, 2004):
- * Added additional convenience NPN_SetExceptionWithUTF8().
- * Changed NPHasPropertyFunctionPtr and NPHasMethodFunctionPtr to take NPClass
- * pointers instead of NPObject pointers.
- * Added NPIsValidIdentifier().
- *
- * Revision 5 (March 17, 2004):
- * Added context parameter to result callbacks from ScriptObject functions.
- *
- * Revision 6 (March 29, 2004):
- * Renamed functions implemented by user agent to NPN_*.  Removed _ from
- * type names.
- * Renamed "JavaScript" types to "Script".
- *
- * Revision 7 (April 21, 2004):
- * NPIdentifier becomes a void*, was int32_t
- * Remove NP_IsValidIdentifier, renamed NP_IdentifierFromUTF8 to NP_GetIdentifier
- * Added NPVariant and modified functions to use this new type.
- *
- * Revision 8 (July 9, 2004):
- * Updated to joint Apple-Mozilla license.
- *
  */
 #ifndef _NP_RUNTIME_H_
 #define _NP_RUNTIME_H_

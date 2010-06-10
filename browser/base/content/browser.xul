@@ -33,6 +33,7 @@
 #   Dão Gottwald <dao@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Robert Strong <robert.bugzilla@gmail.com>
+#   Rob Campbell <rcampbell@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -100,10 +101,6 @@
 <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
-
-<!-- This is still used for dragDropSecurityCheck and transferUtils.  Since we
-     rely on the new Drag and Drop API these dependencies should be removed. -->
-<script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
@@ -216,6 +213,35 @@
                 oncommand="StarUI.panel.hidePopup();"/>
 #endif
       </hbox>
+    </panel>
+
+    <panel id="highlighter-panel"
+           hidden="true"
+           ignorekeys="true"
+           noautofocus="true"
+           noautohide="true"
+           onclick="InspectorUI.stopInspecting();"
+           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"/>
+
+    <panel id="inspector-panel"
+           orient="vertical"
+           hidden="true"
+           ignorekeys="true"
+           noautofocus="true"
+           noautohide="true"
+           level="top"
+           aria-labelledby="inspectPagePanelTitle">
+      <tree id="inspector-tree" class="plain" seltype="single" treelines="true"
+            onselect="InspectorUI.onTreeSelected()" flex="1">
+        <treecols>
+          <treecol id="colNodeName" label="nodeName" primary="true"
+                   persist="width,hidden,ordinal" flex="1"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="colNodeValue" label="nodeValue"
+                   persist="width,hidden,ordinal" flex="1"/>
+        </treecols>
+        <treechildren id="inspector-tree-body"/>
+      </tree>
     </panel>
 
     <popup id="toolbar-context-menu"
@@ -345,8 +371,7 @@
     <tooltip id="bhTooltip"/>
 
     <panel id="customizeToolbarSheetPopup"
-           noautohide="true"
-           onpopupshown="this.moveTo(this.boxObject.screenX + (window.innerWidth - this.boxObject.width) / 2, this.boxObject.screenY);">
+           noautohide="true">
       <iframe id="customizeToolbarSheetIFrame"
               style="&dialog.style;"
               hidden="true"/>
@@ -442,10 +467,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
-                 bookmarkhistoryplaceholder="&urlbar.bookmarkhistory.emptyText;"
-                 bookmarkplaceholder="&urlbar.bookmark.emptyText;"
-                 historyplaceholder="&urlbar.history.emptyText;"
-                 noneplaceholder="&urlbar.none.emptyText;"
+                 placeholder="&urlbar.placeholder;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletesearchparam="enable-actions"
@@ -550,14 +572,40 @@
              customizable="true">
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;"
                    removable="true">
-         <hbox id="bookmarksBarContent" flex="1"
-               type="places"
-               place="place:folder=TOOLBAR"
-               context="placesContext"
-               onclick="BookmarksEventHandler.onClick(event);"
-               oncommand="BookmarksEventHandler.onCommand(event);"
-               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
-               tooltip="bhTooltip" popupsinherittooltip="true"/>
+        <hbox flex="1"
+              id="PlacesToolbar"
+              context="placesContext"
+              onclick="BookmarksEventHandler.onClick(event);"
+              oncommand="BookmarksEventHandler.onCommand(event);"
+              tooltip="bhTooltip"
+              popupsinherittooltip="true">
+          <toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
+                         mousethrough="never"
+                         label="&bookmarksToolbarItem.label;"/>
+          <hbox flex="1">
+            <hbox align="center">
+              <image id="PlacesToolbarDropIndicator"
+                     mousethrough="always"
+                     collapsed="true"/>
+            </hbox>
+            <scrollbox orient="horizontal"
+                       id="PlacesToolbarItems"
+                       flex="1"/>
+            <toolbarbutton type="menu"
+                           id="PlacesChevron"
+                           class="chevron"
+                           mousethrough="never"
+                           collapsed="true"
+                           tooltiptext="&bookmarksToolbarChevron.tooltip;"
+                           onpopupshowing="document.getElementById('PlacesToolbar')
+                                                   ._placesView._onChevronPopupShowing(event);">
+              <menupopup id="PlacesChevronPopup"
+                         placespopup="true"
+                         popupsinherittooltip="true"
+                         context="placesContext"/>
+            </toolbarbutton>
+          </hbox>
+        </hbox>
       </toolbaritem>
     </toolbar>
 
@@ -566,6 +614,7 @@
              customizable="true"
              mode="icons" lockmode="true"
              iconsize="small" defaulticonsize="small" lockiconsize="true"
+             aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
              collapsed="true">
@@ -584,6 +633,7 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&tabCmd.label;"
                      command="cmd_newNavigatorTab"
+                     onclick="checkForMiddleClick(this, event);"
                      tooltiptext="&newTabButton.tooltip;"
                      ondrop="newTabButtonObserver.onDrop(event)"
                      ondragover="newTabButtonObserver.onDragOver(event)"
@@ -664,11 +714,13 @@
                      label="&pasteCmd.label;"
                      command="cmd_paste"
                      tooltiptext="&pasteButton.tooltip;"/>
+
       <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="View:FullScreen"
                      type="checkbox"
                      label="&fullScreenCmd.label;"
                      tooltiptext="&fullScreenButton.tooltip;"/>
+
     </toolbarpalette>
   </toolbox>
 
@@ -695,8 +747,6 @@
   </hbox>
 
   <vbox id="browser-bottombox">
-    <findbar browserid="content" id="FindToolbar"/>
-  
     <statusbar class="chromeclass-status" id="status-bar"
 #ifdef WINCE
                hidden="true"

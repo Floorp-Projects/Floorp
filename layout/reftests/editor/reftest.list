@@ -5,6 +5,10 @@ include xul/reftest.list
 == newline-2.html newline-ref.html
 == newline-3.html newline-ref.html
 == dynamic-1.html dynamic-ref.html
+== dynamic-type-1.html dynamic-ref.html
+== dynamic-type-2.html dynamic-ref.html
+== dynamic-type-3.html dynamic-ref.html
+== dynamic-type-4.html dynamic-ref.html
 == passwd-1.html passwd-ref.html
 != passwd-2.html passwd-ref.html
 == passwd-3.html passwd-ref.html

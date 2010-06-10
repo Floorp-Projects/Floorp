@@ -1,0 +1,6 @@
+protocol bridgesNonexistent {
+    bridges Leftie, Rightie;
+
+child: __delete__();
+state DEAD: send __delete__;
+};

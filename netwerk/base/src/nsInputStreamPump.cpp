@@ -562,7 +562,7 @@ nsInputStreamPump::OnStateStop()
 {
     LOG(("  OnStateStop [this=%x status=%x]\n", this, mStatus));
 
-    // if an error occured, we must be sure to pass the error onto the async
+    // if an error occurred, we must be sure to pass the error onto the async
     // stream.  in some cases, this is redundant, but since close is idempotent,
     // this is OK.  otherwise, be sure to honor the "close-when-done" option.
 

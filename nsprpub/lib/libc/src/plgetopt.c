@@ -177,13 +177,13 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
     ** option. See if we can find a match in the list of possible
     ** options supplied.
     */
-
     if (internal->minus == 2) 
     {
         char * foundEqual = strchr(internal->xargv,'=');
         PRIntn optNameLen = foundEqual ? (foundEqual - internal->xargv) :
                             strlen(internal->xargv);
         const PLLongOpt *longOpt = internal->longOpts;
+        PLOptStatus result = PL_OPT_BAD;
 
         opt->option = 0;
         opt->value  = NULL;
@@ -197,19 +197,31 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
             /* option name match */
             opt->longOptIndex = longOpt - internal->longOpts;
             opt->longOption   = longOpt->longOption;
+            /* value is part of the current argv[] element if = was found */
+            /* note: this sets value even for long options that do not
+             * require option if specified as --long=value */
             if (foundEqual) 
             {
-                opt->value = foundEqual[1] ? foundEqual + 1 : NULL;
+                opt->value = foundEqual + 1;
             }
             else if (longOpt->valueRequired)
             {
-                opt->value = internal->argv[++(internal->xargc)];
+                /* value is the next argv[] element, if any */
+                if (internal->xargc + 1 < internal->argc)
+                {
+                    opt->value = internal->argv[++(internal->xargc)];
+                }
+                /* missing value */
+                else
+                {
+                    break; /* return PL_OPT_BAD */
+                }
             }
-            internal->xargv = &static_Nul; /* consume this */
-            return PL_OPT_OK;
+            result = PL_OPT_OK;
+            break;
         }
         internal->xargv = &static_Nul; /* consume this */
-        return PL_OPT_BAD;
+        return result;
     }
     if (internal->minus)
     {
@@ -223,14 +235,27 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
                 opt->longOption = opt->option & 0xff;
                 /*
                 ** if options indicates that there's an associated
-                ** value, this argv is finished and the next is the
-                ** option's value.
+                ** value, it must be provided, either as part of this
+                ** argv[] element or as the next one
                 */
                 if (':' == internal->options[cop + 1])
                 {
-                    if (0 != *internal->xargv) 
+                    /* value is part of the current argv[] element */
+                    if (0 != *internal->xargv)
+                    {
+                        opt->value = internal->xargv;
+                    }
+                    /* value is the next argv[] element, if any */
+                    else if (internal->xargc + 1 < internal->argc)
+                    {
+                        opt->value = internal->argv[++(internal->xargc)];
+                    }
+                    /* missing value */
+                    else
+                    {
                         return PL_OPT_BAD;
-                    opt->value = internal->argv[++(internal->xargc)];
+                    }
+
                     internal->xargv = &static_Nul;
                     internal->minus = 0;
                 }
@@ -242,6 +267,7 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
         internal->xargv += 1;  /* consume that option */
         return PL_OPT_BAD;
     }
+
     /*
     ** No '-', so it must be a standalone value. The option is nul.
     */

@@ -35,27 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+  // So SSE.h will include emmintrin.h in an appropriate way:
+#define MOZILLA_SSE_INCLUDE_HEADER_FOR_SSE2
+
 #include "nsUCSupport.h"
 #include "nsUTF8ToUnicode.h"
-
-#if defined(__GNUC__) && defined(__SSE2__)
-// on x86_64 environment or using -msse2 such as MacOS X
-#define GCC_SSE2
-#endif
-#if (defined(_M_IX86) || defined(_M_AMD64)) && defined(_MSC_VER) && _MSC_VER >= 1400
-#define WIN_SSE2
-#endif
-
-#if defined(GCC_SSE2) || defined(WIN_SSE2)
-#include "emmintrin.h"
-#endif
-
-#if defined(GCC_SSE2) || defined(_M_AMD64)
-// x86_64 supports SSE2 instruction.
-#define __sse2_available 1
-#elif defined(WIN_SSE2)
-extern "C" int __sse2_available;
-#endif
+#include "mozilla/SSE.h"
 
 #define UNICODE_BYTE_ORDER_MARK    0xFEFF
 
@@ -146,14 +131,14 @@ NS_IMETHODIMP nsUTF8ToUnicode::Reset()
 // number of bytes left in src and the number of unichars available in
 // dst.)
 
-#if defined(GCC_SSE2) || defined(WIN_SSE2)
+#ifdef MOZILLA_COMPILE_WITH_SSE2
 
 static inline void
 Convert_ascii_run (const char *&src,
                    PRUnichar *&dst,
                    PRInt32 len)
 {
-  if (len > 15 && __sse2_available) {
+  if (len > 15 && mozilla::use_sse2()) {
     __m128i in, out1, out2;
     __m128d *outp1, *outp2;
     __m128i zeroes;

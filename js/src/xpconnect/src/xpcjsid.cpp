@@ -470,7 +470,7 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 }
 
 
-/* PRBool resolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id); */
+/* PRBool resolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id); */
 NS_IMETHODIMP
 nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     JSContext * cx, JSObject * obj,
@@ -541,7 +541,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val, out PRBool bp); */
+/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out PRBool bp); */
 NS_IMETHODIMP
 nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * obj,
@@ -927,7 +927,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val, out PRBool bp); */
+/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out PRBool bp); */
 NS_IMETHODIMP
 nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * obj,

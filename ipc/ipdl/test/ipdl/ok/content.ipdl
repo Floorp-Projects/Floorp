@@ -1,0 +1,15 @@
+include protocol compositor;
+include protocol jetpack;
+include protocol plugin;
+
+sync protocol content {
+    parent spawns compositor as parent;
+    parent spawns jetpack;
+    child spawns plugin;
+
+child:
+    __delete__();
+
+state DEAD:
+    send __delete__;
+};

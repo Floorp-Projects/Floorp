@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+ 
+<prefwindow id="mozmill-dxwindow"
+     title="DOM Explorer"
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ 
+<prefpane id="dxwindow" label="DOM Explorer">
+
+  <hbox id="dxtarget" align="center">
+  </hbox>
+</prefpane>
+ 
+</prefwindow>

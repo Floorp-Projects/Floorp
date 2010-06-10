@@ -127,10 +127,6 @@
 #include "nsISecurityCheckedComponent.h"
 #endif
 
-#ifdef XPC_TOOLS_SUPPORT
-#include "nsIXPCToolsProfiler.h"
-#endif
-
 #include "nsIThreadInternal.h"
 
 #ifdef XPC_IDISPATCH_SUPPORT
@@ -554,11 +550,6 @@ private:
 #endif
     PRBool                   mCycleCollecting;
 
-#ifdef XPC_TOOLS_SUPPORT
-    nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
-    nsCOMPtr<nsILocalFile>        mProfilerOutputFile;
-#endif
-
 #ifndef XPCONNECT_STANDALONE
     typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
     ScopeSet mScopes;
@@ -916,8 +907,8 @@ public:
     { SetIsVoid(PR_TRUE); }
 
     explicit XPCReadableJSStringWrapper(JSString *str) :
-        nsDependentString((const PRUnichar *)::JS_GetStringChars(str),
-                          ::JS_GetStringLength(str))
+        nsDependentString(reinterpret_cast<const PRUnichar *>(::JS_GetStringChars(str)),
+                          str->length())
     { }
 };
 
@@ -2266,7 +2257,7 @@ static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
   const js::Value &v = obj->getSlot(JSSLOT_START(obj->getClass()));
-  return static_cast<XPCWrappedNativeProto*>(v.asPrivateVoidPtr());
+  return static_cast<XPCWrappedNativeProto*>(v.asPrivate());
 }
 
 
@@ -3546,8 +3537,6 @@ public:
     void TraceJS(JSTracer* trc);
     void MarkAutoRootsAfterJSFinalize();
 
-    jsuword GetStackLimit() const { return mStackLimit; }
-
     static void InitStatics()
         { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
 
@@ -3579,8 +3568,6 @@ private:
     nsIException*        mException;
     JSBool               mExceptionManagerNotAvailable;
     AutoMarkingPtr*      mAutoRoots;
-
-    jsuword              mStackLimit;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32             mWrappedNativeThreadsafetyReportDepth;

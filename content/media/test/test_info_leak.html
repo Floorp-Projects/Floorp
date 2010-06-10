@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478957
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478957">Mozilla Bug 478957</a>
@@ -25,60 +26,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478957
 
 // Tests whether we leak events and state change info when loading stuff from local files from a webserver.
 
-function fileUriToSrc(path, mustExist) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  const Ci = Components.interfaces;
-  const Cc = Components.classes;
-  const Cr = Components.results;
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  var f = dirSvc.get("CurWorkD", Ci.nsILocalFile);
-  var split = path.split("/");
-  for(var i = 0; i < split.length; ++i) {
-    f.append(split[i]);
-  }
-  is(f.exists(), mustExist, 'File ' + path + ' existence mismatch');
-  return f.path;
-}
 
 var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
 
 var gMedia = null;
-
-var gTests = [
-  {
-    tag: 'video',
-    src: fileUriToSrc("tests/content/media/test/320x240.ogv", true),
-  },{
-    tag: 'video',
-    src: fileUriToSrc("tests/content/media/test/404.ogv", false),
-  }, {
-    tag: 'audio',
-    src: fileUriToSrc("tests/content/media/test/r11025_s16_c1.wav", true),
-  }, {
-    tag: 'audio',
-    src: fileUriToSrc("tests/content/media/test/404.wav", false),
-  }, {
-    tag: 'audio',
-    src: fileUriToSrc("tests/content/media/test/bug461281.ogg", true),
-  }, {
-    tag: 'audio',
-    src: fileUriToSrc("tests/content/media/test/404.ogg", false),
-  }, {
-    tag: 'video',
-    src: 'http://localhost/404.ogv',
-  }, {
-    tag: 'audio',
-    src: 'http://localhost/404.wav',
-  }, {
-    tag: 'video',
-    src: 'http://example.com/tests/content/media/test/test_info_leak.html'
-  }, {
-    tag: 'audio',
-    src: 'http://example.com/tests/content/media/test/test_info_leak.html'
-  }
-];
-
 var gExpectedEvents = ['loadstart', 'error'];
 var gTestNum = 0;
 var gEventNum = 0;
@@ -91,7 +42,7 @@ function log(msg) {
 }
 
 function nextTest() {
-  if (gTestNum == gTests.length) {
+  if (gTestNum == gInfoLeakTests.length) {
     gFinished = true;
     SimpleTest.finish();
     return;
@@ -100,13 +51,13 @@ function nextTest() {
     gMedia.parentNode.removeChild(gMedia);
     gMedia = null;
   }
-  var t = gTests[gTestNum];
+  var t = gInfoLeakTests[gTestNum];
 
-  log("Testing: " + t.tag + " @ " + t.src);
+  log("Testing: " + t.type + " @ " + t.src);
 
   gTestNum++;
   gEventNum = 0;
-  createMedia(t.tag, t.src);
+  createMedia(t.type, t.src);
 }
 
 function listener(evt) {
@@ -125,8 +76,14 @@ function listener(evt) {
   }
 }
 
-function createMedia(tag, src) {
+function createMedia(type, src) {
+  var tag = /^video/.test(type) ? "video" : "audio";
   gMedia = document.createElement(tag);
+  if (!gMedia.canPlayType(type)) {
+    gMedia = null;
+    setTimeout(nextTest, 0);
+    return;
+  }
   for (var i=0; i<gEventTypes.length; i++) {
     gMedia.addEventListener(gEventTypes[i], listener, false);
   }
@@ -151,24 +108,25 @@ function test_is(a, b, msg) {
 }
 
 function checkState() {
-  test_ok(gMedia.networkState <= HTMLMediaElement.NETWORK_LOADING || 
-          gMedia.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
-          "NetworkState of " + gMedia.networkState + " was leaked.");
-  test_ok(gMedia.readyState == HTMLMediaElement.HAVE_NOTHING,
-          "Ready state of " + gMedia.readyState + " was leaked");
-  test_is(gMedia.seeking, false, "Seeking leaked");
-  test_is(gMedia.currentTime, 0, "Leaked currentTime");
-  test_ok(isNaN(gMedia.duration), "Leaked duration");
-  test_is(gMedia.paused, true, "Paused leaked");
-  test_is(gMedia.ended, false, "Ended leaked");
-  test_is(gMedia.autoplay, false, "Autoplay leaked");
-  test_is(gMedia.controls, false, "Controls leaked");
-  test_is(gMedia.muted, false, "muted leaked");
-  test_ok(gMedia.error==null || gMedia.error.code==HTMLMediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
-          "Error code should not exist or be SRC_NOT_SUPPORTED. gMedia.error=" +
-          (gMedia.error ? gMedia.error.code : "null"));
-  test_is(gMedia.currentSrc, "", "Leaked currentSrc");
-
+  if (gMedia != null) {
+    test_ok(gMedia.networkState <= HTMLMediaElement.NETWORK_LOADING || 
+            gMedia.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+            "NetworkState of " + gMedia.networkState + " was leaked.");
+    test_ok(gMedia.readyState == HTMLMediaElement.HAVE_NOTHING,
+            "Ready state of " + gMedia.readyState + " was leaked");
+    test_is(gMedia.seeking, false, "Seeking leaked");
+    test_is(gMedia.currentTime, 0, "Leaked currentTime");
+    test_ok(isNaN(gMedia.duration), "Leaked duration");
+    test_is(gMedia.paused, true, "Paused leaked");
+    test_is(gMedia.ended, false, "Ended leaked");
+    test_is(gMedia.autoplay, false, "Autoplay leaked");
+    test_is(gMedia.controls, false, "Controls leaked");
+    test_is(gMedia.muted, false, "muted leaked");
+    test_ok(gMedia.error==null || gMedia.error.code==HTMLMediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+            "Error code should not exist or be SRC_NOT_SUPPORTED. gMedia.error=" +
+            (gMedia.error ? gMedia.error.code : "null"));
+    test_is(gMedia.currentSrc, "", "Leaked currentSrc");
+  }
   if (!gFinished) {
     setTimeout(checkState, 1);
   }

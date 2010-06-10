@@ -160,20 +160,18 @@ nsIsIndexFrame::GetInputFrame(nsIFormControlFrame** oFrame)
 void
 nsIsIndexFrame::GetInputValue(nsString& oString)
 {
-  nsIFormControlFrame* frame = nsnull;
-  GetInputFrame(&frame);
-  if (frame) {
-    ((nsNewFrame*)frame)->GetValue(oString, PR_FALSE);
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(mInputContent);
+  if (txtCtrl) {
+    txtCtrl->GetTextEditorValue(oString, PR_FALSE);
   }
 }
 
 void
 nsIsIndexFrame::SetInputValue(const nsString& aString)
 {
-  nsIFormControlFrame* frame = nsnull;
-  GetInputFrame(&frame);
-  if (frame) {
-    ((nsNewFrame*)frame)->SetValue(aString);
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(mInputContent);
+  if (txtCtrl) {
+    txtCtrl->SetTextEditorValue(aString, PR_FALSE);
   }
 }
 
@@ -357,7 +355,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
   if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
 
   // Resolve url to an absolute url
-  nsIURI *baseURI = document->GetBaseURI();
+  nsIURI *baseURI = document->GetDocBaseURI();
   if (!baseURI) {
     NS_ERROR("No Base URL found in Form Submit!\n");
     return NS_OK; // No base URL -> exit early, see Bug 30721

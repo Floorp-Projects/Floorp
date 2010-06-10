@@ -249,7 +249,7 @@ main(void)
 
 
         //----------------------------------------------------------------
-        //  Test 1: Open non-existing file
+        //  Test 1: Open nonexistent file
         //----------------------------------------------------------------
         rv = blockFile->Open(localFile, 256);
         if (NS_FAILED(rv)) {
@@ -337,7 +337,7 @@ main(void)
 
 
         //----------------------------------------------------------------
-        //  Test 4: Open non-existing file (again)
+        //  Test 4: Open nonexistent file (again)
         //----------------------------------------------------------------
 
         // Delete existing file

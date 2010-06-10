@@ -46,6 +46,7 @@
 #include "nsIRunnable.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 // This is needed on some systems to prevent collisions between the symbols
 // appearing in xpcom_core and xpcomglue.  It may be unnecessary in the future
@@ -435,8 +436,10 @@ public:
   }
 
   const nsRevocableEventPtr& operator=(T *event) {
-    Revoke();
-    mEvent = event;
+    if (mEvent != event) {
+      Revoke();
+      mEvent = event;
+    }
     return *this;
   }
 
@@ -462,7 +465,7 @@ private:
   nsRevocableEventPtr(const nsRevocableEventPtr&);
   nsRevocableEventPtr& operator=(const nsRevocableEventPtr&);
 
-  T *mEvent;
+  nsRefPtr<T> mEvent;
 };
 
 #endif  // nsThreadUtils_h__

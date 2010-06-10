@@ -108,8 +108,6 @@
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsPIDOMEventTarget.h"
-#include "nsIURIClassifier.h"
-#include "nsIChannelClassifier.h"
 #include "nsILoadContext.h"
 #include "nsIWidget.h"
 #include "nsIWebShellServices.h"
@@ -154,32 +152,6 @@ public:
     
 protected:
     virtual ~nsRefreshTimer();
-};
-
-class nsClassifierCallback : public nsIChannelClassifier
-                           , public nsIURIClassifierCallback
-                           , public nsIRunnable
-                           , public nsIChannelEventSink
-                           , public nsIInterfaceRequestor
-{
-public:
-    nsClassifierCallback() {}
-    ~nsClassifierCallback() {}
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICHANNELCLASSIFIER
-    NS_DECL_NSIURICLASSIFIERCALLBACK
-    NS_DECL_NSIRUNNABLE
-    NS_DECL_NSICHANNELEVENTSINK
-    NS_DECL_NSIINTERFACEREQUESTOR
-
-private:
-    nsCOMPtr<nsIChannel> mChannel;
-    nsCOMPtr<nsIChannel> mSuspendedChannel;
-    nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
-
-    void MarkEntryClassified(nsresult status);
-    PRBool HasBeenClassified(nsIChannel *aChannel);
 };
 
 #define NS_ERROR_DOCSHELL_REQUEST_REJECTED  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,1001)
@@ -352,11 +324,6 @@ protected:
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
                                    nsIURILoader * aURILoader,
                                    PRBool aBypassClassifier);
-
-    // Check the channel load against the URI classifier service (if it
-    // exists).  The channel will be suspended until the classification is
-    // complete.
-    nsresult CheckClassifier(nsIChannel *aChannel);
 
     nsresult ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
                             PRUint32 aLoadType, nscoord *cx, nscoord *cy,
@@ -692,9 +659,6 @@ protected:
 
     // Secure browser UI object
     nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
-
-    // Suspends/resumes channels based on the URI classifier.
-    nsRefPtr<nsClassifierCallback> mClassifier;
 
     // The URI we're currently loading.  This is only relevant during the
     // firing of a pagehide/unload.  The caller of FirePageHideNotification()

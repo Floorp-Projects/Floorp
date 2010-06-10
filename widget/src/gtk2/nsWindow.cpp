@@ -95,8 +95,7 @@
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
-#include "nsIAccessibleRole.h"
-#include "nsIAccessibleEvent.h"
+#include "nsIAccessibleDocument.h"
 #include "prenv.h"
 #include "stdlib.h"
 static PRBool sAccessibilityChecked = PR_FALSE;
@@ -398,9 +397,6 @@ nsWindow::nsWindow()
     mGdkWindow           = nsnull;
     mShell               = nsnull;
     mWindowGroup         = nsnull;
-    mContainerGotFocus   = PR_FALSE;
-    mContainerLostFocus  = PR_FALSE;
-    mContainerBlockFocus = PR_FALSE;
     mHasMappedToplevel   = PR_FALSE;
     mIsFullyObscured     = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
@@ -905,30 +901,11 @@ NS_IMETHODIMP
 nsWindow::SetModal(PRBool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
-
-    // find the toplevel window and set its modality
-    GtkWidget *grabWidget = nsnull;
-
-    GetToplevelWidget(&grabWidget);
-
-    if (!grabWidget)
+    if (mIsDestroyed)
+        return aModal ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+    if (!mIsTopLevel || !mShell)
         return NS_ERROR_FAILURE;
-
-    // block focus tracking via gFocusWindow internally in case the window
-    // manager does not block focus to parents of modal windows
-    if (mTransientParent) {
-        GtkWidget *transientWidget = GTK_WIDGET(mTransientParent);
-        nsRefPtr<nsWindow> parent = get_window_for_gtk_widget(transientWidget);
-        if (!parent)
-            return NS_ERROR_FAILURE;
-        parent->mContainerBlockFocus = aModal;
-    }
-
-    if (aModal)
-        gtk_window_set_modal(GTK_WINDOW(grabWidget), TRUE);
-    else
-        gtk_window_set_modal(GTK_WINDOW(grabWidget), FALSE);
-
+    gtk_window_set_modal(GTK_WINDOW(mShell), aModal ? TRUE : FALSE);
     return NS_OK;
 }
 
@@ -1389,7 +1366,6 @@ nsWindow::SetFocus(PRBool aRaise)
 
     if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
         LOGFOCUS(("  grabbing focus for the toplevel [%p]\n", (void *)this));
-        owningWindow->mContainerBlockFocus = PR_FALSE;
 
         // Set focus to the window
         if (gRaiseWindows && aRaise && toplevelWidget &&
@@ -3106,8 +3082,7 @@ void
 nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
-    // Return if someone has blocked events for this widget.
-    if (mContainerBlockFocus) {
+    if (!mEnabled) {
         LOGFOCUS(("Container focus is blocked [%p]\n", (void *)this));
         return;
     }
@@ -5402,8 +5377,8 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
                     GdkWindow* currWindow =
                         (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
                     if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                      // don't roll up if the mouse event occured within a
-                      // menu of the same type. If the mouse event occured
+                      // don't roll up if the mouse event occurred within a
+                      // menu of the same type. If the mouse event occurred
                       // in a menu higher than that, roll up, but pass the
                       // number of popups to Rollup so that only those of the
                       // same type close up.
@@ -6506,18 +6481,11 @@ gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 #endif /* MOZ_X11 */
 
 #ifdef ACCESSIBILITY
-/**
- * void
- * nsWindow::CreateRootAccessible
- *
- * request to create the nsIAccessible Object for the toplevel window
- **/
 void
 nsWindow::CreateRootAccessible()
 {
     if (mIsTopLevel && !mRootAccessible) {
-        nsCOMPtr<nsIAccessible> acc;
-        DispatchAccessibleEvent(getter_AddRefs(acc));
+        nsAccessible *acc = DispatchAccessibleEvent();
 
         if (acc) {
             mRootAccessible = acc;
@@ -6525,91 +6493,55 @@ nsWindow::CreateRootAccessible()
     }
 }
 
-void
-nsWindow::GetRootAccessible(nsIAccessible** aAccessible)
+nsAccessible*
+nsWindow::DispatchAccessibleEvent()
 {
-    nsCOMPtr<nsIAccessible> accessible, parentAccessible;
-    DispatchAccessibleEvent(getter_AddRefs(accessible));
-    PRUint32 role;
-
-    if (!accessible) {
-        return;
-    }
-    while (PR_TRUE) {
-        accessible->GetParent(getter_AddRefs(parentAccessible));
-        if (!parentAccessible) {
-            break;
-        }
-        parentAccessible->GetRole(&role);
-        if (role == nsIAccessibleRole::ROLE_APP_ROOT) {
-            NS_ADDREF(*aAccessible = accessible);
-            break;
-        }
-        accessible = parentAccessible;
-    }
-}
-
-/**
- * void
- * nsWindow::DispatchAccessibleEvent
- * @aAccessible: the out var, hold the new accessible object
- *
- * generate the NS_GETACCESSIBLE event, the event handler is
- * reponsible to create an nsIAccessible instant.
- **/
-PRBool
-nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
-{
-    PRBool result = PR_FALSE;
     nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
-
-    *aAccessible = nsnull;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    result = (nsEventStatus_eConsumeNoDefault == status) ? PR_TRUE : PR_FALSE;
 
-    // if the event returned an accesssible get it.
-    if (event.accessible)
-        *aAccessible = event.accessible;
+    return event.mAccessible;
+}
 
-    return result;
+void
+nsWindow::DispatchEventToRootAccessible(PRUint32 aEventType)
+{
+    if (!sAccessibilityEnabled) {
+        return;
+    }
+
+    nsCOMPtr<nsIAccessibilityService> accService =
+        do_GetService("@mozilla.org/accessibilityService;1");
+    if (!accService) {
+        return;
+    }
+
+    nsAccessible *acc = DispatchAccessibleEvent();
+    if (!acc) {
+        return;
+    }
+
+    nsCOMPtr<nsIAccessibleDocument> accRootDoc;
+    acc->GetRootDocument(getter_AddRefs(accRootDoc));
+    nsCOMPtr<nsIAccessible> rootAcc(do_QueryInterface(accRootDoc));
+    if (!rootAcc) {
+        return;
+    }
+
+    accService->FireAccessibleEvent(aEventType, rootAcc);
 }
 
 void
 nsWindow::DispatchActivateEventAccessible(void)
 {
-    if (sAccessibilityEnabled) {
-        nsCOMPtr<nsIAccessible> rootAcc;
-        GetRootAccessible(getter_AddRefs(rootAcc));
-
-        nsCOMPtr<nsIAccessibilityService> accService =
-            do_GetService("@mozilla.org/accessibilityService;1");
-
-        if (accService) {
-            accService->FireAccessibleEvent(
-                            nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE,
-                            rootAcc);
-        }
-    }
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE);
 }
 
 void
 nsWindow::DispatchDeactivateEventAccessible(void)
 {
-    if (sAccessibilityEnabled) {
-        nsCOMPtr<nsIAccessible> rootAcc;
-        GetRootAccessible(getter_AddRefs(rootAcc));
-
-        nsCOMPtr<nsIAccessibilityService> accService =
-            do_GetService("@mozilla.org/accessibilityService;1");
-
-        if (accService) {
-          accService->FireAccessibleEvent(
-                          nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE,
-                          rootAcc);
-        }
-    }
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE);
 }
 
 #endif /* #ifdef ACCESSIBILITY */

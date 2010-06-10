@@ -1,0 +1,35 @@
+<html>
+<head>
+<script>
+function extractc(j) {
+var sel = window.getSelection();
+
+
+var b=document.getElementById('b');
+
+var range =document.createRange();
+range.setStart(document.documentElement, 0);
+range.setEnd(document.documentElement, 0);
+sel.addRange(range);
+range.extractContents();
+
+range.setStart(b, 0);
+range.setEnd(b, 0);
+sel.addRange(range);
+range.extractContents();
+
+
+range.setStart(b, 0);
+range.setEnd(b, 0);
+sel.addRange(range);
+range.extractContents();
+
+
+}
+setTimeout(extractc,200,0);
+</script>
+<title id="b"></title>
+</head>
+<body>
+</body>
+</html>

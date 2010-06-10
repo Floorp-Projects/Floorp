@@ -59,9 +59,7 @@ tier_platform_dirs += modules/zlib
 endif
 
 ifndef WINCE
-ifneq (,$(MOZ_XPINSTALL))
 tier_platform_dirs += modules/libreg
-endif
 endif
 
 tier_platform_dirs += \
@@ -107,11 +105,6 @@ endif
 
 ifdef MOZ_IPC
 tier_platform_dirs += ipc
-else
-# Include fake mozilla-runtime so that unify has something to unify.
-ifeq ($(OS_ARCH)_$(TARGET_CPU),Darwin_powerpc)
-tier_platform_dirs += ipc/app/fake
-endif
 endif
 
 tier_platform_dirs += \
@@ -214,10 +207,6 @@ endif
 
 tier_platform_dirs	+= toolkit
 
-ifdef MOZ_XPINSTALL
-tier_platform_dirs     +=  xpinstall
-endif
-
 ifdef MOZ_PSM
 tier_platform_dirs	+= security/manager
 else
@@ -271,6 +260,8 @@ tier_platform_dirs	+= tools/codesighs
 endif
 
 ifdef ENABLE_TESTS
-tier_platform_dirs	+= testing/mochitest
+tier_platform_dirs += testing/mochitest
+tier_platform_dirs += testing/xpcshell 
+tier_platform_dirs += testing/mozmill
 endif
 

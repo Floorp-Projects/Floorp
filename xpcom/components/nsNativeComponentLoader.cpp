@@ -173,7 +173,7 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile, nsIModule* *aResult)
         fprintf(stderr,
                 "nsNativeModuleLoader::LoadModule(\"%s\") - load FAILED, "
                 "rv: %lx, error:\n\t%s\n",
-                filePath.get(), rv, errorMsg);
+                filePath.get(), (unsigned long)rv, errorMsg);
 #endif
 
         return rv;

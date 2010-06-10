@@ -32,7 +32,11 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
-#navigator-toolbox > toolbar:not(#TabsToolbar) {
+#toolbar-menubar {
+  -moz-box-ordinal-group: 5;
+}
+
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   -moz-box-ordinal-group: 50;
 }
 
@@ -255,4 +259,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #allTabs-tab-close-button {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
   margin: 0;
+}
+
+/* Inspector / Highlighter */
+
+#highlighter-panel {
+  -moz-appearance: none;
+  -moz-window-shadow: none;
 }

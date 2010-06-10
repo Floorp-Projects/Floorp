@@ -171,20 +171,10 @@ public:
         mStandardFace(aIsStandardFace),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
-        mCmapInitialized(PR_FALSE), mUserFontData(nsnull),
+        mCmapInitialized(PR_FALSE),
+        mUVSOffset(0), mUVSData(nsnull),
+        mUserFontData(nsnull),
         mFamily(aFamily)
-    { }
-
-    gfxFontEntry(const gfxFontEntry& aEntry) : 
-        mName(aEntry.mName), mItalic(aEntry.mItalic), 
-        mFixedPitch(aEntry.mFixedPitch), mIsProxy(aEntry.mIsProxy), 
-        mIsValid(aEntry.mIsValid), mIsBadUnderlineFont(aEntry.mIsBadUnderlineFont),
-        mIsUserFont(aEntry.mIsUserFont),
-        mStandardFace(aEntry.mStandardFace),
-        mSymbolFont(aEntry.mSymbolFont),
-        mWeight(aEntry.mWeight), mCmapInitialized(aEntry.mCmapInitialized),
-        mCharacterMap(aEntry.mCharacterMap), mUserFontData(aEntry.mUserFontData),
-        mFamily(aEntry.mFamily)
     { }
 
     virtual ~gfxFontEntry();
@@ -204,11 +194,13 @@ public:
     inline PRBool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
             return PR_TRUE;
-            
+
         return TestCharacterMap(ch);
     }
 
     virtual PRBool TestCharacterMap(PRUint32 aCh);
+    nsresult InitializeUVSMap();
+    PRUint16 GetUVSGlyph(PRUint32 aCh, PRUint32 aVS);
     virtual nsresult ReadCMAP();
 
     virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -242,6 +234,8 @@ public:
 
     PRPackedBool     mCmapInitialized;
     gfxSparseBitSet  mCharacterMap;
+    PRUint32         mUVSOffset;
+    nsAutoArrayPtr<PRUint8> mUVSData;
     gfxUserFontData* mUserFontData;
 
 protected:
@@ -260,6 +254,7 @@ protected:
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCmapInitialized(PR_FALSE),
+        mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
         mFamily(nsnull)
     { }
@@ -274,6 +269,10 @@ protected:
     }
 
     gfxFontFamily *mFamily;
+
+private:
+    gfxFontEntry(const gfxFontEntry&);
+    gfxFontEntry& operator=(const gfxFontEntry&);
 };
 
 
@@ -925,6 +924,13 @@ public:
         return mFontEntry->HasCharacter(ch); 
     }
 
+    PRUint16 GetUVSGlyph(PRUint32 aCh, PRUint32 aVS) {
+        if (!mIsValid) {
+            return 0;
+        }
+        return mFontEntry->GetUVSGlyph(aCh, aVS); 
+    }
+
     // Default implementation simply calls mShaper->InitTextRun().
     // Override if the font class wants to give special handling
     // to shaper failure.
@@ -947,6 +953,10 @@ protected:
 
     // the AA setting requested for this font - may affect glyph bounds
     AntialiasOption            mAntialiasOption;
+
+    // a copy of the font without antialiasing, if needed for separate
+    // measurement by mathml code
+    nsAutoPtr<gfxFont>         mNonAAFont;
 
     nsAutoPtr<gfxFontShaper>   mShaper;
 

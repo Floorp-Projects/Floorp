@@ -1,0 +1,37 @@
+<html>
+<head>
+  <title>NPN_Invoke Tests</title>
+  <script type="text/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
+  <script class="testbody" type="application/javascript">
+  ////
+  // This test exercises NP identifiers by querying the reflector to make sure
+  // that identifiers are translated to values correctly.
+  
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests() {
+    var reflector = document.getElementById("plugin1").getReflector();
+
+    for (var i = -10; i < 10; ++i)
+      is(reflector[i], i, "Property " + i);
+
+    is(reflector.a, 'a', "Property .a");
+    is(reflector['a'], 'a', "Property ['a']");
+            
+    SimpleTest.finish();
+  }
+  </script>
+</body>
+</html>

@@ -458,7 +458,7 @@ function TEST_PROT_UrlCryptoKeyManager() {
 
     G_Assert(z, !km.hasKey(), "KM already has key?");
     km.maybeLoadOldKey();
-    G_Assert(z, !km.hasKey(), "KM loaded non-existent key?");
+    G_Assert(z, !km.hasKey(), "KM loaded nonexistent key?");
     km.onGetKeyResponse(null);
     G_Assert(z, !km.hasKey(), "KM got key from null response?");
     km.onGetKeyResponse("");

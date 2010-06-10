@@ -43,6 +43,8 @@
 #include "xpcprivate.h"
 #include "dom_quickstubs.h"
 
+#include "mozilla/FunctionTimer.h"
+
 /***************************************************************************/
 
 const char* XPCJSRuntime::mStrings[] = {
@@ -1067,6 +1069,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
                          sizeof(JSDHashEntryStub), 128);
 #endif
+    NS_TIME_FUNCTION;
 
     DOM_InitInterfaces();
 
@@ -1139,6 +1142,8 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
 JSBool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
+    NS_TIME_FUNCTION;
+
     // if it is our first context then we need to generate our string ids
     JSBool ok = JS_TRUE;
     if(!mStrIDs[0])
@@ -1168,8 +1173,8 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if (!xpc)
         return JS_FALSE;
 
-    JS_SetThreadStackLimit(cx, tls->GetStackLimit());
-    JS_SetScriptStackQuota(cx, 100*1024*1024);
+    JS_SetNativeStackQuota(cx, 512 * 1024);
+    JS_SetScriptStackQuota(cx, 100 * 1024 * 1024);
     return JS_TRUE;
 }
 

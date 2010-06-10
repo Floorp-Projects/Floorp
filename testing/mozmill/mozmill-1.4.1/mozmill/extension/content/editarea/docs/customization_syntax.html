@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+	<title>EditArea documentation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="doc_style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div class='header'>
+		<h1>Customization - Creating a syntax definition file</h1>
+	</div>
+	<div class='content'>
+		<h3>Creating your own syntax definition file</h3>
+		<p>Creating you own syntax definition file for EditArea is fairly easy. You just have to know the language syntax,
+		it's kewords, and then fill a javascript array with thoses values.</p>
+		<p>If your want to create a new syntax file for a given language, choose a language abbreviation for it
+		(&lt;language_abbr&gt;) in lowercase. Then create the file &quot;edit_area/reg_syntax/&lt;language_abbr&gt;.js&quot;.</p>
+		<p>Here is a &quot;css&quot; example:</p>
+<pre>editAreaLoader.load_syntax["css"] = {		<strong>// here &lt;language_abbr&gt; is &quot;css&quot; so the file is &quot;css.js&quot;</strong>
+	'COMMENT_SINGLE' : ['@']		<strong>// Array:  possible single line comments</strong>
+	,'COMMENT_MULTI' : {'/*' : '*/'}	<strong>// associated Array: possible multiple line comments</strong> 
+						<strong>// ("open_mark1" : "close mark1", "open_mark2" : "close_mark2"}</strong>
+	,'QUOTEMARKS' : ['"', "'"]		<strong>// Array: the different possible quotemarks that delimitate strings</strong>
+	,'KEYWORD_CASE_SENSITIVE' : false	<strong>// Boolean: define if the language is case-sensitive</strong>
+	,'KEYWORDS' : {				<strong>// Array: an array of array containing the different keywords class</strong> 
+		'attributes' : [		<strong>// the name 'attribute' can be changed with no problem. I</strong>
+						<strong>// it's only used to define the matching style class</strong> 
+			'aqua', 'azimuth', 'background-attachment', 'background-color'	<strong>// etc...</strong>
+		]
+		,'values' : [
+			'absolute', 'block', 'bold', 'bolder', 'both' 	<strong>// etc...</strong>
+		]
+		,'specials' : [
+			'important'
+		]
+	}
+	,'OPERATORS' :[		<strong>// Array: the operators to highlight (eg, can also contain: +, -, * or / in other languages).</strong>
+		':', ';', '!', '.', '#'
+	]
+	,'DELIMITERS' :[	<strong>// Array: the block code delimiters to highlight</strong>
+		'{', '}'
+	]
+	,'STYLES' : {	<strong>// Array: an array of array, containing all style to apply for categories defined before.</strong>
+			<strong>// Better to define color style only. </strong>
+		'COMMENTS': 'color: #AAAAAA;'
+		,'QUOTESMARKS': 'color: #6381F8;'
+		,'KEYWORDS' : {			<strong>// contain the associated style foreach keywords categories</strong>
+			'attributes' : 'color: #48BDDF;'
+			,'values' : 'color: #2B60FF;'
+			,'specials' : 'color: #FF0000;'
+			}
+		,'OPERATORS' : 'color: #FF00FF;'
+		,'DELIMITERS' : 'color: #60CA00;'
+				
+	}
+};</pre>
+	<p>After reading this example you should be able to create your own syntax file.</p>
+	<div class='separator'></div>
+	<h3>Advanced syntax definition</h3>
+	
+<pre>editAreaLoader.load_syntax["xml"] = {
+	'COMMENT_SINGLE' : {}
+	,'COMMENT_MULTI' : {'&lt;!--' : '--&gt;'}
+	,'QUOTEMARKS' : {1: "'", 2: '"'}
+	,'KEYWORD_CASE_SENSITIVE' : false
+	,'KEYWORDS' : {
+	}
+	,'OPERATORS' :[
+	]
+	,'DELIMITERS' :[
+	]
+	,'REGEXPS' : {			<strong>// advance syntax highlight through regexp</strong>
+		'xml' : {		<strong>// the name 'doctype' can be changed with no problem.</strong>
+			'search' : '()(&lt;\\?[^&gt;]*?\\?&gt;)()'	<strong>// the regexp</strong>
+			,'class' : 'xml'			<strong>// the css class</strong>
+			,'modifiers' : 'g'			<strong>// the modifier (&quot;g&quot; and/or &quot;i&quot;)</strong>
+			,'execute' : 'before'			<strong>// &quot;before&quot; or &quot;after&quot;. Determine if the regexp must </strong>
+								<strong>// be done before or after the main highlight process</strong>
+		}
+		,'cdatas' : {
+			'search' : '()(&lt;!\\[CDATA\\[.*?\\]\\]&gt;)()'
+			,'class' : 'cdata'
+			,'modifiers' : 'g'
+			,'execute' : 'before' 
+		}
+		,'tags' : {
+			'search' : '(&lt;)(/?[a-z][^ \r\n\t&gt;]*)([^&gt;]*&gt;)'
+			,'class' : 'tags'
+			,'modifiers' : 'gi'
+			,'execute' : 'before' 
+		}
+		,'attributes' : {
+			'search' : '( |\n|\r|\t)([^ \r\n\t=]+)(=)'
+			,'class' : 'attributes'
+			,'modifiers' : 'g'
+			,'execute' : 'before'
+		}
+	}
+	,'STYLES' : {
+		'COMMENTS': 'color: #AAAAAA;'
+		,'QUOTESMARKS': 'color: #6381F8;'
+		,'KEYWORDS' : {
+			}
+		,'OPERATORS' : 'color: #E775F0;'
+		,'DELIMITERS' : ''
+		,'REGEXPS' : {
+			'attributes': 'color: #B1AC41;'
+			,'tags': 'color: #800080;'
+			,'xml': 'color: #8DCFB5;'
+			,'cdata': 'color: #50B020;'
+		}	
+	}		
+};</pre>
+	<p>Well, as you can see in this example, the syntax highlight for xml is not based on keywords but on regexp. 
+	The text that will be highlighted, is the one between the second parentheses. The search parameter should always
+	be like this:
+	</p>
+	<pre>(&lt;before_highlight&gt;)(&lt;code_to_highlight&gt;)(&lt;after_highlight&gt;)</pre>
+	<p>For the pattern modifier, &quot;g&quot; signify that all occurences will be highlighted, &quot;i&quot; signify
+	that the regexp will be case-insensitive.</p>
+	
+	<div class='separator'></div>
+	
+	<h3>Contributing your syntax definition file</h3>
+	<p>
+		Go to the <a href="http://sourceforge.net/tracker/?atid=829999&group_id=164008&func=browse">sourceforge patch page</a>
+		and upload the syntax file.
+	</p>
+	
+	
+	</div>
+	<div class='footer'>
+		<div class="indexlink"><a href="index.html">Index</a></div>	
+		<div class='copyright'>EditArea - &copy; Christophe Dolivet 2007-2008</div>
+		<br style="clear: both" />
+	</div>
+</body>
+</html>

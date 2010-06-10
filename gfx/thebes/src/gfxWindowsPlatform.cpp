@@ -88,6 +88,9 @@
 
 #include <string>
 
+#define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
+#define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
+
 #ifdef MOZ_FT2_FONTS
 static FT_Library gPlatformFTLibrary = NULL;
 #endif
@@ -113,6 +116,9 @@ BuildKeyNameFromFontName(nsAString &aName)
 gfxWindowsPlatform::gfxWindowsPlatform()
 {
     mPrefFonts.Init(50);
+
+    mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
+    mUseClearTypeAlways = UNINITIALIZED_VALUE;
 
 #ifdef MOZ_FT2_FONTS
     FT_Init_FreeType(&gPlatformFTLibrary);
@@ -435,6 +441,44 @@ gfxWindowsPlatform::GetFTLibrary()
 }
 #endif
 
+PRBool
+gfxWindowsPlatform::UseClearTypeForDownloadableFonts()
+{
+    if (mUseClearTypeForDownloadableFonts == UNINITIALIZED_VALUE) {
+        mUseClearTypeForDownloadableFonts = GetBoolPref(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, PR_TRUE);
+    }
+
+    return mUseClearTypeForDownloadableFonts;
+}
+
+PRBool
+gfxWindowsPlatform::UseClearTypeAlways()
+{
+    if (mUseClearTypeAlways == UNINITIALIZED_VALUE) {
+        mUseClearTypeAlways = GetBoolPref(GFX_USE_CLEARTYPE_ALWAYS, PR_FALSE);
+    }
+
+    return mUseClearTypeAlways;
+}
+
+PRInt32
+gfxWindowsPlatform::WindowsOSVersion()
+{
+    static PRInt32 winVersion = UNINITIALIZED_VALUE;
+
+    OSVERSIONINFO vinfo;
+
+    if (winVersion == UNINITIALIZED_VALUE) {
+        vinfo.dwOSVersionInfoSize = sizeof (vinfo);
+        if (!GetVersionEx(&vinfo)) {
+            winVersion = kWindowsUnknown;
+        } else {
+            winVersion = PRInt32(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
+        }
+    }
+    return winVersion;
+}
+
 void
 gfxWindowsPlatform::InitDisplayCaps()
 {
@@ -443,4 +487,29 @@ gfxWindowsPlatform::InitDisplayCaps()
     gfxPlatform::sDPI = GetDeviceCaps(dc, LOGPIXELSY);
 
     ReleaseDC((HWND)nsnull, dc);
+}
+
+void
+gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
+{
+    PRBool clearFontCache = PR_TRUE;
+
+    gfxPlatform::FontsPrefsChanged(aPrefBranch, aPref);
+
+    if (!aPref) {
+        mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
+        mUseClearTypeAlways = UNINITIALIZED_VALUE;
+    } else if (!strcmp(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, aPref)) {
+        mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
+    } else if (!strcmp(GFX_USE_CLEARTYPE_ALWAYS, aPref)) {
+        mUseClearTypeAlways = UNINITIALIZED_VALUE;
+    } else {
+        clearFontCache = PR_FALSE;
+    }
+
+    if (clearFontCache) {    
+        gfxFontCache *fc = gfxFontCache::GetCache();
+        if (fc)
+            fc->AgeAllGenerations();
+    }
 }

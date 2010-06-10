@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462455
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462455">Mozilla Bug 462455</a>
@@ -19,17 +20,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462455
 </pre>
 
 <video id="v">
-<source src="320x240.ogv" type="application/ogg"></source>
 <script>
 var loadStarted = false;
 document.write('Pause parsing!');
 var v = document.getElementById('v');
-if (v.networkState != HTMLMediaElement.NETWORK_EMPTY) {
-  loadStarted = true;
+
+var resource = getPlayableVideo(gSmallTests);
+if (resource != null) {
+  var s = document.createElement("source");
+  s.src = resource.name;
+  s.type = resource.type;
+  v.appendChild(s);
 }
-is(loadStarted, false, "We shouldn't start a load until the video tag is closed.");
+
+ok(v.networkState == HTMLMediaElement.NETWORK_EMPTY,
+   "We shouldn't start a load until the video tag is closed.");
 </script>
 </video>
-
 </body>
 </html>

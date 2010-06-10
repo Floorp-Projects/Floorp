@@ -134,15 +134,11 @@ struct JS_FRIEND_API(TypedArray) {
     static JSBool obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                                      JSObject **objp, JSProperty **propp);
 
-    static void obj_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
-
     static void obj_trace(JSTracer *trc, JSObject *obj);
 
-    static JSBool obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                                    uintN *attrsp);
+    static JSBool obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
-    static JSBool obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                                    uintN *attrsp);
+    static JSBool obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
     static int32 lengthOffset() { return offsetof(TypedArray, length); }
     static int32 dataOffset() { return offsetof(TypedArray, data); }

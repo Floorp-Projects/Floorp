@@ -39,9 +39,10 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(c914d7a4-63b3-4d40-943f-91a3c7ab0d4d)]
+[scriptable, uuid(41494073-ac06-4fbe-9d5e-f79c2586385b)]
 interface nsIDOMNSHTMLButtonElement : nsISupports
 {
+  attribute boolean         autofocus;
   void                      blur();
   void                      focus();
   void                      click();

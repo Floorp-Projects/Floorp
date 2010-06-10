@@ -57,6 +57,8 @@
 #include "jsstr.h"
 #include "jsxdrapi.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 #ifdef DEBUG

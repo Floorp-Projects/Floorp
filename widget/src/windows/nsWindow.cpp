@@ -33,7 +33,7 @@
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
  *   Christian Biesinger <cbiesinger@web.de>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Ningjie Chen <chenn@email.uc.edu>
  *   Jim Mathies <jmathies@mozilla.com>
  *   Kyle Huey <me@kylehuey.com>
@@ -125,6 +125,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
@@ -167,6 +168,12 @@
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
 #include "Layers.h"
+#ifndef WINCE
+#ifdef MOZ_ENABLE_D3D9_LAYER
+#include "LayerManagerD3D9.h"
+#endif
+#include "LayerManagerOGL.h"
+#endif
 
 #if !defined(WINCE)
 #include "nsUXThemeConstants.h"
@@ -184,9 +191,6 @@
 #if !defined(WINABLEAPI)
 #include <winable.h>
 #endif // !defined(WINABLEAPI)
-#include "nsIAccessible.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIAccessNode.h"
 #endif // defined(ACCESSIBILITY)
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
@@ -211,6 +215,8 @@
 #ifdef WINCE_WINDOWS_MOBILE
 #include "nsGfxCIID.h"
 #endif
+
+#include "mozilla/FunctionTimer.h"
 
 /**************************************************************
  **************************************************************
@@ -361,7 +367,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mNativeDragTarget     = nsnull;
   mInDtor               = PR_FALSE;
   mIsVisible            = PR_FALSE;
-  mHas3DBorder          = PR_FALSE;
   mIsInMouseCapture     = PR_FALSE;
   mIsTopWidgetWindow    = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
@@ -379,7 +384,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastKeyboardLayout   = 0;
   mBlurSuppressLevel    = 0;
   mIMEEnabled           = nsIWidget::IME_STATUS_ENABLED;
-  mLeadByte             = '\0';
 #ifdef MOZ_XUL
   mTransparentSurface   = nsnull;
   mMemoryDC             = nsnull;
@@ -521,10 +525,12 @@ nsWindow::Create(nsIWidget *aParent,
              aAppShell, aToolkit, aInitData);
 
   HWND parent;
-  if (nsnull != aParent) { // has a nsIWidget parent
-    parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
+  if (aParent) { // has a nsIWidget parent
+    parent = aParent ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : NULL;
+    mParent = aParent;
   } else { // has a nsNative parent
     parent = (HWND)aNativeParent;
+    mParent = aNativeParent ? GetNSWindowPtr((HWND)aNativeParent) : nsnull;
   }
 
   if (nsnull != aInitData) {
@@ -561,8 +567,6 @@ nsWindow::Create(nsIWidget *aParent,
       style |= WS_CLIPSIBLINGS;
     }
   }
-
-  mHas3DBorder = (extendedStyle & WS_EX_CLIENTEDGE) > 0;
 
   mWnd = ::CreateWindowExW(extendedStyle,
                            aInitData && aInitData->mDropShadow ?
@@ -983,6 +987,8 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr)
 // Get and set parent widgets
 NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
+  mParent = aNewParent;
+
   if (aNewParent) {
     nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
@@ -1099,7 +1105,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
        mWindowType == eWindowType_popup))
   {
     firstShow = false;
-    mozilla::FunctionTimer::LogMessage("First toplevel/dialog/popup showing");
+    mozilla::FunctionTimer::LogMessage("@ First toplevel/dialog/popup showing");
   }
 #endif
 
@@ -2071,6 +2077,8 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
   nsIntRegion opaqueRegion;
   opaqueRegion.Sub(clientBounds, mPossiblyTransparentRegion);
   opaqueRegion.Or(opaqueRegion, childWindowRegion);
+  // Sometimes child windows overlap our bounds
+  opaqueRegion.And(opaqueRegion, clientBounds);
   MARGINS margins = { 0, 0, 0, 0 };
   DWORD_PTR dwStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
   // If there is no opaque region or hidechrome=true then full glass
@@ -2078,17 +2086,7 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
     margins.cxLeftWidth = -1;
   } else {
     // Find the largest rectangle and use that to calculate the inset
-    nsIntRegionRectIterator rgnIter(opaqueRegion);
-    const nsIntRect *currentRect = rgnIter.Next();
-    nsIntRect largest = *currentRect;
-    nscoord largestArea = largest.width * largest.height;
-    while (currentRect = rgnIter.Next()) {
-      nscoord area = currentRect->width * currentRect->height;
-      if (area > largestArea) {
-        largest = *currentRect;
-        largestArea = area;
-      }
-    }
+    nsIntRect largest = opaqueRegion.GetLargestRectangle();
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyTopHeight = largest.y;
@@ -2720,6 +2718,8 @@ nsIntPoint nsWindow::WidgetToScreenOffset()
 #if !defined(WINCE) // implemented in nsWindowCE.cpp
 NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
 {
+  NS_ASSERTION(mWnd, "nsWindow::EnableDragDrop() called after Destroy()");
+
   nsresult rv = NS_ERROR_FAILURE;
   if (aEnable) {
     if (nsnull == mNativeDragTarget) {
@@ -2739,7 +2739,7 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
       if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
         rv = NS_OK;
       }
-      mNativeDragTarget->mDragCancelled = PR_TRUE;
+      mNativeDragTarget->DragCancel();
       NS_RELEASE(mNativeDragTarget);
     }
   }
@@ -2930,6 +2930,43 @@ nsWindow::GetLayerManager()
     mLayerManager = NULL;
     mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
   }
+
+#ifndef WINCE
+  if (!mLayerManager) {
+    if (mUseAcceleratedRendering) {
+      nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+      PRBool allowAcceleration = PR_TRUE;
+      PRBool preferOpenGL = PR_FALSE;
+      if (prefs) {
+        prefs->GetBoolPref("mozilla.widget.accelerated-layers",
+                           &allowAcceleration);
+        prefs->GetBoolPref("mozilla.layers.prefer-opengl",
+                           &preferOpenGL);
+      }
+      
+      if (allowAcceleration) {
+#ifdef MOZ_ENABLE_D3D9_LAYER
+        if (!preferOpenGL) {
+          nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
+            new mozilla::layers::LayerManagerD3D9(this);
+          if (layerManager->Initialize()) {
+            mLayerManager = layerManager;
+          }
+        }
+#endif
+        if (!mLayerManager) {
+          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+            new mozilla::layers::LayerManagerOGL(this);
+          if (layerManager->Initialize()) {
+            mLayerManager = layerManager;
+          }
+        }
+      }
+    }
+  }
+#endif
+
   return nsBaseWidget::GetLayerManager();
 }
 
@@ -3617,32 +3654,24 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 
 // Deal with accessibile event
 #ifdef ACCESSIBILITY
-PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAcc, nsIntPoint* aPoint)
+nsAccessible*
+nsWindow::DispatchAccessibleEvent(PRUint32 aEventType)
 {
-  PRBool result = PR_FALSE;
-
   if (nsnull == mEventCallback) {
-    return result;
+    return nsnull;
   }
 
-  *aAcc = nsnull;
-
   nsAccessibleEvent event(PR_TRUE, aEventType, this);
-  InitEvent(event, aPoint);
+  InitEvent(event, nsnull);
 
   event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
   event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
   event.isMeta    = PR_FALSE;
   event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
-  event.accessible = nsnull;
 
-  result = DispatchWindowEvent(&event);
+  DispatchWindowEvent(&event);
 
-  // if the event returned an accesssible get it.
-  if (event.accessible)
-    *aAcc = event.accessible;
-
-  return result;
+  return event.mAccessible;
 }
 #endif
 
@@ -3860,6 +3889,8 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     // Windowed plugins that fire context menu selection events to parent
     // windows.
     case WM_CONTEXTMENU:
+    // IME events fired as a result of synchronous focus changes
+    case WM_IME_SETCONTEXT:
       handled = PR_TRUE;
     break;
   }
@@ -3895,6 +3926,10 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 // The WndProc procedure for all nsWindows in this toolkit
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  NS_TIME_FUNCTION_MIN_FMT(5.0, "%s (line %d) (hWnd: %p, msg: %p, wParam: %p, lParam: %p",
+                           MOZ_FUNCTION_NAME, __LINE__, hWnd, msg,
+                           wParam, lParam);
+
   // Get the window which caused the event and ask it to process the message
   nsWindow *someWindow = GetNSWindowPtr(hWnd);
 
@@ -3924,15 +3959,6 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   nsCOMPtr<nsISupports> kungFuDeathGrip;
   if (!someWindow->mInDtor) // not if we're in the destructor!
     kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)someWindow);
-
-  // Re-direct a tab change message destined for its parent window to the
-  // the actual window which generated the event.
-  if (msg == WM_NOTIFY) {
-    LPNMHDR pnmh = (LPNMHDR) lParam;
-    if (pnmh->code == TCN_SELCHANGE) {
-      someWindow = GetNSWindowPtr(pnmh->hwndFrom);
-    }
-  }
 
   // Call ProcessMessage
   LRESULT retValue;
@@ -4058,23 +4084,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   static PRBool getWheelInfo = PR_TRUE;
 
   switch (msg) {
-    case WM_COMMAND:
-    {
-      WORD wNotifyCode = HIWORD(wParam); // notification code
-      if ((CBN_SELENDOK == wNotifyCode) || (CBN_SELENDCANCEL == wNotifyCode)) { // Combo box change
-        nsGUIEvent event(PR_TRUE, NS_CONTROL_CHANGE, this);
-        nsIntPoint point(0,0);
-        InitEvent(event, &point); // this add ref's event.widget
-        result = DispatchWindowEvent(&event);
-      } else if (wNotifyCode == 0) { // Menu selection
-        nsMenuEvent event(PR_TRUE, NS_MENU_SELECTED, this);
-        event.mCommand = LOWORD(wParam);
-        InitEvent(event);
-        result = DispatchWindowEvent(&event);
-      }
-    }
-    break;
-
 #ifndef WINCE
     // WM_QUERYENDSESSION must be handled by all windows.
     // Otherwise Windows thinks the window can just be killed at will.
@@ -4287,11 +4296,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       }
       break;
 
-    case WM_GETDLGCODE:
-      *aRetValue = DLGC_WANTALLKEYS;
-      result = PR_TRUE;
-      break;
-
     case WM_MOUSEMOVE:
     {
 #ifdef WINCE_WINDOWS_MOBILE
@@ -4463,22 +4467,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = OnScroll(msg, wParam, lParam);
       break;
 
-    case WM_CTLCOLORLISTBOX:
-    case WM_CTLCOLOREDIT:
-    case WM_CTLCOLORBTN:
-    //case WM_CTLCOLORSCROLLBAR: //XXX causes the scrollbar to be drawn incorrectly
-    case WM_CTLCOLORSTATIC:
-      if (lParam) {
-        nsWindow* control = GetNSWindowPtr((HWND)lParam);
-          if (control) {
-            control->SetUpForPaint((HDC)wParam);
-            *aRetValue = (LPARAM)control->OnControlColor();
-          }
-      }
-
-      result = PR_TRUE;
-      break;
-
     // The WM_ACTIVATE event is fired when a window is raised or lowered,
     // and the loword of wParam specifies which. But we don't want to tell
     // the focus system about this until the WM_SETFOCUS or WM_KILLFOCUS
@@ -4589,7 +4577,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #ifdef ACCESSIBILITY
       if (nsWindow::sIsAccessibilityOn) {
         // Create it for the first time so that it can start firing events
-        nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible();
+        nsAccessible *rootAccessible = GetRootAccessible();
       }
 #endif
 
@@ -4674,7 +4662,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     {
       *aRetValue = 0;
       if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
-        nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible(); // Held by a11y cache
+        nsAccessible *rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
           IAccessible *msaaAccessible = NULL;
           rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
@@ -6248,6 +6236,7 @@ void nsWindow::OnDestroy()
   // XXX Windows will take care of this in the proper order, and SetParent(nsnull)'s
   // remove child on the parent already took place in nsBaseWidget's Destroy call above.
   //SetParent(nsnull);
+  mParent = nsnull;
 
   // We have to destroy the native drag target before we null out our window pointer.
   EnableDragDrop(PR_FALSE);
@@ -6305,6 +6294,11 @@ void nsWindow::OnDestroy()
 #if defined(WINCE_HAVE_SOFTKB)
   // Revert the changes made for the software keyboard settings
   nsWindowCE::ResetSoftKB(mWnd);
+#endif
+
+#if !defined(WINCE)
+  // Finalize panning feedback to possibly restore window displacement
+  mGesture.PanFeedbackFinalize(mWnd, PR_TRUE);
 #endif
 
   // Clear the main HWND.
@@ -6627,12 +6621,6 @@ PRBool nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
   return PR_TRUE;
 }
 
-// Return the brush used to paint the background of this control
-HBRUSH nsWindow::OnControlColor()
-{
-  return mBrush;
-}
-
 // Can be overriden. Controls auto-erase of background.
 PRBool nsWindow::AutoErase(HDC dc)
 {
@@ -6792,7 +6780,8 @@ nsWindow::OnIMESelectionChange(void)
 #endif //NS_ENABLE_TSF
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsIAccessible> nsWindow::GetRootAccessible()
+nsAccessible*
+nsWindow::GetRootAccessible()
 {
   // We want the ability to forcibly disable a11y on windows, because
   // some non-a11y-related components attempt to bring it up.  See bug
@@ -6824,8 +6813,6 @@ already_AddRefed<nsIAccessible> nsWindow::GetRootAccessible()
     return nsnull;
   }
 
-  nsIAccessible *rootAccessible = nsnull;
-
   // If accessibility is turned on, we create this even before it is requested
   // when the window gets focused. We need it to be created early so it can 
   // generate accessibility events right away
@@ -6839,18 +6826,19 @@ already_AddRefed<nsIAccessible> nsWindow::GetRootAccessible()
       // Loop through windows and find the first one with accessibility info
       accessibleWindow = GetNSWindowPtr(accessibleWnd);
       if (accessibleWindow) {
-        accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE, &rootAccessible);
+        nsAccessible *rootAccessible =
+          accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE);
         if (rootAccessible) {
-          break;  // Success, one of the child windows was active
+          // Success, one of the child windows was active.
+          return rootAccessible;
         }
       }
       accessibleWnd = ::GetNextWindow(accessibleWnd, GW_HWNDNEXT);
     }
+    return nsnull;
   }
-  else {
-    DispatchAccessibleEvent(NS_GETACCESSIBLE, &rootAccessible);
-  }
-  return rootAccessible;
+
+  return DispatchAccessibleEvent(NS_GETACCESSIBLE);
 }
 
 STDMETHODIMP_(LRESULT)
@@ -6934,6 +6922,8 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
 
+  if (mTransparencyMode == eTransparencyGlass)
+    memset(&mGlassMargins, 0, sizeof mGlassMargins);
   mTransparencyMode = aMode;
 
   SetupTranslucentWindowMemoryBitmap(aMode);
@@ -7270,8 +7260,8 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
-              // don't roll up if the mouse event occured within a menu of the
-              // same type. If the mouse event occured in a menu higher than
+              // don't roll up if the mouse event occurred within a menu of the
+              // same type. If the mouse event occurred in a menu higher than
               // that, roll up, but pass the number of popups to Rollup so
               // that only those of the same type close up.
               if (i < sameTypeCount) {

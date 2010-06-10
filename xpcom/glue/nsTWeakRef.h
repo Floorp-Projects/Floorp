@@ -148,7 +148,7 @@ public:
 
   /**
    * Get the referenced object.  This method may return null if the reference
-   * has been cleared or if an out-of-memory error occured at assignment.
+   * has been cleared or if an out-of-memory error occurred at assignment.
    */
   Type *get() const {
     return mRef ? mRef->mObj : nsnull;

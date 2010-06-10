@@ -719,6 +719,7 @@ nsSocketTransport::nsSocketTransport()
     , mFDconnected(PR_FALSE)
     , mInput(this)
     , mOutput(this)
+    , mQoSBits(0x00)
 {
     LOG(("creating nsSocketTransport @%x\n", this));
 
@@ -1138,6 +1139,12 @@ nsSocketTransport::InitiateSocket()
     if (sndBufferSize > 0) {
         opt.option = PR_SockOpt_SendBufferSize;
         opt.value.send_buffer_size = sndBufferSize;
+        PR_SetSocketOption(fd, &opt);
+    }
+
+    if (mQoSBits) {
+        opt.option = PR_SockOpt_IpTypeOfService;
+        opt.value.tos = mQoSBits;
         PR_SetSocketOption(fd, &opt);
     }
 
@@ -1887,6 +1894,26 @@ nsSocketTransport::SetTimeout(PRUint32 type, PRUint32 value)
     // truncate overly large timeout values.
     mTimeouts[type] = (PRUint16) PR_MIN(value, PR_UINT16_MAX);
     PostEvent(MSG_TIMEOUT_CHANGED);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetQoSBits(PRUint8 aQoSBits)
+{
+    // Don't do any checking here of bits.  Why?  Because as of RFC-4594
+    // several different Class Selector and Assured Forwarding values
+    // have been defined, but that isn't to say more won't be added later.
+    // In that case, any checking would be an impediment to interoperating
+    // with newer QoS definitions.
+
+    mQoSBits = aQoSBits;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetQoSBits(PRUint8 *aQoSBits)
+{
+    *aQoSBits = mQoSBits;
     return NS_OK;
 }
 

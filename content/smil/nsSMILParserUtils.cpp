@@ -48,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prlong.h"
+#include "nsCharSeparatedTokenizer.h"
 
 //------------------------------------------------------------------------------
 // Helper functions and Constants
@@ -595,45 +596,24 @@ nsresult
 nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
                                       GenericValueParser& aParser)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  const PRUnichar* start = aSpec.BeginReading();
-  const PRUnichar* end = aSpec.EndReading();
-  const PRUnichar* substrEnd = nsnull;
-  const PRUnichar* next = nsnull;
-
-  while (start != end) {
-    rv = NS_ERROR_FAILURE;
-
-    SkipBeginWsp(start, end);
-
-    if (start == end || *start == ';')
-      break;
-
-    substrEnd = start;
-
-    while (substrEnd != end && *substrEnd != ';') {
-      ++substrEnd;
-    }
-
-    next = substrEnd;
-    if (*substrEnd == ';') {
-      ++next;
-      if (next == end)
-        break;
-    }
-
-    while (substrEnd != start && NS_IS_SPACE(*(substrEnd-1)))
-      --substrEnd;
-
-    rv = aParser.Parse(Substring(start, substrEnd));
-    if (NS_FAILED(rv))
-      break;
-
-    start = next;
+  nsCharSeparatedTokenizer tokenizer(aSpec, ';');
+  if (!tokenizer.hasMoreTokens()) { // Empty list
+    return NS_ERROR_FAILURE;
   }
 
-  return rv;
+  while (tokenizer.hasMoreTokens()) {
+    nsresult rv = aParser.Parse(tokenizer.nextToken());
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Disallow ;-terminated values lists.
+  if (tokenizer.lastTokenEndedWithSeparator()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 nsresult

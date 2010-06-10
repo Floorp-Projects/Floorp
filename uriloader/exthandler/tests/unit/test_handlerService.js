@@ -412,7 +412,7 @@ function run_test() {
   //**************************************************************************//
   // getTypeFromExtension tests
 
-  // test non-existent extension
+  // test nonexistent extension
   var lolType = handlerSvc.getTypeFromExtension("lolcat");
   do_check_eq(lolType, "");
 

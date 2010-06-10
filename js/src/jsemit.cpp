@@ -1659,6 +1659,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                     }
                 }
                 JS_UNLOCK_SCOPE(cx, scope);
+
                 if (sprop)
                     break;
             }
@@ -1842,7 +1843,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
             continue;
         }
 
-        JSDefinition *dn = (JSDefinition *) v.asPrivateVoidPtr();
+        JSDefinition *dn = (JSDefinition *) v.asPrivate();
         JS_ASSERT(dn->pn_defn);
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
         dn->pn_cookie += depth;

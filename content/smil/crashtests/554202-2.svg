@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('a').beginElementAt(1);
+        document.documentElement.setCurrentTime(2)">
+  <!--
+    This test case sets up a cycle between simultaneous instance times such that
+    when the instance times are sorted if this cycle is not detected we will
+    crash.
+  -->
+  <rect width="100" height="100" fill="red">
+    <set attributeName="fill" to="blue" begin="a.begin" dur="4s"/>
+    <set attributeName="fill" to="green" id="a"
+      begin="b.begin; 3s" dur="4s"/>
+    <set attributeName="fill" to="red" id="b"
+      begin="a.begin" dur="4s"/>
+  </rect>
+</svg>

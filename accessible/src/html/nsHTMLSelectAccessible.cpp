@@ -120,19 +120,19 @@ nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIMutableArray *a
                                                               nsPresContext *aContext)
 {
   PRBool isSelected = PR_FALSE;
-  nsRefPtr<nsAccessible> tempAcc;
+  nsAccessible *optionAcc = nsnull;
 
   if (mOption) {
     mOption->GetSelected(&isSelected);
     if (isSelected) {
       nsCOMPtr<nsIDOMNode> optionNode(do_QueryInterface(mOption));
-      tempAcc = GetAccService()->GetAccessibleInWeakShell(optionNode,
-                                                          mWeakShell);
+      optionAcc = GetAccService()->GetAccessibleInWeakShell(optionNode,
+                                                            mWeakShell);
     }
   }
 
-  if (tempAcc)
-    aSelectedAccessibles->AppendElement(static_cast<nsIAccessible*>(tempAcc),
+  if (optionAcc)
+    aSelectedAccessibles->AppendElement(static_cast<nsIAccessible*>(optionAcc),
                                         PR_FALSE);
 }
 
@@ -150,10 +150,9 @@ nsHTMLSelectableAccessible::iterator::GetAccessibleIfSelected(PRInt32 aIndex,
     if (isSelected) {
       if (mSelCount == aIndex) {
         nsCOMPtr<nsIDOMNode> optionNode(do_QueryInterface(mOption));
-        nsRefPtr<nsAccessible> acc =
+        nsAccessible *accessible =
           GetAccService()->GetAccessibleInWeakShell(optionNode, mWeakShell);
-        if (acc)
-          CallQueryInterface(acc, aAccessible);
+        NS_IF_ADDREF(*aAccessible = accessible);
 
         return PR_TRUE;
       }
@@ -402,11 +401,11 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
       // Get an accessible for option or optgroup and cache it.
       nsCOMPtr<nsIDOMNode> childNode(do_QueryInterface(childContent));
 
-      nsRefPtr<nsAccessible> acc =
+      nsAccessible *accessible =
         GetAccService()->GetAccessibleInWeakShell(childNode, mWeakShell);
-      if (acc) {
-        mChildren.AppendElement(acc);
-        acc->SetParent(this);
+      if (accessible) {
+        mChildren.AppendElement(accessible);
+        accessible->SetParent(this);
       }
 
       // Deep down into optgroup element.
@@ -436,7 +435,7 @@ nsHTMLSelectOptionAccessible::
   // GetParent would normally return. This is because the 
   // nsHTMLComboboxListAccessible is inserted into the accessible hierarchy
   // where there is no DOM node for it.
-  nsRefPtr<nsAccessible> parentAcc =
+  nsAccessible *parentAcc =
     GetAccService()->GetAccessibleInWeakShell(parentNode, mWeakShell);
   if (!parentAcc)
     return;
@@ -1009,11 +1008,11 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetDescription(nsAString& aDescription)
     return NS_OK;
   }
   // Use description of currently focused option
-  nsRefPtr<nsAccessible> optionAcc = GetFocusedOptionAccessible();
-  return optionAcc ? optionAcc->GetDescription(aDescription) : NS_OK;
+  nsAccessible *option = GetFocusedOptionAccessible();
+  return option ? option->GetDescription(aDescription) : NS_OK;
 }
 
-already_AddRefed<nsAccessible>
+nsAccessible *
 nsHTMLComboboxAccessible::GetFocusedOptionAccessible()
 {
   if (IsDefunct())
@@ -1038,8 +1037,8 @@ nsHTMLComboboxAccessible::GetFocusedOptionAccessible()
 NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
 {
   // Use accessible name of currently focused option.
-  nsRefPtr<nsAccessible> optionAcc = GetFocusedOptionAccessible();
-  return optionAcc ? optionAcc->GetName(aValue) : NS_OK;
+  nsAccessible *option = GetFocusedOptionAccessible();
+  return option ? option->GetName(aValue) : NS_OK;
 }
 
 /** Just one action ( click ). */

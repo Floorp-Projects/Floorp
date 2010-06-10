@@ -49,7 +49,7 @@
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 
-class nsHTMLLegendElement : public nsGenericHTMLFormElement,
+class nsHTMLLegendElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLLegendElement
 {
 public:
@@ -60,23 +60,18 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLLegendElement
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
-  // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_LEGEND; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement);
-
+  // nsGenericHTMLElement
   NS_IMETHODIMP Focus();
 
   virtual void PerformAccesskey(PRBool aKeyCausesActivation,
@@ -106,6 +101,13 @@ public:
                              PRBool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  /**
+   * Get the fieldset content element that contains this legend.
+   * Returns null if there is no fieldset containing this legend.
+   */
+  nsIContent* GetFieldSet();
 };
 
 
@@ -113,7 +115,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 
 
 nsHTMLLegendElement::nsHTMLLegendElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -132,7 +134,7 @@ DOMCI_DATA(HTMLLegendElement, nsHTMLLegendElement)
 NS_INTERFACE_TABLE_HEAD(nsHTMLLegendElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLegendElement,
-                                               nsGenericHTMLFormElement)
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLegendElement)
 
 
@@ -145,7 +147,11 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLegendElement)
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLFormElement::GetForm(aForm);
+  *aForm = nsnull;
+
+  nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
+
+  return fieldsetControl ? fieldsetControl->GetForm(aForm) : NS_OK;
 }
 
 
@@ -161,6 +167,18 @@ static const nsAttrValue::EnumTable kAlignTable[] = {
   { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
   { 0 }
 };
+
+nsIContent*
+nsHTMLLegendElement::GetFieldSet()
+{
+  nsIContent* parent = GetParent();
+
+  if (parent && parent->IsHTML() && parent->Tag() == nsGkAtoms::fieldset) {
+    return parent;
+  }
+
+  return nsnull;
+}
 
 PRBool
 nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
@@ -181,7 +199,7 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                             PRInt32 aModType) const
 {
   nsChangeHint retval =
-      nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
+      nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::align) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
@@ -196,14 +214,15 @@ nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   PRBool accesskey = (aAttribute == nsGkAtoms::accesskey &&
                       aNameSpaceID == kNameSpaceID_None);
   if (accesskey) {
-    RegUnRegAccessKey(PR_FALSE);
+    UnregAccessKey();
   }
 
-  nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aAttribute,
-                                                  aPrefix, aValue, aNotify);
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aAttribute,
+                                              aPrefix, aValue, aNotify);
 
   if (accesskey && !aValue.IsEmpty()) {
-    RegUnRegAccessKey(PR_TRUE);
+    SetFlags(NODE_HAS_ACCESSKEY);
+    RegAccessKey();
   }
 
   return rv;
@@ -215,16 +234,12 @@ nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 {
   if (aAttribute == nsGkAtoms::accesskey &&
       aNameSpaceID == kNameSpaceID_None) {
-    RegUnRegAccessKey(PR_FALSE);
+    // Have to unregister before clearing flag. See UnregAccessKey
+    UnregAccessKey();
+    UnsetFlags(NODE_HAS_ACCESSKEY);
   }
 
-  return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
-}
-
-nsresult
-nsHTMLLegendElement::Reset()
-{
-  return NS_OK;
+  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 nsresult
@@ -232,13 +247,13 @@ nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
                                 PRBool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
-    RegUnRegAccessKey(PR_TRUE);
+    RegAccessKey();
   }
 
   return rv;
@@ -248,10 +263,10 @@ void
 nsHTMLLegendElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   if (IsInDoc()) {
-    RegUnRegAccessKey(PR_FALSE);
+    UnregAccessKey();
   }
 
-  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 NS_IMETHODIMP
@@ -284,9 +299,3 @@ nsHTMLLegendElement::PerformAccesskey(PRBool aKeyCausesActivation,
   Focus();
 }
 
-NS_IMETHODIMP
-nsHTMLLegendElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                                       nsIContent* aSubmitElement)
-{
-  return NS_OK;
-}

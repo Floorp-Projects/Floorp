@@ -3029,7 +3029,7 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table,
 /**
  * Updating the database:
  *
- * The Update() method takes a series of chunks seperated with control data,
+ * The Update() method takes a series of chunks separated with control data,
  * as described in
  * http://code.google.com/p/google-safe-browsing/wiki/Protocolv2Spec
  *

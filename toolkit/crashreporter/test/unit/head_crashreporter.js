@@ -18,8 +18,13 @@
  *         minidump is an nsILocalFile of the minidump file produced,
  *         and extra is an object containing the key,value pairs from
  *         the .extra file.
+ *
+ * @param canReturnZero
+ *       If true, the subprocess may return with a zero exit code.
+ *       Certain types of crashes may not cause the process to
+ *       exit with an error. 
  */
-function do_crash(setup, callback)
+function do_crash(setup, callback, canReturnZero)
 {
   // get current process filename (xpcshell)
   let ds = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -55,8 +60,11 @@ function do_crash(setup, callback)
   }
   catch(ex) {} // on Windows we exit with a -1 status when crashing.
 
-  // should exit with an error (should have crashed)
-  do_check_neq(process.exitValue, 0);
+  if (!canReturnZero) {
+    // should exit with an error (should have crashed)
+    do_check_neq(process.exitValue, 0);
+  }
+
   // find minidump
   let minidump = null;
   let en = do_get_cwd().directoryEntries;

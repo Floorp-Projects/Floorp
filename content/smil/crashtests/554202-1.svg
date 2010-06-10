@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo">
+    <content>
+      <animate xmlns="http://www.w3.org/2000/svg" begin="a.begin">
+        <children xmlns="http://www.mozilla.org/xbl"/>
+      </animate>
+    </content>
+  </binding>
+</bindings>
+
+<animate id="a" begin="b.begin; 3s"/>
+<animate id="b" begin="a.begin"/>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.pauseAnimations();
+  document.documentElement.setCurrentTime(0);
+  document.getElementById('a').beginElementAt(1);
+  document.documentElement.style.MozBinding = 'url(#foo)';
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+</svg>

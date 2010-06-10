@@ -8,6 +8,9 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css" id="prereqsheet">
+  #testnode {}
+  </style>
 </head>
 <body>
 <p id="display"></p>
@@ -72,6 +75,9 @@ function xfail_compute(property, value)
 var gElement = document.getElementById("testnode");
 var gDeclaration = gElement.style;
 var gComputedStyle = window.getComputedStyle(gElement, "");
+
+var gPrereqDeclaration =
+  document.getElementById("prereqsheet").sheet.cssRules[0].style;
 
 function test_property(property)
 {
@@ -185,11 +191,25 @@ function test_property(property)
     gDeclaration.removeProperty(property);
   }
 
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gPrereqDeclaration.setProperty(prereq, prereqs[prereq], "");
+    }
+  }
+
   var idx;
   for (idx in info.initial_values)
     test_value(info.initial_values[idx]);
   for (idx in info.other_values)
     test_value(info.other_values[idx]);
+
+  if ("prerequisites" in info) {
+    for (var prereq in info.prerequisites) {
+      gPrereqDeclaration.removeProperty(prereq);
+    }
+  }
+
 }
 
 // To avoid triggering the slow script dialog, we have to test one

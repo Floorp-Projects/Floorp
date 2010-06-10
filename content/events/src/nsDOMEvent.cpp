@@ -870,14 +870,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = dragEvent;
       break;
     }
-    case NS_MENU_EVENT:
-    {
-      newEvent = new nsMenuEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      static_cast<nsMenuEvent*>(newEvent)->mCommand =
-        static_cast<nsMenuEvent*>(mEvent)->mCommand;
-      break;
-    }
     case NS_SCRIPT_ERROR_EVENT:
     {
       newEvent = new nsScriptErrorEvent(PR_FALSE, msg);
@@ -947,12 +939,14 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = mutationEvent;
       break;
     }
+#ifdef ACCESSIBILITY
     case NS_ACCESSIBLE_EVENT:
     {
       newEvent = new nsAccessibleEvent(PR_FALSE, msg, nsnull);
       isInputEvent = PR_TRUE;
       break;
     }
+#endif
     case NS_FORM_EVENT:
     {
       newEvent = new nsFormEvent(PR_FALSE, msg);

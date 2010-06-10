@@ -76,6 +76,14 @@ class IDMap {
   void Clear() {
     data_.clear();
   }
+
+  bool HasData(const T* data) const {
+    // XXX would like to use <algorithm> here ...
+    for (const_iterator it = begin(); it != end(); ++it)
+      if (data == it->second)
+        return true;
+    return false;
+  }
 #endif
 
   T* Lookup(int32 id) const {

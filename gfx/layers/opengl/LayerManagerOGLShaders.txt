@@ -1,0 +1,279 @@
+// -*- Mode: glsl; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40; -*-
+// ***** BEGIN LICENSE BLOCK *****
+// Version: MPL 1.1/GPL 2.0/LGPL 2.1
+//
+// The contents of this file are subject to the Mozilla Public License Version
+// 1.1 (the "License"); you may not use this file except in compliance with
+// the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS" basis,
+// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+// for the specific language governing rights and limitations under the
+// License.
+//
+// The Original Code is Mozilla Foundation code.
+//
+// The Initial Developer of the Original Code is
+//   Mozilla Foundation.
+// Portions created by the Initial Developer are Copyright (C) 2010
+// the Initial Developer. All Rights Reserved.
+//
+// Contributor(s):
+//   Bas Schouten <bschouten@mozilla.org>
+//   Vladimir Vukicevic <vladimir@pobox.com>
+//
+// Alternatively, the contents of this file may be used under the terms of
+// either the GNU General Public License Version 2 or later (the "GPL"), or
+// the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+// in which case the provisions of the GPL or the LGPL are applicable instead
+// of those above. If you wish to allow use of your version of this file only
+// under the terms of either the GPL or the LGPL, and not to allow others to
+// use your version of this file under the terms of the MPL, indicate your
+// decision by deleting the provisions above and replace them with the notice
+// and other provisions required by the GPL or the LGPL. If you do not delete
+// the provisions above, a recipient may use your version of this file under
+// the terms of any one of the MPL, the GPL or the LGPL.
+//
+// ***** END LICENSE BLOCK *****
+
+//
+// Syntax:
+//
+// // comments (only at the start of a line)
+//
+// (@ is used because # is valid inside GLSL)
+//
+// multi-line:
+// @define FOO
+// ...
+// @end
+//
+// single:
+// @define FOO 123
+//
+// $FOO$ to paste
+//
+// To generate a constant string named ShaderName:
+// @shader ShaderName
+// ...
+// @end
+//
+// 
+
+@define VERTEX_SHADER_HEADER
+/* Vertex Shader */
+@end
+
+@define FRAGMENT_SHADER_HEADER
+/* Fragment Shader */
+#ifdef GL_ES
+precision mediump float;
+#endif
+@end
+
+// fragment shader header for all layers
+@define LAYER_FRAGMENT
+$FRAGMENT_SHADER_HEADER$
+
+#ifndef NO_LAYER_OPACITY
+uniform float uLayerOpacity;
+#endif
+
+varying vec2 vTexCoord;
+@end
+
+// This is a basic Layer vertex shader.  It's used for all
+// the Layer programs.
+
+@shader sLayerVS
+$VERTEX_SHADER_HEADER$
+
+uniform mat4 uMatrixProj;
+uniform mat4 uLayerQuadTransform;
+uniform mat4 uLayerTransform;
+uniform vec4 uRenderTargetOffset;
+
+attribute vec4 aVertexCoord;
+attribute vec2 aTexCoord;
+
+varying vec2 vTexCoord;
+
+void main()
+{
+  vec4 finalPosition = aVertexCoord;
+  finalPosition = uLayerQuadTransform * finalPosition;
+  finalPosition = uLayerTransform * finalPosition;
+  finalPosition = finalPosition - uRenderTargetOffset;
+  finalPosition = uMatrixProj * finalPosition;
+
+  vTexCoord = aTexCoord;
+  gl_Position = finalPosition;
+}
+@end
+
+// Solid color rendering.
+// texcoords are ignored (no texture to sample).
+// The layer opacity is baked in to the color.
+@shader sSolidColorLayerFS
+#define NO_LAYER_OPACITY 1
+$LAYER_FRAGMENT$
+uniform vec4 uRenderColor;
+
+void main()
+{
+  gl_FragColor = uRenderColor;
+}
+@end
+
+// Single texture in RGBA format
+@shader sRGBATextureLayerFS
+$LAYER_FRAGMENT$
+uniform sampler2D uTexture;
+
+void main()
+{
+  gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity;
+}
+@end
+
+// Single texture in RGBA format, but with a Rect texture.
+// Container layer needs this to render a FBO group.
+@shader sRGBARectTextureLayerFS
+#extension GL_ARB_texture_rectangle : enable
+
+$LAYER_FRAGMENT$
+
+/* This should not be used on GL ES */
+#ifndef GL_ES
+uniform sampler2DRect uTexture;
+uniform vec2 uTexCoordMultiplier;
+void main()
+{
+  gl_FragColor = texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)) * uLayerOpacity;
+}
+#else
+void main()
+{
+  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+#endif
+@end
+
+// Single texture in BGRA format (via swizzle)
+@shader sBGRATextureLayerFS
+$LAYER_FRAGMENT$
+uniform sampler2D uTexture;
+
+void main()
+{
+  gl_FragColor = texture2D(uTexture, vTexCoord).bgra * uLayerOpacity;
+}
+@end
+
+// Single texture in RGBX format
+@shader sRGBXTextureLayerFS
+$LAYER_FRAGMENT$
+uniform sampler2D uTexture;
+
+void main()
+{
+  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).rgb, 1.0) * uLayerOpacity;
+}
+@end
+
+// Single texture in BGRX format (via swizzle)
+@shader sBGRXTextureLayerFS
+$LAYER_FRAGMENT$
+uniform sampler2D uTexture;
+
+void main()
+{
+  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).bgr, 1.0) * uLayerOpacity;
+}
+@end
+
+// Three textures, representing YCbCr planes of a video image
+@shader sYCbCrTextureLayerFS
+$LAYER_FRAGMENT$
+uniform sampler2D uYTexture;
+uniform sampler2D uCbTexture;
+uniform sampler2D uCrTexture;
+
+void main()
+{
+  vec4 yuv;
+  vec4 color;
+  yuv.r = texture2D(uCrTexture, vTexCoord).r - 0.5;
+  yuv.g = texture2D(uYTexture, vTexCoord).r - 0.0625;
+  yuv.b = texture2D(uCbTexture, vTexCoord).r - 0.5;
+  color.r = yuv.g * 1.164 + yuv.r * 1.596;
+  color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
+  color.b = yuv.g * 1.164 + yuv.b * 2.018;
+  color.a = 1.0;
+  gl_FragColor = color * uLayerOpacity;
+}
+@end
+
+//
+// The "Copy" program is used for blitting a texture to a destination
+// with no transforms or any other manipulation.  They're used for
+// blitting the contents of a FBO-rendered texture to a destination.
+//
+// There are two variants of the fragment shader: one that uses 2D
+// textures and one that uses 2DRect textures (for when
+// EXT_TEXTURE_RECTANGLE is used for FBOs).
+//
+// On GL ES, EXT_TEXTURE_RECTANGLE isn't available, so we still
+// compile the shader but have it render pure red.  It should never
+// be used.
+//
+
+@shader sCopyVS
+$VERTEX_SHADER_HEADER$
+
+attribute vec4 aVertexCoord;
+attribute vec2 aTexCoord;
+
+varying vec2 vTexCoord;
+
+void main()
+{
+  gl_Position = aVertexCoord;
+  vTexCoord = aTexCoord;
+}
+@end
+
+@shader sCopy2DFS
+$FRAGMENT_SHADER_HEADER$
+
+varying vec2 vTexCoord;
+
+uniform sampler2D uTexture;
+void main()
+{
+  gl_FragColor = texture2D(uTexture, vTexCoord);
+}
+@end
+
+@shader sCopy2DRectFS
+#extension GL_ARB_texture_rectangle : enable
+
+$FRAGMENT_SHADER_HEADER$
+
+varying vec2 vTexCoord;
+uniform vec2 uTexCoordMultiplier;
+
+#ifndef GL_ES
+uniform sampler2DRect uTexture;
+void main()
+{
+  gl_FragColor = texture2DRect(uTexture, vTexCoord * uTexCoordMultiplier);
+}
+#else
+void main()
+{
+  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+#endif
+@end
