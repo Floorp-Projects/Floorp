@@ -675,7 +675,7 @@ PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
   if (mIsThemed)
-    return mThemeTransparency == nsITheme::eOpaque;
+    return PR_FALSE;
 
   nsStyleContext *bgSC;
   if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
