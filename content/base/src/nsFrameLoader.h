@@ -48,13 +48,18 @@
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
 #include "nsIURI.h"
+#include "nsFrameMessageManager.h"
 
 class nsIContent;
 class nsIURI;
 class nsIFrameFrame;
+class nsIInProcessContentFrameMessageManager;
+class AutoResetInShow;
 
 class nsFrameLoader : public nsIFrameLoader
 {
+  friend class AutoResetInShow;
+
 protected:
   nsFrameLoader(nsIContent *aOwner) :
     mOwnerContent(aOwner),
@@ -62,7 +67,9 @@ protected:
     mIsTopLevelContent(PR_FALSE),
     mDestroyCalled(PR_FALSE),
     mNeedsAsyncDestroy(PR_FALSE),
-    mInSwap(PR_FALSE)
+    mInSwap(PR_FALSE),
+    mInShow(PR_FALSE),
+    mHideCalled(PR_FALSE)
   {}
 
 public:
@@ -80,16 +87,16 @@ public:
   nsresult ReallyStartLoading();
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
-
+  nsPIDOMEventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
 
   /**
    * Called from the layout frame associated with this frame loader;
    * this notifies us to hook up with the widget and view.
    */
-  bool Show(PRInt32 marginWidth, PRInt32 marginHeight,
-            PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
-            nsIFrameFrame* frame);
+  PRBool Show(PRInt32 marginWidth, PRInt32 marginHeight,
+              PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
+              nsIFrameFrame* frame);
 
   /**
    * Called from the layout frame associated with this frame loader, when
@@ -109,6 +116,7 @@ public:
 private:
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
+  nsresult EnsureMessageManager();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
   nsresult CheckURILoad(nsIURI* aURI);
   void FireErrorEvent();
@@ -117,11 +125,18 @@ private:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
+public:
+  // public because a callback needs these.
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
+  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
+private:
   PRPackedBool mDepthTooGreat : 1;
   PRPackedBool mIsTopLevelContent : 1;
   PRPackedBool mDestroyCalled : 1;
   PRPackedBool mNeedsAsyncDestroy : 1;
   PRPackedBool mInSwap : 1;
+  PRPackedBool mInShow : 1;
+  PRPackedBool mHideCalled : 1;
 };
 
 #endif

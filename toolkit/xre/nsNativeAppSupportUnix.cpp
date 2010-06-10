@@ -235,7 +235,7 @@ OssoSetWindowOrientation(PRBool aPortrait)
   // NOTE: We only update the most recent top-level window so this is only
   //       suitable for apps with only one window.
   nsCOMPtr<nsIDOMWindowInternal> window;
-  GetMostRecentWindow(NS_LITERAL_STRING("").get(), getter_AddRefs(window));
+  GetMostRecentWindow(EmptyString().get(), getter_AddRefs(window));
   GtkWidget* widget = WidgetForDOMWindow(window);
   if (widget && widget->window) {
     GdkWindow *gdk = widget->window;

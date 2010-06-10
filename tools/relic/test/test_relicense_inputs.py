@@ -113,7 +113,7 @@ def _testOneInputFile(self, fname):
         actualError = str(error)
         self.failUnlessEqual(actualError.strip(), expectedError.strip())
     else:
-        self.fail("No reference ouput file or error file for '%s'." % infile)
+        self.fail("No reference output file or error file for '%s'." % infile)
 
     # Ensure next test file gets a clean relic.
     del sys.modules['relic']

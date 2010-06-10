@@ -261,21 +261,8 @@ nsListBoxBodyFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = NS_OK;
 
   if (aAttribute == nsGkAtoms::rows) {
-    nsAutoString rows;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
-    
-    if (!rows.IsEmpty()) {
-      PRInt32 dummy;
-      PRInt32 count = rows.ToInteger(&dummy);
-      PRInt32 rowHeight = GetRowHeightAppUnits();
-      rowHeight = nsPresContext::AppUnitsToIntCSSPixels(rowHeight);
-      nsAutoString value;
-      value.AppendInt(rowHeight*count);
-      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value, PR_FALSE);
-
-      PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-    }
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
   else
     rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
@@ -660,20 +647,6 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
 { 
   if (aRowHeight > mRowHeight) { 
     mRowHeight = aRowHeight;
-    
-    nsAutoString rows;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
-    if (rows.IsEmpty())
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::size, rows);
-    
-    if (!rows.IsEmpty()) {
-      PRInt32 dummy;
-      PRInt32 count = rows.ToInteger(&dummy);
-      PRInt32 rowHeight = nsPresContext::AppUnitsToIntCSSPixels(aRowHeight);
-      nsAutoString value;
-      value.AppendInt(rowHeight*count);
-      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value, PR_FALSE);
-    }
 
     // signal we need to dirty everything 
     // and we want to be notified after reflow

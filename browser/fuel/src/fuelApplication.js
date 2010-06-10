@@ -657,7 +657,6 @@ var ApplicationFactory = {
 };
 
 
-
 //=================================================
 // Application constructor
 function Application() {

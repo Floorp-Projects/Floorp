@@ -83,7 +83,7 @@ class ClientInfo {
   }
 
   // Unregister all waits for the client.
-  bool UnregisterWaits();
+  void UnregisterWaits();
 
   bool Initialize();
   bool GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info) const;

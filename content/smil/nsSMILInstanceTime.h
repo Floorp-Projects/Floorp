@@ -54,18 +54,16 @@ class nsSMILTimeValueSpec;
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in nsSMILTimeValue.h
 //
-// These objects are owned by an nsSMILTimedElement but may be referred to by
-// nsSMILTimeValueSpec objects owned by the same nsSMILTimedElement.
+// These objects are owned by an nsSMILTimedElement but MAY also be referenced
+// by:
 //
-// For example, a syncbase nsSMILTimeValueSpec such as 'a.begin' will generate
-// instance times based on when 'a' begins and will give these instance times to
-// the owner nsSMILTimedElement. It will also keep a pointer to the last created
-// instance time so it can tell its owner nsSMILTimedElement to update or
-// delete it.
-//
-// Furthermore, nsSMILInstanceTime objects may refer to other nsSMILInstanceTime
-// objects to represent dependency chains that are used for resolving priorities
-// within the animation sandwich.
+// a) nsSMILIntervals that belong to the same nsSMILTimedElement and which refer
+//    to the nsSMILInstanceTimes which form the interval endpoints; and/or
+// b) nsSMILIntervals that belong to other nsSMILTimedElements but which need to
+//    update dependent instance times when they change or are deleted.
+//    E.g. for begin='a.begin', 'a' needs to inform dependent
+//    nsSMILInstanceTimes if its begin time changes. This notification is
+//    performed by the nsSMILInterval.
 
 class nsSMILInstanceTime
 {
@@ -111,8 +109,7 @@ public:
     mTime = aNewTime;
   }
 
-  PRBool IsDependent(const nsSMILInstanceTime& aOther,
-                     PRUint32 aRecursionDepth = 0) const;
+  PRBool IsDependent(const nsSMILInstanceTime& aOther) const;
 
   PRBool SameTimeAndBase(const nsSMILInstanceTime& aOther) const
   {
@@ -128,12 +125,11 @@ public:
 
 protected:
   void SetBaseInterval(nsSMILInterval* aBaseInterval);
-  void BreakPotentialCycle(const nsSMILInstanceTime* aNewTail) const;
   const nsSMILInstanceTime* GetBaseTime() const;
 
   nsSMILTimeValue mTime;
 
-  // Internal flags used for represent behaviour of different instance times`
+  // Internal flags used to represent the behaviour of different instance times
   enum {
     // Indicates if this instance time should be removed when the owning timed
     // element is reset. True for events and DOM calls.
@@ -157,8 +153,11 @@ protected:
   PRUint32      mSerial; // A serial number used by the containing class to
                          // specify the sort order for instance times with the
                          // same mTime.
-  PRPackedBool  mVisited;
-  PRPackedBool  mChainEnd;
+  PRPackedBool  mVisited; // (mutable) Cycle tracking
+  PRPackedBool  mChainEnd; // Flag to indicate that this instance time is part
+                           // of some cyclic dependency and that in order to
+                           // avoid infinite recursion the cycle should not be
+                           // followed any further than this point.
 
   nsSMILTimeValueSpec* mCreator; // The nsSMILTimeValueSpec object that created
                                  // us. (currently only needed for syncbase

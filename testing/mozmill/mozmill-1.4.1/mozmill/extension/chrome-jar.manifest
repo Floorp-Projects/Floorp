@@ -1,0 +1,12 @@
+resource mozmill resource/
+content mozmill jar:chrome/mozmill.jar!/content/
+locale mozmill en-US jar:chrome/mozmill-locale.jar!/locale/en-US/
+skin mozmill classic/1.0 jar:chrome/mozmill-skin.jar!/skin/
+
+overlay chrome://browser/content/browser.xul	chrome://mozmill/content/overlay.xul
+overlay chrome://messenger/content/mailWindowOverlay.xul chrome://mozmill/content/overlay_tb.xul
+overlay chrome://calendar/content/calendar.xul chrome://mozmill/content/overlay.xul
+overlay chrome://navigator/content/navigatorOverlay.xul chrome://mozmill/content/overlay_tb.xul
+overlay windowtype:Songbird:Main chrome://mozmill/content/overlay.xul
+
+style chrome://global/content/customizeToolbar.xul chrome://mozmill/skin/overlay.css

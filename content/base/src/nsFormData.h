@@ -39,7 +39,7 @@
 
 #include "nsIDOMFormData.h"
 #include "nsIXMLHttpRequest.h"
-#include "nsIFormSubmission.h"
+#include "nsFormSubmission.h"
 #include "nsTArray.h"
 
 class nsFormData : public nsIDOMFormData,

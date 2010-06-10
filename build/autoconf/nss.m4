@@ -9,7 +9,7 @@ AC_DEFUN(AM_PATH_NSS,
 [dnl
 
 AC_ARG_WITH(nss-prefix,
-	[  --with-nss-prefix=PFX  Prefix where NSS is installed],
+	[  --with-nss-prefix=PFX   Prefix where NSS is installed],
 	nss_config_prefix="$withval",
 	nss_config_prefix="")
 

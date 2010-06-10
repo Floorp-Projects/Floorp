@@ -103,12 +103,12 @@ public:
    * all needed data are found.  Thus overwriting non-empty data will
    * break CSS cascading rules.
    */
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData)=0;
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData)=0;
 
   virtual nsIStyleRule* GetImportantRule(void) { return nsnull; }
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 #endif
 };
 

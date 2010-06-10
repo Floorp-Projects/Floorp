@@ -191,7 +191,7 @@ void imgRequestProxy::RemoveFromLoadGroup(PRBool releaseLoadGroup)
   */
   nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
 
-  mLoadGroup->RemoveRequest(this, NS_OK, nsnull);
+  mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
   mIsInLoadGroup = PR_FALSE;
 
   if (releaseLoadGroup) {

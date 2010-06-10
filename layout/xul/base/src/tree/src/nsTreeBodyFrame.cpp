@@ -1549,8 +1549,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
       currX += mIndentation*level;
     remainingWidth -= mIndentation*level;
 
-    if (isRTL && aX > currX + remainingWidth ||
-        !isRTL && aX < currX) {
+    if ((isRTL && aX > currX + remainingWidth) ||
+        (!isRTL && aX < currX)) {
       // The user clicked within the indentation.
       return nsCSSAnonBoxes::moztreecell;
     }
@@ -2037,6 +2037,10 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
     nsIContent* baseContent = GetBaseElement();
     if (baseContent && baseContent->HasAttr(kNameSpaceID_None, nsGkAtoms::editing))
       mScratchArray->AppendElement(nsGkAtoms::editing);
+
+    // multiple columns
+    if (mColumns->GetColumnAt(1))
+      mScratchArray->AppendElement(nsGkAtoms::multicol);
   }
 
   if (aCol) {

@@ -39,7 +39,6 @@
 #define nsICanvasRenderingContextInternal_h___
 
 #include "nsISupports.h"
-#include "nsICanvasElement.h"
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
 #include "gfxPattern.h"
@@ -48,16 +47,27 @@
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
   { 0xed741c16, 0x4039, 0x469b, { 0x91, 0xda, 0xdc, 0xa7, 0x42, 0xc5, 0x1a, 0x9f } }
 
+class nsHTMLCanvasElement;
 class gfxContext;
 class gfxASurface;
 
+namespace mozilla {
+namespace layers {
+class CanvasLayer;
+class LayerManager;
+}
+}
+
 class nsICanvasRenderingContextInternal : public nsISupports {
 public:
+  typedef mozilla::layers::CanvasLayer CanvasLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
   // This method should NOT hold a ref to aParentCanvas; it will be called
   // with nsnull when the element is going away.
-  NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas) = 0;
+  NS_IMETHOD SetCanvasElement(nsHTMLCanvasElement* aParentCanvas) = 0;
 
   // Sets the dimensions of the canvas, in pixels.  Called
   // whenever the size of the element changes.
@@ -87,6 +97,12 @@ public:
   // dst alpha is always 1.0.  If this is never called, the context
   // defaults to false (not opaque).
   NS_IMETHOD SetIsOpaque(PRBool isOpaque) = 0;
+
+  // Return the CanvasLayer for this context, creating
+  // one for the given layer manager if not available.
+  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *mgr) = 0;
+
+  virtual void MarkContextClean() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

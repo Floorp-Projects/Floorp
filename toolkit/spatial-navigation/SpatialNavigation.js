@@ -133,8 +133,9 @@ function _onInputKeyPress (event, callback) {
       return;
   }
 
-  if ((target instanceof Ci.nsIDOMHTMLInputElement && (target.type == "text" || target.type == "password")) ||
-      target instanceof Ci.nsIDOMHTMLTextAreaElement ) {
+  if ((target instanceof Ci.nsIDOMNSHTMLInputElement &&
+       target.mozIsTextField(false)) ||
+      target instanceof Ci.nsIDOMHTMLTextAreaElement) {
     
     // if there is any selection at all, just ignore
     if (target.selectionEnd - target.selectionStart > 0)
@@ -229,8 +230,9 @@ function _onInputKeyPress (event, callback) {
     doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).focus(bestElementToFocus);
 
     // if it is a text element, select all.
-    if((bestElementToFocus instanceof Ci.nsIDOMHTMLInputElement && (bestElementToFocus.type == "text" || bestElementToFocus.type == "password")) ||
-       bestElementToFocus instanceof Ci.nsIDOMHTMLTextAreaElement ) {
+    if ((bestElementToFocus instanceof Ci.nsIDOMNSHTMLInputElement &&
+         bestElementToFocus.mozIsTextField(false)) ||
+        bestElementToFocus instanceof Ci.nsIDOMHTMLTextAreaElement) {
       bestElementToFocus.selectionStart = 0;
       bestElementToFocus.selectionEnd = bestElementToFocus.textLength;
     }

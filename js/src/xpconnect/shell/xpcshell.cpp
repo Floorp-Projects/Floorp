@@ -241,8 +241,8 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 #ifdef EDITLINE
 extern "C" {
-extern char     *readline(const char *prompt);
-extern void     add_history(char *line);
+extern JS_EXPORT_API(char)     *readline(const char *prompt);
+extern JS_EXPORT_API(void)     add_history(char *line);
 }
 #endif
 
@@ -1189,7 +1189,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
                 if (!JS_SealObject(cx, obj, JS_TRUE))
                     return JS_FALSE;
-                gobj = JS_NewObject(cx, &global_class, NULL, NULL);
+                gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)
                     return JS_FALSE;
                 if (!JS_SetPrototype(cx, gobj, obj))
@@ -1322,7 +1322,7 @@ FullTrustSecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
 }
 
 #ifndef XPCONNECT_STANDALONE
-/* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
+/* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in jsval aName, inout voidPtr aPolicy); */
 NS_IMETHODIMP
 FullTrustSecMan::CanAccess(PRUint32 aAction,
                            nsAXPCNativeCallContext *aCallContext,
@@ -1333,7 +1333,7 @@ FullTrustSecMan::CanAccess(PRUint32 aAction,
     return NS_OK;
 }
 
-/* [noscript] void checkPropertyAccess (in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in string aClassName, in JSVal aProperty, in PRUint32 aAction); */
+/* [noscript] void checkPropertyAccess (in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in string aClassName, in jsval aProperty, in PRUint32 aAction); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
                                      JSObject * aJSObject,

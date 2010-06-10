@@ -799,8 +799,9 @@ nsSHEntry::AttributeChanged(nsIDocument* aDocument,
 
 void
 nsSHEntry::ContentAppended(nsIDocument* aDocument,
-                        nsIContent* aContainer,
-                        PRInt32 aNewIndexInContainer)
+                           nsIContent* aContainer,
+                           nsIContent* aFirstNewContent,
+                           PRInt32 /* unused */)
 {
   DocumentMutated();
 }
@@ -809,7 +810,7 @@ void
 nsSHEntry::ContentInserted(nsIDocument* aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
-                           PRInt32 aIndexInContainer)
+                           PRInt32 /* unused */)
 {
   DocumentMutated();
 }

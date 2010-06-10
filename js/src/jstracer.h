@@ -342,16 +342,17 @@ enum TraceType_
 : int8_t
 #endif
 {
-    TT_OBJECT         = 0, /* pointer to JSObject whose class is not js_FunctionClass */
-    TT_INT32          = 1, /* 32-bit signed integer */
-    TT_DOUBLE         = 2, /* pointer to jsdouble */
-    TT_JSVAL          = 3, /* arbitrary jsval */
-    TT_STRING         = 4, /* pointer to JSString */
-    TT_NULL           = 5, /* null */
-    TT_SPECIAL        = 6, /* true, false, hole, or areturn (0, 1, 6, or 8) */
-    TT_VOID           = 7, /* undefined (2) */
-    TT_FUNCTION       = 8, /* pointer to JSObject whose class is js_FunctionClass */
-    TT_IGNORE         = 9
+    TT_OBJECT        =  0, /* pointer to JSObject whose class is not js_FunctionClass */
+    TT_INT32         =  1, /* 32-bit signed integer */
+    TT_DOUBLE        =  2, /* pointer to jsdouble */
+    TT_JSVAL         =  3, /* arbitrary jsval */
+    TT_STRING        =  4, /* pointer to JSString */
+    TT_NULL          =  5, /* null */
+    TT_SPECIAL       =  6, /* true, false, hole, or areturn (0, 1, 6, or 8) */
+    TT_VOID          =  7, /* undefined (2) */
+    TT_FUNCTION      =  8, /* pointer to JSObject whose class is js_FunctionClass */
+    TT_MAGIC         =  9, /* a 'magic' value, aka a hole */
+    TT_IGNORE        = 10
 }
 #if defined(__GNUC__) && defined(USE_TRACE_TYPE_ENUM)
 __attribute__((packed))
@@ -672,6 +673,7 @@ struct LinkableFragment : public VMFragment
     uint32                  branchCount;
     TypeMap                 typeMap;
     unsigned                nStackTypes;
+    unsigned                spOffsetAtEntry;
     SlotList*               globalSlots;
 };
 
@@ -1311,7 +1313,8 @@ class TraceRecorder
                                                   jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK RecordingStatus setProp(jsval &l, PropertyCacheEntry* entry,
                                                 JSScopeProperty* sprop,
-                                                jsval &v, nanojit::LIns*& v_ins);
+                                                jsval &v, nanojit::LIns*& v_ins,
+                                                bool isDefinitelyAtom);
     JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
                                                     JSScopeProperty *sprop, nanojit::LIns *v_ins,
                                                     jsval v);
@@ -1326,12 +1329,14 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
-    JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
+    JS_REQUIRES_STACK void guardClassHelper(bool cond, nanojit::LIns* obj_ins, JSClass* clasp,
+                                            VMSideExit* exit, nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void guardClass(nanojit::LIns* obj_ins, JSClass* clasp,
                                       VMSideExit* exit, nanojit::AccSet accSet);
-    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           ExitType exitType);
-    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           VMSideExit* exit);
+    JS_REQUIRES_STACK void guardNotClass(nanojit::LIns* obj_ins, JSClass* clasp,
+                                         VMSideExit* exit, nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, ExitType exitType);
+    JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardHasPrototype(JSObject* obj, nanojit::LIns* obj_ins,
                                              JSObject** pobj, nanojit::LIns** pobj_ins,
                                              VMSideExit* exit);

@@ -86,6 +86,8 @@
 #include "nsIDOMSVGTransformList.h"
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGAnimatedRect.h"
+#include "nsIDOMSVGGradientElement.h"
+#include "nsIDOMSVGPatternElement.h"
 #include "nsSVGRect.h"
 #include "nsIFrame.h"
 #include "prdtoa.h"
@@ -1940,14 +1942,30 @@ nsISMILAttr*
 nsSVGElement::GetAnimatedAttr(nsIAtom* aName)
 {
   // Transforms:
+  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transformList;
   if (aName == nsGkAtoms::transform) {
     nsCOMPtr<nsIDOMSVGTransformable> transformable(
             do_QueryInterface(static_cast<nsIContent*>(this)));
     if (!transformable)
       return nsnull;
-    nsCOMPtr<nsIDOMSVGAnimatedTransformList> transformList;
     nsresult rv = transformable->GetTransform(getter_AddRefs(transformList));
     NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+  if (aName == nsGkAtoms::gradientTransform) {
+    nsCOMPtr<nsIDOMSVGGradientElement> gradientElement(
+            do_QueryInterface(static_cast<nsIContent*>(this)));
+
+    nsresult rv = gradientElement->GetGradientTransform(getter_AddRefs(transformList));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+  if (aName == nsGkAtoms::patternTransform) {
+    nsCOMPtr<nsIDOMSVGPatternElement> patternElement(
+            do_QueryInterface(static_cast<nsIContent*>(this)));
+
+    nsresult rv = patternElement->GetPatternTransform(getter_AddRefs(transformList));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+  if (transformList) {
     nsSVGAnimatedTransformList* list
       = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
     NS_ENSURE_TRUE(list, nsnull);

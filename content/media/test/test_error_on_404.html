@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=476731
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script> 
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=476731">Mozilla Bug </a>
@@ -23,58 +24,71 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=476731
 
 /** Test for Bug  **/
 
-var gLoadedData = new Object();
-var gLoadStart = new Object();
-var gLoadError = new Object();
+var videos = [];
 
-gLoadedData['v'] = false;
-gLoadedData['a'] = false;
+function FinishedLoads() {
+  if (videos.length == 0)
+    return false;
+  for (var i=0; i<videos.length; ++i) {
+    if (videos[i]._loadedData) {
+      // A video loadeddata, it should have 404'd. Signal the end of the test
+      // so the error will be reported.
+      return true;
+    }
+    if (!videos[i]._loadError) {
+      return false;
+    }
+  }
+  return true;
+}
 
-gLoadStart['v'] = false;
-gLoadStart['a'] = false;
-
-gLoadError['v'] = false;
-gLoadError['a'] = false;
-
-function loadError(evt, id) {
+function loadError(evt) {
   // Prevent mochitest's onerror handler catching the 'error' event on bubble.
   evt.stopPropagation();
-  is(gLoadError[id], false, "Shouldn't have more than one error for each media element");
-  gLoadError[id] = true;
-  is(gLoadStart[id], true, "Should have started load");
-  is(gLoadedData[id], false, "Shouldn't have finished load.");
-  if (gLoadError['a'] && gLoadError['v'])
+  var v = evt.target;
+  is(v._loadError, false, "Shouldn't receive multiple error events for " + v.src);
+  v._loadError = true;
+  is(v._loadStart, true, "Receive loadstart for " + v.src);
+  is(v._loadedData, false, "Shouldn't receive loadeddata for " + v.src);
+  if (FinishedLoads(videos))
     SimpleTest.finish();
 }
 
-function loadedData(evt, id) {
-  gLoadedData[id] = true;
+function loadedData(evt) {
+  evt.target._loadedData = true;
 }
 
-function loadStart(evt, id) {
-  gLoadStart[id] = true;
+function loadStart(evt) {
+  evt.target._loadStart = true;
+}
+
+// Create all video objects.
+for (var i=0; i<g404Tests.length; ++i) {
+  var v = document.createElement("video");
+  var test = g404Tests[i];
+  if (!v.canPlayType(test.type)) {
+    continue;
+   }
+   v.src = test.name;
+   v._loadedData = false;
+   v._loadStart = false;
+   v._loadError = false;
+   v.addEventListener("error", loadError, false);
+   v.addEventListener("loadstart", loadStart, false);
+   v.addEventListener("loadedddata", loadedData, false);
+   document.body.appendChild(v); // Will start load.
+   videos.push(v);
 }
 
 
-SimpleTest.waitForExplicitFinish();
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
 
 </script>
 </pre>
-
-<video id="v"
-       onerror="loadError(event, 'v');"
-       onloadstart="loadStart(event, 'v');"
-       onloadeddata="loadedData(event, 'v');"
-       src="404.ogg">
-</video>
-
-
-<audio id="a"
-       onerror="loadError(event, 'a');"
-       onloadstart="loadStart(event, 'a');"
-       onloadeddata="loadedData(event, 'a');"
-       src="404.wav">
-</audio>
 
 </body>
 </html>

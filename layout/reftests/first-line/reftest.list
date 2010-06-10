@@ -16,7 +16,7 @@ fails == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 == stress-1.html about:blank # assertion test
 == stress-2.html stress-2-ref.html # assertion + rendering test
 == stress-3.html about:blank # assertion test
-== stress-4.html about:blank # assertion/crash test
+asserts(2) == stress-4.html about:blank # assertion/crash test
 == stress-5.html about:blank # assertion/crash test
 == stress-6.html about:blank # assertion/crash test
 == stress-7.html about:blank # assertion/crash test

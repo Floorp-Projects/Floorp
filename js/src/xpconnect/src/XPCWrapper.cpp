@@ -154,14 +154,28 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
   return JS_TRUE;
 }
 
-static JSClass IteratorClass = {
-  "XOW iterator", JSCLASS_HAS_RESERVED_SLOTS(3),
-  JS_PropertyStub, JS_PropertyStub,
-  JS_PropertyStub, JS_PropertyStub,
-  JS_EnumerateStub, JS_ResolveStub,
-  JS_ConvertStub, IteratorFinalize,
+static JSObject *
+IteratorIterator(JSContext *, JSObject *obj, JSBool)
+{
+  return obj;
+}
 
-  JSCLASS_NO_OPTIONAL_MEMBERS
+static JSExtendedClass IteratorClass = {
+  { "Wrapper iterator",
+    JSCLASS_HAS_RESERVED_SLOTS(3) | JSCLASS_IS_EXTENDED,
+    JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub, IteratorFinalize,
+
+    JSCLASS_NO_OPTIONAL_MEMBERS
+  },
+
+  nsnull,             // equality
+  nsnull, nsnull,     // innerObject/outerObject
+  IteratorIterator,
+  nsnull,             // wrappedObject
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 JSBool
@@ -250,7 +264,7 @@ CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
   }
 
   if (hint & XPCNW_EXPLICIT) {
-    if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, vp)) {
+    if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wn, vp)) {
       return JS_FALSE;
     }
   } else if (hint & SJOW) {
@@ -317,7 +331,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
   // delegates (via the __proto__ link) to the wrapper.
 
   JSObject *iterObj =
-    JS_NewObjectWithGivenProto(cx, &IteratorClass, tempWrapper, wrapperObj);
+    JS_NewObjectWithGivenProto(cx, &IteratorClass.base, tempWrapper, wrapperObj);
   if (!iterObj) {
     return nsnull;
   }
@@ -380,7 +394,7 @@ JSObject *
 CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
                      JSObject *propertyContainer)
 {
-  JSObject *iterObj = JS_NewObjectWithGivenProto(cx, &IteratorClass,
+  JSObject *iterObj = JS_NewObjectWithGivenProto(cx, &IteratorClass.base,
                                                  propertyContainer, scope);
   if (!iterObj) {
     return nsnull;

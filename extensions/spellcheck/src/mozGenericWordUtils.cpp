@@ -36,7 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 #include "mozGenericWordUtils.h"
 
-NS_IMPL_ISUPPORTS1(mozGenericWordUtils, mozISpellI18NUtil)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(mozGenericWordUtils)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(mozGenericWordUtils)
+
+NS_INTERFACE_MAP_BEGIN(mozGenericWordUtils)
+  NS_INTERFACE_MAP_ENTRY(mozISpellI18NUtil)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozISpellI18NUtil)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozGenericWordUtils)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_0(mozGenericWordUtils)
 
   // do something sensible but generic ... eventually.  For now whine.
 

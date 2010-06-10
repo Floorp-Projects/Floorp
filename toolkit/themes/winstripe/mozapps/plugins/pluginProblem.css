@@ -29,16 +29,16 @@ html|a {
     background-repeat: no-repeat;
 }
 :-moz-type-unsupported .icon {
-    background-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
+    background-image: url(chrome://mozapps/skin/plugins/contentPluginDownload.png);
 }
 :-moz-handler-disabled .icon {
-    background-image: url(chrome://mozapps/skin/plugins/pluginDisabled.png);
+    background-image: url(chrome://mozapps/skin/plugins/contentPluginDisabled.png);
 }
 :-moz-handler-blocked .icon {
-    background-image: url(chrome://mozapps/skin/plugins/pluginBlocked.png);
+    background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
 }
 :-moz-handler-crashed .icon {
-    background-image: url(chrome://mozapps/skin/plugins/pluginCrashed.png);
+    background-image: url(chrome://mozapps/skin/plugins/contentPluginCrashed.png);
 }
 
 .throbber {

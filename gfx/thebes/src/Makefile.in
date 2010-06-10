@@ -32,8 +32,16 @@ CPPSRCS	= \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
 	gfxUserFontSet.cpp \
+	gfxUtils.cpp \
 	GLContext.cpp \
+	GLContextProviderOSMesa.cpp \
 	$(NULL)
+
+ifdef MOZ_IPC
+CPPSRCS += \
+	gfxSharedImageSurface.cpp \
+	$(NULL)
+endif
 
 SHARED_LIBRARY_LIBS += \
 	../../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
@@ -49,6 +57,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
+	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
@@ -100,7 +109,21 @@ _OS_LIBS	+= uuid
 endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
+ifdef MOZ_ENABLE_D3D9_LAYER
+DEFINES +=	-DMOZ_ENABLE_D3D9_LAYER
+endif
+
 ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS += \
+	gfxAndroidPlatform.cpp \
+	gfxFT2Fonts.cpp \
+	gfxFT2FontBase.cpp \
+	gfxFT2Utils.cpp \
+	nsUnicodeRange.cpp \
+	$(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -148,7 +171,7 @@ CPPSRCS += gfxDirectFBSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp gfxSharedImageSurface.cpp
+CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 ifdef MOZ_PANGO
 CPPSRCS += gfxPangoFonts.cpp
@@ -214,6 +237,9 @@ endif
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
@@ -222,6 +248,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef WINCE
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

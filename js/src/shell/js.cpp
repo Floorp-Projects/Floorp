@@ -55,6 +55,7 @@
 #include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
+#include "jswrapper.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -73,7 +74,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
-#include "jsscriptinlines.h"
+#include "jsxml.h"
 
 #include "prmjtime.h"
 
@@ -88,6 +89,9 @@
 #endif /* JSDEBUGGER */
 
 #include "jsworkers.h"
+
+#include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -118,9 +122,9 @@ size_t gStackChunkSize = 8192;
 #if defined(DEBUG) && defined(__SUNPRO_CC)
 /* Sun compiler uses larger stack space for js_Interpret() with debug
    Use a bigger gMaxStackSize to make "make check" happy. */
-static size_t gMaxStackSize = 5000000;
+size_t gMaxStackSize = 5000000;
 #else
-static size_t gMaxStackSize = 500000;
+size_t gMaxStackSize = 500000;
 #endif
 
 
@@ -352,40 +356,9 @@ ShellOperationCallback(JSContext *cx)
 }
 
 static void
-SetThreadStackLimit(JSContext *cx)
-{
-    jsuword stackLimit;
-
-    if (gMaxStackSize == 0) {
-        /*
-         * Disable checking for stack overflow if limit is zero.
-         */
-        stackLimit = 0;
-    } else {
-        jsuword stackBase;
-#ifdef JS_THREADSAFE
-        stackBase = (jsuword) PR_GetThreadPrivate(gStackBaseThreadIndex);
-#else
-        stackBase = gStackBase;
-#endif
-        if (stackBase) {
-#if JS_STACK_GROWTH_DIRECTION > 0
-            stackLimit = stackBase + gMaxStackSize;
-#else
-            stackLimit = stackBase - gMaxStackSize;
-#endif
-        } else {
-            stackLimit = 0;
-        }
-    }
-    JS_SetThreadStackLimit(cx, stackLimit);
-
-}
-
-static void
 SetContextOptions(JSContext *cx)
 {
-    SetThreadStackLimit(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
@@ -773,7 +746,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
                 if (!JS_SealObject(cx, obj, JS_TRUE))
                     return JS_FALSE;
-                gobj = JS_NewObject(cx, &global_class, NULL, NULL);
+                gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)
                     return JS_FALSE;
                 if (!JS_SetPrototype(cx, gobj, obj))
@@ -2856,7 +2829,7 @@ split_create_outer(JSContext *cx)
     cpx->inner = NULL;
     cpx->outer = NULL;
 
-    obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
+    obj = JS_NewGlobalObject(cx, &split_global_class.base);
     if (!obj || !JS_SetParent(cx, obj, NULL)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2886,7 +2859,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx->inner = NULL;
     cpx->outer = outer;
 
-    obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
+    obj = JS_NewGlobalObject(cx, &split_global_class.base);
     if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2999,7 +2972,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!sobj) {
         sobj = split
                ? split_setup(scx, JS_TRUE)
-               : JS_NewObject(scx, &sandbox_class, NULL, NULL);
+               : JS_NewGlobalObject(scx, &sandbox_class);
         if (!sobj || (!lazy && !JS_InitStandardClasses(scx, sobj))) {
             ok = JS_FALSE;
             goto out;
@@ -3024,6 +2997,13 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
+        if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+            JS_TransferRequest(scx, cx);
+            JS_ReportError(cx, "Invalid scope argument to evalcx");
+            DestroyContext(scx, false);
+            return JS_FALSE;
+        }
+
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script,
@@ -3231,7 +3211,7 @@ RunScatterThread(void *arg)
 
     /* We are good to go. */
     JS_SetContextThread(cx);
-    SetThreadStackLimit(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_BeginRequest(cx);
     DoScatteredWork(cx, td);
     JS_EndRequest(cx);
@@ -3595,9 +3575,10 @@ CancelExecution(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     if (gWorkers) {
         JSContext *cx = JS_NewContext(rt, 8192);
-        if (cx)
+        if (cx) {
             js::workers::terminateAll(cx, gWorkers);
-        JS_DestroyContextNoGC(cx);
+            JS_DestroyContextNoGC(cx);
+        }
     }
 #endif
     JS_TriggerAllOperationCallbacks(rt);
@@ -3680,11 +3661,13 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(parent);
 
     /* Outerize if necessary.  Embrace the ugliness! */
-    JSClass *clasp = JS_GET_CLASS(cx, parent);
-    if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
-        if (JSObjectOp outerize = xclasp->outerObject)
-            *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+    if (parent) {
+        JSClass *clasp = JS_GET_CLASS(cx, parent);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
+            if (JSObjectOp outerize = xclasp->outerObject)
+                *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+        }
     }
 
     return JS_TRUE;
@@ -3860,6 +3843,23 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+JSBool
+Wrap(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_SET_RVAL(cx, vp, v);
+        return true;
+    }
+
+    JSObject *wrapped = JSWrapper::wrap(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
+    if (!wrapped)
+        return false;
+
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(wrapped));
+    return true;
+}
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -3944,6 +3944,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
     JS_FN("parent",         Parent,         1,0),
+    JS_FN("wrap",           Wrap,           1,0),
     JS_FS_END
 };
 
@@ -4053,6 +4054,7 @@ static const char *const shell_help_messages[] = {
 "  A negative value (default) means that the execution time is unlimited.",
 "elapsed()                Execution time elapsed for the current context.",
 "parent(obj)              Returns the parent of obj.\n",
+"wrap(obj)                Wrap an object into a noop wrapper.\n"
 };
 
 /* Help messages must match shell functions. */
@@ -4614,20 +4616,18 @@ global_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
-    if ((flags & JSRESOLVE_ASSIGNING) == 0) {
-        JSBool resolved;
+    JSBool resolved;
 
-        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-            return JS_FALSE;
-        if (resolved) {
-            *objp = obj;
-            return JS_TRUE;
-        }
+    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+        return JS_FALSE;
+    if (resolved) {
+        *objp = obj;
+        return JS_TRUE;
     }
 #endif
 
 #if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
-    if ((flags & (JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING)) == 0) {
+    if (!(flags & JSRESOLVE_QUALIFIED)) {
         /*
          * Do this expensive hack only for unoptimized Unix builds, which are
          * not used for benchmarking.
@@ -4919,7 +4919,7 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx)
 {
-    JSObject *glob = JS_NewObject(cx, &global_class, NULL, NULL);
+    JSObject *glob = JS_NewGlobalObject(cx, &global_class);
 #ifdef LAZY_STANDARD_CLASSES
     JS_SetGlobalObject(cx, glob);
 #else
@@ -4969,6 +4969,87 @@ NewGlobalObject(JSContext *cx)
 #endif
 
     return glob;
+}
+
+int
+shell(JSContext *cx, int argc, char **argv, char **envp)
+{
+    AutoNewCompartment compartment(cx);
+    if (!compartment.init())
+        return 1;
+
+    JS_BeginRequest(cx);
+
+    JSObject *glob = NewGlobalObject(cx);
+    if (!glob)
+        return 1;
+
+    JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
+    if (!envobj || !JS_SetPrivate(cx, envobj, envp))
+        return 1;
+
+#ifdef JSDEBUGGER
+    /*
+    * XXX A command line option to enable debugging (or not) would be good
+    */
+    jsdc = JSD_DebuggerOnForUser(rt, NULL, NULL);
+    if (!jsdc)
+        return 1;
+    JSD_JSContextInUse(jsdc, cx);
+#ifdef JSD_LOWLEVEL_SOURCE
+    JS_SetSourceHandler(rt, SendSourceToJSDebugger, jsdc);
+#endif /* JSD_LOWLEVEL_SOURCE */
+#ifdef JSDEBUGGER_JAVA_UI
+    jsdjc = JSDJ_CreateContext();
+    if (! jsdjc)
+        return 1;
+    JSDJ_SetJSDContext(jsdjc, jsdc);
+    java_env = JSDJ_CreateJavaVMAndStartDebugger(jsdjc);
+    /*
+    * XXX This would be the place to wait for the debugger to start.
+    * Waiting would be nice in general, but especially when a js file
+    * is passed on the cmd line.
+    */
+#endif /* JSDEBUGGER_JAVA_UI */
+#ifdef JSDEBUGGER_C_UI
+    jsdbc = JSDB_InitDebugger(rt, jsdc, 0);
+#endif /* JSDEBUGGER_C_UI */
+#endif /* JSDEBUGGER */
+
+#ifdef JS_THREADSAFE
+    class ShellWorkerHooks : public js::workers::WorkerHooks {
+    public:
+        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
+    };
+    ShellWorkerHooks hooks;
+    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
+        !js::workers::init(cx, &hooks, glob, &gWorkers)) {
+        return 1;
+    }
+#endif
+
+    int result = ProcessArgs(cx, glob, argv, argc);
+
+#ifdef JS_THREADSAFE
+    js::workers::finish(cx, gWorkers);
+    JS_RemoveObjectRoot(cx, &gWorkers);
+    if (result == 0)
+        result = gExitCode;
+#endif
+
+#ifdef JSDEBUGGER
+    if (jsdc) {
+#ifdef JSDEBUGGER_C_UI
+        if (jsdbc)
+            JSDB_TermDebugger(jsdc);
+#endif /* JSDEBUGGER_C_UI */
+        JSD_DebuggerOff(jsdc);
+    }
+#endif  /* JSDEBUGGER */
+
+    JS_EndRequest(cx);
+
+    return result;
 }
 
 int
@@ -5023,7 +5104,7 @@ main(int argc, char **argv, char **envp)
     CALIBRATION_DELAY_COUNT = 0;
 #endif
 
-    rt = JS_NewRuntime(128L * 1024L * 1024L);
+    rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)
         return 1;
 
@@ -5036,76 +5117,7 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
-    JS_BeginRequest(cx);
-
-    JSObject *glob = NewGlobalObject(cx);
-    if (!glob)
-        return 1;
-
-    JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
-    if (!envobj || !JS_SetPrivate(cx, envobj, envp))
-        return 1;
-
-#ifdef JSDEBUGGER
-    /*
-    * XXX A command line option to enable debugging (or not) would be good
-    */
-    jsdc = JSD_DebuggerOnForUser(rt, NULL, NULL);
-    if (!jsdc)
-        return 1;
-    JSD_JSContextInUse(jsdc, cx);
-#ifdef JSD_LOWLEVEL_SOURCE
-    JS_SetSourceHandler(rt, SendSourceToJSDebugger, jsdc);
-#endif /* JSD_LOWLEVEL_SOURCE */
-#ifdef JSDEBUGGER_JAVA_UI
-    jsdjc = JSDJ_CreateContext();
-    if (! jsdjc)
-        return 1;
-    JSDJ_SetJSDContext(jsdjc, jsdc);
-    java_env = JSDJ_CreateJavaVMAndStartDebugger(jsdjc);
-    /*
-    * XXX This would be the place to wait for the debugger to start.
-    * Waiting would be nice in general, but especially when a js file
-    * is passed on the cmd line.
-    */
-#endif /* JSDEBUGGER_JAVA_UI */
-#ifdef JSDEBUGGER_C_UI
-    jsdbc = JSDB_InitDebugger(rt, jsdc, 0);
-#endif /* JSDEBUGGER_C_UI */
-#endif /* JSDEBUGGER */
-
-#ifdef JS_THREADSAFE
-    class ShellWorkerHooks : public js::workers::WorkerHooks {
-    public:
-        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
-    };
-    ShellWorkerHooks hooks;
-    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
-        !js::workers::init(cx, &hooks, glob, &gWorkers)) {
-        return 1;
-    }
-#endif
-
-    result = ProcessArgs(cx, glob, argv, argc);
-
-#ifdef JS_THREADSAFE
-    js::workers::finish(cx, gWorkers);
-    JS_RemoveObjectRoot(cx, &gWorkers);
-    if (result == 0)
-        result = gExitCode;
-#endif
-
-#ifdef JSDEBUGGER
-    if (jsdc) {
-#ifdef JSDEBUGGER_C_UI
-        if (jsdbc)
-            JSDB_TermDebugger(jsdc);
-#endif /* JSDEBUGGER_C_UI */
-        JSD_DebuggerOff(jsdc);
-    }
-#endif  /* JSDEBUGGER */
-
-    JS_EndRequest(cx);
+    result = shell(cx, argc, argv, envp);
 
     JS_CommenceRuntimeShutDown(rt);
 

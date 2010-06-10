@@ -31,6 +31,12 @@ digits, 2 per channel in AARRGGBB format.
 Attempts to set the value of an undefined variable (0x0) via NPN_SetValue,
 returns true if it succeeds and false if it doesn't. It should never succeed.
 
+* .getReflector()
+Hands back an object which reflects properties as values, e.g.
+  .getReflector().foo = 'foo'
+  .getReflector()['foo'] = 'foo'
+  .getReflector()[1] = 1
+
 == NPN_ConvertPoint testing ==
 
 * convertPointX(sourceSpace, sourceX, sourceY, destSpace)

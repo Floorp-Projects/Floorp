@@ -273,7 +273,7 @@ BrowserStreamChild::DeliverPendingData()
 
   NS_ASSERTION(mPendingData.Length(), "Called from Deliver with empty pending");
 
-  while (mPendingData[0].curpos < mPendingData[0].data.Length()) {
+  while (mPendingData[0].curpos < static_cast<int32_t>(mPendingData[0].data.Length())) {
     int32_t r = mInstance->mPluginIface->writeready(&mInstance->mData, &mStream);
     if (kStreamOpen != mStreamStatus)
       return false;

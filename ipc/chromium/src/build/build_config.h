@@ -57,6 +57,9 @@
 #define ARCH_CPU_ARMEL 1
 #define ARCH_CPU_32_BITS 1
 #define WCHAR_T_IS_UNSIGNED 1
+#elif defined(__ppc__)
+#define ARCH_CPU_PPC 1
+#define ARCH_CPU_32_BITS 1
 #else
 #error Please add support for your architecture in build/build_config.h
 #endif

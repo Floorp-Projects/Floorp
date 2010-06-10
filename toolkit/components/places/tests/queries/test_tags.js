@@ -266,7 +266,7 @@ var gTests = [
   },
 
   {
-    desc: "Querying history on nonexisting tags should return no results",
+    desc: "Querying history on nonexistent tags should return no results",
     run:   function () {
       doWithVisit(["foo", "bar", "baz"], function (aURI) {
         var [query, opts] = makeQuery(["bogus"]);
@@ -350,7 +350,7 @@ var gTests = [
   },
 
   {
-    desc: "Querying bookmarks on nonexisting tag should return no results",
+    desc: "Querying bookmarks on nonexistent tag should return no results",
     run:   function () {
       doWithBookmark(["foo", "bar", "baz"], function (aURI) {
         var [query, opts] = makeQuery(["bogus"]);

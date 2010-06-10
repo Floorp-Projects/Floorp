@@ -62,7 +62,6 @@
 #include "nsIViewManager.h"
 
 #include "nsIDOMHTMLCanvasElement.h"
-#include "nsICanvasElement.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"
@@ -97,6 +96,7 @@ NS_IMPL_RELEASE(nsDOMWindowUtils)
 nsDOMWindowUtils::nsDOMWindowUtils(nsGlobalWindow *aWindow)
   : mWindow(aWindow)
 {
+  NS_ASSERTION(mWindow->IsOuterWindow(), "How did that happen?");
 }
 
 nsDOMWindowUtils::~nsDOMWindowUtils()
@@ -1317,14 +1317,35 @@ nsDOMWindowUtils::GetParent()
   *rval = OBJECT_TO_JSVAL(parent);
 
   // Outerize if necessary.  Embrace the ugliness!
-  JSClass *clasp = JS_GetClass(cx, parent);
-  if (clasp->flags & JSCLASS_IS_EXTENDED) {
-    JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
-    if (JSObjectOp outerize = xclasp->outerObject)
-      *rval = OBJECT_TO_JSVAL(outerize(cx, parent));
+  if (parent) {
+    JSClass* clasp = JS_GET_CLASS(cx, parent);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+      JSExtendedClass* xclasp = reinterpret_cast<JSExtendedClass*>(clasp);
+      if (JSObjectOp outerize = xclasp->outerObject)
+        *rval = OBJECT_TO_JSVAL(outerize(cx, parent));
+    }
   }
 
   cc->SetReturnValueWasSet(PR_TRUE);
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetOuterWindowID(PRUint64 *aWindowID)
+{
+  NS_ASSERTION(mWindow->IsOuterWindow(), "How did that happen?");
+  *aWindowID = mWindow->mWindowID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetCurrentInnerWindowID(PRUint64 *aWindowID)
+{
+  NS_ASSERTION(mWindow->IsOuterWindow(), "How did that happen?");
+  nsGlobalWindow* inner = mWindow->GetCurrentInnerWindowInternal();
+  if (!inner) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aWindowID = inner->mWindowID;
+  return NS_OK;
+}

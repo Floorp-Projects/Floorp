@@ -81,8 +81,6 @@ interface nsIDataType : nsISupports
 #include "jspubtd.h"
 %}
 
-native JSVal(jsval);
-
 /**
  * XPConnect has magic to transparently convert between nsIVariant and JS types.
  * We mark the interface [scriptable] so that JS can use methods
@@ -117,7 +115,7 @@ interface nsIVariant : nsISupports
     [noscript] string       getAsString();
     [noscript] wstring      getAsWString();
     [noscript] nsISupports  getAsISupports();
-    [noscript] JSVal        getAsJSVal();
+    [noscript] jsval        getAsJSVal();
 
     [noscript] void getAsInterface(out nsIIDPtr iid, 
                                    [iid_is(iid), retval] out nsQIResult iface);

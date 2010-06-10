@@ -54,21 +54,20 @@ typedef struct cairo_quartz_surface {
     cairo_surface_t *imageSurfaceEquiv;
 
     cairo_surface_clipper_t clipper;
-    cairo_rectangle_int_t extents;
 
-    /* These are stored while drawing operations are in place, set up
-     * by quartz_setup_source() and quartz_finish_source()
+    /**
+     * If non-null, this is a CGImage representing the contents of the surface.
+     * We clear this out before any painting into the surface, so that we
+     * don't force a copy to be created.
      */
-    CGAffineTransform sourceTransform;
+    CGImageRef bitmapContextImage;
 
-    CGImageRef sourceImage;
-    cairo_surface_t *sourceImageSurface;
-    CGRect sourceImageRect;
+    /**
+     * If non-null, this is the CGLayer for the surface.
+     */
+    CGLayerRef cgLayer;
 
-    CGShadingRef sourceShading;
-    CGPatternRef sourcePattern;
-
-    CGInterpolationQuality oldInterpolationQuality;
+    cairo_rectangle_int_t extents;
 } cairo_quartz_surface_t;
 
 typedef struct cairo_quartz_image_surface {

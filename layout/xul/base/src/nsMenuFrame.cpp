@@ -82,6 +82,7 @@
 #include "nsISound.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMXULMenuListElement.h"
+#include "mozilla/Services.h"
 
 #define NS_MENU_POPUP_LIST_INDEX 0
 
@@ -271,13 +272,13 @@ nsMenuFrame::Init(nsIContent*      aContent,
 
   //load the display strings for the keyboard accelerators, but only once
   if (gRefCnt++ == 0) {
-    
-    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      mozilla::services::GetStringBundleService();
     nsCOMPtr<nsIStringBundle> bundle;
-    if (NS_SUCCEEDED(rv) && bundleService) {
+    if (bundleService) {
       rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
                                         getter_AddRefs(bundle));
-    }    
+    }
     
     NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/platformKeys.properties could not be loaded");
     nsXPIDLString shiftModifier;
@@ -746,55 +747,9 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
   // lay us out
   nsresult rv = nsBoxFrame::DoLayout(aState);
 
-  // layout the popup. First we need to get it.
   if (mPopupFrame) {
     PRBool sizeToPopup = IsSizedToPopup(mContent, PR_FALSE);
-    // then get its preferred size
-    nsSize prefSize = mPopupFrame->GetPrefSize(aState);
-    nsSize minSize = mPopupFrame->GetMinSize(aState); 
-    nsSize maxSize = mPopupFrame->GetMaxSize(aState);
-
-    prefSize = BoundsCheck(minSize, prefSize, maxSize);
-
-    if (sizeToPopup)
-        prefSize.width = mRect.width;
-
-    // if the pref size changed then set bounds to be the pref size
-    PRBool sizeChanged = (mPopupFrame->PreferredSize() != prefSize);
-    if (sizeChanged) {
-      mPopupFrame->SetPreferredBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
-    }
-
-    // if the menu has just been opened, or its size changed, position
-    // the popup. The flag that the popup checks in the HasOpenChanged
-    // method will get cleared in AdjustView which is called below.
-    if (IsOpen() && (sizeChanged || mPopupFrame->HasOpenChanged()))
-      mPopupFrame->SetPopupPosition(this, PR_FALSE);
-
-    // is the new size too small? Make sure we handle scrollbars correctly
-    nsIBox* child = mPopupFrame->GetChildBox();
-
-    nsRect bounds(mPopupFrame->GetRect());
-
-    nsIScrollableFrame *scrollframe = do_QueryFrame(child);
-    if (scrollframe &&
-        scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
-      if (bounds.height < prefSize.height) {
-        // layout the child
-        mPopupFrame->Layout(aState);
-
-        nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
-        if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
-        {
-          bounds.width += scrollbars.left + scrollbars.right;
-          mPopupFrame->SetBounds(aState, bounds);
-        }
-      }
-    }
-
-    // layout the child
-    mPopupFrame->Layout(aState);
-    mPopupFrame->AdjustView();
+    mPopupFrame->LayoutPopup(aState, this, sizeToPopup);
   }
 
   return rv;
@@ -1101,8 +1056,9 @@ nsMenuFrame::BuildAcceleratorText()
       ToUpperCase(keyCode);
 
       nsresult rv;
-      nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv) && bundleService) {
+      nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
+      if (bundleService) {
         nsCOMPtr<nsIStringBundle> bundle;
         rv = bundleService->CreateBundle("chrome://global/locale/keys.properties",
                                          getter_AddRefs(bundle));

@@ -57,6 +57,7 @@
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
 #include "nsContentUtils.h"
+#include "mozilla/Services.h"
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 static PRBool gReportErrors = PR_TRUE;
@@ -447,7 +448,7 @@ InitStringBundle()
     return PR_TRUE;
 
   nsCOMPtr<nsIStringBundleService> sbs =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    mozilla::services::GetStringBundleService();
   if (!sbs)
     return PR_FALSE;
 

@@ -10,6 +10,9 @@ var gLoads = 0;
 
 // setupTest() is run from 'onload='.
 function setupTest(uri, domain, cookies, loads, headers) {
+  ok(true, "setupTest uri: " + uri + " domain: " + domain + " cookies: " + cookies +
+           " loads: " + loads + " headers: " + headers);
+
   SimpleTest.waitForExplicitFinish();
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -53,6 +56,8 @@ function finishTest()
 function obs () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+  ok(true, "adding observer");
+
   this.window = window;
   this.os = Components.classes["@mozilla.org/observer-service;1"]
                       .getService(Components.interfaces.nsIObserverService);
@@ -65,12 +70,28 @@ obs.prototype = {
     this.window.netscape.security
         .PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+    ok(true, "theSubject " + theSubject);
+    ok(true, "theTopic " + theTopic);
+    ok(true, "theData " + theData);
+
     var channel = theSubject.QueryInterface(
                     this.window.Components.interfaces.nsIHttpChannel);
+    ok(true, "channel " + channel);
+    try {
+      ok(true, "channel.URI " + channel.URI);
+      ok(true, "channel.URI.spec " + channel.URI.spec);
+      channel.visitRequestHeaders({
+        visitHeader: function(aHeader, aValue) {
+          ok(true, aHeader + ": " + aValue);
+        }});
+    } catch (err) {
+      ok(false, "catch error " + err);
+    }
 
     // Ignore notifications we don't care about (like favicons)
     if (channel.URI.spec.indexOf(
           "http://example.org/tests/extensions/cookie/test/") == -1) {
+      ok(true, "ignoring this one");
       return;
     }
 
@@ -83,6 +104,8 @@ obs.prototype = {
   {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+    ok(true, "removing observer");
+
     this.os.removeObserver(this, "http-on-modify-request");
     this.os = null;
     this.window = null;
@@ -93,8 +116,16 @@ obs.prototype = {
 // Count and check loads.
 function messageReceiver(evt)
 {
-  is(evt.data, "f_lf_i msg data", "message data received from popup");
-  if (evt.data != "f_lf_i msg data") {
+  ok(evt.data == "f_lf_i msg data img" || evt.data == "f_lf_i msg data page",
+     "message data received from popup");
+  if (evt.data == "f_lf_i msg data img") {
+    ok(true, "message data received from popup for image");
+  }
+  if (evt.data == "f_lf_i msg data page") {
+    ok(true, "message data received from popup for page");
+  }
+  if (evt.data != "f_lf_i msg data img" && evt.data != "f_lf_i msg data page") {
+    ok(true, "got this message but don't know what it is " + evt.data);
     gPopup.close();
     window.removeEventListener("message", messageReceiver, false);
 
@@ -124,8 +155,14 @@ function runTest() {
   var cs = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager);
   var count = 0;
-  for(var list = cs.enumerator; list.hasMoreElements(); list.getNext())
+  var list = cs.enumerator;
+  while (list.hasMoreElements()) {
+    var cookie = list.getNext().QueryInterface(Components.interfaces.nsICookie);
+    ok(true, "cookie: " + cookie);
+    ok(true, "cookie host " + cookie.host + " path " + cookie.path + " name " + cookie.name +
+       " value " + cookie.value + " isSecure " + cookie.isSecure + " expires " + cookie.expires);
     ++count;
+  }
   is(count, gExpectedCookies, "total number of cookies");
   cs.removeAll();
 

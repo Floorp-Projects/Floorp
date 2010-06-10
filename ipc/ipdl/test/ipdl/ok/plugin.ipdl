@@ -1,0 +1,7 @@
+rpc protocol plugin {
+child:
+    __delete__();
+
+state DEAD:
+    send __delete__;
+};

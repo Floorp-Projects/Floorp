@@ -153,14 +153,6 @@ public:
                           nsStyleChangeList* aChangeList,
                           nsChangeHint aMinChange);
 
-  // Determine whether an attribute affects style
-  // If aAttrHasChanged is false, the attribute's value is about to
-  // change. If it's true, it has already changed.
-  NS_HIDDEN_(nsRestyleHint) HasAttributeDependentStyle(nsIContent *aContent,
-                                                       nsIAtom *aAttribute,
-                                                       PRInt32 aModType,
-                                                       PRBool aAttrHasChanged);
-
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.
    * aState is the document state storage object onto which each frame

@@ -48,7 +48,7 @@
 #include "nsICacheSession.h"
 #include "nsICachingChannel.h"
 #include "nsIContent.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"

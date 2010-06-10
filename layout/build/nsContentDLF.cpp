@@ -62,6 +62,8 @@
 #include "nsIParser.h"
 #include "nsMimeTypes.h"
 
+#include "mozilla/FunctionTimer.h"
+
 // plugins
 #include "nsIPluginHost.h"
 static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
@@ -164,6 +166,16 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
+#ifdef NS_FUNCTION_TIMER
+  nsCAutoString channelURL__("N/A");
+  nsCOMPtr<nsIURI> url__;
+  if (aChannel && NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(url__)))) {
+    url__->GetSpec(channelURL__);
+  }
+  NS_TIME_FUNCTION_FMT("%s (line %d) (url: %s)", MOZ_FUNCTION_NAME,
+                       __LINE__, channelURL__.get());
+#endif
+
   // Declare "type" here.  This is because although the variable itself only
   // needs limited scope, we need to use the raw string memory -- as returned
   // by "type.get()" farther down in the function.
@@ -310,6 +322,8 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                         const char *aCommand,
                                         nsIContentViewer** aDocViewerResult)
 {
+  NS_TIME_FUNCTION;
+
   nsresult rv = NS_ERROR_FAILURE;  
 
   do {
@@ -332,6 +346,8 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
                                   nsIPrincipal* aPrincipal,
                                   nsIDocument **aDocument)
 {
+  NS_TIME_FUNCTION;
+
   *aDocument = nsnull;
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -406,6 +422,8 @@ nsContentDLF::CreateDocument(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
+  NS_TIME_FUNCTION;
+
   nsresult rv = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURI> aURL;
@@ -462,6 +480,8 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
                                 nsIStreamListener** aDocListener,
                                 nsIContentViewer** aDocViewer)
 {
+  NS_TIME_FUNCTION;
+
   nsresult rv;
   nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXULDocumentCID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -560,6 +580,8 @@ nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
                                         const char *aType,
                                         const nsModuleComponentInfo* aInfo)
 {
+  NS_TIME_FUNCTION;
+
   nsresult rv;
 
   nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
@@ -585,6 +607,8 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
                                           const char* aRegistryLocation,
                                           const nsModuleComponentInfo* aInfo)
 {
+  NS_TIME_FUNCTION;
+
   nsresult rv;
   nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;

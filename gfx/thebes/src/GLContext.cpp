@@ -44,14 +44,20 @@
 #include "prlink.h"
 
 #include "GLContext.h"
+#include "GLContextProvider.h"
 
 namespace mozilla {
 namespace gl {
 
+// define this here since it's global to GLContextProvider, not any
+// specific implementation
+typedef GLContextProvider::ContextFormat ContextFormat;
+const ContextFormat ContextFormat::BasicRGBA32Format(ContextFormat::BasicRGBA32);
+
 #define MAX_SYMBOL_LENGTH 128
 #define MAX_SYMBOL_NAMES 5
 
-bool
+PRBool
 LibrarySymbolLoader::OpenLibrary(const char *library)
 {
     PRLibSpec lspec;
@@ -60,19 +66,27 @@ LibrarySymbolLoader::OpenLibrary(const char *library)
 
     mLibrary = PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
     if (!mLibrary)
-        return false;
+        return PR_FALSE;
 
-    return true;
+    return PR_TRUE;
+}
+
+PRBool
+LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, PRBool tryplatform, const char *prefix)
+{
+    return LoadSymbols(mLibrary, firstStruct, tryplatform ? mLookupFunc : nsnull, prefix);
 }
 
 PRFuncPtr
-LibrarySymbolLoader::LookupSymbol(const char *sym, bool tryplatform)
+LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
+				  const char *sym,
+				  PlatformLookupFunction lookupFunction)
 {
     PRFuncPtr res = 0;
 
     // try finding it in the library directly, if we have one
-    if (mLibrary) {
-        res = PR_FindFunctionSymbol(mLibrary, sym);
+    if (lib) {
+        res = PR_FindFunctionSymbol(lib, sym);
     }
 
     // try finding it in the process
@@ -82,15 +96,18 @@ LibrarySymbolLoader::LookupSymbol(const char *sym, bool tryplatform)
     }
 
     // no? then try looking it up via the lookup symbol
-    if (!res && tryplatform && mLookupFunc) {
-        res = mLookupFunc (sym);
+    if (!res && lookupFunction) {
+        res = lookupFunction(sym);
     }
 
     return res;
 }
 
 PRBool
-LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, bool tryplatform, const char *prefix)
+LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
+				 SymLoadStruct *firstStruct,
+				 PlatformLookupFunction lookupFunction,
+				 const char *prefix)
 {
     char sbuf[MAX_SYMBOL_LENGTH * 2];
 
@@ -109,7 +126,7 @@ LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, bool tryplatform, c
                 s = sbuf;
             }
 
-            PRFuncPtr p = LookupSymbol(s, tryplatform);
+            PRFuncPtr p = LookupSymbol(lib, s, lookupFunction);
             if (p) {
                 *ss->symPointer = p;
                 break;
@@ -118,13 +135,13 @@ LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, bool tryplatform, c
 
         if (*ss->symPointer == 0) {
             fprintf (stderr, "Can't find symbol '%s'\n", ss->symNames[0]);
-            return false;
+            return PR_FALSE;
         }
 
         ss++;
     }
 
-    return true;
+    return PR_TRUE;
 }
 
 /*

@@ -53,6 +53,8 @@
 #include "jsvector.h"
 #include "jsworkers.h"
 
+extern size_t gMaxStackSize;
+
 /*
  * JavaScript shell workers.
  *
@@ -673,14 +675,13 @@ class Worker : public WorkerParent
     static JSBool jsResolveGlobal(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                                   JSObject **objp)
     {
-        if ((flags & JSRESOLVE_ASSIGNING) == 0) {
-            JSBool resolved;
+        JSBool resolved;
 
-            if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-                return false;
-            if (resolved)
-                *objp = obj;
-        }
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+            return false;
+        if (resolved)
+            *objp = obj;
+
         return true;
     }
 
@@ -1078,7 +1079,7 @@ Worker::processOneEvent()
     }
 
     JS_SetContextThread(context);
-    JS_SetThreadStackLimit(context, 0);
+    JS_SetNativeStackQuota(context, gMaxStackSize);
 
     Event::Result result;
     {

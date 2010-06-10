@@ -152,6 +152,7 @@ typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 typedef struct JSSecurityCallbacks JSSecurityCallbacks;
 typedef struct JSONParser        JSONParser;
+typedef struct JSCompartment     JSCompartment;
 
 /*
  * JavaScript engine unboxed value representation
@@ -371,7 +372,7 @@ JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
 }
 
 static JS_ALWAYS_INLINE jsval_layout
-PRIVATE_TO_JSVAL_IMPL(void *ptr)
+PRIVATE_PTR_TO_JSVAL_IMPL(void *ptr)
 {
     jsval_layout l;
     JS_ASSERT(((uint32)ptr & 1) == 0);
@@ -381,7 +382,7 @@ PRIVATE_TO_JSVAL_IMPL(void *ptr)
 }
 
 static JS_ALWAYS_INLINE void *
-JSVAL_TO_PRIVATE_IMPL(jsval_layout l)
+JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 {
     return l.s.payload.ptr;
 }
@@ -508,16 +509,16 @@ JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
 }
 
 static JS_ALWAYS_INLINE jsval_layout
-PRIVATE_TO_JSVAL_IMPL(void *ptr)
+PRIVATE_PTR_TO_JSVAL_IMPL(void *ptr)
 {
     JS_ASSERT(((uint32)(size_t)ptr & 1) == 0);
     jsval_layout l;
-    l.asBits = 0x8000000000000000LL | ((size_t)ptr >> 1);
+    l.asBits = (size_t)ptr >> 1;
     return l;
 }
 
 static JS_ALWAYS_INLINE void *
-JSVAL_TO_PRIVATE_IMPL(jsval_layout l)
+JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 {
     return (void *)(l.asBits << 1);
 }
@@ -597,17 +598,38 @@ JSVAL_TRACE_KIND_IMPL(jsval_layout l)
     return (uint32)(l.s.u.mask32 == JSVAL_MASK32_STRING);
 }
 
+static JS_ALWAYS_INLINE jsval_layout
+PRIVATE_UINT32_TO_JSVAL_IMPL(uint32 ui)
+{
+    jsval_layout l;
+    l.s.u.mask32 = 0;
+    l.s.payload.u32 = ui;
+    return l;
+}
+
+static JS_ALWAYS_INLINE uint32
+JSVAL_TO_PRIVATE_UINT32_IMPL(jsval_layout l)
+{
+    return l.s.payload.u32;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(jsval_layout l)
+{
+    return JSVAL_IS_DOUBLE_IMPL(l);
+}
+
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
 /*
- * Add, delete, get or set a property named by id in obj.  Note the jsval id
+ * Add, delete, get or set a property named by id in obj.  Note the jsid id
  * type -- id may be a string (Unicode property identifier) or an int (element
  * index).  The *vp out parameter, on success, is the new property value after
  * an add, get, or set.  After a successful delete, *vp is JSVAL_FALSE iff
  * obj[id] can't be deleted (because it's permanent).
  */
 typedef JSBool
-(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -660,7 +682,7 @@ typedef JSBool
  * NB: JSNewResolveOp provides a cheaper way to resolve lazy properties.
  */
 typedef JSBool
-(* JSResolveOp)(JSContext *cx, JSObject *obj, jsval id);
+(* JSResolveOp)(JSContext *cx, JSObject *obj, jsid id);
 
 /*
  * Like JSResolveOp, but flags provide contextual information as follows:
@@ -692,7 +714,7 @@ typedef JSBool
  * *objp without a new JSClass flag.
  */
 typedef JSBool
-(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp);
 
 /*
@@ -759,7 +781,7 @@ typedef JSObjectOps *
  * specialize access checks.
  */
 typedef JSBool
-(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                     jsval *vp);
 
 /*
@@ -823,7 +845,7 @@ extern JSMarkOp js_WrongTypeForClassTracer;
 #endif
 
 /*
- * Tracer callback, called for each traceable thing directly refrenced by a
+ * Tracer callback, called for each traceable thing directly referenced by a
  * particular object or runtime structure. It is the callback responsibility
  * to ensure the traversal of the full object graph via calling eventually
  * JS_TraceChildren on the passed thing. In this case the callback must be
@@ -1048,7 +1070,7 @@ typedef JSBool
 typedef JSBool
 (* FastNative)(JSContext *cx, uintN argc, Value *vp);
 typedef JSBool
-(* PropertyOp)(JSContext *cx, JSObject *obj, jsval id, Value *vp);
+(* PropertyOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 typedef JSBool
 (* ConvertOp)(JSContext *cx, JSObject *obj, JSType type, Value *vp);
 typedef JSBool
@@ -1057,7 +1079,7 @@ typedef JSBool
 typedef JSBool
 (* HasInstanceOp)(JSContext *cx, JSObject *obj, Value v, JSBool *bp);
 typedef JSBool
-(* CheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+(* CheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                   Value *vp);
 typedef JSObjectOps *
 (* GetObjectOps)(JSContext *cx, Class *clasp);

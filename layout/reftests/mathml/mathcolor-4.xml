@@ -1,0 +1,7 @@
+<!-- test mathcolor on a non-presentation element -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <semantics mathcolor="green">
+    <mtext>□■□■□■□</mtext>
+  </semantics>
+</math>
+

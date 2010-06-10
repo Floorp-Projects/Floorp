@@ -538,6 +538,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   }
   if (mWindow) {
     mWindow->SetClientData(0); // nsWebShellWindow hackery
+    mWindow->Destroy();
     mWindow = nsnull;
   }
 

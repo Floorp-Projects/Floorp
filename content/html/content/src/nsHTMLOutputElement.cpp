@@ -37,7 +37,7 @@
 
 #include "nsIDOMHTMLOutputElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIFormSubmission.h"
+#include "nsFormSubmission.h"
 #include "nsDOMSettableTokenList.h"
 #include "nsStubMutationObserver.h"
 
@@ -66,7 +66,7 @@ public:
   NS_DECL_NSIDOMHTMLOUTPUTELEMENT
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_OUTPUT; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_OUTPUT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -81,21 +81,10 @@ public:
   void DescendantsChanged();
 
   // nsIMutationObserver
-  void CharacterDataChanged(nsIDocument* aDocument,
-                            nsIContent* aContent,
-                            CharacterDataChangeInfo* aInfo);
-  void ContentAppended     (nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            PRInt32 aNewIndexInContainer);
-  void ContentInserted     (nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer);
-  void ContentRemoved      (nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer);
-
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLOutputElement,
                                                      nsGenericHTMLFormElement)
@@ -255,6 +244,7 @@ void nsHTMLOutputElement::CharacterDataChanged(nsIDocument* aDocument,
 
 void nsHTMLOutputElement::ContentAppended(nsIDocument* aDocument,
                                           nsIContent* aContainer,
+                                          nsIContent* aFirstNewContent,
                                           PRInt32 aNewIndexInContainer)
 {
   DescendantsChanged();

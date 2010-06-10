@@ -768,16 +768,18 @@ PRUint32 imgFrame::GetImageBytesPerRow() const
 {
   if (mImageSurface)
     return mImageSurface->Stride();
-  else
+
+  if (mPaletteDepth)
     return mSize.width;
+
+  NS_ERROR("GetImageBytesPerRow called with mImageSurface == null and mPaletteDepth == 0");
+
+  return 0;
 }
 
 PRUint32 imgFrame::GetImageDataLength() const
 {
-  if (mImageSurface)
-    return mImageSurface->Stride() * mSize.height;
-  else
-    return mSize.width * mSize.height;
+  return GetImageBytesPerRow() * mSize.height;
 }
 
 void imgFrame::GetImageData(PRUint8 **aData, PRUint32 *length) const
@@ -979,4 +981,42 @@ gfxContext::GraphicsOperator imgFrame::OptimalFillOperator()
 #ifdef XP_WIN
   }
 #endif
+}
+
+PRUint32 imgFrame::EstimateMemoryUsed() const
+{
+  PRUint32 size = 0;
+
+  if (mSinglePixel) {
+    size += sizeof(gfxRGBA);
+  }
+
+  if (mPalettedImageData) {
+    size += GetImageDataLength() + PaletteDataLength();
+  }
+
+#ifdef USE_WIN_SURFACE
+  if (mWinSurface) {
+    size += mWinSurface->KnownMemoryUsed();
+  } else
+#endif
+#ifdef XP_MACOSX
+  if (mQuartzSurface) {
+    size += mSize.width * mSize.height * 4;
+  } else
+#endif
+  if (mImageSurface) {
+    size += mImageSurface->KnownMemoryUsed();
+  }
+
+  if (mOptSurface) {
+    size += mOptSurface->KnownMemoryUsed();
+  }
+
+  // fall back to pessimistic/approximate size
+  if (size == 0) {
+    size = mSize.width * mSize.height * 4;
+  }
+
+  return size;
 }

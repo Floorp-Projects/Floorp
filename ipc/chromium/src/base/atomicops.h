@@ -133,7 +133,7 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 #elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM_FAMILY)
 #include "base/atomicops_internals_arm_gcc.h"
 #else
-#error "Atomic operations are not supported on your platform"
+#include "base/atomicops_internals_mutex.h"
 #endif
 
 #endif  // BASE_ATOMICOPS_H_

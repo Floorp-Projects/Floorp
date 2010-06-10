@@ -118,7 +118,7 @@
 #include "gfxContext.h"
 #include "gfxTextRunWordCache.h"
 #include "gfxImageSurface.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -3531,10 +3531,8 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     // advantage of the propTable's cache and simplify the assertion below
     void* embeddingLevel = propTable->Get(aPrevInFlow, EmbeddingLevelProperty());
     void* baseLevel = propTable->Get(aPrevInFlow, BaseLevelProperty());
-    void* charType = propTable->Get(aPrevInFlow, CharTypeProperty());
     propTable->Set(this, EmbeddingLevelProperty(), embeddingLevel);
     propTable->Set(this, BaseLevelProperty(), baseLevel);
-    propTable->Set(this, CharTypeProperty(), charType);
 
     if (nextContinuation) {
       SetNextContinuation(nextContinuation);
@@ -3544,8 +3542,7 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
              nextContinuation->GetContentOffset() < mContentOffset) {
         NS_ASSERTION(
           embeddingLevel == propTable->Get(nextContinuation, EmbeddingLevelProperty()) &&
-          baseLevel == propTable->Get(nextContinuation, BaseLevelProperty()) &&
-          charType == propTable->Get(nextContinuation, CharTypeProperty()),
+          baseLevel == propTable->Get(nextContinuation, BaseLevelProperty()),
           "stealing text from different type of BIDI continuation");
         nextContinuation->mContentOffset = mContentOffset;
         nextContinuation = static_cast<nsTextFrame*>(nextContinuation->GetNextContinuation());

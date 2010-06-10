@@ -15,8 +15,7 @@
  *
  * The Original Code is Necko Test Code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -47,6 +46,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
@@ -75,6 +75,7 @@ function test_generateQI_string_names()
     } catch(e) {}
 }
 
+
 function test_defineLazyGetter()
 {
     let accessCount = 0;
@@ -100,6 +101,7 @@ function test_defineLazyGetter()
     do_check_eq(accessCount, 1);
 }
 
+
 function test_defineLazyServiceGetter()
 {
     let obj = { };
@@ -117,6 +119,68 @@ function test_defineLazyServiceGetter()
         do_check_true(prop in obj.service);
 }
 
+
+function test_categoryRegistration()
+{
+  const CATEGORY_NAME = "test-cat";
+  const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
+  const XULAPPINFO_CID = Components.ID("{95d89e3e-a169-41a3-8e56-719978e15b12}");
+
+  // Create a fake app entry for our category registration apps filter.
+  let XULAppInfo = {
+    vendor: "Mozilla",
+    name: "catRegTest",
+    ID: "{adb42a9a-0d19-4849-bf4d-627614ca19be}",
+    version: "1",
+    appBuildID: "2007010101",
+    platformVersion: "",
+    platformBuildID: "2007010101",
+    inSafeMode: false,
+    logConsoleErrors: true,
+    OS: "XPCShell",
+    XPCOMABI: "noarch-spidermonkey",
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIXULAppInfo,
+      Ci.nsIXULRuntime,
+    ])
+  };
+  let XULAppInfoFactory = {
+    createInstance: function (outer, iid) {
+      if (outer != null)
+        throw Cr.NS_ERROR_NO_AGGREGATION;
+      return XULAppInfo.QueryInterface(iid);
+    }
+  };
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(
+    XULAPPINFO_CID,
+    "XULAppInfo",
+    XULAPPINFO_CONTRACTID,
+    XULAppInfoFactory
+  );
+
+  // Load test components.
+  do_load_module("CatRegistrationComponents.js");
+
+  const EXPECTED_ENTRIES = ["CatAppRegisteredComponent",
+                            "CatRegisteredComponent"];
+
+  // Check who is registered in "test-cat" category.
+  let foundEntriesCount = 0;
+  let catMan = Cc["@mozilla.org/categorymanager;1"].
+               getService(Ci.nsICategoryManager);
+  let entries = catMan.enumerateCategory(CATEGORY_NAME);
+  while (entries.hasMoreElements()) {
+    foundEntriesCount++;
+    let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+    print("Check the found category entry (" + entry + ") is expected.");  
+    do_check_true(EXPECTED_ENTRIES.indexOf(entry) != -1);
+  }
+  print("Check there are no more or less than expected entries.");
+  do_check_eq(foundEntriesCount, EXPECTED_ENTRIES.length);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -124,6 +188,7 @@ let tests = [
     test_generateQI_string_names,
     test_defineLazyGetter,
     test_defineLazyServiceGetter,
+    test_categoryRegistration,
 ];
 
 function run_test()

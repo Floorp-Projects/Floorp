@@ -279,20 +279,17 @@ nsXULPopupManager::GetFrameOfTypeForContent(nsIContent* aContent,
                                             nsIAtom* aFrameType,
                                             PRBool aShouldFlush)
 {
-  nsIDocument *document = aContent->GetCurrentDoc();
-  if (document) {
-    nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
-    if (presShell) {
-      if (aShouldFlush)
+  if (aShouldFlush) {
+    nsIDocument *document = aContent->GetCurrentDoc();
+    if (document) {
+      nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
+      if (presShell)
         presShell->FlushPendingNotifications(Flush_Frames);
-
-      nsIFrame* frame = aContent->GetPrimaryFrame();
-      if (frame && frame->GetType() == aFrameType)
-        return frame;
     }
   }
 
-  return nsnull;
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  return (frame && frame->GetType() == aFrameType) ? frame : nsnull;
 }
 
 nsMenuFrame*

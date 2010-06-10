@@ -147,7 +147,7 @@ actual = [obj.__lookupSetter__(cnName), obj.__lookupGetter__(cnName)];
 expect = [cnNameSetter, cnNameGetter];
 addThis();
 
-status = 'In SECTION3 of test; looking up non-existent getter/setter';
+status = 'In SECTION3 of test; looking up nonexistent getter/setter';
 actual = [obj.__lookupSetter__(cnColor), obj.__lookupGetter__(cnColor)];
 expect = [undefined, undefined];
 addThis();

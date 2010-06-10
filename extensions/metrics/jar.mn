@@ -1,5 +1,5 @@
 metrics.jar:
-% content metrics %content/ xpcnativewrappers=no
+% content metrics %content/
 % skin    metrics classic/1.0 %skin/
 % locale  metrics en-US %locale/en-US/
   content/prefs.xul               (content/prefs.xul)

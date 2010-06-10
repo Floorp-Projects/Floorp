@@ -49,10 +49,10 @@
  *  The solution used here is to track the number of buffers in use and
  *  to pause the device when the count falls below a threshold.  Writing
  *  a new buffer to the device causes playback to resume automatically.
- *  To support this scheme, the code uses 2 event semaphores to pass
- *  buffer counts between its two threads (the app's decode thread and
- *  DART's event thread).  It also has the event thread do as little as
- *  possible to ensure it's not busy when a buffer-free event occurs.
+ *  To support this scheme, the code uses atomic operations on 2 counters
+ *  to pass buffer counts between its two threads (the app's decode thread
+ *  and DART's event thread).  It also has the event thread do as little
+ *  as possible to ensure it's not busy when a buffer-free event occurs.
  *
  */
 /*****************************************************************************/
@@ -67,6 +67,7 @@
 #define INCL_MCIOS2
 #include <os2.h>
 #include <os2me.h>
+#include <386/builtin.h>
 
 /*****************************************************************************/
 
@@ -74,29 +75,24 @@
  * if other than 16-bit samples are ever supported */
 #define SAOS2_SAMPLE_SIZE   2
 
-/* the number of buffers to allocate - the ogg decoder typically
- * writes 8k at a time, so this works out to roughly 1/2 second */
-#define SAOS2_BUF_CNT       11
+/* the number of buffers to allocate;  each buffer requires
+ * 64kb of linear address space in the low-mem private arena;
+ * actual physical memory used depends on each buffer's size */
+#define SAOS2_BUF_CNT       40
 
-/* this could be as large as 65535 but making it smaller helps
- * avoid having the DART event thread think it's running out of
- * buffers if the decoder sends larger chunks of data less often */
-#define SAOS2_RAW_BUFSIZE   16384
+/* the minimum number of milliseconds worth of data required before
+ * a buffer is written to the device - the actual number of ms per
+ * write will usually be greater;  the size of each buffer is based
+ * on this figure and the stream's rate & number of channels */
+#define SAOS2_MS_PER_WRITE  40
 
-/* playback states */
-#define SAOS2_INIT          0
-#define SAOS2_RECOVER       1
-#define SAOS2_PLAY          2
-#define SAOS2_EXIT          3
+/* if the number of buffers in use is less than this value,
+ * os2_mixer_event() will pause the device to prevent an underrun */
+#define SAOS2_UNDERRUN_CNT  2
 
-/* an indefinite wait invites a hung thread */
-#define SAOS2_SEM_WAIT      5000
-
-/* the only 2 return codes we care about */
-#ifndef INCL_DOSERRORS
-#define ERROR_ALREADY_POSTED    299
-#define ERROR_ALREADY_RESET     300
-#endif
+/* wait 5 seconds for a buffer to become free -
+ * an indefinite wait invites a hung thread */
+#define SAOS2_WAIT          5000
 
 /*****************************************************************************/
 /*  Debug  */
@@ -125,6 +121,7 @@ struct sa_stream {
   sa_pcm_format_t   format;
   uint32_t          rate;
   uint32_t          nchannels;
+  uint32_t          bps;
 
   /* device info */
   uint16_t          hwDeviceID;
@@ -134,22 +131,22 @@ struct sa_stream {
   /* buffer allocations */
   int32_t           bufCnt;
   size_t            bufSize;
+  size_t            bufMin;
   PMCI_MIX_BUFFER   bufList;
 
   /* buffer usage tracking */
-  HEV               freeSem;
+  volatile uint32_t freeNew;
   int32_t           freeCnt;
   int32_t           freeNdx;
-  int32_t           readyCnt;
-  int32_t           readyNdx;
-  HEV               usedSem;
-  volatile int32_t  usedCnt;
+  volatile uint32_t usedNew;
+  int32_t           usedCnt;
+  int32_t           usedMin;
 
   /* miscellaneous */
-  volatile int32_t  state;
+  volatile uint32_t playing;
+  volatile uint32_t writeTime;
+  volatile uint32_t writeNew;
   int64_t           writePos;
-  /* workaround for Bug 495352 */
-  uint32_t          zeroCnt;
 };
 
 /*****************************************************************************/
@@ -157,16 +154,12 @@ struct sa_stream {
 
 static int32_t  os2_mixer_event(uint32_t ulStatus, PMCI_MIX_BUFFER pBuffer,
                                 uint32_t ulFlags);
-static int      os2_write_to_device(sa_stream_t *s);
 static void     os2_stop_device(uint16_t hwDeviceID);
 static int      os2_pause_device(uint16_t hwDeviceID, uint32_t release);
 static int      os2_get_free_count(sa_stream_t *s, int32_t count);
 
 /*****************************************************************************/
 /*  Mozilla-specific Additions  */
-
-/* reset the decode thread's priority */
-static void     os2_set_priority(void);
 
 /* load mdm.dll on demand */
 static int      os2_load_mdm(void);
@@ -223,28 +216,28 @@ do {
   memset(sTemp, 0, size);
   sTemp->bufList = (PMCI_MIX_BUFFER)&sTemp[1];
 
-  /* set the number of buffers;  round the buffer
-   * size down to the nearest multiple of a frame; */
-  sTemp->bufCnt  = SAOS2_BUF_CNT;
-  sTemp->bufSize = SAOS2_RAW_BUFSIZE - 
-                   (SAOS2_RAW_BUFSIZE % (SAOS2_SAMPLE_SIZE * nchannels));
-
-  /* create event semaphores to signal free buffers */
-  rc = DosCreateEventSem(0, &sTemp->freeSem, 0, FALSE);
-  if (!rc)
-    rc = DosCreateEventSem(0, &sTemp->usedSem, 0, FALSE);
-  if (rc) {
-    status = os2_error(SA_ERROR_SYSTEM, "sa_stream_create_pcm",
-                       "DosCreateEventSem - rc=", rc);
-    break;
-  }
-
   /* fill in the miscellanea */
   sTemp->client_name = client_name;
   sTemp->mode        = mode;
   sTemp->format      = format;
   sTemp->rate        = rate;
   sTemp->nchannels   = nchannels;
+  sTemp->bps         = rate * nchannels * SAOS2_SAMPLE_SIZE;
+
+  /* each buffer requires 64k of linear address space;
+   * the actual physical memory used is much less */
+  sTemp->bufCnt  = SAOS2_BUF_CNT;
+
+  /* a buffer must contain at least 'bufmin' bytes before it's written
+   * to the device - this equates to SAOS2_MS_PER_WRITE worth of data */
+  sTemp->bufMin  = (sTemp->bps * SAOS2_MS_PER_WRITE) / 1000;
+
+  /* 'bufSize' is 150% of 'bufmin' rounded up to the nearest page
+   * boundary, then rounded down to a multiple of the frame size;
+   * this ensures that all data delivered to sa_stream_write() will
+   * fit in a single buffer & that all committed memory can be used */
+  sTemp->bufSize = (((3 * sTemp->bufMin) / 2) + 0xfff) & ~0xfff;
+  sTemp->bufSize -= sTemp->bufSize % (SAOS2_SAMPLE_SIZE * nchannels);
 
   *s = sTemp;
 
@@ -252,10 +245,6 @@ do {
 
   /* on error, free any allocations */
   if (status != SA_SUCCESS && sTemp) {
-    if (sTemp->freeSem)
-      DosCloseEventSem(sTemp->freeSem);
-    if (sTemp->usedSem)
-      DosCloseEventSem(sTemp->usedSem);
     if (sTemp)
       DosFreeMem(sTemp);
   }
@@ -281,9 +270,6 @@ int     sa_stream_open(sa_stream_t *s)
     return os2_error(SA_ERROR_NO_INIT, "sa_stream_open", "s is null", 0);
 
 do {
-  /* set this thread's priority to 2-08 */
-  os2_set_priority();
-
   /* s->bufCnt will be restored after successfully allocating buffers */
   bufCntRequested = s->bufCnt;
   s->bufCnt = 0;
@@ -348,6 +334,7 @@ do {
   s->freeCnt = BufferParms.ulNumBuffers;
 
   /* sa_stream_write() & os2_mixer_event() require these initializations */
+  s->usedMin = SAOS2_UNDERRUN_CNT;
   for (ctr = 0; ctr < s->bufCnt; ctr++) {
     s->bufList[ctr].ulStructLength = sizeof(MCI_MIX_BUFFER);
     s->bufList[ctr].ulBufferLength = 0;
@@ -377,7 +364,18 @@ int     sa_stream_destroy(sa_stream_t *s)
   if (s->hwDeviceID) {
 
     /* prevent os2_mixer_event() from reacting to a buffer under-run */
-    s->state = SAOS2_EXIT;
+    s->bufMin = 0;
+    s->playing = FALSE;
+
+    /* If another instance has already acquired the device the
+     * MCI commands below will fail, so re-acquire it temporarily.
+     * MCI_CLOSE will release the device to the previous owner. */
+    rc = _mciSendCommand(s->hwDeviceID, MCI_ACQUIREDEVICE,
+                         MCI_WAIT,
+                         (void*)&GenericParms, 0);
+    if (LOUSHORT(rc))
+      os2_error(0, "sa_stream_destroy",
+                "MCI_ACQUIREDEVICE - rc=", LOUSHORT(rc));
 
     /* stop the device (which may not actually be playing) */
     os2_stop_device(s->hwDeviceID);
@@ -407,10 +405,6 @@ int     sa_stream_destroy(sa_stream_t *s)
   }
 
   /* free other resources we allocated */
-  if (s->freeSem)
-    DosCloseEventSem(s->freeSem);
-  if (s->usedSem)
-    DosCloseEventSem(s->usedSem);
   DosFreeMem(s);
 
   return status;
@@ -432,22 +426,14 @@ int     sa_stream_write(sa_stream_t * s, const void * data, size_t nbytes)
     return os2_error(SA_ERROR_INVALID, "sa_stream_write", "data is null", 0);
 
   /* exit if no data */
-  /* Bug 495352 - this function may get called repeatedly with no data;
-   * as a workaround to prevent as many as 30,000 such calls between valid
-   * writes (and 100% CPU usage), give up the remainder of the current
-   * time-slice every time 16 consecutive zero-byte writes are detected */
-  if (!nbytes) {
-    s->zeroCnt++;
-    if (!(s->zeroCnt & 0x0f)) {
-      s->zeroCnt = 0;
-      DosSleep(1);
-    }
+  if (!nbytes)
     return SA_SUCCESS;
-  }
 
   /* This should only loop on the last write before sa_stream_drain()
    * is called;  at other times, 'nbytes' won't exceed 'bufSize'. */
   while (nbytes) {
+    size_t  offs;
+    size_t  left;
 
     /* get the count of free buffers, wait until at least one
      * is available (in practice, this should never block) */
@@ -456,18 +442,34 @@ int     sa_stream_write(sa_stream_t * s, const void * data, size_t nbytes)
 
     /* copy as much as will fit into the buffer */
     pHW = &(s->bufList[s->freeNdx]);
-    cnt = (nbytes > s->bufSize) ? s->bufSize : nbytes;
-    memcpy(pHW->pBuffer, (char*)data, cnt);
-    pHW->ulBufferLength = cnt;
+
+    offs = pHW->ulBufferLength;
+    left = s->bufSize - offs;
+    cnt = (nbytes > left) ? left : nbytes;
+    memcpy(&((char*)pHW->pBuffer)[offs], (char*)data, cnt);
+
+    pHW->ulBufferLength += cnt;
     nbytes -= cnt;
     data = (char*)data + cnt;
 
-    /* adjust cnts & indices, then send the buffer to the device */
+    /* don't dispatch the buffer until it has bufMin bytes */
+    if (pHW->ulBufferLength < s->bufMin)
+      continue;
+
+    /* write the buffer to the device */
+    rc = s->hwWriteProc(s->hwMixHandle, pHW, 1);
+    if (LOUSHORT(rc)) {
+      pHW->ulBufferLength = 0;
+      return os2_error(SA_ERROR_SYSTEM, "sa_stream_write",
+                       "mixWrite - rc=", LOUSHORT(rc));
+    }
+
+    /* signal the event thread that a new buffer is now in use */
+    __atomic_increment(&s->usedNew);
+    s->playing = TRUE;
+
     s->freeCnt--;
     s->freeNdx = (s->freeNdx + 1) % s->bufCnt;
-    s->readyCnt++;
-    if (os2_write_to_device(s))
-      return SA_ERROR_SYSTEM;
   }
 
   return SA_SUCCESS;
@@ -480,6 +482,8 @@ int     sa_stream_write(sa_stream_t * s, const void * data, size_t nbytes)
 int     sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos)
 {
   uint32_t      rc;
+  uint32_t      then;
+  uint32_t      now;
 
   if (!s || !pos)
     return os2_error(SA_ERROR_NO_INIT, "sa_stream_get_position",
@@ -489,10 +493,24 @@ int     sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *
     return os2_error(SA_ERROR_NOT_SUPPORTED, "sa_stream_get_position",
                      "unsupported postion type=", position);
 
-  /* this is the nbr of bytes that are known to have been played
-   * already; the MCI command to get stream position isn't usable - 
-   * it returns a time value that resets when the stream is paused */
-  *pos = s->writePos;
+  /* Return the count of bytes that are known to have been played
+   * already plus an adjustment for the number that may have been
+   * played since the last mixer event.  Since both 'writePos' and
+   * 'writeTime' are volatile, the loop ensures both are in sync.
+   * Note:  the MCI command to get stream position isn't usable - 
+   * it returns a time value that resets when the stream is paused. */
+
+  do {
+    then = s->writeTime;
+    s->writePos += __atomic_xchg(&s->writeNew, 0);
+    *pos = s->writePos;
+
+    /* adjust if device is playing & there's been at least one write */
+    if (s->playing && s->writePos) {
+      DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &now, sizeof(now));
+      *pos += ((now - then) * s->bps) / 1000;
+    }
+  } while (then != s->writeTime);
 
   return SA_SUCCESS;
 }
@@ -517,12 +535,19 @@ int     sa_stream_resume(sa_stream_t *s)
     return os2_error(SA_ERROR_SYSTEM, "sa_stream_resume",
                      "MCI_ACQUIREDEVICE - rc=", LOUSHORT(rc));
 
+  /* this may produce a spurious error if the device
+   * was just acquired, so report it but ignore it */
   rc = _mciSendCommand(s->hwDeviceID, MCI_RESUME,
                       MCI_WAIT,
                       (void*)&GenericParms, 0);
   if (LOUSHORT(rc))
-    return os2_error(SA_ERROR_SYSTEM, "sa_stream_resume",
-                     "MCI_RESUME - rc=", LOUSHORT(rc));
+    os2_error(SA_ERROR_SYSTEM, "sa_stream_resume",
+              "MCI_RESUME - rc=", LOUSHORT(rc));
+
+  /* reset the last write time so get_position() doesn't over-adjust */
+  DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT,
+                  (void*)&s->writeTime, sizeof(s->writeTime));
+  s->playing = TRUE;
 
   return SA_SUCCESS;
 }
@@ -537,6 +562,7 @@ int     sa_stream_pause(sa_stream_t *s)
     return os2_error(SA_ERROR_NO_INIT, "sa_stream_pause", "s is null", 0);
 
   /* pause & release device */
+  s->playing = FALSE;
   return os2_pause_device(s->hwDeviceID, TRUE);
 }
 
@@ -553,22 +579,25 @@ int     sa_stream_drain(sa_stream_t *s)
     return os2_error(SA_ERROR_NO_INIT, "sa_stream_drain", "s is null", 0);
 
   /* keep os2_mixer_event() from reacting to buffer under-runs */
-  s->state = SAOS2_EXIT;
+  s->usedMin = 0;
+
+  /* perform the smallest possible write to force any
+   * partially-filled buffer to be written to the device */
+  memset(buf, 0, sizeof(buf));
+  s->bufMin = 0;
+  sa_stream_write(s, buf, s->nchannels * SAOS2_SAMPLE_SIZE);
 
   /* DART won't start playing until 2 buffers have been written,
-   * so write a dummy 2nd buffer if any buffers are in use */
-  if (s->freeCnt < SAOS2_BUF_CNT) {
-    memset(buf, 0, sizeof(buf));
+   * so write a dummy 2nd buffer if writePos is still zero */
+  if (!s->writePos)
+    s->writePos += __atomic_xchg(&s->writeNew, 0);
+  if (!s->writePos)
     sa_stream_write(s, buf, s->nchannels * SAOS2_SAMPLE_SIZE);
-  }
-
-  /* write all remaining buffers to the device */
-  if (s->readyCnt)
-    status = os2_write_to_device(s);
 
   /* wait for all buffers to become free */
   if (!status)
     status = os2_get_free_count(s, s->bufCnt);
+  s->playing = FALSE;
 
   /* stop the device so it doesn't misbehave due to an under-run */
   os2_stop_device(s->hwDeviceID);
@@ -593,9 +622,7 @@ int     sa_stream_get_write_size(sa_stream_t *s, size_t *size)
     return SA_ERROR_SYSTEM;
   }
 
-  /* limiting each write to a single buffer
-   * produces smoother results in some cases */
-  *size = s->freeCnt ? s->bufSize : 0;
+  *size = s->freeCnt * s->bufSize;
 
   return SA_SUCCESS;
 }
@@ -675,13 +702,11 @@ int     sa_stream_get_volume_abs(sa_stream_t *s, float *vol)
 static int32_t os2_mixer_event(uint32_t ulStatus, PMCI_MIX_BUFFER pBuffer,
                                uint32_t ulFlags)
 {
-  uint32_t      rc;
-  int32_t       posted;
   sa_stream_t * s;
 
   /* check for errors */
   if (ulFlags & MIX_STREAM_ERROR)
-    rc = os2_error(0, "os2_mixer_event", "MIX_STREAM_ERROR - status=", ulStatus);
+    os2_error(0, "os2_mixer_event", "MIX_STREAM_ERROR - status=", ulStatus);
 
   if (!(ulFlags & MIX_WRITE_COMPLETE))
     return os2_error(TRUE, "os2_mixer_event",
@@ -695,76 +720,30 @@ static int32_t os2_mixer_event(uint32_t ulStatus, PMCI_MIX_BUFFER pBuffer,
   s = (sa_stream_t *)pBuffer->ulUserParm;
 
   /* update the number of buffers that are now in use */
-  rc = DosResetEventSem(s->usedSem, (unsigned long*)&posted);
-  if (rc && rc != ERROR_ALREADY_RESET) {
-    posted = 0;
-    rc = os2_error(rc, "os2_mixer_event", "DosResetEventSem - rc=", rc);
-  }
-  s->usedCnt += posted - 1;
+  s->usedCnt += __atomic_xchg(&s->usedNew, 0);
+  s->usedCnt--;
 
   /* if fewer than 2 buffers are in use, enter recovery mode -
    * if we wait until they're all free, it's often too late; */
-  if (s->usedCnt < 2 && s->state == SAOS2_PLAY) {
-    s->state = SAOS2_RECOVER;
+  if (s->usedCnt < s->usedMin) {
+    s->playing = FALSE;
     os2_pause_device(s->hwDeviceID, FALSE);
-    rc = os2_error(rc, "os2_mixer_event",
-                   "too few buffers in use - recovering", 0);
+    os2_error(0, "os2_mixer_event",
+              "too few buffers in use - recovering", 0);
   }
 
-  /* setting the write position after the buffer has been played yields
-   * far more accurate timing than setting it in sa_stream_write() */
-  s->writePos = s->writePos + (int64_t)pBuffer->ulBufferLength;
+  /* pass the number of newly played bytes to the other thread;
+   * get the time so the other thread can estimate how many
+   * additional bytes have been consumed since this event */
+  __atomic_add(&s->writeNew, pBuffer->ulBufferLength);
   pBuffer->ulBufferLength = 0;
+  DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT,
+                  (void*)&s->writeTime, sizeof(s->writeTime));
 
   /* signal the decode thread that a buffer is available */
-  rc = DosPostEventSem(s->freeSem);
-  if (rc && rc != ERROR_ALREADY_POSTED)
-    rc = os2_error(rc, "os2_mixer_event", "DosPostEventSem - rc=", rc);
+  __atomic_increment(&s->freeNew);
 
   return TRUE;
-}
-
-/*****************************************************************************/
-
-/** write as many buffers as available to the device */
-
-static int  os2_write_to_device(sa_stream_t *s)
-{
-  uint32_t      rc;
-  int32_t       cnt;
-  int32_t       ctr;
-
-  /* this executes twice if bufList wraps, otherwise just once */
-  while (s->readyCnt) {
-
-    /* deal with wrap */
-    cnt = (s->readyNdx + s->readyCnt > s->bufCnt) ?
-          (s->bufCnt - s->readyNdx) : s->readyCnt;
-
-    /* if the write fails, abort */
-    rc = s->hwWriteProc(s->hwMixHandle, &(s->bufList[s->readyNdx]), cnt);
-    if (LOUSHORT(rc))
-      return os2_error(SA_ERROR_SYSTEM, "os2_write_to_device",
-                       "mixWrite - rc=", LOUSHORT(rc));
-
-    /* signal the event thread that 'cnt' buffers are now in use */
-    for (ctr = 0; ctr < cnt; ctr++) {
-      rc = DosPostEventSem(s->usedSem);
-      if (rc && rc != ERROR_ALREADY_POSTED)
-        return os2_error(SA_ERROR_SYSTEM, "os2_write_to_device",
-                         "DosPostEventSem - rc=", rc);
-    }
-
-    /* advance to the next entry */
-    s->readyNdx = (s->readyNdx + cnt) % s->bufCnt;
-    s->readyCnt -= cnt;
-  }
-
-  /* if state is INIT or RECOVER, change to PLAY */
-  if (s->state < SAOS2_PLAY)
-    s->state = SAOS2_PLAY;
-
-  return SA_SUCCESS;
 }
 
 /*****************************************************************************/
@@ -815,23 +794,25 @@ static int  os2_pause_device(uint16_t hwDeviceID, uint32_t release)
 
 static int  os2_get_free_count(sa_stream_t *s, int32_t count)
 {
-  uint32_t      rc;
-  int32_t       posted;
+  uint32_t  timeout = 0;
 
   while (1) {
-    rc = DosResetEventSem(s->freeSem, (unsigned long*)&posted);
-    if (rc && rc != ERROR_ALREADY_RESET)
-      return os2_error(SA_ERROR_SYSTEM, "os2_get_free_count",
-                       "DosResetEventSem - rc=", rc);
+    uint32_t now;
 
-    s->freeCnt += posted;
+    s->freeCnt += __atomic_xchg(&s->freeNew, 0);
     if (s->freeCnt >= count)
       break;
 
-    rc = DosWaitEventSem(s->freeSem, SAOS2_SEM_WAIT);
-    if (rc)
+    /* get the current time in milliseconds */
+    DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &now, sizeof(now));
+    if (!timeout)
+      timeout = now + SAOS2_WAIT;
+
+    if (now > timeout)
       return os2_error(SA_ERROR_SYSTEM, "os2_get_free_count",
-                       "DosWaitEventSem - rc=", rc);
+                       "timed-out waiting for free buffer(s)", 0);
+
+    DosSleep(1);
   }
 
   return SA_SUCCESS;
@@ -857,7 +838,7 @@ static int  os2_error_msg(int rtn, char * func, char * msg, uint32_t err)
 #endif
 
 /*****************************************************************************/
-/*  Mozilla-specific Functions                                               */
+/*  Mozilla-specific Function                                                */
 /*****************************************************************************/
 
 /** load mdm.dll & get the entrypoint for mciSendCommand() */
@@ -885,43 +866,6 @@ static int  os2_load_mdm(void)
   }
 
   return SA_SUCCESS;
-}
-
-/*****************************************************************************/
-
-/** adjust the decode thread's priority */
-
-static void os2_set_priority(void)
-{
-  uint32_t  rc;
-  uint32_t  priority;
-  int32_t   delta;
-  int32_t   newdelta;
-  PTIB      ptib;
-  PPIB      ppib;
-
-#define SAOS2_PRIORITY  8
-
-  DosGetInfoBlocks(&ptib, &ppib);
-  priority = ptib->tib_ptib2->tib2_ulpri;
-  delta = priority & 0xff;
-  priority >>= 8;
-
-  /* if the current priority class is other than "regular" (priority 2),
-   * don't change anything - otherwise, calculate a delta that will set
-   * the priority to SAOS2_PRIORITY */
-  if (priority != PRTYC_REGULAR)
-    newdelta = 0;
-  else
-    newdelta = SAOS2_PRIORITY - delta;
-
-  if (newdelta) {
-    rc = DosSetPriority(PRTYS_THREAD, PRTYC_NOCHANGE, newdelta, 0);
-    if (rc)
-      rc = os2_error(rc, "os2_set_priority", "DosSetPriority - rc=", rc);
-  }
-
-  return;
 }
 
 /*****************************************************************************/

@@ -89,7 +89,7 @@ Cm.nsIComponentRegistrar.registerFactory(NEWSBOXPH_CID,
 try {
 /* ========== 0 ========== */
 var testnum = 0;
-var testdesc = "Initial connection to storage module"
+var testdesc = "Initial connection to storage module";
 
 var storage = Cc["@mozilla.org/login-manager/storage/legacy;1"].
               createInstance(Ci.nsILoginManagerStorage);
@@ -142,6 +142,8 @@ testnum++;
 testdesc = "checking reading of mailnews-like old logins";
 storage = LoginTest.initStorage(INDIR, "signons-403790.txt",
                                OUTDIR, "output-403790.txt");
+// signons-403790.txt has one extra login that is invalid, and hence isn't
+// shown here.
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3,
                                          dummyuser5, dummyuser6]);
 

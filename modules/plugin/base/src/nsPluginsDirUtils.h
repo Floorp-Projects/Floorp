@@ -43,7 +43,7 @@
 #include "prmem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Ouput format from NPP_GetMIMEDescription: "...mime type[;version]:[extension]:[desecription];..."
+// Output format from NPP_GetMIMEDescription: "...mime type[;version]:[extension]:[desecription];..."
 // The ambiguity of mime description could cause the browser fail to parse the MIME types 
 // correctly.
 // E.g. "mime type::desecription;" // correct w/o ext 

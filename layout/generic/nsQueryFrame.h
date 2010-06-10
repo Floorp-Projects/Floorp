@@ -176,6 +176,7 @@ public:
     nsMathMLmtrFrame_id,
     nsMathMLmunderFrame_id,
     nsMathMLmunderoverFrame_id,
+    nsMathMLsemanticsFrame_id,
     nsMathMLTokenFrame_id,
     nsMenuBarFrame_id,
     nsMenuFrame_id,
