@@ -45,7 +45,6 @@
 #include "nsWebBrowser.h"
 
 // Helper Classes
-#include "nsIGenericFactory.h"
 #include "nsStyleCoord.h"
 #include "nsSize.h"
 #include "nsHTMLReflowState.h"

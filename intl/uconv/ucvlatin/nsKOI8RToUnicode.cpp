@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "koi8r.ut"
 };
 
-NS_METHOD
+nsresult
 nsKOI8RToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult) 
 {

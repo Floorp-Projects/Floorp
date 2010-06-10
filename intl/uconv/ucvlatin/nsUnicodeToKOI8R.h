@@ -46,7 +46,7 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-NS_METHOD
+nsresult
 nsUnicodeToKOI8RConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult);
 

@@ -52,7 +52,7 @@
 class nsIRDFDataSource;
 
 // in nsInMemoryDataSource.cpp
-NS_IMETHODIMP
+nsresult
 NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
 
 // in nsRDFXMLDataSource.cpp

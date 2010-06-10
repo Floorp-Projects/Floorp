@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "vps.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToVPSConstructor(nsISupports *aOuter, REFNSIID aIID,
                           void **aResult) 
 {

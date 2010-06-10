@@ -36,8 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -45,7 +44,7 @@
 #include "nsIAccessibleRetrieval.h"
 #include "nscore.h"
 
-static NS_IMETHODIMP
+static nsresult
 NS_ConstructAccessibilityService(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -62,21 +61,26 @@ NS_ConstructAccessibilityService(nsISupports *aOuter, REFNSIID aIID, void **aRes
     return rv;
 }
 
-// The list of components we register
-static const nsModuleComponentInfo components[] = 
-{
-    { "AccessibilityService", 
-      NS_ACCESSIBILITY_SERVICE_CID,
-      "@mozilla.org/accessibilityService;1", 
-      NS_ConstructAccessibilityService
-    },
-    { "AccessibleRetrieval", 
-      NS_ACCESSIBLE_RETRIEVAL_CID,
-      "@mozilla.org/accessibleRetrieval;1", 
-      NS_ConstructAccessibilityService
-    },
+NS_DEFINE_NAMED_CID(NS_ACCESSIBILITY_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_ACCESSIBLE_RETRIEVAL_CID);
+
+static const mozilla::Module::CIDEntry kA11yCIDs[] = {
+    { &kNS_ACCESSIBILITY_SERVICE_CID, false, NULL, NS_ConstructAccessibilityService },
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsAccessibilityModule, components)
+static const mozilla::Module::ContractIDEntry kA11yContracts[] = {
+    { "@mozilla.org/accessibilityService;1", &kNS_ACCESSIBILITY_SERVICE_CID },
+    { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
+    { NULL }
+};
+
+static const mozilla::Module kA11yModule = {
+    mozilla::Module::kVersion,
+    kA11yCIDs,
+    kA11yContracts
+};
+
+NSMODULE_DEFN(nsAccessibilityModule) = &kA11yModule;
 
 

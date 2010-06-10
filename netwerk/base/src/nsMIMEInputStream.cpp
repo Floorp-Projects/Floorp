@@ -280,7 +280,7 @@ NS_IMETHODIMP nsMIMEInputStream::SetEOF(void) {
  * Factory method used by do_CreateInstance
  */
 
-NS_METHOD
+nsresult
 nsMIMEInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
     *result = nsnull;

@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "userdefined.ut"
 };
 
-NS_METHOD
+nsresult
 nsUserDefinedToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                   void **aResult) 
 {

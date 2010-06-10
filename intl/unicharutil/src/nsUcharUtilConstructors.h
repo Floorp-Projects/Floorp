@@ -54,7 +54,7 @@
 // generic factory.
 
 #define UNICHARUTIL_MAKE_CTOR(_name)                                 \
-static NS_IMETHODIMP                                                 \
+static nsresult                                                      \
 CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 {                                                                    \
     if (!aResult) {                                                  \

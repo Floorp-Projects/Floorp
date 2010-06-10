@@ -44,7 +44,7 @@
  * A character set converter from Unicode to ZapfDingbat.
  *
  */
-NS_METHOD
+nsresult
 nsUnicodeToZapfDingbatConstructor(nsISupports *aOuter, REFNSIID aIID,
                                   void **aResult);
 

@@ -55,7 +55,7 @@ static const uScanClassID g_Big5HKSCSScanClassIDs[] =  {
 //----------------------------------------------------------------------
 // Class nsUnicodeToHKSCS [implementation]
 
-NS_METHOD
+nsresult
 nsUnicodeToHKSCSConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult)
 {

@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "viscii.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToVISCIIConstructor(nsISupports *aOuter, REFNSIID aIID,
                              void **aResult) 
 {

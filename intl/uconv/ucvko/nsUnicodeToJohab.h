@@ -44,7 +44,7 @@
  * A character set converter from Unicode to Johab.
  *
  */
-NS_METHOD
+nsresult
 nsUnicodeToJohabConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult);
 

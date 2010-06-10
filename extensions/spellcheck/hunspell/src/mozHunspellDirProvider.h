@@ -37,7 +37,6 @@
 #define mozHunspellDirProvider_h__
 
 #include "nsIDirectoryService.h"
-#include "nsIGenericFactory.h"
 #include "nsISimpleEnumerator.h"
 
 class mozHunspellDirProvider :
@@ -47,15 +46,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
-
-  static NS_METHOD Register(nsIComponentManager* aCompMgr,
-			    nsIFile* aPath, const char *aLoaderStr,
-			    const char *aType,
-			    const nsModuleComponentInfo *aInfo);
-
-  static NS_METHOD Unregister(nsIComponentManager* aCompMgr,
-			      nsIFile* aPath, const char *aLoaderStr,
-			      const nsModuleComponentInfo *aInfo);
 
   static char const *const kContractID;
 
