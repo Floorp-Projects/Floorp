@@ -3,7 +3,7 @@ repository using the update.sh script. The only changes made were
 those applied by update.sh and the addition/upate of Makefile.in files
 for the Mozilla build system.
 
-The svn revision number used was r16911.
+The svn revision number used was r17287.
 
 The int-types.patch address a bug that config_types.h generated from
 Linux platform can't be used on OpenSolaris directly see Mozilla bug
