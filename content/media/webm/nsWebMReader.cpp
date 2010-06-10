@@ -626,12 +626,10 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
     return NS_ERROR_FAILURE;
   }
   if (HasVideo()) {
-    nsAutoPtr<VideoData> video;
     PRBool eof = PR_FALSE;
     PRInt64 startTime = -1;
-    video = nsnull;
     while (HasVideo() && !eof) {
-      while (mVideoQueue.GetSize() == 0 && !eof) {
+      while (mVideoQueue.GetSize() < 2 && !eof) {
         PRBool skip = PR_FALSE;
         eof = !DecodeVideoFrame(skip, 0);
         MonitorAutoExit exitReaderMon(mMonitor);
@@ -640,20 +638,22 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
           return NS_ERROR_FAILURE;
         }
       }
-      if (mVideoQueue.GetSize() == 0) {
+      if (mVideoQueue.GetSize() < 2) {
         break;
       }
-      video = mVideoQueue.PeekFront();
+      nsAutoPtr<VideoData> video(mVideoQueue.PopFront());
+      nsAutoPtr<VideoData> videoNext(mVideoQueue.PeekFront());
       // If the frame end time is less than the seek target, we won't want
       // to display this frame after the seek, so discard it.
-      if (video && video->mTime + 40 < aTarget) {
+      if (video && videoNext && videoNext->mTime < aTarget) {
         if (startTime == -1) {
           startTime = video->mTime;
         }
-        mVideoQueue.PopFront();
         video = nsnull;
+        videoNext.forget();
       } else {
-        video.forget();
+        videoNext.forget();
+        mVideoQueue.PushFront(video.forget());
         break;
       }
     }
