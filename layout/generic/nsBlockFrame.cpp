@@ -398,7 +398,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the rect and state
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%08x]", mState);
+    fprintf(out, " [state=%016llx]", mState);
   }
   nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
   if (f->HasOverflowRect()) {
