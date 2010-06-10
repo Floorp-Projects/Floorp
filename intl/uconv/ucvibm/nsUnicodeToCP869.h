@@ -42,7 +42,7 @@
 /**
  * A character set converter from Unicode to CP869.
  */
-NS_METHOD
+nsresult
 nsUnicodeToCP869Constructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult);
 

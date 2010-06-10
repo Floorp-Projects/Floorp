@@ -37,9 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 
 #ifdef USE_ICON_DECODER
@@ -62,67 +60,50 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 
 #ifdef USE_ICON_DECODER
 static const char gIconMimeType[] = "image/icon";
-
-static NS_METHOD IconDecoderRegisterProc(nsIComponentManager *aCompMgr,
-                                   nsIFile *aPath,
-                                   const char *registryLocation,
-                                   const char *componentType,
-                                   const nsModuleComponentInfo *info) {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  catMan->AddCategoryEntry("Gecko-Content-Viewers", gIconMimeType,
-                           "@mozilla.org/content/document-loader-factory;1",
-                           PR_TRUE, PR_TRUE, nsnull);
-  return NS_OK;
-}
-
-static NS_METHOD IconDecoderUnregisterProc(nsIComponentManager *aCompMgr,
-                                     nsIFile *aPath,
-                                     const char *registryLocation,
-                                     const nsModuleComponentInfo *info) {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gIconMimeType, PR_TRUE);
-  return NS_OK;
-}
-
+NS_DEFINE_NAMED_CID(NS_ICONDECODER_CID);
 #endif
 
-static const nsModuleComponentInfo components[] =
-{
+NS_DEFINE_NAMED_CID(NS_ICONPROTOCOL_CID);
+
+static const mozilla::Module::CIDEntry kIconCIDs[] = {
 #ifdef USE_ICON_DECODER
-  { "icon decoder",
-    NS_ICONDECODER_CID,
-    "@mozilla.org/image/decoder;3?type=image/icon",
-    nsIconDecoderConstructor,
-    IconDecoderRegisterProc,
-    IconDecoderUnregisterProc, },
+  { &kNS_ICONDECODER_CID, false, NULL, nsIconDecoderConstructor },
 #endif
-
-   { "Icon Protocol Handler",      
-      NS_ICONPROTOCOL_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-icon",
-      nsIconProtocolHandlerConstructor
-    }
+  { &kNS_ICONPROTOCOL_CID, false, NULL, nsIconProtocolHandlerConstructor },
+  { NULL }
 };
 
-static nsresult
-IconDecoderModuleCtor(nsIModule* aSelf)
-{
-  return NS_OK;
-}
+static const mozilla::Module::ContractIDEntry kIconContracts[] = {
+#ifdef USE_ICON_DECODER
+  { "@mozilla.org/image/decoder;3?type=image/icon", &kNS_ICONDECODER_CID },
+#endif
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-icon", &kNS_ICONPROTOCOL_CID },
+  { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kIconCategories[] = {
+#ifdef USE_ICON_DECODER
+  { "Gecko-Content-Viewers", gIconMimeType, "@mozilla.org/content/document-loader-factory;1" },
+#endif
+  { NULL }
+};
 
 static void
-IconDecoderModuleDtor(nsIModule* aSelf)
+IconDecoderModuleDtor()
 {
 #ifdef MOZ_WIDGET_GTK2
   nsIconChannel::Shutdown();
 #endif
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsIconDecoderModule, components,
-                                   IconDecoderModuleCtor, IconDecoderModuleDtor)
+static const mozilla::Module kIconModule = {
+  mozilla::Module::kVersion,
+  kIconCIDs,
+  kIconContracts,
+  kIconCategories,
+  NULL,
+  NULL,
+  IconDecoderModuleDtor
+};
+
+NSMODULE_DEFN(nsIconDecoderModule) = &kIconModule;

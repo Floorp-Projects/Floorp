@@ -43,7 +43,6 @@
 #include "nsMemory.h"
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
-#include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"

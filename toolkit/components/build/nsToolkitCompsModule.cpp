@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   The Mozilla Foundation <http://www.mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsAppStartup.h"
 #include "nsUserInfo.h"
 #include "nsToolkitCompsCID.h"
@@ -98,7 +99,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierStreamUpdater)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierUtils, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierHashCompleter, Init)
 
-static NS_IMETHODIMP
+static nsresult
 nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
                                     void **aResult)
 {
@@ -124,86 +125,95 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnescapeHTML)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 
-/////////////////////////////////////////////////////////////////////////////
-
-static const nsModuleComponentInfo components[] =
-{
-  { "App Startup Service",
-    NS_TOOLKIT_APPSTARTUP_CID,
-    NS_APPSTARTUP_CONTRACTID,
-    nsAppStartupConstructor },
-
-  { "User Info Service",
-    NS_USERINFO_CID,
-    NS_USERINFO_CONTRACTID,
-    nsUserInfoConstructor },
+NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
+NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
 #ifdef ALERTS_SERVICE
-  { "Alerts Service",
-    NS_ALERTSSERVICE_CID, 
-    NS_ALERTSERVICE_CONTRACTID,
-    nsAlertsServiceConstructor },
+NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
 #endif
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
-  { "Parental Controls Service",
-    NS_PARENTALCONTROLSSERVICE_CID,
-    NS_PARENTALCONTROLSSERVICE_CONTRACTID,
-    nsParentalControlsServiceWinConstructor },
+NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
 #endif
 #ifdef MOZ_RDF
-  { "Download Manager",
-    NS_DOWNLOADMANAGER_CID,
-    NS_DOWNLOADMANAGER_CONTRACTID,
-    nsDownloadManagerConstructor },
-  { "Download",
-    NS_DOWNLOAD_CID,
-    NS_TRANSFER_CONTRACTID,
-    nsDownloadProxyConstructor },
+NS_DEFINE_NAMED_CID(NS_DOWNLOADMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_DOWNLOAD_CID);
 #endif
-  { "Find Service",
-    NS_FIND_SERVICE_CID,
-    NS_FIND_SERVICE_CONTRACTID,
-    nsFindServiceConstructor },
-  { "TypeAheadFind Component",
-    NS_TYPEAHEADFIND_CID,
-    NS_TYPEAHEADFIND_CONTRACTID,
-    nsTypeAheadFindConstructor
-  },
+NS_DEFINE_NAMED_CID(NS_FIND_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_TYPEAHEADFIND_CID);
 #ifdef MOZ_URL_CLASSIFIER
-  { "Url Classifier DB Service",
-    NS_URLCLASSIFIERDBSERVICE_CID,
-    NS_URLCLASSIFIERDBSERVICE_CONTRACTID,
-    nsUrlClassifierDBServiceConstructor },
-  { "Url Classifier DB Service",
-    NS_URLCLASSIFIERDBSERVICE_CID,
-    NS_URICLASSIFIERSERVICE_CONTRACTID,
-    nsUrlClassifierDBServiceConstructor },
-  { "Url Classifier Stream Updater",
-    NS_URLCLASSIFIERSTREAMUPDATER_CID,
-    NS_URLCLASSIFIERSTREAMUPDATER_CONTRACTID,
-    nsUrlClassifierStreamUpdaterConstructor },
-  { "Url Classifier Utils",
-    NS_URLCLASSIFIERUTILS_CID,
-    NS_URLCLASSIFIERUTILS_CONTRACTID,
-    nsUrlClassifierUtilsConstructor },
-  { "Url Classifier Hash Completer",
-    NS_URLCLASSIFIERHASHCOMPLETER_CID,
-    NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID,
-    nsUrlClassifierHashCompleterConstructor },
+NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERDBSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERSTREAMUPDATER_CID);
+NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERUTILS_CID);
+NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERHASHCOMPLETER_CID);
 #endif
 #ifdef MOZ_FEEDS
-  { "Unescape HTML",
-    NS_SCRIPTABLEUNESCAPEHTML_CID,
-    NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID,
-    nsScriptableUnescapeHTMLConstructor },
+NS_DEFINE_NAMED_CID(NS_SCRIPTABLEUNESCAPEHTML_CID);
 #endif
-  { NS_BROWSERSTATUSFILTER_CLASSNAME,
-    NS_BROWSERSTATUSFILTER_CID,
-    NS_BROWSERSTATUSFILTER_CONTRACTID,
-    nsBrowserStatusFilterConstructor },
-  { "nsCharsetMenu",
-    NS_CHARSETMENU_CID,
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
-    NS_NewCharsetMenu },
+NS_DEFINE_NAMED_CID(NS_BROWSERSTATUSFILTER_CID);
+NS_DEFINE_NAMED_CID(NS_CHARSETMENU_CID);
+
+static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
+  { &kNS_TOOLKIT_APPSTARTUP_CID, false, NULL, nsAppStartupConstructor },
+  { &kNS_USERINFO_CID, false, NULL, nsUserInfoConstructor },
+#ifdef ALERTS_SERVICE
+  { &kNS_ALERTSSERVICE_CID, false, NULL, nsAlertsServiceConstructor },
+#endif
+#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+  { &kNS_PARENTALCONTROLSSERVICE_CID, false, NULL, nsParentalControlsServiceWinConstructor },
+#endif
+#ifdef MOZ_RDF
+  { &kNS_DOWNLOADMANAGER_CID, false, NULL, nsDownloadManagerConstructor },
+  { &kNS_DOWNLOAD_CID, false, NULL, nsDownloadProxyConstructor },
+#endif
+  { &kNS_FIND_SERVICE_CID, false, NULL, nsFindServiceConstructor },
+  { &kNS_TYPEAHEADFIND_CID, false, NULL, nsTypeAheadFindConstructor },
+#ifdef MOZ_URL_CLASSIFIER
+  { &kNS_URLCLASSIFIERDBSERVICE_CID, false, NULL, nsUrlClassifierDBServiceConstructor },
+  { &kNS_URLCLASSIFIERSTREAMUPDATER_CID, false, NULL, nsUrlClassifierStreamUpdaterConstructor },
+  { &kNS_URLCLASSIFIERUTILS_CID, false, NULL, nsUrlClassifierUtilsConstructor },
+  { &kNS_URLCLASSIFIERHASHCOMPLETER_CID, false, NULL, nsUrlClassifierHashCompleterConstructor },
+#endif
+#ifdef MOZ_FEEDS
+  { &kNS_SCRIPTABLEUNESCAPEHTML_CID, false, NULL, nsScriptableUnescapeHTMLConstructor },
+#endif
+  { &kNS_BROWSERSTATUSFILTER_CID, false, NULL, nsBrowserStatusFilterConstructor },
+  { &kNS_CHARSETMENU_CID, false, NULL, NS_NewCharsetMenu },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsToolkitCompsModule, components)
+static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
+  { NS_APPSTARTUP_CONTRACTID, &kNS_TOOLKIT_APPSTARTUP_CID },
+  { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
+#ifdef ALERTS_SERVICE
+  { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
+#endif
+#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+  { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },
+#endif
+#ifdef MOZ_RDF
+  { NS_DOWNLOADMANAGER_CONTRACTID, &kNS_DOWNLOADMANAGER_CID },
+  { NS_TRANSFER_CONTRACTID, &kNS_DOWNLOAD_CID },
+#endif
+  { NS_FIND_SERVICE_CONTRACTID, &kNS_FIND_SERVICE_CID },
+  { NS_TYPEAHEADFIND_CONTRACTID, &kNS_TYPEAHEADFIND_CID },
+#ifdef MOZ_URL_CLASSIFIER
+  { NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &kNS_URLCLASSIFIERDBSERVICE_CID },
+  { NS_URICLASSIFIERSERVICE_CONTRACTID, &kNS_URLCLASSIFIERDBSERVICE_CID },
+  { NS_URLCLASSIFIERSTREAMUPDATER_CONTRACTID, &kNS_URLCLASSIFIERSTREAMUPDATER_CID },
+  { NS_URLCLASSIFIERUTILS_CONTRACTID, &kNS_URLCLASSIFIERUTILS_CID },
+  { NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID, &kNS_URLCLASSIFIERHASHCOMPLETER_CID },
+#endif
+#ifdef MOZ_FEEDS
+  { NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID, &kNS_SCRIPTABLEUNESCAPEHTML_CID },
+#endif
+  { NS_BROWSERSTATUSFILTER_CONTRACTID, &kNS_BROWSERSTATUSFILTER_CID },
+  { NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, &kNS_CHARSETMENU_CID },
+  { NULL }
+};
+
+static const mozilla::Module kToolkitModule = {
+  mozilla::Module::kVersion,
+  kToolkitCIDs,
+  kToolkitContracts
+};
+
+NSMODULE_DEFN(nsToolkitCompsModule) = &kToolkitModule;

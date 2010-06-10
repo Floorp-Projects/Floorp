@@ -45,7 +45,7 @@ static const PRUint16 g_MacGreekMappingTable[] = {
 #include "macgreek.ut"
 };
 
-NS_METHOD
+nsresult
 nsMacGreekToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {

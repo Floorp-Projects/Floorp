@@ -112,7 +112,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsXULPrototypeCache,
                               nsIObserver)
 
 
-NS_IMETHODIMP
+nsresult
 NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
     NS_PRECONDITION(! aOuter, "no aggregation");

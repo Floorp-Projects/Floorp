@@ -252,7 +252,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsBufferedInputStream,
                              nsIBufferedInputStream,
                              nsIStreamBufferAccess)
 
-NS_METHOD
+nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_NO_AGGREGATION(aOuter);
@@ -480,7 +480,7 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedOutputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
-NS_METHOD
+nsresult
 nsBufferedOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_NO_AGGREGATION(aOuter);
