@@ -435,7 +435,6 @@ gfxFontUtils::ReadCMAPTableFormat14(PRUint8 *aBuf, PRUint32 aLength,
             PRUint32 prevUnicode = 0;
             for (PRUint32 j = 0; j < numUVSMappings; j++, tables += SizeOfNonDefUVSTable) {
                 const PRUint32 unicodeValue = ReadUint24At(tables, NonDefUVSOffsetUnicodeValue);
-                const PRUint16 glyphID = ReadShortAt(tables, NonDefUVSOffsetGlyphID);
                 NS_ENSURE_TRUE((prevUnicode < unicodeValue || j == 0) &&
                                unicodeValue <= CMAP_MAX_CODEPOINT, 
                                NS_ERROR_GFX_CMAP_MALFORMED);
