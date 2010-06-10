@@ -19,7 +19,7 @@
       let request;
 
       try {
-        request = indexedDB.open("", "");
+        request = mozIndexedDB.open("", "");
         ok(false, "Open with empty name should have thrown!");
       }
       catch(e) {
@@ -27,14 +27,14 @@
       }
 
       try {
-        request = indexedDB.open(null, "");
+        request = mozIndexedDB.open(null, "");
         ok(false, "Open with null name should have thrown!");
       }
       catch(e) {
         is(request, undefined, "Shouldn't be set to anything");
       }
 
-      request = indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
