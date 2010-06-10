@@ -809,6 +809,8 @@ var AddonManager = {
   ERROR_INCORRECT_HASH: -2,
   // The downloaded file seems to be corrupted in some way.
   ERROR_CORRUPT_FILE: -3,
+  // An error occured trying to write to the filesystem.
+  ERROR_FILE_ACCESS: -4,
 
   // These must be kept in sync with AddonUpdateChecker.
   // No error was encountered.
