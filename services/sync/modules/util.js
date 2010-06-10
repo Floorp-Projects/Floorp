@@ -370,7 +370,7 @@ let Utils = {
   },
 
   lazyStrings: function Weave_lazyStrings(name) {
-    let bundle = "chrome://weave/locale/" + name + ".properties";
+    let bundle = "chrome://weave/locale/services/" + name + ".properties";
     return function() new StringBundle(bundle);
   },
 
