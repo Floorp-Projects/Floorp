@@ -397,13 +397,6 @@ nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
   return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
 }
 
-/**
- * aPart is filled in with the UXTheme part code. On return, values > 0
- * are the actual UXTheme part code; -1 means the widget will be drawn by
- * us; 0 means that we should use part code 0, which isn't a real part code
- * but elicits some kind of default behaviour from UXTheme when drawing
- * (but isThemeBackgroundPartiallyTransparent may not work).
- */
 nsresult 
 nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                        PRInt32& aPart, PRInt32& aState)
@@ -1783,28 +1776,10 @@ nsNativeThemeWin::ThemeNeedsComboboxDropmarker()
   return PR_TRUE;
 }
 
-nsITheme::Transparency
-nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
+nsTransparencyMode
+nsNativeThemeWin::GetWidgetTransparency(PRUint8 aWidgetType)
 {
-  HANDLE theme = GetTheme(aWidgetType);
-  // For the classic theme we don't really have a way of knowing
-  if (!theme)
-    return eUnknownTransparency;
-
-  PRInt32 part, state;
-  nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
-  // Fail conservatively
-  NS_ENSURE_SUCCESS(rv, eUnknownTransparency);
-
-  if (part <= 0) {
-    // Not a real part code, so isThemeBackgroundPartiallyTransparent may
-    // not work, so don't call it.
-    return eUnknownTransparency;
-  }
-
-  if (nsUXThemeData::isThemeBackgroundPartiallyTransparent(theme, part, state))
-    return eTransparent;
-  return eOpaque;
+  return eTransparencyOpaque;
 }
 
 /* Windows 9x/NT/2000/Classic XP Theme Support */

@@ -83,7 +83,6 @@ nsUXThemeData::GetThemeMarginsPtr nsUXThemeData::getThemeMargins = NULL;
 nsUXThemeData::IsAppThemedPtr nsUXThemeData::isAppThemed = NULL;
 nsUXThemeData::GetCurrentThemeNamePtr nsUXThemeData::getCurrentThemeName = NULL;
 nsUXThemeData::GetThemeSysColorPtr nsUXThemeData::getThemeSysColor = NULL;
-nsUXThemeData::IsThemeBackgroundPartiallyTransparentPtr nsUXThemeData::isThemeBackgroundPartiallyTransparent = NULL;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 nsUXThemeData::DwmExtendFrameIntoClientAreaProc nsUXThemeData::dwmExtendFrameIntoClientAreaPtr = NULL;
@@ -125,7 +124,6 @@ nsUXThemeData::Initialize()
     isAppThemed = (IsAppThemedPtr)GetProcAddress(sThemeDLL, "IsAppThemed");
     getCurrentThemeName = (GetCurrentThemeNamePtr)GetProcAddress(sThemeDLL, "GetCurrentThemeName");
     getThemeSysColor = (GetThemeSysColorPtr)GetProcAddress(sThemeDLL, "GetThemeSysColor");
-    isThemeBackgroundPartiallyTransparent = (IsThemeBackgroundPartiallyTransparentPtr)GetProcAddress(sThemeDLL, "IsThemeBackgroundPartiallyTransparent");
   }
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
    sDwmDLL = ::LoadLibraryW(kDwmLibraryName);

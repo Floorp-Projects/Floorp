@@ -153,7 +153,6 @@ public:
                                                   LPWSTR pszColorBuff, int cchMaxColorChars,
                                                   LPWSTR pszSizeBuff, int cchMaxSizeChars);
   typedef COLORREF (WINAPI*GetThemeSysColorPtr)(HANDLE hTheme, int iColorID);
-  typedef BOOL (WINAPI*IsThemeBackgroundPartiallyTransparentPtr)(HANDLE hTheme, int iPartId, int iStateId);
 
   static OpenThemeDataPtr openTheme;
   static CloseThemeDataPtr closeTheme;
@@ -168,7 +167,6 @@ public:
   static IsAppThemedPtr isAppThemed;
   static GetCurrentThemeNamePtr getCurrentThemeName;
   static GetThemeSysColorPtr getThemeSysColor;
-  static IsThemeBackgroundPartiallyTransparentPtr isThemeBackgroundPartiallyTransparent;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // dwmapi.dll function typedefs and declarations
