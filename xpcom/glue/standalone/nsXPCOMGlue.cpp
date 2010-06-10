@@ -154,19 +154,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 }
 
 XPCOM_API(nsresult)
-NS_InitXPCOM3(nsIServiceManager* *result,
-              nsIFile* binDirectory,
-              nsIDirectoryServiceProvider* appFileLocationProvider,
-              nsStaticModuleInfo const *staticComponents,
-              PRUint32 componentCount)
-{
-    if (!xpcomFunctions.init3)
-        return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions.init3(result, binDirectory, appFileLocationProvider,
-                                staticComponents, componentCount);
-}
-
-XPCOM_API(nsresult)
 NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     if (!xpcomFunctions.shutdown)

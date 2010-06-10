@@ -206,6 +206,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentDLF.h"
+#include "nsHTMLMediaElement.h"
 
 using namespace mozilla::dom;
 
@@ -6082,6 +6083,19 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
       *aLoaderType = contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID) ? TYPE_CONTENT : TYPE_UNKNOWN;
     }   
     return docFactory.forget();
+  }
+
+  if (nsHTMLMediaElement::IsOggEnabled()) {
+    for (int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gOggTypes); ++i) {
+      const char* type = nsHTMLMediaElement::gOggTypes[i];
+      if (!strcmp(aType, type)) {
+        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+        if (docFactory && aLoaderType) {
+          *aLoaderType = TYPE_CONTENT;
+        }
+        return docFactory.forget();
+      }
+    }
   }
 
   if (AVAILABLE == pluginEnabled) {

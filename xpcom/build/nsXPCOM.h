@@ -42,7 +42,6 @@
 /* Map frozen functions to private symbol names if not using strict API. */
 #ifdef MOZILLA_INTERNAL_API
 # define NS_InitXPCOM2               NS_InitXPCOM2_P
-# define NS_InitXPCOM3               NS_InitXPCOM3_P
 # define NS_ShutdownXPCOM            NS_ShutdownXPCOM_P
 # define NS_GetServiceManager        NS_GetServiceManager_P
 # define NS_GetComponentManager      NS_GetComponentManager_P
@@ -97,15 +96,11 @@ DECL_CLASS(nsIDebug);
 DECL_CLASS(nsITraceRefcnt);
 DECL_STRUCT(nsPurpleBufferEntry);
 
-/**
- * Every XPCOM component implements this function signature, which is the
- * only entrypoint XPCOM uses to the function.
- *
- * @status FROZEN
- */
-typedef nsresult (*nsGetModuleProc)(nsIComponentManager *aCompMgr,
-                                    nsIFile* location,
-                                    nsIModule** return_cobj);
+#ifdef __cplusplus
+namespace mozilla {
+struct Module;
+}
+#endif
 
 /**
  * Initialises XPCOM. You must call one of the NS_InitXPCOM methods
@@ -145,65 +140,6 @@ XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager* *result, 
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider);
-
-/**
- * Some clients of XPCOM have statically linked components (not dynamically
- * loaded component DLLs), which can be passed to NS_InitXPCOM3 using this
- * structure.
- *
- * @status FROZEN
- */
-typedef struct nsStaticModuleInfo {
-  const char      *name;
-  nsGetModuleProc  getModule;
-} nsStaticModuleInfo;
-
-/**
- * Initialises XPCOM with static components. You must call one of the
- * NS_InitXPCOM methods before proceeding to use xpcom. The one
- * exception is that you may call NS_NewLocalFile to create a nsIFile.
- * 
- * @status FROZEN
- *
- * @note Use <CODE>NS_NewLocalFile</CODE> or <CODE>NS_NewNativeLocalFile</CODE> 
- *       to create the file object you supply as the bin directory path in this
- *       call. The function may be safely called before the rest of XPCOM or 
- *       embedding has been initialised.
- *
- * @param result           The service manager.  You may pass null.
- *
- * @param binDirectory     The directory containing the component
- *                         registry and runtime libraries;
- *                         or use <CODE>nsnull</CODE> to use the working
- *                         directory.
- *
- * @param appFileLocationProvider The object to be used by Gecko that specifies
- *                         to Gecko where to find profiles, the component
- *                         registry preferences and so on; or use
- *                         <CODE>nsnull</CODE> for the default behaviour.
- *
- * @param staticComponents An array of static components. Passing null causes
- *                         default (builtin) components to be registered, if
- *                         present.
- * @param componentCount   Number of elements in staticComponents
- *
- * @see NS_NewLocalFile
- * @see nsILocalFile
- * @see nsIDirectoryServiceProvider
- * @see XRE_GetStaticComponents
- *
- * @return NS_OK for success;
- *         NS_ERROR_NOT_INITIALIZED if static globals were not initialized,
- *         which can happen if XPCOM is reloaded, but did not completly
- *         shutdown. Other error codes indicate a failure during
- *         initialisation.
- */
-XPCOM_API(nsresult)
-NS_InitXPCOM3(nsIServiceManager* *result, 
-              nsIFile* binDirectory,
-              nsIDirectoryServiceProvider* appFileLocationProvider,
-              nsStaticModuleInfo const *staticComponents,
-              PRUint32 componentCount);
 
 /**
  * Shutdown XPCOM. You must call this method after you are finished
@@ -248,11 +184,12 @@ NS_GetServiceManager(nsIServiceManager* *result);
 XPCOM_API(nsresult)
 NS_GetComponentManager(nsIComponentManager* *result);
 
+
 /**
  * Public Method to access to the component registration manager.
- * 
+ *
  * @status FROZEN
- * @param result Interface pointer to the service 
+ * @param result Interface pointer to the service
  *
  * @return NS_OK for success;
  *         other error codes indicate a failure during initialisation.

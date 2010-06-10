@@ -320,7 +320,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
                               nsIFile,
                               nsIHashable)
                               
-NS_IMETHODIMP nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+nsresult
+nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);
   NS_ENSURE_NO_AGGREGATION(outer);

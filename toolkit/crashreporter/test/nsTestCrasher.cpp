@@ -1,8 +1,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIComponentManager.h"
-#include "nsIGenericFactory.h"
 #include "nsITestCrasher.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/ModuleUtils.h"
 
 class nsTestCrasher : public nsITestCrasher
 {
@@ -82,13 +82,22 @@ NS_IMETHODIMP nsTestCrasher::LockDir(nsILocalFile *directory,
 { 0x54afce51, 0x38d7, 0x4df0, {0x97, 0x50, 0x2f, 0x90, 0xf9, 0xff, 0xbc, 0xa2} }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTestCrasher)
+NS_DEFINE_NAMED_CID(NS_TESTCRASHER_CID);
 
-static const nsModuleComponentInfo components[] = {
-    { "Test Crasher",
-      NS_TESTCRASHER_CID,
-      "@mozilla.org/testcrasher;1",
-      nsTestCrasherConstructor
-    }
+static const mozilla::Module::CIDEntry kTestCrasherCIDs[] = {
+  { &kNS_TESTCRASHER_CID, false, NULL, nsTestCrasherConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsTestCrasherModule, components)
+static const mozilla::Module::ContractIDEntry kTestCrasherContracts[] = {
+  { "@mozilla.org/testcrasher;1", &kNS_TESTCRASHER_CID },
+  { NULL }
+};
+
+static const mozilla::Module kTestCrasherModule = {
+  mozilla::Module::kVersion,
+  kTestCrasherCIDs,
+  kTestCrasherContracts
+};
+
+NSMODULE_DEFN(nsTestCrasherModule) = &kTestCrasherModule;

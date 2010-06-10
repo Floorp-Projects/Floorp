@@ -62,10 +62,6 @@ main(int argc, char* argv[])
         nsCOMPtr<nsIServiceManager> servMan;
         rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
         if (NS_FAILED(rv)) return -1;
-        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-        if (registrar)
-            registrar->AutoRegister(nsnull);
 
         if (argc > 1 && argv[1] != nsnull)
         {

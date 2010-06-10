@@ -48,38 +48,34 @@ LIBRARY_NAME	= xpcomcomponents_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS	= \
+  nsCategoryManagerUtils.h \
+  $(NULL)
+
+EXPORTS_mozilla = \
+  GenericFactory.h \
+  Module.h \
+  ModuleLoader.h \
+  ModuleUtils.h \
+  $(NULL)
 
 CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
 		nsNativeComponentLoader.cpp \
-		nsStaticComponentLoader.cpp \
-		nsServiceManagerObsolete.cpp \
-		$(NULL)
-
-EXPORTS		= \
-		nsCategoryManagerUtils.h \
-		nsIServiceManagerObsolete.h \
-		nsModule.h \
-		nsObsoleteModuleLoading.h \
-		$(NULL)
-
-XPIDLSRCS	= \
-		nsIModuleLoader.idl \
-		nsIComponentManagerObsolete.idl \
+		GenericFactory.cpp \
 		$(NULL)
 
 SDK_XPIDLSRCS	= \
 		nsIClassInfo.idl	      \
 		nsIComponentRegistrar.idl     \
-		nsIFactory.idl		      \
-		nsIModule.idl		      \
+		nsIFactory.idl                \
 		nsIServiceManager.idl	      \
 		nsIComponentManager.idl       \
 		nsICategoryManager.idl        \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../reflect/xptinfo/src \
@@ -97,4 +93,4 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC	= 1
 include $(topsrcdir)/config/rules.mk
 
-DEFINES	+= -D_IMPL_NS_COM
+DEFINES	+= -D_IMPL_NS_COM -DNAKED_DLL_SUFFIX=\"$(patsubst .%,%,$(DLL_SUFFIX))\"

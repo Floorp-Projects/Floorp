@@ -54,7 +54,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIENVIRONMENT
 
-    static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID,
+    static nsresult Create(nsISupports *aOuter, REFNSIID aIID,
                            void **aResult);
 
 private:

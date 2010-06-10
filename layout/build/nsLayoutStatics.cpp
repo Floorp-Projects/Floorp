@@ -221,11 +221,6 @@ nsLayoutStatics::Initialize()
   nsMathMLOperators::AddRefTable();
 #endif
 
-#ifdef MOZ_SVG
-  if (NS_SVGEnabled())
-    nsContentDLF::RegisterSVG();
-#endif
-
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsEditProperty::RegisterAtoms();
   nsTextServicesDocument::RegisterAtoms();
@@ -273,10 +268,6 @@ nsLayoutStatics::Initialize()
     NS_ERROR("Could not initialize nsFocusManager");
     return rv;
   }
-
-#ifdef MOZ_MEDIA
-  nsHTMLMediaElement::InitMediaTypes();
-#endif
 
 #ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::InitLibrary();
@@ -371,9 +362,6 @@ nsLayoutStatics::Shutdown()
 
   nsDOMThreadService::Shutdown();
 
-#ifdef MOZ_MEDIA
-  nsHTMLMediaElement::ShutdownMediaTypes();
-#endif
 #ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::ShutdownLibrary();
 #endif

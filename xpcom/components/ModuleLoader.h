@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,12 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla XPCOM.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
  *
  * Contributor(s):
  *
@@ -34,70 +36,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ScopedXREEmbed.h"
+#ifndef mozilla_ModuleLoader_h
+#define mozilla_ModuleLoader_h
 
-#include "base/command_line.h"
-#include "base/string_util.h"
+#include "nsISupports.h"
+#include "mozilla/Module.h"
 
-#include "nsIFile.h"
-#include "nsILocalFile.h"
+#define MOZILLA_MODULELOADER_PSEUDO_IID \
+{ 0xD951A8CE, 0x6E9F, 0x464F, \
+  { 0x8A, 0xC8, 0x14, 0x61, 0xC0, 0xD3, 0x63, 0xC8 } }
 
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h"
-#include "nsStringGlue.h"
-#include "nsXULAppAPI.h"
+namespace mozilla {
 
-using mozilla::ipc::ScopedXREEmbed;
-
-ScopedXREEmbed::ScopedXREEmbed()
-: mShouldKillEmbedding(false)
+/**
+ * Module loaders are responsible for loading a component file. The static
+ * component loader is special and does not use this abstract interface.
+ *
+ * @note Implementations of this interface should be threadsafe,
+ *       methods may be called from any thread.
+ */
+class ModuleLoader : public nsISupports
 {
-  NS_LogInit();
-}
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_MODULELOADER_PSEUDO_IID)
 
-ScopedXREEmbed::~ScopedXREEmbed()
-{
-  Stop();
-  NS_LogTerm();
-}
+  /**
+   * Return the module for a specified file. The loader should cache
+   * the module and return the same module in future calls. The Module
+   * should either be statically or permanently allocated, it will not
+   * be freed.
+   */
+  virtual const Module* LoadModule(nsILocalFile* aFile) = 0;
+};
+NS_DEFINE_STATIC_IID_ACCESSOR(ModuleLoader, MOZILLA_MODULELOADER_PSEUDO_IID)
 
-void
-ScopedXREEmbed::Start()
-{
-  std::string path;
-#if defined(OS_WIN)
-  path = WideToUTF8(CommandLine::ForCurrentProcess()->program());
-#elif defined(OS_POSIX)
-  path = CommandLine::ForCurrentProcess()->argv()[0];
-#else
-#  error Sorry
-#endif
+} // namespace mozilla
 
-  nsCOMPtr<nsILocalFile> localFile;
-  nsresult rv = XRE_GetBinaryPath(path.c_str(), getter_AddRefs(localFile));
-  if (NS_FAILED(rv))
-    return;
-
-  nsCOMPtr<nsIFile> parent;
-  rv = localFile->GetParent(getter_AddRefs(parent));
-  if (NS_FAILED(rv))
-    return;
-
-  localFile = do_QueryInterface(parent);
-  NS_ENSURE_TRUE(localFile,);
-
-  rv = XRE_InitEmbedding2(localFile, localFile, nsnull);
-  if (NS_FAILED(rv))
-    return;
-
-  mShouldKillEmbedding = true;
-}
-
-void
-ScopedXREEmbed::Stop()
-{
-  if (mShouldKillEmbedding) {
-    XRE_TermEmbedding();
-    mShouldKillEmbedding = false;
-  }
-}
+#endif // mozilla_ModuleLoader_h

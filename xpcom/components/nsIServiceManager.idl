@@ -106,8 +106,8 @@ interface nsIServiceManager : nsISupports
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsXPCOM.h"
+#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIServiceManagerObsolete.h"
 #endif
 %}
 

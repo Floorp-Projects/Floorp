@@ -312,7 +312,7 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
 #define NS_GENERIC_AGGREGATED_CONSTRUCTOR(_InstanceClass)                   \
-static NS_METHOD                                                            \
+static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
@@ -335,7 +335,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
 }                                                                           \
 
 #define NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(_InstanceClass, _InitMethod) \
-static NS_METHOD                                                            \
+static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
