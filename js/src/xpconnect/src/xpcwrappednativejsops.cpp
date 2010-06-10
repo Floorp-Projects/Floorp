@@ -1506,7 +1506,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     popper.PushIfNotTop(cx);
 
     JSObject* outerscope = scope;
-    OBJ_TO_OUTER_OBJECT(cx, outerscope);
+    Outerize(cx, &outerscope);
     if(!outerscope)
         return nsnull;
 
@@ -1519,11 +1519,11 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
         if(!XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name))
             return obj;
 
-        js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(obj));
-        if(!XPCCrossOriginWrapper::WrapObject(cx, scope, tvr.addr()))
+        js::AutoValueRooter tvr(cx, js::ObjectTag(*obj));
+        if(!XPCCrossOriginWrapper::WrapObject(cx, scope, tvr.jsval_addr()))
             return nsnull;
 
-        return JSVAL_TO_OBJECT(tvr.value());
+        return &tvr.value().asObject();
     }
 
     nsIScriptSecurityManager* secMan = XPCWrapper::GetSecurityManager();

@@ -2257,7 +2257,7 @@ static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
   const js::Value &v = obj->getSlot(JSSLOT_START(obj->getClass()));
-  return static_cast<XPCWrappedNativeProto*>(v.asPrivateVoidPtr());
+  return static_cast<XPCWrappedNativeProto*>(v.asPrivate());
 }
 
 
