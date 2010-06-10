@@ -161,8 +161,11 @@ function PreviewController(win, tab) {
   // Cannot perform the lookup during construction. See TabWindow.newTab 
   XPCOMUtils.defineLazyGetter(this, "preview", function () this.win.previewFromTab(this.tab));
 
-  XPCOMUtils.defineLazyGetter(this, "canvasPreview", function ()
-    this.win.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas"));
+  XPCOMUtils.defineLazyGetter(this, "canvasPreview", function () {
+    let canvas = this.win.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    canvas.mozOpaque = true;
+    return canvas;
+  });
 
   XPCOMUtils.defineLazyGetter(this, "dirtyRegion",
     function () {
