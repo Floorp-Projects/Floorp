@@ -508,7 +508,7 @@ Assembler::genPrologue()
 }
 
 void
-Assembler::nFragExit(LInsp guard)
+Assembler::nFragExit(LIns* guard)
 {
     SideExit *  exit = guard->record()->exit;
     Fragment *  frag = exit->target;
@@ -612,7 +612,7 @@ Assembler::genEpilogue()
  *   alignment.
  */
 void
-Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, int& stkd)
+Assembler::asm_arg(ArgType ty, LIns* arg, Register& r, int& stkd)
 {
     // The stack pointer must always be at least aligned to 4 bytes.
     NanoAssert((stkd & 3) == 0);
@@ -637,7 +637,7 @@ Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, int& stkd)
 // This function operates in the same way as asm_arg, except that it will only
 // handle arguments where (ArgType)ty == ARGTYPE_D.
 void
-Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
+Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
 {
     // The stack pointer must always be at least aligned to 4 bytes.
     NanoAssert((stkd & 3) == 0);
@@ -735,7 +735,7 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
 }
 
 void
-Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
+Assembler::asm_regarg(ArgType ty, LIns* p, Register r)
 {
     NanoAssert(deprecated_isKnownReg(r));
     if (ty == ARGTYPE_I || ty == ARGTYPE_UI)
@@ -775,7 +775,7 @@ Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
 }
 
 void
-Assembler::asm_stkarg(LInsp arg, int stkd)
+Assembler::asm_stkarg(LIns* arg, int stkd)
 {
     bool isF64 = arg->isD();
 
@@ -830,7 +830,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
 }
 
 void
-Assembler::asm_call(LInsp ins)
+Assembler::asm_call(LIns* ins)
 {
     if (_config.arm_vfp && ins->isop(LIR_calld)) {
         /* Because ARM actually returns the result in (R0,R1), and not in a
@@ -1270,7 +1270,7 @@ Assembler::canRemat(LIns* ins)
 }
 
 void
-Assembler::asm_restore(LInsp i, Register r)
+Assembler::asm_restore(LIns* i, Register r)
 {
     // The following registers should never be restored:
     NanoAssert(r != PC);
@@ -1360,7 +1360,7 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
 }
 
 void
-Assembler::asm_load64(LInsp ins)
+Assembler::asm_load64(LIns* ins)
 {
     //asm_output("<<< load64");
 
@@ -1444,7 +1444,7 @@ Assembler::asm_load64(LInsp ins)
 }
 
 void
-Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
+Assembler::asm_store64(LOpcode op, LIns* value, int dr, LIns* base)
 {
     //asm_output("<<< store64 (dr: %d)", dr);
 
@@ -1586,7 +1586,7 @@ Assembler::asm_immd_nochk(Register rr, int32_t immDlo, int32_t immDhi)
 }
 
 void
-Assembler::asm_immd(LInsp ins)
+Assembler::asm_immd(LIns* ins)
 {
     int d = deprecated_disp(ins);
     Register rr = ins->deprecated_getReg();
@@ -1623,7 +1623,7 @@ Assembler::asm_nongp_copy(Register r, Register s)
 }
 
 Register
-Assembler::asm_binop_rhs_reg(LInsp)
+Assembler::asm_binop_rhs_reg(LIns*)
 {
     return deprecated_UnknownReg;
 }
@@ -2237,7 +2237,7 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
  */
 
 void
-Assembler::asm_i2d(LInsp ins)
+Assembler::asm_i2d(LIns* ins)
 {
     Register rr = deprecated_prepResultReg(ins, FpRegs);
     Register srcr = findRegFor(ins->oprnd1(), GpRegs);
@@ -2250,7 +2250,7 @@ Assembler::asm_i2d(LInsp ins)
 }
 
 void
-Assembler::asm_ui2d(LInsp ins)
+Assembler::asm_ui2d(LIns* ins)
 {
     Register rr = deprecated_prepResultReg(ins, FpRegs);
     Register sr = findRegFor(ins->oprnd1(), GpRegs);
@@ -2262,7 +2262,7 @@ Assembler::asm_ui2d(LInsp ins)
     FMSR(S14, sr);
 }
 
-void Assembler::asm_d2i(LInsp ins)
+void Assembler::asm_d2i(LIns* ins)
 {
     // where our result goes
     Register rr = deprecated_prepResultReg(ins, GpRegs);
@@ -2273,9 +2273,9 @@ void Assembler::asm_d2i(LInsp ins)
 }
 
 void
-Assembler::asm_fneg(LInsp ins)
+Assembler::asm_fneg(LIns* ins)
 {
-    LInsp lhs = ins->oprnd1();
+    LIns* lhs = ins->oprnd1();
     Register rr = deprecated_prepResultReg(ins, FpRegs);
 
     Register sr = ( !lhs->isInReg()
@@ -2286,10 +2286,10 @@ Assembler::asm_fneg(LInsp ins)
 }
 
 void
-Assembler::asm_fop(LInsp ins)
+Assembler::asm_fop(LIns* ins)
 {
-    LInsp lhs = ins->oprnd1();
-    LInsp rhs = ins->oprnd2();
+    LIns* lhs = ins->oprnd1();
+    LIns* rhs = ins->oprnd2();
     LOpcode op = ins->opcode();
 
     // rr = ra OP rb
@@ -2312,10 +2312,10 @@ Assembler::asm_fop(LInsp ins)
 }
 
 void
-Assembler::asm_cmpd(LInsp ins)
+Assembler::asm_cmpd(LIns* ins)
 {
-    LInsp lhs = ins->oprnd1();
-    LInsp rhs = ins->oprnd2();
+    LIns* lhs = ins->oprnd1();
+    LIns* rhs = ins->oprnd2();
     LOpcode op = ins->opcode();
 
     NanoAssert(isCmpDOpcode(op));
@@ -2334,7 +2334,7 @@ Assembler::asm_cmpd(LInsp ins)
  * will be patched up later.
  */
 NIns*
-Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
+Assembler::asm_branch(bool branchOnFalse, LIns* cond, NIns* targ)
 {
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCmp());
@@ -2414,8 +2414,8 @@ NIns* Assembler::asm_branch_ov(LOpcode op, NIns* target)
 void
 Assembler::asm_cmp(LIns *cond)
 {
-    LInsp lhs = cond->oprnd1();
-    LInsp rhs = cond->oprnd2();
+    LIns* lhs = cond->oprnd1();
+    LIns* rhs = cond->oprnd2();
 
     NanoAssert(lhs->isI() && rhs->isI());
 
@@ -2458,7 +2458,7 @@ Assembler::asm_cmpi(Register r, int32_t imm)
 }
 
 void
-Assembler::asm_condd(LInsp ins)
+Assembler::asm_condd(LIns* ins)
 {
     // only want certain regs
     Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
@@ -2476,7 +2476,7 @@ Assembler::asm_condd(LInsp ins)
 }
 
 void
-Assembler::asm_cond(LInsp ins)
+Assembler::asm_cond(LIns* ins)
 {
     Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
     LOpcode op = ins->opcode();
@@ -2498,11 +2498,11 @@ Assembler::asm_cond(LInsp ins)
 }
 
 void
-Assembler::asm_arith(LInsp ins)
+Assembler::asm_arith(LIns* ins)
 {
     LOpcode op = ins->opcode();
-    LInsp   lhs = ins->oprnd1();
-    LInsp   rhs = ins->oprnd2();
+    LIns*   lhs = ins->oprnd1();
+    LIns*   rhs = ins->oprnd2();
 
     RegisterMask    allow = GpRegs;
 
@@ -2681,7 +2681,7 @@ Assembler::asm_arith(LInsp ins)
 }
 
 void
-Assembler::asm_neg_not(LInsp ins)
+Assembler::asm_neg_not(LIns* ins)
 {
     LOpcode op = ins->opcode();
     Register rr = deprecated_prepResultReg(ins, GpRegs);
@@ -2701,7 +2701,7 @@ Assembler::asm_neg_not(LInsp ins)
 }
 
 void
-Assembler::asm_load32(LInsp ins)
+Assembler::asm_load32(LIns* ins)
 {
     LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
@@ -2761,7 +2761,7 @@ Assembler::asm_load32(LInsp ins)
 }
 
 void
-Assembler::asm_cmov(LInsp ins)
+Assembler::asm_cmov(LIns* ins)
 {
     LIns* condval = ins->oprnd1();
     LIns* iftrue  = ins->oprnd2();
@@ -2793,7 +2793,7 @@ Assembler::asm_cmov(LInsp ins)
 }
 
 void
-Assembler::asm_qhi(LInsp ins)
+Assembler::asm_qhi(LIns* ins)
 {
     Register rr = deprecated_prepResultReg(ins, GpRegs);
     LIns *q = ins->oprnd1();
@@ -2802,7 +2802,7 @@ Assembler::asm_qhi(LInsp ins)
 }
 
 void
-Assembler::asm_qlo(LInsp ins)
+Assembler::asm_qlo(LIns* ins)
 {
     Register rr = deprecated_prepResultReg(ins, GpRegs);
     LIns *q = ins->oprnd1();
@@ -2811,7 +2811,7 @@ Assembler::asm_qlo(LInsp ins)
 }
 
 void
-Assembler::asm_param(LInsp ins)
+Assembler::asm_param(LIns* ins)
 {
     uint32_t a = ins->paramArg();
     uint32_t kind = ins->paramKind();
@@ -2835,7 +2835,7 @@ Assembler::asm_param(LInsp ins)
 }
 
 void
-Assembler::asm_immi(LInsp ins)
+Assembler::asm_immi(LIns* ins)
 {
     Register rr = deprecated_prepResultReg(ins, GpRegs);
     asm_ld_imm(rr, ins->immI());

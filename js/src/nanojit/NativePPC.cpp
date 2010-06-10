@@ -730,7 +730,7 @@ namespace nanojit
         for(uint32_t i = 0; i < argc; i++) {
             uint32_t j = argc - i - 1;
             ArgType ty = argTypes[j];
-            LInsp arg = ins->arg(j);
+            LIns* arg = ins->arg(j);
             NanoAssert(ty != ARGTYPE_V);
             if (ty != ARGTYPE_D) {
                 // GP arg
@@ -763,7 +763,7 @@ namespace nanojit
             max_param_size = param_size;
     }
 
-    void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
+    void Assembler::asm_regarg(ArgType ty, LIns* p, Register r)
     {
         NanoAssert(r != deprecated_UnknownReg);
         NanoAssert(ty != ARGTYPE_V);
@@ -847,8 +847,8 @@ namespace nanojit
 
     void Assembler::asm_arith(LIns *ins) {
         LOpcode op = ins->opcode();
-        LInsp lhs = ins->oprnd1();
-        LInsp rhs = ins->oprnd2();
+        LIns* lhs = ins->oprnd1();
+        LIns* rhs = ins->oprnd2();
         RegisterMask allow = GpRegs;
         Register rr = deprecated_prepResultReg(ins, allow);
         Register ra = findRegFor(lhs, GpRegs);
@@ -949,8 +949,8 @@ namespace nanojit
 
     void Assembler::asm_fop(LIns *ins) {
         LOpcode op = ins->opcode();
-        LInsp lhs = ins->oprnd1();
-        LInsp rhs = ins->oprnd2();
+        LIns* lhs = ins->oprnd1();
+        LIns* rhs = ins->oprnd2();
         RegisterMask allow = FpRegs;
         Register rr = deprecated_prepResultReg(ins, allow);
         Register ra, rb;
@@ -1011,7 +1011,7 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_d2i(LInsp) {
+    void Assembler::asm_d2i(LIns*) {
         NanoAssertMsg(0, "NJ_F2I_SUPPORTED not yet supported for this architecture");
     }
 
@@ -1212,7 +1212,7 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_cmov(LInsp ins)
+    void Assembler::asm_cmov(LIns* ins)
     {
         LIns* condval = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
