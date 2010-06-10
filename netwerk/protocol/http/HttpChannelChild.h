@@ -62,7 +62,7 @@
 namespace mozilla {
 namespace net {
 
-// TODO: replace with IPDL states
+// TODO: replace with IPDL states: bug 536319
 enum HttpChannelChildState {
   HCC_NEW,
   HCC_OPENED,

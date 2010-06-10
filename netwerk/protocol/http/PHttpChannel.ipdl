@@ -60,9 +60,9 @@ parent:
   __delete__();
 
   AsyncOpen(URI                 uri,
-            // - TODO: unclear if any HTTP channel clients ever set
-            // originalURI != uri (about:credits?); also not clear if chrome
-            // channel would ever need to know.  Can we get rid of next arg?
+            // - TODO: bug 571161: unclear if any HTTP channel clients ever
+            // set originalURI != uri (about:credits?); also not clear if
+            // chrome channel would ever need to know.  Get rid of next arg?
             URI                 original,
             URI                 doc,
             URI                 referrer,
