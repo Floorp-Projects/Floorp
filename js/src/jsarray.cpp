@@ -3283,7 +3283,7 @@ js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
 }
 
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, Value **vector)
+js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector)
 {
     JSObject *obj = js_NewArrayObject(cx, capacity, NULL);
     if (!obj)
@@ -3299,7 +3299,7 @@ js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, Value **vector)
         return NULL;
 
     obj->setDenseArrayCount(capacity);
-    *vector = obj->getDenseArrayElements();
+    *vector = Jsvalify(obj->getDenseArrayElements());
     return obj;
 }
 
@@ -3369,7 +3369,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
         vector.append(val);
     }
 
-    Value *buffer;
+    jsval *buffer;
     *clone = js_NewArrayObjectWithCapacity(cx, jsvalCount, &buffer);
     if (!*clone)
         return JS_FALSE;

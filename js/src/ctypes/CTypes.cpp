@@ -4267,7 +4267,7 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
   // Prepare a new array for the 'fields' property of the StructType.
   jsval* fieldsVec;
   JSObject* fieldsProp =
-    js_NewArrayObjectWithCapacity(cx, len, Valueify(&fieldsVec));
+    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
   if (!fieldsProp)
     return NULL;
   js::AutoObjectRooter root(cx, fieldsProp);
@@ -4959,7 +4959,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp
   // Prepare a new array.
   jsval* vec;
   JSObject* argTypes =
-    js_NewArrayObjectWithCapacity(cx, len, Valueify(&vec));
+    js_NewArrayObjectWithCapacity(cx, len, &vec);
   if (!argTypes)
     return JS_FALSE;
   js::AutoObjectRooter argsroot(cx, argTypes);
