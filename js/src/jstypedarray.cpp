@@ -77,7 +77,8 @@ using namespace js;
 ArrayBuffer *
 ArrayBuffer::fromJSObject(JSObject *obj)
 {
-    JS_ASSERT(obj->getClass() == &ArrayBuffer::jsclass);
+    while (!js_IsArrayBuffer(obj))
+        obj = obj->getProto();
     return reinterpret_cast<ArrayBuffer*>(obj->getPrivate());
 }
 
@@ -207,6 +208,8 @@ ArrayBuffer::~ArrayBuffer()
 TypedArray *
 TypedArray::fromJSObject(JSObject *obj)
 {
+    while (!js_IsTypedArray(obj))
+        obj = obj->getProto();
     return reinterpret_cast<TypedArray*>(obj->getPrivate());
 }
 
@@ -822,6 +825,9 @@ class TypedArrayTemplate
 
         argv = JS_ARGV(cx, vp);
         obj = JS_THIS_OBJECT(cx, vp);
+
+        if (!JS_InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+            return false;
 
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         if (!tarray)
