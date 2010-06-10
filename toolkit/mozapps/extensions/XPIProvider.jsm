@@ -4424,19 +4424,24 @@ UpdateChecker.prototype = {
         AddonInstall.createUpdate(function(install) {
           self.listener.onUpdateAvailable(createWrapper(self.addon),
                                           install.wrapper);
-          if ("onUpdateFinished" in self.listener)
-            self.listener.onUpdateFinished(createWrapper(self.addon));
+          if ("onUpdateFinished" in self.listener) {
+            self.listener.onUpdateFinished(createWrapper(self.addon),
+                                           AddonManager.UPDATE_STATUS_NO_ERROR);
+          }
         }, this.addon, update);
       }
       else if ("onUpdateFinished" in this.listener) {
-        this.listener.onUpdateFinished(createWrapper(this.addon));
+        this.listener.onUpdateFinished(createWrapper(this.addon),
+                                       AddonManager.UPDATE_STATUS_NO_ERROR);
       }
     }
     else {
       if ("onNoUpdateAvailable" in this.listener)
         this.listener.onNoUpdateAvailable(createWrapper(this.addon));
-      if ("onUpdateFinished" in this.listener)
-        this.listener.onUpdateFinished(createWrapper(this.addon));
+      if ("onUpdateFinished" in this.listener) {
+        this.listener.onUpdateFinished(createWrapper(this.addon),
+                                       AddonManager.UPDATE_STATUS_NO_ERROR);
+      }
     }
   },
 
@@ -4447,10 +4452,12 @@ UpdateChecker.prototype = {
    *         An error status
    */
   onUpdateCheckError: function UC_onUpdateCheckError(aError) {
+    if ("onNoCompatibilityUpdateAvailable" in this.listener)
+      this.listener.onNoCompatibilityUpdateAvailable(createWrapper(this.addon));
     if ("onNoUpdateAvailable" in this.listener)
-      this.listener.onNoUpdateAvailable(createWrapper(this.addon), aError);
+      this.listener.onNoUpdateAvailable(createWrapper(this.addon));
     if ("onUpdateFinished" in this.listener)
-      this.listener.onUpdateFinished(createWrapper(this.addon));
+      this.listener.onUpdateFinished(createWrapper(this.addon), aError);
   }
 };
 
