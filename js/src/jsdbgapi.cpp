@@ -795,17 +795,19 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     JSPropertyOp watcher;
 
     origobj = obj;
-    obj = js_GetWrappedObject(cx, obj);
+    obj = obj->wrappedObject(cx);
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
         return JS_FALSE;
 
+    AutoValueRooter idroot(cx);
     if (JSVAL_IS_INT(idval)) {
         propid = INT_JSVAL_TO_JSID(idval);
     } else {
         if (!js_ValueToStringId(cx, idval, &propid))
             return JS_FALSE;
         propid = js_CheckForStringIndex(propid);
+        idroot.set(ID_TO_VALUE(propid));
     }
 
     /*
@@ -838,35 +840,35 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         }
     } else if (pobj != obj) {
         /* Clone the prototype property so we can watch the right object. */
-        jsval value;
+        AutoValueRooter valroot(cx);
         JSPropertyOp getter, setter;
         uintN attrs, flags;
         intN shortid;
 
         if (pobj->isNative()) {
-            value = SPROP_HAS_VALID_SLOT(sprop, pobj->scope())
-                    ? pobj->lockedGetSlot(sprop->slot)
-                    : JSVAL_VOID;
+            valroot.set(SPROP_HAS_VALID_SLOT(sprop, pobj->scope())
+                        ? pobj->lockedGetSlot(sprop->slot)
+                        : JSVAL_VOID);
             getter = sprop->getter();
             setter = sprop->setter();
             attrs = sprop->attributes();
             flags = sprop->getFlags();
             shortid = sprop->shortid;
+            JS_UNLOCK_OBJ(cx, pobj);
         } else {
-            if (!pobj->getProperty(cx, propid, &value) ||
-                !pobj->getAttributes(cx, propid, prop, &attrs)) {
-                pobj->dropProperty(cx, prop);
+            if (!pobj->getProperty(cx, propid, valroot.addr()) ||
+                !pobj->getAttributes(cx, propid, &attrs)) {
                 return JS_FALSE;
             }
             getter = setter = NULL;
             flags = 0;
             shortid = 0;
         }
-        pobj->dropProperty(cx, prop);
 
         /* Recall that obj is native, whether or not pobj is native. */
-        if (!js_DefineNativeProperty(cx, obj, propid, value, getter, setter,
-                                     attrs, flags, shortid, &prop)) {
+        if (!js_DefineNativeProperty(cx, obj, propid, valroot.value(),
+                                     getter, setter, attrs, flags,
+                                     shortid, &prop)) {
             return JS_FALSE;
         }
         sprop = (JSScopeProperty *) prop;
@@ -874,7 +876,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
 
     /*
      * At this point, prop/sprop exists in obj, obj is locked, and we must
-     * obj->dropProperty(cx, prop) before returning.
+     * unlock the object before returning.
      */
     ok = JS_TRUE;
     DBG_LOCK(rt);
@@ -926,7 +928,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     DBG_UNLOCK(rt);
 
 out:
-    obj->dropProperty(cx, prop);
+    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 
@@ -1764,16 +1766,11 @@ JS_IsSystemObject(JSContext *cx, JSObject *obj)
     return obj->isSystem();
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent, JSBool system)
+JS_PUBLIC_API(JSBool)
+JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 {
-    JSObject *obj;
-
-    obj = NewObject(cx, clasp, proto, parent);
-    if (obj && system)
-        obj->setSystem();
-    return obj;
+    obj->setSystem();
+    return true;
 }
 
 /************************************************************************/
@@ -2253,9 +2250,9 @@ jstv_Filename(JSStackFrame *fp)
 inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
-    while (fp && fp->regs == NULL)
+    while (fp && fp->pc(cx) == NULL)
         fp = fp->down;
-    return (fp && fp->regs) ? js_FramePCToLineNumber(cx, fp) : 0;
+    return (fp && fp->pc(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://mozmill/skin/overlay.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://mozmill/locale/overlay.dtd">
+<overlay id="mozmill-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mozmill/content/overlay.js"/>
+  
+  <keyset>
+    <key id="open-mm" modifiers="accel shift" key="m" oncommand="MozMill.onMenuItemCommand(event);"/>
+  </keyset>
+  
+  <menupopup id="menu_ToolsPopup">
+    <menuitem key="open-mm" id="mozmill-mozmill" label="&mozmill;" 
+              oncommand="MozMill.onMenuItemCommand(event);"/>
+  </menupopup>
+</overlay>

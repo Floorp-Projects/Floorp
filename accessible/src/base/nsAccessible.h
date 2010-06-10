@@ -217,6 +217,16 @@ public:
    */
   virtual void InvalidateChildren();
 
+  /**
+   * Append/remove a child. Alternative approach of children handling than
+   * CacheChildren/InvalidateChildren.
+   *
+   * @param  aAccessible  [in] child to append/remove
+   * @return true          if child was successfully appended/removed
+   */
+  virtual PRBool AppendChild(nsAccessible *aAccessible) { return PR_FALSE; }
+  virtual PRBool RemoveChild(nsAccessible *aAccessible) { return PR_FALSE; }
+
   //////////////////////////////////////////////////////////////////////////////
   // Accessible tree traverse methods
 

@@ -916,9 +916,7 @@ public:
    * Gets the closest frame (the frame passed in or one of its parents) that
    * qualifies as a "layer"; used in DOM0 methods that depends upon that
    * definition. This is the nearest frame that is either positioned or scrolled
-   * (the child of a scroll frame). In Gecko terms, it's approximately
-   * equivalent to having a view, at least for simple HTML. However, views are
-   * going away, so this is a cleaner definition.
+   * (the child of a scroll frame).
    */
   static nsIFrame* GetClosestLayer(nsIFrame* aFrame);
 

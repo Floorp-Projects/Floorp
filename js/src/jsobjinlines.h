@@ -52,6 +52,14 @@
 
 #include "jsscopeinlines.h"
 
+inline void
+JSObject::dropProperty(JSContext *cx, JSProperty *prop)
+{
+    JS_ASSERT(prop);
+    if (isNative())
+        JS_UNLOCK_OBJ(cx, this);
+}
+
 inline jsval
 JSObject::getSlotMT(JSContext *cx, uintN slot)
 {
@@ -469,8 +477,7 @@ JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *paren
 
     JSEmptyScope *emptyScope = proto->scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
-    emptyScope->hold();
-    map = emptyScope;
+    map = emptyScope->hold();
 }
 
 inline void
@@ -494,7 +501,7 @@ JSObject::unbrand(JSContext *cx)
                 return false;
             }
         }
-        scope->setGeneric();
+        scope->unbrand(cx);
         JS_UNLOCK_SCOPE(cx, scope);
     }
     return true;

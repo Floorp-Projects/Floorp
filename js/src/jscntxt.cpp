@@ -45,8 +45,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "jstypes.h"
+
+#define __STDC_LIMIT_MACROS
 #include "jsstdint.h"
+
+#include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsclist.h"
@@ -77,6 +80,9 @@
 
 #ifdef XP_WIN
 # include <windows.h>
+#elif defined(XP_OS2)
+# define INCL_DOSMEMMGR
+# include <os2.h>
 #else
 # include <unistd.h>
 # include <sys/mman.h>
@@ -136,6 +142,12 @@ StackSpace::init()
     base = reinterpret_cast<jsval *>(p);
     commitEnd = base + COMMIT_VALS;
     end = base + CAPACITY_VALS;
+#elif defined(XP_OS2)
+    if (DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE | OBJ_ANY) &&
+        DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
+        return false;
+    base = reinterpret_cast<jsval *>(p);
+    end = base + CAPACITY_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -153,6 +165,8 @@ StackSpace::finish()
 #ifdef XP_WIN
     VirtualFree(base, (commitEnd - base) * sizeof(jsval), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
+#elif defined(XP_OS2)
+    DosFreeMem(base);
 #else
     munmap(base, CAPACITY_BYTES);
 #endif
@@ -1027,30 +1041,14 @@ DumpFunctionMeter(JSContext *cx)
 # define DUMP_FUNCTION_METER(cx)   ((void) 0)
 #endif
 
-#ifdef JS_PROTO_CACHE_METERING
-static void
-DumpProtoCacheMeter(JSContext *cx)
-{
-    JSClassProtoCache::Stats *stats = &cx->runtime->classProtoCacheStats;
-    FILE *fp = fopen("/tmp/protocache.stats", "a");
-    fprintf(fp,
-            "hit ratio %g%%\n",
-            double(stats->hit) * 100.0 / double(stats->probe));
-    fclose(fp);
-}
-
-# define DUMP_PROTO_CACHE_METER(cx) DumpProtoCacheMeter(cx)
-#else
-# define DUMP_PROTO_CACHE_METER(cx) ((void) 0)
-#endif
-
-
 void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
     JSRuntime *rt;
     JSContextCallback cxCallback;
     JSBool last;
+
+    JS_ASSERT(!cx->enumerators);
 
     rt = cx->runtime;
 #ifdef JS_THREADSAFE
@@ -1150,7 +1148,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             js_GC(cx, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
-            DUMP_PROTO_CACHE_METER(cx);
 
             /* Take the runtime down, now that it has no contexts or atoms. */
             JS_LOCK_GC(rt);
@@ -1167,6 +1164,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     }
 #ifdef JS_THREADSAFE
     js_ClearContextThread(cx);
+#endif
+#ifdef JS_METER_DST_OFFSET_CACHING
+    cx->dstOffsetCache.dumpStats();
 #endif
     JS_UNLOCK_GC(rt);
     FreeContext(cx);
@@ -1246,48 +1246,6 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
     return js_ContextIterator(rt, JS_FALSE, &iter);
 #endif
 }
-
-#ifdef JS_THREADSAFE
-
-uint32
-js_CountThreadRequests(JSContext *cx)
-{
-    JSCList *head, *link;
-    uint32 nrequests;
-
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    head = &cx->thread->contextList;
-    nrequests = 0;
-    for (link = head->next; link != head; link = link->next) {
-        JSContext *acx = CX_FROM_THREAD_LINKS(link);
-        JS_ASSERT(acx->thread == cx->thread);
-        if (acx->requestDepth)
-            nrequests++;
-    }
-    return nrequests;
-}
-
-/*
- * If the GC is running and we're called on another thread, wait for this GC
- * activation to finish. We can safely wait here without fear of deadlock (in
- * the case where we are called within a request on another thread's context)
- * because the GC doesn't set rt->gcRunning until after it has waited for all
- * active requests to end.
- *
- * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
- * expensive calls when the GC is not running.
- */
-void
-js_WaitForGC(JSRuntime *rt)
-{
-    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
-        do {
-            JS_AWAIT_GC_DONE(rt);
-        } while (rt->gcRunning);
-    }
-}
-
-#endif
 
 static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)
@@ -2268,8 +2226,43 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #endif
 }
 
+void
+DSTOffsetCache::purge()
+{
+    /*
+     * NB: The initial range values are carefully chosen to result in a cache
+     *     miss on first use given the range of possible values.  Be careful
+     *     to keep these values and the caching algorithm in sync!
+     */
+    offsetMilliseconds = 0;
+    rangeStartSeconds = rangeEndSeconds = INT64_MIN;
+
+#ifdef JS_METER_DST_OFFSET_CACHING
+    totalCalculations = 0;
+    hit = 0;
+    missIncreasing = missDecreasing = 0;
+    missIncreasingOffsetChangeExpand = missIncreasingOffsetChangeUpper = 0;
+    missDecreasingOffsetChangeExpand = missDecreasingOffsetChangeLower = 0;
+    missLargeIncrease = missLargeDecrease = 0;
+#endif
+
+    sanityCheck();
+}
+
+/*
+ * Since getDSTOffsetMilliseconds guarantees that all times seen will be
+ * positive, we can initialize the range at construction time with large
+ * negative numbers to ensure the first computation is always a cache miss and
+ * doesn't return a bogus offset.
+ */
+DSTOffsetCache::DSTOffsetCache()
+{
+    purge();
+}
+
 JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
+    compartment(rt->defaultCompartment),
     fp(NULL),
     regs(NULL),
     regExpStatics(this),
@@ -2471,5 +2464,44 @@ void
 JSContext::purge()
 {
     FreeOldArenas(runtime, &regexpPool);
-    classProtoCache.purge();
+}
+
+JSCompartment::JSCompartment(JSRuntime *rt) : rt(rt), marked(false)
+{
+}
+
+JSCompartment::~JSCompartment()
+{
+}
+
+namespace js {
+
+AutoNewCompartment::AutoNewCompartment(JSContext *cx) :
+    cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = NULL;
+}
+
+bool
+AutoNewCompartment::init()
+{
+    return !!(cx->compartment = NewCompartment(cx));
+}
+
+AutoNewCompartment::~AutoNewCompartment()
+{
+    cx->compartment = compartment;
+}
+
+AutoCompartment::AutoCompartment(JSContext *cx, JSObject *obj) :
+    cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = obj->getCompartment(cx);
+}
+
+AutoCompartment::~AutoCompartment()
+{
+    cx->compartment = compartment;
+}
+
 }

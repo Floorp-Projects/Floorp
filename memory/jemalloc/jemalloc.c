@@ -5770,6 +5770,8 @@ inline void sys_free(void* ptr) {return free(ptr);}
 #define	calloc(a, b)	je_calloc(a, b)
 #define	realloc(a, b)	je_realloc(a, b)
 #define	free(a)		je_free(a)
+#define posix_memalign(a, b, c)  je_posix_memalign(a, b, c)
+
 char    *je_strndup(const char *src, size_t len) {
   char* dst = (char*)je_malloc(len + 1);
   if(dst)

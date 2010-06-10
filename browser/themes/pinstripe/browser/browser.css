@@ -1523,7 +1523,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-border-right-colors: rgba(0, 0, 0, .08) rgba(0, 0, 0, .17) rgba(180, 180, 180, .29);
   -moz-border-bottom-colors: rgba(0, 0, 0, .08) rgba(0, 0, 0, .17) rgba(180, 180, 180, .29);
   -moz-border-left-colors: rgba(0, 0, 0, .08) rgba(0, 0, 0, .17) rgba(180, 180, 180, .29);
-  -moz-background-clip: padding;
+  background-clip: padding-box;
   min-width: 1px !important;
   text-align: center;
   height: 24px;

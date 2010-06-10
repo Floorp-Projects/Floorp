@@ -318,7 +318,7 @@ ThrowException(nsresult rv, JSContext *cx)
 }
 
 // Like GetWrappedObject, but works on other types of wrappers, too.
-// See also js_GetWrappedObject in jsobj.h.
+// See also JSObject::wrappedObject in jsobj.cpp.
 // TODO Move to XPCWrapper?
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)

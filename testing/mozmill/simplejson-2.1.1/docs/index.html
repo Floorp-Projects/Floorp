@@ -1,0 +1,564 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>simplejson &#8212; JSON encoder and decoder &mdash; simplejson v2.1.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '2.1.1',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: '.html'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="simplejson v2.1.1 documentation" href="" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="">simplejson v2.1.1 documentation</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="module-simplejson">
+<h1 id="module-simplejson"><tt class="xref docutils literal"><span class="pre">simplejson</span></tt> &#8212; JSON encoder and decoder<a class="headerlink" href="#module-simplejson" title="Permalink to this headline">¶</a></h1>
+<p>JSON (JavaScript Object Notation) &lt;<a class="reference external" href="http://json.org">http://json.org</a>&gt; is a subset of JavaScript
+syntax (ECMA-262 3rd edition) used as a lightweight data interchange format.</p>
+<p><tt class="xref docutils literal"><span class="pre">simplejson</span></tt> exposes an API familiar to users of the standard library
+<tt class="xref docutils literal"><span class="pre">marshal</span></tt> and <tt class="xref docutils literal"><span class="pre">pickle</span></tt> modules. It is the externally maintained
+version of the <tt class="xref docutils literal"><span class="pre">json</span></tt> library contained in Python 2.6, but maintains
+compatibility with Python 2.5 and (currently) has
+significant performance advantages, even without using the optional C
+extension for speedups.</p>
+<p>Encoding basic Python object hierarchies:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&#39;baz&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2</span><span class="p">)}])</span>
+<span class="go">&#39;[&quot;foo&quot;, {&quot;bar&quot;: [&quot;baz&quot;, null, 1.0, 2]}]&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">foo</span><span class="se">\b</span><span class="s">ar&quot;</span><span class="p">)</span>
+<span class="go">&quot;\&quot;foo\bar&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="s">u&#39;</span><span class="se">\u1234</span><span class="s">&#39;</span><span class="p">)</span>
+<span class="go">&quot;\u1234&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">)</span>
+<span class="go">&quot;\\&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s">&quot;c&quot;</span><span class="p">:</span> <span class="mf">0</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">:</span> <span class="mf">0</span><span class="p">,</span> <span class="s">&quot;a&quot;</span><span class="p">:</span> <span class="mf">0</span><span class="p">},</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">{&quot;a&quot;: 0, &quot;b&quot;: 0, &quot;c&quot;: 0}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">StringIO</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">io</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">([</span><span class="s">&#39;streaming API&#39;</span><span class="p">],</span> <span class="n">io</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">io</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+<span class="go">&#39;[&quot;streaming API&quot;]&#39;</span>
+</pre></div>
+<p>Compact encoding:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,{</span><span class="s">&#39;4&#39;</span><span class="p">:</span> <span class="mf">5</span><span class="p">,</span> <span class="s">&#39;6&#39;</span><span class="p">:</span> <span class="mf">7</span><span class="p">}],</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">,</span><span class="s">&#39;:&#39;</span><span class="p">))</span>
+<span class="go">&#39;[1,2,3,{&quot;4&quot;:5,&quot;6&quot;:7}]&#39;</span>
+</pre></div>
+<p>Pretty printing:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s">&#39;4&#39;</span><span class="p">:</span> <span class="mf">5</span><span class="p">,</span> <span class="s">&#39;6&#39;</span><span class="p">:</span> <span class="mf">7</span><span class="p">},</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mf">4</span> <span class="o">*</span> <span class="s">&#39; &#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span>  <span class="n">s</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()])</span>
+<span class="go">{</span>
+<span class="go">    &quot;4&quot;: 5,</span>
+<span class="go">    &quot;6&quot;: 7</span>
+<span class="go">}</span>
+</pre></div>
+<p>Decoding JSON:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&#39;foo&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">u&#39;bar&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">u&#39;baz&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2</span><span class="p">]}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="s">&#39;[&quot;foo&quot;, {&quot;bar&quot;:[&quot;baz&quot;, null, 1.0, 2]}]&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">obj</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="se">\\</span><span class="s">&quot;foo</span><span class="se">\\</span><span class="s">bar&quot;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">u&#39;&quot;foo</span><span class="se">\x08</span><span class="s">ar&#39;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">StringIO</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">io</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&#39;[&quot;streaming API&quot;]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">io</span><span class="p">)[</span><span class="mf">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;streaming API&#39;</span>
+<span class="go">True</span>
+</pre></div>
+<p>Using Decimal instead of float:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">decimal</span> <span class="k">import</span> <span class="n">Decimal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="s">&#39;1.1&#39;</span><span class="p">,</span> <span class="n">use_decimal</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="n">Decimal</span><span class="p">(</span><span class="s">&#39;1.1&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s">&#39;1.1&#39;</span><span class="p">),</span> <span class="n">use_decimal</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;1.1&#39;</span>
+<span class="go">True</span>
+</pre></div>
+<p>Specializing JSON object decoding:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">as_complex</span><span class="p">(</span><span class="n">dct</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="s">&#39;__complex__&#39;</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;real&#39;</span><span class="p">],</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;imag&#39;</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">dct</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="s">&#39;{&quot;__complex__&quot;: true, &quot;real&quot;: 1, &quot;imag&quot;: 2}&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">object_hook</span><span class="o">=</span><span class="n">as_complex</span><span class="p">)</span>
+<span class="go">(1+2j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">decimal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="s">&#39;1.1&#39;</span><span class="p">,</span> <span class="n">parse_float</span><span class="o">=</span><span class="n">decimal</span><span class="o">.</span><span class="n">Decimal</span><span class="p">)</span> <span class="o">==</span> <span class="n">decimal</span><span class="o">.</span><span class="n">Decimal</span><span class="p">(</span><span class="s">&#39;1.1&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+<p>Specializing JSON object encoding:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">encode_complex</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">imag</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; is not JSON serializable&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="mf">2</span> <span class="o">+</span> <span class="mf">1</span><span class="n">j</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">encode_complex</span><span class="p">)</span>
+<span class="go">&#39;[2.0, 1.0]&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">encode_complex</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="mf">2</span> <span class="o">+</span> <span class="mf">1</span><span class="n">j</span><span class="p">)</span>
+<span class="go">&#39;[2.0, 1.0]&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">encode_complex</span><span class="p">)</span><span class="o">.</span><span class="n">iterencode</span><span class="p">(</span><span class="mf">2</span> <span class="o">+</span> <span class="mf">1</span><span class="n">j</span><span class="p">))</span>
+<span class="go">&#39;[2.0, 1.0]&#39;</span>
+</pre></div>
+<p>Using <tt class="xref docutils literal"><span class="pre">simplejson.tool</span></tt> from the shell to validate and pretty-print:</p>
+<div class="highlight"><pre>$ echo &#39;{&quot;json&quot;:&quot;obj&quot;}&#39; | python -m simplejson.tool
+{
+    &quot;json&quot;: &quot;obj&quot;
+}
+$ echo &#39;{ 1.2:3.4}&#39; | python -m simplejson.tool
+Expecting property name: line 1 column 2 (char 2)
+</pre></div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The JSON produced by this module&#8217;s default settings is a subset of
+YAML, so it may be used as a serializer for that as well.</p>
+</div>
+<div class="section" id="basic-usage">
+<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="simplejson.dump">
+<!--[simplejson.dump]--><tt class="descclassname">simplejson.</tt><tt class="descname">dump</tt><big>(</big><em>obj</em>, <em>fp</em><span class="optional">[</span>, <em>skipkeys</em><span class="optional">[</span>, <em>ensure_ascii</em><span class="optional">[</span>, <em>check_circular</em><span class="optional">[</span>, <em>allow_nan</em><span class="optional">[</span>, <em>cls</em><span class="optional">[</span>, <em>indent</em><span class="optional">[</span>, <em>separators</em><span class="optional">[</span>, <em>encoding</em><span class="optional">[</span>, <em>default</em><span class="optional">[</span>, <em>use_decimal</em><span class="optional">[</span>, <em>**kw</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize <em>obj</em> as a JSON formatted stream to <em>fp</em> (a <tt class="docutils literal"><span class="pre">.write()</span></tt>-supporting
+file-like object).</p>
+<p>If <em>skipkeys</em> is true (default: <tt class="xref docutils literal"><span class="pre">False</span></tt>), then dict keys that are not
+of a basic type (<tt class="xref docutils literal"><span class="pre">str</span></tt>, <tt class="xref docutils literal"><span class="pre">unicode</span></tt>, <tt class="xref docutils literal"><span class="pre">int</span></tt>, <tt class="xref docutils literal"><span class="pre">long</span></tt>,
+<tt class="xref docutils literal"><span class="pre">float</span></tt>, <tt class="xref docutils literal"><span class="pre">bool</span></tt>, <tt class="xref docutils literal"><span class="pre">None</span></tt>) will be skipped instead of raising a
+<tt class="xref docutils literal"><span class="pre">TypeError</span></tt>.</p>
+<p>If <em>ensure_ascii</em> is false (default: <tt class="xref docutils literal"><span class="pre">True</span></tt>), then some chunks written
+to <em>fp</em> may be <tt class="xref docutils literal"><span class="pre">unicode</span></tt> instances, subject to normal Python
+<tt class="xref docutils literal"><span class="pre">str</span></tt> to <tt class="xref docutils literal"><span class="pre">unicode</span></tt> coercion rules.  Unless <tt class="docutils literal"><span class="pre">fp.write()</span></tt>
+explicitly understands <tt class="xref docutils literal"><span class="pre">unicode</span></tt> (as in <tt class="xref docutils literal"><span class="pre">codecs.getwriter()</span></tt>) this
+is likely to cause an error. It&#8217;s best to leave the default settings, because
+they are safe and it is highly optimized.</p>
+<p>If <em>check_circular</em> is false (default: <tt class="xref docutils literal"><span class="pre">True</span></tt>), then the circular
+reference check for container types will be skipped and a circular reference
+will result in an <tt class="xref docutils literal"><span class="pre">OverflowError</span></tt> (or worse).</p>
+<p>If <em>allow_nan</em> is false (default: <tt class="xref docutils literal"><span class="pre">True</span></tt>), then it will be a
+<tt class="xref docutils literal"><span class="pre">ValueError</span></tt> to serialize out of range <tt class="xref docutils literal"><span class="pre">float</span></tt> values (<tt class="docutils literal"><span class="pre">nan</span></tt>,
+<tt class="docutils literal"><span class="pre">inf</span></tt>, <tt class="docutils literal"><span class="pre">-inf</span></tt>) in strict compliance of the JSON specification.
+If <em>allow_nan</em> is true, their JavaScript equivalents will be used
+(<tt class="docutils literal"><span class="pre">NaN</span></tt>, <tt class="docutils literal"><span class="pre">Infinity</span></tt>, <tt class="docutils literal"><span class="pre">-Infinity</span></tt>).</p>
+<p>If <em>indent</em> is a string, then JSON array elements and object members
+will be pretty-printed with a newline followed by that string repeated
+for each level of nesting. <tt class="xref docutils literal"><span class="pre">None</span></tt> (the default) selects the most compact
+representation without any newlines. For backwards compatibility with
+versions of simplejson earlier than 2.1.0, an integer is also accepted
+and is converted to a string with that many spaces.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span>Changed <em>indent</em> from an integer number of spaces to a string.</p>
+<p>If specified, <em>separators</em> should be an <tt class="docutils literal"><span class="pre">(item_separator,</span> <span class="pre">dict_separator)</span></tt>
+tuple.  By default, <tt class="docutils literal"><span class="pre">(',</span> <span class="pre">',</span> <span class="pre">':</span> <span class="pre">')</span></tt> are used.  To get the most compact JSON
+representation, you should specify <tt class="docutils literal"><span class="pre">(',',</span> <span class="pre">':')</span></tt> to eliminate whitespace.</p>
+<p><em>encoding</em> is the character encoding for str instances, default is
+<tt class="docutils literal"><span class="pre">'utf-8'</span></tt>.</p>
+<p><em>default(obj)</em> is a function that should return a serializable version of
+<em>obj</em> or raise <tt class="xref docutils literal"><span class="pre">TypeError</span></tt>.  The default simply raises <tt class="xref docutils literal"><span class="pre">TypeError</span></tt>.</p>
+<p>To use a custom <a title="simplejson.JSONEncoder" class="reference internal" href="#simplejson.JSONEncoder"><tt class="xref docutils literal"><span class="pre">JSONEncoder</span></tt></a> subclass (e.g. one that overrides the
+<tt class="xref docutils literal"><span class="pre">default()</span></tt> method to serialize additional types), specify it with the
+<em>cls</em> kwarg.</p>
+<p>If <em>use_decimal</em> is true (default: <tt class="xref docutils literal"><span class="pre">False</span></tt>) then <tt class="xref docutils literal"><span class="pre">decimal.Decimal</span></tt>
+will be natively serialized to JSON with full precision.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span><em>use_decimal</em> is new in 2.1.0.<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">JSON is not a framed protocol so unlike <tt class="xref docutils literal"><span class="pre">pickle</span></tt> or <tt class="xref docutils literal"><span class="pre">marshal</span></tt> it
+does not make sense to serialize more than one JSON document without some
+container protocol to delimit them.</p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="simplejson.dumps">
+<!--[simplejson.dumps]--><tt class="descclassname">simplejson.</tt><tt class="descname">dumps</tt><big>(</big><em>obj</em><span class="optional">[</span>, <em>skipkeys</em><span class="optional">[</span>, <em>ensure_ascii</em><span class="optional">[</span>, <em>check_circular</em><span class="optional">[</span>, <em>allow_nan</em><span class="optional">[</span>, <em>cls</em><span class="optional">[</span>, <em>indent</em><span class="optional">[</span>, <em>separators</em><span class="optional">[</span>, <em>encoding</em><span class="optional">[</span>, <em>default</em><span class="optional">[</span>, <em>use_decimal</em><span class="optional">[</span>, <em>**kw</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.dumps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize <em>obj</em> to a JSON formatted <tt class="xref docutils literal"><span class="pre">str</span></tt>.</p>
+<p>If <em>ensure_ascii</em> is false, then the return value will be a
+<tt class="xref docutils literal"><span class="pre">unicode</span></tt> instance.  The other arguments have the same meaning as in
+<a title="simplejson.dump" class="reference internal" href="#simplejson.dump"><tt class="xref docutils literal"><span class="pre">dump()</span></tt></a>. Note that the default <em>ensure_ascii</em> setting has much
+better performance.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="simplejson.load">
+<!--[simplejson.load]--><tt class="descclassname">simplejson.</tt><tt class="descname">load</tt><big>(</big><em>fp</em><span class="optional">[</span>, <em>encoding</em><span class="optional">[</span>, <em>cls</em><span class="optional">[</span>, <em>object_hook</em><span class="optional">[</span>, <em>parse_float</em><span class="optional">[</span>, <em>parse_int</em><span class="optional">[</span>, <em>parse_constant</em><span class="optional">[</span>, <em>object_pairs_hook</em><span class="optional">[</span>, <em>use_decimal</em><span class="optional">[</span>, <em>**kw</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize <em>fp</em> (a <tt class="docutils literal"><span class="pre">.read()</span></tt>-supporting file-like object containing a JSON
+document) to a Python object.</p>
+<p>If the contents of <em>fp</em> are encoded with an ASCII based encoding other than
+UTF-8 (e.g. latin-1), then an appropriate <em>encoding</em> name must be specified.
+Encodings that are not ASCII based (such as UCS-2) are not allowed, and
+should be wrapped with <tt class="docutils literal"><span class="pre">codecs.getreader(fp)(encoding)</span></tt>, or simply decoded
+to a <tt class="xref docutils literal"><span class="pre">unicode</span></tt> object and passed to <a title="simplejson.loads" class="reference internal" href="#simplejson.loads"><tt class="xref docutils literal"><span class="pre">loads()</span></tt></a>. The default
+setting of <tt class="docutils literal"><span class="pre">'utf-8'</span></tt> is fastest and should be using whenever possible.</p>
+<p>If <em>fp.read()</em> returns <tt class="xref docutils literal"><span class="pre">str</span></tt> then decoded JSON strings that contain
+only ASCII characters may be parsed as <tt class="xref docutils literal"><span class="pre">str</span></tt> for performance and
+memory reasons. If your code expects only <tt class="xref docutils literal"><span class="pre">unicode</span></tt> the appropriate
+solution is to wrap fp with a reader as demonstrated above.</p>
+<p><em>object_hook</em> is an optional function that will be called with the result of
+any object literal decode (a <tt class="xref docutils literal"><span class="pre">dict</span></tt>).  The return value of
+<em>object_hook</em> will be used instead of the <tt class="xref docutils literal"><span class="pre">dict</span></tt>.  This feature can be used
+to implement custom decoders (e.g. JSON-RPC class hinting).</p>
+<p><em>object_pairs_hook</em> is an optional function that will be called with the
+result of any object literal decode with an ordered list of pairs.  The
+return value of <em>object_pairs_hook</em> will be used instead of the
+<tt class="xref docutils literal"><span class="pre">dict</span></tt>.  This feature can be used to implement custom decoders that
+rely on the order that the key and value pairs are decoded (for example,
+<tt class="xref docutils literal"><span class="pre">collections.OrderedDict</span></tt> will remember the order of insertion). If
+<em>object_hook</em> is also defined, the <em>object_pairs_hook</em> takes priority.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span>Added support for <em>object_pairs_hook</em>.</p>
+<p><em>parse_float</em>, if specified, will be called with the string of every JSON
+float to be decoded.  By default, this is equivalent to <tt class="docutils literal"><span class="pre">float(num_str)</span></tt>.
+This can be used to use another datatype or parser for JSON floats
+(e.g. <tt class="xref docutils literal"><span class="pre">decimal.Decimal</span></tt>).</p>
+<p><em>parse_int</em>, if specified, will be called with the string of every JSON int
+to be decoded.  By default, this is equivalent to <tt class="docutils literal"><span class="pre">int(num_str)</span></tt>.  This can
+be used to use another datatype or parser for JSON integers
+(e.g. <tt class="xref docutils literal"><span class="pre">float</span></tt>).</p>
+<p><em>parse_constant</em>, if specified, will be called with one of the following
+strings: <tt class="docutils literal"><span class="pre">'-Infinity'</span></tt>, <tt class="docutils literal"><span class="pre">'Infinity'</span></tt>, <tt class="docutils literal"><span class="pre">'NaN'</span></tt>.  This can be used to
+raise an exception if invalid JSON numbers are encountered.</p>
+<p>If <em>use_decimal</em> is true (default: <tt class="xref docutils literal"><span class="pre">False</span></tt>) then <em>parse_float</em> is set to
+<tt class="xref docutils literal"><span class="pre">decimal.Decimal</span></tt>. This is a convenience for parity with the
+<a title="simplejson.dump" class="reference internal" href="#simplejson.dump"><tt class="xref docutils literal"><span class="pre">dump()</span></tt></a> parameter.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span><em>use_decimal</em> is new in 2.1.0.</p>
+<p>To use a custom <a title="simplejson.JSONDecoder" class="reference internal" href="#simplejson.JSONDecoder"><tt class="xref docutils literal"><span class="pre">JSONDecoder</span></tt></a> subclass, specify it with the <tt class="docutils literal"><span class="pre">cls</span></tt>
+kwarg.  Additional keyword arguments will be passed to the constructor of the
+class.</p>
+<blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a title="simplejson.load" class="reference internal" href="#simplejson.load"><tt class="xref docutils literal"><span class="pre">load()</span></tt></a> will read the rest of the file-like object as a string and
+then call <a title="simplejson.loads" class="reference internal" href="#simplejson.loads"><tt class="xref docutils literal"><span class="pre">loads()</span></tt></a>. It does not stop at the end of the first valid
+JSON document it finds and it will raise an error if there is anything
+other than whitespace after the document. Except for files containing
+only one JSON document, it is recommended to use <a title="simplejson.loads" class="reference internal" href="#simplejson.loads"><tt class="xref docutils literal"><span class="pre">loads()</span></tt></a>.</p>
+</div>
+</blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="simplejson.loads">
+<!--[simplejson.loads]--><tt class="descclassname">simplejson.</tt><tt class="descname">loads</tt><big>(</big><em>s</em><span class="optional">[</span>, <em>encoding</em><span class="optional">[</span>, <em>cls</em><span class="optional">[</span>, <em>object_hook</em><span class="optional">[</span>, <em>parse_float</em><span class="optional">[</span>, <em>parse_int</em><span class="optional">[</span>, <em>parse_constant</em><span class="optional">[</span>, <em>object_pairs_hook</em><span class="optional">[</span>, <em>use_decimal</em><span class="optional">[</span>, <em>**kw</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.loads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize <em>s</em> (a <tt class="xref docutils literal"><span class="pre">str</span></tt> or <tt class="xref docutils literal"><span class="pre">unicode</span></tt> instance containing a JSON
+document) to a Python object.</p>
+<p>If <em>s</em> is a <tt class="xref docutils literal"><span class="pre">str</span></tt> instance and is encoded with an ASCII based encoding
+other than UTF-8 (e.g. latin-1), then an appropriate <em>encoding</em> name must be
+specified.  Encodings that are not ASCII based (such as UCS-2) are not
+allowed and should be decoded to <tt class="xref docutils literal"><span class="pre">unicode</span></tt> first.</p>
+<p>If <em>s</em> is a <tt class="xref docutils literal"><span class="pre">str</span></tt> then decoded JSON strings that contain
+only ASCII characters may be parsed as <tt class="xref docutils literal"><span class="pre">str</span></tt> for performance and
+memory reasons. If your code expects only <tt class="xref docutils literal"><span class="pre">unicode</span></tt> the appropriate
+solution is decode <em>s</em> to <tt class="xref docutils literal"><span class="pre">unicode</span></tt> prior to calling loads.</p>
+<p>The other arguments have the same meaning as in <a title="simplejson.load" class="reference internal" href="#simplejson.load"><tt class="xref docutils literal"><span class="pre">load()</span></tt></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="encoders-and-decoders">
+<h2 id="encoders-and-decoders">Encoders and decoders<a class="headerlink" href="#encoders-and-decoders" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="simplejson.JSONDecoder">
+<!--[simplejson.JSONDecoder]-->class <tt class="descclassname">simplejson.</tt><tt class="descname">JSONDecoder</tt><big>(</big><span class="optional">[</span><em>encoding</em><span class="optional">[</span>, <em>object_hook</em><span class="optional">[</span>, <em>parse_float</em><span class="optional">[</span>, <em>parse_int</em><span class="optional">[</span>, <em>parse_constant</em><span class="optional">[</span>, <em>object_pairs_hook</em><span class="optional">[</span>, <em>strict</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.JSONDecoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple JSON decoder.</p>
+<p>Performs the following translations in decoding by default:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="56%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">JSON</th>
+<th class="head">Python</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>object</td>
+<td>dict</td>
+</tr>
+<tr><td>array</td>
+<td>list</td>
+</tr>
+<tr><td>string</td>
+<td>unicode</td>
+</tr>
+<tr><td>number (int)</td>
+<td>int, long</td>
+</tr>
+<tr><td>number (real)</td>
+<td>float</td>
+</tr>
+<tr><td>true</td>
+<td>True</td>
+</tr>
+<tr><td>false</td>
+<td>False</td>
+</tr>
+<tr><td>null</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p>It also understands <tt class="docutils literal"><span class="pre">NaN</span></tt>, <tt class="docutils literal"><span class="pre">Infinity</span></tt>, and <tt class="docutils literal"><span class="pre">-Infinity</span></tt> as their
+corresponding <tt class="docutils literal"><span class="pre">float</span></tt> values, which is outside the JSON spec.</p>
+<p><em>encoding</em> determines the encoding used to interpret any <tt class="xref docutils literal"><span class="pre">str</span></tt> objects
+decoded by this instance (<tt class="docutils literal"><span class="pre">'utf-8'</span></tt> by default).  It has no effect when decoding
+<tt class="xref docutils literal"><span class="pre">unicode</span></tt> objects.</p>
+<p>Note that currently only encodings that are a superset of ASCII work, strings
+of other encodings should be passed in as <tt class="xref docutils literal"><span class="pre">unicode</span></tt>.</p>
+<p><em>object_hook</em> is an optional function that will be called with the result of
+every JSON object decoded and its return value will be used in place of the
+given <tt class="xref docutils literal"><span class="pre">dict</span></tt>.  This can be used to provide custom deserializations
+(e.g. to support JSON-RPC class hinting).</p>
+<p><em>object_pairs_hook</em> is an optional function that will be called with the
+result of any object literal decode with an ordered list of pairs.  The
+return value of <em>object_pairs_hook</em> will be used instead of the
+<tt class="xref docutils literal"><span class="pre">dict</span></tt>.  This feature can be used to implement custom decoders that
+rely on the order that the key and value pairs are decoded (for example,
+<tt class="xref docutils literal"><span class="pre">collections.OrderedDict</span></tt> will remember the order of insertion). If
+<em>object_hook</em> is also defined, the <em>object_pairs_hook</em> takes priority.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span>Added support for <em>object_pairs_hook</em>.</p>
+<p><em>parse_float</em>, if specified, will be called with the string of every JSON
+float to be decoded.  By default, this is equivalent to <tt class="docutils literal"><span class="pre">float(num_str)</span></tt>.
+This can be used to use another datatype or parser for JSON floats
+(e.g. <tt class="xref docutils literal"><span class="pre">decimal.Decimal</span></tt>).</p>
+<p><em>parse_int</em>, if specified, will be called with the string of every JSON int
+to be decoded.  By default, this is equivalent to <tt class="docutils literal"><span class="pre">int(num_str)</span></tt>.  This can
+be used to use another datatype or parser for JSON integers
+(e.g. <tt class="xref docutils literal"><span class="pre">float</span></tt>).</p>
+<p><em>parse_constant</em>, if specified, will be called with one of the following
+strings: <tt class="docutils literal"><span class="pre">'-Infinity'</span></tt>, <tt class="docutils literal"><span class="pre">'Infinity'</span></tt>, <tt class="docutils literal"><span class="pre">'NaN'</span></tt>.  This can be used to
+raise an exception if invalid JSON numbers are encountered.</p>
+<p><em>strict</em> controls the parser&#8217;s behavior when it encounters an invalid
+control character in a string. The default setting of <tt class="xref docutils literal"><span class="pre">True</span></tt> means that
+unescaped control characters are parse errors, if <tt class="xref docutils literal"><span class="pre">False</span></tt> then control
+characters will be allowed in strings.</p>
+<dl class="method">
+<dt id="simplejson.JSONDecoder.decode">
+<!--[simplejson.JSONDecoder.decode]--><tt class="descname">decode</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#simplejson.JSONDecoder.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Python representation of <em>s</em> (a <tt class="xref docutils literal"><span class="pre">str</span></tt> or
+<tt class="xref docutils literal"><span class="pre">unicode</span></tt> instance containing a JSON document)</p>
+<p>If <em>s</em> is a <tt class="xref docutils literal"><span class="pre">str</span></tt> then decoded JSON strings that contain
+only ASCII characters may be parsed as <tt class="xref docutils literal"><span class="pre">str</span></tt> for performance and
+memory reasons. If your code expects only <tt class="xref docutils literal"><span class="pre">unicode</span></tt> the
+appropriate solution is decode <em>s</em> to <tt class="xref docutils literal"><span class="pre">unicode</span></tt> prior to calling
+decode.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simplejson.JSONDecoder.raw_decode">
+<!--[simplejson.JSONDecoder.raw_decode]--><tt class="descname">raw_decode</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#simplejson.JSONDecoder.raw_decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode a JSON document from <em>s</em> (a <tt class="xref docutils literal"><span class="pre">str</span></tt> or <tt class="xref docutils literal"><span class="pre">unicode</span></tt>
+beginning with a JSON document) and return a 2-tuple of the Python
+representation and the index in <em>s</em> where the document ended.</p>
+<p>This can be used to decode a JSON document from a string that may have
+extraneous data at the end.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="simplejson.JSONEncoder">
+<!--[simplejson.JSONEncoder]-->class <tt class="descclassname">simplejson.</tt><tt class="descname">JSONEncoder</tt><big>(</big><span class="optional">[</span><em>skipkeys</em><span class="optional">[</span>, <em>ensure_ascii</em><span class="optional">[</span>, <em>check_circular</em><span class="optional">[</span>, <em>allow_nan</em><span class="optional">[</span>, <em>sort_keys</em><span class="optional">[</span>, <em>indent</em><span class="optional">[</span>, <em>separators</em><span class="optional">[</span>, <em>encoding</em><span class="optional">[</span>, <em>default</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.JSONEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extensible JSON encoder for Python data structures.</p>
+<p>Supports the following objects and types by default:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Python</th>
+<th class="head">JSON</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>dict</td>
+<td>object</td>
+</tr>
+<tr><td>list, tuple</td>
+<td>array</td>
+</tr>
+<tr><td>str, unicode</td>
+<td>string</td>
+</tr>
+<tr><td>int, long, float</td>
+<td>number</td>
+</tr>
+<tr><td>True</td>
+<td>true</td>
+</tr>
+<tr><td>False</td>
+<td>false</td>
+</tr>
+<tr><td>None</td>
+<td>null</td>
+</tr>
+</tbody>
+</table>
+<p>To extend this to recognize other objects, subclass and implement a
+<a title="simplejson.JSONEncoder.default" class="reference internal" href="#simplejson.JSONEncoder.default"><tt class="xref docutils literal"><span class="pre">default()</span></tt></a> method with another method that returns a serializable object
+for <tt class="docutils literal"><span class="pre">o</span></tt> if possible, otherwise it should call the superclass implementation
+(to raise <tt class="xref docutils literal"><span class="pre">TypeError</span></tt>).</p>
+<p>If <em>skipkeys</em> is false (the default), then it is a <tt class="xref docutils literal"><span class="pre">TypeError</span></tt> to
+attempt encoding of keys that are not str, int, long, float or None.  If
+<em>skipkeys</em> is true, such items are simply skipped.</p>
+<p>If <em>ensure_ascii</em> is true (the default), the output is guaranteed to be
+<tt class="xref docutils literal"><span class="pre">str</span></tt> objects with all incoming unicode characters escaped.  If
+<em>ensure_ascii</em> is false, the output will be a unicode object.</p>
+<p>If <em>check_circular</em> is false (the default), then lists, dicts, and custom
+encoded objects will be checked for circular references during encoding to
+prevent an infinite recursion (which would cause an <tt class="xref docutils literal"><span class="pre">OverflowError</span></tt>).
+Otherwise, no such check takes place.</p>
+<p>If <em>allow_nan</em> is true (the default), then <tt class="docutils literal"><span class="pre">NaN</span></tt>, <tt class="docutils literal"><span class="pre">Infinity</span></tt>, and
+<tt class="docutils literal"><span class="pre">-Infinity</span></tt> will be encoded as such.  This behavior is not JSON
+specification compliant, but is consistent with most JavaScript based
+encoders and decoders.  Otherwise, it will be a <tt class="xref docutils literal"><span class="pre">ValueError</span></tt> to encode
+such floats.</p>
+<p>If <em>sort_keys</em> is true (not the default), then the output of dictionaries
+will be sorted by key; this is useful for regression tests to ensure that
+JSON serializations can be compared on a day-to-day basis.</p>
+<p>If <em>indent</em> is a string, then JSON array elements and object members
+will be pretty-printed with a newline followed by that string repeated
+for each level of nesting. <tt class="xref docutils literal"><span class="pre">None</span></tt> (the default) selects the most compact
+representation without any newlines. For backwards compatibility with
+versions of simplejson earlier than 2.1.0, an integer is also accepted
+and is converted to a string with that many spaces.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span>Changed <em>indent</em> from an integer number of spaces to a string.</p>
+<p>If specified, <em>separators</em> should be an <tt class="docutils literal"><span class="pre">(item_separator,</span> <span class="pre">key_separator)</span></tt>
+tuple.  By default, <tt class="docutils literal"><span class="pre">(',</span> <span class="pre">',</span> <span class="pre">':</span> <span class="pre">')</span></tt> are used.  To get the most compact JSON
+representation, you should specify <tt class="docutils literal"><span class="pre">(',',</span> <span class="pre">':')</span></tt> to eliminate whitespace.</p>
+<p>If specified, <em>default</em> should be a function that gets called for objects
+that can&#8217;t otherwise be serialized.  It should return a JSON encodable
+version of the object or raise a <tt class="xref docutils literal"><span class="pre">TypeError</span></tt>.</p>
+<p>If <em>encoding</em> is not <tt class="xref docutils literal"><span class="pre">None</span></tt>, then all input strings will be transformed
+into unicode using that encoding prior to JSON-encoding.  The default is
+<tt class="docutils literal"><span class="pre">'utf-8'</span></tt>.</p>
+<dl class="method">
+<dt id="simplejson.JSONEncoder.default">
+<!--[simplejson.JSONEncoder.default]--><tt class="descname">default</tt><big>(</big><em>o</em><big>)</big><a class="headerlink" href="#simplejson.JSONEncoder.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement this method in a subclass such that it returns a serializable
+object for <em>o</em>, or calls the base implementation (to raise a
+<tt class="xref docutils literal"><span class="pre">TypeError</span></tt>).</p>
+<p>For example, to support arbitrary iterators, you could implement default
+like this:</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+   <span class="k">try</span><span class="p">:</span>
+       <span class="n">iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+   <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+       <span class="k">pass</span>
+   <span class="k">else</span><span class="p">:</span>
+       <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+</pre></div>
+</dd></dl>
+
+<dl class="method">
+<dt id="simplejson.JSONEncoder.encode">
+<!--[simplejson.JSONEncoder.encode]--><tt class="descname">encode</tt><big>(</big><em>o</em><big>)</big><a class="headerlink" href="#simplejson.JSONEncoder.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a JSON string representation of a Python data structure, <em>o</em>.  For
+example:</p>
+<div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">import</span> <span class="nn">simplejson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">({</span><span class="s">&quot;foo&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;bar&quot;</span><span class="p">,</span> <span class="s">&quot;baz&quot;</span><span class="p">]})</span>
+<span class="go">&#39;{&quot;foo&quot;: [&quot;bar&quot;, &quot;baz&quot;]}&#39;</span>
+</pre></div>
+</dd></dl>
+
+<dl class="method">
+<dt id="simplejson.JSONEncoder.iterencode">
+<!--[simplejson.JSONEncoder.iterencode]--><tt class="descname">iterencode</tt><big>(</big><em>o</em><big>)</big><a class="headerlink" href="#simplejson.JSONEncoder.iterencode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode the given object, <em>o</em>, and yield each string representation as
+available.  For example:</p>
+<div class="highlight"><pre><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">JSONEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">iterencode</span><span class="p">(</span><span class="n">bigobject</span><span class="p">):</span>
+    <span class="n">mysocket</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</pre></div>
+<p>Note that <a title="simplejson.JSONEncoder.encode" class="reference internal" href="#simplejson.JSONEncoder.encode"><tt class="xref docutils literal"><span class="pre">encode()</span></tt></a> has much better performance than
+<a title="simplejson.JSONEncoder.iterencode" class="reference internal" href="#simplejson.JSONEncoder.iterencode"><tt class="xref docutils literal"><span class="pre">iterencode()</span></tt></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="simplejson.JSONEncoderForHTML">
+<!--[simplejson.JSONEncoderForHTML]-->class <tt class="descclassname">simplejson.</tt><tt class="descname">JSONEncoderForHTML</tt><big>(</big><span class="optional">[</span><em>skipkeys</em><span class="optional">[</span>, <em>ensure_ascii</em><span class="optional">[</span>, <em>check_circular</em><span class="optional">[</span>, <em>allow_nan</em><span class="optional">[</span>, <em>sort_keys</em><span class="optional">[</span>, <em>indent</em><span class="optional">[</span>, <em>separators</em><span class="optional">[</span>, <em>encoding</em><span class="optional">[</span>, <em>default</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#simplejson.JSONEncoderForHTML" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a title="simplejson.JSONEncoder" class="reference internal" href="#simplejson.JSONEncoder"><tt class="xref docutils literal"><span class="pre">JSONEncoder</span></tt></a> that escapes &amp;, &lt;, and &gt; for embedding in HTML.</p>
+<p>
+<span class="versionmodified">Changed in version 2.1.0: </span>New in 2.1.0</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>Table Of Contents</h3>
+            <ul>
+<li><a class="reference external" href=""><tt class="docutils literal"><span class="pre">simplejson</span></tt> &#8212; JSON encoder and decoder</a><ul>
+<li><a class="reference external" href="#basic-usage">Basic Usage</a></li>
+<li><a class="reference external" href="#encoders-and-decoders">Encoders and decoders</a></li>
+</ul>
+</li>
+</ul>
+
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/index.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="">simplejson v2.1.1 documentation</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Bob Ippolito.
+      Last updated on Mar 31, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

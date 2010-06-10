@@ -248,7 +248,8 @@ WebGLContext::SynthesizeGLError(WebGLenum err, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    if (fmt)
+        LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(err);
@@ -259,7 +260,8 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    if (fmt)
+        LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
@@ -270,7 +272,8 @@ WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    if (fmt)
+        LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
@@ -281,7 +284,8 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    if (fmt)
+        LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);

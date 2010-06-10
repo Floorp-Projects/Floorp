@@ -475,6 +475,13 @@ public:
             NS_WARNING("Not same origin error!");
             errorevent.errorMsg = xoriginMsg.get();
             errorevent.lineNr = 0;
+            // FIXME: once the principal of the script is not tied to
+            // the filename, we can stop using the post-redirect
+            // filename if we want and remove this line.  Note that
+            // apparently we can't handle null filenames in the error
+            // event dispatching code.
+            static PRUnichar nullFilename[] = { PRUnichar(0) };
+            errorevent.fileName = nullFilename;
           }
 
           nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
@@ -3045,7 +3052,8 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
     uint32 optbit = (uint32) JSVAL_TO_INT(id);
-    if ((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR)
+    if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
+          optbit == JSOPTION_RELIMIT)
       *vp = (JS_GetOptions(cx) & optbit) ? JSVAL_TRUE : JSVAL_FALSE;
   }
   return JS_TRUE;

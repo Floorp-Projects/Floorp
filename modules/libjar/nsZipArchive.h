@@ -214,9 +214,6 @@ private:
   nsZipItem*        CreateZipItem();
   nsresult          BuildFileList();
   nsresult          BuildSynthetics();
-
-  nsresult  CopyItemToDisk(nsZipItem* item, PRFileDesc* outFD);
-  nsresult  InflateItem(nsZipItem* item, PRFileDesc* outFD);
 };
 
 class nsZipHandle {
@@ -263,6 +260,88 @@ private:
   //-- prevent copies and assignments
   nsZipFind& operator=(const nsZipFind& rhs);
   nsZipFind(const nsZipFind& rhs);
+};
+
+/** 
+ * nsZipCursor -- a low-level class for reading the individual items in a zip.
+ */
+class nsZipCursor {
+public:
+  /**
+   * Initializes the cursor
+   *
+   * @param   aItem       Item of interest
+   * @param   aZip        Archive
+   * @param   aBuf        Buffer used for decompression.
+   *                      This determines the maximum Read() size in the compressed case.
+   * @param   aBufSize    Buffer size
+   * @param   doCRC       When set to true Read() will check crc
+   */
+  nsZipCursor(nsZipItem *aItem, nsZipArchive *aZip, PRUint8* aBuf = NULL, PRUint32 aBufSize = 0, bool doCRC = false);
+
+  ~nsZipCursor();
+
+  /**
+   * Performs reads. In the compressed case it uses aBuf(passed in constructor), for stored files
+   * it returns a zero-copy buffer.
+   *
+   * @param   aBytesRead  Outparam for number of bytes read.
+   * @return  data read or NULL if item is corrupted.
+   */
+  PRUint8* Read(PRUint32 *aBytesRead);
+
+private:
+  nsZipItem *mItem; 
+  PRUint8  *mBuf; 
+  PRUint32  mBufSize; 
+  z_stream  mZs;
+  PRUint32 mCRC;
+  bool mDoCRC;
+};
+
+/** 
+ * nsZipItemPtr - a RAII convenience class for reading the individual items in a zip.
+ * It reads whole files and does zero-copy IO for stored files. A buffer is allocated
+ * for decompression.
+ * Do not use when the file may be very large.
+ */
+class nsZipItemPtr_base {
+public:
+  /**
+   * Initializes the reader
+   *
+   * @param   aZip        Archive
+   * @param   aEntryName  Archive membername
+   * @param   doCRC       When set to true Read() will check crc
+   */
+  nsZipItemPtr_base(nsZipArchive *aZip, const char *aEntryName, bool doCRC);
+
+  PRUint32 Length() const {
+    return mReadlen;
+  }
+
+protected:
+  nsRefPtr<nsZipHandle> mZipHandle;
+  nsAutoArrayPtr<PRUint8> mAutoBuf;
+  PRUint8 *mReturnBuf;
+  PRUint32 mReadlen;
+};
+
+template <class T>
+class nsZipItemPtr : public nsZipItemPtr_base {
+public:
+  nsZipItemPtr(nsZipArchive *aZip, const char *aEntryName, bool doCRC = false) : nsZipItemPtr_base(aZip, aEntryName, doCRC) { }
+  /**
+   * @return buffer containing the whole zip member or NULL on error.
+   * The returned buffer is owned by nsZipItemReader.
+   */
+  const T* Buffer() const {
+    return (const T*)mReturnBuf;
+  }
+
+  operator const T*() const {
+    return Buffer();
+  }
 };
 
 nsresult gZlibInit(z_stream *zs);

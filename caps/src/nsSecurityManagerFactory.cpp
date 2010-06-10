@@ -52,7 +52,6 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
-#include "nsPrefsCID.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
 

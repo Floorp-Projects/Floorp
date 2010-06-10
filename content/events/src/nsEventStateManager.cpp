@@ -66,6 +66,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMNSHTMLLabelElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -3977,50 +3978,71 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
+static already_AddRefed<nsIContent>
+GetLabelTarget(nsIContent* aLabel)
 {
-  aState = aContent->IntrinsicState();
+  nsCOMPtr<nsIDOMNSHTMLLabelElement> label = do_QueryInterface(aLabel);
+  if (!label)
+    return nsnull;
 
-  // Hierchical active:  Check the ancestor chain of mActiveContent to see
-  // if we are on it.
-  for (nsIContent* activeContent = mActiveContent; activeContent;
-       activeContent = activeContent->GetParent()) {
-    if (aContent == activeContent) {
-      aState |= NS_EVENT_STATE_ACTIVE;
-      break;
+  nsCOMPtr<nsIDOMHTMLElement> target;
+  label->GetControl(getter_AddRefs(target));
+  nsIContent* targetContent = nsnull;
+  if (target) {
+    CallQueryInterface(target, &targetContent);
+  }
+  return targetContent;
+}
+
+static bool
+IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant,
+             PRBool aFollowLabels)
+{
+  for (; aPossibleDescendant; aPossibleDescendant = aPossibleDescendant->GetParent()) {
+    if (aPossibleAncestor == aPossibleDescendant)
+      return true;
+
+    if (aFollowLabels) {
+      nsCOMPtr<nsIContent> labelTarget = GetLabelTarget(aPossibleDescendant);
+      if (labelTarget == aPossibleAncestor)
+        return true;
     }
   }
-  // Hierchical hover:  Check the ancestor chain of mHoverContent to see
-  // if we are on it.
-  for (nsIContent* hoverContent = mHoverContent; hoverContent;
-       hoverContent = hoverContent->GetParent()) {
-    if (aContent == hoverContent) {
-      aState |= NS_EVENT_STATE_HOVER;
-      break;
-    }
+  return false;
+}
+
+PRInt32
+nsEventStateManager::GetContentState(nsIContent *aContent, PRBool aFollowLabels)
+{
+  PRInt32 state = aContent->IntrinsicState();
+
+  if (IsAncestorOf(aContent, mActiveContent, aFollowLabels)) {
+    state |= NS_EVENT_STATE_ACTIVE;
+  }
+  if (IsAncestorOf(aContent, mHoverContent, aFollowLabels)) {
+    state |= NS_EVENT_STATE_HOVER;
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nsnull;
   if (aContent == focusedContent) {
-    aState |= NS_EVENT_STATE_FOCUS;
+    state |= NS_EVENT_STATE_FOCUS;
 
     nsIDocument* doc = focusedContent->GetOwnerDoc();
     if (doc) {
       nsPIDOMWindow* window = doc->GetWindow();
       if (window && window->ShouldShowFocusRing()) {
-        aState |= NS_EVENT_STATE_FOCUSRING;
+        state |= NS_EVENT_STATE_FOCUSRING;
       }
     }
   }
   if (aContent == mDragOverContent) {
-    aState |= NS_EVENT_STATE_DRAGOVER;
+    state |= NS_EVENT_STATE_DRAGOVER;
   }
   if (aContent == mURLTargetContent) {
-    aState |= NS_EVENT_STATE_URLTARGET;
+    state |= NS_EVENT_STATE_URLTARGET;
   }
-  return NS_OK;
+  return state;
 }
 
 static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
@@ -4065,6 +4087,20 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
     }
   }
   return nsnull;
+}
+
+static void
+NotifyAncestors(nsIDocument* aDocument, nsIContent* aStartNode,
+                nsIContent* aStopBefore, PRInt32 aState)
+{
+  while (aStartNode && aStartNode != aStopBefore) {
+    aDocument->ContentStatesChanged(aStartNode, nsnull, aState);
+    nsCOMPtr<nsIContent> labelTarget = GetLabelTarget(aStartNode);
+    if (labelTarget) {
+      aDocument->ContentStatesChanged(labelTarget, nsnull, aState);
+    }
+    aStartNode = aStartNode->GetParent();
+  }
 }
 
 PRBool
@@ -4213,27 +4249,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     if (doc1) {
       doc1->BeginUpdate(UPDATE_CONTENT_STATE);
 
-      // Notify all content from newActive to the commonActiveAncestor
-      while (newActive && newActive != commonActiveAncestor) {
-        doc1->ContentStatesChanged(newActive, nsnull, NS_EVENT_STATE_ACTIVE);
-        newActive = newActive->GetParent();
-      }
-      // Notify all content from oldActive to the commonActiveAncestor
-      while (oldActive && oldActive != commonActiveAncestor) {
-        doc1->ContentStatesChanged(oldActive, nsnull, NS_EVENT_STATE_ACTIVE);
-        oldActive = oldActive->GetParent();
-      }
-
-      // Notify all content from newHover to the commonHoverAncestor
-      while (newHover && newHover != commonHoverAncestor) {
-        doc1->ContentStatesChanged(newHover, nsnull, NS_EVENT_STATE_HOVER);
-        newHover = newHover->GetParent();
-      }
-      // Notify all content from oldHover to the commonHoverAncestor
-      while (oldHover && oldHover != commonHoverAncestor) {
-        doc1->ContentStatesChanged(oldHover, nsnull, NS_EVENT_STATE_HOVER);
-        oldHover = oldHover->GetParent();
-      }
+      NotifyAncestors(doc1, newActive, commonActiveAncestor, NS_EVENT_STATE_ACTIVE);
+      NotifyAncestors(doc1, oldActive, commonActiveAncestor, NS_EVENT_STATE_ACTIVE);
+      NotifyAncestors(doc1, newHover, commonHoverAncestor, NS_EVENT_STATE_HOVER);
+      NotifyAncestors(doc1, oldHover, commonHoverAncestor, NS_EVENT_STATE_HOVER);
 
       if (notifyContent[0]) {
         doc1->ContentStatesChanged(notifyContent[0], notifyContent[1],
@@ -4290,14 +4309,14 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
       nsContentUtils::ContentIsDescendantOf(mHoverContent, aContent)) {
     // Since hover is hierarchical, set the current hover to the
     // content's parent node.
-    mHoverContent = aContent->GetParent();
+    SetContentState(aContent->GetParent(), NS_EVENT_STATE_HOVER);
   }
 
   if (mActiveContent &&
       nsContentUtils::ContentIsDescendantOf(mActiveContent, aContent)) {
     // Active is hierarchical, so set the current active to the
     // content's parent node.
-    mActiveContent = aContent->GetParent();
+    SetContentState(aContent->GetParent(), NS_EVENT_STATE_ACTIVE);
   }
 
   if (mDragOverContent &&

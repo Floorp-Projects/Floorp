@@ -458,7 +458,6 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     nsCOMPtr<nsIFormControl> form(do_QueryInterface(findFormParent));
     if (form && form->GetType() != NS_FORM_OBJECT &&
                 form->GetType() != NS_FORM_FIELDSET &&
-                form->GetType() != NS_FORM_LEGEND &&
                 form->GetType() != NS_FORM_LABEL &&
                 form->GetType() != NS_FORM_OUTPUT)
       return NS_OK;

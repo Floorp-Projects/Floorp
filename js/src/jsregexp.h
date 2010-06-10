@@ -140,15 +140,6 @@ JSObject::isRegExp() const
 extern JS_FRIEND_API(JSBool)
 js_ObjectIsRegExp(JSObject *obj);
 
-enum regexp_tinyid {
-    REGEXP_SOURCE       = -1,
-    REGEXP_GLOBAL       = -2,
-    REGEXP_IGNORE_CASE  = -3,
-    REGEXP_LAST_INDEX   = -4,
-    REGEXP_MULTILINE    = -5,
-    REGEXP_STICKY       = -6
-};
-
 extern JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj);
 

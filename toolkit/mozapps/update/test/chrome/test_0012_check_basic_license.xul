@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update checking wizard pages (no billboard, no add-ons)"
+<window title="Update Wizard pages: update check, basic, license, download, and finished"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -21,7 +21,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-const gTests = [ {
+const TESTS = [ {
   pageid: PAGEID_CHECKING
 }, {
   pageid: PAGEID_FOUND_BASIC,
@@ -76,7 +76,7 @@ const gTests = [ {
 function runTest() {
   debugDump("Entering runTest");
 
-  var url = URL_UPDATE + "?showLicense=1&showDetails=1" + getVersionParams();
+  let url = URL_UPDATE + "?showLicense=1&showDetails=1" + getVersionParams();
   setUpdateURLOverride(url);
   debugDump("Update URL: " + url);
 

@@ -732,8 +732,17 @@ inline JSObject*
 xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                                 JSObject *parent)
 {
-    return JS_NewSystemObject(cx, clasp, proto, parent,
-                              JS_IsSystemObject(cx, parent));
+    JSObject *obj;
+    if (clasp->flags & JSCLASS_IS_GLOBAL) {
+        obj = JS_NewGlobalObject(cx, clasp);
+        if (obj && proto)
+            JS_SetPrototype(cx, obj, proto);
+    } else {
+        obj = JS_NewObject(cx, clasp, proto, parent);
+    }
+    if (obj && JS_IsSystemObject(cx, parent) && !JS_MakeSystemObject(cx, obj))
+        obj = NULL;
+    return obj;
 }
 
 inline JSBool

@@ -257,7 +257,8 @@ typedef enum {
 #endif
   NPDrawingModelCoreGraphics = 1,
   NPDrawingModelOpenGL = 2,
-  NPDrawingModelCoreAnimation = 3
+  NPDrawingModelCoreAnimation = 3,
+  NPDrawingModelInvalidatingCoreAnimation = 4
 } NPDrawingModel;
 
 typedef enum {
@@ -392,6 +393,7 @@ typedef enum {
   , NPNVsupportsCoreGraphicsBool = 2001
   , NPNVsupportsOpenGLBool = 2002
   , NPNVsupportsCoreAnimationBool = 2003
+  , NPNVsupportsInvalidatingCoreAnimationBool = 2004
 #ifndef NP_NO_CARBON
   , NPNVsupportsCarbonBool = 3000 /* TRUE if the browser supports the Carbon event model */
 #endif
@@ -434,6 +436,7 @@ typedef struct _NPWindow
   uint32_t width;  /* Maximum window size */
   uint32_t height;
   NPRect   clipRect; /* Clipping rectangle in port coordinates */
+                     /* Used by MAC only. */
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   void * ws_info; /* Platform-dependent additional data */
 #endif /* XP_UNIX */

@@ -52,7 +52,6 @@ LIBXUL_LIBRARY	= 1
 CPPSRCS		= \
 		nsFilteredContentIterator.cpp \
 		nsTextServicesDocument.cpp \
-		nsTSDNotifier.cpp \
 		$(NULL)
 
 

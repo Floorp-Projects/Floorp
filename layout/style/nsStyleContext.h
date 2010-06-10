@@ -145,6 +145,12 @@ public:
   PRBool RelevantLinkVisited() const
     { return !!(mBits & NS_STYLE_RELEVANT_LINK_VISITED); }
 
+  // Is this a style context for a link?
+  PRBool IsLinkContext() const {
+    return
+      GetStyleIfVisited() && GetStyleIfVisited()->GetParent() == GetParent();
+  }
+
   // Is this style context the GetStyleIfVisited() for some other style
   // context?
   PRBool IsStyleIfVisited() const
@@ -169,7 +175,7 @@ public:
   // examining the corresponding struct on |this|.  Doing so will likely
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in nsStyleContext::CalcStyleDifference.
-  nsStyleContext* GetStyleIfVisited()
+  nsStyleContext* GetStyleIfVisited() const
     { return mStyleIfVisited; }
 
   // To be called only from nsStyleSet.

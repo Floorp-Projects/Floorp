@@ -1087,7 +1087,7 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
             ch = SURROGATE_TO_UCS4(ch, aString[i+1]);
             surrogatePair = PR_TRUE;
         }
-        if (i > 0 && gc->Get(aString[i]) == nsIUGenCategory::kMark) {
+        if (i > 0 && gc->Get(ch) == nsIUGenCategory::kMark) {
             gfxTextRun::CompressedGlyph g;
             aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
         }

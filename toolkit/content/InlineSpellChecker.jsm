@@ -218,6 +218,7 @@ InlineSpellChecker.prototype = {
 
       this.mDictionaryNames.push(list[i]);
       var item = menu.ownerDocument.createElement("menuitem");
+      item.setAttribute("id", "spell-check-dictionary-" + list[i]);
       item.setAttribute("label", displayName);
       item.setAttribute("type", "checkbox");
       this.mDictionaryItems.push(item);

@@ -86,8 +86,6 @@ public:
     MOZ_COUNT_DTOR(BasicImplData);
   }
 
-  const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
-
   /**
    * Layers that paint themselves, such as ImageLayers, should paint
    * in response to this method call. aContext will already have been
@@ -97,9 +95,6 @@ public:
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData) {}
-
-protected:
-  nsIntRegion mVisibleRegion;
 };
 
 static BasicImplData*
@@ -121,12 +116,14 @@ public:
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    mVisibleRegion = aRegion;
+    ContainerLayer::SetVisibleRegion(aRegion);
   }
   virtual void InsertAfter(Layer* aChild, Layer* aAfter);
   virtual void RemoveChild(Layer* aChild);
 
 protected:
+  void RemoveChildInternal(Layer* aChild);
+
   BasicLayerManager* BasicManager()
   {
     return static_cast<BasicLayerManager*>(mManager);
@@ -136,12 +133,7 @@ protected:
 BasicContainerLayer::~BasicContainerLayer()
 {
   while (mFirstChild) {
-    Layer* next = mFirstChild->GetNextSibling();
-    mFirstChild->SetNextSibling(nsnull);
-    mFirstChild->SetPrevSibling(nsnull);
-    mFirstChild->SetParent(nsnull);
-    NS_RELEASE(mFirstChild);
-    mFirstChild = next;
+    RemoveChildInternal(mFirstChild);
   }
 
   MOZ_COUNT_DTOR(BasicContainerLayer);
@@ -189,6 +181,12 @@ BasicContainerLayer::RemoveChild(Layer* aChild)
 {
   NS_ASSERTION(BasicManager()->InConstruction(),
                "Can only set properties in construction phase");
+  RemoveChildInternal(aChild);
+}
+
+void
+BasicContainerLayer::RemoveChildInternal(Layer* aChild)
+{
   NS_ASSERTION(aChild->Manager() == Manager(),
                "Child has wrong manager");
   NS_ASSERTION(aChild->GetParent() == this,
@@ -234,7 +232,7 @@ public:
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    mVisibleRegion = aRegion;
+    ThebesLayer::SetVisibleRegion(aRegion);
   }
   virtual void InvalidateRegion(const nsIntRegion& aRegion)
   {
@@ -463,9 +461,15 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     // For simplicity, we read the entire framebuffer for now -- in
     // the future we should use mUpdatedRect, though with WebGL we don't
     // have an easy way to generate one.
+#ifndef USE_GLES2
     mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
                             LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
                             isurf->Data());
+#else
+    mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
+                            LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
+                            isurf->Data());
+#endif
 
     // If the underlying GLContext doesn't have a framebuffer into which
     // premultiplied values were written, we have to do this ourselves here.
@@ -654,7 +658,7 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     if (needsGroup) {
       // If we need to call PushGroup, we should clip to the smallest possible
       // area first to minimize the size of the temporary surface.
-      nsIntRect bbox = ToData(aLayer)->GetVisibleRegion().GetBounds();
+      nsIntRect bbox = aLayer->GetVisibleRegion().GetBounds();
       gfxRect deviceRect =
         mTarget->UserToDevice(gfxRect(bbox.x, bbox.y, bbox.width, bbox.height));
       deviceRect.RoundOut();

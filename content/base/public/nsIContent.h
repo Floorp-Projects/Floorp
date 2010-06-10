@@ -71,8 +71,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x9e3b1a15, 0x72d5, 0x4e4f, \
-  { 0x8f, 0x4b, 0x75, 0xde, 0x07, 0x9c, 0x16, 0xdc } }
+{ 0x1450010b, 0xcdca, 0x451c, \
+  { 0xba, 0xdc, 0x07, 0x90, 0x89, 0x7b, 0xce, 0xb8 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -691,8 +691,8 @@ public:
    *
    * If you also need to determine whether the parser is the one creating your
    * element (through createElement() or cloneNode() generally) then add a
-   * boolean aFromParser to the NS_NewXXX() constructor for your element and
-   * have the parser pass true.  See nsHTMLInputElement.cpp and
+   * PRUint32 aFromParser to the NS_NewXXX() constructor for your element and
+   * have the parser pass the appropriate flags. See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
    * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with
@@ -778,7 +778,12 @@ public:
    * value of the null-namespace attribute whose name is given by
    * GetIDAttributeName().  This may be null if there is no ID.
    */
-  virtual nsIAtom* GetID() const = 0;
+  nsIAtom* GetID() const {
+    if (HasFlag(NODE_HAS_ID)) {
+      return DoGetID();
+    }
+    return nsnull;
+  }
 
   /**
    * Get the class list of this content node (this corresponds to the
@@ -914,6 +919,13 @@ public:
   PRBool IsEqual(nsIContent *aOther);
 
   virtual PRBool IsEqualNode(nsINode* aOther);
+
+protected:
+  /**
+   * Hook for implementing GetID.  This is guaranteed to only be
+   * called if the NODE_HAS_ID flag is set.
+   */
+  virtual nsIAtom* DoGetID() const = 0;
 
 private:
   /**

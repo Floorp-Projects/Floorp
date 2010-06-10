@@ -131,6 +131,7 @@ MOZALLOC_EXPORT char* moz_xstrdup(const char* str)
 MOZALLOC_EXPORT char* moz_strdup(const char* str)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
+MOZALLOC_EXPORT size_t moz_malloc_usable_size(void *ptr);
 
 #if defined(HAVE_STRNDUP)
 MOZALLOC_EXPORT char* moz_xstrndup(const char* str, size_t strsize)

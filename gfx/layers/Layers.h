@@ -126,6 +126,7 @@ public:
     LAYERS_D3D9
   };
 
+  LayerManager() : mUserData(nsnull) {}
   virtual ~LayerManager() {}
 
   /**
@@ -173,6 +174,10 @@ public:
    * Set the root layer.
    */
   virtual void SetRoot(Layer* aLayer) = 0;
+  /**
+   * Can be called anytime
+   */
+  Layer* GetRoot() { return mRoot; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -211,6 +216,15 @@ public:
    * Layers backend specific functionality is necessary.
    */
   virtual LayersBackend GetBackendType() = 0;
+
+  // This setter and getter can be used anytime. The user data is initially
+  // null.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
+
+protected:
+  nsRefPtr<Layer> mRoot;
+  void* mUserData;
 };
 
 class ThebesLayer;
@@ -246,7 +260,7 @@ public:
    * contribute to the final visible window. This can be an
    * overapproximation to the true visible region.
    */
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) {}
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -305,13 +319,15 @@ public:
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nsnull; }
   PRBool IsOpaqueContent() { return mIsOpaqueContent; }
+  const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
 
-  // This setter and getter can be used anytime.
+  // This setter and getter can be used anytime. The user data is initially
+  // null.
   void SetUserData(void* aData) { mUserData = aData; }
   void* GetUserData() { return mUserData; }
 
@@ -354,6 +370,7 @@ protected:
   Layer* mPrevSibling;
   void* mImplData;
   void* mUserData;
+  nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
@@ -382,11 +399,18 @@ public:
    */
   virtual void InvalidateRegion(const nsIntRegion& aRegion) = 0;
 
+  /**
+   * Can be used anytime
+   */
+  const nsIntRegion& GetValidRegion() { return mValidRegion; }
+
   virtual ThebesLayer* AsThebesLayer() { return this; }
 
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData) {}
+
+  nsIntRegion mValidRegion;
 };
 
 /**

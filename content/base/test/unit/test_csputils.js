@@ -350,8 +350,7 @@ test(
 
       var cspr;
       var SD = CSPRep.SRC_DIRECTIVES;
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC,
-                      SD.FRAME_ANCESTORS, SD.FRAME_SRC];
+      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC, SD.FRAME_SRC];
 
       // check one-directive policies
       cspr = CSPRep.fromString("allow bar.com; script-src https://foo.com", 
@@ -377,7 +376,7 @@ test(
     function test_CSPRep_fromString_twodir() {
       var cspr;
       var SD = CSPRep.SRC_DIRECTIVES;
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.FRAME_ANCESTORS, SD.FRAME_SRC];
+      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.FRAME_SRC];
 
       // check two-directive policies
       var polstr = "allow allow.com; "
@@ -448,6 +447,32 @@ test(function test_CSPRep_fromPolicyURI() {
                               cspr_static._directives[SD[i]]);
         }
     });
+
+//////////////// TEST FRAME ANCESTOR DEFAULTS /////////////////
+// (see bug 555068)
+test(function test_FrameAncestor_defaults() {
+      var cspr;
+      var SD = CSPRep.SRC_DIRECTIVES;
+      var self = "http://self.com:34";
+
+      cspr = CSPRep.fromString("allow 'none'", self);
+
+      //"frame-ancestors should default to * not 'allow' value"
+      do_check_true(cspr.permits("https://foo.com:400", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://self.com:34", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("https://self.com:34", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://self.com", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
+
+      cspr = CSPRep.fromString("allow 'none'; frame-ancestors 'self'", self);
+
+      //"frame-ancestors should only allow self"
+      do_check_true(cspr.permits("http://self.com:34", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("https://foo.com:400", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("https://self.com:34", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("http://self.com", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
+     });
 /*
 
 test(function test_CSPRep_fromPolicyURI_failswhenmixed() {

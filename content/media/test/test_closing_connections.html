@@ -9,6 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479863
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="use_large_cache.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
@@ -22,39 +23,31 @@ window.onload = function() {
   ok(true, "loaded metadata for all videos");
   SimpleTest.finish();
 }
-</script>
 
-<!-- With normal per-domain connection limits and a naive implementation, we
+/*   With normal per-domain connection limits and a naive implementation, we
      won't ever be able to load all these videos because the first 15 (or whatever)
      will each take up one HTTP connection (which will be suspended) and then
      the others will be blocked by the per-domain HTTP connection limit. We
      pass this test by closing the connection for non-buffered videos after
-     we've got the first frame. -->
+     we've got the first frame.
+*/
 
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
-<video src="seek.ogv"></video>
+
+var resource = getPlayableVideo(gSeekTests);
+if (resource != null) {
+  for (var i=0; i<20; ++i) {
+    var v = document.createElement("video");
+    v.src = resource.name;
+    document.body.appendChild(v);
+  }
+  SimpleTest.waitForExplicitFinish();
+} else {
+  todo(false, "No types supported");
+}
+</script>
 
 <pre id="test">
 <script type="application/javascript">
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

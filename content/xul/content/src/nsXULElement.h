@@ -353,6 +353,9 @@ public:
     void Set(void *aObject)
     {
         NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
+        if (!aObject) {
+          return;
+        }
 
         nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
                                                        this,
@@ -528,7 +531,7 @@ public:
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
-    virtual nsIAtom* GetID() const;
+    virtual nsIAtom* DoGetID() const;
     virtual const nsAttrValue* DoGetClasses() const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);

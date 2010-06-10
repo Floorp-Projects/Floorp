@@ -67,15 +67,10 @@ public:
                            const nsIntPoint& aOffset);
 
   /** ThebesLayerOGL */
-  const nsIntRect &GetVisibleRect();
+  nsIntRect GetVisibleRect() { return mVisibleRegion.GetBounds(); }
   const nsIntRect &GetInvalidatedRect();
 
 private:
-  /** 
-   * Visible rectangle, this is used to know the size and position of the quad
-   * when doing the rendering of this layer.
-   */
-  nsIntRect mVisibleRect;
   /**
    * Currently invalidated rectangular area.
    */

@@ -184,8 +184,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
     argsobj->setArgsCallee(OBJECT_TO_JSVAL(callee));
     argsobj->setArgsLength(argc);
 
-    argsobj->map = cx->runtime->emptyArgumentsScope;
-    cx->runtime->emptyArgumentsScope->hold();
+    argsobj->map = cx->runtime->emptyArgumentsScope->hold();
 
     /* This must come after argsobj->map has been set. */
     if (!js_EnsureReservedSlots(cx, argsobj, argc))
@@ -770,11 +769,18 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSObject *
 NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
-    JSObject *callobj = NewObjectWithGivenProto(cx, &js_CallClass, NULL, scopeChain);
-    if (!callobj ||
-        !js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars())) {
+    JSObject *callobj = js_NewGCObject(cx);
+    if (!callobj)
         return NULL;
-    }
+
+    /* Init immediately to avoid GC seeing a half-init'ed object. */
+    callobj->init(&js_CallClass, NULL, scopeChain, JSVAL_NULL);
+
+    callobj->map = cx->runtime->emptyCallScope->hold();
+
+    /* This must come after callobj->map has been set. */
+    if (!js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars()))
+        return NULL;
     return callobj;
 }
 
@@ -1294,14 +1300,10 @@ enum {
 static JSBool
 fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    jsint slot;
-    JSFunction *fun;
-    JSStackFrame *fp;
-    JSSecurityCallbacks *callbacks;
-
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    slot = JSVAL_TO_INT(id);
+
+    jsint slot = JSVAL_TO_INT(id);
 
     /*
      * Loop because getter and setter can be delegated from another class,
@@ -1310,7 +1312,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
      * Function.prototype object (we use JSPROP_PERMANENT with JSPROP_SHARED
      * to make it appear so).
      *
-     * This code couples tightly to the attributes for the function_props[]
+     * This code couples tightly to the attributes for lazy_function_props[]
      * initializers above, and to js_SetProperty and js_HasOwnProperty.
      *
      * It's important to allow delegating objects, even though they inherit
@@ -1323,6 +1325,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
      * the non-standard properties when the directly addressed object (obj)
      * is a function object (i.e., when this loop does not iterate).
      */
+    JSFunction *fun;
     while (!(fun = (JSFunction *)
                    JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
         if (slot != FUN_LENGTH)
@@ -1333,6 +1336,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     /* Find fun's top-most activation record. */
+    JSStackFrame *fp;
     for (fp = js_GetTopStackFrame(cx);
          fp && (fp->fun != fun || (fp->flags & JSFRAME_SPECIAL));
          fp = fp->down) {
@@ -1391,7 +1395,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = JSVAL_NULL;
         }
         if (!JSVAL_IS_PRIMITIVE(*vp)) {
-            callbacks = JS_GetSecurityCallbacks(cx);
+            JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
             if (callbacks && callbacks->checkObjectAccess) {
                 id = ATOM_KEY(cx->runtime->atomState.callerAtom);
                 if (!callbacks->checkObjectAccess(cx, obj, id, JSACC_READ, vp))
@@ -1410,36 +1414,15 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-/*
- * ECMA-262 specifies that length is a property of function object instances,
- * but we can avoid that space cost by delegating to a prototype property that
- * is JSPROP_PERMANENT and JSPROP_SHARED.  Each fun_getProperty call computes
- * a fresh length value based on the arity of the individual function object's
- * private data.
- *
- * The extensions below other than length, i.e., the ones not in ECMA-262,
- * are neither JSPROP_READONLY nor JSPROP_SHARED, because for compatibility
- * with ECMA we must allow a delegating object to override them. Therefore to
- * avoid entraining garbage in Function.prototype slots, they must be resolved
- * in non-prototype function objects, wherefore the lazy_function_props table
- * and fun_resolve's use of it.
- */
-#define LENGTH_PROP_ATTRS (JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED)
-
-static JSPropertySpec function_props[] = {
-    {js_length_str,    FUN_LENGTH,    LENGTH_PROP_ATTRS, fun_getProperty, JS_PropertyStub},
-    {0,0,0,0,0}
-};
-
-typedef struct LazyFunctionProp {
+struct LazyFunctionProp {
     uint16      atomOffset;
     int8        tinyid;
     uint8       attrs;
-} LazyFunctionProp;
+};
 
 /* NB: no sentinel at the end -- use JS_ARRAY_LENGTH to bound loops. */
 static LazyFunctionProp lazy_function_props[] = {
-    {ATOM_OFFSET(arguments), FUN_ARGUMENTS, JSPROP_PERMANENT},
+    {ATOM_OFFSET(arguments), FUN_ARGUMENTS,  JSPROP_PERMANENT},
     {ATOM_OFFSET(arity),     FUN_ARITY,      JSPROP_PERMANENT},
     {ATOM_OFFSET(caller),    FUN_CALLER,     JSPROP_PERMANENT},
     {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT},
@@ -1449,21 +1432,17 @@ static JSBool
 fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             JSObject **objp)
 {
-    JSFunction *fun;
-    JSAtom *atom;
-    uintN i;
-
     if (!JSVAL_IS_STRING(id))
         return JS_TRUE;
 
-    fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
 
     /*
      * No need to reflect fun.prototype in 'fun.prototype = ... '. Assert that
      * fun is not a compiler-created function object, which must never leak to
      * script or embedding code and then be mutated.
      */
-    if (flags & JSRESOLVE_ASSIGNING) {
+    if ((flags & JSRESOLVE_ASSIGNING) && id != ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
         return JS_TRUE;
     }
@@ -1472,8 +1451,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
      * Ok, check whether id is 'prototype' and bootstrap the function object's
      * prototype property.
      */
-    atom = cx->runtime->atomState.classPrototypeAtom;
-    if (id == ATOM_KEY(atom)) {
+    JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
+    if (id == ATOM_TO_JSID(atom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
 
         /*
@@ -1505,7 +1484,19 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         return JS_TRUE;
     }
 
-    for (i = 0; i < JS_ARRAY_LENGTH(lazy_function_props); i++) {
+    atom = cx->runtime->atomState.lengthAtom;
+    if (id == ATOM_TO_JSID(atom)) {
+        JS_ASSERT(!IsInternalFunctionObject(obj));
+        if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), INT_TO_JSVAL(jsint(fun->nargs)),
+                                     JS_PropertyStub, JS_PropertyStub,
+                                     JSPROP_PERMANENT | JSPROP_READONLY, 0, 0, NULL)) {
+            return JS_FALSE;
+        }
+        *objp = obj;
+        return JS_TRUE;
+    }
+
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(lazy_function_props); i++) {
         LazyFunctionProp *lfp = &lazy_function_props[i];
 
         atom = OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset);
@@ -2373,7 +2364,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     JSFunction *fun;
 
     proto = JS_InitClass(cx, obj, NULL, &js_FunctionClass, Function, 1,
-                         function_props, function_methods, NULL, NULL);
+                         NULL, function_methods, NULL, NULL);
     if (!proto)
         return NULL;
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
@@ -2621,39 +2612,18 @@ js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 {
-    uintN error;
     const char *name = NULL, *source = NULL;
     AutoValueRooter tvr(cx);
-    if (flags & JSV2F_ITERATOR) {
-        error = JSMSG_BAD_ITERATOR;
-        name = js_iterator_str;
-        JSString *src = js_ValueToSource(cx, *vp);
-        if (!src)
-            return;
-        tvr.setString(src);
-        JSString *qsrc = js_QuoteString(cx, src, 0);
-        if (!qsrc)
-            return;
-        tvr.setString(qsrc);
-        source = js_GetStringBytes(cx, qsrc);
-        if (!source)
-            return;
-    } else if (flags & JSV2F_CONSTRUCT) {
-        error = JSMSG_NOT_CONSTRUCTOR;
-    } else {
-        error = JSMSG_NOT_FUNCTION;
-    }
-
+    uintN error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
     LeaveTrace(cx);
     FrameRegsIter i(cx);
     while (!i.done() && !i.pc())
         ++i;
 
     ptrdiff_t spindex =
-        !i.done() && StackBase(i.fp()) <= vp && vp < i.sp()
-            ? vp - i.sp()
-            : flags & JSV2F_SEARCH_STACK ? JSDVG_SEARCH_STACK
-                                         : JSDVG_IGNORE_STACK;
+        (!i.done() && StackBase(i.fp()) <= vp && vp < i.sp())
+        ? vp - i.sp()
+        : ((flags & JSV2F_SEARCH_STACK) ? JSDVG_SEARCH_STACK : JSDVG_IGNORE_STACK);
 
     js_ReportValueError3(cx, error, spindex, *vp, NULL, name, source);
 }

@@ -54,6 +54,19 @@ typedef struct cairo_quartz_surface {
     cairo_surface_t *imageSurfaceEquiv;
 
     cairo_surface_clipper_t clipper;
+
+    /**
+     * If non-null, this is a CGImage representing the contents of the surface.
+     * We clear this out before any painting into the surface, so that we
+     * don't force a copy to be created.
+     */
+    CGImageRef bitmapContextImage;
+
+    /**
+     * If non-null, this is the CGLayer for the surface.
+     */
+    CGLayerRef cgLayer;
+
     cairo_rectangle_int_t extents;
 } cairo_quartz_surface_t;
 

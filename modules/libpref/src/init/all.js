@@ -161,6 +161,9 @@ pref("media.ogg.enabled", true);
 #ifdef MOZ_WAVE
 pref("media.wave.enabled", true);
 #endif
+#ifdef MOZ_WEBM
+pref("media.webm.enabled", true);
+#endif
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
@@ -558,7 +561,7 @@ pref("javascript.options.strict",           false);
 #ifdef DEBUG
 pref("javascript.options.strict.debug",     true);
 #endif
-pref("javascript.options.relimit",          false);
+pref("javascript.options.relimit",          true);
 pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       true);
 // This preference limits the memory usage of javascript.
@@ -695,6 +698,25 @@ pref("network.http.pipelining.maxrequests" , 4);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
+
+// On networks deploying QoS, it is recommended that these be lockpref()'d,
+// since inappropriate marking can easily overwhelm bandwidth reservations
+// for certain services (i.e. EF for VoIP, AF4x for interactive video,
+// AF3x for broadcast/streaming video, etc)
+
+// default value for HTTP
+// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
+// Section 4.8 "High-Throughput Data Service Class"
+pref("network.http.qos", 0);
+// ditto for Gopher
+pref("network.gopher.qos", 0);
+
+// default values for FTP
+// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
+// Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
+// per Section 4.7 "Low-Latency Data Service Class".
+pref("network.ftp.data.qos", 0);
+pref("network.ftp.control.qos", 0);
 
 // </http>
 
@@ -897,7 +919,7 @@ pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
-pref("network.cookie.thirdparty.sessionOnly", true);
+pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.lifetimePolicy",       0); // accept normally, 1-askBeforeAccepting, 2-acceptForSession,3-acceptForNDays
 pref("network.cookie.alwaysAcceptSessionCookies", false);
 pref("network.cookie.prefsMigrated",        false);

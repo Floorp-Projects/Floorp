@@ -70,6 +70,7 @@ _TEST_FILES = \
 		gZipOfflineChild.html^headers^ \
 		gZipOfflineChild.cacheManifest \
 		gZipOfflineChild.cacheManifest^headers^ \
+		test_bug452451.html \
 		$(NULL)
 
 # The following tests are disabled because they are unreliable:
@@ -81,6 +82,7 @@ _TEST_FILES = \
 # 480169)
 
 _BROWSER_FILES = \
+                 browser_typeAheadFind.js \
                  browser_NetworkPrioritizer.js \
                  browser_allTabsPanel.js \
                  browser_alltabslistener.js \
@@ -120,6 +122,7 @@ _BROWSER_FILES = \
                  browser_bug550565.js \
                  browser_bug555224.js \
                  browser_bug556061.js \
+                 browser_bug562649.js \
                  browser_bug563588.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \

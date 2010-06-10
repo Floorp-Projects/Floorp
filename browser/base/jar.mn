@@ -1,5 +1,5 @@
 browser.jar:
-%  content browser %content/browser/ xpcnativewrappers=yes contentaccessible=yes
+%  content browser %content/browser/ contentaccessible=yes
 #ifdef XP_MACOSX
 %  overlay chrome://mozapps/content/downloads/downloads.xul chrome://browser/content/downloadManagerOverlay.xul
 %  overlay chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/extensionsManagerOverlay.xul

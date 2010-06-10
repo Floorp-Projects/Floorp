@@ -56,7 +56,7 @@ ColorLayerD3D9::GetLayer()
 void
 ColorLayerD3D9::RenderLayer()
 {
-  // XXX we might be able to improve performance by using 
+  // XXX we might be able to improve performance by using
   // IDirect3DDevice9::Clear
 
   float quadTransform[4][4];

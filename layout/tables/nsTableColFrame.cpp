@@ -46,11 +46,11 @@
 #include "nsIContent.h"
 #include "nsIDOMHTMLTableColElement.h"
 
-#define COL_TYPE_BITS                 0xF0000000 // uses bits 29-32 from mState
+#define COL_TYPE_BITS                 (NS_FRAME_STATE_BIT(28) | \
+                                       NS_FRAME_STATE_BIT(29) | \
+                                       NS_FRAME_STATE_BIT(30) | \
+                                       NS_FRAME_STATE_BIT(31))
 #define COL_TYPE_OFFSET               28
-
-#define COL_CONSTRAINT_BITS           0x07000000 // uses bits 25-27
-#define COL_CONSTRAINT_OFFSET         24
 
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) :
   nsSplittableFrame(aContext)

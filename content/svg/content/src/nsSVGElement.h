@@ -70,6 +70,7 @@ struct nsSVGEnumMapping;
 class nsSVGViewBox;
 class nsSVGPreserveAspectRatio;
 class nsSVGString;
+struct gfxMatrix;
 
 typedef nsStyledElement nsSVGElementBase;
 
@@ -423,7 +424,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  nsINodeInfo *aNodeInfo,                     \
-                                 PRBool aFromParser)                         \
+                                 PRUint32 aFromParser)                       \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo, aFromParser);                \

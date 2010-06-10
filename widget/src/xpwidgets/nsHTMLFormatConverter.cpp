@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <matpal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -209,6 +210,8 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     return NS_ERROR_INVALID_ARG;
 
   nsresult rv = NS_OK;
+  *aToData = nsnull;
+  *aDataToLen = 0;
 
   if ( !nsCRT::strcmp(aFromDataFlavor, kHTMLMime) ) {
     nsCAutoString toFlavor ( aToDataFlavor );
@@ -253,8 +256,6 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
       }
     } // else if AOL mail
     else {
-      *aToData = nsnull;
-      *aDataToLen = 0;
       rv = NS_ERROR_FAILURE;
     }
   } // if we got html mime

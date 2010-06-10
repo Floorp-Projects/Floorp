@@ -67,7 +67,7 @@ class nsHTMLSharedObjectElement : public nsGenericHTMLElement,
 {
 public:
   nsHTMLSharedObjectElement(nsINodeInfo *aNodeInfo,
-                            PRBool aFromParser = PR_FALSE);
+                            PRUint32 aFromParser = 0);
   virtual ~nsHTMLSharedObjectElement();
 
   // nsISupports
@@ -173,7 +173,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 
 
 nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(nsINodeInfo *aNodeInfo,
-                                                     PRBool aFromParser)
+                                                     PRUint32 aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mIsDoneAddingChildren(aNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)
 {

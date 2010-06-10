@@ -314,25 +314,18 @@ nsCoreUtils::GetRoleContent(nsIDOMNode *aDOMNode)
 
 PRBool
 nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
-                          nsINode *aPossibleDescendantNode)
+                          nsINode *aPossibleDescendantNode,
+                          nsINode *aRootNode)
 {
   NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, PR_FALSE);
 
   nsINode *parentNode = aPossibleDescendantNode;
-  while ((parentNode = parentNode->GetNodeParent())) {
+  while ((parentNode = parentNode->GetNodeParent()) != aRootNode) {
     if (parentNode == aPossibleAncestorNode)
       return PR_TRUE;
   }
 
   return PR_FALSE;
-}
-
-PRBool
-nsCoreUtils::AreSiblings(nsINode *aNode1, nsINode *aNode2)
-{
-  NS_ENSURE_TRUE(aNode1 && aNode2, PR_FALSE);
-
-  return aNode1->GetNodeParent() == aNode2->GetNodeParent();
 }
 
 nsresult
@@ -496,6 +489,66 @@ nsCoreUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
     CallQueryInterface(container, &docShellTreeItem);
 
   return docShellTreeItem;
+}
+
+PRBool
+nsCoreUtils::IsDocumentBusy(nsIDocument *aDocument)
+{
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  if (!docShell)
+    return PR_TRUE;
+
+  PRUint32 busyFlags = 0;
+  docShell->GetBusyFlags(&busyFlags);
+  return (busyFlags != nsIDocShell::BUSY_FLAGS_NONE);
+}
+
+PRBool
+nsCoreUtils::IsRootDocument(nsIDocument *aDocument)
+{
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    do_QueryInterface(container);
+  NS_ASSERTION(docShellTreeItem, "No document shell for document!");
+
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  docShellTreeItem->GetParent(getter_AddRefs(parentTreeItem));
+
+  return !parentTreeItem;
+}
+
+PRBool
+nsCoreUtils::IsContentDocument(nsIDocument *aDocument)
+{
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    do_QueryInterface(container);
+  NS_ASSERTION(docShellTreeItem, "No document shell tree item for document!");
+
+  PRInt32 contentType;
+  docShellTreeItem->GetItemType(&contentType);
+  return (contentType == nsIDocShellTreeItem::typeContent);
+}
+
+PRBool
+nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
+{
+  nsIURI *uri = aDocument->GetDocumentURI();
+  PRBool isAboutScheme = PR_FALSE;
+  uri->SchemeIs("about", &isAboutScheme);
+  if (!isAboutScheme)
+    return PR_FALSE;
+
+  nsCAutoString path;
+  uri->GetPath(path);
+
+  nsCAutoString::const_iterator start, end;
+  path.BeginReading(start);
+  path.EndReading(end);
+
+  NS_NAMED_LITERAL_CSTRING(neterror, "neterror");
+  return FindInReadable(neterror, start, end);
 }
 
 nsIFrame*

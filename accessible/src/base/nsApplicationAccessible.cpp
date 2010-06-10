@@ -206,7 +206,7 @@ nsApplicationAccessible::GetPlatformVersion(nsAString& aVersion)
 PRBool
 nsApplicationAccessible::IsDefunct()
 {
-  return nsAccessibilityService::gIsShutdown;
+  return nsAccessibilityService::IsShutdown();
 }
 
 nsresult

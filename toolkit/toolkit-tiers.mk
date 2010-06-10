@@ -142,11 +142,23 @@ ifdef MOZ_JSDEBUGGER
 tier_platform_dirs += js/jsd
 endif
 
+ifdef MOZ_VORBIS
+tier_platform_dirs += \
+		media/libvorbis \
+		$(NULL)
+endif
+
+ifdef MOZ_WEBM
+tier_platform_dirs += \
+		media/libnestegg \
+		media/libvpx \
+		$(NULL)
+endif
+
 ifdef MOZ_OGG
 tier_platform_dirs += \
 		media/libogg \
 		media/libtheora \
-		media/libvorbis \
 		$(NULL)
 endif
 
@@ -260,6 +272,8 @@ tier_platform_dirs	+= tools/codesighs
 endif
 
 ifdef ENABLE_TESTS
-tier_platform_dirs	+= testing/mochitest
+tier_platform_dirs += testing/mochitest
+tier_platform_dirs += testing/xpcshell 
+tier_platform_dirs += testing/mozmill
 endif
 

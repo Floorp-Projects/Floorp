@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window id="testingonly" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        title="Testing And Debugging Window">
+
+  <!-- Test Scripts -->
+  <script src="js/mozmill.js"/>
+  <script type="application/x-javascript;version=1.7" src="js/mm/testresults.js"/>
+  <script src="js/tests/test_resultsFactory.js"/>
+
+  <vbox id="testCollection" flex="1">
+
+    <!-- Add more hboxes with items to test -->
+    <hbox id="testItem1">
+      <button id="testResultFactory" 
+              label="Test Result Factory and Result Object"
+              oncommand="runResultFactoryTests();"/>
+      <label id="testResultFactory-Status" value="Results" disabled="true"/>
+    </hbox>
+    <hbox id="testItem2">
+      <button id="testObserver"
+              label = "test observers"
+              oncommand="goObservers();"/>
+      <label id="testObserver" value="Results" disabled="true"/>
+    </hbox>
+  </vbox>
+</window>

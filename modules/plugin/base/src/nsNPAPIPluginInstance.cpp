@@ -1360,7 +1360,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRBool* handled)
+NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
 {
   if (RUNNING != mRunning)
     return NS_OK;
@@ -1370,20 +1370,21 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRBool* handled)
 
   PluginDestructionGuard guard(this);
 
-  PRInt16 result = 0;
-  
+  PRInt16 tmpResult = kNPEventNotHandled;
+
   if (mCallbacks->event) {
     mCurrentPluginEvent = event;
 #if defined(XP_WIN) || defined(XP_OS2)
-    NS_TRY_SAFE_CALL_RETURN(result, (*mCallbacks->event)(&mNPP, event), mLibrary, this);
+    NS_TRY_SAFE_CALL_RETURN(tmpResult, (*mCallbacks->event)(&mNPP, event), mLibrary, this);
 #else
-    result = (*mCallbacks->event)(&mNPP, event);
+    tmpResult = (*mCallbacks->event)(&mNPP, event);
 #endif
     NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
       ("NPP HandleEvent called: this=%p, npp=%p, event=%p, return=%d\n", 
-      this, &mNPP, event, result));
+      this, &mNPP, event, tmpResult));
 
-    *handled = result;
+    if (result)
+      *result = tmpResult;
     mCurrentPluginEvent = nsnull;
   }
 

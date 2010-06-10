@@ -202,7 +202,7 @@ public:
             if (s)
                 msg += JS_GetStringBytes(s);
         }
-        fprintf(stderr, "%s:%d:%.*s\n", filename, lineno, msg.length(), msg.begin());
+        fprintf(stderr, "%s:%d:%.*s\n", filename, lineno, (int) msg.length(), msg.begin());
         msgs += msg;
         return false;
     }
@@ -243,7 +243,7 @@ protected:
 
     virtual JSObject * createGlobal() {
         /* Create the global object. */
-        JSObject *global = JS_NewObject(cx, getGlobalClass(), NULL, NULL);
+        JSObject *global = JS_NewGlobalObject(cx, getGlobalClass());
         if (!global)
             return NULL;
 

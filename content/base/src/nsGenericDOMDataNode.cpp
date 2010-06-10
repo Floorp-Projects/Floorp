@@ -565,7 +565,7 @@ nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // Notify XBL- & nsIAnonymousContentCreator-generated
     // anonymous content that the document is changing.
     // This is needed to update the insertion point.
-    document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
+    document->BindingManager()->RemovedFromDocument(this, document);
   }
 
   mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
@@ -1108,7 +1108,7 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
 }
 
 nsIAtom*
-nsGenericDOMDataNode::GetID() const
+nsGenericDOMDataNode::DoGetID() const
 {
   return nsnull;
 }

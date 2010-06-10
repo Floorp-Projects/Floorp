@@ -382,10 +382,7 @@ private:
 
     GtkWindowGroup     *mWindowGroup;
 
-    PRUint32            mContainerGotFocus : 1,
-                        mContainerLostFocus : 1,
-                        mContainerBlockFocus : 1,
-                        mHasMappedToplevel : 1,
+    PRUint32            mHasMappedToplevel : 1,
                         mIsFullyObscured : 1,
                         mRetryPointerGrab : 1,
                         mRetryKeyboardGrab : 1;

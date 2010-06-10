@@ -51,7 +51,7 @@ float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR
   color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
   color.b = yuv.g * 1.164 + yuv.b * 2.018;
   color.a = 1.0f;
-  
+ 
   return color * fLayerOpacity;
 }
 

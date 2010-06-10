@@ -588,6 +588,14 @@
   -moz-box-shadow: #777 1px 1px 1px;
 }
 
+.download-progress .pause {
+  list-style-image: url('chrome://mozapps/skin/extensions/pause.png');
+}
+
+.download-progress .cancel {
+  list-style-image: url('chrome://mozapps/skin/extensions/cancel.png');
+}
+
 .download-progress .status-container {
   -moz-box-align: center;
 }

@@ -154,7 +154,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 findInListOfActiveFormattingElementsContainsBetweenEndAndLastMarker(nsIAtom* name);
     PRInt32 findLastOrRoot(nsIAtom* name);
     PRInt32 findLastOrRoot(PRInt32 group);
-    void addAttributesToBody(nsHtml5HtmlAttributes* attributes);
+    PRBool addAttributesToBody(nsHtml5HtmlAttributes* attributes);
     void addAttributesToHtml(nsHtml5HtmlAttributes* attributes);
     void pushHeadPointerOntoStack();
     void reconstructTheActiveFormattingElements();
@@ -242,7 +242,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #endif
 
-#define NS_HTML5TREE_BUILDER_STACK_MAX_DEPTH 200
 #define NS_HTML5TREE_BUILDER_OTHER 0
 #define NS_HTML5TREE_BUILDER_A 1
 #define NS_HTML5TREE_BUILDER_BASE 2

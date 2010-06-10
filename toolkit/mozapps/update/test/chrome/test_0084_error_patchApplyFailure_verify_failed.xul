@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update prompt error patching page (partial failed - complete verification failure)"
+<window title="Update Wizard pages: error patching, download, and errors (partial failed and download complete verification failure)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -21,7 +21,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-const gTests = [ {
+const TESTS = [ {
   pageid: PAGEID_ERROR_PATCHING,
   buttonClick: "next"
 }, {
@@ -36,12 +36,12 @@ function runTest() {
 
   // Specify the url to update.sjs with a slowDownloadMar param so the ui can
   // load before the download completes.
-  var slowDownloadURL = URL_UPDATE + "?slowDownloadMar=1";
-  var patches = getLocalPatchString("partial", null, null, null, null, null,
+  let slowDownloadURL = URL_UPDATE + "?slowDownloadMar=1";
+  let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING) +
                 getLocalPatchString("complete", slowDownloadURL, "MD5",
                                     "1234cd43a1c77e30191c53a329a3f99d");
-  var updates = getLocalUpdateString(patches, null, null, null,
+  let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
                                      Services.appinfo.platformVersion);
 

@@ -51,11 +51,9 @@ public:
   ColorLayerD3D9(LayerManagerD3D9 *aManager)
     : ColorLayer(aManager, NULL)
     , LayerD3D9(aManager)
-  { 
+  {
     mImplData = static_cast<LayerD3D9*>(this);
   }
-
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
 
   // LayerD3D9 Implementation
   virtual LayerType GetType();
@@ -63,9 +61,6 @@ public:
   virtual Layer* GetLayer();
 
   virtual void RenderLayer();
-
-protected:
-  nsIntRegion mVisibleRegion;
 };
 
 } /* layers */

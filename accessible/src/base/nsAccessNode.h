@@ -157,20 +157,6 @@ class nsAccessNode: public nsIAccessNode
   PRBool IsInCache();
 #endif
 
-  /**
-   * Return cached document accessible.
-   */
-  static nsDocAccessible* GetDocAccessibleFor(nsIDocument *aDocument);
-  static nsDocAccessible* GetDocAccessibleFor(nsIWeakReference *aWeakShell);
-  static nsDocAccessible* GetDocAccessibleFor(nsIDOMNode *aNode);
-
-  /**
-   * Return document accessible.
-   */
-  static already_AddRefed<nsIAccessibleDocument>
-    GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
-                        PRBool aCanCreate = PR_FALSE);
-
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
 
@@ -196,9 +182,6 @@ protected:
 
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
-
-  static nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible>
-    gGlobalDocAccessibleCache;
 
 private:
   static nsApplicationAccessible *gApplicationAccessible;

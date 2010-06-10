@@ -50,6 +50,10 @@
 #include "prenv.h"
 #include "pratom.h"
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #if defined(XP_BEOS)
 /* For DEBUGGER macros */
 #include <Debug.h>
@@ -307,6 +311,10 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
 #if !defined(XP_WIN) && !defined(XP_OS2)
    if (ll != PR_LOG_WARNING)
      fprintf(stderr, "\07");
+#endif
+
+#ifdef ANDROID
+   __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", buf.buffer);
 #endif
 
    // Write the message to stderr

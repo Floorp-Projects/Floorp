@@ -71,51 +71,28 @@ function test() {
 
     // Test if "Copy Password" works
     function doTest() {
-        let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-        let data = "";
-        let polls = 0;
+        let doc = pwmgrdlg.document;
+        let selection = doc.getElementById("signonsTree").view.selection;
+        let menuitem = doc.getElementById("context-copypassword");
 
-        function step1() {
-            Cc["@mozilla.org/widget/clipboardhelper;1"].
-            getService(Ci.nsIClipboardHelper).copyString("manatee");
+        function copyPassword() {
+            selection.selectAll();
+            is(isMenuitemEnabled(), false, "Copy Password should be disabled");
 
-            waitForClipboard("manatee", step2);
+            selection.select(0);
+            is(isMenuitemEnabled(), true, "Copy Password should be enabled");
+
+            selection.clearSelection();
+            is(isMenuitemEnabled(), false, "Copy Password should be disabled");
+
+            selection.select(2);
+            is(isMenuitemEnabled(), true, "Copy Password should be enabled");
+            menuitem.doCommand();
         }
 
-        function step2() {
-            let doc = pwmgrdlg.document;
-            doc.getElementById("signonsTree").currentIndex = 2;
-            doc.getElementById("context-copypassword").doCommand();
-
-            polls = 0;
-            waitForClipboard("coded", cleanUp);
-        }
-
-        function waitForClipboard(expectedValue, callback) {
-            if (++polls > 50) {
-                ok(false, "Timed out while polling clipboard");
-                cleanUp();
-                return;
-            }
-
-            let data = null;
-            let trans = Cc["@mozilla.org/widget/transferable;1"].
-                        createInstance(Ci.nsITransferable);
-            trans.addDataFlavor("text/unicode");
-            clip.getData(trans, clip.kGlobalClipboard);
-
-            try {
-                let str = {};
-                trans.getTransferData("text/unicode", str, {});
-                data = str.value.QueryInterface(Ci.nsISupportsString).data;
-            } catch (e) {}
-
-            if (data == expectedValue) {
-                is(data, expectedValue, "Clipboard should match expected value");
-                callback();
-            }
-            else
-                setTimeout(waitForClipboard, 100, expectedValue, callback);
+        function isMenuitemEnabled() {
+            doc.defaultView.UpdateCopyPassword();
+            return !menuitem.getAttribute("disabled");
         }
 
         function cleanUp() {
@@ -127,6 +104,6 @@ function test() {
             pwmgrdlg.close();
         }
 
-        step1();
+        waitForClipboard("coded", copyPassword, cleanUp, cleanUp);
     }
 }

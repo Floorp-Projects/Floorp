@@ -2732,6 +2732,24 @@ nsAccessible::GetLinkOffset(PRInt32 *aStartOffset, PRInt32 *aEndOffset)
 nsresult
 nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
 {
+  // Return text representation of non-text accessible within hypertext
+  // accessible. Text accessible overrides this method to return enclosed text.
+  if (aStartOffset != 0)
+    return NS_OK;
+
+  nsIFrame *frame = GetFrame();
+  NS_ENSURE_STATE(frame);
+
+  if (frame->GetType() == nsAccessibilityAtoms::brFrame) {
+    aText += kForcedNewLineChar;
+  } else if (nsAccUtils::MustPrune(this)) {
+    // Expose imaginary embedded object character if the accessible hans't
+    // children.
+    aText += kImaginaryEmbeddedObjectChar;
+  } else {
+    aText += kEmbeddedObjectChar;
+  }
+
   return NS_OK;
 }
 

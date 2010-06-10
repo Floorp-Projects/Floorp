@@ -162,7 +162,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
              aRect.width * 4);
     }
 
-    mTexture->UnlockRect(0);    
+    mTexture->UnlockRect(0);
   }
 }
 
@@ -187,7 +187,7 @@ CanvasLayerD3D9::RenderLayer()
    * and size. To get pixel perfect mapping we offset the quad half a pixel
    * to the top-left. We also flip the Y axis here, note we can only do this
    * because we are in CULL_NONE mode!
-   * 
+   *
    * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
    */
   memset(&quadTransform, 0, sizeof(quadTransform));

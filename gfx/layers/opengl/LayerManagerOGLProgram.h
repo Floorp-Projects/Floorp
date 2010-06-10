@@ -131,7 +131,7 @@ public:
   void SetUniform(GLuint aUniform, float aFloatValue) {
     ASSERT_THIS_PROGRAM;
 
-    if (aUniform == -1)
+    if (aUniform == GLuint(-1))
       return;
 
     if (!mUniformValues[aUniform].equalsFloat(aFloatValue)) {
@@ -143,7 +143,7 @@ public:
   void SetUniform(GLuint aUniform, const gfxRGBA& aColor) {
     ASSERT_THIS_PROGRAM;
 
-    if (aUniform == -1)
+    if (aUniform == GLuint(-1))
       return;
 
     if (!mUniformValues[aUniform].equalsColor(aColor)) {
@@ -155,7 +155,7 @@ public:
   void SetUniform(GLuint aUniform, int aLength, float *aFloatValues) {
     ASSERT_THIS_PROGRAM;
 
-    if (aUniform == -1)
+    if (aUniform == GLuint(-1))
       return;
 
     if (!mUniformValues[aUniform].equalsFloatN(aFloatValues, aLength)) {
@@ -177,7 +177,7 @@ public:
   void SetUniform(GLuint aUniform, GLint aIntValue) {
     ASSERT_THIS_PROGRAM;
 
-    if (aUniform == -1)
+    if (aUniform == GLuint(-1))
       return;
 
     if (!mUniformValues[aUniform].equalsInt(aIntValue)) {
@@ -189,7 +189,7 @@ public:
   void SetMatrixUniform(GLuint aUniform, const float *aFloatValues) {
     ASSERT_THIS_PROGRAM;
 
-    if (aUniform == -1)
+    if (aUniform == GLuint(-1))
       return;
 
     if (!mUniformValues[aUniform].equalsFloatN(aFloatValues, 16)) {

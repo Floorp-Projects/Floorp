@@ -53,7 +53,6 @@
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
         this.timeout = this._prefs.getIntPref("delay");
-        this._setPlaceholder();
 
         this._urlTooltip = document.getElementById("urlTooltip");
 
@@ -407,10 +406,6 @@
               case "delay":
                 this.timeout = this._prefs.getIntPref(aData);
                 break;
-              case "autocomplete.enabled":
-              case "default.behavior":
-                this._setPlaceholder();
-                break;
             }
           }
         ]]></body>
@@ -465,27 +460,6 @@
           ]]>
         </setter>
       </property>
-
-      <method name="_setPlaceholder">
-        <body><![CDATA[
-          var type = "none";
-          if (this._prefs.getBoolPref("autocomplete.enabled")) {
-            // Bottom 2 bits of default.behavior specify history/bookmark
-            switch (this._prefs.getIntPref("default.behavior") & 3) {
-              case 0:
-                type = "bookmarkhistory";
-                break;
-              case 1:
-                type = "history";
-                break;
-              case 2:
-                type = "bookmark";
-                break;
-            }
-          }
-          this.placeholder = this.getAttribute(type + "placeholder");
-        ]]></body>
-      </method>
 
       <method name="_parseActionUrl">
         <parameter name="aUrl"/>

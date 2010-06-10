@@ -1664,4 +1664,19 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       
   return ProcessText(aText, aLength, aBaseDirection, aPresContext, processor,
                      aMode, aPosResolve, aPosResolveCount, aWidth);
 }
+
+PRUint32 nsBidiPresUtils::EstimateMemoryUsed()
+{
+  PRUint32 size = 0;
+
+  size += sizeof(nsBidiPresUtils);
+  size += mBuffer.Length() * sizeof(PRUnichar);
+  size += moz_malloc_usable_size(mBidiEngine->mDirPropsMemory);
+  size += moz_malloc_usable_size(mBidiEngine->mLevelsMemory);
+  size += moz_malloc_usable_size(mBidiEngine->mRunsMemory);
+
+  return size;
+}
+
+
 #endif // IBMBIDI

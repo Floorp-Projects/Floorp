@@ -41,15 +41,14 @@
 #define nsICSSImportRule_h___
 
 #include "nsICSSRule.h"
-#include "nsString.h"
 
-class nsIAtom;
-class nsIURI;
 class nsMediaList;
+class nsString;
 
-// IID for the nsICSSImportRule interface {b2e65d15-6673-4548-a65a-c45ce87304f2}
+// IID for the nsICSSImportRule interface {1d7a658b-2f7b-423d-a3d9-dd5b553f69a9}
 #define NS_ICSS_IMPORT_RULE_IID     \
-{0xb2e65d15, 0x6673, 0x4548, {0xa6, 0x5a, 0xc4, 0x5c, 0xe8, 0x73, 0x04, 0xf2}}
+{0x1d7a658b, 0x2f7b, 0x423d, {0xa3, 0xd9, 0xdd, 0x5b, 0x55, 0x3f, 0x69, 0xa9}}
+
 
 class nsICSSImportRule : public nsICSSRule {
 public:

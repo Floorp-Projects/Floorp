@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Mike Pinkerton (pinkerton@netscape.com)
  *   Dainis Jonitis (Dainis_Jonitis@swh-t.lv)
+ *   Mats Palmgren <matpal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -309,25 +310,32 @@ nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, PRUint
   NS_ENSURE_ARG_POINTER(aFlavor && aData && aDataLen);
 
   nsresult rv = NS_OK;
+  nsCOMPtr<nsISupports> savedData;
   
   // first look and see if the data is present in one of the intrinsic flavors
   PRUint32 i;
   for (i = 0; i < mDataArray.Length(); ++i ) {
     DataStruct& data = mDataArray.ElementAt(i);
     if ( data.GetFlavor().Equals(aFlavor) ) {
-      data.GetData(aData, aDataLen);
-      if (*aDataLen == kFlavorHasDataProvider) {
+      nsCOMPtr<nsISupports> dataBytes;
+      PRUint32 len;
+      data.GetData(getter_AddRefs(dataBytes), &len);
+      if (len == kFlavorHasDataProvider && dataBytes) {
         // do we have a data provider?
-        nsCOMPtr<nsIFlavorDataProvider> dataProvider = do_QueryInterface(*aData);
+        nsCOMPtr<nsIFlavorDataProvider> dataProvider = do_QueryInterface(dataBytes);
         if (dataProvider) {
-          rv = dataProvider->GetFlavorData(this, aFlavor, aData, aDataLen);
+          rv = dataProvider->GetFlavorData(this, aFlavor,
+                                           getter_AddRefs(dataBytes), &len);
           if (NS_FAILED(rv))
             break;    // the provider failed. fall into the converter code below.
         }
       }
-      if (*aData && *aDataLen > 0)
+      if (dataBytes && len > 0) { // XXXmats why is zero length not ok?
+        *aDataLen = len;
+        dataBytes.forget(aData);
         return NS_OK;
-    
+      }
+      savedData = dataBytes;  // return this if format converter fails
       break;
     }
   }
@@ -344,11 +352,12 @@ nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, PRUint
         nsCOMPtr<nsISupports> dataBytes;
         PRUint32 len;
         data.GetData(getter_AddRefs(dataBytes), &len);
-        if (len == kFlavorHasDataProvider) {
+        if (len == kFlavorHasDataProvider && dataBytes) {
           // do we have a data provider?
           nsCOMPtr<nsIFlavorDataProvider> dataProvider = do_QueryInterface(dataBytes);
           if (dataProvider) {
-            rv = dataProvider->GetFlavorData(this, aFlavor, getter_AddRefs(dataBytes), &len);
+            rv = dataProvider->GetFlavorData(this, aFlavor,
+                                             getter_AddRefs(dataBytes), &len);
             if (NS_FAILED(rv))
               break;  // give up
           }
@@ -359,6 +368,13 @@ nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, PRUint
       }
     }
   }
+
+  // for backward compatibility
+  if (!found) {
+    savedData.forget(aData);
+    *aDataLen = 0;
+  }
+
   return found ? NS_OK : NS_ERROR_FAILURE;
 }
 

@@ -40,7 +40,7 @@
 
 #include "xptcprivate.h"
 
-#if !defined(LINUX) || !defined(__arm__)
+#if !defined(__arm__) && !(defined(LINUX) || defined(ANDROID))
 #error "This code is for Linux ARM only. Check that it works on your system, too.\nBeware that this code is highly compiler dependent."
 #endif
 
