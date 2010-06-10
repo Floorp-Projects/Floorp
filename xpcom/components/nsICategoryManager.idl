@@ -43,7 +43,7 @@
  * @status FROZEN
  */
 
-[scriptable, uuid(3275b2cd-af6d-429a-80d7-f0c5120342ac)]
+[scriptable, uuid(70F95BAF-8F93-4D24-B9E0-3428DF27A835)]
 interface nsICategoryManager : nsISupports
 {
     /**
@@ -54,34 +54,6 @@ interface nsICategoryManager : nsISupports
      */
     string getCategoryEntry(in string aCategory, in string aEntry);
     
-    /**
-     * Add an entry to a category.
-     * @param aCategory The name of the category ("protocol")
-     * @param aEntry The entry to be added ("http")
-     * @param aValue The value for the entry ("moz.httprulez.1")
-     * @param aPersist Should this data persist between invocations?
-     * @param aReplace Should we replace an existing entry?
-     * @return Previous entry, if any
-     */
-    string addCategoryEntry(in string aCategory, in string aEntry,
-			    in string aValue, in boolean aPersist,
-			    in boolean aReplace);
-
-    /**
-     * Delete an entry from the category.
-     * @param aCategory The name of the category ("protocol")
-     * @param aEntry The entry to be added ("http")
-     * @param aPersist Delete persistent data from registry, if present?
-     */
-    void deleteCategoryEntry(in string aCategory, in string aEntry,
-                               in boolean aPersist);
-
-    /**
-     * Delete a category and all entries.
-     * @param aCategory The category to be deleted.
-     */
-    void deleteCategory(in string aCategory);
-
     /**
      * Enumerate the entries in a category.
      * @param aCategory The category to be enumerated.

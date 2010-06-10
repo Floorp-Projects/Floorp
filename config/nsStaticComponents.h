@@ -38,10 +38,11 @@
 #ifndef nsStaticComponents_h__
 #define nsStaticComponents_h__
 
+#include "mozilla/Module.h"
+
 // These symbols are provided by nsStaticComponents.cpp, and also by other
 // static component providers such as nsStaticXULComponents (libxul).
 
-extern nsStaticModuleInfo const *const kPStaticModules;
-extern PRUint32 const kStaticModuleCount;
+extern mozilla::Module const *const *const kPStaticModules;
 
 #endif

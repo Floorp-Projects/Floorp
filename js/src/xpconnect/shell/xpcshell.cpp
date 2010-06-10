@@ -73,7 +73,6 @@
 #include "nsCOMArray.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsMemory.h"
-#include "nsIGenericFactory.h"
 #include "nsISupportsImpl.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
@@ -1772,12 +1771,6 @@ main(int argc, char **argv)
         if (NS_FAILED(rv)) {
             printf("NS_InitXPCOM2 failed!\n");
             return 1;
-        }
-        {
-            nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-            NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-            if (registrar)
-                registrar->AutoRegister(nsnull);
         }
 
         nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");

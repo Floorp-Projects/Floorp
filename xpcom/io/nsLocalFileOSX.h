@@ -78,7 +78,7 @@ public:
 
   nsLocalFile();
 
-  static NS_METHOD nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+  static nsresult nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFILE

@@ -656,6 +656,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
+#if 0
   else if (!strcmp(aProperty, NS_XPCOM_COMPONENT_DIR_LIST)) {
     static const char *const kAppendCompDir[] = { "components", nsnull };
     nsCOMArray<nsIFile> directories;
@@ -668,6 +669,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
+#endif
   else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
 

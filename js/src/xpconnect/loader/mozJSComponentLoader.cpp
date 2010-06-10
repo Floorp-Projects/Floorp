@@ -53,10 +53,8 @@
 #include "nsAutoPtr.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
-#include "nsIComponentManagerObsolete.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/Module.h"
 #include "nsILocalFile.h"
-#include "nsIModule.h"
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "mozJSComponentLoader.h"
@@ -574,7 +572,7 @@ mozJSComponentLoader*
 mozJSComponentLoader::sSelf;
 
 NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
-                   nsIModuleLoader,
+                   mozilla::ModuleLoader,
                    xpcIJSModuleLoader,
                    nsIObserver)
  
@@ -660,9 +658,8 @@ mozJSComponentLoader::ReallyInit()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
-                                 nsIModule* *aResult)
+const mozilla::Module*
+mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile)
 {
     nsresult rv;
 
@@ -676,30 +673,27 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     nsCAutoString leafName;
     aComponentFile->GetNativeLeafName(leafName);
     if (!StringTail(leafName, 3).LowerCaseEqualsLiteral(".js"))
-        return NS_ERROR_INVALID_ARG;
+        return NULL;
 
     if (!mInitialized) {
         rv = ReallyInit();
         if (NS_FAILED(rv))
-            return rv;
+            return NULL;
     }
 
     nsCOMPtr<nsIHashable> lfhash(do_QueryInterface(aComponentFile));
     if (!lfhash) {
         NS_ERROR("nsLocalFile not implementing nsIHashable");
-        return NS_NOINTERFACE;
+        return NULL;
     }
 
     ModuleEntry* mod;
-    if (mModules.Get(lfhash, &mod)) {
-        NS_ASSERTION(mod->module, "Bad hashtable data!");
-        NS_ADDREF(*aResult = mod->module);
-        return NS_OK;
-    }
+    if (mModules.Get(lfhash, &mod))
+        return mod;
 
     nsAutoPtr<ModuleEntry> entry(new ModuleEntry);
     if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
+        return NULL;
 
     rv = GlobalForLocation(aComponentFile, &entry->global, &entry->location,
                            nsnull);
@@ -707,18 +701,18 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
 #ifdef DEBUG_shaver
         fprintf(stderr, "GlobalForLocation failed!\n");
 #endif
-        return rv;
+        return NULL;
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID,
                                                &rv);
     if (NS_FAILED(rv))
-        return rv;
+        return NULL;
 
     nsCOMPtr<nsIComponentManager> cm;
     rv = NS_GetComponentManager(getter_AddRefs(cm));
     if (NS_FAILED(rv))
-        return rv;
+        return NULL;
 
     JSCLContextHelper cx(this);
 
@@ -733,7 +727,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
         fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
                 (void *)(JSContext*)cx, (void *)mCompMgr, rv);
 #endif
-        return rv;
+        return NULL;
     }
 
     rv = cm_holder->GetJSObject(&cm_jsobj);
@@ -741,7 +735,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
 #ifdef DEBUG_shaver
         fprintf(stderr, "GetJSObject of ComponentManager failed\n");
 #endif
-        return rv;
+        return NULL;
     }
 
     JSObject* file_jsobj;
@@ -751,72 +745,57 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
                          getter_AddRefs(file_holder));
 
     if (NS_FAILED(rv)) {
-        return rv;
+        return NULL;
     }
 
     rv = file_holder->GetJSObject(&file_jsobj);
     if (NS_FAILED(rv)) {
-        return rv;
+        return NULL;
     }
 
     JSCLAutoErrorReporterSetter aers(cx, mozJSLoaderErrorReporter);
 
-    jsval argv[2], retval, NSGetModule_val;
+    jsval argv[2], retval, NSGetFactory_val;
 
-    if (!JS_GetProperty(cx, entry->global, "NSGetModule", &NSGetModule_val) ||
-        JSVAL_IS_VOID(NSGetModule_val)) {
-        return NS_ERROR_FAILURE;
+    if (!JS_GetProperty(cx, entry->global, "NSGetFactory", &NSGetFactory_val) ||
+        JSVAL_IS_VOID(NSGetFactory_val)) {
+        return NULL;
     }
 
-    if (JS_TypeOfValue(cx, NSGetModule_val) != JSTYPE_FUNCTION) {
+    if (JS_TypeOfValue(cx, NSGetFactory_val) != JSTYPE_FUNCTION) {
         nsCAutoString path;
         aComponentFile->GetNativePath(path);
 
-        JS_ReportError(cx, "%s has NSGetModule property that is not a function",
+        JS_ReportError(cx, "%s has NSGetFactory property that is not a function",
                        path.get());
-        return NS_ERROR_FAILURE;
+        return NULL;
     }
     
-    argv[0] = OBJECT_TO_JSVAL(cm_jsobj);
-    argv[1] = OBJECT_TO_JSVAL(file_jsobj);
-    if (!JS_CallFunctionValue(cx, entry->global, NSGetModule_val,
-                              2, argv, &retval)) {
-        return NS_ERROR_FAILURE;
-    }
-
-#ifdef DEBUG_shaver_off
-    JSString *s = JS_ValueToString(cx, retval);
-    fprintf(stderr, "mJCL: %s::NSGetModule returned %s\n",
-            registryLocation, JS_GetStringBytes(s));
-#endif
-
-    JSObject *jsModuleObj;
-    if (!JS_ValueToObject(cx, retval, &jsModuleObj) ||
-        !jsModuleObj) {
+    JSObject *jsGetFactoryObj;
+    if (!JS_ValueToObject(cx, retval, &jsGetFactoryObj) ||
+        !jsGetFactoryObj) {
         /* XXX report error properly */
-        return NS_ERROR_FAILURE;
+        return NULL;
     }
 
-    rv = xpc->WrapJS(cx, jsModuleObj,
-                     NS_GET_IID(nsIModule), getter_AddRefs(entry->module));
+    rv = xpc->WrapJS(cx, jsGetFactoryObj,
+                     NS_GET_IID(xpcIJSGetFactory), getter_AddRefs(entry->getfactory));
     if (NS_FAILED(rv)) {
         /* XXX report error properly */
 #ifdef DEBUG
         fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
 #endif
-        return rv;
+        return NULL;
     }
 
     // Cache this module for later
     if (!mModules.Put(lfhash, entry))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aResult = entry->module);
+        return NULL;
 
     // The hash owns the ModuleEntry now, forget about it
     entry.forget();
 
-    return NS_OK;
+    return entry;
 }
 
 // Some stack based classes for cleaning up on early return
