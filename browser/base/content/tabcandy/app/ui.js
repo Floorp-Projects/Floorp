@@ -305,11 +305,14 @@ window.Page = {
           var item = TabItems.getItemByTabElement(mirror.el);
           self.setActiveTab(item);
           
-          var rotation = $tab.css("-moz-transform");
-          var extra = item._getSizeExtra();
-          var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
-          w -= extra.x;
-          h -= extra.y;
+          var transform = $tab.css("-moz-transform");
+          var z = $tab.css('zIndex');
+          var pos = $tab.position();
+                  
+/*           var extra = item._getSizeExtra(); */
+          var w = $tab.width();
+          var h = $tab.height();
+
           var scale = window.innerWidth / w;
   
           var overflow = iQ("body").css("overflow");
@@ -333,7 +336,7 @@ window.Page = {
               complete: function() { 
                 $tab.css({
                   zIndex: z,
-                  '-moz-transform': rotation
+                  '-moz-transform': transform
                 });
                 iQ("body").css("overflow", overflow);
                 var activeGroup = Groups.getActiveGroup();
