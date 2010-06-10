@@ -61,10 +61,6 @@
 #include "nsIFormProcessor.h"
 #include "nsIServiceManager.h"
 
-#ifdef MOZ_SVG
-#include "nsHtml5SVGLoadDispatcher.h"
-#endif
-
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 /**
@@ -664,16 +660,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       sele->FreezeUriAsyncDefer();
       return rv;
     }
-#ifdef MOZ_SVG
-    case eTreeOpSvgLoad: {
-      nsIContent* node = *(mOne.node);
-      nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(node);
-      if (NS_FAILED(NS_DispatchToMainThread(event))) {
-        NS_WARNING("failed to dispatch svg load dispatcher");
-      }
-      return rv;
-    }
-#endif
     default: {
       NS_NOTREACHED("Bogus tree op");
     }
