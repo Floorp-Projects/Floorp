@@ -66,6 +66,11 @@ public:
   PRBool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const;
 
   /**
+   * @copydoc nsBaseHashtable::Get
+   */
+  already_AddRefed<Interface> Get(KeyType aKey) const;
+
+  /**
    * Gets a weak reference to the hashtable entry.
    * @param aFound If not nsnull, will be set to PR_TRUE if the entry is found,
    *               to PR_FALSE otherwise.
@@ -131,6 +136,19 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
     *pInterface = nsnull;
 
   return PR_FALSE;
+}
+
+template<class KeyClass, class Interface>
+already_AddRefed<Interface>
+nsInterfaceHashtable<KeyClass,Interface>::Get(KeyType aKey) const
+{
+  typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
+    GetEntry(aKey);
+  if (!ent)
+    return NULL;
+
+  NS_IF_ADDREF(ent->mData);
+  return already_AddRefed<Interface>(ent->mData);
 }
 
 template<class KeyClass,class Interface>

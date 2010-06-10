@@ -305,11 +305,10 @@ XRE_API(nsresult,
         XRE_GetBinaryPath, (const char *argv0, nsILocalFile* *aResult))
 
 /**
- * Get the static components built in to libxul.
+ * Get the static module built in to libxul.
  */
-XRE_API(void,
-        XRE_GetStaticComponents, (nsStaticModuleInfo const **aStaticComponents,
-                                  PRUint32 *aComponentCount))
+XRE_API(const mozilla::Module*,
+        XRE_GetStaticModule, ())
 
 /**
  * Lock a profile directory using platform-specific semantics.
@@ -334,12 +333,6 @@ XRE_API(nsresult,
  * @param aAppDirProvider    A directory provider for the application. This
  *                           provider will be aggregated by a libxul provider
  *                           which will provide the base required GRE keys.
- * @param aStaticComponents  Static components provided by the embedding
- *                           application. This should *not* include the
- *                           components from XRE_GetStaticComponents. May be
- *                           null if there are no static components.
- * @param aStaticComponentCount the number of static components in
- *                           aStaticComponents
  *
  * @note This function must be called from the "main" thread.
  *
@@ -349,11 +342,28 @@ XRE_API(nsresult,
  */
 
 XRE_API(nsresult,
-        XRE_InitEmbedding, (nsILocalFile *aLibXULDirectory,
-                            nsILocalFile *aAppDirectory,
-                            nsIDirectoryServiceProvider *aAppDirProvider,
-                            nsStaticModuleInfo const *aStaticComponents,
-                            PRUint32 aStaticComponentCount))
+        XRE_InitEmbedding2, (nsILocalFile *aLibXULDirectory,
+                             nsILocalFile *aAppDirectory,
+                             nsIDirectoryServiceProvider *aAppDirProvider))
+
+/**
+ * Register static XPCOM component information.
+ * This method may be called at any time before or after XRE_main or
+ * XRE_InitEmbedding.
+ */
+XRE_API(nsresult,
+        XRE_AddStaticComponent, (const mozilla::Module* aComponent))
+/**
+ * Register XPCOM components found in an array of files/directories.
+ * This method may be called at any time before or after XRE_main or
+ * XRE_InitEmbedding.
+ *
+ * @param aFiles An array of files or directories.
+ * @param aFileCount the number of items in the aFiles array.
+ * @note appdir/components is registered automatically.
+ */
+XRE_API(nsresult,
+        XRE_AddComponentLocation, (nsILocalFile* aLocation))
 
 /**
  * Fire notifications to inform the toolkit about a new profile. This

@@ -282,7 +282,7 @@ nsDirectoryService::nsDirectoryService() :
 {
 }
 
-NS_METHOD
+nsresult
 nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
@@ -637,29 +637,6 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sGRE_Directory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-    }
-    // the GRE components directory is relative to the GRE directory
-    // by default; applications may override this behavior in special
-    // cases
-    else if (inAtom == nsDirectoryService::sGRE_ComponentDirectory)
-    {
-        rv = Get(NS_GRE_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
-        if (localFile) {
-            nsCOMPtr<nsIFile> cdir;
-            localFile->Clone(getter_AddRefs(cdir));
-            cdir->AppendNative(COMPONENT_DIRECTORY);
-            localFile = do_QueryInterface(cdir);
-        }
-    }
-    else if (inAtom == nsDirectoryService::sComponentDirectory)
-    {
-        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-        if (localFile) {
-            nsCOMPtr<nsIFile> cdir;
-            localFile->Clone(getter_AddRefs(cdir));
-            cdir->AppendNative(COMPONENT_DIRECTORY);
-            localFile = do_QueryInterface(cdir);
-        }
     }
     else if (inAtom == nsDirectoryService::sOS_DriveDirectory)
     {

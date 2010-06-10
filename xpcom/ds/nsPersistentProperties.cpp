@@ -508,7 +508,7 @@ nsPersistentProperties::Init()
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   if (aOuter)

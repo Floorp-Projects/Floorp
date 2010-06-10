@@ -93,7 +93,7 @@ nsInt2StrHashtable::Remove(PRUint32 key)
 
 NS_IMPL_ISUPPORTS1(nsErrorService, nsIErrorService)
 
-NS_METHOD
+nsresult
 nsErrorService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     NS_ENSURE_NO_AGGREGATION(outer);

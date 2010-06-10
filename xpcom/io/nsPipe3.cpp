@@ -1319,7 +1319,7 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
     return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsPipeConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
     if (outer)

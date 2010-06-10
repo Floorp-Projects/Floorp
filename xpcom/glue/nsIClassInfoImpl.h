@@ -37,22 +37,56 @@
 #define nsIClassInfoImpl_h__
 
 #include "nsIClassInfo.h"
+#include "nsISupportsImpl.h"
 
-#define NS_CLASSINFO_NAME(_class) _class##_classInfoGlobal
+class GenericClassInfo : public nsIClassInfo
+{
+public:
+  struct ClassInfoData
+  {
+    typedef NS_CALLBACK(GetInterfacesProc)(PRUint32* NS_OUTPARAM countp,
+                                           nsIID*** NS_OUTPARAM array);
+    typedef NS_CALLBACK(GetLanguageHelperProc)(PRUint32 language,
+                                               nsISupports** helper);
+
+    GetInterfacesProc getinterfaces;
+    GetLanguageHelperProc getlanguagehelper;
+    PRUint32 flags;
+  };
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSICLASSINFO
+
+  GenericClassInfo(const ClassInfoData* data)
+    : mData(data)
+  { }
+
+private:
+  const ClassInfoData* mData;
+};
+
+#define NS_CLASSINFO_NAME(_class) g##_class##_classInfoGlobal
 #define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
-
 #define NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
   extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
      (PRUint32 * NS_OUTPARAM, nsIID *** NS_OUTPARAM);
 
-#define NS_DECL_CLASSINFO(_class)                                             \
-  NS_DECL_CI_INTERFACE_GETTER(_class)                                         \
-  nsIClassInfo *NS_CLASSINFO_NAME(_class);
+#define NS_DECL_CLASSINFO(_class) foobarstopcompilinghere;
 
-#define NS_IMPL_QUERY_CLASSINFO(_class)                                       \
-  if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                              \
-    extern nsIClassInfo *NS_CLASSINFO_NAME(_class);                           \
-    foundInterface = static_cast<nsIClassInfo*>(NS_CLASSINFO_NAME(_class));   \
+#define NS_IMPL_CLASSINFO(_class, _getlanguagehelper, _flags)           \
+  NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
+  static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = { \
+    NS_CI_INTERFACE_GETTER_NAME(_class),                                \
+    _getlanguagehelper,                                                 \
+    _flags                                                              \
+  };                                                                    \
+  extern nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
+
+#define NS_IMPL_QUERY_CLASSINFO(_class)                                           \
+  if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                                  \
+    if (!NS_CLASSINFO_NAME(_class))                                               \
+      NS_CLASSINFO_NAME(_class) = new GenericClassInfo(&k##_class##ClassInfoData); \
+    foundInterface = NS_CLASSINFO_NAME(_class);                                   \
   } else
 
 #define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                 \

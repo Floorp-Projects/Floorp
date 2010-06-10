@@ -44,8 +44,7 @@
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsXPCOMCID.h"
-#include "nsICategoryManager.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 
 // just to do the reverse-lookup! sheesh.
 #include "nsIInterfaceRequestorUtils.h"
@@ -579,28 +578,28 @@ NS_IMETHODIMP nsWindowDataSource::EndUpdateBatch()
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 
-static NS_METHOD
-RegisterWindowDS(nsIComponentManager *aCompMgr,
-                 nsIFile *aPath,
-                 const char *registryLocation,
-                 const char *componentType,
-                 const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+NS_DEFINE_NAMED_CID(NS_WINDOWDATASOURCE_CID);
 
-    return catman->AddCategoryEntry("app-startup", "Window Data Source",
-                                    "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-                                    PR_TRUE, PR_TRUE, nsnull);
-    return NS_OK;
-}
-
-static const nsModuleComponentInfo components[] = {
-    { "nsWindowDataSource",
-      NS_WINDOWDATASOURCE_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-      nsWindowDataSourceConstructor, RegisterWindowDS }
+static const mozilla::Module::CIDEntry kWindowDSCIDs[] = {
+    { &kNS_WINDOWDATASOURCE_CID, false, NULL, nsWindowDataSourceConstructor },
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsWindowDataSourceModule, components)
+static const mozilla::Module::ContractIDEntry kWindowDSContracts[] = {
+    { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator", &kNS_WINDOWDATASOURCE_CID },
+    { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kWindowDSCategories[] = {
+    { "app-startup", "Window Data Source", "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator" },
+    { NULL }
+};
+        
+static const mozilla::Module kWindowDSModule = {
+    mozilla::Module::kVersion,
+    kWindowDSCIDs,
+    kWindowDSContracts,
+    kWindowDSCategories
+};
+
+NSMODULE_DEFN(nsWindowDataSourceModule) = &kWindowDSModule;

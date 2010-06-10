@@ -85,6 +85,6 @@ public:
     NS_DECL_CYCLE_COLLECTION_CLASS(nsArrayCC)
 };
 
-NS_METHOD nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult);
+nsresult nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult);
 
 #endif

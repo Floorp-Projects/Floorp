@@ -530,7 +530,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageObsolete)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
+nsresult
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsDOMStorage* storage = new nsDOMStorage();
@@ -540,7 +540,7 @@ NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return storage->QueryInterface(aIID, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsDOMStorage2* storage = new nsDOMStorage2();

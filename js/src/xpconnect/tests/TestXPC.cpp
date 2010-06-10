@@ -779,10 +779,6 @@ int main()
     {
         nsCOMPtr<nsIServiceManager> servMan;
         NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-        if(registrar)
-            registrar->AutoRegister(nsnull);
     
         // get the JSRuntime from the runtime svc, if possible
         nsCOMPtr<nsIJSRuntimeService> rtsvc =

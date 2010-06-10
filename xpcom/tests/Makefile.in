@@ -48,7 +48,7 @@ ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
 endif
 
-DIRS		= dynamic services external
+DIRS		= external
 
 ifdef MOZ_ENABLE_LIBXUL
 DIRS += xptinfo
@@ -91,7 +91,6 @@ CPP_UNIT_TESTS = \
                  TestCOMArray.cpp \
                  TestCOMPtr.cpp \
                  TestCOMPtrEq.cpp \
-                 TestFactory.cpp \
                  TestFile.cpp \
                  TestHashtables.cpp \
                  TestID.cpp \
@@ -99,7 +98,6 @@ CPP_UNIT_TESTS = \
                  TestObserverService.cpp \
                  TestPipe.cpp \
                  TestRefPtr.cpp \
-                 TestServMgr.cpp \
                  TestTextFormatter.cpp \
                  $(NULL)
 
