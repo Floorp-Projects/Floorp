@@ -524,8 +524,6 @@ protected:
 
   void SetChromeEventHandlerInternal(nsPIDOMEventTarget* aChromeEventHandler) {
     mChromeEventHandler = aChromeEventHandler;
-    // mParentTarget will be set when the next event is dispatched.
-    mParentTarget = nsnull;
   }
 
   // These two variables are special in that they're set to the same
@@ -533,8 +531,6 @@ protected:
   // sure you keep them in sync!
   nsCOMPtr<nsPIDOMEventTarget> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
-
-  nsCOMPtr<nsPIDOMEventTarget> mParentTarget; // strong
 
   // These members are only used on outer windows.
   nsCOMPtr<nsIDOMElement> mFrameElement;
