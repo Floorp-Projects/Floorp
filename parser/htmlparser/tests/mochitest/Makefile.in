@@ -61,8 +61,6 @@ _TEST_FILES =	parser_datreader.js \
 		bug_502091_iframe.html \
 		test_compatmode.html \
 		invalidchar.xml \
-		test_bug552938.html \
-		test_bug552938-2.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
