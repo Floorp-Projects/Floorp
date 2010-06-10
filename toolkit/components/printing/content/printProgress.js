@@ -53,7 +53,7 @@ var docURL   = "";
 var progressParams = null;
 var switchUI = true;
 
-function elipseString(aStr, doFront)
+function ellipseString(aStr, doFront)
 {
   if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length-4, 3) == "...")) {
     return aStr;
@@ -139,7 +139,7 @@ var progressListener = {
 
       if (progressParams)
       {
-        var docTitleStr = elipseString(progressParams.docTitle, false);
+        var docTitleStr = ellipseString(progressParams.docTitle, false);
         if (docTitleStr != docTitle) {
           docTitle = docTitleStr;
           dialog.title.value = docTitle;
@@ -148,7 +148,7 @@ var progressListener = {
         if (docURLStr != docURL && dialog.title != null) {
           docURL = docURLStr;
           if (docTitle == "") {
-            dialog.title.value = elipseString(docURLStr, true);
+            dialog.title.value = ellipseString(docURLStr, true);
           }
         }
       }
@@ -248,8 +248,8 @@ function onLoad() {
       progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
       if (progressParams)
       {
-        docTitle = elipseString(progressParams.docTitle, false);
-        docURL   = elipseString(progressParams.docURL, true);
+        docTitle = ellipseString(progressParams.docTitle, false);
+        docURL   = ellipseString(progressParams.docURL, true);
       }
     }
 

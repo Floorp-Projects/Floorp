@@ -714,7 +714,7 @@ static int _bufio_flushBuf( BufioFile* file )
 *  sets the file buffer size to bufsize, clearing the buffer in the process.
 *
 *  accepts bufsize of -1 to mean default buffer size, defined by BUFIO_BUFSIZE_DEFAULT
-*  returns new buffers size, or -1 if error occured
+*  returns new buffers size, or -1 if error occurred
 */
 
 int bufio_SetBufferSize(BufioFile* file, int bufsize)

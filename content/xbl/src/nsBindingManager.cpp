@@ -503,13 +503,9 @@ RemoveInsertionParentForNodeList(nsIDOMNodeList* aList, nsIContent* aParent)
 void
 nsBindingManager::RemoveInsertionParent(nsIContent* aParent)
 {
-  nsCOMPtr<nsIDOMNodeList> contentlist;
-  GetContentListFor(aParent, getter_AddRefs(contentlist));
-  RemoveInsertionParentForNodeList(contentlist, aParent);
+  RemoveInsertionParentForNodeList(GetContentListFor(aParent), aParent);
 
-  nsCOMPtr<nsIDOMNodeList> anonnodes;
-  GetAnonymousNodesFor(aParent, getter_AddRefs(anonnodes));
-  RemoveInsertionParentForNodeList(anonnodes, aParent);
+  RemoveInsertionParentForNodeList(GetAnonymousNodesFor(aParent), aParent);
 
   if (mInsertionParentTable.ops) {
     PL_DHashTableEnumerate(&mInsertionParentTable, RemoveInsertionParentCB,
@@ -625,17 +621,11 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
   return SetOrRemoveObject(mWrapperTable, aContent, aWrappedJS);
 }
 
-nsresult
-nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
-                                    nsIDocument* aNewDocument)
+void
+nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
+                                              nsIDocument* aOldDocument)
 {
-  // XXXbz this code is pretty broken, since moving from one document
-  // to another always passes through a null document!
   NS_PRECONDITION(aOldDocument != nsnull, "no old document");
-  NS_PRECONDITION(!aNewDocument,
-                  "Changing to a non-null new document not supported yet");
-  if (! aOldDocument)
-    return NS_ERROR_NULL_POINTER;
 
   // Hold a ref to the binding so it won't die when we remove it from our
   // table.
@@ -654,18 +644,14 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   }
 
   if (binding) {
-    binding->ChangeDocument(aOldDocument, aNewDocument);
+    binding->ChangeDocument(aOldDocument, nsnull);
     SetBinding(aContent, nsnull);
-    if (aNewDocument)
-      aNewDocument->BindingManager()->SetBinding(aContent, binding);
   }
 
   // Clear out insertion parents and content lists.
   SetInsertionParent(aContent, nsnull);
   SetContentListFor(aContent, nsnull);
   SetAnonymousNodesFor(aContent, nsnull);
-
-  return NS_OK;
 }
 
 nsIAtom*
@@ -764,6 +750,13 @@ nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent,
   PRBool dummy;
   NS_IF_ADDREF(*aResult = GetAnonymousNodesInternal(aContent, &dummy));
   return NS_OK;
+}
+
+nsINodeList*
+nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent)
+{
+  PRBool dummy;
+  return GetAnonymousNodesInternal(aContent, &dummy);
 }
 
 nsresult
@@ -1522,6 +1515,7 @@ nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
 void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   nsIContent* aContainer,
+                                  nsIContent* aFirstNewContent,
                                   PRInt32     aNewIndexInContainer)
 {
   if (aNewIndexInContainer != -1 &&

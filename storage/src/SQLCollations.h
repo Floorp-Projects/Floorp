@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _mozilla_storage_SQLCollations_h_
-#define _mozilla_storage_SQLCollations_h_
+#ifndef mozilla_storage_SQLCollations_h
+#define mozilla_storage_SQLCollations_h
 
 #include "mozStorageService.h"
 #include "nscore.h"
@@ -279,4 +279,4 @@ NS_HIDDEN_(int) localeCollationCaseAccentSensitive16(void *aService,
 } // namespace storage
 } // namespace mozilla
 
-#endif // _mozilla_storage_SQLCollations_h_
+#endif // mozilla_storage_SQLCollations_h

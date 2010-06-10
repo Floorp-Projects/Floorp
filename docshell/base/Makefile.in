@@ -74,8 +74,6 @@ XPIDLSRCS	= \
 		nsIURIFixup.idl			\
 		nsIEditorDocShell.idl		\
 		nsIWebPageDescriptor.idl	\
-		nsIURIClassifier.idl		\
-		nsIChannelClassifier.idl	\
 		nsIDownloadHistory.idl          \
 		nsILoadContext.idl              \
 		$(NULL)

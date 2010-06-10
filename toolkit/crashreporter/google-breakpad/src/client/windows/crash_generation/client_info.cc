@@ -101,26 +101,16 @@ ClientInfo::~ClientInfo() {
   }
 }
 
-bool ClientInfo::UnregisterWaits() {
-  bool success = true;
-
+void ClientInfo::UnregisterWaits() {
   if (dump_request_wait_handle_) {
-    if (!UnregisterWait(dump_request_wait_handle_)) {
-      success = false;
-    } else {
-      dump_request_wait_handle_ = NULL;
-    }
+    UnregisterWait(dump_request_wait_handle_);
+    dump_request_wait_handle_ = NULL;
   }
 
   if (process_exit_wait_handle_) {
-    if (!UnregisterWait(process_exit_wait_handle_)) {
-      success = false;
-    } else {
-      process_exit_wait_handle_ = NULL;
-    }
+    UnregisterWait(process_exit_wait_handle_);
+    process_exit_wait_handle_ = NULL;
   }
-
-  return success;
 }
 
 bool ClientInfo::GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info) const {

@@ -10,6 +10,7 @@
 @DLL_PREFIX@xpistub@DLL_SUFFIX@
 @DLL_PREFIX@zlib@DLL_SUFFIX@
 LICENSE
+browserconfig.properties
 chrome.manifest
 chrome/US.jar
 chrome/app-chrome.manifest
@@ -38,9 +39,6 @@ components/aboutPrivateBrowsing.js
 components/aboutRights.js
 components/aboutRobots.js
 components/aboutSessionRestore.js
-components/addonManager.js
-components/amContentHandler.js
-components/amInstallWebListener.js
 components/autocomplete.xpt
 components/airbag.xpt
 components/bookmarks.xpt
@@ -53,6 +51,7 @@ components/nsBackgroundUpdateService.js
 components/nsBookmarkTransactionManager.js
 components/nsCloseAllWindows.js
 components/nsDictionary.js
+components/nsExtensionManager.js
 components/nsInterfaceInfoToIDL.js
 components/nsScriptableIO.js
 components/nsUrlClassifierTable.js
@@ -82,15 +81,15 @@ extensions/talkback@mozilla.org/components/qfaservices.xpt
 extensions/talkback@mozilla.org/install.rdf
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
+greprefs/all.js
+greprefs/security-prefs.js
+greprefs/xpinstall.js
 install.rdf
 modules/JSON.jsm
-modules/AddonLogging.jsm
-modules/AddonManager.jsm
-modules/AddonUpdateChecker.jsm
-modules/PluginProvider.jsm
-modules/XPIProvider.jsm
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
+res/arrow.gif
+res/arrowd.gif
 res/broken-image.gif
 res/broken-image.png
 res/charsetData.properties
@@ -705,9 +704,6 @@ xpicleanup@BIN_SUFFIX@
   components/xultmpl.xpt
   components/zipwriter.xpt
   extensions/inspector@mozilla.org/chrome/chromelist.txt
-  greprefs/all.js
-  greprefs/security-prefs.js
-  greprefs/xpinstall.js
   init.d/README
   libwidget.rsrc
   plugins/Default Plugin.plugin/Contents/Info.plist
@@ -715,6 +711,14 @@ xpicleanup@BIN_SUFFIX@
   plugins/Default Plugin.plugin/Contents/PkgInfo
   plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
   plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/DefaultPlugin.plugin/
+  plugins/DefaultPlugin.plugin/Contents/Info.plist
+  plugins/DefaultPlugin.plugin/Contents/MacOS/
+  plugins/DefaultPlugin.plugin/Contents/MacOS/DefaultPlugin
+  plugins/DefaultPlugin.plugin/Contents/Resources/
+  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/
+  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/DefaultPlugin.plugin/Contents/Resources/plugin.png
   redo-prebinding.sh
   res/bloatcycle.html
   res/cursors/CVS/Entries
@@ -733,6 +737,7 @@ xpicleanup@BIN_SUFFIX@
     icons/mozicon16.xpm
     icons/mozicon50.xpm
     libjemalloc.so
+    plugins/libnullplugin.so
     readme.txt
   #endif
 #endif
@@ -744,6 +749,7 @@ xpicleanup@BIN_SUFFIX@
   components/jsd3250.dll
   components/nsPostUpdateWin.js
   js3250.dll
+  plugins/npnul32.dll
   #ifdef MOZ_MEMORY
     Microsoft.VC80.CRT.manifest
     msvcm80.dll

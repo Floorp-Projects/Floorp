@@ -190,7 +190,7 @@ XPC_WN_Shared_ToSource(JSContext *cx, JSObject *obj,
 // returning the underlying JSObject) so that JS callers will see what looks
 // Like any other xpcom object - and be limited to use its interfaces.
 //
-// See the comment preceeding nsIXPCWrappedJSObjectGetter in nsIXPConnect.idl.
+// See the comment preceding nsIXPCWrappedJSObjectGetter in nsIXPConnect.idl.
 
 static JSObject*
 GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
@@ -878,7 +878,7 @@ static JSObject *
 XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+        static_cast<XPCWrappedNative *>(obj->getPrivate());
     if(!wrapper)
     {
         Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
@@ -917,7 +917,7 @@ static JSObject *
 XPC_WN_InnerObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+        static_cast<XPCWrappedNative *>(obj->getPrivate());
     if(!wrapper)
     {
         Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
@@ -1488,14 +1488,12 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     if(!obj)
         return nsnull;
 
-    JSObject *scope = JS_GetScopeChain(cx);
+    JSObject *scope = JS_GetGlobalForScopeChain(cx);
     if(!scope)
     {
         XPCThrower::Throw(NS_ERROR_FAILURE, cx);
         return nsnull;
     }
-
-    scope = JS_GetGlobalForObject(cx, scope);
 
     XPCPerThreadData *threadData = XPCPerThreadData::GetData(cx);
     if(!threadData)
@@ -1506,6 +1504,27 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
 
     AutoPopJSContext popper(threadData->GetJSContextStack());
     popper.PushIfNotTop(cx);
+
+    JSObject* outerscope = scope;
+    OBJ_TO_OUTER_OBJECT(cx, outerscope);
+    if(!outerscope)
+        return nsnull;
+
+    if(obj == outerscope)
+    {
+        // Fast-path for the common case: a window being wrapped in its own
+        // scope. Check to see if the object actually needs a XOW, and then
+        // give it one in its own scope.
+
+        if(!XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name))
+            return obj;
+
+        js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(obj));
+        if(!XPCCrossOriginWrapper::WrapObject(cx, scope, tvr.addr()))
+            return nsnull;
+
+        return JSVAL_TO_OBJECT(tvr.value());
+    }
 
     nsIScriptSecurityManager* secMan = XPCWrapper::GetSecurityManager();
     if(!secMan)

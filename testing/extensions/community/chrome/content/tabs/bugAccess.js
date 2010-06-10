@@ -217,7 +217,7 @@ function bugAccess()
           alert(success);
         }else if((start = e.target.responseText.indexOf('<td bgcolor="#ff0000">'))!=-1)
         {
-          //error was recieved
+          //error was received
           var error = "Error: "+e.target.responseText.substring(start,e.target.responseText.indexOf('</td>'));
           error = error.replace(/\n|\t|/g,"");
           error = error.replace(/<[^>]+>/g,"");

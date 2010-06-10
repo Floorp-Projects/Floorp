@@ -71,6 +71,9 @@ using mozilla::plugins::PluginInstanceParent;
 #include "prmem.h"
 
 #include "LayerManagerOGL.h"
+#ifdef MOZ_ENABLE_D3D9_LAYER
+#include "LayerManagerD3D9.h"
+#endif
 
 #ifndef WINCE
 #include "nsUXThemeData.h"
@@ -232,13 +235,6 @@ void nsWindowGfx::OnSettingsChangeGfx(WPARAM wParam)
       glpDD->RestoreAllSurfaces();
   }
 #endif
-}
-
-void nsWindow::SetUpForPaint(HDC aHDC)
-{
-  ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
-  ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
-  ::SetBkMode (aHDC, TRANSPARENT);
 }
 
 // GetRegionToPaint returns the invalidated region that needs to be painted
@@ -684,6 +680,13 @@ DDRAW_FAILED:
           SetClippingRegion(event.region);
         result = DispatchWindowEvent(&event, eventStatus);
         break;
+#ifdef MOZ_ENABLE_D3D9_LAYER
+      case LayerManager::LAYERS_D3D9:
+        static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager())->
+          SetClippingRegion(event.region);
+        result = DispatchWindowEvent(&event, eventStatus);
+        break;
+#endif
       default:
         NS_ERROR("Unknown layers backend used!");
         break;

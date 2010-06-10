@@ -894,10 +894,6 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
       return nsnull;
     }
 
-    // XXX Fix this so it is not O(n^2) to walk through the children!
-    // Either we can cache the last accessed child so that we can just GetNextSibling()
-    // or we should cache an array of children in each nsAccessible
-    // (instead of mNextSibling on the children)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
     if (!accWrap || nsAccUtils::MustPrune(accWrap)) {
         return nsnull;
@@ -907,7 +903,9 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
     nsCOMPtr<nsIAccessibleHyperText> hyperText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
     if (hyperText) {
-        // If HyperText, then number of links matches number of children
+        // If HyperText, then number of links matches number of children.
+        // XXX Fix this so it is not O(n^2) to walk through the children
+        // (bug 566328).
         nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
         hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
         accChild = do_QueryInterface(hyperLink);
@@ -945,36 +943,26 @@ getIndexInParentCB(AtkObject *aAtkObj)
         return -1;
     }
 
-    nsCOMPtr<nsIAccessible> parent;
-    accWrap->GetParent(getter_AddRefs(parent));
+    nsAccessible *parent = accWrap->GetParent();
     if (!parent) {
         return -1; // No parent
     }
 
-    nsCOMPtr<nsIAccessible> sibling;
-    parent->GetFirstChild(getter_AddRefs(sibling));
-    if (!sibling) {
-        return -1;  // Error, parent has no children
-    }
-
     PRInt32 currentIndex = 0;
 
-    while (sibling != static_cast<nsIAccessible*>(accWrap)) {
-      NS_ASSERTION(sibling, "Never ran into the same child that we started from");
-
-      if (!sibling) {
-          return -1;
+    PRInt32 childCount = parent->GetChildCount();
+    for (PRInt32 idx = 0; idx < childCount; idx++) {
+      nsAccessible *sibling = parent->GetChildAt(idx);
+      if (sibling == accWrap) {
+          return currentIndex;
       }
+
       if (nsAccUtils::IsEmbeddedObject(sibling)) {
-        ++ currentIndex;
+          ++ currentIndex;
       }
-
-      nsCOMPtr<nsIAccessible> tempAccessible;
-      sibling->GetNextSibling(getter_AddRefs(tempAccessible));
-      sibling.swap(tempAccessible);
     }
 
-    return currentIndex;
+    return -1;
 }
 
 static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,

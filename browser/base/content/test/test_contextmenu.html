@@ -49,14 +49,27 @@ function getVisibleMenuItems(aMenu) {
             key = key.toLowerCase();
 
         if (item.nodeName == "menuitem") {
-            ok(item.id, "child menuitem #" + i + " has an ID");
+            var isSpellSuggestion = item.className == "spell-suggestion";
+            if (isSpellSuggestion) {
+              is(item.id, "", "child menuitem #" + i + " is a spelling suggestion");
+            } else {
+              ok(item.id, "child menuitem #" + i + " has an ID");
+            }
             ok(item.label.length, "menuitem " + item.id + " has a label");
-            ok(key, "menuitem " + item.id + " has an access key");
-            if (accessKeys[key])
-                ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
-            else
-                accessKeys[key] = item.id;
-            items.push(item.id);
+            if (isSpellSuggestion) {
+              is(key, "", "Spell suggestions shouldn't have an access key");
+              items.push("*" + item.label);
+            } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
+                       item.id != "spell-no-suggestions") {
+              ok(key, "menuitem " + item.id + " has an access key");
+              if (accessKeys[key])
+                  ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
+              else
+                  accessKeys[key] = item.id;
+            }
+            if (!isSpellSuggestion) {
+              items.push(item.id);
+            }
             items.push(!item.disabled);
         } else if (item.nodeName == "menuseparator") {
             ok(true, "--- seperator id is " + item.id);
@@ -306,7 +319,78 @@ function runTest(testNum) {
                           "context-viewsource",   true,
                           "context-viewinfo",     true]);
         closeContextMenu();
+        openContextMenuFor(textarea); // Invoke context menu for next test.
+        break;
 
+    case 12:
+        // Context menu for textarea
+        checkContextMenu(["*chubbiness",         true, // spelling suggestion
+                          "spell-add-to-dictionary", true,
+                          "---",                 null,
+                          "context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         false,
+                          "context-copy",        false,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-check-enabled", true,
+                          "spell-dictionaries",  true,
+                              ["spell-check-dictionary-en-US", true,
+                               "---",                          null,
+                               "spell-add-dictionaries",       true], null]);
+
+        closeContextMenu();
+        openContextMenuFor(contenteditable); // Invoke context menu for next test.
+        break;
+
+    case 13:
+        // Context menu for contenteditable
+        checkContextMenu(["spell-no-suggestions", false,
+                          "spell-add-to-dictionary", true,
+                          "---",                 null,
+                          "context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         false,
+                          "context-copy",        false,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-check-enabled", true,
+                          "spell-dictionaries",  true,
+                              ["spell-check-dictionary-en-US", true,
+                               "---",                          null,
+                               "spell-add-dictionaries",       true], null]);
+
+        closeContextMenu();
+        openContextMenuFor(inputspell); // Invoke context menu for next test.
+        break;
+
+    case 14:
+        // Context menu for spell-check input
+        checkContextMenu(["*prodigality",        true, // spelling suggestion
+                          "spell-add-to-dictionary", true,
+                          "---",                 null,
+                          "context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         false,
+                          "context-copy",        false,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-check-enabled", true,
+                          "spell-dictionaries",  true,
+                              ["spell-check-dictionary-en-US", true,
+                               "---",                          null,
+                               "spell-add-dictionaries",       true], null]);
+
+        closeContextMenu();
         subwindow.close();
         SimpleTest.finish();
         return;
@@ -331,7 +415,8 @@ function runTest(testNum) {
 
 var testNum = 1;
 var subwindow, chromeWin, contextMenu;
-var text, link, mailto, input, img, canvas, video, iframe;
+var text, link, mailto, input, img, canvas, video, iframe,
+    textarea, contenteditable, inputspell;
 
 function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -356,6 +441,9 @@ function startTest() {
     video_bad  = subwindow.document.getElementById("test-video-bad");
     video_bad2 = subwindow.document.getElementById("test-video-bad2");
     iframe = subwindow.document.getElementById("test-iframe");
+    textarea = subwindow.document.getElementById("test-textarea");
+    contenteditable = subwindow.document.getElementById("test-contenteditable");
+    inputspell = subwindow.document.getElementById("test-input-spellcheck");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);

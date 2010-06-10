@@ -68,7 +68,18 @@ const int kMaxWordLen=256;
  */
 
 
-NS_IMPL_ISUPPORTS3(mozPersonalDictionary, mozIPersonalDictionary, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(mozPersonalDictionary)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(mozPersonalDictionary)
+
+NS_INTERFACE_MAP_BEGIN(mozPersonalDictionary)
+  NS_INTERFACE_MAP_ENTRY(mozIPersonalDictionary)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozIPersonalDictionary)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozPersonalDictionary)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_1(mozPersonalDictionary, mEncoder)
 
 mozPersonalDictionary::mozPersonalDictionary()
  : mDirty(PR_FALSE)

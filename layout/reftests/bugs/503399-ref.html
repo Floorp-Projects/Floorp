@@ -15,17 +15,21 @@
         }
     </style>
     <script>
+      var done = false;
       function runTest(p) {
+        if (done)
+          return;
         try {
           var r = window.getSelection().getRangeAt(0);
           r.setStart(p.childNodes[1],1);
           r.setEnd(p.childNodes[1],1);
         } catch (e) {}
         document.documentElement.removeAttribute('class');
+        done = true;
       }
     </script>
 </head>
-<body onload="setTimeout(function(){window.focus();document.getElementsByTagName('p')[0].focus()},400)">
+<body onload="var p = document.getElementsByTagName('p')[0]; p.focus(); setTimeout(function(){runTest(p)},1000)">
 
 <p onfocus="runTest(this)" contentEditable="true"
    style="text-align:justify"><span>&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;</span>&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;</p>

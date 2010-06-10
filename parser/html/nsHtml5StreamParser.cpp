@@ -54,8 +54,8 @@
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
-PRInt32 nsHtml5StreamParser::sTimerInitialDelay = 200;
-PRInt32 nsHtml5StreamParser::sTimerSubsequentDelay = 100;
+PRInt32 nsHtml5StreamParser::sTimerInitialDelay = 120;
+PRInt32 nsHtml5StreamParser::sTimerSubsequentDelay = 120;
 
 // static
 void

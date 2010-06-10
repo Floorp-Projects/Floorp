@@ -50,6 +50,7 @@ MOZILLA_INTERNAL_API = 1
 CPP_UNIT_TESTS	= \
 		TestColorNames.cpp \
 		TestRect.cpp \
+		TestRegion.cpp \
 		$(NULL)
 
 LIBS		= \

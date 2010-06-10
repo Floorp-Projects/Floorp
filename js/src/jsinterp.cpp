@@ -398,6 +398,21 @@ const uint32 PrimitiveValue::Masks[PrimitiveValue::THISP_ARRAY_SIZE] = {
     JSVAL_MASK32_BOOLEAN | FAKE_NUMBER_MASK | JSVAL_MASK32_STRING  /* 111 */
 };
 
+class AutoPreserveEnumerators {
+    JSContext *cx;
+    JSObject *enumerators;
+
+  public:
+    AutoPreserveEnumerators(JSContext *cx) : cx(cx), enumerators(cx->enumerators)
+    {
+    }
+
+    ~AutoPreserveEnumerators()
+    {
+        cx->enumerators = enumerators;
+    }
+};
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -508,13 +523,13 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
 #endif
-        JSBool ok = ((FastNative) native)(cx, argc, vp);
+        bool ok = ((FastNative) native)(cx, argc, vp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
         if (ok && !alreadyThrowing)
             ASSERT_NOT_THROWING(cx);
 #endif
-        return !!ok;
+        return ok;
     }
 
     /* Calculate slot usage. */
@@ -627,6 +642,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #endif
     } else {
         JS_ASSERT(script);
+        AutoPreserveEnumerators preserve(cx);
         ok = Interpret(cx);
     }
 
@@ -703,7 +719,7 @@ InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
 }
 
 bool
-Execute(JSContext *cx, JSObject *chain, JSScript *script,
+Execute(JSContext *cx, JSObject *const chain, JSScript *script,
         JSStackFrame *down, uintN flags, Value *result)
 {
     if (script->isEmpty()) {
@@ -779,25 +795,25 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     } else {
         fp->callobj = NULL;
         fp->argsobj = NULL;
-        JSObject *obj = chain;
-        if (cx->options & JSOPTION_VAROBJFIX)
-            obj = obj->getGlobal();
         fp->fun = NULL;
-        JSObject *thisp = chain->thisObject(cx);
-        if (!thisp)
-            return false;
-        fp->thisv.setObject(*thisp);
+        /* Ininitialize fp->thisv after pushExecuteFrame. */
         fp->flags = flags | JSFRAME_COMPUTED_THIS;
         fp->argc = 0;
         fp->argv = NULL;
         fp->annotation = NULL;
-        Innerize(cx, &chain);
-        if (!chain)
-            return false;
-        fp->scopeChain = chain;
 
-        initialVarObj = obj;
+        JSObject *innerizedChain = chain;
+        Innerize(cx, &innerizedChain);
+        if (!innerizedChain)
+            return false;
+        fp->scopeChain = innerizedChain;
+
+        initialVarObj = (cx->options & JSOPTION_VAROBJFIX)
+                        ? chain->getGlobal()
+                        : chain;
     }
+    JS_ASSERT(initialVarObj->map->ops->defineProperty == js_DefineProperty);
+
     fp->script = script;
     fp->imacpc = NULL;
     fp->rval.setUndefined();
@@ -810,10 +826,19 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     /* Officially push |fp|. |frame|'s destructor pops. */
     cx->stack().pushExecuteFrame(cx, frame, regs, initialVarObj);
 
+    /* Now that the frame has been pushed, we can call the thisObject hook. */
+    if (!down) {
+        JSObject *thisp = chain->thisObject(cx);
+        if (!thisp)
+            return false;
+        fp->thisv.setObject(*thisp);
+    }
+
     void *hookData = NULL;
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
+    AutoPreserveEnumerators preserve(cx);
     JSBool ok = Interpret(cx);
     if (result)
         *result = fp->rval;
@@ -839,7 +864,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     /*
      * Both objp and propp must be either null or given. When given, *propp
      * must be null. This way we avoid an extra "if (propp) *propp = NULL" for
-     * the common case of a non-existing property.
+     * the common case of a nonexistent property.
      */
     JS_ASSERT(!objp == !propp);
     JS_ASSERT_IF(propp, !*propp);
@@ -852,21 +877,21 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     JS_ASSERT_IF(attrs == JSPROP_INITIALIZER, !propp);
 
     if (!obj->lookupProperty(cx, id, &obj2, &prop))
-        return JS_FALSE;
+        return false;
     if (!prop)
-        return JS_TRUE;
+        return true;
+    if (obj2->isNative()) {
+        oldAttrs = ((JSScopeProperty *) prop)->attributes();
 
-    /* Use prop as a speedup hint to obj->getAttributes. */
-    if (!obj2->getAttributes(cx, id, prop, &oldAttrs)) {
-        obj2->dropProperty(cx, prop);
-        return JS_FALSE;
+        /* If our caller doesn't want prop, unlock obj2. */
+        if (!propp)
+            JS_UNLOCK_OBJ(cx, obj2);
+    } else {
+        if (!obj2->getAttributes(cx, id, &oldAttrs))
+            return false;
     }
 
-    /*
-     * If our caller doesn't want prop, drop it (we don't need it any longer).
-     */
     if (!propp) {
-        obj2->dropProperty(cx, prop);
         prop = NULL;
     } else {
         *objp = obj2;
@@ -947,7 +972,7 @@ static JS_ALWAYS_INLINE bool
 EqualObjects(JSContext *cx, JSObject *lobj, JSObject *robj)
 {
     return lobj == robj ||
-           js_GetWrappedObject(cx, lobj) == js_GetWrappedObject(cx, robj);
+           lobj->wrappedObject(cx) == robj->wrappedObject(cx);
 }
 
 bool
@@ -1120,13 +1145,15 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
 
 #if JS_HAS_XML_SUPPORT
     if (v.isObject()) {
-        Class *clasp = v.asObject().getClass();
-        if (JS_UNLIKELY(clasp == &js_QNameClass.base ||
-                        clasp == &js_AttributeNameClass ||
-                        clasp == &js_AnyNameClass)) {
-            *idp = OBJECT_TO_JSID(&v.asObject());
-            return true;
+        JSObject *obj = &v.asObject();
+        if (obj->isXML()) {
+            *idp = OBJECT_TO_JSID(obj);
+            return JS_TRUE;
         }
+        if (!js_IsFunctionQName(cx, obj, idp))
+            return JS_FALSE;
+        if (*idp != 0)
+            return JS_TRUE;
     }
 #endif
 
@@ -1636,7 +1663,7 @@ namespace reprmeter {
     // Record an OpInput for the current op. This should be called just
     // before executing the op.
     static void
-    MeterRepr(JSStackFrame *fp)
+    MeterRepr(JSContext *cx)
     {
         // Note that we simply ignore the possibility of errors (OOMs)
         // using the hash map, since this is only metering code.
@@ -1646,13 +1673,13 @@ namespace reprmeter {
             opinputsInitialized = true;
         }
 
-        JSOp op = JSOp(*fp->regs->pc);
-        unsigned nuses = js_GetStackUses(&js_CodeSpec[op], op, fp->regs->pc);
+        JSOp op = JSOp(*cx->regs->pc);
+        int nuses = js_GetStackUses(&js_CodeSpec[op], op, cx->regs->pc);
 
         // Build the OpInput.
         OpInput opinput(op);
-        for (unsigned i = 0; i < nuses; ++i) {
-            jsval v = fp->regs->sp[-nuses+i];
+        for (int i = 0; i < nuses; ++i) {
+            jsval v = cx->regs->sp[-nuses+i];
             opinput.uses[i] = GetRepr(v);
         }
 
@@ -1785,9 +1812,9 @@ CanIncDecWithoutOverflow(int32_t i)
 #endif
 
 #ifdef JS_REPRMETER
-# define METER_REPR(fp)         (reprmeter::MeterRepr(fp))
+# define METER_REPR(cx)         (reprmeter::MeterRepr(cx))
 #else
-# define METER_REPR(fp)         ((void) 0)
+# define METER_REPR(cx)         ((void) 0)
 #endif /* JS_REPRMETER */
 
 /*
@@ -1957,7 +1984,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        *rval = *ni->props_cursor;
+        *rval = ID_TO_VALUE(*ni->props_cursor);
         if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
             ni->props_cursor++;
             return true;
@@ -2040,7 +2067,7 @@ Interpret(JSContext *cx)
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 METER_OP_PAIR(op, JSOp(regs.pc[n]));          \
                                 op = (JSOp) *(regs.pc += (n));                \
-                                METER_REPR(fp);                               \
+                                METER_REPR(cx);                               \
                                 DO_OP();                                      \
                             JS_END_MACRO
 

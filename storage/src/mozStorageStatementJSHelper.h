@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MOZSTORAGESTATEMENTJSHELPER_H__
-#define __MOZSTORAGESTATEMENTJSHELPER_H__
+#ifndef MOZSTORAGESTATEMENTJSHELPER_H
+#define MOZSTORAGESTATEMENTJSHELPER_H
 
 #include "nsIXPCScriptable.h"
 
@@ -61,4 +61,4 @@ private:
 } // namespace storage
 } // namespace mozilla
 
-#endif // __MOZSTORAGESTATEMENTJSHELPER_H__
+#endif // MOZSTORAGESTATEMENTJSHELPER_H

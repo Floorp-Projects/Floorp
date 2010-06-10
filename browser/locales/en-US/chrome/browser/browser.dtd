@@ -159,6 +159,10 @@
 <!ENTITY errorConsoleCmd.accesskey    "C">
 <!ENTITY errorConsoleCmd.commandkey   "j">
 
+<!ENTITY inspectMenu.label            "Inspect">
+<!ENTITY inspectMenu.accesskey        "T">
+<!ENTITY inspectMenu.commandkey       "I">
+
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
 <!ENTITY newNavigatorCmd.label        "New Window">
@@ -225,10 +229,7 @@
 <!ENTITY showAllHistoryCmd.commandkey "H">
 
 <!ENTITY openCmd.commandkey           "l">
-<!ENTITY urlbar.bookmarkhistory.emptyText "Search Bookmarks and History">
-<!ENTITY urlbar.bookmark.emptyText    "Search Bookmarks">
-<!ENTITY urlbar.history.emptyText     "Search History">
-<!ENTITY urlbar.none.emptyText        "Type a Web address">
+<!ENTITY urlbar.placeholder           "Go to a Web Site">
 <!ENTITY urlbar.accesskey             "d">
 <!ENTITY urlbar.switchToTab.label     "Switch to tab:">
 
@@ -475,3 +476,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY downloadMonitor2.tooltip "Click to open downloads window">
 
 <!ENTITY allTabs.filter.emptyText "Search Tabs">
+<!-- Name for the tabs toolbar as spoken by screen readers.
+     The word "toolbar" is appended automatically and should not be contained below! -->
+<!ENTITY tabsToolbar.label "Browser tabs">

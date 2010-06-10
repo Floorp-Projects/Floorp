@@ -1080,7 +1080,7 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
     }
     else {
         nsCOMPtr<nsIStringBundleService> sbs =
-            do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+            mozilla::services::GetStringBundleService();
         if (sbs) {
             nsXPIDLString errorText;
             sbs->FormatStatusMessage(aResult, EmptyString().get(),
@@ -1238,7 +1238,8 @@ txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
 void
 txMozillaXSLTProcessor::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
-                                        PRInt32 aNewIndexInContainer)
+                                        nsIContent* aFirstNewContent,
+                                        PRInt32 /* unused */)
 {
     mStylesheet = nsnull;
 }
@@ -1247,7 +1248,7 @@ void
 txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild,
-                                        PRInt32 aIndexInContainer)
+                                        PRInt32 /* unused */)
 {
     mStylesheet = nsnull;
 }

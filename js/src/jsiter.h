@@ -56,22 +56,34 @@
 #define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
+#define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
 struct NativeIterator {
-    js::Value   *props_array;
-    js::Value   *props_cursor;
-    js::Value   *props_end;
-    uint32      *shapes_array;
-    uint32      shapes_length;
-    uint32      shapes_key;
-    uintN       flags;
-    JSObject    *next;
+    JSObject  *obj;
+    jsid      *props_array;
+    jsid      *props_cursor;
+    jsid      *props_end;
+    uint32    *shapes_array;
+    uint32    shapes_length;
+    uint32    shapes_key;
+    uintN     flags;
+    JSObject  *next;
+
+    static NativeIterator *allocate(JSContext *cx, JSObject *obj, uintN flags,
+                                    uint32 *sarray, uint32 slength, uint32 key,
+                                    jsid *parray, uint32 plength);
 
     void mark(JSTracer *trc);
 };
 
 bool
-EnumerateOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap);
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, JSIdArray **idap);
+
+bool
+GetIterator(JSContext *cx, JSObject *obj, uintN flags, js::Value *vp);
+
+bool
+JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, js::Value *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
@@ -84,6 +96,9 @@ js_ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
 
 extern JS_FRIEND_API(JSBool)
 js_CloseIterator(JSContext *cx, const js::Value &v);
+
+bool
+js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
 
 /*
  * IteratorMore() indicates whether another value is available. It might
@@ -118,6 +133,7 @@ struct JSGenerator {
     JSFrameRegs         savedRegs;
     uintN               vplen;
     JSStackFrame        *liveFrame;
+    JSObject            *enumerators;
     js::Value           floatingStack[1];
 
     JSStackFrame *getFloatingFrame() {

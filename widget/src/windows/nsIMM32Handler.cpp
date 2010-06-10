@@ -90,6 +90,8 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
 PRPackedBool nsIMM32Handler::sIsComposingOnPlugin = PR_FALSE;
 PRPackedBool nsIMM32Handler::sIsStatusChanged = PR_FALSE;
+PRPackedBool nsIMM32Handler::sIsIME = PR_TRUE;
+PRPackedBool nsIMM32Handler::sIsIMEOpening = PR_FALSE;
 
 #ifndef WINCE
 UINT nsIMM32Handler::sCodePage = 0;
@@ -196,9 +198,10 @@ nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
                    LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
                    (PWSTR)&sCodePage, sizeof(sCodePage) / sizeof(WCHAR));
   sIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
+  sIsIME = ::ImmIsIME(aKeyboardLayout);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, sIMEProperty=%08x\n",
-     aKeyboardLayout, sCodePage, sIMEProperty));
+    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, sIMEProperty=%08x sIsIME=%s\n",
+     aKeyboardLayout, sCodePage, sIMEProperty, sIsIME ? "TRUE" : "FALSE"));
 #endif
 }
 
@@ -209,6 +212,21 @@ nsIMM32Handler::GetKeyboardCodePage()
   return ::GetACP();
 #else
   return sCodePage;
+#endif
+}
+
+/* static */ PRBool
+nsIMM32Handler::CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage)
+{
+#ifdef WINCE
+  return PR_TRUE;
+#else
+  // If IME is opening right now, we shouldn't optimize the key and IME message
+  // order because ATOK (Japanese IME of third party) has some problem with the
+  // optimization.  When it finishes opening completely, it eats all key
+  // messages in the message queue.  And it causes starting composition.  So,
+  // we shouldn't eat the key messages before ATOK.
+  return !sIsIMEOpening;
 #endif
 }
 
@@ -272,6 +290,21 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
   // sent to different window, we should commit the old transaction.  And also
   // if the new window handle is not focused, probably, we should not start
   // the composition, however, such case should not be, it's just bad scenario.
+
+  if (sIsIMEOpening) {
+    switch (msg) {
+      case WM_INPUTLANGCHANGE:
+      case WM_IME_STARTCOMPOSITION:
+      case WM_IME_COMPOSITION:
+      case WM_IME_ENDCOMPOSITION:
+      case WM_IME_CHAR:
+      case WM_IME_SELECT:
+      case WM_IME_SETCONTEXT:
+        // For safety, we should reset sIsIMEOpening when we receive unexpected
+        // message.
+        sIsIMEOpening = PR_FALSE;
+    }
+  }
 
   if (aWindow->PluginHasFocus()) {
     return ProcessMessageForPlugin(aWindow, msg, wParam, lParam, aRetValue,
@@ -337,6 +370,8 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
     case WM_IME_SETCONTEXT:
       aEatMessage = OnIMESetContext(aWindow, wParam, lParam);
       return PR_TRUE;
+    case WM_KEYDOWN:
+      return OnKeyDownEvent(aWindow, wParam, lParam, aEatMessage);
     default:
       return PR_FALSE;
   };
@@ -364,6 +399,20 @@ nsIMM32Handler::ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
       return PR_FALSE;
     case WM_IME_ENDCOMPOSITION:
       sIsComposingOnPlugin = PR_FALSE;
+      return PR_FALSE;
+    case WM_IME_NOTIFY:
+      if (wParam == IMN_SETOPENSTATUS) {
+        // finished being opening
+        sIsIMEOpening = PR_FALSE;
+      }
+      return PR_FALSE;
+    case WM_KEYDOWN:
+      if (wParam == VK_PROCESSKEY) {
+        // If we receive when IME isn't open, it means IME is opening right now.
+        nsIMEContext IMEContext(aWindow->GetWindowHandle());
+        sIsIMEOpening = IMEContext.IsValid() &&
+                        ::ImmGetOpenStatus(IMEContext.get());
+      }
       return PR_FALSE;
   }
   return PR_FALSE;
@@ -543,6 +592,7 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
          aWindow->GetWindowHandle()));
       break;
     case IMN_SETOPENSTATUS:
+      sIsIMEOpening = PR_FALSE;
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: OnIMENotify, hWnd=%08x, IMN_SETOPENSTATUS\n",
          aWindow->GetWindowHandle()));
@@ -1675,3 +1725,25 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
 }
 
 #endif // ENABLE_IME_MOUSE_HANDLING
+
+/* static */ PRBool
+nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                               PRBool &aEatMessage)
+{
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: OnKeyDownEvent, hWnd=%08x, wParam=%08x, lParam=%08x\n",
+     aWindow->GetWindowHandle(), wParam, lParam));
+  aEatMessage = PR_FALSE;
+  switch (wParam) {
+    case VK_PROCESSKEY:
+      // If we receive when IME isn't open, it means IME is opening right now.
+      if (sIsIME) {
+        nsIMEContext IMEContext(aWindow->GetWindowHandle());
+        sIsIMEOpening =
+          IMEContext.IsValid() && !::ImmGetOpenStatus(IMEContext.get());
+      }
+      return PR_FALSE;
+    default:
+      return PR_FALSE;
+  }
+}

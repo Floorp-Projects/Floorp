@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+<!-- This reference SVG must perform *exactly* the same path construction,
+     clipping, and filling operations that PaintBoxShadowInner does for
+     the HTML test file. If it doesn't match perfectly, antialiased
+     pixels at the curved edges will not agree.
+
+     PaintBoxShadowInner defines both its second (nonrectangular)
+     clipping path and its fill path as the even-odd-rule compositions
+     of two rectangles, one with nonzero corner radius. It is
+     impossible to express "the path consisting of the even-odd-rule
+     composition of two |rect| elements" in SVG. This is a minor
+     nuisance because we have to write everything out using |path|,
+     plus a major nuisance because Gecko uses the same ellipse-to-
+     Bezier conversion for rounded rectangles in SVG and HTML, but the
+     SVG 'A' operator uses a different one. Therefore we cannot use 'A'.
+     The 'C' parameters here were obtained by dumping out the cairo
+     operations used to draw the HTML, using cairo-trace. -->
+  <defs>
+    <clipPath id="outer">
+      <rect x="16" y="16" width="240" height="240"/>
+    </clipPath>
+    <clipPath id="inner">
+      <path clip-rule="evenodd"
+	    d="M 248 16
+	       H 24  C 19.58468 16 16 19.58468 16 24
+	       V 248 C 16 252.41532 19.58468 256 24 256
+	       H 248 C 252.41532 256 256 252.41532 256 248
+	       V 24  C 256 19.58468 252.41532 16 248 16 Z
+	       M 48 56 H 272 V 296 H 48 Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#outer)">
+    <path fill="grey" fill-rule="evenodd" clip-path="url(#inner)"
+	  d="M 16 16 H 256 V 256 H 16 Z
+	     M 280 48
+	     H 56  C 51.58468 48 48 51.58468 48 56
+	     V 280 C 48 284.41532 51.58468 288 56 288
+	     H 280 C 284.41532 288 288 284.41532 288 280
+	     V 56  C 288 51.58468 284.41532 48 280 48 Z"/>
+  </g>
+</svg>

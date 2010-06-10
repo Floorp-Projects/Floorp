@@ -133,7 +133,7 @@ nsMenuItemIconX::SetupIcon()
 
   rv = LoadIcon(iconURI);
   if (NS_FAILED(rv)) {
-    // There is no icon for this menu item, as an error occured while loading it.
+    // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
     // been set.  Clear it.
     [mNativeMenuItem setImage:nil];
@@ -214,8 +214,8 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
     if (!domElement) return NS_ERROR_FAILURE;
 
-    nsAutoString empty;
-    rv = domViewCSS->GetComputedStyle(domElement, empty,
+
+    rv = domViewCSS->GetComputedStyle(domElement, EmptyString(),
                                       getter_AddRefs(cssStyleDecl));
     if (NS_FAILED(rv)) return rv;
 
@@ -337,8 +337,10 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
       [mNativeMenuItem setImage:sPlaceholderIconImage];
   }
 
+  // Passing in null for channelPolicy here since nsMenuItemIconX::LoadIcon is
+  // not exposed to web content
   rv = loader->LoadImage(aIconURI, nsnull, nsnull, loadGroup, this,
-                         nsnull, nsIRequest::LOAD_NORMAL, nsnull,
+                         nsnull, nsIRequest::LOAD_NORMAL, nsnull, nsnull,
                          nsnull, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 

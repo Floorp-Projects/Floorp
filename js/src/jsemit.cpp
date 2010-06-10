@@ -67,8 +67,9 @@
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
+#include "jsscopeinlines.h"
 #include "jsscript.h"
-#include "jsautooplen.h"
+#include "jsautooplen.h"        // generated headers last
 #include "jsstaticcheck.h"
 
 #include "jsobjinlines.h"
@@ -1598,14 +1599,6 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
 }
 
 /*
- * Check if the attributes describe a property holding a compile-time constant
- * or a permanent, read-only property without a getter.
- */
-#define IS_CONSTANT_PROPERTY(attrs)                                           \
-    (((attrs) & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_GETTER)) ==      \
-     (JSPROP_READONLY | JSPROP_PERMANENT))
-
-/*
  * The function sets vp to NO_CONSTANT when the atom does not corresponds to a
  * name defining a constant.
  */
@@ -1613,11 +1606,8 @@ static JSBool
 LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                           Value *constp)
 {
-    JSBool ok;
     JSStmtInfo *stmt;
-    JSObject *obj, *objbox;
-    JSProperty *prop;
-    uintN attrs;
+    JSObject *obj;
 
     /*
      * Chase down the cg stack, but only until we reach the outermost cg.
@@ -1626,7 +1616,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
      */
     constp->setMagic(JS_NO_CONSTANT);
     do {
-        if (cg->inFunction() && cg->compileAndGo()) {
+        if (cg->inFunction() || cg->compileAndGo()) {
             /* XXX this will need revising if 'const' becomes block-scoped. */
             stmt = js_LexicalLookup(cg, atom, NULL);
             if (stmt)
@@ -1651,28 +1641,25 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
             } else {
                 JS_ASSERT(cg->compileAndGo());
                 obj = cg->scopeChain;
-                ok = obj->lookupProperty(cx, ATOM_TO_JSID(atom), &objbox, &prop);
-                if (!ok)
-                    return JS_FALSE;
-                if (objbox == obj) {
+
+                JS_LOCK_OBJ(cx, obj);
+                JSScope *scope = obj->scope();
+                JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
+                if (sprop) {
                     /*
                      * We're compiling code that will be executed immediately,
                      * not re-executed against a different scope chain and/or
                      * variable object.  Therefore we can get constant values
                      * from our variable object here.
                      */
-                    ok = obj->getAttributes(cx, ATOM_TO_JSID(atom), prop, &attrs);
-                    if (ok && IS_CONSTANT_PROPERTY(attrs)) {
-                        Value v;
-                        if (obj->getProperty(cx, ATOM_TO_JSID(atom), &v))
-                            *constp = v;
+                    if (!sprop->writable() && !sprop->configurable() &&
+                        sprop->hasDefaultGetter() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
+                        *constp = obj->lockedGetSlot(sprop->slot);
                     }
                 }
-                if (prop)
-                    objbox->dropProperty(cx, prop);
-                if (!ok)
-                    return JS_FALSE;
-                if (prop)
+                JS_UNLOCK_SCOPE(cx, scope);
+
+                if (sprop)
                     break;
             }
         }
@@ -1855,7 +1842,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
             continue;
         }
 
-        JSDefinition *dn = (JSDefinition *) v.asPrivateVoidPtr();
+        JSDefinition *dn = (JSDefinition *) v.asPrivate();
         JS_ASSERT(dn->pn_defn);
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
         dn->pn_cookie += depth;

@@ -63,62 +63,21 @@ var gTests = [
 function test() {
   waitForExplicitFinish();
 
-  // Put a multi-line string in the clipboard.
-  info("About to put a string in clipboard");
-  Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper)
-                                             .copyString(kTestString);
+  let cbHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                 getService(Ci.nsIClipboardHelper);
 
+  // Put a multi-line string in the clipboard.
   // Setting the clipboard value is an async OS operation, so we need to poll
   // the clipboard for valid data before going on.
-  setTimeout(poll_clipboard, 100);
-}
-
-var runCount = 0;
-function poll_clipboard() {
-  // Poll for a maximum of 5s (each run happens after 100ms).
-  if (++runCount > 50) {
-    // Log the failure.
-    ok(false, "Timed out while polling clipboard for pasted data");
-    // Cleanup and interrupt the test.
-    finish_test();
-    return;
-  }
-
-  info("Polling clipboard cycle " + runCount);
-  var clip = Cc["@mozilla.org/widget/clipboard;1"].
-             getService(Ci.nsIClipboard);
-  var trans = Cc["@mozilla.org/widget/transferable;1"].
-              createInstance(Ci.nsITransferable);
-  trans.addDataFlavor("text/unicode");
-  var str = new Object();
-  try {
-    // This code could throw if the clipboard is not set yet.
-    clip.getData(trans, clip.kGlobalClipboard);
-    trans.getTransferData("text/unicode", str, {});
-    str = str.value.QueryInterface(Ci.nsISupportsString);
-  }
-  catch(ex) {}
-
-  if (kTestString == str) {
-    next_test();
-  }
-  else
-    setTimeout(poll_clipboard, 100);
+  waitForClipboard(kTestString, function() { cbHelper.copyString(kTestString); },
+                   next_test, finish);
 }
 
 function next_test() {
-  if (gTests.length) {
-    var currentTest = gTests.shift();
-    test_paste(currentTest);
-  }
-  else {
-    // No more tests to run.
-    // Clear the clipboard, emptyClipboard would not clear the native one, so
-    // we are setting it to an empty string.
-    Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper)
-                                               .copyString("");
+  if (gTests.length)
+    test_paste(gTests.shift());
+  else
     finish();
-  }
 }
 
 function test_paste(aCurrentTest) {

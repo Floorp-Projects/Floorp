@@ -607,7 +607,8 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 PRBool
 nsHtml5TreeOpExecutor::IsScriptEnabled()
 {
-  NS_ENSURE_TRUE(mDocument && mDocShell, PR_TRUE);
+  if (!mDocument || !mDocShell)
+    return PR_TRUE;
   nsCOMPtr<nsIScriptGlobalObject> globalObject = mDocument->GetScriptGlobalObject();
   // Getting context is tricky if the document hasn't had its
   // GlobalObject set yet
@@ -829,7 +830,7 @@ nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* a
 already_AddRefed<nsIURI>
 nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(const nsAString& aURL)
 {
-  nsIURI* base = mDocument->GetBaseURI();
+  nsIURI* base = mDocument->GetDocBaseURI();
   const nsCString& charset = mDocument->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, charset.get(), base);

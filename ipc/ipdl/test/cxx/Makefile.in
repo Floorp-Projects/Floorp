@@ -48,7 +48,7 @@ MODULE = ipdlunittest
 EXPORTS_NAMESPACES = mozilla/_ipdltest
 EXPORTS_mozilla/_ipdltest =  \
   IPDLUnitTests.h  \
-  IPDLUnitTestThreadChild.h  \
+  IPDLUnitTestProcessChild.h  \
   IPDLUnitTestTypes.h \
   $(NULL)
 
@@ -58,11 +58,12 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 IPDLTESTS = \
-  TestArrays \
   TestBlockChild \
   TestCrashCleanup \
+  TestDataStructures \
   TestDesc \
   TestHangs \
+  TestJSON \
   TestLatency \
   TestManyChildAllocs  \
   TestMultiMgrs  \
@@ -92,7 +93,7 @@ GENTESTER := $(srcdir)/genIPDLUnitTests.py
 CPPSRCS =  \
   IPDLUnitTests.cpp  \
   IPDLUnitTestSubprocess.cpp  \
-  IPDLUnitTestThreadChild.cpp  \
+  IPDLUnitTestProcessChild.cpp  \
   $(IPDLTESTSRCS)  \
   $(NULL)
 

@@ -49,15 +49,13 @@
 #include "nsICSSRule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsCSSProps.h"
 #include "nsCSSValue.h"
-#include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
 
 class nsIAtom;
 class nsCSSDeclaration;
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 struct nsCSSSelectorList;
 
 struct nsAtomList {
@@ -193,7 +191,7 @@ public:
   // Calculate the specificity of this selector (not including its mNext!).
   PRInt32 CalcWeight() const;
 
-  void ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
+  void ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
                 PRBool aAppend = PR_FALSE) const;
 
 private:
@@ -201,9 +199,9 @@ private:
   nsCSSSelector* Clone(PRBool aDeepNext, PRBool aDeepNegations) const;
 
   void AppendToStringWithoutCombinators(nsAString& aString,
-                                        nsICSSStyleSheet* aSheet) const;
+                                        nsCSSStyleSheet* aSheet) const;
   void AppendToStringWithoutCombinatorsOrNegations(nsAString& aString,
-                                                   nsICSSStyleSheet* aSheet,
+                                                   nsCSSStyleSheet* aSheet,
                                                    PRBool aIsNegated)
                                                         const;
   // Returns true if this selector can have a namespace specified (which
@@ -271,7 +269,7 @@ struct nsCSSSelectorList {
   /**
    * Should be used only on the first in the list
    */
-  void ToString(nsAString& aResult, nsICSSStyleSheet* aSheet);
+  void ToString(nsAString& aResult, nsCSSStyleSheet* aSheet);
 
   /**
    * Do a deep clone.  Should be used only on the first in the list.
@@ -289,10 +287,11 @@ private:
   nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy); 
 };
 
-// e665007e-5d4a-433a-9056-4310701c08b9
+// c6065b5e-4870-4dc5-9be3-747b6e317b25
 #define NS_ICSS_STYLE_RULE_IID \
-{ 0xe665007e, 0x5d4a, 0x433a, \
-  { 0x90, 0x56, 0x43, 0x10, 0x70, 0x1c, 0x08, 0xb9 } }
+{ 0xc6065b5e, 0x4870, 0x4dc5, \
+  { 0x9b, 0xe3, 0x74, 0x7b, 0x6e, 0x31, 0x7b, 0x25 } }
+
 
 class nsICSSStyleRule : public nsICSSRule {
 public:
@@ -327,7 +326,7 @@ public:
   // hooks for DOM rule
   virtual nsresult GetCssText(nsAString& aCssText) = 0;
   virtual nsresult SetCssText(const nsAString& aCssText) = 0;
-  virtual nsresult GetParentStyleSheet(nsICSSStyleSheet** aSheet) = 0;
+  virtual nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet) = 0;
   virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule) = 0;
   virtual nsresult GetSelectorText(nsAString& aSelectorText) = 0;
   virtual nsresult SetSelectorText(const nsAString& aSelectorText) = 0;

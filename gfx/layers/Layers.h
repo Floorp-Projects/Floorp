@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,24 +39,33 @@
 #define GFX_LAYERS_H
 
 #include "gfxTypes.h"
+#include "gfxASurface.h"
 #include "nsRegion.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
 #include "gfx3DMatrix.h"
+#include "gfxColor.h"
+#include "gfxPattern.h"
 
 class gfxContext;
 class nsPaintEvent;
 
 namespace mozilla {
+namespace gl {
+class GLContext;
+}
+
 namespace layers {
 
 class Layer;
 class ThebesLayer;
 class ContainerLayer;
 class ImageLayer;
+class ColorLayer;
 class ImageContainer;
+class CanvasLayer;
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
@@ -113,9 +122,11 @@ class THEBES_API LayerManager {
 public:
   enum LayersBackend {
     LAYERS_BASIC = 0,
-    LAYERS_OPENGL
+    LAYERS_OPENGL,
+    LAYERS_D3D9
   };
 
+  LayerManager() : mUserData(nsnull) {}
   virtual ~LayerManager() {}
 
   /**
@@ -134,20 +145,39 @@ public:
    */
   virtual void BeginTransactionWithTarget(gfxContext* aTarget) = 0;
   /**
-   * Finish the construction phase of the transaction and enter the
-   * drawing phase.
+   * Function called to draw the contents of each ThebesLayer.
+   * aRegionToDraw contains the region that needs to be drawn.
+   * This would normally be a subregion of the visible region. Drawing is
+   * not necessarily clipped to aRegionToDraw.
+   * The callee must draw all of aRegionToDraw.
+   * 
+   * aContext must not be used after the call has returned.
+   * We guarantee that buffered contents in the visible
+   * region are valid once drawing is complete.
    */
-  virtual void EndConstruction() = 0;
+  typedef void (* DrawThebesLayerCallback)(ThebesLayer* aLayer,
+                                           gfxContext* aContext,
+                                           const nsIntRegion& aRegionToDraw,
+                                           void* aCallbackData);
   /**
-   * Complete the transaction.
+   * Finish the construction phase of the transaction, perform the
+   * drawing phase, and end the transaction.
+   * During the drawing phase, all ThebesLayers in the tree are
+   * drawn in tree order, exactly once each, except for those layers
+   * where it is known that the visible region is empty.
    */
-  virtual void EndTransaction() = 0;
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the root layer.
    */
   virtual void SetRoot(Layer* aLayer) = 0;
+  /**
+   * Can be called anytime
+   */
+  Layer* GetRoot() { return mRoot; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -164,6 +194,16 @@ public:
    * Create an ImageLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ImageLayer> CreateImageLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a ColorLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a CanvasLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() = 0;
 
   /**
    * Can be called anytime
@@ -176,7 +216,18 @@ public:
    * Layers backend specific functionality is necessary.
    */
   virtual LayersBackend GetBackendType() = 0;
+
+  // This setter and getter can be used anytime. The user data is initially
+  // null.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
+
+protected:
+  nsRefPtr<Layer> mRoot;
+  void* mUserData;
 };
+
+class ThebesLayer;
 
 /**
  * A Layer represents anything that can be rendered onto a destination
@@ -209,7 +260,7 @@ public:
    * contribute to the final visible window. This can be an
    * overapproximation to the true visible region.
    */
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) {}
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -268,12 +319,24 @@ public:
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nsnull; }
   PRBool IsOpaqueContent() { return mIsOpaqueContent; }
+  const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
 
+  // This setter and getter can be used anytime. The user data is initially
+  // null.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
+
+  /**
+   * Dynamic downcast to a Thebes layer. Returns null if this is not
+   * a ThebesLayer.
+   */
+  virtual ThebesLayer* AsThebesLayer() { return nsnull; }
+  
   /**
    * Only the implementation should call this. This is per-implementation
    * private data. Normally, all layers with a given layer manager
@@ -295,6 +358,7 @@ protected:
     mNextSibling(nsnull),
     mPrevSibling(nsnull),
     mImplData(aImplData),
+    mUserData(nsnull),
     mOpacity(1.0),
     mUseClipRect(PR_FALSE),
     mIsOpaqueContent(PR_FALSE)
@@ -305,6 +369,8 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
+  void* mUserData;
+  nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
@@ -334,53 +400,17 @@ public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) = 0;
 
   /**
-   * DRAWING PHASE ONLY
-   * Start drawing into the layer. On return, aRegionToDraw contains the
-   * region that needs to be drawn in by the caller. This would normally
-   * be a subregion of the visible region. Drawing is not necessarily
-   * clipped to aRegionToDraw.
-   * 
-   * No other layer operations are allowed until we call EndDrawing on this
-   * layer. During the drawing phase, all ThebesLayers in the tree must be
-   * drawn in tree order, exactly once each, except for those layers
-   * where it is known that the visible region is empty. (Calling
-   * BeginDrawing on non-visible layers is allowed, but aRegionToDraw
-   * will return empty.)
-   * 
-   * When an empty region is returned in aRegionToDraw, BeginDrawing
-   * may return a null context.
-   * 
-   * The layer system will hold a reference to the returned gfxContext*
-   * until EndDrawing is called. The returned gfxContext must not be used
-   * after EndDrawing is called.
+   * Can be used anytime
    */
-  virtual gfxContext* BeginDrawing(nsIntRegion* aRegionToDraw) = 0;
-  /**
-   * DRAWING PHASE ONLY
-   * We've finished drawing into this layer. At this point the caller
-   * must have drawn all of aRegionToDraw that was returned by
-   * BeginDrawing, and we guarantee that buffered contents in the visible
-   * region are now valid.
-   */
-  virtual void EndDrawing() = 0;
+  const nsIntRegion& GetValidRegion() { return mValidRegion; }
 
-  /**
-   * DRAWING PHASE ONLY
-   * Copy the aRegion contents from aSource into this layer, offsetting
-   * them by aDelta. The validity is also copied, so invalid areas in
-   * aSource will make corresponding areas of this layer invalid. You
-   * must not call this after BeginDrawing/EndDrawing on this layer.
-   * 
-   * aSource must be this layer or a layer after this layer in a
-   * preorder traversal of the layer tree.
-   */
-  virtual void CopyFrom(ThebesLayer* aSource,
-                        const nsIntRegion& aRegion,
-                        const nsIntPoint& aDelta) = 0;
+  virtual ThebesLayer* AsThebesLayer() { return this; }
 
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData) {}
+
+  nsIntRegion mValidRegion;
 };
 
 /**
@@ -414,6 +444,98 @@ protected:
   {}
 
   Layer* mFirstChild;
+};
+
+/**
+ * A Layer which just renders a solid color in its visible region. It actually
+ * can fill any area that contains the visible region, so if you need to
+ * restrict the area filled, set a clip region on this layer.
+ */
+class THEBES_API ColorLayer : public Layer {
+public:
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the color of the layer.
+   */
+  virtual void SetColor(const gfxRGBA& aColor)
+  {
+    mColor = aColor;
+  }
+
+  // This getter can be used anytime.
+  virtual const gfxRGBA& GetColor() { return mColor; }
+
+protected:
+  ColorLayer(LayerManager* aManager, void* aImplData)
+    : Layer(aManager, aImplData),
+      mColor(0.0, 0.0, 0.0, 0.0)
+  {}
+
+  gfxRGBA mColor;
+};
+
+/**
+ * A Layer for HTML Canvas elements.  It's backed by either a
+ * gfxASurface or a GLContext (for WebGL layers), and has some control
+ * for intelligent updating from the source if necessary (for example,
+ * if hardware compositing is not available, for reading from the GL
+ * buffer into an image surface that we can layer composite.)
+ *
+ * After Initialize is called, the underlying canvas Surface/GLContext
+ * must not be modified during a layer transaction.
+ */
+class THEBES_API CanvasLayer : public Layer {
+public:
+  struct Data {
+    Data()
+      : mSurface(nsnull), mGLContext(nsnull),
+        mGLBufferIsPremultiplied(PR_FALSE)
+    { }
+
+    /* One of these two must be specified, but never both */
+    gfxASurface* mSurface;  // a gfx Surface for the canvas contents
+    mozilla::gl::GLContext* mGLContext; // a GL PBuffer Context
+
+    /* The size of the canvas content */
+    nsIntSize mSize;
+
+    /* Whether the GLContext contains premultiplied alpha
+     * values in the framebuffer or not.  Defaults to FALSE.
+     */
+    PRPackedBool mGLBufferIsPremultiplied;
+  };
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Initialize this CanvasLayer with the given data.  The data must
+   * have either mSurface or mGLContext initialized (but not both), as
+   * well as mSize.
+   *
+   * This must only be called once.
+   */
+  virtual void Initialize(const Data& aData) = 0;
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Notify this CanvasLayer that the rectangle given by aRect
+   * has been updated, and any work that needs to be done
+   * to bring the contents from the Surface/GLContext to the
+   * Layer in preparation for compositing should be performed.
+   */
+  virtual void Updated(const nsIntRect& aRect) = 0;
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the filter used to resample this image (if necessary).
+   */
+  void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+  gfxPattern::GraphicsFilter GetFilter() const { return mFilter; }
+
+protected:
+  CanvasLayer(LayerManager* aManager, void* aImplData)
+    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+
+  gfxPattern::GraphicsFilter mFilter;
 };
 
 }

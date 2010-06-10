@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -241,6 +241,10 @@ public:
     PRUint32 mPicX;
     PRUint32 mPicY;
     gfxIntSize mPicSize;
+  };
+
+  enum {
+    MAX_DIMENSION = 16384
   };
 
   /**

@@ -62,6 +62,10 @@
 #include "MaemoLocationProvider.h"
 #endif
 
+#ifdef ANDROID
+#include "AndroidLocationProvider.h"
+#endif
+
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
@@ -423,6 +427,12 @@ nsresult nsGeolocationService::Init()
 
 #ifdef MOZ_MAEMO_LIBLOCATION
   provider = new MaemoLocationProvider();
+  if (provider)
+    mProviders.AppendObject(provider);
+#endif
+
+#ifdef ANDROID
+  provider = new AndroidLocationProvider();
   if (provider)
     mProviders.AppendObject(provider);
 #endif
@@ -962,7 +972,7 @@ nsGeolocation::WindowOwnerStillExists()
   return PR_TRUE;
 }
 
-#ifndef WINCE_WINDOWS_MOBILE
+#if !defined(WINCE_WINDOWS_MOBILE) && !defined(MOZ_MAEMO_LIBLOCATION) && !defined(ANDROID)
 DOMCI_DATA(GeoPositionCoords, void)
 DOMCI_DATA(GeoPosition, void)
 #endif

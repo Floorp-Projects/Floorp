@@ -62,6 +62,8 @@
  *   A convenience value indicating support for none of the above
  */
 
+//This file must not have include guards.
+
 #define ATTRS_NONE        0x00
 #define ATTRS_CONDITIONAL 0x01
 #define ATTRS_EXTERNAL    0x02

@@ -1,6 +1,6 @@
 
 #viewGroup > radio {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
+  -moz-binding: url("chrome://browser/content/pageinfo/pageInfo.xml#viewbutton");
 }
 
 richlistitem[feed] {

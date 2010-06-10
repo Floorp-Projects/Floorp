@@ -765,8 +765,8 @@ static void AssignNLSString(const PRUnichar *aKey, nsAString& result)
 
   do {
     nsCOMPtr<nsIStringBundleService> bundleSvc =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
+      mozilla::services::GetStringBundleService();
+    if (!bundleSvc)
       break;
 
     nsCOMPtr<nsIStringBundle> bundle;

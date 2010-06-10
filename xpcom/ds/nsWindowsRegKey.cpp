@@ -204,7 +204,7 @@ nsWindowsRegKey::HasChild(const nsAString &name, PRBool *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
-  // Check for the existance of a child key by opening the key with minimal
+  // Check for the existence of a child key by opening the key with minimal
   // rights.  Perhaps there is a more efficient way to do this?
 
   HKEY key;

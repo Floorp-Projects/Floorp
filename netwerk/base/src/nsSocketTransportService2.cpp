@@ -53,6 +53,8 @@
 #include "nsIPrefBranch2.h"
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gSocketTransportLog = nsnull;
 #endif
@@ -378,6 +380,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsSocketTransportService,
 NS_IMETHODIMP
 nsSocketTransportService::Init()
 {
+    NS_TIME_FUNCTION;
+
     NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
     if (!NS_IsMainThread()) {
@@ -408,6 +412,8 @@ nsSocketTransportService::Init()
             LOG(("running socket transport thread without a pollable event"));
         }
     }
+    
+    NS_TIME_FUNCTION_MARK("Created thread");
 
     nsCOMPtr<nsIThread> thread;
     nsresult rv = NS_NewThread(getter_AddRefs(thread), this);
@@ -423,6 +429,8 @@ nsSocketTransportService::Init()
     if (tmpPrefService) 
         tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, PR_FALSE);
     UpdatePrefs();
+
+    NS_TIME_FUNCTION_MARK("UpdatePrefs");
 
     mInitialized = PR_TRUE;
     return NS_OK;

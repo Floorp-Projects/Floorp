@@ -109,6 +109,10 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsHtml5Module.h"
+#include "nsITextControlElement.h"
+
+#include "nsThreadUtils.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;
@@ -168,6 +172,47 @@ nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 
 #endif
 
+/**
+ * nsAutoFocusEvent is used to dispatch a focus event when a
+ * nsGenericHTMLFormElement is binded to the tree with the autofocus attribute
+ * enabled.
+ */
+class nsAutoFocusEvent : public nsRunnable
+{
+public:
+  nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
+
+  NS_IMETHOD Run() {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    nsIDocument* document = mElement->GetOwnerDoc();
+    if (!document) {
+      return NS_OK;
+    }
+
+    // Do not autofocus if an sub-window is focused.
+    nsPIDOMWindow* window = document->GetWindow();
+    if (window && window->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    // If something is focused in the same document, ignore autofocus.
+    if (!fm->GetFocusedContent() ||
+        fm->GetFocusedContent()->GetOwnerDoc() != document) {
+      return mElement->Focus();
+    }
+
+    return NS_OK;
+  }
+private:
+  // NOTE: nsGenericHTMLFormElement is saved as a nsGenericHTMLElement
+  // because AddRef/Release are ambiguous with nsGenericHTMLFormElement
+  // and Focus() is declared (and defined) in nsGenericHTMLElement class.
+  nsRefPtr<nsGenericHTMLElement> mElement;
+};
 
 class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                     public nsIDOMElementCSSInlineStyle
@@ -657,36 +702,66 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ENSURE_STATE(doc);
+
+  nsresult rv = NS_OK;
+
   // This BeginUpdate/EndUpdate pair is important to make us reenable the
   // scriptloader before the last EndUpdate call.
-  mozAutoDocUpdate updateBatch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
 
   // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+  mozAutoSubtreeModified subtree(doc, nsnull);
 
   // Remove childnodes
   nsContentUtils::SetNodeTextContent(this, EmptyString(), PR_FALSE);
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
-
   // Strong ref since appendChild can fire events
-  nsRefPtr<nsScriptLoader> loader;
-  PRBool scripts_enabled = PR_FALSE;
+  nsRefPtr<nsScriptLoader> loader = doc->ScriptLoader();
+  PRBool scripts_enabled = loader->GetEnabled();
+  loader->SetEnabled(PR_FALSE);
 
-  if (doc) {
-    loader = doc->ScriptLoader();
-    scripts_enabled = loader->GetEnabled();
-    loader->SetEnabled(PR_FALSE);
-  }
+  if (doc->IsHTML() && nsHtml5Module::sEnabled) {
+    nsCOMPtr<nsIParser> parser = doc->GetFragmentParser();
+    if (parser) {
+      parser->Reset();
+    } else {
+      parser = nsHtml5Module::NewHtml5Parser();
+      NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
+    }
 
-  nsresult rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
-                                                         PR_FALSE,
-                                                         getter_AddRefs(df));
-  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
-  if (NS_SUCCEEDED(rv)) {
-    static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
+    PRInt32 oldChildCount = GetChildCount();
+    parser->ParseFragment(aInnerHTML, this, Tag(), GetNameSpaceID(),
+                          doc->GetCompatibilityMode() == eCompatibility_NavQuirks);
+    doc->SetFragmentParser(parser);
+
+    // HTML5 parser has notified, but not fired mutation events.
+    // Fire mutation events. Optimize for the case when there are no listeners
+    nsPIDOMWindow* window = nsnull;
+    PRInt32 newChildCount = GetChildCount();
+    if (newChildCount &&
+        (((window = doc->GetInnerWindow()) &&
+          window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) ||
+         !window)) {
+      nsCOMArray<nsIContent> childNodes;
+      NS_ASSERTION(newChildCount - oldChildCount >= 0,
+                   "What, some unexpected dom mutation has happened?");
+      childNodes.SetCapacity(newChildCount - oldChildCount);
+      for (nsINode::ChildIterator iter(this); !iter.IsDone(); iter.Next()) {
+        childNodes.AppendObject(iter);
+      }
+      nsGenericElement::FireNodeInserted(doc, this, childNodes);
+    }
+  } else {
+    rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML, PR_FALSE,
+                                                  getter_AddRefs(df));
+    nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
+    if (NS_SUCCEEDED(rv)) {
+      static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
+    }
   }
 
   if (scripts_enabled) {
@@ -777,12 +852,13 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
     return NS_OK;
   }
 
-  // Is this anything other than a single-line plaintext input?
+  // Is this anything other than an input text?
+  // Other inputs are not spellchecked.
   if (controlType != NS_FORM_INPUT_TEXT) {
     return NS_OK;                       // Not spellchecked by default
   }
 
-  // Does the user want single-line inputs spellchecked by default?
+  // Does the user want input text spellchecked by default?
   // NOTE: Do not reflect a pref value of 0 back to the DOM getter.
   // The web page should not know if the user has disabled spellchecking.
   // We'll catch this in the editor itself.
@@ -838,7 +914,7 @@ nsGenericHTMLElement::UpdateEditableState()
     return;
   }
 
-  nsGenericElement::UpdateEditableState();
+  nsStyledElement::UpdateEditableState();
 }
 
 nsresult
@@ -852,6 +928,10 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
+    if (HasFlag(NODE_HAS_NAME)) {
+      aDocument->
+        AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
+    }
     if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue) {
       nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(aDocument);
       if (htmlDocument) {
@@ -873,7 +953,7 @@ nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     }
   }
 
-  nsGenericElement::UnbindFromTree(aDeep, aNullParent);
+  nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsHTMLFormElement*
@@ -1086,8 +1166,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     SetFlags(NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR);
   }
 
-  nsresult rv = nsGenericElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                          aNotify);
+  nsresult rv = nsStyledElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                         aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (contentEditable) {
@@ -1110,7 +1190,12 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::contenteditable) {
+    if (aAttribute == nsGkAtoms::name) {
+      // Have to do this before clearing flag. See RemoveFromNameTable
+      RemoveFromNameTable();
+      UnsetFlags(NODE_HAS_NAME);
+    }
+    else if (aAttribute == nsGkAtoms::contenteditable) {
       contentEditable = PR_TRUE;
       contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
     }
@@ -1147,6 +1232,15 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 
 //----------------------------------------------------------------------
 
+static PRBool
+CanHaveName(nsIAtom* aTag)
+{
+  return aTag == nsGkAtoms::img ||
+         aTag == nsGkAtoms::form ||
+         aTag == nsGkAtoms::applet ||
+         aTag == nsGkAtoms::embed ||
+         aTag == nsGkAtoms::object;
+}
 
 PRBool
 nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
@@ -1163,10 +1257,22 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntWithBounds(aValue, -32768, 32767);
     }
 
-    if (aAttribute == nsGkAtoms::name && !aValue.IsEmpty()) {
+    if (aAttribute == nsGkAtoms::name) {
       // Store name as an atom.  name="" means that the element has no name,
       // not that it has an emptystring as the name.
+      RemoveFromNameTable();
+      if (aValue.IsEmpty()) {
+        UnsetFlags(NODE_HAS_NAME);
+        return PR_FALSE;
+      }
+
       aResult.ParseAtom(aValue);
+
+      if (CanHaveName(Tag())) {
+        SetFlags(NODE_HAS_NAME);
+        AddToNameTable(aResult.GetAtomValue());
+      }
+      
       return PR_TRUE;
     }
 
@@ -1583,8 +1689,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
   }
 
   PRInt32 formType = GetType();
-  if (formType != NS_FORM_INPUT_PASSWORD && formType != NS_FORM_INPUT_TEXT &&
-      formType != NS_FORM_TEXTAREA) {
+  if (!IsTextControl(PR_FALSE)) {
     SetEditableFlag(PR_FALSE);
     return;
   }
@@ -1838,7 +1943,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
         nsIDocument* doc = presContext->Document();
         nsCOMPtr<nsIURI> uri;
         nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
-            getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
+            getter_AddRefs(uri), spec, doc, doc->GetDocBaseURI());
         if (NS_SUCCEEDED(rv)) {
           // Note that this should generally succeed here, due to the way
           // |spec| is created.  Maybe we should just add an nsStringBuffer
@@ -2369,6 +2474,20 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // An autofocus event has to be launched if the autofocus attribute is
+  // specified and the element accept the autofocus attribute. In addition,
+  // the document should not be already loaded and the "browser.autofocus"
+  // preference should be 'true'.
+  if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
+      aDocument &&
+      aDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE &&
+      nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
+    nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
+    rv = NS_DispatchToCurrentThread(event);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   if (!aParent) {
     return NS_OK;
   }
@@ -2413,6 +2532,8 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // Save state before doing anything
   SaveState();
+  
+  RemoveFromNameTable();
 
   if (mForm) {
     // Might need to unset mForm
@@ -2565,7 +2686,6 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   // It's easier to test the types that _cannot_ be disabled
   return
     type != NS_FORM_LABEL &&
-    type != NS_FORM_LEGEND &&
     type != NS_FORM_FIELDSET &&
     type != NS_FORM_OBJECT &&
     type != NS_FORM_OUTPUT;
@@ -2578,6 +2698,41 @@ nsGenericHTMLFormElement::IsSubmitControl() const
   return type == NS_FORM_INPUT_SUBMIT ||
          type == NS_FORM_BUTTON_SUBMIT ||
          type == NS_FORM_INPUT_IMAGE;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsTextControl(PRBool aExcludePassword) const
+{
+  PRInt32 type = GetType();
+  return nsGenericHTMLFormElement::IsSingleLineTextControl(aExcludePassword) ||
+         type == NS_FORM_TEXTAREA;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsSingleLineTextControlInternal(PRBool aExcludePassword,
+                                                          PRInt32 aType) const
+{
+  return aType == NS_FORM_INPUT_TEXT ||
+         aType == NS_FORM_INPUT_SEARCH ||
+         aType == NS_FORM_INPUT_TEL ||
+         (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
+}
+
+PRBool
+nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
+{
+  return IsSingleLineTextControlInternal(aExcludePassword, GetType());
+}
+
+PRBool
+nsGenericHTMLFormElement::IsLabelableControl() const
+{
+  // Check for non-labelable form controls as they are not numerous.
+  // TODO: datalist should be added to this list.
+  PRInt32 type = GetType();
+  return type != NS_FORM_FIELDSET &&
+         type != NS_FORM_LABEL &&
+         type != NS_FORM_OBJECT;
 }
 
 PRInt32
@@ -3018,12 +3173,10 @@ nsGenericHTMLElement::GetEditorInternal(nsIEditor** aEditor)
 {
   *aEditor = nsnull;
 
-  nsIFormControlFrame *fcFrame = GetFormControlFrame(PR_FALSE);
-  if (fcFrame) {
-    nsITextControlFrame *textFrame = do_QueryFrame(fcFrame);
-    if (textFrame) {
-      return textFrame->GetEditor(aEditor);
-    }
+  nsCOMPtr<nsITextControlElement> textCtrl = do_QueryInterface(this);
+  if (textCtrl) {
+    *aEditor = textCtrl->GetTextEditor();
+    NS_IF_ADDREF(*aEditor);
   }
 
   return NS_OK;

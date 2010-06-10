@@ -50,6 +50,7 @@ _MOCHITEST_FILES = \
   test_npruntime_npnevaluate.html \
   test_npruntime_npninvoke.html \
   test_npruntime_npninvokedefault.html \
+  test_npruntime_identifiers.html \
   loremipsum.txt \
   loremipsum_file.txt \
   loremipsum_nocache.txt \
@@ -84,13 +85,14 @@ _MOCHITEST_FILES = \
   neverending.sjs \
   test_newstreamondestroy.html \
   test_crashing.html \
-  test_crashing2.html \
+  $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
   test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
   test_propertyAndMethod.html \
   test_bug539565-1.html \
   test_bug539565-2.html \
+  test_enumerate.html \
   $(NULL)
 
 #  test_npruntime_npnsetexception.html \ Disabled for e10s

@@ -499,12 +499,47 @@ public:
 
 protected:
   /**
+   * Add/remove this element to the documents name cache
+   */
+  void AddToNameTable(nsIAtom* aName) {
+    NS_ASSERTION(HasFlag(NODE_HAS_NAME), "Node lacking NODE_HAS_NAME flag");
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc && !IsInAnonymousSubtree()) {
+      doc->AddToNameTable(this, aName);
+    }
+  }
+  void RemoveFromNameTable() {
+    if (HasFlag(NODE_HAS_NAME)) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
+                                         GetAtomValue());
+      }
+    }
+  }
+
+  /**
    * Register or unregister an access key to this element based on the
    * accesskey attribute.
-   * @param aDoReg true to register, false to unregister
    */
+  void RegAccessKey()
+  {
+    if (HasFlag(NODE_HAS_ACCESSKEY)) {
+      RegUnRegAccessKey(PR_TRUE);
+    }
+  }
+
+  void UnregAccessKey()
+  {
+    if (HasFlag(NODE_HAS_ACCESSKEY)) {
+      RegUnRegAccessKey(PR_FALSE);
+    }
+  }
+
+private:
   void RegUnRegAccessKey(PRBool aDoReg);
 
+protected:
   /**
    * Determine whether an attribute is an event (onclick, etc.)
    * @param aName the attribute
@@ -789,6 +824,12 @@ public:
   
   virtual PRBool IsSubmitControl() const;
 
+          PRBool IsTextControl(PRBool aExcludePassword) const;
+
+          PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
+
+          PRBool IsLabelableControl() const;
+
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -808,11 +849,21 @@ protected:
                                 const nsAString* aValue, PRBool aNotify);
 
   /**
+   * Returns if the element should react on autofocus attribute.
+   */
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_FALSE;
+  }
+
+  /**
    * Returns true if the control can be disabled
    */
   PRBool CanBeDisabled() const;
 
   void UpdateEditableFormControlState();
+
+  PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
@@ -1090,6 +1141,31 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   _class::Set##_method(const nsAString& aValue)                           \
   {                                                                       \
     return SetAttrHelper(nsGkAtoms::_atom, aValue);                       \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given content
+ * property that needs to set a positive integer. The method uses
+ * the generic GetAttr and SetAttr methods. This macro is much like
+ * the NS_IMPL_NON_NEGATIVE_INT_ATTR macro except the exception is
+ * thrown also when the value is equal to 0.
+ */
+#define NS_IMPL_POSITIVE_INT_ATTR(_class, _method, _atom)                 \
+  NS_IMPL_POSITIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 1)
+
+#define NS_IMPL_POSITIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(PRInt32* aValue)                                   \
+  {                                                                       \
+    return GetIntAttr(nsGkAtoms::_atom, _default, aValue);                \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(PRInt32 aValue)                                    \
+  {                                                                       \
+    if (aValue <= 0) {                                                    \
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
+    }                                                                     \
+    return SetIntAttr(nsGkAtoms::_atom, aValue);                          \
   }
 
 /**

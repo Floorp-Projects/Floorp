@@ -135,6 +135,11 @@ class nsAccessNode: public nsIAccessNode
     virtual nsIFrame* GetFrame();
 
   /**
+   * Return DOM node associated with this accessible.
+   */
+  nsIDOMNode *GetDOMNode() const { return mDOMNode; }
+
+  /**
    * Return the corresponding press shell for this accessible.
    */
   already_AddRefed<nsIPresShell> GetPresShell();

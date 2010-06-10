@@ -242,7 +242,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
-      //
+      // Text accessible shouldn't implement nsIAccessibleHyperLink
+      var res = isAccessible(getNode("namedAnchor").firstChild,
+                             [nsIAccessibleHyperLink]);
+      ok(!res, "Text accessible shouldn't implement nsIAccessibleHyperLink");
+
       SimpleTest.finish();
     }
 

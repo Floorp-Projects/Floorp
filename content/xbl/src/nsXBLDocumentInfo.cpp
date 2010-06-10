@@ -54,6 +54,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
+#include "mozilla/Services.h"
  
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -323,7 +324,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   // we must apparently override that with our own (although it isn't clear 
   // why - see bug 339647)
   JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
-  mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
+  mJSObject = ::JS_NewGlobalObject(cx, &gSharedGlobalClass);
   if (!mJSObject)
     return nsnull;
 
@@ -506,7 +507,8 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   nsIURI* uri = aDocument->GetDocumentURI();
   if (IsChromeURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
-    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+    nsCOMPtr<nsIXULChromeRegistry> reg =
+      mozilla::services::GetXULChromeRegistryService();
     if (reg) {
       PRBool allow = PR_TRUE;
       reg->AllowScriptsForPackage(uri, &allow);

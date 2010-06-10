@@ -394,7 +394,7 @@ namespace nanojit
         bool isTargetWithinS32(NIns* target);\
         void asm_immi(Register r, int32_t v, bool canClobberCCs);\
         void asm_immq(Register r, uint64_t v, bool canClobberCCs);\
-        void asm_immf(Register r, uint64_t v, bool canClobberCCs);\
+        void asm_immd(Register r, uint64_t v, bool canClobberCCs);\
         void asm_regarg(ArgType, LIns*, Register);\
         void asm_stkarg(ArgType, LIns*, int);\
         void asm_shift(LIns*);\
@@ -408,8 +408,8 @@ namespace nanojit
         void dis(NIns *p, int bytes);\
         void asm_cmp(LIns*);\
         void asm_cmp_imm(LIns*);\
-        void asm_fcmp(LIns*, LIns*);\
-        NIns* asm_fbranch(bool, LIns*, NIns*);\
+        void asm_cmpd(LIns*, LIns*);\
+        NIns* asm_branchd(bool, LIns*, NIns*);\
         void asm_div(LIns *ins);\
         void asm_div_mod(LIns *ins);\
         int max_stk_used;\

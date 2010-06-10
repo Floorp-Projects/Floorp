@@ -55,7 +55,7 @@
 
 namespace js {
 
-class AutoDescriptorArray;
+class AutoPropDescArrayRooter;
 
 static inline PropertyOp
 CastAsPropertyOp(JSObject *object)
@@ -69,17 +69,22 @@ CastAsObject(PropertyOp op)
     return JS_FUNC_TO_DATA_PTR(JSObject *, op);
 }
 
+inline Value
+CastAsObjectJSVal(PropertyOp op)
+{
+    return ObjectTag(*CastAsObject(op));
+}
+
 } /* namespace js */
 
 /*
  * A representation of ECMA-262 ed. 5's internal property descriptor data
  * structure.
  */
-struct PropertyDescriptor {
-  friend class js::AutoDescriptorArray;
+struct PropDesc {
+    friend class js::AutoPropDescArrayRooter;
 
-  private:
-    PropertyDescriptor();
+    PropDesc();
 
   public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
@@ -136,6 +141,7 @@ struct PropertyDescriptor {
     static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
     static void finalizeDescriptorArray(JSContext* cx, JSObject* obj);
 
+    js::Value pd;
     jsid id;
     js::Value value, get, set;
 
@@ -176,7 +182,6 @@ struct JSObjectOps {
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
-    JSPropertyRefOp     dropProperty;
     js::Native          call;
     js::Native          construct;
     js::HasInstanceOp   hasInstance;
@@ -361,6 +366,8 @@ struct JSObject {
     inline js::Value getSlotMT(JSContext *cx, uintN slot);
     inline void setSlotMT(JSContext *cx, uintN slot, const js::Value &value);
 
+    inline js::Value getReservedSlot(uintN index) const;
+
     JSObject *getProto() const {
         return fslots[JSSLOT_PROTO].asObjectOrNull();
     }
@@ -409,19 +416,19 @@ struct JSObject {
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        void *priv = fslots[JSSLOT_PRIVATE].asPrivateVoidPtrUnchecked();
+        void *priv = fslots[JSSLOT_PRIVATE].asPrivate();
         return priv;
     }
 
     void setPrivate(void *data) {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
         JS_ASSERT((size_t(data) & 1) == 0);
-        fslots[JSSLOT_PRIVATE].setPrivateVoidPtr(data);
+        fslots[JSSLOT_PRIVATE].setPrivate(data);
     }
 
     static js::Value defaultPrivate(js::Class *clasp) {
         if (clasp->flags & JSCLASS_HAS_PRIVATE)
-            return js::PrivateVoidPtrTag(NULL);
+            return js::PrivateTag(NULL);
         return js::UndefinedTag();
     }
 
@@ -484,10 +491,13 @@ struct JSObject {
 
     inline void voidDenseOnlyArraySlots();  // used when converting a dense array to a slow array
 
+    JSBool makeDenseArraySlow(JSContext *cx);
+
     /*
      * Arguments-specific getters and setters.
      */
 
+  private:
     /*
      * Reserved slot structure for Arguments objects:
      *
@@ -501,7 +511,6 @@ struct JSObject {
      * Argument index i is stored in dslots[i], accessible via
      * {get,set}ArgsElement().
      */
-  private:
     static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_ARGS_CALLEE = JSSLOT_PRIVATE + 2;
 
@@ -561,10 +570,53 @@ struct JSObject {
     inline void setNativeIterator(NativeIterator *);
 
     /*
+     * XML-related getters and setters.
+     */
+
+    /*
+     * Slots for XML-related classes are as follows:
+     * - js_NamespaceClass.base reserves the *_NAME_* and *_NAMESPACE_* slots.
+     * - js_QNameClass.base, js_AttributeNameClass, js_AnyNameClass reserve
+     *   the *_NAME_* and *_QNAME_* slots.
+     * - Others (js_XMLClass, js_XMLFilterClass) don't reserve any slots.
+     */
+  private:
+    static const uint32 JSSLOT_NAME_PREFIX          = JSSLOT_PRIVATE;       // shared
+    static const uint32 JSSLOT_NAME_URI             = JSSLOT_PRIVATE + 1;   // shared
+
+    static const uint32 JSSLOT_NAMESPACE_DECLARED   = JSSLOT_PRIVATE + 2;
+
+    static const uint32 JSSLOT_QNAME_LOCAL_NAME     = JSSLOT_PRIVATE + 2;
+
+  public:
+    static const uint32 NAMESPACE_FIXED_RESERVED_SLOTS = 3;
+    static const uint32 QNAME_FIXED_RESERVED_SLOTS     = 3;
+
+    inline jsval getNamePrefix() const;
+    inline void setNamePrefix(jsval prefix);
+
+    inline jsval getNameURI() const;
+    inline void setNameURI(jsval uri);
+
+    inline jsval getNamespaceDeclared() const;
+    inline void setNamespaceDeclared(jsval decl);
+
+    inline jsval getQNameLocalName() const;
+    inline void setQNameLocalName(jsval decl);
+
+    /*
+     * Proxy-specific getters and setters.
+     */
+
+    inline const js::Value &getProxyHandler() const;
+    inline const js::Value &getProxyPrivate() const;
+    inline void setProxyPrivate(const js::Value &priv);
+
+    /*
      * Back to generic stuff.
      */
 
-    bool isCallable();
+    inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
     void init(js::Class *aclasp, const js::Value &proto, const js::Value &parent,
@@ -618,14 +670,12 @@ struct JSObject {
         return map->ops->setProperty(cx, this, id, vp);
     }
 
-    JSBool getAttributes(JSContext *cx, jsid id, JSProperty *prop,
-                         uintN *attrsp) {
-        return map->ops->getAttributes(cx, this, id, prop, attrsp);
+    JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
+        return map->ops->getAttributes(cx, this, id, attrsp);
     }
 
-    JSBool setAttributes(JSContext *cx, jsid id, JSProperty *prop,
-                         uintN *attrsp) {
-        return map->ops->setAttributes(cx, this, id, prop, attrsp);
+    JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp) {
+        return map->ops->setAttributes(cx, this, id, attrsp);
     }
 
     JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval) {
@@ -650,13 +700,19 @@ struct JSObject {
         return map->ops->typeOf(cx, this);
     }
 
-    inline JSObject *thisObject(JSContext *cx);
+    JSObject *wrappedObject(JSContext *cx) const;
+
+    /* These four are time-optimized to avoid stub calls. */
+    JSObject *thisObject(JSContext *cx) {
+        return map->ops->thisObject ? map->ops->thisObject(cx, this) : this;
+    }
     static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
-    void dropProperty(JSContext *cx, JSProperty *prop) {
-        if (map->ops->dropProperty)
-            map->ops->dropProperty(cx, this, prop);
-    }
+    inline void dropProperty(JSContext *cx, JSProperty *prop);
+
+    JSCompartment *getCompartment(JSContext *cx);
+
+    void swap(JSObject *obj);
 
     inline bool isArguments() const;
     inline bool isArray() const;
@@ -670,6 +726,12 @@ struct JSObject {
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
+    inline bool isNamespace() const;
+    inline bool isQName() const;
+
+    inline bool isProxy() const;
+    inline bool isObjectProxy() const;
+    inline bool isFunctionProxy() const;
 
     inline bool unbrand(JSContext *cx);
 
@@ -702,7 +764,7 @@ JS_STATIC_ASSERT(offsetof(JSObject, clasp) == offsetof(JSPretendObject, clasp));
 /*
  * The GC runs only when all threads except the one on which the GC is active
  * are suspended at GC-safe points, so calling obj->getSlot() from the GC's
- * thread is safe when rt->gcRunning is set. See jsgc.c for details.
+ * thread is safe when rt->gcRunning is set. See jsgc.cpp for details.
  */
 #define THREAD_IS_RUNNING_GC(rt, thread)                                      \
     ((rt)->gcRunning && (rt)->gcThread == (thread))
@@ -848,10 +910,17 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
+js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs,
+                               const js::Value &getter, const js::Value &setter,
+                               const js::Value &value, js::Value *vp);
+
+extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
-extern JSObject *
-js_InitEval(JSContext *cx, JSObject *obj);
+#ifdef OLD_GETTER_SETTER_METHODS
+JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp);
+JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
+#endif
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
@@ -894,6 +963,9 @@ extern JSObject*
 js_NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto,
                            const js::Value &privateSlotValue);
 
+extern JSBool
+js_PopulateObject(JSContext *cx, JSObject *newborn, JSObject *props);
+
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
  */
@@ -903,7 +975,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 
 extern JSBool
 js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
-                  JSObject *cobj);
+                  JSObject *cobj, JSObject *prototype);
 
 /*
  * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
@@ -1131,12 +1203,18 @@ extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                 uintN *attrsp);
+js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
-js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                 uintN *attrsp);
+js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+
+/*
+ * Change attributes for the given native property. The caller must ensure
+ * that obj is locked and this function always unlocks obj on return.
+ */
+extern JSBool
+js_SetNativeAttributes(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+                       uintN attrs);
 
 extern JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval);
@@ -1225,19 +1303,10 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 extern void
 js_Clear(JSContext *cx, JSObject *obj);
 
-#ifdef JS_THREADSAFE
-#define NATIVE_DROP_PROPERTY js_DropProperty
-
-extern void
-js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
-#else
-#define NATIVE_DROP_PROPERTY NULL
-#endif
-
 extern bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 
-bool
+extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
 
 /*
@@ -1267,11 +1336,6 @@ extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
 
-static inline bool
-js_IsCallable(const js::Value &v) {
-    return v.isObject() && v.asObject().isCallable();
-}
-
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
@@ -1285,7 +1349,7 @@ JS_FRIEND_API(void) DumpString(JSString *str);
 JS_FRIEND_API(void) DumpAtom(JSAtom *atom);
 JS_FRIEND_API(void) DumpValue(const js::Value &val);
 JS_FRIEND_API(void) DumpId(jsid id);
-JS_FRIEND_API(void) DumpObject(JSObject *obj);
+JS_FRIEND_API(void) DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
 JS_FRIEND_API(void) DumpStackFrameChain(JSContext *cx, JSStackFrame *start = NULL);
 }
 #endif

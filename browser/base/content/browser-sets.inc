@@ -24,6 +24,7 @@
 #   Blake Ross <blakeross@telocity.com>
 #   Shawn Wilsher <me@shawnwilsher.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Rob Campbell <rcampbell@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -124,6 +125,7 @@
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>    
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
+    <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize"
      oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
@@ -206,8 +208,6 @@
 # is a fundamental keybinding and we are maintaining a XP binding so that it is easy
 # for people to switch to Linux.
 #
-# Do *not* tamper with these values without talking to ben@mozilla.org
-#
     <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
 #ifdef XP_MACOSX
     <key id="key_search2" key="&findOnCmd.commandkey;" command="Tools:Search" modifiers="accel,alt"/>
@@ -222,6 +222,7 @@
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift"/>
+    <key id="key_inspect" key="&inspectMenu.commandkey;" command="Tools:Inspect" modifiers="accel,shift"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb" key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>

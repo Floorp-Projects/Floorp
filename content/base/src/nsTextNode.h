@@ -53,7 +53,7 @@
 /**
  * Class used to implement DOM text nodes
  */
-class nsTextNode : public nsGenericDOMDataNode,
+class nsTextNode : public nsGenericTextNode,
                    public nsIDOMText
 {
 public:

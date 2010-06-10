@@ -185,13 +185,8 @@ public:
       // Appends one of win/ unix/ mac/ to the base URI.
       PLATFORM_PACKAGE = 1 << 0,
 
-      // This package should use the new XPCNativeWrappers to separate
-      // content from chrome. This flag is currently unused (because we call
-      // into xpconnect at registration time).
-      XPCNATIVEWRAPPERS = 1 << 1,
-
       // Content script may access files in this package
-      CONTENT_ACCESSIBLE = 1 << 2
+      CONTENT_ACCESSIBLE = 1 << 1
     };
 
     nsCString        package;

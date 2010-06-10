@@ -185,8 +185,10 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_INPUT_RESET :
   case NS_FORM_INPUT_PASSWORD :
   case NS_FORM_INPUT_RADIO :
+  case NS_FORM_INPUT_SEARCH :
   case NS_FORM_INPUT_SUBMIT :
   case NS_FORM_INPUT_TEXT :
+  case NS_FORM_INPUT_TEL :
   case NS_FORM_SELECT :
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :
@@ -200,9 +202,6 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   //
   // NS_FORM_INPUT_IMAGE
   // NS_FORM_LABEL
-  // NS_FORM_OPTION
-  // NS_FORM_OPTGROUP
-  // NS_FORM_LEGEND
 
   return PR_FALSE;
 }
@@ -356,6 +355,7 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetAction(nsAString& aValue)
@@ -372,21 +372,6 @@ NS_IMETHODIMP
 nsHTMLFormElement::SetAction(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::GetTarget(nsAString& aValue)
-{
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
-    GetBaseTarget(aValue);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::SetTarget(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -816,8 +801,9 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
   }
 
   nsAutoString target;
-  rv = GetTarget(target);
-  NS_ENSURE_SUBMIT_SUCCESS(rv);
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, target)) {
+    GetBaseTarget(target);
+  }
 
   //
   // Notify observers of submit
@@ -1470,9 +1456,8 @@ nsHTMLFormElement::HasSingleTextControl() const
   PRUint32 numTextControlsFound = 0;
   PRUint32 length = mControls->mElements.Length();
   for (PRUint32 i = 0; i < length && numTextControlsFound < 2; ++i) {
-    PRInt32 type = mControls->mElements[i]->GetType();
-    if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD) {
-        numTextControlsFound++;
+    if (mControls->mElements[i]->IsSingleLineTextControl(PR_FALSE)) {
+      numTextControlsFound++;
     }
   }
   return numTextControlsFound == 1;

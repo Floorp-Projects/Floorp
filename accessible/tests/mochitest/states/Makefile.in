@@ -45,13 +45,15 @@ relativesrcdir  = accessible/states
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# temporarily disabled test (bug 562328)
+#  test_frames.html \
+
 _TEST_FILES =\
 		test_aria.html \
 		test_aria_imgmap.html \
 		test_doc.html \
 		test_docarticle.html \
 		test_editablebody.html \
-		test_frames.html \
 		test_link.html \
 		test_popup.xul \
 		test_tree.xul \

@@ -201,6 +201,15 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitMethodDecl(self, md):
         assert not (md.static and md.virtual)
 
+        if md.T:
+            self.write('template<')
+            self.write('typename ')
+            md.T.accept(self)
+            self.println('>')
+            self.printdent()
+
+        if md.inline:
+            self.write('inline ')
         if md.static:
             self.write('static ')
         if md.virtual:
@@ -269,6 +278,8 @@ class CxxCodeGen(CodePrinter, Visitor):
 
 
     def visitDestructorDecl(self, dd):
+        if dd.inline:
+            self.write('inline ')
         if dd.virtual:
             self.write('virtual ')
 
