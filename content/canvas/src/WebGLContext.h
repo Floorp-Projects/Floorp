@@ -41,6 +41,7 @@
 #define WEBGLCONTEXT_H_
 
 #include <stdarg.h>
+#include <vector>
 
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
@@ -72,6 +73,7 @@ class WebGLRenderbuffer;
 class WebGLUniformLocation;
 
 class WebGLZeroingObject;
+class WebGLContextBoundObject;
 
 class WebGLObjectBaseRefPtr
 {
@@ -650,7 +652,9 @@ public:
 
     WebGLProgram(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(PR_FALSE), mLinkStatus(PR_FALSE), mGeneration(0)
+        mName(name), mDeleted(PR_FALSE), mLinkStatus(PR_FALSE), mGeneration(0),
+        mUniformMaxNameLength(0), mAttribMaxNameLength(0),
+        mUniformCount(0), mAttribCount(0)
     {
         mMapUniformLocations.Init();
     }
@@ -712,6 +716,16 @@ public:
 
     already_AddRefed<WebGLUniformLocation> GetUniformLocationObject(GLint glLocation);
 
+    /* Called only after LinkProgram */
+    PRBool UpdateInfo(gl::GLContext *gl);
+
+    /* Getters for cached program info */
+    WebGLint UniformMaxNameLength() const { return mUniformMaxNameLength; }
+    WebGLint AttribMaxNameLength() const { return mAttribMaxNameLength; }
+    WebGLint UniformCount() const { return mUniformCount; }
+    WebGLint AttribCount() const { return mAttribCount; }
+    bool IsAttribInUse(unsigned i) const { return mAttribsInUse[i]; }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLPROGRAM
 protected:
@@ -721,6 +735,11 @@ protected:
     nsTArray<WebGLShader*> mAttachedShaders;
     nsRefPtrHashtable<nsUint32HashKey, WebGLUniformLocation> mMapUniformLocations;
     GLuint mGeneration;
+    GLint mUniformMaxNameLength;
+    GLint mAttribMaxNameLength;
+    GLint mUniformCount;
+    GLint mAttribCount;
+    std::vector<bool> mAttribsInUse;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLProgram, WEBGLPROGRAM_PRIVATE_IID)
