@@ -75,15 +75,21 @@ public:
                         nsLoadScriptCallback aLoadScriptCallback,
                         void* aCallbackData,
                         nsFrameMessageManager* aParentManager,
-                        JSContext* aContext)
-  : mChrome(aChrome), mParentManager(aParentManager),
+                        JSContext* aContext,
+                        PRBool aGlobal = PR_FALSE)
+  : mChrome(aChrome), mGlobal(aGlobal), mParentManager(aParentManager),
     mSyncCallback(aSyncCallback), mAsyncCallback(aAsyncCallback),
     mLoadScriptCallback(aLoadScriptCallback), mCallbackData(aCallbackData),
     mContext(aContext)
   {
-    NS_ASSERTION(mContext, "Should have mContext!");
+    NS_ASSERTION(mContext || (aChrome && !aParentManager),
+                 "Should have mContext in non-global manager!");
     NS_ASSERTION(aChrome || !aParentManager, "Should not set parent manager!");
-    if (mParentManager && mCallbackData) {
+    // This is a bit hackish. When parent manager is global, we want
+    // to attach the window message manager to it immediately.
+    // Is it just the frame message manager which waits until the
+    // content process is running.
+    if (mParentManager && (mCallbackData || IsWindowLevel())) {
       mParentManager->AddChildManager(this);
     }
   }
@@ -106,7 +112,8 @@ public:
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           PRBool aSync, const nsAString& aJSON,
                           JSObject* aObjectsArray,
-                          nsTArray<nsString>* aJSONRetVal);
+                          nsTArray<nsString>* aJSONRetVal,
+                          JSContext* aContext = nsnull);
   void AddChildManager(nsFrameMessageManager* aManager,
                        PRBool aLoadScripts = PR_TRUE);
   void RemoveChildManager(nsFrameMessageManager* aManager)
@@ -127,10 +134,13 @@ public:
     NS_ASSERTION(mChrome, "Should not set parent manager!");
     mParentManager = aParent;
   }
+  PRBool IsGlobal() { return mGlobal; }
+  PRBool IsWindowLevel() { return mParentManager && mParentManager->IsGlobal(); }
 protected:
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
-  PRBool mChrome;
+  PRPackedBool mChrome;
+  PRPackedBool mGlobal;
   nsFrameMessageManager* mParentManager;
   nsSyncMessageCallback mSyncCallback;
   nsAsyncMessageCallback mAsyncCallback;

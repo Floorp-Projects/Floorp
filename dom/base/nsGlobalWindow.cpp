@@ -956,6 +956,12 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
       ac->RemoveWindowListener(this);
   }
 
+  if (mIsChrome && static_cast<nsGlobalChromeWindow*>(this)->mMessageManager) {
+    static_cast<nsFrameMessageManager*>(
+       static_cast<nsGlobalChromeWindow*>(
+         this)->mMessageManager.get())->Disconnect();
+  }
+
   PRUint32 scriptIndex;
   NS_STID_FOR_INDEX(scriptIndex) {
     mInnerWindowHolders[scriptIndex] = nsnull;
@@ -9641,16 +9647,19 @@ nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
     NS_ENSURE_STATE(scx);
     JSContext* cx = (JSContext *)scx->GetNativeContext();
     NS_ENSURE_STATE(cx);
-    mMessageManager = new nsFrameMessageManager(PR_TRUE,
-                                                nsnull,
-                                                nsnull,
-                                                nsnull,
-                                                nsnull,
-                                                nsnull,
-                                                cx);
+    nsCOMPtr<nsIChromeFrameMessageManager> globalMM =
+      do_GetService("@mozilla.org/globalmessagemanager;1");
+    mMessageManager =
+      new nsFrameMessageManager(PR_TRUE,
+                                nsnull,
+                                nsnull,
+                                nsnull,
+                                nsnull,
+                                static_cast<nsFrameMessageManager*>(globalMM.get()),
+                                cx);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
   }
-  NS_ADDREF(*aManager = mMessageManager);
+  CallQueryInterface(mMessageManager, aManager);
   return NS_OK;
 }
 
