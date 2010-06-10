@@ -2960,7 +2960,7 @@ var OfflineApps = {
     updateService.scheduleUpdate(manifestURI, currentURI);
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage: function receiveMessage(aMessage) {
     if (aMessage.name == "MozApplicationManifest") {
       this.offlineAppRequested(aMessage.json);
     }
