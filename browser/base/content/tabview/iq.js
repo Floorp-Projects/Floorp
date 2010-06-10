@@ -420,27 +420,31 @@ iQ.fn = iQ.prototype = {
   // Function: width
 	width: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    return this[0].clientWidth;
+/*     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1); */
+    return parseInt(this.css('width')); //this[0].clientWidth;
   },
 
   // ----------
   // Function: height
 	height: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    return this[0].clientHeight;
+/*     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1); */
+    return parseInt(this.css('height')); //this[0].clientHeight;
   },
 
   // ----------
   // Function: position
   position: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    var el = this[0];
+/*     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1); */
+/*     var el = this[0]; */
     return {
+      left: parseInt(this.css('left')),
+      top: parseInt(this.css('top'))
+/*
       left: (parseInt(el.style.left) || el.offsetLeft), 
       top: (parseInt(el.style.top) || el.offsetTop)
+*/
     };
   },
   
@@ -536,18 +540,18 @@ iQ.fn = iQ.prototype = {
   // Function: css
   css: function(a, b) {
     var properties = null;
-/*
-    var subsitutions = {
-      '-moz-transform': 'MozTransform',
-      'z-index': 'zIndex'
-    };
-*/
     
     if(typeof a === 'string') {
-      var key = a; //(subsitutions[a] || a);
+      var key = a; 
       if(b === undefined) {
         Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
-        return window.getComputedStyle(this[0], null).getPropertyValue(key);  
+
+        var substitutions = {
+          'MozTransform': '-moz-transform',
+          'zIndex': 'z-index'
+        };
+
+        return window.getComputedStyle(this[0], null).getPropertyValue(substitutions[key] || key);  
       } else {
         properties = {};
         properties[key] = b;
