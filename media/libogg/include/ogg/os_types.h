@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: #ifdef jail to whip a few platforms into the UNIX ideal.
- last mod: $Id: os_types.h 17270 2010-06-04 06:01:33Z xiphmont $
+ last mod: $Id: os_types.h 16649 2009-10-25 00:49:58Z ds $
 
  ********************************************************************/
 #ifndef _OS_TYPES_H
@@ -23,19 +23,6 @@
 #define _ogg_calloc  calloc
 #define _ogg_realloc realloc
 #define _ogg_free    free
-
-/* get non-brittle portable type-based MIN/MAX. Assumes 2's-complement
-   math */
-#define TYPE_HALF_MAX_SIGNED(type) \
-  ((typeof(type))1 << (sizeof(type)*8-2))
-#define TYPE_MAX_SIGNED(type) \
-  (TYPE_HALF_MAX_SIGNED(type) - 1 + TYPE_HALF_MAX_SIGNED(type))
-#define TYPE_MIN_SIGNED(type) \
-  (-1 - TYPE_MAX_SIGNED(type))
-#define TYPE_MIN(type) \
-  ((typeof(type))-1 < 1?TYPE_MIN_SIGNED(type):(typeof(type))0)
-#define TYPE_MAX(type) \
-  ((typeof(type))~TYPE_MIN(type))
 
 #if defined(_WIN32) 
 
