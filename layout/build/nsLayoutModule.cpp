@@ -1397,7 +1397,7 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
 
   { "Document Loader Factory",
     NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID,
-    "@mozilla.org/content/document-loader-factory;1",
+    CONTENT_DLF_CONTRACTID,
     CreateContentDLF,
     nsContentDLF::RegisterDocumentFactories,
     nsContentDLF::UnregisterDocumentFactories },
@@ -1448,7 +1448,7 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
 
   { "Plugin Document Loader Factory",
     NS_PLUGINDOCLOADERFACTORY_CID,
-    "@mozilla.org/content/plugin/document-loader-factory;1",
+    PLUGIN_DLF_CONTRACTID,
     CreateContentDLF },
 
   { "Plugin Document",
