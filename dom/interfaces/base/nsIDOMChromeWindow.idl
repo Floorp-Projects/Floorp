@@ -40,8 +40,9 @@
 
 interface nsIBrowserDOMWindow;
 interface nsIDOMElement;
+interface nsIChromeFrameMessageManager;
 
-[scriptable, uuid(09b86cbd-9784-4fe4-9be6-70b9bbca3a9c)]
+[scriptable, uuid(adf6b19f-459f-4892-93eb-71c527bae2af)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
@@ -73,4 +74,6 @@ interface nsIDOMChromeWindow : nsISupports
    * defaultButton is the default button.
    */
   void notifyDefaultButtonLoaded(in nsIDOMElement defaultButton);
+
+  readonly attribute nsIChromeFrameMessageManager messageManager;
 };

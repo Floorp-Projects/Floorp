@@ -248,7 +248,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     # allow relative paths
     options.xrePath = reftest.getFullPath(options.xrePath)
 
-  if options.symbolsPath:
+  if options.symbolsPath and not isURL(options.symbolsPath):
     options.symbolsPath = reftest.getFullPath(options.symbolsPath)
   options.utilityPath = reftest.getFullPath(options.utilityPath)
 

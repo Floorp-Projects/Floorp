@@ -51,12 +51,12 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
 EXTRA_COMPONENTS = \
+	nsFormHistory.js \
 	nsFormAutoComplete.js \
 	$(NULL)
 
 
 CPPSRCS = nsFormFillController.cpp \
-          nsStorageFormHistory.cpp \
           $(NULL)
 
 LOCAL_INCLUDES = \

@@ -80,6 +80,7 @@ endif
 SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
+                 ShowAlignments.cpp \
                  ShowSSEConfig.cpp \
                  TestAutoPtr.cpp \
                  TestCOMArray.cpp \

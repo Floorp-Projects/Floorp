@@ -43,11 +43,7 @@
 
 /* cfae5900-1dd1-11b2-95d0-ad454c233dc6 */
 
-#ifdef MOZ_WIDGET_PHOTON
-#include "PhRemoteClient.h"
-#else
 #include "XRemoteClient.h"
-#endif
 
 #include "nsXRemoteClientCID.h"
 #include "nsIGenericFactory.h"

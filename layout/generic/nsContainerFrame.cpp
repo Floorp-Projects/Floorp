@@ -73,7 +73,7 @@
 #include "nsThemeConstants.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsThemeConstants.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -899,6 +899,8 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
     return NS_OK; // nothing to reflow
 
   nsOverflowContinuationTracker tracker(aPresContext, this, PR_FALSE, PR_FALSE);
+  PRBool shouldReflowAllKids = aReflowState.ShouldReflowAllKids();
+
   for (nsIFrame* frame = overflowContainers->FirstChild(); frame;
        frame = frame->GetNextSibling()) {
     if (frame->GetPrevInFlow()->GetParent() != GetPrevInFlow()) {
@@ -906,7 +908,9 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       // it will get reflowed once it's been placed
       continue;
     }
-    if (NS_SUBTREE_DIRTY(frame)) {
+    // If the available vertical height has changed, we need to reflow
+    // even if the frame isn't dirty.
+    if (shouldReflowAllKids || NS_SUBTREE_DIRTY(frame)) {
       // Get prev-in-flow
       nsIFrame* prevInFlow = frame->GetPrevInFlow();
       NS_ASSERTION(prevInFlow,
@@ -1479,26 +1483,25 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
                 "supposed to call Finish *before* deleting next-in-flow!");
 
   for (nsIFrame* f = aChild; f; f = f->GetNextInFlow()) {
+    // Make sure we drop all references if the only frame
+    // in the overflow containers list is about to be destroyed
+    if (mOverflowContList &&
+        mOverflowContList->FirstChild() == f->GetNextInFlow() &&
+        !f->GetNextInFlow()->GetNextSibling()) {
+      mOverflowContList = nsnull;
+      mPrevOverflowCont = nsnull;
+      mSentry = nsnull;
+      mParent = static_cast<nsContainerFrame*>(f->GetParent());
+      break;
+    }
     if (f == mSentry) {
-      // Make sure we drop all references if this was the only frame
-      // in the overflow containers list
-      if (mOverflowContList->FirstChild() == f->GetNextInFlow()
-          && !f->GetNextInFlow()->GetNextSibling()) {
-        mOverflowContList = nsnull;
-        mPrevOverflowCont = nsnull;
-        mSentry = nsnull;
-        mParent = static_cast<nsContainerFrame*>(f->GetParent());
-        break;
-      }
-      else {
-        // Step past aChild
-        nsIFrame* prevOverflowCont = mPrevOverflowCont;
-        StepForward();
-        if (mPrevOverflowCont == f->GetNextInFlow()) {
-          // Pull mPrevOverflowChild back to aChild's prevSibling:
-          // aChild will be removed from our list by our caller
-          mPrevOverflowCont = prevOverflowCont;
-        }
+      // Step past aChild
+      nsIFrame* prevOverflowCont = mPrevOverflowCont;
+      StepForward();
+      if (mPrevOverflowCont == f->GetNextInFlow()) {
+        // Pull mPrevOverflowChild back to aChild's prevSibling:
+        // aChild will be removed from our list by our caller
+        mPrevOverflowCont = prevOverflowCont;
       }
     }
   }

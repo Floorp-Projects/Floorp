@@ -72,7 +72,7 @@
 #include "nsILinkHandler.h"
 
 #include "nsCSSLoader.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
@@ -97,6 +97,8 @@
 #include "SetDocTitleTxn.h"
 #include "nsGUIEvent.h"
 #include "nsTextFragment.h"
+#include "nsFocusManager.h"
+#include "nsPIDOMWindow.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -1891,6 +1893,9 @@ nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
 NS_IMETHODIMP
 nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   
   if (!aElement)
@@ -2389,6 +2394,9 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, PRBool entireList, co
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
@@ -2467,6 +2475,9 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
@@ -2497,6 +2508,9 @@ nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
@@ -2526,6 +2540,9 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
@@ -2598,6 +2615,9 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   PRBool cancel, handled;
   PRInt32 theAction = nsTextEditRules::kIndent;
@@ -2683,6 +2703,9 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
 NS_IMETHODIMP
 nsHTMLEditor::Align(const nsAString& aAlignType)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpAlign, nsIEditor::eNext);
 
@@ -3384,7 +3407,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
 {
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!sheet)
@@ -3426,7 +3449,7 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // We MUST ONLY load synchronous local files (no @import)
   // XXXbz Except this will actually try to load remote files
   // synchronously, of course..
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
   rv = ps->GetDocument()->CSSLoader()->
     LoadSheetSync(uaURI, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
@@ -3471,7 +3494,7 @@ nsHTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 {
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
 
   // Make sure we remove the stylesheet from our internal list in all
@@ -3495,27 +3518,23 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 NS_IMETHODIMP
 nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
 {
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!sheet)
     return NS_OK; // Don't fail if sheet not found
 
-  nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
-  NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
-
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  rv = sheet->SetOwningDocument(doc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  return domSheet->SetDisabled(!aEnable);
+  sheet->SetOwningDocument(doc);
+
+  return sheet->SetDisabled(!aEnable);
 }
 
 PRBool
 nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
 {
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
   if (NS_FAILED(rv))
     return PR_FALSE;
@@ -3525,14 +3544,9 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
   {
     // Ensure the style sheet is owned by our document.
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-    rv = sheet->SetOwningDocument(doc);
-    if (NS_FAILED(rv))
-      return PR_FALSE;
+    sheet->SetOwningDocument(doc);
 
-    nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
-    NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
-    
-    domSheet->SetDisabled(PR_FALSE);
+    sheet->SetDisabled(PR_FALSE);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -3540,9 +3554,9 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
 
 nsresult
 nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
-                                     nsICSSStyleSheet *aStyleSheet)
+                                     nsCSSStyleSheet *aStyleSheet)
 {
-  PRInt32 countSS = mStyleSheets.Count();
+  PRUint32 countSS = mStyleSheets.Length();
   PRUint32 countU = mStyleSheetURLs.Length();
 
   if (countU < 0 || countSS != countU)
@@ -3551,7 +3565,7 @@ nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
   if (!mStyleSheetURLs.AppendElement(aURL))
     return NS_ERROR_UNEXPECTED;
 
-  return mStyleSheets.AppendObject(aStyleSheet) ? NS_OK : NS_ERROR_UNEXPECTED;
+  return mStyleSheets.AppendElement(aStyleSheet) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 nsresult
@@ -3564,17 +3578,15 @@ nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
     return NS_ERROR_FAILURE;
 
   // Attempt both removals; if one fails there's not much we can do.
-  nsresult rv = NS_OK;
-  if (!mStyleSheets.RemoveObjectAt(foundIndex))
-    rv = NS_ERROR_FAILURE;
+  mStyleSheets.RemoveElementAt(foundIndex);
   mStyleSheetURLs.RemoveElementAt(foundIndex);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
-                                  nsICSSStyleSheet **aStyleSheet)
+                                  nsCSSStyleSheet **aStyleSheet)
 {
   NS_ENSURE_ARG_POINTER(aStyleSheet);
   *aStyleSheet = 0;
@@ -3595,7 +3607,7 @@ nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
+nsHTMLEditor::GetURLForStyleSheet(nsCSSStyleSheet *aStyleSheet,
                                   nsAString &aURL)
 {
   // is it already in the list?
@@ -3890,7 +3902,7 @@ nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 
 
 NS_IMETHODIMP 
-nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+nsHTMLEditor::StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                                nsresult aStatus)
 {
   nsresult rv = NS_OK;
@@ -3908,23 +3920,16 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
     if (NS_SUCCEEDED(rv))
     {
       // Get the URI, then url spec from the sheet
-      nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
-      nsCOMPtr<nsIURI> uri;
-      rv = sheet->GetSheetURI(getter_AddRefs(uri));
+      nsCAutoString spec;
+      rv = aSheet->GetSheetURI()->GetSpec(spec);
 
       if (NS_SUCCEEDED(rv))
       {
-        nsCAutoString spec;
-        rv = uri->GetSpec(spec);
+        // Save it so we can remove before applying the next one
+        mLastStyleSheetURL.AssignWithConversion(spec.get());
 
-        if (NS_SUCCEEDED(rv))
-        {
-          // Save it so we can remove before applying the next one
-          mLastStyleSheetURL.AssignWithConversion(spec.get());
-
-          // Also save in our arrays of urls and sheets
-          AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
-        }
+        // Also save in our arrays of urls and sheets
+        AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
       }
     }
   }
@@ -3944,9 +3949,10 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
 NS_IMETHODIMP
 nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
-  if (! ((mAction==kOpInsertText) || (mAction==kOpInsertIMEText)) )
-    ClearInlineStylesCache();
   if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
 }
@@ -3957,9 +3963,10 @@ nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 NS_IMETHODIMP
 nsHTMLEditor::EndOperation()
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // post processing
-  if (! ((mAction==kOpInsertText) || (mAction==kOpInsertIMEText) || (mAction==kOpIgnore)) )
-    ClearInlineStylesCache();
   nsresult res = NS_OK;
   if (mRules) res = mRules->AfterEdit(mAction, mDirection);
   nsEditor::EndOperation();  // will clear mAction, mDirection
@@ -4017,6 +4024,9 @@ nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
   
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // get editor root node
   nsIDOMElement *rootElement = GetRoot();
   
@@ -4251,11 +4261,6 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
 #ifdef XP_MAC
 #pragma mark -
 #endif
-
-void nsHTMLEditor::ClearInlineStylesCache()
-{
-  mCachedNode = nsnull;
-}
 
 #ifdef PRE_NODE_IN_BODY
 nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
@@ -5141,6 +5146,9 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsresult res;
   nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
@@ -5630,5 +5638,76 @@ nsresult
 nsHTMLEditor::GetReturnInParagraphCreatesNewParagraph(PRBool *aCreatesNewParagraph)
 {
   *aCreatesNewParagraph = mCRInParagraphCreatesParagraph;
+  return NS_OK;
+}
+
+PRBool
+nsHTMLEditor::HasFocus()
+{
+  NS_ENSURE_TRUE(mDocWeak, PR_FALSE);
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+
+  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  PRBool inDesignMode = doc->HasFlag(NODE_IS_EDITABLE);
+  if (!focusedContent) {
+    // in designMode, nobody gets focus in most cases.
+    return inDesignMode ? OurWindowHasFocus() : PR_FALSE;
+  }
+
+  if (inDesignMode) {
+    return OurWindowHasFocus() ?
+      nsContentUtils::ContentIsDescendantOf(focusedContent, doc) : PR_FALSE;
+  }
+
+  // We're HTML editor for contenteditable
+
+  // If the focused content isn't editable, or it has independent selection,
+  // we don't have focus.
+  if (!focusedContent->HasFlag(NODE_IS_EDITABLE) ||
+      IsIndependentSelectionContent(focusedContent)) {
+    return PR_FALSE;
+  }
+  // If our window is focused, we're focused.
+  return OurWindowHasFocus();
+}
+
+PRBool
+nsHTMLEditor::OurWindowHasFocus()
+{
+  NS_ENSURE_TRUE(mDocWeak, PR_FALSE);
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+  nsCOMPtr<nsIDOMWindow> focusedWindow;
+  fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  if (!focusedWindow) {
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  nsCOMPtr<nsIDOMWindow> ourWindow = do_QueryInterface(doc->GetWindow());
+  return ourWindow == focusedWindow;
+}
+
+PRBool
+nsHTMLEditor::IsIndependentSelectionContent(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "aContent must not be null");
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  return (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION));
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetPreferredIMEState(PRUint32 *aState)
+{
+  if (IsReadonly() || IsDisabled()) {
+    *aState = nsIContent::IME_STATUS_DISABLE;
+    return NS_OK;
+  }
+
+  // HTML editor don't prefer the CSS ime-mode because IE didn't do so too.
+  *aState = nsIContent::IME_STATUS_ENABLE;
   return NS_OK;
 }

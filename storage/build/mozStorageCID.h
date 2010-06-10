@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGECID_H_
-#define _MOZSTORAGECID_H_
+#ifndef MOZSTORAGECID_H
+#define MOZSTORAGECID_H
 
 #define MOZ_STORAGE_CONTRACTID_PREFIX "@mozilla.org/storage"
 
@@ -60,4 +60,4 @@
 
 #define MOZ_STORAGE_STATEMENT_WRAPPER_CONTRACTID MOZ_STORAGE_CONTRACTID_PREFIX "/statement-wrapper;1"
 
-#endif /* _MOZSTORAGECID_H_ */
+#endif /* MOZSTORAGECID_H */

@@ -47,8 +47,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "jstypes.h"
+
+#define __STDC_LIMIT_MACROS
 #include "jsstdint.h"
+
+#include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsclist.h"
@@ -73,28 +76,15 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jstracer.h"
-#include "jsiter.h"
+#include "jsnativestack.h"
 
 #include "jscntxtinlines.h"
 
 #ifdef XP_WIN
 # include <windows.h>
-#else
-# include <unistd.h>
-# include <sys/mman.h>
-# if !defined(MAP_ANONYMOUS)
-#  if defined(MAP_ANON)
-#   define MAP_ANONYMOUS MAP_ANON
-#  else
-#   define MAP_ANONYMOUS 0
-#  endif
-# endif
-#endif
-
-#include "jscntxtinlines.h"
-
-#ifdef XP_WIN
-# include <windows.h>
+#elif defined(XP_OS2)
+# define INCL_DOSMEMMGR
+# include <os2.h>
 #else
 # include <unistd.h>
 # include <sys/mman.h>
@@ -154,6 +144,12 @@ StackSpace::init()
     base = reinterpret_cast<Value *>(p);
     commitEnd = base + COMMIT_VALS;
     end = base + CAPACITY_VALS;
+#elif defined(XP_OS2)
+    if (DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE | OBJ_ANY) &&
+        DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
+        return false;
+    base = reinterpret_cast<Value *>(p);
+    end = base + CAPACITY_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -171,6 +167,8 @@ StackSpace::finish()
 #ifdef XP_WIN
     VirtualFree(base, (commitEnd - base) * sizeof(Value), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
+#elif defined(XP_OS2)
+    DosFreeMem(base);
 #else
     munmap(base, CAPACITY_BYTES);
 #endif
@@ -413,7 +411,6 @@ JS_REQUIRES_STACK void
 StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, CallStack *cs, JSStackFrame *fp,
                                            JSFrameRegs &regs)
 {
-    JS_ASSERT(cx->fp->fun->isInterpreted());
     JS_ASSERT(!fp->script && FUN_SLOW_NATIVE(fp->fun));
     fp->down = cx->fp;
     cs->setPreviousInThread(currentCallStack);
@@ -464,6 +461,7 @@ FrameRegsIter::FrameRegsIter(JSContext *cx)
         curfp = curcs->getSuspendedFrame();
         cursp = curcs->getSuspendedRegs()->sp;
         curpc = curcs->getSuspendedRegs()->pc;
+        return;
     }
     JS_ASSERT(cx->fp);
     curfp = cx->fp;
@@ -529,6 +527,7 @@ JSThreadData::init()
         finish();
         return false;
     }
+    nativeStackBase = GetNativeStackBase();
     return true;
 }
 
@@ -607,7 +606,7 @@ JSThreadData::purgeGCFreeLists()
 #ifdef JS_THREADSAFE
 
 static JSThread *
-NewThread(jsword id)
+NewThread(void *id)
 {
     JS_ASSERT(js_CurrentThreadId() == id);
     JSThread *thread = (JSThread *) js_calloc(sizeof(JSThread));
@@ -635,7 +634,7 @@ DestroyThread(JSThread *thread)
 JSThread *
 js_CurrentThread(JSRuntime *rt)
 {
-    jsword id = js_CurrentThreadId();
+    void *id = js_CurrentThreadId();
     JS_LOCK_GC(rt);
 
     /*
@@ -643,14 +642,11 @@ js_CurrentThread(JSRuntime *rt)
      * instances on all threads, see bug 476934.
      */
     js_WaitForGC(rt);
-    JSThreadsHashEntry *entry = (JSThreadsHashEntry *)
-                                JS_DHashTableOperate(&rt->threads,
-                                                     (const void *) id,
-                                                     JS_DHASH_LOOKUP);
+
     JSThread *thread;
-    if (JS_DHASH_ENTRY_IS_BUSY(&entry->base)) {
-        thread = entry->thread;
-        JS_ASSERT(thread->id == id);
+    JSThread::Map::AddPtr p = rt->threads.lookupForAdd(id);
+    if (p) {
+        thread = p->value;
     } else {
         JS_UNLOCK_GC(rt);
         thread = NewThread(id);
@@ -658,19 +654,16 @@ js_CurrentThread(JSRuntime *rt)
             return NULL;
         JS_LOCK_GC(rt);
         js_WaitForGC(rt);
-        entry = (JSThreadsHashEntry *)
-                JS_DHashTableOperate(&rt->threads, (const void *) id,
-                                     JS_DHASH_ADD);
-        if (!entry) {
+        if (!rt->threads.relookupOrAdd(p, id, thread)) {
             JS_UNLOCK_GC(rt);
             DestroyThread(thread);
             return NULL;
         }
 
-        /* Another thread cannot initialize entry->thread. */
-        JS_ASSERT(!entry->thread);
-        entry->thread = thread;
+        /* Another thread cannot add an entry for the current thread id. */
+        JS_ASSERT(p->value == thread);
     }
+    JS_ASSERT(thread->id == id);
 
     return thread;
 }
@@ -695,72 +688,6 @@ js_ClearContextThread(JSContext *cx)
     cx->thread = NULL;
 }
 
-static JSBool
-thread_matchEntry(JSDHashTable *table,
-                  const JSDHashEntryHdr *hdr,
-                  const void *key)
-{
-    const JSThreadsHashEntry *entry = (const JSThreadsHashEntry *) hdr;
-
-    return entry->thread->id == (jsword) key;
-}
-
-static const JSDHashTableOps threads_ops = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    JS_DHashVoidPtrKeyStub,
-    thread_matchEntry,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
-
-static JSDHashOperator
-thread_destroyer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
-                 void * /* arg */)
-{
-    JSThreadsHashEntry *entry = (JSThreadsHashEntry *) hdr;
-    JSThread *thread = entry->thread;
-
-    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
-    DestroyThread(thread);
-    return JS_DHASH_REMOVE;
-}
-
-static JSDHashOperator
-thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
-              void *arg)
-{
-    JSContext* cx = (JSContext *) arg;
-    JSThread *thread = ((JSThreadsHashEntry *) hdr)->thread;
-
-    if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
-        JS_ASSERT(cx->thread != thread);
-        js_DestroyScriptsToGC(cx, &thread->data);
-
-        /*
-         * The following is potentially suboptimal as it also zeros the caches
-         * in data, but the code simplicity wins here.
-         */
-        thread->data.purgeGCFreeLists();
-        DestroyThread(thread);
-        return JS_DHASH_REMOVE;
-    }
-    thread->data.purge(cx);
-    thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
-    return JS_DHASH_NEXT;
-}
-
-static JSDHashOperator
-thread_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
-              void *arg)
-{
-    JSThread *thread = ((JSThreadsHashEntry *) hdr)->thread;
-    thread->data.mark((JSTracer *) arg);
-    return JS_DHASH_NEXT;
-}
-
 #endif /* JS_THREADSAFE */
 
 JSThreadData *
@@ -781,11 +708,8 @@ JSBool
 js_InitThreads(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    if (!JS_DHashTableInit(&rt->threads, &threads_ops, NULL,
-                           sizeof(JSThreadsHashEntry), 4)) {
-        rt->threads.ops = NULL;
+    if (!rt->threads.init(4))
         return false;
-    }
 #else
     if (!rt->threadData.init())
         return false;
@@ -797,11 +721,14 @@ void
 js_FinishThreads(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    if (!rt->threads.ops)
+    if (!rt->threads.initialized())
         return;
-    JS_DHashTableEnumerate(&rt->threads, thread_destroyer, NULL);
-    JS_DHashTableFinish(&rt->threads);
-    rt->threads.ops = NULL;
+    for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
+        JSThread *thread = r.front().value;
+        JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+        DestroyThread(thread);
+    }
+    rt->threads.clear();
 #else
     rt->threadData.finish();
 #endif
@@ -811,19 +738,29 @@ void
 js_PurgeThreads(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JS_DHashTableEnumerate(&cx->runtime->threads, thread_purger, cx);
+    for (JSThread::Map::Enum e(cx->runtime->threads);
+         !e.empty();
+         e.popFront()) {
+        JSThread *thread = e.front().value;
+
+        if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
+            JS_ASSERT(cx->thread != thread);
+            js_DestroyScriptsToGC(cx, &thread->data);
+
+            /*
+             * The following is potentially suboptimal as it also zeros the
+             * caches in data, but the code simplicity wins here.
+             */
+            thread->data.purgeGCFreeLists();
+            DestroyThread(thread);
+            e.removeFront();
+        } else {
+            thread->data.purge(cx);
+            thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
+        }
+    }
 #else
     cx->runtime->threadData.purge(cx);
-#endif
-}
-
-void
-js_TraceThreads(JSRuntime *rt, JSTracer *trc)
-{
-#ifdef JS_THREADSAFE
-    JS_DHashTableEnumerate(&rt->threads, thread_marker, trc);
-#else
-    rt->threadData.mark(trc);
 #endif
 }
 
@@ -1106,30 +1043,14 @@ DumpFunctionMeter(JSContext *cx)
 # define DUMP_FUNCTION_METER(cx)   ((void) 0)
 #endif
 
-#ifdef JS_PROTO_CACHE_METERING
-static void
-DumpProtoCacheMeter(JSContext *cx)
-{
-    JSClassProtoCache::Stats *stats = &cx->runtime->classProtoCacheStats;
-    FILE *fp = fopen("/tmp/protocache.stats", "a");
-    fprintf(fp,
-            "hit ratio %g%%\n",
-            double(stats->hit) * 100.0 / double(stats->probe));
-    fclose(fp);
-}
-
-# define DUMP_PROTO_CACHE_METER(cx) DumpProtoCacheMeter(cx)
-#else
-# define DUMP_PROTO_CACHE_METER(cx) ((void) 0)
-#endif
-
-
 void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
     JSRuntime *rt;
     JSContextCallback cxCallback;
     JSBool last;
+
+    JS_ASSERT(!cx->enumerators);
 
     rt = cx->runtime;
 #ifdef JS_THREADSAFE
@@ -1229,7 +1150,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             js_GC(cx, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
-            DUMP_PROTO_CACHE_METER(cx);
 
             /* Take the runtime down, now that it has no contexts or atoms. */
             JS_LOCK_GC(rt);
@@ -1246,6 +1166,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     }
 #ifdef JS_THREADSAFE
     js_ClearContextThread(cx);
+#endif
+#ifdef JS_METER_DST_OFFSET_CACHING
+    cx->dstOffsetCache.dumpStats();
 #endif
     JS_UNLOCK_GC(rt);
     FreeContext(cx);
@@ -1326,49 +1249,6 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
 #endif
 }
 
-#ifdef JS_THREADSAFE
-
-uint32
-js_CountThreadRequests(JSContext *cx)
-{
-    JSCList *head, *link;
-    uint32 nrequests;
-
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    head = &cx->thread->contextList;
-    nrequests = 0;
-    for (link = head->next; link != head; link = link->next) {
-        JSContext *acx = CX_FROM_THREAD_LINKS(link);
-        JS_ASSERT(acx->thread == cx->thread);
-        if (acx->requestDepth)
-            nrequests++;
-    }
-    return nrequests;
-}
-
-/*
- * If the GC is running and we're called on another thread, wait for this GC
- * activation to finish. We can safely wait here without fear of deadlock (in
- * the case where we are called within a request on another thread's context)
- * because the GC doesn't set rt->gcRunning until after it has waited for all
- * active requests to end.
- *
- * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
- * expensive calls when the GC is not running.
- */
-void
-js_WaitForGC(JSRuntime *rt)
-{
-    JS_ASSERT_IF(rt->gcRunning, rt->gcLevel > 0);
-    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
-        do {
-            JS_AWAIT_GC_DONE(rt);
-        } while (rt->gcRunning);
-    }
-}
-
-#endif
-
 static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
@@ -1377,7 +1257,7 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
     return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ key->id;
 }
 
-JS_PUBLIC_API(JSBool)
+static JSBool
 resolving_MatchEntry(JSDHashTable *table,
                      const JSDHashEntryHdr *hdr,
                      const void *ptr)
@@ -2337,8 +2217,43 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #endif
 }
 
+void
+DSTOffsetCache::purge()
+{
+    /*
+     * NB: The initial range values are carefully chosen to result in a cache
+     *     miss on first use given the range of possible values.  Be careful
+     *     to keep these values and the caching algorithm in sync!
+     */
+    offsetMilliseconds = 0;
+    rangeStartSeconds = rangeEndSeconds = INT64_MIN;
+
+#ifdef JS_METER_DST_OFFSET_CACHING
+    totalCalculations = 0;
+    hit = 0;
+    missIncreasing = missDecreasing = 0;
+    missIncreasingOffsetChangeExpand = missIncreasingOffsetChangeUpper = 0;
+    missDecreasingOffsetChangeExpand = missDecreasingOffsetChangeLower = 0;
+    missLargeIncrease = missLargeDecrease = 0;
+#endif
+
+    sanityCheck();
+}
+
+/*
+ * Since getDSTOffsetMilliseconds guarantees that all times seen will be
+ * positive, we can initialize the range at construction time with large
+ * negative numbers to ensure the first computation is always a cache miss and
+ * doesn't return a bogus offset.
+ */
+DSTOffsetCache::DSTOffsetCache()
+{
+    purge();
+}
+
 JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
+    compartment(rt->defaultCompartment),
     fp(NULL),
     regs(NULL),
     regExpStatics(this),
@@ -2475,30 +2390,37 @@ JSContext::checkMallocGCPressure(void *p)
     }
 
 #ifdef JS_THREADSAFE
+    JS_ASSERT(thread);
     JS_ASSERT(thread->gcThreadMallocBytes <= 0);
     ptrdiff_t n = JS_GC_THREAD_MALLOC_LIMIT - thread->gcThreadMallocBytes;
     thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
 
     AutoLockGC lock(runtime);
     runtime->gcMallocBytes -= n;
-    if (runtime->isGCMallocLimitReached())
+
+    /*
+     * Trigger the GC on memory pressure but only if we are inside a request
+     * and not inside a GC.
+     */
+    if (runtime->isGCMallocLimitReached() && requestDepth != 0)
 #endif
     {
-        JS_ASSERT(runtime->isGCMallocLimitReached());
-        runtime->gcMallocBytes = -1;
+        if (!runtime->gcRunning) {
+            JS_ASSERT(runtime->isGCMallocLimitReached());
+            runtime->gcMallocBytes = -1;
 
-        /*
-         * Empty the GC free lists to trigger a last-ditch GC when allocating
-         * any GC thing later on this thread. This minimizes the amount of
-         * checks on the fast path of the GC allocator. Note that we cannot
-         * touch the free lists on other threads as their manipulation is not
-         * thread-safe.
-         */
-        JS_THREAD_DATA(this)->purgeGCFreeLists();
-        js_TriggerGC(this, true);
+            /*
+             * Empty the GC free lists to trigger a last-ditch GC when any GC
+             * thing is allocated later on this thread. This makes unnecessary
+             * to check for the memory pressure on the fast path of the GC
+             * allocator. We cannot touch the free lists on other threads as
+             * their manipulation is not thread-safe.
+             */
+            JS_THREAD_DATA(this)->purgeGCFreeLists();
+            js_TriggerGC(this, true);
+        }
     }
 }
-
 
 bool
 JSContext::isConstructing()
@@ -2533,7 +2455,46 @@ void
 JSContext::purge()
 {
     FreeOldArenas(runtime, &regexpPool);
-    classProtoCache.purge();
+}
+
+JSCompartment::JSCompartment(JSRuntime *rt) : rt(rt), marked(false)
+{
+}
+
+JSCompartment::~JSCompartment()
+{
+}
+
+namespace js {
+
+AutoNewCompartment::AutoNewCompartment(JSContext *cx) :
+    cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = NULL;
+}
+
+bool
+AutoNewCompartment::init()
+{
+    return !!(cx->compartment = NewCompartment(cx));
+}
+
+AutoNewCompartment::~AutoNewCompartment()
+{
+    cx->compartment = compartment;
+}
+
+AutoCompartment::AutoCompartment(JSContext *cx, JSObject *obj) :
+    cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = obj->getCompartment(cx);
+}
+
+AutoCompartment::~AutoCompartment()
+{
+    cx->compartment = compartment;
+}
+
 }
 
 namespace js {

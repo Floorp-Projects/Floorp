@@ -47,19 +47,56 @@
  */
 
 /*
+ * x_rb = (x_rb * a) / 255
+ */
+#define UN16_rb_MUL_UN16(x, a, t)						\
+    do									\
+    {									\
+	t  = ((x) & RB_MASK) * (a);					\
+	t += RB_ONE_HALF;						\
+	x = (t + ((t >> G_SHIFT) & RB_MASK)) >> G_SHIFT;		\
+	x &= RB_MASK;							\
+    } while (0)
+
+/*
+ * x_rb = min (x_rb + y_rb, 255)
+ */
+#define UN16_rb_ADD_UN16_rb(x, y, t)					\
+    do									\
+    {									\
+	t = ((x) + (y));						\
+	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);		\
+	x = (t & RB_MASK);						\
+    } while (0)
+
+/*
+ * x_rb = (x_rb * a_rb) / 255
+ */
+#define UN16_rb_MUL_UN16_rb(x, a, t)					\
+    do									\
+    {									\
+	t  = (x & MASK) * (a & MASK);					\
+	t |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);			\
+	t += RB_ONE_HALF;						\
+	t = (t + ((t >> G_SHIFT) & RB_MASK)) >> G_SHIFT;		\
+	x = t & RB_MASK;						\
+    } while (0)
+
+/*
  * x_c = (x_c * a) / 255
  */
 #define UN16x4_MUL_UN16(x, a)						\
     do									\
     {									\
-	uint64_t t = ((x & RB_MASK) * a) + RB_ONE_HALF;                  \
-	t = (t + ((t >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
-	t &= RB_MASK;                                                   \
-                                                                        \
-	x = (((x >> COMPONENT_SIZE) & RB_MASK) * a) + RB_ONE_HALF;      \
-	x = (x + ((x >> COMPONENT_SIZE) & RB_MASK));                    \
-	x &= RB_MASK << COMPONENT_SIZE;                                 \
-	x += t;                                                         \
+	uint64_t r1, r2, t;						\
+									\
+	r1 = (x);							\
+	UN16_rb_MUL_UN16 (r1, a, t);					\
+									\
+	r2 = (x) >> G_SHIFT;						\
+	UN16_rb_MUL_UN16 (r2, a, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)
 
 /*
@@ -68,33 +105,19 @@
 #define UN16x4_MUL_UN16_ADD_UN16x4(x, a, y)				\
     do									\
     {									\
-	/* multiply and divide: trunc((i + 128)*257/65536) */           \
-	uint64_t t = ((x & RB_MASK) * a) + RB_ONE_HALF;                  \
-	t = (t + ((t >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
-	t &= RB_MASK;                                                   \
-                                                                        \
-	/* add */                                                       \
-	t += y & RB_MASK;                                               \
-                                                                        \
-	/* saturate */                                                  \
-	t |= RB_MASK_PLUS_ONE - ((t >> COMPONENT_SIZE) & RB_MASK);      \
-	t &= RB_MASK;                                                   \
-                                                                        \
-	/* multiply and divide */                                       \
-	x = (((x >> COMPONENT_SIZE) & RB_MASK) * a) + RB_ONE_HALF;      \
-	x = (x + ((x >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
-	x &= RB_MASK;                                                   \
-                                                                        \
-	/* add */                                                       \
-	x += (y >> COMPONENT_SIZE) & RB_MASK;                           \
-                                                                        \
-	/* saturate */                                                  \
-	x |= RB_MASK_PLUS_ONE - ((x >> COMPONENT_SIZE) & RB_MASK);      \
-	x &= RB_MASK;                                                   \
-                                                                        \
-	/* recombine */                                                 \
-	x <<= COMPONENT_SIZE;                                           \
-	x += t;                                                         \
+	uint64_t r1, r2, r3, t;						\
+									\
+	r1 = (x);							\
+	r2 = (y) & RB_MASK;						\
+	UN16_rb_MUL_UN16 (r1, a, t);					\
+	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+									\
+	r2 = (x) >> G_SHIFT;						\
+	r3 = ((y) >> G_SHIFT) & RB_MASK;				\
+	UN16_rb_MUL_UN16 (r2, a, t);					\
+	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)
 
 /*
@@ -103,32 +126,21 @@
 #define UN16x4_MUL_UN16_ADD_UN16x4_MUL_UN16(x, a, y, b)			\
     do									\
     {									\
-	uint64_t t;                                                      \
-	uint64_t r = (x >> A_SHIFT) * a + (y >> A_SHIFT) * b + ONE_HALF; \
-	r += (r >> G_SHIFT);                                            \
-	r >>= G_SHIFT;                                                  \
-                                                                        \
-	t = (x & G_MASK) * a + (y & G_MASK) * b;                        \
-	t += (t >> G_SHIFT) + (ONE_HALF << G_SHIFT);                    \
-	t >>= R_SHIFT;                                                  \
-                                                                        \
-	t |= r << R_SHIFT;                                              \
-	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);             \
-	t &= RB_MASK;                                                   \
-	t <<= G_SHIFT;                                                  \
-                                                                        \
-	r = ((x >> R_SHIFT) & MASK) * a +                               \
-	    ((y >> R_SHIFT) & MASK) * b + ONE_HALF;                     \
-	r += (r >> G_SHIFT);                                            \
-	r >>= G_SHIFT;                                                  \
-                                                                        \
-	x = (x & MASK) * a + (y & MASK) * b + ONE_HALF;                 \
-	x += (x >> G_SHIFT);                                            \
-	x >>= G_SHIFT;                                                  \
-	x |= r << R_SHIFT;                                              \
-	x |= RB_MASK_PLUS_ONE - ((x >> G_SHIFT) & RB_MASK);             \
-	x &= RB_MASK;                                                   \
-	x |= t;                                                         \
+	uint64_t r1, r2, r3, t;						\
+									\
+	r1 = x;								\
+	r2 = y;								\
+	UN16_rb_MUL_UN16 (r1, a, t);					\
+	UN16_rb_MUL_UN16 (r2, b, t);					\
+	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+									\
+	r2 = (x >> G_SHIFT);						\
+	r3 = (y >> G_SHIFT);						\
+	UN16_rb_MUL_UN16 (r2, a, t);					\
+	UN16_rb_MUL_UN16 (r3, b, t);					\
+	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)
 
 /*
@@ -137,19 +149,17 @@
 #define UN16x4_MUL_UN16x4(x, a)						\
     do									\
     {									\
-	uint64_t t;                                                      \
-	uint64_t r = (x & MASK) * (a & MASK);                            \
-	r |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);                    \
-	r += RB_ONE_HALF;                                               \
-	r = (r + ((r >> G_SHIFT) & RB_MASK)) >> G_SHIFT;                \
-	r &= RB_MASK;                                                   \
-                                                                        \
-	x >>= G_SHIFT;                                                  \
-	t = (x & MASK) * ((a >> G_SHIFT) & MASK);                       \
-	t |= (x & R_MASK) * (a >> A_SHIFT);                             \
-	t += RB_ONE_HALF;                                               \
-	t = t + ((t >> G_SHIFT) & RB_MASK);                             \
-	x = r | (t & AG_MASK);                                          \
+	uint64_t r1, r2, r3, t;						\
+									\
+	r1 = x;								\
+	r2 = a;								\
+	UN16_rb_MUL_UN16_rb (r1, r2, t);					\
+									\
+	r2 = x >> G_SHIFT;						\
+	r3 = a >> G_SHIFT;						\
+	UN16_rb_MUL_UN16_rb (r2, r3, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)
 
 /*
@@ -158,26 +168,21 @@
 #define UN16x4_MUL_UN16x4_ADD_UN16x4(x, a, y)				\
     do									\
     {									\
-	uint64_t t;                                                      \
-	uint64_t r = (x & MASK) * (a & MASK);                            \
-	r |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);                    \
-	r += RB_ONE_HALF;                                               \
-	r = (r + ((r >> G_SHIFT) & RB_MASK)) >> G_SHIFT;                \
-	r &= RB_MASK;                                                   \
-	r += y & RB_MASK;                                               \
-	r |= RB_MASK_PLUS_ONE - ((r >> G_SHIFT) & RB_MASK);             \
-	r &= RB_MASK;                                                   \
-                                                                        \
-	x >>= G_SHIFT;                                                  \
-	t = (x & MASK) * ((a >> G_SHIFT) & MASK);                       \
-	t |= (x & R_MASK) * (a >> A_SHIFT);                             \
-	t += RB_ONE_HALF;                                               \
-	t = (t + ((t >> G_SHIFT) & RB_MASK)) >> G_SHIFT;                \
-	t &= RB_MASK;                                                   \
-	t += (y >> G_SHIFT) & RB_MASK;                                  \
-	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);             \
-	t &= RB_MASK;                                                   \
-	x = r | (t << G_SHIFT);                                         \
+	uint64_t r1, r2, r3, t;						\
+									\
+	r1 = x;								\
+	r2 = a;								\
+	UN16_rb_MUL_UN16_rb (r1, r2, t);					\
+	r2 = y & RB_MASK;						\
+	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+									\
+	r2 = (x >> G_SHIFT);						\
+	r3 = (a >> G_SHIFT);						\
+	UN16_rb_MUL_UN16_rb (r2, r3, t);					\
+	r3 = (y >> G_SHIFT) & RB_MASK;					\
+	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)
 
 /*
@@ -186,33 +191,23 @@
 #define UN16x4_MUL_UN16x4_ADD_UN16x4_MUL_UN16(x, a, y, b)			\
     do									\
     {									\
-	uint64_t t;                                                      \
-	uint64_t r = (x >> A_SHIFT) * (a >> A_SHIFT) +                   \
-	    (y >> A_SHIFT) * b;						\
-	r += (r >> G_SHIFT) + ONE_HALF;                                 \
-	r >>= G_SHIFT;                                                  \
-        								\
-	t = (x & G_MASK) * ((a >> G_SHIFT) & MASK) + (y & G_MASK) * b;  \
-	t += (t >> G_SHIFT) + (ONE_HALF << G_SHIFT);                    \
-	t >>= R_SHIFT;                                                  \
-        								\
-	t |= r << R_SHIFT;                                              \
-	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);             \
-	t &= RB_MASK;                                                   \
-	t <<= G_SHIFT;                                                  \
+	uint64_t r1, r2, r3, t;						\
 									\
-	r = ((x >> R_SHIFT) & MASK) * ((a >> R_SHIFT) & MASK) +         \
-	    ((y >> R_SHIFT) & MASK) * b + ONE_HALF;                     \
-	r += (r >> G_SHIFT);                                            \
-	r >>= G_SHIFT;                                                  \
-        								\
-	x = (x & MASK) * (a & MASK) + (y & MASK) * b + ONE_HALF;        \
-	x += (x >> G_SHIFT);                                            \
-	x >>= G_SHIFT;                                                  \
-	x |= r << R_SHIFT;                                              \
-	x |= RB_MASK_PLUS_ONE - ((x >> G_SHIFT) & RB_MASK);             \
-	x &= RB_MASK;                                                   \
-	x |= t;                                                         \
+	r1 = x;								\
+	r2 = a;								\
+	UN16_rb_MUL_UN16_rb (r1, r2, t);					\
+	r2 = y;								\
+	UN16_rb_MUL_UN16 (r2, b, t);					\
+	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+									\
+	r2 = x >> G_SHIFT;						\
+	r3 = a >> G_SHIFT;						\
+	UN16_rb_MUL_UN16_rb (r2, r3, t);					\
+	r3 = y >> G_SHIFT;						\
+	UN16_rb_MUL_UN16 (r3, b, t);					\
+	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)
 
 /*
@@ -221,13 +216,15 @@
 #define UN16x4_ADD_UN16x4(x, y)						\
     do									\
     {									\
-	uint64_t t;                                                      \
-	uint64_t r = (x & RB_MASK) + (y & RB_MASK);                      \
-	r |= RB_MASK_PLUS_ONE - ((r >> G_SHIFT) & RB_MASK);             \
-	r &= RB_MASK;                                                   \
-        								\
-	t = ((x >> G_SHIFT) & RB_MASK) + ((y >> G_SHIFT) & RB_MASK);    \
-	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);             \
-	r |= (t & RB_MASK) << G_SHIFT;                                  \
-	x = r;                                                          \
+	uint64_t r1, r2, r3, t;						\
+									\
+	r1 = x & RB_MASK;						\
+	r2 = y & RB_MASK;						\
+	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+									\
+	r2 = (x >> G_SHIFT) & RB_MASK;					\
+	r3 = (y >> G_SHIFT) & RB_MASK;					\
+	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+									\
+	x = r1 | (r2 << G_SHIFT);					\
     } while (0)

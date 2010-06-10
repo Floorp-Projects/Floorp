@@ -60,9 +60,11 @@
 #include "nsITransferable.h"
 #include "nsIVariant.h"
 
+#ifdef ACCESSIBILITY
+class nsAccessible;
+#endif
 class nsIRenderingContext;
 class nsIMenuItem;
-class nsIAccessible;
 class nsIContent;
 class nsIURI;
 class nsHashKey;
@@ -80,7 +82,6 @@ class nsHashKey;
 #define NS_INPUT_EVENT                     8
 #define NS_KEY_EVENT                       9
 #define NS_MOUSE_EVENT                    10
-#define NS_MENU_EVENT                     11
 #define NS_SCRIPT_ERROR_EVENT             12
 #define NS_TEXT_EVENT                     13
 #define NS_COMPOSITION_EVENT              14
@@ -192,15 +193,6 @@ class nsHashKey;
 #define NS_TABCHANGE                    (NS_WINDOW_START + 35)
 
 #define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
-
-// Menu item selected
-#define NS_MENU_SELECTED                (NS_WINDOW_START + 38)
-
-// Form control changed: currently == combo box selection changed
-// but could be expanded to mean textbox, checkbox changed, etc.
-// This is a GUI specific event that does not necessarily correspond
-// directly to a mouse click or a key press.
-#define NS_CONTROL_CHANGE                (NS_WINDOW_START + 39)
 
 // Indicates the display has changed depth
 #define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
@@ -838,6 +830,7 @@ public:
   PRPackedBool userCancelled;
 };
 
+#ifdef ACCESSIBILITY
 /**
  * Accessible event
  */
@@ -847,12 +840,13 @@ class nsAccessibleEvent : public nsInputEvent
 public:
   nsAccessibleEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_ACCESSIBLE_EVENT),
-      accessible(nsnull)
+      mAccessible(nsnull)
   {
   }
 
-  nsIAccessible*  accessible;     
+  nsAccessible *mAccessible;
 };
+#endif
 
 /**
  * Keyboard event
@@ -1264,26 +1258,6 @@ public:
 };
 
 /**
- * MenuItem event
- * 
- * When this event occurs the widget field in nsGUIEvent holds the "target"
- * for the event
- */
-
-class nsMenuEvent : public nsGUIEvent
-{
-public:
-  nsMenuEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_MENU_EVENT),
-      mMenuItem(nsnull), mCommand(0)
-  {
-  }
-
-  nsIMenuItem * mMenuItem;
-  PRUint32      mCommand;
-};
-
-/**
  * Form event
  * 
  * We hold the originating form control for form submit and reset events.
@@ -1407,6 +1381,10 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_ENTER_SYNTH) || \
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
         ((evnt)->message == NS_MOUSE_MOVE))
+
+#define NS_IS_MOUSE_EVENT_STRUCT(evnt) \
+       ((evnt)->eventStructType == NS_MOUSE_EVENT || \
+        (evnt)->eventStructType == NS_DRAG_EVENT)
 
 #define NS_IS_MOUSE_LEFT_CLICK(evnt) \
        ((evnt)->eventStructType == NS_MOUSE_EVENT && \

@@ -64,10 +64,10 @@ public:
   virtual ~nsMozIconURI();
 
 protected:
-  nsCOMPtr<nsIURI> mFileIcon; // the file url we want the icon for....
+  nsCOMPtr<nsIURL> mIconURL; // a URL that we want the icon for
   PRUint32 mSize; // the # of pixels in a row that we want for this image. Typically 16, 32, 128, etc.
   nsCString mContentType; // optional field explicitly specifying the content type
-  nsCString mDummyFilePath; // if we don't have a valid file url, the file path is stored here....i.e if mFileIcon is null.....
+  nsCString mFileName; // for if we don't have an actual file path, we're just given a filename with an extension
   nsCString mStockIcon;
   PRInt32 mIconSize;     // -1 if not specified, otherwise index into kSizeStrings
   PRInt32 mIconState;    // -1 if not specified, otherwise index into kStateStrings

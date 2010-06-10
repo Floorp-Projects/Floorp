@@ -60,6 +60,7 @@ struct HasResultCodes
         MsgNotKnown,
         MsgNotAllowed,
         MsgPayloadError,
+        MsgProcessingError,
         MsgRouteError,
         MsgValueError,
     };

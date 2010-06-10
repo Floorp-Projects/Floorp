@@ -128,6 +128,7 @@ nsSVGTitleElement::CharacterDataChanged(nsIDocument *aDocument,
 void
 nsSVGTitleElement::ContentAppended(nsIDocument *aDocument,
                                    nsIContent *aContainer,
+                                   nsIContent *aFirstNewContent,
                                    PRInt32 aNewIndexInContainer)
 {
   SendTitleChangeEvent(PR_FALSE);

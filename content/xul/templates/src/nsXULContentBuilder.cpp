@@ -634,17 +634,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv))
                 return rv;
 
-            if (! aNotify) {
-                // XUL document will watch us, and take care of making
-                // sure that we get added to or removed from the
-                // element map if aNotify is true. If not, we gotta do
-                // it ourselves. Yay.
-                nsCOMPtr<nsIXULDocument> xuldoc =
-                    do_QueryInterface(mRoot->GetDocument());
-                if (xuldoc)
-                    xuldoc->AddElementForID(realKid);
-            }
-
             // Set up the element's 'container' and 'empty' attributes.
             SetContainerAttrs(realKid, aChild, PR_TRUE, PR_FALSE);
         }
@@ -1100,7 +1089,9 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     if (aNotifyAtEnd && container) {
         MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
                             PR_TRUE);
-        nsNodeUtils::ContentAppended(container, newIndexInContainer);
+        nsNodeUtils::ContentAppended(container,
+                                     container->GetChildAt(newIndexInContainer),
+                                     newIndexInContainer);
     }
 
     NS_IF_RELEASE(container);

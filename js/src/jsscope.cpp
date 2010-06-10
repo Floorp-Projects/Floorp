@@ -289,6 +289,7 @@ JSScope::initRuntimeState(JSContext *cx)
     rt->emptyArgumentsScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_ArgumentsClass);
     if (!rt->emptyArgumentsScope)
         return false;
+    JS_ASSERT(rt->emptyArgumentsScope->shape == JSScope::EMPTY_ARGUMENTS_SHAPE);
     JS_ASSERT(rt->emptyArgumentsScope->nrefs == 2);
     rt->emptyArgumentsScope->nrefs = 1;
 
@@ -314,12 +315,31 @@ JSScope::initRuntimeState(JSContext *cx)
 
     rt->emptyBlockScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_BlockClass);
     if (!rt->emptyBlockScope) {
-        rt->emptyArgumentsScope->drop(cx);
-        rt->emptyArgumentsScope = NULL;
+        JSScope::finishRuntimeState(cx);
         return false;
     }
+    JS_ASSERT(rt->emptyBlockScope->shape == JSScope::EMPTY_BLOCK_SHAPE);
     JS_ASSERT(rt->emptyBlockScope->nrefs == 2);
     rt->emptyBlockScope->nrefs = 1;
+
+    rt->emptyCallScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_CallClass);
+    if (!rt->emptyCallScope) {
+        JSScope::finishRuntimeState(cx);
+        return false;
+    }
+    JS_ASSERT(rt->emptyCallScope->shape == JSScope::EMPTY_CALL_SHAPE);
+    JS_ASSERT(rt->emptyCallScope->nrefs == 2);
+    rt->emptyCallScope->nrefs = 1;
+
+    /*
+     * Initialize the shared scope for all empty Call objects so gets for args
+     * and vars do not force the creation of a mutable scope for the particular
+     * call object being accessed.
+     *
+     * See comment above for rt->emptyArgumentsScope->freeslot initialization.
+     */
+    rt->emptyCallScope->freeslot = JS_INITIAL_NSLOTS + JSFunction::MAX_ARGS_AND_VARS;
+
     return true;
 }
 
@@ -335,6 +355,10 @@ JSScope::finishRuntimeState(JSContext *cx)
     if (rt->emptyBlockScope) {
         rt->emptyBlockScope->drop(cx);
         rt->emptyBlockScope = NULL;
+    }
+    if (rt->emptyCallScope) {
+        rt->emptyCallScope->drop(cx);
+        rt->emptyCallScope = NULL;
     }
 }
 

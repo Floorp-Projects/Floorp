@@ -37,7 +37,7 @@ import ipdl
 
 def log(minv, fmt, *args):
     if _verbosity >= minv:
-        print >>sys.stderr, fmt % args
+        print fmt % args
 
 # process command line
 
@@ -70,13 +70,13 @@ includedirs = [ os.path.abspath(incdir) for incdir in options.includedirs ]
 if not len(files):
     op.error("No IPDL files specified")
 
-log(1, 'Generated C++ headers will be generated relative to "%s"', headersdir)
-log(1, 'Generated C++ sources will be generated in "%s"', cppdir)
+log(2, 'Generated C++ headers will be generated relative to "%s"', headersdir)
+log(2, 'Generated C++ sources will be generated in "%s"', cppdir)
 
 allprotocols = []
 
 for f in files:
-    log(1, 'Parsing specification %s', f)
+    log(1, os.path.basename(f))
     if f == '-':
         fd = sys.stdin
         filename = '<stdin>'

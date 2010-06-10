@@ -490,7 +490,7 @@ void
 nsDragService::SetDroppedLocal()
 {
   // Sent from the native drag handler, letting us know
-  // a drop occured within the application vs. outside of it.
+  // a drop occurred within the application vs. outside of it.
   mSentLocalDropEvent = PR_TRUE;
   return;
 }

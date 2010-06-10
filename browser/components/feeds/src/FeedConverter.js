@@ -216,7 +216,7 @@ FeedConverter.prototype = {
     // to always use this stream converter, even when an auto-action is 
     // specified, not the basic one provided by WebContentConverter. This 
     // converter needs to consume all of the data and parse it, and based on
-    // that determination make a judgement about type. 
+    // that determination make a judgment about type. 
     //
     // Since there are no content types for this content, and I'm not going to
     // invent any, the upshot is that while a user can set an auto-handler for

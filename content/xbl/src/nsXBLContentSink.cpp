@@ -59,7 +59,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsINodeInfo.h"
 #include "nsIPrincipal.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -316,7 +316,7 @@ nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
     if (nameSpaceID == kNameSpaceID_XBL) {
       if (mState == eXBL_Error) {
         // Check whether we've opened this tag before; we may not have if
-        // it was a real XBL tag before the error occured.
+        // it was a real XBL tag before the error occurred.
         if (!GetCurrentContent()->NodeInfo()->Equals(localName,
                                                      nameSpaceID)) {
           // OK, this tag was never opened as far as the XML sink is

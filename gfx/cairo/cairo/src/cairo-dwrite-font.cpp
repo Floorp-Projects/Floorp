@@ -1339,38 +1339,31 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     if (transform) {
 	dst->rt->SetTransform(mat);
     }
-    unsigned int last_run = 0;
-    unsigned int runs_remaining = 1;
-    bool pushed_clip = false;
 
-    while (runs_remaining) {
-	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
-								       source,
-								       last_run++,
-								       &runs_remaining,
-								       &pushed_clip);
-	if (!brush) {
-	    delete [] indices;
-	    delete [] offsets;
-	    delete [] advances;
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-	if (transform) {
-	    D2D1::Matrix3x2F mat_inverse = _cairo_d2d_matrix_from_matrix(&dwritesf->mat_inverse);
-	    D2D1::Matrix3x2F mat_brush;
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
+								   source);
 
-	    // The brush matrix needs to be multiplied with the inverted matrix
-	    // as well, to move the brush into the space of the glyphs. Before
-	    // the render target transformation.
-	    brush->GetTransform(&mat_brush);
-	    mat_brush = mat_brush * mat_inverse;
-	    brush->SetTransform(&mat_brush);
-	}
-        dst->rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush);
-	if (pushed_clip) {
-	    dst->rt->PopLayer();
-	}
+    if (!brush) {
+	delete [] indices;
+	delete [] offsets;
+	delete [] advances;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+    
+    if (transform) {
+	D2D1::Matrix3x2F mat_inverse = _cairo_d2d_matrix_from_matrix(&dwritesf->mat_inverse);
+	D2D1::Matrix3x2F mat_brush;
+
+	// The brush matrix needs to be multiplied with the inverted matrix
+	// as well, to move the brush into the space of the glyphs. Before
+	// the render target transformation.
+	brush->GetTransform(&mat_brush);
+	mat_brush = mat_brush * mat_inverse;
+	brush->SetTransform(&mat_brush);
+    }
+    
+    dst->rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush);
+    
     if (transform) {
 	dst->rt->SetTransform(D2D1::Matrix3x2F::Identity());
     }

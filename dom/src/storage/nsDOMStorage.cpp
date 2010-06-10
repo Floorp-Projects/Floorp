@@ -1299,7 +1299,7 @@ nsDOMStorage::SetSecure(const nsAString& aKey, PRBool aSecure)
 #endif
 
   nsSessionStorageEntry *entry = mItems.GetEntry(aKey);
-  NS_ASSERTION(entry, "Don't use SetSecure() with non-existing keys!");
+  NS_ASSERTION(entry, "Don't use SetSecure() with nonexistent keys!");
 
   if (entry) {
     entry->mItem->SetSecureInternal(aSecure);
@@ -1979,16 +1979,27 @@ nsDOMStorageItem::ToString(nsAString& aStr)
   return GetValue(aStr);
 }
 
-DOMCI_DATA(StorageEvent, nsDOMStorageEvent)
+// Cycle collection implementation for nsDOMStorageEvent
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMStorageEvent)
 
-// QueryInterface implementation for nsDOMStorageEvent
-NS_INTERFACE_MAP_BEGIN(nsDOMStorageEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMStorageEvent, nsDOMEvent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mStorageArea)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMStorageEvent, nsDOMEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStorageArea)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsDOMStorageEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMStorageEvent, nsDOMEvent)
+
+DOMCI_DATA(StorageEvent, nsDOMStorageEvent)
+
+// QueryInterface implementation for nsDOMStorageEvent
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMStorageEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageEvent)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageEvent)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 
 /* readonly attribute DOMString key; */

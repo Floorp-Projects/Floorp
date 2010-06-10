@@ -287,6 +287,21 @@ struct JSAtomState {
     JSAtom              *currentAtom;
 #endif
 
+    JSAtom              *ProxyAtom;
+
+    JSAtom              *getOwnPropertyDescriptorAtom;
+    JSAtom              *getPropertyDescriptorAtom;
+    JSAtom              *definePropertyAtom;
+    JSAtom              *deleteAtom;
+    JSAtom              *getOwnPropertyNamesAtom;
+    JSAtom              *enumerateAtom;
+    JSAtom              *fixAtom;
+
+    JSAtom              *hasAtom;
+    JSAtom              *hasOwnAtom;
+    JSAtom              *enumerateOwnAtom;
+    JSAtom              *iterateAtom;
+
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
         JSAtom          *InfinityAtom;
@@ -316,6 +331,8 @@ struct JSAtomState {
         JSAtom          *watchAtom;
     } lazy;
 };
+
+#define ATOM(name) cx->runtime->atomState.name##Atom
 
 #define ATOM_OFFSET_START       offsetof(JSAtomState, emptyAtom)
 #define LAZY_ATOM_OFFSET_START  offsetof(JSAtomState, lazy)

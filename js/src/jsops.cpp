@@ -2366,7 +2366,7 @@ BEGIN_CASE(JSOP_APPLY)
         }
     }
 
-    JSBool ok;
+    bool ok;
     ok = Invoke(cx, InvokeArgsGuard(vp, argc), 0);
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
@@ -2448,7 +2448,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         sprop = (JSScopeProperty *)prop;
   do_native_get:
         NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
-        obj2->dropProperty(cx, (JSProperty *) sprop);
+        JS_UNLOCK_OBJ(cx, obj2);
     }
 
     PUSH_COPY(rval);

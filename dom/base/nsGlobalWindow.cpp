@@ -128,7 +128,6 @@
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIProgrammingLanguage.h"
-#include "nsIAuthPrompt.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
@@ -138,6 +137,7 @@
 #include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -203,7 +203,12 @@
 #include "nsIPopupWindowManager.h"
 
 #include "nsIDragService.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
+#include "nsFrameLoader.h"
+#include "nsISupportsPrimitives.h"
+#include "nsXPCOMCID.h"
+
+#include "mozilla/FunctionTimer.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -227,6 +232,7 @@ static PRInt32              gRunningTimeoutDepth       = 0;
 static PRPackedBool         gMouseDown                 = PR_FALSE;
 static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
 static FILE                *gDumpFile                  = nsnull;
+static PRUint64             gNextWindowID              = 0;
 
 #ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
@@ -290,6 +296,17 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
       return err_rval;                                                        \
     }                                                                         \
     return ((nsGlobalChromeWindow *)outer)->method args;                      \
+  }                                                                           \
+  PR_END_MACRO
+
+#define FORWARD_TO_INNER_CHROME(method, args, err_rval)                       \
+  PR_BEGIN_MACRO                                                              \
+  if (IsOuterWindow()) {                                                      \
+    if (!mInnerWindow) {                                                      \
+      NS_WARNING("No inner window available!");                               \
+      return err_rval;                                                        \
+    }                                                                         \
+    return ((nsGlobalChromeWindow *)mInnerWindow)->method args;               \
   }                                                                           \
   PR_END_MACRO
 
@@ -652,8 +669,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRings(PR_TRUE),
 #endif
     mShowFocusRingForContent(PR_FALSE),
-    mFocusByKeyOccured(PR_FALSE),
+    mFocusByKeyOccurred(PR_FALSE),
     mHasAcceleration(PR_FALSE),
+    mNotifiedIDDestroyed(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -666,6 +684,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     , mCleanedUp(PR_FALSE)
     , mCallCleanUpAfterModalDialogCloses(PR_FALSE)
+    , mWindowID(gNextWindowID++)
 {
   memset(mScriptGlobals, 0, sizeof(mScriptGlobals));
   nsLayoutStatics::AddRef();
@@ -1010,6 +1029,8 @@ nsGlobalWindow::ReallyClearScope(nsRunnable *aRunnable)
     NS_DispatchToMainThread(aRunnable);
     return;
   }
+
+  NotifyWindowIDDestroyed("inner-window-destroyed");
 
   PRUint32 lang_id;
   NS_STID_FOR_ID(lang_id) {
@@ -1694,13 +1715,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
-  /* No mDocShell means we're either an inner window or we're already
-     been partially closed down.  When that happens, setting status
-     isn't a big requirement, so don't. (Doesn't happen under normal
-     circumstances, but bug 49615 describes a case.) */
+  /* No mDocShell means we're already been partially closed down.  When that
+     happens, setting status isn't a big requirement, so don't. (Doesn't happen
+     under normal circumstances, but bug 49615 describes a case.) */
 
-  SetStatus(EmptyString());
-  SetDefaultStatus(EmptyString());
+  nsContentUtils::AddScriptRunner(
+    NS_NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
 
   PRBool reUseInnerWindow = WouldReuseInnerWindow(aDocument);
 
@@ -2134,6 +2154,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   return NS_OK;
 }
 
+void
+nsGlobalWindow::ClearStatus()
+{
+  SetStatus(EmptyString());
+  SetDefaultStatus(EmptyString());
+}
+
 nsresult
 nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 {
@@ -2197,6 +2224,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
     // Make sure that this is called before we null out the document.
     NotifyDOMWindowDestroyed(this);
+
+    NotifyWindowIDDestroyed("outer-window-destroyed");
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
@@ -2364,7 +2393,16 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  aVisitor.mParentTarget = mChromeEventHandler;
+  nsPIDOMEventTarget* chromeTarget = mChromeEventHandler;
+  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
+  if (flo) {
+    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    if (fl) {
+      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
+      chromeTarget = t ? t : chromeTarget;
+    }
+  }
+  aVisitor.mParentTarget = chromeTarget;
   return NS_OK;
 }
 
@@ -2929,12 +2967,6 @@ nsGlobalWindow::GetScrollbars(nsIDOMBarProp** aScrollbars)
   NS_ADDREF(*aScrollbars = mScrollbars);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetDirectories(nsIDOMBarProp** aDirectories)
-{
-  return GetPersonalbar(aDirectories);
 }
 
 NS_IMETHODIMP
@@ -3560,6 +3592,25 @@ nsGlobalWindow::GetMozInnerScreenY(float* aScreenY)
 
   nsRect r = GetInnerScreenRect();
   *aScreenY = nsPresContext::AppUnitsToFloatCSSPixels(r.y);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
+{
+  FORWARD_TO_OUTER(GetMozPaintCount, (aResult), NS_ERROR_NOT_INITIALIZED);
+
+  *aResult = 0;
+
+  if (!mDocShell)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_OK;
+
+  *aResult = presShell->GetPaintCount();
   return NS_OK;
 }
 
@@ -4224,9 +4275,6 @@ nsGlobalWindow::Alert(const nsAString& aString)
 {
   FORWARD_TO_OUTER(Alert, (aString), NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
-
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
   // the whole time a modal dialog is open.
@@ -4251,16 +4299,17 @@ nsGlobalWindow::Alert(const nsAString& aString)
   nsAutoString final;
   nsContentUtils::StripNullChars(*str, final);
 
-  return prompter->Alert(title.get(), final.get());
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return promptSvc->Alert(this, title.get(), final.get());
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
 {
   FORWARD_TO_OUTER(Confirm, (aString, aReturn), NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
@@ -4281,41 +4330,23 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   nsAutoString final;
   nsContentUtils::StripNullChars(aString, final);
 
-  return prompter->Confirm(title.get(), final.get(),
-                           aReturn);
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return promptSvc->Confirm(this, title.get(), final.get(), aReturn);
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
-                       const nsAString& aTitle, PRUint32 aSavePassword,
                        nsAString& aReturn)
 {
-  // We don't use "aTitle" because we ignore the 3rd (title) argument to
-  // prompt(). IE and Opera ignore it too. See Mozilla bug 334893.
   SetDOMStringToNull(aReturn);
-
-  // This code depends on aSavePassword being defaulted to
-  // nsIAuthPrompt::SAVE_PASSWORD_NEVER, which happens to have the
-  // value 0. If that ever changes, this code needs to deal!
-
-  PR_STATIC_ASSERT(nsIAuthPrompt::SAVE_PASSWORD_NEVER == 0);
-
-  nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> wwatch =
-    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAuthPrompt> prompter;
-  wwatch->GetNewAuthPrompter(this, getter_AddRefs(prompter));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
   // the whole time a modal dialog is open.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-  PRBool b;
-  nsXPIDLString uniResult;
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
@@ -4330,13 +4361,22 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   nsContentUtils::StripNullChars(aMessage, fixedMessage);
   nsContentUtils::StripNullChars(aInitial, fixedInitial);
 
-  rv = prompter->Prompt(title.get(), fixedMessage.get(), nsnull,
-                        aSavePassword, fixedInitial.get(),
-                        getter_Copies(uniResult), &b);
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (uniResult && b) {
-    aReturn.Assign(uniResult);
+  // Pass in the default value, if any.
+  PRUnichar *inoutValue = ToNewUnicode(fixedInitial);
+
+  PRBool ok, dummy;
+  rv = promptSvc->Prompt(this, title.get(), fixedMessage.get(),
+                         &inoutValue, nsnull, &dummy, &ok);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAdoptingString outValue(inoutValue);
+
+  if (ok && outValue) {
+    aReturn.Assign(outValue);
   }
 
   return rv;
@@ -4593,17 +4633,13 @@ nsGlobalWindow::Print()
       if (printSettingsAreGlobal) {
         printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
 
-        if (printSettings) {
-          // Call any code that requires a run of the event loop.
-          EnterModalState();
-          printSettings->SetupSilentPrinting();
-          LeaveModalState();
-        }
-
         nsXPIDLString printerName;
-        printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
-        if (printerName)
-          printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
+        printSettings->GetPrinterName(getter_Copies(printerName));
+        if (printerName.IsEmpty()) {
+          printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+          printSettings->SetPrinterName(printerName);
+        }
+        printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
         printSettingsService->InitPrintSettingsFromPrefs(printSettings, 
                                                          PR_TRUE, 
                                                          nsIPrintSettings::kInitSaveAll);
@@ -5177,7 +5213,7 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
   contextWindow->GetDocument(getter_AddRefs(domdoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
   if (doc)
-    baseURL = doc->GetBaseURI();
+    baseURL = doc->GetDocBaseURI();
 
   // use the base URI to build what would have been the popup's URI
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
@@ -5983,6 +6019,42 @@ nsGlobalWindow::NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow) {
   }
 }
 
+class WindowDestroyedEvent : public nsRunnable
+{
+public:
+  WindowDestroyedEvent(PRUint64 aID, const char* aTopic) :
+    mID(aID), mTopic(aTopic) {}
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      nsCOMPtr<nsISupportsPRUint64> wrapper =
+        do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
+      if (wrapper) {
+        wrapper->SetData(mID);
+        observerService->NotifyObservers(wrapper, mTopic.get(), nsnull);
+      }
+    }
+    return NS_OK;
+  }
+
+private:
+  PRUint64 mID;
+  nsCString mTopic;
+};
+
+void
+nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
+{
+  nsRefPtr<nsIRunnable> runnable = new WindowDestroyedEvent(mWindowID, aTopic);
+  nsresult rv = NS_DispatchToCurrentThread(runnable);
+  if (NS_SUCCEEDED(rv)) {
+    mNotifiedIDDestroyed = PR_TRUE;
+  }
+}
+
 void
 nsGlobalWindow::InitJavaProperties()
 {
@@ -6651,9 +6723,8 @@ nsGlobalWindow::RemoveGroupedEventListener(const nsAString & aType,
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
                                                 aEvtGrp);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6949,7 +7020,7 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
     // mShowFocusRingForContent, as we don't want this to be permanent for
     // the window.
     if (mFocusMethod == nsIFocusManager::FLAG_BYKEY) {
-      mFocusByKeyOccured = PR_TRUE;
+      mFocusByKeyOccurred = PR_TRUE;
     } else if (aFocusMethod & nsIFocusManager::FLAG_SHOWRING
 #ifdef MOZ_WIDGET_GTK2
              || mFocusedNode->IsXUL()
@@ -6976,7 +7047,7 @@ nsGlobalWindow::ShouldShowFocusRing()
 {
   FORWARD_TO_INNER(ShouldShowFocusRing, (), PR_FALSE);
 
-  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccured;
+  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccurred;
 }
 
 void
@@ -8322,6 +8393,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     return;
   }
 
+  NS_TIME_FUNCTION;
+
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
@@ -8475,6 +8548,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       const char *filename = nsnull;
       PRUint32 lineNo = 0;
       handler->GetLocation(&filename, &lineNo);
+
+      NS_TIME_FUNCTION_MARK("(file: %s, line: %d)", filename, lineNo);
 
       PRBool is_undefined;
       scx->EvaluateString(nsDependentString(script), 
@@ -8986,7 +9061,7 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
     sourceWindow->GetDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
     if (doc) {
-      baseURI = doc->GetBaseURI();
+      baseURI = doc->GetDocBaseURI();
       charset = doc->GetDocumentCharacterSet();
     }
   }
@@ -9324,6 +9399,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
                                                   nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
@@ -9554,6 +9630,28 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
+{
+  FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_FAILURE);
+  if (!mMessageManager) {
+    nsIScriptContext* scx = GetContextInternal();
+    NS_ENSURE_STATE(scx);
+    JSContext* cx = (JSContext *)scx->GetNativeContext();
+    NS_ENSURE_STATE(cx);
+    mMessageManager = new nsFrameMessageManager(PR_TRUE,
+                                                nsnull,
+                                                nsnull,
+                                                nsnull,
+                                                nsnull,
+                                                nsnull,
+                                                cx);
+    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
+  }
+  NS_ADDREF(*aManager = mMessageManager);
+  return NS_OK;
 }
 
 // nsGlobalModalWindow implementation

@@ -415,7 +415,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // Gather scriptable create info if we are wrapping something
     // other than an nsIClassInfo object. We need to not do this for
     // nsIClassInfo objects because often nsIClassInfo implementations
-    // are also nsIXPCScriptable helper implmentations, but the helper
+    // are also nsIXPCScriptable helper implementations, but the helper
     // code is obviously intended for the implementation of the class
     // described by the nsIClassInfo, not for the class info object
     // itself.
@@ -1748,16 +1748,6 @@ return_tearoff:
         ((JSExtendedClass*)clazz)->outerObject)
     {
         JSObject *outer = ((JSExtendedClass*)clazz)->outerObject(cx, obj);
-
-        // Protect against infinite recursion through XOWs.
-        JSObject *unsafeObj;
-        clazz = outer->getJSClass();
-        if(clazz == &XPCCrossOriginWrapper::XOWClass.base &&
-           (unsafeObj = XPCWrapper::UnwrapXOW(cx, outer)))
-        {
-            outer = unsafeObj;
-        }
-
         if(outer && outer != obj)
             return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
                                               pTearOff);
@@ -3052,7 +3042,7 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithMember (in JSVal name); */
+/* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface;
@@ -3069,7 +3059,7 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterface
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithName (in JSVal name); */
+/* XPCNativeInterface FindInterfaceWithName (in jsval name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsval name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);

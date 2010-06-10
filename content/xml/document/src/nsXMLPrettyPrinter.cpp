@@ -246,6 +246,7 @@ nsXMLPrettyPrinter::AttributeChanged(nsIDocument* aDocument,
 void
 nsXMLPrettyPrinter::ContentAppended(nsIDocument* aDocument,
                                     nsIContent* aContainer,
+                                    nsIContent* aFirstNewContent,
                                     PRInt32 aNewIndexInContainer)
 {
     MaybeUnhook(aContainer);

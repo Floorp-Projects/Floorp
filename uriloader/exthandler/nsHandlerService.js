@@ -419,7 +419,7 @@ HandlerService.prototype = {
       var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
       found = this._hasLiteralAssertion(typeID, NC_VALUE, aHandlerInfo.type);
     } catch (e) {
-      // If the RDF threw (eg, corrupt file), treat as non-existent.
+      // If the RDF threw (eg, corrupt file), treat as nonexistent.
       found = false;
     }
 

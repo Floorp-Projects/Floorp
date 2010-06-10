@@ -65,9 +65,8 @@ enum JSFrameFlags {
     JSFRAME_EVAL               =  0x10, /* frame for obj_eval */
     JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
     JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
-    JSFRAME_ITERATOR           =  0x80, /* trying to get an iterator for for-in */
-    JSFRAME_GENERATOR          = 0x200, /* frame belongs to generator-iterator */
-    JSFRAME_OVERRIDE_ARGS      = 0x400, /* overridden arguments local variable */
+    JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
+    JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -207,7 +206,6 @@ struct JSStackFrame
 };
 
 namespace js {
-
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
@@ -320,12 +318,11 @@ InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
  * See jsfun.h for the latter four and flag renaming macros.
  */
 #define JSINVOKE_CONSTRUCT      JSFRAME_CONSTRUCTING
-#define JSINVOKE_ITERATOR       JSFRAME_ITERATOR
 
 /*
  * Mask to isolate construct and iterator flags for use with jsfun.h functions.
  */
-#define JSINVOKE_FUNFLAGS       (JSINVOKE_CONSTRUCT | JSINVOKE_ITERATOR)
+#define JSINVOKE_FUNFLAGS       JSINVOKE_CONSTRUCT
 
 extern bool
 InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,

@@ -155,54 +155,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
   // lay out all of our currently open popups.
   for (nsFrameList::Enumerator e(mPopupList); !e.AtEnd(); e.Next()) {
     nsMenuPopupFrame* popupChild = static_cast<nsMenuPopupFrame*>(e.get());
-    if (popupChild->IsOpen()) {
-      // then get its preferred size
-      nsSize prefSize = popupChild->GetPrefSize(aState);
-      nsSize minSize = popupChild->GetMinSize(aState);
-      nsSize maxSize = popupChild->GetMaxSize(aState);
-
-      prefSize = BoundsCheck(minSize, prefSize, maxSize);
-
-      popupChild->SetPreferredBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
-      popupChild->SetPopupPosition(nsnull, PR_FALSE);
-
-      // is the new size too small? Make sure we handle scrollbars correctly
-      nsIBox* child = popupChild->GetChildBox();
-
-      nsRect bounds(popupChild->GetRect());
-
-      nsIScrollableFrame *scrollframe = do_QueryFrame(child);
-      if (scrollframe &&
-          scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
-        // if our pref height
-        if (bounds.height < prefSize.height) {
-          // layout the child
-          popupChild->Layout(aState);
-
-          nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
-          if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
-          {
-            bounds.width += scrollbars.left + scrollbars.right;
-            popupChild->SetBounds(aState, bounds);
-          }
-        }
-      }
-
-      // layout the child
-      popupChild->Layout(aState);
-      // if the width or height changed, readjust the popup position. This is a
-      // special case for tooltips where the preferred height doesn't include the
-      // real height for its inline element, but does once it is laid out.
-      // This is bug 228673 which doesn't have a simple fix.
-      if (popupChild->GetRect().width > bounds.width ||
-          popupChild->GetRect().height > bounds.height) {
-        // the size after layout was larger than the preferred size,
-        // so set the preferred size accordingly
-        popupChild->SetPreferredSize(popupChild->GetSize());
-        popupChild->SetPopupPosition(nsnull, PR_FALSE);
-      }
-      popupChild->AdjustView();
-    }
+    popupChild->LayoutPopup(aState, nsnull, PR_FALSE);
   }
 
   return rv;

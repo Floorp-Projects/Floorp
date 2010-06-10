@@ -1,0 +1,10 @@
+struct S {
+    int i;
+    double d;
+};
+
+sync protocol Struct {
+parent:
+    sync test(S s) returns (S ss);
+    __delete__();
+};

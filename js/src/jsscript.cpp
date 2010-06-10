@@ -67,6 +67,7 @@
 #include "jsxdrapi.h"
 #endif
 
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 using namespace js;

@@ -1,0 +1,13 @@
+include protocol subprotocolSpawns;
+
+protocol spawnsSubprotocol {
+    parent spawns subprotocolSpawns;
+
+    manages subprotocolSpawns;
+
+child:
+    subprotocolSpawns();
+    __delete__();
+
+state DEAD: send __delete__;
+};

@@ -49,11 +49,9 @@ class ContainerLayerOGL : public ContainerLayer,
 {
 public:
   ContainerLayerOGL(LayerManagerOGL *aManager);
+  ~ContainerLayerOGL();
 
-  const nsIntRect &GetVisibleRect();
-
-  /** ContainerLayer implementation */
-  void SetVisibleRegion(const nsIntRegion& aRegion);
+  nsIntRect GetVisibleRect() { return mVisibleRegion.GetBounds(); }
 
   void InsertAfter(Layer* aChild, Layer* aAfter);
 
@@ -68,10 +66,9 @@ public:
 
   PRBool IsEmpty();
 
-  void RenderLayer(int aPreviousFrameBuffer);
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset);
 private:
-  nsIntRect mVisibleRect;
-
   GLuint mTexture;
 };
 

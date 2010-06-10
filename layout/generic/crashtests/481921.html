@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function done()
+{
+    document.documentElement.removeAttribute("class");
+    document.body.innerHTML=''
+}
+
+setTimeout(done,800)
+</script>
+</head>
+
+<body>
+
+<iframe id="iframe" src="481921-iframe.html"></iframe>
+
+</body>
+</html>

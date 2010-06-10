@@ -18,27 +18,38 @@ If so, the test will finish once the alert disappears. If not, the test will tim
 <script class="testbody" type="text/javascript">
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
+var gReaperTimeoutId;
 var observer = {
   observe: function (aSubject, aTopic, aData) {
     if (aTopic != "alertclickcallback") // Did someone click the alert while running mochitests?...
       is(aTopic, "alertfinished", "Checking the topic for a finished notification");
 
     is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
+    clearTimeout(gReaperTimeoutId);
     SimpleTest.finish();
   }
 };
 
+const kTimeoutSeconds = 15;
+function reaper() {
+  ok(false,"Observer is notified within " + kTimeoutSeconds + " seconds")
+  SimpleTest.finish();
+}
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 try {
+  SimpleTest.waitForExplicitFinish();
+  gReaperTimeoutId = setTimeout(reaper, kTimeoutSeconds * 1000);
   var notifier = Cc["@mozilla.org/alerts-service;1"].
                  getService(Ci.nsIAlertsService);
   notifier.showAlertNotification(null, "Notification test", "Surprise! I'm here to test notifications!",
                                  false, "foobarcookie", observer);
 
-  SimpleTest.waitForExplicitFinish();
 } catch (ex) {
   // Alerts service doesn't exist
+  todo(false, "Alerts service doesn't exist")
+  SimpleTest.finish();
 }
 
 </script>

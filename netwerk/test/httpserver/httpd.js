@@ -597,7 +597,7 @@ nsHttpServer.prototype =
          (!directory.exists() || !directory.isDirectory())))
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    // XXX determine behavior of non-existent /foo/bar when a /foo/bar/ mapping
+    // XXX determine behavior of nonexistent /foo/bar when a /foo/bar/ mapping
     //     exists!
 
     this._handler.registerDirectory(path, directory);
@@ -3548,7 +3548,7 @@ Response.prototype =
      * the processor (when it first is clear that body data is to be written
      * immediately, not buffered).  If this method is called first, accessing
      * bodyOutputStream will create the processor.  If only this method is
-     * called, we'll write nothing, neither headers nor the non-existent body,
+     * called, we'll write nothing, neither headers nor the nonexistent body,
      * until finish() is called.  Since that delay is easily avoided by simply
      * getting bodyOutputStream or calling write(""), we don't worry about it.
      */

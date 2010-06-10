@@ -46,9 +46,19 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsxml.h"
+
 #include "jsdtracef.h"
 
 #include "jsscopeinlines.h"
+
+inline void
+JSObject::dropProperty(JSContext *cx, JSProperty *prop)
+{
+    JS_ASSERT(prop);
+    if (isNative())
+        JS_UNLOCK_OBJ(cx, this);
+}
 
 inline js::Value
 JSObject::getSlotMT(JSContext *cx, uintN slot)
@@ -81,10 +91,17 @@ JSObject::setSlotMT(JSContext *cx, uintN slot, const js::Value &value)
     if (scope()->title.ownercx == cx)
         this->lockedSetSlot(slot, value);
     else
-        js_SetSlotThreadSafe(cx, this, slot, Jsvalify(value));
+        js_SetSlotThreadSafe(cx, this, slot, js::Jsvalify(value));
 #else
     this->lockedSetSlot(slot, value);
 #endif
+}
+
+inline js::Value
+JSObject::getReservedSlot(uintN index) const
+{
+    uint32 slot = JSSLOT_START(getClass()) + index;
+    return (slot < numSlots()) ? getSlot(slot) : js::undefinedValue();
 }
 
 inline bool
@@ -398,6 +415,62 @@ JSObject::setNativeIterator(NativeIterator *ni)
     setPrivate(ni);
 }
 
+inline jsval
+JSObject::getNamePrefix() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    return js::Jsvalify(fslots[JSSLOT_NAME_PREFIX]);
+}
+
+inline void
+JSObject::setNamePrefix(jsval prefix)
+{
+    JS_ASSERT(isNamespace() || isQName());
+    fslots[JSSLOT_NAME_PREFIX] = js::Valueify(prefix);
+}
+
+inline jsval
+JSObject::getNameURI() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    return js::Jsvalify(fslots[JSSLOT_NAME_URI]);
+}
+
+inline void
+JSObject::setNameURI(jsval uri)
+{
+    JS_ASSERT(isNamespace() || isQName());
+    fslots[JSSLOT_NAME_URI] = js::Valueify(uri);
+}
+
+inline jsval
+JSObject::getNamespaceDeclared() const
+{
+    JS_ASSERT(isNamespace());
+    return js::Jsvalify(fslots[JSSLOT_NAMESPACE_DECLARED]);
+}
+
+inline void
+JSObject::setNamespaceDeclared(jsval decl)
+{
+    JS_ASSERT(isNamespace());
+    fslots[JSSLOT_NAMESPACE_DECLARED] = js::Valueify(decl);
+}
+
+inline jsval
+JSObject::getQNameLocalName() const
+{
+    JS_ASSERT(isQName());
+    return js::Jsvalify(fslots[JSSLOT_QNAME_LOCAL_NAME]);
+}
+
+inline void
+JSObject::setQNameLocalName(jsval name)
+{
+    JS_ASSERT(isQName());
+    fslots[JSSLOT_QNAME_LOCAL_NAME] = js::Valueify(name);
+}
+
 inline void
 JSObject::initSharingEmptyScope(js::Class *clasp,
                                 const js::Value &proto,
@@ -408,8 +481,7 @@ JSObject::initSharingEmptyScope(js::Class *clasp,
 
     JSEmptyScope *emptyScope = proto.asObject().scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
-    emptyScope->hold();
-    map = emptyScope;
+    map = emptyScope->hold();
 }
 
 inline void
@@ -433,24 +505,25 @@ JSObject::unbrand(JSContext *cx)
                 return false;
             }
         }
-        scope->setGeneric();
+        scope->unbrand(cx);
         JS_UNLOCK_SCOPE(cx, scope);
     }
     return true;
 }
 
-inline void
-JSObject::initArrayClass()
+inline bool
+JSObject::isCallable()
 {
-    clasp = &js_ArrayClass;
+    if (isNative())
+        return isFunction() || getClass()->call;
+
+    return !!map->ops->call;
 }
 
-inline JSObject *
-JSObject::thisObject(JSContext *cx)
+static inline bool
+js_IsCallable(const js::Value &v)
 {
-    if (JSObjectOp thisOp = map->ops->thisObject)
-        return thisOp(cx, this);
-    return this;
+    return v.isObject() && v.asObject().isCallable();
 }
 
 inline bool
@@ -469,22 +542,22 @@ JSObject::thisObject(JSContext *cx, const js::Value &v, js::Value *vp)
 
 namespace js {
 
-typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+typedef Vector<PropDesc, 1> PropDescArray;
 
-class AutoDescriptorArray : private AutoGCRooter
+class AutoPropDescArrayRooter : private AutoGCRooter
 {
   public:
-    AutoDescriptorArray(JSContext *cx)
+    AutoPropDescArrayRooter(JSContext *cx)
       : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
     { }
 
-    PropertyDescriptor *append() {
-        if (!descriptors.append(PropertyDescriptor()))
+    PropDesc *append() {
+        if (!descriptors.append(PropDesc()))
             return NULL;
         return &descriptors.back();
     }
 
-    PropertyDescriptor& operator[](size_t i) {
+    PropDesc& operator[](size_t i) {
         JS_ASSERT(i < descriptors.length());
         return descriptors[i];
     }
@@ -492,7 +565,20 @@ class AutoDescriptorArray : private AutoGCRooter
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    PropertyDescriptorArray descriptors;
+    PropDescArray descriptors;
+};
+
+class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescriptor
+{
+  public:
+    AutoPropertyDescriptorRooter(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
+        obj = NULL;
+        attrs = 0;
+        getter = setter = (PropertyOp) NULL;
+        value.setUndefined();
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
 static inline bool

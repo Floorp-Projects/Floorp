@@ -28,30 +28,6 @@
 #include "pixman-private.h"
 
 static void
-delegate_composite (pixman_implementation_t * imp,
-                    pixman_op_t               op,
-                    pixman_image_t *          src,
-                    pixman_image_t *          mask,
-                    pixman_image_t *          dest,
-                    int32_t                   src_x,
-                    int32_t                   src_y,
-                    int32_t                   mask_x,
-                    int32_t                   mask_y,
-                    int32_t                   dest_x,
-                    int32_t                   dest_y,
-                    int32_t                   width,
-                    int32_t                   height)
-{
-    _pixman_implementation_composite (imp->delegate,
-                                      op,
-                                      src, mask, dest,
-                                      src_x, src_y,
-                                      mask_x, mask_y,
-                                      dest_x, dest_y,
-                                      width, height);
-}
-
-static void
 delegate_combine_32 (pixman_implementation_t * imp,
                      pixman_op_t               op,
                      uint32_t *                dest,
@@ -136,7 +112,8 @@ delegate_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate)
+_pixman_implementation_create (pixman_implementation_t *delegate,
+			       const pixman_fast_path_t *fast_paths)
 {
     pixman_implementation_t *imp = malloc (sizeof (pixman_implementation_t));
     pixman_implementation_t *d;
@@ -145,6 +122,8 @@ _pixman_implementation_create (pixman_implementation_t *delegate)
     if (!imp)
 	return NULL;
 
+    assert (fast_paths);
+
     /* Make sure the whole delegate chain has the right toplevel */
     imp->delegate = delegate;
     for (d = imp; d != NULL; d = d->delegate)
@@ -152,7 +131,6 @@ _pixman_implementation_create (pixman_implementation_t *delegate)
 
     /* Fill out function pointers with ones that just delegate
      */
-    imp->composite = delegate_composite;
     imp->blt = delegate_blt;
     imp->fill = delegate_fill;
 
@@ -164,6 +142,8 @@ _pixman_implementation_create (pixman_implementation_t *delegate)
 	imp->combine_64_ca[i] = delegate_combine_64_ca;
     }
 
+    imp->fast_paths = fast_paths;
+    
     return imp;
 }
 
@@ -209,27 +189,6 @@ _pixman_implementation_combine_64_ca (pixman_implementation_t * imp,
                                       int                       width)
 {
     (*imp->combine_64_ca[op]) (imp, op, dest, src, mask, width);
-}
-
-void
-_pixman_implementation_composite (pixman_implementation_t * imp,
-                                  pixman_op_t               op,
-                                  pixman_image_t *          src,
-                                  pixman_image_t *          mask,
-                                  pixman_image_t *          dest,
-                                  int32_t                   src_x,
-                                  int32_t                   src_y,
-                                  int32_t                   mask_x,
-                                  int32_t                   mask_y,
-                                  int32_t                   dest_x,
-                                  int32_t                   dest_y,
-                                  int32_t                   width,
-                                  int32_t                   height)
-{
-    (*imp->composite) (imp, op,
-		       src, mask, dest,
-		       src_x, src_y, mask_x, mask_y, dest_x, dest_y,
-		       width, height);
 }
 
 pixman_bool_t

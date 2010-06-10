@@ -1,5 +1,5 @@
 pippki.jar:
-% content pippki %content/pippki/ xpcnativewrappers=yes
+% content pippki %content/pippki/
     content/pippki/changepassword.xul        (content/changepassword.xul)
     content/pippki/getpassword.xul           (content/getpassword.xul)
     content/pippki/password.js               (content/password.js)

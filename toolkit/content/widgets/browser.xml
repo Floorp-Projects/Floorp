@@ -795,7 +795,7 @@
             // we need these attributes so themers don't need to create per-platform packages
             if (screen.colorDepth > 8) { // need high color for transparency
               // Exclude second-rate platforms
-              this._autoScrollPopup.setAttribute("transparent", !/BeOS|OS\/2|Photon/.test(navigator.appVersion));
+              this._autoScrollPopup.setAttribute("transparent", !/BeOS|OS\/2/.test(navigator.appVersion));
               // Enable translucency on Windows and Mac
               this._autoScrollPopup.setAttribute("translucent", /Win|Mac/.test(navigator.platform));
             }
@@ -1140,6 +1140,16 @@
       <![CDATA[
         if (event.getPreventDefault())
           return;
+
+        // For drags that appear to be internal text (for example, tab drags),
+        // set the dropEffect to 'none'. This prevents the drop even if some
+        // other listener cancelled the event.
+        var types = event.dataTransfer.types;
+        if (types.contains("text/x-moz-text-internal") && !types.contains("text/plain")) {
+          event.dataTransfer.dropEffect = "none";
+          event.stopPropagation();
+          event.preventDefault();
+        }
 
         let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
                             getService(Components.interfaces.nsIDroppedLinkHandler);

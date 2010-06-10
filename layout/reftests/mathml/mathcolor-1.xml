@@ -1,0 +1,7 @@
+<!-- test mathcolor on a presentation element -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mrow mathcolor="red">
+    <mtext>□■□■□■□</mtext>
+  </mrow>
+</math>
+

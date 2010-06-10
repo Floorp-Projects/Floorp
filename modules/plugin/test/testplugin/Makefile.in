@@ -49,6 +49,9 @@ MODULE_NAME  = TestPlugin
 # Don't use STL wrappers; nptest isn't Gecko code
 STL_FLAGS =
 
+# must link statically with the CRT; nptest isn't Gecko code
+USE_STATIC_LIBS = 1
+
 # Need to custom install plugins
 NO_DIST_INSTALL	= 1
 NO_INSTALL = 1

@@ -58,12 +58,12 @@ CPPSRCS		= \
 		nsConverterInputStream.cpp \
 		nsConverterOutputStream.cpp \
 		nsTextToSubURI.cpp \
-		nsGREResProperties.cpp \
 		nsCharsetConverterManager.cpp \
 		nsUTF8ConverterService.cpp \
 		nsUTF8ToUnicode.cpp \
 		nsUnicodeToUTF8.cpp \
 		nsScriptableUConv.cpp \
+		nsUConvPropertySearch.cpp \
 		$(NULL)
 
 ifndef MOZ_USE_NATIVE_UCONV
@@ -144,3 +144,36 @@ include $(topsrcdir)/config/rules.mk
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_XOPEN_SOURCE=500
 endif
+
+nsCharsetAliasImp.$(OBJ_SUFFIX): charsetalias.properties.h
+
+nsMacCharset.$(OBJ_SUFFIX): maccharset.properties.h
+
+nsOS2Charset.$(OBJ_SUFFIX): os2charset.properties.h
+
+nsWinCharset.$(OBJ_SUFFIX): wincharset.properties.h
+
+nsUNIXCharset.$(OBJ_SUFFIX): unixcharset.properties.h
+
+charsetalias.properties.h: props2arrays.py charsetalias.properties
+	$(PYTHON) $^ $@
+
+maccharset.properties.h: props2arrays.py maccharset.properties
+	$(PYTHON) $^ $@
+
+os2charset.properties.h: props2arrays.py os2charset.properties
+	$(PYTHON) $^ $@
+
+wincharset.properties.h: props2arrays.py wincharset.properties
+	$(PYTHON) $^ $@
+
+unixcharset.properties.h: props2arrays.py unixcharset.properties
+	$(PYTHON) $^ $@
+
+GARBAGE += \
+	charsetalias.properties.h \
+	maccharset.properties.h \
+	os2charset.properties.h \
+	unixcharset.properties.h \
+	wincharset.properties.h \
+	$(NULL)

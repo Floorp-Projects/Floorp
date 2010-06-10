@@ -39,18 +39,16 @@
 
 #include "nsCSSRule.h"
 #include "nsCRT.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 
 nsCSSRule::nsCSSRule(void)
-  : mRefCnt(0),
-    mSheet(nsnull),
+  : mSheet(nsnull),
     mParentRule(nsnull)
 {
 }
 
 nsCSSRule::nsCSSRule(const nsCSSRule& aCopy)
-  : mRefCnt(0),
-    mSheet(aCopy.mSheet),
+  : mSheet(aCopy.mSheet),
     mParentRule(aCopy.mParentRule)
 {
 }
@@ -72,7 +70,7 @@ nsCSSRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 }
 
 NS_IMETHODIMP
-nsCSSRule::SetStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   // We don't reference count this up reference. The style sheet
   // will tell us when it's going away or when we're detached from
@@ -91,10 +89,9 @@ nsCSSRule::SetParentRule(nsICSSGroupRule* aRule)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   // The nsIStyleRule contract is not appropriate for all CSS rules.
   NS_NOTREACHED("nsCSSRule::MapRuleInfoInto");
-  return NS_OK;
 }

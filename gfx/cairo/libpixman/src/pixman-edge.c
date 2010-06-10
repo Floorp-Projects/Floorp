@@ -70,7 +70,7 @@
 #define N_BITS  4
 #define RASTERIZE_EDGES rasterize_edges_4
 
-#ifndef WORDS_BIG_ENDIAN
+#ifndef WORDS_BIGENDIAN
 #define SHIFT_4(o)      ((o) << 2)
 #else
 #define SHIFT_4(o)      ((1 - (o)) << 2)

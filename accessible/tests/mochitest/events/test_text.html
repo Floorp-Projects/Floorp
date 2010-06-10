@@ -1,0 +1,89 @@
+<html>
+
+<head>
+  <title>Accessible mutation events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Invokers.
+     */
+    function removeChildSpan(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function removeChildSpan_invoke()
+      {
+        // remove HTML span, a first child of the node
+        this.DOMNode.removeChild(this.DOMNode.firstChild);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_REMOVED, this.DOMNode)
+      ];
+
+      this.check = function removeChildSpan_check(aEvent)
+      {
+        aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
+        is(aEvent.length, 5, "Wrong length of removed text");
+      }
+
+      this.getID = function focusElmWhileSubdocIsFocused_getID()
+      {
+        return "Remove inaccessible span containing accessible nodes" + prettyName(aID);
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // Text remove event on inaccessible child HTML span removal containing
+      // accessible text nodes.
+      gQueue.push(new removeChildSpan("p"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=566293"
+     title=" wrong length of text remove event when inaccessible node containing accessible nodes is removed">
+    Mozilla Bug 566293
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <p id="p"><span><span>333</span><span>22</span></span>1111</p>
+</body>
+</html>

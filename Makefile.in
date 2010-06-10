@@ -74,12 +74,6 @@ ifdef COMPILE_ENVIRONMENT
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
 endif
 
-TIERS += testharness
-
-# test harnesses
-ifdef ENABLE_TESTS
-tier_testharness_dirs += testing/xpcshell
-endif
 
 include $(topsrcdir)/config/config.mk
 
