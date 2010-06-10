@@ -186,7 +186,7 @@ TabMirror.prototype = {
     // When a tab is opened, create the mirror
     Tabs.onOpen(function() { 
       var tab = this;
-      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
     });
@@ -194,7 +194,7 @@ TabMirror.prototype = {
     // When a tab is updated, update the mirror
     Tabs.onReady( function(evt){
       var tab = evt.tab;
-      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
     });
@@ -202,7 +202,7 @@ TabMirror.prototype = {
     // When a tab is closed, unlink.    
     Tabs.onClose( function(){
       var tab = this;
-      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.unlink(tab);
       }, 1);
     });
@@ -286,7 +286,7 @@ TabMirror.prototype = {
   
   _fireNextHeartbeat: function() {
     var self = this;
-    window.setTimeout(function() {
+    iQ.timeout(function() {
       self._heartbeat();
     }, 100);
   },   

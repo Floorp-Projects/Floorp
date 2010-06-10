@@ -1097,7 +1097,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     // we have to marshal it. A value of 0 wait time doesn't seem
     // to work. Instead, we use a value of 1 which seems to be the
     // minimum amount of time required.
-    setTimeout(function(){
+    iQ.timeout(function(){
       Page.hideChrome()
     }, 1);
     
@@ -1140,7 +1140,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
                 // of the group's tab.
                 // TODO: This is probably a terrible hack that sets up a race
                 // condition. We need a better solution.
-                setTimeout(function(){
+                iQ.timeout(function(){
                   UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
                 }, 400);
               }
