@@ -285,8 +285,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     valueCount = 0;
     for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
         if (fp->fun && fp->argv) {
-            Value v;
-            v.setNull();
+            Value v = NullTag();
             if (checkAccess &&
                 !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
                 break;
