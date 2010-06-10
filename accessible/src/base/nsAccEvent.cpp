@@ -394,19 +394,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
 // XXX revisit this when coalescence is faster (eCoalesceFromSameSubtree)
 nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
-                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted,
+                       PRInt32 aStart, PRUint32 aLength,
+                       nsAString& aModifiedText, PRBool aIsInserted,
                        PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput) :
   nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
              aAccessible, aIsAsynch, aIsFromUserInput, eAllowDupes),
-  mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
+  mStart(aStart), mLength(aLength), mIsInserted(aIsInserted),
+  mModifiedText(aModifiedText)
 {
-#ifdef XP_WIN
-  nsCOMPtr<nsIAccessibleText> textAccessible = do_QueryInterface(aAccessible);
-  NS_ASSERTION(textAccessible, "Should not be firing test change event for non-text accessible!!!");
-  if (textAccessible) {
-    textAccessible->GetText(aStart, aStart + aLength, mModifiedText);
-  }
-#endif
 }
 
 NS_IMETHODIMP

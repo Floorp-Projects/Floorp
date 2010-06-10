@@ -314,12 +314,13 @@ nsCoreUtils::GetRoleContent(nsIDOMNode *aDOMNode)
 
 PRBool
 nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
-                          nsINode *aPossibleDescendantNode)
+                          nsINode *aPossibleDescendantNode,
+                          nsINode *aRootNode)
 {
   NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, PR_FALSE);
 
   nsINode *parentNode = aPossibleDescendantNode;
-  while ((parentNode = parentNode->GetNodeParent())) {
+  while ((parentNode = parentNode->GetNodeParent()) != aRootNode) {
     if (parentNode == aPossibleAncestorNode)
       return PR_TRUE;
   }

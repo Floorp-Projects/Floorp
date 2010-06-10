@@ -150,11 +150,14 @@ public:
    *                                   aPossibleDescendantNode
    * @param  aPossibleDescendantNode [in] node to test for descendant-ness of
    *                                   aPossibleAncestorNode
+   * @param  aRootNode               [in, optional] the root node that search
+   *                                   search should be performed within
    * @return PR_TRUE                  if aPossibleAncestorNode is an ancestor of
    *                                   aPossibleDescendantNode
    */
    static PRBool IsAncestorOf(nsINode *aPossibleAncestorNode,
-                              nsINode *aPossibleDescendantNode);
+                              nsINode *aPossibleDescendantNode,
+                              nsINode *aRootNode = nsnull);
 
   /**
    * Helper method to scroll range into view, used for implementation of
