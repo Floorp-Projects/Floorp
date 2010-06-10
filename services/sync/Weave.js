@@ -87,7 +87,7 @@ AboutWeaveTabs.prototype = {
   newChannel: function(aURI) {
     let ios = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);
-    let ch = ios.newChannel("chrome://weave/content/fx-tabs.xul", null, null);
+    let ch = ios.newChannel("chrome://weave/content/firefox/tabs.xul", null, null);
     ch.originalURI = aURI;
     return ch;
   }
