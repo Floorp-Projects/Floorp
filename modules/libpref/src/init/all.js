@@ -967,7 +967,7 @@ pref("intl.uidirection.ar", "rtl");
 pref("intl.uidirection.he", "rtl");
 pref("intl.uidirection.fa", "rtl");
 
-pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
@@ -1629,7 +1629,7 @@ pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
 // We have special support for Monotype Symbol on Windows.
-pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
 
 // cleartype settings - false implies default system settings 
 
@@ -2115,7 +2115,7 @@ pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
 
 // Apple's Symbol is Unicode so use it
-pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
 
 // individual font faces to be treated as independent families
 // names are Postscript names of each face
@@ -2159,7 +2159,7 @@ pref("ui.key.menuAccessKeyFocuses", true);
 
 pref("font.alias-list", "sans,sans-serif,serif,monospace,Tms Rmn,Helv,Courier,Times New Roman");
 
-pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, DejaVu Sans");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, DejaVu Sans");
 
 // Languages only need lists if we have a default that might not be available.
 // Tms Rmn and Helv cannot be used by Thebes but the OS/2 version of FontConfig
