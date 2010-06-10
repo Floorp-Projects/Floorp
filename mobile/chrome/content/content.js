@@ -448,8 +448,6 @@ ContentFormManager.prototype = {
     }
   },
 
-  receiveMessage: Util.receiveMessage,
-
   receiveFennecClosedFormAssist: function() {
     this.closedFormAssistant();
   },
@@ -673,11 +671,12 @@ FormNavigator.prototype = {
 function Content() {
   this._iconURI = null;
 
-  addMessageListener("FennecBlur", this);
-  addMessageListener("FennecFocus", this);
-  addMessageListener("FennecMousedown", this);
-  addMessageListener("FennecMouseup", this);
-  addMessageListener("FennecCancelMouse", this);
+  addMessageListener("Browser:Blur", this);
+  addMessageListener("Browser:Focus", this);
+  addMessageListener("Browser:Mousedown", this);
+  addMessageListener("Browser:Mouseup", this);
+  addMessageListener("Browser:CancelMouse", this);
+  addMessageListener("Browser:SaveAs", this);
 
   this._coalescer = new Coalescer();
   addEventListener("MozAfterPaint", this._coalescer, false);
@@ -693,18 +692,89 @@ function Content() {
 }
 
 Content.prototype = {
-  handleEvent: Util.handleEvent,
+  receiveMessage: function receiveMessage(aMessage) {
+    let json = aMessage.json;
 
-  receiveMessage: Util.receiveMessage,
+    switch (aMessage.name) {
+      case "Browser:Blur": 
+        docShell.isOffScreenBrowser = false;
+        this._selected = false;
+        break;
 
-  receiveFennecFocus: function receiveFennecFocus() {
-    docShell.isOffScreenBrowser = true;
-    this._selected = true;
-  },
+      case "Browser:Focus":
+        docShell.isOffScreenBrowser = true;
+        this._selected = true;
+        break;
 
-  receiveFennecBlur: function receiveFennecBlur() {
-    docShell.isOffScreenBrowser = false;
-    this._selected = false;
+      case "Browser:Mousedown":
+        this._mousedownTimeout.once(kTapOverlayTimeout, function() {
+          let element = elementFromPoint(x, y);
+          gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
+        });
+        break;
+
+      case "Browser:Mouseup":
+        this._mousedownTimeout.flush();
+
+        let element = elementFromPoint(x, y);
+        if (!this._contentFormManager.formAssist(element)) {
+          this._sendMouseEvent("mousedown", element, x, y);
+          this._sendMouseEvent("mouseup", element, x, y);
+        }
+        break;
+
+      case "Browser:CancelMouse":
+        this._mousedownTimeout.clear();
+        // XXX there must be a better way than this to cancel the mouseover/focus?
+        this._sendMouseEvent("mouseup", null, -1000, -1000);
+        try {
+          content.document.activeElement.blur();
+        }
+        catch(e) {}
+        break;
+
+      case "Browser:SaveAs":
+        if (json.type != Ci.nsIPrintSettings.kOutputFormatPDF)
+          return;
+
+        let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                              .getService(Ci.nsIPrintSettingsService)
+                              .newPrintSettings;
+        printSettings.printSilent = true;
+        printSettings.showPrintProgress = false;
+        printSettings.printBGImages = true;
+        printSettings.printBGColors = true;
+        printSettings.printToFile = true;
+        printSettings.toFileName = json.filePath;
+        printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
+        printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+
+        //XXX we probably need a preference here, the header can be useful
+        printSettings.footerStrCenter = "";
+        printSettings.footerStrLeft   = "";
+        printSettings.footerStrRight  = "";
+        printSettings.headerStrCenter = "";
+        printSettings.headerStrLeft   = "";
+        printSettings.headerStrRight  = "";
+
+        let listener = {
+          onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+            if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+              sendAsyncMessage("Browser:SaveAs:Return", { type: json.type, id: json.id, referrer: json.referrer });
+            }
+          },
+          onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
+
+          // stubs for the nsIWebProgressListener interfaces which nsIWebBrowserPrint doesn't use.
+          onLocationChange : function() { throw "Unexpected onLocationChange"; },
+          onStatusChange   : function() { throw "Unexpected onStatusChange";   },
+          onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
+        };
+
+        let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+        webBrowserPrint.print(printSettings, listener);
+        break;
+    }
   },
 
   _sendMouseEvent: function _sendMouseEvent(name, element, x, y) {
@@ -722,32 +792,6 @@ Content.prototype = {
     }
 
     windowUtils.sendMouseEvent(name, x - scrollOffset.x, y - scrollOffset.y, 0, 1, 0, true);
-  },
-
-  receiveFennecMousedown: function receiveFennecMousedown(message, x, y) {
-    this._mousedownTimeout.once(kTapOverlayTimeout, function() {
-      let element = elementFromPoint(x, y);
-      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-    });
-  },
-
-  receiveFennecMouseup: function receiveFennecMouseup(message, x, y) {
-    this._mousedownTimeout.flush();
-
-    let element = elementFromPoint(x, y);
-    if (!this._contentFormManager.formAssist(element)) {
-      this._sendMouseEvent("mousedown", element, x, y);
-      this._sendMouseEvent("mouseup", element, x, y);
-    }
-  },
-
-  receiveFennecCancelMouse: function receiveFennecCancelMouse() {
-    this._mousedownTimeout.clear();
-    // XXX there must be a better way than this to cancel the mouseover/focus?
-    this._sendMouseEvent("mouseup", null, -1000, -1000);
-    let element = content.document.activeElement;
-    if (element)
-      element.blur();
   },
 
   startLoading: function startLoading() {

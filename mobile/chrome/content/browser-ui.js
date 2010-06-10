@@ -403,6 +403,9 @@ var BrowserUI = {
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMWindowClose", this);
 
+    // listen returns messages from content
+    messageManager.addMessageListener("Browser:SaveAs:Return", this);
+
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
 
@@ -689,7 +692,7 @@ var BrowserUI = {
     Browser.selectedBrowser.goBack();
   },
 
-  handleEvent: function (aEvent) {
+  handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       // Browser events
       case "DOMMetaAdded":
@@ -750,7 +753,7 @@ var BrowserUI = {
     }
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage: function receiveMessage(aMessage) {
     let browser = aMessage.target;
     switch (aMessage.name) {
       case "DOMTitleChanged":
@@ -765,6 +768,33 @@ var BrowserUI = {
       case "DOMLinkAdded":
         if (Browser.selectedBrowser == browser)
           this._updateIcon(Browser.selectedBrowser.mIconURL);
+        break;
+      case "Browser:SaveAs:Return":
+        let json = aMessage.json;
+        if (json.type != Ci.nsIPrintSettings.kOutputFormatPDF)
+          return;
+
+        let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+        let db = dm.DBConnection;
+        let stmt = db.createStatement("UPDATE moz_downloads SET endTime = :endTime, state = :state WHERE id = :id");
+        stmt.params.endTime = Date.now() * 1000;
+        stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
+        stmt.params.id = json.id;
+        stmt.execute();
+        stmt.finalize();
+
+        let download = dm.getDownload(json.id);
+        try {
+          DownloadsView.downloadCompleted(download);
+          let element = DownloadsView.getElementForDownload(json.id);
+          element.setAttribute("state", Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
+          element.setAttribute("endTime", Date.now());
+          element.setAttribute("referrer", json.referrer);
+          DownloadsView._updateTime(element);
+          DownloadsView._updateStatus(element);
+        }
+        catch(e) {}
+        gObserverService.notifyObservers(download, "dl-done", null);
         break;
     }
   },
@@ -1022,14 +1052,14 @@ var PageActions = {
   },
 
   _savePageAsPDF: function saveAsPDF() {
-    let contentWindow = Browser.selectedBrowser.contentWindow;
     let strings = Elements.browserBundle;
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, strings.getString("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
     picker.appendFilter("PDF", "*.pdf");
     picker.defaultExtension = "pdf";
 
-    let fileName = getDefaultFileName(null, null, contentWindow.document, null);
+    let browser = Browser.selectedBrowser;
+    let fileName = getDefaultFileName(null, browser.documentURI, browser.contentDocument, null);
 #ifdef MOZ_PLATFORM_MAEMO
     fileName = fileName.replace(/[\*\:\?]+/g, " ");
 #endif
@@ -1037,30 +1067,9 @@ var PageActions = {
 
     let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
     picker.displayDirectory = dm.defaultDownloadsDirectory;
-
     let rv = picker.show();
     if (rv == Ci.nsIFilePicker.returnCancel)
       return;
-
-    let printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                          .getService(Ci.nsIPrintSettingsService)
-                          .newPrintSettings;
-    printSettings.printSilent = true;
-    printSettings.showPrintProgress = false;
-    printSettings.printBGImages = true;
-    printSettings.printBGColors = true;
-    printSettings.printToFile = true;
-    printSettings.toFileName = picker.file.path;
-    printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
-    printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-
-    //XXX we probably need a preference here, the header can be useful
-    printSettings.footerStrCenter = '';
-    printSettings.footerStrLeft   = '';
-    printSettings.footerStrRight  = '';
-    printSettings.headerStrCenter = '';
-    printSettings.headerStrLeft   = '';
-    printSettings.headerStrRight  = '';
 
     // We must manually add this to the download system
     let db = dm.DBConnection;
@@ -1081,48 +1090,22 @@ var PageActions = {
     stmt.execute();
     stmt.finalize();
 
-    let newId = db.lastInsertRowID;
-    let listener = {
-      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-        if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          let stmt = db.createStatement("UPDATE moz_downloads SET endTime = :endTime, state = :state WHERE id = :id");
-          stmt.params.endTime = Date.now() * 1000;
-          stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
-          stmt.params.id = newId;
-          stmt.execute();
-          stmt.finalize();
-
-          let download = dm.getDownload(newId);
-          try {
-            DownloadsView.downloadCompleted(download);
-            let element = DownloadsView.getElementForDownload(newId);
-            element.setAttribute("state", Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
-            element.setAttribute("endTime", Date.now());
-            element.setAttribute("referrer", current);
-            DownloadsView._updateTime(element);
-            DownloadsView._updateStatus(element);
-          }
-          catch(e) {}
-          gObserverService.notifyObservers(download, "dl-done", null);
-        }
-      },
-      onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
-
-      // stubs for the nsIWebProgressListener interfaces which nsIWebBrowserPrint doesn't use.
-      onLocationChange : function() { throw "Unexpected onLocationChange"; },
-      onStatusChange   : function() { throw "Unexpected onStatusChange";   },
-      onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
-    };
-
-    let download = dm.getDownload(newId);
+    let newItemId = db.lastInsertRowID;
+    let download = dm.getDownload(newItemId);
     try {
       DownloadsView.downloadStarted(download);
     }
     catch(e) {}
     gObserverService.notifyObservers(download, "dl-start", null);
 
-    let webBrowserPrint = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
-    webBrowserPrint.print(printSettings, listener);
+    let data = {
+      type: Ci.nsIPrintSettings.kOutputFormatPDF,
+      id: newItemId,
+      referrer: current,
+      filePath: picker.file.path
+    };
+
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:SaveAs", data);
   },
 
   updatePageSaveAs: function updatePageSaveAs() {
