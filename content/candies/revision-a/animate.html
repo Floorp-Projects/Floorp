@@ -38,7 +38,7 @@
       $elem.data('callbacks', callbacks);
       $elem.css(css);
 /*
-      setTimeout(function() {
+      iQ.timeout(function() {
         $elem.css({
           '-moz-transition-duration': '0s'
         });
@@ -89,7 +89,7 @@
       Utils.log('first animation done');
     });
 
-    setTimeout(function() {
+    iQ.timeout(function() {
       $div.css({
         '-moz-transition-duration': '0s'
       });

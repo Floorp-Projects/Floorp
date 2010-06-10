@@ -222,7 +222,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
     var self = this;
     var chromeWindow = Utils.getCurrentWindow();
     if(!chromeWindow || !chromeWindow.getBrowser || !chromeWindow.getBrowser()) {
-      setTimeout(function() {
+      iQ.timeout(function() {
         self.init();
       }, 100);
       

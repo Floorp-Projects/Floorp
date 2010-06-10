@@ -34,7 +34,7 @@ Navbar = {
       el.collapsed = false; 
     else { // needs a little longer to get going
       var self = this;
-      setTimeout(function() {
+      iQ.timeout(function() {
         self.show();
       }, 300); 
     }
@@ -47,7 +47,7 @@ Navbar = {
       el.collapsed = true; 
     else { // needs a little longer to get going
       var self = this;
-      setTimeout(function() {
+      iQ.timeout(function() {
         self.hide();
       }, 300); 
     }
@@ -269,7 +269,7 @@ window.Page = {
     this.setupKeyHandlers();
         
     Tabs.onClose(function(){
-      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         // Only go back to the TabCandy tab when there you close the last
         // tab of a group.
         var group = Groups.getActiveGroup();
@@ -327,7 +327,7 @@ window.Page = {
               '-moz-transform': 'rotate(0deg)'
           });
           
-          setTimeout(function() { // Marshal event from chrome thread to DOM thread
+          iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
             $tab.animate({
               top: pos.top, left: pos.left,
               width: w, height: h
@@ -350,7 +350,7 @@ window.Page = {
           }, 1);
         }
       } else { // switched to another tab
-        setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           UI.focused = false;
           Page.showChrome();
           var item = TabItems.getItemByTabElement(Utils.activeTab.mirror.el);
@@ -531,7 +531,7 @@ UIClass.prototype = {
       }
       
       Tabs.onOpen(function(a, b) {
-        setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           self.navBar.show();
         }, 1);
       });
