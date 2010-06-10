@@ -497,23 +497,26 @@ const InstallListener = {
     if (install.state != AddonManager.STATE_DOWNLOADED &&
         install.state != AddonManager.STATE_AVAILABLE)
       do_throw("Bad install state " + install.state);
+    do_check_eq(install.error, 0);
     do_check_eq("onNewInstall", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
   onDownloadStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADING);
+    do_check_eq(install.error, 0);
     do_check_eq("onDownloadStarted", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
   onDownloadEnded: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    do_check_eq(install.error, 0);
     do_check_eq("onDownloadEnded", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
-  onDownloadFailed: function(install, status) {
+  onDownloadFailed: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     do_check_eq("onDownloadFailed", gExpectedInstalls.shift());
     return check_test_completed(arguments);
@@ -521,23 +524,26 @@ const InstallListener = {
 
   onDownloadCancelled: function(install) {
     do_check_eq(install.state, AddonManager.STATE_CANCELLED);
+    do_check_eq(install.error, 0);
     do_check_eq("onDownloadCancelled", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
   onInstallStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLING);
+    do_check_eq(install.error, 0);
     do_check_eq("onInstallStarted", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
   onInstallEnded: function(install, newAddon) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLED);
+    do_check_eq(install.error, 0);
     do_check_eq("onInstallEnded", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
 
-  onInstallFailed: function(install, status) {
+  onInstallFailed: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALL_FAILED);
     do_check_eq("onInstallFailed", gExpectedInstalls.shift());
     return check_test_completed(arguments);
@@ -545,6 +551,7 @@ const InstallListener = {
 
   onInstallCancelled: function(install) {
     do_check_eq(install.state, AddonManager.STATE_CANCELLED);
+    do_check_eq(install.error, 0);
     do_check_eq("onInstallCancelled", gExpectedInstalls.shift());
     return check_test_completed(arguments);
   },
@@ -655,6 +662,7 @@ function installAllFiles(aFiles, aCallback, aIgnoreIncompatible) {
     AddonManager.getInstallForFile(aFile, function(aInstall) {
       if (!aInstall)
         do_throw("No AddonInstall created for " + aFile.path);
+      do_check_eq(aInstall.state, AddonManager.STATE_DOWNLOADED);
 
       if (!aIgnoreIncompatible || !aInstall.addon.appDisabled)
         installs.push(aInstall);

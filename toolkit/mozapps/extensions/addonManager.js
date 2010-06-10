@@ -135,14 +135,14 @@ amManager.prototype = {
                 aCallback.onInstallEnded(uri, USER_CANCELLED);
               },
 
-              onDownloadFailed: function(aInstall, aError) {
-                if (aError == AddonManager.ERROR_CORRUPT_FILE)
+              onDownloadFailed: function(aInstall) {
+                if (aInstall.error == AddonManager.ERROR_CORRUPT_FILE)
                   aCallback.onInstallEnded(uri, CANT_READ_ARCHIVE);
                 else
                   aCallback.onInstallEnded(uri, DOWNLOAD_ERROR);
               },
 
-              onInstallFailed: function(aInstall, aError) {
+              onInstallFailed: function(aInstall) {
                 aCallback.onInstallEnded(uri, EXECUTION_ERROR);
               },
 

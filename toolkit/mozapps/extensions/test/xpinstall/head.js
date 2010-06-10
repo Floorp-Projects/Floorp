@@ -216,9 +216,9 @@ var Harness = {
     this.checkTestEnded();
   },
 
-  onDownloadFailed: function(install, status) {
+  onDownloadFailed: function(install) {
     if (this.downloadFailedCallback)
-      this.downloadFailedCallback(install, status);
+      this.downloadFailedCallback(install);
     this.checkTestEnded();
   },
 
@@ -234,9 +234,9 @@ var Harness = {
     this.checkTestEnded();
   },
 
-  onInstallFailed: function(install, status) {
+  onInstallFailed: function(install) {
     if (this.installFailedCallback)
-      this.installFailedCallback(install, status);
+      this.installFailedCallback(install);
     this.checkTestEnded();
   },
 
