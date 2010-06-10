@@ -257,8 +257,10 @@ FrameState::pushUntypedPayload(JSValueMask32 tag, RegisterID payload)
 #endif
 
     masm.storeTypeTag(ImmTag(tag), addressOf(fe));
-    fe->type.sync();
+    fe->type.setMemory();
     fe->data.unsync();
+    fe->setNotCopied();
+    fe->setCopyOf(NULL);
     fe->data.setRegister(payload);
     regstate[payload] = RegisterState(fe, RematInfo::DATA, true);
 }
