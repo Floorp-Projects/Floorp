@@ -52,9 +52,7 @@ const PREF_TASKBAR_ITEMCOUNT = "maxListItemCount";
 const PREF_TASKBAR_FREQUENT  = "frequent.enabled";
 const PREF_TASKBAR_RECENT    = "recent.enabled";
 const PREF_TASKBAR_TASKS     = "tasks.enabled";
-
-// The amount of time between updates for jump lists
-const TIMER_TASKBAR_REFRESH = 1000*60*2; // 2 min.
+const PREF_TASKBAR_REFRESH   = "refreshInSeconds";
 
 /**
  * Exports
@@ -101,6 +99,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "_ioService",
                                    "@mozilla.org/network/io-service;1",
                                    "nsIIOService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "_winShellService",
+                                   "@mozilla.org/browser/shell-service;1",
+                                   "nsIWindowsShellService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "_privateBrowsingSvc",
+                                   "@mozilla.org/privatebrowsing;1",
+                                   "nsIPrivateBrowsingService");
+
 /**
  * Global functions
  */
@@ -143,6 +149,26 @@ var tasksCfg = [
     open:             true,
     close:            false, // no point
   },
+
+  // Privacy mode
+  {
+    get title() {
+      if (_privateBrowsingSvc.privateBrowsingEnabled)
+        return _getString("taskbar.tasks.exitPrivacyMode.label");
+      else
+        return _getString("taskbar.tasks.enterPrivacyMode.label");
+    },
+    get description() {
+      if (_privateBrowsingSvc.privateBrowsingEnabled)
+        return _getString("taskbar.tasks.exitPrivacyMode.description");
+      else
+        return _getString("taskbar.tasks.enterPrivacyMode.description");
+    },
+    args:             "-private-toggle",
+    iconIndex:        0, // Fx app icon
+    open:             true,
+    close:            true,
+  },
 ];
 
 /////////////////////////////////////////////////////////////////////////////
@@ -162,6 +188,11 @@ var WinTaskbarJumpList =
     // exit if this isn't win7 or higher.
     if (!this._initTaskbar())
       return;
+
+    // Win shell shortcut maintenance. If we've gone through an update,
+    // this will update any pinned taskbar shortcuts. Not specific to
+    // jump lists, but this was a convienent place to call it. 
+    this._shortcutMaintenance();
 
     // Store our task list config data
     this._tasks = tasksCfg;
@@ -184,12 +215,6 @@ var WinTaskbarJumpList =
     if (!this._enabled)
       return;
 
-    // hide jump lists when we're enabled and in private browsing mode
-    if (this._inPrivateBrowsing) {
-      this._deleteActiveJumpList();
-      return;
-    }
-
     // do what we came here to do, update the taskbar jumplist
     this._buildList();
   },
@@ -198,6 +223,10 @@ var WinTaskbarJumpList =
     this._shuttingDown = true;
     this.update();
     this._free();
+  },
+
+  _shortcutMaintenance: function WTBJL__maintenace() {
+    _winShellService.shortcutMaintenance();
   },
 
   /**
@@ -215,16 +244,15 @@ var WinTaskbarJumpList =
     if (!this._startBuild())
       return;
 
-    if (this._showTasks && !this._buildTasks())
-      return;
+    if (this._showTasks)
+      this._buildTasks();
 
     // Space for frequent items takes priority over recent.
-    
-    if (this._showFrequent && !this._buildFrequent())
-      return;
+    if (this._showFrequent)
+      this._buildFrequent();
 
-    if (this._showRecent && !this._buildRecent())
-      return;
+    if (this._showRecent)
+      this._buildRecent();
 
     this._commitBuild();
   },
@@ -261,16 +289,13 @@ var WinTaskbarJumpList =
       items.appendElement(item, false);
     }, this);
     
-    if (items.length == 0)
-      return true;
-
-    return this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_TASKS, items);
+    if (items.length > 0)
+      this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_TASKS, items);
   },
 
   _buildCustom: function WTBJL__buildCustom(title, items) {
-    if (items.length == 0)
-      return true;
-    return this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_CUSTOMLIST, items, title);
+    if (items.length > 0)
+      this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_CUSTOMLIST, items, title);
   },
 
   _buildFrequent: function WTBJL__buildFrequent() {
@@ -284,7 +309,7 @@ var WinTaskbarJumpList =
     var list = this._getNavFrequent(this._maxItemCount);
 
     if (!list || list.length == 0)
-      return true;
+      return;
 
     // track frequent items so that we don't add them to
     // the recent list.
@@ -295,7 +320,7 @@ var WinTaskbarJumpList =
       items.appendElement(shortcut, false);
       this._frequentHashList.push(entry.uri);
     }, this);
-    return this._buildCustom(_getString("taskbar.frequent.label"), items);
+    this._buildCustom(_getString("taskbar.frequent.label"), items);
   },
 
   _buildRecent: function WTBJL__buildRecent() {
@@ -304,7 +329,7 @@ var WinTaskbarJumpList =
     var list = this._getNavRecent(this._maxItemCount*2);
     
     if (!list || list.length == 0)
-      return true;
+      return;
 
     let count = 0;
     for (let idx = 0; idx < list.length; idx++) {
@@ -320,11 +345,11 @@ var WinTaskbarJumpList =
       items.appendElement(shortcut, false);
       count++;
     }
-    return this._buildCustom(_getString("taskbar.recent.label"), items);
+    this._buildCustom(_getString("taskbar.recent.label"), items);
   },
 
   _deleteActiveJumpList: function WTBJL__deleteAJL() {
-    return this._builder.deleteActiveList();
+    this._builder.deleteActiveList();
   },
 
   /**
@@ -431,7 +456,7 @@ var WinTaskbarJumpList =
         try { // in case we get a bad uri
           let uriSpec = oldItem.app.getParameter(0);
           _navHistoryService.QueryInterface(Ci.nsIBrowserHistory).removePage(
-            _ioService.newURI(uriSpec));
+            _ioService.newURI(uriSpec, null, null));
         } catch (err) { }
       }
     }
@@ -447,11 +472,6 @@ var WinTaskbarJumpList =
     this._showRecent = _prefs.getBoolPref(PREF_TASKBAR_RECENT);
     this._showTasks = _prefs.getBoolPref(PREF_TASKBAR_TASKS);
     this._maxItemCount = _prefs.getIntPref(PREF_TASKBAR_ITEMCOUNT);
-
-    // retrieve the initial status of the Private Browsing mode.
-    this._inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
-                              getService(Ci.nsIPrivateBrowsingService).
-                              privateBrowsingEnabled;
   },
 
   /**
@@ -469,18 +489,22 @@ var WinTaskbarJumpList =
   _initObs: function WTBJL__initObs() {
     _observerService.addObserver(this, "private-browsing", false);
     _observerService.addObserver(this, "quit-application-granted", false);
+    _observerService.addObserver(this, "browser:purge-session-history", false);
     _prefs.addObserver("", this, false);
   },
  
   _freeObs: function WTBJL__freeObs() {
     _observerService.removeObserver(this, "private-browsing");
     _observerService.removeObserver(this, "quit-application-granted");
+    _observerService.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
   },
 
   _initTimer: function WTBJL__initTimer(aTimer) {
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timer.initWithCallback(this, TIMER_TASKBAR_REFRESH, this._timer.TYPE_REPEATING_SLACK);
+    this._timer.initWithCallback(this,
+                                 _prefs.getIntPref(PREF_TASKBAR_REFRESH)*1000,
+                                 this._timer.TYPE_REPEATING_SLACK);
   },
 
   _free: function WTBJL__free() {
@@ -500,6 +524,8 @@ var WinTaskbarJumpList =
   observe: function WTBJL_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
+        if (this._enabled == true && !_prefs.getBoolPref(PREF_TASKBAR_ENABLED))
+          this._deleteActiveJumpList();
         this._refreshPrefs();
         this.update();
       break;
@@ -513,14 +539,6 @@ var WinTaskbarJumpList =
       break;
 
       case "private-browsing":
-        switch (aData) {
-          case "enter":
-            this._inPrivateBrowsing = true;
-            break;
-          case "exit":
-            this._inPrivateBrowsing = false;
-            break;
-        }
         this.update();
       break;
     }

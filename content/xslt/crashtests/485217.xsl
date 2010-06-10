@@ -2,7 +2,7 @@
 
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-    <xsl:key name="label" match="item2" use="w00t()"/>
+    <xsl:key name="label" match="item2" use="undeclaredfunc()"/>
 
     <xsl:template match="root">
                     <xsl:for-each select="//item1">

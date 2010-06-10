@@ -13,15 +13,7 @@
 
   <binding id="tabbox"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation implements="nsIDOMEventListener, nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTabBox;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation implements="nsIDOMEventListener">
       <property name="handleCtrlTab">
         <setter>
         <![CDATA[
@@ -243,7 +235,7 @@
       <xul:spacer class="tabs-right" flex="1"/>
     </content>
     
-    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlElement, nsIDOMXULRelatedElement, nsIAccessibleProvider">
       <constructor>
       <![CDATA[
         // first and last tabs need to be able to have unique styles
@@ -278,7 +270,8 @@
           this.selectedIndex = 0;
       ]]>
       </constructor>
-      
+
+      <!-- nsIAccessibleProvider -->
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -287,6 +280,55 @@
         </getter>
       </property>
 
+      <!-- nsIDOMXULRelatedElement -->
+      <method name="getRelatedElement">
+        <parameter name="aTabElm"/>
+        <body>
+        <![CDATA[
+          if (!aTabElm)
+            return null;
+
+          let tabboxElm = this.tabbox;
+          if (!tabboxElm)
+            return null;
+
+          let tabpanelsElm = tabboxElm.tabpanels;
+          if (!tabpanelsElm)
+            return null;
+
+          // Get linked tab panel by 'linkedpanel' attribute on the given tab
+          // element.
+          let linkedPanelElm = null;
+
+          let linkedPanelId = aTabElm.linkedPanel;
+          if (linkedPanelId) {
+            let ownerDoc = this.ownerDocument;
+
+            // XXX bug 565858: if XUL tab element is anonymous element then
+            // suppose linked tab panel is hosted within the same XBL binding
+            // and search it by ID attribute inside an anonymous content of
+            // the binding. This is not robust assumption since tab elements may
+            // live outside a tabbox element so that for example tab elements
+            // can be explicit content but tab panels can be anonymous.
+
+            let bindingParent = ownerDoc.getBindingParent(aTabElm);
+            if (bindingParent)
+              return ownerDoc.getAnonymousElementByAttribute(bindingParent,
+                                                             "id",
+                                                             linkedPanelId);
+
+            return ownerDoc.getElementById(linkedPanelId);
+          }
+
+          // otherwise linked tabpanel element has the same index as the given
+          // tab element.
+          let tabElmIdx = this.getIndexOfItem(aTabElm);
+          return tabpanelsElm.childNodes[tabElmIdx];
+        ]]>
+        </body>
+      </method>
+
+      <!-- nsIDOMXULSelectControlElement -->
       <property name="itemCount" readonly="true"
                 onget="return this.childNodes.length"/>
 
@@ -347,31 +389,13 @@
 
             this.setAttribute("value", tab.value);
 
-            if (this.tabbox) {
+            let linkedPanel = this.getRelatedElement(tab);
+            if (linkedPanel) {
               this.tabbox.setAttribute("selectedIndex", val);
-              var tabpanels = this.tabbox.tabpanels;
-              // This will cause an onselect event to fire for the tabpanel element.
-              if (tabpanels) {
-                // find an id
-                let linkedPanelId = tab.linkedPanel;
-                let linkedPanel = null;
-                if (linkedPanelId) {
-                  let ownerDoc = tab.ownerDocument;
-                  let bindingParent = ownerDoc.getBindingParent(tab);
-                  if (bindingParent) {
-                    linkedPanel =
-                      ownerDoc.getAnonymousElementByAttribute(bindingParent,
-                                                              "id",
-                                                              linkedPanelId);
-                  }
-                  else
-                    linkedPanel = ownerDoc.getElementById(linkedPanelId);
-                }
-                if (linkedPanel)
-                  tabpanels.selectedPanel = linkedPanel;
-                else
-                  tabpanels.selectedIndex = val;
-              }
+
+              // This will cause an onselect event to fire for the tabpanel
+              // element.
+              this.tabbox.tabpanels.selectedPanel = linkedPanel;
             }
 
             if (!alreadySelected) {
@@ -555,7 +579,66 @@
 
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULRelatedElement">
+
+      <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULTabpanels;
+          ]]>
+        </getter>
+      </property>
+
+      <!-- nsIDOMXULRelatedElement -->
+      <method name="getRelatedElement">
+        <parameter name="aTabPanelElm"/>
+        <body>
+        <![CDATA[
+          if (!aTabPanelElm)
+            return null;
+
+          let tabboxElm = this.tabbox;
+          if (!tabboxElm)
+            return null;
+
+          let tabsElm = tabboxElm.tabs;
+          if (!tabsElm)
+            return null;
+
+          // Return tab element having 'linkedpanel' attribute equal to the id
+          // of the tab panel or the same index as the tab panel element.
+          let tabpanelIdx = Array.indexOf(this.childNodes, aTabPanelElm);
+          if (tabpanelIdx == -1)
+            return null;
+
+          let tabElms = tabsElm.childNodes;
+          let tabElmFromIndex = tabElms[tabpanelIdx];
+
+          let tabpanelId = aTabPanelElm.id;
+          if (tabpanelId) {
+            for (let idx = 0; idx < tabElms.length; idx++) {
+              var tabElm = tabElms[idx];
+              if (tabElm.linkedPanel == tabpanelId)
+                return tabElm;
+            }
+          }
+
+          return tabElmFromIndex;
+        ]]>
+        </body>
+      </method>
+
+      <!-- public -->
+      <field name="tabbox" readonly="true"><![CDATA[
+        var parent = this.parentNode;
+        while (parent) {
+          if (parent.localName == "tabbox")
+            break;
+          parent = parent.parentNode;
+        }
+        parent;
+      ]]></field>
 
       <field name="_selectedPanel">this.childNodes.item(this.selectedIndex)</field>
 

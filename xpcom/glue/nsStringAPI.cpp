@@ -416,7 +416,7 @@ nsAString::RFind(const self_type& aStr, PRInt32 aOffset, ComparatorFunc c) const
   if (selflen < otherlen)
     return -1;
 
-  if (aOffset < 0 || aOffset > (selflen - otherlen))
+  if (aOffset < 0 || PRUint32(aOffset) > (selflen - otherlen))
     end -= otherlen;
   else
     end = begin + aOffset;
@@ -441,7 +441,7 @@ nsAString::RFind(const char *aStr, PRInt32 aOffset, PRBool aIgnoreCase) const
   if (selflen < otherlen)
     return -1;
 
-  if (aOffset < 0 || aOffset > (selflen - otherlen))
+  if (aOffset < 0 || PRUint32(aOffset) > (selflen - otherlen))
     end -= otherlen;
   else
     end = begin + aOffset;
@@ -825,7 +825,7 @@ nsACString::RFind(const self_type& aStr, PRInt32 aOffset, ComparatorFunc c) cons
   if (selflen < otherlen)
     return -1;
 
-  if (aOffset < 0 || aOffset > (selflen - otherlen))
+  if (aOffset < 0 || PRUint32(aOffset) > (selflen - otherlen))
     end -= otherlen;
   else
     end = begin + aOffset;
@@ -849,12 +849,12 @@ nsACString::RFind(const char_type *aStr, PRInt32 aLen, ComparatorFunc c) const
   const char_type *begin, *end;
   PRUint32 selflen = BeginReading(&begin, &end);
 
-  if (aLen == 0) {
+  if (aLen <= 0) {
     NS_WARNING("Searching for zero-length string.");
     return -1;
   }
 
-  if (aLen > selflen)
+  if (PRUint32(aLen) > selflen)
     return -1;
 
   // We want to start searching otherlen characters before the end of the string

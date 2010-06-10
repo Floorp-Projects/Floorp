@@ -52,7 +52,6 @@ MAKEFILES_dom="
   ipc/chromium/Makefile
   ipc/glue/Makefile
   ipc/ipdl/Makefile
-  ipc/app/fake/Makefile
   dom/Makefile
   dom/public/coreEvents/Makefile
   dom/interfaces/base/Makefile
@@ -205,8 +204,6 @@ MAKEFILES_xpconnect="
   js/src/xpconnect/tests/Makefile
   js/src/xpconnect/tests/components/Makefile
   js/src/xpconnect/tests/idl/Makefile
-  js/src/xpconnect/tools/Makefile
-  js/src/xpconnect/tools/idl/Makefile
 "
 
 MAKEFILES_jsdebugger="
@@ -340,9 +337,6 @@ MAKEFILES_plugin="
   modules/plugin/Makefile
   modules/plugin/base/src/Makefile
   modules/plugin/base/public/Makefile
-  modules/plugin/default/mac/Makefile
-  modules/plugin/default/unix/Makefile
-  modules/plugin/default/windows/Makefile
   modules/plugin/sdk/Makefile
   modules/plugin/sdk/samples/Makefile
   modules/plugin/sdk/samples/common/Makefile
@@ -361,45 +355,20 @@ MAKEFILES_netwerk="
   netwerk/base/src/Makefile
   netwerk/build/Makefile
   netwerk/cache/Makefile
-  netwerk/cache/public/Makefile
-  netwerk/cache/src/Makefile
   netwerk/cookie/Makefile
-  netwerk/cookie/public/Makefile
-  netwerk/cookie/src/Makefile
   netwerk/wifi/Makefile
-  netwerk/wifi/public/Makefile
-  netwerk/wifi/src/Makefile
   netwerk/dns/Makefile
-  netwerk/dns/public/Makefile
-  netwerk/dns/src/Makefile
   netwerk/protocol/Makefile
   netwerk/protocol/about/Makefile
-  netwerk/protocol/about/public/Makefile
-  netwerk/protocol/about/src/Makefile
   netwerk/protocol/data/Makefile
-  netwerk/protocol/data/src/Makefile
   netwerk/protocol/file/Makefile
-  netwerk/protocol/file/public/Makefile
-  netwerk/protocol/file/src/Makefile
   netwerk/protocol/ftp/Makefile
-  netwerk/protocol/ftp/public/Makefile
-  netwerk/protocol/ftp/src/Makefile
   netwerk/protocol/gopher/Makefile
-  netwerk/protocol/gopher/src/Makefile
   netwerk/protocol/http/Makefile
-  netwerk/protocol/http/public/Makefile
-  netwerk/protocol/http/src/Makefile
   netwerk/protocol/res/Makefile
-  netwerk/protocol/res/public/Makefile
-  netwerk/protocol/res/src/Makefile
   netwerk/protocol/viewsource/Makefile
-  netwerk/protocol/viewsource/public/Makefile
-  netwerk/protocol/viewsource/src/Makefile
   netwerk/mime/Makefile
-  netwerk/mime/public/Makefile
-  netwerk/mime/src/Makefile
   netwerk/socket/Makefile
-  netwerk/socket/base/Makefile
   netwerk/streamconv/Makefile
   netwerk/streamconv/converters/Makefile
   netwerk/streamconv/public/Makefile
@@ -493,7 +462,6 @@ MAKEFILES_widget="
   widget/src/build/Makefile
   widget/src/gtk2/Makefile
   widget/src/gtkxtbin/Makefile
-  widget/src/photon/Makefile
   widget/src/cocoa/Makefile
   widget/src/os2/Makefile
   widget/src/windows/Makefile
@@ -552,12 +520,6 @@ MAKEFILES_xpcom_tests="
   xpcom/tests/services/Makefile
   xpcom/tests/windows/Makefile
   xpcom/tests/static-checker/Makefile
-"
-
-MAKEFILES_xpinstall="
-  xpinstall/Makefile
-  xpinstall/public/Makefile
-  xpinstall/src/Makefile
 "
 
 MAKEFILES_xpfe="
@@ -841,7 +803,6 @@ add_makefiles "
   $MAKEFILES_widget
   $MAKEFILES_xpcom
   $MAKEFILES_xpcom_tests
-  $MAKEFILES_xpinstall
   $MAKEFILES_xpfe
   $MAKEFILES_embedding
   $MAKEFILES_xulapp
@@ -1004,7 +965,6 @@ if [ "$ENABLE_TESTS" ]; then
     widget/tests/Makefile
     xpcom/sample/program/Makefile
     xpcom/tests/external/Makefile
-    xpinstall/tests/Makefile
   "
 fi
 

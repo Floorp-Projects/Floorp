@@ -41,9 +41,10 @@
 
 interface nsIControllers;
 
-[scriptable, uuid(dd9f7df2-c06c-4c2d-b33a-90124e5ddea1)]
+[scriptable, uuid(ca626eac-924b-49e5-9170-39e69e11000a)]
 interface nsIDOMNSHTMLTextAreaElement : nsISupports
 {
+           attribute boolean          autofocus;
   readonly attribute nsIControllers   controllers;
 
   readonly attribute long    textLength;

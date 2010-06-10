@@ -323,9 +323,13 @@ private:
     static LRESULT CALLBACK NestedInputEventHook(int code,
                                                  WPARAM wParam,
                                                  LPARAM lParam);
-    void SetNestedInputEventHook();
-    void ResetNestedInputEventHook();
+    static LRESULT CALLBACK CallWindowProcHook(int code,
+                                               WPARAM wParam,
+                                               LPARAM lParam);
+    void SetEventHooks();
+    void ResetEventHooks();
     HHOOK mNestedEventHook;
+    HHOOK mGlobalCallWndProcHook;
 #endif
 };
 

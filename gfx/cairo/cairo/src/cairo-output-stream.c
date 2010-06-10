@@ -311,9 +311,14 @@ _cairo_dtostr (char *buffer, size_t size, double d, cairo_bool_t limited_precisi
     if (d == 0.0)
 	d = 0.0;
 
+#ifdef HAVE_LOCALECONV
     locale_data = localeconv ();
     decimal_point = locale_data->decimal_point;
     decimal_point_len = strlen (decimal_point);
+#else
+    decimal_point = ".";
+    decimal_point_len = 1;
+#endif
 
     assert (decimal_point_len != 0);
 

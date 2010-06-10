@@ -417,14 +417,14 @@ nsJAR::LoadEntry(const char* aFilename, char** aBuf, PRUint32* aBufLen)
   if (NS_FAILED(rv)) return rv;
   if (len == PRUint32(-1))
     return NS_ERROR_FILE_CORRUPTED; // bug 164695
-  buf = (char*)PR_MALLOC(len+1);
+  buf = (char*)malloc(len+1);
   if (!buf) return NS_ERROR_OUT_OF_MEMORY;
   PRUint32 bytesRead;
   rv = manifestStream->Read(buf, len, &bytesRead);
   if (bytesRead != len) 
     rv = NS_ERROR_FILE_CORRUPTED;
   if (NS_FAILED(rv)) {
-    PR_FREEIF(buf);
+    free(buf);
     return rv;
   }
   buf[len] = '\0'; //Null-terminate the buffer

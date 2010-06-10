@@ -222,7 +222,9 @@ struct JSScope : public JSObjectMap
 #endif
     JSObject        *object;            /* object that owns this scope */
     uint32          freeslot;           /* index of next free slot in object */
+  protected:
     uint8           flags;              /* flags, see below */
+  public:
     int8            hashShift;          /* multiplicative hash shift */
 
     uint16          spare;              /* reserved */
@@ -267,7 +269,7 @@ struct JSScope : public JSObjectMap
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
-    inline void updateFlags(const JSScopeProperty *sprop);
+    inline void updateFlags(const JSScopeProperty *sprop, bool isDefinitelyAtom = false);
 
   protected:
     void initMinimal(JSContext *cx, uint32 newShape);
@@ -349,7 +351,7 @@ struct JSScope : public JSObjectMap
     void clear(JSContext *cx);
 
     /* Extend this scope to have sprop as its last-added property. */
-    void extend(JSContext *cx, JSScopeProperty *sprop);
+    void extend(JSContext *cx, JSScopeProperty *sprop, bool isDefinitelyAtom = false);
 
     /*
      * Read barrier to clone a joined function object stored as a method.
@@ -421,9 +423,10 @@ struct JSScope : public JSObjectMap
      * properties without magic getters and setters), and its scope->shape
      * evolves whenever a function value changes.
      */
-    bool branded()              { JS_ASSERT(!generic()); return flags & BRANDED; }
+    bool branded()              { return flags & BRANDED; }
 
     bool brand(JSContext *cx, uint32 slot, const js::Value &) {
+        JS_ASSERT(!generic());
         JS_ASSERT(!branded());
         generateOwnShape(cx);
         if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
@@ -433,7 +436,17 @@ struct JSScope : public JSObjectMap
     }
 
     bool generic()              { return flags & GENERIC; }
-    void setGeneric()           { flags |= GENERIC; }
+
+    /*
+     * Here and elsewhere "unbrand" means "make generic". We never actually
+     * clear the BRANDED bit on any object. Once branded, there's no point in
+     * being generic, since the shape has already evolved unpredictably. So
+     * obj->unbrand() on a branded object does nothing.
+     */
+    void unbrand(JSContext *cx) {
+        if (!branded())
+            flags |= GENERIC;
+    }
 
     bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
     void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
@@ -498,6 +511,13 @@ struct JSScope : public JSObjectMap
 
     static bool initRuntimeState(JSContext *cx);
     static void finishRuntimeState(JSContext *cx);
+
+    enum {
+        EMPTY_ARGUMENTS_SHAPE = 1,
+        EMPTY_BLOCK_SHAPE     = 2,
+        EMPTY_CALL_SHAPE      = 3,
+        LAST_RESERVED_SHAPE   = 3
+    };
 };
 
 struct JSEmptyScope : public JSScope
@@ -507,10 +527,11 @@ struct JSEmptyScope : public JSScope
 
     JSEmptyScope(JSContext *cx, const JSObjectOps *ops, js::Class *clasp);
 
-    void hold() {
+    JSEmptyScope *hold() {
         /* The method is only called for already held objects. */
         JS_ASSERT(nrefs >= 1);
         JS_ATOMIC_INCREMENT(&nrefs);
+        return this;
     }
 
     void drop(JSContext *cx) {
@@ -657,13 +678,7 @@ struct JSScopeProperty {
     };
 
     JSScopeProperty(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid)
-        : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
-          flags(uint8(flags)), shortid(int16(shortid))
-    {
-        JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
-        JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER), setterObj->isCallable());
-    }
+                    uintN attrs, uintN flags, intN shortid);
 
     bool marked() const { return (flags & MARK) != 0; }
     void mark() { flags |= MARK; }
@@ -697,13 +712,13 @@ struct JSScopeProperty {
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return getterObj; }
 
     // Per ES5, decode null getterObj as the undefined value, which encodes as null.
-    js::FunObjOrUndefinedTag getterValue() const {
+    js::ObjectOrUndefinedTag getterValue() const {
         JS_ASSERT(hasGetterValue());
-        return js::FunObjOrUndefinedTag(getterObj);
+        return js::ObjectOrUndefinedTag(getterObj);
     }
 
-    js::FunObjOrUndefinedTag getterOrUndefined() const {
-        return js::FunObjOrUndefinedTag(hasGetterValue() ? getterObj : NULL);
+    js::ObjectOrUndefinedTag getterOrUndefined() const {
+        return js::ObjectOrUndefinedTag(hasGetterValue() ? getterObj : NULL);
     }
 
     js::PropertyOp setter() const { return rawSetter; }
@@ -712,13 +727,13 @@ struct JSScopeProperty {
     JSObject *setterObject() const { JS_ASSERT(hasSetterValue()); return setterObj; }
 
     // Per ES5, decode null setterObj as the undefined value, which encodes as null.
-    js::FunObjOrUndefinedTag setterValue() const {
+    js::ObjectOrUndefinedTag setterValue() const {
         JS_ASSERT(hasSetterValue());
-        return js::FunObjOrUndefinedTag(setterObj);
+        return js::ObjectOrUndefinedTag(setterObj);
     }
 
-    js::FunObjOrUndefinedTag setterOrUndefined() const {
-        return js::FunObjOrUndefinedTag(hasSetterValue() ? setterObj : NULL);
+    js::ObjectOrUndefinedTag setterOrUndefined() const {
+        return js::ObjectOrUndefinedTag(hasSetterValue() ? setterObj : NULL);
     }
 
     inline JSDHashNumber hash() const;
@@ -974,7 +989,10 @@ JSScopeProperty::get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp
         return scope->methodReadBarrier(cx, this, vp);
     }
 
-    /* See the comment in JSScopeProperty::get as to why we check for With. */
+    /*
+     * |with (it) color;| ends up here, as do XML filter-expressions.
+     * Avoid exposing the With object to native getters.
+     */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
     return getterOp()(cx, obj, SPROP_USERID(this), vp);
@@ -991,9 +1009,9 @@ JSScopeProperty::set(JSContext* cx, JSObject *obj, js::Value* vp)
     if (attrs & JSPROP_GETTER)
         return !!js_ReportGetterOnlyAssignment(cx);
 
-    /* See the comment in JSScopeProperty::get as to why we can check for With. */
+    /* See the comment in JSScopeProperty::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)
-        obj = obj->map->ops->thisObject(cx, obj);
+        obj = js_UnwrapWithObject(cx, obj);
     return setterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 

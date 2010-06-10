@@ -1671,6 +1671,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
                        loadFlags,
                        nsnull,
                        nsnull,
+                       nsnull,      /* channel policy not needed */
                        aRequest);
 }
 

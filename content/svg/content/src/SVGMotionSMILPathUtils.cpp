@@ -39,7 +39,7 @@
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsContentCreatorFunctions.h" // For NS_NewSVGElement
-
+#include "nsCharSeparatedTokenizer.h"
 
 namespace mozilla {
 
@@ -117,61 +117,41 @@ SVGMotionSMILPathUtils::PathGenerator::GetResultingPath()
 //----------------------------------------------------------------------
 // Helper / protected methods
 
-static PRBool
-ParseOneCoordinate(char** aRest, nsSVGLength2& aLengthVal)
-{
-  aLengthVal.Init();
-
-  // Grab token, up to next delimiter
-  // XXXdholbert Ideally we'd like to know if the delimeter we found was a
-  // comma (and if so, fail if we come across any more commas before the next
-  // value). Current behavior will accept mutliple commas in between values,
-  // and that's not technically spec-correct, but it's simpler and it matches
-  // our behavior elsewhere where we use strtok with SVG_COMMA_WSP_DELIM.
-  char* token = nsCRT::strtok(*aRest, SVG_COMMA_WSP_DELIM, aRest);
-  if (!token) {
-    return PR_FALSE;
-  }
-
-  // Parse token into value + unit
-  nsresult rv = aLengthVal.SetBaseValueString(NS_ConvertASCIItoUTF16(token),
-                                              nsnull, PR_FALSE);
-  return NS_SUCCEEDED(rv);
-}
-
 PRBool
 SVGMotionSMILPathUtils::PathGenerator::
   ParseCoordinatePair(const nsAString& aCoordPairStr,
                       float& aXVal, float& aYVal)
 {
-  nsSVGLength2 xLength, yLength;
-  
-  char* str = ToNewCString(aCoordPairStr);
-  char* rest = str;
-  PRBool success = PR_FALSE;
+  nsCharSeparatedTokenizer
+    tokenizer(aCoordPairStr, ',',
+              nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
-  if (ParseOneCoordinate(&rest, xLength) &&
-      ParseOneCoordinate(&rest, yLength)) {
+  nsSVGLength2 x, y;
+  nsresult rv;
 
-    // Check for any non-whitespace characters remaining at the end.
-    PRBool foundTrailingNonWhitespace = PR_FALSE;
-    while (*rest != '\0') {
-      if (!IsSVGWhitespace(*rest)) {
-        foundTrailingNonWhitespace = PR_TRUE;
-        break;
-      }
-    }
-    if (!foundTrailingNonWhitespace) {
-      success = PR_TRUE;
-    }
+  if (!tokenizer.hasMoreTokens()) { // No 1st token
+    return PR_FALSE;
   }
-  nsMemory::Free(str);
-
-  if (success) {
-    aXVal = xLength.GetBaseValue(mSVGElement);
-    aYVal = yLength.GetBaseValue(mSVGElement);
+  // Parse X value
+  x.Init();
+  rv = x.SetBaseValueString(tokenizer.nextToken(), nsnull, PR_FALSE);
+  if (NS_FAILED(rv) ||                // 1st token failed to parse.
+      !tokenizer.hasMoreTokens()) {   // No 2nd token.
+    return PR_FALSE;
   }
-  return success;
+
+  // Parse Y value
+  y.Init();
+  rv = y.SetBaseValueString(tokenizer.nextToken(), nsnull, PR_FALSE);
+  if (NS_FAILED(rv) ||                           // 2nd token failed to parse.
+      tokenizer.lastTokenEndedWithSeparator() || // Trailing comma.
+      tokenizer.hasMoreTokens()) {               // More text remains
+    return PR_FALSE;
+  }
+
+  aXVal = x.GetBaseValue(mSVGElement);
+  aYVal = y.GetBaseValue(mSVGElement);
+  return PR_TRUE;
 }
 
 //----------------------------------------------------------------------

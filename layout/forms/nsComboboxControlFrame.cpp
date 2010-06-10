@@ -1170,22 +1170,23 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   }
 
   // Create a text frame and put it inside the block frame
-  mTextFrame = NS_NewTextFrame(shell, textStyleContext);
-  if (NS_UNLIKELY(!mTextFrame)) {
+  nsIFrame* textFrame = NS_NewTextFrame(shell, textStyleContext);
+  if (NS_UNLIKELY(!textFrame)) {
     return nsnull;
   }
 
   // initialize the text frame
-  rv = mTextFrame->Init(aContent, mDisplayFrame, nsnull);
+  rv = textFrame->Init(aContent, mDisplayFrame, nsnull);
   if (NS_FAILED(rv)) {
     mDisplayFrame->Destroy();
     mDisplayFrame = nsnull;
-    mTextFrame->Destroy();
-    mTextFrame = nsnull;
+    textFrame->Destroy();
+    textFrame = nsnull;
     return nsnull;
   }
+  mDisplayContent->SetPrimaryFrame(textFrame);
 
-  nsFrameList textList(mTextFrame, mTextFrame);
+  nsFrameList textList(textFrame, textFrame);
   mDisplayFrame->SetInitialChildList(nsnull, textList);
   return mDisplayFrame;
 }

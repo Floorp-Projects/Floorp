@@ -187,11 +187,25 @@ int NS_main(int argc, NS_tchar **argv)
     fail("%s | ini file doesn't exist (check 7)", TEST_NAME);
   }
 
+  // Test reading a non-default section name
+  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
+  retval = ReadStrings(inifile, "Title\0", 1, &testStrings.title, "BogusSection2");
+  if (retval == OK) {
+    if (strcmp(testStrings.title, "Bogus Title") != 0) {
+      rv = 27;
+      fail("%s | Title ini value incorrect (check 9)", TEST_NAME);
+    }
+  }
+  else {
+    fail("%s | ReadStrings returned %i (check 8)", TEST_NAME, retval);
+    rv = 28;
+  }
+
 
   if (rv == 0) {
     printf("TEST-PASS | %s | all checks passed\n", TEST_NAME);
   } else {
-    fail("%s | %i out of 7 checks failed", TEST_NAME, gFailCount);
+    fail("%s | %i out of 9 checks failed", TEST_NAME, gFailCount);
   }
 
   return rv;

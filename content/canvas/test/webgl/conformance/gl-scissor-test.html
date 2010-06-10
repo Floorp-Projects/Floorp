@@ -1,0 +1,71 @@
+<!--
+Copyright (c) 2009 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+ -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>WebGL Scissor Test</title>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
+<script src="../../debug/webgl-debug.js"></script>
+<script src="../resources/js-test-pre.js"></script>
+<script src="../fast/resources/webgl-test.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<canvas id="canvas" width="2" height="2" style="width: 40px; height: 40px;"> </canvas>
+<script>
+description("Check if glScissor setting works.");
+
+debug("");
+debug("Canvas.getContext");
+
+var gl = create3DContext(document.getElementById("canvas"));
+if (!gl) {
+  testFailed("context does not exist");
+} else {
+  testPassed("context exists");
+
+  debug("");
+
+  // clear a portion of our FBO
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(0, 0, 1, 1);
+  gl.clearColor(0,1,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  var b = gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE);
+  checkPixel(b, 0, 0, [0, 1, 0, 1]);
+  checkPixel(b, 1, 0, [0, 0, 0, 0]);
+  checkPixel(b, 0, 1, [0, 0, 0, 0]);
+  checkPixel(b, 1, 1, [0, 0, 0, 0]);
+
+  function checkPixel(b, x, y, color) {
+    var offset = (y * 2 + x) * 4;
+    var match = true;
+    for (var c = 0; c < 4; ++c) {
+      if (b[offset + c] != color[c] * 255) {
+        match = false;
+        break;
+      }
+    }
+    assertMsg(match, "pixel at " + x + ", " + y + " is expected value");
+  }
+}
+
+debug("");
+successfullyParsed = true;
+
+</script>
+<script src="../resources/js-test-post.js"></script>
+
+<script>
+</script>
+
+</body>
+</html>

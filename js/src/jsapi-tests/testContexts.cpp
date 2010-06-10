@@ -72,4 +72,22 @@ BEGIN_TEST(testContexts_bug561444)
     }
 END_TEST(testContexts_bug561444)
 
+BEGIN_TEST(testContexts_bug563735)
+{
+    JSContext *cx2 = JS_NewContext(rt, 8192);
+    CHECK(cx2);
+
+    JS_TransferRequest(cx, cx2);
+    jsval v = JSVAL_NULL;
+    JSBool ok = JS_SetProperty(cx2, global, "x", &v);
+    JS_TransferRequest(cx2, cx);
+    CHECK(ok);
+
+    EXEC("(function () { for (var i = 0; i < 9; i++) ; })();");
+
+    JS_DestroyContext(cx2);
+    return true;
+}
+END_TEST(testContexts_bug563735)
+
 #endif

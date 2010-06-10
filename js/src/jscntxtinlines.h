@@ -46,6 +46,15 @@
 
 #include "jsobjinlines.h"
 
+inline bool
+JSContext::ensureGeneratorStackSpace()
+{
+    bool ok = genStack.reserve(genStack.length() + 1);
+    if (!ok)
+        js_ReportOutOfMemory(this);
+    return ok;
+}
+
 namespace js {
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
@@ -220,16 +229,29 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case DESCRIPTORS: {
-        PropertyDescriptorArray &descriptors =
-            static_cast<AutoDescriptorArray *>(this)->descriptors;
+        PropDescArray &descriptors =
+            static_cast<AutoPropDescArrayRooter *>(this)->descriptors;
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
-            PropertyDescriptor &desc = descriptors[i];
+            PropDesc &desc = descriptors[i];
 
-            MarkValue(trc, desc.value, "PropertyDescriptor::value");
-            MarkValue(trc, desc.get, "PropertyDescriptor::get");
-            MarkValue(trc, desc.set, "PropertyDescriptor::set");
+            MarkValue(trc, desc.pd, "PropDesc::pd");
+            MarkValue(trc, desc.value, "PropDesc::value");
+            MarkValue(trc, desc.get, "PropDesc::get");
+            MarkValue(trc, desc.set, "PropDesc::set");
             MarkId(trc, desc.id, "desc.id");
         }
+        return;
+      }
+
+      case DESCRIPTOR : {
+        AutoPropertyDescriptorRooter &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
+        if (desc.obj)
+            MarkObject(trc, desc.obj, "Descriptor::obj");
+        MarkValue(trc, desc.value, "Descriptor::value");
+        if (desc.attrs & JSPROP_GETTER)
+            MarkObject(trc, CastAsObject(desc.getter), "Descriptor::get");
+        if (desc.attrs & JSPROP_SETTER)
+            MarkObject(trc, CastAsObject(desc.setter), "Descriptor::set");
         return;
       }
 
@@ -250,20 +272,20 @@ AutoGCRooter::trace(JSTracer *trc)
             Mark(trc, obj, JSTRACE_OBJECT, "js::AutoObjectRooter.obj");
         return;
 
-      case STRING:
-        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            Mark(trc, str, JSTRACE_STRING, "js::AutoStringRooter.str");
-        return;
-
       case ID:
         MarkId(trc, static_cast<AutoIdRooter *>(this)->idval, "js::AutoIdRooter.val");
         return;
 
-      case VALVECTOR: {
+      case VECTOR: {
         Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
         MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
         return;
       }
+
+      case STRING:
+        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
+            Mark(trc, str, JSTRACE_STRING, "js::AutoStringRooter.str");
+        return;
     }
 
     JS_ASSERT(tag >= 0);

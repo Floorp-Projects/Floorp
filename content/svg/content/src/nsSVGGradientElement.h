@@ -59,7 +59,6 @@ class nsSVGGradientElement : public nsSVGGradientElementBase,
 
 protected:
   nsSVGGradientElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
 
 public:
   // interfaces:
@@ -78,6 +77,8 @@ protected:
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
 
+  virtual void DidAnimateTransform();
+
   enum { GRADIENTUNITS, SPREADMETHOD };
   nsSVGEnum mEnumAttributes[2];
   static nsSVGEnumMapping sSpreadMethodMap[];
@@ -87,8 +88,14 @@ protected:
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 
+  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
+
   // nsIDOMSVGGradientElement values
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> mGradientTransform;
+
+  // helper
+  nsresult CreateTransformList();
 };
 
 //---------------------Linear Gradients------------------------

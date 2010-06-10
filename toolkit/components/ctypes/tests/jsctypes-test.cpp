@@ -389,6 +389,7 @@ test_vector_add_va_cdecl(PRUint8 num_vecs,
     for (PRUint8 j = 0; j < vec_len; ++j)
       result[j] += vec[j];
   }
+  va_end(list);
   return result;
 }
 

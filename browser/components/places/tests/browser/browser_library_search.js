@@ -202,9 +202,9 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
     // getFolders() on a History query returns an empty array, so no use
     // comparing against aFolderId in that case.
     if (aFolderId !== PlacesUIUtils.leftPaneQueries["History"]) {
-      // contentTree.place should be equal to contentTree.getResult().root.uri,
+      // contentTree.place should be equal to contentTree.result.root.uri,
       // but it's not until bug 476952 is fixed.
-      var query = queryStringToQuery(contentTree.getResult().root.uri);
+      var query = queryStringToQuery(contentTree.result.root.uri);
       is(query.getFolders()[0], aFolderId,
          "Content tree's folder should be what was selected in the left pane");
     }
@@ -215,7 +215,7 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
   var searchBox = doc.getElementById("searchFilter");
   searchBox.value = aSearchStr;
   libraryWin.PlacesSearchBox.search(searchBox.value);
-  query = queryStringToQuery(contentTree.getResult().root.uri);
+  query = queryStringToQuery(contentTree.result.root.uri);
   if (aSearchStr) {
     is(query.searchTerms, aSearchStr,
        "Content tree's searchTerms should be text in search box");

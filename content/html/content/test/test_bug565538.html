@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=565538
+-->
+<head>
+  <title>Test for Bug 565538</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=565538">Mozilla Bug 565538</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 565538 **/
+
+var gElementTestData = [
+/* element     result */
+  ['input',    true],
+  ['button',   false],
+  ['fieldset', false],
+  ['label',    false],
+  ['option',   false],
+  ['optgroup', false],
+  ['output',   false],
+  ['legend',   false],
+  ['select',   false],
+  ['textarea', false],
+  ['object',   false],
+];
+
+var gInputTestData = [
+/* type        result */
+  ['password', true],
+  ['tel',      true],
+  ['text',     true],
+  ['button',   false],
+  ['checkbox', false],
+  ['file',     false],
+  ['hidden',   false],
+  ['reset',    false],
+  ['image',    false],
+  ['radio',    false],
+  ['submit',   false],
+  // TODO: the next states are not yet implemented but we can't use a todo for
+  // them as the check will success so the test will fail (todo _has_ to fail).
+  // The tests are not failing because the unvalid states fallback to 'text'.
+  ['search',   true],
+  ['email',    true],
+  ['url',      true],
+];
+
+/**
+ * TODO: the next types are not yet in the tree.
+ * The value is only a suggestion.
+ */
+var gInputTodoData = [
+/* type        expected result */
+  ['number',   false],
+  ['range',    false],
+  ['color',    false],
+  ['date',     false],
+  ['datetime', false],
+  ['month',    false],
+  ['week',     false],
+  ['time',     false],
+  ['datetime-local', false],
+];
+
+function checkMozIsTextFieldDefined(aElement, aResult)
+{
+  var element = document.createElement(aElement);
+
+  var msg = "mozIsTextField should be "
+  if (aResult) {
+    msg += "defined";
+  } else {
+    msg += "undefined";
+  }
+
+  is('mozIsTextField' in element, aResult, msg);
+}
+
+function checkMozIsTextFieldValue(aInput, aResult)
+{
+  is(aInput.mozIsTextField(false), aResult,
+     "mozIsTextField(false) should return " + aResult);
+
+  if (aInput.type == 'password') {
+    ok(!aInput.mozIsTextField(true),
+       "mozIsTextField(true) should return false for password");
+  } else {
+    is(aInput.mozIsTextField(true), aResult,
+       "mozIsTextField(true) should return " + aResult);
+  }
+}
+
+function checkMozIsTextFieldValueTodo(aInput, aResult)
+{
+  todo_is(aInput.mozIsTextField(false), aResult,
+          "mozIsTextField(false) should return " + aResult);
+  todo_is(aInput.mozIsTextField(true), aResult,
+          "mozIsTextField(true) should return " + aResult);
+}
+
+// Check if the method is defined for the correct elements.
+for each (data in gElementTestData) {
+  checkMozIsTextFieldDefined(data[0], data[1]);
+}
+
+// Check if the method returns the correct value.
+var input = document.createElement('input');
+for each (data in gInputTestData) {
+  input.type = data[0];
+  checkMozIsTextFieldValue(input, data[1]);
+}
+
+// Check for the todo's.
+for each (data in gInputTodoData) {
+  input.type = data[0];
+  checkMozIsTextFieldValueTodo(input, data[1]);
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,11 @@
+include protocol content;
+
+sync protocol compositor {
+    bridges compositor, content;
+
+child:
+    __delete__();
+
+state DEAD:
+    send __delete__;
+};

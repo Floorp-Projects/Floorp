@@ -1,5 +1,7 @@
 function test()
 {
+  waitForExplicitFinish();
+
   // ---- Test dragging the proxy icon ---
   var value = content.location.href;
   var urlString = value + "\n" + content.document.title;
@@ -24,4 +26,22 @@ function test()
   // Now, the identity information panel is opened by the proxy icon click.
   // We need to close it for next tests.
   EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+
+  // now test dragging onto a tab
+  var tab1 = gBrowser.addTab();
+  var browser1 = gBrowser.getBrowserForTab(tab1);
+
+  var tab2 = gBrowser.addTab();
+  var browser2 = gBrowser.getBrowserForTab(tab2);
+
+  gBrowser.selectedTab = tab1;
+
+  browser2.addEventListener("load", function () {
+    is(browser2.contentWindow.location, "http://mochi.test:8888/", "drop on tab");
+    gBrowser.removeCurrentTab();
+    gBrowser.removeCurrentTab();
+    finish();
+  }, true);
+
+  EventUtils.synthesizeDrop(tab2, [[{type: "text/uri-list", data: "http://mochi.test:8888/"}]], "copy", window);
 }

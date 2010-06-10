@@ -54,86 +54,25 @@ class FileError(Exception):
   def __str__(self):
     return self.msg
 
-class myProc(Thread):
-  def __init__(self, hostip, hostport, cmd, new_line = True, sleeptime = 0):
-    self.cmdline = cmd
-    self.newline = new_line
-    self.sleep = sleeptime
-    self.host = hostip
-    self.port = hostport
-    Thread.__init__(self)
-
-  def run(self):
-    promptre =re.compile('.*\$\>.$')
-    data = ""
-    try:
-      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except:
-      return None
-      
-    try:
-      s.connect((self.host, int(self.port)))
-    except:
-      s.close()
-      return None
-      
-    try:
-      s.recv(1024)
-    except:
-      s.close()
-      return None
-      
-    for cmd in self.cmdline:
-      if (cmd == 'quit'): break
-      if self.newline: cmd += '\r\n'
-      try:
-        s.send(cmd)
-      except:
-        s.close()
-        return None
-        
-      time.sleep(int(self.sleep))
-
-      found = False
-      while (found == False):
-        try:
-          temp = s.recv(1024)
-        except:
-          s.close()
-          return None
-          
-        lines = temp.split('\n')
-        for line in lines:
-          if (promptre.match(line)):
-            found = True
-          data += temp
-
-    try:
-      s.send('quit\r\n')
-    except:
-      s.close()
-      return None
-    try:
-      s.close()
-    except:
-      return None
-    return data
-
 class DeviceManager:
   host = ''
   port = 0
   debug = 3
   _redo = False
-  deviceRoot = '/tests'
+  deviceRoot = None
   tempRoot = os.getcwd()
+  base_prompt = '\$\>'
+  prompt_sep = '\x00'
+  prompt_regex = '.*' + base_prompt + prompt_sep
 
   def __init__(self, host, port = 27020):
     self.host = host
     self.port = port
     self._sock = None
+    self.getDeviceRoot()
 
   def sendCMD(self, cmdline, newline = True, sleep = 0):
-    promptre = re.compile('.*\$\>.$')
+    promptre = re.compile(self.prompt_regex + '$')
 
     # TODO: any commands that don't output anything and quit need to match this RE
     pushre = re.compile('^push .*$')
@@ -169,6 +108,7 @@ class DeviceManager:
       
       try:
         self._sock.send(cmd)
+        if (self.debug >= 4): print "send cmd: " + str(cmd)
       except:
         self._redo = True
         self._sock.close()
@@ -181,7 +121,7 @@ class DeviceManager:
         time.sleep(int(sleep))
         found = False
         while (found == False):
-          if (self.debug >= 3): print "recv'ing..."
+          if (self.debug >= 4): print "recv'ing..."
           
           try:
             temp = self._sock.recv(1024)
@@ -211,16 +151,16 @@ class DeviceManager:
   
   # take a data blob and strip instances of the prompt '$>\x00'
   def stripPrompt(self, data):
-    promptre = re.compile('.*\$\>.*')
+    promptre = re.compile(self.prompt_regex + '.*')
     retVal = []
     lines = data.split('\n')
     for line in lines:
       try:
         while (promptre.match(line)):
-          pieces = line.split('\x00')
-          index = pieces.index("$>")
+          pieces = line.split(self.prompt_sep)
+          index = pieces.index('$>')
           pieces.pop(index)
-          line = '\x00'.join(pieces)
+          line = self.prompt_sep.join(pieces)
       except(ValueError):
         pass
       retVal.append(line)
@@ -229,19 +169,16 @@ class DeviceManager:
   
 
   def pushFile(self, localname, destname):
-    if (self.debug >= 2):
-      print "in push file with: " + localname + ", and: " + destname
+    if (self.debug >= 2): print "in push file with: " + localname + ", and: " + destname
     if (self.validateFile(destname, localname) == True):
-      if (self.debug >= 2):
-        print "files are validated"
+      if (self.debug >= 2): print "files are validated"
       return ''
 
     if self.mkDirs(destname) == None:
       print "unable to make dirs: " + destname
       return None
 
-    if (self.debug >= 2):
-      print "sending: push " + destname
+    if (self.debug >= 2): print "sending: push " + destname
     
     # sleep 5 seconds / MB
     filesize = os.path.getsize(localname)
@@ -252,13 +189,11 @@ class DeviceManager:
     f.close()
     retVal = self.sendCMD(['push ' + destname + '\r\n', data], newline = False, sleep = sleepTime)
     if (retVal == None):
-      if (self.debug >= 2):
-        print "Error in sendCMD, not validating push"
+      if (self.debug >= 2): print "Error in sendCMD, not validating push"
       return None
 
     if (self.validateFile(destname, localname) == False):
-      if (self.debug >= 2):
-        print "file did not copy as expected"
+      if (self.debug >= 2): print "file did not copy as expected"
       return None
 
     return retVal
@@ -286,7 +221,6 @@ class DeviceManager:
     for root, dirs, files in os.walk(localDir):
       parts = root.split(localDir)
       for file in files:
-        print "examining file: " + file
         remoteRoot = remoteDir + '/' + parts[1]
         remoteName = remoteRoot + '/' + file
         if (parts[1] == ""): remoteRoot = remoteDir
@@ -346,7 +280,7 @@ class DeviceManager:
 
 
   def getProcessList(self):
-    data = self.sendCMD(['ps', 'quit'], sleep = 3)
+    data = self.sendCMD(['ps'], sleep = 3)
     if (data == None):
       return None
       
@@ -355,12 +289,13 @@ class DeviceManager:
     files = []
     for line in lines:
       if (line.strip() != ''):
-        pidproc = line.strip().split(' ')
+        pidproc = line.strip().split()
         if (len(pidproc) == 2):
           files += [[pidproc[0], pidproc[1]]]
-      
+        elif (len(pidproc) == 3):
+          #android returns <userID> <procID> <procName>
+          files += [[pidproc[1], pidproc[2], pidproc[0]]]     
     return files
-
 
   def getMemInfo(self):
     data = self.sendCMD(['mems', 'quit'])
@@ -375,29 +310,40 @@ class DeviceManager:
 
   def fireProcess(self, appname):
     if (self.debug >= 2): print "FIRE PROC: '" + appname + "'"
-    self.process = myProc(self.host, self.port, ['exec ' + appname, 'quit'])
-    self.process.start()  
+    
+    if (self.processExist(appname) != ''):
+      print "WARNING: process %s appears to be running already\n" % appname
+    
+    self.sendCMD(['exec ' + appname])
+
+    #NOTE: we sleep for 30 seconds to allow the application to startup
+    time.sleep(30)
+
+    self.process = self.processExist(appname)
+    if (self.debug >= 4): print "got pid: " + str(self.process) + " for process: " + str(appname)
 
   def launchProcess(self, cmd, outputFile = "process.txt", cwd = ''):
     if (outputFile == "process.txt"):
       outputFile = self.getDeviceRoot() + '/' + "process.txt"
-      
+
     cmdline = subprocess.list2cmdline(cmd)
     self.fireProcess(cmdline + " > " + outputFile)
     handle = outputFile
-        
+
     return handle
   
+  #hardcoded: sleep interval of 5 seconds, timeout of 10 minutes
   def communicate(self, process, timeout = 600):
+    interval = 5
     timed_out = True
     if (timeout > 0):
       total_time = 0
       while total_time < timeout:
-        time.sleep(1)
+        time.sleep(interval)
         if (not self.poll(process)):
           timed_out = False
           break
-        total_time += 1
+        total_time += interval
 
     if (timed_out == True):
       return None
@@ -407,7 +353,7 @@ class DeviceManager:
 
   def poll(self, process):
     try:
-      if (not self.process.isAlive()):
+      if (self.processExist(process) == None):
         return None
       return 1
     except:
@@ -420,10 +366,11 @@ class DeviceManager:
   def processExist(self, appname):
     pid = ''
   
-    pieces = appname.split('/')
-    app = pieces[-1]
+    pieces = appname.split(' ')
+    parts = pieces[0].split('/')
+    app = parts[-1]
     procre = re.compile('.*' + app + '.*')
-  
+
     procList = self.getProcessList()
     if (procList == None):
       return None
@@ -442,7 +389,6 @@ class DeviceManager:
     return True
 
   def getTempDir(self):
-    promptre = re.compile('.*\$\>\x00.*')
     retVal = ''
     data = self.sendCMD(['tmpd', 'quit'])
     if (data == None):
@@ -455,7 +401,7 @@ class DeviceManager:
     if localFile == '':
         localFile = os.path.join(self.tempRoot, "temp.txt")
   
-    promptre = re.compile('.*\$\>\x00.*')
+    promptre = re.compile(self.prompt_regex + '.*')
     data = self.sendCMD(['cat ' + remoteFile, 'quit'], sleep = 5)
     if (data == None):
       return None
@@ -506,8 +452,7 @@ class DeviceManager:
       retVal = self.stripPrompt(data)
       if (retVal != None):
         retVal = retVal.strip('\n')
-      if (self.debug >= 3): 
-        print "remote hash: '" + retVal + "'"
+      if (self.debug >= 3): print "remote hash returned: '" + retVal + "'"
       return retVal
     
 
@@ -530,13 +475,14 @@ class DeviceManager:
 
       file.close()
       hexval = mdsum.hexdigest()
-      if (self.debug >= 3):
-        print "local hash: '" + hexval + "'"
+      if (self.debug >= 3): print "local hash returned: '" + hexval + "'"
       return hexval
 
   # Gets the device root for the testing area on the device
   # For all devices we will use / type slashes and depend on the device-agent
-  # to sort those out.
+  # to sort those out.  The agent will return us the device location where we
+  # should store things, we will then create our /tests structure relative to
+  # that returned path.
   # Structure on the device is as follows:
   # /tests
   #       /<fennec>|<firefox>  --> approot
@@ -546,11 +492,14 @@ class DeviceManager:
   #       /mochitest
   def getDeviceRoot(self):
     if (not self.deviceRoot):
-      if (self.dirExists('/tests')):
-        self.deviceRoot = '/tests'
-      else:
-        self.mkDir('/tests')
-        self.deviceRoot = '/tests'
+      data = self.sendCMD(['testroot'], sleep = 1)
+      if (data == None):
+        return '/tests'
+      self.deviceRoot = self.stripPrompt(data).strip('\n') + '/tests'
+
+    if (not self.dirExists(self.deviceRoot)):
+      self.mkDir(self.deviceRoot)
+
     return self.deviceRoot
 
   # Either we will have /tests/fennec or /tests/firefox but we will never have
@@ -558,8 +507,10 @@ class DeviceManager:
   def getAppRoot(self):
     if (self.dirExists(self.getDeviceRoot() + '/fennec')):
       return self.getDeviceRoot() + '/fennec'
-    else:
+    elif (self.dirExists(self.getDeviceRoot() + '/firefox')):
       return self.getDeviceRoot() + '/firefox'
+    else:
+      return 'org.mozilla.fennec'
 
   # Gets the directory location on the device for a specific test type
   # Type is one of: xpcshell|reftest|mochitest
@@ -592,8 +543,8 @@ class DeviceManager:
         dir = '/'.join(parts[:-1])
     elif self.fileExists('/' + filename):
       dir = '/' + filename
-    elif self.fileExists('/tests/' + filename):
-      dir = '/tests/' + filename
+    elif self.fileExists(self.getDeviceRoot() + '/' + filename):
+      dir = self.getDeviceRoot() + '/' + filename
     else:
       return None
 
@@ -630,3 +581,71 @@ class DeviceManager:
         if (self.validateFile(remoteName, os.path.join(root, file)) <> True):
             return None
     return True
+
+  #TODO: make this simpler by doing a single directive at a time
+  # Returns information about the device:
+  # Directive indicates the information you want to get, your choices are:
+  # os - name of the os
+  # id - unique id of the device
+  # uptime - uptime of the device
+  # systime - system time of the device
+  # screen - screen resolution
+  # memory - memory stats
+  # process - list of running processes (same as ps)
+  # disk - total, free, available bytes on disk
+  # power - power status (charge, battery temp)
+  # all - all of them
+  def getInfo(self, directive):
+    data = None
+    if (directive in ('os','id','uptime','systime','screen','memory','process',
+                      'disk','power')):
+      data = self.sendCMD(['info ' + directive, 'quit'], sleep = 1)
+    else:
+      directive = None
+      data = self.sendCMD(['info', 'quit'], sleep = 1)
+
+    if (data is None):
+      return None
+      
+    data = self.stripPrompt(data)
+    result = {}
+        
+    if directive:
+      result[directive] = data.split('\n')
+      for i in range(len(result[directive])):
+        if (len(result[directive][i]) != 0):
+          result[directive][i] = result[directive][i].strip()
+
+      # Get rid of any empty attributes
+      result[directive].remove('')
+
+    else:
+      lines = data.split('\n')
+      result['id'] = lines[0]
+      result['os'] = lines[1]
+      result['systime'] = lines[2]
+      result['uptime'] = lines[3]
+      result['screen'] = lines[4]
+      result['memory'] = lines[5]
+      if (lines[6] == 'Power status'):
+        tmp = []
+        for i in range(4):
+          tmp.append(line[7 + i])
+        result['power'] = tmp
+      tmp = []
+
+      # Linenum is the line where the process list begins
+      linenum = 11
+      for j in range(len(lines) - linenum):
+        if (lines[j + linenum].strip() != ''):
+          procline = lines[j + linenum].split('\t')
+
+          if len(procline) == 2:
+            tmp.append([procline[0], procline[1]])
+          elif len(procline) == 3:
+            # Android has <userid> <procid> <procname>
+            # We put the userid to achieve a common format
+            tmp.append([procline[1], procline[2], procline[0]])
+      result['process'] = tmp
+    return result
+

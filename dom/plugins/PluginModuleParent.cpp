@@ -542,9 +542,6 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
         }
         else {
             intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
-            if (intval == -1) {
-                return nsnull;
-            }
             string.SetIsVoid(PR_TRUE);
         }
         ident = new PluginIdentifierParent(aIdentifier);
@@ -740,7 +737,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
 
     if (*error != NPERR_NO_ERROR) {
         NPP_Destroy(instance, 0);
-        return *error;
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;

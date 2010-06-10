@@ -1105,7 +1105,18 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
     CHECK_mPath();
 
-#ifdef HAVE_TRUNCATE64
+#if defined(ANDROID)
+    /* no truncate on bionic */
+    int fd = open(mPath.get(), O_WRONLY);
+    if (fd == -1)
+        return NSRESULT_FOR_ERRNO();
+
+    int ret = ftruncate(fd, (off_t)aFileSize);
+    close(fd);
+
+    if (ret == -1)
+        return NSRESULT_FOR_ERRNO();
+#elif defined(HAVE_TRUNCATE64)
     if (truncate64(mPath.get(), (off64_t)aFileSize) == -1)
         return NSRESULT_FOR_ERRNO();
 #else

@@ -223,40 +223,70 @@ TypedArray::isArrayIndex(JSContext *cx, jsid id, jsuint *ip)
     return false;
 }
 
+typedef Value (* TypedArrayPropertyGetter)(TypedArray *tarray);
+
+template <TypedArrayPropertyGetter Get>
+class TypedArrayGetter {
+  public:
+    static inline bool get(JSContext *cx, JSObject *obj, jsid id, Value *vp) {
+        do {
+            if (js_IsTypedArray(obj)) {
+                TypedArray *tarray = TypedArray::fromJSObject(obj);
+                if (tarray)
+                    *vp = Get(tarray);
+                return true;
+            }
+        } while ((obj = obj->getProto()) != NULL);
+        return true;
+    }
+};
+
+inline Value
+getBuffer(TypedArray *tarray)
+{
+    return NonFunObjTag(*tarray->bufferJS);
+}
+
 JSBool
 TypedArray::prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    TypedArray *tarray = fromJSObject(obj);
-    if (tarray)
-        vp->setNonFunObj(*tarray->bufferJS);
-    return true;
+    return TypedArrayGetter<getBuffer>::get(cx, obj, id, vp);
+}
+
+inline Value
+getByteOffset(TypedArray *tarray)
+{
+    return Int32Tag(tarray->byteOffset);
 }
 
 JSBool
 TypedArray::prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    TypedArray *tarray = fromJSObject(obj);
-    if (tarray)
-        vp->setInt32(tarray->byteOffset);
-    return true;
+    return TypedArrayGetter<getByteOffset>::get(cx, obj, id, vp);
+}
+
+inline Value
+getByteLength(TypedArray *tarray)
+{
+    return Int32Tag(tarray->byteLength);
 }
 
 JSBool
 TypedArray::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    TypedArray *tarray = fromJSObject(obj);
-    if (tarray)
-        vp->setInt32(tarray->byteLength);
-    return true;
+    return TypedArrayGetter<getByteLength>::get(cx, obj, id, vp);
+}
+
+inline Value
+getLength(TypedArray *tarray)
+{
+    return Int32Tag(tarray->length);
 }
 
 JSBool
 TypedArray::prop_getLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    TypedArray *tarray = fromJSObject(obj);
-    if (tarray)
-        vp->setInt32(tarray->length);
-    return true;
+    return TypedArrayGetter<getLength>::get(cx, obj, id, vp);
 }
 
 JSBool
@@ -283,15 +313,6 @@ TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
 }
 
 void
-TypedArray::obj_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
-{
-#ifdef DEBUG
-    TypedArray *tarray = fromJSObject(obj);
-    JS_ASSERT_IF(tarray, tarray->isArrayIndex(cx, (jsid) prop));
-#endif
-}
-
-void
 TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 {
     TypedArray *tarray = fromJSObject(obj);
@@ -303,8 +324,7 @@ TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 }
 
 JSBool
-TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                              uintN *attrsp)
+TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
               ? JSPROP_PERMANENT | JSPROP_READONLY
@@ -313,8 +333,7 @@ TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty 
 }
 
 JSBool
-TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-                              uintN *attrsp)
+TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_CANT_SET_ARRAY_ATTRS);
@@ -527,8 +546,8 @@ class TypedArrayTemplate
                     sprop = (JSScopeProperty *) prop;
                     if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
                         return false;
+                    JS_UNLOCK_OBJ(cx, obj2);
                 }
-                obj2->dropProperty(cx, prop);
             }
         }
 
@@ -1142,12 +1161,12 @@ class TypedArrayTemplate
     bool
     createBufferWithByteLength(JSContext *cx, int32 bytes)
     {
-        Value argv;
-        argv.setInt32(bytes);
-        JSObject *obj = js_ConstructObject(cx, &ArrayBuffer::jsclass, NULL, NULL,
-                                           1, &argv);
-        if (!obj)
+        Value argv = Int32Tag(bytes);
+        AutoValueRooter tvr(cx);
+        if (!ArrayBuffer::create(cx, NULL, 1, &argv, tvr.addr()))
             return false;
+
+        JSObject *obj = &tvr.value().asObject();
 
         bufferJS = obj;
         buffer = ArrayBuffer::fromJSObject(obj);
@@ -1274,10 +1293,11 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     js_CheckAccess,                                                            \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \
-    NULL,                                                                      \
-    _typedArray::obj_dropProperty,                                             \
-    NULL, NULL, NULL,                                                          \
-    NULL                                                                       \
+    NULL,   /* thisObject */                                                   \
+    NULL,   /* call */                                                         \
+    NULL,   /* construct */                                                    \
+    NULL,   /* hasInstance */                                                  \
+    NULL    /* clear */                                                        \
 };                                                                             \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
     JS_FN("slice", _typedArray::fun_slice, 2, 0),                              \
@@ -1386,15 +1406,17 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSBool)
 js_IsArrayBuffer(JSObject *obj)
 {
-    return obj && obj->getClass() == &ArrayBuffer::jsclass;
+    JS_ASSERT(obj);
+    return obj->getClass() == &ArrayBuffer::jsclass;
 }
 
 JS_FRIEND_API(JSBool)
 js_IsTypedArray(JSObject *obj)
 {
-    return obj &&
-           obj->getClass() >= &TypedArray::fastClasses[0] &&
-           obj->getClass() <  &TypedArray::fastClasses[TypedArray::TYPE_MAX];
+    JS_ASSERT(obj);
+    Class *clasp = obj->getClass();
+    return clasp >= &TypedArray::fastClasses[0] &&
+           clasp <  &TypedArray::fastClasses[TypedArray::TYPE_MAX];
 }
 
 JS_FRIEND_API(JSObject *)
@@ -1514,6 +1536,8 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
 JS_FRIEND_API(JSBool)
 js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope)
 {
+    JS_ASSERT(obj);
+
     scope = JS_GetGlobalForObject(cx, scope);
     if (!scope)
         return JS_FALSE;

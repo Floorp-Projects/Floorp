@@ -70,6 +70,7 @@
 
 #include "nsPoint.h"
 #include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -146,6 +147,10 @@ public:
   NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
+  virtual PRBool HasFocus();
+
+  /* ------------ nsIEditorIMESupport overrides ------------ */
+  NS_IMETHOD GetPreferredIMEState(PRUint32 *aState);
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
@@ -365,7 +370,7 @@ public:
   NS_IMETHOD SelectAll();
 
   /* ------------ nsICSSLoaderObserver -------------- */
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet*aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
 
   /* ------------ Utility Routines, not part of public API -------------- */
@@ -413,12 +418,12 @@ public:
 
   // Dealing with the internal style sheet lists:
   NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
-                               nsICSSStyleSheet **_retval);
-  NS_IMETHOD GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet, nsAString &aURL);
+                                 nsCSSStyleSheet **_retval);
+  NS_IMETHOD GetURLForStyleSheet(nsCSSStyleSheet *aStyleSheet, nsAString &aURL);
 
   // Add a url + known style sheet to the internal lists:
   nsresult AddNewStyleSheetToList(const nsAString &aURL,
-                                  nsICSSStyleSheet *aStyleSheet);
+                                  nsCSSStyleSheet *aStyleSheet);
 
   nsresult RemoveStyleSheetFromList(const nsAString &aURL);
                        
@@ -436,9 +441,6 @@ protected:
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);
   PRBool IsElementInBody(nsIDOMElement* aElement);
 
-  // inline style caching
-  void ClearInlineStylesCache();
-  
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
@@ -504,7 +506,7 @@ protected:
 
   nsresult CopyCellBackgroundColor(nsIDOMElement *destCell, nsIDOMElement *sourceCell);
 
-  // Reduce rowspan/colspan when cells span into non-existent rows/columns
+  // Reduce rowspan/colspan when cells span into nonexistent rows/columns
   NS_IMETHOD FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& aNewRowCount);
   NS_IMETHOD FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& aNewColCount);
 
@@ -725,14 +727,18 @@ protected:
   nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass);
   nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag);
 
+  // Whether the outer window of the DOM event target has focus or not.
+  PRBool   OurWindowHasFocus();
+  // Whether the content has independent selection or not.  E.g., input field,
+  // password field and textarea element.  At that time, this returns TRUE.
+  PRBool IsIndependentSelectionContent(nsIContent* aContent);
+
 // Data members
 protected:
 
   nsCOMArray<nsIContentFilter> mContentFilters;
 
   TypeInState*         mTypeInState;
-
-  nsCOMPtr<nsIDOMNode> mCachedNode;
 
   PRPackedBool mCRInParagraphCreatesParagraph;
 
@@ -747,7 +753,7 @@ protected:
 
   // Maintain a list of associated style sheets and their urls.
   nsTArray<nsString> mStyleSheetURLs;
-  nsCOMArray<nsICSSStyleSheet> mStyleSheets;
+  nsTArray<nsRefPtr<nsCSSStyleSheet> > mStyleSheets;
   
   // an array for holding default style settings
   nsTArray<PropItem*> mDefaultStyles;
@@ -901,7 +907,7 @@ protected:
   nsresult CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn);
   nsresult StartMoving(nsIDOMElement * aHandle);
   nsresult SetFinalPosition(PRInt32 aX, PRInt32 aY);
-  void     AddPositioningOffet(PRInt32 & aX, PRInt32 & aY);
+  void     AddPositioningOffset(PRInt32 & aX, PRInt32 & aY);
   void     SnapToGrid(PRInt32 & newX, PRInt32 & newY);
   nsresult GrabberClicked();
   nsresult EndMoving();

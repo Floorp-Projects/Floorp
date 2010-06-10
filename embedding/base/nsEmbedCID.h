@@ -77,18 +77,6 @@
  "@mozilla.org/embedcomp/prompt-service;1"
 
 /**
- * Non Blocking Alert Service ContractID
- *   This service is for posing non blocking alerts to the user.
- *
- * This contract implements the following interfaces:
- * nsINonBlockingAlertService
- *
- * Embedders may override this ContractID with their own implementation.
- */
-#define NS_NONBLOCKINGALERTSERVICE_CONTRACTID \
- "@mozilla.org/embedcomp/nbalert-service;1"
-
-/**
  * This contract ID should be implemented by password managers to be able to
  * override the standard implementation of nsIAuthPrompt2. It will be used as
  * a service.

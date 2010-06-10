@@ -42,6 +42,25 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  *
+ * Copyright © 1998 Keith Packard
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of Keith Packard not be used in
+ * advertising or publicity pertaining to distribution of the software without
+ * specific, written prior permission.  Keith Packard makes no
+ * representations about the suitability of this software for any purpose.  It
+ * is provided "as is" without express or implied warranty.
+ *
+ * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+ * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <stdlib.h>
@@ -66,74 +85,17 @@
 #define GOOD_RECT(rect) ((rect)->x1 < (rect)->x2 && (rect)->y1 < (rect)->y2)
 #define BAD_RECT(rect) ((rect)->x1 > (rect)->x2 || (rect)->y1 > (rect)->y2)
 
-/* Turn on debugging depending on what type of release this is
- */
-
-#if ((PIXMAN_VERSION_MICRO % 2) == 1)
-/* Random git checkout.
- * 
- * Those are often used for performance work, so we don't turn on the
- * full self-checking, but we do turn on the asserts.
- */
-#    define   FATAL_BUGS
-#    define noSELF_CHECKS
-#elif ((PIXMAN_VERSION_MINOR % 2) == 0)
-/* Stable release.
- *
- * We don't want assertions because the X server should stay alive
- * if possible. We also don't want self-checks for performance-reasons.
- */
-#    define noFATAL_BUGS
-#    define noSELF_CHECKS
-#else
-/* Development snapshot.
- *
- * These are the things that get shipped in development distributions
- * such as Rawhide. We want both self-checking and fatal assertions
- * to catch as many bugs as possible.
- */
-#    define FATAL_BUGS
-#    define SELF_CHECKS
-#endif
-
-#ifndef FATAL_BUGS
-#    undef assert
-#    undef abort
-#    define assert(expr)
-#    define abort()
-#endif
-
-#ifdef SELF_CHECKS
-
-static void
-log_region_error (const char *function, const char *message)
-{
-    static int n_messages = 0;
-
-    if (n_messages < 50)
-    {
-	fprintf (stderr,
-		 "*** BUG ***\n"
-		 "%s: %s\n"
-		 "Set a breakpoint on 'log_region_error' to debug\n\n",
-                 function, message);
-
-        abort (); /* This is #defined away unless FATAL_BUGS is defined */
-
-	n_messages++;
-    }
-}
+#ifdef DEBUG
 
 #define GOOD(reg)							\
     do									\
     {									\
 	if (!PREFIX (_selfcheck (reg)))					\
-	    log_region_error (FUNC, "Malformed region " # reg);         \
+	    _pixman_log_error (FUNC, "Malformed region " # reg);	\
     } while (0)
 
 #else
 
-#define log_region_error(function, name)
 #define GOOD(reg)
 
 #endif
@@ -295,7 +257,7 @@ alloc_data (size_t n)
 	}								\
 	ADDRECT (next_rect, nx1, ny1, nx2, ny2);			\
 	region->data->numRects++;					\
-	assert (region->data->numRects <= region->data->size);		\
+	critical_if_fail (region->data->numRects <= region->data->size);		\
     } while (0)
 
 #define DOWNSIZE(reg, numRects)						\
@@ -420,7 +382,7 @@ PREFIX (_init_rect) (region_type_t *	region,
     if (!GOOD_RECT (&region->extents))
     {
         if (BAD_RECT (&region->extents))
-            log_region_error (FUNC, "Invalid rectangle passed");
+            _pixman_log_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -434,7 +396,7 @@ PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
     if (!GOOD_RECT (extents))
     {
         if (BAD_RECT (extents))
-            log_region_error (FUNC, "Invalid rectangle passed");
+            _pixman_log_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -612,7 +574,7 @@ pixman_coalesce (region_type_t * region,      /* Region to coalesce		 */
      * Figure out how many rectangles are in the band.
      */
     numRects = cur_start - prev_start;
-    assert (numRects == region->data->numRects - cur_start);
+    critical_if_fail (numRects == region->data->numRects - cur_start);
 
     if (!numRects) return cur_start;
 
@@ -700,8 +662,8 @@ pixman_region_append_non_o (region_type_t * region,
 
     new_rects = r_end - r;
 
-    assert (y1 < y2);
-    assert (new_rects != 0);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (new_rects != 0);
 
     /* Make sure we have enough space for all rectangles to be added */
     RECTALLOC (region, new_rects);
@@ -710,7 +672,7 @@ pixman_region_append_non_o (region_type_t * region,
 
     do
     {
-	assert (r->x1 < r->x2);
+	critical_if_fail (r->x1 < r->x2);
 	ADDRECT (next_rect, r->x1, y1, r->x2, y2);
 	r++;
     }
@@ -835,8 +797,8 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
     r2 = PIXREGION_RECTS (reg2);
     r2_end = r2 + numRects;
     
-    assert (r1 != r1_end);
-    assert (r2 != r2_end);
+    critical_if_fail (r1 != r1_end);
+    critical_if_fail (r2 != r2_end);
 
     old_data = (region_data_type_t *)NULL;
 
@@ -904,8 +866,8 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
 	 * rectangle after the last one in the current band for their
 	 * respective regions.
 	 */
-        assert (r1 != r1_end);
-        assert (r2 != r2_end);
+        critical_if_fail (r1 != r1_end);
+        critical_if_fail (r2 != r2_end);
 
         FIND_BAND (r1, r1_band_end, r1_end, r1y1);
         FIND_BAND (r2, r2_band_end, r2_end, r2y1);
@@ -1112,7 +1074,7 @@ pixman_set_extents (region_type_t *region)
     region->extents.x2 = box_end->x2;
     region->extents.y2 = box_end->y2;
 
-    assert (region->extents.y1 < region->extents.y2);
+    critical_if_fail (region->extents.y1 < region->extents.y2);
 
     while (box <= box_end)
     {
@@ -1123,7 +1085,7 @@ pixman_set_extents (region_type_t *region)
         box++;
     }
 
-    assert (region->extents.x1 < region->extents.x2);
+    critical_if_fail (region->extents.x1 < region->extents.x2);
 }
 
 /*======================================================================
@@ -1159,8 +1121,8 @@ pixman_region_intersect_o (region_type_t *region,
 
     next_rect = PIXREGION_TOP (region);
 
-    assert (y1 < y2);
-    assert (r1 != r1_end && r2 != r2_end);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (r1 != r1_end && r2 != r2_end);
 
     do
     {
@@ -1317,8 +1279,8 @@ pixman_region_union_o (region_type_t *region,
     int x1;            /* left and right side of current union */
     int x2;
 
-    assert (y1 < y2);
-    assert (r1 != r1_end && r2 != r2_end);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (r1 != r1_end && r2 != r2_end);
 
     next_rect = PIXREGION_TOP (region);
 
@@ -1367,6 +1329,24 @@ pixman_region_union_o (region_type_t *region,
     return TRUE;
 }
 
+PIXMAN_EXPORT pixman_bool_t
+PREFIX(_intersect_rect) (region_type_t *dest,
+			 region_type_t *source,
+			 int x, int y,
+			 unsigned int width,
+			 unsigned int height)
+{
+    region_type_t region;
+
+    region.data = NULL;
+    region.extents.x1 = x;
+    region.extents.y1 = y;
+    region.extents.x2 = x + width;
+    region.extents.y2 = y + height;
+
+    return PREFIX(_intersect) (dest, source, &region);
+}
+
 /* Convenience function for performing union of region with a
  * single rectangle
  */
@@ -1388,10 +1368,10 @@ PREFIX (_union_rect) (region_type_t *dest,
     if (!GOOD_RECT (&region.extents))
     {
         if (BAD_RECT (&region.extents))
-            log_region_error (FUNC, "Invalid rectangle passed");
+            _pixman_log_error (FUNC, "Invalid rectangle passed");
 	return PREFIX (_copy) (dest, source);
     }
-    
+
     region.data = NULL;
 
     return PREFIX (_union) (dest, source, &region);
@@ -1881,8 +1861,8 @@ pixman_region_subtract_o (region_type_t * region,
 
     x1 = r1->x1;
 
-    assert (y1 < y2);
-    assert (r1 != r1_end && r2 != r2_end);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (r1 != r1_end && r2 != r2_end);
 
     next_rect = PIXREGION_TOP (region);
 
@@ -1926,7 +1906,7 @@ pixman_region_subtract_o (region_type_t * region,
 	     * Left part of subtrahend covers part of minuend: add uncovered
 	     * part of minuend to region and skip to next subtrahend.
 	     */
-            assert (x1 < r2->x1);
+            critical_if_fail (x1 < r2->x1);
             NEWRECT (region, next_rect, x1, y1, r2->x1, y2);
 
             x1 = r2->x2;
@@ -1968,7 +1948,7 @@ pixman_region_subtract_o (region_type_t * region,
      */
     while (r1 != r1_end)
     {
-        assert (x1 < r1->x2);
+        critical_if_fail (x1 < r1->x2);
 
         NEWRECT (region, next_rect, x1, y1, r1->x2, y2);
 
@@ -2330,7 +2310,7 @@ PREFIX (_reset) (region_type_t *region, box_type_t *box)
 {
     GOOD (region);
 
-    assert (GOOD_RECT (box));
+    critical_if_fail (GOOD_RECT (box));
 
     region->extents = *box;
 
@@ -2470,7 +2450,7 @@ PREFIX (_selfcheck) (region_type_t *reg)
 
 PIXMAN_EXPORT pixman_bool_t
 PREFIX (_init_rects) (region_type_t *region,
-                      box_type_t *boxes, int count)
+                      const box_type_t *boxes, int count)
 {
     box_type_t *rects;
     int displacement;
@@ -2549,4 +2529,241 @@ PREFIX (_init_rects) (region_type_t *region,
     region->extents.x1 = region->extents.x2 = 0;
 
     return validate (region, &i);
+}
+
+#define READ(_ptr) (*(_ptr))
+
+static inline box_type_t *
+bitmap_addrect (region_type_t *reg,
+                box_type_t *r,
+                box_type_t **first_rect,
+                int rx1, int ry1,
+                int rx2, int ry2)
+{
+    if ((rx1 < rx2) && (ry1 < ry2) &&
+	(!(reg->data->numRects &&
+	   ((r-1)->y1 == ry1) && ((r-1)->y2 == ry2) &&
+	   ((r-1)->x1 <= rx1) && ((r-1)->x2 >= rx2))))
+    {
+	if (!reg->data ||
+	    reg->data->numRects == reg->data->size)
+	{
+	    if (!pixman_rect_alloc (reg, 1))
+		return NULL;
+	    *first_rect = PIXREGION_BOXPTR(reg);
+	    r = *first_rect + reg->data->numRects;
+	}
+	r->x1 = rx1;
+	r->y1 = ry1;
+	r->x2 = rx2;
+	r->y2 = ry2;
+	reg->data->numRects++;
+	if (r->x1 < reg->extents.x1)
+	    reg->extents.x1 = r->x1;
+	if (r->x2 > reg->extents.x2)
+	    reg->extents.x2 = r->x2;
+	r++;
+    }
+    return r;
+}
+
+/* Convert bitmap clip mask into clipping region.
+ * First, goes through each line and makes boxes by noting the transitions
+ * from 0 to 1 and 1 to 0.
+ * Then it coalesces the current line with the previous if they have boxes
+ * at the same X coordinates.
+ * Stride is in number of uint32_t per line.
+ */
+PIXMAN_EXPORT void
+PREFIX (_init_from_image) (region_type_t *region,
+                           pixman_image_t *image)
+{
+    uint32_t mask0 = 0xffffffff & ~SCREEN_SHIFT_RIGHT(0xffffffff, 1);
+    box_type_t *first_rect, *rects, *prect_line_start;
+    box_type_t *old_rect, *new_rect;
+    uint32_t *pw, w, *pw_line, *pw_line_end;
+    int	irect_prev_start, irect_line_start;
+    int	h, base, rx1 = 0, crects;
+    int	ib;
+    pixman_bool_t in_box, same;
+    int width, height, stride;
+
+    PREFIX(_init) (region);
+
+    return_if_fail (image->type == BITS);
+    return_if_fail (image->bits.format == PIXMAN_a1);
+
+    pw_line = pixman_image_get_data (image);
+    width = pixman_image_get_width (image);
+    height = pixman_image_get_height (image);
+    stride = pixman_image_get_stride (image) / 4;
+
+    first_rect = PIXREGION_BOXPTR(region);
+    rects = first_rect;
+
+    region->extents.x1 = width - 1;
+    region->extents.x2 = 0;
+    irect_prev_start = -1;
+    for (h = 0; h < height; h++)
+    {
+        pw = pw_line;
+        pw_line += stride;
+        irect_line_start = rects - first_rect;
+
+        /* If the Screen left most bit of the word is set, we're starting in
+         * a box */
+        if (READ(pw) & mask0)
+        {
+            in_box = TRUE;
+            rx1 = 0;
+        }
+        else
+        {
+            in_box = FALSE;
+        }
+
+        /* Process all words which are fully in the pixmap */
+        pw_line_end = pw + (width >> 5);
+        for (base = 0; pw < pw_line_end; base += 32)
+        {
+            w = READ(pw++);
+            if (in_box)
+            {
+                if (!~w)
+                    continue;
+            }
+            else
+            {
+                if (!w)
+                    continue;
+            }
+            for (ib = 0; ib < 32; ib++)
+            {
+                /* If the Screen left most bit of the word is set, we're
+                 * starting a box */
+                if (w & mask0)
+                {
+                    if (!in_box)
+                    {
+                        rx1 = base + ib;
+                        /* start new box */
+                        in_box = TRUE;
+                    }
+                }
+                else
+                {
+                    if (in_box)
+                    {
+                        /* end box */
+                        rects = bitmap_addrect (region, rects, &first_rect,
+                                                rx1, h, base + ib, h + 1);
+                        if (rects == NULL)
+                            goto error;
+                        in_box = FALSE;
+                    }
+                }
+                /* Shift the word VISUALLY left one. */
+                w = SCREEN_SHIFT_LEFT(w, 1);
+            }
+        }
+
+        if (width & 31)
+        {
+            /* Process final partial word on line */
+             w = READ(pw++);
+            for (ib = 0; ib < (width & 31); ib++)
+            {
+                /* If the Screen left most bit of the word is set, we're
+                 * starting a box */
+                if (w & mask0)
+                {
+                    if (!in_box)
+                    {
+                        rx1 = base + ib;
+                        /* start new box */
+                        in_box = TRUE;
+                    }
+                }
+                else
+                {
+                    if (in_box)
+                    {
+                        /* end box */
+                        rects = bitmap_addrect(region, rects, &first_rect,
+					       rx1, h, base + ib, h + 1);
+			if (rects == NULL)
+			    goto error;
+                        in_box = FALSE;
+                    }
+                }
+                /* Shift the word VISUALLY left one. */
+                w = SCREEN_SHIFT_LEFT(w, 1);
+            }
+        }
+        /* If scanline ended with last bit set, end the box */
+        if (in_box)
+        {
+            rects = bitmap_addrect(region, rects, &first_rect,
+				   rx1, h, base + (width & 31), h + 1);
+	    if (rects == NULL)
+		goto error;
+        }
+        /* if all rectangles on this line have the same x-coords as
+         * those on the previous line, then add 1 to all the previous  y2s and
+         * throw away all the rectangles from this line
+         */
+        same = FALSE;
+        if (irect_prev_start != -1)
+        {
+            crects = irect_line_start - irect_prev_start;
+            if (crects != 0 &&
+                crects == ((rects - first_rect) - irect_line_start))
+            {
+                old_rect = first_rect + irect_prev_start;
+                new_rect = prect_line_start = first_rect + irect_line_start;
+                same = TRUE;
+                while (old_rect < prect_line_start)
+                {
+                    if ((old_rect->x1 != new_rect->x1) ||
+                        (old_rect->x2 != new_rect->x2))
+                    {
+                          same = FALSE;
+                          break;
+                    }
+                    old_rect++;
+                    new_rect++;
+                }
+                if (same)
+                {
+                    old_rect = first_rect + irect_prev_start;
+                    while (old_rect < prect_line_start)
+                    {
+                        old_rect->y2 += 1;
+                        old_rect++;
+                    }
+                    rects -= crects;
+                    region->data->numRects -= crects;
+                }
+            }
+        }
+        if(!same)
+            irect_prev_start = irect_line_start;
+    }
+    if (!region->data->numRects)
+    {
+        region->extents.x1 = region->extents.x2 = 0;
+    }
+    else
+    {
+        region->extents.y1 = PIXREGION_BOXPTR(region)->y1;
+        region->extents.y2 = PIXREGION_END(region)->y2;
+        if (region->data->numRects == 1)
+        {
+            free (region->data);
+            region->data = NULL;
+        }
+    }
+
+ error:
+    return;
 }

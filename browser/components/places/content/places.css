@@ -2,12 +2,8 @@ tree[type="places"] {
   -moz-binding: url("chrome://browser/content/places/tree.xml#places-tree");
 }
 
-hbox[type="places"] {
-  -moz-binding: url("chrome://browser/content/places/toolbar.xml#places-bar");
-}
-
 .bookmarks-toolbar-customize,
-toolbarpaletteitem .bookmarks-toolbar-items {
+toolbarpaletteitem #PlacesToolbarItems {
   display: none;
 }
 
@@ -18,10 +14,6 @@ toolbarpaletteitem .bookmarks-toolbar-customize {
 .toolbar-drop-indicator {
   position: relative;
   z-index: 1;
-}
-
-menupopup[type="places"] {
-  -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
 }
 
 menupopup[placespopup="true"] {

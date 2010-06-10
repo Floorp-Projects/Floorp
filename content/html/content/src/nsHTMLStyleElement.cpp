@@ -201,6 +201,7 @@ nsHTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,
 void
 nsHTMLStyleElement::ContentAppended(nsIDocument* aDocument,
                                     nsIContent* aContainer,
+                                    nsIContent* aFirstNewContent,
                                     PRInt32 aNewIndexInContainer)
 {
   ContentChanged(aContainer);

@@ -120,6 +120,8 @@ typedef unsigned long       size_t;
 [ref, astring] native AStringRef(ignored);
 [ptr, astring] native AStringPtr(ignored);
 
+native jsval(jsval);
+
 %{C++
 /* 
  * End commenting out the C++ versions of the above in the output header

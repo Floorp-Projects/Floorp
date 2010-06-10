@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _mozStorageBindingParamsArray_h_
-#define _mozStorageBindingParamsArray_h_
+#ifndef mozStorageBindingParamsArray_h
+#define mozStorageBindingParamsArray_h
 
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
@@ -141,4 +141,4 @@ private:
 } // namespace storage
 } // namespace mozilla
 
-#endif // _mozStorageBindingParamsArray_h_
+#endif // mozStorageBindingParamsArray_h

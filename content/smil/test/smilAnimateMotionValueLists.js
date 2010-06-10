@@ -48,14 +48,16 @@ const gValidValues = [
 ];
 
 const gInvalidValues = [
+  ";10 10",
   "10 10;",  // We treat semicolon-terminated value-lists as failure cases
+  "10 10;;",
   "1 2 3",
   "1 2 3 4",
   "1,2;3,4 ,",
-  ",", ";", "a", "", " ",
-];
-
-const gInvalidValuesTodo = [
+  ",", " , ",
+  ";", " ; ",
+  "a", " a; ", ";a;",
+  "", " ",
   "1,2;3,4,",
   "1,,2",
   ",1,2",
@@ -83,7 +85,9 @@ const gInvalidRotate = [
 const gValidToBy = [
  "0 0",
  "1em,2",
- "50.3em 0.2in"
+ "50.3em 0.2in",
+ " 1,2",
+ "1 2 "
 ];
 
 const gInvalidToBy = [
@@ -92,17 +96,13 @@ const gInvalidToBy = [
  "0,0,0",
  "1emm 2",
  "1 2;",
+ "1 2,",
  " 1,2 ,",
  "abc",
  ",",
- ""
-];
-
-const gInvalidToByTodo = [
+ "",
  "1,,2",
- "1,2,",
- " 1,2",
- "1 2 "
+ "1,2,"
 ];
 
 const gValidPath = [

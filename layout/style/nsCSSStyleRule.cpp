@@ -49,7 +49,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSGroupRule.h"
 #include "nsCSSDeclaration.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSLoader.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
@@ -535,7 +535,7 @@ PRInt32 nsCSSSelector::CalcWeight() const
 // StyleRule:selectorText
 //
 void
-nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
+nsCSSSelector::ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
                         PRBool aAppend) const
 {
   if (!aAppend)
@@ -578,7 +578,7 @@ nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
 
 void
 nsCSSSelector::AppendToStringWithoutCombinators
-                   (nsAString& aString, nsICSSStyleSheet* aSheet) const
+                   (nsAString& aString, nsCSSStyleSheet* aSheet) const
 {
   AppendToStringWithoutCombinatorsOrNegations(aString, aSheet, PR_FALSE);
 
@@ -593,7 +593,7 @@ nsCSSSelector::AppendToStringWithoutCombinators
 
 void
 nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
-                   (nsAString& aString, nsICSSStyleSheet* aSheet,
+                   (nsAString& aString, nsCSSStyleSheet* aSheet,
                    PRBool aIsNegated) const
 {
   nsAutoString temp;
@@ -865,7 +865,7 @@ nsCSSSelectorList::AddSelector(PRUnichar aOperator)
 }
 
 void
-nsCSSSelectorList::ToString(nsAString& aResult, nsICSSStyleSheet* aSheet)
+nsCSSSelectorList::ToString(nsAString& aResult, nsCSSStyleSheet* aSheet)
 {
   aResult.Truncate();
   nsCSSSelectorList *p = this;
@@ -903,9 +903,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleRule interface
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
 protected:
@@ -927,14 +927,14 @@ CSSImportantRule::~CSSImportantRule(void)
 
 NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
 
-NS_IMETHODIMP
+/* virtual */ void
 CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  return mImportantBlock->MapRuleInfoInto(aRuleData);
+  mImportantBlock->MapRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+/* virtual */ void
 CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
@@ -942,7 +942,6 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, "! Important rule block=%p\n",
           static_cast<void*>(mImportantBlock.get()));
-  return NS_OK;
 }
 #endif
 
@@ -1082,16 +1081,15 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   if (mRule) {
     mRule->GetStyleSheet(*getter_AddRefs(sheet));
     if (sheet) {
-      sheet->GetSheetURI(aSheetURI);
-      sheet->GetBaseURI(aBaseURI);
+      NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
+      NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
 
-      nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
+      nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
       if (cssSheet) {
         NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
       }
 
-      nsCOMPtr<nsIDocument> document;
-      sheet->GetOwningDocument(*getter_AddRefs(document));
+      nsIDocument* document = sheet->GetOwningDocument();
       if (document) {
         NS_ADDREF(*aCSSLoader = document->CSSLoader());
       }
@@ -1130,7 +1128,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
   nsCOMPtr<nsIStyleSheet> sheet;
   mRule->GetStyleSheet(*getter_AddRefs(sheet));
   if (sheet) {
-    sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+    owningDoc = sheet->GetOwningDocument();
   }
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, PR_TRUE);
@@ -1214,13 +1212,10 @@ DOMCSSStyleRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
     *aSheet = nsnull;
     return NS_OK;
   }
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   Rule()->GetParentStyleSheet(getter_AddRefs(sheet));
-  if (!sheet) {
-    *aSheet = nsnull;
-    return NS_OK;
-  }
-  return CallQueryInterface(sheet, aSheet);
+  NS_IF_ADDREF(*aSheet = sheet);
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1303,13 +1298,13 @@ public:
   virtual void RuleMatched();
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet);
   
   NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule);
 
   virtual nsresult GetCssText(nsAString& aCssText);
   virtual nsresult SetCssText(const nsAString& aCssText);
-  virtual nsresult GetParentStyleSheet(nsICSSStyleSheet** aSheet);
+  virtual nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet);
   virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule);
   virtual nsresult GetSelectorText(nsAString& aSelectorText);
   virtual nsresult SetSelectorText(const nsAString& aSelectorText);
@@ -1323,10 +1318,10 @@ public:
     DeclarationChanged(PRBool aHandleContainer);
 
   // The new mapping function.
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
 private: 
@@ -1482,7 +1477,7 @@ CSSStyleRuleImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
 }
 
 NS_IMETHODIMP
-CSSStyleRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
+CSSStyleRuleImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   return nsCSSRule::SetStyleSheet(aSheet);
 }
@@ -1554,16 +1549,16 @@ CSSStyleRuleImpl::DeclarationChanged(PRBool aHandleContainer)
   return clone;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   NS_ABORT_IF_FALSE(mNormalBlock,
                     "somebody forgot to call nsICSSStyleRule::RuleMatched");
-  return mNormalBlock->MapRuleInfoInto(aRuleData);
+  mNormalBlock->MapRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+/* virtual */ void
 CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
@@ -1582,8 +1577,6 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
     fputs("{ null declaration }", out);
   }
   fputs("\n", out);
-
-  return NS_OK;
 }
 #endif
 
@@ -1615,7 +1608,7 @@ CSSStyleRuleImpl::SetCssText(const nsAString& aCssText)
 }
 
 /* virtual */ nsresult    
-CSSStyleRuleImpl::GetParentStyleSheet(nsICSSStyleSheet** aSheet)
+CSSStyleRuleImpl::GetParentStyleSheet(nsCSSStyleSheet** aSheet)
 {
   *aSheet = mSheet;
   NS_IF_ADDREF(*aSheet);

@@ -1,0 +1,12 @@
+include protocol content;
+include protocol jetpack;
+
+rpc protocol jetpackContent {
+    bridges jetpack, content;
+
+child:
+    __delete__();
+
+state DEAD:
+    send __delete__;
+};

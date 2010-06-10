@@ -113,7 +113,7 @@ EXPORTS		= \
 		nsStringEnumerator.h \
 		nsHashPropertyBag.h \
 		nsWhitespaceTokenizer.h \
-		nsCommaSeparatedTokenizer.h \
+		nsCharSeparatedTokenizer.h \
 		$(NULL)			
 
 XPIDLSRCS	= \

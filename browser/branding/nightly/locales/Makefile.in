@@ -45,11 +45,3 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -DAB_CD=$(AB_CD) -DMOZ_DISTRIBUTION_ID_UNQUOTED=$(MOZ_DISTRIBUTION_ID)
 
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	@$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/browserconfig.properties > $(FINAL_TARGET)/browserconfig.properties
-
-install::
-	@$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/browserconfig.properties > $(DESTDIR)$(mozappdir)/browserconfig.properties

@@ -161,8 +161,7 @@ nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
     else
       mSourceContent = static_cast<nsSVGElement*>(aSource->GetContent());
     NS_ASSERTION(mSourceContent, "Can't get content for gradient");
-  }
-  else {
+  } else {
     NS_ASSERTION(gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
                  "Unknown gradientUnits type");
     // objectBoundingBox is the default anyway
@@ -175,6 +174,9 @@ nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
 
   nsSVGGradientElement *element =
     GetGradientWithAttr(nsGkAtoms::gradientTransform, mContent);
+
+  if (!element->mGradientTransform)
+    return bboxMatrix;
 
   nsCOMPtr<nsIDOMSVGTransformList> trans;
   element->mGradientTransform->GetAnimVal(getter_AddRefs(trans));

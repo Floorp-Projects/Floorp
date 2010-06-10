@@ -59,7 +59,7 @@ nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
   nsresult rv = nsGNOMERegistry::LoadURL(aURI);
 #if (MOZ_PLATFORM_MAEMO == 5) && defined (MOZ_ENABLE_GNOMEVFS)
   if (NS_FAILED(rv)){
-    HildonURIAction *action = hildon_uri_get_default_action(mType.get(), nsnull);
+    HildonURIAction *action = hildon_uri_get_default_action(mSchemeOrType.get(), nsnull);
     if (action) {
       nsCAutoString spec;
       aURI->GetAsciiSpec(spec);
@@ -76,7 +76,7 @@ NS_IMETHODIMP
 nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
 {
   *_retval = PR_FALSE;
-  nsRefPtr<nsMIMEInfoBase> mimeInfo = nsGNOMERegistry::GetFromType(mType);
+  nsRefPtr<nsMIMEInfoBase> mimeInfo = nsGNOMERegistry::GetFromType(mSchemeOrType);
   if (!mimeInfo) {
     nsCAutoString ext;
     nsresult rv = GetPrimaryExtension(ext);
@@ -91,7 +91,7 @@ nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
     return NS_OK;
 
 #if (MOZ_PLATFORM_MAEMO == 5) && defined (MOZ_ENABLE_GNOMEVFS)
-  HildonURIAction *action = hildon_uri_get_default_action(mType.get(), nsnull);
+  HildonURIAction *action = hildon_uri_get_default_action(mSchemeOrType.get(), nsnull);
   if (action) {
     *_retval = PR_TRUE;
     hildon_uri_action_unref(action);
@@ -118,12 +118,12 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
   nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
   if (giovfs) {
     nsCOMPtr<nsIGIOMimeApp> app;
-    if (NS_SUCCEEDED(giovfs->GetAppForMimeType(mType, getter_AddRefs(app))) && app)
+    if (NS_SUCCEEDED(giovfs->GetAppForMimeType(mSchemeOrType, getter_AddRefs(app))) && app)
       return app->Launch(nativePath);
   } else if (gnomevfs) {
     /* Fallback to GnomeVFS */
     nsCOMPtr<nsIGnomeVFSMimeApp> app;
-    if (NS_SUCCEEDED(gnomevfs->GetAppForMimeType(mType, getter_AddRefs(app))) && app)
+    if (NS_SUCCEEDED(gnomevfs->GetAppForMimeType(mSchemeOrType, getter_AddRefs(app))) && app)
       return app->Launch(nativePath);
   }
 
@@ -176,7 +176,7 @@ nsMIMEInfoUnix::LaunchDefaultWithDBus(const char *aFilePath)
 
   result = hildon_mime_open_file_with_mime_type(connection,
                                                 aFilePath,
-                                                mType.get());
+                                                mSchemeOrType.get());
   if (result != kHILDON_SUCCESS)
     if (hildon_mime_open_file(connection, aFilePath) != kHILDON_SUCCESS)
       return NS_ERROR_FAILURE;
@@ -205,7 +205,7 @@ nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHa
     if (!mPossibleApplications)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    GSList *actions = hildon_uri_get_actions(mType.get(), nsnull);
+    GSList *actions = hildon_uri_get_actions(mSchemeOrType.get(), nsnull);
     GSList *actionsPtr = actions;
     while (actionsPtr) {
       HildonURIAction *action = (HildonURIAction*)actionsPtr->data;

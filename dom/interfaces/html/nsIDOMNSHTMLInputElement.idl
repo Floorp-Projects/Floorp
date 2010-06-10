@@ -42,9 +42,10 @@
 interface nsIControllers;
 interface nsIDOMFileList;
 
-[scriptable, uuid(e79806b8-7788-4229-ac69-debe395cb0e1)]
+[scriptable, uuid(aa764da9-9046-4565-9e34-abd3c4da158e)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
+           attribute boolean          autofocus;
 	readonly attribute nsIControllers   controllers;
 	
 	readonly attribute long             textLength;
@@ -68,4 +69,10 @@ interface nsIDOMNSHTMLInputElement : nsISupports
 	/* convenience */
   void                      setSelectionRange(in long selectionStart,
                                               in long selectionEnd);
+
+  /**
+   * This non-standard method prevents to check types manually to know if the
+   * element is a text field.
+   */
+  boolean mozIsTextField(in boolean aExcludePassword);
 };

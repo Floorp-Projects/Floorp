@@ -237,7 +237,8 @@ namespace nanojit
 
     template<class K> struct DefaultHash {
         static size_t hash(const K &k) {
-            return murmurhash(&k, sizeof(K));
+            // (const void*) cast is required by ARM RVCT 2.2
+            return murmurhash((const void*) &k, sizeof(K));
         }
     };
 

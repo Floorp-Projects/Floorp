@@ -80,7 +80,14 @@ nsSystemFontsQt::GetSystemFontInfo(const char *aClassName, nsString *aFontName,
     aFontStyle->weight = qFont.weight();
     // FIXME: Set aFontStyle->stretch correctly!
     aFontStyle->stretch = NS_FONT_STRETCH_NORMAL;
-    aFontStyle->size = qFont.pointSizeF() * float(gfxPlatform::GetDPI()) / 72.0f;
+    // use pixel size directly if it is set, otherwise compute from point size
+    if (qFont.pixelSize() != -1) {
+        aFontStyle->size = qFont.pixelSize();
+    } else {
+        aFontStyle->size = qFont.pointSizeF()
+                           * float(gfxPlatform::GetDPI())
+                           / 72.0f;
+    }
     return NS_OK;
 }
 

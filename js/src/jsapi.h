@@ -247,7 +247,7 @@ JSVAL_TO_GCTHING(jsval v)
 static JS_ALWAYS_INLINE jsval
 PRIVATE_TO_JSVAL(void *ptr)
 {
-    return PRIVATE_TO_JSVAL_IMPL(ptr).asBits;
+    return PRIVATE_PTR_TO_JSVAL_IMPL(ptr).asBits;
 }
 
 static JS_ALWAYS_INLINE void *
@@ -256,13 +256,15 @@ JSVAL_TO_PRIVATE(jsval v)
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
     l.asBits = v;
-    return JSVAL_TO_PRIVATE_IMPL(l);
+    return JSVAL_TO_PRIVATE_PTR_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSVAL_MAY_BE_PRIVATE(jsval v)
+JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
 {
-    return JSVAL_IS_DOUBLE(v);
+    jsval_layout l;
+    l.asBits = v;
+    return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(l);
 }
 
 /* Lock and unlock the GC thing held by a jsval. */
@@ -285,6 +287,8 @@ JSVAL_MAY_BE_PRIVATE(jsval v)
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
+#define JSPROP_SHORTID          0x100   /* set in JSPropertyDescriptor.attrs
+                                           if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
@@ -801,7 +805,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj);
  * loops any classes not yet resolved lazily.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id,
                         JSBool *resolved);
 
 extern JS_PUBLIC_API(JSBool)
@@ -825,6 +829,9 @@ JS_GetScopeChain(JSContext *cx);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForScopeChain(JSContext *cx);
 
 #ifdef JS_HAS_CTYPES
 /*
@@ -890,27 +897,28 @@ extern JS_PUBLIC_API(JSBool)
 JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
 /*
- * A GC root is a pointer to a jsval, JSObject *, or JSString * that itself
- * points into the GC heap. JS_AddValueRoot takes pointers to jsvals and
- * JS_AddGCThingRoot takes pointers to a JSObject * or JString *.
+ * A GC root is a pointer to a jsval, JSObject * or JSString * that itself
+ * points into the GC heap. JS_AddValueRoot takes a pointer to a jsval and
+ * JS_AddGCThingRoot takes a pointer to a JSObject * or JString *.
  *
- * Note that, since JS_Add*Root stores the address of a (jsval, JSString *, or
- * JSObject *) variable, that variable must be alive until JS_RemoveRoot is
- * called to remove that variable. For example, after writing:
+ * Note that, since JS_Add*Root stores the address of a variable (of type
+ * jsval, JSString *, or JSObject *), that variable must live until
+ * JS_Remove*Root is called to remove that variable. For example, after:
  *
- *   jsval v;
- *   JS_AddNamedRootedValue(cx, &v, "name");
+ *   void some_function() {
+ *     jsval v;
+ *     JS_AddNamedRootedValue(cx, &v, "name");
  *
  * the caller must perform
  *
- *   JS_RemoveRootedValue(cx, &v);
+ *     JS_RemoveRootedValue(cx, &v);
  *
- * before 'v' goes out of scope.
+ * before some_function() returns.
  *
- * Also, use JS_AddNamedRoot(cx, &structPtr->memberObj, "structPtr->memberObj")
- * in preference to JS_AddRoot(cx, &structPtr->memberObj), in order to identify
+ * Also, use JS_AddNamed*Root(cx, &structPtr->memberObj, "structPtr->memberObj")
+ * in preference to JS_Add*Root(cx, &structPtr->memberObj), in order to identify
  * roots by their source callsites.  This way, you can find the callsite while
- * debugging if you should fail to do JS_RemoveRoot(cx, &structPtr->memberObj)
+ * debugging if you should fail to do JS_Remove*Root(cx, &structPtr->memberObj)
  * before freeing structPtr's memory.
  */
 extern JS_PUBLIC_API(JSBool)
@@ -994,7 +1002,7 @@ JS_ClearNewbornRoots(JSContext *cx);
  * Scoped local root management allows native functions, getter/setters, etc.
  * to avoid worrying about the newborn root pigeon-holes, overloading local
  * roots allocated in argv and *rval, or ending up having to call JS_Add*Root
- * and JS_RemoveRoot to manage global roots temporarily.
+ * and JS_Remove*Root to manage global roots temporarily.
  *
  * Instead, calling JS_EnterLocalRootScope and JS_LeaveLocalRootScope around
  * the body of the native hook causes the engine to allocate a local root for
@@ -1002,7 +1010,7 @@ JS_ClearNewbornRoots(JSContext *cx);
  * associated with cx.  For example:
  *
  *    JSBool
- *    my_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+ *    my_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
  *    {
  *        JSBool ok;
  *
@@ -1452,12 +1460,18 @@ extern JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str);
 
 /*
- * Sets maximum (if stack grows upward) or minimum (downward) legal stack byte
- * address in limitAddr for the thread or process stack used by cx.  To disable
- * stack size checking, pass 0 for limitAddr.
+ * Deprecated. Use JS_SetNativeStackQuoata instead.
  */
 extern JS_PUBLIC_API(void)
 JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
+
+/*
+ * Set the size of the native stack that should not be exceed. To disable
+ * stack size checking pass 0.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
+
 
 /*
  * Set the quota on the number of bytes that stack-like data structures can
@@ -1570,7 +1584,9 @@ struct JSExtendedClass {
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
 #define JSCLASS_GLOBAL_FLAGS \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 2))
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + 1))
+
+#define JSRESERVED_GLOBAL_COMPARTMENT (JSProto_LIMIT * 3)
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -1619,13 +1635,13 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
 
 extern JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id);
+JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
@@ -1747,6 +1763,9 @@ JS_GetConstructor(JSContext *cx, JSObject *proto);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
@@ -1876,6 +1895,7 @@ struct JSPropertyDescriptor {
     uintN        attrs;
     JSPropertyOp getter;
     JSPropertyOp setter;
+    uintN        shortid;
     jsval        value;
 };
 
@@ -2262,13 +2282,13 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
  *
  *    JSScript *script = JS_CompileFile(cx, global, filename);
  *    JSObject *scrobj = JS_NewScriptObject(cx, script);
- *    JS_AddNamedRoot(cx, &scrobj, "scrobj");
+ *    JS_AddNamedObjectRoot(cx, &scrobj, "scrobj");
  *    do {
  *        jsval result;
  *        JS_ExecuteScript(cx, global, script, &result);
  *        JS_GC();
  *    } while (!JSVAL_IS_BOOLEAN(result) || JSVAL_TO_BOOLEAN(result));
- *    JS_RemoveRoot(cx, &scrobj);
+ *    JS_RemoveObjectRoot(cx, &scrobj);
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);
@@ -2956,11 +2976,6 @@ struct FunObjOrNull {
     JSObject *obj;
 };
 
-struct FunObjOrUndefinedTag {
-    explicit FunObjOrUndefinedTag(JSObject *obj) : obj(obj) {}
-    JSObject *obj;
-};
-
 struct NonFunObjTag {
     explicit NonFunObjTag(JSObject &obj) : obj(obj) {}
     JSObject &obj;
@@ -2981,13 +2996,19 @@ struct ObjectOrNullTag {
     JSObject *obj;
 };
 
+struct ObjectOrUndefinedTag {
+    /* Interpret null JSObject* as undefined value */
+    explicit ObjectOrUndefinedTag(JSObject *obj) : obj(obj) {}
+    JSObject *obj;
+};
+
 struct BooleanTag {
     explicit BooleanTag(bool boo) : boo(boo) {}
     bool boo;
 };
 
-struct PrivateVoidPtrTag {
-    explicit PrivateVoidPtrTag(void *ptr) : ptr(ptr) {}
+struct PrivateTag {
+    explicit PrivateTag(void *ptr) : ptr(ptr) {}
     void *ptr;
 };
 
@@ -3036,24 +3057,24 @@ class Value
 
     /* Construct a Value of a single type */
 
-    Value(NullTag)                     { setNull(); }
-    Value(UndefinedTag)                { setUndefined(); }
-    Value(Int32Tag arg)                { setInt32(arg.i32); }
-    Value(DoubleTag arg)               { setDouble(arg.dbl); }
-    Value(StringTag arg)               { setString(arg.str); }
-    Value(FunObjTag arg)               { setFunObj(arg.obj); }
-    Value(NonFunObjTag arg)            { setNonFunObj(arg.obj); }
-    Value(BooleanTag arg)              { setBoolean(arg.boo); }
-    Value(JSWhyMagic arg)              { setMagic(arg); }
+    Value(NullTag)                         { setNull(); }
+    Value(UndefinedTag)                    { setUndefined(); }
+    Value(Int32Tag arg)                    { setInt32(arg.i32); }
+    Value(DoubleTag arg)                   { setDouble(arg.dbl); }
+    Value(StringTag arg)                   { setString(arg.str); }
+    Value(FunObjTag arg)                   { setFunObj(arg.obj); }
+    Value(NonFunObjTag arg)                { setNonFunObj(arg.obj); }
+    Value(BooleanTag arg)                  { setBoolean(arg.boo); }
+    Value(JSWhyMagic arg)                  { setMagic(arg); }
 
     /* Construct a Value of a type dynamically chosen from a set of types */
 
-    Value(FunObjOrNull arg)            { setFunObjOrNull(arg.obj); }
-    Value(FunObjOrUndefinedTag arg)    { setFunObjOrUndefined(arg.obj); }
-    Value(NonFunObjOrNullTag arg)      { setNonFunObjOrNull(arg.obj); }
+    Value(FunObjOrNull arg)                { setFunObjOrNull(arg.obj); }
+    Value(NonFunObjOrNullTag arg)          { setNonFunObjOrNull(arg.obj); }
     inline Value(NumberTag arg);
-    inline Value(ObjectTag arg)        { setObject(arg.obj); }
-    inline Value(ObjectOrNullTag arg)  { setObjectOrNull(arg.obj); }
+    inline Value(ObjectTag arg)            { setObject(arg.obj); }
+    inline Value(ObjectOrNullTag arg)      { setObjectOrNull(arg.obj); }
+    inline Value(ObjectOrUndefinedTag arg) { setObjectOrUndefined(arg.obj); }
 
     /* Change to a Value of a single type */
 
@@ -3122,12 +3143,6 @@ class Value
         data = OBJECT_TO_JSVAL_IMPL(mask, arg);
     }
 
-    void setFunObjOrUndefined(JSObject *arg) {
-        JS_ASSERT_IF(arg, JS_OBJ_IS_FUN_IMPL(arg));
-        JSValueMask32 mask = arg ? JSVAL_MASK32_FUNOBJ : JSVAL_MASK32_UNDEFINED;
-        data = OBJECT_TO_JSVAL_IMPL(mask, arg);
-    }
-
     void setNonFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, !JS_OBJ_IS_FUN_IMPL(arg));
         JSValueMask32 mask = arg ? JSVAL_MASK32_NONFUNOBJ : JSVAL_MASK32_NULL;
@@ -3145,6 +3160,13 @@ class Value
                                                            : JSVAL_MASK32_NONFUNOBJ
                                  : JSVAL_MASK32_NULL;
 	    data = OBJECT_TO_JSVAL_IMPL(mask, arg);
+    }
+
+    inline void setObjectOrUndefined(JSObject *arg) {
+        if (arg)
+            setObject(*arg);
+        else
+            setUndefined();
     }
 
     /* Query a Value's type */
@@ -3335,33 +3357,34 @@ class Value
      * Privates values are given a valid type of Int32Tag and are thus GC-safe.
      */
 
-    Value(PrivateVoidPtrTag arg) {
-        setPrivateVoidPtr(arg.ptr);
+    Value(PrivateTag arg) {
+        setPrivate(arg.ptr);
     }
 
-    void setPrivateVoidPtr(void *ptr) {
-		data = PRIVATE_TO_JSVAL_IMPL(ptr);
+    bool isUnderlyingTypeOfPrivate() const {
+        return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data);
     }
 
-    void *asPrivateVoidPtr() const {
-		JS_ASSERT(isDouble());
-		return JSVAL_TO_PRIVATE_IMPL(data);
+    void setPrivate(void *ptr) {
+		data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
     }
 
-    void *asPrivateVoidPtrUnchecked() const {
-        return JSVAL_TO_PRIVATE_IMPL(data);
+    void *asPrivate() const {
+		JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+		return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
 
-    void setPrivateUint32(uint32 u) {
-		setInt32((int32)u);
+    void setPrivateUint32(uint32 ui) {
+        data = PRIVATE_UINT32_TO_JSVAL_IMPL(ui);
     }
 
     uint32 asPrivateUint32() const {
-		return (uint32)asInt32();
+		JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+		return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
     }
 
     uint32 &asPrivateUint32Ref() {
-		JS_ASSERT(isInt32());
+		JS_ASSERT(isDouble());
 		return data.s.payload.u32;
     }
 } VALUE_ALIGNMENT;
@@ -3430,10 +3453,23 @@ struct ExtendedClass {
 
 JS_STATIC_ASSERT(sizeof(JSExtendedClass) == sizeof(ExtendedClass));
 
-static JS_ALWAYS_INLINE JSClass *         Jsvalify(Class *c)           { return (JSClass *)c; }
-static JS_ALWAYS_INLINE Class *           Valueify(JSClass *c)         { return (Class *)c; }
-static JS_ALWAYS_INLINE JSExtendedClass * Jsvalify(ExtendedClass *c)   { return (JSExtendedClass *)c; }
-static JS_ALWAYS_INLINE ExtendedClass *   Valueify(JSExtendedClass *c) { return (ExtendedClass *)c; }
+struct PropertyDescriptor {
+    JSObject     *obj;
+    uintN        attrs;
+    PropertyOp   getter;
+    PropertyOp   setter;
+    uintN        shortid;
+    Value        value;
+};
+
+JS_STATIC_ASSERT(sizeof(JSPropertyDescriptor) == sizeof(PropertyDescriptor));
+
+static JS_ALWAYS_INLINE JSClass *              Jsvalify(Class *c)                { return (JSClass *)c; }
+static JS_ALWAYS_INLINE Class *                Valueify(JSClass *c)              { return (Class *)c; }
+static JS_ALWAYS_INLINE JSExtendedClass *      Jsvalify(ExtendedClass *c)        { return (JSExtendedClass *)c; }
+static JS_ALWAYS_INLINE ExtendedClass *        Valueify(JSExtendedClass *c)      { return (ExtendedClass *)c; }
+static JS_ALWAYS_INLINE JSPropertyDescriptor * Jsvalify(PropertyDescriptor *p) { return (JSPropertyDescriptor *) p; }
+static JS_ALWAYS_INLINE PropertyDescriptor *   Valueify(JSPropertyDescriptor *p) { return (PropertyDescriptor *) p; }
 
 } /* namespace js */
 #endif  /* __cplusplus */

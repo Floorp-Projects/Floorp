@@ -1,5 +1,5 @@
 toolkit.jar:
-%   content passwordmgr %content/passwordmgr/ xpcnativewrappers=yes
+%   content passwordmgr %content/passwordmgr/
 *   content/passwordmgr/passwordManager.xul            (content/passwordManager.xul)
 *   content/passwordmgr/passwordManager.js             (content/passwordManager.js)
 *   content/passwordmgr/passwordManagerExceptions.js   (content/passwordManagerExceptions.js)

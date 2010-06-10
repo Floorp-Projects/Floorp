@@ -79,10 +79,10 @@
 #  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
 #elif defined(MOZ_WIDGET_GTK2)
 #  define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
-#elif defined(MOZ_WIDGET_PHOTON)
-#  define WIDGET_MODULES MODULE(nsWidgetPhModule)
 #elif defined(MOZ_WIDGET_QT)
 #  define WIDGET_MODULES MODULE(nsWidgetQtModule)
+#elif defined(MOZ_WIDGET_ANDROID)
+#  define WIDGET_MODULES MODULE(nsWidgetAndroidModule)
 #else
 #  error Unknown widget module.
 #endif
@@ -131,7 +131,7 @@
 #define SYSTEMPREF_MODULES
 #endif
 
-#ifdef MOZ_ENABLE_EXTENSION_LAYOUT_DEBUG
+#if defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 #define LAYOUT_DEBUG_MODULE MODULE(nsLayoutDebugModule)
 #else
 #define LAYOUT_DEBUG_MODULE
@@ -142,13 +142,6 @@
     MODULE(nsPluginModule)
 #else
 #define PLUGINS_MODULES
-#endif
-
-#ifdef MOZ_XPINSTALL
-#define XPINSTALL_MODULES \
-    MODULE(nsSoftwareUpdate)
-#else
-#define XPINSTALL_MODULES
 #endif
 
 #ifdef MOZ_JSDEBUGGER
@@ -234,7 +227,6 @@
 #endif
 
 #define XUL_MODULES                          \
-    MODULE(xpconnect)                        \
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
     MODULE(nsChardetModule)                  \
@@ -245,7 +237,6 @@
     MODULE(nsJarModule)                      \
     ZIPWRITER_MODULE                         \
     MODULE(nsPrefModule)                     \
-    MODULE(nsSecurityManagerModule)          \
     RDF_MODULES                              \
     MODULE(nsParserModule)                   \
     GFX_MODULES                              \
@@ -269,9 +260,9 @@
     STORAGE_MODULE                           \
     PLACES_MODULES                           \
     XULENABLED_MODULES                       \
+    MODULE(AddonsModule)                     \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
-    XPINSTALL_MODULES                        \
     JSDEBUGGER_MODULES                       \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \

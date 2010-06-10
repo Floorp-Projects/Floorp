@@ -115,9 +115,30 @@ enum nsCSSUnit {
   eCSSUnit_Function     = 24,     // (nsCSSValue::Array*) a function with parameters.  First elem of array is name,
                                   //  the rest of the values are arguments.
 
-  eCSSUnit_URL          = 30,     // (nsCSSValue::URL*) value
-  eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
-  eCSSUnit_Gradient     = 32,     // (nsCSSValueGradient*) value
+  // The top level of a calc() expression is either -moz-calc()
+  // (eCSSUnit_Calc), -moz-min() (eCSSUnit_Calc_Minimum), or -moz-max()
+  // (eCSSUnit_Calc_Maximum).  All remaining eCSSUnit_Calc_* units only
+  // occur inside these toplevel calc values.
+
+  // eCSSUnit_Calc has an array with exactly 1 element.  eCSSUnit_Calc
+  // exists so we can distinguish calc(2em) from 2em as specified values
+  // (but we drop this distinction for nsStyleCoord when we store
+  // computed values).
+  eCSSUnit_Calc         = 25,     // (nsCSSValue::Array*) calc() value
+  // Plus, Minus, Times_* and Divided have arrays with exactly 2
+  // elements.  a + b + c + d is grouped as ((a + b) + c) + d
+  eCSSUnit_Calc_Plus    = 26,     // (nsCSSValue::Array*) + node within calc()
+  eCSSUnit_Calc_Minus   = 27,     // (nsCSSValue::Array*) - within calc
+  eCSSUnit_Calc_Times_L = 28,     // (nsCSSValue::Array*) num * val within calc
+  eCSSUnit_Calc_Times_R = 29,     // (nsCSSValue::Array*) val * num within calc
+  eCSSUnit_Calc_Divided = 30,     // (nsCSSValue::Array*) / within calc
+  // Minimum and Maximum have arrays with 1 or more elements
+  eCSSUnit_Calc_Minimum = 31,     // (nsCSSValue::Array*) min() within calc
+  eCSSUnit_Calc_Maximum = 32,     // (nsCSSValue::Array*) max() within calc
+
+  eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
+  eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
+  eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
   eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
@@ -212,9 +233,13 @@ public:
     { return eCSSUnit_Hertz <= mUnit && mUnit <= eCSSUnit_Kilohertz; }
   PRBool    IsTimeUnit() const  
     { return eCSSUnit_Seconds <= mUnit && mUnit <= eCSSUnit_Milliseconds; }
+  PRBool    IsCalcUnit() const
+    { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
 
   PRBool    UnitHasStringValue() const
     { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Font_Format; }
+  PRBool    UnitHasArrayValue() const
+    { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
 
   PRInt32 GetIntValue() const
   {
@@ -271,8 +296,7 @@ public:
 
   Array* GetArrayValue() const
   {
-    NS_ASSERTION(eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function,
-                 "not an array value");
+    NS_ASSERTION(UnitHasArrayValue(), "not an array value");
     return mValue.mArray;
   }
 
