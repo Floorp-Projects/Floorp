@@ -265,7 +265,7 @@ struct SyncRegInfo {
  * a situation where a copy's backing store has no register. If we run into
  * this situation, the structure below is used to allocate registers.
  *
- * While walking the tracer, we remember all registers that have been sunk,
+ * While walking the tracker, we remember all registers that have been sunk,
  * and can thus be clobbered. These are given out on a first-come, first-serve
  * basis. If none are available, one is evicted (explained later).
  *
@@ -368,6 +368,7 @@ struct SyncRegs {
          * nothing triggers it. Yay?
          */
         JS_NOT_REACHED("wat");
+        return RegisterID(worst);
     }
 
     /* Returns true if had an fe */
@@ -410,7 +411,7 @@ FrameState::syncFancy(Assembler &masm, Registers avail, uint32 resumeAt) const
     SyncRegs sr(*this, masm, avail);
 
     FrameEntry *tos = tosFe();
-    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
+    for (uint32 i = resumeAt; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
             continue;
