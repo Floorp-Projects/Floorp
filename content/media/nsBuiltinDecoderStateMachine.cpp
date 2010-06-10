@@ -126,10 +126,13 @@ nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
 
 PRBool nsBuiltinDecoderStateMachine::HasFutureAudio() const {
   mDecoder->GetMonitor().AssertCurrentThreadIn();
+  PRBool aboveLowAudioThreshold = PR_FALSE;
+  if (mAudioEndTime != -1) {
+    aboveLowAudioThreshold = mAudioEndTime - mCurrentFrameTime + mStartTime > LOW_AUDIO_MS;
+  }
   return HasAudio() &&
-         !mAudioCompleted &&
-         (mReader->mAudioQueue.GetSize() > 0 ||
-         mAudioEndTime - mCurrentFrameTime + mStartTime > LOW_AUDIO_MS);
+    !mAudioCompleted &&
+    (mReader->mAudioQueue.GetSize() > 0 || aboveLowAudioThreshold);
 }
 
 PRBool nsBuiltinDecoderStateMachine::HaveNextFrameData() const {
@@ -221,8 +224,10 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     {
       MonitorAutoEnter mon(mDecoder->GetMonitor());
       currentTime = mCurrentFrameTime + mStartTime;
-      audioDecoded = mReader->mAudioQueue.Duration() +
-                     mAudioEndTime - currentTime;
+      audioDecoded = mReader->mAudioQueue.Duration();
+      if (mAudioEndTime != -1) {
+        audioDecoded += mAudioEndTime - currentTime;
+      }
       initialDownloadPosition =
         mDecoder->GetCurrentStream()->GetCachedDataEnd(mDecoder->mDecoderPosition);
     }
