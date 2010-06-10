@@ -474,7 +474,9 @@ XPCNativeScriptableSharedMap::Entry::Hash(JSDHashTable *table, const void *key)
     XPCNativeScriptableShared* obj =
         (XPCNativeScriptableShared*) key;
 
-    // hash together the flags and the classname string
+    // hash together the flags and the classname string, ignore the interfaces
+    // bitmap since it's very rare that it's different when flags and classname
+    // are the same.
 
     h = (JSDHashNumber) obj->GetFlags();
     for (s = (const unsigned char*) obj->GetJSClass()->name; *s != '\0'; s++)
@@ -493,9 +495,10 @@ XPCNativeScriptableSharedMap::Entry::Match(JSDHashTable *table,
     XPCNativeScriptableShared* obj2 =
         (XPCNativeScriptableShared*) key;
 
-    // match the flags and the classname string
+    // match the flags, the classname string and the interfaces bitmap
 
-    if(obj1->GetFlags() != obj2->GetFlags())
+    if(obj1->GetFlags() != obj2->GetFlags() ||
+       obj1->GetInterfacesBitmap() != obj2->GetInterfacesBitmap())
         return JS_FALSE;
 
     const char* name1 = obj1->GetJSClass()->name;
