@@ -52,6 +52,9 @@ class nsILoadGroup;
 class nsIStreamListener;
 struct nsModuleComponentInfo;
 
+#define CONTENT_DLF_CONTRACTID "@mozilla.org/content/document-loader-factory;1"
+#define PLUGIN_DLF_CONTRACTID "@mozilla.org/content/plugin/document-loader-factory;1"
+
 class nsContentDLF : public nsIDocumentLoaderFactory
 {
 public:
