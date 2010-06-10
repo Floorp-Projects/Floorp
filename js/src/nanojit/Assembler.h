@@ -321,7 +321,7 @@ namespace nanojit
             void        intersectRegisterState(RegAlloc& saved);
             void        unionRegisterState(RegAlloc& saved);
             void        assignSaved(RegAlloc &saved, RegisterMask skip);
-            LInsp       findVictim(RegisterMask allow);
+            LIns*       findVictim(RegisterMask allow);
 
             Register    getBaseReg(LIns *ins, int &d, RegisterMask allow);
             void        getBaseReg2(RegisterMask allowValue, LIns* value, Register& rv,
@@ -403,62 +403,62 @@ namespace nanojit
         #endif
 
             // Holds the current instruction during gen().
-            LInsp       currIns;
+            LIns*       currIns;
 
             AR          _activation;
             RegAlloc    _allocator;
 
             verbose_only( void asm_inc_m32(uint32_t*); )
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
-            void        asm_jmp(LInsp ins, InsList& pending_lives);
-            void        asm_jcc(LInsp ins, InsList& pending_lives);
-            void        asm_jov(LInsp ins, InsList& pending_lives);
-            void        asm_x(LInsp ins);
-            void        asm_xcc(LInsp ins);
-            NIns*       asm_exit(LInsp guard);
-            NIns*       asm_leave_trace(LInsp guard);
+            void        asm_jmp(LIns* ins, InsList& pending_lives);
+            void        asm_jcc(LIns* ins, InsList& pending_lives);
+            void        asm_jov(LIns* ins, InsList& pending_lives);
+            void        asm_x(LIns* ins);
+            void        asm_xcc(LIns* ins);
+            NIns*       asm_exit(LIns* guard);
+            NIns*       asm_leave_trace(LIns* guard);
             void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_store64(LOpcode op, LIns *val, int d, LIns *base);
 
             // WARNING: the implementation of asm_restore() should emit fast code
             // to rematerialize instructions where canRemat() returns true.
             // Otherwise, register allocation decisions will be suboptimal.
-            void        asm_restore(LInsp, Register);
+            void        asm_restore(LIns*, Register);
 
-            void        asm_maybe_spill(LInsp ins, bool pop);
+            void        asm_maybe_spill(LIns* ins, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
-            void        asm_load64(LInsp ins);
-            void        asm_ret(LInsp ins);
+            void        asm_load64(LIns* ins);
+            void        asm_ret(LIns* ins);
 #ifdef NANOJIT_64BIT
-            void        asm_immq(LInsp ins);
+            void        asm_immq(LIns* ins);
 #endif
-            void        asm_immd(LInsp ins);
-            void        asm_condd(LInsp ins);
-            void        asm_cond(LInsp ins);
-            void        asm_arith(LInsp ins);
-            void        asm_neg_not(LInsp ins);
-            void        asm_load32(LInsp ins);
-            void        asm_cmov(LInsp ins);
-            void        asm_param(LInsp ins);
-            void        asm_immi(LInsp ins);
+            void        asm_immd(LIns* ins);
+            void        asm_condd(LIns* ins);
+            void        asm_cond(LIns* ins);
+            void        asm_arith(LIns* ins);
+            void        asm_neg_not(LIns* ins);
+            void        asm_load32(LIns* ins);
+            void        asm_cmov(LIns* ins);
+            void        asm_param(LIns* ins);
+            void        asm_immi(LIns* ins);
 #if NJ_SOFTFLOAT_SUPPORTED
-            void        asm_qlo(LInsp ins);
-            void        asm_qhi(LInsp ins);
+            void        asm_qlo(LIns* ins);
+            void        asm_qhi(LIns* ins);
             void        asm_qjoin(LIns *ins);
 #endif
-            void        asm_fneg(LInsp ins);
-            void        asm_fop(LInsp ins);
-            void        asm_i2d(LInsp ins);
-            void        asm_ui2d(LInsp ins);
-            void        asm_d2i(LInsp ins);
+            void        asm_fneg(LIns* ins);
+            void        asm_fop(LIns* ins);
+            void        asm_i2d(LIns* ins);
+            void        asm_ui2d(LIns* ins);
+            void        asm_d2i(LIns* ins);
 #ifdef NANOJIT_64BIT
-            void        asm_q2i(LInsp ins);
+            void        asm_q2i(LIns* ins);
             void        asm_promote(LIns *ins);
 #endif
             void        asm_nongp_copy(Register r, Register s);
-            void        asm_call(LInsp);
-            Register    asm_binop_rhs_reg(LInsp ins);
-            NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
+            void        asm_call(LIns*);
+            Register    asm_binop_rhs_reg(LIns* ins);
+            NIns*       asm_branch(bool branchOnFalse, LIns* cond, NIns* targ);
             NIns*       asm_branch_ov(LOpcode op, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
