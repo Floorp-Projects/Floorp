@@ -635,8 +635,7 @@ BEGIN_CASE(JSOP_PICK)
 {
     jsint i = regs.pc[1];
     JS_ASSERT(regs.sp - (i+1) >= fp->base());
-    Value lval;
-    lval = regs.sp[-(i+1)];
+    Value lval = regs.sp[-(i+1)];
     memmove(regs.sp - (i+1), regs.sp - i, sizeof(Value)*i);
     regs.sp[-1] = lval;
 }
@@ -1701,8 +1700,7 @@ END_CASE(JSOP_LENGTH)
 
 BEGIN_CASE(JSOP_CALLPROP)
 {
-    Value lval;
-    lval = regs.sp[-1];
+    Value lval = regs.sp[-1];
 
     Value objv;
     if (lval.isObject()) {
@@ -2659,8 +2657,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     JS_ASSERT(atoms == script->atomMap.vector);
     jsbytecode *pc2 = regs.pc;
 
-    Value lval;
-    lval = regs.sp[-1];
+    Value lval = regs.sp[-1];
     regs.sp--;
 
     if (!lval.isPrimitive())
@@ -2944,8 +2941,7 @@ BEGIN_CASE(JSOP_SETGVAR)
         JSAtom *atom;
         LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
-        Value rval;
-        rval = rref;
+        Value rval = rref;
         if (!obj->setProperty(cx, id, &rval))
             goto error;
     } else {
@@ -3101,8 +3097,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     MUST_FLOW_THROUGH("restore_scope");
     fp->scopeChain = obj;
 
-    Value rval;
-    rval.setFunObj(*obj);
+    Value rval = FunObjTag(*obj);
 
     /*
      * ECMA requires functions defined when entering Eval code to be
@@ -3202,8 +3197,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
     if (!obj)
         goto error;
 
-    Value rval;
-    rval.setFunObj(*obj);
+    Value rval = FunObjTag(*obj);
 
     uintN attrs = (fp->flags & JSFRAME_EVAL)
                   ? JSPROP_ENUMERATE
@@ -3584,8 +3578,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
 {
     /* Load the property's initial value into rval. */
     JS_ASSERT(regs.sp - fp->base() >= 2);
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
     JSObject *obj = &regs.sp[-2].asObject();
@@ -3782,8 +3775,7 @@ BEGIN_CASE(JSOP_SHARPINIT)
     uint32 slot = GET_UINT16(regs.pc);
     JS_ASSERT(slot + 1 < fp->script->nfixed);
     Value *vp = &fp->slots()[slot];
-    Value rval;
-    rval = vp[1];
+    Value rval = vp[1];
 
     /*
      * We peek ahead safely here because empty initialisers get zero
@@ -3992,8 +3984,7 @@ BEGIN_CASE(JSOP_QNAMECONST)
     JSAtom *atom;
     LOAD_ATOM(0, atom);
     Value rval = StringTag(ATOM_TO_STRING(atom));
-    Value lval;
-    lval = regs.sp[-1];
+    Value lval = regs.sp[-1];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
         goto error;
@@ -4003,9 +3994,8 @@ END_CASE(JSOP_QNAMECONST)
 
 BEGIN_CASE(JSOP_QNAME)
 {
-    Value rval, lval;
-    rval = regs.sp[-1];
-    lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    Value lval = regs.sp[-2];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
         goto error;
@@ -4039,9 +4029,8 @@ END_CASE(JSOP_TOATTRVAL)
 BEGIN_CASE(JSOP_ADDATTRNAME)
 BEGIN_CASE(JSOP_ADDATTRVAL)
 {
-    Value rval, lval;
-    rval = regs.sp[-1];
-    lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    Value lval = regs.sp[-2];
     JSString *str = lval.asString();
     JSString *str2 = rval.asString();
     str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
@@ -4068,8 +4057,7 @@ END_CASE(JSOP_BINDXMLNAME)
 BEGIN_CASE(JSOP_SETXMLNAME)
 {
     JSObject *obj = &regs.sp[-3].asObject();
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     if (!obj->setProperty(cx, id, &rval))
@@ -4083,8 +4071,7 @@ END_CASE(JSOP_SETXMLNAME)
 BEGIN_CASE(JSOP_CALLXMLNAME)
 BEGIN_CASE(JSOP_XMLNAME)
 {
-    Value lval;
-    lval = regs.sp[-1];
+    Value lval = regs.sp[-1];
     JSObject *obj;
     jsid id;
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
@@ -4160,8 +4147,7 @@ END_CASE(JSOP_ENDFILTER);
 
 BEGIN_CASE(JSOP_TOXML)
 {
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
     JSObject *obj = js_ValueToXMLObject(cx, rval);
     if (!obj)
         goto error;
@@ -4171,8 +4157,7 @@ END_CASE(JSOP_TOXML)
 
 BEGIN_CASE(JSOP_TOXMLLIST)
 {
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
     JSObject *obj = js_ValueToXMLListObject(cx, rval);
     if (!obj)
         goto error;
@@ -4182,8 +4167,7 @@ END_CASE(JSOP_TOXMLLIST)
 
 BEGIN_CASE(JSOP_XMLTAGEXPR)
 {
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
     JSString *str = js_ValueToString(cx, rval);
     if (!str)
         goto error;
@@ -4193,8 +4177,7 @@ END_CASE(JSOP_XMLTAGEXPR)
 
 BEGIN_CASE(JSOP_XMLELTEXPR)
 {
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
     JSString *str;
     if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
@@ -4249,8 +4232,7 @@ BEGIN_CASE(JSOP_XMLPI)
     JSAtom *atom;
     LOAD_ATOM(0, atom);
     JSString *str = ATOM_TO_STRING(atom);
-    Value rval;
-    rval = regs.sp[-1];
+    Value rval = regs.sp[-1];
     JSString *str2 = rval.asString();
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, str, str2);
     if (!obj)

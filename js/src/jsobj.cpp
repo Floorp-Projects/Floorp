@@ -2129,8 +2129,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
-    Value v;
-    v.setUndefined();
+    Value v = UndefinedTag();
 
     /*
      * In the special case of shared permanent properties, the "own" property
@@ -5318,11 +5317,10 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
 JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 {
-    Value v;
-    v.setObject(*obj);
-    if (hint == JSTYPE_STRING) {
     JS_ASSERT(hint != JSTYPE_OBJECT && hint != JSTYPE_FUNCTION);
 
+    Value v = ObjectTag(*obj);
+    if (hint == JSTYPE_STRING) {
         /*
          * Optimize for String objects with standard toString methods. Support
          * new String(...) instances whether mutated to have their own scope or

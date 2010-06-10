@@ -1946,9 +1946,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
-    Value fval;
-    fval = vp[1];
 
+    Value fval = vp[1];
     if (!js_IsCallable(fval)) {
         JSString *str = js_ValueToString(cx, fval);
         if (str) {
