@@ -2143,11 +2143,25 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
+  nsContentUtils::AddScriptRunner(
+    NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+
+  return NS_OK;
+}
+
+void
+nsGlobalWindow::DispatchDOMWindowCreated()
+{
+  // Fire DOMWindowCreated at chrome event listeners
+  nsContentUtils::DispatchChromeEvent(mDoc, mDocument, NS_LITERAL_STRING("DOMWindowCreated"),
+                                      PR_TRUE /* bubbles */,
+                                      PR_FALSE /* not cancellable */);
+
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
     nsAutoString origin;
-    nsIPrincipal* principal = aDocument->NodePrincipal();
+    nsIPrincipal* principal = mDoc->NodePrincipal();
     nsContentUtils::GetUTFOrigin(principal, origin);
     observerService->
       NotifyObservers(static_cast<nsIDOMWindow*>(this),
@@ -2156,8 +2170,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                         "content-document-global-created",
                       origin.get());
   }
-
-  return NS_OK;
 }
 
 void
