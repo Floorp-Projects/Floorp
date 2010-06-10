@@ -243,7 +243,7 @@ DerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 }
 
 static bool
-Trap(JSContext *cx, JSObject *handler, const Value &fval, uintN argc, Value* argv, Value *rval)
+Trap(JSContext *cx, JSObject *handler, Value fval, uintN argc, Value* argv, Value *rval)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -251,7 +251,7 @@ Trap(JSContext *cx, JSObject *handler, const Value &fval, uintN argc, Value* arg
 }
 
 static bool
-Trap1(JSContext *cx, JSObject *handler, const Value &fval, jsid id, Value *rval)
+Trap1(JSContext *cx, JSObject *handler, Value fval, jsid id, Value *rval)
 {
     JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
     if (!str)
@@ -261,7 +261,7 @@ Trap1(JSContext *cx, JSObject *handler, const Value &fval, jsid id, Value *rval)
 }
 
 static bool
-Trap2(JSContext *cx, JSObject *handler, const Value &fval, jsid id, Value v, Value *rval)
+Trap2(JSContext *cx, JSObject *handler, Value fval, jsid id, Value v, Value *rval)
 {
     JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
     if (!str)

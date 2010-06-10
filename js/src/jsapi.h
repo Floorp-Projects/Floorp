@@ -2974,11 +2974,6 @@ struct FunObjOrNull {
     JSObject *obj;
 };
 
-struct FunObjOrUndefinedTag {
-    explicit FunObjOrUndefinedTag(JSObject *obj) : obj(obj) {}
-    JSObject *obj;
-};
-
 struct NonFunObjTag {
     explicit NonFunObjTag(JSObject &obj) : obj(obj) {}
     JSObject &obj;
@@ -2996,6 +2991,12 @@ struct ObjectTag {
 
 struct ObjectOrNullTag {
     explicit ObjectOrNullTag(JSObject *obj) : obj(obj) {}
+    JSObject *obj;
+};
+
+struct ObjectOrUndefinedTag {
+    /* Interpret null JSObject* as undefined value */
+    explicit ObjectOrUndefinedTag(JSObject *obj) : obj(obj) {}
     JSObject *obj;
 };
 
@@ -3054,24 +3055,24 @@ class Value
 
     /* Construct a Value of a single type */
 
-    Value(NullTag)                     { setNull(); }
-    Value(UndefinedTag)                { setUndefined(); }
-    Value(Int32Tag arg)                { setInt32(arg.i32); }
-    Value(DoubleTag arg)               { setDouble(arg.dbl); }
-    Value(StringTag arg)               { setString(arg.str); }
-    Value(FunObjTag arg)               { setFunObj(arg.obj); }
-    Value(NonFunObjTag arg)            { setNonFunObj(arg.obj); }
-    Value(BooleanTag arg)              { setBoolean(arg.boo); }
-    Value(JSWhyMagic arg)              { setMagic(arg); }
+    Value(NullTag)                         { setNull(); }
+    Value(UndefinedTag)                    { setUndefined(); }
+    Value(Int32Tag arg)                    { setInt32(arg.i32); }
+    Value(DoubleTag arg)                   { setDouble(arg.dbl); }
+    Value(StringTag arg)                   { setString(arg.str); }
+    Value(FunObjTag arg)                   { setFunObj(arg.obj); }
+    Value(NonFunObjTag arg)                { setNonFunObj(arg.obj); }
+    Value(BooleanTag arg)                  { setBoolean(arg.boo); }
+    Value(JSWhyMagic arg)                  { setMagic(arg); }
 
     /* Construct a Value of a type dynamically chosen from a set of types */
 
-    Value(FunObjOrNull arg)            { setFunObjOrNull(arg.obj); }
-    Value(FunObjOrUndefinedTag arg)    { setFunObjOrUndefined(arg.obj); }
-    Value(NonFunObjOrNullTag arg)      { setNonFunObjOrNull(arg.obj); }
+    Value(FunObjOrNull arg)                { setFunObjOrNull(arg.obj); }
+    Value(NonFunObjOrNullTag arg)          { setNonFunObjOrNull(arg.obj); }
     inline Value(NumberTag arg);
-    inline Value(ObjectTag arg)        { setObject(arg.obj); }
-    inline Value(ObjectOrNullTag arg)  { setObjectOrNull(arg.obj); }
+    inline Value(ObjectTag arg)            { setObject(arg.obj); }
+    inline Value(ObjectOrNullTag arg)      { setObjectOrNull(arg.obj); }
+    inline Value(ObjectOrUndefinedTag arg) { setObjectOrUndefined(arg.obj); }
 
     /* Change to a Value of a single type */
 
@@ -3140,12 +3141,6 @@ class Value
         data = OBJECT_TO_JSVAL_IMPL(mask, arg);
     }
 
-    void setFunObjOrUndefined(JSObject *arg) {
-        JS_ASSERT_IF(arg, JS_OBJ_IS_FUN_IMPL(arg));
-        JSValueMask32 mask = arg ? JSVAL_MASK32_FUNOBJ : JSVAL_MASK32_UNDEFINED;
-        data = OBJECT_TO_JSVAL_IMPL(mask, arg);
-    }
-
     void setNonFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, !JS_OBJ_IS_FUN_IMPL(arg));
         JSValueMask32 mask = arg ? JSVAL_MASK32_NONFUNOBJ : JSVAL_MASK32_NULL;
@@ -3163,6 +3158,13 @@ class Value
                                                            : JSVAL_MASK32_NONFUNOBJ
                                  : JSVAL_MASK32_NULL;
 	    data = OBJECT_TO_JSVAL_IMPL(mask, arg);
+    }
+
+    inline void setObjectOrUndefined(JSObject *arg) {
+        if (arg)
+            setObject(*arg);
+        else
+            setUndefined();
     }
 
     /* Query a Value's type */

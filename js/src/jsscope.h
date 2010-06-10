@@ -712,13 +712,13 @@ struct JSScopeProperty {
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return getterObj; }
 
     // Per ES5, decode null getterObj as the undefined value, which encodes as null.
-    js::FunObjOrUndefinedTag getterValue() const {
+    js::ObjectOrUndefinedTag getterValue() const {
         JS_ASSERT(hasGetterValue());
-        return js::FunObjOrUndefinedTag(getterObj);
+        return js::ObjectOrUndefinedTag(getterObj);
     }
 
-    js::FunObjOrUndefinedTag getterOrUndefined() const {
-        return js::FunObjOrUndefinedTag(hasGetterValue() ? getterObj : NULL);
+    js::ObjectOrUndefinedTag getterOrUndefined() const {
+        return js::ObjectOrUndefinedTag(hasGetterValue() ? getterObj : NULL);
     }
 
     js::PropertyOp setter() const { return rawSetter; }
@@ -727,13 +727,13 @@ struct JSScopeProperty {
     JSObject *setterObject() const { JS_ASSERT(hasSetterValue()); return setterObj; }
 
     // Per ES5, decode null setterObj as the undefined value, which encodes as null.
-    js::FunObjOrUndefinedTag setterValue() const {
+    js::ObjectOrUndefinedTag setterValue() const {
         JS_ASSERT(hasSetterValue());
-        return js::FunObjOrUndefinedTag(setterObj);
+        return js::ObjectOrUndefinedTag(setterObj);
     }
 
-    js::FunObjOrUndefinedTag setterOrUndefined() const {
-        return js::FunObjOrUndefinedTag(hasSetterValue() ? setterObj : NULL);
+    js::ObjectOrUndefinedTag setterOrUndefined() const {
+        return js::ObjectOrUndefinedTag(hasSetterValue() ? setterObj : NULL);
     }
 
     inline JSDHashNumber hash() const;
