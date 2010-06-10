@@ -45,6 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsArrayEnumerator.h"
 #include "mozilla/FunctionTimer.h"
+#include "nsXPTZipLoader.h"
 
 #define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
 
@@ -301,14 +302,14 @@ xptiInterfaceInfoManager::RegisterFile(nsILocalFile* aFile, xptiFileType::Type a
         RegisterXPTHeader(header);
         break;
     }
-        
-    case xptiFileType::ZIP: {
-        // XXX XPCOM registration ordering issue, use C++!
-        nsCOMPtr<nsIXPTLoader> loader = do_GetService(NS_ZIPLOADER_CONTRACTID);
-        if (!loader)
-            return;
 
+    case xptiFileType::ZIP: {
+#ifndef MOZ_ENABLE_LIBXUL
+        NS_WARNING("Trying to register XPTs in a JAR in a non-libxul build");
+#else
+        nsCOMPtr<nsIXPTLoader> loader = new nsXPTZipLoader();
         loader->EnumerateEntries(aFile, this);
+#endif
         break;
     }
 
