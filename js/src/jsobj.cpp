@@ -641,13 +641,13 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 unsigned attrs = sprop->attributes();
                 if (attrs & JSPROP_GETTER) {
                     doGet = false;
-                    val[valcnt].setFunObjOrUndefined(sprop->getterObject());
+                    val[valcnt] = sprop->getterValue();
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.getAtom);
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
                     doGet = false;
-                    val[valcnt].setFunObjOrUndefined(sprop->setterObject());
+                    val[valcnt] = sprop->setterValue();
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.setAtom);
                     valcnt++;
                 }
@@ -1717,7 +1717,7 @@ obj_lookupGetter(JSContext *cx, uintN argc, Value *vp)
         if (pobj->isNative()) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
             if (sprop->hasGetterValue())
-                vp->setFunObjOrUndefined(sprop->getterObject());
+                *vp = sprop->getterValue();
             JS_UNLOCK_OBJ(cx, pobj);
         }
     }
@@ -1740,7 +1740,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, Value *vp)
         if (pobj->isNative()) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
             if (sprop->hasSetterValue())
-                vp->setFunObjOrUndefined(sprop->setterObject());
+                *vp = sprop->setterValue();
             JS_UNLOCK_OBJ(cx, pobj);
         }
     }
