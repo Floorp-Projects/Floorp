@@ -180,6 +180,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "BasicLayers.h"
 #include "nsFocusManager.h"
 #include "nsTextEditorState.h"
+#include "nsIPluginHost.h"
+#include "nsICategoryManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -203,6 +205,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsContentDLF.h"
 
 using namespace mozilla::dom;
 
@@ -6040,3 +6043,54 @@ nsIContentUtils::IsSafeToRunScript()
   return nsContentUtils::IsSafeToRunScript();
 }
 
+already_AddRefed<nsIDocumentLoaderFactory>
+nsIContentUtils::FindInternalContentViewer(const char* aType,
+                                           ContentViewerType* aLoaderType)
+{
+  if (aLoaderType) {
+    *aLoaderType = TYPE_UNSUPPORTED;
+  }
+
+  // one helper factory, please
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  if (!catMan)
+    return NULL;
+
+  FullPagePluginEnabledType pluginEnabled = NOT_ENABLED;
+
+  nsCOMPtr<nsIPluginHost> pluginHost =
+    do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
+  if (pluginHost) {
+    pluginHost->IsFullPagePluginEnabledForType(aType, &pluginEnabled);
+  }
+
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+
+  if (OVERRIDE_BUILTIN == pluginEnabled) {
+    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_PLUGIN;
+    }
+    return docFactory.forget();
+  }
+
+  nsXPIDLCString contractID;
+  nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aType, getter_Copies(contractID));
+  if (NS_SUCCEEDED(rv)) {
+    docFactory = do_GetService(contractID);
+    if (docFactory && aLoaderType) {
+      *aLoaderType = contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID) ? TYPE_CONTENT : TYPE_UNKNOWN;
+    }   
+    return docFactory.forget();
+  }
+
+  if (AVAILABLE == pluginEnabled) {
+    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_PLUGIN;
+    }
+    return docFactory.forget();
+  }
+
+  return NULL;
+}
