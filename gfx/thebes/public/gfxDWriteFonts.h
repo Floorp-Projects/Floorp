@@ -52,8 +52,11 @@ class gfxDWriteFont : public gfxFont
 public:
     gfxDWriteFont(gfxFontEntry *aFontEntry,
                   const gfxFontStyle *aFontStyle,
-                  PRBool aNeedsBold = PR_FALSE);
+                  PRBool aNeedsBold = PR_FALSE,
+                  AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
+
+    virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
     virtual nsString GetUniqueName();
 
@@ -83,6 +86,7 @@ protected:
     gfxFloat mAdjustedSize;
     gfxFont::Metrics mMetrics;
     PRBool mNeedsOblique;
+    PRBool mNeedsBold;
 };
 
 #endif
