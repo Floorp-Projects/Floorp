@@ -56,8 +56,7 @@ JSObject *
 GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
              JSObject *scope, nsIPrincipal *aObjectPrincipal);
 JSBool
-CreateExplicitWrapper(JSContext *cx, XPCWrappedNative *wrapper, JSBool deep,
-                      jsval *rval);
+CreateExplicitWrapper(JSContext *cx, XPCWrappedNative *wrapper, jsval *rval);
 
 inline PRBool
 IsNativeWrapperClass(JSClass *clazz)

@@ -405,7 +405,7 @@ bool ConnectSocket(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout
 void HandleConnection(void* data)
 {
   connection_info_t* ci = static_cast<connection_info_t*>(data);
-  PRIntervalTime connect_timeout = PR_SecondsToInterval(2);
+  PRIntervalTime connect_timeout = PR_SecondsToInterval(30);
 
   AutoFD other_sock(PR_NewTCPSocket());
   bool client_done = false;

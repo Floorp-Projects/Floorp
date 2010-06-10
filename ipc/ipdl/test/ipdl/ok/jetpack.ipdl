@@ -1,0 +1,7 @@
+sync protocol jetpack {
+child:
+    __delete__();
+
+state DEAD:
+    send __delete__;
+};

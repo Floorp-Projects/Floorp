@@ -113,5 +113,5 @@ install:: $(_RES_FILES)
 #  up in the test directory.
 libs::
 	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/data
-	$(INSTALL) $(topsrcdir)/netwerk/dns/src/effective_tld_names.dat \
+	$(INSTALL) $(topsrcdir)/netwerk/dns/effective_tld_names.dat \
           $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/

@@ -1,0 +1,2436 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <math.h>
+#include <string.h>
+
+#include "pixman-private.h"
+
+#include "pixman-combine.h"
+
+/*** per channel helper functions ***/
+
+static void
+combine_mask_ca (comp4_t *src, comp4_t *mask)
+{
+    comp4_t a = *mask;
+
+    comp4_t x;
+    comp2_t xa;
+
+    if (!a)
+    {
+	*(src) = 0;
+	return;
+    }
+
+    x = *(src);
+    if (a == ~0)
+    {
+	x = x >> A_SHIFT;
+	x |= x << G_SHIFT;
+	x |= x << R_SHIFT;
+	*(mask) = x;
+	return;
+    }
+
+    xa = x >> A_SHIFT;
+    UNcx4_MUL_UNcx4 (x, a);
+    *(src) = x;
+    
+    UNcx4_MUL_UNc (a, xa);
+    *(mask) = a;
+}
+
+static void
+combine_mask_value_ca (comp4_t *src, const comp4_t *mask)
+{
+    comp4_t a = *mask;
+    comp4_t x;
+
+    if (!a)
+    {
+	*(src) = 0;
+	return;
+    }
+
+    if (a == ~0)
+	return;
+
+    x = *(src);
+    UNcx4_MUL_UNcx4 (x, a);
+    *(src) = x;
+}
+
+static void
+combine_mask_alpha_ca (const comp4_t *src, comp4_t *mask)
+{
+    comp4_t a = *(mask);
+    comp4_t x;
+
+    if (!a)
+	return;
+
+    x = *(src) >> A_SHIFT;
+    if (x == MASK)
+	return;
+
+    if (a == ~0)
+    {
+	x |= x << G_SHIFT;
+	x |= x << R_SHIFT;
+	*(mask) = x;
+	return;
+    }
+
+    UNcx4_MUL_UNc (a, x);
+    *(mask) = a;
+}
+
+/*
+ * There are two ways of handling alpha -- either as a single unified value or
+ * a separate value for each component, hence each macro must have two
+ * versions.  The unified alpha version has a 'U' at the end of the name,
+ * the component version has a 'C'.  Similarly, functions which deal with
+ * this difference will have two versions using the same convention.
+ */
+
+/*
+ * All of the composing functions
+ */
+
+static force_inline comp4_t
+combine_mask (const comp4_t *src, const comp4_t *mask, int i)
+{
+    comp4_t s, m;
+
+    if (mask)
+    {
+	m = *(mask + i) >> A_SHIFT;
+
+	if (!m)
+	    return 0;
+    }
+
+    s = *(src + i);
+
+    if (mask)
+	UNcx4_MUL_UNc (s, m);
+
+    return s;
+}
+
+static void
+combine_clear (pixman_implementation_t *imp,
+               pixman_op_t              op,
+               comp4_t *                dest,
+               const comp4_t *          src,
+               const comp4_t *          mask,
+               int                      width)
+{
+    memset (dest, 0, width * sizeof(comp4_t));
+}
+
+static void
+combine_src_u (pixman_implementation_t *imp,
+               pixman_op_t              op,
+               comp4_t *                dest,
+               const comp4_t *          src,
+               const comp4_t *          mask,
+               int                      width)
+{
+    int i;
+
+    if (!mask)
+	memcpy (dest, src, width * sizeof (comp4_t));
+    else
+    {
+	for (i = 0; i < width; ++i)
+	{
+	    comp4_t s = combine_mask (src, mask, i);
+
+	    *(dest + i) = s;
+	}
+    }
+}
+
+/* if the Src is opaque, call combine_src_u */
+static void
+combine_over_u (pixman_implementation_t *imp,
+                pixman_op_t              op,
+                comp4_t *                dest,
+                const comp4_t *          src,
+                const comp4_t *          mask,
+                int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t ia = ALPHA_c (~s);
+
+	UNcx4_MUL_UNc_ADD_UNcx4 (d, ia, s);
+	*(dest + i) = d;
+    }
+}
+
+/* if the Dst is opaque, this is a noop */
+static void
+combine_over_reverse_u (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t ia = ALPHA_c (~*(dest + i));
+	UNcx4_MUL_UNc_ADD_UNcx4 (s, ia, d);
+	*(dest + i) = s;
+    }
+}
+
+/* if the Dst is opaque, call combine_src_u */
+static void
+combine_in_u (pixman_implementation_t *imp,
+              pixman_op_t              op,
+              comp4_t *                dest,
+              const comp4_t *          src,
+              const comp4_t *          mask,
+              int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t a = ALPHA_c (*(dest + i));
+	UNcx4_MUL_UNc (s, a);
+	*(dest + i) = s;
+    }
+}
+
+/* if the Src is opaque, this is a noop */
+static void
+combine_in_reverse_u (pixman_implementation_t *imp,
+                      pixman_op_t              op,
+                      comp4_t *                dest,
+                      const comp4_t *          src,
+                      const comp4_t *          mask,
+                      int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t a = ALPHA_c (s);
+	UNcx4_MUL_UNc (d, a);
+	*(dest + i) = d;
+    }
+}
+
+/* if the Dst is opaque, call combine_clear */
+static void
+combine_out_u (pixman_implementation_t *imp,
+               pixman_op_t              op,
+               comp4_t *                dest,
+               const comp4_t *          src,
+               const comp4_t *          mask,
+               int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t a = ALPHA_c (~*(dest + i));
+	UNcx4_MUL_UNc (s, a);
+	*(dest + i) = s;
+    }
+}
+
+/* if the Src is opaque, call combine_clear */
+static void
+combine_out_reverse_u (pixman_implementation_t *imp,
+                       pixman_op_t              op,
+                       comp4_t *                dest,
+                       const comp4_t *          src,
+                       const comp4_t *          mask,
+                       int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t a = ALPHA_c (~s);
+	UNcx4_MUL_UNc (d, a);
+	*(dest + i) = d;
+    }
+}
+
+/* if the Src is opaque, call combine_in_u */
+/* if the Dst is opaque, call combine_over_u */
+/* if both the Src and Dst are opaque, call combine_src_u */
+static void
+combine_atop_u (pixman_implementation_t *imp,
+                pixman_op_t              op,
+                comp4_t *                dest,
+                const comp4_t *          src,
+                const comp4_t *          mask,
+                int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t dest_a = ALPHA_c (d);
+	comp4_t src_ia = ALPHA_c (~s);
+
+	UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (s, dest_a, d, src_ia);
+	*(dest + i) = s;
+    }
+}
+
+/* if the Src is opaque, call combine_over_reverse_u */
+/* if the Dst is opaque, call combine_in_reverse_u */
+/* if both the Src and Dst are opaque, call combine_dst_u */
+static void
+combine_atop_reverse_u (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t src_a = ALPHA_c (s);
+	comp4_t dest_ia = ALPHA_c (~d);
+
+	UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (s, dest_ia, d, src_a);
+	*(dest + i) = s;
+    }
+}
+
+/* if the Src is opaque, call combine_over_u */
+/* if the Dst is opaque, call combine_over_reverse_u */
+/* if both the Src and Dst are opaque, call combine_clear */
+static void
+combine_xor_u (pixman_implementation_t *imp,
+               pixman_op_t              op,
+               comp4_t *                dest,
+               const comp4_t *          src,
+               const comp4_t *          mask,
+               int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t src_ia = ALPHA_c (~s);
+	comp4_t dest_ia = ALPHA_c (~d);
+
+	UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (s, dest_ia, d, src_ia);
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_add_u (pixman_implementation_t *imp,
+               pixman_op_t              op,
+               comp4_t *                dest,
+               const comp4_t *          src,
+               const comp4_t *          mask,
+               int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	UNcx4_ADD_UNcx4 (d, s);
+	*(dest + i) = d;
+    }
+}
+
+/* if the Src is opaque, call combine_add_u */
+/* if the Dst is opaque, call combine_add_u */
+/* if both the Src and Dst are opaque, call combine_add_u */
+static void
+combine_saturate_u (pixman_implementation_t *imp,
+                    pixman_op_t              op,
+                    comp4_t *                dest,
+                    const comp4_t *          src,
+                    const comp4_t *          mask,
+                    int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp2_t sa, da;
+
+	sa = s >> A_SHIFT;
+	da = ~d >> A_SHIFT;
+	if (sa > da)
+	{
+	    sa = DIV_UNc (da, sa);
+	    UNcx4_MUL_UNc (s, sa);
+	}
+	;
+	UNcx4_ADD_UNcx4 (d, s);
+	*(dest + i) = d;
+    }
+}
+
+/*
+ * PDF blend modes:
+ * The following blend modes have been taken from the PDF ISO 32000
+ * specification, which at this point in time is available from
+ * http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
+ * The relevant chapters are 11.3.5 and 11.3.6.
+ * The formula for computing the final pixel color given in 11.3.6 is:
+ * αr × Cr = (1 – αs) × αb × Cb + (1 – αb) × αs × Cs + αb × αs × B(Cb, Cs)
+ * with B() being the blend function.
+ * Note that OVER is a special case of this operation, using B(Cb, Cs) = Cs
+ *
+ * These blend modes should match the SVG filter draft specification, as
+ * it has been designed to mirror ISO 32000. Note that at the current point
+ * no released draft exists that shows this, as the formulas have not been
+ * updated yet after the release of ISO 32000.
+ *
+ * The default implementation here uses the PDF_SEPARABLE_BLEND_MODE and
+ * PDF_NON_SEPARABLE_BLEND_MODE macros, which take the blend function as an
+ * argument. Note that this implementation operates on premultiplied colors,
+ * while the PDF specification does not. Therefore the code uses the formula
+ * ar.Cra = (1 – as) . Dca + (1 – ad) . Sca + B(Dca, ad, Sca, as)
+ */
+
+/*
+ * Multiply
+ * B(Dca, ad, Sca, as) = Dca.Sca
+ */
+
+static void
+combine_multiply_u (pixman_implementation_t *imp,
+                    pixman_op_t              op,
+                    comp4_t *                dest,
+                    const comp4_t *          src,
+                    const comp4_t *          mask,
+                    int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t ss = s;
+	comp4_t src_ia = ALPHA_c (~s);
+	comp4_t dest_ia = ALPHA_c (~d);
+
+	UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (ss, dest_ia, d, src_ia);
+	UNcx4_MUL_UNcx4 (d, s);
+	UNcx4_ADD_UNcx4 (d, ss);
+
+	*(dest + i) = d;
+    }
+}
+
+static void
+combine_multiply_ca (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     comp4_t *                dest,
+                     const comp4_t *          src,
+                     const comp4_t *          mask,
+                     int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t m = *(mask + i);
+	comp4_t s = *(src + i);
+	comp4_t d = *(dest + i);
+	comp4_t r = d;
+	comp4_t dest_ia = ALPHA_c (~d);
+
+	combine_mask_value_ca (&s, &m);
+
+	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (r, ~m, s, dest_ia);
+	UNcx4_MUL_UNcx4 (d, s);
+	UNcx4_ADD_UNcx4 (r, d);
+
+	*(dest + i) = r;
+    }
+}
+
+#define PDF_SEPARABLE_BLEND_MODE(name)					\
+    static void								\
+    combine_ ## name ## _u (pixman_implementation_t *imp,		\
+			    pixman_op_t              op,		\
+                            comp4_t *                dest,		\
+			    const comp4_t *          src,		\
+			    const comp4_t *          mask,		\
+			    int                      width)		\
+    {									\
+	int i;								\
+	for (i = 0; i < width; ++i) {					\
+	    comp4_t s = combine_mask (src, mask, i);			\
+	    comp4_t d = *(dest + i);					\
+	    comp1_t sa = ALPHA_c (s);					\
+	    comp1_t isa = ~sa;						\
+	    comp1_t da = ALPHA_c (d);					\
+	    comp1_t ida = ~da;						\
+	    comp4_t result;						\
+									\
+	    result = d;							\
+	    UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (result, isa, s, ida);	\
+	    								\
+	    *(dest + i) = result +					\
+		(DIV_ONE_UNc (sa * da) << A_SHIFT) +			\
+		(blend_ ## name (RED_c (d), da, RED_c (s), sa) << R_SHIFT) + \
+		(blend_ ## name (GREEN_c (d), da, GREEN_c (s), sa) << G_SHIFT) + \
+		(blend_ ## name (BLUE_c (d), da, BLUE_c (s), sa));	\
+	}								\
+    }									\
+    									\
+    static void								\
+    combine_ ## name ## _ca (pixman_implementation_t *imp,		\
+			     pixman_op_t              op,		\
+                             comp4_t *                dest,		\
+			     const comp4_t *          src,		\
+			     const comp4_t *          mask,		\
+			     int                     width)		\
+    {									\
+	int i;								\
+	for (i = 0; i < width; ++i) {					\
+	    comp4_t m = *(mask + i);					\
+	    comp4_t s = *(src + i);					\
+	    comp4_t d = *(dest + i);					\
+	    comp1_t da = ALPHA_c (d);					\
+	    comp1_t ida = ~da;						\
+	    comp4_t result;						\
+            								\
+	    combine_mask_value_ca (&s, &m);				\
+            								\
+	    result = d;							\
+	    UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (result, ~m, s, ida);     \
+            								\
+	    result +=							\
+	        (DIV_ONE_UNc (ALPHA_c (m) * da) << A_SHIFT) +		\
+	        (blend_ ## name (RED_c (d), da, RED_c (s), RED_c (m)) << R_SHIFT) + \
+	        (blend_ ## name (GREEN_c (d), da, GREEN_c (s), GREEN_c (m)) << G_SHIFT) + \
+	        (blend_ ## name (BLUE_c (d), da, BLUE_c (s), BLUE_c (m))); \
+	    								\
+	    *(dest + i) = result;					\
+	}								\
+    }
+
+/*
+ * Screen
+ * B(Dca, ad, Sca, as) = Dca.sa + Sca.da - Dca.Sca
+ */
+static inline comp4_t
+blend_screen (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    return DIV_ONE_UNc (sca * da + dca * sa - sca * dca);
+}
+
+PDF_SEPARABLE_BLEND_MODE (screen)
+
+/*
+ * Overlay
+ * B(Dca, Da, Sca, Sa) =
+ *   if 2.Dca < Da
+ *     2.Sca.Dca
+ *   otherwise
+ *     Sa.Da - 2.(Da - Dca).(Sa - Sca)
+ */
+static inline comp4_t
+blend_overlay (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    comp4_t rca;
+
+    if (2 * dca < da)
+	rca = 2 * sca * dca;
+    else
+	rca = sa * da - 2 * (da - dca) * (sa - sca);
+    return DIV_ONE_UNc (rca);
+}
+
+PDF_SEPARABLE_BLEND_MODE (overlay)
+
+/*
+ * Darken
+ * B(Dca, Da, Sca, Sa) = min (Sca.Da, Dca.Sa)
+ */
+static inline comp4_t
+blend_darken (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    comp4_t s, d;
+
+    s = sca * da;
+    d = dca * sa;
+    return DIV_ONE_UNc (s > d ? d : s);
+}
+
+PDF_SEPARABLE_BLEND_MODE (darken)
+
+/*
+ * Lighten
+ * B(Dca, Da, Sca, Sa) = max (Sca.Da, Dca.Sa)
+ */
+static inline comp4_t
+blend_lighten (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    comp4_t s, d;
+
+    s = sca * da;
+    d = dca * sa;
+    return DIV_ONE_UNc (s > d ? s : d);
+}
+
+PDF_SEPARABLE_BLEND_MODE (lighten)
+
+/*
+ * Color dodge
+ * B(Dca, Da, Sca, Sa) =
+ *   if Dca == 0
+ *     0
+ *   if Sca == Sa
+ *     Sa.Da
+ *   otherwise
+ *     Sa.Da. min (1, Dca / Da / (1 - Sca/Sa))
+ */
+static inline comp4_t
+blend_color_dodge (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    if (sca >= sa)
+    {
+	return dca == 0 ? 0 : DIV_ONE_UNc (sa * da);
+    }
+    else
+    {
+	comp4_t rca = dca * sa / (sa - sca);
+	return DIV_ONE_UNc (sa * MIN (rca, da));
+    }
+}
+
+PDF_SEPARABLE_BLEND_MODE (color_dodge)
+
+/*
+ * Color burn
+ * B(Dca, Da, Sca, Sa) =
+ *   if Dca == Da
+ *     Sa.Da
+ *   if Sca == 0
+ *     0
+ *   otherwise
+ *     Sa.Da.(1 - min (1, (1 - Dca/Da).Sa / Sca))
+ */
+static inline comp4_t
+blend_color_burn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    if (sca == 0)
+    {
+	return dca < da ? 0 : DIV_ONE_UNc (sa * da);
+    }
+    else
+    {
+	comp4_t rca = (da - dca) * sa / sca;
+	return DIV_ONE_UNc (sa * (MAX (rca, da) - rca));
+    }
+}
+
+PDF_SEPARABLE_BLEND_MODE (color_burn)
+
+/*
+ * Hard light
+ * B(Dca, Da, Sca, Sa) =
+ *   if 2.Sca < Sa
+ *     2.Sca.Dca
+ *   otherwise
+ *     Sa.Da - 2.(Da - Dca).(Sa - Sca)
+ */
+static inline comp4_t
+blend_hard_light (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    if (2 * sca < sa)
+	return DIV_ONE_UNc (2 * sca * dca);
+    else
+	return DIV_ONE_UNc (sa * da - 2 * (da - dca) * (sa - sca));
+}
+
+PDF_SEPARABLE_BLEND_MODE (hard_light)
+
+/*
+ * Soft light
+ * B(Dca, Da, Sca, Sa) =
+ *   if (2.Sca <= Sa)
+ *     Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa))
+ *   otherwise if Dca.4 <= Da
+ *     Dca.(Sa + (2.Sca - Sa).((16.Dca/Da - 12).Dca/Da + 3)
+ *   otherwise
+ *     (Dca.Sa + (SQRT (Dca/Da).Da - Dca).(2.Sca - Sa))
+ */
+static inline comp4_t
+blend_soft_light (comp4_t dca_org,
+		  comp4_t da_org,
+		  comp4_t sca_org,
+		  comp4_t sa_org)
+{
+    double dca = dca_org * (1.0 / MASK);
+    double da = da_org * (1.0 / MASK);
+    double sca = sca_org * (1.0 / MASK);
+    double sa = sa_org * (1.0 / MASK);
+    double rca;
+
+    if (2 * sca < sa)
+    {
+	if (da == 0)
+	    rca = dca * sa;
+	else
+	    rca = dca * sa - dca * (da - dca) * (sa - 2 * sca) / da;
+    }
+    else if (da == 0)
+    {
+	rca = 0;
+    }
+    else if (4 * dca <= da)
+    {
+	rca = dca * sa +
+	    (2 * sca - sa) * dca * ((16 * dca / da - 12) * dca / da + 3);
+    }
+    else
+    {
+	rca = dca * sa + (sqrt (dca * da) - dca) * (2 * sca - sa);
+    }
+    return rca * MASK + 0.5;
+}
+
+PDF_SEPARABLE_BLEND_MODE (soft_light)
+
+/*
+ * Difference
+ * B(Dca, Da, Sca, Sa) = abs (Dca.Sa - Sca.Da)
+ */
+static inline comp4_t
+blend_difference (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    comp4_t dcasa = dca * sa;
+    comp4_t scada = sca * da;
+
+    if (scada < dcasa)
+	return DIV_ONE_UNc (dcasa - scada);
+    else
+	return DIV_ONE_UNc (scada - dcasa);
+}
+
+PDF_SEPARABLE_BLEND_MODE (difference)
+
+/*
+ * Exclusion
+ * B(Dca, Da, Sca, Sa) = (Sca.Da + Dca.Sa - 2.Sca.Dca)
+ */
+
+/* This can be made faster by writing it directly and not using
+ * PDF_SEPARABLE_BLEND_MODE, but that's a performance optimization */
+
+static inline comp4_t
+blend_exclusion (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+    return DIV_ONE_UNc (sca * da + dca * sa - 2 * dca * sca);
+}
+
+PDF_SEPARABLE_BLEND_MODE (exclusion)
+
+#undef PDF_SEPARABLE_BLEND_MODE
+
+/*
+ * PDF nonseperable blend modes are implemented using the following functions
+ * to operate in Hsl space, with Cmax, Cmid, Cmin referring to the max, mid
+ * and min value of the red, green and blue components.
+ *
+ * LUM (C) = 0.3 × Cred + 0.59 × Cgreen + 0.11 × Cblue
+ *
+ * clip_color (C):
+ *   l = LUM (C)
+ *   min = Cmin
+ *   max = Cmax
+ *   if n < 0.0
+ *     C = l + ( ( ( C – l ) × l ) ⁄ ( l – min ) )
+ *   if x > 1.0
+ *     C = l + ( ( ( C – l ) × ( 1 – l ) ) ⁄ ( max – l ) )
+ *   return C
+ *
+ * set_lum (C, l):
+ *   d = l – LUM (C)
+ *   C += d
+ *   return clip_color (C)
+ *
+ * SAT (C) = CH_MAX (C) - CH_MIN (C)
+ *
+ * set_sat (C, s):
+ *  if Cmax > Cmin
+ *    Cmid = ( ( ( Cmid – Cmin ) × s ) ⁄ ( Cmax – Cmin ) )
+ *    Cmax = s
+ *  else
+ *    Cmid = Cmax = 0.0
+ *  Cmin = 0.0
+ *  return C
+ */
+
+/* For premultiplied colors, we need to know what happens when C is
+ * multiplied by a real number. LUM and SAT are linear:
+ *
+ *    LUM (r × C) = r × LUM (C)		SAT (r * C) = r * SAT (C)
+ *
+ * If we extend clip_color with an extra argument a and change
+ *
+ *        if x >= 1.0
+ *
+ * into
+ *
+ *        if x >= a
+ *
+ * then clip_color is also linear:
+ *
+ *    r * clip_color (C, a) = clip_color (r_c, ra);
+ *
+ * for positive r.
+ *
+ * Similarly, we can extend set_lum with an extra argument that is just passed
+ * on to clip_color:
+ *
+ *   r * set_lum ( C, l, a)
+ *
+ *   = r × clip_color ( C + l - LUM (C), a)
+ *
+ *   = clip_color ( r * C + r × l - r * LUM (C), r * a)
+ *
+ *   = set_lum ( r * C, r * l, r * a)
+ *
+ * Finally, set_sat:
+ *
+ *    r * set_sat (C, s) = set_sat (x * C, r * s)
+ *
+ * The above holds for all non-zero x, because they x'es in the fraction for
+ * C_mid cancel out. Specifically, it holds for x = r:
+ *
+ *    r * set_sat (C, s) = set_sat (r_c, rs)
+ *
+ */
+
+/* So, for the non-separable PDF blend modes, we have (using s, d for
+ * non-premultiplied colors, and S, D for premultiplied:
+ *
+ *   Color:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * set_lum (S/a_s, LUM (D/a_d), 1)
+ *   = set_lum (S * a_d, a_s * LUM (D), a_s * a_d)
+ *
+ *
+ *   Luminosity:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * set_lum (D/a_d, LUM(S/a_s), 1)
+ *   = set_lum (a_s * D, a_d * LUM(S), a_s * a_d)
+ *
+ *
+ *   Saturation:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * set_lum (set_sat (D/a_d, SAT (S/a_s)), LUM (D/a_d), 1)
+ *   = set_lum (a_s * a_d * set_sat (D/a_d, SAT (S/a_s)),
+ *                                        a_s * LUM (D), a_s * a_d)
+ *   = set_lum (set_sat (a_s * D, a_d * SAT (S), a_s * LUM (D), a_s * a_d))
+ *
+ *   Hue:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * set_lum (set_sat (S/a_s, SAT (D/a_d)), LUM (D/a_d), 1)
+ *   = a_s * a_d * set_lum (set_sat (a_d * S, a_s * SAT (D)),
+ *                                        a_s * LUM (D), a_s * a_d)
+ *
+ */
+
+#define CH_MIN(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
+#define CH_MAX(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
+#define LUM(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
+#define SAT(c) (CH_MAX (c) - CH_MIN (c))
+
+#define PDF_NON_SEPARABLE_BLEND_MODE(name)				\
+    static void								\
+    combine_ ## name ## _u (pixman_implementation_t *imp,		\
+			    pixman_op_t op,				\
+                            comp4_t *dest,				\
+			    const comp4_t *src,				\
+			    const comp4_t *mask,			\
+			    int width)					\
+    {									\
+	int i;								\
+	for (i = 0; i < width; ++i)					\
+	{								\
+	    comp4_t s = combine_mask (src, mask, i);			\
+	    comp4_t d = *(dest + i);					\
+	    comp1_t sa = ALPHA_c (s);					\
+	    comp1_t isa = ~sa;						\
+	    comp1_t da = ALPHA_c (d);					\
+	    comp1_t ida = ~da;						\
+	    comp4_t result;						\
+	    comp4_t sc[3], dc[3], c[3];					\
+            								\
+	    result = d;							\
+	    UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (result, isa, s, ida);	\
+	    dc[0] = RED_c (d);						\
+	    sc[0] = RED_c (s);						\
+	    dc[1] = GREEN_c (d);					\
+	    sc[1] = GREEN_c (s);					\
+	    dc[2] = BLUE_c (d);						\
+	    sc[2] = BLUE_c (s);						\
+	    blend_ ## name (c, dc, da, sc, sa);				\
+            								\
+	    *(dest + i) = result +					\
+		(DIV_ONE_UNc (sa * da) << A_SHIFT) +			\
+		(DIV_ONE_UNc (c[0]) << R_SHIFT) +			\
+		(DIV_ONE_UNc (c[1]) << G_SHIFT) +			\
+		(DIV_ONE_UNc (c[2]));					\
+	}								\
+    }
+
+static void
+set_lum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
+{
+    double a, l, min, max;
+    double tmp[3];
+
+    a = sa * (1.0 / MASK);
+
+    l = lum * (1.0 / MASK);
+    tmp[0] = src[0] * (1.0 / MASK);
+    tmp[1] = src[1] * (1.0 / MASK);
+    tmp[2] = src[2] * (1.0 / MASK);
+
+    l = l - LUM (tmp);
+    tmp[0] += l;
+    tmp[1] += l;
+    tmp[2] += l;
+
+    /* clip_color */
+    l = LUM (tmp);
+    min = CH_MIN (tmp);
+    max = CH_MAX (tmp);
+
+    if (min < 0)
+    {
+	tmp[0] = l + (tmp[0] - l) * l / (l - min);
+	tmp[1] = l + (tmp[1] - l) * l / (l - min);
+	tmp[2] = l + (tmp[2] - l) * l / (l - min);
+    }
+    if (max > a)
+    {
+	tmp[0] = l + (tmp[0] - l) * (a - l) / (max - l);
+	tmp[1] = l + (tmp[1] - l) * (a - l) / (max - l);
+	tmp[2] = l + (tmp[2] - l) * (a - l) / (max - l);
+    }
+
+    dest[0] = tmp[0] * MASK + 0.5;
+    dest[1] = tmp[1] * MASK + 0.5;
+    dest[2] = tmp[2] * MASK + 0.5;
+}
+
+static void
+set_sat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
+{
+    int id[3];
+    comp4_t min, max;
+
+    if (src[0] > src[1])
+    {
+	if (src[0] > src[2])
+	{
+	    id[0] = 0;
+	    if (src[1] > src[2])
+	    {
+		id[1] = 1;
+		id[2] = 2;
+	    }
+	    else
+	    {
+		id[1] = 2;
+		id[2] = 1;
+	    }
+	}
+	else
+	{
+	    id[0] = 2;
+	    id[1] = 0;
+	    id[2] = 1;
+	}
+    }
+    else
+    {
+	if (src[0] > src[2])
+	{
+	    id[0] = 1;
+	    id[1] = 0;
+	    id[2] = 2;
+	}
+	else
+	{
+	    id[2] = 0;
+	    if (src[1] > src[2])
+	    {
+		id[0] = 1;
+		id[1] = 2;
+	    }
+	    else
+	    {
+		id[0] = 2;
+		id[1] = 1;
+	    }
+	}
+    }
+
+    max = dest[id[0]];
+    min = dest[id[2]];
+    if (max > min)
+    {
+	dest[id[1]] = (dest[id[1]] - min) * sat / (max - min);
+	dest[id[0]] = sat;
+	dest[id[2]] = 0;
+    }
+    else
+    {
+	dest[0] = dest[1] = dest[2] = 0;
+    }
+}
+
+/*
+ * Hue:
+ * B(Cb, Cs) = set_lum (set_sat (Cs, SAT (Cb)), LUM (Cb))
+ */
+static inline void
+blend_hsl_hue (comp4_t c[3],
+               comp4_t dc[3],
+               comp4_t da,
+               comp4_t sc[3],
+               comp4_t sa)
+{
+    c[0] = sc[0] * da;
+    c[1] = sc[1] * da;
+    c[2] = sc[2] * da;
+    set_sat (c, c, SAT (dc) * sa);
+    set_lum (c, c, sa * da, LUM (dc) * sa);
+}
+
+PDF_NON_SEPARABLE_BLEND_MODE (hsl_hue)
+
+/*
+ * Saturation:
+ * B(Cb, Cs) = set_lum (set_sat (Cb, SAT (Cs)), LUM (Cb))
+ */
+static inline void
+blend_hsl_saturation (comp4_t c[3],
+                      comp4_t dc[3],
+                      comp4_t da,
+                      comp4_t sc[3],
+                      comp4_t sa)
+{
+    c[0] = dc[0] * sa;
+    c[1] = dc[1] * sa;
+    c[2] = dc[2] * sa;
+    set_sat (c, c, SAT (sc) * da);
+    set_lum (c, c, sa * da, LUM (dc) * sa);
+}
+
+PDF_NON_SEPARABLE_BLEND_MODE (hsl_saturation)
+
+/*
+ * Color:
+ * B(Cb, Cs) = set_lum (Cs, LUM (Cb))
+ */
+static inline void
+blend_hsl_color (comp4_t c[3],
+                 comp4_t dc[3],
+                 comp4_t da,
+                 comp4_t sc[3],
+                 comp4_t sa)
+{
+    c[0] = sc[0] * da;
+    c[1] = sc[1] * da;
+    c[2] = sc[2] * da;
+    set_lum (c, c, sa * da, LUM (dc) * sa);
+}
+
+PDF_NON_SEPARABLE_BLEND_MODE (hsl_color)
+
+/*
+ * Luminosity:
+ * B(Cb, Cs) = set_lum (Cb, LUM (Cs))
+ */
+static inline void
+blend_hsl_luminosity (comp4_t c[3],
+                      comp4_t dc[3],
+                      comp4_t da,
+                      comp4_t sc[3],
+                      comp4_t sa)
+{
+    c[0] = dc[0] * sa;
+    c[1] = dc[1] * sa;
+    c[2] = dc[2] * sa;
+    set_lum (c, c, sa * da, LUM (sc) * da);
+}
+
+PDF_NON_SEPARABLE_BLEND_MODE (hsl_luminosity)
+
+#undef SAT
+#undef LUM
+#undef CH_MAX
+#undef CH_MIN
+#undef PDF_NON_SEPARABLE_BLEND_MODE
+
+/* Overlay
+ *
+ * All of the disjoint composing functions
+ *
+ * The four entries in the first column indicate what source contributions
+ * come from each of the four areas of the picture -- areas covered by neither
+ * A nor B, areas covered only by A, areas covered only by B and finally
+ * areas covered by both A and B.
+ * 
+ * Disjoint			Conjoint
+ * Fa		Fb		Fa		Fb
+ * (0,0,0,0)	0		0		0		0
+ * (0,A,0,A)	1		0		1		0
+ * (0,0,B,B)	0		1		0		1
+ * (0,A,B,A)	1		min((1-a)/b,1)	1		max(1-a/b,0)
+ * (0,A,B,B)	min((1-b)/a,1)	1		max(1-b/a,0)	1
+ * (0,0,0,A)	max(1-(1-b)/a,0) 0		min(1,b/a)	0
+ * (0,0,0,B)	0		max(1-(1-a)/b,0) 0		min(a/b,1)
+ * (0,A,0,0)	min(1,(1-b)/a)	0		max(1-b/a,0)	0
+ * (0,0,B,0)	0		min(1,(1-a)/b)	0		max(1-a/b,0)
+ * (0,0,B,A)	max(1-(1-b)/a,0) min(1,(1-a)/b)	 min(1,b/a)	max(1-a/b,0)
+ * (0,A,0,B)	min(1,(1-b)/a)	max(1-(1-a)/b,0) max(1-b/a,0)	min(1,a/b)
+ * (0,A,B,0)	min(1,(1-b)/a)	min(1,(1-a)/b)	max(1-b/a,0)	max(1-a/b,0)
+ */
+
+#define COMBINE_A_OUT 1
+#define COMBINE_A_IN  2
+#define COMBINE_B_OUT 4
+#define COMBINE_B_IN  8
+
+#define COMBINE_CLEAR   0
+#define COMBINE_A       (COMBINE_A_OUT | COMBINE_A_IN)
+#define COMBINE_B       (COMBINE_B_OUT | COMBINE_B_IN)
+#define COMBINE_A_OVER  (COMBINE_A_OUT | COMBINE_B_OUT | COMBINE_A_IN)
+#define COMBINE_B_OVER  (COMBINE_A_OUT | COMBINE_B_OUT | COMBINE_B_IN)
+#define COMBINE_A_ATOP  (COMBINE_B_OUT | COMBINE_A_IN)
+#define COMBINE_B_ATOP  (COMBINE_A_OUT | COMBINE_B_IN)
+#define COMBINE_XOR     (COMBINE_A_OUT | COMBINE_B_OUT)
+
+/* portion covered by a but not b */
+static comp1_t
+combine_disjoint_out_part (comp1_t a, comp1_t b)
+{
+    /* min (1, (1-b) / a) */
+
+    b = ~b;                 /* 1 - b */
+    if (b >= a)             /* 1 - b >= a -> (1-b)/a >= 1 */
+	return MASK;        /* 1 */
+    return DIV_UNc (b, a);     /* (1-b) / a */
+}
+
+/* portion covered by both a and b */
+static comp1_t
+combine_disjoint_in_part (comp1_t a, comp1_t b)
+{
+    /* max (1-(1-b)/a,0) */
+    /*  = - min ((1-b)/a - 1, 0) */
+    /*  = 1 - min (1, (1-b)/a) */
+
+    b = ~b;                 /* 1 - b */
+    if (b >= a)             /* 1 - b >= a -> (1-b)/a >= 1 */
+	return 0;           /* 1 - 1 */
+    return ~DIV_UNc(b, a);    /* 1 - (1-b) / a */
+}
+
+/* portion covered by a but not b */
+static comp1_t
+combine_conjoint_out_part (comp1_t a, comp1_t b)
+{
+    /* max (1-b/a,0) */
+    /* = 1-min(b/a,1) */
+
+    /* min (1, (1-b) / a) */
+
+    if (b >= a)             /* b >= a -> b/a >= 1 */
+	return 0x00;        /* 0 */
+    return ~DIV_UNc(b, a);    /* 1 - b/a */
+}
+
+/* portion covered by both a and b */
+static comp1_t
+combine_conjoint_in_part (comp1_t a, comp1_t b)
+{
+    /* min (1,b/a) */
+
+    if (b >= a)             /* b >= a -> b/a >= 1 */
+	return MASK;        /* 1 */
+    return DIV_UNc (b, a);     /* b/a */
+}
+
+#define GET_COMP(v, i)   ((comp2_t) (comp1_t) ((v) >> i))
+
+#define ADD(x, y, i, t)							\
+    ((t) = GET_COMP (x, i) + GET_COMP (y, i),				\
+     (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
+
+#define GENERIC(x, y, i, ax, ay, t, u, v)				\
+    ((t) = (MUL_UNc (GET_COMP (y, i), ay, (u)) +			\
+            MUL_UNc (GET_COMP (x, i), ax, (v))),			\
+     (comp4_t) ((comp1_t) ((t) |					\
+                           (0 - ((t) >> G_SHIFT)))) << (i))
+
+static void
+combine_disjoint_general_u (comp4_t *      dest,
+                            const comp4_t *src,
+                            const comp4_t *mask,
+                            int            width,
+                            comp1_t        combine)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t m, n, o, p;
+	comp2_t Fa, Fb, t, u, v;
+	comp1_t sa = s >> A_SHIFT;
+	comp1_t da = d >> A_SHIFT;
+
+	switch (combine & COMBINE_A)
+	{
+	default:
+	    Fa = 0;
+	    break;
+
+	case COMBINE_A_OUT:
+	    Fa = combine_disjoint_out_part (sa, da);
+	    break;
+
+	case COMBINE_A_IN:
+	    Fa = combine_disjoint_in_part (sa, da);
+	    break;
+
+	case COMBINE_A:
+	    Fa = MASK;
+	    break;
+	}
+
+	switch (combine & COMBINE_B)
+	{
+	default:
+	    Fb = 0;
+	    break;
+
+	case COMBINE_B_OUT:
+	    Fb = combine_disjoint_out_part (da, sa);
+	    break;
+
+	case COMBINE_B_IN:
+	    Fb = combine_disjoint_in_part (da, sa);
+	    break;
+
+	case COMBINE_B:
+	    Fb = MASK;
+	    break;
+	}
+	m = GENERIC (s, d, 0, Fa, Fb, t, u, v);
+	n = GENERIC (s, d, G_SHIFT, Fa, Fb, t, u, v);
+	o = GENERIC (s, d, R_SHIFT, Fa, Fb, t, u, v);
+	p = GENERIC (s, d, A_SHIFT, Fa, Fb, t, u, v);
+	s = m | n | o | p;
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_disjoint_over_u (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp2_t a = s >> A_SHIFT;
+
+	if (a != 0x00)
+	{
+	    if (a != MASK)
+	    {
+		comp4_t d = *(dest + i);
+		a = combine_disjoint_out_part (d >> A_SHIFT, a);
+		UNcx4_MUL_UNc_ADD_UNcx4 (d, a, s);
+		s = d;
+	    }
+
+	    *(dest + i) = s;
+	}
+    }
+}
+
+static void
+combine_disjoint_in_u (pixman_implementation_t *imp,
+                       pixman_op_t              op,
+                       comp4_t *                dest,
+                       const comp4_t *          src,
+                       const comp4_t *          mask,
+                       int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_A_IN);
+}
+
+static void
+combine_disjoint_in_reverse_u (pixman_implementation_t *imp,
+                               pixman_op_t              op,
+                               comp4_t *                dest,
+                               const comp4_t *          src,
+                               const comp4_t *          mask,
+                               int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_B_IN);
+}
+
+static void
+combine_disjoint_out_u (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_A_OUT);
+}
+
+static void
+combine_disjoint_out_reverse_u (pixman_implementation_t *imp,
+                                pixman_op_t              op,
+                                comp4_t *                dest,
+                                const comp4_t *          src,
+                                const comp4_t *          mask,
+                                int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_B_OUT);
+}
+
+static void
+combine_disjoint_atop_u (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_A_ATOP);
+}
+
+static void
+combine_disjoint_atop_reverse_u (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 comp4_t *                dest,
+                                 const comp4_t *          src,
+                                 const comp4_t *          mask,
+                                 int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_B_ATOP);
+}
+
+static void
+combine_disjoint_xor_u (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    combine_disjoint_general_u (dest, src, mask, width, COMBINE_XOR);
+}
+
+static void
+combine_conjoint_general_u (comp4_t *      dest,
+                            const comp4_t *src,
+                            const comp4_t *mask,
+                            int            width,
+                            comp1_t        combine)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combine_mask (src, mask, i);
+	comp4_t d = *(dest + i);
+	comp4_t m, n, o, p;
+	comp2_t Fa, Fb, t, u, v;
+	comp1_t sa = s >> A_SHIFT;
+	comp1_t da = d >> A_SHIFT;
+
+	switch (combine & COMBINE_A)
+	{
+	default:
+	    Fa = 0;
+	    break;
+
+	case COMBINE_A_OUT:
+	    Fa = combine_conjoint_out_part (sa, da);
+	    break;
+
+	case COMBINE_A_IN:
+	    Fa = combine_conjoint_in_part (sa, da);
+	    break;
+
+	case COMBINE_A:
+	    Fa = MASK;
+	    break;
+	}
+
+	switch (combine & COMBINE_B)
+	{
+	default:
+	    Fb = 0;
+	    break;
+
+	case COMBINE_B_OUT:
+	    Fb = combine_conjoint_out_part (da, sa);
+	    break;
+
+	case COMBINE_B_IN:
+	    Fb = combine_conjoint_in_part (da, sa);
+	    break;
+
+	case COMBINE_B:
+	    Fb = MASK;
+	    break;
+	}
+
+	m = GENERIC (s, d, 0, Fa, Fb, t, u, v);
+	n = GENERIC (s, d, G_SHIFT, Fa, Fb, t, u, v);
+	o = GENERIC (s, d, R_SHIFT, Fa, Fb, t, u, v);
+	p = GENERIC (s, d, A_SHIFT, Fa, Fb, t, u, v);
+
+	s = m | n | o | p;
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_conjoint_over_u (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_A_OVER);
+}
+
+static void
+combine_conjoint_over_reverse_u (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 comp4_t *                dest,
+                                 const comp4_t *          src,
+                                 const comp4_t *          mask,
+                                 int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_B_OVER);
+}
+
+static void
+combine_conjoint_in_u (pixman_implementation_t *imp,
+                       pixman_op_t              op,
+                       comp4_t *                dest,
+                       const comp4_t *          src,
+                       const comp4_t *          mask,
+                       int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_A_IN);
+}
+
+static void
+combine_conjoint_in_reverse_u (pixman_implementation_t *imp,
+                               pixman_op_t              op,
+                               comp4_t *                dest,
+                               const comp4_t *          src,
+                               const comp4_t *          mask,
+                               int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_B_IN);
+}
+
+static void
+combine_conjoint_out_u (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_A_OUT);
+}
+
+static void
+combine_conjoint_out_reverse_u (pixman_implementation_t *imp,
+                                pixman_op_t              op,
+                                comp4_t *                dest,
+                                const comp4_t *          src,
+                                const comp4_t *          mask,
+                                int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_B_OUT);
+}
+
+static void
+combine_conjoint_atop_u (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_A_ATOP);
+}
+
+static void
+combine_conjoint_atop_reverse_u (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 comp4_t *                dest,
+                                 const comp4_t *          src,
+                                 const comp4_t *          mask,
+                                 int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_B_ATOP);
+}
+
+static void
+combine_conjoint_xor_u (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    combine_conjoint_general_u (dest, src, mask, width, COMBINE_XOR);
+}
+
+/************************************************************************/
+/*********************** Per Channel functions **************************/
+/************************************************************************/
+
+static void
+combine_clear_ca (pixman_implementation_t *imp,
+                  pixman_op_t              op,
+                  comp4_t *                dest,
+                  const comp4_t *          src,
+                  const comp4_t *          mask,
+                  int                      width)
+{
+    memset (dest, 0, width * sizeof(comp4_t));
+}
+
+static void
+combine_src_ca (pixman_implementation_t *imp,
+                pixman_op_t              op,
+                comp4_t *                dest,
+                const comp4_t *          src,
+                const comp4_t *          mask,
+                int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+
+	combine_mask_value_ca (&s, &m);
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_over_ca (pixman_implementation_t *imp,
+                 pixman_op_t              op,
+                 comp4_t *                dest,
+                 const comp4_t *          src,
+                 const comp4_t *          mask,
+                 int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t a;
+
+	combine_mask_ca (&s, &m);
+
+	a = ~m;
+	if (a)
+	{
+	    comp4_t d = *(dest + i);
+	    UNcx4_MUL_UNcx4_ADD_UNcx4 (d, a, s);
+	    s = d;
+	}
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_over_reverse_ca (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t d = *(dest + i);
+	comp4_t a = ~d >> A_SHIFT;
+
+	if (a)
+	{
+	    comp4_t s = *(src + i);
+	    comp4_t m = *(mask + i);
+
+	    UNcx4_MUL_UNcx4 (s, m);
+	    UNcx4_MUL_UNc_ADD_UNcx4 (s, a, d);
+
+	    *(dest + i) = s;
+	}
+    }
+}
+
+static void
+combine_in_ca (pixman_implementation_t *imp,
+               pixman_op_t              op,
+               comp4_t *                dest,
+               const comp4_t *          src,
+               const comp4_t *          mask,
+               int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t d = *(dest + i);
+	comp2_t a = d >> A_SHIFT;
+	comp4_t s = 0;
+
+	if (a)
+	{
+	    comp4_t m = *(mask + i);
+
+	    s = *(src + i);
+	    combine_mask_value_ca (&s, &m);
+
+	    if (a != MASK)
+		UNcx4_MUL_UNc (s, a);
+	}
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_in_reverse_ca (pixman_implementation_t *imp,
+                       pixman_op_t              op,
+                       comp4_t *                dest,
+                       const comp4_t *          src,
+                       const comp4_t *          mask,
+                       int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t a;
+
+	combine_mask_alpha_ca (&s, &m);
+
+	a = m;
+	if (a != ~0)
+	{
+	    comp4_t d = 0;
+
+	    if (a)
+	    {
+		d = *(dest + i);
+		UNcx4_MUL_UNcx4 (d, a);
+	    }
+
+	    *(dest + i) = d;
+	}
+    }
+}
+
+static void
+combine_out_ca (pixman_implementation_t *imp,
+                pixman_op_t              op,
+                comp4_t *                dest,
+                const comp4_t *          src,
+                const comp4_t *          mask,
+                int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t d = *(dest + i);
+	comp2_t a = ~d >> A_SHIFT;
+	comp4_t s = 0;
+
+	if (a)
+	{
+	    comp4_t m = *(mask + i);
+
+	    s = *(src + i);
+	    combine_mask_value_ca (&s, &m);
+
+	    if (a != MASK)
+		UNcx4_MUL_UNc (s, a);
+	}
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_out_reverse_ca (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t a;
+
+	combine_mask_alpha_ca (&s, &m);
+
+	a = ~m;
+	if (a != ~0)
+	{
+	    comp4_t d = 0;
+
+	    if (a)
+	    {
+		d = *(dest + i);
+		UNcx4_MUL_UNcx4 (d, a);
+	    }
+
+	    *(dest + i) = d;
+	}
+    }
+}
+
+static void
+combine_atop_ca (pixman_implementation_t *imp,
+                 pixman_op_t              op,
+                 comp4_t *                dest,
+                 const comp4_t *          src,
+                 const comp4_t *          mask,
+                 int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t d = *(dest + i);
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t ad;
+	comp2_t as = d >> A_SHIFT;
+
+	combine_mask_ca (&s, &m);
+
+	ad = ~m;
+
+	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (d, ad, s, as);
+
+	*(dest + i) = d;
+    }
+}
+
+static void
+combine_atop_reverse_ca (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t d = *(dest + i);
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t ad;
+	comp2_t as = ~d >> A_SHIFT;
+
+	combine_mask_ca (&s, &m);
+
+	ad = m;
+
+	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (d, ad, s, as);
+
+	*(dest + i) = d;
+    }
+}
+
+static void
+combine_xor_ca (pixman_implementation_t *imp,
+                pixman_op_t              op,
+                comp4_t *                dest,
+                const comp4_t *          src,
+                const comp4_t *          mask,
+                int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t d = *(dest + i);
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t ad;
+	comp2_t as = ~d >> A_SHIFT;
+
+	combine_mask_ca (&s, &m);
+
+	ad = ~m;
+
+	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (d, ad, s, as);
+
+	*(dest + i) = d;
+    }
+}
+
+static void
+combine_add_ca (pixman_implementation_t *imp,
+                pixman_op_t              op,
+                comp4_t *                dest,
+                const comp4_t *          src,
+                const comp4_t *          mask,
+                int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t d = *(dest + i);
+
+	combine_mask_value_ca (&s, &m);
+
+	UNcx4_ADD_UNcx4 (d, s);
+
+	*(dest + i) = d;
+    }
+}
+
+static void
+combine_saturate_ca (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     comp4_t *                dest,
+                     const comp4_t *          src,
+                     const comp4_t *          mask,
+                     int                      width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s, d;
+	comp2_t sa, sr, sg, sb, da;
+	comp2_t t, u, v;
+	comp4_t m, n, o, p;
+
+	d = *(dest + i);
+	s = *(src + i);
+	m = *(mask + i);
+
+	combine_mask_ca (&s, &m);
+
+	sa = (m >> A_SHIFT);
+	sr = (m >> R_SHIFT) & MASK;
+	sg = (m >> G_SHIFT) & MASK;
+	sb =  m             & MASK;
+	da = ~d >> A_SHIFT;
+
+	if (sb <= da)
+	    m = ADD (s, d, 0, t);
+	else
+	    m = GENERIC (s, d, 0, (da << G_SHIFT) / sb, MASK, t, u, v);
+
+	if (sg <= da)
+	    n = ADD (s, d, G_SHIFT, t);
+	else
+	    n = GENERIC (s, d, G_SHIFT, (da << G_SHIFT) / sg, MASK, t, u, v);
+
+	if (sr <= da)
+	    o = ADD (s, d, R_SHIFT, t);
+	else
+	    o = GENERIC (s, d, R_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
+
+	if (sa <= da)
+	    p = ADD (s, d, A_SHIFT, t);
+	else
+	    p = GENERIC (s, d, A_SHIFT, (da << G_SHIFT) / sa, MASK, t, u, v);
+
+	*(dest + i) = m | n | o | p;
+    }
+}
+
+static void
+combine_disjoint_general_ca (comp4_t *      dest,
+                             const comp4_t *src,
+                             const comp4_t *mask,
+                             int            width,
+                             comp1_t        combine)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s, d;
+	comp4_t m, n, o, p;
+	comp4_t Fa, Fb;
+	comp2_t t, u, v;
+	comp4_t sa;
+	comp1_t da;
+
+	s = *(src + i);
+	m = *(mask + i);
+	d = *(dest + i);
+	da = d >> A_SHIFT;
+
+	combine_mask_ca (&s, &m);
+
+	sa = m;
+
+	switch (combine & COMBINE_A)
+	{
+	default:
+	    Fa = 0;
+	    break;
+
+	case COMBINE_A_OUT:
+	    m = (comp4_t)combine_disjoint_out_part ((comp1_t) (sa >> 0), da);
+	    n = (comp4_t)combine_disjoint_out_part ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+	    o = (comp4_t)combine_disjoint_out_part ((comp1_t) (sa >> R_SHIFT), da) << R_SHIFT;
+	    p = (comp4_t)combine_disjoint_out_part ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+	    Fa = m | n | o | p;
+	    break;
+
+	case COMBINE_A_IN:
+	    m = (comp4_t)combine_disjoint_in_part ((comp1_t) (sa >> 0), da);
+	    n = (comp4_t)combine_disjoint_in_part ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+	    o = (comp4_t)combine_disjoint_in_part ((comp1_t) (sa >> R_SHIFT), da) << R_SHIFT;
+	    p = (comp4_t)combine_disjoint_in_part ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+	    Fa = m | n | o | p;
+	    break;
+
+	case COMBINE_A:
+	    Fa = ~0;
+	    break;
+	}
+
+	switch (combine & COMBINE_B)
+	{
+	default:
+	    Fb = 0;
+	    break;
+
+	case COMBINE_B_OUT:
+	    m = (comp4_t)combine_disjoint_out_part (da, (comp1_t) (sa >> 0));
+	    n = (comp4_t)combine_disjoint_out_part (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+	    o = (comp4_t)combine_disjoint_out_part (da, (comp1_t) (sa >> R_SHIFT)) << R_SHIFT;
+	    p = (comp4_t)combine_disjoint_out_part (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+	    Fb = m | n | o | p;
+	    break;
+
+	case COMBINE_B_IN:
+	    m = (comp4_t)combine_disjoint_in_part (da, (comp1_t) (sa >> 0));
+	    n = (comp4_t)combine_disjoint_in_part (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+	    o = (comp4_t)combine_disjoint_in_part (da, (comp1_t) (sa >> R_SHIFT)) << R_SHIFT;
+	    p = (comp4_t)combine_disjoint_in_part (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+	    Fb = m | n | o | p;
+	    break;
+
+	case COMBINE_B:
+	    Fb = ~0;
+	    break;
+	}
+	m = GENERIC (s, d, 0, GET_COMP (Fa, 0), GET_COMP (Fb, 0), t, u, v);
+	n = GENERIC (s, d, G_SHIFT, GET_COMP (Fa, G_SHIFT), GET_COMP (Fb, G_SHIFT), t, u, v);
+	o = GENERIC (s, d, R_SHIFT, GET_COMP (Fa, R_SHIFT), GET_COMP (Fb, R_SHIFT), t, u, v);
+	p = GENERIC (s, d, A_SHIFT, GET_COMP (Fa, A_SHIFT), GET_COMP (Fb, A_SHIFT), t, u, v);
+
+	s = m | n | o | p;
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_disjoint_over_ca (pixman_implementation_t *imp,
+                          pixman_op_t              op,
+                          comp4_t *                dest,
+                          const comp4_t *          src,
+                          const comp4_t *          mask,
+                          int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_A_OVER);
+}
+
+static void
+combine_disjoint_in_ca (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_A_IN);
+}
+
+static void
+combine_disjoint_in_reverse_ca (pixman_implementation_t *imp,
+                                pixman_op_t              op,
+                                comp4_t *                dest,
+                                const comp4_t *          src,
+                                const comp4_t *          mask,
+                                int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_B_IN);
+}
+
+static void
+combine_disjoint_out_ca (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_A_OUT);
+}
+
+static void
+combine_disjoint_out_reverse_ca (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 comp4_t *                dest,
+                                 const comp4_t *          src,
+                                 const comp4_t *          mask,
+                                 int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_B_OUT);
+}
+
+static void
+combine_disjoint_atop_ca (pixman_implementation_t *imp,
+                          pixman_op_t              op,
+                          comp4_t *                dest,
+                          const comp4_t *          src,
+                          const comp4_t *          mask,
+                          int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_A_ATOP);
+}
+
+static void
+combine_disjoint_atop_reverse_ca (pixman_implementation_t *imp,
+                                  pixman_op_t              op,
+                                  comp4_t *                dest,
+                                  const comp4_t *          src,
+                                  const comp4_t *          mask,
+                                  int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_B_ATOP);
+}
+
+static void
+combine_disjoint_xor_ca (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_disjoint_general_ca (dest, src, mask, width, COMBINE_XOR);
+}
+
+static void
+combine_conjoint_general_ca (comp4_t *      dest,
+                             const comp4_t *src,
+                             const comp4_t *mask,
+                             int            width,
+                             comp1_t        combine)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s, d;
+	comp4_t m, n, o, p;
+	comp4_t Fa, Fb;
+	comp2_t t, u, v;
+	comp4_t sa;
+	comp1_t da;
+
+	s = *(src + i);
+	m = *(mask + i);
+	d = *(dest + i);
+	da = d >> A_SHIFT;
+
+	combine_mask_ca (&s, &m);
+
+	sa = m;
+
+	switch (combine & COMBINE_A)
+	{
+	default:
+	    Fa = 0;
+	    break;
+
+	case COMBINE_A_OUT:
+	    m = (comp4_t)combine_conjoint_out_part ((comp1_t) (sa >> 0), da);
+	    n = (comp4_t)combine_conjoint_out_part ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+	    o = (comp4_t)combine_conjoint_out_part ((comp1_t) (sa >> R_SHIFT), da) << R_SHIFT;
+	    p = (comp4_t)combine_conjoint_out_part ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+	    Fa = m | n | o | p;
+	    break;
+
+	case COMBINE_A_IN:
+	    m = (comp4_t)combine_conjoint_in_part ((comp1_t) (sa >> 0), da);
+	    n = (comp4_t)combine_conjoint_in_part ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+	    o = (comp4_t)combine_conjoint_in_part ((comp1_t) (sa >> R_SHIFT), da) << R_SHIFT;
+	    p = (comp4_t)combine_conjoint_in_part ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+	    Fa = m | n | o | p;
+	    break;
+
+	case COMBINE_A:
+	    Fa = ~0;
+	    break;
+	}
+
+	switch (combine & COMBINE_B)
+	{
+	default:
+	    Fb = 0;
+	    break;
+
+	case COMBINE_B_OUT:
+	    m = (comp4_t)combine_conjoint_out_part (da, (comp1_t) (sa >> 0));
+	    n = (comp4_t)combine_conjoint_out_part (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+	    o = (comp4_t)combine_conjoint_out_part (da, (comp1_t) (sa >> R_SHIFT)) << R_SHIFT;
+	    p = (comp4_t)combine_conjoint_out_part (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+	    Fb = m | n | o | p;
+	    break;
+
+	case COMBINE_B_IN:
+	    m = (comp4_t)combine_conjoint_in_part (da, (comp1_t) (sa >> 0));
+	    n = (comp4_t)combine_conjoint_in_part (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+	    o = (comp4_t)combine_conjoint_in_part (da, (comp1_t) (sa >> R_SHIFT)) << R_SHIFT;
+	    p = (comp4_t)combine_conjoint_in_part (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+	    Fb = m | n | o | p;
+	    break;
+
+	case COMBINE_B:
+	    Fb = ~0;
+	    break;
+	}
+	m = GENERIC (s, d, 0, GET_COMP (Fa, 0), GET_COMP (Fb, 0), t, u, v);
+	n = GENERIC (s, d, G_SHIFT, GET_COMP (Fa, G_SHIFT), GET_COMP (Fb, G_SHIFT), t, u, v);
+	o = GENERIC (s, d, R_SHIFT, GET_COMP (Fa, R_SHIFT), GET_COMP (Fb, R_SHIFT), t, u, v);
+	p = GENERIC (s, d, A_SHIFT, GET_COMP (Fa, A_SHIFT), GET_COMP (Fb, A_SHIFT), t, u, v);
+
+	s = m | n | o | p;
+
+	*(dest + i) = s;
+    }
+}
+
+static void
+combine_conjoint_over_ca (pixman_implementation_t *imp,
+                          pixman_op_t              op,
+                          comp4_t *                dest,
+                          const comp4_t *          src,
+                          const comp4_t *          mask,
+                          int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_A_OVER);
+}
+
+static void
+combine_conjoint_over_reverse_ca (pixman_implementation_t *imp,
+                                  pixman_op_t              op,
+                                  comp4_t *                dest,
+                                  const comp4_t *          src,
+                                  const comp4_t *          mask,
+                                  int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_B_OVER);
+}
+
+static void
+combine_conjoint_in_ca (pixman_implementation_t *imp,
+                        pixman_op_t              op,
+                        comp4_t *                dest,
+                        const comp4_t *          src,
+                        const comp4_t *          mask,
+                        int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_A_IN);
+}
+
+static void
+combine_conjoint_in_reverse_ca (pixman_implementation_t *imp,
+                                pixman_op_t              op,
+                                comp4_t *                dest,
+                                const comp4_t *          src,
+                                const comp4_t *          mask,
+                                int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_B_IN);
+}
+
+static void
+combine_conjoint_out_ca (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_A_OUT);
+}
+
+static void
+combine_conjoint_out_reverse_ca (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 comp4_t *                dest,
+                                 const comp4_t *          src,
+                                 const comp4_t *          mask,
+                                 int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_B_OUT);
+}
+
+static void
+combine_conjoint_atop_ca (pixman_implementation_t *imp,
+                          pixman_op_t              op,
+                          comp4_t *                dest,
+                          const comp4_t *          src,
+                          const comp4_t *          mask,
+                          int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_A_ATOP);
+}
+
+static void
+combine_conjoint_atop_reverse_ca (pixman_implementation_t *imp,
+                                  pixman_op_t              op,
+                                  comp4_t *                dest,
+                                  const comp4_t *          src,
+                                  const comp4_t *          mask,
+                                  int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_B_ATOP);
+}
+
+static void
+combine_conjoint_xor_ca (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         comp4_t *                dest,
+                         const comp4_t *          src,
+                         const comp4_t *          mask,
+                         int                      width)
+{
+    combine_conjoint_general_ca (dest, src, mask, width, COMBINE_XOR);
+}
+
+void
+_pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
+{
+    /* Unified alpha */
+    imp->combine_width[PIXMAN_OP_CLEAR] = combine_clear;
+    imp->combine_width[PIXMAN_OP_SRC] = combine_src_u;
+    /* dest */
+    imp->combine_width[PIXMAN_OP_OVER] = combine_over_u;
+    imp->combine_width[PIXMAN_OP_OVER_REVERSE] = combine_over_reverse_u;
+    imp->combine_width[PIXMAN_OP_IN] = combine_in_u;
+    imp->combine_width[PIXMAN_OP_IN_REVERSE] = combine_in_reverse_u;
+    imp->combine_width[PIXMAN_OP_OUT] = combine_out_u;
+    imp->combine_width[PIXMAN_OP_OUT_REVERSE] = combine_out_reverse_u;
+    imp->combine_width[PIXMAN_OP_ATOP] = combine_atop_u;
+    imp->combine_width[PIXMAN_OP_ATOP_REVERSE] = combine_atop_reverse_u;
+    imp->combine_width[PIXMAN_OP_XOR] = combine_xor_u;
+    imp->combine_width[PIXMAN_OP_ADD] = combine_add_u;
+    imp->combine_width[PIXMAN_OP_SATURATE] = combine_saturate_u;
+
+    /* Disjoint, unified */
+    imp->combine_width[PIXMAN_OP_DISJOINT_CLEAR] = combine_clear;
+    imp->combine_width[PIXMAN_OP_DISJOINT_SRC] = combine_src_u;
+    /* dest */
+    imp->combine_width[PIXMAN_OP_DISJOINT_OVER] = combine_disjoint_over_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_OVER_REVERSE] = combine_saturate_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_IN] = combine_disjoint_in_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_IN_REVERSE] = combine_disjoint_in_reverse_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_OUT] = combine_disjoint_out_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_OUT_REVERSE] = combine_disjoint_out_reverse_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_ATOP] = combine_disjoint_atop_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_ATOP_REVERSE] = combine_disjoint_atop_reverse_u;
+    imp->combine_width[PIXMAN_OP_DISJOINT_XOR] = combine_disjoint_xor_u;
+
+    /* Conjoint, unified */
+    imp->combine_width[PIXMAN_OP_CONJOINT_CLEAR] = combine_clear;
+    imp->combine_width[PIXMAN_OP_CONJOINT_SRC] = combine_src_u;
+    /* dest */
+    imp->combine_width[PIXMAN_OP_CONJOINT_OVER] = combine_conjoint_over_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_OVER_REVERSE] = combine_conjoint_over_reverse_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_IN] = combine_conjoint_in_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_IN_REVERSE] = combine_conjoint_in_reverse_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_OUT] = combine_conjoint_out_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_OUT_REVERSE] = combine_conjoint_out_reverse_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_ATOP] = combine_conjoint_atop_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = combine_conjoint_atop_reverse_u;
+    imp->combine_width[PIXMAN_OP_CONJOINT_XOR] = combine_conjoint_xor_u;
+
+    imp->combine_width[PIXMAN_OP_MULTIPLY] = combine_multiply_u;
+    imp->combine_width[PIXMAN_OP_SCREEN] = combine_screen_u;
+    imp->combine_width[PIXMAN_OP_OVERLAY] = combine_overlay_u;
+    imp->combine_width[PIXMAN_OP_DARKEN] = combine_darken_u;
+    imp->combine_width[PIXMAN_OP_LIGHTEN] = combine_lighten_u;
+    imp->combine_width[PIXMAN_OP_COLOR_DODGE] = combine_color_dodge_u;
+    imp->combine_width[PIXMAN_OP_COLOR_BURN] = combine_color_burn_u;
+    imp->combine_width[PIXMAN_OP_HARD_LIGHT] = combine_hard_light_u;
+    imp->combine_width[PIXMAN_OP_SOFT_LIGHT] = combine_soft_light_u;
+    imp->combine_width[PIXMAN_OP_DIFFERENCE] = combine_difference_u;
+    imp->combine_width[PIXMAN_OP_EXCLUSION] = combine_exclusion_u;
+    imp->combine_width[PIXMAN_OP_HSL_HUE] = combine_hsl_hue_u;
+    imp->combine_width[PIXMAN_OP_HSL_SATURATION] = combine_hsl_saturation_u;
+    imp->combine_width[PIXMAN_OP_HSL_COLOR] = combine_hsl_color_u;
+    imp->combine_width[PIXMAN_OP_HSL_LUMINOSITY] = combine_hsl_luminosity_u;
+
+    /* Component alpha combiners */
+    imp->combine_width_ca[PIXMAN_OP_CLEAR] = combine_clear_ca;
+    imp->combine_width_ca[PIXMAN_OP_SRC] = combine_src_ca;
+    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_OVER] = combine_over_ca;
+    imp->combine_width_ca[PIXMAN_OP_OVER_REVERSE] = combine_over_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_IN] = combine_in_ca;
+    imp->combine_width_ca[PIXMAN_OP_IN_REVERSE] = combine_in_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_OUT] = combine_out_ca;
+    imp->combine_width_ca[PIXMAN_OP_OUT_REVERSE] = combine_out_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_ATOP] = combine_atop_ca;
+    imp->combine_width_ca[PIXMAN_OP_ATOP_REVERSE] = combine_atop_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_XOR] = combine_xor_ca;
+    imp->combine_width_ca[PIXMAN_OP_ADD] = combine_add_ca;
+    imp->combine_width_ca[PIXMAN_OP_SATURATE] = combine_saturate_ca;
+
+    /* Disjoint CA */
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_CLEAR] = combine_clear_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_SRC] = combine_src_ca;
+    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER] = combine_disjoint_over_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER_REVERSE] = combine_saturate_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN] = combine_disjoint_in_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN_REVERSE] = combine_disjoint_in_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OUT] = combine_disjoint_out_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OUT_REVERSE] = combine_disjoint_out_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_ATOP] = combine_disjoint_atop_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_ATOP_REVERSE] = combine_disjoint_atop_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_XOR] = combine_disjoint_xor_ca;
+
+    /* Conjoint CA */
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_CLEAR] = combine_clear_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_SRC] = combine_src_ca;
+    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OVER] = combine_conjoint_over_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OVER_REVERSE] = combine_conjoint_over_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_IN] = combine_conjoint_in_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_IN_REVERSE] = combine_conjoint_in_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OUT] = combine_conjoint_out_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OUT_REVERSE] = combine_conjoint_out_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP] = combine_conjoint_atop_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = combine_conjoint_atop_reverse_ca;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_XOR] = combine_conjoint_xor_ca;
+
+    imp->combine_width_ca[PIXMAN_OP_MULTIPLY] = combine_multiply_ca;
+    imp->combine_width_ca[PIXMAN_OP_SCREEN] = combine_screen_ca;
+    imp->combine_width_ca[PIXMAN_OP_OVERLAY] = combine_overlay_ca;
+    imp->combine_width_ca[PIXMAN_OP_DARKEN] = combine_darken_ca;
+    imp->combine_width_ca[PIXMAN_OP_LIGHTEN] = combine_lighten_ca;
+    imp->combine_width_ca[PIXMAN_OP_COLOR_DODGE] = combine_color_dodge_ca;
+    imp->combine_width_ca[PIXMAN_OP_COLOR_BURN] = combine_color_burn_ca;
+    imp->combine_width_ca[PIXMAN_OP_HARD_LIGHT] = combine_hard_light_ca;
+    imp->combine_width_ca[PIXMAN_OP_SOFT_LIGHT] = combine_soft_light_ca;
+    imp->combine_width_ca[PIXMAN_OP_DIFFERENCE] = combine_difference_ca;
+    imp->combine_width_ca[PIXMAN_OP_EXCLUSION] = combine_exclusion_ca;
+
+    /* It is not clear that these make sense, so leave them out for now */
+    imp->combine_width_ca[PIXMAN_OP_HSL_HUE] = NULL;
+    imp->combine_width_ca[PIXMAN_OP_HSL_SATURATION] = NULL;
+    imp->combine_width_ca[PIXMAN_OP_HSL_COLOR] = NULL;
+    imp->combine_width_ca[PIXMAN_OP_HSL_LUMINOSITY] = NULL;
+}
+

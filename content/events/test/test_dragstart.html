@@ -32,7 +32,7 @@ function runTests()
 
 function afterDragTests()
 {
-  // the dragstart should have occured due to moving the mouse. gDataTransfer
+  // the dragstart should have occurred due to moving the mouse. gDataTransfer
   // caches the dataTransfer that was used, however it should now be empty and
   // be read only.
   ok(gDataTransfer instanceof DataTransfer, "DataTransfer after dragstart event");
@@ -157,7 +157,7 @@ function test_DataTransfer(dt)
 
   is(dt.mozUserCancelled, false, "userCancelled");
 
-  // because an exception occured, the data should not have been added
+  // because an exception occurred, the data should not have been added
   is(dt.mozItemCount, 0, "empty setDataAt index too high itemCount");
   dt.getData("text/plain", "", "empty setDataAt index too high getData");
 

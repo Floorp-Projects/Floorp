@@ -89,10 +89,15 @@ calcChecksum(const sfntDirEntry * dirEntry,
   const uint32_t * csumPtr;
   const uint32_t * csumEnd;
   uint32_t csum = 0;
-  uint32_t length = LONGALIGN(READ32BE(dirEntry->length));
+  uint32_t length = READ32BE(dirEntry->length);
   uint32_t offset = READ32BE(dirEntry->offset);
   uint32_t tag;
-  if ((offset & 3) != 0) {
+  if (LONGALIGN(length) < length) { /* overflow */
+    return csum;
+  } else {
+    length = LONGALIGN(length);
+  }
+  if ((offset & 3) != 0) { /* invalid - not properly aligned */
     return csum;
   }
   if (length > sfntLen || offset > sfntLen - length) {
@@ -224,6 +229,9 @@ woffEncode(const uint8_t * sfntData, uint32_t sfntLen,
       if (tag == TABLE_TAG_DSIG) {
         status |= eWOFF_warn_removed_DSIG;
         removedDsigSize = READ32BE(sfntDir[tableIndex].length);
+        if (LONGALIGN(removedDsigSize) < removedDsigSize) {
+          FAIL(eWOFF_invalid);
+        }
         continue;
       }
     }
@@ -235,6 +243,7 @@ woffEncode(const uint8_t * sfntData, uint32_t sfntLen,
   qsort(tableOrder, numTables, sizeof(tableOrderRec), compareOffsets);
 
   /* initially, allocate space for header and directory */
+  /* cannot be too big because numTables is 16-bit */
   tableOffset = sizeof(woffHeader) + numTables * sizeof(woffDirEntry);
   woffData = (uint8_t *) malloc(tableOffset);
   if (!woffData) {
@@ -282,7 +291,15 @@ woffEncode(const uint8_t * sfntData, uint32_t sfntLen,
     if (sourceLen > sfntLen || sourceOffset > sfntLen - sourceLen) {
       FAIL(eWOFF_invalid);
     }
-    destLen = LONGALIGN(compressBound(sourceLen));
+    destLen = compressBound(sourceLen);
+    if (LONGALIGN(destLen) < destLen) {
+      /* something weird is going on if this overflows! */
+      FAIL(eWOFF_invalid);
+    }
+    destLen = LONGALIGN(destLen);
+    if (tableOffset + destLen < tableOffset) {
+      FAIL(eWOFF_invalid);
+    }
     woffData = (uint8_t *) realloc(woffData, tableOffset + destLen);
     if (!woffData) {
       FAIL(eWOFF_out_of_memory);
@@ -296,13 +313,19 @@ woffEncode(const uint8_t * sfntData, uint32_t sfntLen,
     }
     if (destLen < sourceLen) {
       /* compressed table was smaller */
-      tableOffset += destLen;
+      tableOffset += destLen; /* checked for potential overflow above */
       WOFFDIR[newIndex].compLen = READ32BE(destLen);
     } else {
       /* compression didn't make it smaller, so store original data instead */
+      if (LONGALIGN(sourceLen) < sourceLen) {
+        FAIL(eWOFF_invalid); /* overflow, bail out */
+      }
       destLen = sourceLen;
       /* reallocate to ensure enough space for the table,
          plus potential padding after it */
+      if (tableOffset + LONGALIGN(sourceLen) < tableOffset) {
+        FAIL(eWOFF_invalid); /* overflow, bail out */
+      }
       woffData = (uint8_t *) realloc(woffData,
                                      tableOffset + LONGALIGN(sourceLen));
       if (!woffData) {
@@ -311,12 +334,21 @@ woffEncode(const uint8_t * sfntData, uint32_t sfntLen,
       /* copy the original data into place */
       memcpy(woffData + tableOffset,
              sfntData + READ32BE(sfntDir[oldIndex].offset), sourceLen);
+      if (tableOffset + sourceLen < tableOffset) {
+        FAIL(eWOFF_invalid); /* overflow, bail out */
+      }
       tableOffset += sourceLen;
       WOFFDIR[newIndex].compLen = WOFFDIR[newIndex].origLen;
     }
 
     /* update total size of uncompressed OpenType with table size */
+    if (totalSfntSize + sourceLen < totalSfntSize) {
+      FAIL(eWOFF_invalid); /* overflow, bail out */
+    }
     totalSfntSize += sourceLen;
+    if (LONGALIGN(totalSfntSize) < totalSfntSize) {
+      FAIL(eWOFF_invalid);
+    }
     totalSfntSize = LONGALIGN(totalSfntSize);
   }
 
@@ -442,10 +474,20 @@ rebuildWoff(const uint8_t * woffData, uint32_t * woffLen,
 
   totalSize = tableLimit; /* already long-aligned */
   if (metaCompLen) {
+    if (totalSize + metaCompLen < totalSize) {
+      FAIL(eWOFF_invalid);
+    }
     totalSize += metaCompLen;
   }
   if (privLen) {
-    totalSize = LONGALIGN(totalSize) + privLen;
+    if (LONGALIGN(totalSize) < totalSize) {
+      FAIL(eWOFF_invalid);
+    }
+    totalSize = LONGALIGN(totalSize);
+    if (totalSize + privLen < totalSize) {
+      FAIL(eWOFF_invalid);
+    }
+    totalSize += privLen;
   }
   newData = malloc(totalSize);
   if (!newData) {
@@ -771,6 +813,7 @@ woffDecodeToBufferInternal(const uint8_t * woffData, uint32_t woffLen,
   }
   newHeader->entrySelector = READ16BE(entrySelector);
 
+  /* cannot be too big because numTables is 16-bit */
   tableOrder = (tableOrderRec *) malloc(numTables * sizeof(tableOrderRec));
   if (!tableOrder) {
     FAIL(eWOFF_out_of_memory);

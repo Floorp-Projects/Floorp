@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -198,7 +197,8 @@ nsSVGRenderingObserver::AttributeChanged(nsIDocument *aDocument,
 void
 nsSVGRenderingObserver::ContentAppended(nsIDocument *aDocument,
                                         nsIContent *aContainer,
-                                        PRInt32 aNewIndexInContainer)
+                                        nsIContent *aFirstNewContent,
+                                        PRInt32 /* unused */)
 {
   DoUpdate();
 }
@@ -207,7 +207,7 @@ void
 nsSVGRenderingObserver::ContentInserted(nsIDocument *aDocument,
                                         nsIContent *aContainer,
                                         nsIContent *aChild,
-                                        PRInt32 aIndexInContainer)
+                                        PRInt32 /* unused */)
 {
   DoUpdate();
 }
@@ -255,7 +255,7 @@ nsSVGFilterProperty::DoUpdate()
     NS_UpdateHint(changeHint, nsChangeHint_ReflowFrame);
   }
   mFramePresShell->FrameConstructor()->PostRestyleEvent(
-    mFrame->GetContent(), nsRestyleHint(0), changeHint);
+    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 void
@@ -272,7 +272,7 @@ nsSVGMarkerProperty::DoUpdate()
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
 
   mFramePresShell->FrameConstructor()->PostRestyleEvent(
-    mFrame->GetContent(), nsRestyleHint(0), changeHint);
+    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 void

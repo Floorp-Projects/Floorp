@@ -183,7 +183,7 @@ main ()
           echo "***"
           echo "***    rpm --erase --nodeps gtk gtk-devel" ],
         [ echo "*** The test program failed to compile or link. See the file config.log for the"
-          echo "*** exact error that occured. This usually means GLIB was incorrectly installed"
+          echo "*** exact error that occurred. This usually means GLIB was incorrectly installed"
           echo "*** or that you have moved GLIB since it was installed. In the latter case, you"
           echo "*** may want to edit the glib-config script: $GLIB_CONFIG" ])
           CFLAGS="$ac_save_CFLAGS"

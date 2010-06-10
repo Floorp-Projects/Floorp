@@ -468,7 +468,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
         return scx->cb.append(dstr, dbufSize);
     }
 
-    if (JSVAL_IS_OBJECT(*vp) && !VALUE_IS_FUNCTION(cx, *vp) && !VALUE_IS_XML(cx, *vp)) {
+    if (JSVAL_IS_OBJECT(*vp) && !VALUE_IS_FUNCTION(cx, *vp) && !VALUE_IS_XML(*vp)) {
         JSBool ok;
 
         scx->depth++;
@@ -641,7 +641,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
         return NULL;
 
     jp->objectStack = arr;
-    if (!js_AddGCThingRoot(cx, (void **)&jp->objectStack, "JSON parse stack"))
+    if (!JS_AddNamedObjectRoot(cx, &jp->objectStack, "JSON parse stack"))
         goto bad;
 
     jp->statep = jp->stateStack;

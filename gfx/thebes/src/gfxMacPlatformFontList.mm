@@ -214,7 +214,7 @@ MacOSFontEntry::ReadCMAP()
 
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
     nsresult rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                         mCharacterMap, unicodeFont, symbolFont);
+                                         mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
 
     if (NS_FAILED(rv)) {
         mCharacterMap.reset();

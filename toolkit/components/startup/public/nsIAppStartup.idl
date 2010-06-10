@@ -117,7 +117,17 @@ interface nsIAppStartup : nsISupports
 [scriptable, uuid(3012668f-44b6-49b1-89fb-761a912a78c1)]
 interface nsIAppStartup2 : nsIAppStartup
 {
+    /**
+     * True if the application is in the process of shutting down.
+     */
     readonly attribute boolean shuttingDown;
+
+    /**
+     * Set to true to tell the platform that a restart is necessary to load new
+     * XPCOM components and interfaces. Setting this only has an effect early in
+     * the startup process.
+     */
+    attribute boolean needsRestart;
 };
 
 %{C++

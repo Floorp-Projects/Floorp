@@ -78,7 +78,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
 
   void LoadResources(PRBool* aResult);

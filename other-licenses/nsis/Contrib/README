@@ -1,5 +1,5 @@
 These directories contain modified source code to the NSIS Plugins used by the
-Windows installers. All of these plugin dll's have been compiled with VC6.
+Windows installers.
 
 NSIS project page: http://nsis.sourceforge.net/
 NSIS Unicode port project page: http://www.scratchpaper.com/
@@ -52,5 +52,13 @@ so the plugin had to be compiled with Unicode support. A diff of the changes to
 the source are available at:
 https://bugzilla.mozilla.org/show_bug.cgi?id=473348
 https://bugzilla.mozilla.org/attachment.cgi?id=357014
+
+-------------------------------------------------------------------------------
+
+ApplicationID v1.0
+http://nsis.sourceforge.net/ApplicationID_plug-in
+Unicode support and taskbar resource deleteion was added for this plugin. A diff
+of the changes to the source is available at:
+https://bugzilla.mozilla.org/show_bug.cgi?id=521141
 
 -------------------------------------------------------------------------------

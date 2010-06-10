@@ -57,6 +57,7 @@
 #include "nsIObserver.h"
 #include "pldhash.h"
 #include "plstr.h"
+#include "nsIScriptExternalNameSet.h"
 
 class nsIDocShell;
 class nsString;
@@ -648,6 +649,22 @@ private:
     static nsIThreadJSContextStack* sJSContextStack;
     static nsIStringBundle *sStrBundle;
     static JSRuntime       *sRuntime;
+};
+
+#define NS_SECURITYNAMESET_CID \
+ { 0x7c02eadc, 0x76, 0x4d03, \
+ { 0x99, 0x8d, 0x80, 0xd7, 0x79, 0xc4, 0x85, 0x89 } }
+#define NS_SECURITYNAMESET_CONTRACTID "@mozilla.org/security/script/nameset;1"
+
+class nsSecurityNameSet : public nsIScriptExternalNameSet 
+{
+public:
+    nsSecurityNameSet();
+    virtual ~nsSecurityNameSet();
+    
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD InitializeNameSet(nsIScriptContext* aScriptContext);
 };
 
 #endif // nsScriptSecurityManager_h__

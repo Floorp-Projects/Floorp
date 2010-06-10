@@ -12,5 +12,5 @@
   window.addEventListener("load", init, false);
   </script>
   
-  <rect requiredFeatures="http://www.w3.org/TR/SVG11/feature#SVG-nonexistant-feature"/>
+  <rect requiredFeatures="http://www.w3.org/TR/SVG11/feature#SVG-nonexistent-feature"/>
 </svg>

@@ -46,13 +46,13 @@
 #include "nsICSSRule.h"
 #include "nsCOMArray.h"
 
-class nsIAtom;
 class nsPresContext;
 class nsMediaQueryResultCacheKey;
 
-// IID for the nsICSSGroupRule interface {67b8492e-6d8d-43a5-8037-71eb269f24fe}
+// IID for the nsICSSGroupRule interface {4d5e7eca-433e-491a-b226-39a200390ea1}
 #define NS_ICSS_GROUP_RULE_IID     \
-{0x67b8492e, 0x6d8d, 0x43a5, {0x80, 0x37, 0x71, 0xeb, 0x26, 0x9f, 0x24, 0xfe}}
+{0x4d5e7eca, 0x433e, 0x491a, {0xb2, 0x26, 0x39, 0xa2, 0x00, 0x39, 0x0e, 0xa1}}
+
 
 class nsICSSGroupRule : public nsICSSRule {
 public:

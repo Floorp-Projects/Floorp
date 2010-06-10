@@ -99,7 +99,9 @@ public:
     /* Fast copy from another image surface; returns TRUE if successful, FALSE otherwise */
     PRBool CopyFrom (gfxImageSurface *other);
 
-private:
+protected:
+    gfxImageSurface();
+    void InitFromSurface(cairo_surface_t *csurf);
     long ComputeStride() const;
 
     gfxIntSize mSize;

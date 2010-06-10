@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: input element in search state looks like in text state -->
+  <script type="text/javascript">
+    function setToSearch()
+    {
+      document.getElementById('i').type = 'search';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setToSearch(); disableReftestWait();">
+    <input type='checkbox' id='i'>
+  </body>
+</html>

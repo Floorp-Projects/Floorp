@@ -184,17 +184,39 @@ typedef enum JSGCInvocationKind {
     /*
      * Flag bit telling js_GC that the caller has already acquired rt->gcLock.
      */
-    GC_LOCK_HELD        = 0x10,
-
-    /*
-     * Called from js_SetProtoOrParent with a request to set an object's proto
-     * or parent slot inserted on rt->setSlotRequests.
-     */
-    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1
+    GC_LOCK_HELD        = 0x10
 } JSGCInvocationKind;
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
+
+/*
+ * Set object's prototype or parent slot while checking that doing so would
+ * not create a cycle in the proto or parent chain. The cycle check and slot
+ * change are done only when all other requests are finished or suspended to
+ * ensure exclusive access to the chain. If there is a cycle, return false
+ * without reporting an error. Otherwise, set the proto or parent and return
+ * true.
+ */
+extern bool
+js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
+                                     uint32 slot, JSObject *pobj);
+
+#ifdef JS_THREADSAFE
+/*
+ * This is a helper for code at can potentially run outside JS request to
+ * ensure that the GC is not running when the function returns.
+ *
+ * This function must be called with the GC lock held.
+ */
+extern void
+js_WaitForGC(JSRuntime *rt);
+
+#else /* !JS_THREADSAFE */
+
+# define js_WaitForGC(rt)    ((void) 0)
+
+#endif
 
 /*
  * The kind of GC thing with a finalizer. The external strings follow the
@@ -407,7 +429,6 @@ struct JSGCStats {
     uint32  maxunmarked;/* maximum number of things with children to mark
                            later */
 #endif
-    uint32  maxlevel;       /* maximum GC nesting (indirect recursion) level */
     uint32  poke;           /* number of potentially useful GC calls */
     uint32  afree;          /* thing arenas freed so far */
     uint32  stackseg;       /* total extraordinary stack segments scanned */
@@ -552,6 +573,12 @@ MarkGCThing(JSTracer *trc, void *thing, const char *name, size_t index)
     JS_SET_TRACING_INDEX(trc, name, index);
     MarkGCThingRaw(trc, thing);
 }
+
+JSCompartment *
+NewCompartment(JSContext *cx);
+
+void
+SweepCompartments(JSContext *cx);
 
 } /* namespace js */
 

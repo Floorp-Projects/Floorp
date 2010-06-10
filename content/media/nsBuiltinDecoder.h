@@ -87,6 +87,73 @@ etc methods on the nsBuiltinDecoder object. When the transition
 occurs nsBuiltinDecoder then calls the methods on the decoder state
 machine object to cause it to behave appropriate to the play state.
 
+An implementation of the nsDecoderStateMachine class is the event
+that gets dispatched to the state machine thread. It has the following states:
+
+DECODING_METADATA
+  The media headers are being loaded, and things like framerate, etc are
+  being determined, and the first frame of audio/video data is being decoded.
+DECODING
+  The decode and audio threads are started and video frames displayed at
+  the required time. 
+SEEKING
+  A seek operation is in progress.
+BUFFERING
+  Decoding is paused while data is buffered for smooth playback.
+COMPLETED
+  The resource has completed decoding, but not finished playback. 
+SHUTDOWN
+  The decoder object is about to be destroyed.
+
+The following result in state transitions.
+
+Shutdown()
+  Clean up any resources the nsDecoderStateMachine owns.
+Decode()
+  Start decoding media data.
+Buffer
+  This is not user initiated. It occurs when the
+  available data in the stream drops below a certain point.
+Complete
+  This is not user initiated. It occurs when the
+  stream is completely decoded.
+Seek(float)
+  Seek to the time position given in the resource.
+
+A state transition diagram:
+
+DECODING_METADATA
+  |      |
+  v      | Shutdown()
+  |      |
+  v      -->-------------------->--------------------------|
+  |---------------->----->------------------------|        v
+DECODING             |          |  |              |        |
+  ^                  v Seek(t)  |  |              |        |
+  |         Decode() |          v  |              |        |
+  ^-----------<----SEEKING      |  v Complete     v        v
+  |                  |          |  |              |        |
+  |                  |          |  COMPLETED    SHUTDOWN-<-|
+  ^                  ^          |  |Shutdown()    |
+  |                  |          |  >-------->-----^
+  |         Decode() |Seek(t)   |Buffer()         |
+  -----------<--------<-------BUFFERING           |
+                                |                 ^
+                                v Shutdown()      |
+                                |                 |
+                                ------------>-----|
+
+The following represents the states that the nsBuiltinDecoder object
+can be in, and the valid states the nsDecoderStateMachine can be in at that
+time:
+
+player LOADING   decoder DECODING_METADATA
+player PLAYING   decoder DECODING, BUFFERING, SEEKING, COMPLETED
+player PAUSED    decoder DECODING, BUFFERING, SEEKING, COMPLETED
+player SEEKING   decoder SEEKING
+player COMPLETED decoder SHUTDOWN
+player SHUTDOWN  decoder SHUTDOWN
+
 The general sequence of events is:
 
 1) The video element calls Load on nsMediaDecoder. This creates the
@@ -124,7 +191,7 @@ queue an event to the main thread to perform the actual Shutdown. This
 way the shutdown can occur at a safe time.
 
 This means the owning object of a nsBuiltinDecoder object *MUST* call
-Shutdown when destroying the nsOggDecoder object.  
+Shutdown when destroying the nsBuiltinDecoder object.  
 */
 #if !defined(nsBuiltinDecoder_h_)
 #define nsBuiltinDecoder_h_
@@ -158,9 +225,23 @@ static inline PRBool IsCurrentThread(nsIThread* aThread) {
 class nsDecoderStateMachine : public nsRunnable
 {
 public:
+  // Enumeration for the valid decoding states
+  enum State {
+    DECODER_STATE_DECODING_METADATA,
+    DECODER_STATE_DECODING,
+    DECODER_STATE_SEEKING,
+    DECODER_STATE_BUFFERING,
+    DECODER_STATE_COMPLETED,
+    DECODER_STATE_SHUTDOWN
+  };
+
   // Initializes the state machine, returns NS_OK on success, or
   // NS_ERROR_FAILURE on failure.
   virtual nsresult Init() = 0;
+
+  // Return the current decode state. The decoder monitor must be
+  // obtained before calling this.
+  virtual State GetState() = 0;
 
   // Set the audio volume. The decoder monitor must be obtained before
   // calling this.
@@ -204,6 +285,13 @@ public:
   // Called from the main thread to set whether the media resource can
   // be seeked. The decoder monitor must be obtained before calling this.
   virtual void SetSeekable(PRBool aSeekable) = 0;
+
+  // Update the playback position. This can result in a timeupdate event
+  // and an invalidate of the frame being dispatched asynchronously if
+  // there is no such event currently queued.
+  // Only called on the decoder thread. Must be called with
+  // the decode monitor held.
+  virtual void UpdatePlaybackPosition(PRInt64 aTime) = 0;
 };
 
 class nsBuiltinDecoder : public nsMediaDecoder
@@ -215,6 +303,8 @@ class nsBuiltinDecoder : public nsMediaDecoder
   NS_DECL_NSIOBSERVER
 
  public:
+  typedef mozilla::Monitor Monitor;
+
   // Enumeration for the valid play states (see mPlayState)
   enum PlayState {
     PLAY_STATE_START,
@@ -325,7 +415,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
 
   // Returns the monitor for other threads to synchronise access to
   // state.
-  mozilla::Monitor& GetMonitor() { 
+  Monitor& GetMonitor() { 
     return mMonitor; 
   }
 
@@ -352,6 +442,15 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // The actual playback rate computation. The monitor must be held.
   double ComputePlaybackRate(PRPackedBool* aReliable);
 
+  // Make the decoder state machine update the playback position. Called by
+  // the reader on the decoder thread (Assertions for this checked by 
+  // mDecoderStateMachine). This must be called with the decode monitor
+  // held.
+  void UpdatePlaybackPosition(PRInt64 aTime)
+  {
+    mDecoderStateMachine->UpdatePlaybackPosition(aTime);
+  }
+
   /****** 
    * The following methods must only be called on the main
    * thread.
@@ -362,7 +461,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // change. Call on the main thread only.
   void ChangeState(PlayState aState);
 
-  // Called when the metadata from the Ogg file has been read.
+  // Called when the metadata from the media file has been read.
   // Call on the main thread only.
   void MetadataLoaded();
 
@@ -408,7 +507,14 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Updates the approximate byte offset which playback has reached. This is
   // used to calculate the readyState transitions.
   void UpdatePlaybackOffset(PRInt64 aOffset);
-  
+
+  // Provide access to the state machine object
+  nsDecoderStateMachine* GetStateMachine() { return mDecoderStateMachine; }
+
+  // Return the current decode state. The decoder monitor must be
+  // obtained before calling this.
+  nsDecoderStateMachine::State GetDecodeState() { return mDecoderStateMachine->GetState(); }
+
 public:
   // Notifies the element that decoding has failed.
   void DecodeError();
@@ -453,7 +559,7 @@ public:
   float mRequestedSeekTime;
 
   // Duration of the media resource. Set to -1 if unknown.
-  // Set when the Ogg metadata is loaded. Accessed on the main thread
+  // Set when the metadata is loaded. Accessed on the main thread
   // only.
   PRInt64 mDuration;
 
@@ -478,7 +584,7 @@ public:
   // Monitor for detecting when the video play state changes. A call
   // to Wait on this monitor will block the thread until the next
   // state change.
-  mozilla::Monitor mMonitor;
+  Monitor mMonitor;
 
   // Set to one of the valid play states. It is protected by the
   // monitor mMonitor. This monitor must be acquired when reading or

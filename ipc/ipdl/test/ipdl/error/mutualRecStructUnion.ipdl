@@ -1,0 +1,20 @@
+struct X {
+    int i;
+    Y[] y;
+};
+
+union Y {
+    X;
+    Z;
+};
+
+struct Z {
+    double d;
+    X x;
+};
+
+protocol mutualRecStructUnion {
+child:
+    Test(X x, Y y, Z z);
+    __delete__();
+};

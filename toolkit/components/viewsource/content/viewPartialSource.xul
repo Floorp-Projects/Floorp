@@ -123,7 +123,7 @@
   <toolbox id="viewSource-toolbox">
     <menubar id="viewSource-main-menubar">
 
-      <menu id="file_menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
+      <menu id="menu_file" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="filemenu-popup">
           <menuitem key="key_savePage" command="cmd_savePage" id="menu_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>

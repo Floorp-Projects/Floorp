@@ -10,8 +10,13 @@
 <ms_asmv3:trustInfo xmlns:ms_asmv3="urn:schemas-microsoft-com:asm.v3">
   <ms_asmv3:security>
     <ms_asmv3:requestedPrivileges>
-      <ms_asmv3:requestedExecutionLevel level="asInvoker" uiAccess="false"></ms_asmv3:requestedExecutionLevel>
+      <ms_asmv3:requestedExecutionLevel level="asInvoker" uiAccess="false" />
     </ms_asmv3:requestedPrivileges>
   </ms_asmv3:security>
 </ms_asmv3:trustInfo>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}" />
+    </application>
+  </compatibility>
 </assembly>

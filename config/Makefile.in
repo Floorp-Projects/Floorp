@@ -139,22 +139,26 @@ GARBAGE_DIRS += system_wrappers
 endif
 
 ifdef WRAP_STL_INCLUDES
-ifdef GCC_VERSION
+ifdef GNU_CXX
 stl_compiler = gcc
 else
+ifdef _MSC_VER
 stl_compiler = msvc
+endif
 endif
 endif
 
 ifdef stl_compiler
-stl-wrappers-sentinel: $(srcdir)/make-stl-wrappers.py $(srcdir)/$(stl_compiler)-stl-wrapper.template.h $(srcdir)/stl-headers $(GLOBAL_DEPS)
+STL_WRAPPERS_SENTINEL = $(DIST)/stl_wrappers/sentinel
+
+$(STL_WRAPPERS_SENTINEL): $(srcdir)/make-stl-wrappers.py $(srcdir)/$(stl_compiler)-stl-wrapper.template.h $(srcdir)/stl-headers $(GLOBAL_DEPS)
 	$(PYTHON) $(srcdir)/make-stl-wrappers.py stl_wrappers $(stl_compiler) $(srcdir)/$(stl_compiler)-stl-wrapper.template.h $(srcdir)/stl-headers
 	$(PYTHON) $(srcdir)/nsinstall.py stl_wrappers $(DIST)
-	touch stl-wrappers-sentinel
+	touch $(STL_WRAPPERS_SENTINEL)
 
-export:: stl-wrappers-sentinel
+export:: $(STL_WRAPPERS_SENTINEL)
 
-GARBAGE += stl-wrappers-sentinel
+GARBAGE += $(STL_WRAPPERS_SENTINEL)
 GARBAGE_DIRS += stl_wrappers
 endif
 

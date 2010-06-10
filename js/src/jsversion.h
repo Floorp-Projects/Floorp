@@ -219,6 +219,12 @@
 #define JS_HAS_RESERVED_JAVA_KEYWORDS   1
 #define JS_HAS_RESERVED_ECMA_KEYWORDS   1
 
+/* Support for JS_NewGlobalObject. */
+#define JS_HAS_NEW_GLOBAL_OBJECT        1
+
+/* Support for JS_MakeSystemObject. */
+#define JS_HAS_MAKE_SYSTEM_OBJECT       1
+
 /* Feature-test macro for evolving destructuring support. */
 #define JS_HAS_DESTRUCTURING_SHORTHAND  (JS_HAS_DESTRUCTURING == 2)
 

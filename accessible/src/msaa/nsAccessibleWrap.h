@@ -324,7 +324,11 @@ class nsAccessibleWrap : public nsAccessible,
    */
   void UpdateSystemCaret();
 
-  virtual void GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessible **aXPAccessible);
+  /**
+   * Find an accessible by the given child ID in cached documents.
+   */
+  virtual nsAccessible *GetXPAccessibleFor(const VARIANT& aVarChild);
+
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 
   // NT4 does not have the oleacc that defines these methods. So we define copies here that automatically

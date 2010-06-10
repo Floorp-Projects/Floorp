@@ -148,6 +148,18 @@ function createStatement(aSQL)
 }
 
 /**
+ * Creates an asynchronous SQL statement.
+ *
+ * @param aSQL
+ *        The SQL to parse into a statement.
+ * @returns a mozIStorageAsyncStatement from aSQL.
+ */
+function createAsyncStatement(aSQL)
+{
+  return getOpenedDatabase().createAsyncStatement(aSQL);
+}
+
+/**
  * Invoke the given function and assert that it throws an exception expressing
  * the provided error code in its 'result' attribute.  JS function expressions
  * can be used to do this concisely.

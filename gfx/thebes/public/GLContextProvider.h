@@ -50,13 +50,66 @@ namespace gl {
 class THEBES_API GLContextProvider 
 {
 public:
+    struct ContextFormat {
+        static const ContextFormat BasicRGBA32Format;
+
+        enum StandardContextFormat {
+            Empty,
+            BasicRGBA32,
+            StrictBasicRGBA32,
+            BasicRGBX32,
+            StrictBasicRGBX32
+        };
+
+        ContextFormat(const StandardContextFormat cf) {
+            memset(this, 0, sizeof(ContextFormat));
+
+            switch (cf) {
+            case BasicRGBA32:
+                red = green = blue = alpha = 8;
+                minRed = minGreen = minBlue = minAlpha = 1;
+                break;
+
+            case StrictBasicRGBA32:
+                red = green = blue = alpha = 8;
+                minRed = minGreen = minBlue = minAlpha = 8;
+                break;
+
+            case BasicRGBX32:
+                red = green = blue = 8;
+                minRed = minGreen = minBlue = 1;
+                break;
+
+            case StrictBasicRGBX32:
+                red = green = blue = alpha = 8;
+                minRed = minGreen = minBlue = 8;
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        int depth, minDepth;
+        int stencil, minStencil;
+        int red, minRed;
+        int green, minGreen;
+        int blue, minBlue;
+        int alpha, minAlpha;
+
+        int colorBits() const { return red + green + blue; }
+    };
+
     /**
      * Creates a PBuffer.
      *
      * @param aSize Size of the pbuffer to create
+     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
+     *
      * @return Context to use for this Pbuffer
      */
-    already_AddRefed<GLContext> CreatePbuffer(const gfxSize &aSize);
+    already_AddRefed<GLContext> CreatePBuffer(const gfxIntSize &aSize,
+                                              const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
 
     /**
      * Create a context that renders to the surface of the widget that is
@@ -66,6 +119,33 @@ public:
      * @return Context to use for this window
      */
     already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
+};
+
+/** Same as GLContextProvider but for off-screen Mesa rendering */
+class THEBES_API GLContextProviderOSMesa
+{
+public:
+    typedef GLContextProvider::ContextFormat ContextFormat;
+
+    /**
+     * Creates a PBuffer.
+     *
+     * @param aSize Size of the pbuffer to create
+     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
+     *
+     * @return Context to use for this Pbuffer
+     */
+    static already_AddRefed<GLContext> CreatePBuffer(const gfxIntSize &aSize,
+                                              const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
+
+    /**
+     * Create a context that renders to the surface of the widget that is
+     * passed in.
+     *
+     * @param Widget whose surface to create a context for
+     * @return Context to use for this window
+     */
+    static already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
 };
 
 extern GLContextProvider THEBES_API sGLContextProvider;

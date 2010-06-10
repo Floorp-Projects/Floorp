@@ -158,7 +158,7 @@ menuitem.bookmark-item {
 }
 
 /* Bookmarks toolbar */
-.toolbar-drop-indicator {
+#PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
 }
 

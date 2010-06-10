@@ -214,7 +214,7 @@ nsHTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
-    RegUnRegAccessKey(PR_TRUE);
+    RegAccessKey();
   }
 
   return rv;
@@ -228,7 +228,7 @@ nsHTMLAreaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   Link::ResetLinkState(false);
 
   if (IsInDoc()) {
-    RegUnRegAccessKey(PR_FALSE);
+    UnregAccessKey();
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -240,7 +240,7 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            PRBool aNotify)
 {
   if (aName == nsGkAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
-    RegUnRegAccessKey(PR_FALSE);
+    UnregAccessKey();
   }
 
   nsresult rv =
@@ -257,7 +257,8 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   if (aName == nsGkAtoms::accesskey && aNameSpaceID == kNameSpaceID_None &&
       !aValue.IsEmpty()) {
-    RegUnRegAccessKey(PR_TRUE);
+    SetFlags(NODE_HAS_ACCESSKEY);
+    RegAccessKey();
   }
 
   return rv;
@@ -269,7 +270,9 @@ nsHTMLAreaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 {
   if (aAttribute == nsGkAtoms::accesskey &&
       aNameSpaceID == kNameSpaceID_None) {
-    RegUnRegAccessKey(PR_FALSE);
+    // Have to unregister before clearing flag. See UnregAccessKey
+    UnregAccessKey();
+    UnsetFlags(NODE_HAS_ACCESSKEY);
   }
 
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,

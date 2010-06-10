@@ -47,7 +47,7 @@ changes over that version include:
 	More robust
 	Calling sequence changed to be compatible with readline.
 	Test program, new manpage, better configuration
-	More system-independant; includes Unix and OS-9 support.
+	More system-independent; includes Unix and OS-9 support.
 
 This contains some changes since the posting to comp.sources.misc:
 	Bugfix for completion on absolute pathnames.

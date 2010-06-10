@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsWindow.h"
 #include "nsQtKeyUtils.h"
-#include "keysym2ucs.h"
 
 #include "nsGUIEvent.h"
 
@@ -271,70 +270,5 @@ DOMKeyCodeToQtKeyCode(int aKeysym)
     if (aKeysym >= NS_VK_F1 && aKeysym <= NS_VK_F9)
       return aKeysym - NS_VK_F1 + Qt::Key_F1;
 
-    return 0;
-}
-
-// Convert gdk key event keyvals to char codes if printable, 0 otherwise
-PRUint32 nsConvertCharCodeToUnicode(QKeyEvent* aEvent)
-{
-    // Anything above 0xf000 is considered a non-printable
-    // Exception: directly encoded UCS characters
-    if (aEvent->key() > 0xf000 && (aEvent->key() & 0xff000000) != 0x01000000) {
-
-        // Keypad keys are an exception: they return a value different
-        // from their non-keypad equivalents, but mozilla doesn't distinguish.
-/*
-        switch (aEvent->key())
-            {
-            case Qt::Key_KP_Space:
-                return ' ';
-            case Qt::Key_KP_Equal:
-                return '=';
-            case Qt::Key_KP_Multiply:
-                return '*';
-            case Qt::Key_KP_Add:
-                return '+';
-            case Qt::Key_KP_Separator:
-                return ',';
-            case Qt::Key_KP_Subtract:
-                return '-';
-            case Qt::Key_KP_Decimal:
-                return '.';
-            case Qt::Key_KP_Divide:
-                return '/';
-            case Qt::Key_KP_0:
-                return '0';
-            case Qt::Key_KP_1:
-                return '1';
-            case Qt::Key_KP_2:
-                return '2';
-            case Qt::Key_KP_3:
-                return '3';
-            case Qt::Key_KP_4:
-                return '4';
-            case Qt::Key_KP_5:
-                return '5';
-            case Qt::Key_KP_6:
-                return '6';
-            case Qt::Key_KP_7:
-                return '7';
-            case Qt::Key_KP_8:
-                return '8';
-            case Qt::Key_KP_9:
-                return '9';
-            }
-
-        // non-printables
-        return 0;
-*/
-    }
-
-
-    // we're supposedly printable, let's try to convert
-    long ucs = keysym2ucs(aEvent->key());
-    if ((ucs != -1) && (ucs < 0x10000))
-        return ucs;
-
-    // I guess we couldn't convert
     return 0;
 }

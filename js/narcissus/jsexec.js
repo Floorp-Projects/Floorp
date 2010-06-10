@@ -110,9 +110,9 @@ var global = {
         var s = {object: global, parent: null};
         return new FunctionObject(f, s);
     },
-    Array: function Array(dummy) {
+    Array: function (dummy) {
         // Array when called as a function acts as a constructor.
-        return GLOBAL.Array.apply(this, arguments);
+        return Array.apply(this, arguments);
     },
     String: function String(s) {
         // Called as function or constructor: convert argument to string type.

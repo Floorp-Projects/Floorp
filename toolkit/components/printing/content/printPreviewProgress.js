@@ -50,7 +50,7 @@ var docTitle = "";
 var docURL   = "";
 var progressParams = null;
 
-function elipseString(aStr, doFront)
+function ellipseString(aStr, doFront)
 {
   if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length-4, 3) == "..."))
     return aStr;
@@ -78,12 +78,12 @@ var progressListener = {
   {
     if (!progressParams)
       return;
-    var docTitleStr = elipseString(progressParams.docTitle, false);
+    var docTitleStr = ellipseString(progressParams.docTitle, false);
     if (docTitleStr != docTitle) {
       docTitle = docTitleStr;
       dialog.title.value = docTitle;
     }
-    var docURLStr = elipseString(progressParams.docURL, true);
+    var docURLStr = ellipseString(progressParams.docURL, true);
     if (docURLStr != docURL && dialog.title != null) {
       docURL = docURLStr;
       if (docTitle == "")
@@ -114,8 +114,8 @@ function onLoad() {
   if (window.arguments[1]) {
     progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
     if (progressParams) {
-      docTitle = elipseString(progressParams.docTitle, false);
-      docURL   = elipseString(progressParams.docURL, true);
+      docTitle = ellipseString(progressParams.docTitle, false);
+      docURL   = ellipseString(progressParams.docURL, true);
     }
   }
 

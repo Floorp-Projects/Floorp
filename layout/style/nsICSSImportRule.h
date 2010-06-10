@@ -41,15 +41,14 @@
 #define nsICSSImportRule_h___
 
 #include "nsICSSRule.h"
-#include "nsString.h"
 
-class nsIAtom;
-class nsIURI;
 class nsMediaList;
+class nsString;
 
-// IID for the nsICSSImportRule interface {33824a60-1a09-11d3-805a-006008159b5a}
+// IID for the nsICSSImportRule interface {1d7a658b-2f7b-423d-a3d9-dd5b553f69a9}
 #define NS_ICSS_IMPORT_RULE_IID     \
-{0x33824a60, 0x1a09, 0x11d3, {0x80, 0x5a, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0x1d7a658b, 0x2f7b, 0x423d, {0xa3, 0xd9, 0xdd, 0x5b, 0x55, 0x3f, 0x69, 0xa9}}
+
 
 class nsICSSImportRule : public nsICSSRule {
 public:
@@ -61,7 +60,7 @@ public:
   NS_IMETHOD SetMedia(const nsString& aMedia) = 0;
   NS_IMETHOD GetMedia(nsString& aMedia) const = 0;
 
-  NS_IMETHOD SetSheet(nsICSSStyleSheet*) = 0;
+  NS_IMETHOD SetSheet(nsCSSStyleSheet*) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSImportRule, NS_ICSS_IMPORT_RULE_IID)

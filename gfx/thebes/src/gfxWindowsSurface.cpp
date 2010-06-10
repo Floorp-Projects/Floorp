@@ -74,7 +74,10 @@ gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imag
 
     cairo_surface_t *surf = cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
                                                                 size.width, size.height);
+
     Init(surf);
+
+    RecordMemoryUsed(size.width * size.height * 4 + sizeof(gfxWindowsSurface));
 
     if (CairoStatus() == 0)
         mDC = cairo_win32_surface_get_dc(CairoSurface());
@@ -90,7 +93,12 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFor
 
     cairo_surface_t *surf = cairo_win32_surface_create_with_ddb(dc, (cairo_format_t)imageFormat,
                                                                 size.width, size.height);
+
     Init(surf);
+
+    // DDBs will generally only use 3 bytes per pixel when RGB24
+    int bytesPerPixel = ((imageFormat == gfxASurface::ImageFormatRGB24) ? 3 : 4);
+    RecordMemoryUsed(size.width * size.height * bytesPerPixel + sizeof(gfxWindowsSurface));
 
     if (CairoStatus() == 0)
         mDC = cairo_win32_surface_get_dc(CairoSurface());

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!--
+build.xml adapted from Shawn Wilsher's rtse
+(http://shawnwilsher.com/extensions/rtse/)
+ -->
+
+<project name="mozmill" default="createxpi">
+  <tstamp>
+    <format property="build.number" pattern="yyyyMMdd" offset="-1" unit="hour"/>
+  </tstamp>
+  <property name="build.version" value="1.1.${build.number}"/>
+
+  <target name="createxpi" depends="createjar">
+    <delete file="mozmill.xpi"/>
+    <zip destfile="mozmill.xpi">
+      <zipfileset dir="" includes="chrome/mozmill.jar"/>
+      <zipfileset dir="" includes="chrome/mozmill-locale.jar"/>
+      <zipfileset dir="" includes="chrome/mozmill-skin.jar"/>
+      <zipfileset dir="" includes="install.rdf"/>
+      <zipfileset dir="" includes="readme.txt"/>
+      <zipfileset dir="" includes="chrome-jar.manifest" fullpath="chrome.manifest"/>
+      <zipfileset dir="" includes="defaults/**" excludes="**SVN"/>
+      <zipfileset dir="" includes="resource/**" excludes="**SVN"/>
+    </zip>
+    <antcall target="cleanup"/>
+  </target>
+
+  <target name="createjar">
+    <mkdir dir="chrome"/>
+    <zip destfile="chrome/mozmill.jar">
+      <zipfileset dir="" includes="content/**" excludes="**SVN"/>
+    </zip>
+    <zip destfile="chrome/mozmill-locale.jar">
+      <zipfileset dir="" includes="locale/**" excludes="**SVN"/>
+    </zip>
+    <zip destfile="chrome/mozmill-skin.jar">
+      <zipfileset dir="" includes="skin/**" excludes="**SVN"/>
+    </zip>
+  </target>
+
+  <target name="unpacked">
+    <delete file="mozmill.xpi"/>
+    <zip destfile="mozmill.xpi">
+      <zipfileset dir="" includes="content/**" excludes="**SVN"/>
+      <zipfileset dir="" includes="locale/**" excludes="**SVN"/>
+      <zipfileset dir="" includes="skin/**" excludes="**SVN"/>
+      <zipfileset dir="" includes="install.rdf"/>
+      <zipfileset dir="" includes="readme.txt"/>
+      <zipfileset dir="" includes="chrome.manifest" fullpath="chrome.manifest"/>
+      <zipfileset dir="" includes="defaults/**" excludes="**SVN"/>
+      <zipfileset dir="" includes="resource/**" excludes="**SVN"/>
+    </zip>
+  </target>
+
+  <target name="cleanup">
+    <!-- Delete the chrome directory, any other cleanup actions go here -->
+    <delete dir="chrome"/>
+  </target>
+</project>

@@ -62,7 +62,7 @@ static POINTL gDragLastPoint;
  */
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
   : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE), mTookOwnRef(PR_FALSE),
-  mDropTargetHelper(nsnull), mDragCancelled(PR_FALSE)
+  mDropTargetHelper(nsnull)
 {
   mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
 
@@ -297,6 +297,12 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
     return E_FAIL;
   }
 
+  nsCOMPtr<nsIDragSession> currentDragSession;
+  mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+  if (!currentDragSession) {
+    return S_OK;  // Drag was canceled.
+  }
+
   // without the AddRef() |this| can get destroyed in an event handler
   this->AddRef();
 
@@ -307,10 +313,8 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
   }
 
   mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
-  if (!mDragCancelled) {
-    // Now process the native drag state and then dispatch the event
-    ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, ptl, pdwEffect);
-  }
+  // Now process the native drag state and then dispatch the event
+  ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, ptl, pdwEffect);
 
   this->Release();
 
@@ -356,6 +360,22 @@ nsNativeDragTarget::DragLeave()
   }
 
   return S_OK;
+}
+
+void
+nsNativeDragTarget::DragCancel()
+{
+  if (mDropTargetHelper) {
+    mDropTargetHelper->DragLeave();
+  }
+  if (mDragService) {
+    mDragService->EndDragSession(PR_FALSE);
+  }
+  // release the ref that we might have taken in DragEnter
+  if (mTookOwnRef) {
+    this->Release();
+    mTookOwnRef = PR_FALSE;
+  }
 }
 
 STDMETHODIMP

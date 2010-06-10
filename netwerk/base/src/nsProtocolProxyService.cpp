@@ -722,7 +722,7 @@ nsProtocolProxyService::DisableProxy(nsProxyInfo *pi)
     dsec += pi->mTimeout;
 
     // NOTE: The classic codebase would increase the timeout value
-    //       incrementally each time a subsequent failure occured.
+    //       incrementally each time a subsequent failure occurred.
     //       We could do the same, but it would require that we not
     //       remove proxy entries in IsProxyDisabled or otherwise
     //       change the way we are recording disabled proxies.

@@ -48,6 +48,7 @@
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
 #include "nsWidgetsCID.h"
+#include "WinTaskbar.h"
 
 namespace mozilla {
 namespace widget {
@@ -339,7 +340,11 @@ NS_IMETHODIMP JumpListBuilder::DeleteActiveList(PRBool *_retval)
   if(sBuildingList)
     AbortListBuild();
 
-  if (SUCCEEDED(mJumpListMgr->DeleteList(gMozillaJumpListIDGeneric)))
+  nsAutoString uid;
+  if (!WinTaskbar::GetAppUserModelID(uid))
+    return NS_OK;
+
+  if (SUCCEEDED(mJumpListMgr->DeleteList(uid.get())))
     *_retval = PR_TRUE;
 
   return NS_OK;

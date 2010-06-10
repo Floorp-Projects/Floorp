@@ -729,7 +729,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment(PRUint32 lang_id)
       // some special JS specific code we should abstract
       JSContext *cx = (JSContext *)ctxNew->GetNativeContext();
       JSAutoRequest ar(cx);
-      JSObject *newGlob = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
+      JSObject *newGlob = ::JS_NewGlobalObject(cx, &gSharedGlobalClass);
       if (!newGlob)
         return nsnull;
 

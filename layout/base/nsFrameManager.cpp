@@ -698,6 +698,10 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
                       nsStyleContext *aOldStyleContext,
                       nsRefPtr<nsStyleContext> *aNewStyleContext /* inout */)
 {
+  if (!aContent || !aContent->IsElement()) {
+    return;
+  }
+
   // Notify the transition manager, and if it starts a transition,
   // it will give us back a transition-covering style rule which
   // we'll use to get *another* style context.  We want to ignore
@@ -706,7 +710,7 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
   // them again for descendants that inherit that value.
   nsCOMPtr<nsIStyleRule> coverRule = 
     aPresContext->TransitionManager()->StyleContextChanged(
-      aContent, aOldStyleContext, *aNewStyleContext);
+      aContent->AsElement(), aOldStyleContext, *aNewStyleContext);
   if (coverRule) {
     nsCOMArray<nsIStyleRule> rules;
     rules.AppendObject(coverRule);
@@ -1308,7 +1312,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     if (fireAccessibilityEvents && mPresShell->IsAccessibilityActive() &&
         aFrame->GetStyleVisibility()->IsVisible() != isVisible &&
         !aFrame->GetPrevContinuation()) {
-      // A significant enough change occured that this part
+      // A significant enough change occurred that this part
       // of the accessible tree is no longer valid. Fire event for primary
       // frames only and if it wasn't fired for parent frame already.
 
@@ -1455,29 +1459,6 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
       (propTable->Get(frame2, nsIFrame::IBSplitSpecialSibling()));
     frame = frame2;
   } while (frame2);
-}
-
-
-nsRestyleHint
-nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
-                                           nsIAtom *aAttribute,
-                                           PRInt32 aModType,
-                                           PRBool aAttrHasChanged)
-{
-  nsRestyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
-                                                             aContent,
-                                                             aAttribute,
-                                                             aModType,
-                                                             aAttrHasChanged);
-
-  if (aAttrHasChanged && aAttribute == nsGkAtoms::style) {
-    // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
-    // it doesn't really matter.  Or we could even let
-    // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.
-    hint = nsRestyleHint(hint | eRestyle_Self);
-  }
-
-  return hint;
 }
 
 // Capture state for a given frame.

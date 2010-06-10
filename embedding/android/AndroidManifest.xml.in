@@ -1,0 +1,67 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="org.mozilla.@MOZ_APP_NAME@"
+      android:versionCode="1"
+      android:versionName="1.9.3"
+      android:sharedUserId="org.mozilla.sharedID">
+    <uses-sdk android:minSdkVersion="5"
+              android:targetSdkVersion="5"/>
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> 
+    <uses-permission android:name="android.permission.INTERNET"/> 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> 
+
+    <application android:label="@MOZ_APP_DISPLAYNAME@"
+		 android:icon="@drawable/icon">
+        <activity android:name="App"
+                  android:label="@MOZ_APP_DISPLAYNAME@"
+                  android:configChanges="keyboard|keyboardHidden|orientation|mcc|mnc"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Default browser intents -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:scheme="about" />
+                <data android:scheme="javascript" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="text/html"/>
+                <data android:mimeType="text/plain"/>
+                <data android:mimeType="application/xhtml+xml"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.WEB_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <!-- For debugging -->
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.DEBUG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+	<receiver android:enabled="true" android:name="Restarter">
+	  <intent-filter>
+            <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" />
+	  </intent-filter>
+	</receiver>
+    </application>
+</manifest> 

@@ -46,6 +46,7 @@
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
+#include "nsCycleCollectionParticipant.h"
 
 // couple of utility static functs
 
@@ -118,7 +119,8 @@ NodeIsInTraversalRange(nsINode *aNode, PRBool aIsPreMode,
 class nsContentIterator : public nsIContentIterator //, public nsIEnumerator
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsContentIterator)
 
   nsContentIterator();
   virtual ~nsContentIterator();
@@ -252,8 +254,20 @@ nsresult NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult)
  * XPCOM cruft
  ******************************************************/
  
-NS_IMPL_ISUPPORTS1(nsContentIterator, nsIContentIterator)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsContentIterator)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsContentIterator)
 
+NS_INTERFACE_MAP_BEGIN(nsContentIterator)
+  NS_INTERFACE_MAP_ENTRY(nsIContentIterator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentIterator)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsContentIterator)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_4(nsContentIterator,
+                           mCurNode,
+                           mFirst,
+                           mLast,
+                           mCommonParent)
 
 /******************************************************
  * constructor/destructor

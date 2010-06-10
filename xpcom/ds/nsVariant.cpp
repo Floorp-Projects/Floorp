@@ -1889,7 +1889,7 @@ NS_IMETHODIMP nsVariant::GetAsISupports(nsISupports **_retval)
 /* jsval getAsJSVal() */
 NS_IMETHODIMP nsVariant::GetAsJSVal(jsval *_retval)
 {
-    // Can only get the JSVal from an XPCVariant.
+    // Can only get the jsval from an XPCVariant.
     return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 

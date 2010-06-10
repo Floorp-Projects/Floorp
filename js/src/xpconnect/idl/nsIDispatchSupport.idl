@@ -69,14 +69,14 @@ interface nsIDispatchSupport : nsISupports
      * @param comvar The COM Variant to be converted.
      * @param val The jsval to receive the converted value.
      */
-    void COMVariant2JSVal(in COMVARIANTPtr comvar, out JSVal val);
+    void COMVariant2JSVal(in COMVARIANTPtr comvar, out jsval val);
 
     /**
      * Converts a jsval to a COM Variant
      * @param var The jsval to be converted.
      * @param comvar The COM Variant to receive the converted value
      */
-    void JSVal2COMVariant(in JSVal var, out COMVARIANT comvar);
+    void JSVal2COMVariant(in jsval var, out COMVARIANT comvar);
     
     /**
      * Test if the class is safe to host.

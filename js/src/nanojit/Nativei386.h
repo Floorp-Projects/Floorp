@@ -190,12 +190,12 @@ namespace nanojit
         void asm_farg(LInsp, int32_t& stkd);\
         void asm_arg(ArgType ty, LInsp p, Register r, int32_t& stkd);\
         void asm_pusharg(LInsp);\
-        void asm_fcmp(LIns *cond);\
-        NIns* asm_fbranch(bool, LIns*, NIns*);\
+        void asm_cmpd(LIns *cond);\
+        NIns* asm_branchd(bool, LIns*, NIns*);\
         void asm_cmp(LIns *cond); \
         void asm_div_mod(LIns *cond); \
         void asm_load(int d, Register r); \
-        void asm_immf(Register r, uint64_t q, double d, bool canClobberCCs); \
+        void asm_immd(Register r, uint64_t q, double d, bool canClobberCCs); \
         void IMM8(int32_t i) { \
             _nIns -= 1; \
             *((int8_t*)_nIns) = (int8_t)(i); \

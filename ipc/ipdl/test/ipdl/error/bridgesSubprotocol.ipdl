@@ -1,0 +1,13 @@
+include protocol subprotocolBridges;
+
+protocol bridgesSubprotocol {
+    bridges subprotocolBridges, subprotocolBridges;
+
+    manages subprotocolBridges;
+
+child:
+    subprotocolBridges();
+    __delete__();
+
+state DEAD: send __delete__;
+};

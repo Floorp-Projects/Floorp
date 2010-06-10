@@ -51,6 +51,8 @@
 
 #ifdef _MSC_VER
 #define vsnprintf _vsnprintf
+#include <windows.h>
+#include <mmsystem.h>
 #endif
 
 using namespace mozilla;
@@ -60,10 +62,11 @@ using namespace mozilla;
 // assigned the Now() value to it.
 static TimeStamp sAppStart;
 
-FunctionTimerLog *FunctionTimer::sLog = nsnull;
+nsAutoPtr<FunctionTimerLog> FunctionTimer::sLog;
 char *FunctionTimer::sBuf1 = nsnull;
 char *FunctionTimer::sBuf2 = nsnull;
 int FunctionTimer::sBufSize = FunctionTimer::InitTimers();
+unsigned FunctionTimer::sDepth = 0;
 
 int
 FunctionTimer::InitTimers()
@@ -95,12 +98,21 @@ FunctionTimerLog::FunctionTimerLog(const char *fname)
         }
         mFile = fp;
     }
+
+#ifdef _MSC_VER
+    // Get 1ms resolution on Windows
+    timeBeginPeriod(1);
+#endif
 }
 
 FunctionTimerLog::~FunctionTimerLog()
 {
     if (mFile && mFile != stdout && mFile != stderr)
         fclose((FILE*)mFile);
+
+#ifdef _MSC_VER
+    timeEndPeriod(1);
+#endif
 }
 
 void

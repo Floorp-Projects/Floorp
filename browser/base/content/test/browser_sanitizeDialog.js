@@ -450,8 +450,10 @@ WindowHelper.prototype = {
        "Details button should be " + dir + " because item list is " +
        (hidden ? "" : "not ") + "hidden");
     let height = 0;
-    if (!hidden)
+    if (!hidden) {
+      ok(list.boxObject.height > 30, "listbox has sufficient size")
       height += list.boxObject.height;
+    }
     if (this.isWarningPanelVisible())
       height += this.getWarningPanel().boxObject.height;
     ok(height < this.win.innerHeight,

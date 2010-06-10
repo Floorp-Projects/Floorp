@@ -753,11 +753,11 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
   rv = PREF_CopyCharPref(aPrefName, getter_Copies(propertyFileURL), PR_TRUE);
   if (NS_FAILED(rv))
     return rv;
-    
+
   nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+    mozilla::services::GetStringBundleService();
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> bundle;
   rv = bundleService->CreateBundle(propertyFileURL,

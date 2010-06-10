@@ -168,7 +168,15 @@ nsFontFaceLoader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
   
   if (!aSourcePrincipal)
     return NS_OK;
-    
+
+  // check with the security manager
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  rv = secMan->CheckLoadURIWithPrincipal(aSourcePrincipal, aTargetURI,
+                                        nsIScriptSecurityManager::STANDARD);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   // check content policy
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_FONT,

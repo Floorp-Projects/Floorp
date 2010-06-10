@@ -395,13 +395,8 @@ EquivalentYearForDST(jsint year)
 static jsdouble LocalTZA;
 
 static jsdouble
-DaylightSavingTA(jsdouble t)
+DaylightSavingTA(jsdouble t, JSContext *cx)
 {
-    volatile int64 PR_t;
-    int64 ms2us;
-    int64 offset;
-    jsdouble result;
-
     /* abort if NaN */
     if (JSDOUBLE_IS_NaN(t))
         return t;
@@ -411,40 +406,34 @@ DaylightSavingTA(jsdouble t)
      * many OSes, map it to an equivalent year before asking.
      */
     if (t < 0.0 || t > 2145916800000.0) {
-        jsint year;
-        jsdouble day;
-
-        year = EquivalentYearForDST(YearFromTime(t));
-        day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+        jsint year = EquivalentYearForDST(YearFromTime(t));
+        jsdouble day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
         t = MakeDate(day, TimeWithinDay(t));
     }
 
-    /* put our t in an LL, and map it to usec for prtime */
-    JSLL_D2L(PR_t, t);
-    JSLL_I2L(ms2us, PRMJ_USEC_PER_MSEC);
-    JSLL_MUL(PR_t, PR_t, ms2us);
-
-    offset = PRMJ_DSTOffset(PR_t);
-
-    JSLL_DIV(offset, offset, ms2us);
-    JSLL_L2D(result, offset);
-    return result;
+    int64 timeMilliseconds = static_cast<int64>(t);
+    int64 offsetMilliseconds = cx->dstOffsetCache.getDSTOffsetMilliseconds(timeMilliseconds, cx);
+    return static_cast<jsdouble>(offsetMilliseconds);
 }
 
 static jsdouble
-AdjustTime(jsdouble date)
+AdjustTime(jsdouble date, JSContext *cx)
 {
-    jsdouble t = DaylightSavingTA(date) + LocalTZA;
+    jsdouble t = DaylightSavingTA(date, cx) + LocalTZA;
     t = (LocalTZA >= 0) ? fmod(t, msPerDay) : -fmod(msPerDay - t, msPerDay);
     return t;
 }
 
-#define LocalTime(t)    ((t) + AdjustTime(t))
+static jsdouble
+LocalTime(jsdouble t, JSContext *cx)
+{
+    return t + AdjustTime(t, cx);
+}
 
 static jsdouble
-UTC(jsdouble t)
+UTC(jsdouble t, JSContext *cx)
 {
-    return t - AdjustTime(t - LocalTZA);
+    return t - AdjustTime(t - LocalTZA, cx);
 }
 
 static intN
@@ -752,7 +741,7 @@ ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
  */
 
 static JSBool
-date_parseISOString(JSString *str, jsdouble *result)
+date_parseISOString(JSString *str, jsdouble *result, JSContext *cx)
 {
     jsdouble msec;
 
@@ -860,7 +849,7 @@ date_parseISOString(JSString *str, jsdouble *result)
                              frac * 1000.0);;
 
     if (isLocalTime) {
-        msec = UTC(msec);
+        msec = UTC(msec, cx);
     } else {
         msec -= ((tzMul) * ((tzHour * msPerHour) 
                             + (tzMin * msPerMinute)));
@@ -885,7 +874,7 @@ date_parseISOString(JSString *str, jsdouble *result)
 }
 
 static JSBool
-date_parseString(JSString *str, jsdouble *result)
+date_parseString(JSString *str, jsdouble *result, JSContext *cx)
 {
     jsdouble msec;
 
@@ -906,7 +895,7 @@ date_parseString(JSString *str, jsdouble *result)
     int temp;
     JSBool seenmonthname = JS_FALSE;
 
-    if (date_parseISOString(str, result))
+    if (date_parseISOString(str, result, cx))
         return JS_TRUE;
 
     str->getCharsAndLength(s, limit);
@@ -1141,7 +1130,7 @@ date_parseString(JSString *str, jsdouble *result)
     msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
 
     if (tzoffset == -1) { /* no time zone specified, have to use local */
-        msec = UTC(msec);
+        msec = UTC(msec, cx);
     } else {
         msec += tzoffset * msPerMinute;
     }
@@ -1169,7 +1158,7 @@ date_parse(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return JS_FALSE;
     vp[2].setString(str);
-    if (!date_parseString(str, &result)) {
+    if (!date_parseString(str, &result, cx)) {
         vp->setDouble(js_NaN);
         return true;
     }
@@ -1255,7 +1244,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
 
         /* if result is NaN, it couldn't be finite. */
         if (JSDOUBLE_IS_FINITE(result))
-            result = LocalTime(result);
+            result = LocalTime(result, cx);
 
         obj->setDateLocalTime(DoubleTag(result));
     }
@@ -1602,7 +1591,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
     }
 
     if (local)
-        lorutime = LocalTime(result);
+        lorutime = LocalTime(result, cx);
     else
         lorutime = result;
 
@@ -1634,7 +1623,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 /*     fprintf(stderr, "%f\n", result); */
 
     if (local)
-        result = UTC(result);
+        result = UTC(result, cx);
 
 /*     fprintf(stderr, "%f\n", result); */
 
@@ -1733,7 +1722,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
         }
         lorutime = +0.;
     } else {
-        lorutime = local ? LocalTime(result) : result;
+        lorutime = local ? LocalTime(result, cx) : result;
     }
 
     argp = args;
@@ -1757,7 +1746,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
     result = MakeDate(day, TimeWithinDay(lorutime));
 
     if (local)
-        result = UTC(result);
+        result = UTC(result, cx);
 
     return SetUTCTime(cx, obj, TIMECLIP(result), vp);
 }
@@ -1824,10 +1813,10 @@ date_setYear(JSContext *cx, uintN argc, Value *vp)
     if (year >= 0 && year <= 99)
         year += 1900;
 
-    jsdouble t = JSDOUBLE_IS_FINITE(result) ? LocalTime(result) : +0.0;
+    jsdouble t = JSDOUBLE_IS_FINITE(result) ? LocalTime(result, cx) : +0.0;
     jsdouble day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
     result = MakeDate(day, TimeWithinDay(t));
-    result = UTC(result);
+    result = UTC(result, cx);
 
     return SetUTCTime(cx, obj, TIMECLIP(result), vp);
 }
@@ -1910,7 +1899,7 @@ date_toISOString(JSContext *cx, uintN argc, Value *vp)
 /* for Date.toLocaleString; interface to PRMJTime date struct.
  */
 static void
-new_explode(jsdouble timeval, PRMJTime *split)
+new_explode(jsdouble timeval, PRMJTime *split, JSContext *cx)
 {
     jsint year = YearFromTime(timeval);
 
@@ -1926,7 +1915,7 @@ new_explode(jsdouble timeval, PRMJTime *split)
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
-    split->tm_isdst = (DaylightSavingTA(timeval) != 0);
+    split->tm_isdst = (DaylightSavingTA(timeval, cx) != 0);
 }
 
 typedef enum formatspec {
@@ -1947,11 +1936,11 @@ date_format(JSContext *cx, jsdouble date, formatspec format, Value *rval)
     if (!JSDOUBLE_IS_FINITE(date)) {
         JS_snprintf(buf, sizeof buf, js_NaN_date_str);
     } else {
-        jsdouble local = LocalTime(date);
+        jsdouble local = LocalTime(date, cx);
 
         /* offset from GMT in minutes.  The offset includes daylight savings,
            if it applies. */
-        jsint minutes = (jsint) floor(AdjustTime(date) / msPerMinute);
+        jsint minutes = (jsint) floor(AdjustTime(date, cx) / msPerMinute);
 
         /* map 510 minutes to 0830 hours */
         intN offset = (minutes / 60) * 100 + minutes % 60;
@@ -1967,7 +1956,7 @@ date_format(JSContext *cx, jsdouble date, formatspec format, Value *rval)
 
         /* get a timezone string from the OS to include as a
            comment. */
-        new_explode(date, &split);
+        new_explode(date, &split, cx);
         if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split) != 0) {
 
             /* Decide whether to use the resulting timezone string.
@@ -2064,8 +2053,8 @@ date_toLocaleHelper(JSContext *cx, const char *format, Value *vp)
         JS_snprintf(buf, sizeof buf, js_NaN_date_str);
     } else {
         intN result_len;
-        jsdouble local = LocalTime(utctime);
-        new_explode(local, &split);
+        jsdouble local = LocalTime(utctime, cx);
+        new_explode(local, &split, cx);
 
         /* let PRMJTime format it.       */
         result_len = PRMJ_FormatTime(buf, sizeof buf, format, &split);
@@ -2335,7 +2324,7 @@ js_Date(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
                 return JS_FALSE;
             argv[0].setString(str);
 
-            if (!date_parseString(str, &d))
+            if (!date_parseString(str, &d, cx))
                 d = js_NaN;
             else
                 d = TIMECLIP(d);
@@ -2346,7 +2335,7 @@ js_Date(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
             return JS_FALSE;
 
         if (JSDOUBLE_IS_FINITE(msec_time)) {
-            msec_time = UTC(msec_time);
+            msec_time = UTC(msec_time, cx);
             msec_time = TIMECLIP(msec_time);
         }
         d = msec_time;
@@ -2394,7 +2383,7 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
 
     JS_ASSERT(mon < 12);
     msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-    obj = js_NewDateObjectMsec(cx, UTC(msec_time));
+    obj = js_NewDateObjectMsec(cx, UTC(msec_time, cx));
     return obj;
 }
 
@@ -2503,7 +2492,7 @@ js_DateSetYear(JSContext *cx, JSObject *obj, int year)
                               msFromTime(local));
 
     /* SetUTCTime also invalidates local time cache. */
-    SetUTCTime(cx, obj, UTC(local));
+    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(void)
@@ -2527,7 +2516,7 @@ js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
                               MinFromTime(local),
                               SecFromTime(local),
                               msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local));
+    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(void)
@@ -2548,7 +2537,7 @@ js_DateSetDate(JSContext *cx, JSObject *obj, int date)
                               MinFromTime(local),
                               SecFromTime(local),
                               msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local));
+    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(void)
@@ -2568,7 +2557,7 @@ js_DateSetHours(JSContext *cx, JSObject *obj, int hours)
                               MinFromTime(local),
                               SecFromTime(local),
                               msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local));
+    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(void)
@@ -2588,7 +2577,7 @@ js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes)
                               minutes,
                               SecFromTime(local),
                               msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local));
+    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(void)
@@ -2608,7 +2597,7 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
                               MinFromTime(local),
                               seconds,
                               msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local));
+    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(jsdouble)

@@ -375,12 +375,6 @@ function ViewSourceReload()
                            Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
 }
 
-// Strips the |view-source:| for editPage()
-function ViewSourceEditPage()
-{
-  editPage(window.content.location.href.substring(12), window, false);
-}
-
 // Strips the |view-source:| for saveURL()
 function ViewSourceSavePage()
 {

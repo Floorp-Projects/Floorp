@@ -39,7 +39,7 @@
 /*
  *
  * Date:    16 September 2002
- * SUMMARY: Testing propertyIsEnumerable() on non-existent property
+ * SUMMARY: Testing propertyIsEnumerable() on nonexistent property
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=156354
  *
  */
@@ -47,7 +47,7 @@
 var gTestfile = 'regress-156354.js';
 var UBound = 0;
 var BUGNUMBER = 156354;
-var summary = 'Testing propertyIsEnumerable() on non-existent property';
+var summary = 'Testing propertyIsEnumerable() on nonexistent property';
 var status = '';
 var statusitems = [];
 var actual = '';

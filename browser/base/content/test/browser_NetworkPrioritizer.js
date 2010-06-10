@@ -86,7 +86,7 @@ function test() {
     let tab_A2 = window_A.gBrowser.addTab("http://example.com");
     let tab_A3 = window_A.gBrowser.addTab("about:config");
     tab_A3.linkedBrowser.addEventListener("load", function(aEvent) {
-      tab_A3.removeEventListener("load", arguments.callee, true);
+      tab_A3.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
       // tab_A2 isn't focused yet
       isWindowState(window_A, [-10, 0, 0]);
@@ -129,7 +129,6 @@ function test() {
               }, window_B);
             }, window_A);
           }, window_B);
-
         }, true);
       }, false);
     }, true);

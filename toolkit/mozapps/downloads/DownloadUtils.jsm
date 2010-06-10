@@ -206,7 +206,7 @@ let DownloadUtils = {
   /**
    * Generate the transfer progress string to show the current and total byte
    * size. Byte units will be as large as possible and the same units for
-   * current and max will be supressed for the former.
+   * current and max will be suppressed for the former.
    *
    * @param aCurrBytes
    *        Number of bytes transferred so far

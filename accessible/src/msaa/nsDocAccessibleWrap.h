@@ -61,8 +61,6 @@ public:
     STDMETHODIMP_(ULONG) Release();
     STDMETHODIMP      QueryInterface(REFIID, void**);
 
-    void GetXPAccessibleFor(const VARIANT& varChild, nsIAccessible **aXPAccessible);
-
     // ISimpleDOMDocument
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_URL( 
         /* [out] */ BSTR __RPC_FAR *url);
@@ -94,16 +92,17 @@ public:
         /* [optional][in] */ VARIANT varChild,
         /* [retval][out] */ BSTR __RPC_FAR *pszValue);
 
+  // nsAccessibleWrap
+  virtual nsAccessible *GetXPAccessibleFor(const VARIANT& varChild);
+
   // nsDocAccessibleWrap
 
   /**
    * Find an accessible by the given child ID in cached documents.
    *
    * @param  aVarChild    [in] variant pointing to the child ID
-   * @param  aAccessible  [out] the found accessible
    */
-  static void GetXPAccessibleForChildID(const VARIANT& aVarChild,
-                                        nsIAccessible **aAccessible);
+  static nsAccessible *GetXPAccessibleForChildID(const VARIANT& aVarChild);
 };
 
 #endif
