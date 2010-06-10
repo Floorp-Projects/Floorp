@@ -130,13 +130,15 @@ function InputHandler(browserViewContainer) {
   window.addEventListener("click", this, true);
 
   /* these handle key strokes in the browser view (where page content appears) */
-  browserViewContainer.addEventListener("keydown", this, true);
-  browserViewContainer.addEventListener("keyup", this, true);
+  browserViewContainer.addEventListener("keypress", this, false);
+  browserViewContainer.addEventListener("keyup", this, false);
+  browserViewContainer.addEventListener("keydown", this, false);
   browserViewContainer.addEventListener("DOMMouseScroll", this, true);
   browserViewContainer.addEventListener("MozMousePixelScroll", this, true);
   browserViewContainer.addEventListener("contextmenu", this, false);
 
   this.addModule(new MouseModule(this, browserViewContainer));
+  this.addModule(new KeyModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
 }
 
@@ -1128,6 +1130,39 @@ KineticController.prototype = {
     this.momentumBuffer.push({'t': now, 'dx' : dx, 'dy' : dy});
   }
 };
+
+
+/**
+ * Input module for basic key input.
+ */
+function KeyModule(owner, browserViewContainer) {
+  this._owner = owner;
+  this._browserViewContainer = browserViewContainer;
+}
+
+KeyModule.prototype = {
+  getClickerFromElement: function getClickerFromElement(elem) {
+    for (; elem; elem = elem.parentNode)
+      if (elem.customKeySender)
+        break;
+    return (elem) ? elem : null;
+  },
+
+  handleEvent: function handleEvent(evInfo) {
+    if (evInfo.event.type == "keydown" || evInfo.event.type == "keyup" || evInfo.event.type == "keypress") {
+      let keyer = this._browserViewContainer.customKeySender;
+      if (keyer) {
+        keyer.dispatchKeyEvent(evInfo.event);
+        evInfo.event.preventDefault();
+        evInfo.event.stopPropagation();
+      }
+    }
+  },
+
+  /* We don't have much state to reset if we lose event focus */
+  cancelPending: function cancelPending() {}
+};
+
 
 /**
  * Input module for basic scrollwheel input.  Currently just zooms the browser

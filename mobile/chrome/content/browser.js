@@ -375,6 +375,7 @@ var Browser = {
 
     /* handles dispatching clicks on tiles into clicks in content or zooms */
     container.customClicker = new ContentCustomClicker(bv);
+    container.customKeySender = new ContentCustomKeySender(bv);
 
     /* scrolling box that contains tiles */
     let contentScrollbox = this.contentScrollbox = document.getElementById("content-scrollbox");
@@ -1973,6 +1974,28 @@ ContentCustomClicker.prototype = {
     toString: function toString() {
       return "[ContentCustomClicker] { }";
     }
+};
+
+/** Watches for mouse events in chrome and sends them to content. */
+function ContentCustomKeySender(browserView) {
+  this._browserView = browserView;
+}
+
+ContentCustomKeySender.prototype = {
+  /** Dispatch a mouse event with chrome client coordinates. */
+  dispatchKeyEvent: function _dispatchKeyEvent(event) {
+    let browser = this._browserView.getBrowser();
+    if (browser) {
+      let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+      try {
+        fl.sendCrossProcessKeyEvent(event.type, event.keyCode, event.charCode, event.modifiers);
+      } catch (e) {}
+    }
+  },
+
+  toString: function toString() {
+    return "[ContentCustomClicker] { }";
+  }
 };
 
 /** Watches for mouse click in content and redirect them to the best found target **/
