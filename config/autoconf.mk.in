@@ -177,6 +177,8 @@ JAR="@JAR@"
 
 TAR=@TAR@
 
+MAKENSISU=@MAKENSISU@
+
 RM = rm -f
 
 # The MOZ_UI_LOCALE var is used to build a particular locale. Do *not*

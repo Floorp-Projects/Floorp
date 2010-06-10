@@ -63,8 +63,8 @@ WebGLContext::ValidateBuffers(PRUint32 count)
         return PR_FALSE;
     }
 
-    if (currentProgram != mCurrentProgram->GLName()) {
-        LogMessage("WebGL internal error: current program (%d) doesn't agree with GL current program (%d)", mCurrentProgram->GLName(), currentProgram);
+    if (WebGLuint(currentProgram) != mCurrentProgram->GLName()) {
+        LogMessage("WebGL internal error: current program (%u) doesn't agree with GL current program (%d)", mCurrentProgram->GLName(), currentProgram);
         return PR_FALSE;
     }
 
