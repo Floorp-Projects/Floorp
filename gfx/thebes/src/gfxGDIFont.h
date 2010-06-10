@@ -85,10 +85,6 @@ protected:
 
     void FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize);
 
-    // mShaper is used for the GDI shaper, mUniscribeShaper
-    // for the Uniscribe version if needed
-    nsAutoPtr<gfxFontShaper>   mUniscribeShaper;
-
     gfxFloat              mAdjustedSize;
 
     HFONT                 mFont;
