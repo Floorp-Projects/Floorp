@@ -2725,3 +2725,52 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
     return script->nmap[offs];
 }
 
+void * JS_FASTCALL
+stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
+{
+    jsbytecode * const originalPC = origPc;
+    jsbytecode *pc = originalPC;
+    JSScript *script = f.fp->script;
+    uint32 jumpOffset = GET_JUMP_OFFSET(pc);
+    pc += JUMP_OFFSET_LEN;
+
+    /* Note: compiler adjusts the stack beforehand. */
+    Value rval = f.regs.sp[-1];
+
+    jsint tableIdx;
+    if (rval.isInt32()) {
+        tableIdx = rval.asInt32();
+    } else if (rval.isDouble()) {
+        double d = rval.asDouble();
+        if (d == 0) {
+            /* Treat -0 (double) as 0. */
+            tableIdx = 0;
+        } else if (!JSDOUBLE_IS_INT32(d, tableIdx)) {
+            goto finally;
+        }
+    } else {
+        goto finally;
+    }
+
+    {
+        uint32 low = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        uint32 high = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+
+        tableIdx -= low;
+        if ((jsuint) tableIdx < (jsuint)(high - low + 1)) {
+            pc += JUMP_OFFSET_LEN * tableIdx;
+            uint32 candidateOffset = GET_JUMP_OFFSET(pc);
+            if (candidateOffset)
+                jumpOffset = candidateOffset;
+        }
+    }
+
+finally:
+    /* Provide the native address. */
+    ptrdiff_t offset = (originalPC + jumpOffset) - script->code;
+    JS_ASSERT(script->nmap[offset]);
+    return script->nmap[offset];
+}
+
