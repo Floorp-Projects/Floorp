@@ -229,7 +229,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
   rv = aInputStream->Read(p, aCount, &bytesRead);
   data.EndWriting();
   if (!NS_SUCCEEDED(rv) || bytesRead != aCount) {
-    return rv;              // TODO: figure out error handling
+    return rv;              // TODO: cancel request locally (bug 536317)
   }
 
   if (mIPCClosed || !SendOnDataAvailable(data, aOffset, bytesRead))

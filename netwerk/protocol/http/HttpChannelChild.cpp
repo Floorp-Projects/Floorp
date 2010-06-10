@@ -112,7 +112,7 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead)
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (!NS_SUCCEEDED(rv)) {
-    // TODO: Cancel request:
+    // TODO: Cancel request: (bug 536317)
     //  - Send Cancel msg to parent 
     //  - drop any in flight OnDataAvail msgs we receive
     //  - make sure we do call OnStopRequest eventually
@@ -149,7 +149,7 @@ HttpChannelChild::RecvOnDataAvailable(const nsCString& data,
                                   stringStream, offset, count);
   stringStream->Close();
   if (!NS_SUCCEEDED(rv)) {
-    // TODO: Cancel request: see notes in OnStartRequest
+    // TODO: Cancel request: see OnStartRequest. Bug 536317
     return false; 
   }
   return true;
@@ -176,7 +176,7 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
   this->Release();
   
   if (!NS_SUCCEEDED(rv)) {
-    // TODO: Cancel request: see notes in OnStartRequest
+    // TODO: Cancel request: see OnStartRequest (bug 536317)
     return false;  
   }
   return true;
