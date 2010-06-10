@@ -727,6 +727,15 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_AND)
 
+          BEGIN_CASE(JSOP_LOOKUPSWITCH)
+            frame.forgetEverything();
+            masm.move(ImmPtr(PC), Registers::ArgReg1);
+            stubCall(stubs::LookupSwitch, Uses(1), Defs(0));
+            masm.jump(Registers::ReturnReg);
+            PC += js_GetVariableBytecodeLength(PC);
+            break;
+          END_CASE(JSOP_LOOKUPSWITCH)
+
           BEGIN_CASE(JSOP_STRICTEQ)
             prepareStubCall();
             stubCall(stubs::StrictEq, Uses(2), Defs(1));
