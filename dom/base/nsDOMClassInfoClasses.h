@@ -423,11 +423,13 @@ DOMCI_CLASS(GeoPositionError)
 DOMCI_CLASS(CSSFontFaceRule)
 DOMCI_CLASS(CSSFontFaceStyleDecl)
 
+#if defined(MOZ_MEDIA)
 // WhatWG Video Element
 DOMCI_CLASS(HTMLVideoElement)
 DOMCI_CLASS(HTMLSourceElement)
 DOMCI_CLASS(HTMLMediaError)
 DOMCI_CLASS(HTMLAudioElement)
+#endif
 
 DOMCI_CLASS(ProgressEvent)
 
@@ -457,6 +459,7 @@ DOMCI_CLASS(WebGLProgram)
 DOMCI_CLASS(WebGLShader)
 DOMCI_CLASS(WebGLFramebuffer)
 DOMCI_CLASS(WebGLRenderbuffer)
+DOMCI_CLASS(WebGLUniformLocation)
 
 // WebGL Buffers
 DOMCI_CLASS(PaintRequest)

@@ -499,12 +499,47 @@ public:
 
 protected:
   /**
+   * Add/remove this element to the documents name cache
+   */
+  void AddToNameTable(nsIAtom* aName) {
+    NS_ASSERTION(HasFlag(NODE_HAS_NAME), "Node lacking NODE_HAS_NAME flag");
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc && !IsInAnonymousSubtree()) {
+      doc->AddToNameTable(this, aName);
+    }
+  }
+  void RemoveFromNameTable() {
+    if (HasFlag(NODE_HAS_NAME)) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
+                                         GetAtomValue());
+      }
+    }
+  }
+
+  /**
    * Register or unregister an access key to this element based on the
    * accesskey attribute.
-   * @param aDoReg true to register, false to unregister
    */
+  void RegAccessKey()
+  {
+    if (HasFlag(NODE_HAS_ACCESSKEY)) {
+      RegUnRegAccessKey(PR_TRUE);
+    }
+  }
+
+  void UnregAccessKey()
+  {
+    if (HasFlag(NODE_HAS_ACCESSKEY)) {
+      RegUnRegAccessKey(PR_FALSE);
+    }
+  }
+
+private:
   void RegUnRegAccessKey(PRBool aDoReg);
 
+protected:
   /**
    * Determine whether an attribute is an event (onclick, etc.)
    * @param aName the attribute
@@ -828,6 +863,8 @@ protected:
 
   void UpdateEditableFormControlState();
 
+  PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
+
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
   // window, eActiveWindow means it's in an active window.
@@ -929,14 +966,14 @@ protected:
  */
 #define NS_IMPL_NS_NEW_HTML_ELEMENT(_elementName)                            \
 nsGenericHTMLElement*                                                        \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
+NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo);                       \
 }
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)               \
 nsGenericHTMLElement*                                                        \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
+NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
 }
@@ -1268,12 +1305,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)              \
 nsGenericHTMLElement*                                             \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
-                                  PRBool aFromParser = PR_FALSE);
+                                  PRUint32 aFromParser = 0);
 
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(_elementName)    \
 inline nsGenericHTMLElement*                                      \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
-                                  PRBool aFromParser = PR_FALSE)  \
+                                  PRUint32 aFromParser = 0)       \
 {                                                                 \
   return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);         \
 }

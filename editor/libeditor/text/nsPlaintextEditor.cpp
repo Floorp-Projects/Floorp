@@ -78,6 +78,7 @@
 #include "nsInternetCiter.h"
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
+#include "nsDebug.h"
 
 // Drag & Drop, Clipboard
 #include "nsIClipboard.h"
@@ -353,48 +354,83 @@ PRBool nsPlaintextEditor::IsModifiable()
   return !IsReadonly();
 }
 
+nsresult
+nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
+{
+  // NOTE: When you change this method, you should also change:
+  //   * editor/libeditor/text/tests/test_texteditor_keyevent_handling.html
+  //   * editor/libeditor/html/tests/test_htmleditor_keyevent_handling.html
+  //
+  // And also when you add new key handling, you need to change the subclass's
+  // HandleKeyPressEvent()'s switch statement.
+
+  if (IsReadonly() || IsDisabled()) {
+    // When we're not editable, the events handled on nsEditor.
+    return nsEditor::HandleKeyPressEvent(aKeyEvent);
+  }
+
+  nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
+  NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
+  NS_ASSERTION(nativeKeyEvent->message == NS_KEY_PRESS,
+               "HandleKeyPressEvent gets non-keypress event");
+
+  switch (nativeKeyEvent->keyCode) {
+    case nsIDOMKeyEvent::DOM_VK_META:
+    case nsIDOMKeyEvent::DOM_VK_SHIFT:
+    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    case nsIDOMKeyEvent::DOM_VK_ALT:
+    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+    case nsIDOMKeyEvent::DOM_VK_DELETE:
+      // These keys are handled on nsEditor
+      return nsEditor::HandleKeyPressEvent(aKeyEvent);
+    case nsIDOMKeyEvent::DOM_VK_TAB: {
+      if (IsTabbable()) {
+        return NS_OK; // let it be used for focus switching
+      }
+
+      if (nativeKeyEvent->isShift || nativeKeyEvent->isControl ||
+          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+        return NS_OK;
+      }
+
+      // else we insert the tab straight through
+      aKeyEvent->PreventDefault();
+      return TypedText(NS_LITERAL_STRING("\t"), eTypedText);
+    }
+    case nsIDOMKeyEvent::DOM_VK_RETURN:
+    case nsIDOMKeyEvent::DOM_VK_ENTER:
+      if (IsSingleLineEditor() || nativeKeyEvent->isControl ||
+          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+        return NS_OK;
+      }
+      aKeyEvent->PreventDefault();
+      return TypedText(EmptyString(), eTypedBreak);
+    case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+      // pass escape keypresses through as empty strings: needed for IME support
+      // XXX This might be broken, we should check the behavior, see bug 471322.
+      // XXX Even if this keypress event is handled, this doesn't consume the
+      // event. This is wrong behavior but we have serious problem,
+      // see bug 569988 and 570455.
+      return TypedText(EmptyString(), eTypedText);
+  }
+
+  // NOTE: On some keyboard layout, some characters are inputted with Control
+  // key or Alt key, but at that time, widget sets FALSE to these keys.
+  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->isControl ||
+      nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+    // we don't PreventDefault() here or keybindings like control-x won't work
+    return NS_OK;
+  }
+  aKeyEvent->PreventDefault();
+  nsAutoString str(nativeKeyEvent->charCode);
+  return TypedText(str, eTypedText);
+}
 
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  nsIHTMLEditor methods 
 #pragma mark -
 #endif
-
-NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
-{
-  PRUint32 keyCode, character;
-  PRBool   ctrlKey, altKey, metaKey;
-
-  if (!aKeyEvent) return NS_ERROR_NULL_POINTER;
-
-  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
-      NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey)) &&
-      NS_SUCCEEDED(aKeyEvent->GetMetaKey(&metaKey)))
-  {
-    aKeyEvent->GetCharCode(&character);
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
-     || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
-    {
-      nsString empty;
-      return TypedText(empty, eTypedBreak);
-    }
-    else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
-    {
-      // pass escape keypresses through as empty strings: needed for ime support
-      nsString empty;
-      return TypedText(empty, eTypedText);
-    }
-    
-    if (character && !altKey && !ctrlKey && !metaKey)
-    {
-      aKeyEvent->PreventDefault();
-      nsAutoString key(character);
-      return TypedText(key, eTypedText);
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
 
 /* This routine is needed to provide a bottleneck for typing for logging
    purposes.  Can't use HandleKeyPress() (above) for that since it takes
@@ -636,6 +672,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
 
   if (*aAction == eNextWord || *aAction == ePreviousWord
       || (*aAction == eNext && bCollapsed)
+      || (*aAction == ePrevious && bCollapsed)
       || *aAction == eToBeginningOfLine || *aAction == eToEndOfLine)
   {
     nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
@@ -658,12 +695,33 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
         result = selCont->CharacterExtendForDelete();
         // Don't set aAction to eNone (see Bug 502259)
         break;
-      case ePrevious:
-        /* FIXME: extend selection over UTF-16 surrogates for Bug #332636
-         * and set *aAction = eNone
-         */
-        result = NS_OK;
+      case ePrevious: {
+        // Only extend the selection where the selection is after a UTF-16
+        // surrogate pair.  For other cases we don't want to do that, in order
+        // to make sure that pressing backspace will only delete the last
+        // typed character.
+        nsCOMPtr<nsIDOMNode> node;
+        PRInt32 offset;
+        result = GetStartNodeAndOffset(aSelection, address_of(node), &offset);
+        NS_ENSURE_SUCCESS(result, result);
+        NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+
+        if (IsTextNode(node)) {
+          nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
+          if (charData) {
+            nsAutoString data;
+            result = charData->GetData(data);
+            NS_ENSURE_SUCCESS(result, result);
+
+            if (offset > 1 &&
+                NS_IS_LOW_SURROGATE(data[offset - 1]) &&
+                NS_IS_HIGH_SURROGATE(data[offset - 2])) {
+              result = selCont->CharacterExtendForBackspace();
+            }
+          }
+        }
         break;
+      }
       case eToBeginningOfLine:
         selCont->IntraLineMove(PR_TRUE, PR_FALSE);          // try to move to end
         result = selCont->IntraLineMove(PR_FALSE, PR_TRUE); // select to beginning
@@ -684,6 +742,9 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
 NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsresult result;
 
@@ -742,6 +803,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   PRInt32 theAction = nsTextEditRules::kInsertText;
   PRInt32 opID = kOpInsertText;
   if (mInIMEMode) 
@@ -784,6 +848,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
 NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertBreak, nsIEditor::eNext);
@@ -874,6 +941,9 @@ nsPlaintextEditor::BeginComposition()
 
   if (IsPasswordEditor())  {
     if (mRules) {
+      // Protect the edit rules object from dying
+      nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
       nsIEditRules *p = mRules.get();
       nsTextEditRules *textEditRules = static_cast<nsTextEditRules *>(p);
       textEditRules->ResetIMETextPWBuf();
@@ -894,6 +964,9 @@ nsPlaintextEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
   
   if (!mRules)
     return NS_ERROR_NOT_INITIALIZED;
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
   
   return mRules->DocumentIsEmpty(aDocumentIsEmpty);
 }
@@ -1096,6 +1169,9 @@ nsPlaintextEditor::SetNewlineHandling(PRInt32 aNewlineHandling)
 NS_IMETHODIMP 
 nsPlaintextEditor::Undo(PRUint32 aCount)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsAutoUpdateViewBatch beginViewBatching(this);
 
   ForceCompositionEnd();
@@ -1120,6 +1196,9 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
 NS_IMETHODIMP 
 nsPlaintextEditor::Redo(PRUint32 aCount)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsAutoUpdateViewBatch beginViewBatching(this);
 
   ForceCompositionEnd();
@@ -1268,6 +1347,9 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
                                   PRUint32 aFlags,
                                   nsAString& aOutputString)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsString resultString;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
   ruleInfo.outString = &resultString;
@@ -1396,6 +1478,9 @@ NS_IMETHODIMP
 nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                                      nsIDOMNode **aNodeInserted)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // We have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer = new nsInternetCiter();
 
@@ -1627,6 +1712,9 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString,
 NS_IMETHODIMP
 nsPlaintextEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
   if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
@@ -1638,6 +1726,9 @@ nsPlaintextEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection
 NS_IMETHODIMP
 nsPlaintextEditor::EndOperation()
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // post processing
   nsresult res = NS_OK;
   if (mRules) res = mRules->AfterEdit(mAction, mDirection);
@@ -1650,6 +1741,9 @@ NS_IMETHODIMP
 nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   // is doc empty?
   PRBool bDocIsEmpty;

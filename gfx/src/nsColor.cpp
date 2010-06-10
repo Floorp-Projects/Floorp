@@ -155,9 +155,7 @@ NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
     NS_ASSERTION((r >= 0) && (r <= 255), "bad r");
     NS_ASSERTION((g >= 0) && (g <= 255), "bad g");
     NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
-    if (nsnull != aResult) {
-      *aResult = NS_RGB(r, g, b);
-    }
+    *aResult = NS_RGB(r, g, b);
     return PR_TRUE;
   }
 
@@ -165,39 +163,69 @@ NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
   return PR_FALSE;
 }
 
-// compatible with legacy Nav behavior
+// This implements part of the algorithm for legacy behavior described in
+// http://www.whatwg.org/specs/web-apps/current-work/complete/common-microsyntaxes.html#rules-for-parsing-a-legacy-color-value
 NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
+  if (aColorSpec.EqualsLiteral("transparent")) {
+    return PR_FALSE;
+  }
+
   int nameLen = aColorSpec.Length();
   const PRUnichar* colorSpec = aColorSpec.get();
+  if (nameLen > 128) {
+    nameLen = 128;
+  }
+
   if ('#' == colorSpec[0]) {
     ++colorSpec;
     --nameLen;
   }
 
-  if (3 < nameLen) {
-    // Convert the ascii to binary
-    int dpc = (nameLen / 3) + (((nameLen % 3) != 0) ? 1 : 0);
-    if (4 < dpc) {
-      dpc = 4;
-    }
+  // digits per component
+  int dpc = (nameLen + 2) / 3;
+  int newdpc = dpc;
 
-    // Translate components from hex to binary
-    int r = ComponentValue(colorSpec, nameLen, 0, dpc);
-    int g = ComponentValue(colorSpec, nameLen, 1, dpc);
-    int b = ComponentValue(colorSpec, nameLen, 2, dpc);
-    NS_ASSERTION((r >= 0) && (r <= 255), "bad r");
-    NS_ASSERTION((g >= 0) && (g <= 255), "bad g");
-    NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
-    if (nsnull != aResult) {
-      *aResult = NS_RGB(r, g, b);
-    }
+  // Use only the rightmost 8 characters of each component.
+  if (newdpc > 8) {
+    nameLen -= newdpc - 8;
+    colorSpec += newdpc - 8;
+    newdpc = 8;
   }
-  else {
-    if (nsnull != aResult) {
-      *aResult = NS_RGB(0, 0, 0);
+
+  // And then keep trimming characters at the left until we'd trim one
+  // that would leave a nonzero value, but not past 2 characters per
+  // component.
+  while (newdpc > 2) {
+    PRBool haveNonzero = PR_FALSE;
+    for (int c = 0; c < 3; ++c) {
+      NS_ABORT_IF_FALSE(c * dpc < nameLen,
+                        "should not pass end of string while newdpc > 2");
+      PRUnichar ch = colorSpec[c * dpc];
+      if (('1' <= ch && ch <= '9') ||
+          ('A' <= ch && ch <= 'F') ||
+          ('a' <= ch && ch <= 'f')) {
+        haveNonzero = PR_TRUE;
+        break;
+      }
     }
+    if (haveNonzero) {
+      break;
+    }
+    --newdpc;
+    --nameLen;
+    ++colorSpec;
   }
+
+  // Translate components from hex to binary
+  int r = ComponentValue(colorSpec, nameLen, 0, dpc);
+  int g = ComponentValue(colorSpec, nameLen, 1, dpc);
+  int b = ComponentValue(colorSpec, nameLen, 2, dpc);
+  NS_ASSERTION((r >= 0) && (r <= 255), "bad r");
+  NS_ASSERTION((g >= 0) && (g <= 255), "bad g");
+  NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
+
+  *aResult = NS_RGB(r, g, b);
   return PR_TRUE;
 }
 

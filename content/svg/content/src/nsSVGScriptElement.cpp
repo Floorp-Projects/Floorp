@@ -59,8 +59,8 @@ class nsSVGScriptElement : public nsSVGScriptElementBase,
 protected:
   friend nsresult NS_NewSVGScriptElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo,
-                                         PRBool aFromParser);
-  nsSVGScriptElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
+                                         PRUint32 aFromParser);
+  nsSVGScriptElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser);
   
 public:
   // interfaces:
@@ -131,7 +131,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 // Implementation
 
 nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo,
-                                       PRBool aFromParser)
+                                       PRUint32 aFromParser)
   : nsSVGScriptElementBase(aNodeInfo)
 {
   mDoneAddingChildren = !aFromParser;

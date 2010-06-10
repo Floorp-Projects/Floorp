@@ -16,6 +16,7 @@
   <script type="text/javascript" src="seek8.js"></script>
   <script type="text/javascript" src="seek9.js"></script>
   <script type="text/javascript" src="seek10.js"></script>
+  <script type="text/javascript" src="seek11.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -39,7 +40,7 @@ function doNextFile() {
     return;
   }
 
-  for (var i = 1; i <= 10; ++i) {
+  for (var i = 1; i <= 11; ++i) {
     var v = document.createElement('video');
     v.src = test.name;
     document.body.appendChild(v);
@@ -60,6 +61,7 @@ function doNextFile() {
         doNextFile();
       }
     };
+    dump("Seek test: " + i + "\n");
     window['test_seek' + i](v, test.duration/2, localIs, localOk, localFinish);
     ++testsWaiting;
   }

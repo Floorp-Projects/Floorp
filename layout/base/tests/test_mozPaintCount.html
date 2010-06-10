@@ -17,9 +17,11 @@
 SimpleTest.waitForExplicitFinish();
 
 var startPaintCount = window.mozPaintCount;
+ok(true, "Got to initial paint count: " + startPaintCount);
 var color = 0;
 
 function doFlicker() {
+  ok(true, "Iteration " + color + ", paint count: " + window.mozPaintCount);
   if (window.mozPaintCount - startPaintCount > 20) {
     ok(true, "Got enough paints");
     SimpleTest.finish();

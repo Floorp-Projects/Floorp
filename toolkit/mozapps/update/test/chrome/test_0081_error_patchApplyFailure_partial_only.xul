@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update prompt error page (partial only patch apply failure)"
+<window title="Update Wizard pages: errors (partial only patch apply failure)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -21,7 +21,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-const gTests = [ {
+const TESTS = [ {
   pageid: PAGEID_ERRORS,
   buttonClick: "finish"
 } ];
@@ -29,9 +29,9 @@ const gTests = [ {
 function runTest() {
   debugDump("Entering runTest");
 
-  var patches = getLocalPatchString("partial", null, null, null, null, null,
+  let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING);
-  var updates = getLocalUpdateString(patches, null, null, null,
+  let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
                                      Services.appinfo.platformVersion);
 

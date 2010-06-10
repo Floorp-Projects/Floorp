@@ -117,9 +117,10 @@ enum {
 
   NODE_IS_EDITABLE =             0x00000100U,
 
-  // Optimizations to quickly check whether element may have ID, class or style
-  // attributes. Not all element implementations may use these!
-  NODE_MAY_HAVE_ID =             0x00000200U,
+  // Set to true if the element has a non-empty id attribute. This can in rare
+  // cases lie for nsXMLElement, such as when the node has been moved between
+  // documents with different id mappings.
+  NODE_HAS_ID =                  0x00000200U,
   // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
   // node in fact has a class, but may be set even if it doesn't.
   NODE_MAY_HAVE_CLASS =          0x00000400U,
@@ -170,9 +171,15 @@ enum {
 
   // Set if the node is an element.
   NODE_IS_ELEMENT              = 0x00200000U,
+  
+  // Set if the node has the accesskey attribute set.
+  NODE_HAS_ACCESSKEY           = 0x00400000U,
+
+  // Set if the node has the accesskey attribute set.
+  NODE_HAS_NAME                = 0x00800000U,
 
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               22,
+  NODE_SCRIPT_TYPE_OFFSET =               24,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -616,12 +623,10 @@ public:
    * using the destruction function given when that value was set.
    *
    * @param aPropertyName  name of property to destroy.
-   *
-   * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
    */
-  nsresult DeleteProperty(nsIAtom *aPropertyName)
+  void DeleteProperty(nsIAtom *aPropertyName)
   {
-    return DeleteProperty(0, aPropertyName);
+    DeleteProperty(0, aPropertyName);
   }
 
   /**
@@ -630,10 +635,8 @@ public:
    *
    * @param aCategory      category of property to destroy.
    * @param aPropertyName  name of property to destroy.
-   *
-   * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
    */
-  virtual nsresult DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName);
+  virtual void DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be

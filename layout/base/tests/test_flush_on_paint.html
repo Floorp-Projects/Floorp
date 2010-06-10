@@ -31,14 +31,15 @@ invalidationLoop();
 
 function doIteration() {
   lastPaintCount = plugin.getPaintCount();
+  ok(true, "Beginning iteration " + iterations + ", last paint count: " + lastPaintCount);
 
-  var v = 255 - iterations;
   expectedWidth = 201 + iterations;
   plugin.style.width = expectedWidth + "px";
   checkDone();
 }
 
 function checkDone() {
+  ok(true, "Check to see if we're done: " + plugin.getPaintCount());
   if (plugin.getPaintCount() == lastPaintCount) {
     setTimeout(checkDone, 30);
     return;

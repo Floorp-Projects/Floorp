@@ -542,7 +542,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
     goto end;
 
 #ifdef XP_MACOSX
-  SetupMacCommandLine(argc, argv, PR_TRUE);
+  CommandLineServiceMac::SetupMacCommandLine(argc, argv, PR_TRUE);
 #endif
 
   PR_CreateProcessDetached(updaterPath.get(), argv, nsnull, attr);

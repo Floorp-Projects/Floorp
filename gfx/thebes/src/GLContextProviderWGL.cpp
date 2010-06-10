@@ -181,11 +181,12 @@ class GLContextWGL : public GLContext
 {
 public:
     GLContextWGL(HDC aDC, HGLRC aContext)
-        : mContext(aContext), mDC(aDC), mPBuffer(nsnull)
+        : mContext(aContext), mDC(aDC), mPBuffer(nsnull), mPixelFormat(-1)
     { }
 
-    GLContextWGL(HANDLE aPBuffer) {
+    GLContextWGL(HANDLE aPBuffer, int aPixelFormat) {
         mPBuffer = aPBuffer;
+        mPixelFormat = aPixelFormat;
         mDC = sWGLLibrary.fGetPbufferDC(mPBuffer);
         mContext = sWGLLibrary.fCreateContext(mDC);
     }
@@ -241,10 +242,52 @@ public:
         }
     }
 
+    PRBool Resize(const gfxIntSize& aNewSize) {
+        if (!mPBuffer)
+            return PR_FALSE;
+
+        nsTArray<int> pbattribs;
+        pbattribs.AppendElement(LOCAL_WGL_TEXTURE_FORMAT_ARB);
+        // XXX fixme after bug 571092 lands and we have the format available
+        if (true /*aFormat.alpha > 0*/) {
+            pbattribs.AppendElement(LOCAL_WGL_TEXTURE_RGBA_ARB);
+        } else {
+            pbattribs.AppendElement(LOCAL_WGL_TEXTURE_RGB_ARB);
+        }
+        pbattribs.AppendElement(LOCAL_WGL_TEXTURE_TARGET_ARB);
+        pbattribs.AppendElement(LOCAL_WGL_TEXTURE_2D_ARB);
+
+        pbattribs.AppendElement(0);
+
+        HANDLE newbuf = sWGLLibrary.fCreatePbuffer(gDummyWindowDC, mPixelFormat,
+                                                   aNewSize.width, aNewSize.height,
+                                                   pbattribs.Elements());
+        if (!newbuf)
+            return PR_FALSE;
+
+        bool isCurrent = false;
+        if (sWGLLibrary.fGetCurrentContext() == mContext) {
+            sWGLLibrary.fMakeCurrent(NULL, NULL);
+            isCurrent = true;
+        }
+
+        // hey, it worked!
+        sWGLLibrary.fDestroyPbuffer(mPBuffer);
+
+        mPBuffer = newbuf;
+        mDC = sWGLLibrary.fGetPbufferDC(mPBuffer);
+
+        if (isCurrent)
+            MakeCurrent();
+
+        return PR_TRUE;
+    }
+
 private:
     HGLRC mContext;
     HDC mDC;
     HANDLE mPBuffer;
+    int mPixelFormat;
 };
 
 already_AddRefed<GLContext>
@@ -362,7 +405,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize& aSize, const ContextFormat& a
         return nsnull;
     }
 
-    nsRefPtr<GLContextWGL> glContext = new GLContextWGL(pbuffer);
+    nsRefPtr<GLContextWGL> glContext = new GLContextWGL(pbuffer, chosenFormat);
     glContext->Init();
 
     return glContext.forget().get();

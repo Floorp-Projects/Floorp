@@ -56,7 +56,7 @@ using namespace mozilla;
 using namespace mozilla::layers;
 
 nsGenericHTMLElement*
-NS_NewHTMLCanvasElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+NS_NewHTMLCanvasElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
 {
   return new nsHTMLCanvasElement(aNodeInfo);
 }

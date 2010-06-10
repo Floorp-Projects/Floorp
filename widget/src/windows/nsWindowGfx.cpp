@@ -71,7 +71,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "prmem.h"
 
 #include "LayerManagerOGL.h"
-#ifndef WINCE
+#ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
 
@@ -435,7 +435,13 @@ PRBool nsWindow::OnPaint(HDC aDC)
               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
           {
             if (!mD2DWindowSurface) {
-              mD2DWindowSurface = new gfxD2DSurface(mWnd);
+              gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR;
+#if defined(MOZ_XUL)
+              if (mTransparencyMode != eTransparencyOpaque) {
+                content = gfxASurface::CONTENT_COLOR_ALPHA;
+              }
+#endif
+              mD2DWindowSurface = new gfxD2DSurface(mWnd, content);
             }
             targetSurface = mD2DWindowSurface;
           }
@@ -506,6 +512,9 @@ DDRAW_FAILED:
               thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
             }
             thebesContext->Clip();
+            thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+            thebesContext->Paint();
+            thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
           }
 #ifdef WINCE
           thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
@@ -680,7 +689,7 @@ DDRAW_FAILED:
           SetClippingRegion(event.region);
         result = DispatchWindowEvent(&event, eventStatus);
         break;
-#ifndef WINCE
+#ifdef MOZ_ENABLE_D3D9_LAYER
       case LayerManager::LAYERS_D3D9:
         static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager())->
           SetClippingRegion(event.region);

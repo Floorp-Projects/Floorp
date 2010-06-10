@@ -54,6 +54,13 @@ public:
 
     virtual ~gfxQuartzSurface();
 
+    virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
+                                                               const gfxIntSize& aSize);
+    virtual PRBool AreSimilarSurfacesSensitiveToContentType()
+    {
+      return PR_FALSE;
+    }
+
     const gfxSize& GetSize() const { return mSize; }
 
     CGContextRef GetCGContext() { return mCGContext; }

@@ -1175,6 +1175,13 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
 
   rv = NS_NewNativeLocalFile(nsDependentCString(appDir), PR_TRUE,
                              getter_AddRefs(localDir));
+#elif defined(ANDROID)
+  // used for setting the patch to our profile
+  // XXX: investigate putting the profile somewhere else
+  const char* homeDir = "/data/data/org.mozilla." MOZ_APP_NAME;
+
+  rv = NS_NewNativeLocalFile(nsDependentCString(homeDir), PR_TRUE,
+                             getter_AddRefs(localDir));
 #elif defined(XP_UNIX)
   const char* homeDir = getenv("HOME");
   if (!homeDir || !*homeDir)
@@ -1413,6 +1420,12 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+#elif defined(ANDROID)
+  // The directory used for storing profiles
+  // The parent of this directory is set in GetUserDataDirectoryHome
+  // XXX: handle gAppData->profile properly
+  rv = aFile->AppendNative(nsDependentCString("mozilla"));
+  NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_UNIX)
   // Make it hidden (i.e. using the ".")
   nsCAutoString folder(".");

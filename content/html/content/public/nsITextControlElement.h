@@ -40,17 +40,21 @@
 #define nsITextControlElement_h___
 
 #include "nsISupports.h"
+class nsIContent;
 class nsAString;
-class nsITextControlFrame;
+class nsIEditor;
+class nsISelectionController;
+class nsFrameSelection;
+class nsTextControlFrame;
 
 // IID for the nsITextControl interface
 #define NS_ITEXTCONTROLELEMENT_IID    \
-{ 0x8c22af1e, 0x1dd2, 0x11b2,    \
-  { 0x9d, 0x72, 0xb4, 0xc1, 0x53, 0x68, 0xdc, 0xa1 } }
+{ 0x66545dde, 0x3f4a, 0x49fd,    \
+  { 0x82, 0x73, 0x69, 0x7e, 0xab, 0x54, 0x06, 0x0a } }
 
 /**
- * This interface is used for the text control frame to store its value away
- * into the content.
+ * This interface is used for the text control frame to get the editor and
+ * selection controller objects, and some helper properties.
  */
 class nsITextControlElement : public nsISupports {
 public:
@@ -58,14 +62,152 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXTCONTROLELEMENT_IID)
 
   /**
-   * Set the control's value without security checks
-   */
-  NS_IMETHOD TakeTextFrameValue(const nsAString& aValue) = 0;
-
-  /**
    * Tell the control that value has been deliberately changed (or not).
    */
   NS_IMETHOD SetValueChanged(PRBool changed) = 0;
+
+  /**
+   * Find out whether this is a single line text control.  (text or password)
+   * @return whether this is a single line text control
+   */
+  NS_IMETHOD_(PRBool) IsSingleLineTextControl() const = 0;
+
+  /**
+   * Find out whether this control is a textarea.
+   * @return whether this is a textarea text control
+   */
+  NS_IMETHOD_(PRBool) IsTextArea() const = 0;
+
+  /**
+   * Find out whether this control edits plain text.  (Currently always true.)
+   * @return whether this is a plain text control
+   */
+  NS_IMETHOD_(PRBool) IsPlainTextControl() const = 0;
+
+  /**
+   * Find out whether this is a password control (input type=password)
+   * @return whether this is a password ontrol
+   */
+  NS_IMETHOD_(PRBool) IsPasswordTextControl() const = 0;
+
+  /**
+   * Get the cols attribute (if textarea) or a default
+   * @return the number of columns to use
+   */
+  NS_IMETHOD_(PRInt32) GetCols() = 0;
+
+  /**
+   * Get the column index to wrap at, or -1 if we shouldn't wrap
+   */
+  NS_IMETHOD_(PRInt32) GetWrapCols() = 0;
+
+  /**
+   * Get the rows attribute (if textarea) or a default
+   * @return the number of rows to use
+   */
+  NS_IMETHOD_(PRInt32) GetRows() = 0;
+
+  /**
+   * Get the default value of the text control
+   */
+  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) = 0;
+
+  /**
+   * Return true if the value of the control has been changed.
+   */
+  NS_IMETHOD_(PRBool) ValueChanged() const = 0;
+
+  /**
+   * Get the current value of the text editor.
+   *
+   * @param aValue the buffer to retrieve the value in
+   * @param aIgnoreWrap whether to ignore the text wrapping behavior specified
+   * for the element.
+   */
+  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, PRBool aIgnoreWrap) const = 0;
+
+  /**
+   * Set the current value of the text editor.
+   *
+   * @param aValue the new value for the text control.
+   * @param aUserInput whether this value is coming from user input.
+   */
+  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, PRBool aUserInput) = 0;
+
+  /**
+   * Get the editor object associated with the text editor.
+   * The return value is null if the control does not support an editor
+   * (for example, if it is a checkbox.)
+   */
+  NS_IMETHOD_(nsIEditor*) GetTextEditor() = 0;
+
+  /**
+   * Get the selection controller object associated with the text editor.
+   * The return value is null if the control does not support an editor
+   * (for example, if it is a checkbox.)
+   */
+  NS_IMETHOD_(nsISelectionController*) GetSelectionController() = 0;
+
+  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() = 0;
+
+  /**
+   * Binds a frame to the text control.  This is performed when a frame
+   * is created for the content node.
+   */
+  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) = 0;
+
+  /**
+   * Unbinds a frame from the text control.  This is performed when a frame
+   * belonging to a content node is destroyed.
+   */
+  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) = 0;
+
+  /**
+   * Creates an editor for the text control.  This should happen when
+   * a frame has been created for the text control element, but the created
+   * editor may outlive the frame itself.
+   */
+  NS_IMETHOD CreateEditor() = 0;
+
+  /**
+   * Get the anonymous root node for the text control.
+   */
+  NS_IMETHOD_(nsIContent*) GetRootEditorNode() = 0;
+
+  /**
+   * Get the placeholder anonymous node for the text control.
+   */
+  NS_IMETHOD_(nsIContent*) GetPlaceholderNode() = 0;
+
+  /**
+   * Initialize the keyboard event listeners.
+   */
+  NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
+
+  /**
+   * Notify the text control that the placeholder text needs to be updated.
+   */
+  NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify) = 0;
+
+  /**
+   * Show/hide the placeholder for the control.
+   */
+  NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify) = 0;
+
+  static const PRInt32 DEFAULT_COLS = 20;
+  static const PRInt32 DEFAULT_ROWS = 1;
+  static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
+  static const PRInt32 DEFAULT_UNDO_CAP = 1000;
+
+  // wrap can be one of these three values.  
+  typedef enum {
+    eHTMLTextWrap_Off     = 1,    // "off"
+    eHTMLTextWrap_Hard    = 2,    // "hard"
+    eHTMLTextWrap_Soft    = 3     // the default
+  } nsHTMLTextWrap;
+
+  static PRBool
+  GetWrapPropertyEnum(nsIContent* aContent, nsHTMLTextWrap& aWrapProp);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,

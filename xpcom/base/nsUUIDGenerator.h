@@ -59,7 +59,7 @@ protected:
 
     PRLock* mLock;
 #if defined(WINCE)
-#elif !defined(XP_WIN) && !defined(XP_MACOSX)
+#elif !defined(XP_WIN) && !defined(XP_MACOSX) && !defined(ANDROID)
     char mState[128];
     char *mSavedState;
     PRUint8 mRBytes;

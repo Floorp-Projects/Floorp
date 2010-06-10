@@ -300,6 +300,13 @@
 #define NS_EVENTLISTENERSERVICE_CONTRACTID \
   "@mozilla.org/eventlistenerservice;1"
 
+#define NS_GLOBALMESSAGEMANAGER_CID                   \
+ { /* 130b016f-fad7-4526-bc7f-827dabf79265 */         \
+    0x130b016f, 0xfad7, 0x4526,                       \
+  { 0xbc, 0x7f, 0x82, 0x7d, 0xab, 0xf7, 0x92, 0x65 } }
+#define NS_GLOBALMESSAGEMANAGER_CONTRACTID \
+  "@mozilla.org/globalmessagemanager;1"
+
 // {f96f5ec9-755b-447e-b1f3-717d1a84bb41}
 #define NS_PLUGINDOCUMENT_CID \
 { 0xf96f5ec9, 0x755b, 0x447e, { 0xb1, 0xf3, 0x71, 0x7d, 0x1a, 0x84, 0xbb, 0x41 } }

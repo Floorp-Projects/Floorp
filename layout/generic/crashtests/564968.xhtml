@@ -1,0 +1,30 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+    .container {
+      height: 1em;
+    }
+    .overflow {
+      height: 8em;
+    }
+    body {
+      font-family: monospace;
+      height: 8em;
+      line-height: 1em;
+      -moz-column-count: 2;
+      -moz-column-gap: 0;
+    }
+</style>
+<script>
+    function boom()
+    {
+      document.documentElement.offsetHeight;
+      document.getElementById('x').style.display = 'none';
+      document.documentElement.offsetHeight;
+      document.getElementById('y').style.display = 'none';
+    }
+</script>
+</head>
+
+<body style="width: 17ch;" onload="boom();"><div id="x" class="container"></div>This paragraph must be in the first column.<div class="container" id="y"><div class="overflow"></div></div></body>
+</html>

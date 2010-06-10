@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Adobe AS3 Team
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Jacob Bramley <Jacob.Bramley@arm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -269,6 +270,13 @@ Assembler::asm_add_imm(Register rd, Register rn, int32_t imm, int stat /* =0 */)
     NanoAssert(IsGpReg(rn));
     NanoAssert((stat & 1) == stat);
 
+    // As a special case to simplify code elsewhere, emit nothing where we
+    // don't want to update the flags (stat == 0), the second operand is 0 and
+    // (rd == rn). Such instructions are effectively NOPs.
+    if ((imm == 0) && (stat == 0) && (rd == rn)) {
+        return;
+    }
+
     // Try to encode the value directly as an operand 2 immediate value, then
     // fall back to loading the value into a register.
     if (encOp2Imm(imm, &op2imm)) {
@@ -309,6 +317,13 @@ Assembler::asm_sub_imm(Register rd, Register rn, int32_t imm, int stat /* =0 */)
     NanoAssert(IsGpReg(rd));
     NanoAssert(IsGpReg(rn));
     NanoAssert((stat & 1) == stat);
+    
+    // As a special case to simplify code elsewhere, emit nothing where we
+    // don't want to update the flags (stat == 0), the second operand is 0 and
+    // (rd == rn). Such instructions are effectively NOPs.
+    if ((imm == 0) && (stat == 0) && (rd == rn)) {
+        return;
+    }
 
     // Try to encode the value directly as an operand 2 immediate value, then
     // fall back to loading the value into a register.
@@ -771,7 +786,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
         if (!_config.arm_vfp || !isF64) {
             NanoAssert(IsGpReg(rr));
 
-            STR(rr, SP, stkd);
+            asm_str(rr, SP, stkd);
         } else {
             // According to the comments in asm_arg_64, LIR_ii2d
             // can have a 64-bit argument even if VFP is disabled. However,
@@ -794,7 +809,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
         // memory for it and then copy it onto the stack.
         int d = findMemFor(arg);
         if (!isF64) {
-            STR(IP, SP, stkd);
+            asm_str(IP, SP, stkd);
             if (arg->isop(LIR_allocp)) {
                 asm_add_imm(IP, FP, d);
             } else {
@@ -806,9 +821,9 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
             NanoAssert((stkd & 7) == 0);
 #endif
 
-            STR(IP, SP, stkd+4);
+            asm_str(IP, SP, stkd+4);
             LDR(IP, FP, d+4);
-            STR(IP, SP, stkd);
+            asm_str(IP, SP, stkd);
             LDR(IP, FP, d);
         }
     }
@@ -876,8 +891,8 @@ Assembler::asm_call(LInsp ins)
 
                 // The result doesn't have a register allocated, so store the
                 // result (in R0,R1) directly to its stack slot.
-                STR(R0, FP, d+0);
-                STR(R1, FP, d+4);
+                asm_str(R0, FP, d+0);
+                asm_str(R1, FP, d+4);
             } else {
                 NanoAssert(IsFpReg(rr));
 
@@ -1184,11 +1199,11 @@ Assembler::asm_qjoin(LIns *ins)
     LIns* hi = ins->oprnd2();
 
     Register r = findRegFor(hi, GpRegs);
-    STR(r, FP, d+4);
+    asm_str(r, FP, d+4);
 
     // okay if r gets recycled.
     r = findRegFor(lo, GpRegs);
-    STR(r, FP, d);
+    asm_str(r, FP, d);
     deprecated_freeRsrcOf(ins);     // if we had a reg in use, emit a ST to flush it to mem
 }
 
@@ -1257,6 +1272,11 @@ Assembler::canRemat(LIns* ins)
 void
 Assembler::asm_restore(LInsp i, Register r)
 {
+    // The following registers should never be restored:
+    NanoAssert(r != PC);
+    NanoAssert(r != IP);
+    NanoAssert(r != SP);
+
     if (i->isop(LIR_allocp)) {
         asm_add_imm(r, FP, deprecated_disp(i));
     } else if (i->isImmI()) {
@@ -1308,8 +1328,10 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
     (void) pop;
     (void) quad;
     NanoAssert(d);
-    // fixme: bug 556175 this code doesn't appear to handle
-    // values of d outside the 12-bit range.
+    // The following registers should never be spilled:
+    NanoAssert(rr != PC);
+    NanoAssert(rr != IP);
+    NanoAssert(rr != SP);
     if (_config.arm_vfp && IsFpReg(rr)) {
         if (isS8(d >> 2)) {
             FSTD(rr, FP, d);
@@ -1319,17 +1341,20 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
         }
     } else {
         NIns merged;
-        STR(rr, FP, d);
-        // See if we can merge this store into an immediately following one,
-        // one, by creating or extending a STM instruction.
-        if (/* is it safe to poke _nIns[1] ? */
-            does_next_instruction_exist(_nIns, codeStart, codeEnd,
-                                               exitStart, exitEnd)
-            && /* can we merge _nIns[0] into _nIns[1] ? */
-               do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
-            _nIns[1] = merged;
-            _nIns++;
-            verbose_only( asm_output("merge next into STMDB"); )
+        // asm_str always succeeds, but returns '1' to indicate that it emitted
+        // a simple, easy-to-merge STR.
+        if (asm_str(rr, FP, d)) {
+            // See if we can merge this store into an immediately following one,
+            // one, by creating or extending a STM instruction.
+            if (/* is it safe to poke _nIns[1] ? */
+                    does_next_instruction_exist(_nIns, codeStart, codeEnd,
+                        exitStart, exitEnd)
+                    && /* can we merge _nIns[0] into _nIns[1] ? */
+                    do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
+                _nIns[1] = merged;
+                _nIns++;
+                verbose_only( asm_output("merge next into STMDB"); )
+            }
         }
     }
 }
@@ -1432,9 +1457,9 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                     underrunProtect(LD32_size*2 + 8);
 
                     // XXX use another reg, get rid of dependency
-                    STR(IP, rb, dr);
+                    asm_str(IP, rb, dr);
                     asm_ld_imm(IP, value->immDlo(), false);
-                    STR(IP, rb, dr+4);
+                    asm_str(IP, rb, dr+4);
                     asm_ld_imm(IP, value->immDhi(), false);
 
                     return;
@@ -1481,9 +1506,9 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                     underrunProtect(LD32_size*2 + 8);
 
                     // XXX use another reg, get rid of dependency
-                    STR(IP, rb, dr);
+                    asm_str(IP, rb, dr);
                     asm_ld_imm(IP, value->immDlo(), false);
-                    STR(IP, rb, dr+4);
+                    asm_str(IP, rb, dr+4);
                     asm_ld_imm(IP, value->immDhi(), false);
 
                     return;
@@ -1555,8 +1580,6 @@ Assembler::asm_immd_nochk(Register rr, int32_t immDlo, int32_t immDhi)
 void
 Assembler::asm_immd(LInsp ins)
 {
-    //asm_output(">>> asm_immd");
-
     int d = deprecated_disp(ins);
     Register rr = ins->deprecated_getReg();
 
@@ -1570,17 +1593,12 @@ Assembler::asm_immd(LInsp ins)
         asm_immd_nochk(rr, ins->immDlo(), ins->immDhi());
     } else {
         NanoAssert(d);
-        // asm_mmq might spill a reg, so don't call it;
-        // instead do the equivalent directly.
-        //asm_mmq(FP, d, PC, -16);
 
-        STR(IP, FP, d+4);
+        asm_str(IP, FP, d+4);
         asm_ld_imm(IP, ins->immDhi());
-        STR(IP, FP, d);
+        asm_str(IP, FP, d);
         asm_ld_imm(IP, ins->immDlo());
     }
-
-    //asm_output("<<< asm_immd");
 }
 
 void
@@ -1638,6 +1656,9 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     //  STR ip, [rd, #dd]
     //  LDR ip, [rs, #(ds+4)]
     //  STR ip, [rd, #(dd+4)]
+    //
+    // Note that if rs+4 or rd+4 is outside the LDR or STR range, extra
+    // instructions will be emitted as required to make the code work.
 
     // Ensure that the PC is not used as either base register. The instruction
     // generation macros call underrunProtect, and a side effect of this is
@@ -1646,18 +1667,50 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     NanoAssert(rs != PC);
     NanoAssert(rd != PC);
 
+    // We use IP as a swap register, so check that it isn't used for something
+    // else by the caller.
+    NanoAssert(rs != IP);
+    NanoAssert(rd != IP);
+
     // Find the list of free registers from the allocator's free list and the
     // GpRegs mask. This excludes any floating-point registers that may be on
     // the free list.
     RegisterMask    free = _allocator.free & AllowableFlagRegs;
+
+    // Ensure that ds and dd are within the +/-4095 offset range of STR and
+    // LDR. If either is out of range, adjust and modify rd or rs so that the
+    // load works correctly.
+    // The modification here is performed after the LDR/STR block (because code
+    // is emitted backwards), so this one is the reverse operation.
+
+    int32_t dd_adj = 0;
+    int32_t ds_adj = 0;
+
+    if ((dd+4) >= 0x1000) {
+        dd_adj = ((dd+4) & ~0xfff);
+    } else if (dd <= -0x1000) {
+        dd_adj = -((-dd) & ~0xfff);
+    }
+    if ((ds+4) >= 0x1000) {
+        ds_adj = ((ds+4) & ~0xfff);
+    } else if (ds <= -0x1000) {
+        ds_adj = -((-ds) & ~0xfff);
+    }
+
+    // These will emit no code if d*_adj is 0.
+    asm_sub_imm(rd, rd, dd_adj);
+    asm_sub_imm(rs, rs, ds_adj);
+
+    ds -= ds_adj;
+    dd -= dd_adj;
 
     if (free) {
         // There is at least one register on the free list, so grab one for
         // temporary use. There is no need to allocate it explicitly because
         // we won't need it after this function returns.
 
-        // The CountLeadingZeroes can be used to quickly find a set bit in the
-        // free mask.
+        // The CountLeadingZeroes utility can be used to quickly find a set bit
+        // in the free mask.
         Register    rr = (Register)(31-CountLeadingZeroes(free));
 
         // Note: Not every register in GpRegs is usable here. However, these
@@ -1669,7 +1722,6 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
         NanoAssert((free & rmask(FP)) == 0);
 
         // Emit the actual instruction sequence.
-
         STR(IP, rd, dd+4);
         STR(rr, rd, dd);
         LDR(IP, rs, ds+4);
@@ -1681,6 +1733,10 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
         STR(IP, rd, dd);
         LDR(IP, rs, ds);
     }
+
+    // Re-adjust the base registers. (These will emit no code if d*_adj is 0.
+    asm_add_imm(rd, rd, dd_adj);
+    asm_add_imm(rs, rs, ds_adj);
 }
 
 // Increment the 32-bit profiling counter at pCtr, without
@@ -1926,6 +1982,72 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
     }
 
     asm_output("ldr %s, [%s, #%d]",gpn(d),gpn(b),(off));
+}
+
+// Emit a store, using a register base and an arbitrary immediate offset. This
+// behaves like a STR instruction, but doesn't care about the offset range, and
+// emits one of the following instruction sequences:
+//
+// ----
+// STR  rt, [rr, #offset]
+// ----
+// asm_add_imm  ip, rr, #(offset & ~0xfff)
+// STR  rt, [ip, #(offset & 0xfff)]
+// ----
+// # This one's fairly horrible, but should be rare.
+// asm_add_imm  rr, rr, #(offset & ~0xfff)
+// STR  rt, [ip, #(offset & 0xfff)]
+// asm_sub_imm  rr, rr, #(offset & ~0xfff)
+// ----
+// SUB-based variants (for negative offsets) are also supported.
+// ----
+//
+// The return value is 1 if a simple STR could be emitted, or 0 if the required
+// sequence was more complex.
+int32_t
+Assembler::asm_str(Register rt, Register rr, int32_t offset)
+{
+    // We can't do PC-relative stores, and we can't store the PC value, because
+    // we use macros (such as STR) which call underrunProtect, and this can
+    // push _nIns to a new page, thus making any PC value impractical to
+    // predict.
+    NanoAssert(rr != PC);
+    NanoAssert(rt != PC);
+    if (offset >= 0) {
+        // The offset is positive, so use ADD (and variants).
+        if (isU12(offset)) {
+            STR(rt, rr, offset);
+            return 1;
+        }
+
+        if (rt != IP) {
+            STR(rt, IP, offset & 0xfff);
+            asm_add_imm(IP, rr, offset & ~0xfff);
+        } else {
+            int32_t adj = offset & ~0xfff;
+            asm_sub_imm(rr, rr, adj);
+            STR(rt, rr, offset-adj);
+            asm_add_imm(rr, rr, adj);
+        }
+    } else {
+        // The offset is negative, so use SUB (and variants).
+        if (isU12(-offset)) {
+            STR(rt, rr, offset);
+            return 1;
+        }
+
+        if (rt != IP) {
+            STR(rt, IP, -((-offset) & 0xfff));
+            asm_sub_imm(IP, rr, (-offset) & ~0xfff);
+        } else {
+            int32_t adj = -((-offset) & 0xfff);
+            asm_add_imm(IP, rr, adj);
+            STR(rt, rr, offset-adj);
+            asm_sub_imm(rr, rr, adj);
+        }
+    }
+
+    return 0;
 }
 
 // Emit the code required to load an immediate value (imm) into general-purpose

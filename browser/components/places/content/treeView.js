@@ -151,15 +151,15 @@ PlacesTreeView.prototype = {
    *        If true, the row will be computed even if the node still isn't set
    *        in our rows array.
    * @param [optional] aParentRow
-   *        The row of aNode's parent.
-   *        DO NOT compute this yourself for the purpose of calling this
-   *        function.  However, do pass it if you have it handy.
-   *        Ignored for the root node.
+   *        The row of aNode's parent. Ignored for the root node.
    * @param [optional] aNodeIndex
    *        The index of aNode in its parent.  Only used if aParentRow is
    *        set too.
    *
    * @throws if aNode is invisible.
+   * @note If aParentRow and aNodeIndex are passed and parent is a plain
+   * container, this method will just return a calculated row value, without
+   * making assumptions on existence of the node at that position.
    * @return aNode's row if it's in the rows list or if aForceBuild is set, -1
    *         otherwise.
    */
@@ -683,7 +683,9 @@ PlacesTreeView.prototype = {
         this._result.sortingMode != Ci.nsINavHistoryQueryOptions.SORT_BY_NONE)
       return;
 
-    let oldRow = this._getRowForNode(aNode, true);
+    let parentRow = aParentNode == this._rootNode ?
+                    undefined : this._getRowForNode(aParentNode, true);
+    let oldRow = this._getRowForNode(aNode, true, parentRow, aOldIndex);
     if (oldRow < 0)
       throw Cr.NS_ERROR_UNEXPECTED;
 

@@ -3,7 +3,9 @@
  */
 
 /**
- * Most tests can use an array named gTests that will perform most if not all of
+ * Test Definition
+ *
+ * Most tests can use an array named TESTS that will perform most if not all of
  * the necessary checks. Each element in the array must be an object with the
  * following possible properties. Additional properties besides the ones listed
  * below can be added as needed.
@@ -53,7 +55,7 @@
  *
  * ranTest (should not be specified)
  *   When delayedDefaultCallback is called a property named ranTest is added to
- *   the current test it is possible to verify that each test in the gTests
+ *   the current test it is possible to verify that each test in the TESTS
  *   array has ran.
  *
  * prefHasUserValue (optional)
@@ -70,20 +72,59 @@
  *   For comparing the expected remotecontent state attribute value of the
  *   wizard's billboard and license pages in the checkRemoteContentState and
  *   waitForRemoteContentLoaded functions.
+ *
+ *
+ * Test Add-ons
+ *
+ * All tests include the test add-ons specified in the TEST_ADDONS array and
+ * the only thing that can be configured is whether the noupdate test add-on is
+ * disabled (see below). The add-on names are in the format of typename_X where
+ * X is a number to make the add-on ID unique and typename is one of the values
+ * specified below:
+ *
+ * appdisabled
+ *   disabled by the application due to being incompatible with the current
+ *   toolkit version.
+ *
+ * compatible
+ *   compatible with the current toolkit version and the update's toolkit
+ *   version.
+ *
+ * noupdate
+ *   the add-on is compatible with the current toolkit version and does not have
+ *   an update to make it compatible with the update's toolkit version. Tests
+ *   that need to have all add-ons compatible for the application update can
+ *   disable this add-on by setting the gDisableNoUpdateAddon variable to true.
+ *
+ * updatecompatibility
+ *   the add-on is compatible with the current toolkit version and has a
+ *   compatibility update to make it compatible with the update's toolkit
+ *   version.
+ *
+ * updateversion
+ *   the add-on is compatible with the current toolkit version and has a version
+ *   update to make it compatible with the update's toolkit version.
+ *
+ * userdisabled
+ *   disabled by the user and compatible with the current toolkit version but
+ *   not the update's toolkit version. This add-on will be disabled after its
+ *   install completes.
  */
 
-// The tests have to use the pageid due to the wizard's access method being
-// random.
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
+// The tests have to use the pageid instead of the pageIndex due to the
+// app update wizard's access method being random.
 const PAGEID_DUMMY            = "dummy";                 // Done
 const PAGEID_CHECKING         = "checking";              // Done
 const PAGEID_PLUGIN_UPDATES   = "pluginupdatesfound";
 const PAGEID_NO_UPDATES_FOUND = "noupdatesfound";        // Done
 const PAGEID_MANUAL_UPDATE    = "manualUpdate"; // Tested on license load failure
-const PAGEID_INCOMPAT_CHECK   = "incompatibleCheck"; // Bug 546595
+const PAGEID_INCOMPAT_CHECK   = "incompatibleCheck";     // Done
 const PAGEID_FOUND_BASIC      = "updatesfoundbasic";     // Done
 const PAGEID_FOUND_BILLBOARD  = "updatesfoundbillboard"; // Done
 const PAGEID_LICENSE          = "license";               // Done
-const PAGEID_INCOMPAT_LIST    = "incompatibleList"; // Bug 546595
+const PAGEID_INCOMPAT_LIST    = "incompatibleList";      // Done
 const PAGEID_DOWNLOADING      = "downloading";           // Done
 const PAGEID_ERRORS           = "errors";                // Done
 const PAGEID_ERROR_PATCHING   = "errorpatching";         // Done
@@ -101,16 +142,35 @@ const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
 const CRC_ERROR = 4;
 
+const ADDON_ID_SUFFIX = "@appupdatetest.mozilla.org";
+const ADDON_PREP_DIR = "appupdateprep";
+// Preference for storing add-ons that are disabled by the tests to prevent them
+// from interefering with the tests.
+const PREF_DISABLEDADDONS = "app.update.test.disabledAddons";
+const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
+                      "compatible_1", "compatible_2",
+                      "noupdate_1", "noupdate_2",
+                      "updatecompatibility_1", "updatecompatibility_2",
+                      "updateversion_1", "updateversion_2",
+                      "userdisabled_1", "userdisabled_2" ];
+
 const DEBUG_DUMP = false;
 
 const TEST_TIMEOUT = 30000; // 30 seconds
 var gTimeoutTimer;
 
+// The following vars are for restoring previous preference values (if present)
+// when the test finishes.
+var gAppUpdateChannel; // app.update.channel (default prefbranch)
+var gAppUpdateEnabled; // app.update.enabled
+var gAppUpdateURL;     // app.update.url.override
+var gExtUpdateURL;     // extensions.update.url
+
 var gTestCounter = -1;
-var gUpdateChannel;
-var gDocElem;
 var gWin;
+var gDocElem;
 var gPrefToCheck;
+var gDisableNoUpdateAddon = false;
 
 #include ../shared.js
 
@@ -121,10 +181,10 @@ function debugDump(msg) {
 }
 
 /**
- * The current test in gTests array.
+ * The current test in TESTS array.
  */
 __defineGetter__("gTest", function() {
-  return gTests[gTestCounter];
+  return TESTS[gTestCounter];
 });
 
 /**
@@ -133,8 +193,8 @@ __defineGetter__("gTest", function() {
  * overrideCallback property is undefined.
  */
 __defineGetter__("gCallback", function() {
-    return gTest.overrideCallback ? gTest.overrideCallback
-                                  : defaultCallback;
+  return gTest.overrideCallback ? gTest.overrideCallback
+                                : defaultCallback;
 });
 
 /**
@@ -170,21 +230,31 @@ __defineGetter__("gAcceptDeclineLicense", function() {
 });
 
 /**
+ * The listbox for the incompatibleList page.
+ */
+__defineGetter__("gIncompatibleListbox", function() {
+  return gWin.document.getElementById("incompatibleListbox");
+});
+
+/**
  * Default test run function that can be used by most tests.
  */
 function runTestDefault() {
   debugDump("Entering runTestDefault");
 
+  if (!("@mozilla.org/zipwriter;1" in AUS_Cc)) {
+    ok(false, "nsIZipWriter is required to run these tests");
+    return;
+  }
+
   SimpleTest.waitForExplicitFinish();
 
   Services.ww.registerNotification(gWindowObserver);
-  setUpdateChannel();
-  Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
 
-  removeUpdateDirsAndFiles
+  setupPrefs();
+  removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
-
-  runTest();
+  setupAddons(runTest);
 }
 
 /**
@@ -215,8 +285,8 @@ function finishTestDefault() {
  * Window doesn't close for a test. This allows the next test to run properly if
  * a previous test fails.
  *
- * @param aTimer
- *        The nsITimer that fired.
+ * @param  aTimer
+ *         The nsITimer that fired.
  */
 function finishTestTimeout(aTimer) {
   gTimeoutTimer = null;
@@ -249,7 +319,7 @@ function onPageShowDefault(aEvent) {
  * Default callback that can be used by most tests.
  */
 function defaultCallback(aEvent) {
-  debugDump("Entering defaultCallback - gTests[" + gTestCounter + "], " +
+  debugDump("Entering defaultCallback - TESTS[" + gTestCounter + "], " +
             "pageid: " + gTest.pageid + ", " +
             "aEvent.originalTarget.nodeName: " + aEvent.originalTarget.nodeName);
 
@@ -263,7 +333,7 @@ function defaultCallback(aEvent) {
   }
 
   is(gDocElem.currentPage.pageid, gTest.pageid,
-     "Checking currentPage.pageid equals " + gTest.pageid + " in onPageShow");
+     "Checking currentPage.pageid equals " + gTest.pageid + " in pageshow");
 
   // Perform extra checks if specified by the test
   if (gTest.extraCheckFunction) {
@@ -284,7 +354,7 @@ function defaultCallback(aEvent) {
  * before checking their values.
  */
 function delayedDefaultCallback() {
-  debugDump("Entering delayedDefaultCallback - gTests[" + gTestCounter + "], " +
+  debugDump("Entering delayedDefaultCallback - TESTS[" + gTestCounter + "], " +
             "pageid: " + gTest.pageid);
 
   // Verify the pageid hasn't changed after executeSoon was called.
@@ -325,7 +395,7 @@ function delayedDefaultCallback() {
  * and hidden attribute value is true.
  */
 function checkButtonStates() {
-  debugDump("Entering checkButtonStates - gTests[" + gTestCounter + "], " +
+  debugDump("Entering checkButtonStates - TESTS[" + gTestCounter + "], " +
             "pageid: " + gTest.pageid);
 
   const buttonNames = ["extra1", "extra2", "back", "next", "finish", "cancel"];
@@ -400,7 +470,7 @@ function getExpectedButtonStates() {
  * Adds a load event listener to the current remotecontent element.
  */
 function addRemoteContentLoadListener() {
-  debugDump("Entering addRemoteContentLoadListener - gTests[" + gTestCounter +
+  debugDump("Entering addRemoteContentLoadListener - TESTS[" + gTestCounter +
             "], pageid: " + gTest.pageid);
 
   gRemoteContent.addEventListener("load", remoteContentLoadListener, false);
@@ -468,7 +538,7 @@ function checkRemoteContentState() {
  * the radio element specified in the current test's radioClick property.
  */
 function addRadioGroupSelectListenerAndClick() {
-  debugDump("Entering addRadioGroupSelectListenerAndClick - gTests[" +
+  debugDump("Entering addRadioGroupSelectListenerAndClick - TESTS[" +
             gTestCounter + "], pageid: " + gTest.pageid);
 
   gAcceptDeclineLicense.addEventListener("select", radioGroupSelectListener,
@@ -506,18 +576,31 @@ function checkRadioGroupSelectedIndex() {
 }
 
 /**
+ * Checks that only incompatible add-ons (e.g. noupdate_X add-ons) that don't
+ * have an update are listed in the add-ons incompatible list.
+ */
+function checkIncompatbleList() {
+  for (let i = 0; i < gIncompatibleListbox.itemCount; i++) {
+    let label = gIncompatibleListbox.getItemAtIndex(i).label;
+    // Use indexOf since locales can change the text displayed
+    ok(label.indexOf("noupdate") != -1, "Checking that only incompatible " + 
+       "add-ons that don't have an update are listed in the incompatible list");
+  }
+}
+
+/**
  * Compares the return value of prefHasUserValue for the preference specified in
- * gPrefToCheck with the value passed in the aPrefHasValue param or the value
- * specified in the current test's prefHasUserValue property if aPrefHasValue
- * is undefined.
+ * gPrefToCheck with the value passed in the aPrefHasValue parameter or the
+ * value specified in the current test's prefHasUserValue property if
+ * aPrefHasValue is undefined.
  *
- * @param aPrefHasValue
- *        The expected value returned from prefHasUserValue for the preference
- *        specified in gPrefToCheck. If aPrefHasValue is undefined the value
- *        of the current test's prefHasUserValue property will be used.
+ * @param  aPrefHasValue (optional)
+ *         The expected value returned from prefHasUserValue for the preference
+ *         specified in gPrefToCheck. If aPrefHasValue is undefined the value
+ *         of the current test's prefHasUserValue property will be used.
  */
 function checkPrefHasUserValue(aPrefHasValue) {
-  var prefHasUserValue = aPrefHasValue === undefined ? gTest.prefHasUserValue
+  let prefHasUserValue = aPrefHasValue === undefined ? gTest.prefHasUserValue
                                                      : aPrefHasValue;
   is(Services.prefs.prefHasUserValue(gPrefToCheck), prefHasUserValue,
      "Checking prefHasUserValue for preference " + gPrefToCheck + " equals " +
@@ -525,16 +608,17 @@ function checkPrefHasUserValue(aPrefHasValue) {
 }
 
 /**
- * Gets the update version info for the update url params to send to update.sjs.
+ * Gets the update version info for the update url parameters to send to
+ * update.sjs.
  *
- * @param  aAppVersion
+ * @param  aAppVersion (optional)
  *         The application version for the update snippet. If not specified the
  *         current application version will be used.
- * @param  aPlatformVersion
+ * @param  aPlatformVersion (optional)
  *         The platform version for the update snippet. If not specified the
  *         current platform version will be used.
- * @return The url params for the application and platform version to send to
- *         update.sjs.
+ * @return The url parameters for the application and platform version to send
+ *         to update.sjs.
  */
 function getVersionParams(aAppVersion, aPlatformVersion) {
   let appInfo = Services.appinfo;
@@ -544,60 +628,392 @@ function getVersionParams(aAppVersion, aPlatformVersion) {
 }
 
 /**
+ * Gets an application version that is greater than the current application
+ * version. The version is created by taking the first sequence from the current
+ * application version and adding 1 to it.
+ *
+ * @return A version string greater than the current application version string.
+ */
+function getNewerAppVersion() {
+  let appVersion = Services.appinfo.version.split(".")[0];
+  appVersion++;
+  return appVersion;
+}
+
+/**
+ * Gets a platform version that is greater than the current platform version.
+ * The version is created by taking the first sequence from the current platform
+ * version and adding 1 to it.
+ *
+ * @return A version string greater than the current platform version string.
+ */
+function getNewerPlatformVersion() {
+  let platformVersion = Services.appinfo.platformVersion.split(".")[0];
+  platformVersion++;
+  return platformVersion;
+}
+
+/**
  * Verifies that all tests ran.
  */
 function verifyTestsRan() {
   debugDump("Entering verifyTestsRan");
 
   // Return early if there are no tests defined.
-  if (!gTests) {
+  if (!TESTS) {
     return;
   }
 
   gTestCounter = -1;
-  for (let i = 0; i < gTests.length; ++i) {
+  for (let i = 0; i < TESTS.length; ++i) {
     gTestCounter++;
-    let test = gTests;
-    let msg = "Checking if gTests[" + i + "] test was performed... " +
-              "callback function name = " + gCallback.name + "," +
-              "pageid = " + (gTest.pageid ? gTest.pageid : "N/A");
-    ok(gTest.ranTest, msg);
+    let test = TESTS[i];
+    let msg = "Checking if TESTS[" + i + "] test was performed... " +
+              "callback function name = " + gCallback.name + ", " +
+              "pageid = " + test.pageid;
+    ok(test.ranTest, msg);
   }
 }
 
 /**
- * Resets the most common preferences used by tests to their original value.
+ * Sets the most common preferences used by tests to values used by the tests
+ * and saves some of the preference's original values if present so they can be
+ * set back to the original values when each test has finished.
+ */
+function setupPrefs() {
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
+    gAppUpdateURL = Services.prefs.setIntPref(PREF_APP_UPDATE_URL_OVERRIDE);
+  }
+
+  gAppUpdateChannel = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
+  setUpdateChannel();
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ENABLED)) {
+    gAppUpdateEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_UPDATE_URL)) {
+    gExtUpdateURL = Services.prefs.getCharPref(PREF_EXTENSIONS_UPDATE_URL);
+  }
+  let extUpdateUrl = URL_UPDATE + "?addonID=%ITEM_ID%&platformVersion=" +
+                     getNewerPlatformVersion();
+  Services.prefs.setCharPref(PREF_EXTENSIONS_UPDATE_URL, extUpdateUrl);
+  debugDump("extensions.update.url: " + extUpdateUrl);
+
+  Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
+}
+
+/**
+ * Resets the most common preferences used by tests to their original values.
  */
 function resetPrefs() {
-  if (gUpdateChannel) {
-    setUpdateChannel(gUpdateChannel);
+  if (gAppUpdateURL) {
+    Services.prefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, gAppUpdateURL);
   }
+  else if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_URL_OVERRIDE);
+  }
+
+  if (gAppUpdateChannel) {
+    setUpdateChannel(gAppUpdateChannel);
+  }
+
+  if (gAppUpdateEnabled) {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, gAppUpdateEnabled);
+  }
+  else if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ENABLED)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_ENABLED);
+  }
+
+  if (gExtUpdateURL) {
+    Services.prefs.setCharPref(PREF_EXTENSIONS_UPDATE_URL, gExtUpdateURL);
+  }
+  else if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_UPDATE_URL)) {
+    Services.prefs.clearUserPref(PREF_EXTENSIONS_UPDATE_URL);
+  }
+
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_IDLETIME)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_IDLETIME);
   }
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ENABLED)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_ENABLED);
-  }
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_LOG)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_LOG);
-  }
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SHOW_INSTALLED_UI)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI);
-  }
+
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_DETAILS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_URL_DETAILS);
   }
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_URL_OVERRIDE);
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SHOW_INSTALLED_UI)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI);
   }
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_IDLETIME)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_IDLETIME);
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_LOG)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_LOG);
   }
+
   try {
     Services.prefs.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
   }
   catch(e) {
   }
+}
+
+/**
+ * Disables pre-existing add-ons so they don't interfere with the tests,
+ * installs the test add-ons, sets the noupdate test add-ons' userDisabled value
+ * for the test, and calls the callback specified in the aCallback parameter. If
+ * the app.update.test.disabledAddons has a user value then setting the noupdate
+ * test add-ons' userDisabled value for the test is the only thing that is done.
+ *
+ * @param  aCallback
+ *         A callback to call after all operations have completed.
+ */
+function setupAddons(aCallback) {
+  debugDump("Entering setupAddons");
+
+  // Sets the appropriate userDisabled value for the noupdate test add-ons based
+  // on the value of gDisableNoUpdateAddon and calls the callback specified in
+  // setupAddons aCallback parameter.
+  function setNoUpdateAddonsDisabledState() {
+    AddonManager.getAllAddons(function(aAddons) {
+      aAddons.forEach(function(aAddon) {
+        if (aAddon.name.indexOf("noupdate") != 0)
+          return;
+
+        if (gDisableNoUpdateAddon) {
+          if (!aAddon.userDisabled) {
+            aAddon.userDisabled = true;
+          }
+        }
+        else {
+          if (aAddon.userDisabled) {
+            aAddon.userDisabled = false;
+          }
+        }
+      });
+      aCallback();
+    });
+  }
+
+  // If the app.update.test.disabledAddons preference exists the pre-existing
+  // add-ons have already been disabled so they don't interfere with the tests,
+  // the test add-ons have already been installed, and the only thing that needs
+  // to be done is setting the appropriate userDisabled value for the noupdate
+  // test add-ons.
+  if (Services.prefs.prefHasUserValue(PREF_DISABLEDADDONS)) {
+    setNoUpdateAddonsDisabledState();
+    return;
+  }
+
+  // Disable all pre-existing enabled addons so they don't interfere with the
+  // tests.
+  AddonManager.getAllAddons(function(aAddons) {
+    let disabledAddons = [];
+    aAddons.forEach(function(aAddon) {
+      // If an addon's type equals plugin it is skipped since
+      // checking plugins compatibility information isn't supported at this
+      // time (also see bug 566787).
+      if (aAddon.type != "plugin" && !aAddon.appDisabled &&
+          !aAddon.userDisabled) {
+        disabledAddons.push(aAddon);
+        aAddon.userDisabled = true;
+      }
+    });
+    // If there are no pre-existing add-ons the preference value will be an
+    // empty string.
+    Services.prefs.setCharPref(PREF_DISABLEDADDONS, disabledAddons.join(" "));
+
+    // Install the test add-ons.
+    let xpiFiles = getTestAddonXPIFiles();
+    let xpiCount = xpiFiles.length;
+    let installs = [];
+    xpiFiles.forEach(function(aFile) {
+      AddonManager.getInstallForFile(aFile, function(aInstall) {
+        if (!aInstall) {
+          throw "No AddonInstall created for " + aFile.path;
+        }
+
+        installs.push(aInstall);
+
+        if (--xpiCount == 0) {
+          let installCount = installs.length;
+          function installCompleted(aInstall) {
+            aInstall.removeListener(listener);
+
+            if (getAddonTestType(aInstall.addon.name) == "userdisabled") {
+              aInstall.addon.userDisabled = true;
+            }
+            if (--installCount == 0) {
+              setNoUpdateAddonsDisabledState();
+            }
+          }
+
+          let listener = {
+            onDownloadFailed: installCompleted,
+            onDownloadCancelled: installCompleted,
+            onInstallFailed: installCompleted,
+            onInstallCancelled: installCompleted,
+            onInstallEnded: installCompleted
+          };
+
+          installs.forEach(function(aInstall) {
+            aInstall.addListener(listener);
+            aInstall.install();
+          });
+        }
+      });
+    });
+  });
+}
+
+/**
+ * Uninstalls the test add-ons, enables add-ons that were disabled when the
+ * test started, and calls the callback specified in the aCallback parameter.
+ *
+ * @param  aCallback
+ *         A callback to call after all operations have completed.
+ */
+function resetAddons(aCallback) {
+  debugDump("Entering resetAddons");
+  // If test_9999_cleanup.xul is ran by itself then the test add-ons will not
+  // have been installed and any pre-existing add-ons will not have been
+  // disabled so return early.
+  if (!Services.prefs.prefHasUserValue(PREF_DISABLEDADDONS)) {
+    debugDump("resetAddons - preference " + PREF_DISABLEDADDONS + " doesn't " +
+              "exist... returning early");
+    aCallback();
+    return;
+  }
+
+  // Uninstall the test add-ons.
+  let count = TEST_ADDONS.length;
+  function uninstallCompleted(aAddon) {
+    if (--count == 0) {
+      AddonManager.removeAddonListener(listener);
+
+      // Enable the pre-existing add-ons that were disabled so they wouldn't
+      // interfere with the tests.
+      let disabledAddons = Services.prefs.getCharPref(PREF_DISABLEDADDONS).split(" ");
+      Services.prefs.clearUserPref(PREF_DISABLEDADDONS);
+      AddonManager.getAllAddons(function(aAddons) {
+        aAddons.forEach(function(aAddon) {
+          if (disabledAddons.indexOf(aAddon.id)) {
+            aAddon.userDisabled = false;
+          }
+        });
+        aCallback();
+      });
+    }
+  }
+
+  let listener = {
+    onUninstalled: uninstallCompleted
+  };
+
+  AddonManager.addAddonListener(listener);
+  TEST_ADDONS.forEach(function(aName) {
+    AddonManager.getAddonByID(aName + ADDON_ID_SUFFIX, function(aAddon) {
+      aAddon.uninstall();
+    });
+  });
+}
+
+/**
+ * Helper function to get the string before the '_' character in an add-on's
+ * name or id which is used to determine the add-on test type used by the tests.
+ *
+ * @param  aName
+ *         The test add-on's name or id.
+ * @return The string before the '_' character in the string passed in the aName
+ *         parameter.
+ */
+function getAddonTestType(aName) {
+  return aName.split("_")[0];
+}
+
+/**
+ * Helper function to create add-on xpi files for the default test add-ons.
+ *
+ * @return An array with each member being an nsILocalFile for an add-on XPI
+ *         file.
+ */
+function getTestAddonXPIFiles() {
+  let addonPrepDir = Services.dirsvc.get(NS_APP_USER_PROFILE_50_DIR,
+                                         AUS_Ci.nsILocalFile);
+  addonPrepDir.append(ADDON_PREP_DIR);
+
+  let bootstrap = addonPrepDir.clone();
+  bootstrap.append("bootstrap.js");
+  // If a previous test has already created bootstrap.js don't create it again.
+  if (!bootstrap.exists()) {
+    let bootstrapContents = "function install(data, reason){ }\n" +
+                            "function startup(data, reason){ }\n" +
+                            "function shutdown(data, reason){ }\n" +
+                            "function uninstall(data, reason){ }\n";
+    writeFile(bootstrap, bootstrapContents);
+  }
+
+  let installRDF = addonPrepDir.clone();
+  installRDF.append("install.rdf");
+
+  let xpiFiles = [];
+  TEST_ADDONS.forEach(function(aName) {
+    let xpiFile = addonPrepDir.clone();
+    xpiFile.append(aName + ".xpi");
+
+    if (installRDF.exists())
+      installRDF.remove(false);
+    writeFile(installRDF, getInstallRDFString(aName));
+    gZipW.open(xpiFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
+    gZipW.addEntryFile(installRDF.leafName,
+                       AUS_Ci.nsIZipWriter.COMPRESSION_DEFAULT, installRDF,
+                       false);
+    gZipW.addEntryFile(bootstrap.leafName,
+                       AUS_Ci.nsIZipWriter.COMPRESSION_DEFAULT, bootstrap,
+                       false);
+    gZipW.close();
+    xpiFiles.push(xpiFile);
+  });
+
+  return xpiFiles;
+}
+
+/**
+ * Helper function to gets the string representation of the contents of the
+ * add-on's install.rdf file.
+ *
+ * @param  aName
+ *         The string to use for the add-on's name which is also used to
+ *         construct the local-part in RFC 5322 format of the add-on's ID.
+ * @return A string representation of the contents of the add-on's install.rdf
+ *         file.
+ */
+function getInstallRDFString(aName) {
+  let maxVersion = Services.appinfo.platformVersion;
+  switch (getAddonTestType(aName)) {
+    case "compatible":
+      maxVersion = getNewerPlatformVersion();
+      break;
+    case "appdisabled":
+      maxVersion = "0.1";
+      break;
+  }
+
+  return "<?xml version=\"1.0\"?>\n" +
+         "<RDF xmlns=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" +
+         "  xmlns:em=\"http://www.mozilla.org/2004/em-rdf#\">\n" +
+         "  <Description about=\"urn:mozilla:install-manifest\">\n" +
+         "    <em:id>" + aName + ADDON_ID_SUFFIX + "</em:id>\n" +
+         "    <em:version>1.0</em:version>\n" +
+         "    <em:bootstrap>true</em:bootstrap>\n" +
+         "    <em:name>" + aName + "</em:name>\n" +
+         "    <em:description>Test Description</em:description>\n" +
+         "    <em:targetApplication>\n" +
+         "      <Description>\n" +
+         "        <em:id>toolkit@mozilla.org</em:id>\n" +
+         "        <em:minVersion>undefined</em:minVersion>\n" +
+         "        <em:maxVersion>" + maxVersion + "</em:maxVersion>\n" +
+         "      </Description>\n" +
+         "    </em:targetApplication>\n" +
+         "  </Description>\n" +
+         "</RDF>";
 }
 
 /**

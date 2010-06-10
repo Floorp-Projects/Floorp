@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update prompt installed page"
+<window title="Update Wizard pages: installed"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -21,7 +21,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-const gTests = [ {
+const TESTS = [ {
   pageid: PAGEID_INSTALLED,
   buttonClick: "finish"
 } ];
@@ -30,9 +30,9 @@ function runTest() {
   debugDump("Entering runTest");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, true);
-  var patches = getLocalPatchString("complete", null, null, null, null, null,
+  let patches = getLocalPatchString("complete", null, null, null, null, null,
                                     STATE_PENDING);
-  var updates = getLocalUpdateString(patches, null, null, null,
+  let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
                                      Services.appinfo.platformVersion);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);

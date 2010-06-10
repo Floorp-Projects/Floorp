@@ -2223,7 +2223,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         sprop = (JSScopeProperty *)prop;
   do_native_get:
         NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
-        obj2->dropProperty(cx, (JSProperty *) sprop);
+        JS_UNLOCK_OBJ(cx, obj2);
     }
 
   do_push_rval:

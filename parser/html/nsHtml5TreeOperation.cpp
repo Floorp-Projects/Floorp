@@ -107,7 +107,8 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpAddAttributes:
       delete mTwo.attributes;
       break;
-    case eTreeOpCreateElement:
+    case eTreeOpCreateElementNetwork:
+    case eTreeOpCreateElementNotNetwork:
       delete mThree.attributes;
       break;
     case eTreeOpAppendDoctypeToDocument:
@@ -362,7 +363,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       
       return rv;
     }
-    case eTreeOpCreateElement: {
+    case eTreeOpCreateElementNetwork:
+    case eTreeOpCreateElementNotNetwork: {
       nsIContent** target = mOne.node;
       PRInt32 ns = mInt;
       nsCOMPtr<nsIAtom> name = Reget(mTwo.atom);
@@ -376,7 +378,14 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIContent> newContent;
       nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->GetNodeInfo(name, nsnull, ns);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
-      NS_NewElement(getter_AddRefs(newContent), nodeInfo->NamespaceID(), nodeInfo, PR_TRUE);
+      NS_NewElement(getter_AddRefs(newContent),
+                    nodeInfo->NamespaceID(),
+                    nodeInfo,
+                    (mOpCode == eTreeOpCreateElementNetwork ?
+                     NS_FROM_PARSER_NETWORK
+                     : (aBuilder->IsFragmentMode() ?
+                        NS_FROM_PARSER_FRAGMENT :
+                        NS_FROM_PARSER_DOCUMENT_WRITE)));
       NS_ASSERTION(newContent, "Element creation created null pointer.");
 
       aBuilder->HoldElement(*target = newContent);      

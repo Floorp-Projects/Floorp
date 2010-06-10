@@ -181,9 +181,12 @@ TestRunner.runNextTest = function() {
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(tests) {
-    if (TestRunner.logEnabled)
-        TestRunner.logger.debug("SimpleTest finished " +
-                                TestRunner._urls[TestRunner._currentTest]);
+    if (TestRunner.logEnabled) {
+        var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
+        TestRunner.logger.log("SimpleTest finished " +
+                              TestRunner._urls[TestRunner._currentTest] +
+                              " in " + runtime + "ms");
+    }
 
     TestRunner.updateUI(tests);
     TestRunner._currentTest++;

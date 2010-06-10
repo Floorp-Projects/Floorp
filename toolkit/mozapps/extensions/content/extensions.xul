@@ -96,7 +96,7 @@
 
   <hbox flex="1">
     <!-- left pane -->
-    <vbox id="right-pane">
+    <vbox id="left-pane">
 
       <!-- category list -->
       <richlistbox id="categories" flex="1">
@@ -106,13 +106,13 @@
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
                       name="&view.discover.label;"/>
-        <richlistitem id="category-languages" value="addons://list/language"
+        <richlistitem id="category-languages" value="addons://list/locale"
                       class="category"
-                      name="&view.languages.label;"/>
+                      name="&view.languages.label;" hidden="true"/>
         <richlistitem id="category-searchengines"
                       value="addons://list/searchengine"
                       class="category"
-                      name="&view.searchengines.label;"/>
+                      name="&view.searchengines.label;" hidden="true"/>
         <richlistitem id="category-extensions" value="addons://list/extension"
                       class="category"
                       name="&view.features.label;"/>

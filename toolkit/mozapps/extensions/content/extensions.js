@@ -613,6 +613,42 @@ var gCategories = {
         gViewController.loadView(viewId);
       }
     }, false);
+
+    var maybeHidden = ["addons://list/language", "addons://list/searchengine"];
+    maybeHidden.forEach(function(aId) {
+      var type = gViewController.parseViewId(aId).param;
+      AddonManager.getAddonsByTypes([type], function(aAddonsList) {
+        self.get(aId).hidden = (aAddonsList.length == 0);
+
+        if (aAddonsList.length > 0)
+          return;
+
+        gEventManager.registerInstallListener({
+          onNewInstall: function(aInstall) {
+            this._maybeShowCategory(aInstall);
+          },
+
+          onInstallStarted: function(aInstall) {
+            this._maybeShowCategory(aInstall);
+          },
+
+          onInstallEnded: function(aInstall, aAddon) {
+            this._maybeShowCategory(aAddon);
+          },
+
+          onExternalInstall: function(aAddon, aExistingAddon, aRequiresRestart) {
+            this._maybeShowCategory(aAddon);
+          },
+
+          _maybeShowCategory: function(aAddon) {
+            if (type == aAddon.type) {
+              self.get(aId).hidden = false;
+              gEventManager.unregisterInstallListener(this);
+            }
+          }
+        });
+      });
+    });
   },
 
   select: function(aId) {

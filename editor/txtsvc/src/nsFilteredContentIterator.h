@@ -44,6 +44,7 @@
 #include "nsITextServicesFilter.h"
 #include "nsIDOMNSRange.h"
 #include "nsIRangeUtils.h"
+#include "nsCycleCollectionParticipant.h"
 
 /**
  * 
@@ -53,7 +54,8 @@ class nsFilteredContentIterator : public nsIContentIterator
 public:
 
   // nsISupports interface...
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsFilteredContentIterator)
 
   nsFilteredContentIterator(nsITextServicesFilter* aFilter);
 

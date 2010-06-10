@@ -1044,7 +1044,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
 
         /* Finally, stash the constructor for later uses. */
-        if (!js_SetClassObject(cx, obj, protoKey, FUN_OBJECT(fun)))
+        if (!js_SetClassObject(cx, obj, protoKey, FUN_OBJECT(fun), proto))
             return NULL;
     }
 

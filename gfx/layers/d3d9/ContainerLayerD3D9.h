@@ -44,21 +44,19 @@
 namespace mozilla {
 namespace layers {
 
-class ContainerLayerD3D9 : public ContainerLayer, 
+class ContainerLayerD3D9 : public ContainerLayer,
                            public LayerD3D9
 {
 public:
   ContainerLayerD3D9(LayerManagerD3D9 *aManager);
   ~ContainerLayerD3D9();
 
-  const nsIntRect &GetVisibleRect();
+  nsIntRect GetVisibleRect() { return mVisibleRegion.GetBounds(); }
 
   /* ContainerLayer implementation */
-  void SetVisibleRegion(const nsIntRegion& aRegion);
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter);
 
-  void InsertAfter(Layer* aChild, Layer* aAfter);
-
-  void RemoveChild(Layer* aChild);
+  virtual void RemoveChild(Layer* aChild);
 
   /* LayerD3D9 implementation */
   LayerType GetType();
@@ -70,9 +68,6 @@ public:
   PRBool IsEmpty();
 
   void RenderLayer();
-
-private:
-  nsIntRect mVisibleRect;
 };
 
 } /* layers */

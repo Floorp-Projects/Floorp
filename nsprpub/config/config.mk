@@ -74,6 +74,17 @@ NOMD_CCFLAGS	= $(CCC_ONLY_FLAGS) $(OPTIMIZER) $(NOMD_OS_CFLAGS)\
 
 LDFLAGS		= $(OS_LDFLAGS)
 
+# Enable profile-guided optimization
+ifdef MOZ_PROFILE_GENERATE
+CFLAGS += $(PROFILE_GEN_CFLAGS)
+LDFLAGS += $(PROFILE_GEN_LDFLAGS)
+endif # MOZ_PROFILE_GENERATE
+
+ifdef MOZ_PROFILE_USE
+CFLAGS += $(PROFILE_USE_CFLAGS)
+LDFLAGS += $(PROFILE_USE_LDFLAGS)
+endif # MOZ_PROFILE_USE
+
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
 endef

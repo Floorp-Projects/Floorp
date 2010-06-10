@@ -314,6 +314,10 @@ MAKEFILES_libvorbis="
   media/libvorbis/include/vorbis/Makefile
 "
 
+MAKEFILES_libvpx="
+  media/libvpx/Makefile
+"
+
 MAKEFILES_libtheora="
   media/libtheora/Makefile
   media/libtheora/lib/Makefile
@@ -327,10 +331,17 @@ MAKEFILES_libogg="
   media/libogg/include/Makefile
   media/libogg/include/ogg/Makefile
 "
+
 MAKEFILES_libsydneyaudio="
   media/libsydneyaudio/Makefile
   media/libsydneyaudio/include/Makefile
   media/libsydneyaudio/src/Makefile
+"
+
+MAKEFILES_libnestegg="
+  media/libnestegg/Makefile
+  media/libnestegg/include/Makefile
+  media/libnestegg/src/Makefile
 "
 
 MAKEFILES_plugin="
@@ -355,45 +366,20 @@ MAKEFILES_netwerk="
   netwerk/base/src/Makefile
   netwerk/build/Makefile
   netwerk/cache/Makefile
-  netwerk/cache/public/Makefile
-  netwerk/cache/src/Makefile
   netwerk/cookie/Makefile
-  netwerk/cookie/public/Makefile
-  netwerk/cookie/src/Makefile
   netwerk/wifi/Makefile
-  netwerk/wifi/public/Makefile
-  netwerk/wifi/src/Makefile
   netwerk/dns/Makefile
-  netwerk/dns/public/Makefile
-  netwerk/dns/src/Makefile
   netwerk/protocol/Makefile
   netwerk/protocol/about/Makefile
-  netwerk/protocol/about/public/Makefile
-  netwerk/protocol/about/src/Makefile
   netwerk/protocol/data/Makefile
-  netwerk/protocol/data/src/Makefile
   netwerk/protocol/file/Makefile
-  netwerk/protocol/file/public/Makefile
-  netwerk/protocol/file/src/Makefile
   netwerk/protocol/ftp/Makefile
-  netwerk/protocol/ftp/public/Makefile
-  netwerk/protocol/ftp/src/Makefile
   netwerk/protocol/gopher/Makefile
-  netwerk/protocol/gopher/src/Makefile
   netwerk/protocol/http/Makefile
-  netwerk/protocol/http/public/Makefile
-  netwerk/protocol/http/src/Makefile
   netwerk/protocol/res/Makefile
-  netwerk/protocol/res/public/Makefile
-  netwerk/protocol/res/src/Makefile
   netwerk/protocol/viewsource/Makefile
-  netwerk/protocol/viewsource/public/Makefile
-  netwerk/protocol/viewsource/src/Makefile
   netwerk/mime/Makefile
-  netwerk/mime/public/Makefile
-  netwerk/mime/src/Makefile
   netwerk/socket/Makefile
-  netwerk/socket/base/Makefile
   netwerk/streamconv/Makefile
   netwerk/streamconv/converters/Makefile
   netwerk/streamconv/public/Makefile
@@ -1219,12 +1205,25 @@ if [ "$MOZ_MEDIA" ]; then
  "
 fi
 
-if [ "$MOZ_OGG" ]; then
+if [ "$MOZ_VORBIS" ]; then
  add_makefiles "
    $MAKEFILES_libvorbis
+ "
+fi
+
+if [ "$MOZ_OGG" ]; then
+ add_makefiles "
    $MAKEFILES_libtheora
    $MAKEFILES_libogg
    content/media/ogg/Makefile
+ "
+fi
+
+if [ "$MOZ_WEBM" ]; then
+ add_makefiles "
+   $MAKEFILES_libvpx
+   $MAKEFILES_libnestegg
+   content/media/webm/Makefile
  "
 fi
 

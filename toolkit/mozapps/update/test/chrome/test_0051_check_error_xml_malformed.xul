@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update checking wizard error page (xml malformed)"
+<window title="Update Wizard pages: update check and error (xml malformed)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -21,7 +21,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-const gTests = [ {
+const TESTS = [ {
   pageid: PAGEID_CHECKING
 }, {
   pageid: PAGEID_ERRORS,
@@ -31,7 +31,7 @@ const gTests = [ {
 function runTest() {
   debugDump("Entering runTest");
 
-  var url = URL_UPDATE + "?xmlMalformed=1";
+  let url = URL_UPDATE + "?xmlMalformed=1";
   setUpdateURLOverride(url);
   debugDump("Update URL: " + url);
 

@@ -72,7 +72,7 @@ public:
      * Do what |nsIStyleRule::MapRuleInfoInto| needs to do for a style
      * rule using this block for storage.
      */
-    nsresult MapRuleInfoInto(nsRuleData *aRuleData) const;
+    void MapRuleInfoInto(nsRuleData *aRuleData) const;
 
     /**
      * Return the location at which the *value* for the property is

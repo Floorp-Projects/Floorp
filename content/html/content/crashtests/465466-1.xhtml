@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="u">
+<content><foopy><children xmlns="http://www.mozilla.org/xbl"/></foopy></content>
+</binding></bindings>
+
+
+<script type="text/javascript">
+
+function boom()
+{
+  var f = document.getElementById("f");
+  var anon = document.getAnonymousNodes(f)[0];
+  document.body.removeChild(f);
+  anon.appendChild(document.createElement("label"));
+}
+
+</script>
+</head>
+
+<body onload="boom();"><form id="f" style="-moz-binding: url(#u);"><label></label></form></body>
+</html>

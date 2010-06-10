@@ -2161,6 +2161,12 @@ nsFrameSelection::CharacterExtendForDelete()
 }
 
 nsresult
+nsFrameSelection::CharacterExtendForBackspace()
+{
+  return MoveCaret(nsIDOMKeyEvent::DOM_VK_BACK_SPACE, PR_TRUE, eSelectCharacter);
+}
+
+nsresult
 nsFrameSelection::WordMove(PRBool aForward, PRBool aExtend)
 {
   if (aForward)

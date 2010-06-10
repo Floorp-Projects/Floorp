@@ -61,7 +61,7 @@
       sendMeta = true;
     }
 
-    var imports = [ "SimpleTest", "ok", "finish"];
+    var imports = [ "SimpleTest", "ok"];
       for each (var import in imports) {
         window[import] = window.opener.wrappedJSObject[import];
       }
@@ -72,20 +72,13 @@
       SimpleTest.finish();
     }
 
-    function onLoad() {
-      var _delayedOnLoad = function() {
-        gFindBar = document.getElementById("FindToolbar");
-        gBrowser = document.getElementById("content");
-        gBrowser.addEventListener("pageshow", onPageShow, false);
-        var data = 'data:text/html,<input id="inp" type="text" />';
-        data +='<textarea id="tarea"/>'
-        gBrowser.loadURI(data);
-      }
-      let tm = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager);
-      tm.mainThread.dispatch({
-        run: function() _delayedOnLoad()
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+    function startTest() {
+      gFindBar = document.getElementById("FindToolbar");
+      gBrowser = document.getElementById("content");
+      gBrowser.addEventListener("pageshow", onPageShow, false);
+      var data = 'data:text/html,<input id="inp" type="text" />';
+      data +='<textarea id="tarea"/>'
+      gBrowser.loadURI(data);
     }
 
     function resetForNextTest(aElement, aText) {
@@ -292,7 +285,7 @@
       finishTest();
     }
 
-    window.opener.wrappedJSObject.SimpleTest.waitForFocus(onLoad, window);
+    SimpleTest.waitForFocus(startTest, window);
   ]]></script>
 
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>

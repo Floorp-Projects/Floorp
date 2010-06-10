@@ -99,6 +99,8 @@ public:
      */
     static void RemoveTextRun(gfxTextRun *aTextRun);
 
+    static void Flush();
+
 protected:
     friend class gfxPlatform;
 

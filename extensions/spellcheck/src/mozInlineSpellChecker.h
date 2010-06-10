@@ -53,6 +53,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsWeakReference.h"
 #include "mozISpellI18NUtil.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDOMDocumentRange;
 class nsIDOMMouseEventListener;
@@ -218,9 +219,10 @@ private:
 
 public:
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIEDITACTIONLISTENER
   NS_DECL_NSIINLINESPELLCHECKER
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMKeyListener)
 
   // returns true if it looks likely that we can enable real-time spell checking
   static PRBool CanEnableInlineSpellChecking();

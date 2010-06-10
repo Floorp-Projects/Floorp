@@ -43,7 +43,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="onLoad();"
+        onload="SimpleTest.executeSoon(startTest);"
         title="451286 test (also tests bug 493658)">
 
   <script type="application/javascript"><![CDATA[
@@ -56,38 +56,31 @@
     var gFindBar = null;
     var gBrowser;
 
-    var imports = [ "SimpleTest", "ok", "snapshotWindow", "compareSnapshots"];
+    var imports = ["SimpleTest", "ok", "snapshotWindow", "compareSnapshots"];
     for each (var import in imports) {
       window[import] = window.opener.wrappedJSObject[import];
     }
 
     function finish() {
       window.close();
-      window.opener.wrappedJSObject.SimpleTest.finish();
+      SimpleTest.finish();
     }
 
-    function onLoad() {
-      var _delayedOnLoad = function() {
-        gFindBar = document.getElementById("FindToolbar");
-        gBrowser = document.getElementById("content");
-        gBrowser.addEventListener("pageshow", onPageShow, false);
+    function startTest() {
+      gFindBar = document.getElementById("FindToolbar");
+      gBrowser = document.getElementById("content");
+      gBrowser.addEventListener("pageshow", onPageShow, false);
 
-        // Bug 451286. An iframe that should be highlighted
-        var visible = "<iframe id='visible' src='" + DATAURI + "'></iframe>";
+      // Bug 451286. An iframe that should be highlighted
+      var visible = "<iframe id='visible' src='" + DATAURI + "'></iframe>";
 
-        // Bug 493658. An invisible iframe that shouldn't interfere with
-        // highlighting matches lying after it in the document
-        var invisible = "<iframe id='invisible' style='display: none;' " +
-                        "src='" + DATAURI + "'></iframe>";
+      // Bug 493658. An invisible iframe that shouldn't interfere with
+      // highlighting matches lying after it in the document
+      var invisible = "<iframe id='invisible' style='display: none;' " +
+                      "src='" + DATAURI + "'></iframe>";
 
-        var uri = DATAURI + invisible + SEARCH_TEXT + visible + SEARCH_TEXT;
-        gBrowser.loadURI(uri);
-      }
-      let tm = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager);
-      tm.mainThread.dispatch({
-        run: function() _delayedOnLoad()
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      var uri = DATAURI + invisible + SEARCH_TEXT + visible + SEARCH_TEXT;
+      gBrowser.loadURI(uri);
     }
 
     function onPageShow(aEvent) {

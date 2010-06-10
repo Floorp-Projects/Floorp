@@ -95,16 +95,6 @@ static const char *sCJKLangGroup[] = {
  * FontEntry
  */
 
-FontEntry::FontEntry(const FontEntry& aFontEntry) :
-    gfxFontEntry(aFontEntry)
-{
-    mFTFace = aFontEntry.mFTFace;
-    if (aFontEntry.mFontFace)
-        mFontFace = cairo_font_face_reference(aFontEntry.mFontFace);
-    else
-        mFontFace = nsnull;
-}
-
 FontEntry::~FontEntry()
 {
     // Do nothing for mFTFace here since FTFontDestroyFunc is called by cairo.
@@ -273,7 +263,7 @@ FontEntry::ReadCMAP()
 
     PRPackedBool unicodeFont;
     PRPackedBool symbolFont;
-    return gfxFontUtils::ReadCMAP(buf, len, mCharacterMap,
+    return gfxFontUtils::ReadCMAP(buf, len, mCharacterMap, mUVSOffset,
                                   unicodeFont, symbolFont);
 }
 

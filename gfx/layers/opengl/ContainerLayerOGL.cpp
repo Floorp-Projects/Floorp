@@ -54,18 +54,6 @@ ContainerLayerOGL::~ContainerLayerOGL()
   }
 }
 
-const nsIntRect&
-ContainerLayerOGL::GetVisibleRect()
-{
-  return mVisibleRect;
-}
-
-void
-ContainerLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
-{
-  mVisibleRect = aRegion.GetBounds();
-}
-
 void
 ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
 {
@@ -164,15 +152,16 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   nsIntPoint childOffset(aOffset);
   bool needsFramebuffer = false;
+  nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
   float opacity = GetOpacity();
   if (opacity != 1.0) {
-    mOGLManager->CreateFBOWithTexture(mVisibleRect.width,
-                                      mVisibleRect.height,
+    mOGLManager->CreateFBOWithTexture(visibleRect.width,
+                                      visibleRect.height,
                                       &frameBuffer,
                                       &containerSurface);
-    childOffset.x = mVisibleRect.x;
-    childOffset.y = mVisibleRect.y;
+    childOffset.x = visibleRect.x;
+    childOffset.y = visibleRect.y;
   } else {
     frameBuffer = aPreviousFrameBuffer;
   }
@@ -184,12 +173,12 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   while (layerToRender) {
     const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
     if (clipRect) {
-      gl()->fScissor(clipRect->x - mVisibleRect.x,
-                     clipRect->y - mVisibleRect.y,
+      gl()->fScissor(clipRect->x - visibleRect.x,
+                     clipRect->y - visibleRect.y,
                      clipRect->width,
                      clipRect->height);
     } else {
-      gl()->fScissor(0, 0, mVisibleRect.width, mVisibleRect.height);
+      gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
     }
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
@@ -212,7 +201,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     ColorTextureLayerProgram *rgb = mOGLManager->GetFBOLayerProgram();
 
     rgb->Activate();
-    rgb->SetLayerQuadRect(mVisibleRect);
+    rgb->SetLayerQuadRect(visibleRect);
     rgb->SetLayerTransform(mTransform);
     rgb->SetLayerOpacity(opacity);
     rgb->SetRenderOffset(aOffset);
@@ -220,7 +209,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
       // 2DRect case, get the multiplier right for a sampler2DRect
-      float f[] = { float(mVisibleRect.width), float(mVisibleRect.height) };
+      float f[] = { float(visibleRect.width), float(visibleRect.height) };
       rgb->SetUniform(rgb->GetTexCoordMultiplierUniformLocation(),
                       2, f);
     }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+	<title>EditArea documentation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="doc_style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div class='header'>
+		<h1>Customization - Creating a language translation</h1>
+	</div>
+	<div class='content'>
+		<h2>Making language file</h2>
+	
+		<p>Language packs are simply JavaScript name/value arrays placed in the &quot;.js&quot; 
+		files in the &quot;lang&quot; directory. Notice there are two kinds of language packs.</p>
+		<ul>
+			<li><p>The first one is the general one located at &quot;edit_area/langs/&quot; and used by the EditArea core. 
+			The example below shows how the search and	 replace texts are lang packed.</p>
+<pre>editAreaLoader.lang["en"]={
+search: "search",
+replace: "replace"
+};</pre>
+			</li>
+			<li><p>The second ones are plugins specific language packs. These are contained in 
+			&quot;edit_area/plugins/&lt;plugin_name&gt;/langs/&quot;. Here is the example of the test plugin.</p>
+<pre>editArea.add_lang("en",{
+test_select: "select tag",
+test_but: "test button"
+});</pre>
+				<p>For creating a new plugin, remember to always use the &quot;&lt;plugin_name&gt;&quot; 
+				prefix for these value names so that they don't override other variables in the templates.
+				</p>
+			</li>
+		</ul>
+		<p>
+			Remember, the last translation line should not have a , character at the end.
+		</p>
+		
+		<h3>Files to edit</h3>
+	
+		<p>
+			When translating EditArea, these are the files that currently needs to be translated:
+		</p>
+		<p>
+			edit_area/langs/en.js<br />
+			edit_area/plugins/&lt;plugin_name&gt;/langs/en.js<br />
+		</p>
+	
+		<h3>Contributing your language pack</h3>
+		<p>
+			Go to the <a href="http://sourceforge.net/tracker/?atid=829999&group_id=164008&func=browse">sourceforge patch page</a>
+			and upload a zip containing all the language files in the correct directory structure.<br /><br />
+		
+			Please translate all the plugins, even if you aren't using them.<br />
+		</p>
+	</div>
+	<div class='footer'>
+		<div class="indexlink"><a href="index.html">Index</a></div>	
+		<div class='copyright'>EditArea - &copy; Christophe Dolivet 2007-2008</div>
+		<br style="clear: both" />
+	</div>
+</body>
+</html>

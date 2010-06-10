@@ -67,6 +67,7 @@ function startTests() {
     v.prevTime = 0;
     var timeUpdate = function(test, v) { return function() {
       is(test.name, v.name, "Name should match test.name #4");
+      checkMetadata(test.name, v, test);
       ok(v.prevTime <= v.currentTime,
          test.name + " time should run forwards: p=" +
          v.prevTime + " c=" + v.currentTime);

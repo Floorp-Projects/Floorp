@@ -1,56 +1,78 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Wave Media test: Bug 465498 - Seeking after playback ended</title>
+  <title>Media test: Bug 465498 - Seeking after playback ended</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=465498">Mozilla Bug 465498</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var haveSeeked = false;
 
-function startTest() {
-  var v = document.getElementById('v');
-  v.play();
-  return false;
+var videos = [];
+
+function startTest(e) {
+  e.target.play();
 }
 
-function playbackEnded() {
-  var v = document.getElementById('v');
-  ok(v.currentTime >= 0.9 && v.currentTime <= 1.1,
-     "Checking currentTime at end: " + v.currentTime);
-  ok(v.ended, "Checking playback has ended");
-
+function playbackEnded(e) {
+  var v = e.target;
+  if (v._finished)
+    return;
+  ok(v.currentTime >= v.duration - 0.1 && v.currentTime <= v.duration + 0.1,
+     "Checking currentTime at end: " + v.currentTime + " for " + v._name);
+  ok(v.ended, "Checking playback has ended for " + v._name);
   v.pause();
   v.currentTime = 0;
-  ok(!v.ended, "Checking ended is no longer true");
-  haveSeeked = true;
-
-  return false;
+  ok(!v.ended, "Checking ended is no longer true for " + v._name);
+  v._seeked = true;
 }
 
-function endTest() {
-  if (!haveSeeked)
-    return false;
-
-  var v = document.getElementById('v');
-  ok(v.currentTime == 0, "Checking currentTime after seek: " + v.currentTime);
-  ok(!v.ended, "Checking ended is false");
-  SimpleTest.finish();
-  return false;
+function seekEnded(e) {
+  var v = e.target;
+  if (v._finished)
+    return;
+  ok(v.currentTime == 0, "Checking currentTime after seek: " +
+     v.currentTime  + " for " + v._name);
+  ok(!v.ended, "Checking ended is false for " + v._name);
+  v._finished = true;
+  if (AllFinished(videos))
+    SimpleTest.finish();
 }
 
-SimpleTest.waitForExplicitFinish();
+for (var i=0; i<gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  var test = gSmallTests[i];
+  if (!v.canPlayType(test.type))
+    continue;
+  v._name = test.name;
+  
+  var s = document.createElement("source");
+  s.type = test.type;
+  s.src = test.name;
+  v.appendChild(s);
+
+  v._seeked = false;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", startTest, false);
+  v.addEventListener("ended", playbackEnded, false);
+  v.addEventListener("seeked", seekEnded, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
 </script>
 </pre>
-<audio id='v'
-       onloadedmetadata='return startTest();'
-       onended='return playbackEnded();'
-       onseeked='return endTest();'>
-  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
-</audio>
 </body>
 </html>

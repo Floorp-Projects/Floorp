@@ -68,7 +68,9 @@
 #endif
 
 #if defined(HAVE_SYS_QUOTA_H)
+#if defined(HAVE_SYS_SYSMACROS_H)
 #include <sys/sysmacros.h>
+#endif
 #include <sys/quota.h>
 #endif
 
@@ -1105,7 +1107,18 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
     CHECK_mPath();
 
-#ifdef HAVE_TRUNCATE64
+#if defined(ANDROID)
+    /* no truncate on bionic */
+    int fd = open(mPath.get(), O_WRONLY);
+    if (fd == -1)
+        return NSRESULT_FOR_ERRNO();
+
+    int ret = ftruncate(fd, (off_t)aFileSize);
+    close(fd);
+
+    if (ret == -1)
+        return NSRESULT_FOR_ERRNO();
+#elif defined(HAVE_TRUNCATE64)
     if (truncate64(mPath.get(), (off64_t)aFileSize) == -1)
         return NSRESULT_FOR_ERRNO();
 #else
@@ -1220,7 +1233,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
      */
     *aDiskSpaceAvailable = (PRInt64)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
 
-#if defined(HAVE_SYS_STAT_H) || defined(HAVE_SYS_QUOTA_H)
+#if defined(HAVE_SYS_STAT_H) || defined(HAVE_SYS_SYSMACROS_H)
 
     if(!FillStatCache()) {
         // Return available size from statfs

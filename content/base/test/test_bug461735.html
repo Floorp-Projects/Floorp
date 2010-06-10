@@ -17,21 +17,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=461735
 </div>
 <pre id="test">
 <script type="application/javascript">
+var errorFired = false;
 window.onerror = function(message, uri, line) {
   is(message, "Script error.", "Should have empty error message");
-  is(uri, "http://example.com/tests/content/base/test/bug461735-post-redirect.js", "Unexpected error location URI");
+  is(uri, "", "Should have empty error location URI");
   is(line, 0, "Shouldn't have a line here");
+  errorFired = true;
 }
 </script>
 <script src="bug461735-redirect1.sjs"></script>
+<script>
+  is(errorFired, true, "Should have error in redirected different origin script");
+  errorFired = false;
+</script>
 <script type="application/javascript">
 window.onerror = function(message, uri, line) {
   is(message, "c is not defined", "Should have correct error message");
   is(uri, "http://mochi.test:8888/tests/content/base/test/bug461735-post-redirect.js", "Unexpected error location URI");
   is(line, 3, "Should have a line here");
+  errorFired = true;
 }
 </script>
 <script src="bug461735-redirect2.sjs"></script>
+<script>
+  is(errorFired, true, "Should have error in same origin script");
+</script>
 </pre>
 </body>
 </html>

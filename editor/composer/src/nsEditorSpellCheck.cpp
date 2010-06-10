@@ -60,8 +60,18 @@
 #include "nsITextServicesFilter.h"
 #include "mozilla/Services.h"
 
-NS_IMPL_ISUPPORTS1(nsEditorSpellCheck,
-                   nsIEditorSpellCheck)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEditorSpellCheck)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEditorSpellCheck)
+
+NS_INTERFACE_MAP_BEGIN(nsEditorSpellCheck)
+  NS_INTERFACE_MAP_ENTRY(nsIEditorSpellCheck)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditorSpellCheck)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsEditorSpellCheck)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_2(nsEditorSpellCheck,
+                           mSpellChecker,
+                           mTxtSrvFilter)
 
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)

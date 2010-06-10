@@ -94,12 +94,12 @@ public:
       rv = dmui->GetVisible(&visible);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      PRBool focus = PR_TRUE;
+      PRBool focusWhenStarting = PR_TRUE;
       if (branch)
-        (void)branch->GetBoolPref(PREF_BDM_FOCUSWHENSTARTING, &focus);
+        (void)branch->GetBoolPref(PREF_BDM_FOCUSWHENSTARTING, &focusWhenStarting);
 
-      if (visible && !focus)
-        return dmui->GetAttention();
+      if (visible && !focusWhenStarting)
+        return NS_OK;
 
       return dmui->Show(nsnull, id, nsIDownloadManagerUI::REASON_NEW_DOWNLOAD);
     }

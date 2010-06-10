@@ -1218,7 +1218,7 @@ Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
   NS_PRECONDITION(aSheet, "Must have a sheet!");
 
   nsresult rv;
-  nsCOMPtr<nsMediaList> mediaList(aMediaList);
+  nsRefPtr<nsMediaList> mediaList(aMediaList);
 
   if (!aMediaString.IsEmpty()) {
     NS_ASSERTION(!aMediaList,
