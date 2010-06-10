@@ -112,6 +112,8 @@ quartz-is-clear.patch: Propagate the quartz is_clear flag.
 
 cairo-qt-compile.patch: Fix compile error, return not reached, and clone_similar interface
 
+dwrite-glyph-extents.patch: Add padding to extents of antialiased glyphs, to avoid unwanted clipping. (bug 568191)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
