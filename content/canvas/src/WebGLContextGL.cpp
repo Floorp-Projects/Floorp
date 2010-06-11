@@ -1163,13 +1163,11 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
     return NS_OK;
 }
 
-// XXX fixme to return objects correctly for programs/etc.
 NS_IMETHODIMP
-WebGLContext::GetParameter(PRUint32 pname)
+WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
 
@@ -1225,8 +1223,6 @@ WebGLContext::GetParameter(PRUint32 pname)
         case LOCAL_GL_SAMPLE_BUFFERS:
         case LOCAL_GL_SAMPLES:
         //case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
-        //case LOCAL_GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        //case LOCAL_GL_SHADER_BINARY_FORMATS:
         //case LOCAL_GL_NUM_SHADER_BINARY_FORMATS:
         case LOCAL_GL_MAX_VERTEX_ATTRIBS:
         case LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS:
@@ -1235,6 +1231,8 @@ WebGLContext::GetParameter(PRUint32 pname)
         case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+        //case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:  // not present in desktop OpenGL
+        //case LOCAL_GL_MAX_VARYING_VECTORS:           // not present in desktop OpenGL
         case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
         case LOCAL_GL_RED_BITS:
         case LOCAL_GL_GREEN_BITS:
@@ -1247,12 +1245,16 @@ WebGLContext::GetParameter(PRUint32 pname)
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
-            js.SetRetVal(PRInt32(i));
+            wrval->SetAsInt32(i);
         }
             break;
 
+        case LOCAL_GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+            wrval->SetAsInt32(0);
+            break;
+
 // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
-// javascript integer values. We just return them as double's and javascript doesn't care.
+// javascript integer values. We just return them as doubles and javascript doesn't care.
         case LOCAL_GL_STENCIL_BACK_VALUE_MASK:
         case LOCAL_GL_STENCIL_BACK_WRITEMASK:
         case LOCAL_GL_STENCIL_VALUE_MASK:
@@ -1261,7 +1263,8 @@ WebGLContext::GetParameter(PRUint32 pname)
             GLint i = 0; // the GL api (glGetIntegerv) only does signed ints
             gl->fGetIntegerv(pname, &i);
             GLuint i_unsigned(i); // this is where -1 becomes 2^32-1
-            js.SetRetVal(double(i_unsigned)); // pass as FP value to allow large values such as 2^32-1.
+            double i_double(i_unsigned); // pass as FP value to allow large values such as 2^32-1.
+            wrval->SetAsDouble(i_double);
         }
             break;
 
@@ -1271,9 +1274,9 @@ WebGLContext::GetParameter(PRUint32 pname)
         case LOCAL_GL_POLYGON_OFFSET_UNITS:
         case LOCAL_GL_SAMPLE_COVERAGE_VALUE:
         {
-            float fv = 0;
-            gl->fGetFloatv(pname, &fv);
-            js.SetRetVal((double) fv);
+            GLfloat f = 0.f;
+            gl->fGetFloatv(pname, &f);
+            wrval->SetAsFloat(f);
         }
             break;
 
@@ -1287,11 +1290,10 @@ WebGLContext::GetParameter(PRUint32 pname)
         case LOCAL_GL_SCISSOR_TEST:
         case LOCAL_GL_SAMPLE_COVERAGE_INVERT:
         case LOCAL_GL_DEPTH_WRITEMASK:
-        ////case LOCAL_GL_SHADER_COMPILER: // pretty much must be true 
         {
-            realGLboolean bv = 0;
-            gl->fGetBooleanv(pname, &bv);
-            js.SetBoolRetVal(bv);
+            realGLboolean b = 0;
+            gl->fGetBooleanv(pname, &b);
+            wrval->SetAsBool(PRBool(b));
         }
             break;
 
@@ -1302,77 +1304,85 @@ WebGLContext::GetParameter(PRUint32 pname)
         case LOCAL_GL_ALIASED_POINT_SIZE_RANGE: // 2 floats
         case LOCAL_GL_ALIASED_LINE_WIDTH_RANGE: // 2 floats
         {
-            float fv[2] = { 0 };
-            gl->fGetFloatv(pname, &fv[0]);
-            js.SetRetVal(fv, 2);
+            GLfloat fv[2] = { 0 };
+            gl->fGetFloatv(pname, fv);
+            wrval->SetAsArray(nsIDataType::VTYPE_FLOAT, nsnull,
+                              2, static_cast<void*>(fv));
         }
             break;
         
         case LOCAL_GL_COLOR_CLEAR_VALUE: // 4 floats
         case LOCAL_GL_BLEND_COLOR: // 4 floats
         {
-            float fv[4] = { 0 };
-            gl->fGetFloatv(pname, &fv[0]);
-            js.SetRetVal(fv, 4);
+            GLfloat fv[4] = { 0 };
+            gl->fGetFloatv(pname, fv);
+            wrval->SetAsArray(nsIDataType::VTYPE_FLOAT, nsnull,
+                              4, static_cast<void*>(fv));
         }
             break;
 
         case LOCAL_GL_MAX_VIEWPORT_DIMS: // 2 ints
         {
-            PRInt32 iv[2] = { 0 };
-            gl->fGetIntegerv(pname, (GLint*) &iv[0]);
-            js.SetRetVal(iv, 2);
+            GLint iv[2] = { 0 };
+            gl->fGetIntegerv(pname, iv);
+            wrval->SetAsArray(nsIDataType::VTYPE_INT32, nsnull,
+                              2, static_cast<void*>(iv));
         }
             break;
 
         case LOCAL_GL_SCISSOR_BOX: // 4 ints
         case LOCAL_GL_VIEWPORT: // 4 ints
         {
-            PRInt32 iv[4] = { 0 };
-            gl->fGetIntegerv(pname, (GLint*) &iv[0]);
-            js.SetRetVal(iv, 4);
+            GLint iv[2] = { 0 };
+            gl->fGetIntegerv(pname, iv);
+            wrval->SetAsArray(nsIDataType::VTYPE_INT32, nsnull,
+                              4, static_cast<void*>(iv));
         }
             break;
 
         case LOCAL_GL_COLOR_WRITEMASK: // 4 bools
         {
-            JSObject *abufObject = js_CreateArrayBuffer(js.ctx, 4);
-            if (!abufObject)
-                return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY, "GetParameter: could not allocate buffer");
-
-            js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(abufObject);
-
-            gl->fGetBooleanv(pname, reinterpret_cast<realGLboolean*>(abuf->data));
-            JSObject *retval = js_CreateTypedArrayWithBuffer(js.ctx, js::TypedArray::TYPE_UINT8,
-                                                             abufObject, 0, 4);
-            js.SetRetVal(retval);
+            realGLboolean gl_bv[4] = { 0 };
+            gl->fGetBooleanv(pname, gl_bv);
+            PRBool pr_bv[4] = { gl_bv[0], gl_bv[1], gl_bv[2], gl_bv[3] };
+            wrval->SetAsArray(nsIDataType::VTYPE_BOOL, nsnull,
+                              4, static_cast<void*>(pr_bv));
         }
             break;
 
-#define IMPL_GETPARAMETER_RETURNING_GL_NAME(PNAME, OBJECT_PTR) \
-        case PNAME:                                            \
-        {                                                      \
-            if(OBJECT_PTR) {                                   \
-                JSObjectHelper retobj(&js);                    \
-                retobj.DefineProperty("name", OBJECT_PTR->GLName()); \
-                js.SetRetVal(retobj.Object());                 \
-            } else {                                           \
-                js.SetRetVal((JSObject*)nsnull);               \
-            }                                                  \
-        }                                                      \
+        case LOCAL_GL_ARRAY_BUFFER_BINDING:
+            wrval->SetAsISupports(mBoundArrayBuffer);
             break;
 
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_ARRAY_BUFFER_BINDING, mBoundArrayBuffer)
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING, mBoundElementArrayBuffer)
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_RENDERBUFFER_BINDING, mBoundRenderbuffer)
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_FRAMEBUFFER_BINDING, mBoundFramebuffer)
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_CURRENT_PROGRAM, mCurrentProgram)
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_TEXTURE_BINDING_2D, mBound2DTextures[mActiveTexture])
-        IMPL_GETPARAMETER_RETURNING_GL_NAME(LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, mBoundCubeMapTextures[mActiveTexture])
+        case LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING:
+            wrval->SetAsISupports(mBoundElementArrayBuffer);
+            break;
+
+        case LOCAL_GL_RENDERBUFFER_BINDING:
+            wrval->SetAsISupports(mBoundRenderbuffer);
+            break;
+
+        case LOCAL_GL_FRAMEBUFFER_BINDING:
+            wrval->SetAsISupports(mBoundFramebuffer);
+            break;
+
+        case LOCAL_GL_CURRENT_PROGRAM:
+            wrval->SetAsISupports(mCurrentProgram);
+            break;
+
+        case LOCAL_GL_TEXTURE_BINDING_2D:
+            wrval->SetAsISupports( mBound2DTextures[mActiveTexture]);
+            break;
+
+        case LOCAL_GL_TEXTURE_BINDING_CUBE_MAP:
+            wrval->SetAsISupports(mBoundCubeMapTextures[mActiveTexture]);
+            break;
 
         default:
             return ErrorInvalidEnum("GetParameter: invalid parameter");
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
