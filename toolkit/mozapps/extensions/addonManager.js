@@ -71,7 +71,7 @@ amManager.prototype = {
              getService(Ci.nsIObserverService);
 
     switch (aTopic) {
-    case "profile-after-change":
+    case "addons-startup":
       os.addObserver(this, "xpcom-shutdown", false);
       AddonManagerPrivate.startup();
       break;
@@ -170,8 +170,7 @@ amManager.prototype = {
   classDescription: "Addons Manager",
   contractID: "@mozilla.org/addons/integration;1",
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),
-  _xpcom_categories: [{ category: "profile-after-change" },
-                      { category: "update-timer",
+  _xpcom_categories: [{ category: "update-timer",
                         value: "@mozilla.org/addons/integration;1," +
                                "getService,addon-background-update-timer," +
                                PREF_EM_UPDATE_INTERVAL + ",86400" }],
