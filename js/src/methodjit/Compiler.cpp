@@ -306,6 +306,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_PUSH)
 
           BEGIN_CASE(JSOP_POPV)
+          BEGIN_CASE(JSOP_SETRVAL)
           {
             FrameEntry *fe = frame.peek(-1);
             frame.storeTo(fe, Address(Assembler::FpReg, offsetof(JSStackFrame, rval)), true);
@@ -1013,6 +1014,10 @@ mjit::Compiler::generateMethod()
             frame.pop();
           }
           END_CASE(JSOP_DEFLOCALFUN)
+
+          BEGIN_CASE(JSOP_RETRVAL)
+            emitReturn();
+          END_CASE(JSOP_RETRVAL)
 
           BEGIN_CASE(JSOP_REGEXP)
           {
