@@ -2168,13 +2168,6 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
  *
  **************************************************************/
 
-#ifdef WINCE_WINDOWS_MOBILE
-static inline void AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion)
-{
-  aRegion->Union(aRect.left, aRect.top, aRect.right - aRect.left, aRect.bottom - aRect.top);
-}
-#endif
-
 // Invalidate this component visible area
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
