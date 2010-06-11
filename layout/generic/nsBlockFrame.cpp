@@ -6338,12 +6338,28 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
       return rv;
     }
 
-    // Create list bullet if this is a list-item. Note that this is done
-    // here so that RenumberLists will work (it needs the bullets to
-    // store the bullet numbers).
-    const nsStyleDisplay* styleDisplay = GetStyleDisplay();
+    // Create a list bullet if this is a list-item. Note that this is
+    // done here so that RenumberLists will work (it needs the bullets
+    // to store the bullet numbers).  Also note that due to various
+    // wrapper frames (scrollframes, columns) we want to use the
+    // outermost (primary, ideally, but it's not set yet when we get
+    // here) frame of our content for the display check.  On the other
+    // hand, we look at ourselves for the GetPrevInFlow() check, since
+    // for a columnset we don't want a bullet per column.  Note that
+    // the outermost frame for the content is the primary frame in
+    // most cases; the ones when it's not (like tables) can't be
+    // NS_STYLE_DISPLAY_LIST_ITEM).
+    nsIFrame* possibleListItem = this;
+    while (1) {
+      nsIFrame* parent = possibleListItem->GetParent();
+      if (parent->GetContent() != GetContent()) {
+        break;
+      }
+      possibleListItem = parent;
+    }
     if ((nsnull == GetPrevInFlow()) &&
-        (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
+        (NS_STYLE_DISPLAY_LIST_ITEM ==
+           possibleListItem->GetStyleDisplay()->mDisplay) &&
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
       const nsStyleList* styleList = GetStyleList();
@@ -6397,7 +6413,11 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
 PRBool
 nsBlockFrame::BulletIsEmpty() const
 {
-  NS_ASSERTION(GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM &&
+  NS_ASSERTION((GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
+                (GetStyleContext()->GetPseudo() ==
+                   nsCSSAnonBoxes::scrolledContent &&
+                 GetParent()->GetStyleDisplay()->mDisplay ==
+                   NS_STYLE_DISPLAY_LIST_ITEM)) &&
                HaveOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = GetStyleList();
