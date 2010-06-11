@@ -144,7 +144,7 @@ function startupManager(aExpectedRestarts, aAppChanged) {
                      getService(AM_Ci.nsIObserver).
                      QueryInterface(AM_Ci.nsITimerCallback);
 
-  gInternalManager.observe(null, "profile-after-change", "startup");
+  gInternalManager.observe(null, "addons-startup", null);
 
   let appStartup = AM_Cc["@mozilla.org/toolkit/app-startup;1"].
                    getService(AM_Ci.nsIAppStartup2);
