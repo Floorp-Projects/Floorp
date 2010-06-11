@@ -1511,6 +1511,7 @@ public:
 };
 
 #define TRACING_ENABLED(cx)       ((cx)->jitEnabled)
+#define REGEX_JIT_ENABLED(cx)     ((cx)->jitEnabled || ((cx)->options & JSOPTION_METHODJIT))
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
 #define SET_TRACE_RECORDER(cx,tr) (JS_TRACE_MONITOR(cx).recorder = (tr))
 
