@@ -6769,11 +6769,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLELEM:
       case TOK_XMLLIST:
-        if (pn->pn_op == JSOP_XMLOBJECT) {
-            ok = EmitObjectOp(cx, pn->pn_objbox, PN_OP(pn), cg);
-            break;
-        }
-
         JS_ASSERT(PN_TYPE(pn) == TOK_XMLLIST || pn->pn_count != 0);
         switch (pn->pn_head ? PN_TYPE(pn->pn_head) : TOK_XMLLIST) {
           case TOK_XMLETAGO:
@@ -6817,12 +6812,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_XMLPTAGC:
-        if (pn->pn_op == JSOP_XMLOBJECT) {
-            ok = EmitObjectOp(cx, pn->pn_objbox, PN_OP(pn), cg);
-            break;
-        }
-        /* FALL THROUGH */
-
       case TOK_XMLSTAGO:
       case TOK_XMLETAGO:
       {
