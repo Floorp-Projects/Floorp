@@ -576,7 +576,7 @@ var Browser = {
     ImagePreloader.cache();
 
     messageManager.addMessageListener("FennecViewportMetadata", this);
-    messageManager.addMessageListener("MozApplicationManifest", OfflineApps);
+    messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     this._pluginObserver = new PluginObserver(bv);
 
@@ -2984,7 +2984,7 @@ var OfflineApps = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
-    if (aMessage.name == "MozApplicationManifest") {
+    if (aMessage.name == "Browser:MozApplicationManifest") {
       this.offlineAppRequested(aMessage.json);
     }
   }

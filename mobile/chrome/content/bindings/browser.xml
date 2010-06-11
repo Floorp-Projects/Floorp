@@ -104,7 +104,7 @@
             case "DOMLinkAdded":
               let link = aMessage.json;
               if (link.location != this._documentURI)
-                return;
+                return {};
 
               let linkType = this._getLinkType(link);
               switch(linkType) {
@@ -121,6 +121,8 @@
               }
               break;
          }
+
+         return {};
         ]]></body>
       </method>
 
