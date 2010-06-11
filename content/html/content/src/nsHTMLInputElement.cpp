@@ -571,6 +571,7 @@ nsHTMLInputElement::FreeData()
     nsMemory::Free(mInputData.mValue);
     mInputData.mValue = nsnull;
   } else {
+    UnbindFromFrame(nsnull);
     NS_IF_RELEASE(mInputData.mState);
   }
 }
