@@ -52,6 +52,8 @@ CPPSRCS = nsBrowserApp.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
+LIBS += $(JEMALLOC_LIBS)
+
 ifeq (Linux_1, $(OS_ARCH)_$(GNU_LD))
 OS_LDFLAGS += -Wl,-rpath='$$ORIGIN'
 NSDISTMODE = copy
