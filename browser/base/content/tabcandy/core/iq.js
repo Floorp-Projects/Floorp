@@ -604,6 +604,19 @@ iQ.fn = iQ.prototype = {
       var duration = (options.duration || 400);
       var easing = (easings[options.easing] || 'ease');
 
+      // The latest versions of Firefox do not animate from a non-explicitly set
+      // css properties. So for each element to be animated, go through and
+      // explicitly define 'em.
+      rupper = /([A-Z])/g;    
+      this.each(function(){
+        var cStyle = window.getComputedStyle(this, null);      
+        for(var prop in css){
+          prop = prop.replace( rupper, "-$1" ).toLowerCase();
+          iQ(this).css(prop, cStyle.getPropertyValue(prop));
+        }    
+      });
+
+
       this.css({
         '-moz-transition-property': 'all', // TODO: just animate the properties we're changing  
         '-moz-transition-duration': (duration / 1000) + 's',  
