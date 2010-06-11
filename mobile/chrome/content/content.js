@@ -233,13 +233,16 @@ Coalescer.prototype = {
       case "MozApplicationManifest": {
         let doc = aEvent.originalTarget;
 
-        sendAsyncMessage("MozApplicationManifest", {
+        sendAsyncMessage("Browser:MozApplicationManifest", {
           location: doc.documentURIObject.spec,
           manifest: doc.documentElement.getAttribute("manifest"),
           charset: doc.characterSet
         });
         break;
       }
+      case "scroll":
+        sendSyncMessage("Browser:PageScroll", {});
+        break;
     }
   },
 
@@ -260,8 +263,8 @@ Coalescer.prototype = {
     // Adjust width and height from the incoming event properties so that we
     // ignore changes to width and height contributed by growth in page
     // quadrants other than x > 0 && y > 0.
-    var x = x + scrollOffset.x;
-    var y = y + scrollOffset.y;
+    x = x + scrollOffset.x;
+    y = y + scrollOffset.y;
     this._pendingSizeChange = {
       width: width + (x < 0 ? x : 0),
       height: height + (y < 0 ? y : 0)
@@ -292,20 +295,24 @@ Coalescer.prototype = {
   },
 
   flush: function flush() {
-    var dirtyRect = this._pendingDirtyRect;
-    var sizeChange = this._pendingSizeChange;
+    let dirtyRect = this._pendingDirtyRect;
+    let sizeChange = this._pendingSizeChange;
     if (sizeChange) {
-      sendMessage("FennecMozScrolledAreaChanged", sizeChange.width, sizeChange.height);
+      sendSyncMessage("Browser:MozScrolledAreaChanged", { width: sizeChange.width, height: sizeChange.height });
       if (!this._incremental)
-        sendMessage("FennecMozAfterPaint", [new Rect(0, 0, sizeChange.width, sizeChange.height)]);
+        sendSyncMessage("Browser:MozAfterPaint", { rects: [ { left: 0, top: 0, right: sizeChange.width, bottom: sizeChange.height } ] });
+
       this._pendingSizeChange = null;
+
       // After first size change has been issued, assume subsequent size changes are only incremental
       // changes to the current page.
       this._incremental = true;
     }
     else if (!dirtyRect.isEmpty()) {
       // No size change has occurred, but areas have been dirtied.
-      sendMessage("FennecMozAfterPaint", [dirtyRect]);
+      sendSyncMessage("Browser:MozAfterPaint", { rects: [dirtyRect] });
+
+      // Reset the rect to empty
       dirtyRect.top = dirtyRect.bottom;
       dirtyRect.left = dirtyRect.right;
     }
@@ -682,6 +689,7 @@ function Content() {
   addEventListener("MozAfterPaint", this._coalescer, false);
   addEventListener("MozScrolledAreaChanged", this._coalescer, false);
   addEventListener("MozApplicationManifest", this._coalescer, false);
+  addEventListener("scroll", this._coalescer, false);
 
   this._progressController = new ProgressController(this);
   this._progressController.start();

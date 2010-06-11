@@ -215,13 +215,12 @@ BrowserView.Util = {
   },
 
   ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
-    let event = document.createEvent("Event");
-    event.initEvent("MozScrolledAreaChanged", true, false);
-    event.x = 0;
-    event.y = 0;
-    event.width = aWidth;
-    event.height = aHeight;
-    aBrowser.dispatchEvent(event);
+    let message = {};
+    message.target = aBrowser;
+    message.name = "Browser:MozScrolledAreaChanged";
+    message.json = { width: aWidth, height: aHeight };
+
+    Browser._browserView.updateScrolledArea(message);
   }
 };
 
@@ -272,8 +271,10 @@ BrowserView.prototype = {
     this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
     this._idleServiceWait = kBrowserViewPrefetchBeginIdleWait;
 
-    let browsers = document.getElementById("browsers");
-    browsers.addEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
+    let self = this;
+    messageManager.addMessageListener("Browser:MozScrolledAreaChanged", this);
+    messageManager.addMessageListener("Browser:MozAfterPaint", this);
+    messageManager.addMessageListener("Browser:PageScroll", this);
   },
 
   uninit: function uninit() {
@@ -474,8 +475,6 @@ BrowserView.prototype = {
     let browserChanged = (oldBrowser !== browser);
 
     if (oldBrowser) {
-      oldBrowser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
-      oldBrowser.removeEventListener("scroll", this.handlePageScroll, false);
       oldBrowser.setAttribute("type", "content");
       oldBrowser.docShell.isOffScreenBrowser = false;
     }
@@ -489,11 +488,7 @@ BrowserView.prototype = {
 
       this.beginBatchOperation();
 
-      browser.addEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
-      browser.addEventListener("scroll", this.handlePageScroll, false);
-
       browser.docShell.isOffScreenBrowser = true;
-
       if (browserChanged)
         this._viewportChanged(true, true);
 
@@ -505,40 +500,52 @@ BrowserView.prototype = {
     return this._browser;
   },
 
-  handleMozAfterPaint: function handleMozAfterPaint(ev) {
-    let browser = this._browser;
+  receiveMessage: function receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "Browser:MozAfterPaint":
+        this.updateDirtyTiles(aMessage);
+        break;
+      case "Browser:PageScroll":
+        this.updatePageScroll(aMessage);
+        break;
+      case "Browser:MozScrolledAreaChanged":
+        this.updateScrolledArea(aMessage);
+        break;
+    }
+    
+    return {};
+  },
+
+  updateDirtyTiles: function updateDirtyTiles(aMessage) {
+    let browser = aMessage.target;
+    if (browser != this._browser)
+      return;
+    
+    let rects = aMessage.json.rects;
+
     let tm = this._tileManager;
     let vs = this._browserViewportState;
 
-    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(browser);
-    let clientRects = ev.clientRects;
-
-    let rects = [];
+    let dirtyRects = [];
     // loop backwards to avoid xpconnect penalty for .length
-    for (let i = clientRects.length - 1; i >= 0; --i) {
-      let e = clientRects.item(i);
-      let r = new Rect(e.left + scrollX,
-                            e.top + scrollY,
-                            e.width, e.height);
-
+    for (let i = rects.length - 1; i >= 0; --i) {
+      let r = Rect.fromRect(rects[i]);
       r = this.browserToViewportRect(r);
       r.expandToIntegers();
 
-      if (r.right < 0 || r.bottom < 0)
-        continue;
-
       r.restrictTo(vs.viewportRect);
       if (!r.isEmpty())
-        rects.push(r);
+        dirtyRects.push(r);
     }
 
-    tm.dirtyRects(rects, this.isRendering(), true);
+    tm.dirtyRects(dirtyRects, this.isRendering(), true);
   },
 
   /** If browser scrolls, pan content to new scroll area. */
-  handlePageScroll: function handlePageScroll(aEvent) {
-    if (aEvent.target != this._browser.contentDocument || this._ignorePageScroll)
+  updatePageScroll: function updatePageScroll(aMessage) {
+    if (aMessage.target != this._browser || this._ignorePageScroll)
       return;
+
     // XXX shouldn't really make calls to Browser
     Browser.scrollContentToBrowser();
   },
@@ -548,32 +555,21 @@ BrowserView.prototype = {
     this._ignorePageScroll = aIgnoreScroll;
   },
 
-  handleMozScrolledAreaChanged: function handleMozScrolledAreaChanged(ev) {
-    let tab = Browser.getTabForDocument(ev.originalTarget) ||
-             (ev.target.contentDocument && Browser.getTabForDocument(ev.target.contentDocument));
-    if (!tab)
-      return;
+  updateScrolledArea: function updateScrolledArea(aMessage) {
+    let browser = aMessage.target;
+    if (!browser)
+      throw "MozScrolledAreaChanged: Could not find browser";
 
-    let browser = tab.browser;
+    let json = aMessage.json;
+    let tab = Browser.getTabForBrowser(browser);
     let bvs = tab.browserViewportState;
-    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(browser);
-    let x = ev.x + scrollX;
-    let y = ev.y + scrollY;
-    let w = ev.width;
-    let h = ev.height;
-
-    // Adjust width and height from the incoming event properties so that we
-    // ignore changes to width and height contributed by growth in page
-    // quadrants other than x > 0 && y > 0.
-    if (x < 0) w += x;
-    if (y < 0) h += y;
 
     let vis = this.getVisibleRect();
     let viewport = bvs.viewportRect;
     let oldRight = viewport.right;
     let oldBottom = viewport.bottom;
-    viewport.right  = bvs.zoomLevel * w;
-    viewport.bottom = bvs.zoomLevel * h;
+    viewport.right  = bvs.zoomLevel * json.width;
+    viewport.bottom = bvs.zoomLevel * json.height;
 
     if (browser == this._browser) {
       // Page has now loaded enough to allow zooming.

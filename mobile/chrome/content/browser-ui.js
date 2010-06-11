@@ -797,6 +797,8 @@ var BrowserUI = {
         gObserverService.notifyObservers(download, "dl-done", null);
         break;
     }
+
+    return {};
   },
 
   supportsCommand : function(cmd) {
