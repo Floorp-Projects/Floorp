@@ -564,7 +564,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   }
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
-  res = GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+  res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   
   res = CreateBR(selNode, selOffset, outBRNode);
@@ -702,7 +702,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
         // typed character.
         nsCOMPtr<nsIDOMNode> node;
         PRInt32 offset;
-        result = GetStartNodeAndOffset(aSelection, address_of(node), &offset);
+        result = GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
         NS_ENSURE_SUCCESS(result, result);
         NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
