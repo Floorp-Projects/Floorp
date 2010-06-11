@@ -176,7 +176,7 @@ union SecurityLevel
 
 struct PropertyPolicy : public PLDHashEntryHdr
 {
-    jsval          key;  // property name as jsval
+    JSString       *key;  // interned string
     SecurityLevel  mGet;
     SecurityLevel  mSet;
 };
@@ -187,7 +187,7 @@ InitPropertyPolicyEntry(PLDHashTable *table,
                      const void *key)
 {
     PropertyPolicy* pp = (PropertyPolicy*)entry;
-    pp->key = (jsval)key;
+    pp->key = (JSString *)key;
     pp->mGet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
     pp->mSet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
     return PR_TRUE;
@@ -197,7 +197,7 @@ static void
 ClearPropertyPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PropertyPolicy* pp = (PropertyPolicy*)entry;
-    pp->key = JSVAL_VOID;
+    pp->key = NULL;
 }
 
 // Class Policy

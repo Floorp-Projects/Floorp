@@ -1260,7 +1260,8 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ key->id;
+    return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ 
+           JSDHashNumber(key->id) ^ JSDHashNumber(key->id >> 32);
 }
 
 static JSBool

@@ -147,7 +147,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - fp->base()));
-    for (obj = fp->scopeChain; obj; obj = obj->getParent()) {
+    for (obj = fp->scopeChainObj(); obj; obj = obj->getParent()) {
         Class *clasp = obj->getClass();
         if (clasp != &js_BlockClass && clasp != &js_WithClass)
             continue;
@@ -182,11 +182,11 @@ BEGIN_CASE(JSOP_ENTERWITH)
      * We set sp[-1] to the current "with" object to help asserting the
      * enter/leave balance in [leavewith].
      */
-    regs.sp[-1].setNonFunObj(*fp->scopeChain);
+    regs.sp[-1] = fp->scopeChain;
 END_CASE(JSOP_ENTERWITH)
 
 BEGIN_CASE(JSOP_LEAVEWITH)
-    JS_ASSERT(&regs.sp[-1].asNonFunObj() == fp->scopeChain);
+    JS_ASSERT(&regs.sp[-1].asNonFunObj() == fp->scopeChainObj());
     regs.sp--;
     js_LeaveWith(cx);
 END_CASE(JSOP_LEAVEWITH)
@@ -228,7 +228,7 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!fp->blockChain);
-        JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
+        JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChainObj(), 0));
 
         if (JS_LIKELY(script->staticLevel < JS_DISPLAY_SIZE))
             cx->display[script->staticLevel] = fp->displaySave;
@@ -755,7 +755,7 @@ BEGIN_CASE(JSOP_BINDNAME)
          * the rhs. We desire such resolve hook equivalence between the two
          * forms.
          */
-        obj = fp->scopeChain;
+        obj = fp->scopeChainObj();
         if (!obj->getParent())
             break;
 
@@ -769,7 +769,7 @@ BEGIN_CASE(JSOP_BINDNAME)
         }
 
         jsid id = ATOM_TO_JSID(atom);
-        obj = js_FindIdentifierBase(cx, fp->scopeChain, id);
+        obj = js_FindIdentifierBase(cx, fp->scopeChainObj(), id);
         if (!obj)
             goto error;
     } while (0);
@@ -1356,7 +1356,7 @@ BEGIN_CASE(JSOP_DECNAME)
 BEGIN_CASE(JSOP_NAMEINC)
 BEGIN_CASE(JSOP_NAMEDEC)
 {
-    obj = fp->scopeChain;
+    obj = fp->scopeChainObj();
 
     JSObject *obj2;
     PropertyCacheEntry *entry;
@@ -2280,14 +2280,14 @@ BEGIN_CASE(JSOP_APPLY)
 
             /* Initialize stack frame. */
             newfp->callobj = NULL;
-            newfp->argsobj = NULL;
+            newfp->setArgsObj(NULL);
             newfp->script = newscript;
             newfp->fun = fun;
             newfp->argc = argc;
             newfp->argv = vp + 2;
             newfp->rval.setUndefined();
             newfp->annotation = NULL;
-            newfp->scopeChain = obj->getParent();
+            newfp->setScopeChainObj(obj->getParent());
             newfp->flags = flags;
             newfp->blockChain = NULL;
             if (JS_LIKELY(newscript->staticLevel < JS_DISPLAY_SIZE)) {
@@ -2423,7 +2423,7 @@ END_CASE(JSOP_SETCALL)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
-    JSObject *obj = fp->scopeChain;
+    JSObject *obj = fp->scopeChainObj();
 
     JSScopeProperty *sprop;
     Value rval;
@@ -2563,7 +2563,7 @@ BEGIN_CASE(JSOP_REGEXP)
      */
     jsatomid index = GET_FULL_INDEX(0);
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, fp->scopeChain, JSProto_RegExp, &proto))
+    if (!js_GetClassPrototype(cx, fp->scopeChainObj(), JSProto_RegExp, &proto))
         goto error;
     JS_ASSERT(proto);
     JSObject *obj = js_CloneRegExpObject(cx, script->getRegExp(index), proto);
@@ -3144,7 +3144,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          * FIXME: bug 476950, although debugger users may also demand some kind
          * of scope link for debugger-assisted eval-in-frame.
          */
-        obj2 = fp->scopeChain;
+        obj2 = fp->scopeChainObj();
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
@@ -3153,7 +3153,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          * top-level function.
          */
         if (!fp->blockChain) {
-            obj2 = fp->scopeChain;
+            obj2 = fp->scopeChainObj();
         } else {
             obj2 = js_GetScopeChain(cx, fp);
             if (!obj2)
@@ -3182,7 +3182,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * fp->scopeChain code below the parent->defineProperty call.
      */
     MUST_FLOW_THROUGH("restore_scope");
-    fp->scopeChain = obj;
+    fp->setScopeChainObj(obj);
 
     Value rval = FunObjTag(*obj);
 
@@ -3266,7 +3266,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
   restore_scope:
     /* Restore fp->scopeChain now that obj is defined in fp->callobj. */
-    fp->scopeChain = obj2;
+    fp->setScopeChainObj(obj2);
     if (!ok)
         goto error;
 }
@@ -3340,7 +3340,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSObject *obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = CloneFunctionObject(cx, fun, fp->scopeChain);
+        obj = CloneFunctionObject(cx, fun, fp->scopeChainObj());
         if (!obj)
             goto error;
     } else {
@@ -3407,7 +3407,7 @@ BEGIN_CASE(JSOP_LAMBDA)
     do {
         JSObject *parent;
         if (FUN_NULL_CLOSURE(fun)) {
-            parent = fp->scopeChain;
+            parent = fp->scopeChainObj();
 
             if (obj->getParent() == parent) {
                 op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
@@ -4360,7 +4360,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      * anything else we should have popped off fp->scopeChain when we left its
      * static scope.
      */
-    JSObject *obj2 = fp->scopeChain;
+    JSObject *obj2 = fp->scopeChainObj();
     Class *clasp;
     while ((clasp = obj2->getClass()) == &js_WithClass)
         obj2 = obj2->getParent();
@@ -4392,7 +4392,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      * cloned onto fp->scopeChain, clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject *obj = fp->scopeChain;
+    JSObject *obj = fp->scopeChainObj();
     if (obj->getProto() == fp->blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
@@ -4424,7 +4424,7 @@ BEGIN_CASE(JSOP_GENERATOR)
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
         goto error;
-    JS_ASSERT(!fp->callobj && !fp->argsobj);
+    JS_ASSERT(!fp->callobj && !fp->argsObj());
     fp->rval.setNonFunObj(*obj);
     interpReturnOK = true;
     if (inlineCallCount != 0)
@@ -4451,7 +4451,7 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     JSObject *obj = &fp->slots()[slot].asObject();
-    if (!js_ArrayCompPush(cx, obj, regs.sp[-1]))
+    if (!js_ArrayCompPush(cx, obj, &regs.sp[-1]))
         goto error;
     regs.sp--;
 }

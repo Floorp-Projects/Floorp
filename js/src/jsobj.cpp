@@ -2670,7 +2670,7 @@ js_NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
     if (!obj)
         return NULL;
 
-    obj->initSharingEmptyScope(clasp, proto, proto->getParent(), privateSlotValue);
+    obj->initSharingEmptyScope(clasp, ObjectTag(*proto), ObjectTag(*proto->getParent()), privateSlotValue);
     return obj;
 }
 
@@ -2678,7 +2678,7 @@ JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
-    return js_NewObjectWithClassProto(cx, &js_ObjectClass, proto, JSVAL_VOID);
+    return js_NewObjectWithClassProto(cx, &js_ObjectClass, proto, UndefinedTag());
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
@@ -2689,7 +2689,7 @@ JSObject* FASTCALL
 js_NonEmptyObject(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
-    JSObject *obj = js_NewObjectWithClassProto(cx, &js_ObjectClass, proto, JSVAL_VOID);
+    JSObject *obj = js_NewObjectWithClassProto(cx, &js_ObjectClass, proto, UndefinedTag());
     if (!obj)
         return NULL;
     JS_LOCK_OBJ(cx, obj);
@@ -2713,14 +2713,14 @@ JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NonEmptyObject, CONTEXT, CALL
 
 static inline JSObject*
 NewNativeObject(JSContext* cx, Class* clasp, JSObject* proto,
-                JSObject *parent, void *privateSlotValue)
+                JSObject *parent, const Value &privateSlotValue)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = js_NewGCObject(cx);
     if (!obj)
         return NULL;
 
-    obj->init(clasp, proto, parent, privateSlotValue);
+    obj->init(clasp, ObjectTag(*proto), ObjectTag(*parent), privateSlotValue);
     return InitScopeForObject(cx, obj, clasp, proto, &js_ObjectOps) ? obj : NULL;
 }
 
@@ -2743,13 +2743,13 @@ js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
     }
 
     JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
-    Value pval = sprop ? ctor->getSlot(sprop->slot) : JSVAL_HOLE;
+    Value pval = sprop ? ctor->getSlot(sprop->slot) : JSWhyMagic(JS_NO_CONSTANT);
 
     JSObject *proto;
-    if (!JSVAL_IS_PRIMITIVE(pval)) {
+    if (!pval.isPrimitive()) {
         /* An object in ctor.prototype, let's use it as the new instance's proto. */
-        proto = JSVAL_TO_OBJECT(pval);
-    } else if (pval == JSVAL_HOLE) {
+        proto = &pval.asObject();
+    } else if (pval.isMagic(JS_NO_CONSTANT)) {
         /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
         proto = NewObject(cx, clasp, NULL, ctor->getParent());
         if (!proto)
@@ -2758,7 +2758,7 @@ js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
             return NULL;
     } else {
         /* Primitive value in .prototype means we use Object.prototype for proto. */
-        if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]),
+        if (!js_GetClassPrototype(cx, &ctor->fslots[JSSLOT_PARENT].asObject(),
                                   JSProto_Object, &proto)) {
             return NULL;
         }
@@ -3078,7 +3078,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
 
     JSStackFrame *const fp = cx->fp;
-    JSObject *obj = fp->scopeChain;
+    JSObject *obj = fp->scopeChainObj();
     JS_ASSERT(obj->getClass() == &js_BlockClass);
     JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
@@ -3117,7 +3117,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* We must clear the private slot even with errors. */
     obj->setPrivate(NULL);
-    fp->scopeChain = obj->getParent();
+    fp->setScopeChainObj(obj->getParent());
     return normalUnwind;
 }
 
@@ -3797,7 +3797,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (!start && (fp = cx->fp) != NULL)
-        start = fp->scopeChain;
+        start = fp->scopeChainObj();
 
     if (start) {
         /* Find the topmost object in the scope chain. */
@@ -4522,7 +4522,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     JSProperty *prop;
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
-    scopeChain = js_GetTopStackFrame(cx)->scopeChain;
+    scopeChain = js_GetTopStackFrame(cx)->scopeChainObj();
 
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
@@ -5185,7 +5185,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     }
 
     if (defineHow & JSDNP_CACHE_RESULT) {
-#ifdef JS_JSTRACE
+#ifdef JS_TRACER
         JS_ASSERT_NOT_ON_TRACE(cx);
         PropertyCacheEntry *entry =
 #endif
@@ -5699,7 +5699,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
     if (protoKey != JSProto_Null) {
         if (!scope) {
             if (cx->fp)
-                scope = cx->fp->scopeChain;
+                scope = cx->fp->scopeChainObj();
             if (!scope) {
                 scope = cx->globalObject;
                 if (!scope) {
@@ -6575,7 +6575,7 @@ DumpStackFrame(JSContext *cx, JSStackFrame *start)
         }
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->callobj);
-        MaybeDumpObject("argsobj", fp->argsobj);
+        MaybeDumpObject("argsobj", fp->argsObj());
         MaybeDumpValue("this", fp->thisv);
         fprintf(stderr, "  rval: ");
         dumpValue(fp->rval);
@@ -6602,8 +6602,8 @@ DumpStackFrame(JSContext *cx, JSStackFrame *start)
             fprintf(stderr, " overridden_args");
         fputc('\n', stderr);
 
-        if (fp->scopeChain)
-            fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->scopeChain);
+        if (fp->scopeChainObj())
+            fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->scopeChainObj());
         if (fp->blockChain)
             fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
 

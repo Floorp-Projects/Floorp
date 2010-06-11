@@ -1645,7 +1645,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->fp)
-        return cx->fp->scopeChain->getGlobal();
+        return cx->fp->scopeChainObj()->getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
@@ -4003,7 +4003,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     native =
 #ifdef JS_TRACER
              (fs->flags & JSFUN_TRCINFO)
-             ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
+             ? (FastNative) JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
              :
 #endif
                (FastNative) fs->call;

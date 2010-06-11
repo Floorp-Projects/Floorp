@@ -1347,6 +1347,7 @@ namespace js {
 JS_FRIEND_API(void) DumpChars(const jschar *s, size_t n);
 JS_FRIEND_API(void) DumpString(JSString *str);
 JS_FRIEND_API(void) DumpAtom(JSAtom *atom);
+JS_FRIEND_API(void) DumpObject(JSObject *obj);
 JS_FRIEND_API(void) DumpValue(const js::Value &val);
 JS_FRIEND_API(void) DumpId(jsid id);
 JS_FRIEND_API(void) DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
