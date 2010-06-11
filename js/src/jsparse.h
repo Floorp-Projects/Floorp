@@ -294,9 +294,21 @@ struct GlobalScope {
       : globalObj(globalObj), cg(cg), defs(ContextAllocPolicy(cx))
     { }
 
+    struct GlobalDef {
+        JSAtom *atom;
+        JSFunctionBox *funbox;
+
+        GlobalDef() { }
+        GlobalDef(JSAtom *atom) : atom(atom), funbox(NULL)
+        { }
+        GlobalDef(JSAtom *atom, JSFunctionBox *box) :
+          atom(atom), funbox(box)
+        { }
+    };
+
     JSObject *globalObj;
     JSCodeGenerator *cg;
-    Vector<JSAtom *, 16, ContextAllocPolicy> defs;
+    Vector<GlobalDef, 16, ContextAllocPolicy> defs;
     uint32 globalFreeSlot;
 };
 
