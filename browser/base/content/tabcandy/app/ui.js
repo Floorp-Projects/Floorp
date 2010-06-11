@@ -289,88 +289,100 @@ window.Page = {
     
     Tabs.onFocus(function() {
       var focusTab = this;
+      var currentTab = UI.currentTab;
       
-      var sTime = (new Date()).getTime();
-      Utils.log("Tabcandy got focus. Timer starter:", sTime);
-
       // If we switched to TabCandy window...
       if( focusTab.contentWindow == window ){
         UI.focused = true;
         Page.hideChrome();
-        Utils.log("Chrome Hidden. Elapsed time:", (new Date()).getTime()-sTime);
-        var currentTab = UI.currentTab;
         if(currentTab != null && currentTab.mirror != null) {
           // If there was a previous currentTab we want to animate
           // its mirror for the zoom out.
+          // Note that we start the animation on the chrome thread.
           
           // Zoom out!
           var mirror = currentTab.mirror;
           var $tab = iQ(mirror.el);
+          var data = $tab.data('zoomSave');
           var item = TabItems.getItemByTabElement(mirror.el);
-          self.setActiveTab(item);
-          
-          var transform = $tab.css("-moz-transform");
-          var z = $tab.css('zIndex');
-          var pos = $tab.position();
-                  
-/*           var extra = item._getSizeExtra(); */
-          var w = $tab.width();
-          var h = $tab.height();
-
-          var scale = window.innerWidth / w;
-  
-          var overflow = iQ("body").css("overflow");
-          iQ("body").css("overflow", "hidden");
-          
+            
           TabMirror.pausePainting();
-          $tab.css({
-              top: 0, left: 0,
-              width: window.innerWidth,
-              height: h * (window.innerWidth/w),
-              zIndex: 999999,
-              '-moz-transform': 'rotate(0deg)'
+
+          $tab.animate({
+            left: data.pos.left,
+            top: data.pos.top, 
+            width: data.w,
+            height: data.h
+          }, {
+            duration: 400,
+            easing: 'easeInQuad',
+            complete: function() { // note that this will happen on the DOM thread
+              $tab.css({
+                zIndex: data.z,
+                '-moz-transform': data.transform
+              });
+              
+              self.setActiveTab(item);
+              var activeGroup = Groups.getActiveGroup();
+              if( activeGroup )
+                activeGroup.reorderBasedOnTabOrder(item);        
+      
+              window.Groups.setActiveGroup(null);
+              TabMirror.resumePainting();        
+              UI.resize(true);
+            }
           });
-          Utils.log("Tab CSS set. Elapsed time:", (new Date()).getTime()-sTime);
-          
-          iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-            // Note that it is the marshalling that is causing a near 200ms delay between
-            // showing the tab and starting the animation which causes a big ugly jump.
-            // TODO: WE NEED A BETTER SOLUTION.
-            Utils.log("Start animation elapsed time:", (new Date()).getTime()-sTime);
-            var animStart = (new Date()).getTime();
-            $tab.animate({
-              top: pos.top, left: pos.left,
-              width: w, height: h
-            }, {
-              duration: 350,
-              complete: function() { 
-                // TODO:
-                // This never seems to actually take 350ms?
-                Utils.log("350ms animation took (in ms)", (new Date()).getTime()-animStart);              
-                $tab.css({
-                  zIndex: z,
-                  '-moz-transform': transform
-                });
-                iQ("body").css("overflow", overflow);
-                var activeGroup = Groups.getActiveGroup();
-                if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
-        
-                window.Groups.setActiveGroup(null);
-                TabMirror.resumePainting();        
-                UI.resize(true);
-              }
-            });
-          }, 1);
         }
       } else { // switched to another tab
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           UI.focused = false;
           Page.showChrome();
-          var item = TabItems.getItemByTabElement(Utils.activeTab.mirror.el);
+          var item = TabItems.getItemByTabElement(focusTab.mirror.el);
           if(item) 
             Groups.setActiveGroup(item.parent);
             
-          UI.tabBar.show();        
+          UI.tabBar.show();  
+          
+          // ___ prepare for when we return to TabCandy
+          var oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+          if(item != oldItem) {
+            var data;
+            if(oldItem) {
+              var $oldTab = iQ(oldItem.container);
+              data = $oldTab.data('zoomSave');
+              $oldTab.css({
+                  left: data.pos.left,
+                  top: data.pos.top, 
+                  width: data.w,
+                  height: data.h,
+                  zIndex: data.z,
+                  '-moz-transform': data.transform
+              });
+            }                
+  
+            if(item) {
+              var $tab = iQ(item.container);
+
+              data = {
+                transform: $tab.css('-moz-transform'),
+                z: $tab.css('zIndex'),
+                pos: $tab.position(),
+                w: $tab.width(),
+                h: $tab.height()
+              };
+              
+              $tab.data('zoomSave', data);
+
+              $tab.css({
+                  left: 0,
+                  top: 0, 
+                  width: window.innerWidth,
+                  height: data.h * (window.innerWidth / data.w),
+                  zIndex: 999999,
+                  '-moz-transform': 'rotate(0deg)'
+               });
+            }                
+          }
         }, 1);
       }
       
