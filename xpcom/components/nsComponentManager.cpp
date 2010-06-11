@@ -417,7 +417,7 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
                                  entry->entry,
                                  entry->value);
     }
-};
+}
 
 void
 nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry,
@@ -1260,7 +1260,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
                                         const char* aContractID,
                                         nsIFactory* aFactory)
 {
-    nsAutoPtr<nsFactoryEntry> f = new nsFactoryEntry(aFactory);
+    nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aFactory));
 
     nsAutoMonitor mon(mMon);
     nsFactoryEntry* oldf = mFactories.Get(aClass);
