@@ -1601,9 +1601,22 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin: 0;
 }
 
-.allTabs-favicon {
-  margin-top: 1px;
-  -moz-margin-start: 1px;
+.allTabs-favicon[src] {
+  background-color: -moz-dialog;
+  width: 22px;
+  height: 22px;
+  padding-top: 1px;
+  padding-bottom: 5px;
+  -moz-padding-start: 1px;
+  -moz-padding-end: 5px;
+  margin-top: -2px;
+  -moz-margin-start: -2px;
+  -moz-border-radius-bottomright: 4px;
+}
+
+.allTabs-favicon[src]:-moz-locale-dir(rtl) {
+  -moz-border-radius-bottomright: 0;
+  -moz-border-radius-bottomleft: 4px;
 }
 
 .allTabs-preview-inner > .tabPreview-canvas {
