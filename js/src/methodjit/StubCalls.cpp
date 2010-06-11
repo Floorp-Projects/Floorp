@@ -2110,6 +2110,62 @@ stubs::DecProp(VMFrame &f, JSAtom *atom)
 }
 
 void JS_FASTCALL
+stubs::ElemInc(VMFrame &f)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    jsid id;
+    if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
+        THROW();
+    if (!ObjIncOp<1, true>(f, obj, id))
+        THROW();
+    f.regs.sp[-3] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
+stubs::ElemDec(VMFrame &f)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    jsid id;
+    if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
+        THROW();
+    if (!ObjIncOp<-1, true>(f, obj, id))
+        THROW();
+    f.regs.sp[-3] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
+stubs::IncElem(VMFrame &f)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    jsid id;
+    if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
+        THROW();
+    if (!ObjIncOp<1, false>(f, obj, id))
+        THROW();
+    f.regs.sp[-3] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
+stubs::DecElem(VMFrame &f)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    jsid id;
+    if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
+        THROW();
+    if (!ObjIncOp<-1, false>(f, obj, id))
+        THROW();
+    f.regs.sp[-3] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
 stubs::NameInc(VMFrame &f, JSAtom *atom)
 {
     if (!NameIncDec<1, true>(f, atom))
