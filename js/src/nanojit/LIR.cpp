@@ -620,8 +620,9 @@ namespace nanojit
     LIns* ExprFilter::ins2(LOpcode v, LIns* oprnd1, LIns* oprnd2)
     {
         NanoAssert(oprnd1 && oprnd2);
-        if (oprnd1 == oprnd2)
-        {
+
+        if (oprnd1 == oprnd2) {
+            // The operands are equal.
             switch (v) {
             case LIR_xori:
             case LIR_subi:
@@ -630,21 +631,24 @@ namespace nanojit
             case LIR_gti:
             case LIR_lti:
                 return insImmI(0);
+
             case LIR_ori:
             case LIR_andi:
                 return oprnd1;
+
             case LIR_lei:
             case LIR_leui:
             case LIR_gei:
             case LIR_geui:
-                // x <= x == 1; x >= x == 1
-                return insImmI(1);
+                return insImmI(1);      // (x <= x) == 1; (x >= x) == 1
+
             default:
-                ;
+                break;
             }
         }
-        if (oprnd1->isImmI() && oprnd2->isImmI())
-        {
+
+        if (oprnd1->isImmI() && oprnd2->isImmI()) {
+            // The operands are both 32-bit integer immediates.
             int32_t c1 = oprnd1->immI();
             int32_t c2 = oprnd2->immI();
             double d;
@@ -652,93 +656,72 @@ namespace nanojit
 
             switch (v) {
 #if NJ_SOFTFLOAT_SUPPORTED
-            case LIR_ii2d:
-                return insImmD(do_join(c1, c2));
+            case LIR_ii2d:  return insImmD(do_join(c1, c2));
 #endif
-            case LIR_eqi:
-                return insImmI(c1 == c2);
-            case LIR_lti:
-                return insImmI(c1 < c2);
-            case LIR_gti:
-                return insImmI(c1 > c2);
-            case LIR_lei:
-                return insImmI(c1 <= c2);
-            case LIR_gei:
-                return insImmI(c1 >= c2);
-            case LIR_ltui:
-                return insImmI(uint32_t(c1) < uint32_t(c2));
-            case LIR_gtui:
-                return insImmI(uint32_t(c1) > uint32_t(c2));
-            case LIR_leui:
-                return insImmI(uint32_t(c1) <= uint32_t(c2));
-            case LIR_geui:
-                return insImmI(uint32_t(c1) >= uint32_t(c2));
-            case LIR_rshi:
-                return insImmI(int32_t(c1) >> int32_t(c2));
-            case LIR_lshi:
-                return insImmI(int32_t(c1) << int32_t(c2));
-            case LIR_rshui:
-                return insImmI(uint32_t(c1) >> int32_t(c2));
-            case LIR_ori:
-                return insImmI(uint32_t(c1) | int32_t(c2));
-            case LIR_andi:
-                return insImmI(uint32_t(c1) & int32_t(c2));
-            case LIR_xori:
-                return insImmI(uint32_t(c1) ^ int32_t(c2));
-            case LIR_addi:
-                d = double(c1) + double(c2);
+            case LIR_eqi:   return insImmI(c1 == c2);
+            case LIR_lti:   return insImmI(c1 <  c2);
+            case LIR_gti:   return insImmI(c1 >  c2);
+            case LIR_lei:   return insImmI(c1 <= c2);
+            case LIR_gei:   return insImmI(c1 >= c2);
+            case LIR_ltui:  return insImmI(uint32_t(c1) <  uint32_t(c2));
+            case LIR_gtui:  return insImmI(uint32_t(c1) >  uint32_t(c2));
+            case LIR_leui:  return insImmI(uint32_t(c1) <= uint32_t(c2));
+            case LIR_geui:  return insImmI(uint32_t(c1) >= uint32_t(c2));
+
+            case LIR_rshi:  return insImmI(c1 >> c2);
+            case LIR_lshi:  return insImmI(c1 << c2);
+            case LIR_rshui: return insImmI(uint32_t(c1) >> c2);
+            case LIR_ori:   return insImmI(c1 | c2);
+            case LIR_andi:  return insImmI(c1 & c2);
+            case LIR_xori:  return insImmI(c1 ^ c2);
+
+            case LIR_addi:  d = double(c1) + double(c2);    goto fold;
+            case LIR_subi:  d = double(c1) - double(c2);    goto fold;
+            case LIR_muli:  d = double(c1) * double(c2);    goto fold;
             fold:
+                // Make sure the constant expression doesn't overflow.  This
+                // probably isn't necessary, because the C++ overflow
+                // behaviour is very likely to be the same as the machine code
+                // overflow behaviour, but we do it just to be safe.
                 r = int32_t(d);
                 if (r == d)
                     return insImmI(r);
                 break;
-            case LIR_subi:
-                d = double(c1) - double(c2);
-                goto fold;
-            case LIR_muli:
-                d = double(c1) * double(c2);
-                goto fold;
-            CASE86(LIR_divi:)
-            CASE86(LIR_modi:)
-                #if defined NANOJIT_IA32 || defined NANOJIT_X64
+
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+            case LIR_divi:
+            case LIR_modi:
                 // We can't easily fold div and mod, since folding div makes it
                 // impossible to calculate the mod that refers to it. The
                 // frontend shouldn't emit div and mod with constant operands.
                 NanoAssert(0);
-                #endif
+#endif
             default:
-                ;
+                break;
             }
-        }
-        else if (oprnd1->isImmD() && oprnd2->isImmD())
-        {
+
+        } else if (oprnd1->isImmD() && oprnd2->isImmD()) {
+            // The operands are both 64-bit double immediates.
             double c1 = oprnd1->immD();
             double c2 = oprnd2->immD();
             switch (v) {
-            case LIR_eqd:
-                return insImmI(c1 == c2);
-            case LIR_ltd:
-                return insImmI(c1 < c2);
-            case LIR_gtd:
-                return insImmI(c1 > c2);
-            case LIR_led:
-                return insImmI(c1 <= c2);
-            case LIR_ged:
-                return insImmI(c1 >= c2);
-            case LIR_addd:
-                return insImmD(c1 + c2);
-            case LIR_subd:
-                return insImmD(c1 - c2);
-            case LIR_muld:
-                return insImmD(c1 * c2);
-            case LIR_divd:
-                return insImmD(c1 / c2);
-            default:
-                ;
+            case LIR_eqd:   return insImmI(c1 == c2);
+            case LIR_ltd:   return insImmI(c1 <  c2);
+            case LIR_gtd:   return insImmI(c1 >  c2);
+            case LIR_led:   return insImmI(c1 <= c2);
+            case LIR_ged:   return insImmI(c1 >= c2);
+
+            case LIR_addd:  return insImmD(c1 + c2);
+            case LIR_subd:  return insImmD(c1 - c2);
+            case LIR_muld:  return insImmD(c1 * c2);
+            case LIR_divd:  return insImmD(c1 / c2);
+
+            default:        break;
             }
-        }
-        else if (oprnd1->isImmI() && !oprnd2->isImmI())
-        {
+
+        } else if (oprnd1->isImmI() && !oprnd2->isImmI()) {
+            // The first operand is a 32-bit integer immediate;  move it to
+            // the right if possible.
             switch (v) {
             case LIR_addi:
             case LIR_muli:
@@ -766,8 +749,8 @@ namespace nanojit
             }
         }
 
-        if (oprnd2->isImmI())
-        {
+        if (oprnd2->isImmI()) {
+            // The second operand is a 32-bit integer immediate.
             int c = oprnd2->immI();
             switch (v) {
             case LIR_addi:
@@ -778,6 +761,7 @@ namespace nanojit
                     oprnd1 = oprnd1->oprnd1();
                 }
                 break;
+
             case LIR_subi:
                 if (oprnd1->isop(LIR_addi) && oprnd1->oprnd2()->isImmI()) {
                     // sub(add(x,c1),c2) => add(x,c1-c2)
@@ -787,16 +771,19 @@ namespace nanojit
                     v = LIR_addi;
                 }
                 break;
+
             case LIR_rshi:
                 if (c == 16 && oprnd1->isop(LIR_lshi) &&
                     oprnd1->oprnd2()->isImmI(16) &&
-                    insIsS16(oprnd1->oprnd1())) {
+                    insIsS16(oprnd1->oprnd1()))
+                {
                     // rsh(lhs(x,16),16) == x, if x is S16
                     return oprnd1->oprnd1();
                 }
                 break;
+
             default:
-                ;
+                break;
             }
 
             if (c == 0) {
@@ -809,59 +796,47 @@ namespace nanojit
                 case LIR_rshi:
                 case LIR_rshui:
                     return oprnd1;
+
                 case LIR_andi:
                 case LIR_muli:
                 case LIR_ltui: // unsigned < 0 -> always false
-                    // note that we know that oprnd2 == insImmI(0), so just return that
                     return oprnd2;
+
                 case LIR_geui: // unsigned >= 0 -> always true
                     return insImmI(1);
+
                 case LIR_eqi:
                     if (oprnd1->isop(LIR_ori) &&
                         oprnd1->oprnd2()->isImmI() &&
-                        oprnd1->oprnd2()->immI() != 0) {
+                        oprnd1->oprnd2()->immI() != 0)
+                    {
                         // (x or c) != 0 if c != 0
                         return insImmI(0);
                     }
+
                 default:
-                    ;
+                    break;
                 }
+
             } else if (c == -1) {
                 switch (v) {
-                case LIR_ori:
-                    // x | -1 = -1
-                    return oprnd2;
-                case LIR_andi:
-                    // x & -1 = x
-                    return oprnd1;
-                case LIR_gtui:
-                    // u32 > 0xffffffff -> always false
-                    return insImmI(0);
-                case LIR_leui:
-                    // u32 <= 0xffffffff -> always true
-                    return insImmI(1);
-                default:
-                    ;
+                case LIR_ori:  return oprnd2;       // x | -1 = -1
+                case LIR_andi: return oprnd1;       // x & -1 = x
+                case LIR_gtui: return insImmI(0);   // u32 > 0xffffffff -> always false
+                case LIR_leui: return insImmI(1);   // u32 <= 0xffffffff -> always true
+                default:       break;
                 }
+
             } else if (c == 1) {
                 if (oprnd1->isCmp()) {
                     switch (v) {
-                    case LIR_ori:
-                        // cmp | 1 = 1
-                        // note that we know that oprnd2 == insImmI(1), so just return that
-                        return oprnd2;
-                    case LIR_andi:
-                        // cmp & 1 = cmp
-                        return oprnd1;
-                    case LIR_gtui:
-                        // (0|1) > 1 -> always false
-                        return insImmI(0);
-                    default:
-                        ;
+                    case LIR_ori:   return oprnd2;      // cmp | 1 = 1   (and oprnd2 == 1)
+                    case LIR_andi:  return oprnd1;      // cmp & 1 = cmp
+                    case LIR_gtui:  return insImmI(0);  // (0|1) > 1 -> always false
+                    default:        break;
                     }
                 } else if (v == LIR_muli) {
-                    // x * 1 = x
-                    return oprnd1;
+                    return oprnd1;          // x * 1 = x
                 }
             }
         }
