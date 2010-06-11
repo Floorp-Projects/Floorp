@@ -94,7 +94,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int LI = 15;
 
-    final static int LINK = 16;
+    final static int LINK_OR_BASEFONT_OR_BGSOUND = 16;
 
     final static int MATH = 17;
 
@@ -158,7 +158,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int EMBED_OR_IMG = 48;
 
-    final static int AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR = 49;
+    final static int AREA_OR_SPACER_OR_WBR = 49;
 
     final static int DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU = 50;
 
@@ -1768,7 +1768,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case MARQUEE_OR_APPLET:
                         case OBJECT:
                         case TABLE:
-                        case AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR:
+                        case AREA_OR_SPACER_OR_WBR:
                         case BR:
                         case EMBED_OR_IMG:
                         case INPUT:
@@ -1797,7 +1797,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 }
                                 break starttagloop;
                             case BASE:
-                            case LINK:
+                            case LINK_OR_BASEFONT_OR_BGSOUND:
                             case META:
                             case STYLE:
                             case SCRIPT:
@@ -1989,7 +1989,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break starttagloop;
                             case BR:
                             case EMBED_OR_IMG:
-                            case AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR:
+                            case AREA_OR_SPACER_OR_WBR:
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE
                             case PARAM_OR_SOURCE:
@@ -2313,7 +2313,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 attributes = null; // CPP
                                 break starttagloop;
                             case META:
-                            case LINK:
+                            case LINK_OR_BASEFONT_OR_BGSOUND:
                                 // Fall through to IN_HEAD_NOSCRIPT
                                 break inheadloop;
                             case TITLE:
@@ -2390,7 +2390,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 attributes = null; // CPP
                             }
                             break starttagloop;
-                        case LINK:
+                        case LINK_OR_BASEFONT_OR_BGSOUND:
                             appendVoidElementToCurrentMayFoster(
                                     "http://www.w3.org/1999/xhtml",
                                     elementName, attributes);
@@ -2766,7 +2766,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             pop(); // head
                             attributes = null; // CPP
                             break starttagloop;
-                        case LINK:
+                        case LINK_OR_BASEFONT_OR_BGSOUND:
                             err("\u201Clink\u201D element outside \u201Chead\u201D.");
                             pushHeadPointerOntoStack();
                             appendVoidElementToCurrentMayFoster(
@@ -3576,7 +3576,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         elementName,
                                         HtmlAttributes.EMPTY_ATTRIBUTES);
                                 break endtagloop;
-                            case AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR:
+                            case AREA_OR_SPACER_OR_WBR:
                             case PARAM_OR_SOURCE:
                             case EMBED_OR_IMG:
                             case IMAGE:
