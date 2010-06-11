@@ -114,7 +114,7 @@ def get_test_cmd(path, lib_dir):
     if OPTIONS.methodjit_only:
         jit_flags = [ '-m' ]
     else:
-        jit_flags = [ '-m', '-j' ]
+        jit_flags = [ '-m' ]
     return [ JS ] + jit_flags + [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
              '-f', path ]
 

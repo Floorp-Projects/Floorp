@@ -185,7 +185,7 @@ struct JSScript {
     }
 # endif
 #endif
-#ifdef JS_TRACER
+#if 0 /* def JS_TRACER */
     js::TraceTreeCache  *trees; /* trace tree info. */
     uint32          tmGen;      /* generation number from the TraceMonitor */
 #endif
