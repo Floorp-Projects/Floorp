@@ -246,13 +246,19 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBo
 nsresult
 GDIFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 {
+    if (!IsTrueType()) {
+        return NS_ERROR_FAILURE;
+    }
+
     AutoDC dc;
     AutoSelectFont font(dc.GetDC(), &mLogFont);
     if (font.IsValid()) {
-        PRInt32 tableSize = ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
+        PRInt32 tableSize =
+            ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
         if (tableSize != GDI_ERROR) {
             if (aBuffer.SetLength(tableSize)) {
-                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, aBuffer.Elements(), tableSize);
+                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0,
+                              aBuffer.Elements(), tableSize);
                 return NS_OK;
             }
             return NS_ERROR_OUT_OF_MEMORY;
