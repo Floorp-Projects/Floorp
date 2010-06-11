@@ -292,15 +292,19 @@ MacOSFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
     nsAutoreleasePool localPool;
 
     ATSFontRef fontRef = GetFontRef();
-    if (fontRef == (ATSFontRef)kATSUInvalidFontID)
+    if (fontRef == (ATSFontRef)kATSUInvalidFontID) {
         return NS_ERROR_FAILURE;
+    }
 
     ByteCount dataLength;
     OSStatus status = ::ATSFontGetTable(fontRef, aTableTag, 0, 0, 0, &dataLength);
-    NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
+    if (status != noErr) {
+        return NS_ERROR_FAILURE;
+    }
 
-    if (!aBuffer.AppendElements(dataLength))
+    if (!aBuffer.AppendElements(dataLength)) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
     PRUint8 *dataPtr = aBuffer.Elements();
 
     status = ::ATSFontGetTable(fontRef, aTableTag, 0, dataLength, dataPtr, &dataLength);

@@ -48,6 +48,7 @@
 #include "gfxFontUtils.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "gfxSkipChars.h"
 #include "gfxRect.h"
@@ -70,6 +71,8 @@ class gfxUserFontSet;
 class gfxUserFontData;
 
 class nsILanguageAtomService;
+
+typedef struct _hb_blob_t hb_blob_t;
 
 // We should eliminate these synonyms when it won't cause many merge conflicts.
 #define FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
@@ -217,7 +220,15 @@ public:
 
     const nsString& FamilyName();
 
-    already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold);
+    already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
+                                             PRBool aNeedsBold);
+
+    // Subclasses should override this if they can do something more efficient
+    // than getting tables with GetFontTable() and caching them in the entry.
+    //
+    // Note that some gfxFont implementations may not call this at all,
+    // if it is more efficient to get the table from the OS at that level.
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
     nsString         mName;
 
@@ -272,6 +283,61 @@ protected:
     }
 
     gfxFontFamily *mFamily;
+
+    /*
+     * Font table cache, to support GetFontTable for harfbuzz.
+     *
+     * The harfbuzz shaper (and potentially other clients) needs access to raw
+     * font table data. This needs to be cached so that it can be used
+     * repeatedly (each time we construct a text run; in some cases, for
+     * each character/glyph within the run) without re-fetching large tables
+     * every time.
+     * 
+     * Because we may instantiate many gfxFonts for the same physical font
+     * file (at different sizes), we should ensure that they can share a
+     * single cached copy of the font tables. To do this, we implement table
+     * access and caching on the fontEntry rather than the font itself.
+     *
+     * The default implementation uses GetFontTable() to read font table
+     * data into byte arrays, and caches these in a hashtable along with
+     * hb_blob_t wrappers. The entry can then return blobs to harfbuzz.
+     *
+     * Harfbuzz will "destroy" the blobs when it is finished with them;
+     * they are created with a destroy callback that removes them from
+     * the hashtable when all references are released.
+     */
+    class FontTableCacheEntry {
+    public:
+        // create a cache entry by adopting the content of an existing buffer
+        FontTableCacheEntry(nsTArray<PRUint8>& aBuffer,
+                            PRUint32 aTag,
+            nsClassHashtable<nsUint32HashKey,FontTableCacheEntry>& aCache);
+
+        ~FontTableCacheEntry() {
+            MOZ_COUNT_DTOR(FontTableCacheEntry);
+        }
+
+        hb_blob_t *GetBlob() const { return mBlob; }
+
+    protected:
+        // the data block, owned (via adoption) by the entry
+        nsTArray<PRUint8>  mData;
+        // a harfbuzz blob wrapper that we can return to clients
+        hb_blob_t         *mBlob;
+        // the blob destroy function needs to know the table tag
+        // and the owning hashtable, so that it can remove the entry
+        PRUint32           mTag;
+        nsClassHashtable<nsUint32HashKey,FontTableCacheEntry>&
+                           mCache;
+
+    private:
+        // not implemented
+        FontTableCacheEntry(const FontTableCacheEntry&);
+
+        static void Destroy(void *aUserData);
+    };
+
+    nsClassHashtable<nsUint32HashKey,FontTableCacheEntry> mFontTableCache;
 
 private:
     gfxFontEntry(const gfxFontEntry&);
@@ -777,6 +843,20 @@ public:
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption) {
         // platforms where this actually matters should override
         return nsnull;
+    }
+
+    // Access to raw font table data (needed for Harfbuzz):
+    // returns a pointer to data owned by the fontEntry or the OS,
+    // which will remain valid until released.
+    //
+    // Default implementations forward to the font entry, which
+    // maintains a shared table cache; however, subclasses may
+    // override if they can provide more efficient table access.
+
+    // Get pointer to a specific font table, or an empty blob if
+    // the table doesn't exist in the font
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag) {
+        return mFontEntry->GetFontTable(aTag);
     }
 
     // Font metrics

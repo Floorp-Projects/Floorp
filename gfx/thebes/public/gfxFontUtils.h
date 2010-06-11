@@ -505,35 +505,39 @@ public:
     }
 
     static nsresult
-    ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, 
+    ReadCMAPTableFormat12(const PRUint8 *aBuf, PRUint32 aLength, 
                           gfxSparseBitSet& aCharacterMap);
 
     static nsresult 
-    ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, 
+    ReadCMAPTableFormat4(const PRUint8 *aBuf, PRUint32 aLength, 
                          gfxSparseBitSet& aCharacterMap);
 
     static nsresult
-    ReadCMAPTableFormat14(PRUint8 *aBuf, PRUint32 aLength, 
+    ReadCMAPTableFormat14(const PRUint8 *aBuf, PRUint32 aLength, 
                           PRUint8*& aTable);
 
     static PRUint32
-    FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
+    FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
                           PRUint32 *aTableOffset, PRUint32 *aUVSTableOffset,
                           PRBool *aSymbolEncoding);
 
     static nsresult
-    ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap,
+    ReadCMAP(const PRUint8 *aBuf, PRUint32 aBufLength,
+             gfxSparseBitSet& aCharacterMap,
              PRUint32& aUVSOffset,
              PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont);
 
     static PRUint32
     MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh);
 
+    static PRUint32
+    MapCharToGlyphFormat12(const PRUint8 *aBuf, PRUint32 aCh);
+
     static PRUint16
     MapUVSToGlyphFormat14(const PRUint8 *aBuf, PRUint32 aCh, PRUint32 aVS);
 
     static PRUint32
-    MapCharToGlyph(PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh);
+    MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh);
 
 #ifdef XP_WIN
 
