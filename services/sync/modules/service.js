@@ -294,30 +294,17 @@ WeaveSvc.prototype = {
 
     this._updateCachedURLs();
 
-    // Send an event now that Weave service is ready
-    Svc.Obs.notify("weave:service:ready");
-
-    // Wait a little before checking how long to wait to autoconnect
-    if (this._checkSetup() == STATUS_OK && Svc.Prefs.get("autoconnect")) {
-      Utils.delay(function() {
-        // Figure out how many seconds to delay autoconnect based on the app
-        let wait = 3;
-        switch (Svc.AppInfo.ID) {
-          case FIREFOX_ID:
-            // Add one second delay for each busy tab in every window
-            let enum = Svc.WinMediator.getEnumerator("navigator:browser");
-            while (enum.hasMoreElements()) {
-              Array.forEach(enum.getNext().gBrowser.mTabs, function(tab) {
-                wait += tab.hasAttribute("busy");
-              });
-            }
-            break;
-        }
-
-        this._log.debug("Autoconnecting in " + wait + " seconds");
-        Utils.delay(this._autoConnect, wait * 1000, this, "_autoTimer");
-      }, 2000, this, "_autoTimer");
+    // Applications can specify this preference if they want autoconnect
+    // to happen after a fixed delay.
+    let delay = Svc.Prefs.get("autoconnectDelay");
+    if (delay) {
+      this.delayedAutoConnect(delay);
     }
+
+    // Send an event now that Weave service is ready.  We don't do this
+    // synchronously so that observers will definitely have access to the
+    // 'Weave' namespace.
+    Utils.delay(function() Svc.Obs.notify("weave:service:ready"), 0);
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {
@@ -674,6 +661,15 @@ WeaveSvc.prototype = {
       Svc.Login.removeLogin(login);
     });
     Svc.Obs.notify("weave:service:start-over");
+  },
+
+  delayedAutoConnect: function delayedAutoConnect(delay) {
+    if (this._loggedIn)
+      return;
+
+    if (this._checkSetup() == STATUS_OK && Svc.Prefs.get("autoconnect")) {
+      Utils.delay(this._autoConnect, delay * 1000, this, "_autoTimer");
+    }
   },
 
   _autoConnect: let (attempts = 0) function _autoConnect() {

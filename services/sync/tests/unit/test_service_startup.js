@@ -1,6 +1,7 @@
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/ext/Observers.js");
+Cu.import("resource://weave/ext/Sync.js");
 
 function run_test() {
   _("When imported, Weave.Service.onStartup is called");
@@ -29,6 +30,8 @@ function run_test() {
     do_check_eq(ID.get('WeaveCryptoID').username, "johndoe");
 
     _("Observers are notified of startup");
+    // Synchronize with Weave.Service.onStartup's async notification
+    Sync.sleep(0);
     do_check_true(observerCalled);
 
   } finally {
