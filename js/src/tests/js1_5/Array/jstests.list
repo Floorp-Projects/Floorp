@@ -1,7 +1,7 @@
 url-prefix ../../jsreftest.html?test=js1_5/Array/
 script 11.1.4.js
 script array-001.js
-script regress-101964.js
+random script regress-101964.js # bogus perf test (bug 467263)
 script regress-107138.js
 fails-if(!xulRuntime.shell) script regress-108440.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR line 74
 script regress-154338.js
