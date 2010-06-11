@@ -1109,7 +1109,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendCharacters(stack[currentPtr]->node, prompt, 0, prompt.length);
                 prompt.release();
               } else {
-                appendCharacters(stack[currentPtr]->node, nsHtml5TreeBuilder::ISINDEX_PROMPT, 0, nsHtml5TreeBuilder::ISINDEX_PROMPT.length);
+                appendIsindexPrompt(stack[currentPtr]->node);
               }
               nsHtml5HtmlAttributes* inputAttributes = new nsHtml5HtmlAttributes(0);
               inputAttributes->addAttribute(nsHtml5AttributeName::ATTR_NAME, nsHtml5Portability::newStringFromLiteral("isindex"));
@@ -3991,7 +3991,6 @@ nsHtml5TreeBuilder::getStackLength()
 void
 nsHtml5TreeBuilder::initializeStatics()
 {
-  ISINDEX_PROMPT = nsHtml5Portability::isIndexPrompt();
   QUIRKY_PUBLIC_IDS = jArray<const char*,PRInt32>(55);
   QUIRKY_PUBLIC_IDS[0] = "+//silmaril//dtd html pro v0r11 19970101//";
   QUIRKY_PUBLIC_IDS[1] = "-//advasoft ltd//dtd html 3.0 aswedit + extensions//";
@@ -4053,7 +4052,6 @@ nsHtml5TreeBuilder::initializeStatics()
 void
 nsHtml5TreeBuilder::releaseStatics()
 {
-  ISINDEX_PROMPT.release();
   QUIRKY_PUBLIC_IDS.release();
 }
 
