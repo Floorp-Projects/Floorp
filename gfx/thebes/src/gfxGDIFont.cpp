@@ -111,7 +111,8 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
                         gfxTextRun *aTextRun,
                         const PRUnichar *aString,
                         PRUint32 aRunStart,
-                        PRUint32 aRunLength)
+                        PRUint32 aRunLength,
+                        PRInt32 aRunScript)
 {
     if (!mMetrics) {
         Initialize();
@@ -121,7 +122,7 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
         return;
     }
     PRBool ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                     aRunStart, aRunLength);
+                                     aRunStart, aRunLength, aRunScript);
     if (!ok) {
         // shaping failed; if we were using uniscribe, fall back to GDI
         GDIFontEntry *fe = static_cast<GDIFontEntry*>(GetFontEntry());
@@ -130,7 +131,7 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
             fe->mForceGDI = PR_TRUE;
             mShaper = new gfxGDIShaper(this);
             ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                      aRunStart, aRunLength);
+                                      aRunStart, aRunLength, aRunScript);
         }
     }
     NS_WARN_IF_FALSE(ok, "shaper failed, expect broken or missing text");
