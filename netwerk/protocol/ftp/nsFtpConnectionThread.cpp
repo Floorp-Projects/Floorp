@@ -1538,7 +1538,7 @@ nsFtpState::R_pasv() {
         mDataStream = do_QueryInterface(input);
     }
 
-    if (mRETRFailed || (!mPath.IsEmpty() && mPath.Last() == '/'))
+    if (mRETRFailed || mPath.IsEmpty() || mPath.Last() == '/')
         return FTP_S_CWD;
     return FTP_S_SIZE;
 }
