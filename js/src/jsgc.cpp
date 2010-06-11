@@ -1930,16 +1930,16 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
-    if (fp->argsobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments");
+    if (fp->argsObj())
+        JS_CALL_OBJECT_TRACER(trc, fp->argsObj(), "arguments");
     if (fp->script)
         js_TraceScript(trc, fp->script);
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
     MarkValue(trc, fp->thisv, "this");
     MarkValue(trc, fp->rval, "rval");
-    if (fp->scopeChain)
-        JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
+    if (fp->scopeChainObj())
+        JS_CALL_OBJECT_TRACER(trc, fp->scopeChainObj(), "scope chain");
 }
 
 void
@@ -2005,7 +2005,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     TracerState* state = acx->tracerState;
     while (state) {
         if (state->nativeVp)
-            TraceValues(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
+            MarkValueRange(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
         state = state->prev;
     }
 #endif
