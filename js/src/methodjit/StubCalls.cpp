@@ -89,16 +89,16 @@ mjit::stubs::BindName(VMFrame &f)
     PropertyCacheEntry *entry;
 
     /* Fast-path should have caught this. See comment in interpreter. */
-    JS_ASSERT(f.fp->scopeChain->getParent());
+    JS_ASSERT(f.fp->scopeChainObj()->getParent());
 
     JSAtom *atom;
     JSObject *obj2;
     JSContext *cx = f.cx;
-    JSObject *obj = f.fp->scopeChain->getParent();
+    JSObject *obj = f.fp->scopeChainObj();
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
     if (atom) {
         jsid id = ATOM_TO_JSID(atom);
-        obj = js_FindIdentifierBase(cx, f.fp->scopeChain, id);
+        obj = js_FindIdentifierBase(cx, f.fp->scopeChainObj(), id);
         if (!obj)
             THROW();
     }
@@ -114,7 +114,7 @@ InlineReturn(JSContext *cx)
     JSStackFrame *fp = cx->fp;
 
     JS_ASSERT(!fp->blockChain);
-    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
+    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChainObj(), 0));
 
     if (fp->script->staticLevel < JS_DISPLAY_SIZE)
         cx->display[fp->script->staticLevel] = fp->displaySave;
@@ -489,7 +489,6 @@ mjit::stubs::SetName(VMFrame &f, uint32 index)
                  * slot's value that might contain a method of a
                  * branded scope.
                  */
-                TRACE_2(SetPropHit, entry, sprop);
                 obj->lockedSetSlot(slot, rref);
 
                 /*
@@ -554,7 +553,7 @@ NameOp(VMFrame &f, uint32 index)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp;
-    JSObject *obj = fp->scopeChain;
+    JSObject *obj = fp->scopeChainObj();
 
     JSScopeProperty *sprop;
     Value rval;
@@ -709,7 +708,7 @@ stubs::GetElem(VMFrame &f)
                 /* Otherwise, fall to getProperty(). */
             }
         } else if (obj->isArguments()
-#ifdef JS_TRACER
+#if 0 /* def JS_TRACER */
                    && !GetArgsPrivateNative(obj)
 #endif
                   ) {
@@ -1055,14 +1054,14 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     /* Initialize the frame. */
     newfp->ncode = NULL;
     newfp->callobj = NULL;
-    newfp->argsobj = NULL;
+    newfp->argsval.setNull();
     newfp->script = newscript;
     newfp->fun = fun;
     newfp->argc = argc;
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
     newfp->annotation = NULL;
-    newfp->scopeChain = funobj->getParent();
+    newfp->scopeChain.setNonFunObj(*funobj->getParent());
     newfp->flags = flags;
     newfp->blockChain = NULL;
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
@@ -1106,7 +1105,7 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 
     if (cx->options & JSOPTION_METHODJIT) {
         if (!newscript->ncode) {
-            if (mjit::TryCompile(cx, newscript, fun, newfp->scopeChain) == Compile_Error)
+            if (mjit::TryCompile(cx, newscript, fun, newfp->scopeChainObj()) == Compile_Error)
                 return false;
         }
         JS_ASSERT(newscript->ncode);
@@ -1145,7 +1144,7 @@ stubs::Call(VMFrame &f, uint32 argc)
 
             f.cx->regs->pc = f.fp->script->code;
 
-#ifdef JS_TRACER
+#if 0 /* def JS_TRACER */
             if (ret && f.cx->jitEnabled && IsTraceableRecursion(f.cx)) {
                 /* Top of script should always have traceId 0. */
                 f.u.tracer.traceId = 0;
@@ -1260,7 +1259,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
          * FIXME: bug 476950, although debugger users may also demand some kind
          * of scope link for debugger-assisted eval-in-frame.
          */
-        obj2 = fp->scopeChain;
+        obj2 = fp->scopeChainObj();
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
@@ -1269,7 +1268,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
          * top-level function.
          */
         if (!fp->blockChain) {
-            obj2 = fp->scopeChain;
+            obj2 = fp->scopeChainObj();
         } else {
             obj2 = js_GetScopeChain(cx, fp);
             if (!obj2)
@@ -1298,7 +1297,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
      * fp->scopeChain code below the parent->defineProperty call.
      */
     MUST_FLOW_THROUGH("restore_scope");
-    fp->scopeChain = obj;
+    fp->setScopeChainObj(obj);
 
     Value rval;
     rval.setFunObj(*obj);
@@ -1391,7 +1390,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
 
   restore_scope:
     /* Restore fp->scopeChain now that obj is defined in fp->callobj. */
-    fp->scopeChain = obj2;
+    fp->setScopeChainObj(obj2);
     if (!ok)
         THROW();
 }
@@ -1904,7 +1903,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     JSObject *obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = CloneFunctionObject(f.cx, fun, f.fp->scopeChain);
+        obj = CloneFunctionObject(f.cx, fun, f.fp->scopeChainObj());
         if (!obj)
             THROWV(NULL);
     } else {
@@ -1934,7 +1933,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      * js_GetClassPrototype uses the latter only to locate the global.
      */
     JSObject *proto;
-    if (!js_GetClassPrototype(f.cx, f.fp->scopeChain, JSProto_RegExp, &proto))
+    if (!js_GetClassPrototype(f.cx, f.fp->scopeChainObj(), JSProto_RegExp, &proto))
         THROWV(NULL);
     JS_ASSERT(proto);
     JSObject *obj = js_CloneRegExpObject(f.cx, regex, proto);
@@ -1950,7 +1949,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
 
     JSObject *parent;
     if (FUN_NULL_CLOSURE(fun)) {
-        parent = f.fp->scopeChain;
+        parent = f.fp->scopeChainObj();
     } else {
         parent = js_GetScopeChain(f.cx, f.fp);
         if (!parent)
@@ -2035,7 +2034,7 @@ NameIncDec(VMFrame &f, JSAtom *origAtom)
     JSObject *obj2;
     JSProperty *prop;
     PropertyCacheEntry *entry;
-    JSObject *obj = fp->scopeChain;
+    JSObject *obj = fp->scopeChainObj();
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
@@ -2612,7 +2611,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      * anything else we should have popped off fp->scopeChain when we left its
      * static scope.
      */
-    JSObject *obj2 = fp->scopeChain;
+    JSObject *obj2 = fp->scopeChainObj();
     Class *clasp;
     while ((clasp = obj2->getClass()) == &js_WithClass)
         obj2 = obj2->getParent();
@@ -2646,7 +2645,7 @@ stubs::LeaveBlock(VMFrame &f)
      * cloned onto fp->scopeChain, clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject *obj = fp->scopeChain;
+    JSObject *obj = fp->scopeChainObj();
     if (obj->getProto() == fp->blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))

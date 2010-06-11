@@ -1466,7 +1466,7 @@ BEGIN_CASE(JSOP_GLOBALDEC)
     slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
     JSObject *obj;
-    obj = fp->scopeChain->getGlobal();
+    obj = fp->scopeChainObj()->getGlobal();
     vp = &obj->getSlotRef(slot);
     goto do_int_fast_incop;
 END_CASE(JSOP_INCGLOBAL)
@@ -2365,7 +2365,8 @@ BEGIN_CASE(JSOP_APPLY)
              * :FIXME: try to method jit - take this out once we're more
              * complete.
              */
-            mjit::CompileStatus status = mjit::CanMethodJIT(cx, newscript, fun, newfp->scopeChain);
+            JSObject *scope = newfp->scopeChainObj();
+            mjit::CompileStatus status = mjit::CanMethodJIT(cx, newscript, fun, scope);
             if (status == mjit::Compile_Error)
                 goto error;
             if (status == mjit::Compile_Okay) {
@@ -2929,7 +2930,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj = fp->scopeChainObj()->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     PUSH_COPY(obj->getSlot(slot));
     if (op == JSOP_CALLGLOBAL)
@@ -2945,7 +2946,7 @@ BEGIN_CASE(JSOP_FORGLOBAL)
     PUSH_COPY(rval);
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj = fp->scopeChainObj()->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     JS_LOCK_OBJ(cx, obj);
     {
@@ -2965,7 +2966,7 @@ BEGIN_CASE(JSOP_SETGLOBAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj = fp->scopeChainObj()->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     {
         JS_LOCK_OBJ(cx, obj);

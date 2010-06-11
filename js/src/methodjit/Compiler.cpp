@@ -109,7 +109,7 @@ mjit::Compiler::Compile()
         jumpMap[i] = Label();
 #endif
 
-#ifdef JS_TRACER
+#if 0 /* def JS_TRACER */
     if (script->tracePoints) {
         script->trees = (TraceTreeCache*)cx->malloc(script->tracePoints * sizeof(TraceTreeCache));
         if (!script->trees)
