@@ -142,7 +142,7 @@ TestRunner.runNextTest = function() {
         TestRunner._timeoutFactor = 1;
 
         if (TestRunner.logEnabled)
-            TestRunner.logger.log("Running " + url + "...");
+            TestRunner.logger.log("TEST-START | " + url);
 
         TestRunner._makeIframe(url, 0);
     } else {
@@ -172,8 +172,10 @@ TestRunner.runNextTest = function() {
             TestRunner.logger.log("SimpleTest FINISHED");
         }
 
-        if (TestRunner.onComplete)
+        if (TestRunner.onComplete) {
+            TestRunner.logger.log("TEST-START | Shutdown");
             TestRunner.onComplete();
+        }
     }
 };
 

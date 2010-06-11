@@ -677,7 +677,7 @@ function StartCurrentURI(aState)
         // there's already a canvas for this URL
         setTimeout(DocumentLoaded, 0);
     } else {
-        dump("REFTEST INFO | Loading " + gCurrentURL + "\n");
+        dump("REFTEST TEST-START | " + gCurrentURL + "\n");
         gBrowser.loadURI(gCurrentURL);
     }
 }
@@ -713,8 +713,8 @@ function DoneTests()
 
     dump("REFTEST INFO | Total canvas count = " + gRecycledCanvases.length + "\n");
 
+    dump("REFTEST TEST-START | Shutdown\n");
     function onStopped() {
-        dump("REFTEST INFO | Quitting...\n");
         goQuitApplication();
     }
     if (gServer)
