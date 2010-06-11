@@ -942,11 +942,32 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
         JS_ASSERT(globalObj->scope()->freeslot == globalScope.globalFreeSlot);
         JS_ASSERT(!cg.compilingForEval());
         for (size_t i = 0; i < globalScope.defs.length(); i++) {
-            JSAtom *atom = globalScope.defs[i];
-            jsid id = ATOM_TO_JSID(atom);
+            GlobalScope::GlobalDef &def = globalScope.defs[i];
+            jsid id = ATOM_TO_JSID(def.atom);
+            Value rval;
+
+            if (def.funbox) {
+                JSFunction *fun = (JSFunction *)def.funbox->object;
+
+                /* Compile-and-go should have chosen scopeChain as the parent. */
+                JS_ASSERT(fun->getParent() == scopeChain);
+
+                /* No named statement getters or setters at global scope. */
+                JS_ASSERT(!JSFUN_GSFLAG2ATTR(fun->flags));
+
+                /*
+                 * No need to check for redeclarations or anything, global
+                 * optimizations only take place if the property is not
+                 * defined.
+                 */
+                rval.setFunObj(*fun);
+            } else {
+                rval.setUndefined();
+            }
+
             JSProperty *prop;
 
-            if (!js_DefineNativeProperty(cx, globalObj, id, Value(UndefinedTag()), PropertyStub,
+            if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub,
                                          PropertyStub, JSPROP_ENUMERATE | JSPROP_PERMANENT,
                                          0, 0, &prop)) {
                 goto out;
@@ -2580,6 +2601,9 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
     return true;
 }
 
+static bool
+DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom);
+
 JSParseNode *
 Parser::functionDef(uintN lambda, bool namePermitted)
 {
@@ -2994,6 +3018,13 @@ Parser::functionDef(uintN lambda, bool namePermitted)
         pn->pn_body = body;
     }
 
+    if (!outertc->inFunction() && topLevel && funAtom && !lambda &&
+        outertc->compiling()) {
+        JS_ASSERT(pn->pn_cookie == FREE_UPVAR_COOKIE);
+        if (!DefineGlobal(pn, (JSCodeGenerator *)outertc, funAtom))
+            return false;
+    }
+
     pn->pn_blockid = outertc->blockid();
 
     if (!LeaveFunction(pn, &funtc, funAtom, lambda))
@@ -3303,12 +3334,17 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
             SPROP_HAS_VALID_SLOT(sprop, globalObj->scope()) &&
             sprop->hasDefaultGetterOrIsMethod() &&
             sprop->hasDefaultSetter() &&
-            cg->addGlobalUse(atom, sprop->slot, &index) &&
-            index != FREE_UPVAR_COOKIE)
+            pn->pn_type != TOK_FUNCTION)
         {
-            pn->pn_op = JSOP_GETGLOBAL;
-            pn->pn_cookie = index;
-            pn->pn_dflags |= PND_BOUND | PND_GVAR;
+            if (!cg->addGlobalUse(atom, sprop->slot, &index)) {
+                JS_UNLOCK_SCOPE(cg->parser->context, scope);
+                return false;
+            }
+            if (index != FREE_UPVAR_COOKIE) {
+                pn->pn_op = JSOP_GETGLOBAL;
+                pn->pn_cookie = index;
+                pn->pn_dflags |= PND_BOUND | PND_GVAR;
+            }
         }
 
         JS_UNLOCK_SCOPE(cg->parser->context, scope);
@@ -3316,21 +3352,42 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
     }
     JS_UNLOCK_SCOPE(cg->parser->context, scope);
 
-    /* Definitions from |var| are not redefined, like functions. */
-    JS_ASSERT(!cg->globalMap.lookup(atom));
+    /*
+     * Functions can be redeclared, and the last one takes effect. Check for
+     * this and make sure to rewrite the definition.
+     */
+    uint32 slot = SPROP_INVALID_SLOT;
+    JSFunctionBox *funbox = NULL;
+    if (pn->pn_type == TOK_FUNCTION) {
+        funbox = pn->pn_funbox;
+        JSAtomListElement *ale = cg->globalMap.lookup(atom);
+        if (ale) {
+            uint32 index = ALE_INDEX(ale);
+            slot = cg->globalUses[index].slot;
+            uint32 defSlot = slot - globalScope->globalFreeSlot;
+            JS_ASSERT(globalScope->defs[defSlot].funbox);
+            globalScope->defs[defSlot].funbox = funbox;
+        }
+    }
 
-    uint32 slot = globalScope->globalFreeSlot + globalScope->defs.length();
-    if (!globalScope->defs.append(atom))
-        return false;
+    if (slot == SPROP_INVALID_SLOT) {
+        GlobalScope::GlobalDef def(atom, funbox);
+        slot = globalScope->globalFreeSlot + globalScope->defs.length();
+        if (!globalScope->defs.append(def))
+            return false;
+    }
 
     uint32 index;
     if (!cg->addGlobalUse(atom, slot, &index))
         return false;
 
     if (index != FREE_UPVAR_COOKIE) {
-        pn->pn_op = JSOP_GETGLOBAL;
         pn->pn_cookie = index;
-        pn->pn_dflags |= PND_BOUND | PND_GVAR;
+        pn->pn_dflags |= PND_GVAR;
+        if (pn->pn_type != TOK_FUNCTION) {
+            pn->pn_op = JSOP_GETGLOBAL;
+            pn->pn_dflags |= PND_BOUND;
+        }
     }
 
     return true;

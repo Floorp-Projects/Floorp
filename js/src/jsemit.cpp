@@ -2106,7 +2106,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     }
 
     if (dn->pn_dflags & PND_GVAR) {
-        if (js_CodeSpec[dn->pn_op].type() == JOF_GLOBAL) {
+        if (js_CodeSpec[dn->pn_op].type() == JOF_GLOBAL ||
+            dn_kind == JSDefinition::FUNCTION) {
             switch (op) {
               case JSOP_NAME:     op = JSOP_GETGLOBAL; break;
               case JSOP_SETNAME:  op = JSOP_SETGLOBAL; break;
@@ -4501,10 +4502,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!cg->inFunction()) {
             JS_ASSERT(!cg->topStmt);
-            CG_SWITCH_TO_PROLOG(cg);
-            op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
-            EMIT_INDEX_OP(op, index);
-            CG_SWITCH_TO_MAIN(cg);
+            if (pn->pn_cookie == FREE_UPVAR_COOKIE) {
+                CG_SWITCH_TO_PROLOG(cg);
+                op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
+                EMIT_INDEX_OP(op, index);
+                CG_SWITCH_TO_MAIN(cg);
+            }
 
             /* Emit NOP for the decompiler. */
             if (!EmitFunctionDefNop(cx, cg, index))
