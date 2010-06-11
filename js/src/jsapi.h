@@ -58,6 +58,7 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_FALSE  BUILD_JSVAL(JSVAL_MASK32_BOOLEAN,   JS_FALSE)
 #define JSVAL_TRUE   BUILD_JSVAL(JSVAL_MASK32_BOOLEAN,   JS_TRUE)
 #define JSVAL_VOID   BUILD_JSVAL(JSVAL_MASK32_UNDEFINED, 0)
+#define JSVAL_HOLE   BUILD_JSVAL(JSVAL_MASK32_MAGIC,     0)
 
 /* Predicates for type testing. */
 
@@ -3248,6 +3249,8 @@ class Value
         return isMagic();
     }
 
+    bool isIntDouble() const;
+
     int32 traceKind() const {
         JS_ASSERT(isGCThing());
         return JSVAL_TRACE_KIND_IMPL(data);
@@ -3340,6 +3343,25 @@ class Value
         return data.s.payload.u32;
     }
 
+    uint64 asRawBits() const {
+        return data.asBits;
+    }
+
+#ifdef DEBUG
+    char typeTag() const {
+        if (isInt32()) return 'I';
+        if (isDouble()) return 'D';
+        if (isString()) return 'S';
+        if (isFunObj()) return 'F';
+        if (isNonFunObj()) return 'O';
+        if (isBoolean()) return 'B';
+        if (isNull()) return 'N';
+        if (isUndefined()) return 'U';
+        if (isMagic()) return 'H';
+        return '?';
+    }
+#endif
+
     /* Swap two Values */
 
     void swap(Value &rhs) {
@@ -3387,6 +3409,18 @@ class Value
 		JS_ASSERT(isDouble());
 		return data.s.payload.u32;
     }
+
+    /* Tracing support API. 
+     * Use these functions to check if a Value needs to be passed
+     * to JS_CallTracer. */
+    bool isTraceable() const {
+        return isGCThing();
+    }
+
+    void *toTraceable() {
+        return asGCThing();
+    }
+
 } VALUE_ALIGNMENT;
 
 /*
