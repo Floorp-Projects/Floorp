@@ -87,7 +87,7 @@ StubCompiler::leave()
         jumpList[i].linkTo(masm.label(), &masm);
     jumpList.clear();
 }
-
+ 
 void
 StubCompiler::rejoin(uint32 invalidationDepth)
 {
@@ -146,29 +146,29 @@ StubCompiler::finalize(uint8 *ncode)
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::vpInc(JSOp op, bool pushed)
+StubCompiler::vpInc(JSOp op, uint32 depth)
 {
-    uint32 slots = frame.stackDepth() + script->nfixed;
-    if (pushed) {
-        JS_ASSERT(frame.stackDepth());
-        slots--;
-    }
+    uint32 slots = depth + script->nfixed;
 
     VoidVpStub stub = NULL;
     switch (op) {
       case JSOP_GLOBALINC:
+      case JSOP_ARGINC:
         stub = stubs::VpInc;
         break;
 
       case JSOP_GLOBALDEC:
+      case JSOP_ARGDEC:
         stub = stubs::VpDec;
         break;
 
       case JSOP_INCGLOBAL:
+      case JSOP_INCARG:
         stub = stubs::IncVp;
         break;
 
       case JSOP_DECGLOBAL:
+      case JSOP_DECARG:
         stub = stubs::DecVp;
         break;
 

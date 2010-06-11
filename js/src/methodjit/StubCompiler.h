@@ -108,7 +108,7 @@ class StubCompiler
         return masm.buffer();
     }
 
-    Call vpInc(JSOp op, bool pushed);
+    Call vpInc(JSOp op, uint32 depth);
 
 #define STUB_CALL_TYPE(type)                                    \
     Call call(type stub) {                                      \
@@ -125,6 +125,7 @@ class StubCompiler
     void linkExit(Jump j);
 
     void leave();
+    void leaveWithDepth(uint32 depth);
 
     /*
      * Rejoins slow-path code back to the fast-path. The invalidation param
