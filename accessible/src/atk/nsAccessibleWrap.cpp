@@ -270,10 +270,9 @@ PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
 PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 #endif
 
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
-                                   nsIWeakReference *aShell)
-    : nsAccessible(aNode, aShell),
-      mAtkObject(nsnull)
+nsAccessibleWrap::
+    nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsAccessible(aContent, aShell), mAtkObject(nsnull)
 {
 #ifdef MAI_LOGGING
     ++mAccWrapCreated;
@@ -562,7 +561,7 @@ GetUniqueMaiAtkTypeName(PRUint16 interfacesBits)
 PRBool nsAccessibleWrap::IsValidObject()
 {
     // to ensure we are not shut down
-    return (mDOMNode != nsnull);
+    return !IsDefunct();
 }
 
 /* static functions for ATK callbacks */

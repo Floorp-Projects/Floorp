@@ -51,7 +51,7 @@ class nsXULComboboxAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Click = 0 };
 
-  nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULComboboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& aValue);

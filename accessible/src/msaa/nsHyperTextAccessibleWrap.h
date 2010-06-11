@@ -51,8 +51,8 @@ class nsHyperTextAccessibleWrap : public nsHyperTextAccessible,
                                   public CAccessibleEditableText
 {
 public:
-  nsHyperTextAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-    nsHyperTextAccessible(aNode, aShell){}
+  nsHyperTextAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsHyperTextAccessible(aContent, aShell) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

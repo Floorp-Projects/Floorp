@@ -40,13 +40,14 @@
 
 #include "nsAccessibleWrap.h"
 
-/* Accessible for supporting XUL alerts
+/**
+ * Accessible for supporting XUL alerts.
  */
 
 class nsXULAlertAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULAlertAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXULAlertAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 

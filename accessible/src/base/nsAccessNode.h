@@ -82,9 +82,10 @@ typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessNode>
 
 class nsAccessNode: public nsIAccessNode
 {
-  public: // construction, destruction
-    nsAccessNode(nsIDOMNode *, nsIWeakReference* aShell);
-    virtual ~nsAccessNode();
+public:
+
+  nsAccessNode(nsIContent *aContent, nsIWeakReference *aShell);
+  virtual ~nsAccessNode();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAccessNode, nsIAccessNode)
@@ -110,9 +111,18 @@ class nsAccessNode: public nsIAccessNode
    */
   already_AddRefed<nsRootAccessible> GetRootAccessible();
 
-    static nsIDOMNode *gLastFocusedNode;
+  /**
+   * Reference to a node of focused accessible.
+   */
+  static nsINode *gLastFocusedNode;
 
-    already_AddRefed<nsIDOMNode> GetCurrentFocus();
+  /**
+   * Return focused node within accessible window.
+   *
+   * XXX: it shouldn't break us if we return focused node not depending on
+   * window so that we can turn this method into util method.
+   */
+  already_AddRefed<nsINode> GetCurrentFocus();
 
     /**
      * Returns true when the accessible is defunct.
@@ -137,7 +147,31 @@ class nsAccessNode: public nsIAccessNode
   /**
    * Return DOM node associated with this accessible.
    */
-  nsIDOMNode *GetDOMNode() const { return mDOMNode; }
+  already_AddRefed<nsIDOMNode> GetDOMNode() const
+  {
+    nsIDOMNode *DOMNode = nsnull;
+    if (GetNode())
+      CallQueryInterface(GetNode(), &DOMNode);
+    return DOMNode;
+  }
+
+  /**
+   * Return DOM node associated with the accessible.
+   */
+  virtual nsINode* GetNode() const { return mContent; }
+  nsIContent* GetContent() const { return mContent; }
+
+  /**
+   * Return node type information of DOM node associated with the accessible.
+   */
+  PRBool IsContent() const
+  {
+    return GetNode() && GetNode()->IsNodeOfType(nsINode::eCONTENT);
+  }
+  PRBool IsDocument() const
+  {
+    return GetNode() && GetNode()->IsNodeOfType(nsINode::eDOCUMENT);
+  }
 
   /**
    * Return the corresponding press shell for this accessible.
@@ -158,14 +192,17 @@ class nsAccessNode: public nsIAccessNode
 #endif
 
 protected:
-    nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
+  /**
+   * Return the access node for the given DOM node.
+   */
+  nsAccessNode *MakeAccessNode(nsINode *aNode);
 
     nsPresContext* GetPresContext();
 
     void LastRelease();
 
-    nsCOMPtr<nsIDOMNode> mDOMNode;
-    nsCOMPtr<nsIWeakReference> mWeakShell;
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIWeakReference> mWeakShell;
 
 #ifdef DEBUG_A11Y
     PRBool mIsInitialized;

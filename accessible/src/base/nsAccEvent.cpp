@@ -88,11 +88,11 @@ nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   CaptureIsFromUserInput(aIsFromUserInput);
 }
 
-nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
+nsAccEvent::nsAccEvent(PRUint32 aEventType, nsINode *aNode,
                        PRBool aIsAsync, EIsFromUserInput aIsFromUserInput,
                        EEventRule aEventRule) :
   mEventType(aEventType), mEventRule(aEventRule), mIsAsync(aIsAsync),
-  mNode(do_QueryInterface(aDOMNode))
+  mNode(aNode)
 {
   CaptureIsFromUserInput(aIsFromUserInput);
 }
@@ -128,7 +128,7 @@ nsAccEvent::GetAccessible(nsIAccessible **aAccessible)
   *aAccessible = nsnull;
 
   if (!mAccessible)
-    mAccessible = GetAccessibleByNode();
+    mAccessible = GetAccessibleForNode();
 
   NS_IF_ADDREF(*aAccessible = mAccessible);
   return NS_OK;
@@ -165,14 +165,9 @@ nsINode*
 nsAccEvent::GetNode()
 {
   if (!mNode) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mAccessible));
-    if (!accessNode)
-      return nsnull;
-
-    nsCOMPtr<nsIDOMNode> DOMNode;
-    accessNode->GetDOMNode(getter_AddRefs(DOMNode));
-
-    mNode = do_QueryInterface(DOMNode);
+    nsRefPtr<nsAccessNode> accessNode(do_QueryObject(mAccessible));
+    if (accessNode)
+      mNode = accessNode->GetNode();
   }
 
   return mNode;
@@ -191,16 +186,13 @@ nsAccEvent::GetDocAccessible()
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccEvent: protected methods
 
-already_AddRefed<nsIAccessible>
-nsAccEvent::GetAccessibleByNode()
+nsAccessible *
+nsAccEvent::GetAccessibleForNode() const
 {
   if (!mNode)
     return nsnull;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mNode));
-
-  nsCOMPtr<nsIAccessible> accessible;
-  GetAccService()->GetAccessibleFor(DOMNode, getter_AddRefs(accessible));
+  nsAccessible *accessible = GetAccService()->GetAccessible(mNode);
 
 #ifdef MOZ_XUL
   // hack for xul tree table. We need a better way for firing delayed event
@@ -220,20 +212,19 @@ nsAccEvent::GetAccessibleByNode()
       if (treeIndex >= 0) {
         nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
         if (treeAcc)
-          accessible = treeAcc->GetTreeItemAccessible(treeIndex);
+          return treeAcc->GetTreeItemAccessible(treeIndex);
       }
     }
   }
 #endif
 
-  return accessible.forget();
+  return accessible;
 }
 
 void
 nsAccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
 {
-  nsCOMPtr<nsIDOMNode> targetNode;
-  GetDOMNode(getter_AddRefs(targetNode));
+  nsINode *targetNode = GetNode();
 
 #ifdef DEBUG
   if (!targetNode) {
@@ -282,7 +273,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccReorderEvent, nsAccEvent,
 nsAccReorderEvent::nsAccReorderEvent(nsIAccessible *aAccTarget,
                                      PRBool aIsAsynch,
                                      PRBool aIsUnconditional,
-                                     nsIDOMNode *aReasonNode) :
+                                     nsINode *aReasonNode) :
   nsAccEvent(::nsIAccessibleEvent::EVENT_REORDER, aAccTarget,
              aIsAsynch, eAutoDetect, nsAccEvent::eCoalesceFromSameSubtree),
   mUnconditionalEvent(aIsUnconditional), mReasonNode(aReasonNode)
@@ -301,9 +292,7 @@ nsAccReorderEvent::HasAccessibleInReasonSubtree()
   if (!mReasonNode)
     return PR_FALSE;
 
-  nsCOMPtr<nsIAccessible> accessible;
-  GetAccService()->GetAccessibleFor(mReasonNode, getter_AddRefs(accessible));
-
+  nsAccessible *accessible = GetAccService()->GetAccessible(mReasonNode);
   return accessible || nsAccUtils::HasAccessibleChildren(mReasonNode);
 }
 
@@ -329,8 +318,7 @@ nsAccStateChangeEvent::
 }
 
 nsAccStateChangeEvent::
-  nsAccStateChangeEvent(nsIDOMNode *aNode,
-                        PRUint32 aState, PRBool aIsExtraState,
+  nsAccStateChangeEvent(nsINode *aNode, PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled):
   nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
@@ -338,15 +326,14 @@ nsAccStateChangeEvent::
 }
 
 nsAccStateChangeEvent::
-  nsAccStateChangeEvent(nsIDOMNode *aNode,
-                        PRUint32 aState, PRBool aIsExtraState):
+  nsAccStateChangeEvent(nsINode *aNode, PRUint32 aState, PRBool aIsExtraState) :
   nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode),
   mState(aState), mIsExtraState(aIsExtraState)
 {
-  // Use GetAccessibleByNode() because we do not want to store an accessible
+  // Use GetAccessibleForNode() because we do not want to store an accessible
   // since it leads to problems with delayed events in the case when
   // an accessible gets reorder event before delayed event is processed.
-  nsCOMPtr<nsIAccessible> accessible(GetAccessibleByNode());
+  nsAccessible *accessible = GetAccessibleForNode();
   if (accessible) {
     PRUint32 state = 0, extraState = 0;
     accessible->GetState(&state, mIsExtraState ? &extraState : nsnull);
@@ -447,7 +434,7 @@ nsAccCaretMoveEvent::
 }
 
 nsAccCaretMoveEvent::
-  nsAccCaretMoveEvent(nsIDOMNode *aNode) :
+  nsAccCaretMoveEvent(nsINode *aNode) :
   nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, PR_TRUE), // Currently always asynch
   mCaretOffset(-1)
 {

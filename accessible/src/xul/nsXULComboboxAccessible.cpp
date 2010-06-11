@@ -51,8 +51,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULComboboxAccessible::
-  nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell) :
-  nsAccessibleWrap(aDOMNode, aShell)
+  nsXULComboboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -60,23 +60,23 @@ nsresult
 nsXULComboboxAccessible::Init()
 {
   nsresult rv = nsAccessibleWrap::Init();
-  nsCoreUtils::GeneratePopupTree(mDOMNode);
+  nsCoreUtils::GeneratePopupTree(mContent);
   return rv;
 }
 
 nsresult
 nsXULComboboxAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  if (!content) {
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
-  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                           NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
+
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                            nsAccessibilityAtoms::autocomplete, eIgnoreCase)) {
     *aRole = nsIAccessibleRole::ROLE_AUTOCOMPLETE;
   } else {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX;
   }
+
   return NS_OK;
 }
 
@@ -95,7 +95,7 @@ nsXULComboboxAccessible::GetStateInternal(PRUint32 *aState,
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
     PRBool isOpen;
     menuList->GetOpen(&isOpen);
@@ -122,7 +122,7 @@ nsXULComboboxAccessible::GetValue(nsAString& aValue)
     return NS_ERROR_FAILURE;
 
   // The value is the option or text shown entered in the combobox.
-  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList)
     return menuList->GetLabel(aValue);
 
@@ -138,16 +138,17 @@ nsXULComboboxAccessible::GetDescription(nsAString& aDescription)
     return NS_ERROR_FAILURE;
 
   // Use description of currently focused option
-  nsCOMPtr<nsIDOMXULMenuListElement> menuListElm(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULMenuListElement> menuListElm(do_QueryInterface(mContent));
   if (!menuListElm)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> focusedOptionItem;
   menuListElm->GetSelectedItem(getter_AddRefs(focusedOptionItem));
-  nsCOMPtr<nsIDOMNode> focusedOptionNode(do_QueryInterface(focusedOptionItem));
-  if (focusedOptionNode) {
+  nsCOMPtr<nsIContent> focusedOptionContent =
+    do_QueryInterface(focusedOptionItem);
+  if (focusedOptionContent) {
     nsAccessible *focusedOption =
-      GetAccService()->GetAccessibleInWeakShell(focusedOptionNode, mWeakShell);
+      GetAccService()->GetAccessibleInWeakShell(focusedOptionContent, mWeakShell);
     NS_ENSURE_TRUE(focusedOption, NS_ERROR_FAILURE);
 
     return focusedOption->GetDescription(aDescription);
@@ -159,14 +160,9 @@ nsXULComboboxAccessible::GetDescription(nsAString& aDescription)
 PRBool
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  NS_ASSERTION(content, "No content during accessible tree building!");
-  if (!content)
-    return PR_FALSE;
-
-  if (content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL) ||
-      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::editable,
-                           nsAccessibilityAtoms::_true, eIgnoreCase)) {
+  if (mContent->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL) ||
+      mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::editable,
+                            nsAccessibilityAtoms::_true, eIgnoreCase)) {
     // Both the XUL <textbox type="autocomplete"> and <menulist editable="true"> widgets
     // use nsXULComboboxAccessible. We need to walk the anonymous children for these
     // so that the entry field is a child
@@ -199,7 +195,7 @@ nsXULComboboxAccessible::DoAction(PRUint8 aIndex)
     return NS_ERROR_FAILURE;
 
   // Programmaticaly toggle the combo box.
-  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (!menuList) {
     return NS_ERROR_FAILURE;
   }
@@ -223,7 +219,7 @@ nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   //     if we are open -> close is our name.
   // Uses the frame to get the state, updated on every click.
 
-  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (!menuList) {
     return NS_ERROR_FAILURE;
   }

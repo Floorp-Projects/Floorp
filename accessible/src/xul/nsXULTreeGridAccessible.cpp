@@ -50,8 +50,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridAccessible::
-  nsXULTreeGridAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
-  nsXULTreeAccessible(aDOMNode, aShell)
+  nsXULTreeGridAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULTreeAccessible(aContent, aShell)
 {
 }
 
@@ -577,7 +577,7 @@ already_AddRefed<nsAccessible>
 nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 {
   nsRefPtr<nsAccessible> accessible =
-    new nsXULTreeGridRowAccessible(mDOMNode, mWeakShell, this, mTree,
+    new nsXULTreeGridRowAccessible(mContent, mWeakShell, this, mTree,
                                    mTreeView, aRow);
 
   return accessible.forget();
@@ -589,10 +589,10 @@ nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridRowAccessible::
-  nsXULTreeGridRowAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+  nsXULTreeGridRowAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                              nsAccessible *aTreeAcc, nsITreeBoxObject* aTree,
                              nsITreeView *aTreeView, PRInt32 aRow) :
-  nsXULTreeItemAccessibleBase(aDOMNode, aShell, aTreeAcc, aTree, aTreeView, aRow)
+  nsXULTreeItemAccessibleBase(aContent, aShell, aTreeAcc, aTree, aTreeView, aRow)
 {
   mAccessibleCache.Init(kDefaultTreeCacheSize);
 }
@@ -722,7 +722,7 @@ nsXULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
 
   if (!accessible) {
     accessible =
-      new nsXULTreeGridCellAccessibleWrap(mDOMNode, mWeakShell, this, mTree,
+      new nsXULTreeGridCellAccessibleWrap(mContent, mWeakShell, this, mTree,
                                           mTreeView, mRow, aColumn);
     if (!accessible)
       return nsnull;
@@ -776,11 +776,11 @@ nsXULTreeGridRowAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridCellAccessible::
-nsXULTreeGridCellAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+nsXULTreeGridCellAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                             nsXULTreeGridRowAccessible *aRowAcc,
                             nsITreeBoxObject *aTree, nsITreeView *aTreeView,
                             PRInt32 aRow, nsITreeColumn* aColumn) :
-  nsLeafAccessible(aDOMNode, aShell), mTree(aTree),
+  nsLeafAccessible(aContent, aShell), mTree(aTree),
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
   mParent = aRowAcc;
@@ -1042,8 +1042,9 @@ nsXULTreeGridCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   nsCOMPtr<nsIDOMElement> columnElm;
   mColumn->GetElement(getter_AddRefs(columnElm));
 
+  nsCOMPtr<nsIContent> columnContent(do_QueryInterface(columnElm));
   nsAccessible *headerCell =
-    GetAccService()->GetAccessibleInWeakShell(columnElm, mWeakShell);
+    GetAccService()->GetAccessibleInWeakShell(columnContent, mWeakShell);
 
   if (headerCell)
     headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
@@ -1324,9 +1325,7 @@ nsXULTreeGridCellAccessible::IsEditable() const
                                   eCaseMatters))
     return PR_FALSE;
 
-  nsCOMPtr<nsIContent> treeContent(do_QueryInterface(mDOMNode));
-  return treeContent->AttrValueIs(kNameSpaceID_None,
-                                  nsAccessibilityAtoms::editable,
-                                  nsAccessibilityAtoms::_true,
-                                  eCaseMatters);
+  return mContent->AttrValueIs(kNameSpaceID_None,
+                               nsAccessibilityAtoms::editable,
+                               nsAccessibilityAtoms::_true, eCaseMatters);
 }

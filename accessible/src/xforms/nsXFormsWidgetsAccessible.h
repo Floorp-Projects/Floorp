@@ -51,7 +51,7 @@ class nsXFormsDropmarkerWidgetAccessible : public nsLeafAccessible,
                                            public nsXFormsAccessibleBase
 {
 public:
-  nsXFormsDropmarkerWidgetAccessible(nsIDOMNode *aNode,
+  nsXFormsDropmarkerWidgetAccessible(nsIContent *aContent,
                                      nsIWeakReference *aShell);
 
   // nsIAccessible
@@ -71,7 +71,8 @@ public:
 class nsXFormsCalendarWidgetAccessible : public nsAccessibleWrap
 {
 public:
-  nsXFormsCalendarWidgetAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+  nsXFormsCalendarWidgetAccessible(nsIContent *aContent,
+                                   nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -85,7 +86,7 @@ public:
 class nsXFormsComboboxPopupWidgetAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsComboboxPopupWidgetAccessible(nsIDOMNode *aNode,
+  nsXFormsComboboxPopupWidgetAccessible(nsIContent *aContent,
                                         nsIWeakReference *aShell);
 
   // nsIAccessible

@@ -57,9 +57,10 @@
 // nsDocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
-                                         nsIWeakReference *aShell) :
-  nsDocAccessible(aDOMNode, aShell)
+nsDocAccessibleWrap::
+  nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
+                      nsIWeakReference *aShell) :
+  nsDocAccessible(aDocument, aRootContent, aShell)
 {
 }
 

@@ -68,7 +68,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
   NS_DECL_ISUPPORTS_INHERITED
 
 public:
-  nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
+  nsRootAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
+                   nsIWeakReference *aShell);
   virtual ~nsRootAccessible();
 
   // nsIAccessible
@@ -103,8 +104,8 @@ public:
    *                             item was the same
    * @return                    boolean -- was a focus event actually fired
    */
-  PRBool FireAccessibleFocusEvent(nsIAccessible *aFocusAccessible,
-                                  nsIDOMNode *aFocusNode,
+  PRBool FireAccessibleFocusEvent(nsAccessible *aFocusAccessible,
+                                  nsINode *aFocusNode,
                                   nsIDOMEvent *aFocusEvent,
                                   PRBool aForceEvent = PR_FALSE,
                                   PRBool aIsAsynch = PR_FALSE,
@@ -123,16 +124,23 @@ protected:
 
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();
-    nsresult HandleEventWithTarget(nsIDOMEvent* aEvent,
-                                   nsIDOMNode* aTargetNode);
+
+  /**
+   * Process DOM events.
+   */
+  nsresult HandleEventWithTarget(nsIDOMEvent* aEvent, nsINode* aTargetNode);
+
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
 
-    /**
-     * Used in HandleEventWithTarget().
-     */
-    nsresult HandlePopupShownEvent(nsIAccessible *aAccessible);
-    nsresult HandlePopupHidingEvent(nsIDOMNode *aNode,
-                                    nsIAccessible *aAccessible);
+  /**
+   * Process "popupshown" event. Used by HandleEventWithTarget().
+   */
+
+  nsresult HandlePopupShownEvent(nsAccessible *aAccessible);
+  /*
+   * Process "popuphiding" event. Used by HandleEventWithTarget().
+   */
+  nsresult HandlePopupHidingEvent(nsINode *aNode, nsAccessible *aAccessible);
 
 #ifdef MOZ_XUL
     nsresult HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
@@ -145,7 +153,7 @@ protected:
     already_AddRefed<nsIDocShellTreeItem>
            GetContentDocShell(nsIDocShellTreeItem *aStart);
     nsRefPtr<nsCaretAccessible> mCaretAccessible;
-    nsCOMPtr<nsIDOMNode> mCurrentARIAMenubar;
+  nsCOMPtr<nsINode> mCurrentARIAMenubar;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsRootAccessible, NS_ROOTACCESSIBLE_IMPL_CID)

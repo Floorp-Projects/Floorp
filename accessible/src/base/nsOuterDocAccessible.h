@@ -53,8 +53,7 @@
 class nsOuterDocAccessible : public nsAccessibleWrap
 {
 public:
-  nsOuterDocAccessible(nsIDOMNode* aNode, 
-                       nsIWeakReference* aShell);
+  nsOuterDocAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 

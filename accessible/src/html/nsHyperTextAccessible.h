@@ -74,7 +74,7 @@ class nsHyperTextAccessible : public nsAccessibleWrap,
                               public nsIAccessibleEditableText
 {
 public:
-  nsHyperTextAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHyperTextAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETEXT
   NS_DECL_NSIACCESSIBLEHYPERTEXT
@@ -120,7 +120,7 @@ public:
     *                       it is within the current nsHyperTextAccessible,
     *                       otherwise nsnull
     */
-  nsAccessible *DOMPointToHypertextOffset(nsIDOMNode *aNode,
+  nsAccessible *DOMPointToHypertextOffset(nsINode *aNode,
                                           PRInt32 aNodeOffset,
                                           PRInt32 *aHypertextOffset,
                                           PRBool aIsEndOffset = PR_FALSE);

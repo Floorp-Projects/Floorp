@@ -85,7 +85,7 @@ class MaiHyperlink;
 class nsAccessibleWrap: public nsAccessible
 {
 public:
-    nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
+    nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell);
     virtual ~nsAccessibleWrap();
     void ShutdownAtkObject();
 

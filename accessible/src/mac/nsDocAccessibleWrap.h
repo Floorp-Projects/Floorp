@@ -44,8 +44,9 @@
 class nsDocAccessibleWrap: public nsDocAccessible
 {
 public:
-    nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsDocAccessibleWrap();
+  nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
+                      nsIWeakReference *aShell);
+  virtual ~nsDocAccessibleWrap();
 
     // nsIAccessNode
 

@@ -46,9 +46,9 @@
 #import "mozActionElements.h"
 #import "mozTextAccessible.h"
 
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell): 
-  nsAccessible(aNode, aShell),
-  mNativeWrapper(nsnull)
+nsAccessibleWrap::
+  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessible(aContent, aShell), mNativeWrapper(nsnull)
 {
 }
 

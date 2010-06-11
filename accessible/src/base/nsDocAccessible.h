@@ -82,7 +82,8 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
   NS_DECL_NSIOBSERVER
 
 public:
-  nsDocAccessible(nsIDOMNode *aNode, nsIWeakReference* aShell);
+  nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
+                  nsIWeakReference* aShell);
   virtual ~nsDocAccessible();
 
   // nsIAccessible
@@ -104,6 +105,7 @@ public:
   virtual nsresult Shutdown();
   virtual nsIFrame* GetFrame();
   virtual PRBool IsDefunct();
+  virtual nsINode* GetNode() const { return mDocument; }
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -149,7 +151,7 @@ public:
    * @param aIsAsynch    [in] set to PR_TRUE if this is not being called from
    *                      code synchronous with a DOM event
    */
-  nsresult FireDelayedAccessibleEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
+  nsresult FireDelayedAccessibleEvent(PRUint32 aEventType, nsINode *aNode,
                                       nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
                                       PRBool aIsAsynch = PR_FALSE,
                                       EIsFromUserInput aIsFromUserInput = eAutoDetect);
@@ -223,9 +225,13 @@ protected:
    * @param aStartNode  [in] the root of the subrtee to invalidate accessible
    *                      child/parent refs in
    */
-  void InvalidateChildrenInSubtree(nsIDOMNode *aStartNode);
+  void InvalidateChildrenInSubtree(nsINode *aStartNode);
 
-    void RefreshNodes(nsIDOMNode *aStartNode);
+  /**
+   * Traverse through DOM tree and shutdown accessible objects.
+   */
+  void RefreshNodes(nsINode *aStartNode);
+
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
     /**
@@ -262,7 +268,7 @@ protected:
    * Create a text change event for a changed node.
    *
    * @param  aContainerAccessible  [in] the parent accessible for the node
-   * @param  aNode                 [in] the node that is being inserted or
+   * @param  aChangeNode           [in] the node that is being inserted or
    *                                 removed, or shown/hidden
    * @param  aAccessible           [in] the accessible for that node, or nsnull
    *                                 if none exists
@@ -273,7 +279,7 @@ protected:
    */
   already_AddRefed<nsAccEvent>
     CreateTextChangeEventForNode(nsAccessible *aContainerAccessible,
-                                 nsIDOMNode *aNode,
+                                 nsIContent *aChangeNode,
                                  nsAccessible *aAccessible,
                                  PRBool aIsInserting,
                                  PRBool aIsAsynch,
@@ -299,7 +305,7 @@ protected:
    * @param  aIsAsyncChange    [in] whether casual change is async
    * @param  aIsFromUserInput  [in] the event is known to be from user input
    */
-  nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode,
+  nsresult FireShowHideEvents(nsINode *aDOMNode, PRBool aAvoidOnThisNode,
                               PRUint32 aEventType,
                               EEventFiringType aDelayedOrNormal,
                               PRBool aIsAsyncChange,
