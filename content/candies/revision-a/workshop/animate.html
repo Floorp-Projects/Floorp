@@ -9,9 +9,9 @@
 </head>
 
 <body>
-  <script type="text/javascript;version=1.8" src="../../js/optional/stacktrace.js"></script>
-  <script type="text/javascript;version=1.8" src="../../js/core/iq.js"></script>
-  <script type="text/javascript;version=1.8" src="../../js/core/utils.js"></script>
+  <script type="text/javascript;version=1.8" src="../../../js/optional/stacktrace.js"></script>
+  <script type="text/javascript;version=1.8" src="../../../js/core/iq.js"></script>
+  <script type="text/javascript;version=1.8" src="../../../js/core/utils.js"></script>
   <script type="text/javascript;version=1.8">
     
     Utils.log('it begins! -----------');
@@ -36,6 +36,7 @@
       var callbacks = ($elem.data('callbacks') || []);
       callbacks.push(callback);
       $elem.data('callbacks', callbacks);
+      Utils.log('css', css);
       $elem.css(css);
 /*
       iQ.timeout(function() {
@@ -83,16 +84,18 @@
     });
     
     animate($div, {
-      left: 10,
-      top: 10
+      left: 200,
+      top: 200
     }, function() {
       Utils.log('first animation done');
     });
 
     iQ.timeout(function() {
+/*
       $div.css({
         '-moz-transition-duration': '0s'
       });
+*/
 /*
       animate($div, {
         left: 400,

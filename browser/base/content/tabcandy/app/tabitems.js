@@ -384,11 +384,12 @@ window.TabItems = {
           UI.tabBar.show(false);              
           TabMirror.resumePainting();
           tab.focus();
-          $tabEl.css({
-            top:   orig.pos.top,
-            left:  orig.pos.left,
-            width: orig.width,
-            height:orig.height,
+          $tabEl
+            .css({
+              top:   orig.pos.top,
+              left:  orig.pos.left,
+              width: orig.width,
+              height:orig.height,
             })
             .removeClass("front");  
           Navbar.show();
