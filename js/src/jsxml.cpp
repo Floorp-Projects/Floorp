@@ -7681,26 +7681,6 @@ js_ValueToXMLListObject(JSContext *cx, jsval v)
 }
 
 JSObject *
-js_CloneXMLObject(JSContext *cx, JSObject *obj)
-{
-    uintN flags;
-    JSXML *xml;
-
-    if (!GetXMLSettingFlags(cx, &flags))
-        return NULL;
-    xml = (JSXML *) obj->getPrivate();
-    if (flags & (XSF_IGNORE_COMMENTS |
-                 XSF_IGNORE_PROCESSING_INSTRUCTIONS |
-                 XSF_IGNORE_WHITESPACE)) {
-        xml = DeepCopy(cx, xml, NULL, flags);
-        if (!xml)
-            return NULL;
-        return xml->object;
-    }
-    return NewXMLObject(cx, xml);
-}
-
-JSObject *
 js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
                        JSString *value)
 {
