@@ -102,14 +102,8 @@
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
 
-// Buffered QPixmap surface
-// http://doc.qt.nokia.com/4.6/qpaintengine.html#Type-enum
-// used in QPaintEngine::X11/OpenGL2 backend
-static QPixmap *gBufferPixmap = nsnull;
-// Buffered image surface
-// best option for QPaintEngine::Raster
-// Also compatible with all other engine types
-static gfxImageSurface *gBufferImage = nsnull;
+// Cached offscreen surface
+static nsRefPtr<gfxASurface> gBufferSurface;
 
 static int gBufferPixmapUsageCount = 0;
 static gfxIntSize gBufferMaxSize(0, 0);
@@ -233,34 +227,20 @@ _gfximage_to_qformat(gfxASurface::gfxImageFormat aFormat)
     }
 }
 
-static void
-FreeOffScreenBuffers(void)
-{
-    delete gBufferImage;
-    delete gBufferPixmap;
-    gBufferImage = nsnull;
-    gBufferPixmap = nsnull;
-}
-
 static bool
-UpdateOffScreenBuffers(QPaintEngine::Type aType, int aDepth, QSize aSize)
+UpdateOffScreenBuffers(int aDepth, QSize aSize)
 {
     gfxIntSize size(aSize.width(), aSize.height());
-    if (gBufferPixmap || gBufferImage) {
+    if (gBufferSurface) {
         if (gBufferMaxSize.width < size.width ||
             gBufferMaxSize.height < size.height) {
-            FreeOffScreenBuffers();
+            gBufferSurface = nsnull;
         } else
             return true;
     }
 
     gBufferMaxSize.width = PR_MAX(gBufferMaxSize.width, size.width);
     gBufferMaxSize.height = PR_MAX(gBufferMaxSize.height, size.height);
-    // For Qt X11 engine better to use QPixmap as offscreen buffer
-    if (aType == QPaintEngine::X11 || aType == QPaintEngine::OpenGL2) {
-        gBufferPixmap = new QPixmap(gBufferMaxSize.width, gBufferMaxSize.height);
-        return true;
-    }
 
     // Check if system depth has related gfxImage format
     gfxASurface::gfxImageFormat format =
@@ -270,8 +250,8 @@ UpdateOffScreenBuffers(QPaintEngine::Type aType, int aDepth, QSize aSize)
     if (format == gfxASurface::ImageFormatUnknown)
         format = gfxASurface::ImageFormatRGB24;
 
-    // For non-X11 qt paint engine we use image surface as offscreen buffer
-    gBufferImage = new gfxImageSurface(gBufferMaxSize, format);
+    gBufferSurface = gfxPlatform::GetPlatform()->
+        CreateOffscreenSurface(gBufferMaxSize, format);
     return true;
 }
 
@@ -322,7 +302,7 @@ nsWindow::Destroy(void)
     if (gBufferPixmapUsageCount &&
         --gBufferPixmapUsageCount == 0) {
 
-        FreeOffScreenBuffers();
+        gBufferSurface = nsnull;
     }
 
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
@@ -1009,21 +989,15 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         mDirtyScrollArea = QRegion();
 
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
-    QPaintEngine::Type paintEngineType = aPainter->paintEngine()->type();
     int depth = aPainter->device()->depth();
 
     nsRefPtr<gfxASurface> targetSurface = nsnull;
     if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
         // Prepare offscreen buffers iamge or xlib, depends from paintEngineType
-        if (!UpdateOffScreenBuffers(paintEngineType, depth, QSize(r.width(), r.height())))
+        if (!UpdateOffScreenBuffers(depth, QSize(r.width(), r.height())))
             return nsEventStatus_eIgnore;
 
-        if (gBufferPixmap) {
-            targetSurface = GetSurfaceForQPixmap(gBufferPixmap);
-        }
-        else if (gBufferImage) {
-            NS_ADDREF(targetSurface = gBufferImage);
-        }
+        targetSurface = gBufferSurface;
 
     } else if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
         targetSurface = new gfxQPainterSurface(aPainter);
@@ -1063,18 +1037,24 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     // Handle buffered painting mode
     if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
-        if (gBufferPixmap) {
+        if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
             // Paint offscreen pixmap to QPainter
-            aPainter->drawPixmap(QPoint(rect.x, rect.y), *gBufferPixmap,
+            static QPixmap gBufferPixmap;
+            Drawable draw = static_cast<gfxXlibSurface*>(gBufferSurface.get())->XDrawable();
+            if (gBufferPixmap.handle() != draw)
+                gBufferPixmap = QPixmap::fromX11Pixmap(draw, QPixmap::ExplicitlyShared);
+            XSync(static_cast<gfxXlibSurface*>(gBufferSurface.get())->XDisplay(), False);
+            aPainter->drawPixmap(QPoint(rect.x, rect.y), gBufferPixmap,
                                  QRect(0, 0, rect.width, rect.height));
 
-        } else if (gBufferImage) {
+        } else if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeImage) {
             // in raster mode we can just wrap gBufferImage as QImage and paint directly
-            QImage img(gBufferImage->Data(),
-                       gBufferImage->Width(),
-                       gBufferImage->Height(),
-                       gBufferImage->Stride(),
-                       _gfximage_to_qformat(gBufferImage->Format()));
+            gfxImageSurface *imgs = static_cast<gfxImageSurface*>(gBufferSurface.get());
+            QImage img(imgs->Data(),
+                       imgs->Width(),
+                       imgs->Height(),
+                       imgs->Stride(),
+                       _gfximage_to_qformat(imgs->Format()));
             aPainter->drawImage(QPoint(rect.x, rect.y), img,
                                 QRect(0, 0, rect.width, rect.height));
         }
