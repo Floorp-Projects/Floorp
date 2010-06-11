@@ -142,13 +142,24 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     {
     public:
         ModuleEntry() : mozilla::Module() {
-            
+            mVersion = mozilla::Module::kVersion;
+            mCIDs = NULL;
+            mContractIDs = NULL;
+            mCategoryEntries = NULL;
+            getfactory = GetFactory;
+            loaded = NULL;
+            unloaded = NULL;
+
             global = nsnull;
             location = nsnull;
         }
 
         ~ModuleEntry() {
-            getfactory = NULL;
+            Clear();
+        }
+
+        void Clear() {
+            getfactoryobj = NULL;
 
             if (global) {
                 JSAutoRequest ar(sSelf->mContext);
@@ -158,19 +169,25 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
             if (location)
                 NS_Free(location);
+
+            global = NULL;
+            location = NULL;
         }
 
         static already_AddRefed<nsIFactory> GetFactory(const mozilla::Module& module,
                                                        const mozilla::Module::CIDEntry& entry);
 
-        nsCOMPtr<xpcIJSGetFactory> getfactory;
+        nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
         JSObject            *global;
         char                *location;
     };
 
     friend class ModuleEntry;
 
-    nsClassHashtable<nsHashableHashKey, ModuleEntry> mModules;
+    // Modules are intentionally leaked, but still cleared.
+    static PLDHashOperator ClearModules(nsIHashable* key, ModuleEntry*& entry, void* cx);
+    nsDataHashtable<nsHashableHashKey, ModuleEntry*> mModules;
+
     nsClassHashtable<nsHashableHashKey, ModuleEntry> mImports;
     nsDataHashtable<nsHashableHashKey, ModuleEntry*> mInProgressImports;
 

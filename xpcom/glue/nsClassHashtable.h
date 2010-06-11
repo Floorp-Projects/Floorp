@@ -63,6 +63,12 @@ public:
    * @param pData if the key doesn't exist, pData will be set to nsnull.
    */
   PRBool Get(KeyType aKey, UserDataType* pData) const;
+
+  /**
+   * @copydoc nsBaseHashtable::Get
+   * @returns NULL if the key is not present.
+   */
+  UserDataType Get(KeyType aKey) const;
 };
 
 
@@ -112,6 +118,19 @@ nsClassHashtable<KeyClass,T>::Get(KeyType aKey, T** retVal) const
     *retVal = nsnull;
 
   return PR_FALSE;
+}
+
+template<class KeyClass,class T>
+T*
+nsClassHashtable<KeyClass,T>::Get(KeyType aKey) const
+{
+  typename nsBaseHashtable<KeyClass,nsAutoPtr<T>,T*>::EntryType* ent =
+    GetEntry(aKey);
+
+  if (!ent)
+    return NULL;
+
+  return ent->mData;
 }
 
 
