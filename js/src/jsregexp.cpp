@@ -4765,7 +4765,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     NativeRegExp native;
 
     /* Run with native regexp if possible. */
-    if (TRACING_ENABLED(gData->cx) &&
+    if (REGEX_JIT_ENABLED(gData->cx) &&
         !(gData->regexp->flags & JSREG_NOCOMPILE) &&
         (native = GetNativeRegExp(gData->cx, gData->regexp))) {
 
