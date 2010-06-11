@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -521,25 +522,25 @@ nsAccDocManager::ShutdownDocAccessiblesInTree(nsIDocShellTreeItem *aTreeItem,
                                               nsIDocument *aDocument)
 {
   nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(aTreeItem));
-  if (!treeNode)
-    return;
 
-  PRInt32 subDocumentsCount = 0;
-  treeNode->GetChildCount(&subDocumentsCount);
-  for (PRInt32 idx = 0; idx < subDocumentsCount; idx++) {
-    nsCOMPtr<nsIDocShellTreeItem> treeItemChild;
-    treeNode->GetChildAt(idx, getter_AddRefs(treeItemChild));
-    NS_ASSERTION(treeItemChild, "No tree item when there should be");
-    if (!treeItemChild)
-      continue;
+  if (treeNode) {
+    PRInt32 subDocumentsCount = 0;
+    treeNode->GetChildCount(&subDocumentsCount);
+    for (PRInt32 idx = 0; idx < subDocumentsCount; idx++) {
+      nsCOMPtr<nsIDocShellTreeItem> treeItemChild;
+      treeNode->GetChildAt(idx, getter_AddRefs(treeItemChild));
+      NS_ASSERTION(treeItemChild, "No tree item when there should be");
+      if (!treeItemChild)
+        continue;
 
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(treeItemChild));
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    docShell->GetContentViewer(getter_AddRefs(contentViewer));
-    if (!contentViewer)
-      continue;
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(treeItemChild));
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      docShell->GetContentViewer(getter_AddRefs(contentViewer));
+      if (!contentViewer)
+        continue;
 
-    ShutdownDocAccessiblesInTree(treeItemChild, contentViewer->GetDocument());
+      ShutdownDocAccessiblesInTree(treeItemChild, contentViewer->GetDocument());
+    }
   }
 
   ShutdownDocAccessible(aDocument);
