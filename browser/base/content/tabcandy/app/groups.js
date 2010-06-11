@@ -2,37 +2,28 @@
 (function(){
 
 // ----------
+// Function: numCmp
+// Numeric compare for sorting.
+// Private to this file.
 var numCmp = function(a,b){ return a-b; }
 
 // ----------
+// Function: min
+// Given a list of numbers, returns the smallest. 
+// Private to this file.
 function min(list){ return list.slice().sort(numCmp)[0]; }
 
 // ----------
+// Function: max
+// Given a list of numbers, returns the largest. 
+// Private to this file.
 function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 
 // ----------
-function isEventOverElement(event, el){
-  var hit = {nodeName: null};
-  var isOver = false;
-  
-  var hiddenEls = [];
-  while(hit.nodeName != "BODY" && hit.nodeName != "HTML"){
-    hit = document.elementFromPoint(event.clientX, event.clientY);
-    if( hit == el ){
-      isOver = true;
-      break;
-    }
-    iQ(hit).hide();
-    hiddenEls.push(hit);
-  }
-  
-  var hidden;
-  [iQ(hidden).show() for([,hidden] in Iterator(hiddenEls))];
-  return isOver;
-}
-
-// ----------
-function dropAcceptFunction(el) { // ".tab", //".tab, .group",
+// Function: dropAcceptFunction
+// Given a DOM element, returns true if it should accept tabs being dropped on it.
+// Private to this file.
+function dropAcceptFunction(el) {
   var $el = iQ(el);
   if($el.hasClass('tab')) {
     var item = Items.item($el);
@@ -48,6 +39,23 @@ function dropAcceptFunction(el) { // ".tab", //".tab, .group",
 // Class: Group
 // A single group in the tab candy window. Descended from <Item>.
 // Note that it implements the <Subscribable> interface.
+// 
+// ----------
+// Constructor: Group
+// 
+// Parameters: 
+//   listOfEls - an array of DOM elements for tabs to be added to this group
+//   options - various options for this group (see below). In addition, gets passed 
+//     to <add> along with the elements provided. 
+// 
+// Possible options: 
+//   id - specifies the group's id; otherwise automatically generated
+//   locked - see <Item.locked>; default is {}
+//   userSize - see <Item.userSize>; default is null
+//   bounds - a <Rect>; otherwise based on the locations of the provided elements
+//   container - a DOM element to use as the container for this group; otherwise will create 
+//   title - the title for the group; otherwise blank
+//   dontPush - true if this group shouldn't push away on creation; default is false
 window.Group = function(listOfEls, options) {
   try {
   if(typeof(options) == 'undefined')
@@ -274,9 +282,13 @@ window.Group = function(listOfEls, options) {
 // ----------
 window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------
+  // Variable: defaultName
+  // The prompt text for the title field.
   defaultName: "name this group...",
 
   // -----------
+  // Function: setActiveTab
+  // Sets the active tab (for keyboard selection, etc)
   // TODO: This currently accepts only the DOM element of a tab.
   // It should also take a TabItem... 
   setActiveTab: function(tab){
@@ -284,6 +296,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
 
   // -----------
+  // Function: getActiveTab
+  // Gets the active tab (for keyboard selection, etc)
   // TODO: This currently returns a DOM element of the selected tab.
   // It should probably actually be a TabItem...
   getActiveTab: function(tab){
@@ -291,6 +305,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
+  // Function: getStorageData
+  // Returns all of the info worth storing about this group.
   getStorageData: function() {
     var data = {
       bounds: this.getBounds(), 
@@ -307,6 +323,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: save
+  // Saves this group to persistant storage. 
   save: function() {
     if (!this._inited) // too soon to save now
       return;
@@ -317,8 +335,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------
+  // Function: isNewTabsGroup
+  // Returns true if the callee is the "New Tabs" group.
+  // TODO: more robust
   isNewTabsGroup: function() {
-    // TODO: more robust
     return (this.locked.bounds && this.locked.title && this.locked.close);
   },
   
