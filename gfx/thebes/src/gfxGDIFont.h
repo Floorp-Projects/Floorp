@@ -78,7 +78,8 @@ public:
                              gfxTextRun *aTextRun,
                              const PRUnichar *aString,
                              PRUint32 aRunStart,
-                             PRUint32 aRunLength);
+                             PRUint32 aRunLength,
+                             PRInt32 aRunScript);
 
 protected:
     void Initialize(); // creates metrics and Cairo fonts

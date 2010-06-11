@@ -61,7 +61,8 @@ public:
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
-                               PRUint32 aRunLength);
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript);
 
     // clean up static objects that may have been cached
     static void Shutdown();
