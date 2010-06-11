@@ -14750,6 +14750,13 @@ TraceRecorder::record_JSOP_REGEXP()
     return ARECORD_CONTINUE;
 }
 
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_UNUSED180()
+{
+    JS_NOT_REACHED("recording JSOP_UNUSED180?!?");
+    return ARECORD_ERROR;
+}
+
 // begin JS_HAS_XML_SUPPORT
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14862,12 +14869,6 @@ TraceRecorder::record_JSOP_XMLTAGEXPR()
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_XMLELTEXPR()
-{
-    return ARECORD_STOP;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_XMLOBJECT()
 {
     return ARECORD_STOP;
 }
