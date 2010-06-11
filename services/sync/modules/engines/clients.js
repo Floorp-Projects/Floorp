@@ -40,6 +40,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://weave/ext/StringBundle.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
@@ -127,24 +128,14 @@ ClientEngine.prototype = {
       return localName;
 
     // Generate a client name if we don't have a useful one yet
-    let user = Svc.Env.get("USER") || Svc.Env.get("USERNAME");
-    let app = Svc.AppInfo.name;
-    let host = Svc.SysInfo.get("host");
+    let user = Svc.Env.get("USER") || Svc.Env.get("USERNAME") ||
+               Svc.Prefs.get("username");
+    let brand = new StringBundle("chrome://branding/locale/brand.properties");
+    let app = brand.get("brandShortName");
+    let os = Cc["@mozilla.org/network/protocol;1?name=http"].
+             getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    // Try figuring out the name of the current profile
-    let prof = Svc.Directory.get("ProfD", Components.interfaces.nsIFile).path;
-    let profiles = Svc.Profiles.profiles;
-    while (profiles.hasMoreElements()) {
-      let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
-      if (prof == profile.rootDir.path) {
-        // Only bother adding the profile name if it's not "default"
-        if (profile.name != "default")
-          host = profile.name + "-" + host;
-        break;
-      }
-    }
-
-    return this.localName = Str.sync.get("client.name", [user, app, host]);
+    return this.localName = Str.sync.get("client.name2", [user, app, os]);
   },
   set localName(value) Svc.Prefs.set("client.name", value),
 
