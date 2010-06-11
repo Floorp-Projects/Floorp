@@ -118,6 +118,7 @@ dialog .prompt-title {
 
 dialog .prompt-message {
   margin-top: 1mm;
+  white-space: pre-wrap;
 }
 
 dialog .button-checkbox {

@@ -485,6 +485,11 @@ richlistitem[isDisabled="true"] image {
   }
 }
 
+.console-error-msg,
+.console-msg-text {
+  white-space: pre-wrap;
+}
+
 /* bookmarks navigation popup ------------------------------ */
 #tool-bookmarks-close {
   margin-top: -8px; /* force the button to go to the edge */
