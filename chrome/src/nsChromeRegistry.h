@@ -55,6 +55,9 @@
 #include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
+#include "nsXULAppAPI.h"
+#include "nsIResProtocolHandler.h"
+#include "nsIXPConnect.h"
 
 struct PRFileDesc;
 class nsIAtom;
@@ -121,19 +124,41 @@ private:
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 
-#ifdef MOZ_XUL
-  NS_HIDDEN_(void) ProcessProvider(PRFileDesc *fd, nsIRDFService* aRDFs,
-                                   nsIRDFDataSource* ds, nsIRDFResource* aRoot,
-                                   PRBool aIsLocale, const nsACString& aBaseURL);
-  NS_HIDDEN_(void) ProcessOverlays(PRFileDesc *fd, nsIRDFDataSource* ds,
-                                   nsIRDFResource* aRoot,
-                                   const nsCSubstring& aType);
-#endif
+public:
+  struct ManifestProcessingContext
+  {
+    ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile)
+      : mType(aType)
+      , mFile(aFile)
+    { }
+    ~ManifestProcessingContext()
+    { }
 
-  NS_HIDDEN_(nsresult) ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessManifestBuffer(char *aBuffer, PRInt32 aLength, nsILocalFile* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessNewChromeFile(nsILocalFile *aListFile, nsIURI* aManifest);
-  NS_HIDDEN_(nsresult) ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength, nsIURI* aManifest);
+    nsIURI* GetManifestURI();
+    nsIXPConnect* GetXPConnect();
+
+    already_AddRefed<nsIURI> ResolveURI(const char* uri);
+
+    NSLocationType mType;
+    nsCOMPtr<nsILocalFile> mFile;
+    nsCOMPtr<nsIURI> mManifestURI;
+    nsCOMPtr<nsIXPConnect> mXPConnect;
+  };
+
+  void ManifestContent(ManifestProcessingContext& cx, int lineno,
+                       char *const * argv, bool platform, bool contentaccessible);
+  void ManifestLocale(ManifestProcessingContext& cx, int lineno,
+                      char *const * argv, bool platform, bool contentaccessible);
+  void ManifestSkin(ManifestProcessingContext& cx, int lineno,
+                    char *const * argv, bool platform, bool contentaccessible);
+  void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
+                       char *const * argv, bool platform, bool contentaccessible);
+  void ManifestStyle(ManifestProcessingContext& cx, int lineno,
+                     char *const * argv, bool platform, bool contentaccessible);
+  void ManifestOverride(ManifestProcessingContext& cx, int lineno,
+                        char *const * argv, bool platform, bool contentaccessible);
+  void ManifestResource(ManifestProcessingContext& cx, int lineno,
+                        char *const * argv, bool platform, bool contentaccessible);
 
 public:
   struct ProviderEntry
