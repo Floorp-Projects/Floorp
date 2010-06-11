@@ -1034,6 +1034,8 @@ nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
         // start evicting entries if the new size is smaller!
         EvictDiskCacheEntries(mCacheCapacity);
     }
+    // Let cache map know of the new capacity
+    mCacheMap.NotifyCapacityChange(capacity);
 }
 
 
