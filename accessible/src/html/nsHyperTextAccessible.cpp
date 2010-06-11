@@ -1653,7 +1653,7 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
 
   PRInt32 lineNumber = 1;
   nsAutoLineIterator lineIterForCaret;
-  nsIContent *hyperTextContent = IsContent() ? mContent : nsnull;
+  nsIContent *hyperTextContent = IsContent() ? mContent.get() : nsnull;
   while (caretFrame) {
     if (hyperTextContent == caretFrame->GetContent()) {
       return lineNumber; // Must be in a single line hyper text, there is no line iterator
