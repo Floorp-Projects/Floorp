@@ -169,7 +169,7 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Valu
 #endif
 
 extern JSBool JS_FASTCALL
-js_ArrayCompPush(JSContext *cx, JSObject *obj, const js::Value &v);
+js_ArrayCompPush(JSContext *cx, JSObject *obj, const js::Value *vp);
 
 /*
  * Fast dense-array-to-buffer conversion for use by canvas.
