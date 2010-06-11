@@ -781,6 +781,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     else:
       outputPipe = subprocess.PIPE
 
+    self.lastTestSeen = "automation.py"
     proc = self.Process([cmd] + args,
                  env = self.environment(env, xrePath = xrePath,
                                    crashreporter = not debuggerInfo),
