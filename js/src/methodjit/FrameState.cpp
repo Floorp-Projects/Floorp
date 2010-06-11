@@ -684,7 +684,19 @@ FrameState::ownRegForData(FrameEntry *fe)
             reg = alloc();
             masm.move(backing->data.reg(), reg);
         }
-    } else if (fe->data.inRegister()) {
+        return reg;
+    }
+
+    if (fe->isCopied()) {
+        uncopy(fe);
+        if (fe->isCopied()) {
+            reg = alloc();
+            masm.loadData32(addressOf(fe), reg);
+            return reg;
+        }
+    }
+    
+    if (fe->data.inRegister()) {
         reg = fe->data.reg();
         /* Remove ownership of this register. */
         JS_ASSERT(regstate[reg].fe == fe);
