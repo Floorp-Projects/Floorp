@@ -2141,8 +2141,11 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
     CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1,
-    CAIRO_FORMAT_RGB16_565
+    CAIRO_FORMAT_A1
+    /* The value of 4 is reserved by a deprecated enum value.
+     * The next format added must have an explicit value of 5.
+    CAIRO_FORMAT_RGB16_565 = 4,
+    */
 } cairo_format_t;
 
 cairo_public cairo_surface_t *
