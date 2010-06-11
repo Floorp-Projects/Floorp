@@ -7567,7 +7567,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetMozIndexedDB(nsIIndexedDatabaseRequest** _retval)
+nsGlobalWindow::GetMoz_indexedDB(nsIIndexedDatabaseRequest** _retval)
 {
   if (!mIndexedDB) {
     mIndexedDB = mozilla::dom::indexedDB::IndexedDatabaseRequest::Create();
