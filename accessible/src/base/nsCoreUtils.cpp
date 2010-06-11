@@ -320,7 +320,8 @@ nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
   NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, PR_FALSE);
 
   nsINode *parentNode = aPossibleDescendantNode;
-  while ((parentNode = parentNode->GetNodeParent()) != aRootNode) {
+  while ((parentNode = parentNode->GetNodeParent()) &&
+         parentNode != aRootNode) {
     if (parentNode == aPossibleAncestorNode)
       return PR_TRUE;
   }
