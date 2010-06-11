@@ -359,6 +359,21 @@ private:
 
 #pragma pack()
 
+// Return just the highest bit of the given value, i.e., the highest
+// power of 2 that is <= value, or zero if the input value is zero.
+inline PRUint32
+FindHighestBit(PRUint32 value)
+{
+    // propagate highest bit into all lower bits of the value
+    value |= (value >> 1);
+    value |= (value >> 2);
+    value |= (value >> 4);
+    value |= (value >> 8);
+    value |= (value >> 16);
+    // isolate the leftmost bit
+    return (value & ~(value >> 1));
+}
+
 } // namespace mozilla
 
 // used for overlaying name changes without touching original font data
