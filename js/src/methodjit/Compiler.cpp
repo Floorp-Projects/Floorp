@@ -571,6 +571,10 @@ mjit::Compiler::generateMethod()
             jsop_propinc(op, stubs::IncProp, fullAtomIndex(PC));
           END_CASE(JSOP_INCPROP)
 
+          BEGIN_CASE(JSOP_INCELEM)
+            jsop_eleminc(op, stubs::IncElem);
+          END_CASE(JSOP_INCELEM)
+
           BEGIN_CASE(JSOP_DECNAME)
             jsop_nameinc(op, stubs::DecName, fullAtomIndex(PC));
           END_CASE(JSOP_DECNAME)
@@ -578,6 +582,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DECPROP)
             jsop_propinc(op, stubs::DecProp, fullAtomIndex(PC));
           END_CASE(JSOP_DECPROP)
+
+          BEGIN_CASE(JSOP_DECELEM)
+            jsop_eleminc(op, stubs::DecElem);
+          END_CASE(JSOP_DECELEM)
 
           BEGIN_CASE(JSOP_NAMEINC)
             jsop_nameinc(op, stubs::NameInc, fullAtomIndex(PC));
@@ -587,6 +595,10 @@ mjit::Compiler::generateMethod()
             jsop_propinc(op, stubs::PropInc, fullAtomIndex(PC));
           END_CASE(JSOP_PROPINC)
 
+          BEGIN_CASE(JSOP_ELEMINC)
+            jsop_eleminc(op, stubs::ElemInc);
+          END_CASE(JSOP_ELEMINC)
+
           BEGIN_CASE(JSOP_NAMEDEC)
             jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
           END_CASE(JSOP_NAMEDEC)
@@ -594,6 +606,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_PROPDEC)
             jsop_propinc(op, stubs::PropDec, fullAtomIndex(PC));
           END_CASE(JSOP_PROPDEC)
+
+          BEGIN_CASE(JSOP_ELEMDEC)
+            jsop_eleminc(op, stubs::ElemDec);
+          END_CASE(JSOP_ELEMDEC)
 
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
@@ -1697,5 +1713,14 @@ mjit::Compiler::iterMore()
     PC += js_CodeSpec[next].length;
 
     stubcc.rejoin(0);
+}
+
+void
+mjit::Compiler::jsop_eleminc(JSOp op, VoidStub stub)
+{
+    prepareStubCall();
+    stubCall(stub, Uses(2), Defs(1));
+    frame.popn(2);
+    frame.pushSynced();
 }
 
