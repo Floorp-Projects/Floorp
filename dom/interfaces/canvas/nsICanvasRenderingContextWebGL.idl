@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIVariant.idl"
 
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
@@ -661,7 +662,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   WebGLint getAttribLocation(in nsIWebGLProgram program, in DOMString name);
 
-  void getParameter(in WebGLenum pname);
+  nsIVariant getParameter(in WebGLenum pname);
 
   // Modified: void glGetBufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
   void getBufferParameter(in WebGLenum target, in WebGLenum pname);
