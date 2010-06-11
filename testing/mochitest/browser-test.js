@@ -115,6 +115,7 @@ Tester.prototype = {
     }
 
     this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
+    this.dumper.dump("TEST-START | Shutdown\n");
 
     this.dumper.done();
 
@@ -160,7 +161,7 @@ Tester.prototype = {
   },
 
   execTest: function Tester_execTest() {
-    this.dumper.dump("Running " + this.currentTest.path + "...\n");
+    this.dumper.dump("TEST-START | " + this.currentTest.path + "\n");
 
     // Load the tests into a testscope
     this.currentTest.scope = new testScope(this, this.currentTest);
