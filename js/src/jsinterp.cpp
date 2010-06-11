@@ -691,7 +691,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     } else {
         JS_ASSERT(script);
         AutoPreserveEnumerators preserve(cx);
-        ok = RunScript(cx, script, fun, fp->scopeChain);
+        ok = RunScript(cx, script, fun, &fp->scopeChain.asObject());
     }
 
     DTrace::exitJSFun(cx, fp, fun, fp->rval);
@@ -887,7 +887,7 @@ Execute(JSContext *cx, JSObject *const chain, JSScript *script,
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
     AutoPreserveEnumerators preserve(cx);
-    JSBool ok = RunScript(cx, script, fp->fun, fp->scopeChain);
+    JSBool ok = RunScript(cx, script, fp->fun, &fp->scopeChain.asObject());
     if (result)
         *result = fp->rval;
 

@@ -642,7 +642,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         cx->free(script->nmap);
         script->nmap = NULL;
     }
-# ifdef JS_TRACER
+# if 0 /* def JS_TRACER */
     if (script->trees) {
         cx->free(script->trees);
         script->trees = NULL;
