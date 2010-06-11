@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "jsbool.h"
+#include "jsnum.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -694,6 +695,72 @@ mjit::Compiler::jsop_typeof()
     frame.pop();
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_MASK32_STRING, Registers::ReturnReg);
+}
+
+void
+mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
+{
+    bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);
+    int32 amt = (op == JSOP_INCLOCAL || op == JSOP_LOCALINC) ? 1 : -1;
+    uint32 depth = frame.stackDepth();
+
+    frame.pushLocal(slot);
+
+    FrameEntry *fe = frame.peek(-1);
+
+    if (fe->isConstant() && fe->getValue().isPrimitive()) {
+        Value v = fe->getValue();
+        double d;
+        ValueToNumber(cx, v, &d);
+        d += amt;
+        v.setNumber(d);
+        frame.push(v);
+        frame.storeLocal(slot);
+        frame.pop();
+        return;
+    }
+
+    if (post && !popped) {
+        frame.dup();
+        fe = frame.peek(-1);
+    }
+
+    if (!fe->isTypeKnown() || fe->getTypeTag() != JSVAL_MASK32_INT32) {
+        /* :TODO: do something smarter for the known-type-is-bad case. */
+        if (fe->isTypeKnown()) {
+            Jump j = masm.jump();
+            stubcc.linkExit(j);
+        } else {
+            Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
+            stubcc.linkExit(intFail);
+        }
+    }
+
+    RegisterID reg = frame.ownRegForData(fe);
+    frame.pop();
+
+    Jump ovf;
+    if (amt > 0)
+        ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
+    else
+        ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
+    stubcc.linkExit(ovf);
+
+    /* Note, stub call will push original value again no matter what. */
+    stubcc.leave();
+    stubcc.masm.addPtr(Imm32(sizeof(Value) * slot + sizeof(JSStackFrame)),
+                       Assembler::FpReg,
+                       Registers::ArgReg1);
+    stubcc.vpInc(op, depth);
+
+    /* :TODO: We can do slightly better here. */
+    frame.pushUntypedPayload(JSVAL_MASK32_INT32, reg);
+    frame.storeLocal(slot);
+
+    if (post || popped)
+        frame.pop();
+
+    stubcc.rejoin(1);
 }
 
 void

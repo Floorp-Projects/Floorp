@@ -255,6 +255,7 @@ FrameState::pushUntypedPayload(JSValueMask32 tag, RegisterID payload)
 #ifdef DEBUG
     fe->type.unsync();
 #endif
+    fe->clear();
 
     masm.storeTypeTag(ImmTag(tag), addressOf(fe));
     fe->type.setMemory();

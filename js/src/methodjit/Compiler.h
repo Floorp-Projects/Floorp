@@ -152,6 +152,7 @@ class Compiler
     void jsop_not();
     void jsop_typeof();
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
+    void jsop_localinc(JSOp op, uint32 slot, bool popped);
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
@@ -172,6 +173,7 @@ class Compiler
     STUB_CALL_TYPE(JSStrStubUInt32);
     STUB_CALL_TYPE(VoidStubJSObj);
     STUB_CALL_TYPE(VoidPtrStubPC);
+    STUB_CALL_TYPE(VoidVpStub);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();
