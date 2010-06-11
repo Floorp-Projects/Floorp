@@ -66,14 +66,14 @@ void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
-void JS_FASTCALL SetName(VMFrame &f, uint32 index);
-void JS_FASTCALL Name(VMFrame &f, uint32 index);
+void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL CallElem(VMFrame &f);
 void JS_FASTCALL SetElem(VMFrame &f);
 void JS_FASTCALL Length(VMFrame &f);
-void JS_FASTCALL CallName(VMFrame &f, uint32 index);
+void JS_FASTCALL CallName(VMFrame &f);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);
 
 void JS_FASTCALL NameInc(VMFrame &f, JSAtom *atom);

@@ -334,7 +334,7 @@ ValueToObject(JSContext *cx, Value *vp)
     JS_END_MACRO
 
 void JS_FASTCALL
-mjit::stubs::SetName(VMFrame &f, uint32 index)
+mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
 
@@ -518,7 +518,7 @@ mjit::stubs::SetName(VMFrame &f, uint32 index)
         }
 
         if (!atom)
-            atom = f.fp->script->getAtom(index);
+            atom = origAtom;
         jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
             uintN defineHow;
@@ -549,7 +549,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 }
 
 static JSObject *
-NameOp(VMFrame &f, uint32 index)
+NameOp(VMFrame &f)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp;
@@ -617,9 +617,9 @@ NameOp(VMFrame &f, uint32 index)
 }
 
 void JS_FASTCALL
-stubs::Name(VMFrame &f, uint32 index)
+stubs::Name(VMFrame &f)
 {
-    if (!NameOp(f, index))
+    if (!NameOp(f))
         THROW();
 }
 
@@ -836,9 +836,9 @@ stubs::SetElem(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::CallName(VMFrame &f, uint32 index)
+stubs::CallName(VMFrame &f)
 {
-    JSObject *obj = NameOp(f, index);
+    JSObject *obj = NameOp(f);
     if (!obj)
         THROW();
     f.regs.sp++;
