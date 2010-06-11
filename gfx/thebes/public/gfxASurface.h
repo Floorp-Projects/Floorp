@@ -68,6 +68,7 @@ public:
         ImageFormatRGB24,  ///< xRGB data in native endianness
         ImageFormatA8,     ///< Only an alpha channel
         ImageFormatA1,     ///< Packed transparency information (one byte refers to 8 pixels)
+        ImageFormatRGB16_565,  ///< RGB_565 data in native endianness
         ImageFormatUnknown
     } gfxImageFormat;
 
@@ -186,6 +187,8 @@ public:
     void RecordMemoryFreed();
 
     PRInt32 KnownMemoryUsed() { return mBytesRecorded; }
+
+    static PRInt32 BytePerPixelFromFormat(gfxImageFormat format);
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0), mSurfaceValid(PR_FALSE) { }
