@@ -327,6 +327,11 @@ class FrameState
     inline void learnType(FrameEntry *fe, JSValueMask32 tag);
 
     /*
+     * Forget a type, syncing in the process.
+     */
+    inline void forgetType(FrameEntry *fe);
+
+    /*
      * Helper function. Tests if a slot's type is an integer. Condition should
      * be Equal or NotEqual.
      */

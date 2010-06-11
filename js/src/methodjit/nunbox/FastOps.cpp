@@ -326,6 +326,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     RegisterID data;
     RegisterID reg = frame.allocReg();
     Address addr = masm.objSlotRef(globalObj, reg, slot);
+    uint32 depth = frame.stackDepth();
 
     if (post && !popped) {
         frame.push(addr);
@@ -349,7 +350,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 
     stubcc.leave();
     stubcc.masm.lea(addr, Registers::ArgReg1);
-    stubcc.vpInc(op, post && !popped);
+    stubcc.vpInc(op, depth);
 
     masm.storeData32(data, addr);
 
@@ -693,5 +694,54 @@ mjit::Compiler::jsop_typeof()
     frame.pop();
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_MASK32_STRING, Registers::ReturnReg);
+}
+
+void
+mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
+{
+    int amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
+    bool post = !!(js_CodeSpec[op].format & JOF_POST);
+    uint32 depth = frame.stackDepth();
+
+    jsop_getarg(slot);
+    if (post && !popped)
+        frame.dup();
+
+    FrameEntry *fe = frame.peek(-1);
+    Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
+    stubcc.linkExit(notInt);
+
+    RegisterID reg = frame.ownRegForData(fe);
+    frame.pop();
+
+    Jump ovf;
+    if (amt > 0)
+        ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
+    else
+        ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
+    stubcc.linkExit(ovf);
+
+    Address argv(Assembler::FpReg, offsetof(JSStackFrame, argv));
+
+    stubcc.leave();
+    stubcc.masm.loadPtr(argv, Registers::ArgReg1);
+    stubcc.masm.addPtr(Imm32(sizeof(Value) * slot), Registers::ArgReg1, Registers::ArgReg1);
+    stubcc.vpInc(op, depth);
+
+    frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+    fe = frame.peek(-1);
+
+    reg = frame.allocReg();
+    masm.loadPtr(argv, reg);
+    Address address = Address(reg, slot * sizeof(Value));
+    frame.storeTo(fe, address, popped);
+    frame.freeReg(reg);
+
+    if (post || popped)
+        frame.pop();
+    else
+        frame.forgetType(fe);
+
+    stubcc.rejoin(1);
 }
 

@@ -379,6 +379,14 @@ FrameState::syncData(const FrameEntry *fe, Address to, Assembler &masm) const
 }
 
 inline void
+FrameState::forgetType(FrameEntry *fe)
+{
+    JS_ASSERT(fe->isTypeKnown() && !fe->type.synced());
+    syncType(fe, addressOf(fe), masm);
+    fe->type.setMemory();
+}
+
+inline void
 FrameState::learnType(FrameEntry *fe, JSValueMask32 tag)
 {
     if (fe->type.inRegister())

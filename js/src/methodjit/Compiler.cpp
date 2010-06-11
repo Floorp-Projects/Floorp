@@ -885,6 +885,23 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_INITELEM)
 
+          BEGIN_CASE(JSOP_INCARG)
+          BEGIN_CASE(JSOP_DECARG)
+          BEGIN_CASE(JSOP_ARGINC)
+          BEGIN_CASE(JSOP_ARGDEC)
+          {
+            jsbytecode *next = &PC[JSOP_ARGINC_LENGTH];
+            bool popped = false;
+            if (JSOp(*next) == JSOP_POP && !analysis[next].nincoming)
+                popped = true;
+            jsop_arginc(op, GET_SLOTNO(PC), popped);
+            PC += JSOP_ARGINC_LENGTH;
+            if (popped)
+                PC += JSOP_POP_LENGTH;
+            break;
+          }
+          END_CASE(JSOP_ARGDEC)
+
           BEGIN_CASE(JSOP_FORNAME)
             prepareStubCall();
             masm.move(ImmPtr(script->getAtom(fullAtomIndex(PC))), Registers::ArgReg1);
