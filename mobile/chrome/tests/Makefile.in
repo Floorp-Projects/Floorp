@@ -57,6 +57,7 @@ _BROWSER_FILES = \
   browser_FormAssistant.js \
   browser_viewport.js \
   browser_navigation.js \
+  browser_preferences_basic.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_select.html \
