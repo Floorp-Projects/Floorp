@@ -107,6 +107,8 @@ protected:
   nsresult DragGesture(nsIDOMDragEvent* aDragEvent);
   already_AddRefed<nsIPresShell> GetPresShell();
 
+  void EnsureSelectionInEditor(nsIDOMEvent* aEvent, PRBool aOnFocus);
+
 protected:
   nsEditor* mEditor; // weak
   nsRefPtr<nsCaret> mCaret;
