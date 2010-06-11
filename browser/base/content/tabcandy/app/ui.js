@@ -317,10 +317,7 @@ window.Page = {
             duration: 400,
             easing: 'easeInQuad',
             complete: function() { // note that this will happen on the DOM thread
-              $tab.css({
-                zIndex: data.z,
-                '-moz-transform': data.transform
-              });
+              $tab.removeClass('front');
               
               self.setActiveTab(item);
               var activeGroup = Groups.getActiveGroup();
@@ -350,22 +347,20 @@ window.Page = {
             if(oldItem) {
               var $oldTab = iQ(oldItem.container);
               data = $oldTab.data('zoomSave');
-              $oldTab.css({
+              $oldTab
+                .removeClass('front')
+                .css({
                   left: data.pos.left,
                   top: data.pos.top, 
                   width: data.w,
-                  height: data.h,
-                  zIndex: data.z,
-                  '-moz-transform': data.transform
-              });
+                  height: data.h
+                });
             }                
   
             if(item) {
               var $tab = iQ(item.container);
 
               data = {
-                transform: $tab.css('-moz-transform'),
-                z: $tab.css('zIndex'),
                 pos: $tab.position(),
                 w: $tab.width(),
                 h: $tab.height()
@@ -373,14 +368,14 @@ window.Page = {
               
               $tab.data('zoomSave', data);
 
-              $tab.css({
+              $tab
+                .addClass('front')
+                .css({
                   left: 0,
                   top: 0, 
                   width: window.innerWidth,
-                  height: data.h * (window.innerWidth / data.w),
-                  zIndex: 999999,
-                  '-moz-transform': 'rotate(0deg)'
-               });
+                  height: data.h * (window.innerWidth / data.w)
+                });
             }                
           }
         }, 1);

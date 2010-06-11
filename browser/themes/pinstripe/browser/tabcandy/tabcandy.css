@@ -137,6 +137,14 @@ body {
   -moz-box-shadow:  rgba(54,79,225,1) 0px 0px 5px -1px !important;
 }
 
+.front .tab-title, .front .close, .front .favicon, .front .expander, .front .thumbShadow {
+  display: none;
+}
+
+.front .focus {
+  -moz-box-shadow: none !important;
+}
+
 /* Tab Group
 ----------------------------------*/
 
@@ -348,6 +356,8 @@ input.defaultName:hover{
   z-index: 999999 !important;
   -moz-border-radius: 0 !important;
 	-moz-box-shadow: none !important;
+	-moz-transform: none;
+  image-rendering: -moz-crisp-edges;
 }
 
 /* Feedback
