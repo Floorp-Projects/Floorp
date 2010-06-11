@@ -78,7 +78,7 @@ nsresult TypeInState::UpdateSelState(nsISelection *aSelection)
 
   if (isCollapsed)
   {
-    result = nsEditor::GetStartNodeAndOffset(aSelection, address_of(mLastSelectionContainer), &mLastSelectionOffset);
+    result = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(mLastSelectionContainer), &mLastSelectionOffset);
   }
   return result;
 }
@@ -108,7 +108,7 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
       nsCOMPtr<nsIDOMNode> selNode;
       PRInt32 selOffset = 0;
 
-      result = nsEditor::GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+      result = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
 
       if (NS_FAILED(result)) return result;
 
