@@ -909,6 +909,24 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::ForName, Uses(0), Defs(0));
           END_CASE(JSOP_FORNAME)
 
+          BEGIN_CASE(JSOP_INCLOCAL)
+          BEGIN_CASE(JSOP_DECLOCAL)
+          BEGIN_CASE(JSOP_LOCALINC)
+          BEGIN_CASE(JSOP_LOCALDEC)
+          {
+            jsbytecode *next = &PC[JSOP_LOCALINC_LENGTH];
+            bool popped = false;
+            if (JSOp(*next) == JSOP_POP && !analysis[next].nincoming)
+                popped = true;
+            /* These manually advance the PC. */
+            jsop_localinc(op, GET_SLOTNO(PC), popped);
+            PC += JSOP_LOCALINC_LENGTH;
+            if (popped)
+                PC += JSOP_POP_LENGTH;
+            break;
+          }
+          END_CASE(JSOP_LOCALDEC)
+
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)

@@ -154,21 +154,25 @@ StubCompiler::vpInc(JSOp op, uint32 depth)
     switch (op) {
       case JSOP_GLOBALINC:
       case JSOP_ARGINC:
+      case JSOP_LOCALINC:
         stub = stubs::VpInc;
         break;
 
       case JSOP_GLOBALDEC:
       case JSOP_ARGDEC:
+      case JSOP_LOCALDEC:
         stub = stubs::VpDec;
         break;
 
       case JSOP_INCGLOBAL:
       case JSOP_INCARG:
+      case JSOP_INCLOCAL:
         stub = stubs::IncVp;
         break;
 
       case JSOP_DECGLOBAL:
       case JSOP_DECARG:
+      case JSOP_DECLOCAL:
         stub = stubs::DecVp;
         break;
 
