@@ -80,7 +80,7 @@ private:
     _getlanguagehelper,                                                 \
     _flags                                                              \
   };                                                                    \
-  extern nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
+  nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
 
 #define NS_IMPL_QUERY_CLASSINFO(_class)                                           \
   if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                                  \
