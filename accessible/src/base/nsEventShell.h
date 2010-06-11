@@ -78,11 +78,11 @@ public:
    * @param  aNode        [in] the DOM node
    * @param  aAttributes  [in, out] the attributes
    */
-  static void GetEventAttributes(nsIDOMNode *aNode,
+  static void GetEventAttributes(nsINode *aNode,
                                  nsIPersistentProperties *aAttributes);
 
 private:
-  static nsCOMPtr<nsIDOMNode> sEventTargetNode;
+  static nsCOMPtr<nsINode> sEventTargetNode;
   static PRBool sEventFromUserInput;
 };
 

@@ -51,6 +51,7 @@
 #include "nsINode.h"
 #include "nsIDOMNode.h"
 
+class nsAccessible;
 class nsDocAccessible;
 
 // Constants used to point whether the event is from user input.
@@ -108,8 +109,7 @@ public:
              EIsFromUserInput aIsFromUserInput = eAutoDetect,
              EEventRule aEventRule = eRemoveDupes);
   // Initialize with an nsIDOMNode
-  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-             PRBool aIsAsynch = PR_FALSE,
+  nsAccEvent(PRUint32 aEventType, nsINode *aNode, PRBool aIsAsynch = PR_FALSE,
              EIsFromUserInput aIsFromUserInput = eAutoDetect,
              EEventRule aEventRule = eRemoveDupes);
   virtual ~nsAccEvent() {}
@@ -133,7 +133,7 @@ protected:
   /**
    * Get an accessible from event target node.
    */
-  already_AddRefed<nsIAccessible> GetAccessibleByNode();
+  nsAccessible *GetAccessibleForNode() const;
 
   /**
    * Determine whether the event is from user input by event state manager if
@@ -168,7 +168,7 @@ class nsAccReorderEvent : public nsAccEvent
 public:
 
   nsAccReorderEvent(nsIAccessible *aAccTarget, PRBool aIsAsynch,
-                    PRBool aIsUnconditional, nsIDOMNode *aReasonNode);
+                    PRBool aIsUnconditional, nsINode *aReasonNode);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCREORDEREVENT_IMPL_CID)
 
@@ -186,7 +186,7 @@ public:
 
 private:
   PRBool mUnconditionalEvent;
-  nsCOMPtr<nsIDOMNode> mReasonNode;
+  nsCOMPtr<nsINode> mReasonNode;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccReorderEvent, NS_ACCREORDEREVENT_IMPL_CID)
@@ -201,12 +201,10 @@ public:
                         PRBool aIsEnabled, PRBool aIsAsynch = PR_FALSE,
                         EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
-  nsAccStateChangeEvent(nsIDOMNode *aNode,
-                        PRUint32 aState, PRBool aIsExtraState,
+  nsAccStateChangeEvent(nsINode *aNode, PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled);
 
-  nsAccStateChangeEvent(nsIDOMNode *aNode,
-                        PRUint32 aState, PRBool aIsExtraState);
+  nsAccStateChangeEvent(nsINode *aNode, PRUint32 aState, PRBool aIsExtraState);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESTATECHANGEEVENT
@@ -241,7 +239,7 @@ class nsAccCaretMoveEvent: public nsAccEvent,
 {
 public:
   nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset);
-  nsAccCaretMoveEvent(nsIDOMNode *aNode);
+  nsAccCaretMoveEvent(nsINode *aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLECARETMOVEEVENT

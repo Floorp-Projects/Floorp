@@ -43,12 +43,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLWin32ObjectOwnerAccessible::
-  nsHTMLWin32ObjectOwnerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell,
-                                   void* aHwnd) :
-  nsAccessibleWrap(aNode, aShell)
+  nsHTMLWin32ObjectOwnerAccessible(nsIContent *aContent,
+                                   nsIWeakReference *aShell, void *aHwnd) :
+  nsAccessibleWrap(aContent, aShell), mHwnd(aHwnd)
 {
-  mHwnd = aHwnd;
-
   // Our only child is a nsHTMLWin32ObjectAccessible object.
   mNativeAccessible = new nsHTMLWin32ObjectAccessible(mHwnd);
 }

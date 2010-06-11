@@ -110,7 +110,8 @@ nsresult nsCaretAccessible::ClearControlSelectionListener()
   return selPrivate->RemoveSelectionListener(this);
 }
 
-nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode)
+nsresult
+nsCaretAccessible::SetControlSelectionListener(nsIContent *aCurrentNode)
 {
   NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
 
@@ -126,10 +127,7 @@ nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode
   nsCOMPtr<nsISelectionController> controller =
     GetSelectionControllerForNode(mCurrentControl);
 #ifdef DEBUG
-  PRUint16 nodeType;
-  nsresult result = aCurrentNode->GetNodeType(&nodeType);
-  NS_ASSERTION(NS_SUCCEEDED(result) &&
-               (controller || nodeType == nsIDOMNode::DOCUMENT_NODE),
+  NS_ASSERTION(controller || aCurrentNode->IsNodeOfType(nsINode::eDOCUMENT),
                "No selection controller for non document node!");
 #endif
   if (!controller)
@@ -247,7 +245,7 @@ nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
     return NS_OK; // No selection
   }
 
-  nsCOMPtr<nsIDOMNode> textNode;
+  nsCOMPtr<nsINode> textNode;
   nsCOMPtr<nsIAccessibleText> textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSel, getter_AddRefs(textNode));
   NS_ENSURE_STATE(textAcc);
@@ -309,15 +307,13 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
     return caretRect;    // Return empty rect
   }
 
-  nsCOMPtr<nsIAccessNode> lastAccessNode(do_QueryInterface(mLastTextAccessible));
-  NS_ENSURE_TRUE(lastAccessNode, caretRect);
+  nsRefPtr<nsAccessible> lastTextAccessible =
+    do_QueryObject(mLastTextAccessible);
 
-  nsCOMPtr<nsIDOMNode> lastNodeWithCaret;
-  lastAccessNode->GetDOMNode(getter_AddRefs(lastNodeWithCaret));
+  nsINode *lastNodeWithCaret = lastTextAccessible->GetNode();
   NS_ENSURE_TRUE(lastNodeWithCaret, caretRect);
 
-  nsIPresShell *presShell =
-    nsCoreUtils::GetPresShellFor(lastNodeWithCaret);
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(lastNodeWithCaret);
   NS_ENSURE_TRUE(presShell, caretRect);
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
@@ -361,25 +357,20 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
 }
 
 already_AddRefed<nsISelectionController>
-nsCaretAccessible::GetSelectionControllerForNode(nsIDOMNode *aNode)
+nsCaretAccessible::GetSelectionControllerForNode(nsIContent *aContent)
 {
-  if (!aNode)
+  if (!aContent)
     return nsnull;
 
-  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
+  nsIDocument *document = aContent->GetOwnerDoc();
+  if (!document)
+    return nsnull;
+
+  nsIPresShell *presShell = document->GetPrimaryShell();
   if (!presShell)
     return nsnull;
 
-  nsCOMPtr<nsIDocument> doc = presShell->GetDocument();
-  if (!doc)
-    return nsnull;
-
-  // Get selection controller only for form controls, not for the document.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (!content)
-    return nsnull;
-
-  nsIFrame *frame = content->GetPrimaryFrame();
+  nsIFrame *frame = aContent->GetPrimaryFrame();
   if (!frame)
     return nsnull;
 

@@ -51,9 +51,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
 
-nsARIAGridAccessible::nsARIAGridAccessible(nsIDOMNode* aDomNode,
-                                           nsIWeakReference* aShell) :
-  nsAccessibleWrap(aDomNode, aShell)
+nsARIAGridAccessible::
+  nsARIAGridAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -756,7 +756,7 @@ nsresult
 nsARIAGridAccessible::SetARIASelected(nsAccessible *aAccessible,
                                       PRBool aIsSelected, PRBool aNotify)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aAccessible->GetDOMNode()));
+  nsIContent *content = aAccessible->GetContent();
   NS_ENSURE_STATE(content);
 
   nsresult rv = NS_OK;
@@ -897,9 +897,9 @@ nsARIAGridAccessible::GetSelectedColumnsArray(PRUint32 *acolumnCount,
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
 
-nsARIAGridCellAccessible::nsARIAGridCellAccessible(nsIDOMNode* aDomNode,
-                                                   nsIWeakReference* aShell) :
-  nsHyperTextAccessibleWrap(aDomNode, aShell)
+nsARIAGridCellAccessible::
+  nsARIAGridCellAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
 {
 }
 

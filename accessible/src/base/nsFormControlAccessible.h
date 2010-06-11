@@ -44,13 +44,13 @@
 typedef nsLeafAccessible nsFormControlAccessible;
 
 /**
-  * nsRadioButtonAccessible
+  * Generic class used for radio buttons.
   */
 class nsRadioButtonAccessible : public nsFormControlAccessible
 {
 
 public:
-  nsRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsRadioButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);

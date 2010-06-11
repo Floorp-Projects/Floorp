@@ -40,8 +40,9 @@
 #import "mozAccessibleWrapper.h"
 
 nsDocAccessibleWrap::
-  nsDocAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
-  nsDocAccessible(aDOMNode, aShell)
+  nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
+                      nsIWeakReference *aShell) :
+  nsDocAccessible(aDocument, aContent, aShell)
 {
 }
 

@@ -202,8 +202,6 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
   NS_ENSURE_STATE(docShell);
 
-  nsCOMPtr<nsIDOMNode> DOMNode = do_QueryInterface(document);
-
   // Fire reload and state busy events on existing document accessible while
   // event from user input flag can be calculated properly and accessible
   // is alive. When new document gets loaded then this one is destroyed.
@@ -223,7 +221,7 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
   // Fire state busy change event. Use delayed event since we don't care
   // actually if event isn't delivered when the document goes away like a shot.
   nsRefPtr<nsAccEvent> stateEvent =
-    new nsAccStateChangeEvent(DOMNode, nsIAccessibleStates::STATE_BUSY,
+    new nsAccStateChangeEvent(document, nsIAccessibleStates::STATE_BUSY,
                               PR_FALSE, PR_TRUE);
   docAcc->FireDelayedAccessibleEvent(stateEvent);
 
@@ -357,15 +355,14 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
   }
 
   // Fire complete/load stopped if the load event type is given.
-  nsCOMPtr<nsIDOMNode> DOMNode = do_QueryInterface(aDocument);
   if (aLoadEventType) {
-    nsRefPtr<nsAccEvent> loadEvent = new nsAccEvent(aLoadEventType, DOMNode);
+    nsRefPtr<nsAccEvent> loadEvent = new nsAccEvent(aLoadEventType, aDocument);
     docAcc->FireDelayedAccessibleEvent(loadEvent);
   }
 
   // Fire busy state change event.
   nsRefPtr<nsAccEvent> stateEvent =
-    new nsAccStateChangeEvent(DOMNode, nsIAccessibleStates::STATE_BUSY,
+    new nsAccStateChangeEvent(aDocument, nsIAccessibleStates::STATE_BUSY,
                               PR_FALSE, PR_FALSE);
   docAcc->FireDelayedAccessibleEvent(stateEvent);
 }
@@ -453,9 +450,9 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
 
   // Do not create document accessible until role content is loaded, otherwise
   // we get accessible document with wrong role.
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(aDocument));
-  if (!nsCoreUtils::GetRoleContent(DOMNode))
-    return NS_OK;
+  nsIContent *rootElm = nsCoreUtils::GetRoleContent(aDocument);
+  if (!rootElm)
+    return nsnull;
 
   PRBool isRootDoc = nsCoreUtils::IsRootDocument(aDocument);
 
@@ -468,8 +465,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
       return nsnull;
 
     nsIContent* ownerContent = parentDoc->FindContentForSubDocument(aDocument);
-    nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
-    if (!ownerNode)
+    if (!ownerContent)
       return nsnull;
 
     // XXXaaronl: ideally we would traverse the presshell chain. Since there's
@@ -477,7 +473,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
     // GetAccessible() is bad because it doesn't support our concept of multiple
     // presshells per doc. It should be changed to use
     // GetAccessibleInWeakShell().
-    outerDocAcc = GetAccService()->GetAccessible(ownerNode);
+    outerDocAcc = GetAccService()->GetAccessible(ownerContent);
     if (!outerDocAcc)
       return nsnull;
   }
@@ -487,8 +483,8 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
   nsDocAccessible *docAcc = isRootDoc ?
-    new nsRootAccessibleWrap(DOMNode, weakShell) :
-    new nsDocAccessibleWrap(DOMNode, weakShell);
+    new nsRootAccessibleWrap(aDocument, rootElm, weakShell) :
+    new nsDocAccessibleWrap(aDocument, rootElm, weakShell);
 
   if (!docAcc)
     return nsnull;
@@ -509,7 +505,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   }
 
   if (!GetAccService()->InitAccessible(docAcc,
-                                       nsAccUtils::GetRoleMapEntry(DOMNode))) {
+                                       nsAccUtils::GetRoleMapEntry(aDocument))) {
     mDocAccessibleCache.Remove(static_cast<void*>(aDocument));
     return nsnull;
   }
