@@ -1187,6 +1187,15 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
             *aCachedClassPolicy = cpolicy;
     }
 
+    NS_ASSERTION(JSVAL_IS_INT(aProperty) || JSVAL_IS_OBJECT(aProperty) ||
+                 JSVAL_IS_STRING(aProperty), "Property must be a valid id");
+
+    // Only atomized strings are stored in the policies' hash tables.
+    if (!JSVAL_IS_STRING(aProperty))
+        return NS_OK;
+
+    JSString *propertyKey = JSVAL_TO_STRING(aProperty);
+
     // We look for a PropertyPolicy in the following places:
     // 1)  The ClassPolicy for our class we got from our DomainPolicy
     // 2)  The mWildcardPolicy of our DomainPolicy
@@ -1197,7 +1206,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
     {
         ppolicy = static_cast<PropertyPolicy*>
                              (PL_DHashTableOperate(cpolicy->mPolicy,
-                                                      (void*)aProperty,
+                                                      propertyKey,
                                                       PL_DHASH_LOOKUP));
     }
 
@@ -1209,7 +1218,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         ppolicy =
             static_cast<PropertyPolicy*>
                        (PL_DHashTableOperate(dpolicy->mWildcardPolicy->mPolicy,
-                                                (void*)aProperty,
+                                                propertyKey,
                                                 PL_DHASH_LOOKUP));
     }
 
@@ -1229,7 +1238,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
             ppolicy =
                 static_cast<PropertyPolicy*>
                            (PL_DHashTableOperate(cpolicy->mPolicy,
-                                                    (void*)aProperty,
+                                                    propertyKey,
                                                     PL_DHASH_LOOKUP));
         }
 
@@ -1239,7 +1248,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
             ppolicy =
               static_cast<PropertyPolicy*>
                          (PL_DHashTableOperate(mDefaultPolicy->mWildcardPolicy->mPolicy,
-                                                  (void*)aProperty,
+                                                  propertyKey,
                                                   PL_DHASH_LOOKUP));
         }
     }
@@ -3782,11 +3791,9 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
             return NS_ERROR_OUT_OF_MEMORY;
 
         // Store this property in the class policy
-        const void* ppkey =
-          reinterpret_cast<const void*>(STRING_TO_JSVAL(propertyKey));
         PropertyPolicy* ppolicy = 
           static_cast<PropertyPolicy*>
-                     (PL_DHashTableOperate(cpolicy->mPolicy, ppkey,
+                     (PL_DHashTableOperate(cpolicy->mPolicy, propertyKey,
                                               PL_DHASH_ADD));
         if (!ppolicy)
             break;
@@ -4057,7 +4064,7 @@ PrintPropertyPolicy(PLDHashTable *table, PLDHashEntryHdr *entry,
     JSContext* cx = (JSContext*)arg;
     prop.AppendInt((PRUint32)pp->key);
     prop += ' ';
-    prop.AppendWithConversion((PRUnichar*)JSValIDToString(cx, pp->key));
+    prop.AppendWithConversion((PRUnichar*)JS_GetStringChars(pp->key));
     prop += ": Get=";
     if (SECURITY_ACCESS_LEVEL_FLAG(pp->mGet))
         prop.AppendInt(pp->mGet.level);
