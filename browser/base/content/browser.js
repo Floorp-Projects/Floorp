@@ -2187,7 +2187,7 @@ function traceVerbose(verbose)
 }
 #endif
 
-function URLBarSetURI(aURI, aValid) {
+function URLBarSetURI(aURI) {
   var value = gBrowser.userTypedValue;
   var valid = false;
 
@@ -2201,8 +2201,7 @@ function URLBarSetURI(aURI, aValid) {
     else
       value = losslessDecodeURI(uri);
 
-    let isBlank = (uri.spec == "about:blank");
-    valid = !isBlank && (!aURI || aValid);
+    valid = (uri.spec != "about:blank");
   }
 
   gURLBar.value = value;
@@ -4127,7 +4126,7 @@ var XULBrowserWindow = {
         try {
           uri = this._uriFixup.createExposableURI(uri);
         } catch (e) {}
-        URLBarSetURI(uri, true);
+        URLBarSetURI(uri);
 
         // Update starring UI
         PlacesStarButton.updateState();
