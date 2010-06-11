@@ -54,6 +54,7 @@
 #include "gfxFontMissingGlyphs.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
+#include "gfxScriptItemizer.h"
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
@@ -1250,7 +1251,8 @@ gfxFont::InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aRunStart,
-                     PRUint32 aRunLength)
+                     PRUint32 aRunLength,
+                     PRInt32 aRunScript)
 {
     NS_ASSERTION(mShaper != nsnull, "no shaper?!");
     if (!mShaper) {
@@ -1258,7 +1260,7 @@ gfxFont::InitTextRun(gfxContext *aContext,
     }
 
     PRBool ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                     aRunStart, aRunLength);
+                                     aRunStart, aRunLength, aRunScript);
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
 }
 
@@ -1966,15 +1968,33 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                           const PRUnichar *aString,
                           PRUint32 aLength)
 {
+    // split into script runs so that script can potentially influence
+    // the font matching process below
+    gfxScriptItemizer scriptRuns(aString, aLength);
+
+    PRUint32 runStart = 0, runLimit = aLength;
+    PRInt32 runScript = HB_SCRIPT_LATIN;
+    while (scriptRuns.Next(runStart, runLimit, runScript)) {
+        InitTextRun(aContext, aTextRun, aString, aLength,
+                    runStart, runLimit, runScript);
+    }
+}
+
+void
+gfxFontGroup::InitTextRun(gfxContext *aContext,
+                          gfxTextRun *aTextRun,
+                          const PRUnichar *aString,
+                          PRUint32 aTotalLength,
+                          PRUint32 aScriptRunStart,
+                          PRUint32 aScriptRunEnd,
+                          PRInt32 aRunScript)
+{
     gfxFont *mainFont = mFonts[0].get();
 
-    PRUint32 runStart = 0;
+    PRUint32 runStart = aScriptRunStart;
     nsAutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString, 0, aLength);
+    ComputeRanges(fontRanges, aString, aScriptRunStart, aScriptRunEnd);
     PRUint32 numRanges = fontRanges.Length();
-
-    nsAutoTArray<PRPackedBool,SMALL_GLYPH_RUN> unmatchedArray;
-    PRPackedBool *unmatched = NULL;
 
     for (PRUint32 r = 0; r < numRanges; r++) {
         const gfxTextRange& range = fontRanges[r];
@@ -1987,23 +2007,15 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
             // do glyph layout and record the resulting positioned glyphs
             matchedFont->InitTextRun(aContext, aTextRun, aString,
-                                     runStart, matchedLength);
+                                     runStart, matchedLength, aRunScript);
         } else {
-            // no font available, so record missing glyph info instead
-            if (unmatched == NULL) {
-                if (unmatchedArray.SetLength(aLength)) {
-                    unmatched = unmatchedArray.Elements();
-                    ::memset(unmatched, PR_FALSE, aLength*sizeof(PRPackedBool));
-                }
-            }
-
             // create the glyph run before calling SetMissing Glyph
             aTextRun->AddGlyphRun(mainFont, runStart, matchedLength);
 
             for (PRUint32 index = runStart; index < runStart + matchedLength; index++) {
                 // Record the char code so we can draw a box with the Unicode value
                 if (NS_IS_HIGH_SURROGATE(aString[index]) &&
-                    index + 1 < aLength &&
+                    index + 1 < aScriptRunEnd &&
                     NS_IS_LOW_SURROGATE(aString[index+1])) {
                     aTextRun->SetMissingGlyph(index,
                                               SURROGATE_TO_UCS4(aString[index],
@@ -2013,12 +2025,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                     aTextRun->SetMissingGlyph(index, aString[index]);
                 }
             }
-
-            // We have to remember the indices of unmatched chars to avoid overwriting
-            // their glyph (actually char code) data with the space glyph later,
-            // while we're retrieving actual glyph data from CoreText runs.
-            if (unmatched)
-                ::memset(unmatched + runStart, PR_TRUE, matchedLength);
         }
 
         runStart += matchedLength;

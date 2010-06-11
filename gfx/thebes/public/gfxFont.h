@@ -675,7 +675,8 @@ public:
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
-                               PRUint32 aRunLength) = 0;
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript) = 0;
 
 protected:
     // the font this shaper is working with
@@ -949,7 +950,8 @@ public:
                              gfxTextRun *aTextRun,
                              const PRUnichar *aString,
                              PRUint32 aRunStart,
-                             PRUint32 aRunLength);
+                             PRUint32 aRunLength,
+                             PRInt32 aRunScript);
 
 protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
@@ -1946,10 +1948,21 @@ protected:
     // you should call this with the *first* bad font.
     void InitMetricsForBadFont(gfxFont* aBadFont);
 
+    // Set up the textrun glyphs, by finding script and font ranges
+    // and calling each font's InitTextRun() as appropriate
     void InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aLength);
+
+    // InitTextRun helper to handle a single script run
+    void InitTextRun(gfxContext *aContext,
+                     gfxTextRun *aTextRun,
+                     const PRUnichar *aString,
+                     PRUint32 aTotalLength,
+                     PRUint32 aScriptRunStart,
+                     PRUint32 aScriptRunEnd,
+                     PRInt32 aRunScript);
 
     /* If aResolveGeneric is true, then CSS/Gecko generic family names are
      * replaced with preferred fonts.
