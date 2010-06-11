@@ -74,6 +74,8 @@
 #include <errno.h>  /* for EINVAL */
 #include <time.h>
 
+namespace nspr {
+
 /* Implements the Unix localtime_r() function for windows */
 #if defined(OS_WIN)
 static void localtime_r(const time_t* secs, struct tm* time) {
@@ -1201,3 +1203,5 @@ PR_ParseTimeString(
   *result_imploded = PR_ImplodeTime(result);
   return PR_SUCCESS;
 }
+
+} // namespace nspr
