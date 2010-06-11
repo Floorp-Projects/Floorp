@@ -55,8 +55,7 @@ nsEventShell::FireEvent(nsAccEvent *aEvent)
   nsRefPtr<nsAccessible> acc = do_QueryObject(aEvent->GetAccessible());
   NS_ENSURE_TRUE(acc,);
 
-  nsCOMPtr<nsIDOMNode> node;
-  aEvent->GetDOMNode(getter_AddRefs(node));
+  nsINode* node = aEvent->GetNode();
   if (node) {
     sEventTargetNode = node;
     sEventFromUserInput = aEvent->IsFromUserInput();
@@ -80,7 +79,7 @@ nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
 }
 
 void 
-nsEventShell::GetEventAttributes(nsIDOMNode *aNode,
+nsEventShell::GetEventAttributes(nsINode *aNode,
                                  nsIPersistentProperties *aAttributes)
 {
   if (aNode != sEventTargetNode)
@@ -95,7 +94,7 @@ nsEventShell::GetEventAttributes(nsIDOMNode *aNode,
 // nsEventShell: private
 
 PRBool nsEventShell::sEventFromUserInput = PR_FALSE;
-nsCOMPtr<nsIDOMNode> nsEventShell::sEventTargetNode;
+nsCOMPtr<nsINode> nsEventShell::sEventTargetNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////

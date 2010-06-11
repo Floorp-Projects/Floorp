@@ -44,8 +44,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridAccessibleWrap::
-  nsXULTreeGridAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
-  nsXULTreeGridAccessible(aDOMNode, aShell)
+  nsXULTreeGridAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULTreeGridAccessible(aContent, aShell)
 {
 }
 
@@ -62,13 +62,13 @@ IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridAccessibleWrap,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridCellAccessibleWrap::
-  nsXULTreeGridCellAccessibleWrap(nsIDOMNode *aDOMNode,
+  nsXULTreeGridCellAccessibleWrap(nsIContent *aContent,
                                   nsIWeakReference *aShell,
                                   nsXULTreeGridRowAccessible *aRowAcc,
                                   nsITreeBoxObject *aTree,
                                   nsITreeView *aTreeView,
                                   PRInt32 aRow, nsITreeColumn* aColumn) :
-  nsXULTreeGridCellAccessible(aDOMNode, aShell, aRowAcc, aTree, aTreeView,
+  nsXULTreeGridCellAccessible(aContent, aShell, aRowAcc, aTree, aTreeView,
                               aRow, aColumn)
 {
 }

@@ -82,15 +82,16 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 
 static const PRInt32 kIEnumVariantDisconnected = -1;
 
-/*
- * Class nsAccessibleWrap
- */
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell):
-  nsAccessible(aNode, aShell), mEnumVARIANTPosition(0), mTypeInfo(NULL)
+nsAccessibleWrap::
+  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessible(aContent, aShell), mEnumVARIANTPosition(0), mTypeInfo(NULL)
 {
 }
 
@@ -481,7 +482,7 @@ __try {
   // -- Try BSTR role
   // Could not map to known enumerated MSAA role like ROLE_BUTTON
   // Use BSTR role to expose role attribute or tag name + namespace
-  nsIContent *content = nsCoreUtils::GetRoleContent(xpAccessible->GetDOMNode());
+  nsIContent *content = xpAccessible->GetContent();
   if (!content)
     return E_FAIL;
 
@@ -596,9 +597,8 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   // VT_DISPATCH: pdispVal member is the address of the IDispatch interface
   //              for the child object with the keyboard focus.
 __try {
-  if (!mDOMNode) {
-    return E_FAIL; // This node is shut down
-  }
+  if (IsDefunct())
+    return E_FAIL;
 
   VariantInit(pvarChild);
 
@@ -1470,7 +1470,7 @@ nsAccessibleWrap::get_windowHandle(HWND *aWindowHandle)
 __try {
   *aWindowHandle = 0;
 
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
 
   void *handle = nsnull;

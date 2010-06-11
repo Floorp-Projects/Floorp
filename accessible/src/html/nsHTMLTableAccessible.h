@@ -52,7 +52,7 @@ class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap,
                                   public nsIAccessibleTableCell
 {
 public:
-  nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLTableCellAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -95,8 +95,8 @@ protected:
 class nsHTMLTableHeaderCellAccessible : public nsHTMLTableCellAccessible
 {
 public:
-  nsHTMLTableHeaderCellAccessible(nsIDOMNode* aDomNode,
-                                  nsIWeakReference* aShell);
+  nsHTMLTableHeaderCellAccessible(nsIContent *aContent,
+                                  nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -124,7 +124,7 @@ class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public nsIAccessibleTable
 {
 public:
-  nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLTableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETABLE
@@ -207,8 +207,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLTableAccessible,
 class nsHTMLCaptionAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLCaptionAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell) :
-    nsHyperTextAccessibleWrap(aDomNode, aShell) { }
+  nsHTMLCaptionAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsHyperTextAccessibleWrap(aContent, aShell) { }
 
   // nsIAccessible
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,

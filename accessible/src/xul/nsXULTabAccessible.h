@@ -51,7 +51,7 @@ class nsXULTabAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Switch = 0 };
 
-  nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXULTabAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -74,7 +74,7 @@ public:
 class nsXULTabsAccessible : public nsXULSelectableAccessible
 {
 public:
-  nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXULTabsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -92,7 +92,7 @@ public:
 class nsXULTabpanelsAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULTabpanelsAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+  nsXULTabpanelsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -112,7 +112,7 @@ public:
 class nsXULTabpanelAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULTabpanelAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+  nsXULTabpanelAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,

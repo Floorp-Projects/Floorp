@@ -50,7 +50,7 @@ class nsARIAGridAccessible : public nsAccessibleWrap,
                              public nsIAccessibleTable
 {
 public:
-  nsARIAGridAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsARIAGridAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -110,7 +110,7 @@ class nsARIAGridCellAccessible : public nsHyperTextAccessibleWrap,
                                  public nsIAccessibleTableCell
 {
 public:
-  nsARIAGridCellAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsARIAGridCellAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
