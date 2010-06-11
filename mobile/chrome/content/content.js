@@ -817,16 +817,18 @@ let ViewportHandler = {
   metadata: null,
 
   init: function init() {
-    addEventListener("DOMContentLoaded", this, false);
+    addEventListener("DOMWindowCreated", this, false);
     addEventListener("DOMMetaAdded", this, false);
+    addEventListener("DOMContentLoaded", this, false);
     addEventListener("pageshow", this, false);
-
-    this.progresscontroller = new ProgressController(this)
-    this.progresscontroller.start();
   },
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "DOMWindowCreated":
+        this.resetMetadata();
+        break;
+
       case "DOMMetaAdded":
         let target = aEvent.originalTarget;
         let isRootDocument = (target.ownerDocument == content.document);
@@ -842,15 +844,12 @@ let ViewportHandler = {
     }
   },
 
-  startLoading: function() {
+  resetMetadata: function resetMetadata() {
     this.metadata = null;
     sendAsyncMessage("FennecViewportMetadata", {});
   },
 
-  stopLoading: function() {
-  },
-
-  updateMetadata: function notify() {
+  updateMetadata: function updateMetadata() {
     this.metadata = this.getViewportMetadata();
     sendAsyncMessage("FennecViewportMetadata", this.metadata);
   },
