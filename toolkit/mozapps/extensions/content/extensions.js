@@ -614,7 +614,7 @@ var gCategories = {
       }
     }, false);
 
-    var maybeHidden = ["addons://list/language", "addons://list/searchengine"];
+    var maybeHidden = ["addons://list/locale", "addons://list/searchengine"];
     maybeHidden.forEach(function(aId) {
       var type = gViewController.parseViewId(aId).param;
       AddonManager.getAddonsByTypes([type], function(aAddonsList) {
