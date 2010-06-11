@@ -350,6 +350,7 @@ struct SyncRegs {
          * Worst case. This register is backed by a synced FE that might back
          * copies. Evicting it could result in a load.
          */
+        uint32 any = FrameState::InvalidIndex;
         uint32 worst = FrameState::InvalidIndex;
 
         /*
@@ -363,7 +364,7 @@ struct SyncRegs {
             if (!(Registers::maskReg(reg) & Registers::AvailRegs))
                 continue;
 
-            worst = i;
+            any = i;
 
             FrameEntry *myFe = regs[reg].fe;
             if (!myFe) {
@@ -378,6 +379,8 @@ struct SyncRegs {
                     return reg;
                 else if (frame.regstate[reg].type == RematInfo::DATA && fe->data.synced())
                     return reg;
+            } else {
+                worst = i;
             }
         }
 
@@ -391,6 +394,16 @@ struct SyncRegs {
                 frame.syncData(fe, frame.addressOf(fe), masm);
             regs[nbest].synced = true;
             return RegisterID(nbest);
+        }
+
+        if (worst != FrameState::InvalidIndex) {
+            JS_ASSERT(regs[worst].fe);
+            if (regs[worst].type == RematInfo::TYPE)
+                regs[worst].fe->type.setMemory();
+            else
+                regs[worst].fe->data.setMemory();
+            regs[worst].fe = NULL;
+            return RegisterID(worst);
         }
 
         JS_NOT_REACHED("wat");
@@ -904,8 +917,8 @@ FrameState::storeLocal(uint32 n)
     if (!backing->isTypeKnown())
         backing->type.invalidate();
     backing->data.invalidate();
-    backing->setNotCopied();
     backing->setCopyOf(localFe);
+    localFe->setCopied();
 
     JS_ASSERT(top->copyOf() == localFe);
 }
