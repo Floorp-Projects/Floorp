@@ -476,7 +476,7 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   PRInt32 selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult res;
-  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   // confirm we are at end of document
   if (selOffset == 0) return NS_OK;  // can't be after a br if we are at offset 0
@@ -513,7 +513,7 @@ static inline already_AddRefed<nsIDOMNode>
 GetTextNode(nsISelection *selection, nsEditor *editor) {
   PRInt32 selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
-  nsresult res = editor->GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+  nsresult res = editor->GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
   if (NS_FAILED(res)) return nsnull;
   if (!editor->IsTextNode(selNode)) {
     // Get an nsINode from the nsIDOMNode
@@ -731,7 +731,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // get the (collapsed) selection location
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
-  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
 
   // don't put text in places that can't have it
@@ -1005,7 +1005,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
   {
     nsCOMPtr<nsIDOMNode> startNode;
     PRInt32 startOffset;
-    res = mEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+    res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
     if (NS_FAILED(res)) return res;
     if (!startNode) return NS_ERROR_FAILURE;
     
@@ -1039,7 +1039,7 @@ nsTextEditRules::DidDeleteSelection(nsISelection *aSelection,
 {
   nsCOMPtr<nsIDOMNode> startNode;
   PRInt32 startOffset;
-  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
   if (NS_FAILED(res)) return res;
   if (!startNode) return NS_ERROR_FAILURE;
   

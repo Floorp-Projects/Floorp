@@ -581,7 +581,7 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt32 offset;
       nsCOMPtr<nsIDOMNode> node, blockParent;
-      rv = GetStartNodeAndOffset(selection, address_of(node), &offset);
+      rv = GetStartNodeAndOffset(selection, getter_AddRefs(node), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
@@ -1546,7 +1546,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   }
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
-  res = GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+  res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   
   res = CreateBR(selNode, selOffset, outBRNode);
@@ -2233,7 +2233,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
   // get selection location
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
-  res = GetStartNodeAndOffset(selection, address_of(parent), &offset);
+  res = GetStartNodeAndOffset(selection, getter_AddRefs(parent), &offset);
   if (NS_FAILED(res)) return res;
   if (!parent) return NS_ERROR_NULL_POINTER;
 
@@ -2458,7 +2458,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, PRBool entireList, co
     nsCOMPtr<nsIDOMNode> node;
     PRInt32 offset;
   
-    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+    res = GetStartNodeAndOffset(selection, getter_AddRefs(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -2602,7 +2602,7 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     nsCOMPtr<nsIDOMNode> node;
     PRInt32 offset;
   
-    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+    res = GetStartNodeAndOffset(selection, getter_AddRefs(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -2682,7 +2682,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
     res = selection->GetIsCollapsed(&isCollapsed);
     if (NS_FAILED(res)) return res;
 
-    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+    res = GetStartNodeAndOffset(selection, getter_AddRefs(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -2720,7 +2720,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
         res = InsertText(NS_LITERAL_STRING(" "));
         if (NS_FAILED(res)) return res;
         // reposition selection to before the space character
-        res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+        res = GetStartNodeAndOffset(selection, getter_AddRefs(node), &offset);
         if (NS_FAILED(res)) return res;
         res = selection->Collapse(node,0);
         if (NS_FAILED(res)) return res;

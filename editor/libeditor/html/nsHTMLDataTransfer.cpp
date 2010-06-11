@@ -295,7 +295,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   {
     // if caller didn't provide the destination/target node,
     // fetch the paste insertion point from our selection
-    res = GetStartNodeAndOffset(selection, address_of(targetNode), &targetOffset);
+    res = GetStartNodeAndOffset(selection, getter_AddRefs(targetNode), &targetOffset);
     if (!targetNode) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   }
@@ -417,7 +417,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   {
     // The rules code (WillDoAction above) might have changed the selection.  
     // refresh our memory...
-    res = GetStartNodeAndOffset(selection, address_of(parentNode), &offsetOfNewNode);
+    res = GetStartNodeAndOffset(selection, getter_AddRefs(parentNode), &offsetOfNewNode);
     if (!parentNode) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
 
