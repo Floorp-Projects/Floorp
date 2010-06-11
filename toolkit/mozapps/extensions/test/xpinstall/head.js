@@ -184,6 +184,7 @@ var Harness = {
                           .getInterface(Components.interfaces.nsIDOMWindowInternal);
     var self = this;
     domwindow.addEventListener("load", function() {
+      domwindow.removeEventListener("load", arguments.callee, false);
       self.windowLoad(domwindow);
     }, false);
   },
