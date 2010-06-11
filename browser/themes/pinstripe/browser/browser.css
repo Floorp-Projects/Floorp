@@ -2027,9 +2027,27 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0;
 }
 
-.allTabs-favicon {
-  margin-top: 1px;
-  -moz-margin-start: 1px;
+.allTabs-favicon[src] {
+  background-color: -moz-dialog;
+  width: 20px;
+  height: 20px;
+  padding-bottom: 4px;
+  -moz-padding-start: 4px;
+  -moz-border-radius-bottomleft: 4px;
+}
+
+.allTabs-favicon[src]:-moz-locale-dir(rtl) {
+  -moz-border-radius-bottomleft: 0;
+  -moz-border-radius-bottomright: 4px;
+}
+
+.allTabs-preview:not(:focus) > * > .allTabs-favicon-container > .allTabs-favicon[src] {
+  width: 22px;
+  height: 22px;
+  padding-top: 2px;
+  -moz-padding-end: 2px;
+  margin-top: -2px;
+  -moz-margin-end: -2px;
 }
 
 .allTabs-preview-inner > .tabPreview-canvas {
@@ -2044,4 +2062,3 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .allTabs-preview:focus > * > .allTabs-preview-inner {
   -moz-box-shadow: @focusRingShadow@;
 }
-
