@@ -171,6 +171,29 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         sizeOk = PR_FALSE;
 
 #ifdef MOZ_X11
+    int glitzf;
+    int xrenderFormatID;
+    switch (imageFormat) {
+        case gfxASurface::ImageFormatARGB32:
+            glitzf = 0; // GLITZ_STANDARD_ARGB32;
+            xrenderFormatID = PictStandardARGB32;
+            break;
+        case gfxASurface::ImageFormatRGB24:
+            glitzf = 1; // GLITZ_STANDARD_RGB24;
+            xrenderFormatID = PictStandardRGB24;
+            break;
+        case gfxASurface::ImageFormatA8:
+            glitzf = 2; // GLITZ_STANDARD_A8;
+            xrenderFormatID = PictStandardA8;
+            break;
+        case gfxASurface::ImageFormatA1:
+            glitzf = 3; // GLITZ_STANDARD_A1;
+            xrenderFormatID = PictStandardA1;
+            break;
+        default:
+            return nsnull;
+    }
+
     // XXX we really need a different interface here, something that passes
     // in more context, including the display and/or target surface type that
     // we should try to match
@@ -179,13 +202,8 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         return nsnull;
 
     GdkPixmap* pixmap = nsnull;
-    // try to optimize it for 16bpp default screen
-    if (gfxASurface::ImageFormatRGB24 == imageFormat
-        && 16 == gdk_visual_get_system()->depth)
-        imageFormat = gfxASurface::ImageFormatRGB16_565;
-
     XRenderPictFormat* xrenderFormat =
-        gfxXlibSurface::FindRenderFormat(display, imageFormat);
+        XRenderFindStandardFormat(display, xrenderFormatID);
 
     if (xrenderFormat && sizeOk) {
         pixmap = gdk_pixmap_new(nsnull, size.width, size.height,
