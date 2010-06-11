@@ -1176,13 +1176,17 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         // String params
         //
 
-        // XXX do we want to fake these?  Could be a problem to reveal this to web content
         case LOCAL_GL_VENDOR:
+            wrval->SetAsDOMString(NS_LITERAL_STRING("Mozilla"));
+            break;
         case LOCAL_GL_RENDERER:
+            wrval->SetAsDOMString(NS_LITERAL_STRING("Mozilla"));
+            break;
         case LOCAL_GL_VERSION:
+            wrval->SetAsDOMString(NS_LITERAL_STRING("WebGL 1.0"));
+            break;
         case LOCAL_GL_SHADING_LANGUAGE_VERSION:
-        //case LOCAL_GL_EXTENSIONS:  // Not going to expose this
-
+            wrval->SetAsDOMString(NS_LITERAL_STRING("WebGL GLSL ES 1.0"));
             break;
 
         //
@@ -1618,13 +1622,6 @@ WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
     CopyASCIItoUTF16(log, retval);
 
     return NS_OK;
-}
-
-/* DOMString glGetString (in GLenum name); */
-NS_IMETHODIMP
-WebGLContext::GetString(WebGLenum name, nsAString & _retval NS_OUTPARAM)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* XXX fix */

@@ -691,7 +691,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //void glGetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, WebGLint* range, WebGLint* precision);
 
   DOMString getShaderSource(in nsIWebGLShader shader);
-  DOMString getString(in WebGLenum name);
 
   void getTexParameter(in WebGLenum target, in WebGLenum pname);
 
