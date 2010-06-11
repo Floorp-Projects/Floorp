@@ -87,7 +87,7 @@ struct JSStackFrame
 
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSObject            *callobj;       /* lazily created Call object */
-    JSObject            *argsobj;       /* lazily created arguments object */
+    js::Value           argsval;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
     uintN               argc;           /* actual argument count */
@@ -138,7 +138,7 @@ struct JSStackFrame
      * also used in some other cases --- entering 'with' blocks, for
      * example.
      */
-    JSObject        *scopeChain;
+    js::Value       scopeChain;
     JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
@@ -156,8 +156,8 @@ struct JSStackFrame
          */
         if (callobj) {
             js_PutCallObject(cx, this);
-            JS_ASSERT(!argsobj);
-        } else if (argsobj) {
+            JS_ASSERT(argsval.isNull());
+        } else if (argsval.isNonFunObj()) {
             js_PutArgsObject(cx, this);
         }
     }
@@ -184,6 +184,25 @@ struct JSStackFrame
 
     JSObject *callee() {
         return argv ? &argv[-2].asObject() : NULL;
+    }
+
+    JSObject *argsObj() {
+        return argsval.asObjectOrNull();
+    }
+
+    void setArgsObj(JSObject *obj) {
+        if (obj)
+            argsval.setNonFunObj(*obj);
+        else
+            argsval.setNull();
+    }
+
+    JSObject *scopeChainObj() {
+        return scopeChain.asObjectOrNull();
+    }
+
+    void setScopeChainObj(JSObject *obj) {
+        scopeChain.setObjectOrNull(obj);
     }
 
     /*
