@@ -103,69 +103,40 @@ js_imod(int32 a, int32 b)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
-jsval FASTCALL
-js_BoxDouble(JSContext* cx, jsdouble d)
-{
-    int32 i;
-    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
-        return INT_TO_JSVAL(i);
-    JS_ASSERT(JS_ON_TRACE(cx));
-    jsval v; /* not rooted but ok here because we know GC won't run */
-    if (!js_NewDoubleInRootedValue(cx, d, &v))
-        return JSVAL_NULL;
-    return v;
-}
-JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxDouble, CONTEXT, DOUBLE, 1, ACC_NONE)
-
-jsval FASTCALL
-js_BoxInt32(JSContext* cx, int32 i)
-{
-    if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
-        return INT_TO_JSVAL(i);
-    JS_ASSERT(JS_ON_TRACE(cx));
-    jsval v; /* not rooted but ok here because we know GC won't run */
-    jsdouble d = (jsdouble)i;
-    if (!js_NewDoubleInRootedValue(cx, d, &v))
-        return JSVAL_NULL;
-    return v;
-}
-JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxInt32, CONTEXT, INT32, 1, ACC_NONE)
 
 jsdouble FASTCALL
-js_UnboxDouble(jsval v)
+js_UnboxDouble(Value *v)
 {
-    if (JS_LIKELY(JSVAL_IS_INT(v)))
-        return (jsdouble)JSVAL_TO_INT(v);
-    return *JSVAL_TO_DOUBLE(v);
+    return v->asNumber();
 }
-JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, JSVAL, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, VALUEPTR, 1, ACC_NONE)
 
 int32 FASTCALL
-js_UnboxInt32(jsval v)
+js_UnboxInt32(Value *v)
 {
-    if (JS_LIKELY(JSVAL_IS_INT(v)))
-        return JSVAL_TO_INT(v);
-    return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
+    if (v->isInt32())
+        return v->asInt32();
+    return js_DoubleToECMAInt32(v->asDouble());
 }
-JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, JSVAL, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, VALUEPTR, 1, ACC_NONE)
 
 JSBool FASTCALL
-js_TryUnboxInt32(jsval v, int32* i32p)
+js_TryUnboxInt32(Value *v, int32* i32p)
 {
-    if (JS_LIKELY(JSVAL_IS_INT(v))) {
-        *i32p = JSVAL_TO_INT(v);
+    if (v->isInt32()) {
+        *i32p = v->asInt32();
         return JS_TRUE;
     }
-    if (!JSVAL_IS_DOUBLE(v))
+    if (!v->isDouble())
         return JS_FALSE;
-    int32 i;
-    jsdouble d = *JSVAL_TO_DOUBLE(v);
-    if (!JSDOUBLE_IS_INT(d, i))
+    int32_t i;
+    jsdouble d = v->asDouble();
+    if (!JSDOUBLE_IS_INT32(d, i))
         return JS_FALSE;
     *i32p = i;
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, JSVAL, INT32PTR, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, VALUEPTR, INT32PTR, 1, ACC_NONE)
 
 int32 FASTCALL
 js_DoubleToInt32(jsdouble d)
@@ -217,7 +188,7 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isD
 
     if (!scope->table) {
         if (slot < obj->numSlots() && !obj->getClass()->reserveSlots) {
-            JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
+            JS_ASSERT(obj->getSlot(scope->freeslot).isUndefined());
             ++scope->freeslot;
         } else {
             if (!js_AllocSlot(cx, obj, &slot))
@@ -270,16 +241,16 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
     // Check that we know how the lookup op will behave.
     for (JSObject* pobj = obj; pobj; pobj = pobj->getProto()) {
         if (pobj->map->ops->lookupProperty != js_LookupProperty)
-            return JSVAL_TO_SPECIAL(JSVAL_VOID);
-        JSClass* clasp = pobj->getClass();
+            return JS_NEITHER;
+        Class* clasp = pobj->getClass();
         if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
-            return JSVAL_TO_SPECIAL(JSVAL_VOID);
+            return JS_NEITHER;
     }
 
     JSObject* obj2;
     JSProperty* prop;
     if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
-        return JSVAL_TO_SPECIAL(JSVAL_VOID);
+        return JS_NEITHER;
     if (prop)
         obj2->dropProperty(cx, prop);
     return prop != NULL;
@@ -288,22 +259,14 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
-    jsid id;
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
-
-    return HasProperty(cx, obj, id);
+    return HasProperty(cx, obj, ATOM_TO_JSID(idstr));
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedProperty, CONTEXT, OBJECT, STRING, 0, ACC_STORE_ANY)
 
 JSBool FASTCALL
 js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 {
-    jsid id;
-    if (!js_Int32ToId(cx, index, &id))
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
-
-    return HasProperty(cx, obj, id);
+    return HasProperty(cx, obj, INT_TO_JSID(index));
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, INT32, 0,
                      ACC_STORE_ANY)
@@ -320,9 +283,8 @@ JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfObject, CONTEXT, OBJECT, 1, ACC_NO
 JSString* FASTCALL
 js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 {
-    /* Watch out for pseudo-booleans. */
-    jsval boxed = SPECIAL_TO_JSVAL(unboxed);
-    JS_ASSERT(JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed));
+    JS_ASSERT(unboxed == JS_FALSE || unboxed == JS_TRUE);
+    jsval boxed = BOOLEAN_TO_JSVAL(unboxed);
     JSType type = JS_TypeOfValue(cx, boxed);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
 }
@@ -350,8 +312,8 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    closure->initSharingEmptyScope(&js_FunctionClass, proto, parent,
-                                   reinterpret_cast<jsval>(fun));
+    closure->initSharingEmptyScope(&js_FunctionClass, ObjectTag(*proto), ObjectTag(*parent),
+                                   PrivateTag(fun));
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0,

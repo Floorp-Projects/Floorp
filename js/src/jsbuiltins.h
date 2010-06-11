@@ -80,7 +80,6 @@ enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
  * 'o': a JSObject* argument
  * 'r': a JSObject* argument that is of class js_RegExpClass
  * 'f': a JSObject* argument that is of class js_FunctionClass
- * 'v': a jsval argument (boxing whatever value is actually being passed in)
  */
 struct JSSpecializedNative {
     const nanojit::CallInfo *builtin;
@@ -172,7 +171,7 @@ struct ClosureVarInfo;
  * effects.
  */
 #define _JS_CTYPE(ctype, size, pch, ach, flags)     (ctype, size, pch, ach, flags)
-#define _JS_JSVAL_CTYPE(size, pch, ach, flags)  (jsval, size, pch, ach, (flags | JSTN_UNBOX_AFTER))
+#define _JS_JSVAL_CTYPE(size, pch, ach, flags)  (Value, size, pch, ach, (flags | JSTN_UNBOX_AFTER))
 
 #define _JS_CTYPE_CONTEXT           _JS_CTYPE(JSContext *,            _JS_PTR,"C", "", INFALLIBLE)
 #define _JS_CTYPE_RUNTIME           _JS_CTYPE(JSRuntime *,            _JS_PTR,"R", "", INFALLIBLE)
@@ -183,10 +182,8 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CALLEE_PROTOTYPE  _JS_CTYPE(JSObject *,             _JS_PTR,"p","",  INFALLIBLE)
 #define _JS_CTYPE_FUNCTION          _JS_CTYPE(JSFunction *,           _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
-#define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
-#define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
-#define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
-#define _JS_CTYPE_JSID              _JS_CTYPE(jsid,                   _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_VALUEPTR          _JS_CTYPE(Value *,                _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_CVALUEPTR         _JS_CTYPE(const Value *,          _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
@@ -522,8 +519,6 @@ JS_DECLARE_CALLINFO(js_NewArrayWithSlots)
 JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
 /* Defined in jsbuiltins.cpp. */
-JS_DECLARE_CALLINFO(js_BoxDouble)
-JS_DECLARE_CALLINFO(js_BoxInt32)
 JS_DECLARE_CALLINFO(js_UnboxDouble)
 JS_DECLARE_CALLINFO(js_UnboxInt32)
 JS_DECLARE_CALLINFO(js_TryUnboxInt32)
