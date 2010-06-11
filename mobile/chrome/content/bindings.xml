@@ -1134,9 +1134,9 @@
     </implementation>
   </binding>
 
-  <binding id="select-button" display="xul:menu" extends="chrome://global/content/bindings/general.xml#basecontrol">
+  <binding id="select-button" extends="xul:box">
     <content>
-      <svg:svg width="14px" height="10px" version="1.1" xmlns="http://www.w3.org/2000/svg">
+      <svg:svg width="11px" viewBox="0 0 11px 10px" version="1.1" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 35%; margin-left: 4px;">
         <svg:polyline points="1 1 5 6 9 1" stroke="#414141" stroke-width="2" stroke-linecap="round" fill="transparent" stroke-linejoin="round"/>
       </svg:svg>
     </content>

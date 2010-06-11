@@ -71,10 +71,10 @@ xul|thumb {
   -moz-border-radius: 4px !important;
 }
 
-select:not([size]):not([multiple]) > scrollbar,
-select[size="1"] > scrollbar,
-select:not([size]):not([multiple]) scrollbarbutton,
-select[size="1"] scrollbarbutton {
+select:not([size]):not([multiple]) > xul|scrollbar,
+select[size="1"] > xul|scrollbar,
+select:not([size]):not([multiple]) xul|scrollbarbutton,
+select[size="1"] xul|scrollbarbutton {
   display: block !important;
 }
 
@@ -155,8 +155,10 @@ input[type="checkbox"] {
   padding: 2px 1px 2px 1px;
 }
 
-select input[type="button"] {
+select > input[type="button"] {
   border-width: 0px !important;
+  margin: 0px !important;
+  padding: 0px !important;
   -moz-border-radius: 0;
   -moz-background-size: 100% 90%;
   color: #414141;
@@ -165,12 +167,11 @@ select input[type="button"] {
   background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5) !important;
   background-position: -15px center !important;
   background-repeat: no-repeat !important;
-  -moz-binding: url("chrome://browser/content/bindings.xml#select-button");
-}
 
-select input[type="button"] > svg {
-  margin-left: -3px;
-  margin-top: 6px;
+  /* Use to position an svg arrow on <select> element */
+  -moz-binding: url("chrome://browser/content/bindings.xml#select-button");
+  position: relative !important;
+  font-size: inherit;
 }
 
 select[size]:focus,
@@ -228,6 +229,12 @@ button[disabled],
   background: transparent -moz-linear-gradient(top, rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
 }
 
+select:not([size]):not([multiple])[disabled],
+select[size="0"][disabled],
+select[size="1"][disabled] {
+  background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+}
+
 input[type="button"][disabled],
 input[type="submit"][disabled],
 input[type="reset"][disabled],
@@ -236,13 +243,13 @@ button[disabled="true"] {
   background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
-
 input[type="checkbox"][disabled],
 input[type="radio"][disabled] {
   border:1px solid rgba(125,125,125,0.4) !important;
 }
 
-select[disabled] input[type="button"] {
+select[disabled] > input[type="button"] {
   opacity: 0.6;
   padding: 1px 7px 1px 7px;
 }
+
