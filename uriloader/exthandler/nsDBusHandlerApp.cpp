@@ -40,7 +40,6 @@
 #include  <dbus/dbus.h>
 #include "nsDBusHandlerApp.h"
 #include "nsIURI.h"
-#include "nsIGenericFactory.h"
 #include "nsIClassInfoImpl.h"
 #include "nsCOMPtr.h"
 
@@ -54,6 +53,7 @@
 
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
+NS_IMPL_CLASSINFO(nsDBusHandlerApp, NULL, 0)
 NS_IMPL_ISUPPORTS2_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,5 @@ NS_IMETHODIMP nsDBusHandlerApp::SetObjectPath(const nsACString & aObjpath)
   mObjpath.Assign(aObjpath);
   return NS_OK;
 }
-
-NS_DECL_CLASSINFO(nsDBusHandlerApp)
 
 
