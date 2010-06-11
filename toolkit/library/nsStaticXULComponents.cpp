@@ -252,7 +252,6 @@
     MODULE(appshell)                         \
     MODULE(nsTransactionManagerModule)       \
     COMPOSER_MODULE                          \
-    MODULE(nsChromeModule)                   \
     MODULE(application)                      \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
