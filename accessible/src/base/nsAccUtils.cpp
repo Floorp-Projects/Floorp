@@ -651,16 +651,8 @@ nsAccUtils::GetScreenCoordsForWindow(nsAccessNode *aAccessNode)
 nsIntPoint
 nsAccUtils::GetScreenCoordsForParent(nsAccessNode *aAccessNode)
 {
-  nsRefPtr<nsAccessNode> parent;
-  nsRefPtr<nsAccessible> accessible(do_QueryObject(aAccessNode));
-  if (accessible) {
-    parent = do_QueryObject(accessible->GetParent());
-  } else {
-    nsCOMPtr<nsIAccessNode> parentAccessNode;
-    aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
-    parent = do_QueryObject(parentAccessNode);
-  }
-
+  nsAccessible *parent =
+    GetAccService()->GetContainerAccessible(aAccessNode->GetNode(), PR_TRUE);
   if (!parent)
     return nsIntPoint(0, 0);
 

@@ -228,18 +228,18 @@ nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 ////////////////////////////////////////////////////////////////////////////////
 // nsLinkableAccessible. nsAccessNode
 
-nsresult
+PRBool
 nsLinkableAccessible::Init()
 {
   CacheActionContent();
   return nsAccessibleWrap::Init();
 }
 
-nsresult
+void
 nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;
-  return nsAccessibleWrap::Shutdown();
+  nsAccessibleWrap::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -780,14 +780,14 @@ nsAccessibilityService::CreateHTMLCaptionAccessible(nsIFrame *aFrame,
   return NS_OK;
 }
 
-// nsAccessibilityService public
-nsAccessNode*
-nsAccessibilityService::GetCachedAccessNode(nsINode *aNode,
+// nsAccessibilityService protected
+nsAccessible *
+nsAccessibilityService::GetCachedAccessible(nsINode *aNode,
                                             nsIWeakReference *aWeakShell)
 {
-  nsDocAccessible *docAccessible = nsAccUtils::GetDocAccessibleFor(aWeakShell);
+  nsDocAccessible *docAccessible = GetDocAccessible(aNode->GetOwnerDoc());
   return docAccessible ?
-    docAccessible->GetCachedAccessNode(static_cast<void*>(aNode)) : nsnull;
+    docAccessible->GetCachedAccessible(static_cast<void*>(aNode)) : nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1072,10 +1072,7 @@ nsAccessibilityService::GetContainerAccessible(nsINode *aNode,
 
     } else {
       // Only return cached accessible, don't create anything.
-      nsRefPtr<nsAccessible> cachedAcc =
-        do_QueryObject(GetCachedAccessNode(currNode, weakShell));
-
-      accessible = cachedAcc;
+      accessible = GetCachedAccessible(currNode, weakShell);
     }
   }
 
@@ -1099,8 +1096,8 @@ nsAccessibilityService::InitAccessible(nsAccessible *aAccessible,
   if (!aAccessible)
     return PR_FALSE;
 
-  nsresult rv = aAccessible->Init(); // Add to cache, etc.
-  if (NS_FAILED(rv)) {
+  // Add to cache an accessible, etc.
+  if (!aAccessible->Init()) {
     NS_ERROR("Failed to initialize an accessible!");
 
     aAccessible->Shutdown();
@@ -1148,24 +1145,17 @@ nsAccessibilityService::GetAccessible(nsINode *aNode,
                                       nsIWeakReference *aWeakShell,
                                       PRBool *aIsHidden)
 {
-  if (!aPresShell || !aWeakShell || gIsShutdown)
+  if (!aPresShell || !aWeakShell || !aNode || gIsShutdown)
     return nsnull;
-
-  NS_ASSERTION(aNode, "GetAccessible() called with no node.");
 
   if (aIsHidden)
     *aIsHidden = PR_FALSE;
 
   // Check to see if we already have an accessible for this node in the cache.
-  nsAccessNode* cachedAccessNode = GetCachedAccessNode(aNode, aWeakShell);
-  if (cachedAccessNode) {
-    // XXX: the cache might contain the access node for the DOM node that is not
-    // accessible because of wrong cache update. In this case try to create new
-    // accessible.
-    nsRefPtr<nsAccessible> cachedAccessible = do_QueryObject(cachedAccessNode);
-
-    if (cachedAccessible)
-      return cachedAccessible.forget();
+  nsAccessible *cachedAccessible = GetCachedAccessible(aNode, aWeakShell);
+  if (cachedAccessible) {
+    NS_ADDREF(cachedAccessible);
+    return cachedAccessible;
   }
 
   // No cache entry, so we must create the accessible.
@@ -1611,13 +1601,8 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame *aImageFrame,
 
   // Try to get image map accessible from the global cache or create it
   // if failed.
-  nsRefPtr<nsAccessible> imageAcc;
-
-  nsAccessNode *cachedImgAcc = GetCachedAccessNode(aImageFrame->GetContent(),
-                                                   aWeakShell);
-  if (cachedImgAcc)
-    imageAcc = do_QueryObject(cachedImgAcc);
-
+  nsRefPtr<nsAccessible> imageAcc =
+    GetCachedAccessible(aImageFrame->GetContent(), aWeakShell);
   if (!imageAcc) {
     nsCOMPtr<nsIAccessible> imageAccessible;
     CreateHTMLImageAccessible(aImageFrame,
@@ -1632,12 +1617,9 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame *aImageFrame,
   // that they should be available in global cache.
   imageAcc->EnsureChildren();
 
-  nsAccessNode *cachedAreaAcc = GetCachedAccessNode(aAreaNode, aWeakShell);
-  if (!cachedAreaAcc)
-    return nsnull;
-
-  nsRefPtr<nsAccessible> areaAcc = do_QueryObject(cachedAreaAcc);
-  return areaAcc.forget();
+  nsAccessible *cachedAreaAcc = GetCachedAccessible(aAreaNode, aWeakShell);
+  NS_IF_ADDREF(cachedAreaAcc);
+  return cachedAreaAcc;
 }
 
 already_AddRefed<nsAccessible>

@@ -357,18 +357,17 @@ nsApplicationAccessible::IsDefunct()
   return nsAccessibilityService::IsShutdown();
 }
 
-nsresult
+PRBool
 nsApplicationAccessible::Init()
 {
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
-  return NS_OK;
+  return PR_TRUE;
 }
 
-nsresult
+void
 nsApplicationAccessible::Shutdown()
 {
   mAppInfo = nsnull;
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,63 +515,6 @@ nsApplicationAccessible::GetDOMNode(nsIDOMNode **aDOMNode)
 {
   NS_ENSURE_ARG_POINTER(aDOMNode);
   *aDOMNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetNumChildren(PRInt32 *aNumChildren)
-{
-  NS_ENSURE_ARG_POINTER(aNumChildren);
-  *aNumChildren = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetChildNodeAt(PRInt32 aChildNum,
-                                        nsIAccessNode **aChildNode)
-{
-  NS_ENSURE_ARG_POINTER(aChildNode);
-  *aChildNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetParentNode(nsIAccessNode **aParentNode)
-{
-  NS_ENSURE_ARG_POINTER(aParentNode);
-  *aParentNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetFirstChildNode(nsIAccessNode **aFirstChildNode)
-{
-  NS_ENSURE_ARG_POINTER(aFirstChildNode);
-  *aFirstChildNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetLastChildNode(nsIAccessNode **aLastChildNode)
-{
-  NS_ENSURE_ARG_POINTER(aLastChildNode);
-  *aLastChildNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetPreviousSiblingNode(nsIAccessNode **aPreviousSiblingNode)
-{
-  NS_ENSURE_ARG_POINTER(aPreviousSiblingNode);
-  *aPreviousSiblingNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetNextSiblingNode(nsIAccessNode **aNextSiblingNode)
-{
-  NS_ENSURE_ARG_POINTER(aNextSiblingNode);
-  *aNextSiblingNode = nsnull;
   return NS_OK;
 }
 
