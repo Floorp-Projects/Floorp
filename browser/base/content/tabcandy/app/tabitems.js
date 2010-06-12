@@ -413,18 +413,25 @@ window.TabItems = {
           Utils.log(e);
         }
       }
-
+      
+      // The scaleCheat is a clever way to speed up the zoom-in code.
+      // Because image scaling is slowest on big images, we cheat and stop the image
+      // at scaled-down size and placed accordingly. Because the animation is fast, you can't
+      // see the difference but it feels a lot zippier. The only trick is choosing the
+      // right animation function so that you don't see a change in percieved 
+      // animation speed.
+      var scaleCheat = 1.7;
       TabMirror.pausePainting();
       iQ(tabEl)
         .addClass("front")
         .animate({
-          top:    -10,
-          left:   0,
-          width:  orig.width*scale,
-          height: orig.height*scale
+          top:    orig.pos.top * (1-1/scaleCheat),
+          left:   orig.pos.left * (1-1/scaleCheat),
+          width:  orig.width*scale/scaleCheat,
+          height: orig.height*scale/scaleCheat
         }, {
-          duration: 200,
-          easing: 'easeInQuad',
+          duration: 230,
+          easing: 'fast',
           complete: onZoomDone
         });
     }    
