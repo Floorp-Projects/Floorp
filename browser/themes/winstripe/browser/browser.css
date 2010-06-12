@@ -48,6 +48,7 @@
 
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.5)
+%define navbarTextboxCustomBorder border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -612,16 +613,23 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   margin: 1px 3px;
   padding: 2px;
   background-clip: padding-box;
-  border: 1px solid;
-  border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
+  border: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 4px;
   -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    0 1px 0 rgba(255,255,255,.4);
 }
 
+@media all and (-moz-windows-default-theme) {
+  #urlbar,
+  .searchbar-textbox {
+    @navbarTextboxCustomBorder@
+  }
+}
+
 #urlbar:-moz-lwtheme,
 .searchbar-textbox:-moz-lwtheme {
   background-color: rgba(255,255,255,.8);
+  @navbarTextboxCustomBorder@
   color: black;
 }
 
