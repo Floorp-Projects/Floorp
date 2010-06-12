@@ -3302,7 +3302,7 @@ AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
 AC_CHECK_HEADERS(sys/quota.h)
-AC_CHECK_HEADERS(sys/sysmacros.h)
+AC_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
