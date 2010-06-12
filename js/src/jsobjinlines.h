@@ -493,9 +493,9 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 };
 
 static inline bool
-InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* proto, JSObjectOps* ops)
+InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* proto)
 {
-    JS_ASSERT(ops->isNative());
+    JS_ASSERT(clasp->isNative());
     JS_ASSERT(proto == obj->getProto());
 
     /* Share proto's emptyScope only if obj is similar to proto. */
@@ -504,7 +504,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
     if (proto && proto->isNative()) {
         JS_LOCK_OBJ(cx, proto);
         scope = proto->scope();
-        if (scope->canProvideEmptyScope(ops, clasp)) {
+        if (scope->canProvideEmptyScope(clasp)) {
             JSScope *emptyScope = scope->getEmptyScope(cx, clasp);
             JS_UNLOCK_SCOPE(cx, scope);
             if (!emptyScope)
@@ -517,7 +517,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
     }
 
     if (!scope) {
-        scope = JSScope::create(cx, ops, clasp, obj, js_GenerateShape(cx, false));
+        scope = JSScope::create(cx, clasp, obj, js_GenerateShape(cx, false));
         if (!scope)
             goto bad;
         uint32 freeslot = JSSLOT_FREE(clasp);
@@ -570,7 +570,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
 
         JS_LOCK_OBJ(cx, proto);
         JSScope *scope = proto->scope();
-        JS_ASSERT(scope->canProvideEmptyScope(&js_ObjectOps, clasp));
+        JS_ASSERT(scope->canProvideEmptyScope(clasp));
         scope = scope->getEmptyScope(cx, clasp);
         JS_UNLOCK_OBJ(cx, proto);
 
@@ -638,11 +638,6 @@ NewObjectWithGivenProto(JSContext *cx, Class *clasp, JSObject *proto, JSObject *
 {
     DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
-    /* Always call the class's getObjectOps hook if it has one. */
-    JSObjectOps *ops = clasp->getObjectOps
-                       ? clasp->getObjectOps(cx, clasp)
-                       : &js_ObjectOps;
-
     /*
      * Allocate an object from the GC heap and initialize all its fields before
      * doing any operation that can potentially trigger GC. Functions have a
@@ -672,14 +667,13 @@ NewObjectWithGivenProto(JSContext *cx, Class *clasp, JSObject *proto, JSObject *
               (!parent && proto) ? proto->getParent() : parent,
               JSObject::defaultPrivate(clasp));
 
-    if (ops->isNative()) {
-        if (!InitScopeForObject(cx, obj, clasp, proto, ops)) {
+    if (clasp->isNative()) {
+        if (!InitScopeForObject(cx, obj, clasp, proto)) {
             obj = NULL;
             goto out;
         }
     } else {
-        JS_ASSERT(ops->objectMap->ops == ops);
-        obj->map = const_cast<JSObjectMap *>(ops->objectMap);
+        obj->map = const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative);
     }
 
 out:
