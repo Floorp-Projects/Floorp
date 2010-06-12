@@ -376,13 +376,14 @@ window.Page = {
               // animation speed from frame #1 (the tab) to frame #2 (the half-size image) to 
               // frame #3 (the first frame of real animation). Choosing an animation that starts
               // fast is key.
+              var scaleCheat = 2;
               $tab
                 .addClass('front')
                 .css({
-                  left: data.pos.left/2,
-                  top: data.pos.top/2, 
-                  width: window.innerWidth/2,
-                  height: data.h * (window.innerWidth / data.w)/2
+                  left: data.pos.left * (1-1/scaleCheat),
+                  top: data.pos.top * (1-1/scaleCheat), 
+                  width: window.innerWidth/scaleCheat,
+                  height: data.h * (window.innerWidth / data.w)/scaleCheat
                 });
             }                
           }
