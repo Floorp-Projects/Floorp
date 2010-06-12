@@ -107,7 +107,7 @@ public:
    * Return ARIA level value or the default one if ARIA is missed for the
    * given accessible.
    */
-  static PRInt32 GetARIAOrDefaultLevel(nsIAccessible *aAcc);
+  static PRInt32 GetARIAOrDefaultLevel(nsAccessible *aAccessible);
 
   /**
    * Compute position in group (posinset) and group size (setsize) for
@@ -229,7 +229,7 @@ public:
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.
    */
-  static PRBool IsARIASelected(nsIAccessible *aAccessible);
+  static PRBool IsARIASelected(nsAccessible *aAccessible);
 
   /**
    * Return text accessible containing focus point of the given selection.

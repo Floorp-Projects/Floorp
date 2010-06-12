@@ -184,7 +184,7 @@ __try{
 
   if (IsDefunct())
     return E_FAIL;
- 
+
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(GetNode()));
 
   PRUint16 nodeType = 0;

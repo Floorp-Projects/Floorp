@@ -99,9 +99,9 @@ public:
   static nsApplicationAccessible* GetApplicationAccessible();
 
   /**
-   * Return the document accessible for this accesnode.
+   * Return the document accessible for this access node.
    */
-  nsDocAccessible* GetDocAccessible() const;
+  inline nsDocAccessible *GetDocAccessible() const;
 
   /**
    * Return the root document accessible for this accessnode.

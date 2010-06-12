@@ -159,13 +159,16 @@ NS_IMETHODIMP nsAccessNode::GetUniqueID(void **aUniqueID)
 }
 
 // nsIAccessNode
-NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
+NS_IMETHODIMP
+nsAccessNode::GetOwnerWindow(void **aWindow)
 {
+  NS_ENSURE_ARG_POINTER(aWindow);
   *aWindow = nsnull;
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  if (!docAccessible)
-    return NS_ERROR_FAILURE; // This node or doc accessible is shut down
-  return docAccessible->GetWindowHandle(aWindow);
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  return GetDocAccessible()->GetWindowHandle(aWindow);
 }
 
 nsApplicationAccessible*
@@ -292,6 +295,13 @@ nsPresContext* nsAccessNode::GetPresContext()
   return presShell->GetPresContext();
 }
 
+nsDocAccessible *
+nsAccessNode::GetDocAccessible() const
+{
+  return mContent ?
+    GetAccService()->GetDocAccessible(mContent->GetOwnerDoc()) : nsnull;
+}
+
 already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
@@ -318,7 +328,6 @@ nsAccessNode::GetFrame()
   return mContent ? mContent->GetPrimaryFrame() : nsnull;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessNode
 
@@ -340,7 +349,7 @@ nsAccessNode::GetDocument(nsIAccessibleDocument **aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  NS_IF_ADDREF(*aDocument = nsAccUtils::GetDocAccessibleFor(mWeakShell));
+  NS_IF_ADDREF(*aDocument = GetDocAccessible());
   return NS_OK;
 }
 
@@ -493,13 +502,4 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
   }
  
   return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsAccessNode protected
-
-nsDocAccessible*
-nsAccessNode::GetDocAccessible() const
-{
-  return nsAccUtils::GetDocAccessibleFor(mWeakShell);
 }

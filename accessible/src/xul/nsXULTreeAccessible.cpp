@@ -544,11 +544,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
       accessible->Shutdown();
 
       // Remove accessible from document cache and tree cache.
-      nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessible();
-      if (docAccessible) { 
-        nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(docAccessible);
-        docAcc->RemoveAccessNodeFromCache(accessible);
-      }
+      nsDocAccessible *docAccessible = GetDocAccessible();
+      if (docAccessible)
+        docAccessible->RemoveAccessNodeFromCache(accessible);
 
       mAccessibleCache.Remove(key);
     }
@@ -573,11 +571,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
       accessible->Shutdown();
 
       // Remove accessible from document cache and tree cache.
-      nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessible();
-      if (docAccessible) {
-        nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(docAccessible);
-        docAcc->RemoveAccessNodeFromCache(accessible);
-      }
+      nsDocAccessible *docAccessible = GetDocAccessible();
+      if (docAccessible)
+        docAccessible->RemoveAccessNodeFromCache(accessible);
 
       mAccessibleCache.Remove(key);
     }
