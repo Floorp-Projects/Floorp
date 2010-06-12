@@ -67,10 +67,8 @@
     #include <fabdef.h>
 #endif
 
-#if defined(HAVE_SYS_QUOTA_H)
-#if defined(HAVE_SYS_SYSMACROS_H)
-#include <sys/sysmacros.h>
-#endif
+#if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
+#define USE_LINUX_QUOTACTL
 #include <sys/quota.h>
 #endif
 
@@ -1233,7 +1231,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
      */
     *aDiskSpaceAvailable = (PRInt64)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
 
-#if defined(HAVE_SYS_STAT_H) || defined(HAVE_SYS_SYSMACROS_H)
+#if defined(USE_LINUX_QUOTACTL)
 
     if(!FillStatCache()) {
         // Return available size from statfs
