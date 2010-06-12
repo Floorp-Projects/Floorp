@@ -59,7 +59,7 @@ class nsSimpleURI : public nsIURI,
                     public nsIMutable
 {
 public:
-    NS_DECL_AGGREGATED
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
@@ -67,7 +67,7 @@ public:
 
     // nsSimpleURI methods:
 
-    nsSimpleURI(nsISupports* outer);
+    nsSimpleURI();
     virtual ~nsSimpleURI();
 
 protected:
