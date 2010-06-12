@@ -1727,14 +1727,13 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 }
 
 HWND
-nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
+nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessNode> accessNode = do_QueryObject(aAccessible);
-  if (!accessNode)
-    return 0;
-
   HWND hWnd = 0;
-  nsIFrame *frame = accessNode->GetFrame();
+  if (!aAccessible)
+    return hWnd;
+
+  nsIFrame *frame = aAccessible->GetFrame();
   if (frame) {
     nsIWidget *window = frame->GetWindow();
     PRBool isVisible;
@@ -1760,7 +1759,7 @@ nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
 
   if (!hWnd) {
     void* handle = nsnull;
-    nsDocAccessible *accessibleDoc = accessNode->GetDocAccessible();
+    nsDocAccessible *accessibleDoc = aAccessible->GetDocAccessible();
     if (!accessibleDoc)
       return 0;
 

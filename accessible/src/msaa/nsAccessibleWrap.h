@@ -311,7 +311,7 @@ public: // construction, destruction
 
   // Helper methods
   static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
-  static HWND GetHWNDFor(nsIAccessible *aAccessible);
+  static HWND GetHWNDFor(nsAccessible *aAccessible);
   static HRESULT ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
                                         BSTR *aIA2Attributes);
 

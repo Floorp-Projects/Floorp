@@ -262,7 +262,7 @@ nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
     }
   }
   mLastCaretOffset = caretOffset;
-  mLastTextAccessible = textAcc;
+  mLastTextAccessible.swap(textAcc);
 
   nsRefPtr<nsAccEvent> event =
     new nsAccCaretMoveEvent(textNode);
@@ -305,10 +305,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
     return caretRect;    // Return empty rect
   }
 
-  nsRefPtr<nsAccessible> lastTextAccessible =
-    do_QueryObject(mLastTextAccessible);
-
-  nsINode *lastNodeWithCaret = lastTextAccessible->GetNode();
+  nsINode *lastNodeWithCaret = mLastTextAccessible->GetNode();
   NS_ENSURE_TRUE(lastNodeWithCaret, caretRect);
 
   nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(lastNodeWithCaret);

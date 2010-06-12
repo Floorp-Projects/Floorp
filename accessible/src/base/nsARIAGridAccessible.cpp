@@ -458,18 +458,18 @@ nsARIAGridAccessible::GetSelectedCells(nsIArray **aCells)
   nsAccessible *row = nsnull;
   while (row = rowIter.GetNext()) {
     nsAccIterator cellIter(row, nsAccIterator::GetCell);
-    nsIAccessible *cell = nsnull;
+    nsAccessible *cell = nsnull;
 
     if (nsAccUtils::IsARIASelected(row)) {
       while (cell = cellIter.GetNext())
-        selCells->AppendElement(cell, PR_FALSE);
+        selCells->AppendElement(static_cast<nsIAccessible *>(cell), PR_FALSE);
 
       continue;
     }
 
     while (cell = cellIter.GetNext()) {
       if (nsAccUtils::IsARIASelected(cell))
-        selCells->AppendElement(cell, PR_FALSE);
+        selCells->AppendElement(static_cast<nsIAccessible *>(cell), PR_FALSE);
     }
   }
 
@@ -1058,8 +1058,7 @@ nsARIAGridCellAccessible::IsSelected(PRBool *aIsSelected)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAccessible> row;
-  GetParent(getter_AddRefs(row));
+  nsAccessible *row = GetParent();
   if (nsAccUtils::Role(row) != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
@@ -1084,17 +1083,11 @@ nsARIAGridCellAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
     return NS_OK;
 
   // Check aria-selected="true" on the row.
-  nsCOMPtr<nsIAccessible> row;
-  GetParent(getter_AddRefs(row));
+  nsAccessible *row = GetParent();
   if (nsAccUtils::Role(row) != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
-  nsRefPtr<nsAccessible> acc = do_QueryObject(row);
-  nsCOMPtr<nsIDOMNode> rowNode;
-  acc->GetDOMNode(getter_AddRefs(rowNode));
-  NS_ENSURE_STATE(rowNode);
-
-  nsCOMPtr<nsIContent> rowContent(do_QueryInterface(rowNode));
+  nsIContent *rowContent = row->GetContent();
   if (nsAccUtils::HasDefinedARIAToken(rowContent,
                                       nsAccessibilityAtoms::aria_selected) &&
       !rowContent->AttrValueIs(kNameSpaceID_None,

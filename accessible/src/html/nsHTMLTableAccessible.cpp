@@ -1483,12 +1483,9 @@ nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
     NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
     nsSize tableSize  = tableFrame->GetSize();
 
-    nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessible();
+    nsDocAccessible *docAccessible = GetDocAccessible();
     NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-
-    nsRefPtr<nsAccessNode> docAccessNode = do_QueryObject(docAccessible);
-
-    nsIFrame *docFrame = docAccessNode->GetFrame();
+    nsIFrame *docFrame = docAccessible->GetFrame();
     NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
 
     nsSize docSize = docFrame->GetSize();
