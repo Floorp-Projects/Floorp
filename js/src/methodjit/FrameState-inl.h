@@ -407,14 +407,25 @@ FrameState::addressOf(const FrameEntry *fe) const
 inline JSC::MacroAssembler::Jump
 FrameState::testInt32(Assembler::Condition cond, FrameEntry *fe)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     if (shouldAvoidTypeRemat(fe))
         return masm.testInt32(cond, addressOf(fe));
     return masm.testInt32(cond, tempRegForType(fe));
 }
 
 inline JSC::MacroAssembler::Jump
+FrameState::testDouble(Assembler::Condition cond, FrameEntry *fe)
+{
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testDouble(cond, addressOf(fe));
+    return masm.testDouble(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
 FrameState::testBoolean(Assembler::Condition cond, FrameEntry *fe)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     if (shouldAvoidTypeRemat(fe))
         return masm.testBoolean(cond, addressOf(fe));
     return masm.testBoolean(cond, tempRegForType(fe));
