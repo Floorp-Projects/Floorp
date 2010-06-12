@@ -338,6 +338,12 @@ class FrameState
     inline Jump testInt32(Assembler::Condition cond, FrameEntry *fe);
 
     /*
+     * Helper function. Tests if a slot's type is a double. Condition should
+     * be Equal or Not Equal.
+     */
+    inline Jump testDouble(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
      * Helper function. Tests if a slot's type is an integer. Condition should
      * be Equal or NotEqual.
      */
