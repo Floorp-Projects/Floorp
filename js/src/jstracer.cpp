@@ -8993,8 +8993,7 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
             if (l.isNull())
                 op = LIR_eqp;
         } else if (l.isObject()) {
-            Class *clasp = l.toObject().getClass();
-            if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
+            if (l.toObject().getClass()->ext.equality)
                 RETURN_STOP_A("Can't trace extended class equality operator");
             op = LIR_eqp;
             cond = (l == r);
@@ -9403,8 +9402,6 @@ TraceRecorder::forgetGuardedShapes()
 #endif
     guardedShapeTable.clear();
 }
-
-JS_STATIC_ASSERT(offsetof(JSObjectOps, objectMap) == 0);
 
 inline LIns*
 TraceRecorder::map(LIns* obj_ins)
@@ -11406,7 +11403,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (clasp == &js_FunctionClass)
             RETURN_STOP("new Function");
 
-        if (clasp->getObjectOps)
+        if (!clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
         args[0] = INS_CONSTOBJ(funobj);
@@ -11834,7 +11831,7 @@ TraceRecorder::record_JSOP_SETPROP()
         RETURN_STOP_A("primitive this for SETPROP");
 
     JSObject* obj = &l.toObject();
-    if (obj->map->ops->setProperty != js_SetProperty)
+    if (obj->getOps()->setProperty)
         RETURN_STOP_A("non-native JSObjectOps::setProperty");
     return ARECORD_CONTINUE;
 }
@@ -13537,7 +13534,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
      * object not having the same op must have a different class, and therefore
      * must differ in its shape (or not be the global object).
      */
-    if (!obj->isDenseArray() && obj->map->ops->getProperty != js_GetProperty)
+    if (!obj->isDenseArray() && obj->getOps()->getProperty)
         RETURN_STOP_A("non-dense-array, non-native JSObjectOps::getProperty");
 
     JS_ASSERT((slotp && v_insp && !outp) || (!slotp && !v_insp && outp));
@@ -14220,8 +14217,8 @@ TraceRecorder::record_JSOP_MOREITER()
     LIns* cond_ins;
 
     /* JSOP_FOR* already guards on this, but in certain rare cases we might record misformed loop traces. */
-    if (iterobj->hasClass(&js_IteratorClass.base)) {
-        guardClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+    if (iterobj->hasClass(&js_IteratorClass)) {
+        guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         void *cursor = ni->props_cursor;
         void *end = ni->props_end;
@@ -14237,7 +14234,7 @@ TraceRecorder::record_JSOP_MOREITER()
         cond = cursor < end;
         cond_ins = lir->ins2(LIR_ltp, cursor_ins, end_ins);
     } else {
-        guardNotClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+        guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
 
         enterDeepBailCall();
 
@@ -14335,8 +14332,8 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
     JSObject *iterobj = &iterobj_val.toObject();
     LIns* iterobj_ins = get(&iterobj_val);
 
-    if (iterobj->hasClass(&js_IteratorClass.base)) {
-        guardClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+    if (iterobj->hasClass(&js_IteratorClass)) {
+        guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
 
         LIns *ni_ins = stobj_get_const_private_ptr(iterobj_ins);
@@ -14376,9 +14373,10 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
             cursor_ins = lir->ins2(LIR_addp, cursor_ins, INS_CONSTWORD(sizeof(Value)));
         }
 
-        lir->insStore(LIR_stp, cursor_ins, ni_ins, offsetof(NativeIterator, props_cursor), ACCSET_OTHER);
+        lir->insStore(LIR_stp, cursor_ins, ni_ins, offsetof(NativeIterator, props_cursor),
+                      ACCSET_OTHER);
     } else {
-        guardNotClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+        guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
 
         v_ins = unbox_value(cx->iterValue, cx_ins, offsetof(JSContext, iterValue),
                             snapshot(BRANCH_EXIT));

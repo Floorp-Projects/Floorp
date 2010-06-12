@@ -1342,11 +1342,10 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 }
 
 #define CLASP(name)                 (&js_##name##Class)
-#define XCLASP(name)                (&js_##name##Class.base)
+#define TYPED_ARRAY_CLASP(type)     (&TypedArray::fastClasses[TypedArray::type])
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define EAGER_ATOM_AND_XCLASP(name) EAGER_CLASS_ATOM(name), XCLASP(name)
 #define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
@@ -1392,8 +1391,8 @@ static JSStdName standard_class_atoms[] = {
     {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
-    {js_InitNamespaceClass,             EAGER_ATOM_AND_XCLASP(Namespace)},
-    {js_InitQNameClass,                 EAGER_ATOM_AND_XCLASP(QName)},
+    {js_InitNamespaceClass,             EAGER_ATOM_AND_CLASP(Namespace)},
+    {js_InitQNameClass,                 EAGER_ATOM_AND_CLASP(QName)},
 #endif
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
@@ -1448,21 +1447,22 @@ static JSStdName standard_class_names[] = {
 #endif
 
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Iterator)},
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Generator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
 #endif
 
     /* Typed Arrays */
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array), &TypedArray::fastClasses[TypedArray::TYPE_INT8]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT8]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array), &TypedArray::fastClasses[TypedArray::TYPE_INT16]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT16]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array), &TypedArray::fastClasses[TypedArray::TYPE_INT32]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT32]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), &TypedArray::fastClasses[TypedArray::TYPE_FLOAT32]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), &TypedArray::fastClasses[TypedArray::TYPE_FLOAT64]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), &TypedArray::fastClasses[TypedArray::TYPE_UINT8_CLAMPED]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array),  TYPED_ARRAY_CLASP(TYPE_UINT16)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array),   TYPED_ARRAY_CLASP(TYPE_INT32)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array),  TYPED_ARRAY_CLASP(TYPE_UINT32)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), TYPED_ARRAY_CLASP(TYPE_FLOAT32)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), TYPED_ARRAY_CLASP(TYPE_FLOAT64)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
+                                TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
 
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
@@ -3756,8 +3756,12 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    if (obj->map->ops->clear)
-        obj->map->ops->clear(cx, obj);
+    JSFinalizeOp clearOp = obj->getOps()->clear;
+    if (clearOp)
+        clearOp(cx, obj);
+
+    if (obj->isNative())
+        js_ClearNative(cx, obj);
 
     /* Clear cached class objects on the global object. */
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
@@ -3830,10 +3834,21 @@ static Class prop_iter_class = {
     "PropertyIterator",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_MARK_IS_TRACE,
-    PropertyStub,     PropertyStub,    PropertyStub,    PropertyStub,
-    EnumerateStub,    ResolveStub,     ConvertStub,     prop_iter_finalize,
-    NULL,             NULL,            NULL,            NULL,
-    NULL,             NULL,            JS_CLASS_TRACE(prop_iter_trace), NULL
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    prop_iter_finalize,
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    JS_CLASS_TRACE(prop_iter_trace)
 };
 
 JS_PUBLIC_API(JSObject *)

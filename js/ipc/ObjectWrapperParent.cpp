@@ -169,36 +169,32 @@ with_error(JSContext* cx,
     return rval;
 }
 
-const JSExtendedClass ObjectWrapperParent::sCPOW_JSClass = {
-    // JSClass (JSExtendedClass.base) initialization
-    { "CrossProcessObjectWrapper",
-      JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_IS_EXTENDED |
+const js::Class ObjectWrapperParent::sCPOW_JSClass = {
+      "CrossProcessObjectWrapper",
+      JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE |
       JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(sNumSlots),
-      ObjectWrapperParent::CPOW_AddProperty,
-      ObjectWrapperParent::CPOW_DelProperty,
-      ObjectWrapperParent::CPOW_GetProperty,
-      ObjectWrapperParent::CPOW_SetProperty,
+      js::Valueify(ObjectWrapperParent::CPOW_AddProperty),
+      js::Valueify(ObjectWrapperParent::CPOW_DelProperty),
+      js::Valueify(ObjectWrapperParent::CPOW_GetProperty),
+      js::Valueify(ObjectWrapperParent::CPOW_SetProperty),
       (JSEnumerateOp) ObjectWrapperParent::CPOW_NewEnumerate,
-        (JSResolveOp) ObjectWrapperParent::CPOW_NewResolve,
-      ObjectWrapperParent::CPOW_Convert,
+      (JSResolveOp) ObjectWrapperParent::CPOW_NewResolve,
+      js::Valueify(ObjectWrapperParent::CPOW_Convert),
       ObjectWrapperParent::CPOW_Finalize,
-      nsnull, // getObjectOps
+      nsnull, // reserved1
       nsnull, // checkAccess
-      ObjectWrapperParent::CPOW_Call,
-      ObjectWrapperParent::CPOW_Construct,
+      js::Valueify(ObjectWrapperParent::CPOW_Call),
+      js::Valueify(ObjectWrapperParent::CPOW_Construct),
       nsnull, // xdrObject
-      ObjectWrapperParent::CPOW_HasInstance,
+      js::Valueify(ObjectWrapperParent::CPOW_HasInstance),
       nsnull, // mark
-      nsnull, // reserveSlots
-    },
-
-    // JSExtendedClass initialization
-    ObjectWrapperParent::CPOW_Equality,
-    nsnull, // outerObject
-    nsnull, // innerObject
-    nsnull, // iterator
-    nsnull, // wrappedObject
-    JSCLASS_NO_RESERVED_MEMBERS
+      {
+          js::Valueify(ObjectWrapperParent::CPOW_Equality),
+          nsnull, // outerObject
+          nsnull, // innerObject
+          nsnull, // iteratorObject
+          nsnull, // wrappedObject
+    }
 };
 
 void
@@ -220,8 +216,8 @@ ObjectWrapperParent::Manager()
 JSObject*
 ObjectWrapperParent::GetJSObject(JSContext* cx) const
 {
-    JSClass* clasp = const_cast<JSClass*>(&ObjectWrapperParent::sCPOW_JSClass.base);
-    if (!mObj && (mObj = JS_NewObject(cx, clasp, NULL, NULL))) {
+    js::Class *clasp = const_cast<js::Class *>(&ObjectWrapperParent::sCPOW_JSClass);
+    if (!mObj && (mObj = JS_NewObject(cx, js::Jsvalify(clasp), NULL, NULL))) {
         JS_SetPrivate(cx, mObj, (void*)this);
         JS_SetReservedSlot(cx, mObj, sFlagsSlot, JSVAL_ZERO);
     }
@@ -231,7 +227,7 @@ ObjectWrapperParent::GetJSObject(JSContext* cx) const
 static ObjectWrapperParent*
 Unwrap(JSContext* cx, JSObject* obj)
 {
-    while (obj->getJSClass() != &ObjectWrapperParent::sCPOW_JSClass.base)
+    while (obj->getClass() != &ObjectWrapperParent::sCPOW_JSClass)
         if (!(obj = obj->getProto()))
             return NULL;
     

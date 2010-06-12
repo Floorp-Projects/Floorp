@@ -88,10 +88,21 @@ Class js_ErrorClass = {
     js_Error_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_MARK_IS_TRACE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
-    PropertyStub,     PropertyStub,     PropertyStub,     PropertyStub,
-    exn_enumerate,    (JSResolveOp)exn_resolve, ConvertStub, exn_finalize,
-    NULL,             NULL,             NULL,             Exception,
-    NULL,             NULL,             JS_CLASS_TRACE(exn_trace), NULL
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    exn_enumerate,
+    (JSResolveOp)exn_resolve,
+    ConvertStub,
+    exn_finalize,
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    Exception,      /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    JS_CLASS_TRACE(exn_trace)
 };
 
 typedef struct JSStackTraceElem {

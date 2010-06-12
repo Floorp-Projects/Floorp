@@ -493,9 +493,6 @@ class TypedArrayTemplate
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
 
-    static JSObjectOps fastObjectOps;
-    static JSObjectMap fastObjectMap;
-
     static JSFunctionSpec jsfuncs[];
 
     static inline Class *slowClass()
@@ -506,11 +503,6 @@ class TypedArrayTemplate
     static inline Class *fastClass()
     {
         return &TypedArray::fastClasses[ArrayTypeID()];
-    }
-
-    static JSObjectOps *getObjectOps(JSContext *cx, Class *clasp)
-    {
-        return &fastObjectOps;
     }
 
     static JSBool
@@ -926,7 +918,7 @@ class TypedArrayTemplate
         JS_ASSERT(obj->getClass() == slowClass());
         obj->setPrivate(tarray);
         obj->clasp = fastClass();
-        obj->map = &fastObjectMap;
+        obj->map = const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative);
     }
 
   public:
@@ -1264,9 +1256,14 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value 
 Class ArrayBuffer::jsclass = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
-    PropertyStub,     PropertyStub,   PropertyStub,   PropertyStub,
-    EnumerateStub,    ResolveStub,    ConvertStub,    ArrayBuffer::class_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    ArrayBuffer::class_finalize,
 };
 
 JSPropertySpec ArrayBuffer::jsprops[] = {
@@ -1301,23 +1298,6 @@ JSPropertySpec TypedArray::jsprops[] = {
  */
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
-template<> JSObjectMap _typedArray::fastObjectMap(&_typedArray::fastObjectOps, \
-                                                  JSObjectMap::SHAPELESS);     \
-template<> JSObjectOps _typedArray::fastObjectOps = {                          \
-    &_typedArray::fastObjectMap,                                               \
-    _typedArray::obj_lookupProperty,                                           \
-    _typedArray::obj_defineProperty,                                           \
-    _typedArray::obj_getProperty,                                              \
-    _typedArray::obj_setProperty,                                              \
-    _typedArray::obj_getAttributes,                                            \
-    _typedArray::obj_setAttributes,                                            \
-    _typedArray::obj_deleteProperty,                                           \
-    _typedArray::obj_enumerate,                                                \
-    _typedArray::obj_typeOf,                                                   \
-    _typedArray::obj_trace,                                                    \
-    NULL,   /* thisObject */                                                   \
-    NULL    /* clear */                                                        \
-};                                                                             \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
     JS_FN("slice", _typedArray::fun_slice, 2, 0),                              \
     JS_FS_END                                                                  \
@@ -1327,20 +1307,50 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
 {                                                                              \
     #_typedArray,                                                              \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),     \
-    PropertyStub, PropertyStub, PropertyStub, PropertyStub,                    \
-    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,                     \
-    JSCLASS_NO_OPTIONAL_MEMBERS                                                \
+    PropertyStub,   /* addProperty */                                          \
+    PropertyStub,   /* delProperty */                                          \
+    PropertyStub,   /* getProperty */                                          \
+    PropertyStub,   /* setProperty */                                          \
+    EnumerateStub,                                                             \
+    ResolveStub,                                                               \
+    ConvertStub,                                                               \
+    FinalizeStub                                                               \
 }
 
 #define IMPL_TYPED_ARRAY_FAST_CLASS(_typedArray)                               \
 {                                                                              \
     #_typedArray,                                                              \
-    JSCLASS_HAS_PRIVATE,                                                       \
-    PropertyStub, PropertyStub, PropertyStub, PropertyStub,                    \
-    EnumerateStub, ResolveStub, ConvertStub,                                   \
+    Class::NON_NATIVE | JSCLASS_HAS_PRIVATE,                                   \
+    PropertyStub,   /* addProperty */                                          \
+    PropertyStub,   /* delProperty */                                          \
+    PropertyStub,   /* getProperty */                                          \
+    PropertyStub,   /* setProperty */                                          \
+    EnumerateStub,                                                             \
+    ResolveStub,                                                               \
+    ConvertStub,                                                               \
     _typedArray::class_finalize,                                               \
-    _typedArray::getObjectOps, NULL, NULL, NULL,                               \
-    NULL, NULL, NULL, NULL                                                     \
+    NULL,           /* reserved0   */                                          \
+    NULL,           /* checkAccess */                                          \
+    NULL,           /* call        */                                          \
+    NULL,           /* construct   */                                          \
+    NULL,           /* xdrObject   */                                          \
+    NULL,           /* hasInstance */                                          \
+    NULL,           /* mark        */                                          \
+    JS_NULL_CLASS_EXT,                                                         \
+    {                                                                          \
+        _typedArray::obj_lookupProperty,                                       \
+        _typedArray::obj_defineProperty,                                       \
+        _typedArray::obj_getProperty,                                          \
+        _typedArray::obj_setProperty,                                          \
+        _typedArray::obj_getAttributes,                                        \
+        _typedArray::obj_setAttributes,                                        \
+        _typedArray::obj_deleteProperty,                                       \
+        _typedArray::obj_enumerate,                                            \
+        _typedArray::obj_typeOf,                                               \
+        _typedArray::obj_trace,                                                \
+        NULL,       /* thisObject      */                                      \
+        NULL,       /* clear           */                                      \
+    }                                                                          \
 }
 
 #define INIT_TYPED_ARRAY_CLASS(_typedArray,_type)                              \

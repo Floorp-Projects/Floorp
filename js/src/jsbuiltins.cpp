@@ -256,7 +256,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 {
     // Check that we know how the lookup op will behave.
     for (JSObject* pobj = obj; pobj; pobj = pobj->getProto()) {
-        if (pobj->map->ops->lookupProperty != js_LookupProperty)
+        if (pobj->getOps()->lookupProperty)
             return JS_NEITHER;
         Class* clasp = pobj->getClass();
         if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)

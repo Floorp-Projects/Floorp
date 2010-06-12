@@ -216,13 +216,12 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class);
 extern JSObject *
 js_GetXMLObject(JSContext *cx, JSXML *xml);
 
-extern JS_FRIEND_DATA(JSObjectOps)       js_XMLObjectOps;
-extern JS_FRIEND_DATA(js::Class)         js_XMLClass;
-extern JS_FRIEND_DATA(js::ExtendedClass) js_NamespaceClass;
-extern JS_FRIEND_DATA(js::ExtendedClass) js_QNameClass;
-extern JS_FRIEND_DATA(js::Class)         js_AttributeNameClass;
-extern JS_FRIEND_DATA(js::Class)         js_AnyNameClass;
-extern js::Class                         js_XMLFilterClass;
+extern JS_FRIEND_DATA(js::Class) js_XMLClass;
+extern JS_FRIEND_DATA(js::Class) js_NamespaceClass;
+extern JS_FRIEND_DATA(js::Class) js_QNameClass;
+extern JS_FRIEND_DATA(js::Class) js_AttributeNameClass;
+extern JS_FRIEND_DATA(js::Class) js_AnyNameClass;
+extern js::Class                 js_XMLFilterClass;
 
 /*
  * Methods to test whether an object or a value is of type "xml" (per typeof).
@@ -230,14 +229,14 @@ extern js::Class                         js_XMLFilterClass;
 inline bool
 JSObject::isXML() const
 {
-    return map->ops == &js_XMLObjectOps;
+    return getClass() == &js_XMLClass;
 }
 
 inline bool
 JSObject::isXMLId() const
 {
     js::Class *clasp = getClass();
-    return clasp == &js_QNameClass.base ||
+    return clasp == &js_QNameClass ||
            clasp == &js_AttributeNameClass ||
            clasp == &js_AnyNameClass;
 }
@@ -247,14 +246,14 @@ JSObject::isXMLId() const
 inline bool
 JSObject::isNamespace() const
 {
-    return getClass() == &js_NamespaceClass.base;
+    return getClass() == &js_NamespaceClass;
 }
 
 inline bool
 JSObject::isQName() const
 {
     js::Class* clasp = getClass();
-    return clasp == &js_QNameClass.base ||
+    return clasp == &js_QNameClass ||
            clasp == &js_AttributeNameClass ||
            clasp == &js_AnyNameClass;
 }
