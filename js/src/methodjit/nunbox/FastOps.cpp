@@ -86,8 +86,7 @@ mjit::Compiler::jsop_bitnot()
     /* Test the type. */
     bool stubNeeded = false;
     if (!top->isTypeKnown()) {
-        RegisterID reg = frame.tempRegForType(top);
-        Jump intFail = masm.testInt32(Assembler::NotEqual, reg);
+        Jump intFail = frame.testInt32(Assembler::NotEqual, top);
         stubcc.linkExit(intFail);
         frame.learnType(top, JSVAL_MASK32_INT32);
         stubNeeded = true;
@@ -148,15 +147,13 @@ mjit::Compiler::jsop_bitop(JSOp op)
     /* Test the types. */
     bool stubNeeded = false;
     if (!rhs->isTypeKnown()) {
-        RegisterID reg = frame.tempRegForType(rhs);
-        Jump rhsFail = masm.testInt32(Assembler::NotEqual, reg);
+        Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
         stubcc.linkExit(rhsFail);
         frame.learnType(rhs, JSVAL_MASK32_INT32);
         stubNeeded = true;
     }
     if (!lhs->isTypeKnown()) {
-        RegisterID reg = frame.tempRegForType(lhs);
-        Jump lhsFail = masm.testInt32(Assembler::NotEqual, reg);
+        Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
         stubcc.linkExit(lhsFail);
         stubNeeded = true;
     }
@@ -384,14 +381,12 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
 
     /* Test the types. */
     if (!rhs->isTypeKnown()) {
-        RegisterID reg = frame.tempRegForType(rhs);
-        Jump rhsFail = masm.testInt32(Assembler::NotEqual, reg);
+        Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
         stubcc.linkExit(rhsFail);
         frame.learnType(rhs, JSVAL_MASK32_INT32);
     }
     if (!lhs->isTypeKnown()) {
-        RegisterID reg = frame.tempRegForType(lhs);
-        Jump lhsFail = masm.testInt32(Assembler::NotEqual, reg);
+        Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
         stubcc.linkExit(lhsFail);
     }
 
