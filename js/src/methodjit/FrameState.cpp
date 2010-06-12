@@ -632,7 +632,9 @@ JSC::MacroAssembler::RegisterID
 FrameState::copyData(FrameEntry *fe)
 {
     JS_ASSERT(!fe->data.isConstant());
-    JS_ASSERT(!fe->isCopy());
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
 
     if (fe->data.inRegister()) {
         RegisterID reg = fe->data.reg();
