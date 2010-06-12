@@ -57,10 +57,9 @@ nsHyperTextAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
       eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
-    nsCOMPtr<nsIAccessible> accessible;
-    aEvent->GetAccessible(getter_AddRefs(accessible));
+    nsAccessible *accessible = aEvent->GetAccessible();
     if (accessible) {
-      nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
+      nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(accessible));
       if (winAccessNode) {
         void *instancePtr = NULL;
         nsresult rv = winAccessNode->QueryNativeInterface(IID_IAccessibleText,

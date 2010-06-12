@@ -1133,8 +1133,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
       // otherwise we would need access to the old attribute value in this listener.
       // This is because we don't know if the previous value of aria-checked or aria-pressed was "mixed"
       // without caching that info.
-      nsCOMPtr<nsIAccessible> accessible;
-      event->GetAccessible(getter_AddRefs(accessible));
+      nsAccessible *accessible = event->GetAccessible();
       if (accessible) {
         PRBool wasMixed = (gLastFocusedAccessiblesState & nsIAccessibleStates::STATE_MIXED) != 0;
         PRBool isMixed  =
@@ -1296,14 +1295,14 @@ nsDocAccessible::HandleAccEvent(nsAccEvent *aAccEvent)
 // Protected members
 
 void
-nsDocAccessible::FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldAccessible)
+nsDocAccessible::FireValueChangeForTextFields(nsAccessible *aAccessible)
 {
-  if (nsAccUtils::Role(aPossibleTextFieldAccessible) != nsIAccessibleRole::ROLE_ENTRY)
+  if (nsAccUtils::Role(aAccessible) != nsIAccessibleRole::ROLE_ENTRY)
     return;
 
   // Dependent value change event for text changes in textfields
   nsRefPtr<nsAccEvent> valueChangeEvent =
-    new nsAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aPossibleTextFieldAccessible,
+    new nsAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
                    PR_FALSE, eAutoDetect, nsAccEvent::eRemoveDupes);
   FireDelayedAccessibleEvent(valueChangeEvent);
 }
@@ -1476,10 +1475,7 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsAccEvent *aEvent)
 void
 nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 {  
-  nsCOMPtr<nsIAccessible> acc;
-  aEvent->GetAccessible(getter_AddRefs(acc));
-  nsRefPtr<nsAccessible> accessible(do_QueryObject(acc));
-
+  nsAccessible *accessible = aEvent->GetAccessible();
   nsINode *node = aEvent->GetNode();
 
   PRUint32 eventType = aEvent->GetEventType();
