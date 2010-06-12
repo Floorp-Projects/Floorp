@@ -1666,8 +1666,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
   // Means we're not active.
   NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAccessible> accessible;
-  aEvent->GetAccessible(getter_AddRefs(accessible));
+  nsAccessible *accessible = aEvent->GetAccessible();
   if (!accessible)
     return NS_OK;
 
@@ -1681,11 +1680,11 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     return NS_OK; // Can't fire an event without a child ID
 
   // See if we're in a scrollable area with its own window
-  nsCOMPtr<nsIAccessible> newAccessible;
+  nsAccessible *newAccessible = nsnull;
   if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
     // Don't use frame from current accessible when we're hiding that
     // accessible.
-    accessible->GetParent(getter_AddRefs(newAccessible));
+    newAccessible = accessible->GetParent();
   } else {
     newAccessible = accessible;
   }

@@ -246,7 +246,7 @@ nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
   }
 
   nsCOMPtr<nsINode> textNode;
-  nsCOMPtr<nsIAccessibleText> textAcc =
+  nsRefPtr<nsHyperTextAccessible> textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSel, getter_AddRefs(textNode));
   NS_ENSURE_STATE(textAcc);
 
@@ -281,15 +281,13 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsIDOMDocument *aDoc,
   // misspelled word). If spellchecking is disabled (for example,
   // @spellcheck="false" on html:body) then we won't fire any event.
 
-  nsCOMPtr<nsIAccessibleText> textAcc =
+  nsRefPtr<nsHyperTextAccessible> textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSel);
   NS_ENSURE_STATE(textAcc);
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(textAcc));
-
   nsRefPtr<nsAccEvent> event =
     new nsAccEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED,
-                   acc, nsnull);
+                   textAcc, nsnull);
 
   nsEventShell::FireEvent(event);
   return NS_OK;

@@ -59,6 +59,7 @@
 
 class nsAccessNode;
 class nsAccessible;
+class nsHyperTextAccessible;
 class nsHTMLTableAccessible;
 class nsDocAccessible;
 #ifdef MOZ_XUL
@@ -238,7 +239,7 @@ public:
    * @param aNode       [out, optional] the DOM node of text accessible
    * @return            text accessible
    */
-  static already_AddRefed<nsIAccessibleText>
+  static already_AddRefed<nsHyperTextAccessible>
     GetTextAccessibleFromSelection(nsISelection *aSelection,
                                    nsINode **aNode = nsnull);
 

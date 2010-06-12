@@ -184,8 +184,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
       eventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE)
     return NS_OK;
 
-  nsCOMPtr<nsIAccessible> accessible;
-  aEvent->GetAccessible(getter_AddRefs(accessible));
+  nsAccessible *accessible = aEvent->GetAccessible();
   NS_ENSURE_STATE(accessible);
 
   mozAccessible *nativeAcc = nil;
