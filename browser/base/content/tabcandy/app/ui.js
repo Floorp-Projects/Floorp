@@ -314,8 +314,8 @@ window.Page = {
             width: data.w,
             height: data.h
           }, {
-            duration: 400,
-            easing: 'easeInQuad',
+            duration: 300,
+            easing: 'cubic-bezier',
             complete: function() { // note that this will happen on the DOM thread
               $tab.removeClass('front');
               
@@ -368,13 +368,21 @@ window.Page = {
               
               $tab.data('zoomSave', data);
 
+              // The divide by two part here is a clever way to speed up the zoom-out code.
+              // Because image scaling is slowest on big images, we cheat and start the image
+              // at half-size and placed accordingly. Because the animation is fast, you can't
+              // see the difference but it feels a lot zippier. The only trick is choosing the
+              // right animation function so that you don't see a change in percieved 
+              // animation speed from frame #1 (the tab) to frame #2 (the half-size image) to 
+              // frame #3 (the first frame of real animation). Choosing an animation that starts
+              // fast is key.
               $tab
                 .addClass('front')
                 .css({
-                  left: 0,
-                  top: 0, 
-                  width: window.innerWidth,
-                  height: data.h * (window.innerWidth / data.w)
+                  left: data.pos.left/2,
+                  top: data.pos.top/2, 
+                  width: window.innerWidth/2,
+                  height: data.h * (window.innerWidth / data.w)/2
                 });
             }                
           }
