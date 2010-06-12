@@ -354,7 +354,7 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
 
     if (initializeAllSlots) {
         Value *base = addressOfDenseArrayElement(0);
-        for (Value *vp = base + oldcap, *end = base + newcap; vp != end; ++vp)
+        for (Value *vp = base + oldcap, *end = base + newcap; vp < end; ++vp)
             vp->setMagic(JS_ARRAY_HOLE);
     }
 
