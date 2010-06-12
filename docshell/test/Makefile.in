@@ -52,7 +52,10 @@ XPCSHELL_TESTS = unit
 include $(DEPTH)/config/autoconf.mk
 
 ifneq (mobile,$(MOZ_BUILD_APP))
-	DIRS += browser
+	DIRS += \
+    #  Disabled due to Bug 571649
+    #       browser
+            $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
