@@ -101,15 +101,15 @@ nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 }
 
 PRInt32
-nsAccUtils::GetDefaultLevel(nsAccessible *aAcc)
+nsAccUtils::GetDefaultLevel(nsAccessible *aAccessible)
 {
-  PRUint32 role = nsAccUtils::Role(aAcc);
+  PRUint32 role = nsAccUtils::Role(aAccessible);
 
   if (role == nsIAccessibleRole::ROLE_OUTLINEITEM)
     return 1;
 
   if (role == nsIAccessibleRole::ROLE_ROW) {
-    nsCOMPtr<nsIAccessible> parent = aAcc->GetParent();
+    nsAccessible *parent = aAccessible->GetParent();
     if (Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
       // It is a row inside flatten treegrid. Group level is always 1 until it
       // is overriden by aria-level attribute.
@@ -121,23 +121,16 @@ nsAccUtils::GetDefaultLevel(nsAccessible *aAcc)
 }
 
 PRInt32
-nsAccUtils::GetARIAOrDefaultLevel(nsIAccessible *aAcc)
+nsAccUtils::GetARIAOrDefaultLevel(nsAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessible> acc = do_QueryObject(aAcc);
-  NS_ENSURE_TRUE(acc, 0);
-
-  nsCOMPtr<nsIDOMNode> node;
-  acc->GetDOMNode(getter_AddRefs(node));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  NS_ENSURE_TRUE(content, 0);
-
   PRInt32 level = 0;
-  nsCoreUtils::GetUIntAttr(content, nsAccessibilityAtoms::aria_level, &level);
+  nsCoreUtils::GetUIntAttr(aAccessible->GetContent(),
+                           nsAccessibilityAtoms::aria_level, &level);
 
   if (level != 0)
     return level;
 
-  return GetDefaultLevel(acc);
+  return GetDefaultLevel(aAccessible);
 }
 
 void
@@ -509,22 +502,11 @@ nsAccUtils::GetMultiSelectableContainer(nsINode *aNode)
 }
 
 PRBool
-nsAccUtils::IsARIASelected(nsIAccessible *aAccessible)
+nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessible> acc = do_QueryObject(aAccessible);
-  nsCOMPtr<nsIDOMNode> node;
-  acc->GetDOMNode(getter_AddRefs(node));
-  NS_ASSERTION(node, "No DOM node!");
-
-  if (node) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    if (content->AttrValueIs(kNameSpaceID_None,
-                             nsAccessibilityAtoms::aria_selected,
-                             nsAccessibilityAtoms::_true, eCaseMatters))
-      return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return aAccessible->GetContent()->
+    AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_selected,
+                nsAccessibilityAtoms::_true, eCaseMatters);
 }
 
 already_AddRefed<nsHyperTextAccessible>

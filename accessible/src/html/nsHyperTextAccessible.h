@@ -186,7 +186,7 @@ protected:
     * @return                  the resulting offset into this hypertext
     */
   PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
-                            PRInt32 aFromOffset, nsIAccessible *aFromAccessible,
+                            PRInt32 aFromOffset, nsAccessible *aFromAccessible,
                             nsSelectionAmount aAmount, nsDirection aDirection,
                             PRBool aNeedsStart);
 
