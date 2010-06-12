@@ -181,7 +181,8 @@ nsresult
 nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
                                             nsIAccessible *aTarget)
 {
-  nsEventShell::FireEvent(aEvent, aTarget);
+  nsRefPtr<nsAccessible> accessible(do_QueryObject(aTarget));
+  nsEventShell::FireEvent(aEvent, accessible);
   return NS_OK;
 }
 

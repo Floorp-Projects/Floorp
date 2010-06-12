@@ -67,7 +67,7 @@ public:
    * @param  aIsAsync     [in, optional] specifies whether the origin change
    *                        this event is fired owing to is async.
    */
-  static void FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+  static void FireEvent(PRUint32 aEventType, nsAccessible *aAccessible,
                         PRBool aIsAsynch = PR_FALSE,
                         EIsFromUserInput aIsFromUserInput = eAutoDetect);
 

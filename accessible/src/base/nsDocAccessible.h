@@ -311,10 +311,11 @@ protected:
                               PRBool aIsAsyncChange,
                               EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
-    /**
-     * If the given accessible object is a ROLE_ENTRY, fire a value change event for it
-     */
-    void FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldAccessible);
+  /**
+   * Fire a value change event for the the given accessible if it is a text
+   * field (has a ROLE_ENTRY).
+   */
+  void FireValueChangeForTextFields(nsAccessible *aAccessible);
 
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;

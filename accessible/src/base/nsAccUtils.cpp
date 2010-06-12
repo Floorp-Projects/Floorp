@@ -527,7 +527,7 @@ nsAccUtils::IsARIASelected(nsIAccessible *aAccessible)
   return PR_FALSE;
 }
 
-already_AddRefed<nsIAccessibleText>
+already_AddRefed<nsHyperTextAccessible>
 nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
                                            nsINode **aNode)
 {
@@ -554,7 +554,7 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
     if (!resultNode->IsNodeOfType(nsINode::eTEXT)) {
       nsAccessible *accessible = GetAccService()->GetAccessible(resultNode);
       if (accessible) {
-        nsIAccessibleText *textAcc = nsnull;
+        nsHyperTextAccessible *textAcc = nsnull;
         CallQueryInterface(accessible, &textAcc);
         if (textAcc) {
           if (aNode)
