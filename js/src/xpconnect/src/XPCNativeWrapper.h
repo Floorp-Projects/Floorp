@@ -45,8 +45,8 @@ class nsIPrincipal;
 namespace XPCNativeWrapper {
 
 namespace internal {
-  extern JSExtendedClass NW_NoCall_Class;
-  extern JSExtendedClass NW_Call_Class;
+extern js::Class NW_NoCall_Class;
+extern js::Class NW_Call_Class;
 }
 
 PRBool
@@ -59,16 +59,16 @@ JSBool
 CreateExplicitWrapper(JSContext *cx, XPCWrappedNative *wrapper, jsval *rval);
 
 inline PRBool
-IsNativeWrapperClass(JSClass *clazz)
+IsNativeWrapperClass(js::Class *clazz)
 {
-  return clazz == &internal::NW_NoCall_Class.base ||
-         clazz == &internal::NW_Call_Class.base;
+  return clazz == &internal::NW_NoCall_Class ||
+         clazz == &internal::NW_Call_Class;
 }
 
 inline PRBool
 IsNativeWrapper(JSObject *obj)
 {
-  return IsNativeWrapperClass(obj->getJSClass());
+  return IsNativeWrapperClass(obj->getClass());
 }
 
 JSBool
@@ -86,8 +86,8 @@ inline JSClass *
 GetJSClass(bool call)
 {
   return call
-    ? &internal::NW_Call_Class.base
-    : &internal::NW_NoCall_Class.base;
+    ? js::Jsvalify(&internal::NW_Call_Class)
+    : js::Jsvalify(&internal::NW_NoCall_Class);
 }
 
 void
