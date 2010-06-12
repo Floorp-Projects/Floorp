@@ -434,20 +434,6 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
   return NS_OK;
 }
 
-nsresult
-nsAccessible::Shutdown()
-{
-  // Invalidate the child count and pointers to other accessibles, also make
-  // sure none of its children point to this parent
-  InvalidateChildren();
-  if (mParent) {
-    mParent->InvalidateChildren();
-    mParent = nsnull;
-  }
-
-  return nsAccessNodeWrap::Shutdown();
-}
-
 NS_IMETHODIMP
 nsAccessible::GetParent(nsIAccessible **aParent)
 {
@@ -2672,6 +2658,56 @@ nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsAccessNode public methods
+
+PRBool
+nsAccessible::Init()
+{
+  if (!nsAccessNodeWrap::Init())
+    return PR_FALSE;
+
+  nsDocAccessible *docAcc =
+    GetAccService()->GetDocAccessible(mContent->GetOwnerDoc());
+  NS_ASSERTION(docAcc, "Cannot cache new nsAccessible!");
+  if (!docAcc)
+    return PR_FALSE;
+
+  void *uniqueID = nsnull;
+  GetUniqueID(&uniqueID);
+
+  if (!docAcc->CacheAccessible(uniqueID, this))
+    return PR_FALSE;
+
+  // Make sure an ancestor in real content is cached so that
+  // nsDocAccessible::RefreshNodes() can find the anonymous subtree to release
+  // when the root node goes away. /Specific examples of where this is used:
+  // <input type="file"> and <xul:findbar>.
+  // XXX: remove this once we create correct accessible tree.
+  if (mContent && mContent->IsInAnonymousSubtree()) {
+    nsAccessible *parent = GetAccService()->GetContainerAccessible(mContent,
+                                                                   PR_TRUE);
+    if (parent)
+      parent->EnsureChildren();
+  }
+
+  return PR_TRUE;
+}
+
+void
+nsAccessible::Shutdown()
+{
+  // Invalidate the child count and pointers to other accessibles, also make
+  // sure none of its children point to this parent
+  InvalidateChildren();
+  if (mParent) {
+    mParent->InvalidateChildren();
+    mParent = nsnull;
+  }
+
+  nsAccessNodeWrap::Shutdown();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsAccessible public methods
 
 nsresult
@@ -2826,6 +2862,23 @@ nsAccessible::GetCachedFirstChild()
 
   return mChildren.SafeElementAt(0, nsnull);
 }
+
+
+#ifdef DEBUG
+PRBool
+nsAccessible::IsInCache()
+{
+  nsDocAccessible *docAccessible =
+    GetAccService()->GetDocAccessible(mContent->GetOwnerDoc());
+  if (!docAccessible)
+    return nsnull;
+
+  void *uniqueID = nsnull;
+  GetUniqueID(&uniqueID);
+
+  return docAccessible->GetCachedAccessible(uniqueID) ? PR_TRUE : PR_FALSE;
+}
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

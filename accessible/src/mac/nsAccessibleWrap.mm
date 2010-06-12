@@ -60,19 +60,20 @@ nsAccessibleWrap::~nsAccessibleWrap()
   }
 }
 
-nsresult
+PRBool
 nsAccessibleWrap::Init () 
 {
-  // need to pass the call up, so we're cached (which nsAccessNode::Init() takes care of).
-  nsresult rv = nsAccessible::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  if (!nsAccessible::Init())
+    return PR_FALSE;
+
   if (!mNativeWrapper && !AncestorIsFlat()) {
     // Create our native object using the class type specified in GetNativeType().
     mNativeWrapper = new AccessibleWrapper (this, GetNativeType());
+    if (!mNativeWrapper)
+      return PR_FALSE;
   }
 
-  return NS_OK;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -148,7 +149,7 @@ nsAccessibleWrap::GetNativeType ()
 // this method is very important. it is fired when an accessible object "dies". after this point
 // the object might still be around (because some 3rd party still has a ref to it), but it is
 // in fact 'dead'.
-nsresult
+void
 nsAccessibleWrap::Shutdown ()
 {
   if (mNativeWrapper) {
@@ -156,7 +157,7 @@ nsAccessibleWrap::Shutdown ()
     mNativeWrapper = nsnull;
   }
   
-  return nsAccessible::Shutdown();
+  nsAccessible::Shutdown();
 }
 
 nsresult

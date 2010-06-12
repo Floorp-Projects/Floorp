@@ -75,11 +75,11 @@ nsXULSelectableAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULSelectableAccessible, nsAccessible, nsIAccessibleSelectable)
 
-nsresult
+void
 nsXULSelectableAccessible::Shutdown()
 {
   mSelectControl = nsnull;
-  return nsAccessibleWrap::Shutdown();
+  nsAccessibleWrap::Shutdown();
 }
 
 nsresult nsXULSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
@@ -271,12 +271,14 @@ nsXULMenuitemAccessible::
 {
 }
 
-nsresult
+PRBool
 nsXULMenuitemAccessible::Init()
 {
-  nsresult rv = nsAccessibleWrap::Init();
+  if (!nsAccessibleWrap::Init())
+    return PR_FALSE;
+
   nsCoreUtils::GeneratePopupTree(mContent);
-  return rv;
+  return PR_TRUE;
 }
 
 nsresult

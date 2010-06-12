@@ -85,7 +85,7 @@ public:
                                            nsAccessible)
 
   // nsAccessNode
-  virtual nsresult Shutdown();
+  virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -155,7 +155,7 @@ public:
 
   // nsAccessNode
   virtual PRBool IsDefunct();
-  virtual nsresult Init();
+  virtual PRBool Init();
 
   // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);

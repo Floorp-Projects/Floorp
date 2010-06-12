@@ -817,33 +817,34 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode
 
-nsresult
+PRBool
 nsRootAccessible::Init()
 {
   nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
-  NS_ENSURE_STATE(applicationAcc);
+  if (!applicationAcc)
+    return PR_FALSE;
 
   applicationAcc->AddRootAccessible(this);
 
   return nsDocAccessibleWrap::Init();
 }
 
-nsresult
+void
 nsRootAccessible::Shutdown()
 {
   // Called manually or by nsAccessNode::LastRelease()
-  if (!mWeakShell) {
-    return NS_OK;  // Already shutdown
-  }
+  if (!mWeakShell)
+    return;  // Already shutdown
 
   nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
-  NS_ENSURE_STATE(applicationAcc);
+  if (!applicationAcc)
+    return;
 
   applicationAcc->RemoveRootAccessible(this);
 
   mCurrentARIAMenubar = nsnull;
 
-  return nsDocAccessibleWrap::Shutdown();
+  nsDocAccessibleWrap::Shutdown();
 }
 
 // nsRootAccessible protected member

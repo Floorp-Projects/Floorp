@@ -67,7 +67,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessNode
-  virtual nsresult Init();
+  virtual PRBool Init();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);

@@ -174,7 +174,7 @@ private:
 
   struct nsSearchAccessibleInCacheArg
   {
-    nsRefPtr<nsAccessible> mAccessible;
+    nsAccessible *mAccessible;
     void *mUniqueID;
   };
 

@@ -75,7 +75,7 @@ class nsAccessibleWrap : public nsAccessible
     // returns a pointer to the native window for this accessible tree.
     void GetNativeWindow (void **aOutNativeWindow);
     
-    virtual nsresult Shutdown ();
+    virtual void Shutdown ();
     virtual void InvalidateChildren();
 
     virtual nsresult HandleAccEvent(nsAccEvent *aEvent);
