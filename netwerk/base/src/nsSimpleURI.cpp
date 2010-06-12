@@ -60,41 +60,24 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 ////////////////////////////////////////////////////////////////////////////////
 // nsSimpleURI methods:
 
-nsSimpleURI::nsSimpleURI(nsISupports* outer)
+nsSimpleURI::nsSimpleURI()
     : mMutable(PR_TRUE)
 {
-    NS_INIT_AGGREGATED(outer);
 }
 
 nsSimpleURI::~nsSimpleURI()
 {
 }
 
-NS_IMPL_AGGREGATED(nsSimpleURI)
-
-nsresult
-nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-
-    if (aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = InnerObject();
-    } else if (aIID.Equals(kThisSimpleURIImplementationCID) || // used by Equals
-               aIID.Equals(NS_GET_IID(nsIURI))) {
-        *aInstancePtr = static_cast<nsIURI*>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsISerializable))) {
-        *aInstancePtr = static_cast<nsISerializable*>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-        *aInstancePtr = static_cast<nsIClassInfo*>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIMutable))) {
-        *aInstancePtr = static_cast<nsIMutable*>(this);
-    } else {
-        *aInstancePtr = nsnull;
-        return NS_NOINTERFACE;
-    }
-    NS_ADDREF((nsISupports*)*aInstancePtr);
-    return NS_OK;
-}
+NS_IMPL_ADDREF(nsSimpleURI)
+NS_IMPL_RELEASE(nsSimpleURI)
+NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
+NS_INTERFACE_TABLE4(nsSimpleURI, nsIURI, nsISerializable, nsIClassInfo, nsIMutable)
+NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  if (aIID.Equals(kThisSimpleURIImplementationCID))
+    foundInterface = static_cast<nsIURI*>(this);
+  else
+NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISerializable methods:
@@ -358,7 +341,7 @@ nsSimpleURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 /* virtual */ nsSimpleURI*
 nsSimpleURI::StartClone()
 {
-    return new nsSimpleURI(nsnull);     // XXX outer?
+    return new nsSimpleURI();
 }
 
 NS_IMETHODIMP
