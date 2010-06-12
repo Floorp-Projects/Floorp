@@ -1739,10 +1739,6 @@ PRStatus nsNSSSocketInfo::CloseSocketAndDestroy()
 
   PRFileDesc* popped = PR_PopIOLayer(mFd, PR_TOP_IO_LAYER);
 
-  if (GetHandshakeInProgress()) {
-    nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(mFd->lower, this);
-  }
-
   PRStatus status = mFd->methods->close(mFd);
   if (status != PR_SUCCESS) return status;
 
