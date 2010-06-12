@@ -249,9 +249,9 @@ js_LiveFrameIfGenerator(JSStackFrame *fp)
 
 #endif
 
-extern js::ExtendedClass js_GeneratorClass;
-extern js::ExtendedClass js_IteratorClass;
-extern js::Class         js_StopIterationClass;
+extern js::Class js_GeneratorClass;
+extern js::Class js_IteratorClass;
+extern js::Class js_StopIterationClass;
 
 static inline bool
 js_ValueIsStopIteration(const js::Value &v)

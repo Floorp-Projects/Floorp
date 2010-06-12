@@ -98,28 +98,34 @@ static const char prefix[] = "chrome://global/";
 
 namespace SystemOnlyWrapper {
 
-JSExtendedClass SOWClass = {
-  // JSClass (JSExtendedClass.base) initialization
-  { "SystemOnlyWrapper",
-    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED |
+js::Class SOWClass = {
+    "SystemOnlyWrapper",
+    JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots),
-    XPC_SOW_AddProperty, XPC_SOW_DelProperty,
-    XPC_SOW_GetProperty, XPC_SOW_SetProperty,
-    XPC_SOW_Enumerate,   (JSResolveOp)XPC_SOW_NewResolve,
-    XPC_SOW_Convert,     nsnull,
-    nsnull,              XPC_SOW_CheckAccess,
-    nsnull,              nsnull,
-    nsnull,              XPC_SOW_HasInstance,
-    nsnull,              nsnull
-  },
+    js::Valueify(XPC_SOW_AddProperty),
+    js::Valueify(XPC_SOW_DelProperty),
+    js::Valueify(XPC_SOW_GetProperty),
+    js::Valueify(XPC_SOW_SetProperty),
+    XPC_SOW_Enumerate,
+    (JSResolveOp)XPC_SOW_NewResolve,
+    js::Valueify(XPC_SOW_Convert),
+    nsnull,   // finalize
+    nsnull,   // reserved0
+    js::Valueify(XPC_SOW_CheckAccess),
+    nsnull,   // call
+    nsnull,   // construct
+    nsnull,   // xdrObject
+    js::Valueify(XPC_SOW_HasInstance),
+    nsnull,   // mark
 
-  // JSExtendedClass initialization
-  XPC_SOW_Equality,
-  nsnull,             // outerObject
-  nsnull,             // innerObject
-  XPC_SOW_Iterator,
-  XPC_SOW_WrappedObject,
-  JSCLASS_NO_RESERVED_MEMBERS
+    // ClassExtension
+    {
+      js::Valueify(XPC_SOW_Equality),
+      nsnull, // outerObject
+      nsnull, // innerObject
+      XPC_SOW_Iterator,
+      XPC_SOW_WrappedObject
+    }
 };
 
 JSBool
@@ -133,7 +139,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
   }
 
   JSObject *wrapperObj =
-    JS_NewObjectWithGivenProto(cx, &SOWClass.base, NULL, parent);
+    JS_NewObjectWithGivenProto(cx, js::Jsvalify(&SOWClass), NULL, parent);
   if (!wrapperObj) {
     return JS_FALSE;
   }
@@ -154,9 +160,9 @@ MakeSOW(JSContext *cx, JSObject *obj)
 {
 #ifdef DEBUG
   {
-    JSClass *clasp = obj->getJSClass();
-    NS_ASSERTION(clasp != &SystemOnlyWrapper::SOWClass.base &&
-                 clasp != &XPCCrossOriginWrapper::XOWClass.base,
+    js::Class *clasp = obj->getClass();
+    NS_ASSERTION(clasp != &SystemOnlyWrapper::SOWClass &&
+                 clasp != &XPCCrossOriginWrapper::XOWClass,
                  "bad call");
   }
 #endif
@@ -268,17 +274,9 @@ using namespace SystemOnlyWrapper;
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)
 {
-  JSClass *clasp = obj->getJSClass();
-  if (!(clasp->flags & JSCLASS_IS_EXTENDED)) {
-    return obj;
-  }
-
-  JSExtendedClass *xclasp = (JSExtendedClass *)clasp;
-  if (!xclasp->wrappedObject) {
-    return obj;
-  }
-
-  return xclasp->wrappedObject(cx, obj);
+  if (JSObjectOp op = obj->getClass()->ext.wrappedObject)
+    return op(cx, obj);
+  return obj;
 }
 
 // Get the (possibly nonexistent) SOW off of an object
@@ -286,7 +284,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (obj->getJSClass() != &SOWClass.base) {
+  while (obj->getClass() != &SOWClass) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -405,7 +403,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     return XPC_SOW_WrapFunction(cx, wrapperObj, obj, vp);
   }
 
-  if (obj->getJSClass() == &SOWClass.base) {
+  if (obj->getClass() == &SOWClass) {
     // We are extra careful about content-polluted wrappers here. I don't know
     // if it's possible to reach them through objects that we wrap, but figuring
     // that out is more expensive (and harder) than simply checking and
@@ -430,7 +428,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
 static JSBool
 XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  NS_ASSERTION(obj->getJSClass() == &SOWClass.base, "Wrong object");
+  NS_ASSERTION(obj->getClass() == &SOWClass, "Wrong object");
 
   jsval resolving;
   if (!JS_GetReservedSlot(cx, obj, sFlagsSlot, &resolving)) {
@@ -653,23 +651,16 @@ XPC_SOW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
   }
 
   if (lhs) {
-    // Delegate to our wrapped object if we can.
-    JSClass *clasp = lhs->getJSClass();
-    if (clasp->flags & JSCLASS_IS_EXTENDED) {
-      JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
-      // NB: JSExtendedClass.equality is a required field.
+    if (JSEqualityOp op = js::Jsvalify(lhs->getClass()->ext.equality)) {
       jsval rhsVal = OBJECT_TO_JSVAL(rhs);
-      return xclasp->equality(cx, lhs, &rhsVal, bp);
+      return op(cx, lhs, &rhsVal, bp);
     }
   }
 
   // We know rhs is non-null.
-  JSClass *clasp = rhs->getJSClass();
-  if (clasp->flags & JSCLASS_IS_EXTENDED) {
-    JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
-    // NB: JSExtendedClass.equality is a required field.
+  if (JSEqualityOp op = js::Jsvalify(rhs->getClass()->ext.equality)) {
     jsval lhsVal = OBJECT_TO_JSVAL(lhs);
-    return xclasp->equality(cx, rhs, &lhsVal, bp);
+    return op(cx, rhs, &lhsVal, bp);
   }
 
   *bp = JS_FALSE;
@@ -685,7 +676,7 @@ XPC_SOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSObject *wrapperIter = JS_NewObject(cx, &SOWClass.base, nsnull,
+  JSObject *wrapperIter = JS_NewObject(cx, js::Jsvalify(&SOWClass), nsnull,
                                        JS_GetGlobalForObject(cx, obj));
   if (!wrapperIter) {
     return nsnull;
