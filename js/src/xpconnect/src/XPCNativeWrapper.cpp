@@ -109,56 +109,68 @@ namespace XPCNativeWrapper { namespace internal {
 // JS class for XPCNativeWrapper (and this doubles as the constructor
 // for XPCNativeWrapper for the moment too...)
 
-JSExtendedClass NW_NoCall_Class = {
-  // JSClass (JSExtendedClass.base) initialization
-  { "XPCNativeWrapper",
+js::Class NW_NoCall_Class = {
+    "XPCNativeWrapper",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED | JSCLASS_CONSTRUCT_PROTOTYPE,
-    XPC_NW_AddProperty, XPC_NW_DelProperty,
-    XPC_NW_GetProperty, XPC_NW_SetProperty,
-    XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
-    XPC_NW_Convert,     XPC_NW_Finalize,
-    nsnull,             XPC_NW_CheckAccess,
-    nsnull,             XPC_NW_Construct,
-    nsnull,             XPC_NW_HasInstance,
-    JS_CLASS_TRACE(XPC_NW_Trace), nsnull
-  },
+    JSCLASS_MARK_IS_TRACE | JSCLASS_CONSTRUCT_PROTOTYPE,
+    js::Valueify(XPC_NW_AddProperty),
+    js::Valueify(XPC_NW_DelProperty),
+    js::Valueify(XPC_NW_GetProperty),
+    js::Valueify(XPC_NW_SetProperty),
+    XPC_NW_Enumerate,
+    (JSResolveOp)XPC_NW_NewResolve,
+    js::Valueify(XPC_NW_Convert),
+    XPC_NW_Finalize,
+    nsnull,   // reserved0
+    js::Valueify(XPC_NW_CheckAccess),
+    nsnull,   // call
+    js::Valueify(XPC_NW_Construct),
+    nsnull,   // xdrObject
+    js::Valueify(XPC_NW_HasInstance),
+    JS_CLASS_TRACE(XPC_NW_Trace),
 
-  // JSExtendedClass initialization
-  XPC_NW_Equality,
-  nsnull,             // outerObject
-  nsnull,             // innerObject
-  XPC_NW_Iterator,
-  nsnull,             // wrappedObject
-  JSCLASS_NO_RESERVED_MEMBERS
+    // ClassExtension
+    {
+      js::Valueify(XPC_NW_Equality),
+      nsnull, // outerObject
+      nsnull, // innerObject
+      XPC_NW_Iterator,
+      nsnull, // wrappedObject
+    }
 };
 
-JSExtendedClass NW_Call_Class = {
-  // JSClass (JSExtendedClass.base) initialization
-  { "XPCNativeWrapper",
+js::Class NW_Call_Class = {
+    "XPCNativeWrapper",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED | JSCLASS_CONSTRUCT_PROTOTYPE,
-    XPC_NW_AddProperty, XPC_NW_DelProperty,
-    XPC_NW_GetProperty, XPC_NW_SetProperty,
-    XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
-    XPC_NW_Convert,     XPC_NW_Finalize,
-    nsnull,             XPC_NW_CheckAccess,
-    XPC_NW_Call,        XPC_NW_Construct,
-    nsnull,             XPC_NW_HasInstance,
-    JS_CLASS_TRACE(XPC_NW_Trace), nsnull
-  },
+    JSCLASS_MARK_IS_TRACE | JSCLASS_CONSTRUCT_PROTOTYPE,
+    js::Valueify(XPC_NW_AddProperty),
+    js::Valueify(XPC_NW_DelProperty),
+    js::Valueify(XPC_NW_GetProperty),
+    js::Valueify(XPC_NW_SetProperty),
+    XPC_NW_Enumerate,
+    (JSResolveOp)XPC_NW_NewResolve,
+    js::Valueify(XPC_NW_Convert),
+    XPC_NW_Finalize,
+    nsnull,   // reserved0
+    js::Valueify(XPC_NW_CheckAccess),
+    js::Valueify(XPC_NW_Call),
+    js::Valueify(XPC_NW_Construct),
+    nsnull,   // xdrObject
+    js::Valueify(XPC_NW_HasInstance),
+    JS_CLASS_TRACE(XPC_NW_Trace),
 
-  // JSExtendedClass initialization
-  XPC_NW_Equality,
-  nsnull,             // outerObject
-  nsnull,             // innerObject
-  XPC_NW_Iterator,
-  nsnull,             // wrappedObject
-  JSCLASS_NO_RESERVED_MEMBERS
+    // ClassExtension
+    {
+      js::Valueify(XPC_NW_Equality),
+      nsnull, // outerObject
+      nsnull, // innerObject
+      XPC_NW_Iterator,
+      nsnull, // wrappedObject
+    }
 };
 
 } // namespace internal
@@ -1028,7 +1040,8 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
                                              JSObject *aGlobalObject)
 {
   JSObject *class_obj =
-    ::JS_InitClass(ccx, aGlobalObject, nsnull, &internal::NW_Call_Class.base,
+    ::JS_InitClass(ccx, aGlobalObject, nsnull,
+                   js::Jsvalify(&internal::NW_Call_Class),
                    XPCNativeWrapperCtor, 0, nsnull, nsnull,
                    nsnull, static_functions);
   if (!class_obj) {
@@ -1046,7 +1059,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 
   JSBool found;
   return ::JS_SetPropertyAttributes(ccx, aGlobalObject,
-                                    internal::NW_Call_Class.base.name,
+                                    internal::NW_Call_Class.name,
                                     JSPROP_READONLY | JSPROP_PERMANENT,
                                     &found);
 }

@@ -294,12 +294,11 @@ struct JSScope : public JSObjectMap
                                        JSScopeProperty **spp);
 
   public:
-    JSScope(const JSObjectOps *ops, JSObject *obj)
-      : JSObjectMap(ops, 0), object(obj) {}
+    JSScope(JSObject *obj)
+      : JSObjectMap(0), object(obj) {}
 
     /* Create a mutable, owned, empty scope. */
-    static JSScope *create(JSContext *cx, const JSObjectOps *ops,
-                           js::Class *clasp, JSObject *obj, uint32 shape);
+    static JSScope *create(JSContext *cx, js::Class *clasp, JSObject *obj, uint32 shape);
 
     void destroy(JSContext *cx);
 
@@ -314,7 +313,7 @@ struct JSScope : public JSObjectMap
 
     inline bool ensureEmptyScope(JSContext *cx, js::Class *clasp);
 
-    inline bool canProvideEmptyScope(JSObjectOps *ops, js::Class *clasp);
+    inline bool canProvideEmptyScope(js::Class *clasp);
 
     JSScopeProperty *lookup(jsid id);
 
@@ -528,7 +527,7 @@ struct JSEmptyScope : public JSScope
     js::Class * const clasp;
     jsrefcount        nrefs;              /* count of all referencing objects */
 
-    JSEmptyScope(JSContext *cx, const JSObjectOps *ops, js::Class *clasp);
+    JSEmptyScope(JSContext *cx, js::Class *clasp);
 
     JSEmptyScope *hold() {
         /* The method is only called for already held objects. */
@@ -960,7 +959,7 @@ JSScope::search(jsid id, bool adding)
 #undef METER
 
 inline bool
-JSScope::canProvideEmptyScope(JSObjectOps *ops, js::Class *clasp)
+JSScope::canProvideEmptyScope(js::Class *clasp)
 {
     /*
      * An empty scope cannot provide another empty scope, or wrongful two-level
@@ -968,7 +967,7 @@ JSScope::canProvideEmptyScope(JSObjectOps *ops, js::Class *clasp)
      */
     if (!object)
         return false;
-    return this->ops == ops && (!emptyScope || emptyScope->clasp == clasp);
+    return !emptyScope || emptyScope->clasp == clasp;
 }
 
 inline bool
