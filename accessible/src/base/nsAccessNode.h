@@ -101,7 +101,7 @@ public:
   /**
    * Return the document accessible for this access node.
    */
-  inline nsDocAccessible *GetDocAccessible() const;
+  nsDocAccessible *GetDocAccessible() const;
 
   /**
    * Return the root document accessible for this accessnode.
