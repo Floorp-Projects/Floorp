@@ -196,17 +196,6 @@ public:
   nsINode *GetRelevantContentNodeFor(nsINode *aNode);
 
   /**
-   * Return an access node for the DOM node in the given presentation shell if
-   * the access node already exists, otherwise null.
-   *
-   * @param  aNode       [in] the DOM node to get an access node for
-   * @param  aPresShell  [in] the presentation shell which contains layout info
-   *                       for the DOM node
-   */
-  nsAccessNode* GetCachedAccessNode(nsINode *aNode,
-                                    nsIWeakReference *aShell);
-
-  /**
    * Initialize an accessible and cache it. The method should be called for
    * every created accessible.
    *
@@ -218,6 +207,18 @@ public:
    */
   PRBool InitAccessible(nsAccessible *aAccessible,
                         nsRoleMapEntry *aRoleMapEntry);
+
+protected:
+  /**
+   * Return an accessible for the DOM node in the given presentation shell if
+   * the accessible already exists, otherwise null.
+   *
+   * @param  aNode       [in] the DOM node to get an access node for
+   * @param  aPresShell  [in] the presentation shell which contains layout info
+   *                       for the DOM node
+   */
+  nsAccessible *GetCachedAccessible(nsINode *aNode,
+                                    nsIWeakReference *aShell);
 
 private:
   // nsAccessibilityService creation is controlled by friend

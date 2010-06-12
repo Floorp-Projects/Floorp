@@ -101,8 +101,8 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER
 
   // nsAccessNode
-  virtual nsresult Init();
-  virtual nsresult Shutdown();
+  virtual PRBool Init();
+  virtual void Shutdown();
   virtual nsIFrame* GetFrame();
   virtual PRBool IsDefunct();
   virtual nsINode* GetNode() const { return mDocument; }
@@ -178,31 +178,31 @@ public:
   void InvalidateCacheSubtree(nsIContent *aContent, PRUint32 aEvent);
 
   /**
-   * Return the cached access node by the given unique ID if it's in subtree of
+   * Return the cached accessible by the given unique ID if it's in subtree of
    * this document accessible or the document accessible itself, otherwise null.
    *
    * @note   the unique ID matches with the uniqueID attribute on nsIAccessNode
    *
    * @param  aUniqueID  [in] the unique ID used to cache the node.
    *
-   * @return the access node object
+   * @return the accessible object
    */
-  nsAccessNode* GetCachedAccessNode(void *aUniqueID);
+  nsAccessible* GetCachedAccessible(void *aUniqueID);
 
   /**
-   * Cache the access node.
+   * Cache the accessible.
    *
    * @param  aUniquID     [in] the unique identifier of accessible
-   * @param  aAccessNode  [in] accessible to cache
+   * @param  aAccessible  [in] accessible to cache
    *
-   * @return true if node beign cached, otherwise false
+   * @return true if accessible being cached, otherwise false
    */
-  PRBool CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode);
+  PRBool CacheAccessible(void *aUniqueID, nsAccessible *aAccessible);
 
   /**
-   * Remove the given access node from document cache.
+   * Remove the given accessible from document cache.
    */
-  void RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode);
+  void RemoveAccessNodeFromCache(nsAccessible *aAccessible);
 
   /**
    * Process the event when the queue of pending events is untwisted. Fire
@@ -317,7 +317,11 @@ protected:
    */
   void FireValueChangeForTextFields(nsAccessible *aAccessible);
 
-    nsAccessNodeHashtable mAccessNodeCache;
+  /**
+   * Cache of accessibles within this document accessible.
+   */
+  nsAccessibleHashtable mAccessibleCache;
+
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;

@@ -306,11 +306,11 @@ void nsAccessibleWrap::ShutdownAtkObject()
     }
 }
 
-nsresult
+void
 nsAccessibleWrap::Shutdown()
 {
     ShutdownAtkObject();
-    return nsAccessible::Shutdown();
+    nsAccessible::Shutdown();
 }
 
 MaiHyperlink* nsAccessibleWrap::GetMaiHyperlink(PRBool aCreate /* = PR_TRUE */)

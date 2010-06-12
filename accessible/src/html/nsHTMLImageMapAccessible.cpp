@@ -149,8 +149,7 @@ nsHTMLImageMapAccessible::CacheChildren()
     if (!areaAcc)
       return;
 
-    nsresult rv = areaAcc->Init();
-    if (NS_FAILED(rv)) {
+    if (!areaAcc->Init()) {
       areaAcc->Shutdown();
       return;
     }

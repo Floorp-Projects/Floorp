@@ -324,9 +324,6 @@ __try {
   if (!*pszName)
     return E_OUTOFMEMORY;
 
-#ifdef DEBUG_A11Y
-  NS_ASSERTION(mIsInitialized, "Access node was not initialized");
-#endif
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
