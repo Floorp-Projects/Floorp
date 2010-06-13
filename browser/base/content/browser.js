@@ -1088,6 +1088,10 @@ function BrowserStartup() {
     goSetCommandEnabled("cmd_newNavigatorTab", false);
   }
 
+#ifdef MENUBAR_CAN_AUTOHIDE
+  updateAppButtonDisplay();
+#endif
+
   CombinedStopReload.init();
 
   allTabs.readPref();
@@ -4545,9 +4549,11 @@ nsBrowserAccess.prototype = {
   }
 }
 
-function onViewToolbarsPopupShowing(aEvent)
-{
+function onViewToolbarsPopupShowing(aEvent) {
   var popup = aEvent.target;
+  if (popup != aEvent.currentTarget)
+    return;
+
   var i;
 
   // Empty the menu
@@ -4569,8 +4575,9 @@ function onViewToolbarsPopupShowing(aEvent)
       menuItem.setAttribute("toolbarindex", i);
       menuItem.setAttribute("type", "checkbox");
       menuItem.setAttribute("label", toolbarName);
-      menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
       menuItem.setAttribute("checked", toolbar.getAttribute(hidingAttribute) != "true");
+      if (popup.id != "appmenu_customizeMenu")
+        menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
       popup.insertBefore(menuItem, firstMenuItem);
 
       menuItem.addEventListener("command", onViewToolbarCommand, false);
@@ -4579,8 +4586,7 @@ function onViewToolbarsPopupShowing(aEvent)
   }
 }
 
-function onViewToolbarCommand(aEvent)
-{
+function onViewToolbarCommand(aEvent) {
   var index = aEvent.originalTarget.getAttribute("toolbarindex");
   var toolbar = gNavToolbox.childNodes[index];
   var hidingAttribute = toolbar.getAttribute("type") == "menubar" ?
@@ -4589,6 +4595,10 @@ function onViewToolbarCommand(aEvent)
   toolbar.setAttribute(hidingAttribute,
                        aEvent.originalTarget.getAttribute("checked") != "true");
   document.persist(toolbar.id, hidingAttribute);
+
+#ifdef MENUBAR_CAN_AUTOHIDE
+  updateAppButtonDisplay();
+#endif
 }
 
 var TabsOnTop = {
@@ -4613,6 +4623,13 @@ var TabsOnTop = {
     return val;
   }
 }
+
+#ifdef MENUBAR_CAN_AUTOHIDE
+function updateAppButtonDisplay() {
+  document.getElementById("appmenu-button-container").hidden =
+    document.getElementById("toolbar-menubar").getAttribute("autohide") != "true";
+}
+#endif
 
 function displaySecurityInfo()
 {
