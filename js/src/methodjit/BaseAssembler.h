@@ -92,12 +92,12 @@ class BaseAssembler : public JSC::MacroAssembler
     static const uint32 TotalFPRegisters = FPRegisters::TotalFPRegisters;
 
     /*
-     * FpReg is used to home the current JSStackFrame*.
+     * JSFrameReg is used to home the current JSStackFrame*.
      */
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-    static const RegisterID FpReg = JSC::X86Registers::ebx;
+    static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
-    static const RegisterID FpReg = JSC::X86Registers::r11;
+    static const RegisterID JSFrameReg = JSC::X86Registers::r11;
 #endif
 
     size_t distanceOf(Label l) {
@@ -186,7 +186,7 @@ class BaseAssembler : public JSC::MacroAssembler
     void fixScriptStack(uint32 frameDepth) {
         /* sp = fp + slots() + stackDepth */
         addPtr(Imm32(sizeof(JSStackFrame) + frameDepth * sizeof(jsval)),
-               FpReg,
+               JSFrameReg,
                ClobberInCall);
 
         /* regs->sp = sp */
@@ -230,6 +230,9 @@ class BaseAssembler : public JSC::MacroAssembler
         }
     }
 };
+
+/* Save some typing. */
+const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
 
 } /* namespace js */
 } /* namespace mjit */
