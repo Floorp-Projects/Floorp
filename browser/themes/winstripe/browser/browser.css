@@ -1011,12 +1011,13 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   -moz-appearance: none;
   background: -moz-linear-gradient(left, transparent, transparent 1px,
                                          rgba(50%,50%,50%,.1) 1px, rgba(50%,50%,50%,.1));
-  background-position: -6px 0;
+  background-position: -6px -2px;
+  background-repeat: no-repeat;
   background-size: 200%;
   margin: 0;
   padding: 0;
-  -moz-border-image: url(tabbrowser/tab.png) 3 5 3 6 / 3px 5px 3px 6px;
-  -moz-border-radius: 6px 4px 0 0;
+  -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px;
+  -moz-border-radius: 10px 8px 0 0;
 }
 
 .tabbrowser-tab:hover,
@@ -1060,7 +1061,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
                                                @toolbarHighlight@ 1px, @toolbarHighlight@),
                     -moz-linear-gradient(left, transparent, transparent 1px,
                                                -moz-dialog 1px, -moz-dialog);
-  background-position: center center, -6px 0, -6px 0;
+  background-position: center center, -6px -2px, -6px -2px;
   color: -moz-dialogText;
 }
 
