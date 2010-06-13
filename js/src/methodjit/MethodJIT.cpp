@@ -642,6 +642,11 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         cx->free(script->nmap);
         script->nmap = NULL;
     }
+    if (script->mics) {
+        cx->free(script->mics);
+        script->mics = NULL;
+    }
+
 # if 0 /* def JS_TRACER */
     if (script->trees) {
         cx->free(script->trees);

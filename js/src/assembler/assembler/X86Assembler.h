@@ -1505,7 +1505,9 @@ public:
     
     void movl_mr(void* addr, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movl       0(%p), %s\n",
+                       addr, nameIReg(4, dst));
         if (dst == X86Registers::eax)
             movl_mEAX(addr);
         else

@@ -106,6 +106,12 @@ mjit::stubs::BindName(VMFrame &f)
     f.regs.sp[-1].setNonFunObj(*obj);
 }
 
+JSObject * JS_FASTCALL
+mjit::stubs::BindGlobalName(VMFrame &f)
+{
+    return f.fp->scopeChainObj()->getGlobal();
+}
+
 static bool
 InlineReturn(JSContext *cx)
 {

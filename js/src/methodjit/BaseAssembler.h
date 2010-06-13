@@ -59,6 +59,13 @@ struct FrameAddress : JSC::MacroAssembler::Address
     { }
 };
 
+struct ImmIntPtr : public JSC::MacroAssembler::ImmPtr
+{
+    ImmIntPtr(intptr_t val)
+      : ImmPtr(reinterpret_cast<void*>(val))
+    { }
+};
+
 class BaseAssembler : public JSC::MacroAssembler
 {
     struct CallPatch {
@@ -86,6 +93,10 @@ class BaseAssembler : public JSC::MacroAssembler
       : callPatches(SystemAllocPolicy())
     {
         startLabel = label();
+    }
+
+    void load32FromImm(void *ptr, RegisterID reg) {
+        load32(ptr, reg);
     }
 
     /*

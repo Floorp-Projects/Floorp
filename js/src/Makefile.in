@@ -312,6 +312,7 @@ CPPSRCS += 	Assertions.cpp \
 		FrameState.cpp \
 		FastOps.cpp \
 		StubCompiler.cpp \
+		MonoIC.cpp \
 		$(NULL)
 #		PICStubCompiler.cpp \
 
