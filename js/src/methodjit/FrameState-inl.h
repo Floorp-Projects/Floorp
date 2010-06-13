@@ -76,7 +76,13 @@ FrameState::popn(uint32 n)
 inline JSC::MacroAssembler::RegisterID
 FrameState::allocReg()
 {
-    return alloc();
+    RegisterID reg;
+    if (!freeRegs.empty())
+        reg = freeRegs.takeAnyReg();
+    else
+        reg = evictSomething();
+    regstate[reg].fe = NULL;
+    return reg;
 }
 
 inline JSC::MacroAssembler::RegisterID
@@ -92,19 +98,7 @@ FrameState::allocReg(uint32 mask)
 }
 
 inline JSC::MacroAssembler::RegisterID
-FrameState::alloc()
-{
-    RegisterID reg;
-    if (!freeRegs.empty())
-        reg = freeRegs.takeAnyReg();
-    else
-        reg = evictSomething();
-    regstate[reg].fe = NULL;
-    return reg;
-}
-
-inline JSC::MacroAssembler::RegisterID
-FrameState::alloc(FrameEntry *fe, RematInfo::RematType type, bool weak)
+FrameState::allocReg(FrameEntry *fe, RematInfo::RematType type, bool weak)
 {
     RegisterID reg;
     if (!freeRegs.empty())
@@ -218,7 +212,7 @@ FrameState::push(Address address)
     if (free)
         freeRegs.takeReg(address.base);
 
-    RegisterID reg = alloc(fe, RematInfo::DATA, true);
+    RegisterID reg = allocReg(fe, RematInfo::DATA, true);
     masm.loadData32(address, reg);
     fe->data.setRegister(reg);
 
@@ -226,7 +220,7 @@ FrameState::push(Address address)
     if (free)
         freeRegs.putReg(address.base);
 
-    reg = alloc(fe, RematInfo::TYPE, true);
+    reg = allocReg(fe, RematInfo::TYPE, true);
     masm.loadTypeTag(address, reg);
     fe->type.setRegister(reg);
 }
@@ -278,7 +272,7 @@ FrameState::tempRegForType(FrameEntry *fe)
 
     /* :XXX: X64 */
 
-    RegisterID reg = alloc(fe, RematInfo::TYPE, true);
+    RegisterID reg = allocReg(fe, RematInfo::TYPE, true);
     masm.loadTypeTag(addressOf(fe), reg);
     fe->type.setRegister(reg);
     return reg;
@@ -295,7 +289,7 @@ FrameState::tempRegForData(FrameEntry *fe)
     if (fe->data.inRegister())
         return fe->data.reg();
 
-    RegisterID reg = alloc(fe, RematInfo::DATA, true);
+    RegisterID reg = allocReg(fe, RematInfo::DATA, true);
     masm.loadData32(addressOf(fe), reg);
     fe->data.setRegister(reg);
     return reg;
@@ -401,7 +395,7 @@ FrameState::addressOf(const FrameEntry *fe) const
     uint32 index = (fe - entries);
     JS_ASSERT(index >= nargs);
     index -= nargs;
-    return Address(Assembler::FpReg, sizeof(JSStackFrame) + sizeof(Value) * index);
+    return Address(JSFrameReg, sizeof(JSStackFrame) + sizeof(Value) * index);
 }
 
 inline JSC::MacroAssembler::Jump
