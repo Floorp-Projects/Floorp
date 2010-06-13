@@ -67,6 +67,7 @@ void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetElem(VMFrame &f);
@@ -75,11 +76,16 @@ void JS_FASTCALL SetElem(VMFrame &f);
 void JS_FASTCALL Length(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);
+void JS_FASTCALL GetGlobalName(VMFrame &f);
 
 void JS_FASTCALL NameInc(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL NameDec(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL IncName(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL DecName(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL GlobalNameInc(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL GlobalNameDec(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL IncGlobalName(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL DecGlobalName(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL PropInc(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL PropDec(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL IncProp(VMFrame &f, JSAtom *atom);

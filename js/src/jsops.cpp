@@ -735,6 +735,10 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
 END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
+BEGIN_CASE(JSOP_BINDGNAME)
+    PUSH_NONFUNOBJ(*fp->scopeChainObj()->getGlobal());
+END_CASE(JSOP_BINDGNAME)
+
 BEGIN_CASE(JSOP_BINDNAME)
 {
     JSObject *obj;
@@ -1355,8 +1359,14 @@ BEGIN_CASE(JSOP_INCNAME)
 BEGIN_CASE(JSOP_DECNAME)
 BEGIN_CASE(JSOP_NAMEINC)
 BEGIN_CASE(JSOP_NAMEDEC)
+BEGIN_CASE(JSOP_INCGNAME)
+BEGIN_CASE(JSOP_DECGNAME)
+BEGIN_CASE(JSOP_GNAMEINC)
+BEGIN_CASE(JSOP_GNAMEDEC)
 {
     obj = fp->scopeChainObj();
+    if (js_CodeSpec[op].format & JOF_GNAME)
+        obj = obj->getGlobal();
 
     JSObject *obj2;
     PropertyCacheEntry *entry;
@@ -1522,62 +1532,6 @@ BEGIN_CASE(JSOP_LOCALINC)
             goto error;
     }
     len = JSOP_INCARG_LENGTH;
-    JS_ASSERT(len == js_CodeSpec[op].length);
-    DO_NEXT_OP(len);
-}
-
-/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
-#define FAST_GLOBAL_INCREMENT_OP(SLOWOP,INCR,INCR2)                           \
-    op2 = SLOWOP;                                                             \
-    incr = INCR;                                                              \
-    incr2 = INCR2;                                                            \
-    goto do_global_incop
-
-{
-    JSOp op2;
-    int incr, incr2;
-
-BEGIN_CASE(JSOP_DECGVAR)
-    FAST_GLOBAL_INCREMENT_OP(JSOP_DECNAME, -1, -1);
-BEGIN_CASE(JSOP_GVARDEC)
-    FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEDEC, -1,  0);
-BEGIN_CASE(JSOP_INCGVAR)
-    FAST_GLOBAL_INCREMENT_OP(JSOP_INCNAME,  1,  1);
-BEGIN_CASE(JSOP_GVARINC)
-    FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEINC,  1,  0);
-
-#undef FAST_GLOBAL_INCREMENT_OP
-
-  do_global_incop:
-    JS_ASSERT((js_CodeSpec[op].format & JOF_TMPSLOT_MASK) ==
-              JOF_TMPSLOT2);
-    uint32 slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < GlobalVarCount(fp));
-    METER_SLOT_OP(op, slot);
-    const Value &lref = fp->slots()[slot];
-    if (lref.isNull()) {
-        op = op2;
-        DO_OP();
-    }
-    slot = (uint32)lref.asInt32();
-    JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *varobj = cx->activeCallStack()->getInitialVarObj();
-
-    /* XXX all this code assumes that varobj is either a callobj or global and
-     * that it cannot be accessed in a MT way. This is either true now or
-     * coming soon. */
-
-    Value &rref = varobj->getSlotRef(slot);
-    int32_t tmp;
-    if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
-        PUSH_INT32(tmp + incr2);
-        rref.asInt32Ref() = tmp + incr;
-    } else {
-        PUSH_COPY(rref);
-        if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], &rref))
-            goto error;
-    }
-    len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
 }
@@ -1823,6 +1777,7 @@ BEGIN_CASE(JSOP_UNBRAND)
         goto error;
 END_CASE(JSOP_UNBRAND)
 
+BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
 BEGIN_CASE(JSOP_SETMETHOD)
@@ -1833,6 +1788,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
     JS_ASSERT_IF(op == JSOP_SETNAME, lref.isObject());
     JSObject *obj;
     VALUE_TO_OBJECT(cx, &lref, obj);
+
+    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == fp->scopeChainObj()->getGlobal());
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -2423,10 +2380,14 @@ BEGIN_CASE(JSOP_SETCALL)
 }
 END_CASE(JSOP_SETCALL)
 
+BEGIN_CASE(JSOP_GETGNAME)
+BEGIN_CASE(JSOP_CALLGNAME)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
     JSObject *obj = fp->scopeChainObj();
+    if (op == JSOP_GETGNAME || op == JSOP_CALLGNAME)
+        obj = obj->getGlobal();
 
     JSScopeProperty *sprop;
     Value rval;
@@ -2487,7 +2448,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
   do_push_obj_if_call:
     /* obj must be on the scope chain, thus not a function. */
-    if (op == JSOP_CALLNAME)
+    if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
         PUSH_NONFUNOBJ(*obj);
 }
 END_CASE(JSOP_NAME)
@@ -2983,71 +2944,6 @@ BEGIN_CASE(JSOP_SETGLOBAL)
 }
 END_SET_CASE(JSOP_SETGLOBAL)
 
-BEGIN_CASE(JSOP_GETGVAR)
-BEGIN_CASE(JSOP_CALLGVAR)
-{
-    uint32 slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < GlobalVarCount(fp));
-    METER_SLOT_OP(op, slot);
-    const Value &lval = fp->slots()[slot];
-    if (lval.isNull()) {
-        op = (op == JSOP_GETGVAR) ? JSOP_NAME : JSOP_CALLNAME;
-        DO_OP();
-    }
-    JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *varobj = cx->activeCallStack()->getInitialVarObj();
-
-    /* XXX all this code assumes that varobj is either a callobj or global and
-     * that it cannot be accessed in a MT way. This is either true now or
-     * coming soon. */
-
-    slot = (uint32)lval.asInt32();
-    const Value &rref = varobj->lockedGetSlot(slot);
-    PUSH_COPY(rref);
-    if (op == JSOP_CALLGVAR)
-        PUSH_NULL();
-}
-END_CASE(JSOP_GETGVAR)
-
-BEGIN_CASE(JSOP_SETGVAR)
-{
-    uint32 slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < GlobalVarCount(fp));
-    METER_SLOT_OP(op, slot);
-    const Value &rref = regs.sp[-1];
-    JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *obj = cx->activeCallStack()->getInitialVarObj();
-    const Value &lref = fp->slots()[slot];
-    if (lref.isNull()) {
-        /*
-         * Inline-clone and deoptimize JSOP_SETNAME code here because
-         * JSOP_SETGVAR has arity 1: [rref], not arity 2: [obj, rref]
-         * as JSOP_SETNAME does, where [obj] is due to JSOP_BINDNAME.
-         */
-#ifdef JS_TRACER
-        if (TRACE_RECORDER(cx))
-            AbortRecording(cx, "SETGVAR with NULL slot");
-#endif
-        JSAtom *atom;
-        LOAD_ATOM(0, atom);
-        jsid id = ATOM_TO_JSID(atom);
-        Value rval = rref;
-        if (!obj->setProperty(cx, id, &rval))
-            goto error;
-    } else {
-        uint32 slot = (uint32)lref.asInt32();
-        JS_LOCK_OBJ(cx, obj);
-        JSScope *scope = obj->scope();
-        if (!scope->methodWriteBarrier(cx, slot, rref)) {
-            JS_UNLOCK_SCOPE(cx, scope);
-            goto error;
-        }
-        obj->lockedSetSlot(slot, rref);
-        JS_UNLOCK_SCOPE(cx, scope);
-    }
-}
-END_SET_CASE(JSOP_SETGVAR)
-
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
@@ -3091,31 +2987,6 @@ BEGIN_CASE(JSOP_DEFVAR)
         }
         JS_ASSERT(prop);
         obj2 = obj;
-    }
-
-    /*
-     * Try to optimize a property we either just created, or found
-     * directly in the global object, that is permanent, has a slot,
-     * and has stub getter and setter, into a "fast global" accessed
-     * by the JSOP_*GVAR opcodes.
-     */
-    if (!fp->fun &&
-        index < GlobalVarCount(fp) &&
-        obj2 == obj &&
-        obj->isNative()) {
-        JSScopeProperty *sprop = (JSScopeProperty *) prop;
-        if (!sprop->configurable() &&
-            SPROP_HAS_VALID_SLOT(sprop, obj->scope()) &&
-            sprop->hasDefaultGetterOrIsMethod() &&
-            sprop->hasDefaultSetter()) {
-            /*
-             * Fast globals use frame variables to map the global name's atom
-             * index to the permanent varobj slot number, tagged as a jsval.
-             * The atom index for the global's name literal is identical to its
-             * variable index.
-             */
-            fp->slots()[index].setInt32(sprop->slot);
-        }
     }
 
     obj2->dropProperty(cx, prop);
@@ -4511,7 +4382,5 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_ANYNAME:
   L_JSOP_DEFXMLNS:
 # endif
-
-  L_JSOP_UNUSED218:
 
 #endif /* !JS_THREADED_INTERP */

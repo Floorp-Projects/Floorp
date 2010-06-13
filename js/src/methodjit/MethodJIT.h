@@ -71,30 +71,10 @@ struct VMFrame
 #endif
 
     union Arguments {
-        struct DEFVAR {
-            jsatomid index;
-            uint32   op;
-        } defvar;
-        struct LAMBDA {
-            uint32 index;
-            JSOp   op;
-        } lambda;
-        struct INITPROP {
-            uint32   index;
-            unsigned defineHow;
-        } initprop;
-        struct DEFLOCALFUN {
-            uint32   slot;
-            uint32   index;
-        } deflocalfun;
-        struct TRACER {
-            uint32 traceId;
-            uint32 offs;
-        } tracer;
-        struct SETTER {
-            jsatomid index;
-            JSOp     op;
-        } setter;
+        struct {
+            void *ptr;
+            void *ptr2;
+        } x;
     } u;
 
     JSFrameRegs  *oldRegs;

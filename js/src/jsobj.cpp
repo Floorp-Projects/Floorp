@@ -2812,6 +2812,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
             }
             return JS_FALSE;
 
+          case JSOP_GETGNAME:
           case JSOP_NAME:
             /*
              * Special case #2: handle (document.all == undefined).  Don't
