@@ -110,17 +110,13 @@ SFX B   e     able       [^aeiou]e
 SFX L Y 1
 SFX L   0     ment       .
 
-SFX i N 1
-SFX i   us    i          us
-
-REP 90
+REP 88
 REP a ei
 REP ei a
 REP a ey
 REP ey a
 REP ai ie
 REP ie ai
-REP alot a_lot
 REP are air
 REP are ear
 REP are eir
@@ -203,4 +199,3 @@ REP ss z
 REP shun tion
 REP shun sion
 REP shun cion
-REP sitted sat
