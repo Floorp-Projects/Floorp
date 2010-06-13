@@ -53,7 +53,7 @@ void
 mjit::Compiler::jsop_bindname(uint32 index)
 {
     RegisterID reg = frame.allocReg();
-    Address scopeChain(Assembler::FpReg, offsetof(JSStackFrame, scopeChain));
+    Address scopeChain(JSFrameReg, offsetof(JSStackFrame, scopeChain));
     masm.loadData32(scopeChain, reg);
 
     Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
@@ -745,7 +745,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
     /* Note, stub call will push original value again no matter what. */
     stubcc.leave();
     stubcc.masm.addPtr(Imm32(sizeof(Value) * slot + sizeof(JSStackFrame)),
-                       Assembler::FpReg,
+                       JSFrameReg,
                        Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
@@ -784,7 +784,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
     stubcc.linkExit(ovf);
 
-    Address argv(Assembler::FpReg, offsetof(JSStackFrame, argv));
+    Address argv(JSFrameReg, offsetof(JSStackFrame, argv));
 
     stubcc.leave();
     stubcc.masm.loadPtr(argv, Registers::ArgReg1);
