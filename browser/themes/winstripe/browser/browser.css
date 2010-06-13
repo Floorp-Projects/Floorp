@@ -100,6 +100,62 @@ statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
 }
 
+/* App menu button */
+
+%ifndef WINSTRIPE_AERO
+#appmenu-button-container {
+  background: ActiveCaption;
+}
+
+#appmenu-button-container:-moz-window-inactive {
+  background: InactiveCaption;
+}
+%endif
+
+#appmenu-button {
+  -moz-appearance: none;
+  background-color: rgb(228,120,14);
+  background-image: -moz-linear-gradient(rgba(255,255,255,.7),
+                                         rgba(255,255,255,.4) 10%,
+                                         rgba(255,255,255,0) 50%);
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.5);
+  -moz-border-radius: 4px;
+  -moz-box-shadow: 0 0 5px rgba(255,255,255,.5) inset;
+  color: white;
+  text-shadow: 0 0 2px #333;
+  font-weight: bold;
+  padding: .2em 2em;
+}
+
+#appmenu-button:hover:not(:active):not([open]) {
+  background-color: rgb(248,140,34);
+}
+
+#appmenu-button:hover:active,
+#appmenu-button[open] {
+  background-image: -moz-linear-gradient(rgba(0,0,0,.3), rgba(0,0,0,.2) 10%, transparent 60%);
+  -moz-box-shadow: 0 0 4px rgba(0,0,0,.3) inset;
+}
+
+#appmenu-button > .button-box {
+  border-style: none;
+  padding: 0;
+}
+
+#appmenu-button > .button-box > .button-menu-dropmarker {
+  list-style-image: url(appmenu-dropmarker.png);
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  -moz-margin-start: .5em;
+}
+
+#appmenu-button > menupopup > menuitem {
+  -moz-padding-end: 16px;
+}
+
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item {
