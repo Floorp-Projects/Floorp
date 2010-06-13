@@ -40,7 +40,7 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsICategoryManager.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsNetworkManagerListener.h"
 #include "nsNetCID.h"
@@ -56,15 +56,22 @@
 /* ===== XPCOM registration stuff ======== */
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetworkManagerListener, Init)
+NS_DEFINE_NAMED_CID(NS_DBUS_NETWORK_LINK_SERVICE_CID);
 
-static const nsModuleComponentInfo components[] = {
-    { NS_DBUS_NETWORK_LINK_SERVICE_CLASSNAME,
-      NS_DBUS_NETWORK_LINK_SERVICE_CID,
-      NS_NETWORK_LINK_SERVICE_CONTRACTID,
-      nsNetworkManagerListenerConstructor,
-      nsnull,
-      nsnull,
-    },
+static const mozilla::Module::CIDEntry kDBUSCIDs[] = {
+    { &kNS_DBUS_NETWORK_LINK_SERVICE_CID, false, NULL, nsNetworkManagerListenerConstructor },
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsDBusModule, components)
+static const mozilla::Module::ContractIDEntry kDBUSContracts[] = {
+    { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_DBUS_NETWORK_LINK_SERVICE_CID },
+    { NULL }
+};
+
+static const mozilla::Module kDBUSModule = {
+    mozilla::Module::kVersion,
+    kDBUSCIDs,
+    kDBUSContracts
+};
+
+NSMODULE_DEFN(nsDBusModule) = &kDBUSModule;
