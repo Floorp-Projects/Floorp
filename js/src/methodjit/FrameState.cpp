@@ -194,7 +194,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         masm.storeData32(fe->data.reg(), address);
     } else {
         JS_ASSERT(fe->data.inMemory());
-        RegisterID reg = popped ? alloc() : alloc(fe, RematInfo::DATA, true);
+        RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::DATA, true);
         masm.loadData32(addressOf(fe), reg);
         masm.storeData32(reg, address);
         if (popped)
@@ -209,7 +209,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         masm.storeTypeTag(fe->type.reg(), address);
     } else {
         JS_ASSERT(fe->type.inMemory());
-        RegisterID reg = popped ? alloc() : alloc(fe, RematInfo::TYPE, true);
+        RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE, true);
         masm.loadTypeTag(addressOf(fe), reg);
         masm.storeTypeTag(reg, address);
         if (popped)
@@ -644,14 +644,14 @@ FrameState::copyData(FrameEntry *fe)
             fe->data.setMemory();
             regstate[reg].fe = NULL;
         } else {
-            RegisterID newReg = alloc();
+            RegisterID newReg = allocReg();
             masm.move(reg, newReg);
             reg = newReg;
         }
         return reg;
     }
 
-    RegisterID reg = alloc();
+    RegisterID reg = allocReg();
 
     if (!freeRegs.empty())
         masm.move(tempRegForData(fe), reg);
@@ -683,7 +683,7 @@ FrameState::ownRegForData(FrameEntry *fe)
             backing->data.setMemory();
             moveOwnership(reg, NULL);
         } else {
-            reg = alloc();
+            reg = allocReg();
             masm.move(backing->data.reg(), reg);
         }
         return reg;
@@ -692,7 +692,7 @@ FrameState::ownRegForData(FrameEntry *fe)
     if (fe->isCopied()) {
         uncopy(fe);
         if (fe->isCopied()) {
-            reg = alloc();
+            reg = allocReg();
             masm.loadData32(addressOf(fe), reg);
             return reg;
         }
@@ -707,7 +707,7 @@ FrameState::ownRegForData(FrameEntry *fe)
         fe->data.invalidate();
     } else {
         JS_ASSERT(fe->data.inMemory());
-        reg = alloc();
+        reg = allocReg();
         masm.loadData32(addressOf(fe), reg);
     }
     return reg;
