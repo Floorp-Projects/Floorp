@@ -297,7 +297,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 #if defined(MOZ_X11)
     { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceGTKConstructor },
 #endif
-
+    { NULL }
 };
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
@@ -334,7 +334,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 #if defined(MOZ_X11)
     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
 #endif
-
+    { NULL }
 };
 
 static void
