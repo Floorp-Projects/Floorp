@@ -80,8 +80,7 @@
   GTKF(gtk_moz_embed_get_title_unichar) \
   GTKF(gtk_moz_embed_get_js_status_unichar) \
   GTKF(gtk_moz_embed_get_link_message_unichar) \
-  GTKF(gtk_moz_embed_set_directory_service_provider) \
-  GTKF(gtk_moz_embed_set_app_components)
+  GTKF(gtk_moz_embed_set_directory_service_provider)
 
 #define GTKF(fname) fname##Type fname;
 

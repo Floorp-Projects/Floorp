@@ -62,10 +62,6 @@ GTKMOZEMBED_API(PRUnichar*,
 GTKMOZEMBED_API(void,
   gtk_moz_embed_set_directory_service_provider, (nsIDirectoryServiceProvider *appFileLocProvider))
 
-GTKMOZEMBED_API(void,
-  gtk_moz_embed_set_app_components, (const nsModuleComponentInfo *aComps,
-                                     int aNumComps))
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
