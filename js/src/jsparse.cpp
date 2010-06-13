@@ -3399,25 +3399,9 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
  * compiling is completed.
  *
  * If not compile-and-go, or compiling for eval, this optimization is invalid.
- * The old path (explained below), which works for global references only, is
- * thus preserved at the bottom of BindGvar().
- *
- * If we are generating global or eval-called-from-global code, bind a "gvar"
- * here, as soon as possible. The JSOP_GETGVAR, etc., ops speed up interpreted
- * global variable access by memoizing name-to-slot mappings during execution
- * of the script prolog (via JSOP_DEFVAR/JSOP_DEFCONST). If the memoization
- * can't be done due to a pre-existing property of the same name as the var or
- * const but incompatible attributes/getter/setter/etc, these ops devolve to
- * JSOP_NAME, etc.
- *
- * For now, don't try to lookup eval frame variables at compile time. This is
- * sub-optimal: we could handle eval-called-from-global-code gvars since eval
- * gets its own script and frame. The eval-from-function-code case is harder,
- * since functions do not atomize gvars and then reserve their atom indexes as
- * stack frame slots.
  */
 static bool
-BindGvar(JSParseNode *pn, JSTreeContext *tc, bool inWith = false)
+BindGvar(JSParseNode *pn, JSTreeContext *tc)
 {
     JS_ASSERT(pn->pn_op == JSOP_NAME);
     JS_ASSERT(!tc->inFunction());
@@ -3427,36 +3411,10 @@ BindGvar(JSParseNode *pn, JSTreeContext *tc, bool inWith = false)
 
     JSCodeGenerator *cg = (JSCodeGenerator *) tc;
 
-    if (!(pn->pn_dflags & PND_CONST) && !inWith) {
-        if (!DefineGlobal(pn, cg, pn->pn_atom))
-            return false;
-        if (pn->pn_dflags & PND_BOUND)
-            return true;
-    }
-
-    /* If direct binding failed, try the old gvar optimization. */
-
-    /* Index pn->pn_atom so we can map fast global number to name. */
-    JSAtomListElement *ale = cg->atomList.add(tc->parser, pn->pn_atom);
-    if (!ale)
-        return false;
-
-    /* Defend against cg->ngvars 16-bit overflow. */
-    uintN slot = ALE_INDEX(ale);
-    if ((slot + 1) >> 16)
+    if (pn->pn_dflags & PND_CONST)
         return true;
 
-    if ((uint16)(slot + 1) > cg->ngvars)
-        cg->ngvars = (uint16)(slot + 1);
-
-    /* See bug 561011; don't optimize, but slot must be reserved above. */
-    if (!inWith) {
-        pn->pn_op = JSOP_GETGVAR;
-        pn->pn_cookie = MAKE_UPVAR_COOKIE(tc->staticLevel, slot);
-        pn->pn_dflags |= PND_BOUND | PND_GVAR;
-    }
-
-    return true;
+    return DefineGlobal(pn, cg, pn->pn_atom);
 }
 
 static JSBool
@@ -3474,7 +3432,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
     if (stmt && stmt->type == STMT_WITH) {
         data->fresh = false;
-        return tc->inFunction() || BindGvar(pn, tc, true);
+        return true;
     }
 
     JSAtomListElement *ale = tc->decls.lookup(atom);
@@ -3731,12 +3689,11 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
      * done by the data->binder function.
      */
     if (pn->pn_dflags & PND_BOUND) {
-        JS_ASSERT_IF((pn->pn_dflags & PND_GVAR),
-                     PN_OP(pn) == JSOP_GETGVAR || PN_OP(pn) == JSOP_GETGLOBAL);
+        JS_ASSERT_IF((pn->pn_dflags & PND_GVAR), PN_OP(pn) == JSOP_GETGLOBAL);
         pn->pn_op = (pn->pn_op == JSOP_ARGUMENTS)
                     ? JSOP_SETNAME
                     : (pn->pn_dflags & PND_GVAR)
-                    ? (PN_OP(pn) == JSOP_GETGVAR ? JSOP_SETGVAR : JSOP_SETGLOBAL)
+                    ? JSOP_SETGLOBAL
                     : JSOP_SETLOCAL;
     } else {
         pn->pn_op = (data->op == JSOP_DEFCONST)
@@ -5991,13 +5948,12 @@ Parser::variables(bool inLetHead)
                 pn2->pn_expr = init;
             }
 
-            JS_ASSERT_IF((pn2->pn_dflags & PND_GVAR),
-                         PN_OP(pn2) == JSOP_GETGVAR || PN_OP(pn2) == JSOP_GETGLOBAL);
+            JS_ASSERT_IF((pn2->pn_dflags & PND_GVAR), PN_OP(pn2) == JSOP_GETGLOBAL);
 
             pn2->pn_op = (PN_OP(pn2) == JSOP_ARGUMENTS)
                          ? JSOP_SETNAME
                          : (pn2->pn_dflags & PND_GVAR)
-                         ? (PN_OP(pn2) == JSOP_GETGVAR ? JSOP_SETGVAR : JSOP_SETGLOBAL)
+                         ? JSOP_SETGLOBAL
                          : (pn2->pn_dflags & PND_BOUND)
                          ? JSOP_SETLOCAL
                          : (data.op == JSOP_DEFCONST)

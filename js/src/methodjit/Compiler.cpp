@@ -567,6 +567,10 @@ mjit::Compiler::generateMethod()
             jsop_nameinc(op, stubs::IncName, fullAtomIndex(PC));
           END_CASE(JSOP_INCNAME)
 
+          BEGIN_CASE(JSOP_INCGNAME)
+            jsop_nameinc(op, stubs::IncGlobalName, fullAtomIndex(PC));
+          END_CASE(JSOP_INCGNAME)
+
           BEGIN_CASE(JSOP_INCPROP)
             jsop_propinc(op, stubs::IncProp, fullAtomIndex(PC));
           END_CASE(JSOP_INCPROP)
@@ -579,6 +583,10 @@ mjit::Compiler::generateMethod()
             jsop_nameinc(op, stubs::DecName, fullAtomIndex(PC));
           END_CASE(JSOP_DECNAME)
 
+          BEGIN_CASE(JSOP_DECGNAME)
+            jsop_nameinc(op, stubs::DecGlobalName, fullAtomIndex(PC));
+          END_CASE(JSOP_DECGNAME)
+
           BEGIN_CASE(JSOP_DECPROP)
             jsop_propinc(op, stubs::DecProp, fullAtomIndex(PC));
           END_CASE(JSOP_DECPROP)
@@ -587,9 +595,9 @@ mjit::Compiler::generateMethod()
             jsop_eleminc(op, stubs::DecElem);
           END_CASE(JSOP_DECELEM)
 
-          BEGIN_CASE(JSOP_NAMEINC)
-            jsop_nameinc(op, stubs::NameInc, fullAtomIndex(PC));
-          END_CASE(JSOP_NAMEINC)
+          BEGIN_CASE(JSOP_GNAMEINC)
+            jsop_nameinc(op, stubs::GlobalNameInc, fullAtomIndex(PC));
+          END_CASE(JSOP_GNAMEINC)
 
           BEGIN_CASE(JSOP_PROPINC)
             jsop_propinc(op, stubs::PropInc, fullAtomIndex(PC));
@@ -602,6 +610,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NAMEDEC)
             jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
           END_CASE(JSOP_NAMEDEC)
+
+          BEGIN_CASE(JSOP_GNAMEDEC)
+            jsop_nameinc(op, stubs::GlobalNameDec, fullAtomIndex(PC));
+          END_CASE(JSOP_GNAMEDEC)
 
           BEGIN_CASE(JSOP_PROPDEC)
             jsop_propinc(op, stubs::PropDec, fullAtomIndex(PC));
@@ -824,6 +836,15 @@ mjit::Compiler::generateMethod()
                 frame.push(NullTag());
           }
           END_CASE(JSOP_GETARG)
+
+          BEGIN_CASE(JSOP_BINDGNAME)
+          {
+            if (script->compileAndGo && globalObj)
+                frame.push(NonFunObjTag(*globalObj));
+            else
+                jsop_bindname(fullAtomIndex(PC));
+          }
+          END_CASE(JSOP_BINDGNAME)
 
           BEGIN_CASE(JSOP_SETARG)
           {
@@ -1055,6 +1076,32 @@ mjit::Compiler::generateMethod()
             emitReturn();
           END_CASE(JSOP_RETRVAL)
 
+          BEGIN_CASE(JSOP_GETGNAME)
+          BEGIN_CASE(JSOP_CALLGNAME)
+            prepareStubCall();
+            stubCall(stubs::GetGlobalName, Uses(0), Defs(1));
+            frame.pushSynced();
+            if (op == JSOP_CALLGNAME)
+                frame.push(NullTag());
+          END_CASE(JSOP_GETGNAME)
+
+          BEGIN_CASE(JSOP_SETGNAME)
+          {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+            prepareStubCall();
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::SetGlobalName, Uses(2), Defs(1));
+            if (JSOp(PC[JSOP_SETGNAME_LENGTH]) == JSOP_POP &&
+                !analysis[&PC[JSOP_SETGNAME_LENGTH]].nincoming) {
+                frame.popn(2);
+                PC += JSOP_SETGNAME_LENGTH + JSOP_POP_LENGTH;
+                break;
+            }
+            frame.popn(2);
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_SETGNAME)
+
           BEGIN_CASE(JSOP_REGEXP)
           {
             JSObject *regex = script->getRegExp(fullAtomIndex(PC));
@@ -1241,7 +1288,8 @@ mjit::Compiler::generateMethod()
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
-            JaegerSpew(JSpew_Abort, "opcode %s not handled yet\n", OpcodeNames[op]);
+            JaegerSpew(JSpew_Abort, "opcode %s not handled yet (%s line %d)\n", OpcodeNames[op],
+                       script->filename, js_PCToLineNumber(cx, script, PC));
 #endif
             return Compile_Abort;
         }
