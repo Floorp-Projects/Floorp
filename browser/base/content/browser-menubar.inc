@@ -210,9 +210,8 @@
               <menupopup id="menu_viewPopup">
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
-                      accesskey="&viewToolbarsMenu.accesskey;"
-                      onpopupshowing="onViewToolbarsPopupShowing(event);">
-                  <menupopup>
+                      accesskey="&viewToolbarsMenu.accesskey;">
+                  <menupopup onpopupshowing="onViewToolbarsPopupShowing(event);">
                     <menuseparator/>
                     <menuitem command="cmd_ToggleTabsOnTop"
                               type="checkbox"

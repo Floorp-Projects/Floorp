@@ -73,6 +73,11 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   background-position: bottom left;
 }
 
+.split-menuitem-menu > .menu-text,
+.split-menuitem-menu > .menu-accel-container {
+  display: none;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
