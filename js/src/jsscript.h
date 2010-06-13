@@ -153,6 +153,7 @@ struct JSScript {
     bool            savedCallerFun:1; /* object 0 is caller function */
     bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
+    bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */

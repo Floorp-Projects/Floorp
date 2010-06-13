@@ -540,6 +540,12 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
     f.regs.sp[-2] = f.regs.sp[-1];
 }
 
+void JS_FASTCALL
+stubs::SetGlobalName(VMFrame &f, JSAtom *atom)
+{
+    SetName(f, atom);
+}
+
 static void
 ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 {
@@ -549,11 +555,9 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 }
 
 static JSObject *
-NameOp(VMFrame &f)
+NameOp(VMFrame &f, JSObject *obj)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp;
-    JSObject *obj = fp->scopeChainObj();
 
     JSScopeProperty *sprop;
     Value rval;
@@ -619,8 +623,16 @@ NameOp(VMFrame &f)
 void JS_FASTCALL
 stubs::Name(VMFrame &f)
 {
-    if (!NameOp(f))
+    if (!NameOp(f, f.fp->scopeChainObj()))
         THROW();
+}
+
+void JS_FASTCALL
+stubs::GetGlobalName(VMFrame &f)
+{
+    JSObject *globalObj = f.fp->scopeChainObj()->getGlobal();
+    if (!NameOp(f, globalObj))
+         THROW();
 }
 
 static inline bool
@@ -838,7 +850,7 @@ stubs::SetElem(VMFrame &f)
 void JS_FASTCALL
 stubs::CallName(VMFrame &f)
 {
-    JSObject *obj = NameOp(f);
+    JSObject *obj = NameOp(f, f.fp->scopeChainObj());
     if (!obj)
         THROW();
     f.regs.sp++;
@@ -2025,16 +2037,14 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
 
 template <int32 N, bool POST>
 static inline bool
-NameIncDec(VMFrame &f, JSAtom *origAtom)
+NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp;
 
     JSAtom *atom;
     JSObject *obj2;
     JSProperty *prop;
     PropertyCacheEntry *entry;
-    JSObject *obj = fp->scopeChainObj();
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
@@ -2168,28 +2178,64 @@ stubs::DecElem(VMFrame &f)
 void JS_FASTCALL
 stubs::NameInc(VMFrame &f, JSAtom *atom)
 {
-    if (!NameIncDec<1, true>(f, atom))
+    JSObject *obj = f.fp->scopeChainObj();
+    if (!NameIncDec<1, true>(f, obj, atom))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::NameDec(VMFrame &f, JSAtom *atom)
 {
-    if (!NameIncDec<-1, true>(f, atom))
+    JSObject *obj = f.fp->scopeChainObj();
+    if (!NameIncDec<-1, true>(f, obj, atom))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::IncName(VMFrame &f, JSAtom *atom)
 {
-    if (!NameIncDec<1, false>(f, atom))
+    JSObject *obj = f.fp->scopeChainObj();
+    if (!NameIncDec<1, false>(f, obj, atom))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::DecName(VMFrame &f, JSAtom *atom)
 {
-    if (!NameIncDec<-1, false>(f, atom))
+    JSObject *obj = f.fp->scopeChainObj();
+    if (!NameIncDec<-1, false>(f, obj, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::GlobalNameInc(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    if (!NameIncDec<1, true>(f, obj, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::GlobalNameDec(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    if (!NameIncDec<-1, true>(f, obj, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::IncGlobalName(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    if (!NameIncDec<1, false>(f, obj, atom))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::DecGlobalName(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    if (!NameIncDec<-1, false>(f, obj, atom))
         THROW();
 }
 
