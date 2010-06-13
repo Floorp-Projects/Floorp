@@ -45,8 +45,8 @@ class RepatchBuffer {
     typedef MacroAssemblerCodePtr CodePtr;
 
 public:
-    RepatchBuffer(void *start, size_t size)
-    : m_start(start), m_size(size)
+    RepatchBuffer(void *start, size_t size, bool mprot = true)
+    : m_start(start), m_size(size), mprot(mprot)
     {
         ExecutableAllocator::makeWritable(m_start, m_size);
     }
@@ -57,12 +57,14 @@ public:
         m_start = code.start();
         m_size = code.size();
 
-        ExecutableAllocator::makeWritable(m_start, m_size);
+        if (mprot)
+            ExecutableAllocator::makeWritable(m_start, m_size);
     }
 
     ~RepatchBuffer()
     {
-        ExecutableAllocator::makeExecutable(m_start, m_size);
+        if (mprot)
+            ExecutableAllocator::makeExecutable(m_start, m_size);
     }
 
     void relink(CodeLocationJump jump, CodeLocationLabel destination)
@@ -138,6 +140,7 @@ public:
 protected:
     void* m_start;
     size_t m_size;
+    bool mprot;
 };
 
 } // namespace JSC

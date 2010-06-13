@@ -123,9 +123,12 @@ namespace JSC {
     class ExecutablePool;
 }
 namespace js {
-    namespace mjit {
-        struct PICInfo;
-    }
+namespace mjit {
+namespace ic {
+    struct PICInfo;
+    struct MICInfo;
+}
+}
 }
 #endif
 
@@ -176,9 +179,10 @@ struct JSScript {
     void            **nmap;     /* maps PCs to native code */
     JSC::ExecutablePool *execPool;  /* pool that contains |ncode|; script owns the pool */
     unsigned        npics;      /* Number of PICs in the array |pics| */
-    js::mjit::PICInfo *pics;      /* PICs in this script */
+    js::mjit::ic::PICInfo *pics; /* PICs in this script */
+    js::mjit::ic::MICInfo *mics; /* MICs in this script. */
 # ifdef DEBUG
-    size_t          jitLength;  /* length of JIT'd code */
+    uint32          jitLength;  /* length of JIT'd code */
 
     inline bool isValidJitCode(void *jcode) {
         return (char*)jcode >= (char*)ncode &&

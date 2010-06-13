@@ -209,7 +209,7 @@ struct JSObjectMap {
 
     explicit JSObjectMap(const JSObjectOps *ops, uint32 shape) : ops(ops), shape(shape) {}
 
-    enum { SHAPELESS = 0xffffffff };
+    enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
 
 private:
     /* No copy or assignment semantics. */

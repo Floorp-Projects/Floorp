@@ -117,6 +117,7 @@ class StubCompiler
 
     STUB_CALL_TYPE(JSObjStub);
     STUB_CALL_TYPE(VoidStub);
+    STUB_CALL_TYPE(VoidStubUInt32);
     STUB_CALL_TYPE(BoolStub);
 
 #undef STUB_CALL_TYPE

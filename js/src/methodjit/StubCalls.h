@@ -66,6 +66,7 @@ void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
+JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
