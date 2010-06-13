@@ -1117,7 +1117,8 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
                                                @toolbarHighlight@ 1px, @toolbarHighlight@),
                     -moz-linear-gradient(left, transparent, transparent 1px,
                                                -moz-dialog 1px, -moz-dialog);
-  background-position: center center, -6px -2px, -6px -2px;
+  background-position: center -2px, -6px -2px, -6px -2px;
+  background-size: 100%, 200%, 200%;
   color: -moz-dialogText;
 }
 
