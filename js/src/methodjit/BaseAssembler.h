@@ -88,6 +88,9 @@ class BaseAssembler : public JSC::MacroAssembler
         startLabel = label();
     }
 
+    /* Total number of floating-point registers. */
+    static const uint32 TotalFPRegisters = FPRegisters::TotalFPRegisters;
+
     /*
      * FpReg is used to home the current JSStackFrame*.
      */

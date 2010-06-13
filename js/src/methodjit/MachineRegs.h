@@ -162,11 +162,11 @@ struct Registers {
         freeMask = AvailRegs;
     }
 
-    bool empty() {
+    bool empty() const {
         return !freeMask;
     }
 
-    bool empty(uint32 mask) {
+    bool empty(uint32 mask) const {
         return !(freeMask & mask);
     }
 
@@ -212,6 +212,109 @@ struct Registers {
     }
 
     uint32 freeMask;
+};
+
+
+struct FPRegisters {
+
+    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
+
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    static const uint32 TotalFPRegisters = 8;
+    static const uint32 TempFPRegs =
+          (1 << JSC::X86Registers::xmm0)
+        | (1 << JSC::X86Registers::xmm1)
+        | (1 << JSC::X86Registers::xmm2)
+        | (1 << JSC::X86Registers::xmm3)
+        | (1 << JSC::X86Registers::xmm4)
+        | (1 << JSC::X86Registers::xmm5)
+        | (1 << JSC::X86Registers::xmm6)
+        | (1 << JSC::X86Registers::xmm7);
+#elif defined(JS_CPU_ARM)
+    static const uint32 TotalFPRegisters = 4;
+    static const uint32 TempFPRegs = 
+          (1 << JSC::ARMRegisters::d0)
+        | (1 << JSC::ARMRegisters::d1)
+        | (1 << JSC::ARMRegisters::d2)
+        | (1 << JSC::ARMRegisters::d3);
+#else
+# error "Unsupported platform"
+#endif
+
+    static const uint32 AvailFPRegs = TempFPRegs;
+
+    FPRegisters()
+      : freeFPMask(AvailFPRegs)
+    { }
+
+    FPRegisters(uint32 freeFPMask)
+      : freeFPMask(freeFPMask)
+    { }
+
+    FPRegisters(const FPRegisters &other)
+      : freeFPMask(other.freeFPMask)
+    { }
+
+    FPRegisters & operator =(const FPRegisters &other)
+    {
+        freeFPMask = other.freeFPMask;
+        return *this;
+    }
+
+    void reset() {
+        freeFPMask = AvailFPRegs;
+    }
+
+    bool empty() const {
+        return !freeFPMask;
+    }
+
+    bool empty(uint32 mask) const {
+        return !(freeFPMask & mask);
+    }
+
+    FPRegisterID takeAnyReg() {
+        JS_ASSERT(!empty());
+        FPRegisterID reg = (FPRegisterID)(31 - js_bitscan_clz32(freeFPMask));
+        takeReg(reg);
+        return reg;
+    }
+
+    bool hasRegInMask(uint32 mask) const {
+        FPRegisters temp(freeFPMask & mask);
+        return !temp.empty();
+    }
+
+    FPRegisterID takeRegInMask(uint32 mask) {
+        FPRegisters temp(freeFPMask & mask);
+        FPRegisterID reg = temp.takeAnyReg();
+        takeReg(reg);
+        return reg;
+    }
+
+    bool hasReg(FPRegisterID fpreg) const {
+        return !!(freeFPMask & (1 << fpreg));
+    }
+
+    void putRegUnchecked(FPRegisterID fpreg) {
+        freeFPMask |= (1 << fpreg);
+    }
+
+    void putReg(FPRegisterID fpreg) {
+        JS_ASSERT(!hasReg(fpreg));
+        putRegUnchecked(fpreg);
+    }
+
+    void takeReg(FPRegisterID fpreg) {
+        JS_ASSERT(hasReg(fpreg));
+        freeFPMask &= ~(1 << fpreg);
+    }
+
+    bool operator ==(const FPRegisters &other) {
+        return freeFPMask == other.freeFPMask;
+    }
+
+    uint32 freeFPMask;
 };
 
 } /* namespace mjit */
