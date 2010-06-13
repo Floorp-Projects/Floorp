@@ -729,7 +729,7 @@ struct JSObject {
  * obj->dslots[-1] that is used to store the length of the vector biased by
  * JS_INITIAL_NSLOTS (and again net of the slot at index -1).
  */
-#define MAX_DSLOTS_LENGTH   (JS_MAX(~uint32(0), ~size_t(0)) / sizeof(jsval) - 1)
+#define MAX_DSLOTS_LENGTH   (~size_t(0) / sizeof(jsval) - 1)
 #define MAX_DSLOTS_LENGTH32 (~uint32(0) / sizeof(jsval) - 1)
 
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
