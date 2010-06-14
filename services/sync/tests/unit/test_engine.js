@@ -66,7 +66,7 @@ Observers.add("weave:engine:sync:finish", engineObserver);
 function test_members() {
   _("Engine object members");
   let engine = new SteamEngine();
-  do_check_eq(engine.displayName, "Steam");
+  do_check_eq(engine.Name, "Steam");
   do_check_eq(engine.prefName, "steam");
   do_check_true(engine._store instanceof SteamStore);
   do_check_true(engine._tracker instanceof SteamTracker);
