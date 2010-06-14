@@ -99,6 +99,11 @@
 #include <libosso.h>
 #endif
 
+#ifdef ANDROID
+#include "AndroidBridge.h"
+#include "nsIMIMEService.h"
+#endif
+
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcntImpl.h"
 
@@ -1801,6 +1806,18 @@ nsLocalFile::Launch()
     
     return NS_ERROR_FAILURE;
 #endif
+#elif defined(ANDROID)
+    // Try to get a mimetype, if this fails just use the file uri alone
+    nsresult rv;
+    nsCAutoString type;
+    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1", &rv));
+    if (NS_SUCCEEDED(rv))
+        rv = mimeService->GetTypeFromFile(this, type);
+
+    nsDependentCString fileUri = NS_LITERAL_CSTRING("file://");
+    fileUri.Append(mPath);
+    mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
+    return bridge->OpenUriExternal(fileUri, type) ? NS_OK : NS_ERROR_FAILURE;
 #else
     return NS_ERROR_FAILURE;
 #endif
