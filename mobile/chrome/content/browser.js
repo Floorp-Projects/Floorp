@@ -154,7 +154,7 @@ function debugTile(i, j) {
   dump('------ DEBUGGING TILE (' + i + ',' + j + ') --------\n');
 
   dump('in bounds: ' + tc.inBounds(i, j) + endl);
-  dump('occupied : ' + tc.isOccupied(i, j) + endl);
+  dump('occupied : ' + !!tc.lookup(i, j) + endl);
   if (t)
   {
   dump('toString : ' + t.toString(true) + endl);
@@ -216,7 +216,7 @@ function onDebugKeyPress(ev) {
         dump(tile ? (tile.isDirty() ? 'd' : '*') : ' ');
         break;
       case o: // occupied tileholders
-        dump(tc.isOccupied(col, row) ? 'o' : ' ');
+        dump(tc.lookup(col, row) ? 'o' : ' ');
         break;
       }
     }
