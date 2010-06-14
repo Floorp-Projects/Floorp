@@ -103,13 +103,27 @@ js_imod(int32 a, int32 b)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
+namespace js {
+static jsdouble JS_ALWAYS_INLINE
+UnboxDoubleHelper(uint32 mask, uint32 payload)
+{
+    if (mask == JSVAL_MASK32_INT32) {
+        return int32(payload);
+    } else {
+        Value v;
+        v.data.s.u.mask32 = mask;
+        v.data.s.payload.u32 = payload;
+        return v.asDouble();
+    }
+}
+}
 
 jsdouble FASTCALL
-js_UnboxDouble(Value *v)
+js_UnboxDouble(uint32 mask, uint32 payload)
 {
-    return v->asNumber();
+    return UnboxDoubleHelper(mask, payload);
 }
-JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, VALUEPTR, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_UnboxDouble, UINT32, UINT32, 1, ACC_NONE)
 
 int32 FASTCALL
 js_UnboxInt32(Value *v)

@@ -8226,6 +8226,13 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
     }
     if (f->isCall()) {
         const CallInfo* ci = f->callInfo();
+        if (ci == &js_UnboxDouble_ci) {
+            LIns *boxed = lir->insAlloc(sizeof(Value));
+            lir->insStore(fcallarg(f, 1), boxed, 0, ACC_OTHER);
+            lir->insStore(fcallarg(f, 0), boxed, sizeof(uint32), ACC_OTHER);
+            LIns* args[] = { boxed };
+            return lir->insCall(&js_UnboxInt32_ci, args);
+        }
         if (ci == &js_StringToNumber_ci) {
             LIns* args[] = { fcallarg(f, 1), fcallarg(f, 0) };
             return lir->insCall(&js_StringToInt32_ci, args);
@@ -9361,7 +9368,9 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
                                       lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)),
                                       lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)))),
               exit);
-        LIns* args[] = { lir->ins2(LIR_addp, vaddr_ins, INS_CONST(offset)) };
+        LIns *val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + offsetof(jsval_layout, s.payload),
+                                     accSet);
+        LIns* args[] = { val_ins, mask_ins };
         return lir->insCall(&js_UnboxDouble_ci, args);
     }
 
@@ -12373,7 +12382,13 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         LIns* res_ins;
         LIns* args[] = { NULL, idx_ins, obj_ins, cx_ins };
         if (v.isNumber()) {
-            if (isPromoteInt(v_ins)) {
+            if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
+                LIns *boxed = lir->insAlloc(sizeof(Value));
+                lir->insStore(fcallarg(v_ins, 1), boxed, 0, ACC_OTHER);
+                lir->insStore(fcallarg(v_ins, 0), boxed, sizeof(uint32), ACC_OTHER);
+                args[0] = boxed;
+                res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
+            } else if (isPromoteInt(v_ins)) {
                 args[0] = demote(lir, v_ins);
                 res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
             } else {
