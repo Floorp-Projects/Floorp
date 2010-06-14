@@ -28,7 +28,7 @@ function test()
   EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
 
   // now test dragging onto a tab
-  var tab = gBrowser.addTab();
+  var tab = gBrowser.addTab("about:blank", {skipAnimation: true});
   var browser = gBrowser.getBrowserForTab(tab);
 
   browser.addEventListener("load", function () {
