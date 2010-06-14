@@ -44,7 +44,7 @@ NS_IMETHODIMP
 nsXPTCStubBase::QueryInterface(REFNSIID aIID,
                                void **aInstancePtr)
 {
-    if (aIID.Equals(mEntry->mIID)) {
+    if (aIID.Equals(mEntry->IID())) {
         NS_ADDREF_THIS();
         *aInstancePtr = static_cast<nsISupports*>(this);
         return NS_OK;
@@ -72,7 +72,7 @@ NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
     NS_ENSURE_ARG(aOuter && aResult);
 
     xptiInterfaceInfoManager *iim =
-        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+        xptiInterfaceInfoManager::GetSingleton();
     NS_ENSURE_TRUE(iim, NS_ERROR_NOT_INITIALIZED);
 
     xptiInterfaceEntry *iie = iim->GetInterfaceEntryForIID(&aIID);
