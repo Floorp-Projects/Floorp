@@ -36,8 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  is(gBrowser.tabs.length, 1, "one tab is open initially"); 
-
   // Add several new tabs in sequence, interrupted by selecting a
   // different tab, moving a tab around and closing a tab,
   // returning a list of opened tabs for verifying the expected order.
@@ -78,9 +76,9 @@ function test() {
   is(tabs[3], gBrowser.tabs[1], "next tab with referrer opened further to the right");
   is(tabs[4], gBrowser.tabs[4], "tab selection changed, tab opens immediately to the right");
   is(tabs[5], gBrowser.tabs[6], "blank tab with referrer opens to the right of 3rd original tab where removed tab was");
-  is(tabs[6], gBrowser.tabs[2], "tab has moved, new tab opens immediately to the right");
-  is(tabs[7], gBrowser.tabs[8], "blank tab without referrer opens at the end");
-  is(tabs[8], gBrowser.tabs[9], "tab without referrer opens at the end");
+  is(tabs[6], gBrowser.tabs[2], "tab has moved, new tab opens immediately to the right"); 
+  is(tabs[7], gBrowser.tabs[8], "blank tab without referrer opens at the end"); 
+  is(tabs[8], gBrowser.tabs[9], "tab without referrer opens at the end"); 
 
   cleanUp(tabs);
 }
