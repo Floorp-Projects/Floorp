@@ -144,8 +144,37 @@ PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap)
 }
 
 PRBool
-WebGLContext::ValidateGL()
+WebGLContext::InitAndValidateGL()
 {
+    if (!gl) return PR_FALSE;
+
+    mActiveTexture = 0;
+    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+
+    mAttribBuffers.Clear();
+
+    mUniformTextures.Clear();
+    mBound2DTextures.Clear();
+    mBoundCubeMapTextures.Clear();
+
+    mBoundArrayBuffer = nsnull;
+    mBoundElementArrayBuffer = nsnull;
+    mCurrentProgram = nsnull;
+
+    mFramebufferColorAttachments.Clear();
+    mFramebufferDepthAttachment = nsnull;
+    mFramebufferStencilAttachment = nsnull;
+
+    mBoundFramebuffer = nsnull;
+    mBoundRenderbuffer = nsnull;
+
+    mMapTextures.Clear();
+    mMapBuffers.Clear();
+    mMapPrograms.Clear();
+    mMapShaders.Clear();
+    mMapFramebuffers.Clear();
+    mMapRenderbuffers.Clear();
+
     // make sure that the opengl stuff that we need is supported
     GLint val = 0;
 
