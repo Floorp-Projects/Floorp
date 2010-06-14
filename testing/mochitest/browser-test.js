@@ -71,6 +71,14 @@ Tester.prototype = {
   },
 
   waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
+    if (this.currentTest && gBrowser.tabs.length > 1) {
+      let msg = "Found " + (gBrowser.tabs.length - 1) +
+                " unexpected tab(s) at the end of test run";      
+      this.currentTest.addResult(new testResult(false, msg, "", false));
+      while (gBrowser.tabs.length > 1)
+        gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+    }
+
     this.dumper.dump("TEST-INFO | checking window state\n");
     let windowsEnum = this._wm.getEnumerator("navigator:browser");
     while (windowsEnum.hasMoreElements()) {
