@@ -723,7 +723,6 @@ default all::
 ifneq (,$(strip $(STATIC_DIRS)))
 	$(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,,$(dir)))
 endif
-	touch $(DIST)/bin/.purgecaches
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
