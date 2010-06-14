@@ -3144,8 +3144,6 @@ Tab.prototype = {
 
   endLoading: function endLoading() {
     if (!this._loading) throw "Not Loading!";
-
-    this.setIcon(this._browser.mIconURL);
     this._loading = false;
 
     if (this == Browser.selectedTab) {
@@ -3310,34 +3308,6 @@ Tab.prototype = {
     let browserView = (Browser.selectedBrowser == this._browser && bv.isDefaultZoom()) ? Browser._browserView 
                                                                                        : null;
     this._chromeTab.updateThumbnail(this._browser, browserView);
-  },
-
-  setIcon: function setIcon(aURI) {
-    let faviconURI = null;
-    if (aURI) {
-      try {
-        faviconURI = gIOService.newURI(aURI, null, null);
-      }
-      catch (e) {
-        faviconURI = null;
-      }
-    }
-
-    if (!faviconURI || faviconURI.schemeIs("javascript") || gFaviconService.isFailedFavicon(faviconURI)) {
-      try {
-        // Use documentURIObject in the favicon construction so that we
-        // do the right thing with about:-style error pages.  Bug 515188
-        faviconURI = gIOService.newURI(this._browser.contentDocument.documentURIObject.prePath + "/favicon.ico", null, null);
-        gFaviconService.setAndLoadFaviconForPage(this._browser.currentURI, faviconURI, true);
-      }
-      catch (e) {
-        faviconURI = null;
-      }
-      if (faviconURI && gFaviconService.isFailedFavicon(faviconURI))
-        faviconURI = null;
-    }
-
-    this._browser.mIconURL = faviconURI ? faviconURI.spec : "";
   },
 
   toString: function() {
