@@ -46,6 +46,7 @@
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "StubCompiler.h"
+#include "MonoIC.h"
 
 namespace js {
 namespace mjit {
@@ -76,6 +77,10 @@ class Compiler
         DataLabelPtr shapeVal;
         Label load;
         Call call;
+        ic::MICInfo::Type type;
+        bool typeConst;
+        bool dataConst;
+        bool dataWrite;
     };
 
     struct Uses {
@@ -154,6 +159,8 @@ class Compiler
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
+    void jsop_setgname(uint32 index);
+    void jsop_setgname_slow(uint32 index);
     void jsop_bindgname();
 
     /* Fast opcodes. */
