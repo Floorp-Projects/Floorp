@@ -230,6 +230,94 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   }
 }
 
+function test_syncStartup_metaGet404() {
+  _("SyncEngine._syncStartup resets sync and wipes server data if the symmetric key is missing 404");
+
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+
+  // A symmetric key with an incorrect HMAC
+  let crypto_steam = new ServerWBO("steam");
+
+  // A proper global record with matching version and syncID
+  let engine = makeSteamEngine();
+  let global = new ServerWBO("global",
+                             {engines: {steam: {version: engine.version,
+                                                syncID: engine.syncID}}});
+
+  // Some server side data that's going to be wiped
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      "flying", encryptPayload({id: "flying",
+                                denomination: "LNER Class A3 4472"}));
+  collection.wbos.scotsman = new ServerWBO(
+      "scotsman", encryptPayload({id: "scotsman",
+                                  denomination: "Flying Scotsman"}));
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  createAndUploadKeypair();
+
+  try {
+
+    _("Confirm initial environment");
+    do_check_false(!!crypto_steam.payload);
+    do_check_true(!!collection.wbos.flying.payload);
+    do_check_true(!!collection.wbos.scotsman.payload);
+
+    engine.lastSync = Date.now() / 1000;
+    engine._syncStartup();
+
+    _("Sync was reset and server data was wiped");
+    do_check_eq(engine.lastSync, 0);
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_eq(collection.wbos.scotsman.payload, undefined);
+
+    _("New bulk key was uploaded");
+    key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
+    do_check_eq(key.wrapped, "fake-symmetric-key-0");
+    do_check_eq(key.hmac, "fake-symmetric-key-0                                            ");
+
+  } finally {
+    server.stop(function() {});
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    CryptoMetas.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+function test_syncStartup_failedMetaGet() {
+  _("SyncEngine._syncStartup non-404 failures for getting cryptometa should stop sync");
+
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  let server = httpd_setup({
+    "/1.0/foo/storage/crypto/steam": function(request, response) {
+      response.setStatusLine(request.httpVersion, 405, "Method Not Allowed");
+      response.bodyOutputStream.write("Fail!", 5);
+    }
+  });
+
+  let engine = makeSteamEngine();
+  try {
+
+    _("Getting the cryptometa will fail and should set the appropriate failure");
+    let error;
+    try {
+      engine._syncStartup();
+    } catch (ex) {
+      error = ex;
+    }
+    do_check_eq(error.failureCode, ENGINE_METARECORD_DOWNLOAD_FAIL);
+
+  } finally {
+    server.stop(function() {});
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
 
 function test_syncStartup_serverHasNewerVersion() {
   _("SyncEngine._syncStartup ");

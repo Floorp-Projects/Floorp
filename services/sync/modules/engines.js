@@ -363,6 +363,12 @@ SyncEngine.prototype = {
         meta = null;
       }
     }
+    // Don't proceed if we failed to get the crypto meta for reasons not 404
+    else if (CryptoMetas.response.status != 404) {
+      let resp = CryptoMetas.response;
+      resp.failureCode = ENGINE_METARECORD_DOWNLOAD_FAIL;
+      throw resp;
+    }
 
     // Determine if we need to wipe on outdated versions
     let metaGlobal = Records.get(this.metaURL);
