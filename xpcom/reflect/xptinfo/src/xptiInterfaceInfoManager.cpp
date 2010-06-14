@@ -45,6 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsArrayEnumerator.h"
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Omnijar.h"
 #include "nsXPTZipLoader.h"
 
 #define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
@@ -548,6 +549,15 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
                 RegisterDirectory(components);
         }
     }
+
+#ifdef MOZ_OMNIJAR
+    nsCOMPtr<nsIFile> omniJar(mozilla::OmnijarPath());
+    nsCOMPtr<nsILocalFile> file;
+    if (omniJar)
+        file = do_QueryInterface(omniJar);
+    if (file)
+        RegisterFile(file, xptiFileType::ZIP);
+#endif
 
     return NS_OK;
 }
