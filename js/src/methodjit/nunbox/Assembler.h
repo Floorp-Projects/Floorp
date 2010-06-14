@@ -111,18 +111,18 @@ class Assembler : public BaseAssembler
     Jump testDouble(Assembler::Condition cond, RegisterID reg) {
         Assembler::Condition opcond;
         if (cond == Assembler::Equal)
-            opcond = Assembler::LessThan;
-        else
             opcond = Assembler::GreaterThanOrEqual;
+        else
+            opcond = Assembler::LessThan;
         return branch32(opcond, reg, ImmTag(JSVAL_MASK32_CLEAR));
     }
 
     Jump testDouble(Assembler::Condition cond, Address address) {
         Assembler::Condition opcond;
         if (cond == Assembler::Equal)
-            opcond = Assembler::LessThan;
-        else
             opcond = Assembler::GreaterThanOrEqual;
+        else
+            opcond = Assembler::LessThan;
         return branch32(opcond, tagOf(address), ImmTag(JSVAL_MASK32_CLEAR));
     }
 
