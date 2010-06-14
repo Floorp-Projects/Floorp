@@ -6413,11 +6413,8 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
 PRBool
 nsBlockFrame::BulletIsEmpty() const
 {
-  NS_ASSERTION((GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
-                (GetStyleContext()->GetPseudo() ==
-                   nsCSSAnonBoxes::scrolledContent &&
-                 GetParent()->GetStyleDisplay()->mDisplay ==
-                   NS_STYLE_DISPLAY_LIST_ITEM)) &&
+  NS_ASSERTION(mContent->GetPrimaryFrame()->GetStyleDisplay()->mDisplay ==
+                 NS_STYLE_DISPLAY_LIST_ITEM &&
                HaveOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = GetStyleList();
