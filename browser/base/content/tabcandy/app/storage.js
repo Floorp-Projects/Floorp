@@ -37,13 +37,16 @@ Storage = {
   
   // ----------
   saveTab: function(tab, data) {
-/*     Utils.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA saving tab data"); */
+    Utils.assert('tab', tab);
+
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
       JSON.stringify(data));
   },
 
   // ----------
   getTabData: function(tab) {
+    Utils.assert('tab', tab);
+
     var existingData = null;
     try {
 /*         Utils.log("readTabData: " + this._sessionStore.getTabValue(tab, this.TAB_DATA_IDENTIFIER)); */
@@ -53,7 +56,7 @@ Storage = {
       }
     } catch (e) {
       // getWindowValue will fail if the property doesn't exist
-      Utils.log("Error in readTabData: "+e);
+      Utils.log(e);
     }
     
 /*     Utils.log('tab', existingData); */
