@@ -62,7 +62,7 @@ class nsAccessibleWrap : public nsAccessible
     virtual ~nsAccessibleWrap();
     
     // creates the native accessible connected to this one.
-    NS_IMETHOD Init ();
+    virtual PRBool Init ();
     
     // get the native obj-c object (mozAccessible)
     NS_IMETHOD GetNativeInterface (void **aOutAccessible);
