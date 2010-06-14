@@ -333,7 +333,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETRVAL)
           {
             FrameEntry *fe = frame.peek(-1);
-            frame.storeTo(fe, Address(Assembler::FpReg, offsetof(JSStackFrame, rval)), true);
+            frame.storeTo(fe, Address(JSFrameReg, offsetof(JSStackFrame, rval)), true);
             frame.pop();
           }
           END_CASE(JSOP_POPV)
@@ -342,7 +342,7 @@ mjit::Compiler::generateMethod()
           {
             /* Safe point! */
             FrameEntry *fe = frame.peek(-1);
-            frame.storeTo(fe, Address(Assembler::FpReg, offsetof(JSStackFrame, rval)), true);
+            frame.storeTo(fe, Address(JSFrameReg, offsetof(JSStackFrame, rval)), true);
             frame.pop();
             /* :TODO: We only have to forget things that are closed over... */
             frame.forgetEverything();
@@ -873,7 +873,7 @@ mjit::Compiler::generateMethod()
             bool popped = PC[JSOP_SETARG_LENGTH] == JSOP_POP;
 
             RegisterID reg = frame.allocReg();
-            masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+            masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
             Address address = Address(reg, slot * sizeof(Value));
             frame.storeTo(top, address, popped);
             frame.freeReg(reg);
@@ -1061,7 +1061,7 @@ mjit::Compiler::generateMethod()
           {
             // :FIXME: x64
             RegisterID reg = frame.allocReg();
-            masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+            masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
             masm.loadData32(Address(reg, int32(sizeof(Value)) * -2), reg);
             masm.loadPtr(Address(reg, offsetof(JSObject, dslots)), reg);
             frame.freeReg(reg);
@@ -1454,7 +1454,7 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
 void
 mjit::Compiler::restoreFrameRegs()
 {
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, fp)), Assembler::FpReg);
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, fp)), JSFrameReg);
 }
 
 bool
@@ -1555,7 +1555,7 @@ void
 mjit::Compiler::jsop_getarg(uint32 index)
 {
     RegisterID reg = frame.allocReg();
-    masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, argv)), reg);
+    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
     frame.freeReg(reg);
     frame.push(Address(reg, index * sizeof(Value)));
 }
