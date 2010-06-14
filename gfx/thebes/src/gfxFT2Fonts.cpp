@@ -269,6 +269,7 @@ FontEntry::ReadCMAP()
     nsresult rv = gfxFontUtils::ReadCMAP(buf, len, mCharacterMap, mUVSOffset,
                                          unicodeFont, symbolFont);
     mHasCmapTable = NS_SUCCEEDED(rv);
+    return rv;
 }
 
 FontEntry *
