@@ -175,6 +175,11 @@ class FrameState
     inline void pushTypedPayload(JSValueMask32 tag, RegisterID payload);
 
     /*
+     * Pushes a type register and data register pair.
+     */
+    inline void pushRegs(RegisterID type, RegisterID data);
+
+    /*
      * Pushes a known type and allocated payload onto the operation stack.
      * This must be used when the type is known, but cannot be propagated
      * because it is not known to be correct at a slow-path merge point.
@@ -232,6 +237,17 @@ class FrameState
      * opcode.
      */
     RegisterID ownRegForData(FrameEntry *fe);
+
+    /*
+     * Allocates a register for a FrameEntry's type, such that the compiler
+     * can modify it in-place.
+     *
+     * The caller guarantees the FrameEntry will not be observed again. This
+     * allows the compiler to avoid spilling. Only call this if the FE is
+     * going to be popped before stubcc joins/guards or the end of the current
+     * opcode.
+     */
+    RegisterID ownRegForType(FrameEntry *fe);
 
     /*
      * Allocates a register for a FrameEntry's data, such that the compiler
