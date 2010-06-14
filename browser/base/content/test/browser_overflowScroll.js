@@ -5,8 +5,8 @@ var originalSmoothScroll = tabstrip.smoothScroll;
 
 function rect(ele)           ele.getBoundingClientRect();
 function width(ele)          rect(ele).width;
-function left(ele)           Math.floor(rect(ele).left);
-function right(ele)          Math.floor(rect(ele).right);
+function left(ele)           rect(ele).left;
+function right(ele)          rect(ele).right;
 function isLeft(ele, msg)    is(left(ele), left(scrollbox), msg);
 function isRight(ele, msg)   is(right(ele), right(scrollbox), msg);
 function elementFromPoint(x) tabstrip._elementFromPoint(x);
@@ -28,7 +28,7 @@ function doTest() {
   var tabMinWidth = gPrefService.getIntPref("browser.tabs.tabMinWidth");
   var tabCountForOverflow = Math.ceil(width(tabstrip) / tabMinWidth * 3);
   while (tabContainer.childNodes.length < tabCountForOverflow)
-    gBrowser.addTab();
+    gBrowser.addTab("about:blank", {skipAnimation: true});
 
   tabstrip.addEventListener("overflow", runOverflowTests, false);
 }
