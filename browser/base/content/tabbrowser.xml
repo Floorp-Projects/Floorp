@@ -3081,7 +3081,7 @@
         this._ignoredClick = false;
 
         tabContainer.tabbrowser.removeTab(bindingParent);
-        this._blockDblClick = true;
+        tabContainer._blockDblClick = true;
 
         /* XXXmano hack (see bug 343628):
          * Since we're removing the event target, if the user
@@ -3091,7 +3091,6 @@
          * In this context, we're manually blocking the dblclick event
          * (see dblclick handler).
          */
-        var self = this;
         var clickedOnce = false;
         function enableDblClick(event) {
           if (event.detail == 1 && !clickedOnce) {
@@ -3099,7 +3098,7 @@
             return;
           }
           setTimeout(function() {
-            self._blockDblClick = false;
+            tabContainer._blockDblClick = false;
           }, 0);
           tabContainer.removeEventListener("click", enableDblClick, false);
         }
