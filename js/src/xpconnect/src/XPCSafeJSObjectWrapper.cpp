@@ -282,7 +282,8 @@ WrapObject(JSContext *cx, JSObject *scope, jsval v, jsval *vp)
   // This might be redundant if called from XPC_SJOW_Construct, but it should
   // be cheap in that case.
   JSObject *objToWrap = UnsafeUnwrapSecurityWrapper(cx, JSVAL_TO_OBJECT(v));
-  if (!objToWrap) {
+  if (!objToWrap ||
+      JS_TypeOfValue(cx, OBJECT_TO_JSVAL(objToWrap)) == JSTYPE_XML) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
