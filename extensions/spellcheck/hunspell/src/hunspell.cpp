@@ -61,7 +61,9 @@
 
 #include "hunspell.hxx"
 #include "hunspell.h"
-#ifndef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT
+#    include "nscore.h"
+#else
 #    include "config.h"
 #endif
 #include "csutil.hxx"
