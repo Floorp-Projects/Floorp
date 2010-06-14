@@ -393,6 +393,7 @@ _TEST_FILES2 = \
 		file_bug548193.sjs \
 		test_html_colors_quirks.html \
 		test_html_colors_standards.html \
+		test_bug571390.xul \
 		$(NULL)
 
 # This test fails on the Mac for some reason
