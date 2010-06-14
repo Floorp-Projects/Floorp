@@ -178,7 +178,6 @@ struct JSScript {
     void            *ncode;     /* native code compiled by the method JIT */
     void            **nmap;     /* maps PCs to native code */
     JSC::ExecutablePool *execPool;  /* pool that contains |ncode|; script owns the pool */
-    unsigned        npics;      /* Number of PICs in the array |pics| */
     js::mjit::ic::PICInfo *pics; /* PICs in this script */
     js::mjit::ic::MICInfo *mics; /* MICs in this script. */
 # ifdef DEBUG

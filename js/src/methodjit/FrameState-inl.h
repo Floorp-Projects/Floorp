@@ -232,6 +232,20 @@ FrameState::push(Address address)
 }
 
 inline void
+FrameState::pushRegs(RegisterID type, RegisterID data)
+{
+    JS_ASSERT(!freeRegs.hasReg(type) && !freeRegs.hasReg(data));
+
+    FrameEntry *fe = rawPush();
+
+    fe->resetUnsynced();
+    fe->type.setRegister(type);
+    fe->data.setRegister(data);
+    regstate[type] = RegisterState(fe, RematInfo::TYPE, true);
+    regstate[data] = RegisterState(fe, RematInfo::DATA, true);
+}
+
+inline void
 FrameState::pushTypedPayload(JSValueMask32 tag, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
