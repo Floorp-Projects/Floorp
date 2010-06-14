@@ -91,7 +91,7 @@
           }
         ]
       };
-      //testAccessibleTree(getNode("tabbrowser").tabContainer, tabsAccTree);
+      testAccessibleTree(getNode("tabbrowser").tabContainer, tabsAccTree);
 
       var tabboxAccTree = {
         role: ROLE_PANE,
