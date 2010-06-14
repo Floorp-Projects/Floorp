@@ -662,6 +662,8 @@ public:
     const nsAttrValue* mValue;
   };
 
+  // Be careful when using this method. This does *NOT* handle
+  // XUL prototypes. You may want to use GetAttrInfo.
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
   {
     return mAttrsAndChildren.GetAttr(aAttr);
