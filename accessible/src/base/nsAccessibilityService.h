@@ -126,6 +126,8 @@ public:
 
   virtual nsresult FireAccessibleEvent(PRUint32 aEvent, nsIAccessible *aTarget);
 
+  virtual void PresShellDestroyed(nsIPresShell* aPresShell);
+
   // nsAccessibiltiyService
 
   /**

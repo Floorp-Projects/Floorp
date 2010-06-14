@@ -186,6 +186,18 @@ nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
   return NS_OK;
 }
 
+void
+nsAccessibilityService::PresShellDestroyed(nsIPresShell* aPresShell)
+{
+  //  Presshell destruction will automatically destroy shells for
+  //  descendant documents, so no need to worry about those.  Just
+  //  shut down the accessible for this one document.  That keeps us
+  //  from having bad behavior in case of deep bushy subtrees.
+  nsIDocument* doc = aPresShell->GetDocument();
+  if (doc)
+    ShutdownDocAccessible(doc);
+}
+
 // nsAccessibilityService private
 nsresult
 nsAccessibilityService::GetInfo(nsIFrame *aFrame, nsIWeakReference **aShell,
