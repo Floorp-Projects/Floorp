@@ -71,6 +71,9 @@ window.Group = function(listOfEls, options) {
   this.expanded = null;
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
+  
+  // Variable: _activeTab
+  // The <TabItem> for the group's active tab. 
   this._activeTab = null;
   
   if(isPoint(options.userSize))  
@@ -288,19 +291,16 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
   // -----------
   // Function: setActiveTab
-  // Sets the active tab (for keyboard selection, etc)
-  // TODO: This currently accepts only the DOM element of a tab.
-  // It should also take a TabItem... 
+  // Sets the active <TabItem> for this group
   setActiveTab: function(tab){
+    Utils.assert('tab must be a TabItem', tab && tab.isATabItem);
     this._activeTab = tab;
   },
 
   // -----------
   // Function: getActiveTab
-  // Gets the active tab (for keyboard selection, etc)
-  // TODO: This currently returns a DOM element of the selected tab.
-  // It should probably actually be a TabItem...
-  getActiveTab: function(tab){
+  // Gets the active <TabItem> for this group
+  getActiveTab: function(){
     return this._activeTab;
   },
   
@@ -1053,10 +1053,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         // Don't zoom in to the last tab for the new tab group.
         if( self.isNewTabsGroup() ) return;
         var activeTab = self.getActiveTab();
-        if( activeTab ) TabItems.zoomTo(activeTab)
-        // TODO: This should also accept TabItems
+        if( activeTab ) 
+          activeTab.zoomIn();
         else if(self.getChild(0))
-          TabItems.zoomTo(self.getChild(0).tab.mirror.el);
+          self.getChild(0).zoomIn();
           
         self._mouseDownLocation = null;
     });

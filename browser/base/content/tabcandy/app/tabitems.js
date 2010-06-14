@@ -10,7 +10,51 @@ window.TabItem = function(container, tab) {
   
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
+  this.isATabItem = true;
+  this._zoomPrep = false;
+  this.sizeExtra = new Point();
 
+  // ___ setup div
+  var $div = iQ(container);
+  var self = this;
+  
+  $div.data('tabItem', this);    
+  $div.data('isDragging', false);
+  $div.draggable(window.Groups.dragOptions);
+  $div.droppable(window.Groups.dropOptions);
+  
+  $div.mousedown(function(e) {
+    if(!Utils.isRightClick(e))
+      self.lastMouseDownTarget = e.target;
+  });
+    
+  $div.mouseup(function(e) {
+    var same = (e.target == self.lastMouseDownTarget);
+    self.lastMouseDownTarget = null;
+    if(!same)
+      return;
+    
+    if(iQ(e.target).hasClass("close")) 
+      tab.close();
+    else {
+      if(!iQ(this).data('isDragging')) 
+        self.zoomIn();
+/*
+      else 
+        tab.raw.pos = iQ(this).position(); // TODO: is this necessary?
+*/
+    }
+  });
+  
+  iQ("<div>")
+    .addClass('close')
+    .appendTo($div); 
+    
+  iQ("<div>")
+    .addClass('expander')
+    .appendTo($div);
+
+  // ___ additional setup
   this._init(container);
 
   this.reconnected = false;
@@ -66,13 +110,13 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   _getSizeExtra: function() {
     var $container = iQ(this.container);
 
-    var widthExtra = parseInt($container.css('padding-left')) 
+    this.sizeExtra.x = parseInt($container.css('padding-left')) 
         + parseInt($container.css('padding-right'));
 
-    var heightExtra = parseInt($container.css('padding-top')) 
+    this.sizeExtra.y = parseInt($container.css('padding-top')) 
         + parseInt($container.css('padding-bottom'));
 
-    return new Point(widthExtra, heightExtra);
+    return new Point(this.sizeExtra);
   },
   
   // ----------  
@@ -97,84 +141,92 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------  
-  setBounds: function(rect, immediately) {
+  setBounds: function(rect, immediately, options) {
     if(!isRect(rect)) {
       Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
       return;
     }
     
-    var $container = iQ(this.container);
-    var $title = iQ('.tab-title', $container);
-    var $thumb = iQ('.thumb', $container);
-    var $close = iQ('.close', $container);
-    var extra = this._getSizeExtra();
-    var css = {};
+    if(!options)
+      options = {};
     
-    const minFontSize = 8;
-    const maxFontSize = 15;
-
-    if(rect.left != this.bounds.left)
-      css.left = rect.left;
+    if(this._zoomPrep)
+      this.bounds.copy(rect);
+    else {
+      var $container = iQ(this.container);
+      var $title = iQ('.tab-title', $container);
+      var $thumb = iQ('.thumb', $container);
+      var $close = iQ('.close', $container);
+      var extra = this._getSizeExtra();
+      var css = {};
       
-    if(rect.top != this.bounds.top)
-      css.top = rect.top;
-      
-    if(rect.width != this.bounds.width) {
-      css.width = rect.width - extra.x;
-      var scale = css.width / TabItems.tabWidth;
-      
-      // The ease function ".5+.5*Math.tanh(2*x-2)" is a pretty
-      // little graph. It goes from near 0 at x=0 to near 1 at x=2
-      // smoothly and beautifully.
-      css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
-    }
-
-    if(rect.height != this.bounds.height) {
-      css.height = rect.height - extra.y; 
-    }
-      
-    if(iQ.isEmptyObject(css))
-      return;
-      
-    this.bounds.copy(rect);
-    
-    // If this is a brand new tab don't animate it in from
-    // a random location (i.e., from [0,0]). Instead, just
-    // have it appear where it should be.
-    if(immediately || (!this._hasBeenDrawn) ) {
-/*       $container.stop(true, true); */
-      $container.css(css);
-    } else {
-      TabMirror.pausePainting();
-      $container.animate(css, {
-        duration: 200,
-        easing: 'tabcandyBounce',
-        complete: function() {
-          TabMirror.resumePainting();
-        }
-      });
-  /*       }).dequeue(); */
-    }
-
-    if(css.fontSize && !this.inStack()) {
-      if(css.fontSize < minFontSize )
-        $title.fadeOut();//.dequeue();
-      else
-        $title.fadeIn();//.dequeue();
-    }
-
-    if(css.width) {
-      if(css.width < 30) {
-        $thumb.fadeOut();
-        $close.fadeOut();
-      } else {
-        $thumb.fadeIn();
-        $close.fadeIn();
+      const minFontSize = 8;
+      const maxFontSize = 15;
+  
+      if(rect.left != this.bounds.left)
+        css.left = rect.left;
+        
+      if(rect.top != this.bounds.top)
+        css.top = rect.top;
+        
+      if(rect.width != this.bounds.width) {
+        css.width = rect.width - extra.x;
+        var scale = css.width / TabItems.tabWidth;
+        
+        // The ease function ".5+.5*Math.tanh(2*x-2)" is a pretty
+        // little graph. It goes from near 0 at x=0 to near 1 at x=2
+        // smoothly and beautifully.
+        css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
       }
-    }    
+  
+      if(rect.height != this.bounds.height) {
+        css.height = rect.height - extra.y; 
+      }
+        
+      if(iQ.isEmptyObject(css) && !options.force)
+        return;
+        
+      this.bounds.copy(rect);
+      
+      // If this is a brand new tab don't animate it in from
+      // a random location (i.e., from [0,0]). Instead, just
+      // have it appear where it should be.
+      if(immediately || (!this._hasBeenDrawn) ) {
+  /*       $container.stop(true, true); */
+        $container.css(css);
+      } else {
+        TabMirror.pausePainting();
+        $container.animate(css, {
+          duration: 200,
+          easing: 'tabcandyBounce',
+          complete: function() {
+            TabMirror.resumePainting();
+          }
+        });
+    /*       }).dequeue(); */
+      }
+  
+      if(css.fontSize && !this.inStack()) {
+        if(css.fontSize < minFontSize )
+          $title.fadeOut();//.dequeue();
+        else
+          $title.fadeIn();//.dequeue();
+      }
+  
+      if(css.width) {
+        if(css.width < 30) {
+          $thumb.fadeOut();
+          $close.fadeOut();
+        } else {
+          $thumb.fadeIn();
+          $close.fadeIn();
+        }
+      }    
+
+      this._hasBeenDrawn = true;
+    }
 
     this._updateDebugBounds();
-    this._hasBeenDrawn = true;
     
     if(!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
@@ -257,10 +309,159 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------
-  // Function: zoom
-  // Zooms into this tab thereby allowing you to interact with it.
-  zoom: function(){
-    TabItems.zoomTo(this.container);
+  // Function: zoomIn
+  // Allows you to select the tab and zoom in on it, thereby bringing you
+  // to the tab in Firefox to interact with.
+  zoomIn: function() {
+    var self = this;
+    var $tabEl = iQ(this.container);
+    var childHitResult = { shouldZoom: true };
+    if(this.parent)
+      childHitResult = this.parent.childHit(this);
+      
+    if(childHitResult.shouldZoom) {
+      // Zoom in! 
+      var orig = {
+        width: $tabEl.width(),
+        height:  $tabEl.height(),
+        pos: $tabEl.position()
+      }
+
+      var scale = window.innerWidth/orig.width;
+      
+      var tab = this.tab;
+      var mirror = tab.mirror;
+      
+      function onZoomDone(){
+        UI.tabBar.show(false);              
+        TabMirror.resumePainting();
+        tab.focus();
+        $tabEl
+          .css({
+            top:   orig.pos.top,
+            left:  orig.pos.left,
+            width: orig.width,
+            height:orig.height,
+          })
+          .removeClass("front");  
+        Navbar.show();
+               
+        // If the tab is in a group set then set the active
+        // group to the tab's parent. 
+        if( self.parent ){
+          var gID = self.parent.id;
+          var group = Groups.group(gID);
+          Groups.setActiveGroup( group );
+          group.setActiveTab( self );                 
+        }
+        else
+          Groups.setActiveGroup( null );
+      
+        if(childHitResult.callback)
+          childHitResult.callback();             
+      }
+      
+      // The scaleCheat is a clever way to speed up the zoom-in code.
+      // Because image scaling is slowest on big images, we cheat and stop the image
+      // at scaled-down size and placed accordingly. Because the animation is fast, you can't
+      // see the difference but it feels a lot zippier. The only trick is choosing the
+      // right animation function so that you don't see a change in percieved 
+      // animation speed.
+      var scaleCheat = 1.7;
+      TabMirror.pausePainting();
+      $tabEl
+        .addClass("front")
+        .animate({
+          top:    orig.pos.top * (1-1/scaleCheat),
+          left:   orig.pos.left * (1-1/scaleCheat),
+          width:  orig.width*scale/scaleCheat,
+          height: orig.height*scale/scaleCheat
+        }, {
+          duration: 230,
+          easing: 'fast',
+          complete: onZoomDone
+        });
+    }    
+  },
+  
+  // ----------
+  // Function: zoomOut
+  // Handles the zoom down animation after returning to TabCandy.
+  // It is expected that this routine will be called from the chrome thread
+  // (in response to Tabs.onFocus()).
+  // 
+  // Parameters: 
+  //   complete - a function to call after the zoom down animation
+  zoomOut: function(complete) {
+    var $tab = iQ(this.container);
+          
+    var box = this.getBounds();
+    box.width -= this.sizeExtra.x;
+    box.height -= this.sizeExtra.y;
+      
+    TabMirror.pausePainting();
+
+    var self = this;
+    $tab.animate({
+      left: box.left,
+      top: box.top, 
+      width: box.width,
+      height: box.height
+    }, {
+      duration: 300,
+      easing: 'fast',
+      complete: function() { // note that this will happen on the DOM thread
+        $tab.removeClass('front');
+        
+        TabMirror.resumePainting();   
+        
+        self._zoomPrep = false;
+        self.setBounds(self.getBounds(), true, {force: true});    
+        
+        if(iQ.isFunction(complete)) 
+           complete();
+      }
+    });
+  },
+  
+  // ----------
+  // Function: setZoomPrep
+  // Either go into or return from (depending on <value>) "zoom prep" mode, 
+  // where the tab fills a large portion of the screen in anticipation of 
+  // the zoom out animation.
+  setZoomPrep: function(value) {
+    var $div = iQ(this.container);
+    var data;
+    
+    if(value) { 
+      this._zoomPrep = true;
+      var box = this.getBounds();
+
+      // The divide by two part here is a clever way to speed up the zoom-out code.
+      // Because image scaling is slowest on big images, we cheat and start the image
+      // at half-size and placed accordingly. Because the animation is fast, you can't
+      // see the difference but it feels a lot zippier. The only trick is choosing the
+      // right animation function so that you don't see a change in percieved 
+      // animation speed from frame #1 (the tab) to frame #2 (the half-size image) to 
+      // frame #3 (the first frame of real animation). Choosing an animation that starts
+      // fast is key.
+      var scaleCheat = 2;
+      $div
+        .addClass('front')
+        .css({
+          left: box.left * (1-1/scaleCheat),
+          top: box.top * (1-1/scaleCheat), 
+          width: window.innerWidth/scaleCheat,
+          height: box.height * (window.innerWidth / box.width)/scaleCheat
+        });
+    } else {
+      this._zoomPrep = false;
+      $div.removeClass('front')
+        
+      var box = this.getBounds();
+      this.reloadBounds();
+      this.setBounds(box, true);
+    }                
   }
 });
 
@@ -278,62 +479,23 @@ window.TabItems = {
     this.items = [];
     
     var self = this;
-        
-    function mod(mirror) {
+    window.TabMirror.customize(function(mirror) {
       var $div = iQ(mirror.el);
       var tab = mirror.tab;
-      
-      if(window.Groups) {        
-        $div.data('isDragging', false);
-        $div.draggable(window.Groups.dragOptions);
-        $div.droppable(window.Groups.dropOptions);
-      }
-      
-      $div.mousedown(function(e) {
-        if(!Utils.isRightClick(e))
-          self.lastMouseDownTarget = e.target;
-      });
-        
-      $div.mouseup(function(e) {
-        var same = (e.target == self.lastMouseDownTarget);
-        self.lastMouseDownTarget = null;
-        if(!same)
-          return;
-        
-        if(iQ(e.target).hasClass("close")) 
-          tab.close();
-        else {
-          if(!iQ(this).data('isDragging'))
-            self.zoomTo(this);
-          else 
-            tab.raw.pos = iQ(this).position(); // TODO: is this necessary?
-        }
-      });
-      
-      iQ("<div>")
-        .addClass('close')
-        .appendTo($div); 
-        
-      iQ("<div>")
-        .addClass('expander')
-        .appendTo($div);
-  
+
       if(tab == Utils.homeTab) 
         $div.hide();
       else {
         var item = new TabItem(mirror.el, tab);
-        $div.data('tabItem', item);    
         
         item.addOnClose(self, function() {
           Items.unsquish(null, item);
         });
 
-        if(!TabItems.reconnect(item))
+        if(!self.reconnect(item))
           Groups.newTab(item);          
       }
-    }
-    
-    window.TabMirror.customize(mod);
+    });
   },
 
   // ----------  
@@ -349,94 +511,6 @@ window.TabItems = {
       this.items.splice(index, 1);  
   },
     
-  // ----------
-  // Function: zoomTo(container)
-  // Given the containing element of a tab, allows you to
-  // select that tab and zoom in on it, thereby bringing you
-  // to the tab in Firefox to interact with.
-  //
-  zoomTo: function(tabEl){
-    var self = this;
-    var $tabEl = iQ(tabEl);
-    var item = this.getItemByTabElement(tabEl);
-    var childHitResult = { shouldZoom: true };
-    if(item.parent)
-      childHitResult = item.parent.childHit(item);
-      
-    if(childHitResult.shouldZoom) {
-      // Zoom in! 
-      var orig = {
-        width: $tabEl.width(),
-        height:  $tabEl.height(),
-        pos: $tabEl.position()
-      }
-
-      var scale = window.innerWidth/orig.width;
-      
-      var tab = Tabs.tab(tabEl);
-      var mirror = tab.mirror;
-      
-      var overflow = iQ("body").css("overflow");
-      iQ("body").css("overflow", "hidden");
-      
-      function onZoomDone(){
-        try {
-          UI.tabBar.show(false);              
-          TabMirror.resumePainting();
-          tab.focus();
-          $tabEl
-            .css({
-              top:   orig.pos.top,
-              left:  orig.pos.left,
-              width: orig.width,
-              height:orig.height,
-            })
-            .removeClass("front");  
-          Navbar.show();
-                 
-          // If the tab is in a group set then set the active
-          // group to the tab's parent. 
-          if( item.parent ){
-            var gID = item.parent.id;
-            var group = Groups.group(gID);
-            Groups.setActiveGroup( group );
-            group.setActiveTab( tabEl );                 
-          }
-          else
-            Groups.setActiveGroup( null );
-        
-          iQ("body").css("overflow", overflow); 
-          
-          if(childHitResult.callback)
-            childHitResult.callback();             
-        } catch(e) {
-          Utils.log(e);
-        }
-      }
-      
-      // The scaleCheat is a clever way to speed up the zoom-in code.
-      // Because image scaling is slowest on big images, we cheat and stop the image
-      // at scaled-down size and placed accordingly. Because the animation is fast, you can't
-      // see the difference but it feels a lot zippier. The only trick is choosing the
-      // right animation function so that you don't see a change in percieved 
-      // animation speed.
-      var scaleCheat = 1.7;
-      TabMirror.pausePainting();
-      iQ(tabEl)
-        .addClass("front")
-        .animate({
-          top:    orig.pos.top * (1-1/scaleCheat),
-          left:   orig.pos.left * (1-1/scaleCheat),
-          width:  orig.width*scale/scaleCheat,
-          height: orig.height*scale/scaleCheat
-        }, {
-          duration: 230,
-          easing: 'fast',
-          complete: onZoomDone
-        });
-    }    
-  },
-
   // ----------
   getItems: function() {
     return Utils.copy(this.items);
@@ -524,4 +598,3 @@ window.TabItems = {
     return found; 
   }
 };
-

@@ -356,7 +356,7 @@ input.defaultName:hover{
   z-index: 999999 !important;
   -moz-border-radius: 0 !important;
 	-moz-box-shadow: none !important;
-	-moz-transform: none;
+	-moz-transform: none !important;
   image-rendering: -moz-crisp-edges;
 }
 
