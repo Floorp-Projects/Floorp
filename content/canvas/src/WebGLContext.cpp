@@ -168,60 +168,22 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     }
 
-    LogMessage("Canvas 3D: creating PBuffer...");
-
     GLContextProvider::ContextFormat format(GLContextProvider::ContextFormat::BasicRGBA32);
     format.depth = 16;
     format.minDepth = 1;
 
     gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height), format);
 
-    if (!gl) {
-        LogMessage("Canvas 3D: can't get a native PBuffer, trying OSMesa...");
+    if (!InitAndValidateGL()) {
         gl = gl::GLContextProviderOSMesa::CreatePBuffer(gfxIntSize(width, height), format);
-        if (!gl) {
-            LogMessage("Canvas 3D: can't create a OSMesa pseudo-PBuffer.");
+        if (!InitAndValidateGL()) {
+            LogMessage("WebGL: Can't get a usable OpenGL context.");
             return NS_ERROR_FAILURE;
         }
+        else {
+            LogMessage("WebGL: Using software rendering via OSMesa");
+        }
     }
-
-    // We just blew away all the resources by creating a new context; reset everything,
-    // and let ValidateGL set up the correct dimensions again.
-
-    mActiveTexture = 0;
-    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
-
-    mAttribBuffers.Clear();
-
-    mUniformTextures.Clear();
-    mBound2DTextures.Clear();
-    mBoundCubeMapTextures.Clear();
-
-    mBoundArrayBuffer = nsnull;
-    mBoundElementArrayBuffer = nsnull;
-    mCurrentProgram = nsnull;
-
-    mFramebufferColorAttachments.Clear();
-    mFramebufferDepthAttachment = nsnull;
-    mFramebufferStencilAttachment = nsnull;
-
-    mBoundFramebuffer = nsnull;
-    mBoundRenderbuffer = nsnull;
-
-    mMapTextures.Clear();
-    mMapBuffers.Clear();
-    mMapPrograms.Clear();
-    mMapShaders.Clear();
-    mMapFramebuffers.Clear();
-    mMapRenderbuffers.Clear();
-
-    // Now check the GL implementation, checking limits along the way
-    if (!ValidateGL()) {
-        LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
-        return NS_ERROR_FAILURE;
-    }
-
-    LogMessage("Canvas 3D: ready");
 
     mWidth = width;
     mHeight = height;

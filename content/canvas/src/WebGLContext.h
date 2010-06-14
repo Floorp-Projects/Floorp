@@ -304,7 +304,7 @@ protected:
     WebGLenum mSynthesizedGLError;
 
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
-    PRBool ValidateGL();
+    PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
     static PRBool ValidateCapabilityEnum(WebGLenum cap);
 
