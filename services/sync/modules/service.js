@@ -534,7 +534,7 @@ WeaveSvc.prototype = {
     return false;
   },
 
-  _verifyLogin: function _verifyLogin()
+  verifyLogin: function verifyLogin()
     this._notify("verify-login", "", function() {
       // Make sure we have a cluster to verify against
       // this is a little weird, if we don't get a node we pretend
@@ -545,11 +545,22 @@ WeaveSvc.prototype = {
         return true;
       }
 
+      if (!this.username) {
+        Status.login = LOGIN_FAILED_NO_USERNAME;
+        return false;
+      }
+
       try {
         let test = new Resource(this.infoURL).get();
         switch (test.status) {
           case 200:
-            // The user is authenticated, so check the passphrase now
+            // The user is authenticated.
+            if (!this.passphrase) {
+              Status.login = LOGIN_FAILED_NO_PASSPHRASE;
+              return false;
+            }
+
+            // We also have a passphrase, so check it now.
             if (!this._verifyPassphrase()) {
               Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
               return false;
@@ -563,7 +574,7 @@ WeaveSvc.prototype = {
           case 404:
             // Check that we're verifying with the correct cluster
             if (this._setCluster())
-              return this._verifyLogin();
+              return this.verifyLogin();
 
             // We must have the right cluster, but the server doesn't expect us
             Status.login = LOGIN_FAILED_LOGIN_REJECTED;
@@ -721,7 +732,7 @@ WeaveSvc.prototype = {
 
       this._log.info("Logging in user " + this.username);
 
-      if (!this._verifyLogin()) {
+      if (!this.verifyLogin()) {
         // verifyLogin sets the failure states here.
         throw "Login failed: " + Status.login;
       }
@@ -901,7 +912,7 @@ WeaveSvc.prototype = {
       Sync.sleep(15000);
 
       // bug 545725 - re-verify creds and fail sanely
-      if (!this._verifyLogin()) {
+      if (!this.verifyLogin()) {
         Status.sync = CREDENTIALS_CHANGED;
         this._log.info("Credentials have changed, aborting sync and forcing re-login.");
         return false;
