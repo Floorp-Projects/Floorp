@@ -60,7 +60,8 @@ namespace places {
  *
  * In SQL, you'd use it in the WHERE clause like so:
  * WHERE AUTOCOMPLETE_MATCH(aSearchString, aURL, aTitle, aTags, aVisitCount,
- *                          aTyped)
+ *                          aTyped, aBookmark, aOpenPageCount, aMatchBehavior,
+ *                          aSearchBehavior)
  *
  * @param aSearchString
  *        The string to compare against.
@@ -76,6 +77,9 @@ namespace places {
  *        Indicates if aURL is a typed URL or not.  Treated as a boolean.
  * @param aBookmark
  *        Indicates if aURL is a bookmark or not.  Treated as a boolean.
+ * @param aOpenPageCount
+ *        The number of times aURL has been registered as being open.  (See
+ *        nsIBrowserHistory.registerOpenPage.)
  * @param aMatchBehavior
  *        The match behavior to use for this search.
  * @param aSearchBehavior
@@ -106,9 +110,10 @@ private:
   static const PRUint32 kArgIndexVisitCount = 4;
   static const PRUint32 kArgIndexTyped = 5;
   static const PRUint32 kArgIndexBookmark = 6;
-  static const PRUint32 kArgIndexMatchBehavior = 7;
-  static const PRUint32 kArgIndexSearchBehavior = 8;
-  static const PRUint32 kArgIndexLength = 9;
+  static const PRUint32 kArgIndexOpenPageCount = 7;
+  static const PRUint32 kArgIndexMatchBehavior = 8;
+  static const PRUint32 kArgIndexSearchBehavior = 9;
+  static const PRUint32 kArgIndexLength = 10;
 
   /**
    * Typedefs
