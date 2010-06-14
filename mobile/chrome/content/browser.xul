@@ -528,4 +528,6 @@
     </html:div>
   </box>
 
+  <tooltip default="true" id="default-tooltip"/>
+
 </window>
