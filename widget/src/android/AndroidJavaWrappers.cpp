@@ -408,3 +408,12 @@ AndroidRect::Init(JNIEnv *jenv, jobject jobj)
         mBottom = 0;
     }
 }
+
+nsJNIString::nsJNIString(jstring jstr)
+{
+    const jchar* jCharPtr = JNI()->GetStringChars(jstr, false);
+    nsresult rv;
+    Assign(jCharPtr);
+    JNI()->ReleaseStringChars(jstr, jCharPtr);
+
+}

@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,6 +55,9 @@ import android.location.*;
 
 import android.util.*;
 import android.content.DialogInterface; 
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+
 
 class GeckoAppShell
 {
@@ -234,5 +237,40 @@ class GeckoAppShell
     static void scheduleRestart() {
         Log.i("GeckoAppJava", "scheduling restart");
         gRestartScheduled = true;        
+    }
+    
+    static String[] getHandlersForMimeType(String aMimeType) {
+        PackageManager pm = 
+            GeckoApp.surfaceView.getContext().getPackageManager();
+        Intent intent = new Intent();
+        intent.setType(aMimeType);
+        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        int numAttr = 2;
+        String[] ret = new String[list.size() * numAttr];
+        for (int i = 0; i < list.size(); i++) {
+          ret[i * numAttr] = list.get(i).loadLabel(pm).toString();
+          if (list.get(i).isDefault)
+              ret[i * numAttr + 1] = "default";
+          else
+              ret[i * numAttr + 1] = "";
+        }
+        return ret;
+    }
+
+    static String getMimeTypeFromExtension(String aFileExt) {
+        return android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(aFileExt);
+    }
+
+    static boolean openUriExternal(String aUriSpec, String aMimeType) {
+        // XXX: It's not clear if we should set the action to view or leave it open
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(android.net.Uri.parse(aUriSpec), aMimeType);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        try {
+            GeckoApp.surfaceView.getContext().startActivity(intent);
+            return true;
+        } catch(ActivityNotFoundException e) {
+            return false;
+        }
     }
 }
