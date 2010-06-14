@@ -3,8 +3,8 @@ var tab1, tab2;
 function test() {
   waitForExplicitFinish();
 
-  tab1 = gBrowser.addTab();
-  tab2 = gBrowser.addTab();
+  tab1 = gBrowser.addTab("about:blank", {skipAnimation: true});
+  tab2 = gBrowser.addTab("about:blank", {skipAnimation: true});
 
   EventUtils.synthesizeMouse(tab1, 2, 2, {});
   setTimeout(step2, 0);
