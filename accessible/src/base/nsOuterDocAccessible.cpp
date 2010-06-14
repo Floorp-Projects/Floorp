@@ -159,15 +159,6 @@ nsOuterDocAccessible::DoAction(PRUint8 aIndex)
 void
 nsOuterDocAccessible::Shutdown()
 {
-  // Shutdown child document if any.
-  nsAccessible *childAcc = mChildren.SafeElementAt(0, nsnull);
-  if (childAcc) {
-    nsRefPtr<nsDocAccessible> docAcc(do_QueryObject(childAcc));
-    NS_LOG_ACCDOCDESTROY_FOR("outerdoc document shutdown",
-                             docAcc->GetDOMDocument(), docAcc.get())
-    GetAccService()->ShutdownDocAccessiblesInTree(docAcc->GetDOMDocument());
-  }
-
   nsAccessible::InvalidateChildren();
 
   nsAccessibleWrap::Shutdown();
@@ -179,14 +170,9 @@ nsOuterDocAccessible::Shutdown()
 void
 nsOuterDocAccessible::InvalidateChildren()
 {
-  // Do not invalidate children because nsAccDocManager is responsible for
-  // document accessible lifetime when DOM document is created or destroyed. If
-  // DOM document isn't destroyed but its presshell is destroyed (for example,
-  // when DOM node of outerdoc accessible is hidden), then outerdoc accessible
-  // notifies nsAccDocManager about this. If presshell is created for existing
-  // DOM document (for example when DOM node of outerdoc accessible is shown)
-  // then allow nsAccDocManager to handle this case since the document
-  // accessible is created and appended as a child when it's requested.
+  // Do not invalidate children because nsAccDocManager is responsible
+  // for document accessible lifetime when DOM document or its
+  // presshell is created or destroyed.
 
   mAreChildrenInitialized = PR_FALSE;
 }
