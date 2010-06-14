@@ -73,6 +73,13 @@ public:
    */
   nsAccessible *FindAccessibleInCache(void *aUniqueID) const;
 
+  /**
+   * Shutdown document accessibles in the tree starting from the given one.
+   *
+   * @param  aDocument  [in] the DOM document of start document accessible
+   */
+  void ShutdownDocAccessiblesInTree(nsIDocument *aDocument);
+
 protected:
   nsAccDocManager() { };
 
@@ -85,18 +92,6 @@ protected:
    * Shutdown the manager.
    */
   void Shutdown();
-
-  /**
-   * Shutdown the document accessible.
-   */
-  void ShutdownDocAccessible(nsIDocument *aDocument);
-
-  /**
-   * Shutdown document accessibles in the tree starting from the given one.
-   *
-   * @param  aDocument  [in] the DOM document of start document accessible
-   */
-  void ShutdownDocAccessiblesInTree(nsIDocument *aDocument);
 
 private:
   nsAccDocManager(const nsAccDocManager&);
@@ -152,6 +147,11 @@ private:
    */
   void ShutdownDocAccessiblesInTree(nsIDocShellTreeItem *aTreeItem,
                                     nsIDocument *aDocument);
+
+  /**
+   * Shutdown the document accessible.
+   */
+  void ShutdownDocAccessible(nsIDocument *aDocument);
 
   typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible>
     nsDocAccessibleHashtable;
