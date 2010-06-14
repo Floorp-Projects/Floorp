@@ -42,6 +42,7 @@
 
 #include "gfxDWriteTextAnalysis.h"
 
+#include "nsCRT.h"
 
 #define MAX_RANGE_LENGTH 25000
 
@@ -79,28 +80,40 @@ gfxDWriteShaper::InitTextRun(gfxContext *aContext,
      * characters.
      * TODO: Figure out what exactly is going on, and what is a safe number, and 
      * why.
-     * TODO: Figure out good places to split this.
      */
-/*
-    for (unsigned int i = 0; i < ranges.Length(); i++) {
-        if (ranges[i].Length() > MAX_RANGE_LENGTH) {
-            ranges.InsertElementAt(i + 1, 
-                                   gfxTextRange(ranges[i].start 
-                                     + MAX_RANGE_LENGTH,
-                                   ranges[i].end));
-            ranges[i + 1].font = ranges[i].font;
-            ranges[i].end = ranges[i].start + MAX_RANGE_LENGTH;
-        }
-    }
-    UINT32 rangeOffset = 0;
-*/
- //   for (unsigned int i = 0; i < ranges.Length(); i++) {
- //       gfxTextRange &range = ranges[i];
     PRBool result = PR_TRUE;
-    do {
-        gfxTextRange range(aRunStart, aRunStart + aRunLength);
-        TextAnalysis analysis(
-            aString + range.start, range.Length(),
+    UINT32 rangeOffset = 0;
+    while (rangeOffset < aRunLength) {
+        PRUint32 rangeLen = NS_MIN<PRUint32>(aRunLength - rangeOffset,
+                                             MAX_RANGE_LENGTH);
+        if (rangeOffset + rangeLen < aRunLength) {
+            // Iterate backwards to find a decent place to break shaping:
+            // look for a whitespace char, and if that's not found then
+            // at least a char where IsClusterStart is true.
+            // However, we never iterate back further than half-way;
+            // if a decent break is not found by then, we just chop anyway
+            // at the original range length.
+            PRUint32 adjRangeLen = 0;
+            const PRUnichar *rangeStr = aString + aRunStart + rangeOffset;
+            for (PRUint32 i = rangeLen; i > MAX_RANGE_LENGTH / 2; i--) {
+                if (nsCRT::IsAsciiSpace(rangeStr[i])) {
+                    adjRangeLen = i;
+                    break;
+                }
+                if (adjRangeLen == 0 &&
+                    aTextRun->IsClusterStart(aRunStart + rangeOffset + i)) {
+                    adjRangeLen = i;
+                }
+            }
+            if (adjRangeLen != 0) {
+                rangeLen = adjRangeLen;
+            }
+        }
+
+        gfxTextRange range(aRunStart + rangeOffset,
+                           aRunStart + rangeOffset + rangeLen);
+        rangeOffset += rangeLen;
+        TextAnalysis analysis(aString + range.start, range.Length(),
             NULL, 
             readingDirection);
         TextAnalysis::Run *runHead;
@@ -256,7 +269,7 @@ trymoreglyphs:
                     detailedGlyphs.Elements());
             }
         }
-    } while (0);
+    }
 
     return result;
 }
