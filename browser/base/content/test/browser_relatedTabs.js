@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  is(gBrowser.tabs.length, 1, "one tab is open initially"); 
+  is(gBrowser.tabs.length, 1, "one tab is open initially");
 
   // Add several new tabs in sequence, interrupted by selecting a
   // different tab, moving a tab around and closing a tab,
@@ -58,7 +58,7 @@ function test() {
   gBrowser.selectedTab = tabs[3];
   addTab("http://mochi.test:8888/#5", gBrowser.currentURI);
   gBrowser.removeTab(tabs.pop());
-  addTab("about:blank",gBrowser.currentURI);
+  addTab("about:blank", gBrowser.currentURI);
   gBrowser.moveTabTo(gBrowser.selectedTab, 1);
   addTab("http://mochi.test:8888/#6", gBrowser.currentURI);
   addTab();
