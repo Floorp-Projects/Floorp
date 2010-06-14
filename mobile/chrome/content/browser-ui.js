@@ -341,6 +341,8 @@ var BrowserUI = {
     if (button)
       button.checked = true;
 
+    this.blurFocusedElement();
+
     let pane = document.getElementById(id);
     document.getElementById("panel-items").selectedPanel = pane;
   },
@@ -638,10 +640,17 @@ var BrowserUI = {
   hidePanel: function hidePanel() {
     Elements.panelUI.hidden = true;
     Elements.contentShowing.removeAttribute("disabled");
+    this.blurFocusedElement();
   },
 
   isPanelVisible: function isPanelVisible() {
     return (!Elements.panelUI.hidden && Elements.panelUI.left == 0);
+  },
+
+  blurFocusedElement: function blurFocusedElement() {
+    let focusedElement = document.commandDispatcher.focusedElement;
+    if (focusedElement)
+      focusedElement.blur();
   },
 
   switchTask: function switchTask() {
