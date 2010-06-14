@@ -478,14 +478,6 @@ var BrowserUI = {
   },
 
   getDisplayURI : function(browser) {
-    let loadGroup = browser.webNavigation.QueryInterface(Ci.nsIDocumentLoader).loadGroup;
-    if (loadGroup.activeCount && loadGroup.defaultLoadRequest) {
-      // browser.currentURI may not be valid if the request is still active.
-      // For chrome URIs especially, we want the urlbar during loading to use the
-      // "original" URI (about:home), not a rewritten one (jar:file:///...).
-      return loadGroup.defaultLoadRequest.QueryInterface(Ci.nsIChannel).originalURI.spec;
-    }
-
     if (!this._URIFixup)
       this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
 
