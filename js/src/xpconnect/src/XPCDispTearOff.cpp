@@ -386,7 +386,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
             goto pre_call_clean_up;
         }
 
-        sp = stackbase = args.getvp();
+        sp = stackbase = Jsvalify(args.getvp());
 
         // this is a function call, so push function and 'this'
         *sp++ = fval;
