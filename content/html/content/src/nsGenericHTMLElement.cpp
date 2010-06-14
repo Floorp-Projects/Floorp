@@ -1671,7 +1671,6 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
     return;
   }
 
-  PRInt32 formType = GetType();
   if (!IsTextControl(PR_FALSE)) {
     SetEditableFlag(PR_FALSE);
     return;
