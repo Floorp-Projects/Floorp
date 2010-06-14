@@ -2479,9 +2479,6 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
   file->Remove(PR_FALSE);
 
-  file->SetNativeLeafName(NS_LITERAL_CSTRING("xpti.dat"));
-  file->Remove(PR_FALSE);
-
   if (aRemoveEMFiles) {
     file->SetNativeLeafName(NS_LITERAL_CSTRING("extensions.ini"));
     file->Remove(PR_FALSE);
@@ -3327,7 +3324,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
     else if (versionOK) {
       if (!cachesOK) {
-        // Remove compreg.dat and xpti.dat, forcing component re-registration.
+        // Remove compreg.dat, forcing component re-registration.
         // The new list of additional components directories is derived from
         // information in "extensions.ini".
         RemoveComponentRegistries(profD, profLD, PR_FALSE);
@@ -3339,7 +3336,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Nothing need be done for the normal startup case.
     }
     else {
-      // Remove compreg.dat and xpti.dat, forcing component re-registration
+      // Remove compreg.dat, forcing component re-registration
       // with the default set of components (this disables any potentially
       // troublesome incompatible XPCOM components). 
       RemoveComponentRegistries(profD, profLD, PR_TRUE);
