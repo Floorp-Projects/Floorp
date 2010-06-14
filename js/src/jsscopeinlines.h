@@ -46,8 +46,6 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
-#include "jsobjinlines.h"
-
 inline JSEmptyScope *
 JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 {
