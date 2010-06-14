@@ -5844,7 +5844,7 @@ JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
-    if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
+    if (cx->fp->scopeChainObj()->getGlobal()->scope()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
     }

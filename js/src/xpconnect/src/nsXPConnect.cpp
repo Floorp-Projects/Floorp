@@ -2804,7 +2804,38 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    js::DumpValue(js::Valueify(val));
+    printf("Dumping 0x%p.\n", (void *) val);
+    if(JSVAL_IS_NULL(val)) {
+        printf("Value is null\n");
+    }
+    else if(JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {
+        printf("Value is an object\n");
+        JSObject* obj = JSVAL_TO_OBJECT(val);
+        DumpJSObject(obj);
+    }
+    else if(JSVAL_IS_NUMBER(val)) {
+        printf("Value is a number: ");
+        if(JSVAL_IS_INT(val))
+          printf("Integer %i\n", JSVAL_TO_INT(val));
+        else if(JSVAL_IS_DOUBLE(val))
+          printf("Floating-point value %f\n", JSVAL_TO_DOUBLE(val));
+    }
+    else if(JSVAL_IS_STRING(val)) {
+        printf("Value is a string: ");
+        JSString* string = JSVAL_TO_STRING(val);
+        char* bytes = JS_GetStringBytes(string);
+        printf("<%s>\n", bytes);
+    }
+    else if(JSVAL_IS_BOOLEAN(val)) {
+        printf("Value is boolean: ");
+        printf(JSVAL_TO_BOOLEAN(val) ? "true" : "false");
+    }
+    else if(JSVAL_IS_VOID(val)) {
+        printf("Value is undefined\n");
+    }
+    else {
+        printf("No idea what this value is.\n");
+    }
 }
 JS_END_EXTERN_C
 
