@@ -432,6 +432,12 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
   rv = json->DecodeToJSVal(aJSON, *aCx, clone.addr());
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (JSVAL_IS_PRIMITIVE(clone.value())) {
+    // This isn't an object, so just leave the key unset.
+    aValue = Key::UNSETKEY;
+    return NS_OK;
+  }
+
   JSObject* obj = JSVAL_TO_OBJECT(clone.value());
 
   const jschar* keyPathChars =
@@ -443,11 +449,7 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
                                value.addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  if (JSVAL_IS_VOID(value.value())) {
-    // Not sure what to do if the object doesn't have a value for our index...
-    aValue = Key::UNSETKEY;
-  }
-  else if (JSVAL_IS_INT(value.value())) {
+  if (JSVAL_IS_INT(value.value())) {
     aValue = JSVAL_TO_INT(value.value());
   }
   else if (JSVAL_IS_DOUBLE(value.value())) {
@@ -466,7 +468,8 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
     }
   }
   else {
-    return NS_ERROR_INVALID_ARG;
+    // If the object doesn't have a value for our index then we leave it unset.
+    aValue = Key::UNSETKEY;
   }
 
   return NS_OK;
@@ -574,61 +577,59 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
 
   JSObject* cloneObj = nsnull;
 
-  PRUint32 indexesCount = objectStoreInfo->indexes.Length();
-  if (indexesCount) {
-    if (JSVAL_IS_PRIMITIVE(clone.value())) {
-      // Not sure what to do if we have an index but the value isn't an object...
-      NS_NOTYETIMPLEMENTED("Implement me!");
-      return NS_ERROR_NOT_IMPLEMENTED;
+  PRUint32 count = objectStoreInfo->indexes.Length();
+  if (count && !JSVAL_IS_PRIMITIVE(clone.value())) {
+    if (!aUpdateInfoArray.SetCapacity(count)) {
+      NS_ERROR("Out of memory!");
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
     cloneObj = JSVAL_TO_OBJECT(clone.value());
-  }
 
-  for (PRUint32 indexesIndex = 0; indexesIndex < indexesCount; indexesIndex++) {
-    const IndexInfo& indexInfo = objectStoreInfo->indexes[indexesIndex];
+    for (PRUint32 indexesIndex = 0; indexesIndex < count; indexesIndex++) {
+      const IndexInfo& indexInfo = objectStoreInfo->indexes[indexesIndex];
 
-    const jschar* keyPathChars =
-      reinterpret_cast<const jschar*>(indexInfo.keyPath.BeginReading());
-    const size_t keyPathLen = indexInfo.keyPath.Length();
+      const jschar* keyPathChars =
+        reinterpret_cast<const jschar*>(indexInfo.keyPath.BeginReading());
+      const size_t keyPathLen = indexInfo.keyPath.Length();
 
-    jsval keyPathValue;
-    JSBool ok = JS_GetUCProperty(cx, cloneObj, keyPathChars, keyPathLen,
-                                 &keyPathValue);
-    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+      jsval keyPathValue;
+      JSBool ok = JS_GetUCProperty(cx, cloneObj, keyPathChars, keyPathLen,
+                                   &keyPathValue);
+      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    Key value;
-    if (JSVAL_IS_VOID(keyPathValue)) {
-      // No value here, continue.
-      continue;
-    }
+      Key value;
 
-    if (JSVAL_IS_INT(keyPathValue)) {
-      value = JSVAL_TO_INT(keyPathValue);
-    }
-    else if (JSVAL_IS_DOUBLE(keyPathValue)) {
-      value = *JSVAL_TO_DOUBLE(keyPathValue);
-    }
-    else if (JSVAL_IS_STRING(keyPathValue)) {
-      JSString* str = JSVAL_TO_STRING(keyPathValue);
-      size_t len = JS_GetStringLength(str);
-      if (len) {
-        const PRUnichar* chars =
-          reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
-        value = nsDependentString(chars, len);
+      if (JSVAL_IS_INT(keyPathValue)) {
+        value = JSVAL_TO_INT(keyPathValue);
+      }
+      else if (JSVAL_IS_DOUBLE(keyPathValue)) {
+        value = *JSVAL_TO_DOUBLE(keyPathValue);
+      }
+      else if (JSVAL_IS_STRING(keyPathValue)) {
+        JSString* str = JSVAL_TO_STRING(keyPathValue);
+        size_t len = JS_GetStringLength(str);
+        if (len) {
+          const PRUnichar* chars =
+            reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+          value = nsDependentString(chars, len);
+        }
+        else {
+          value = EmptyString();
+        }
       }
       else {
-        value = EmptyString();
+        // Not a value we can do anything with, ignore it.
+        continue;
       }
-    }
-    else {
-      return NS_ERROR_INVALID_ARG;
-    }
 
-    IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
-    NS_ENSURE_TRUE(updateInfo, NS_ERROR_OUT_OF_MEMORY);
-
-    updateInfo->info = indexInfo;
-    updateInfo->value = value;
+      IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
+      updateInfo->info = indexInfo;
+      updateInfo->value = value;
+    }
+  }
+  else {
+    aUpdateInfoArray.Clear();
   }
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
