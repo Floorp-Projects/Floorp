@@ -50,7 +50,7 @@ using namespace js::mjit;
 using namespace js::mjit::ic;
 
 static void
-PatchFallback(VMFrame &f, ic::MICInfo &mic)
+PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
 {
     JSC::RepatchBuffer repatch(mic.stubEntry.executableAddress(), 64);
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::GetGlobalName));
@@ -74,7 +74,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     {
         JS_UNLOCK_SCOPE(f.cx, scope);
         if (sprop)
-            PatchFallback(f, mic);
+            PatchGetFallback(f, mic);
         stubs::GetGlobalName(f);
         return;
     }
@@ -110,10 +110,93 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
         slot -= JS_INITIAL_NSLOTS;
     slot *= sizeof(Value);
     JSC::RepatchBuffer loads(mic.load.executableAddress(), 32, false);
-    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::TYPE_OFFSET), slot);
-    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::DATA_OFFSET), slot + 4);
+    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
+    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_DATA_OFFSET), slot);
 
     /* Do load anyway... this time. */
     stubs::GetGlobalName(f);
+}
+
+static void JS_FASTCALL
+SetGlobalNameSlow(VMFrame &f, uint32 index)
+{
+    JSAtom *atom = f.fp->script->getAtom(GET_INDEX(f.regs.pc));
+    stubs::SetGlobalName(f, atom);
+}
+
+static void
+PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
+{
+    JSC::RepatchBuffer repatch(mic.stubEntry.executableAddress(), 64);
+    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, SetGlobalNameSlow));
+    repatch.relink(mic.stubCall, fptr);
+}
+
+void JS_FASTCALL
+ic::SetGlobalName(VMFrame &f, uint32 index)
+{
+    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    ic::MICInfo &mic = f.fp->script->mics[index];
+    JSAtom *atom = f.fp->script->getAtom(GET_INDEX(f.regs.pc));
+    jsid id = ATOM_TO_JSID(atom);
+
+    JS_LOCK_OBJ(f.cx, obj);
+    JSScope *scope = obj->scope();
+    JSScopeProperty *sprop = scope->lookup(id);
+    if (!sprop ||
+        !sprop->hasDefaultGetterOrIsMethod() ||
+        !SPROP_HAS_VALID_SLOT(sprop, scope))
+    {
+        JS_UNLOCK_SCOPE(f.cx, scope);
+        if (sprop)
+            PatchSetFallback(f, mic);
+        stubs::SetGlobalName(f, atom);
+        return;
+    }
+    uint32 shape = obj->shape();
+    uint32 slot = sprop->slot;
+    JS_UNLOCK_SCOPE(f.cx, scope);
+
+    /*
+     * :TODO:
+     * These cases should never hit, because the global object has tons of
+     * reserved slots. We should prove this and remove the code, and assert
+     * easier.
+     */
+    if (slot < JS_INITIAL_NSLOTS &&
+        (!mic.touched || mic.lastSlot >= JS_INITIAL_NSLOTS)) {
+        /* Need to patch mov to lea. */
+        JS_NOT_REACHED("waat");
+    } else if (slot >= JS_INITIAL_NSLOTS && mic.touched &&
+               mic.lastSlot < JS_INITIAL_NSLOTS) {
+        /* Need to patch lea to mov. */
+        JS_NOT_REACHED("waat");
+    }
+
+    mic.touched = true;
+    mic.lastSlot = slot;
+
+    /* Patch shape guard. */
+    JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
+    repatch.repatch(mic.shape, reinterpret_cast<void*>(shape));
+
+    /* Patch loads. */
+    if (slot >= JS_INITIAL_NSLOTS)
+        slot -= JS_INITIAL_NSLOTS;
+    slot *= sizeof(Value);
+
+    JSC::RepatchBuffer stores(mic.load.executableAddress(), 32, false);
+    stores.repatch(mic.load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
+
+    uint32 dataOffset;
+    if (mic.typeConst)
+        dataOffset = MICInfo::SET_DATA_CONST_TYPE_OFFSET;
+    else
+        dataOffset = MICInfo::SET_DATA_TYPE_OFFSET;
+    if (mic.dataWrite)
+        stores.repatch(mic.load.dataLabel32AtOffset(dataOffset), slot);
+
+    /* Do load anyway... this time. */
+    stubs::SetGlobalName(f, atom);
 }
 

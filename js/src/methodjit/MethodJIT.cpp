@@ -627,7 +627,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 #ifdef DEBUG
         script->jitLength = 0;
 #endif
-        script->npics = 0;
         
 #if defined(ENABLE_PIC) && ENABLE_PIC
         if (script->pics) {
@@ -635,6 +634,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
             script->pics = NULL;
             JS_METHODJIT_DATA(cx).removeScript(script);
         }
+        script->npics = 0;
 #endif
     }
 

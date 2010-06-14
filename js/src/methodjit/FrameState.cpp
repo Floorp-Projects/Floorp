@@ -662,6 +662,49 @@ FrameState::copyData(FrameEntry *fe)
 }
 
 JSC::MacroAssembler::RegisterID
+FrameState::ownRegForType(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->type.isConstant());
+
+    RegisterID reg;
+    if (fe->isCopy()) {
+        /* For now, just do an extra move. The reg must be mutable. */
+        FrameEntry *backing = fe->copyOf();
+        if (!backing->type.inRegister()) {
+            JS_ASSERT(backing->type.inMemory());
+            tempRegForType(backing);
+        }
+
+        if (freeRegs.empty()) {
+            /* For now... just steal the register that already exists. */
+            if (!backing->type.synced())
+                syncType(backing, addressOf(backing), masm);
+            reg = backing->type.reg();
+            backing->type.setMemory();
+            moveOwnership(reg, NULL);
+        } else {
+            reg = alloc();
+            masm.move(backing->type.reg(), reg);
+        }
+        return reg;
+    }
+
+    if (fe->type.inRegister()) {
+        reg = fe->type.reg();
+        /* Remove ownership of this register. */
+        JS_ASSERT(regstate[reg].fe == fe);
+        JS_ASSERT(regstate[reg].type == RematInfo::TYPE);
+        regstate[reg].fe = NULL;
+        fe->type.invalidate();
+    } else {
+        JS_ASSERT(fe->type.inMemory());
+        reg = alloc();
+        masm.loadTypeTag(addressOf(fe), reg);
+    }
+    return reg;
+}
+
+JSC::MacroAssembler::RegisterID
 FrameState::ownRegForData(FrameEntry *fe)
 {
     JS_ASSERT(!fe->data.isConstant());
