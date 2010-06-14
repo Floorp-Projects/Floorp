@@ -76,6 +76,18 @@ abstract public class GeckoApp
             env = i.getStringExtra("env" + c);
             Log.i("GeckoApp", "env"+ c +": "+ env);
         }
+        String tmpdir = System.getProperty("java.io.tmpdir");
+        if (tmpdir == null) {
+          try {
+            File f = Environment.getDownloadCacheDirectory();
+            dalvik.system.TemporaryDirectory.setUpDirectory(f);
+            tmpdir = f.getPath();
+          } catch (Exception e) {
+            Log.e("GeckoApp", "error setting up tmp dir" + e);
+          }
+        }
+        GeckoAppShell.putenv("TMPDIR=" + tmpdir);
+
         GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
                                i.getStringExtra("args"),
                                i.getDataString());

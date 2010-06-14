@@ -441,6 +441,12 @@ public:
     };
 };
 
+class nsJNIString : public nsString
+{
+public:
+    nsJNIString(jstring jstr);
+};
+
 }
 
 #endif
