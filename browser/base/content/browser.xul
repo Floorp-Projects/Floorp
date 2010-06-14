@@ -488,7 +488,7 @@
              defaultset="menubar-items"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
-#ifdef XP_WIN
+#ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
 #endif
