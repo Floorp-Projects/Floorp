@@ -104,7 +104,8 @@ js_imod(int32 a, int32 b)
 JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
 namespace js {
-static jsdouble JS_ALWAYS_INLINE
+
+jsdouble JS_ALWAYS_INLINE
 UnboxDoubleHelper(uint32 mask, uint32 payload)
 {
     if (mask == JSVAL_MASK32_INT32) {
@@ -116,6 +117,7 @@ UnboxDoubleHelper(uint32 mask, uint32 payload)
         return v.asDouble();
     }
 }
+
 }
 
 jsdouble FASTCALL
