@@ -683,7 +683,7 @@ FrameState::ownRegForType(FrameEntry *fe)
             backing->type.setMemory();
             moveOwnership(reg, NULL);
         } else {
-            reg = alloc();
+            reg = allocReg();
             masm.move(backing->type.reg(), reg);
         }
         return reg;
@@ -698,7 +698,7 @@ FrameState::ownRegForType(FrameEntry *fe)
         fe->type.invalidate();
     } else {
         JS_ASSERT(fe->type.inMemory());
-        reg = alloc();
+        reg = allocReg();
         masm.loadTypeTag(addressOf(fe), reg);
     }
     return reg;
