@@ -90,7 +90,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   // ----------
   save: function() {
     try{
-      if (!("tab" in this) || !("raw" in this.tab) || !this.reconnected) // too soon to save
+      if(!this.tab || !this.tab.raw || !this.reconnected) // too soon/late to save
         return;
 
       var data = this.getStorageData();
@@ -559,9 +559,14 @@ window.TabItems = {
     var found = false;
 
     try{
-      if(item.reconnected) {
+      Utils.assert('item', item);
+      Utils.assert('item.tab', item.tab);
+      
+      if(item.reconnected) 
         return true;
-      }
+        
+      if(!item.tab.raw)
+        return false;
         
       var tab = Storage.getTabData(item.tab.raw);
       if (tab && this.storageSanity(tab)) {
@@ -592,7 +597,7 @@ window.TabItems = {
     
       item.save();
     }catch(e){
-      Utils.log("Error in TabItems.reconnect: "+e + " at " + e.fileName + "(" + e.lineNumber + ")");
+      Utils.log(e);
     }
         
     return found; 

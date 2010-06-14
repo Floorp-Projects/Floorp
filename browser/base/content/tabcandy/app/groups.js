@@ -1040,25 +1040,40 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     
     iQ(container)
       .mousedown(function(e){
-        self._mouseDownLocation = new Point(e.clientX, e.clientY);
+        self._mouseDown = {
+          location: new Point(e.clientX, e.clientY),
+          className: e.target.className
+        };
       })    
       .mouseup(function(e){
-        // Don't zoom in on clicks inside of the title area.
-        if( e.target.className == "title-shield" || e.target.className == "name" ) return;
+        if(!self._mouseDown || !self._mouseDown.location || !self._mouseDown.className)
+          return;
+          
+        // Don't zoom in on clicks inside of the controls.
+        var className = self._mouseDown.className;
+        if(className.indexOf('title-shield') != -1
+            || className.indexOf('name') != -1
+            || className.indexOf('close') != -1
+            || className.indexOf('newTabButton') != -1) {
+          return;
+        }
         
         var location = new Point(e.clientX, e.clientY);
       
-        if( !self._mouseDownLocation || location.distance(self._mouseDownLocation) > 1.0 ) 
+        if(location.distance(self._mouseDown.location) > 1.0) 
           return;
+          
         // Don't zoom in to the last tab for the new tab group.
-        if( self.isNewTabsGroup() ) return;
+        if( self.isNewTabsGroup() ) 
+          return;
+          
         var activeTab = self.getActiveTab();
         if( activeTab ) 
           activeTab.zoomIn();
         else if(self.getChild(0))
           self.getChild(0).zoomIn();
           
-        self._mouseDownLocation = null;
+        self._mouseDown = null;
     });
     
     iQ(container).droppable({

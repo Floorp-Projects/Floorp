@@ -309,6 +309,9 @@ window.Page = {
           
           // Zoom out!
           item.zoomOut(function() {
+            if(!currentTab.mirror) // if the tab's been destroyed 
+              item = null;
+            
             self.setActiveTab(item);
             var activeGroup = Groups.getActiveGroup();
             if( activeGroup )
@@ -319,10 +322,13 @@ window.Page = {
           });
         }
       } else { // switched to another tab
+        UI.focused = false;
+        Page.showChrome();
+
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-          UI.focused = false;
-          Page.showChrome();
-          
+          if(focusTab != UI.currentTab) // things have changed while we were in timeout
+            return;
+            
           var newItem = null;
           if(focusTab && focusTab.mirror)
             newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
