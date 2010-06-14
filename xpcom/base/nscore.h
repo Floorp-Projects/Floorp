@@ -155,7 +155,7 @@
     (__GNUC__ >= 3) && !defined(XP_OS2)
 #define NS_FASTCALL __attribute__ ((regparm (3), stdcall))
 #define NS_CONSTRUCTOR_FASTCALL __attribute__ ((regparm (3), stdcall))
-#elif defined(XP_WIN)
+#elif defined(XP_WIN) && !defined(_WIN64)
 #define NS_FASTCALL __fastcall
 #define NS_CONSTRUCTOR_FASTCALL
 #else
