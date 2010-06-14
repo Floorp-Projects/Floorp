@@ -168,14 +168,6 @@ Engine.prototype = {
     return tracker;
   },
 
-  get displayName() {
-    try {
-      return Str.engines.get(this.name);
-    } catch (e) {}
-
-    return this.Name;
-  },
-
   sync: function Engine_sync() {
     if (!this.enabled)
       return;
