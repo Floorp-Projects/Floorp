@@ -309,7 +309,7 @@ BrowserGlue.prototype = {
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function BG__onProfileShutdown() {
-#ifdef WINCE
+#if defined(WINCE) && defined(MOZ_UPDATER)
     // If there's a pending update, clear cache to free up disk space.
     try {
       let um = Cc["@mozilla.org/updates/update-manager;1"].
