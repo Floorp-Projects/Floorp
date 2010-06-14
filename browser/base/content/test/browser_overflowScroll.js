@@ -5,8 +5,8 @@ var originalSmoothScroll = tabstrip.smoothScroll;
 
 function rect(ele)           ele.getBoundingClientRect();
 function width(ele)          rect(ele).width;
-function left(ele)           Math.round(rect(ele).left);
-function right(ele)          Math.round(rect(ele).right);
+function left(ele)           Math.floor(rect(ele).left);
+function right(ele)          Math.floor(rect(ele).right);
 function isLeft(ele, msg)    is(left(ele), left(scrollbox), msg);
 function isRight(ele, msg)   is(right(ele), right(scrollbox), msg);
 function elementFromPoint(x) tabstrip._elementFromPoint(x);
