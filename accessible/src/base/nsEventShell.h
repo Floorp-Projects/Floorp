@@ -45,6 +45,8 @@
 
 #include "nsAutoPtr.h"
 
+#include "nsRefreshDriver.h"
+
 class nsIPersistentProperties;
 
 /**
@@ -90,7 +92,8 @@ private:
 /**
  * Event queue.
  */
-class nsAccEventQueue : public nsISupports
+class nsAccEventQueue : public nsISupports,
+                        public nsARefreshObserver
 {
 public:
   nsAccEventQueue(nsDocAccessible *aDocument);
@@ -120,9 +123,7 @@ private:
    * Process pending events. It calls nsDocAccessible::ProcessPendingEvent()
    * where the real event processing is happen.
    */
-  void Flush();
-
-  NS_DECL_RUNNABLEMETHOD(nsAccEventQueue, Flush)
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
 
   /**
    * Coalesce redundant events from the queue.
@@ -157,9 +158,10 @@ private:
                                          nsAccEvent *aDescendantAccEvent);
 
   /**
-   * Indicates whether events flush is run.
+   * Indicates whether we're waiting on a refresh notification from our
+   * presshell to flush events
    */
-  PRBool mProcessingStarted;
+  PRBool mObservingRefresh;
 
   /**
    * The document accessible reference owning this queue.
@@ -167,13 +169,8 @@ private:
   nsRefPtr<nsDocAccessible> mDocument;
 
   /**
-   * The number of events processed currently. Used to avoid event coalescence
-   * with new events appended to the queue because of events handling.
-   */
-  PRInt32 mFlushingEventsCount;
-
-  /**
-   * Pending events array.
+   * Pending events array.  Don't make this an nsAutoTArray; we use
+   * SwapElements() on it.
    */
   nsTArray<nsRefPtr<nsAccEvent> > mEvents;
 };
