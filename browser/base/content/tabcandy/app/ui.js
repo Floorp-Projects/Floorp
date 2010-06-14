@@ -229,7 +229,7 @@ window.Page = {
           break;
         case 49: // Command-1
         case 69: // Command-E
-          if( Keys.meta ) if( self.getActiveTab() ) self.getActiveTab().zoom();
+          if( Keys.meta ) if( self.getActiveTab() ) self.getActiveTab().zoomIn();
           break;
       }
       
@@ -245,7 +245,7 @@ window.Page = {
       }
       
       if((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
-        if( self.getActiveTab() ) self.getActiveTab().zoom();
+        if( self.getActiveTab() ) self.getActiveTab().zoomIn();
       
       
        
@@ -256,8 +256,10 @@ window.Page = {
   // ----------  
   init: function() {
     var self = this;
+/*  Ian suspects we don't need these lines
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
+*/
         
     // When you click on the background/empty part of TabCandy
     // we create a new group.
@@ -295,97 +297,52 @@ window.Page = {
       if( focusTab.contentWindow == window ){
         UI.focused = true;
         Page.hideChrome();
-        if(currentTab != null && currentTab.mirror != null) {
+
+        var item = null;
+        if(currentTab && currentTab.mirror)
+          item = TabItems.getItemByTabElement(currentTab.mirror.el);
+        
+        if(item) {
           // If there was a previous currentTab we want to animate
           // its mirror for the zoom out.
           // Note that we start the animation on the chrome thread.
           
           // Zoom out!
-          var mirror = currentTab.mirror;
-          var $tab = iQ(mirror.el);
-          var data = $tab.data('zoomSave');
-          var item = TabItems.getItemByTabElement(mirror.el);
-            
-          TabMirror.pausePainting();
-
-          $tab.animate({
-            left: data.pos.left,
-            top: data.pos.top, 
-            width: data.w,
-            height: data.h
-          }, {
-            duration: 300,
-            easing: 'cubic-bezier',
-            complete: function() { // note that this will happen on the DOM thread
-              $tab.removeClass('front');
-              
-              self.setActiveTab(item);
-              var activeGroup = Groups.getActiveGroup();
-              if( activeGroup )
-                activeGroup.reorderBasedOnTabOrder(item);        
-      
-              window.Groups.setActiveGroup(null);
-              TabMirror.resumePainting();        
-              UI.resize(true);
-            }
+          item.zoomOut(function() {
+            self.setActiveTab(item);
+            var activeGroup = Groups.getActiveGroup();
+            if( activeGroup )
+              activeGroup.reorderBasedOnTabOrder(item);        
+    
+            window.Groups.setActiveGroup(null);
+            UI.resize(true);
           });
         }
       } else { // switched to another tab
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           UI.focused = false;
           Page.showChrome();
-          var item = TabItems.getItemByTabElement(focusTab.mirror.el);
-          if(item) 
-            Groups.setActiveGroup(item.parent);
+          
+          var newItem = null;
+          if(focusTab && focusTab.mirror)
+            newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
+
+          if(newItem) 
+            Groups.setActiveGroup(newItem.parent);
             
           UI.tabBar.show();  
           
           // ___ prepare for when we return to TabCandy
-          var oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
-          if(item != oldItem) {
-            var data;
-            if(oldItem) {
-              var $oldTab = iQ(oldItem.container);
-              data = $oldTab.data('zoomSave');
-              $oldTab
-                .removeClass('front')
-                .css({
-                  left: data.pos.left,
-                  top: data.pos.top, 
-                  width: data.w,
-                  height: data.h
-                });
-            }                
-  
-            if(item) {
-              var $tab = iQ(item.container);
+          var oldItem = null;
+          if(currentTab && currentTab.mirror)
+            oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+            
+          if(newItem != oldItem) {
+            if(oldItem)
+              oldItem.setZoomPrep(false);
 
-              data = {
-                pos: $tab.position(),
-                w: $tab.width(),
-                h: $tab.height()
-              };
-              
-              $tab.data('zoomSave', data);
-
-              // The divide by two part here is a clever way to speed up the zoom-out code.
-              // Because image scaling is slowest on big images, we cheat and start the image
-              // at half-size and placed accordingly. Because the animation is fast, you can't
-              // see the difference but it feels a lot zippier. The only trick is choosing the
-              // right animation function so that you don't see a change in percieved 
-              // animation speed from frame #1 (the tab) to frame #2 (the half-size image) to 
-              // frame #3 (the first frame of real animation). Choosing an animation that starts
-              // fast is key.
-              var scaleCheat = 2;
-              $tab
-                .addClass('front')
-                .css({
-                  left: data.pos.left * (1-1/scaleCheat),
-                  top: data.pos.top * (1-1/scaleCheat), 
-                  width: window.innerWidth/scaleCheat,
-                  height: data.h * (window.innerWidth / data.w)/scaleCheat
-                });
-            }                
+            if(newItem)
+              newItem.setZoomPrep(true);
           }
         }, 1);
       }
@@ -468,7 +425,7 @@ window.Page = {
   // Function: setActiveTab
   // Sets the currently active tab. The idea of a focused tab is useful
   // for keyboard navigation and returning to the last zoomed-in tab.
-  // Hiting return/esc brings you to the focused tab, and using the
+  // Hitting return/esc brings you to the focused tab, and using the
   // arrow keys lets you navigate between open tabs.
   //
   // Parameters:
