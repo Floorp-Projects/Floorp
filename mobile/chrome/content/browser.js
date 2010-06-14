@@ -2864,10 +2864,8 @@ ProgressController.prototype = {
   _networkStop: function _networkStop() {
     this._tab.endLoading();
 
-    if (this._tab == Browser.selectedTab) {
+    if (this._tab == Browser.selectedTab)
       BrowserUI.update(TOOLBARSTATE_LOADED);
-      this.browser.docShell.isOffScreenBrowser = true;
-    }
 
     if (this.browser.currentURI.spec != "about:blank")
       this._tab.updateThumbnail();

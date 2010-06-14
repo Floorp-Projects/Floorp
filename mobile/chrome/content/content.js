@@ -141,6 +141,7 @@ const ElementTouchHelper = {
       if (this._clickableEvents.indexOf(listeners[i].type) != -1)
         return true;
     }
+    return false;
   }
 };
 
@@ -676,8 +677,6 @@ FormNavigator.prototype = {
 
 /** Can't think of a good description of this class.  It probably does too much? */
 function Content() {
-  this._iconURI = null;
-
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:Focus", this);
   addMessageListener("Browser:Mousedown", this);
@@ -804,7 +803,6 @@ Content.prototype = {
 
   startLoading: function startLoading() {
     this._loading = true;
-    this._iconURI = null;
     this._coalescer.emptyPage();
     this._coalescer.startCoalescing();
   },

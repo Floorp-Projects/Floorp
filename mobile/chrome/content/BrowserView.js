@@ -476,7 +476,7 @@ BrowserView.prototype = {
 
     if (oldBrowser) {
       oldBrowser.setAttribute("type", "content");
-      oldBrowser.docShell.isOffScreenBrowser = false;
+      oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
     }
 
     this._browser = browser;
@@ -485,10 +485,10 @@ BrowserView.prototype = {
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
+      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
 
       this.beginBatchOperation();
 
-      browser.docShell.isOffScreenBrowser = true;
       if (browserChanged)
         this._viewportChanged(true, true);
 
