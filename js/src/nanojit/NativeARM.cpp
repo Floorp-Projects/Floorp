@@ -2404,7 +2404,7 @@ NIns* Assembler::asm_branch_ov(LOpcode op, NIns* target)
     // Because MUL can't set the V flag, we use SMULL and CMP to set the Z flag
     // to detect overflow on multiply. Thus, if we have a LIR_mulxovi, we must
     // be conditional on !Z, not V.
-    ConditionCode cc = ( op == LIR_mulxovi ? NE : VS );
+    ConditionCode cc = ( (op == LIR_mulxovi) || (op == LIR_muljovi) ? NE : VS );
 
     // Emit a suitable branch instruction.
     B_cond(cc, target);
@@ -2532,7 +2532,7 @@ Assembler::asm_arith(LIns* ins)
     // basic arithmetic instructions to generate constant multiplications.
     // However, LIR_muli is never invoked with a constant during
     // trace-tests.js so it is very unlikely to be worthwhile implementing it.
-    if (rhs->isImmI() && op != LIR_muli && op != LIR_mulxovi)
+    if (rhs->isImmI() && (op != LIR_muli) && (op != LIR_mulxovi) && (op != LIR_muljovi))
     {
         if ((op == LIR_addi || op == LIR_addxovi) && lhs->isop(LIR_allocp)) {
             // Add alloc+const. The result should be the address of the
@@ -2549,8 +2549,10 @@ Assembler::asm_arith(LIns* ins)
         switch (op)
         {
             case LIR_addi:       asm_add_imm(rr, ra, immI);     break;
+            case LIR_addjovi:
             case LIR_addxovi:    asm_add_imm(rr, ra, immI, 1);  break;
             case LIR_subi:       asm_sub_imm(rr, ra, immI);     break;
+            case LIR_subjovi:
             case LIR_subxovi:    asm_sub_imm(rr, ra, immI, 1);  break;
             case LIR_andi:       asm_and_imm(rr, ra, immI);     break;
             case LIR_ori:        asm_orr_imm(rr, ra, immI);     break;
@@ -2585,8 +2587,10 @@ Assembler::asm_arith(LIns* ins)
     switch (op)
     {
         case LIR_addi:       ADDs(rr, ra, rb, 0);    break;
+        case LIR_addjovi:
         case LIR_addxovi:    ADDs(rr, ra, rb, 1);    break;
         case LIR_subi:       SUBs(rr, ra, rb, 0);    break;
+        case LIR_subjovi:
         case LIR_subxovi:    SUBs(rr, ra, rb, 1);    break;
         case LIR_andi:       ANDs(rr, ra, rb, 0);    break;
         case LIR_ori:        ORRs(rr, ra, rb, 0);    break;
@@ -2594,6 +2598,7 @@ Assembler::asm_arith(LIns* ins)
 
         // XXX: LIR_muli can be done more efficiently than LIR_mulxovi.  See bug 542629.
         case LIR_muli:
+        case LIR_muljovi:
         case LIR_mulxovi:
             // ARMv5 and earlier cores cannot do a MUL where the first operand
             // is also the result, so we need a special case to handle that.
