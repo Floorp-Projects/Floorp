@@ -2318,6 +2318,7 @@ BEGIN_CASE(JSOP_APPLY)
             }
 #endif
 
+#ifdef JS_METHODJIT
             /*
              * :FIXME: try to method jit - take this out once we're more
              * complete.
@@ -2334,6 +2335,7 @@ BEGIN_CASE(JSOP_APPLY)
                     goto inline_return;
                 }
             }
+#endif
 
             /* Load first op and dispatch it (safe since JSOP_STOP). */
             op = (JSOp) *regs.pc;
