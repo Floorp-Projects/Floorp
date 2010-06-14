@@ -11835,7 +11835,8 @@ nsCSSFrameConstructor::PostRestyleEventInternal(PRBool aForLazyConstruction)
   // add ourselves as a refresh observer until then.
   PRBool inRefresh = aForLazyConstruction ? mInLazyFCRefresh : mInStyleRefresh;
   if (!mObservingRefreshDriver && !inRefresh) {
-    mObservingRefreshDriver = mPresShell->AddRefreshObserver(this, Flush_Style);
+    mObservingRefreshDriver = mPresShell->GetPresContext()->
+      RefreshDriver()->AddRefreshObserver(this, Flush_Style);
   }
 }
 
@@ -11847,7 +11848,8 @@ nsCSSFrameConstructor::WillRefresh(mozilla::TimeStamp aTime)
   // a refresh so we don't restart due to animation-triggered
   // restyles.  The actual work of processing our restyles will get
   // done when the refresh driver flushes styles.
-  mPresShell->RemoveRefreshObserver(this, Flush_Style);
+  mPresShell->GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(this, Flush_Style);
   mObservingRefreshDriver = PR_FALSE;
   mInLazyFCRefresh = PR_TRUE;
   mInStyleRefresh = PR_TRUE;
