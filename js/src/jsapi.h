@@ -3029,6 +3029,7 @@ class Value
      * uses of public jsval members in jsapi.h/jspubtd.h.
      */
     friend class PrimitiveValue;
+    friend jsdouble UnboxDoubleHelper(uint32 mask, uint32 payload);
 
   protected:
     /* Type masks */

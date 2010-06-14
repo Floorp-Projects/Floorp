@@ -754,7 +754,9 @@ TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSi
                                   lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)),
                                   lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)))),
           exit);
-    LIns* args[] = { lir->ins2(LIR_addp, addr_ins, INS_CONST(offset)) };
+    LIns *val_ins = lir->insLoad(LIR_ldi, addr_ins, offset + offsetof(jsval_layout, s.payload),
+                                     ACC_OTHER);
+    LIns* args[] = { val_ins, mask_ins };
     return lir->insCall(&js_UnboxDouble_ci, args);
 }
 
