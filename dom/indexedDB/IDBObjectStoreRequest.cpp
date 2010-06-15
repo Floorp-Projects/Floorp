@@ -327,7 +327,10 @@ nsresult
 IDBObjectStoreRequest::GetKeyFromVariant(nsIVariant* aKeyVariant,
                                          Key& aKey)
 {
-  NS_ASSERTION(aKeyVariant, "Null pointer!");
+  if (!aKeyVariant) {
+    aKey = Key::UNSETKEY;
+    return NS_OK;
+  }
 
   PRUint16 type;
   nsresult rv = aKeyVariant->GetDataType(&type);
@@ -556,7 +559,11 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
     }
   }
   else {
-    // Inline keys live on the object.
+    // Inline keys live on the object. Make sure it is an object.
+    if (JSVAL_IS_PRIMITIVE(clone.value())) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
     rv = GetKeyFromObject(cx, JSVAL_TO_OBJECT(clone.value()), mKeyPath, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
