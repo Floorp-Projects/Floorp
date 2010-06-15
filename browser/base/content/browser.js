@@ -6559,10 +6559,7 @@ function undoCloseTab(aIndex) {
   var blankTabToRemove = null;
   if (gBrowser.tabs.length == 1 &&
       !gPrefService.getBoolPref("browser.tabs.autoHide") &&
-      gBrowser.sessionHistory.count < 2 &&
-      gBrowser.currentURI.spec == "about:blank" &&
-      !gBrowser.contentDocument.body.hasChildNodes() &&
-      !gBrowser.selectedTab.hasAttribute("busy"))
+      isTabEmpty(gBrowser.selectedTab))
     blankTabToRemove = gBrowser.selectedTab;
 
   var tab = null;
@@ -6592,6 +6589,18 @@ function undoCloseWindow(aIndex) {
     window = ss.undoCloseWindow(aIndex || 0);
 
   return window;
+}
+
+/*
+ * Determines if a tab is "empty", usually used in the context of determining
+ * if it's ok to close the tab.
+ */
+function isTabEmpty(aTab) {
+  let browser = aTab.linkedBrowser;
+  return browser.sessionHistory.count < 2 &&
+         browser.currentURI.spec == "about:blank" &&
+         !browser.contentDocument.body.hasChildNodes() &&
+         !aTab.hasAttribute("busy");
 }
 
 /**
@@ -7585,10 +7594,16 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
       let browser = browsers[i];
       if (browser.currentURI.equals(aURI)) {
         gURLBar.handleRevert();
+        // We need the current tab so we can check if we should close it
+        let prevTab = gBrowser.selectedTab;
+        // Focus the matching window & tab
         aWindow.focus();
         aWindow.gBrowser.tabContainer.selectedIndex = i;
         if (aCallback)
           aCallback(browser);
+        // Close the previously selected tab if it was empty
+        if (isTabEmpty(prevTab))
+          gBrowser.removeTab(prevTab);
         return true;
       }
     }
