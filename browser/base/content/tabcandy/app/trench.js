@@ -204,11 +204,11 @@ var Trenches = {
 			var newRect = t.rectOverlaps(rect,assumeConstantSize,keepProportional);
 
 			if (newRect) {
-				if (updatedX && updatedY)
+				if (assumeConstantSize && updatedX && updatedY)
 					break;
-				if (updatedX && (newRect.adjustedEdge == "left"||newRect.adjustedEdge == "right"))
+				if (assumeConstantSize && updatedX && (newRect.adjustedEdge == "left"||newRect.adjustedEdge == "right"))
 					continue;
-				if (updatedY && (newRect.adjustedEdge == "top"||newRect.adjustedEdge == "bottom"))
+				if (assumeConstantSize && updatedY && (newRect.adjustedEdge == "top"||newRect.adjustedEdge == "bottom"))
 					continue;
 				rect = newRect;
 				updated = true;
