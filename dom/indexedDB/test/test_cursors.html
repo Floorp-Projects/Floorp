@@ -15,6 +15,8 @@
     {
       const NOT_FOUND_ERR =
         Components.interfaces.nsIIDBDatabaseException.NOT_FOUND_ERR;
+      const NEXT = Components.interfaces.nsIIDBCursor.NEXT;
+      const PREV = Components.interfaces.nsIIDBCursor.PREV;
 
       const name = window.location.pathname;
       const description = "My Test Database";
@@ -229,7 +231,7 @@
       let gotRemoveEvent = false;
       let ok = false;
 
-      request = objectStore.openCursor();
+      request = objectStore.openCursor(null, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -268,6 +270,32 @@
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
+
+      keyIndex = sortedKeys.length - 1;
+
+      request = objectStore.openCursor(null, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all added items");
 
       finishTest();
       yield;

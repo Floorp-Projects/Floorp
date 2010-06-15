@@ -258,7 +258,8 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
     aDirection = nsIIDBCursor::NEXT;
   }
 
-  if (aDirection != nsIIDBCursor::NEXT) {
+  if (aDirection == nsIIDBCursor::NEXT_NO_DUPLICATE ||
+      aDirection == nsIIDBCursor::PREV_NO_DUPLICATE) {
     NS_NOTYETIMPLEMENTED("Implement me!");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -522,7 +523,20 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   query.Append(table);
   query.AppendLiteral(" WHERE index_id = :");
   query.Append(indexId);
-  query.AppendLiteral(" ORDER BY value DESC");
+  query.AppendLiteral(" ORDER BY value ");
+
+  switch (mDirection) {
+    case nsIIDBCursor::NEXT:
+      query.AppendLiteral("DESC");
+      break;
+
+    case nsIIDBCursor::PREV:
+      query.AppendLiteral("ASC");
+      break;
+
+    default:
+      NS_NOTREACHED("Unknown direction!");
+  }
 
   if (!mData.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
