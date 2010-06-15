@@ -409,7 +409,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       height: box.height
     }, {
       duration: 300,
-      easing: 'fast',
+      easing: 'cubic-bezier', // note that this is legal easing, even without parameters
       complete: function() { // note that this will happen on the DOM thread
         $tab.removeClass('front');
         
