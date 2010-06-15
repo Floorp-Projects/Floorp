@@ -971,12 +971,6 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
     aDirection = nsIIDBCursor::NEXT;
   }
 
-  if (aDirection == nsIIDBCursor::NEXT_NO_DUPLICATE ||
-      aDirection == nsIIDBCursor::PREV_NO_DUPLICATE) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   if (aPreload) {
     NS_NOTYETIMPLEMENTED("Implement me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1641,10 +1635,12 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
+    case nsIIDBCursor::NEXT_NO_DUPLICATE:
       query.AppendLiteral(" DESC");
       break;
 
     case nsIIDBCursor::PREV:
+    case nsIIDBCursor::PREV_NO_DUPLICATE:
       query.AppendLiteral(" ASC");
       break;
 
