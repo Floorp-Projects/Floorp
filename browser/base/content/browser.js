@@ -1096,6 +1096,8 @@ function BrowserStartup() {
 
   allTabs.readPref();
 
+  TabsOnTop.syncCommand();
+
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
 }
 
@@ -1405,8 +1407,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   if (Win7Features)
     Win7Features.onOpenWindow();
-
-  TabsOnTop.syncCommand();
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
@@ -4606,8 +4606,10 @@ var TabsOnTop = {
     this.enabled = !this.enabled;
   },
   syncCommand: function () {
+    let enabled = this.enabled;
     document.getElementById("cmd_ToggleTabsOnTop")
-            .setAttribute("checked", this.enabled);
+            .setAttribute("checked", enabled);
+    document.documentElement.setAttribute("tabsontop", enabled);
   },
   get enabled () {
     return gNavToolbox.getAttribute("tabsontop") == "true";
