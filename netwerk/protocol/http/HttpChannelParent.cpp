@@ -123,7 +123,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
     return false;       // TODO: cancel request (bug 536317), return true
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-  httpChan->SetRemoteChannel();
+  httpChan->SetRemoteChannel(true);
 
   if (originalUri)
     httpChan->SetOriginalURI(originalUri);
@@ -134,10 +134,11 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   if (loadFlags != nsIRequest::LOAD_NORMAL)
     httpChan->SetLoadFlags(loadFlags);
 
-  for (PRUint32 i = 0; i < requestHeaders.Length(); i++)
+  for (PRUint32 i = 0; i < requestHeaders.Length(); i++) {
     httpChan->SetRequestHeader(requestHeaders[i].mHeader,
                                requestHeaders[i].mValue,
                                requestHeaders[i].mMerge);
+  }
 
   httpChan->SetNotificationCallbacks(this);
 

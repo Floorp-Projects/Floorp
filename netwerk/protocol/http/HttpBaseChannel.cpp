@@ -940,6 +940,42 @@ HttpBaseChannel::AdjustPriority(PRInt32 delta)
 
 //------------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// HttpBaseChannel helpers
+//-----------------------------------------------------------------------------
+
+void
+HttpBaseChannel::AddCookiesToRequest()
+{
+  if (mLoadFlags & LOAD_ANONYMOUS) {
+    return;
+  }
+
+  nsXPIDLCString cookie;
+
+  nsICookieService *cs = gHttpHandler->GetCookieService();
+  if (cs) {
+    cs->GetCookieStringFromHttp(mURI,
+                                mDocumentURI ? mDocumentURI : mOriginalURI,
+                                this,
+                                getter_Copies(cookie));
+  }
+
+  if (cookie.IsEmpty()) {
+    cookie = mUserSetCookieHeader;
+  }
+  else if (!mUserSetCookieHeader.IsEmpty()) {
+    cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
+  }
+
+  // overwrite any existing cookie headers.  be sure to clear any
+  // existing cookies if we have no cookies to set or if the cookie
+  // service is unavailable.
+  SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, PR_FALSE);
 }
-}
+
+//------------------------------------------------------------------------------
+
+}  // namespace net
+}  // namespace mozilla
 

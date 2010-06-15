@@ -115,6 +115,7 @@ nsHttpChannel::nsHttpChannel()
     , mLoadedFromApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
     , mCustomConditionalRequest(PR_FALSE)
+    , mRemoteChannel(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
 }
@@ -559,32 +560,6 @@ nsHttpChannel::SetupTransaction()
     return rv;
 }
 
-void
-nsHttpChannel::AddCookiesToRequest()
-{
-    if (mLoadFlags & LOAD_ANONYMOUS) {
-      return;
-    }
-
-    nsXPIDLCString cookie;
-
-    nsICookieService *cs = gHttpHandler->GetCookieService();
-    if (cs)
-        cs->GetCookieStringFromHttp(mURI,
-                                    mDocumentURI ? mDocumentURI : mOriginalURI,
-                                    this,
-                                    getter_Copies(cookie));
-    if (cookie.IsEmpty())
-        cookie = mUserSetCookieHeader;
-    else if (!mUserSetCookieHeader.IsEmpty())
-        cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
-
-    // overwrite any existing cookie headers.  be sure to clear any
-    // existing cookies if we have no cookies to set or if the cookie
-    // service is unavailable.
-    mRequestHead.SetHeader(nsHttp::Cookie, cookie, PR_FALSE);
-}
-
 nsresult
 nsHttpChannel::ApplyContentConversions()
 {
@@ -848,9 +823,12 @@ nsHttpChannel::ProcessResponse()
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
 
-    // set cookies, if any exist; done after OnExamineResponse to allow those
-    // observers to modify the cookie response headers
-    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+    if (!mRemoteChannel) {
+      // For non-remote channels, we are responsible for cookies.
+      // Set cookies, if any exist; done after OnExamineResponse to allow those
+      // observers to modify the cookie response headers.
+      SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+    }
 
     // handle unused username and password in url (see bug 232567)
     if (httpStatus != 401 && httpStatus != 407) {
@@ -2712,6 +2690,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     // convey the new redirection limit
     httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
 
+    nsHttpChannel *httpChannelImpl = static_cast<nsHttpChannel*>(httpChannel.get());
+    httpChannelImpl->SetRemoteChannel(mRemoteChannel);
+
     nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
     if (httpInternal) {
         // convey the mForceAllowThirdPartyCookie flag
@@ -4124,13 +4105,17 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         }
     }
     
-    // Remember the cookie header that was set, if any
-    const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
-    if (cookieHeader)
-        mUserSetCookieHeader = cookieHeader;
+    if (!mRemoteChannel) {
+      // For non-remote channels, we are responsible for cookies.
 
-    // fetch cookies, and add them to the request header
-    AddCookiesToRequest();
+      // Remember the cookie header that was set, if any
+      const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
+      if (cookieHeader) {
+        mUserSetCookieHeader = cookieHeader;
+      }
+
+      AddCookiesToRequest();
+    }
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
@@ -4937,7 +4922,11 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // fetch cookies, and add them to the request header.
     // the server response could have included cookies that must be sent with
     // this authentication attempt (bug 84794).
-    AddCookiesToRequest();
+    // TODO: save cookies from auth response and send them here (bug 572151).
+    if (!mRemoteChannel) {
+      // For non-remote channels, we are responsible for cookies.
+      AddCookiesToRequest();
+    }
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
