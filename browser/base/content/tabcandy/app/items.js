@@ -203,6 +203,7 @@ window.Item.prototype = {
   //
   setParent: function(parent) {
     this.parent = parent;
+    Trenches.unregister(this.container);
     this.save();
   },
 
@@ -401,7 +402,39 @@ window.Item.prototype = {
         height: this.bounds.height
       });
     }
-  }  
+  },
+  
+  setTrenches: function(rect) {
+
+		var container = this.container;
+
+		if (!this.borderTrenches) {
+			var bT = this.borderTrenches = {};
+			bT.left = Trenches.register(container,"x","border","left");
+			bT.right = Trenches.register(container,"x","border","right");
+			bT.top = Trenches.register(container,"y","border","top");
+			bT.bottom = Trenches.register(container,"y","border","bottom");
+		}
+		var bT = this.borderTrenches;
+		bT.left.setWithRect(rect);
+		bT.right.setWithRect(rect);
+		bT.top.setWithRect(rect);
+		bT.bottom.setWithRect(rect);
+				
+		if (!this.guideTrenches) {
+			var gT = this.guideTrenches = {};
+			gT.left = Trenches.register(container,"x","guide","left");
+			gT.right = Trenches.register(container,"x","guide","right");
+			gT.top = Trenches.register(container,"y","guide","top");
+			gT.bottom = Trenches.register(container,"y","guide","bottom");
+		}
+		var gT = this.guideTrenches;
+		gT.left.setWithRect(rect);
+		gT.right.setWithRect(rect);
+		gT.top.setWithRect(rect);
+		gT.bottom.setWithRect(rect);
+
+  },
 };  
 
 // ##########

@@ -66,8 +66,7 @@ Trench.prototype = {
 	},
 	show: function Trench_show() { // DEBUG
 		if (!iQ('#showTrenches:checked').length) {
-			if (this.visibleTrench)
-				this.visibleTrench.remove();
+			this.hide();
 			return;
 		}
 
@@ -88,7 +87,11 @@ Trench.prototype = {
 		visibleTrench.css(this.rect);
 		iQ("body").append(visibleTrench);
 	},
-	rectOverlaps: function Trench_rectOverlaps(rect, assumeConstantSize) {
+	hide: function Trench_hide() {
+		if (this.visibleTrench)
+			this.visibleTrench.remove();
+	},
+	rectOverlaps: function Trench_rectOverlaps(rect, assumeConstantSize, keepProportional) {
 		var xRange = {min: rect.left, max: rect.left + rect.width};
 		var yRange = {min: rect.top, max: rect.top + rect.height};
 		
@@ -106,6 +109,8 @@ Trench.prototype = {
 			edgeToCheck = this.edge;
 		}
 
+		rect.adjustedEdge = edgeToCheck;
+
 		switch (edgeToCheck) {
 			case "left":
 				if (this.ruleOverlaps(rect.left, yRange)) {
@@ -115,10 +120,14 @@ Trench.prototype = {
 				break;
 			case "right":
 				if (this.ruleOverlaps(rect.left + rect.width, yRange)) {
-					if (assumeConstantSize)
+					if (assumeConstantSize) {
 						rect.left = this.position - rect.width;
-					else
-						rect.width = this.position - rect.left;
+					} else {
+						var newWidth = this.position - rect.left;
+						if (keepProportional)
+							rect.height = rect.height * newWidth / rect.width;
+						rect.width = newWidth;
+					}
 					return rect;
 				}
 				break;
@@ -130,10 +139,14 @@ Trench.prototype = {
 				break;
 			case "bottom":
 				if (this.ruleOverlaps(rect.top + rect.height, xRange)) {
-					if (assumeConstantSize)
+					if (assumeConstantSize) {
 						rect.top = this.position - rect.height;
-					else
-						rect.height = this.position - rect.top;
+					} else {
+						var newHeight = this.position - rect.top;
+						if (keepProportional)
+							rect.width = rect.width * newHeight / rect.height;
+						rect.height = newHeight;
+					}
 					return rect;
 				}
 		}
@@ -149,11 +162,21 @@ Trench.prototype = {
 // global Trenches
 // used to track "trenches" in which the edges will snap.
 var Trenches = {
+	preferTop: true,
+	preferLeft: true,
 	trenches: [],
 	register: function Trenches_register(element, xory, type, edge) {
 		var trench = new Trench(element, xory, type, edge);
 		this.trenches.push(trench);
 		return trench;
+	},
+	unregister: function Trenches_unregister(element) {
+		for (let i in this.trenches) {
+			if (this.trenches[i].el === element) {
+				this.trenches[i].hide();
+				delete this.trenches[i];
+			}
+		}
 	},
 	activateOthersTrenches: function Trenches_activateOthersTrenches(element) {
 		this.trenches.forEach(function(t) {
@@ -169,18 +192,41 @@ var Trenches = {
 			t.show();
 		});
 	},
-	snap: function Trenches_snap(rect,assumeConstantSize) {
+	snap: function Trenches_snap(rect,assumeConstantSize,keepProportional) {
 		var updated = false;
-		this.trenches.forEach(function(t){
+		var updatedX = false;
+		var updatedY = false;
+		for (let i in this.trenches) {
+			var t = this.trenches[i];
 			if (!t.active)
-				return;
+				continue;
 			// newRect will be a new rect, or false
-			var newRect = t.rectOverlaps(rect,assumeConstantSize);
+			var newRect = t.rectOverlaps(rect,assumeConstantSize,keepProportional);
+
 			if (newRect) {
+				if (updatedX && updatedY)
+					break;
+				if (updatedX && (newRect.adjustedEdge == "left"||newRect.adjustedEdge == "right"))
+					continue;
+				if (updatedY && (newRect.adjustedEdge == "top"||newRect.adjustedEdge == "bottom"))
+					continue;
 				rect = newRect;
 				updated = true;
+	
+				// if updatedX, we don't need to update x any more.
+				if (newRect.adjustedEdge == "left" && this.preferLeft)
+					updatedX = true;
+				if (newRect.adjustedEdge == "right" && !this.preferLeft)
+					updatedX = true;
+	
+				// if updatedY, we don't need to update x any more.
+				if (newRect.adjustedEdge == "top" && this.preferTop)
+					updatedY = true;
+				if (newRect.adjustedEdge == "bottom" && !this.preferTop)
+					updatedY = true;
+
 			}
-		});
+		}
 		if (updated)
 			return rect;
 		else

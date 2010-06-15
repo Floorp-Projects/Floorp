@@ -477,38 +477,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
     this.save();
   },
-  
-  setTrenches: function(rect) {
-
-		var container = this.container;
-
-		if (!this.borderTrenches) {
-			var bT = this.borderTrenches = {};
-			bT.left = Trenches.register(container,"x","border","left");
-			bT.right = Trenches.register(container,"x","border","right");
-			bT.top = Trenches.register(container,"y","border","top");
-			bT.bottom = Trenches.register(container,"y","border","bottom");
-		}
-		var bT = this.borderTrenches;
-		bT.left.setWithRect(rect);
-		bT.right.setWithRect(rect);
-		bT.top.setWithRect(rect);
-		bT.bottom.setWithRect(rect);
-				
-		if (!this.guideTrenches) {
-			var gT = this.guideTrenches = {};
-			gT.left = Trenches.register(container,"x","guide","left");
-			gT.right = Trenches.register(container,"x","guide","right");
-			gT.top = Trenches.register(container,"y","guide","top");
-			gT.bottom = Trenches.register(container,"y","guide","bottom");
-		}
-		var gT = this.guideTrenches;
-		gT.left.setWithRect(rect);
-		gT.right.setWithRect(rect);
-		gT.top.setWithRect(rect);
-		gT.bottom.setWithRect(rect);
-
-  },
     
   // ----------
   setZ: function(value) {
@@ -538,6 +506,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     this.removeAll();
     this._sendOnClose();
     Groups.unregister(this);
+		Trenches.unregister(this.container);
     iQ(this.container).fadeOut(function() {
       iQ(this).remove();
       Items.unsquish();
@@ -580,9 +549,11 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       } else {
         $el = iQ(a);
         item = Items.item($el);
-      }    
+      }
       
       Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
+  
+			Trenches.unregister(a.container);
   
       if(!dropPos) 
         dropPos = {top:window.innerWidth, left:window.innerHeight};
