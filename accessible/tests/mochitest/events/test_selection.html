@@ -1,0 +1,96 @@
+<html>
+
+<head>
+  <title>Accessible selection event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function addSelection(aNode, aOption)
+    {
+      this.DOMNode = aNode;
+      this.optionNode = aOption;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION_WITHIN, getAccessible(this.DOMNode)),
+        new invokerChecker(EVENT_SELECTION_ADD, getAccessible(this.optionNode))
+      ];
+
+      this.invoke = function addselection_invoke() {
+        synthesizeMouse(this.optionNode, 1, 1, {});
+      };
+
+      this.getID = function addselection_getID() {
+        return prettyName(this.optionNode) + " added to selection";
+      };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    //var gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      var select = document.getElementById("toppings");
+      var option = document.getElementById("onions");
+      gQueue.push(new addSelection(select, option));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=569653"
+     title="Make selection events async">
+    Mozilla Bug 569653
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p>Pizza</p>
+  <select id="toppings" name="toppings" multiple size=5>
+    <option value="mushrooms">mushrooms
+    <option value="greenpeppers">green peppers
+    <option value="onions" id="onions">onions
+    <option value="tomatoes">tomatoes
+    <option value="olives">olives
+  </select>
+
+  <div id="testContainer">
+    <iframe id="iframe"></iframe>
+  </div>
+  <div id="eventdump"></div>
+</body>
+</html>
