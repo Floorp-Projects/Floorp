@@ -481,7 +481,9 @@ nsChildView::nsChildView() : nsBaseWidget()
 #endif // PR_LOGGING
 
   memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
+#ifndef NP_NO_QUICKDRAW
   memset(&mPluginQDPort, 0, sizeof(mPluginQDPort));
+#endif
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
@@ -739,8 +741,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       UpdatePluginPort();
       if (mPluginIsCG)
         retVal = (void*)&mPluginCGContext;
+#ifndef NP_NO_QUICKDRAW
       else
         retVal = (void*)&mPluginQDPort;
+#endif
       break;
     }
   }
@@ -823,8 +827,8 @@ void nsChildView::UpdatePluginPort()
   NS_ASSERTION(mWindowType == eWindowType_plugin,
                "UpdatePluginPort called on non-plugin view");
 
-  NSWindow* cocoaWindow = [mView window];
 #if !defined(NP_NO_CARBON) || !defined(NP_NO_QUICKDRAW)
+  NSWindow* cocoaWindow = [mView window];
   WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
 #endif
 
@@ -3278,7 +3282,9 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+#ifndef NP_NO_CARBON  
   EventRecord carbonEvent;
+#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON  
@@ -3329,7 +3335,9 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+#ifndef NP_NO_CARBON
   EventRecord carbonEvent;
+#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
