@@ -12,4 +12,5 @@ script scripted-proxies.js
 script array-length-protochange.js
 script parseInt-octal.js
 script proxy-enumerateOwn-duplicates.js
+skip-if(!xulRuntime.shell) script reflect-parse.js
 script destructure-accessor.js
