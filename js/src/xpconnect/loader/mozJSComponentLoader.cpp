@@ -1676,7 +1676,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     // figure out the resolved URI
     nsCOMPtr<nsIChannel> scriptChannel;
     rv = ioService->NewChannelFromURI(resURI, getter_AddRefs(scriptChannel));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
 
     nsCOMPtr<nsIURI> resolvedURI;
     rv = scriptChannel->GetURI(getter_AddRefs(resolvedURI));
