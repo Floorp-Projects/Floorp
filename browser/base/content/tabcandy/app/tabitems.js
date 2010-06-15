@@ -39,10 +39,6 @@ window.TabItem = function(container, tab) {
     else {
       if(!iQ(this).data('isDragging')) 
         self.zoomIn();
-/*
-      else 
-        tab.raw.pos = iQ(this).position(); // TODO: is this necessary?
-*/
     }
   });
   
@@ -53,6 +49,12 @@ window.TabItem = function(container, tab) {
   iQ("<div>")
     .addClass('expander')
     .appendTo($div);
+
+  this.sizeExtra.x = parseInt($div.css('padding-left')) 
+      + parseInt($div.css('padding-right'));
+
+  this.sizeExtra.y = parseInt($div.css('padding-top')) 
+      + parseInt($div.css('padding-bottom'));
 
   // ___ additional setup
   this._init(container);
@@ -107,21 +109,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------  
-  _getSizeExtra: function() {
-    var $container = iQ(this.container);
-
-    this.sizeExtra.x = parseInt($container.css('padding-left')) 
-        + parseInt($container.css('padding-right'));
-
-    this.sizeExtra.y = parseInt($container.css('padding-top')) 
-        + parseInt($container.css('padding-bottom'));
-
-    return new Point(this.sizeExtra);
-  },
-  
-  // ----------  
   reloadBounds: function() {
-    var newBounds = Utils.getBounds(this.container);
+    var newBounds = iQ(this.container).bounds();
+    newBounds.width += this.sizeExtra.x;
+    newBounds.height += this.sizeExtra.y;
 
 /*
     if(!this.bounds || newBounds.width != this.bounds.width || newBounds.height != this.bounds.height) {
@@ -157,7 +148,6 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       var $title = iQ('.tab-title', $container);
       var $thumb = iQ('.thumb', $container);
       var $close = iQ('.close', $container);
-      var extra = this._getSizeExtra();
       var css = {};
       
       const minFontSize = 8;
@@ -170,7 +160,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         css.top = rect.top;
         
       if(rect.width != this.bounds.width) {
-        css.width = rect.width - extra.x;
+        css.width = rect.width - this.sizeExtra.x;
         var scale = css.width / TabItems.tabWidth;
         
         // The ease function ".5+.5*Math.tanh(2*x-2)" is a pretty
@@ -179,9 +169,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
       }
   
-      if(rect.height != this.bounds.height) {
-        css.height = rect.height - extra.y; 
-      }
+      if(rect.height != this.bounds.height) 
+        css.height = rect.height - this.sizeExtra.y; 
         
       if(iQ.isEmptyObject(css) && !options.force)
         return;
@@ -330,7 +319,6 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       var scale = window.innerWidth/orig.width;
       
       var tab = this.tab;
-      var mirror = tab.mirror;
       
       function onZoomDone(){
         UI.tabBar.show(false);              
