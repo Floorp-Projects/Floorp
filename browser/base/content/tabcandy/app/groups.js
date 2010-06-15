@@ -530,12 +530,16 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   
   // ----------  
   closeAll: function() {
+    var self = this;
     if(this._children.length) {
       var toClose = iQ.merge([], this._children);
       iQ.each(toClose, function(index, child) {
+        child.removeOnClose(self);
         child.close();
       });
-    } else if(!this.locked.close)
+    } 
+    
+    if(!this.locked.close)
       this.close();
   },
     
