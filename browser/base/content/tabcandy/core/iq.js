@@ -1013,6 +1013,9 @@ iQ.fn = iQ.prototype = {
             startSize = new Point($elem.width(), $elem.height());
             startAspect = startSize.y / startSize.x;
             
+						if(iQ.isFunction(options.start))
+							options.start.apply(elem, [e]);
+            
             iQ(window)
               .mousemove(handleMouseMove)
               .mouseup(handleMouseUp);          
