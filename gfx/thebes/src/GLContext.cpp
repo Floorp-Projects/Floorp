@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -79,8 +80,8 @@ LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, PRBool tryplatform,
 
 PRFuncPtr
 LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
-				  const char *sym,
-				  PlatformLookupFunction lookupFunction)
+                                  const char *sym,
+                                  PlatformLookupFunction lookupFunction)
 {
     PRFuncPtr res = 0;
 
@@ -105,9 +106,9 @@ LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
 
 PRBool
 LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
-				 SymLoadStruct *firstStruct,
-				 PlatformLookupFunction lookupFunction,
-				 const char *prefix)
+                                 SymLoadStruct *firstStruct,
+                                 PlatformLookupFunction lookupFunction,
+                                 const char *prefix)
 {
     char sbuf[MAX_SYMBOL_LENGTH * 2];
 
@@ -319,8 +320,8 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fIsRenderbuffer, { "IsRenderbuffer", "IsRenderbufferEXT", NULL } },
         { (PRFuncPtr*) &fRenderbufferStorage, { "RenderbufferStorage", "RenderbufferStorageEXT", NULL } },
 #if 0
-	{ (PRFuncPtr*) &fMapBuffer, { "MapBuffer", NULL } },
-	{ (PRFuncPtr*) &fUnmapBuffer, { "UnmapBuffer", NULL } },
+        { (PRFuncPtr*) &fMapBuffer, { "MapBuffer", NULL } },
+        { (PRFuncPtr*) &fUnmapBuffer, { "UnmapBuffer", NULL } },
 #endif
 
         { NULL, { NULL } },
@@ -353,13 +354,13 @@ GLContext::IsExtensionSupported(const char *extension)
     for (;;) {
         where = (GLubyte *) strstr((const char *) start, extension);
         if (!where) {
-	    break;
+            break;
         }
         terminator = where + strlen(extension);
         if (where == start || *(where - 1) == ' ') {
-	    if (*terminator == ' ' || *terminator == '\0') {
-	        return PR_TRUE;
-	    }
+            if (*terminator == ' ' || *terminator == '\0') {
+                return PR_TRUE;
+            }
         }
         start = terminator;
     }
