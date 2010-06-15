@@ -5765,9 +5765,11 @@ var MailIntegration = {
   }
 };
 
-function BrowserOpenAddonsMgr(aPane) {
-  // TODO need to implement switching to the relevant view - see bug 560449
-  switchToTabHavingURI("about:addons", true);
+function BrowserOpenAddonsMgr(aView) {
+  switchToTabHavingURI("about:addons", true, function(browser) {
+    if (aView)
+      browser.contentWindow.wrappedJSObject.loadView(aView);
+  });
 }
 
 function AddKeywordForSearchField() {
@@ -6016,7 +6018,7 @@ var gPluginHandler = {
 
   // Callback for user clicking on a disabled plugin
   managePlugins: function (aEvent) {
-    BrowserOpenAddonsMgr("plugins");
+    BrowserOpenAddonsMgr("addons://list/plugin");
   },
 
   // Callback for user clicking "submit a report" link
@@ -7491,7 +7493,7 @@ var LightWeightThemeWebInstaller = {
       label: text("manageButton"),
       accessKey: text("manageButton.accesskey"),
       callback: function () {
-        BrowserOpenAddonsMgr("themes");
+        BrowserOpenAddonsMgr("addons://list/theme");
       }
     }];
 
@@ -7570,9 +7572,11 @@ var LightWeightThemeWebInstaller = {
  *        URI to search for
  * @param aOpenNew
  *        True to open a new tab and switch to it, if no existing tab is found
+ * @param A callback to call when the tab is open, the tab's browser will be
+ *        passed as an argument
  * @return True if a tab was switched to (or opened), false otherwise
  */
-function switchToTabHavingURI(aURI, aOpenNew) {
+function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
   function switchIfURIInWindow(aWindow) {
     if (!("gBrowser" in aWindow))
       return false;
@@ -7583,6 +7587,8 @@ function switchToTabHavingURI(aURI, aOpenNew) {
         gURLBar.handleRevert();
         aWindow.focus();
         aWindow.gBrowser.tabContainer.selectedIndex = i;
+        if (aCallback)
+          aCallback(browser);
         return true;
       }
     }
@@ -7611,6 +7617,15 @@ function switchToTabHavingURI(aURI, aOpenNew) {
   // No opened tab has that url.
   if (aOpenNew) {
     gBrowser.selectedTab = gBrowser.addTab(aURI.spec);
+    if (aCallback) {
+      let browser = gBrowser.selectedBrowser;
+      browser.addEventListener("pageshow", function(event) {
+        if (event.target.location.href != aURI.spec)
+          return;
+        browser.removeEventListener("pageshow", arguments.callee, true);
+        aCallback(browser);
+      }, true);
+    }
     return true;
   }
 
