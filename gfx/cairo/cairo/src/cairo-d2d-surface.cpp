@@ -390,28 +390,17 @@ _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface)
  */
 static void _cairo_d2d_update_surface_bitmap(cairo_d2d_surface_t *d2dsurf)
 {
-    if (!d2dsurf->backBuf) {
+    if (!d2dsurf->backBuf && d2dsurf->rt->GetPixelFormat().format != DXGI_FORMAT_A8_UNORM) {
 	return;
     }
-    ID3D10Texture2D *texture = _cairo_d2d_get_buffer_texture(d2dsurf);
+    
     if (!d2dsurf->surfaceBitmap) {
-	RefPtr<IDXGISurface> dxgiSurface;
-	D2D1_ALPHA_MODE alpha;
-	if (d2dsurf->base.content == CAIRO_CONTENT_COLOR) {
-	    alpha = D2D1_ALPHA_MODE_IGNORE;
-	} else {
-	    alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
-	}
-        /** Using DXGI_FORMAT_UNKNOWN will automatically use the texture's format. */
-	D2D1_BITMAP_PROPERTIES bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
-										   alpha));
-	texture->QueryInterface(&dxgiSurface);
-	d2dsurf->rt->CreateSharedBitmap(IID_IDXGISurface,
-					dxgiSurface,
-					&bitProps,
-					&d2dsurf->surfaceBitmap);
+	d2dsurf->rt->CreateBitmap(d2dsurf->rt->GetPixelSize(),
+				  D2D1::BitmapProperties(d2dsurf->rt->GetPixelFormat()),
+				  &d2dsurf->surfaceBitmap);
     }
-    D3D10Factory::Device()->CopyResource(texture, d2dsurf->surface);
+
+    d2dsurf->surfaceBitmap->CopyFromRenderTarget(NULL, d2dsurf->rt, NULL);
 }
 
 /**
@@ -1445,12 +1434,17 @@ _cairo_d2d_create_similar(void			*surface,
 	goto FAIL_CREATESIMILAR;
     }
 
-    hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
-					 dxgiSurface,
-					 &bitProps,
-					 &newSurf->surfaceBitmap);
-    if (FAILED(hr)) {
-	goto FAIL_CREATESIMILAR;
+    if (desc.Format != DXGI_FORMAT_A8_UNORM) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+	if (FAILED(hr)) {
+	    goto FAIL_CREATESIMILAR;
+	}
     }
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
@@ -2337,12 +2331,19 @@ cairo_d2d_surface_create(cairo_format_t format,
 
     bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
 				      alpha));
-    hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
-					 dxgiSurface,
-					 &bitProps,
-					 &newSurf->surfaceBitmap);
 
-    if (FAILED(hr)) {
+    if (dxgiformat != DXGI_FORMAT_A8_UNORM) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+
+	if (FAILED(hr)) {
+	    goto FAIL_CREATE;
+	}
     }
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
