@@ -266,7 +266,10 @@ public:
     WebGLContext();
     virtual ~WebGLContext();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+
     NS_DECL_NSICANVASRENDERINGCONTEXTWEBGL
 
     // nsICanvasRenderingContextInternal
@@ -295,7 +298,10 @@ public:
     // all context resources to be lost.
     PRUint32 Generation() { return mGeneration; }
 protected:
-    nsHTMLCanvasElement* mCanvasElement;
+    nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
+    nsHTMLCanvasElement *HTMLCanvasElement() {
+        return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
+    }
 
     nsRefPtr<gl::GLContext> gl;
 
