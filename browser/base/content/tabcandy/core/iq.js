@@ -444,14 +444,8 @@ iQ.fn = iQ.prototype = {
   // Function: bounds
   bounds: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    var el = this[0];
-    return new Rect(
-      parseInt(el.style.left) || el.offsetLeft, 
-      parseInt(el.style.top) || el.offsetTop, 
-      el.clientWidth,
-      el.clientHeight
-    );
+    var p = this.position();
+    return new Rect(p.left, p.top, this.width(), this.height());
   },
   
   // ----------

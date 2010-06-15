@@ -395,7 +395,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   
   // ----------  
   reloadBounds: function() {
-    var bb = Utils.getBounds(this.container);
+    var bb = iQ(this.container).bounds();
     
     if(!this.bounds)
       this.bounds = new Rect(0, 0, 0, 0);
