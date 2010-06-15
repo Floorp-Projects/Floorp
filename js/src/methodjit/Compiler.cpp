@@ -41,7 +41,6 @@
 #include "jsnum.h"
 #include "jsbool.h"
 #include "jsiter.h"
-#include "jslibmath.h"
 #include "Compiler.h"
 #include "StubCalls.h"
 #include "MonoIC.h"
@@ -1566,75 +1565,6 @@ mjit::Compiler::jsop_this()
      */
     prepareStubCall();
     stubCall(stubs::This, Uses(0), Defs(1));
-    frame.pushSynced();
-}
-
-void
-mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
-{
-    FrameEntry *rhs = frame.peek(-1);
-    FrameEntry *lhs = frame.peek(-2);
-
-    if (lhs->isConstant() && rhs->isConstant()) {
-        const Value &L = lhs->getValue();
-        const Value &R = rhs->getValue();
-        if ((L.isPrimitive() && R.isPrimitive()) &&
-            (op != JSOP_ADD || (!L.isString() && !R.isString())))
-        {
-            /* Constant fold. */
-            double dL, dR;
-            ValueToNumber(cx, L, &dL);
-            ValueToNumber(cx, R, &dR);
-            switch (op) {
-              case JSOP_ADD:
-                dL += dR;
-                break;
-              case JSOP_SUB:
-                dL -= dR;
-                break;
-              case JSOP_MUL:
-                dL *= dR;
-                break;
-              case JSOP_DIV:
-                if (dR == 0) {
-#ifdef XP_WIN
-                    if (JSDOUBLE_IS_NaN(dR))
-                        dL = js_NaN;
-                    else
-#endif
-                    if (dL == 0 || JSDOUBLE_IS_NaN(dL))
-                        dL = js_NaN;
-                    else if (JSDOUBLE_IS_NEG(dL) != JSDOUBLE_IS_NEG(dR))
-                        dL = cx->runtime->negativeInfinityValue.asDouble();
-                    else
-                        dL = cx->runtime->positiveInfinityValue.asDouble();
-                } else {
-                    dL /= dR;
-                }
-                break;
-              case JSOP_MOD:
-                if (dL == 0)
-                    dL = js_NaN;
-                else
-                    dL = js_fmod(dR, dL);
-                break;
-
-              default:
-                JS_NOT_REACHED("NYI");
-                break;
-            }
-            frame.popn(2);
-            Value v;
-            v.setNumber(dL);
-            frame.push(v);
-            return;
-        }
-    }
-
-    /* Can't constant fold, slow paths. */
-    prepareStubCall();
-    stubCall(stub, Uses(2), Defs(1));
-    frame.popn(2);
     frame.pushSynced();
 }
 

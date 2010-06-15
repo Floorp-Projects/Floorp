@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "jsbool.h"
+#include "jslibmath.h"
 #include "jsnum.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
@@ -359,6 +360,175 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
         frame.freeReg(data);
 
     frame.freeReg(reg);
+
+    stubcc.rejoin(1);
+}
+
+static inline bool
+JSOpBinaryTryConstantFold(JSContext *cx, FrameState &frame, JSOp op, FrameEntry *lhs, FrameEntry *rhs)
+{
+    if (!lhs->isConstant() || !rhs->isConstant())
+        return false;
+
+    const Value &L = lhs->getValue();
+    const Value &R = rhs->getValue();
+
+    if (!L.isPrimitive() || !R.isPrimitive() ||
+        (op == JSOP_ADD && (L.isString() || R.isString()))) {
+        return false;
+    }
+
+    double dL, dR;
+    ValueToNumber(cx, L, &dL);
+    ValueToNumber(cx, R, &dR);
+
+    switch (op) {
+      case JSOP_ADD:
+        dL += dR;
+        break;
+      case JSOP_SUB:
+        dL -= dR;
+        break;
+      case JSOP_MUL:
+        dL *= dR;
+        break;
+      case JSOP_DIV:
+        if (dR == 0) {
+#ifdef XP_WIN
+            if (JSDOUBLE_IS_NaN(dR))
+                dL = js_NaN;
+            else
+#endif
+            if (dL == 0 || JSDOUBLE_IS_NaN(dL))
+                dL = js_NaN;
+            else if (JSDOUBLE_IS_NEG(dL) != JSDOUBLE_IS_NEG(dR))
+                dL = cx->runtime->negativeInfinityValue.asDouble();
+            else
+                dL = cx->runtime->positiveInfinityValue.asDouble();
+        } else {
+            dL /= dR;
+        }
+        break;
+      case JSOP_MOD:
+        if (dL == 0)
+            dL = js_NaN;
+        else
+            dL = js_fmod(dR, dL);
+        break;
+
+      default:
+        JS_NOT_REACHED("NYI");
+        break;
+    }
+
+    Value v;
+    v.setNumber(dL);
+    frame.popn(2);
+    frame.push(v);
+
+    return true;
+}
+
+
+void
+mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
+{
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    if (JSOpBinaryTryConstantFold(cx, frame, op, lhs, rhs))
+        return;
+
+    /* Bail out if there's a non-int constant, or unhandled ops.
+     * This is temporary while ops are still being implemented. */
+    if (op == JSOP_MUL || op == JSOP_DIV || op == JSOP_MOD) {
+        prepareStubCall();
+        stubCall(stub, Uses(2), Defs(1));
+        frame.popn(2);
+        frame.pushSynced();
+        return;
+    }
+
+    /* Try an integer fastpath. */
+    RegisterID reg = Registers::ReturnReg;
+    if ((!lhs->isTypeKnown() || lhs->getTypeTag() == JSVAL_MASK32_INT32) &&
+        (!rhs->isTypeKnown() || rhs->getTypeTag() == JSVAL_MASK32_INT32)) {
+        if (!rhs->isTypeKnown()) {
+            Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
+            stubcc.linkExit(rhsFail);
+        }
+        if (!lhs->isTypeKnown()) {
+            Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
+            stubcc.linkExit(lhsFail);
+        }
+
+        /* One of the values should not be a constant.
+         * If there is a constant, force it to be in rhs. */
+        bool swapped = false;
+        if (lhs->isConstant()) {
+            JS_ASSERT(!rhs->isConstant());
+            swapped = true;
+            FrameEntry *tmp = lhs;
+            lhs = rhs;
+            rhs = tmp;
+        }
+
+        reg = frame.copyData(lhs);
+        if (swapped && op == JSOP_SUB) {
+            masm.neg32(reg);
+            op = JSOP_ADD;
+        }
+
+        Jump fail;
+        switch(op) {
+          case JSOP_ADD:
+            if (rhs->isConstant()) {
+                fail = masm.branchAdd32(Assembler::Overflow,
+                                        Imm32(rhs->getValue().asInt32()), reg);
+            } else if (frame.shouldAvoidDataRemat(rhs)) {
+                fail = masm.branchAdd32(Assembler::Overflow,
+                                        frame.addressOf(rhs), reg);
+            } else {
+                RegisterID rhsReg = frame.tempRegForData(rhs);
+                fail = masm.branchAdd32(Assembler::Overflow,
+                                        rhsReg, reg);
+            }
+            break;
+
+          case JSOP_SUB:
+            if (rhs->isConstant()) {
+                fail = masm.branchSub32(Assembler::Overflow,
+                                        Imm32(rhs->getValue().asInt32()), reg);
+            } else if (frame.shouldAvoidDataRemat(rhs)) {
+                fail = masm.branchSub32(Assembler::Overflow,
+                                        frame.addressOf(rhs), reg);
+            } else {
+                RegisterID rhsReg = frame.tempRegForData(rhs);
+                fail = masm.branchSub32(Assembler::Overflow,
+                                        rhsReg, reg);
+            }
+            break;
+
+          default:
+            JS_NOT_REACHED("kittens");
+            break;
+        }
+        stubcc.linkExit(fail);
+    } else {
+        /* Int code can't possibly work. */
+        /* TODO: Double code goes here. And changes the push below. */
+        prepareStubCall();
+        stubCall(stub, Uses(2), Defs(1));
+        frame.popn(2);
+        frame.pushSynced();
+        return;
+    }
+
+    stubcc.leave();
+    stubcc.call(stub);
+
+    frame.popn(2);
+    frame.pushUntypedPayload(JSVAL_MASK32_INT32, reg);
 
     stubcc.rejoin(1);
 }
