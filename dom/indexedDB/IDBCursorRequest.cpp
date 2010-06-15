@@ -239,6 +239,7 @@ IDBCursorRequest::IDBCursorRequest()
   mCachedValue(JSVAL_VOID),
   mHaveCachedValue(false),
   mJSRuntime(nsnull),
+  mContinueCalled(false),
   mDataIndex(0),
   mType(OBJECTSTORE)
 {
@@ -408,6 +409,10 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (mContinueCalled) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   Key key;
   nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -435,6 +440,8 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTransaction->OnNewRequest();
+
+  mContinueCalled = true;
 
   *_retval = PR_TRUE;
   return NS_OK;
@@ -752,6 +759,7 @@ ContinueRunnable::Run()
   mCursor->mCachedKey = nsnull;
   mCursor->mCachedValue = JSVAL_VOID;
   mCursor->mHaveCachedValue = false;
+  mCursor->mContinueCalled = false;
 
   if (mCursor->mType == IDBCursorRequest::INDEX) {
     mCursor->mKeyData.RemoveElementAt(mCursor->mDataIndex);
