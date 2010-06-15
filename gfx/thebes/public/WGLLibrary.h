@@ -42,7 +42,7 @@ namespace gl {
 class WGLLibrary
 {
 public:
-    WGLLibrary() : mInitialized(PR_FALSE) {}
+    WGLLibrary() : mInitialized(PR_FALSE), mOGLLibrary(nsnull) {}
 
     typedef HGLRC (GLAPIENTRY * PFNWGLCREATECONTEXTPROC) (HDC);
     PFNWGLCREATECONTEXTPROC fCreateContext;

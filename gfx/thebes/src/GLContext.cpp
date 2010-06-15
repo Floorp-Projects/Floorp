@@ -328,8 +328,42 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
-
     return mInitialized;
+}
+
+PRBool
+GLContext::IsExtensionSupported(const char *extension)
+{
+    const GLubyte *extensions = NULL;
+    const GLubyte *start;
+    GLubyte *where, *terminator;
+
+    /* Extension names should not have spaces. */
+    where = (GLubyte *) strchr(extension, ' ');
+    if (where || *extension == '\0')
+        return PR_FALSE;
+
+    extensions = fGetString(LOCAL_GL_EXTENSIONS);
+    /* 
+     * It takes a bit of care to be fool-proof about parsing the
+     * OpenGL extensions string. Don't be fooled by sub-strings,
+     * etc. 
+     */
+    start = extensions;
+    for (;;) {
+        where = (GLubyte *) strstr((const char *) start, extension);
+        if (!where) {
+	    break;
+        }
+        terminator = where + strlen(extension);
+        if (where == start || *(where - 1) == ' ') {
+	    if (*terminator == ' ' || *terminator == '\0') {
+	        return PR_TRUE;
+	    }
+        }
+        start = terminator;
+    }
+    return PR_FALSE;
 }
 
 } /* namespace gl */

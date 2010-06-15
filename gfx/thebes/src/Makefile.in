@@ -232,6 +232,11 @@ GL_PROVIDER = WGL
 endif
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifndef MOZ_PLATFORM_MAEMO
+GL_PROVIDER = GLX
+endif
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 GL_PROVIDER = CGL
