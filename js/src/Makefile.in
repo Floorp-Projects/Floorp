@@ -313,6 +313,7 @@ CPPSRCS += 	Assertions.cpp \
 		FastOps.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
+		ImmutableSync.cpp \
 		$(NULL)
 #		PICStubCompiler.cpp \
 
