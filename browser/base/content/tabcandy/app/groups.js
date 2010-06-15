@@ -1108,13 +1108,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         minWidth: 90,
         minHeight: 90,
         start: function(){
-          window.Trenches.activateOthersTrenches(self.container);
+          Trenches.activateOthersTrenches(self.container);
         },
         resize: function(){
           self.reloadBounds();
           var bounds = self.getBounds();
 					// OH SNAP!
-					var newRect = window.Trenches.snap(bounds,false);
+					var newRect = Trenches.snap(bounds,false);
 					if (newRect) // might be false if no changes were made
 						self.setBounds(bounds,true);
         },
@@ -1122,7 +1122,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           self.reloadBounds();
           self.setUserSize();
           self.pushAway();
-          window.Trenches.disactivate();
+          Trenches.disactivate();
         } 
       });
     } else {
