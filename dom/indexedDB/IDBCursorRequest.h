@@ -131,6 +131,7 @@ protected:
   bool mHaveCachedValue;
   JSRuntime* mJSRuntime;
 
+  bool mContinueCalled;
   PRUint32 mDataIndex;
 
   Type mType;
