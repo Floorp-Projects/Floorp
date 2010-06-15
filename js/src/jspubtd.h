@@ -397,21 +397,6 @@ typedef void
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
 
-/*
- * The optional JSClass.reserveSlots hook allows a class to make computed
- * per-instance object slots reservations, in addition to or instead of using
- * JSCLASS_HAS_RESERVED_SLOTS(n) in the JSClass.flags initializer to reserve
- * a constant-per-class number of slots.  Implementations of this hook should
- * return the number of slots to reserve, not including any reserved by using
- * JSCLASS_HAS_RESERVED_SLOTS(n) in JSClass.flags.
- *
- * NB: called with obj locked by the JSObjectOps-specific mutual exclusion
- * mechanism appropriate for obj, so don't nest other operations that might
- * also lock obj.
- */
-typedef uint32
-(* JSReserveSlotsOp)(JSContext *cx, JSObject *obj);
-
 /* JSExtendedClass function pointer typedefs. */
 
 typedef JSBool

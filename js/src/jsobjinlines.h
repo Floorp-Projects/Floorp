@@ -594,14 +594,15 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSClass *clasp, JSObject* proto
         scope = JSScope::create(cx, ops, clasp, obj, js_GenerateShape(cx, false));
         if (!scope)
             goto bad;
-
-        /* Let JSScope::create set freeslot so as to reserve slots. */
-        JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
-        if (scope->freeslot > JS_INITIAL_NSLOTS &&
-            !obj->allocSlots(cx, scope->freeslot)) {
-            scope->destroy(cx);
+        uint32 freeslot = JSSLOT_FREE(clasp);
+        JS_ASSERT(freeslot >= scope->freeslot);
+        if (freeslot > JS_INITIAL_NSLOTS && !obj->allocSlots(cx, freeslot))
             goto bad;
-        }
+        scope->freeslot = freeslot;
+#ifdef DEBUG
+        if (freeslot < obj->numSlots())
+            obj->setSlot(freeslot, JSVAL_VOID);
+#endif
     }
 
     obj->map = scope;
