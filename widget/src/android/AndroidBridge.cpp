@@ -217,6 +217,7 @@ AndroidBridge::NotifyXreExit()
 void
 AndroidBridge::GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray)
 {
+    NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
     jstring jstr = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
@@ -224,6 +225,8 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStr
                                                   jGetHandlersForMimeType, 
                                                   jstr);
     jobjectArray arr = static_cast<jobjectArray>(obj);
+    if (!arr)
+        return;
     jsize len = mJNIEnv->GetArrayLength(arr);
     for (jsize i = 0; i < len; i+=2) {
         jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));

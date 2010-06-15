@@ -411,6 +411,10 @@ AndroidRect::Init(JNIEnv *jenv, jobject jobj)
 
 nsJNIString::nsJNIString(jstring jstr)
 {
+    if (!jstr) {
+        SetIsVoid(PR_TRUE);
+        return;
+    }
     const jchar* jCharPtr = JNI()->GetStringChars(jstr, false);
     nsresult rv;
     Assign(jCharPtr);
