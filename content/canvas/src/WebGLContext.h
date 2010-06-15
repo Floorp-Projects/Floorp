@@ -668,6 +668,7 @@ public:
 
     PRBool Deleted() { return mDeleted; }
     WebGLuint GLName() { return mName; }
+    const nsTArray<WebGLShader*>& AttachedShaders() const { return mAttachedShaders; }
     PRBool LinkStatus() { return mLinkStatus; }
     GLuint Generation() const { return mGeneration; }
     void SetLinkStatus(PRBool val) { mLinkStatus = val; }

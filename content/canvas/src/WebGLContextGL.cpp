@@ -1106,48 +1106,37 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
     return NS_OK;
 }
 
-// XXX fixme to return a IntArray
-#if 0
 NS_IMETHODIMP
-WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj)
+WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj, nsIVariant **retval)
 {
-    nsresult rv;
-    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
-    if (NS_FAILED(rv))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    WebGLProgram *prog;
+    if (!GetConcreteObject(pobj, &prog))
+        return ErrorInvalidOperation("GetActiveAttrib: invalid program");
 
-    if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
-        return ErrorInvalidOperation("%s: program is null or deleted!", __FUNCTION__);
-
-    WebGLuint program = static_cast<WebGLProgram*>(prog)->GLName();
-
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
 
-    GLint count = 0;
-    gl->fGetProgramiv(program, LOCAL_GL_ATTACHED_SHADERS, &count);
-    if (count == 0) {
-        JSObject *empty = JS_NewArrayObject(js.ctx, 0, NULL);
-        js.SetRetVal(empty);
-        return NS_OK;
+    if (prog->AttachedShaders().Length() == 0) {
+        wrval->SetAsEmptyArray();
+    }
+    else {
+        wrval->SetAsArray(nsIDataType::VTYPE_INTERFACE,
+                        &NS_GET_IID(nsIWebGLShader),
+                        prog->AttachedShaders().Length(),
+                        const_cast<void*>( // @#$% SetAsArray doesn't accept a const void*
+                            static_cast<const void*>(
+                                prog->AttachedShaders().Elements()
+                            )
+                        )
+                        );
     }
 
-    nsAutoArrayPtr<PRUint32> shaders(new PRUint32[count]);
-
-    gl->fGetAttachedShaders(program, count, NULL, (WebGLuint*) shaders.get());
-
-    JSObject *obj = NativeJSContext::ArrayToJSArray(js.ctx, shaders, count);
-
-    js.AddGCRoot(obj, "GetAttachedShaders");
-    js.SetRetVal(obj);
-    js.ReleaseGCRoot(obj);
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP
 WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
@@ -2014,14 +2003,17 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
     if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
         return ErrorInvalidOperation("LinkProgram: invalid program");
 
-    if (!program->HasBothShaderTypesAttached())
-        return ErrorInvalidOperation("LinkProgram: program does not have at least one vertex and fragment shader attached");
+    if (!program->NextGeneration())
+        return NS_ERROR_FAILURE;
+
+    if (!program->HasBothShaderTypesAttached()) {
+        program->SetLinkStatus(PR_FALSE);
+        return NS_OK;
+    }
 
     MakeContextCurrent();
 
     gl->fLinkProgram(progname);
-    if (!program->NextGeneration())
-        return NS_ERROR_FAILURE;
 
     GLint ok;
     gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);

@@ -656,9 +656,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   nsIWebGLActiveInfo getActiveAttrib(in nsIWebGLProgram program, in PRUint32 index);
   nsIWebGLActiveInfo getActiveUniform(in nsIWebGLProgram program, in PRUint32 index);
 
-  // TBD
-  // void glGetAttachedShaders(WebGLuint program, WebGLsizei maxcount, WebGLsizei* count, WebGLuint* shaders);
-  //nsIWebGLShaderArray glGetAttachedShaders(in WebGLuint program);
+  nsIVariant getAttachedShaders(in nsIWebGLProgram program);
 
   WebGLint getAttribLocation(in nsIWebGLProgram program, in DOMString name);
 
