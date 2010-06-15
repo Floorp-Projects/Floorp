@@ -164,6 +164,7 @@ class Compiler
     void jsop_setgname_slow(uint32 index);
     void jsop_bindgname();
     void jsop_setelem_slow();
+    void jsop_getelem_slow();
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
@@ -177,6 +178,7 @@ class Compiler
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
+    void jsop_getelem();
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \

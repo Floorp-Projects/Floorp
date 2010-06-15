@@ -1083,3 +1083,85 @@ mjit::Compiler::jsop_setelem()
     stubcc.rejoin(0);
 }
 
+void
+mjit::Compiler::jsop_getelem()
+{
+    FrameEntry *obj = frame.peek(-2);
+    FrameEntry *id = frame.peek(-1);
+
+    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_MASK32_NONFUNOBJ) ||
+        (id->isTypeKnown() && id->getTypeTag() != JSVAL_MASK32_INT32) ||
+        (id->isConstant() && id->getValue().asInt32() < 0)) {
+        jsop_getelem_slow();
+        return;
+    }
+
+    /* id.isInt32() */
+    if (!id->isTypeKnown()) {
+        Jump j = frame.testInt32(Assembler::NotEqual, id);
+        stubcc.linkExit(j);
+    }
+
+    /* obj.isNonFunObj() */
+    if (!obj->isTypeKnown()) {
+        Jump j = frame.testNonFunObj(Assembler::NotEqual, obj);
+        stubcc.linkExit(j);
+    }
+
+    /* obj.isDenseArray() */
+    RegisterID objReg = frame.copyData(obj);
+    Jump guardDense = masm.branchPtr(Assembler::NotEqual,
+                                      Address(objReg, offsetof(JSObject, clasp)),
+                                      ImmPtr(&js_ArrayClass));
+    stubcc.linkExit(guardDense);
+
+    /* dslots non-NULL */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
+    stubcc.linkExit(guardSlots);
+
+    /* guard within capacity */
+    if (id->isConstant()) {
+        Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
+                                     masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
+                                     Imm32(id->getValue().asInt32()));
+        stubcc.linkExit(inRange);
+
+        /* guard not a hole */
+        Address slot(objReg, id->getValue().asInt32() * sizeof(Value));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), Imm32(JSVAL_MASK32_MAGIC));
+        stubcc.linkExit(notHole);
+
+        stubcc.leave();
+        stubcc.call(stubs::GetElem);
+
+        frame.popn(2);
+        frame.freeReg(objReg);
+        frame.push(slot);
+    } else {
+        RegisterID idReg = frame.copyData(id);
+        Jump inRange = masm.branch32(Assembler::AboveOrEqual,
+                                     idReg,
+                                     masm.payloadOf(Address(objReg, -int(sizeof(Value)))));
+        stubcc.linkExit(inRange);
+
+        /* guard not a hole */
+        BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), Imm32(JSVAL_MASK32_MAGIC));
+        stubcc.linkExit(notHole);
+
+        stubcc.leave();
+        stubcc.call(stubs::GetElem);
+
+        frame.popn(2);
+
+        RegisterID reg = frame.allocReg();
+        masm.loadTypeTag(slot, reg);
+        masm.loadData32(slot, idReg);
+        frame.freeReg(objReg);
+        frame.pushRegs(reg, idReg);
+    }
+
+    stubcc.rejoin(0);
+}
+
