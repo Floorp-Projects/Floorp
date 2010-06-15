@@ -103,6 +103,8 @@ JS_PROTO(Float32Array,          34,     js_InitTypedArrayClasses)
 JS_PROTO(Float64Array,          35,     js_InitTypedArrayClasses)
 JS_PROTO(Uint8ClampedArray,     36,     js_InitTypedArrayClasses)
 JS_PROTO(Proxy,                 37,     js_InitProxyClass)
+JS_PROTO(Reflect,               38,     js_InitReflectClass)
+JS_PROTO(ASTNode,               39,     js_InitReflectClass)
 
 #undef XML_INIT
 #undef NAMESPACE_INIT

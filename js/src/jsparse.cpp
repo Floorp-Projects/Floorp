@@ -2886,10 +2886,9 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 #if JS_HAS_DESTRUCTURING
     /*
      * If there were destructuring formal parameters, prepend the initializing
-     * comma expression that we synthesized to body.  If the body is a lexical
-     * scope node, we must make a special TOK_SEQ node, to prepend the formal
-     * parameter destructuring code without bracing the decompilation of the
-     * function body's lexical scope.
+     * comma expression that we synthesized to body.  If the body is a return
+     * node, we must make a special TOK_SEQ node, to prepend the destructuring
+     * code without bracing the decompilation of the function body.
      */
     if (prolog) {
         if (body->pn_arity != PN_LIST) {
@@ -7881,10 +7880,9 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                  * ARRAYPUSH node after we parse the rest of the comprehension.
                  */
                 pnexp = pn->last();
-                JS_ASSERT(pn->pn_count == 1 || pn->pn_count == 2);
-                pn->pn_tail = (--pn->pn_count == 1)
-                              ? &pn->pn_head->pn_next
-                              : &pn->pn_head;
+                JS_ASSERT(pn->pn_count == 1);
+                pn->pn_count = 0;
+                pn->pn_tail = &pn->pn_head;
                 *pn->pn_tail = NULL;
 
                 pntop = comprehensionTail(pnexp, pn->pn_blockid,
