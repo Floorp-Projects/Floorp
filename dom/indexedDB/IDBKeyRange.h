@@ -64,7 +64,7 @@ protected:
                                        PRUint16 aFlags);
 
   IDBKeyRange()
-  : mFlags(nsIIDBKeyRange::SINGLE)
+  : mFlags(0)
   { }
 
   ~IDBKeyRange() { }

@@ -241,9 +241,26 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsresult rv;
+  Key leftKey, rightKey;
+  PRUint16 keyRangeFlags = 0;
+
   if (aKeyRange) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    rv = aKeyRange->GetFlags(&keyRangeFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIVariant> variant;
+    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, leftKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aKeyRange->GetRight(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, rightKey);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (aOptionalArgCount >= 2) {
@@ -274,10 +291,10 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
 
   nsRefPtr<OpenCursorHelper> helper =
     new OpenCursorHelper(mObjectStore->Transaction(), request, this, mId,
-                         mUnique, mAutoIncrement, Key(), Key(), 0, aDirection,
-                         aPreload);
+                         mUnique, mAutoIncrement, leftKey, rightKey,
+                         keyRangeFlags, aDirection, aPreload);
 
-  nsresult rv = helper->DispatchToTransactionPool();
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -516,6 +533,33 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   NS_NAMED_LITERAL_CSTRING(indexId, "index_id");
+  NS_NAMED_LITERAL_CSTRING(leftKeyName, "left_key");
+  NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
+
+  nsCAutoString keyRangeClause;
+  if (!mLeftKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND value");
+    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+      keyRangeClause.AppendLiteral(" > :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" >= :");
+    }
+    keyRangeClause.Append(leftKeyName);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND value");
+    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+      keyRangeClause.AppendLiteral(" < :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" <= :");
+    }
+    keyRangeClause.Append(rightKeyName);
+  }
 
   nsCAutoString query("SELECT value, ");
   query.Append(keyColumn);
@@ -523,6 +567,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   query.Append(table);
   query.AppendLiteral(" WHERE index_id = :");
   query.Append(indexId);
+  query.Append(keyRangeClause);
   query.AppendLiteral(" ORDER BY value ");
 
   switch (mDirection) {
@@ -550,6 +595,32 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsresult rv = stmt->BindInt64ByName(indexId, mId);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (!mLeftKey.IsUnset()) {
+    if (mLeftKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+    }
+    else if (mLeftKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    if (mRightKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+    }
+    else if (mRightKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
 
   PRBool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
@@ -619,6 +690,8 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
+
+  mIndex = nsnull;
 
   return OK;
 }
