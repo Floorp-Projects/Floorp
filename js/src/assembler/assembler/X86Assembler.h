@@ -1013,7 +1013,9 @@ public:
 
     void cmpl_im(int imm, int offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cmpl       %d, %d(%s,%s,%d)\n",
+                       imm, offset, nameIReg(4,base), nameIReg(4,index), scale);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, GROUP1_OP_CMP, base, index, scale, offset);
             m_formatter.immediate8(imm);
@@ -1306,8 +1308,8 @@ public:
     void movl_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
     {
         js::JaegerSpew(js::JSpew_Insns,
-                       IPFX "movl       %s, $%d(%s)\n", 
-                       nameIReg(4, src), offset, nameIReg(base));
+                       IPFX "movl       %s, $%d(%s,%s,%d)\n", 
+                       nameIReg(4, src), offset, nameIReg(base), nameIReg(index), scale);
         m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
     

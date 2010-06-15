@@ -422,6 +422,15 @@ FrameState::testInt32(Assembler::Condition cond, FrameEntry *fe)
 }
 
 inline JSC::MacroAssembler::Jump
+FrameState::testNonFunObj(Assembler::Condition cond, FrameEntry *fe)
+{
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testNonFunObj(cond, addressOf(fe));
+    return masm.testNonFunObj(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
 FrameState::testDouble(Assembler::Condition cond, FrameEntry *fe)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
@@ -535,6 +544,16 @@ FrameState::enterBlock(uint32 n)
     JS_ASSERT(uint32(sp + n - locals) <= script->nslots);
 
     sp += n;
+}
+
+inline void
+FrameState::eviscerate(FrameEntry *fe)
+{
+    forgetRegs(fe);
+    fe->type.invalidate();
+    fe->data.invalidate();
+    fe->setNotCopied();
+    fe->setCopyOf(NULL);
 }
 
 } /* namspace mjit */

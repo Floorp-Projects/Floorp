@@ -980,4 +980,12 @@ FrameState::storeLocal(uint32 n)
     JS_ASSERT(top->copyOf() == localFe);
 }
 
+void
+FrameState::shimmy(uint32 n)
+{
+    JS_ASSERT(sp - n >= spBase);
+    int32 depth = 0 - int32(n);
+    storeLocal(indexOfFe(sp[depth - 1]) - nargs);
+    popn(n);
+}
 
