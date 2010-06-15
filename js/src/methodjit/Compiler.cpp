@@ -676,10 +676,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LENGTH)
 
           BEGIN_CASE(JSOP_GETELEM)
-            prepareStubCall();
-            stubCall(stubs::GetElem, Uses(2), Defs(1));
-            frame.popn(2);
-            frame.pushSynced();
+            jsop_getelem();
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_SETELEM)
@@ -1911,6 +1908,15 @@ mjit::Compiler::jsop_setelem_slow()
     prepareStubCall();
     stubCall(stubs::SetElem, Uses(3), Defs(1));
     frame.popn(3);
+    frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_getelem_slow()
+{
+    prepareStubCall();
+    stubCall(stubs::GetElem, Uses(2), Defs(1));
+    frame.popn(2);
     frame.pushSynced();
 }
 
