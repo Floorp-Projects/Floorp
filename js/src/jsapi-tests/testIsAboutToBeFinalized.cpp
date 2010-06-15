@@ -46,7 +46,7 @@ BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
      * Due to the conservative GC we use separated never-inline function to
      * test rooted elements.
      */
-    createAndTestRooted();
+    CHECK(createAndTestRooted());
     NativeFrameCleaner();
 
     JS_GC(cx);
@@ -117,5 +117,6 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
      */
     for (jsuint i = 0; i != checkPointersLength; ++i)
         CHECK(checkPointers[i]);
+    return true;
 }
 
