@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
   helpers.js \
   test_add_twice_failure.html \
+  test_bad_keypath.html \
   test_create_index.html \
   test_create_objectStore.html \
   test_cursors.html \
