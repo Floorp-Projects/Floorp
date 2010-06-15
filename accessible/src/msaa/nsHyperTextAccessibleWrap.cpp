@@ -66,8 +66,8 @@ nsHyperTextAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
                                                           &instancePtr);
         if (NS_SUCCEEDED(rv)) {
           NS_IF_RELEASE(gTextEvent);
+          NS_IF_ADDREF(gTextEvent = downcast_accEvent(aEvent));
 
-          CallQueryInterface(aEvent, &gTextEvent);
           (static_cast<IUnknown*>(instancePtr))->Release();
         }
       }
@@ -89,26 +89,17 @@ nsHyperTextAccessibleWrap::GetModifiedText(PRBool aGetInsertedText,
 
   if (!gTextEvent)
     return NS_OK;
-    
-  PRBool isInserted;
-  gTextEvent->IsInserted(&isInserted);
+
+  PRBool isInserted = gTextEvent->IsTextInserted();
   if (aGetInsertedText != isInserted)
     return NS_OK;
 
-  nsCOMPtr<nsIAccessibleEvent> event(do_QueryInterface(gTextEvent));
-
-  nsCOMPtr<nsIAccessible> targetAcc;
-  event->GetAccessible(getter_AddRefs(targetAcc));
+  nsAccessible *targetAcc = gTextEvent->GetAccessible();
   if (targetAcc != this)
     return NS_OK;
 
-  PRInt32 offset;
-  PRUint32 length;
-
-  gTextEvent->GetStart(&offset);
-  gTextEvent->GetLength(&length);
-  *aStartOffset = offset;
-  *aEndOffset = offset + length;
+  *aStartOffset = gTextEvent->GetStartOffset();
+  *aEndOffset = *aStartOffset + gTextEvent->GetLength();
   return gTextEvent->GetModifiedText(aText);
 }
 

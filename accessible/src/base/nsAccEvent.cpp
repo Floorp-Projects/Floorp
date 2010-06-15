@@ -72,7 +72,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccEvent)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEvent)
-  NS_INTERFACE_MAP_ENTRY(nsAccEvent)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -273,8 +272,7 @@ nsAccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
 // nsAccReorderEvent
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsAccReorderEvent, nsAccEvent,
-                             nsAccReorderEvent)
+NS_IMPL_ISUPPORTS_INHERITED0(nsAccReorderEvent, nsAccEvent)
 
 nsAccReorderEvent::nsAccReorderEvent(nsAccessible *aAccTarget,
                                      PRBool aIsAsynch,
@@ -352,6 +350,7 @@ nsAccStateChangeEvent::
 NS_IMETHODIMP
 nsAccStateChangeEvent::GetState(PRUint32 *aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
   *aState = mState;
   return NS_OK;
 }
@@ -359,6 +358,7 @@ nsAccStateChangeEvent::GetState(PRUint32 *aState)
 NS_IMETHODIMP
 nsAccStateChangeEvent::IsExtraState(PRBool *aIsExtraState)
 {
+  NS_ENSURE_ARG_POINTER(aIsExtraState);
   *aIsExtraState = mIsExtraState;
   return NS_OK;
 }
@@ -366,6 +366,7 @@ nsAccStateChangeEvent::IsExtraState(PRBool *aIsExtraState)
 NS_IMETHODIMP
 nsAccStateChangeEvent::IsEnabled(PRBool *aIsEnabled)
 {
+  NS_ENSURE_ARG_POINTER(aIsEnabled);
   *aIsEnabled = mIsEnabled;
   return NS_OK;
 }
@@ -400,6 +401,7 @@ nsAccTextChangeEvent::
 NS_IMETHODIMP
 nsAccTextChangeEvent::GetStart(PRInt32 *aStart)
 {
+  NS_ENSURE_ARG_POINTER(aStart);
   *aStart = mStart;
   return NS_OK;
 }
@@ -407,6 +409,7 @@ nsAccTextChangeEvent::GetStart(PRInt32 *aStart)
 NS_IMETHODIMP
 nsAccTextChangeEvent::GetLength(PRUint32 *aLength)
 {
+  NS_ENSURE_ARG_POINTER(aLength);
   *aLength = mLength;
   return NS_OK;
 }
@@ -414,6 +417,7 @@ nsAccTextChangeEvent::GetLength(PRUint32 *aLength)
 NS_IMETHODIMP
 nsAccTextChangeEvent::IsInserted(PRBool *aIsInserted)
 {
+  NS_ENSURE_ARG_POINTER(aIsInserted);
   *aIsInserted = mIsInserted;
   return NS_OK;
 }

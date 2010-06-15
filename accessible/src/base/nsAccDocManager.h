@@ -382,14 +382,10 @@ private:
   } else if (type == nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD) {              \
       strEventType.AssignLiteral("reload");                                    \
   } else if (type == nsIAccessibleEvent::EVENT_STATE_CHANGE) {                 \
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event(do_QueryObject(aEvent));     \
-    PRUint32 state = 0;                                                        \
-    event->GetState(&state);                                                   \
-    if (state == nsIAccessibleStates::STATE_BUSY) {                            \
-      PRBool isEnabled;                                                        \
-      event->IsEnabled(&isEnabled);                                            \
+    nsAccStateChangeEvent *event = downcast_accEvent(aEvent);                  \
+    if (event->GetState() == nsIAccessibleStates::STATE_BUSY) {                \
       strEventType.AssignLiteral("busy ");                                     \
-      if (isEnabled)                                                           \
+      if (event->IsStateEnabled())                                             \
         strEventType.AppendLiteral("true");                                    \
       else                                                                     \
         strEventType.AppendLiteral("false");                                   \
