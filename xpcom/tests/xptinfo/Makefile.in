@@ -47,7 +47,7 @@ NO_DIST_INSTALL = 1
 
 XPIDLSRCS = xptiITestInterface.idl
 
-XPCSHELL_TESTS = xptunit
+# XPCSHELL_TESTS = xptunit
 
 include $(topsrcdir)/config/rules.mk
 
