@@ -567,6 +567,10 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   const unsigned long INVALID_FRAMEBUFFER_OPERATION  = 0x0506;
 
+  const unsigned long UNPACK_FLIP_Y_WEBGL            = 0x9240;
+  const unsigned long UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
+  const unsigned long CONTEXT_LOST_WEBGL             = 0x9242;
+
   //
   //  ATTRIBUTES
   //

@@ -78,7 +78,9 @@ WebGLContext::WebGLContext()
       mGeneration(0),
       mInvalidated(PR_FALSE),
       mActiveTexture(0),
-      mSynthesizedGLError(LOCAL_GL_NO_ERROR)
+      mSynthesizedGLError(LOCAL_GL_NO_ERROR),
+      mPixelStoreFlipY(PR_FALSE),
+      mPixelStorePremultiplyAlpha(PR_FALSE)
 {
     mMapBuffers.Init();
     mMapTextures.Init();
