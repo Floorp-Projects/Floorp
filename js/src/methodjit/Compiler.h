@@ -58,6 +58,7 @@ class Compiler
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::BaseIndex BaseIndex;
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Call Call;
     typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
@@ -162,6 +163,7 @@ class Compiler
     void jsop_setgname(uint32 index);
     void jsop_setgname_slow(uint32 index);
     void jsop_bindgname();
+    void jsop_setelem_slow();
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
@@ -174,6 +176,7 @@ class Compiler
     void jsop_typeof();
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
+    void jsop_setelem();
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
