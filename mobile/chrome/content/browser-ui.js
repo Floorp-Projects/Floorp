@@ -586,9 +586,9 @@ var BrowserUI = {
       this.starButton.removeAttribute("starred");
   },
 
-  newTab : function newTab(aURI) {
+  newTab : function newTab(aURI, aOwner) {
     aURI = aURI || "about:blank";
-    let tab = Browser.addTab(aURI, true);
+    let tab = Browser.addTab(aURI, true, aOwner);
 
     this.hidePanel();
 
@@ -690,7 +690,13 @@ var BrowserUI = {
     }
 
     // Only if there are no dialogs, popups, or panels open
-    Browser.selectedBrowser.goBack();
+    let tab = Browser.selectedTab;
+    let browser = tab.browser;
+
+    if (browser.canGoBack)
+      browser.goBack();
+    else if (tab.owner)
+      this.closeTab(tab);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -2344,7 +2350,7 @@ var ContextHelper = {
 
 var ContextCommands = {
   openInNewTab: function cc_openInNewTab(aEvent) {
-    Browser.addTab(ContextHelper.linkURL, false);
+    Browser.addTab(ContextHelper.linkURL, false, Browser.selectedTab);
   },
 
   saveImage: function cc_saveImage(aEvent) {

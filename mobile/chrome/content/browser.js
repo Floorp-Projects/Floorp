@@ -760,8 +760,9 @@ var Browser = {
     return null;
   },
 
-  addTab: function(uri, bringFront) {
+  addTab: function(uri, bringFront, aOwner) {
     let newTab = new Tab();
+    newTab.owner = aOwner || null;
     this._tabs.push(newTab);
 
     if (bringFront)
@@ -786,11 +787,17 @@ var Browser = {
     let tabIndex = this._tabs.indexOf(tab);
 
     let nextTab = this._selectedTab;
-    if (this._selectedTab == tab) {
-      nextTab = this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
+    if (nextTab == tab) {
+      nextTab = tab.owner || this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
       if (!nextTab)
         return;
     }
+
+    // Tabs owned by the closed tab are now orphaned.
+    this._tabs.forEach(function(aTab, aIndex, aArray) {
+      if (aTab.owner == tab)
+        aTab.owner = null;
+    });
 
     let event = document.createEvent("Events");
     event.initEvent("TabClose", true, false);
@@ -1678,11 +1685,10 @@ nsBrowserAccess.prototype = {
       let newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
                                  "all,dialog=no", url, null, null, null);
       browser = newWindow.Browser.selectedBrowser;
-    } else {
-      if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
-        browser = Browser.addTab("about:blank", true).browser;
-      else // OPEN_CURRENTWINDOW and illegal values
-        browser = Browser.selectedBrowser;
+    } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+      browser = Browser.addTab("about:blank", true, Browser.selectedTab).browser;
+    } else { // OPEN_CURRENTWINDOW and illegal values
+      browser = Browser.selectedBrowser;
     }
     
     try {
@@ -1953,7 +1959,7 @@ ContentCustomClicker.prototype = {
       else if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
         let uri = Util.getHrefForElement(element);
         if (uri)
-          Browser.addTab(uri, false);
+          Browser.addTab(uri, false, Browser.selectedTab);
       }
     },
 
@@ -2523,7 +2529,7 @@ const gPopupBlockerObserver = {
         let popupFeatures = pageReport[i].popupWindowFeatures;
         let popupName = pageReport[i].popupWindowName;
 
-        Browser.addTab(popupURIspec, false);
+        Browser.addTab(popupURIspec, false, Browser.selectedTab);
       }
     }
   }
@@ -2994,6 +3000,8 @@ function Tab() {
   this._loading = false;
   this._chromeTab = null;
   this._resizeAndPaint = Util.bind(this._resizeAndPaint, this);
+
+  this.owner = null;
 
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
   // toss if app needs more memory.
