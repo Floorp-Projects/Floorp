@@ -1,0 +1,437 @@
+FrJS = function() {
+	// Used to disambiguate references to 'this' in inner classes.
+	var mgr = this; 
+	
+	// INNER CLASSES --------------------------------
+	
+	// Utility map class... because standard JS associative arrays don't work properly.
+	this.Hash = function() {
+		this.keys = new Array();
+		this.values = new Array();
+		
+		this.contains = function (key) {
+			for(var i = 0; i < this.keys.length; i++) {
+				if(this.keys[i] == key) {
+					return true;
+				}
+			}
+			
+			return false;
+		};
+		
+		this.get = function (key) {
+			for(var i = 0; i < this.keys.length; i++) {
+				if(this.keys[i] == key) {
+					return this.values[i];
+				}
+			}
+			
+			return null;
+		};
+		
+		this.put = function (key, value) {
+			this.keys[this.keys.length] = key;
+			this.values[this.values.length] = value;
+			return value;
+		};
+		
+		this.toString = function () {
+			var ans = "(";
+			
+			if(this.keys.length > 0) {
+				ans += this.keys[0] + ":" + this.values[0];
+			
+				for(var i = 1; i < this.keys.length - 1; i++) {
+					ans += "," + this.keys[i] + ":" + this.values[i];
+				}
+			}
+			
+			return ans + ")";
+		};
+	};
+	
+	// Class representing a signal.
+	this.Signal = function(src, value, timestamp) {
+		this.src = src;
+		this.value = value;
+		this.timestamp = timestamp;
+		this.toString = function() {
+			return "(Signal " + this.value + " " + this.timestamp + ")";
+		};
+	};
+	
+	// Node (arrayof node) -> node
+	// 
+	// Superclass of Event and Behaviour... contains code for receiving and 
+	// propagating signals.
+	this.Node = function(prev) {
+		this.next = new Array;
+		
+		this.type = "Node";
+		
+		this.addNext = function(n) { 
+			this.next[this.next.length] = n; 
+		};
+		
+		this.propagate = function(signal) {	
+			for(var i = 0; i < this.next.length; i++) {
+				this.next[i].onSignal(signal);
+			}
+		};
+		
+		for(var i = 0; i < prev.length; i++) {
+			prev[i].addNext(this);
+		}
+	};
+
+	// Event (arrayof node) -> event
+	// 
+	// Class representing an event.
+	// 
+	// Events receive incoming signals, process them and (if appropriate)
+	// immediately send output signals. Values of output signals are based
+	// directly on values of input signals.
+	this.Event = function(prev) {
+		this.superclass = mgr.Node;
+		this.superclass(prev);
+		
+		this.type = "Event";
+		
+		this.onSignal = function(signal) {
+			this.propagate(new mgr.Signal(this, signal.value, new Date));
+		};
+		
+		this.toString = function() { 
+			return "(" + this.type + ")"; 
+		};
+	};
+	
+	// Event any (arrayof node) -> behaviour<any>
+	// 
+	// Class representing a behaviour.
+	// 
+	// Behaviours store persistent values that can be accessed by other
+	// behaviours. They accept input signals and use them as cues to recalculate
+	// their values. Stored values are not necessarily related to signal values:
+	// they may depend on values from other nodes or other bits of JavaScript 
+	// data. Output signals are emitted only if the stored value changes.
+	this.Behaviour = function(init, prev) {
+		this.superclass = mgr.Node;
+		this.superclass(prev);
+		
+		this.type = "Behaviour";
+		
+		this.value = init;
+		
+		this.onSignal = function(signal) {
+			this.setValue(signal.value);
+		};
+		
+		this.setValue = function(newValue) {
+			if(this.value != newValue) {
+				this.value = newValue;
+				this.propagate(new mgr.Signal(this, newValue, new Date));
+			}
+		};
+				
+		this.toString = function() { 
+			return "(" + this.type + " " + this.value + ")"; 
+		};
+	};
+	
+	// FIELDS ---------------------------------------
+
+	this.domEventInputs = new mgr.Hash();
+	this.domEventOutputs = new mgr.Hash();
+	
+	// METHODS --------------------------------------
+
+	// getDomEventData element string (union mgr.DomEventInputs mgr.DomEventOutputs) -> (arrayof node)
+	// 
+	// This internal function returns an array of nodes registered as 
+	// DomEventInputs or DomEventOutputs, depending on the value of the
+	// third parameter.
+	this.getDomEventData = function(id, type, data) {
+		var temp = data.get(id);
+		
+		if(temp == null) {
+			temp = data.put(id, new mgr.Hash());
+		}
+		
+		var ans = temp.get(type);
+		
+		if(ans == null) {
+			ans = temp.put(type, new Array());
+		}
+
+		return ans;
+	};
+
+	// getDomEventInputs element string -> (arrayof node)
+	// 
+	// This internal function returns an array in which nodes registered as 
+	// DomEventInputs for the specified event can be stored and retrieved.
+	this.getDomEventInputs = function(id, type) {
+		return this.getDomEventData(id, type, mgr.domEventInputs);
+	};
+
+	// getDomEventOutputs element string -> (arrayof node)
+	// 
+	// This internal function returns an array in which nodes registered as 
+	// DomEventOutputs for the specified event can be stored and retrieved.
+	this.getDomEventOutputs = function(id, type) {
+		return this.getDomEventData(id, type, mgr.domEventOutputs);
+	};
+
+	// doDomEvent element domEvent -> void
+	//
+	// This internal function is bound to DOM event handlers such as 
+	// 'onsubmit' when they are attached to FrJS via createDomEventInput().
+	this.doDomEvent = function(elem, domEvent) {
+		var id = elem.id;
+		var type = "on" + domEvent.type;
+		
+		var inputs = mgr.getDomEventInputs(id, type);
+		var outputs = mgr.getDomEventOutputs(id, type);
+		
+		// alert("Manager: Handling {" + id + "} {" + type + "} {" + inputs + "} {" + outputs + "}");
+	
+		for(var i = 0; i < inputs.length; i++) {
+			inputs[i].doDomEvent(domEvent);
+		}
+	
+		if(outputs.length > 0) {
+			var node1 = outputs["cancelBubble"];
+			if(node1) domEvent.cancelBubble = node1.value;
+
+			var node2 = outputs["returnValue"];
+			if(node2) {
+				domEvent.returnValue = node2.value;
+				return node2.value;
+			}
+		}
+	};
+
+	// createDomEventInput 
+	//    element 
+	//    (union "onclick" ...) 
+	//    [(domEvent -> <a>)] 
+	//    -> node<a>
+	// 
+	// Registers FrJS to handle a particular DOM event. Returns an Event that 
+	// receives an input signal whenever the specified event occurs.
+	// 
+	// The third argument is a function mapping DOM events to signal values. 
+	// If no argument is supplied, all incoming signals have the boolean value 
+	// 'true'.
+	this.createDomEventInput = function(elem, type) {
+		var id = elem.id;
+
+		var valueFn = arguments.length == 3
+			? function(domEvent) { eval("return domEvent." + arguments[2] + ";"); }
+			: function(domEvent) { return true; };
+
+		var node = new mgr.Event(new Array);
+		
+		node.type = "DomEventInput " + id + " " + type;
+
+		node.doDomEvent = function(domEvent) {
+			// alert(this + ": Handling " + domEvent);
+			this.propagate(new mgr.Signal(this, valueFn(domEvent), new Date));
+		};
+
+		var inputs = mgr.getDomEventInputs(id, type);
+		inputs[inputs.length] = node;
+
+		// alert("Registering {" + id + "} {" + type + "} {" + inputs + "}");
+
+		eval("elem." + type + " = function(domEvent) { return mgr.doDomEvent(elem, domEvent); };");
+
+
+		return node;
+	};
+	
+	// createDomEventOutput 
+	//    element
+	//    (union "onclick" ...)
+	//    (union "resultValue" "cancelBubble") 
+	//    node 
+	//    -> void
+	//
+	// Specifies that a particular node should be used to pass a value back to
+	// a DOM event object. When the event occurs and its input signal has been 
+	// processed by the network, the specified field ("returnValue" or 
+	// "cancelBubble") is set to the value of the specified node, allowing the 
+	// event to be cancelled in the relevant way.
+	this.registerDomEventOutput = function(elem, type, field, node) {
+		var id = elem.id;
+	
+		var outputs = mgr.getDomEventOutputs(id, type);
+		outputs[field] = node;
+		
+		// alert("Registering {" + id + "} {" + type + "} {" + field + "} {" + node + "} {{" + outputs.field + "}} {" + mgr.domEventOutputs + "}");
+
+		eval("elem." + type + " = function(domEvent) { return mgr.doDomEvent(elem, domEvent); };");
+	};
+		
+	// createDomProperty element string -> node
+	// 
+	// Creates a node whose value is echoed a property of an element of the DOM. 
+	// The initial value of the node is set from the DOM and any changes to the 
+	// node's value are copied to the DOM.
+	this.createDomOutput = function(elem, prop, prev) {
+		var id = elem.id;
+
+		var node = new mgr.Behaviour(eval("elem." + prop), prev);
+		
+		node.type = "DomOutput " + id + " " + prop;
+		
+		node.elem = elem;
+		
+		node.setValue = function(newValue) {
+			if(this.value != newValue) {
+				this.value = newValue;
+				eval("this.elem." + prop + " = newValue;");
+				this.propagate(new mgr.Signal(this, newValue, new Date));
+			}
+		};
+
+		return node;		
+	};
+	
+	// filter (a -> boolean) (arrayof node<a>) -> node<b>
+	// 
+	// Creates an event that filters input signals based on a predicate function. 
+	// The function (first parameter) must take a Signal as its single parameter.
+	this.createFilter = function(filterFn, prev) {
+		var node = new mgr.Event(prev);
+		
+		node.type = "Filter " + filterFn;
+		
+		node.onSignal = function(signal) {
+			if(filterFn(signal.value)) {
+				this.value = signal.value;
+				this.propagate(new mgr.Signal(this, signal.value, new Date));
+			}
+		};
+		
+		return node;
+	}
+
+	// createMap (a -> b) (arrayof event<a>) -> event<b>
+	// 
+	// Creates an event that maps input signal values to output signal values 
+	// using a Javascript mapping function. 
+	this.createMap = function(mapFn, prev) {
+		var node = new mgr.Node(prev);
+		
+		node.type = "Map " + mapFn;
+		
+		node.onSignal = function(signal) {
+			var newValue = mapFn(signal.value);
+			
+			if(this.value != newValue) {
+				this.value = newValue;
+				this.propagate(new mgr.Signal(this, newValue, new Date));
+			}
+		};
+		
+		return node;
+	}
+	
+	// createOnce (arrayof event<a>) -> event<a>
+	this.createOnce = function(prev) {
+		var node = new mgr.Event(prev);
+		
+		node.type = "Once";
+		
+		node.fired = false;
+			
+		node.onSignal = function(signal) {
+			if(!this.fired) {
+				this.fired = true;
+				this.propagate(new mgr.Signal(this, signal.value, new Date));
+			}
+		};
+		
+		return node;
+	};
+	
+	// createAlert (arrayof event<a>) -> event<a>
+	//
+	// Creates an event 
+	this.createAlert = function(prev) {
+		var node = new mgr.Event(prev);
+	
+		node.onSignal = function(signal) {
+			alert(signal);
+			this.propagate(new mgr.Signal(this, signal.value, new Date));
+		};
+		
+		return node;
+	}
+	
+	this.createDelay = function(delay, prev) {
+		var node = new mgr.Event(prev);
+		
+		node.type = "Delay " + delay;
+		
+		node.onSignal = function(signal) {
+			window.setTimeout(delay, "this.propagate(new mgr.Signal(this, signal.value, new Date))");
+		};
+		
+		return node;
+	};
+	
+	// createMerge (arrayof event<a>) -> event<a>
+	this.createMerge = function(prev) {
+		var node = new mgr.Event(prev);
+		node.type = "Merge";
+		return node;
+	};
+
+	// createHold (arrayof event<a>) -> behaviour<a>
+	this.createHold = function(init, prev) {
+		var node = new mgr.Behaviour(prev);
+		node.type = "Hold";
+		return node;
+	};
+	
+	// createChanges (arrayof behaviour<a>) -> event<a>
+	this.createChanges = function(prev) {
+		var node = new mgr.Event(prev);
+		node.type = "Changes";
+		return node;
+	};
+	
+	this.createSwitch = function(init, prev) {
+		var node = new mgr.Behaviour(init, prev);
+		
+ 		node.type = "Switch";
+		
+		node.onSignal = function(signal) {
+			this.setValue(!this.value);
+		};
+		
+		return node;
+	};
+	
+	// createFunction (void -> a) (arrayof node<a>) -> behaviour<a>
+	// 
+	// Creates a behaviour whose value is determined by a JavaScript function.
+	// Input signals trigger refreshes, but their values have no effect on the
+	// value of the behaviour. Output signals are only created when the value of
+	// the behaviour changes.
+	this.createFunction = function(valueFn, prev) {
+		var node = new mgr.Behaviour(valueFn(), prev);
+		
+ 		node.type = "Function " + valueFn;
+		
+		node.onSignal = function(signal) {
+			this.setValue(valueFn());
+		};
+		
+		return node;
+	};
+	
+};
