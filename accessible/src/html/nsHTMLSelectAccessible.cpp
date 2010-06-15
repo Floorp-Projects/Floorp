@@ -40,6 +40,7 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsDocAccessible.h"
 #include "nsEventShell.h"
 #include "nsIAccessibleEvent.h"
 #include "nsTextEquivUtils.h"
@@ -780,8 +781,14 @@ nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOpti
   if (!option)
     return;
 
-  nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                          multiSelect);
+
+  nsRefPtr<nsAccEvent> selWithinEvent =
+    new nsAccEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN, multiSelect);
+
+  if (!selWithinEvent)
+    return;
+
+  option->GetDocAccessible()->FireDelayedAccessibleEvent(selWithinEvent);
 
   PRUint32 state = nsAccUtils::State(option);
   PRUint32 eventType;
@@ -792,7 +799,11 @@ nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOpti
     eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
   }
 
-  nsEventShell::FireEvent(eventType, option);
+  nsRefPtr<nsAccEvent> setAddRemoveEvent =
+    new nsAccEvent(eventType, option);
+
+  if (setAddRemoveEvent)
+    option->GetDocAccessible()->FireDelayedAccessibleEvent(setAddRemoveEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
