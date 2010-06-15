@@ -81,6 +81,10 @@ class Assembler : public BaseAssembler
         load32(Address(address.base, address.offset + TAG_OFFSET), reg);
     }
 
+    void loadTypeTag(BaseIndex address, RegisterID reg) {
+        load32(tagOf(address), reg);
+    }
+
     void storeTypeTag(ImmTag imm, Address address) {
         store32(imm, Address(address.base, address.offset + TAG_OFFSET));
     }
@@ -99,6 +103,10 @@ class Assembler : public BaseAssembler
 
     void loadData32(Address address, RegisterID reg) {
         load32(Address(address.base, address.offset + PAYLOAD_OFFSET), reg);
+    }
+
+    void loadData32(BaseIndex address, RegisterID reg) {
+        load32(payloadOf(address), reg);
     }
 
     void storeData32(Imm32 imm, Address address) {
