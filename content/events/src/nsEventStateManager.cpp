@@ -3781,7 +3781,8 @@ nsEventStateManager::UpdateDragDataTransfer(nsDragEvent* dragEvent)
 
 nsIContent* GetParentContentForMouseTarget(nsIContent* aContent)
 {
-  return aContent && aContent->IsInNativeAnonymousSubtree() ?
+  return aContent && (aContent->IsInNativeAnonymousSubtree() ||
+                      aContent->IsNodeOfType(nsINode::eTEXT)) ?
            aContent->GetParent() : nsnull;
 }
 
