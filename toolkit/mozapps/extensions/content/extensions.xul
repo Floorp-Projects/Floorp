@@ -99,7 +99,7 @@
     <vbox id="left-pane">
 
       <!-- category list -->
-      <richlistbox id="categories" flex="1">
+      <richlistbox id="categories" flex="1" persist="last-selected">
         <richlistitem id="category-search" value="addons://search/"
                       class="category"
                       name="&view.search.label;" disabled="true"/>

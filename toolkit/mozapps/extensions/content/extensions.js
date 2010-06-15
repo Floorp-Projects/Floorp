@@ -58,6 +58,8 @@ const SEARCH_SCORE_MATCH_WHOLEWORD = 1;
 const SEARCH_SCORE_MATCH_WORDBOUNDRY = 0.6;
 const SEARCH_SCORE_MATCH_SUBSTRING = 0.3;
 
+const VIEW_DEFAULT = "addons://list/extension";
+
 
 var gStrings = {};
 XPCOMUtils.defineLazyServiceGetter(gStrings, "bundleSvc",
@@ -91,11 +93,26 @@ function initialize() {
   gViewController.initialize();
   gEventManager.initialize();
 
-  gViewController.loadView("addons://list/extension");
+  var view = VIEW_DEFAULT;
+  if (gCategories.node.selectedItem &&
+      gCategories.node.selectedItem.id != "category-search")
+    view = gCategories.node.selectedItem.value;
+
+  if ("arguments" in window && window.arguments.length > 0) {
+    if ("view" in window.arguments[0])
+      view = window.arguments[0].view;
+  }
+
+  gViewController.loadView(view);
 }
 
 function shutdown() {
   gEventManager.shutdown();
+}
+
+// Used by external callers to load a specific view into the manager
+function loadView(url) {
+  gViewController.loadView(url);
 }
 
 var gEventManager = {
@@ -618,10 +635,10 @@ var gCategories = {
     maybeHidden.forEach(function(aId) {
       var type = gViewController.parseViewId(aId).param;
       AddonManager.getAddonsByTypes([type], function(aAddonsList) {
-        self.get(aId).hidden = (aAddonsList.length == 0);
-
-        if (aAddonsList.length > 0)
+        if (aAddonsList.length > 0) {
+          self.get(aId).hidden = false;
           return;
+        }
 
         gEventManager.registerInstallListener({
           onNewInstall: function(aInstall) {
