@@ -171,10 +171,10 @@ mjit::Compiler::jsop_bitop(JSOp op)
         switch (op) {
           case JSOP_BITOR:
             frame.push(Int32Tag(L | R));
-            break;
+            return;
           case JSOP_BITXOR:
             frame.push(Int32Tag(L ^ R));
-            break;
+            return;
           case JSOP_BITAND:
             frame.push(Int32Tag(L & R));
             return;
