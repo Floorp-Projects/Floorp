@@ -366,6 +366,12 @@ class FrameState
     inline Jump testBoolean(Assembler::Condition cond, FrameEntry *fe);
 
     /*
+     * Helper function. Tests if a slot's type is a non-funobj. Condition should
+     * be Equal or NotEqual.
+     */
+    inline Jump testNonFunObj(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
      * Marks a register such that it cannot be spilled by the register
      * allocator. Any pinned registers must be unpinned at the end of the op.
      * Note: This function should only be used on registers tied to FEs.
@@ -399,6 +405,20 @@ class FrameState
 #endif
 
     Address addressOf(const FrameEntry *fe) const;
+
+    /*
+     * This is similar to freeReg(ownRegForData(fe)) - except no movement takes place.
+     * The fe is simply invalidated as if it were popped. This can be used to free
+     * registers in the working area of the stack. Obviously, this can only be called
+     * in infallible code that will pop these entries soon after.
+     */
+    inline void eviscerate(FrameEntry *fe);
+
+    /*
+     * Moves the top of the stack down N slots, popping each item above it.
+     * Caller guarantees the slots below have been observed and eviscerated.
+     */
+    void shimmy(uint32 n);
 
   private:
     inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type, bool weak);
