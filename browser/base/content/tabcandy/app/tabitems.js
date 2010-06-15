@@ -121,6 +121,7 @@ window.TabItem = function(container, tab) {
   var self = this;
   this.tab.mirror.addOnClose(this, function(who, info) {
     TabItems.unregister(self);
+    Trenches.unregister(self.container);
   });   
      
   this.tab.mirror.addSubscriber(this, 'urlChanged', function(who, info) {
@@ -178,15 +179,15 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   reloadBounds: function() {
     var newBounds = Utils.getBounds(this.container);
 
-/*
-    if(!this.bounds || newBounds.width != this.bounds.width || newBounds.height != this.bounds.height) {
+
+/*    if(!this.bounds || newBounds.width != this.bounds.width || newBounds.height != this.bounds.height) {
       // if resizing, or first time, do the whole deal
       if(!this.bounds)
         this.bounds = new Rect(0, 0, 0, 0);
   
       this.setBounds(newBounds, true);      
-    } else { 
-*/
+    } else { */
+
       // if we're just moving, this is more efficient
       this.bounds = newBounds;
       this._updateDebugBounds();
@@ -204,7 +205,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     
     if(!options)
       options = {};
-    
+
     if(this._zoomPrep)
       this.bounds.copy(rect);
     else {
@@ -285,6 +286,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     
     if(!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
+		
+    if (this.parent === null)
+			this.setTrenches(rect);
 
     this.save();
   },
@@ -345,7 +349,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           self.reloadBounds();
           var bounds = self.getBounds();
 					// OH SNAP!
-					var newRect = Trenches.snap(bounds,false);
+					var newRect = Trenches.snap(bounds,false,true);
 					if (newRect) // might be false if no changes were made
 						self.setBounds(bounds,true);
         },
