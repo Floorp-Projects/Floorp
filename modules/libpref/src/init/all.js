@@ -154,7 +154,7 @@ pref("browser.triple_click_selects_paragraph", true);
 pref("media.enforce_same_site_origin", false);
 
 // Media cache size in kilobytes
-pref("media.cache_size", 51200);
+pref("media.cache_size", 512000);
 
 #ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
