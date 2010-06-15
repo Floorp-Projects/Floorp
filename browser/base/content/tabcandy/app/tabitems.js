@@ -18,10 +18,68 @@ window.TabItem = function(container, tab) {
   var $div = iQ(container);
   var self = this;
   
-  $div.data('tabItem', this);    
+  $div.data('tabItem', this);
   $div.data('isDragging', false);
-  $div.draggable(window.Groups.dragOptions);
-  $div.droppable(window.Groups.dropOptions);
+  
+  // ___ superclass setup
+  this._init(container);
+  
+  // override dropOptions with custom tabitem methods
+  // This is mostly to support the phantom groups.
+  this.dropOptions.drop = function(e){
+		$target = iQ(this);  
+		iQ(this).removeClass("acceptsDrop");
+		var phantom = $target.data("phantomGroup")
+		
+		var group = drag.info.item.parent;
+		if( group == null ){
+			phantom.removeClass("phantom");
+			phantom.removeClass("group-content");
+			var group = new Group([$target, drag.info.$el], {container:phantom});
+		} else 
+			group.add( drag.info.$el );      
+	};
+  this.dropOptions.over = function(e){
+		var $target = iQ(this);
+
+		function elToRect($el){
+		 return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
+		}
+
+		var height = elToRect($target).height * 1.5 + 20;
+		var width = elToRect($target).width * 1.5 + 20;
+		var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
+
+		var newLeft = unionRect.left + unionRect.width/2 - width/2;
+		var newTop = unionRect.top + unionRect.height/2 - height/2;
+
+		iQ(".phantom").remove();
+		var phantom = iQ("<div>")
+			.addClass('group phantom group-content')
+			.css({
+				width: width,
+				height: height,
+				position:"absolute",
+				top: newTop,
+				left: newLeft,
+				zIndex: -99
+			})
+			.appendTo("body")
+			.hide()
+			.fadeIn();
+			
+		$target.data("phantomGroup", phantom);      
+	};
+  this.dropOptions.out =  function(e){      
+		var phantom = iQ(this).data("phantomGroup");
+		if(phantom) { 
+			phantom.fadeOut(function(){
+				iQ(this).remove();
+			});
+		}
+	}
+  $div.draggable(this.dragOptions);
+  $div.droppable(this.dropOptions);
   
   $div.mousedown(function(e) {
     if(!Utils.isRightClick(e))
@@ -53,9 +111,6 @@ window.TabItem = function(container, tab) {
   iQ("<div>")
     .addClass('expander')
     .appendTo($div);
-
-  // ___ additional setup
-  this._init(container);
 
   this.reconnected = false;
   this._hasBeenDrawn = false;
