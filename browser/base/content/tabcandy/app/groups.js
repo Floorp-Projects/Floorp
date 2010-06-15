@@ -497,7 +497,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   setTrenches: function(rect) {
 
 		var container = this.container;
-		
+
 		if (!this.borderTrenches) {
 			var bT = this.borderTrenches = {};
 			bT.left = Trenches.register(container,"x","border","left");
@@ -1064,7 +1064,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       iQ(container).draggable({
         cancelClass: 'close name',
         start: function(e, ui){
-          drag.info = new DragInfo(this, e);
+          drag.info = new Drag(this, e);
         },
         drag: function(e, ui){
           drag.info.drag(e, ui);
@@ -1146,13 +1146,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         minWidth: 90,
         minHeight: 90,
         start: function(){
-          Trenches.activateOthersTrenches(self.container);
+          window.Trenches.activateOthersTrenches(self.container);
         },
         resize: function(){
           self.reloadBounds();
           var bounds = self.getBounds();
 					// OH SNAP!
-					var newRect = Trenches.snap(bounds,false);
+					var newRect = window.Trenches.snap(bounds,false);
 					if (newRect) // might be false if no changes were made
 						self.setBounds(bounds,true);
         },
@@ -1160,7 +1160,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           self.reloadBounds();
           self.setUserSize();
           self.pushAway();
-          Trenches.disactivate();
+          window.Trenches.disactivate();
         } 
       });
     } else {
@@ -1294,120 +1294,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 });
 
 // ##########
-// Class: DragInfo
-// Helper class for dragging <Item>s
-// 
-// ----------
-// Constructor: DragInfo
-// Called to create a DragInfo in response to a jQuery-UI draggable "start" event.
-var DragInfo = function(element, event) {
-  this.el = element;
-  this.$el = iQ(this.el);
-  this.item = Items.item(this.el);
-  this.parent = this.item.parent;
-  this.startPosition = new Point(event.clientX, event.clientY);
-  this.startTime = Utils.getMilliseconds();
-  
-  this.$el.data('isDragging', true);
-  this.item.setZ(999999);
-  
-  Trenches.activateOthersTrenches(this.el);
-  
-  // When a tab drag starts, make it the focused tab.
-  if(this.item.isAGroup) {
-    var tab = Page.getActiveTab();
-    if(!tab || tab.parent != this.item) {
-      if(this.item._children.length)
-        Page.setActiveTab(this.item._children[0]);
-    }
-  } else {
-    Page.setActiveTab(this.item);
-  }
-};
-
-DragInfo.prototype = {
-  // ----------  
-  snap: function(event, ui){
-    var me = this.item;
-		var bounds = me.getBounds();
-
-		// OH SNAP!
-		var newRect = Trenches.snap(bounds,true);
-		if (newRect) // might be false if no changes were made
-			me.setBounds(newRect,true);
-    
-    return ui;
-    
-  },
-  
-  // ----------  
-  // Function: drag
-  // Called in response to a jQuery-UI draggable "drag" event.
-  drag: function(event, ui) {
-    if(this.item.isAGroup) {
-      var bb = this.item.getBounds();
-      bb.left = ui.position.left;
-      bb.top = ui.position.top;
-      this.item.setBounds(bb, true);
-      ui = this.snap(event,ui);
-    } else
-      this.item.reloadBounds();
-      
-    if(this.parent && this.parent.expanded) {
-      var now = Utils.getMilliseconds();
-      var distance = this.startPosition.distance(new Point(event.clientX, event.clientY));
-      if(/* now - this.startTime > 500 ||  */distance > 100) {
-        this.parent.remove(this.item);
-        this.parent.collapse();
-      }
-    }
-  },
-
-  // ----------  
-  // Function: stop
-  // Called in response to a jQuery-UI draggable "stop" event.
-  stop: function() {
-    this.$el.data('isDragging', false);    
-
-    // I'm commenting this out for a while as I believe it feels uncomfortable
-    // that groups go away when there is still a tab in them. I do this at
-    // the cost of symmetry. -- Aza
-    /*
-    if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
-        && this.parent._children.length == 1 && !this.parent.getTitle()) {
-      this.parent.remove(this.parent._children[0]);
-    }*/
-
-    if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
-        && this.parent._children.length == 0 && !this.parent.getTitle()) {
-      this.parent.close();
-    }
-     
-    if(this.parent && this.parent.expanded)
-      this.parent.arrange();
-      
-    if(this.item && !this.item.parent) {
-      this.item.setZ(drag.zIndex);
-      drag.zIndex++;
-      
-      this.item.reloadBounds();
-      this.item.pushAway();
-    }
-    
-    Trenches.disactivate();
-    
-  }
-};
-
-// ----------
-// Variable: drag
-// The DragInfo that's currently in process. 
-var drag = {
-  info: null,
-  zIndex: 100
-};
-
-// ##########
 // Class: Groups
 // Singelton for managing all <Group>s. 
 window.Groups = {
@@ -1415,7 +1301,7 @@ window.Groups = {
   dragOptions: {
     cancelClass: 'close',
     start: function(e, ui) {
-      drag.info = new DragInfo(this, e);
+      drag.info = new Drag(this, e);
     },
     drag: function(e, ui) {
       drag.info.drag(e, ui);
@@ -1763,204 +1649,5 @@ window.Groups = {
 
 // ----------
 Groups.init();
-
-// Class: Trench
-// Class for drag-snapping regions; called "trenches" as they are long and narrow.
-var Trench = function(element, xory, type, edge) {
-	this.el = element;
-	this.$el = iQ(this.el);
-	this.xory = xory; // either "x" or "y"
-	this.type = type; // either "border" or "guide"
-	this.edge = edge; // "top", "left", "bottom", or "right"
-
-	this.active = false;
-	this.gutter = 15;
-
-	// position is the position that we should snap to
-	this.position = 0;
-	// radius is how far away we should snap from
-	this.radius = 10;
-	// active range - this is along the perpendicular axis
-	this.range = {min: 0, max: 10000};
-};
-Trench.prototype = {
-	setPosition: function Trench_setPos(position, range) {
-		this.position = position;
-		
-		// optionally, set the range.
-		if (range && 'min' in range && 'max' in range) {
-			this.range.min = range.min;
-			this.range.max = range.max;
-		}
-		
-		// set the appropriate bounds as a rect.
-		if ( this.xory == "x" ) // horizontal
-			this.rect = new Rect ( this.position - this.radius, this.range.min, 2 * this.radius, this.range.max - this.range.min );
-		else
-			this.rect = new Rect ( this.range.min, this.position - this.radius, this.range.max - this.range.min, 2 * this.radius );
-
-		this.show(); // DEBUG
-
-	},
-	setWithRect: function Trench_setWithRect(rect) {
-		if (this.type == "border") {
-			// border trenches have a range.
-			if (this.xory == "x")
-				var range = {min: rect.top - this.gutter, max: rect.top + rect.height + this.gutter};
-			else
-				var range = {min: rect.left - this.gutter, max: rect.left + rect.width + this.gutter};
-			
-			if (this.edge == "left")
-				this.setPosition(rect.left - this.gutter, range);
-			else if (this.edge == "right")
-				this.setPosition(rect.left + rect.width + this.gutter, range);
-			else if (this.edge == "top")
-				this.setPosition(rect.top - this.gutter, range);
-			else if (this.edge == "bottom")
-				this.setPosition(rect.top + rect.height + this.gutter, range);
-		} else if (this.type == "guide") {
-			// guide trenches have no range.
-			if (this.edge == "left")		
-				this.setPosition(rect.left);
-			else if (this.edge == "right")
-				this.setPosition(rect.left + rect.width);
-			else if (this.edge == "top")
-				this.setPosition(rect.top);
-			else if (this.edge == "bottom")
-				this.setPosition(rect.top + rect.height);
-		}
-	},
-	show: function Trench_show() { // DEBUG
-		if (!iQ('#showTrenches:checked').length) {
-			if (this.visibleTrench)
-				this.visibleTrench.remove();
-			return;
-		}
-
-		if (!this.visibleTrench)
-			this.visibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-101});
-		var visibleTrench = this.visibleTrench;
-
-		if (this.active)
-			visibleTrench.css({opacity: 0.5});
-		else
-			visibleTrench.css({opacity: 0.05});
-			
-		if (this.type == "border")
-			visibleTrench.css({backgroundColor:'red'});
-		else
-			visibleTrench.css({backgroundColor:'blue'});
-
-		visibleTrench.css(this.rect);
-		iQ("body").append(visibleTrench);
-	},
-	rectOverlaps: function Trench_rectOverlaps(rect, assumeConstantSize) {
-		var xRange = {min: rect.left, max: rect.left + rect.width};
-		var yRange = {min: rect.top, max: rect.top + rect.height};
-		
-		var edgeToCheck;
-		if (this.type == "border") {
-			if (this.edge == "left")
-				edgeToCheck = "right";
-			else if (this.edge == "right")
-				edgeToCheck = "left";
-			else if (this.edge == "top")
-				edgeToCheck = "bottom";
-			else if (this.edge == "bottom")
-				edgeToCheck = "top";
-		} else if (this.type == "guide") {
-			edgeToCheck = this.edge;
-		}
-
-		switch (edgeToCheck) {
-			case "left":
-				if (this.ruleOverlaps(rect.left, yRange)) {
-					rect.left = this.position;
-					return rect;
-				}
-				break;
-			case "right":
-				if (this.ruleOverlaps(rect.left + rect.width, yRange)) {
-					if (assumeConstantSize)
-						rect.left = this.position - rect.width;
-					else
-						rect.width = this.position - rect.left;
-					return rect;
-				}
-				break;
-			case "top":
-				if (this.ruleOverlaps(rect.top, xRange)) {
-					rect.top = this.position;
-					return rect;
-				}
-				break;
-			case "bottom":
-				if (this.ruleOverlaps(rect.top + rect.height, xRange)) {
-					if (assumeConstantSize)
-						rect.top = this.position - rect.height;
-					else
-						rect.height = this.position - rect.top;
-					return rect;
-				}
-		}
-			
-		return false;
-	},
-	ruleOverlaps: function Trench_ruleOverlaps(position, range) {
-		return (this.position - this.radius <= position && position <= this.position + this.radius
-						&& range.min <= this.range.max && this.range.min <= range.max);
-	}
-};
-
-// global Trenches
-// used to track "trenches" in which the edges will snap.
-var Trenches = {
-	trenches: [],
-	register: function Trenches_register(element, xory, type, edge) {
-		var trench = new Trench(element, xory, type, edge);
-		this.trenches.push(trench);
-		return trench;
-	},
-	activateOthersTrenches: function Trenches_activateOthersTrenches(element) {
-		this.trenches.forEach(function(t) {
-			if (t.el === element)
-				return;
-			t.active = true;
-			t.show(); // debug
-		});
-	},
-	disactivate: function Trenches_disactivate() {
-		this.trenches.forEach(function(t) {
-			t.active = false;
-			t.show();
-		});
-	},
-	snap: function Trenches_snap(rect,assumeConstantSize) {
-		var updated = false;
-		this.trenches.forEach(function(t){
-			if (!t.active)
-				return;
-			// newRect will be a new rect, or false
-			var newRect = t.rectOverlaps(rect,assumeConstantSize);
-			if (newRect) {
-				rect = newRect;
-				updated = true;
-			}
-		});
-		if (updated)
-			return rect;
-		else
-			return false;
-	},
-	show: function Trenches_show() {
-		this.trenches.forEach(function(t){
-			t.show();
-		});
-	}
-};
-
-iQ('#showTrenches').change(function() {
-	Trenches.show();
-})
 
 })();
