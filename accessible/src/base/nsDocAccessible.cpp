@@ -1086,8 +1086,9 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     nsCOMPtr<nsINode> focusedNode = GetCurrentFocus();
     if (nsCoreUtils::GetRoleContent(focusedNode) == aContent) {
       nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
-      if (rootAcc)
+      if (rootAcc) {
         rootAcc->FireAccessibleFocusEvent(nsnull, focusedNode, nsnull, PR_TRUE);
+      }
     }
     return;
   }
