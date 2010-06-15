@@ -229,6 +229,12 @@ class FrameState
     inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg);
 
     /*
+     * Returns a register that contains the constant value of the
+     * frame entry's data payload.
+     */
+    inline RegisterID tempRegForConstant(FrameEntry *fe);
+
+    /*
      * Allocates a register for a FrameEntry's data, such that the compiler
      * can modify it in-place.
      *
