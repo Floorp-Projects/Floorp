@@ -338,13 +338,22 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         aspectRatio: true,
         minWidth: TabItems.minTabWidth,
         minHeight: TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth),
+        start: function(){
+          Trenches.activateOthersTrenches(self.container);
+        },
         resize: function(){
           self.reloadBounds();
+          var bounds = self.getBounds();
+					// OH SNAP!
+					var newRect = Trenches.snap(bounds,false);
+					if (newRect) // might be false if no changes were made
+						self.setBounds(bounds,true);
         },
         stop: function(){
           self.reloadBounds();
           self.setUserSize();        
           self.pushAway();
+          Trenches.disactivate();
         } 
       });
     } else {
