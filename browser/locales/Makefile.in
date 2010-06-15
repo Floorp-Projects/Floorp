@@ -180,12 +180,6 @@ libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
 
-tests:
-ifneq (en-US, $(AB_CD))
-	@echo "Verifying $(AB_CD) installer variable usage"
-	@$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/check-locales.pl $(LOCALE_SRCDIR)/installer
-endif
-
 
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
