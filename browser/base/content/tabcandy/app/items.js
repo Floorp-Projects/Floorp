@@ -472,8 +472,9 @@ window.Items = {
       figure();
     }
     
-    if(rows == 1) {
-      tabWidth = Math.min(Math.min(TabItems.tabWidth, bounds.width / count), bounds.height / tabAspect);
+    if(rows == 1 && columns == 1) {
+      var maxWidth = Math.max(TabItems.tabWidth, bounds.width / 2);
+      tabWidth = Math.min(Math.min(maxWidth, bounds.width / count), bounds.height / tabAspect);
       tabHeight = tabWidth * tabAspect;
     }
     
