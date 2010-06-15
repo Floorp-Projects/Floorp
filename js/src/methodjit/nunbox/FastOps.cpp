@@ -439,9 +439,16 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     if (JSOpBinaryTryConstantFold(cx, frame, op, lhs, rhs))
         return;
 
-    /* Bail out if there's a non-int constant, or unhandled ops.
-     * This is temporary while ops are still being implemented. */
-    if (op == JSOP_MUL || op == JSOP_DIV || op == JSOP_MOD) {
+    /*
+     * Bail out if there's a non-int constant, or unhandled ops.
+     * This is temporary while ops are still being implemented.
+     */
+    if ((op == JSOP_DIV || op == JSOP_MOD)
+#if defined(JS_CPU_ARM)
+    /* ARM cannot detect integer overflow with multiplication. */
+    || op == JSOP_MUL
+#endif /* JS_CPU_ARM */
+    ) {
         prepareStubCall();
         stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
@@ -462,8 +469,10 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
             stubcc.linkExit(lhsFail);
         }
 
-        /* One of the values should not be a constant.
-         * If there is a constant, force it to be in rhs. */
+        /* 
+         * One of the values should not be a constant.
+         * If there is a constant, force it to be in rhs.
+         */
         bool swapped = false;
         if (lhs->isConstant()) {
             JS_ASSERT(!rhs->isConstant());
@@ -508,6 +517,23 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
                                         rhsReg, reg);
             }
             break;
+
+#if !defined(JS_CPU_ARM)
+          case JSOP_MUL:
+            if (rhs->isConstant()) {
+                RegisterID rhsReg = frame.tempRegForConstant(rhs);
+                fail = masm.branchMul32(Assembler::Overflow,
+                                        rhsReg, reg);
+            } else if (frame.shouldAvoidDataRemat(rhs)) {
+                fail = masm.branchMul32(Assembler::Overflow,
+                                        frame.addressOf(rhs), reg);
+            } else {
+                RegisterID rhsReg = frame.tempRegForData(rhs);
+                fail = masm.branchMul32(Assembler::Overflow,
+                                        rhsReg, reg);
+            }
+            break;
+#endif /* JS_CPU_ARM */
 
           default:
             JS_NOT_REACHED("kittens");
