@@ -327,6 +327,8 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
                                            PRBool aIsAsynch,
                                            EIsFromUserInput aIsFromUserInput)
 {
+  // Implementors: only fire delayed/async events from this method.
+
   if (mCaretAccessible) {
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
     if (nsevent) {
@@ -364,7 +366,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
       nsIDocument *doc = aNode->GetOwnerDoc();
       finalFocusNode = doc->GetElementById(id);
       if (!finalFocusNode) {
-        // If aria-activedescendant is set to nonextistant ID, then treat as focus
+        // If aria-activedescendant is set to nonexistant ID, then treat as focus
         // on the activedescendant container (which has real DOM focus)
         finalFocusNode = aNode;
       }
@@ -380,8 +382,8 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
   if (!finalFocusAccessible) {
     finalFocusAccessible = GetAccService()->GetAccessible(finalFocusNode);
     // For activedescendant, the ARIA spec does not require that the user agent
-    // checks whether finalFocusNode is actually a descendant of the element with
-    // the activedescendant attribute.
+    // checks whether finalFocusNode is actually a DOM descendant of the element
+    // with the aria-activedescendant attribute.
     if (!finalFocusAccessible) {
       return PR_FALSE;
     }
@@ -400,9 +402,13 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
         if (menuBarAccessible) {
           mCurrentARIAMenubar = menuBarAccessible->GetNode();
           if (mCurrentARIAMenubar) {
-            nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                                    menuBarAccessible, PR_FALSE,
-                                    aIsFromUserInput);
+            nsRefPtr<nsAccEvent> menuStartEvent =
+              new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_START,
+                             menuBarAccessible, PR_FALSE, aIsFromUserInput,
+                             nsAccEvent::eAllowDupes);
+            if (menuStartEvent) {
+              FireDelayedAccessibleEvent(menuStartEvent);
+            }
           }
         }
       }
