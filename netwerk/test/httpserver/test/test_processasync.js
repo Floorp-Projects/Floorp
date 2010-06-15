@@ -331,10 +331,13 @@ handlers["/handleAsyncOrdering"] = handleAsyncOrdering;
 function stop_handleAsyncOrdering(ch, cx, status, data)
 {
   do_check_eq(data.length, 20 * 65536);
-  do_check_true(data.every(function(v) { return v === 0; }));
+  data.forEach(function(v, index)
+  {
+    if (v !== 0)
+      do_throw("value " + v + " at index " + index + " should be zero");
+  });
 }
 
 test = new Test(PREPATH + "/handleAsyncOrdering",
                 null, null, stop_handleAsyncOrdering);
 tests.push(test);
-
