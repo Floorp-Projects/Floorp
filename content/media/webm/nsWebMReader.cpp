@@ -84,6 +84,7 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
       eof = PR_TRUE;
       break;
     }
+    decoder->NotifyBytesConsumed(bytes);
     aLength -= bytes;
     p += bytes;
   }
