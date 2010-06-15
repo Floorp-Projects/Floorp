@@ -78,19 +78,15 @@
         <parameter name="aMessage"/>
         <body><![CDATA[
           switch (aMessage.name) {
-            case "DOMContentLoaded":
-              let data = aMessage.json;
-              if (this.mIconURL == "") {
-                this.mIconURL = this.documentURI.prePath + "/favicon.ico";
-              }
-              break;
-
             case "DOMPopupBlocked":
               this.onPopupBlocked(aMessage);
               break;
 
             case "pageshow":
               this.onPageShow(aMessage);
+
+              if (this.mIconURL == "")
+                this.mIconURL = this.documentURI.prePath + "/favicon.ico";
               break;
 
             case "pagehide":
@@ -373,7 +369,6 @@
           }
 
           messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
-          messageManager.addMessageListener("DOMContentLoaded", this);
           messageManager.addMessageListener("DOMTitleChanged", this);
           messageManager.addMessageListener("DOMLinkAdded", this);
 
