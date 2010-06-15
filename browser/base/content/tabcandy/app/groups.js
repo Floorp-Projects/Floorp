@@ -19,22 +19,6 @@ function min(list){ return list.slice().sort(numCmp)[0]; }
 // Private to this file.
 function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 
-// ----------
-// Function: dropAcceptFunction
-// Given a DOM element, returns true if it should accept tabs being dropped on it.
-// Private to this file.
-function dropAcceptFunction(el) {
-  var $el = iQ(el);
-  if($el.hasClass('tab')) {
-    var item = Items.item($el);
-    if(item && (!item.parent || !item.parent.expanded)) {
-      return true;
-    }
-  }           
-          
-  return false;
-}
-
 // ##########
 // Class: Group
 // A single group in the tab candy window. Descended from <Item>.
@@ -1060,21 +1044,17 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   _addHandlers: function(container) {
     var self = this;
     
-    if(!this.locked.bounds) {
-      iQ(container).draggable({
-        cancelClass: 'close name',
-        start: function(e, ui){
-          drag.info = new Drag(this, e);
-        },
-        drag: function(e, ui){
-          drag.info.drag(e, ui);
-        }, 
-        stop: function() {
-          drag.info.stop();
-          drag.info = null;
-        }
-      });
-    }
+    this.dropOptions.over = function(){
+			if( !self.isNewTabsGroup() )
+				iQ(this).addClass("acceptsDrop");
+		};
+		this.dropOptions.drop = function(event){
+			iQ(this).removeClass("acceptsDrop");
+			self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
+		};
+    
+    if(!this.locked.bounds)
+      iQ(container).draggable(this.dragOptions);
     
     iQ(container)
       .mousedown(function(e){
@@ -1114,25 +1094,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         self._mouseDown = null;
     });
     
-    iQ(container).droppable({
-      over: function(){
-        if( !self.isNewTabsGroup() )
-          iQ(this).addClass("acceptsDrop");
-      },
-      out: function(){
-        var group = drag.info.item.parent;
-        if(group) {
-          group.remove(drag.info.$el, {dontClose: true});
-        }
-          
-        iQ(this).removeClass("acceptsDrop");
-      },
-      drop: function(event){
-        iQ(this).removeClass("acceptsDrop");
-        self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
-      },
-      accept: dropAcceptFunction
-    });
+    iQ(container).droppable(this.dropOptions);
   },
 
   // ----------  
@@ -1297,77 +1259,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 // Class: Groups
 // Singelton for managing all <Group>s. 
 window.Groups = {
-  // ----------  
-  dragOptions: {
-    cancelClass: 'close',
-    start: function(e, ui) {
-      drag.info = new Drag(this, e);
-    },
-    drag: function(e, ui) {
-      drag.info.drag(e, ui);
-    },
-    stop: function() {
-      drag.info.stop();
-      drag.info = null;
-    }
-  },
-  
-  // ----------  
-  dropOptions: {
-    accept: dropAcceptFunction,
-    drop: function(e){
-      $target = iQ(this);  
-      iQ(this).removeClass("acceptsDrop");
-      var phantom = $target.data("phantomGroup")
-      
-      var group = drag.info.item.parent;
-      if( group == null ){
-        phantom.removeClass("phantom");
-        phantom.removeClass("group-content");
-        var group = new Group([$target, drag.info.$el], {container:phantom});
-      } else 
-        group.add( drag.info.$el );      
-    },
-    over: function(e){
-      var $target = iQ(this);
-
-      function elToRect($el){
-       return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
-      }
-
-      var height = elToRect($target).height * 1.5 + 20;
-      var width = elToRect($target).width * 1.5 + 20;
-      var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
-
-      var newLeft = unionRect.left + unionRect.width/2 - width/2;
-      var newTop = unionRect.top + unionRect.height/2 - height/2;
-
-      iQ(".phantom").remove();
-      var phantom = iQ("<div>")
-        .addClass('group phantom group-content')
-        .css({
-          width: width,
-          height: height,
-          position:"absolute",
-          top: newTop,
-          left: newLeft,
-          zIndex: -99
-        })
-        .appendTo("body")
-        .hide()
-        .fadeIn();
-        
-      $target.data("phantomGroup", phantom);      
-    },
-    out: function(e){      
-      var phantom = iQ(this).data("phantomGroup");
-      if(phantom) { 
-        phantom.fadeOut(function(){
-          iQ(this).remove();
-        });
-      }
-    }
-  }, 
   
   // ----------
   init: function() {
