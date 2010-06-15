@@ -366,7 +366,7 @@ JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
             return JS_FALSE;
 
         // Store ourselves and our native interface within the JSObject
-        if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(this)))
+        if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL((void *) this)))
             return JS_FALSE;
 
         if(!JS_SetReservedSlot(ccx, funobj, 1, PRIVATE_TO_JSVAL(iface)))
