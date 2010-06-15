@@ -57,6 +57,9 @@ import android.util.*;
 abstract public class GeckoApp
     extends Activity
 {
+    public static final String ACTION_ALERT_CLICK = "org.mozilla.gecko.ACTION_ALERT_CLICK";
+    public static final String ACTION_ALERT_CLEAR = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
+
     public static FrameLayout mainLayout;
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
@@ -430,5 +433,9 @@ abstract public class GeckoApp
             Log.i("GeckoAppJava", e.toString());
         }
         System.exit(0);
+    }
+
+    public void handleNotification(String action, String alertName, String alertCookie) {
+        GeckoAppShell.handleNotification(action, alertName, alertCookie);
     }
 }

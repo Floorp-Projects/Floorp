@@ -56,9 +56,11 @@ interface nsIAlertsService : nsISupports
     *                       consumer during the alert listener callbacks.
     * @param alertListener  Used for callbacks. May be null if the caller 
     *                       doesn't care about callbacks.
-    * @param name           The name of the notification.  This is currently
-    *                       only used on OS X with Growl.  On OS X with Growl,
-    *                       users can disable notifications with a given name.
+    * @param name           The name of the notification. This is currently
+    *                       only used on OS X with Growl and Android.
+    *                       On OS X with Growl, users can disable notifications
+    *                       with a given name. On Android the name is hashed
+    *                       and used as a notification ID.
     *
     * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
     *
