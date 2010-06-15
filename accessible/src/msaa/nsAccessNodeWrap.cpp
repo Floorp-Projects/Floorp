@@ -70,7 +70,7 @@ PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
 // Used to determine whether an IAccessible2 compatible screen reader is loaded.
 PRBool nsAccessNodeWrap::gIsIA2Disabled = PR_FALSE;
 
-nsIAccessibleTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
+nsAccTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
 
 // Pref to disallow CtrlTab preview functionality if JAWS or Window-Eyes are
 // running.

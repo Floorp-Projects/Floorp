@@ -1591,7 +1591,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
       // Fire reorder event if it's unconditional (see InvalidateCacheSubtree
       // method) or if changed node (that is the reason of this reorder event)
       // is accessible or has accessible children.
-      nsCOMPtr<nsAccReorderEvent> reorderEvent = do_QueryInterface(aEvent);
+      nsAccReorderEvent *reorderEvent = downcast_accEvent(aEvent);
       if (reorderEvent->IsUnconditionalEvent() ||
           reorderEvent->HasAccessibleInReasonSubtree()) {
         nsEventShell::FireEvent(aEvent);

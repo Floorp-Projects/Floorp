@@ -437,14 +437,14 @@ nsAccEventQueue::CoalesceReorderEventsFromSameSource(nsAccEvent *aAccEvent1,
                                                      nsAccEvent *aAccEvent2)
 {
   // Do not emit event2 if event1 is unconditional.
-  nsCOMPtr<nsAccReorderEvent> reorderEvent1 = do_QueryInterface(aAccEvent1);
+  nsAccReorderEvent *reorderEvent1 = downcast_accEvent(aAccEvent1);
   if (reorderEvent1->IsUnconditionalEvent()) {
     aAccEvent2->mEventRule = nsAccEvent::eDoNotEmit;
     return;
   }
 
   // Do not emit event1 if event2 is unconditional.
-  nsCOMPtr<nsAccReorderEvent> reorderEvent2 = do_QueryInterface(aAccEvent2);
+  nsAccReorderEvent *reorderEvent2 = downcast_accEvent(aAccEvent2);
   if (reorderEvent2->IsUnconditionalEvent()) {
     aAccEvent1->mEventRule = nsAccEvent::eDoNotEmit;
     return;
@@ -462,7 +462,7 @@ nsAccEventQueue::CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
                                                    nsAccEvent *aDescendantAccEvent)
 {
   // Do not emit descendant event if this event is unconditional.
-  nsCOMPtr<nsAccReorderEvent> reorderEvent = do_QueryInterface(aAccEvent);
+  nsAccReorderEvent *reorderEvent = downcast_accEvent(aAccEvent);
   if (reorderEvent->IsUnconditionalEvent())
     aDescendantAccEvent->mEventRule = nsAccEvent::eDoNotEmit;
 }
