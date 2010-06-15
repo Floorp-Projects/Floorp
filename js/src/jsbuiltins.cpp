@@ -275,7 +275,11 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
-    return HasProperty(cx, obj, ATOM_TO_JSID(idstr));
+    jsid id;
+    if (!js_ValueToStringId(cx, StringTag(idstr), &id))
+        return JS_NEITHER;
+
+    return HasProperty(cx, obj, id);
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedProperty, CONTEXT, OBJECT, STRING, 0, ACC_STORE_ANY)
 
