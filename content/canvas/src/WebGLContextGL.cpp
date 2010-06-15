@@ -1233,6 +1233,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS:
+        case LOCAL_GL_PACK_ALIGNMENT:
         //case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE:
         //case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
         {
@@ -2027,20 +2028,33 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
     return NS_OK;
 }
 
-// XXX #if 0
 NS_IMETHODIMP
 WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 {
-    if (pname != LOCAL_GL_PACK_ALIGNMENT &&
-        pname != LOCAL_GL_UNPACK_ALIGNMENT)
-        return ErrorInvalidEnum("PixelStorei: invalid parameter");
-
-    MakeContextCurrent();
-    gl->fPixelStorei(pname, param);
+    switch (pname) {
+        case UNPACK_FLIP_Y_WEBGL:
+            mPixelStoreFlipY = (param != 0);
+            break;
+        case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+            mPixelStorePremultiplyAlpha = (param != 0);
+            break;
+        case LOCAL_GL_PACK_ALIGNMENT:
+        case LOCAL_GL_UNPACK_ALIGNMENT:
+             if (param != 1 &&
+                 param != 2 &&
+                 param != 4 &&
+                 param != 8)
+                 return ErrorInvalidValue("PixelStorei: invalid pack/unpack alignment value");
+            MakeContextCurrent();
+            gl->fPixelStorei(pname, param);
+            break;
+        default:
+            return ErrorInvalidEnum("PixelStorei: invalid parameter");
+    }
 
     return NS_OK;
 }
-//#endif
+
 
 GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, float, float)
 
@@ -2812,7 +2826,7 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum interna
     nsRefPtr<gfxImageSurface> isurf;
 
     nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
-                                           PR_FALSE/*flipY*/, PR_FALSE/*premultiplyAlpha*/);
+                                           mPixelStoreFlipY, mPixelStorePremultiplyAlpha);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2986,7 +3000,7 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
     nsRefPtr<gfxImageSurface> isurf;
 
     nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
-                                           PR_FALSE/*flipY*/, PR_FALSE/*premultiplyAlpha*/);
+                                           mPixelStoreFlipY, mPixelStorePremultiplyAlpha);
     if (NS_FAILED(rv))
         return rv;
 
