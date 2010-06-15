@@ -44,6 +44,7 @@
 #include "methodjit/MachineRegs.h"
 #include "methodjit/FrameEntry.h"
 #include "CodeGenIncludes.h"
+#include "ImmutableSync.h"
 
 namespace js {
 namespace mjit {
@@ -87,12 +88,12 @@ namespace mjit {
  */
 class FrameState
 {
+    friend class ImmutableSync;
+
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Imm32 Imm32;
-
-    friend struct SyncRegs;
 
     static const uint32 InvalidIndex = 0xFFFFFFFF;
 
@@ -500,6 +501,8 @@ class FrameState
      * entry is active, you must check the allocated registers.
      */
     RegisterState regstate[Assembler::TotalRegisters];
+
+    mutable ImmutableSync reifier;
 };
 
 } /* namespace mjit */
