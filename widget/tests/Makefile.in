@@ -73,6 +73,7 @@ _CHROME_FILES =	test_bug343416.xul \
 		test_plugin_scroll_consistency.html \
 		test_composition_text_querycontent.xul \
 		window_composition_text_querycontent.xul \
+		test_input_events_on_deactive_window.xul \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
