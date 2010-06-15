@@ -2065,7 +2065,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei he
     if (NS_FAILED(js.error))
         return js.error;
 
-    if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
+    if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         LogMessage("ReadPixels: Not allowed");
         return NS_ERROR_DOM_SECURITY_ERR;
     }
@@ -2187,7 +2187,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     if (!res.mSurface)
         return NS_ERROR_FAILURE;
 
-    CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, res.mPrincipal, res.mIsWriteOnly);
+    CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(), res.mPrincipal, res.mIsWriteOnly);
 
     if (res.mSurface->GetType() != gfxASurface::SurfaceTypeImage) {
         // SurfaceFromElement lied!
@@ -3035,7 +3035,7 @@ WebGLContext::GetImageData(PRUint32 x, PRUint32 y, PRUint32 w, PRUint32 h)
     if (!mCanvasElement)
         return NS_ERROR_FAILURE;
 
-    if (mCanvasElement->IsWriteOnly() && !IsCallerTrustedForRead()) {
+    if (HTMLCanvasElement()->IsWriteOnly() && !IsCallerTrustedForRead()) {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_SECURITY_ERR;
     }
