@@ -2806,10 +2806,38 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
 }
 
 NS_IMETHODIMP
-WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level,
-                             nsIDOMElement *elt,
-                             WebGLboolean flipY, WebGLboolean premultiplyAlpha)
+WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum internalformat,
+                             WebGLenum format, GLenum type, nsIDOMElement *elt)
 {
+    nsRefPtr<gfxImageSurface> isurf;
+
+    nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
+                                           PR_FALSE/*flipY*/, PR_FALSE/*premultiplyAlpha*/);
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ASSERTION(isurf->Stride() == isurf->Width() * 4, "Bad stride!");
+
+    PRUint32 byteLength = isurf->Stride() * isurf->Height();
+
+    return TexImage2D_base(target, level, internalformat,
+                           isurf->Width(), isurf->Height(), 0,
+                           format, type,
+                           isurf->Data(), byteLength);
+}
+
+NS_IMETHODIMP
+WebGLContext::TexImage2D_dom_old_API_deprecated(WebGLenum target, WebGLint level, nsIDOMElement *elt,
+                                                PRBool flipY, PRBool premultiplyAlpha)
+{
+    static PRBool firsttime = PR_TRUE;
+
+    if (firsttime) {
+        LogMessage("The WebGL spec changed, TexImage2D is now taking at least 6 parameters, please "
+                   "adapt your JavaScript code as support for the old API will soon be dropped!");
+        firsttime = PR_FALSE;
+    }
+
     nsRefPtr<gfxImageSurface> isurf;
 
     nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
@@ -2817,10 +2845,14 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level,
     if (NS_FAILED(rv))
         return rv;
 
+    NS_ASSERTION(isurf->Stride() == isurf->Width() * 4, "Bad stride!");
+
+    PRUint32 byteLength = isurf->Stride() * isurf->Height();
+
     return TexImage2D_base(target, level, LOCAL_GL_RGBA,
                            isurf->Width(), isurf->Height(), 0,
                            LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                           isurf->Data(), isurf->Stride() * isurf->Height());
+                           isurf->Data(), byteLength);
 }
 
 NS_IMETHODIMP
@@ -2948,22 +2980,23 @@ WebGLContext::TexSubImage2D_array(WebGLenum target, WebGLint level,
 NS_IMETHODIMP
 WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                                 WebGLint xoffset, WebGLint yoffset,
-                                WebGLsizei width, WebGLsizei height,
-                                nsIDOMElement *elt,
-                                WebGLboolean flipY, WebGLboolean premultiplyAlpha)
+                                WebGLenum format, WebGLenum type,
+                                nsIDOMElement *elt)
 {
     nsRefPtr<gfxImageSurface> isurf;
 
     nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
-                                           flipY, premultiplyAlpha);
+                                           PR_FALSE/*flipY*/, PR_FALSE/*premultiplyAlpha*/);
     if (NS_FAILED(rv))
         return rv;
 
+    PRUint32 byteLength = isurf->Stride() * isurf->Height();
+
     return TexSubImage2D_base(target, level,
                               xoffset, yoffset,
-                              width, height,
+                              isurf->Width(), isurf->Height(),
                               LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                              isurf->Data(), isurf->Stride() * isurf->Height());
+                              isurf->Data(), byteLength);
 }
 
 #if 0

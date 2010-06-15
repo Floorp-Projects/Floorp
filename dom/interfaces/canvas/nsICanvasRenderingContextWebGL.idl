@@ -745,9 +745,11 @@ interface nsICanvasRenderingContextWebGL : nsISupports
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
-  [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in nsIDOMElement element,
-                                 [optional] in WebGLboolean premultiply, [optional] in WebGLboolean asPremultipliedAlpha);
-
+  [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+                                 in WebGLenum format, in WebGLenum type, in nsIDOMElement element);
+  // XXX the old API. Eventually drop that.
+  [noscript] void TexImage2D_dom_old_API_deprecated(in WebGLenum target, in WebGLint level,
+                                                    in nsIDOMElement element, in PRBool flipY, in PRBool premultiplyAlpha);
 
   void texSubImage2D([optional] in long dummy);
   [noscript] void texSubImage2D_buf(in WebGLenum target, in WebGLint level,
@@ -758,9 +760,8 @@ interface nsICanvasRenderingContextWebGL : nsISupports
                                       in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texSubImage2D_dom(in WebGLenum target, in WebGLint level,
-                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                    in nsIDOMElement element,
-                                    [optional] in WebGLboolean premultiply, [optional] in WebGLboolean asPremultipliedAlpha);
+                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLenum format, in WebGLenum type,
+                                    in nsIDOMElement element);
 
   // Modified: This replaces glTexParameterf, glTexParameterfv, glTexParameteri and glTexParameteriv
   void texParameterf(in WebGLenum target, in WebGLenum pname, in WebGLfloat param);
