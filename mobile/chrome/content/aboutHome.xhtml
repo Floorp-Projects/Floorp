@@ -140,8 +140,9 @@
 
     function openTabs(aURLs) {
       let BrowserUI = getChromeWin().BrowserUI;
-      for (let i=0; i< aURLs.length; i++) {
-        BrowserUI.newTab(aURLs[i]);
+      let owner = getChromeWin().Browser.selectedTab;
+      for (let i=0; i < aURLs.length; i++) {
+        BrowserUI.newTab(aURLs[i], owner);
       }
     }
 
