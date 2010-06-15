@@ -42,30 +42,28 @@ var Drag = function(element, event) {
 Drag.prototype = {
   // ----------  
   snap: function(event, ui){
-    var me = this.item;
-		var bounds = me.getBounds();
+		var bounds = this.item.getBounds();
 
 		// OH SNAP!
 		var newRect = Trenches.snap(bounds,true);
 		if (newRect) // might be false if no changes were made
-			me.setBounds(newRect,true);
-    
+			this.item.setBounds(newRect,true);
+
     return ui;
-    
   },
   
   // ----------  
   // Function: drag
   // Called in response to a jQuery-UI draggable "drag" event.
   drag: function(event, ui) {
-    if(this.item.isAGroup) {
+//    if(this.item.isAGroup) {
       var bb = this.item.getBounds();
       bb.left = ui.position.left;
       bb.top = ui.position.top;
       this.item.setBounds(bb, true);
       ui = this.snap(event,ui);
-    } else
-      this.item.reloadBounds();
+//    } else
+//      this.item.reloadBounds();
       
     if(this.parent && this.parent.expanded) {
       var now = Utils.getMilliseconds();
