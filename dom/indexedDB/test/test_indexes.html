@@ -448,6 +448,333 @@
 
       is(keyIndex, 4, "Saw all the expected keys");
 
+      keyIndex = 0;
+
+      request = objectStore.index("name").openObjectCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
+
+      keyIndex = objectStoreDataNameSort.length - 1;
+
+      request = objectStore.index("name").openObjectCursor(null, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
+
+      keyIndex = 1;
+      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron");
+
+      request = objectStore.index("name").openObjectCursor(keyRange);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      keyIndex = 2;
+      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", true);
+
+      request = objectStore.index("name").openObjectCursor(keyRange);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      keyIndex = 1;
+      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", false, true);
+
+      request = objectStore.index("name").openObjectCursor(keyRange);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 4, "Saw all the expected keys");
+
+      keyIndex = 2;
+      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", true, true);
+
+      request = objectStore.index("name").openObjectCursor(keyRange);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 4, "Saw all the expected keys");
+
+      keyIndex = 4;
+      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron");
+
+      request = objectStore.index("name").openObjectCursor(keyRange, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 0, "Saw all the expected keys");
+
       finishTest();
       yield;
     }

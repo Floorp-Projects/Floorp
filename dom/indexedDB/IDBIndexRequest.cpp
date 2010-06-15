@@ -140,6 +140,45 @@ private:
   nsTArray<KeyKeyPair> mData;
 };
 
+class OpenObjectCursorHelper : public AsyncConnectionHelper
+{
+public:
+  OpenObjectCursorHelper(IDBTransactionRequest* aTransaction,
+                         IDBRequest* aRequest,
+                         IDBIndexRequest* aIndex,
+                         PRInt64 aId,
+                         bool aUnique,
+                         bool aAutoIncrement,
+                         const Key& aLeftKey,
+                         const Key& aRightKey,
+                         PRUint16 aKeyRangeFlags,
+                         PRUint16 aDirection,
+                         PRBool aPreload)
+  : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex), mId(aId),
+    mUnique(aUnique), mAutoIncrement(aAutoIncrement), mLeftKey(aLeftKey),
+    mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
+    mDirection(aDirection), mPreload(aPreload)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+private:
+  // In-params.
+  nsRefPtr<IDBIndexRequest> mIndex;
+  const PRInt64 mId;
+  const bool mUnique;
+  const bool mAutoIncrement;
+  const Key mLeftKey;
+  const Key mRightKey;
+  const PRUint16 mKeyRangeFlags;
+  const PRUint16 mDirection;
+  const PRBool mPreload;
+
+  // Out-params.
+  nsTArray<KeyValuePair> mData;
+};
+
 } // anonymous namespace
 
 // static
@@ -302,15 +341,76 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aRange,
+IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
                                   PRUint16 aDirection,
                                   PRBool aPreload,
                                   PRUint8 aOptionalArgCount,
                                   nsIIDBRequest** _retval)
 {
-  NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!mObjectStore->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv;
+  Key leftKey, rightKey;
+  PRUint16 keyRangeFlags = 0;
+
+  if (aKeyRange) {
+    rv = aKeyRange->GetFlags(&keyRangeFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIVariant> variant;
+    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, leftKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aKeyRange->GetRight(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, rightKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aOptionalArgCount >= 2) {
+    if (aDirection != nsIIDBCursor::NEXT &&
+        aDirection != nsIIDBCursor::NEXT_NO_DUPLICATE &&
+        aDirection != nsIIDBCursor::PREV &&
+        aDirection != nsIIDBCursor::PREV_NO_DUPLICATE) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  else {
+    aDirection = nsIIDBCursor::NEXT;
+  }
+
+  if (aDirection == nsIIDBCursor::NEXT_NO_DUPLICATE ||
+      aDirection == nsIIDBCursor::PREV_NO_DUPLICATE) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (aPreload) {
+    NS_NOTYETIMPLEMENTED("Implement me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<OpenObjectCursorHelper> helper =
+    new OpenObjectCursorHelper(mObjectStore->Transaction(), request, this, mId,
+                               mUnique, mAutoIncrement, leftKey, rightKey,
+                               keyRangeFlags, aDirection, aPreload);
+
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 
@@ -678,6 +778,189 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 PRUint16
 OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  if (mData.IsEmpty()) {
+    aResult->SetAsEmpty();
+    return NS_OK;
+  }
+
+  nsRefPtr<IDBCursorRequest> cursor =
+    IDBCursorRequest::Create(mRequest, mTransaction, mIndex, mDirection,
+                             mData);
+  NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
+
+  mIndex = nsnull;
+
+  return OK;
+}
+
+PRUint16
+OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_ASSERTION(aConnection, "Passed a null connection!");
+
+  nsCString indexTable;
+  nsCString objectTable;
+
+  if (mAutoIncrement) {
+    objectTable.AssignLiteral("ai_object_data");
+    if (mUnique) {
+      indexTable.AssignLiteral("unique_ai_index_data");
+    }
+    else {
+      indexTable.AssignLiteral("ai_index_data");
+    }
+  }
+  else {
+    objectTable.AssignLiteral("object_data");
+    if (mUnique) {
+      indexTable.AssignLiteral("unique_index_data");
+    }
+    else {
+      indexTable.AssignLiteral("index_data");
+    }
+  }
+
+  NS_NAMED_LITERAL_CSTRING(indexId, "index_id");
+  NS_NAMED_LITERAL_CSTRING(leftKeyName, "left_key");
+  NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
+  NS_NAMED_LITERAL_CSTRING(value, "value");
+  NS_NAMED_LITERAL_CSTRING(data, "data");
+
+  nsCAutoString keyRangeClause;
+  if (!mLeftKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND value");
+    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+      keyRangeClause.AppendLiteral(" > :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" >= :");
+    }
+    keyRangeClause.Append(leftKeyName);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND value");
+    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+      keyRangeClause.AppendLiteral(" < :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" <= :");
+    }
+    keyRangeClause.Append(rightKeyName);
+  }
+
+  nsCString directionString;
+  switch (mDirection) {
+    case nsIIDBCursor::NEXT:
+      directionString.AssignLiteral(" DESC");
+      break;
+
+    case nsIIDBCursor::PREV:
+      directionString.AssignLiteral(" ASC");
+      break;
+
+    default:
+      NS_NOTREACHED("Unknown direction!");
+  }
+
+  nsCAutoString query = NS_LITERAL_CSTRING("SELECT ") + indexTable +
+                        NS_LITERAL_CSTRING(".") + value +
+                        NS_LITERAL_CSTRING(",") + objectTable +
+                        NS_LITERAL_CSTRING(".") + data +
+                        NS_LITERAL_CSTRING(" FROM ") + objectTable +
+                        NS_LITERAL_CSTRING(" INNER JOIN ") + indexTable +
+                        NS_LITERAL_CSTRING(" ON ") + indexTable +
+                        NS_LITERAL_CSTRING(".object_data_id = ") + objectTable +
+                        NS_LITERAL_CSTRING(".id WHERE ") + indexId +
+                        NS_LITERAL_CSTRING("= :") + indexId + keyRangeClause +
+                        NS_LITERAL_CSTRING(" ORDER BY ") + indexTable +
+                        NS_LITERAL_CSTRING(".") + value + directionString;
+
+  if (!mData.SetCapacity(50)) {
+    NS_ERROR("Out of memory!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(indexId, mId);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (!mLeftKey.IsUnset()) {
+    if (mLeftKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+    }
+    else if (mLeftKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    if (mRightKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+    }
+    else if (mRightKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  PRBool hasResult;
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (mData.Capacity() == mData.Length()) {
+      if (!mData.SetCapacity(mData.Capacity() * 2)) {
+        NS_ERROR("Out of memory!");
+        return nsIIDBDatabaseException::UNKNOWN_ERR;
+      }
+    }
+
+    KeyValuePair* pair = mData.AppendElement();
+    NS_ASSERTION(pair, "Shouldn't fail if SetCapacity succeeded!");
+
+    PRInt32 keyType;
+    rv = stmt->GetTypeOfIndex(0, &keyType);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+                 keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                 "Bad key type!");
+
+    if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+      pair->key = stmt->AsInt64(0);
+    }
+    else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+      rv = stmt->GetString(0, pair->key.ToString());
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    }
+    else {
+      NS_NOTREACHED("Bad SQLite type!");
+    }
+
+    rv = stmt->GetString(1, pair->value);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  return OK;
+}
+
+PRUint16
+OpenObjectCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   if (mData.IsEmpty()) {
     aResult->SetAsEmpty();
