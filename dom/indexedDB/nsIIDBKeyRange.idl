@@ -49,7 +49,6 @@ interface nsIVariant;
 [scriptable, uuid(8e6b05f4-2358-420b-a6fd-03416543ed18)]
 interface nsIIDBKeyRange : nsISupports
 {
-  const unsigned short SINGLE = 0;
   const unsigned short LEFT_OPEN = 1 << 1;
   const unsigned short RIGHT_OPEN = 1 << 2;
   const unsigned short LEFT_BOUND = 1 << 3;

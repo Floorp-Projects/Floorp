@@ -566,7 +566,8 @@ IndexedDatabaseRequest::MakeSingleKeyRange(nsIVariant* aValue,
   }
 
   nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(aValue, aValue, PRUint16(nsIIDBKeyRange::SINGLE));
+    IDBKeyRange::Create(aValue, aValue, PRUint16(nsIIDBKeyRange::LEFT_BOUND |
+                                                 nsIIDBKeyRange::RIGHT_BOUND));
   NS_ASSERTION(range, "Out of memory?");
 
   range.forget(_retval);

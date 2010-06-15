@@ -181,7 +181,7 @@ public:
 
 private:
   // In-params.
-  const nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
   const Key mLeftKey;
   const Key mRightKey;
   const PRUint16 mKeyRangeFlags;
@@ -1460,7 +1460,9 @@ AddHelper::UpdateIndexes(mozIStorageConnection* aConnection,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -1753,6 +1755,8 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
+
+  mObjectStore = nsnull;
 
   return OK;
 }
