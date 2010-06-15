@@ -123,7 +123,7 @@ public:
 public: /* internal necko use only */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
     nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
-    void SetRemoteChannel() { mRemoteChannel = 1; }
+    void SetRemoteChannel(bool aRemote) { mRemoteChannel = aRemote; }
     void InternalSetUploadStream(nsIInputStream *uploadStream) 
       { mUploadStream = uploadStream; }
     void SetUploadStreamHasHeaders(PRBool hasHeaders) 
@@ -152,7 +152,6 @@ private:
     void     HandleAsyncNotifyListener();
     void     DoNotifyListener();
     nsresult SetupTransaction();
-    void     AddCookiesToRequest();
     nsresult ApplyContentConversions();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
@@ -251,7 +250,6 @@ private:
     nsRefPtr<nsHttpTransaction>       mTransaction;
 
     PRUint64                          mLogicalOffset;
-    nsCString                         mUserSetCookieHeader;
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
