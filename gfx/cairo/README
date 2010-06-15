@@ -116,6 +116,8 @@ dwrite-glyph-extents.patch: Add padding to extents of antialiased glyphs, to avo
 
 fix-ps-output.patch: PS: Add missing 'q' when resetting clip path (42b5cac7668625c9761113ff72b47af5cfd10377)
 
+ensure-text-flushed.patch: PDF-operators: ensure text operations flushed before emitting clip (42b5cac7668625c9761113ff72b47af5cfd10377)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
