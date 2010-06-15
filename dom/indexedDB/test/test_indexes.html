@@ -16,6 +16,8 @@
       const CONSTRAINT_ERR =
         Components.interfaces.nsIIDBDatabaseException.CONSTRAINT_ERR;
       const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+      const NEXT = Components.interfaces.nsIIDBCursor.NEXT;
+      const PREV = Components.interfaces.nsIIDBCursor.PREV;
 
       const name = window.location.pathname;
       const description = "My Test Database";
@@ -164,7 +166,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("weight").openCursor();
+      request = objectStore.index("weight").openCursor(null, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -199,6 +201,36 @@
       request.onerror = new ExpectError(CONSTRAINT_ERR);
       request.onsuccess = unexpectedSuccessHandler;
       event = yield;
+
+      keyIndex = objectStoreDataNameSort.length - 1;
+
+      request = objectStore.index("name").openCursor(null, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          let ok = cursor.continue();
+          is(ok, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
 
       finishTest();
       yield;
