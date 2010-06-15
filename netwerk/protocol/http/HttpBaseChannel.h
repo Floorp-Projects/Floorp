@@ -167,6 +167,8 @@ public:
   NS_IMETHOD AdjustPriority(PRInt32 delta);
 
 protected:
+  void AddCookiesToRequest();
+
   // Helper function to simplify getting notification callbacks.
   template <class T>
   void GetCallback(nsCOMPtr<T> &aResult)
@@ -195,6 +197,7 @@ protected:
   nsCString                         mSpec; // ASCII encoded URL spec
   nsCString                         mContentTypeHint;
   nsCString                         mContentCharsetHint;
+  nsCString                         mUserSetCookieHeader;
 
   nsresult                          mStatus;
   PRUint32                          mLoadFlags;
