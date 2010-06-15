@@ -104,19 +104,15 @@ WebGLContext::Invalidate()
         return;
 
     mInvalidated = true;
-    mCanvasElement->InvalidateFrame();
+    HTMLCanvasElement()->InvalidateFrame();
 }
 
 /* readonly attribute nsIDOMHTMLCanvasElement canvas; */
 NS_IMETHODIMP
 WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 {
-    if (mCanvasElement == nsnull) {
-        *canvas = nsnull;
-        return NS_OK;
-    }
+    NS_IF_ADDREF(*canvas = mCanvasElement);
 
-    NS_ADDREF(*canvas = static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
     return NS_OK;
 }
 
@@ -127,14 +123,7 @@ WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 NS_IMETHODIMP
 WebGLContext::SetCanvasElement(nsHTMLCanvasElement* aParentCanvas)
 {
-    if (aParentCanvas == nsnull) {
-        // we get this on shutdown; we should do some more cleanup here,
-        // but instead we just let our destructor do it.
-        mCanvasElement = nsnull;
-        return NS_OK;
-    }
-
-    if (!SafeToCreateCanvas3DContext(aParentCanvas))
+    if (aParentCanvas && !SafeToCreateCanvas3DContext(aParentCanvas))
         return NS_ERROR_FAILURE;
 
     mCanvasElement = aParentCanvas;
@@ -354,12 +343,20 @@ WebGLContext::GetCanvasLayer(LayerManager *manager)
 // XPCOM goop
 //
 
-NS_IMPL_ADDREF(WebGLContext)
-NS_IMPL_RELEASE(WebGLContext)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(WebGLContext)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebGLContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCanvasElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebGLContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCanvasElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(CanvasRenderingContextWebGL, WebGLContext)
 
-NS_INTERFACE_MAP_BEGIN(WebGLContext)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextWebGL)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
