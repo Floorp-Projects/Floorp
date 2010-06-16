@@ -2206,6 +2206,7 @@ class AutoGCRooter {
         context->autoGCRooters = down;
     }
 
+    /* Implemented in jsgc.cpp. */
     inline void trace(JSTracer *trc);
 
 #ifdef __GNUC__
