@@ -421,6 +421,29 @@
                   key="key_find"
                   command="cmd_find"/>
         <menuseparator/>
+        <menu id="appmenu_history"
+              label="&historyMenu.label;">
+          <menupopup id="appmenu_history_popup"
+                     placespopup="true"
+                     oncommand="this.parentNode._placesView._onCommand(event);"
+                     onclick="checkForMiddleClick(this, event);"
+                     onpopupshowing="if (!this.parentNode._placesView)
+                                       new HistoryMenu(event);"
+                     tooltip="bhTooltip"
+                     popupsinherittooltip="true">
+            <menuitem id="appmenu_sanitizeHistory"
+                      label="&clearRecentHistory.label;"
+                      key="key_sanitize"
+                      command="Tools:Sanitize"/>
+            <menuseparator/>
+            <menuitem id="appmenu_showAllHistory"
+                      label="&showAllHistoryCmd2.label;"
+                      key="showAllHistoryKb"
+                      command="Browser:ShowAllHistory"/>
+            <menuseparator class="hide-if-empty-places-result"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
         <menu id="appmenu_customize"
               label="&appMenuCustomize.label;">
           <menupopup id="appmenu_customizeMenu"
