@@ -1,5 +1,5 @@
 _("Make sure catch when copied to an object will correctly catch stuff");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let ret, rightThis, didCall, didThrow;

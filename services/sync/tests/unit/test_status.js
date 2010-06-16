@@ -1,5 +1,5 @@
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/status.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/status.js");
 
 function run_test() {
 

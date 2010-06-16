@@ -41,8 +41,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/resource.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/util.js");
 
 function Collection(uri, recordObj) {
   Resource.call(this, uri);

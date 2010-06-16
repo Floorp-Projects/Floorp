@@ -1,7 +1,7 @@
-Cu.import("resource://weave/engines/clients.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/base_records/keys.js");
-Cu.import("resource://weave/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/engines/clients.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let baseUri = "http://fakebase/";

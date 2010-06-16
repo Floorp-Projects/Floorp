@@ -1,4 +1,4 @@
-Cu.import("resource://weave/engines.js");
+Cu.import("resource://services-sync/engines.js");
 
 function run_test() {
   _("We start out with a clean slate");

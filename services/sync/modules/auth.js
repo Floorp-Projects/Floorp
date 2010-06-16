@@ -41,7 +41,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 Utils.lazy(this, 'Auth', AuthMgr);
 

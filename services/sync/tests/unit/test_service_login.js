@@ -1,8 +1,8 @@
-Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/service.js");
-Cu.import("resource://weave/status.js");
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
 
 function login_handler(request, response) {
   // btoa('johndoe:ilovejane') == am9obmRvZTppbG92ZWphbmU=

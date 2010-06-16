@@ -1,5 +1,5 @@
 _("Make sure lock prevents calling with a shared lock");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let ret, rightThis, didCall;

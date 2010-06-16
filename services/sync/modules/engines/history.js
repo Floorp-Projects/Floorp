@@ -43,11 +43,11 @@ const Cu = Components.utils;
 const GUID_ANNO = "weave/guid";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/stores.js");
-Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/type_records/history.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/stores.js");
+Cu.import("resource://services-sync/trackers.js");
+Cu.import("resource://services-sync/type_records/history.js");
+Cu.import("resource://services-sync/util.js");
 
 // Create some helper functions to handle GUIDs
 function setGUID(uri, guid) {

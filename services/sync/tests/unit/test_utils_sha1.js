@@ -1,5 +1,5 @@
 _("Make sure sha1 digests works with various messages");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let mes1 = "hello";

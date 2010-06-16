@@ -2,7 +2,7 @@ function LOG(aMsg) {
   dump("TEST_XMPP_SIMPLE: " + aMsg + "\n");
 }
 
-Components.utils.import( "resource://weave/xmpp/xmppClient.js" );
+Components.utils.import( "resource://services-sync/xmpp/xmppClient.js" );
 
 var serverUrl = "http://localhost:5280/http-poll";
 var jabberDomain = "localhost";

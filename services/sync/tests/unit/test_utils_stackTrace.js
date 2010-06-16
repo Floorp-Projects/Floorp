@@ -4,7 +4,7 @@ function bar(v) baz(v + 1); // line 3
 function baz(v) { throw new Error(v + 1); } // line 4
 
 _("Make sure lazy constructor calling/assignment works");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Make sure functions, arguments, files are pretty printed in the trace");

@@ -1,9 +1,9 @@
-Cu.import("resource://weave/service.js");
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/status.js");
-Cu.import("resource://weave/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
 
 function test_urlsAndIdentities() {
   _("Various Weave.Service properties correspond to preference settings and update other object properties upon being set.");

@@ -50,40 +50,39 @@ const IDLE_TIME = 5; // xxxmpc: in seconds, should be preffable
 const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://weave/ext/Sync.js");
-Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/auth.js");
-Cu.import("resource://weave/resource.js");
-Cu.import("resource://weave/base_records/wbo.js");
-Cu.import("resource://weave/base_records/crypto.js");
-Cu.import("resource://weave/base_records/keys.js");
-Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/status.js");
-Cu.import("resource://weave/engines/clients.js");
+Cu.import("resource://services-sync/auth.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/engines/clients.js");
+Cu.import("resource://services-sync/ext/Sync.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
 
 // for export
 let Weave = {};
-Cu.import("resource://weave/constants.js", Weave);
-Cu.import("resource://weave/util.js", Weave);
-Cu.import("resource://weave/auth.js", Weave);
-Cu.import("resource://weave/resource.js", Weave);
-Cu.import("resource://weave/base_records/keys.js", Weave);
-Cu.import("resource://weave/notifications.js", Weave);
-Cu.import("resource://weave/identity.js", Weave);
-Cu.import("resource://weave/status.js", Weave);
-Cu.import("resource://weave/stores.js", Weave);
-Cu.import("resource://weave/engines.js", Weave);
-
-Cu.import("resource://weave/engines/bookmarks.js", Weave);
-Cu.import("resource://weave/engines/clients.js", Weave);
-Cu.import("resource://weave/engines/forms.js", Weave);
-Cu.import("resource://weave/engines/history.js", Weave);
-Cu.import("resource://weave/engines/prefs.js", Weave);
-Cu.import("resource://weave/engines/passwords.js", Weave);
-Cu.import("resource://weave/engines/tabs.js", Weave);
+Cu.import("resource://services-sync/auth.js", Weave);
+Cu.import("resource://services-sync/constants.js", Weave);
+Cu.import("resource://services-sync/base_records/keys.js", Weave);
+Cu.import("resource://services-sync/engines.js", Weave);
+Cu.import("resource://services-sync/engines/bookmarks.js", Weave);
+Cu.import("resource://services-sync/engines/clients.js", Weave);
+Cu.import("resource://services-sync/engines/forms.js", Weave);
+Cu.import("resource://services-sync/engines/history.js", Weave);
+Cu.import("resource://services-sync/engines/prefs.js", Weave);
+Cu.import("resource://services-sync/engines/passwords.js", Weave);
+Cu.import("resource://services-sync/engines/tabs.js", Weave);
+Cu.import("resource://services-sync/identity.js", Weave);
+Cu.import("resource://services-sync/notifications.js", Weave);
+Cu.import("resource://services-sync/resource.js", Weave);
+Cu.import("resource://services-sync/status.js", Weave);
+Cu.import("resource://services-sync/stores.js", Weave);
+Cu.import("resource://services-sync/util.js", Weave);
 
 Utils.lazy(Weave, 'Service', WeaveSvc);
 

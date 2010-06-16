@@ -1,5 +1,5 @@
 _("Make sure queryAsync will synchronously fetch rows for a query asyncly");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Using the form service to test queries");

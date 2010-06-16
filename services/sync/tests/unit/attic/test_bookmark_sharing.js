@@ -1,7 +1,7 @@
-Cu.import("resource://weave/engines/bookmarks.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
-Cu.import("resource://weave/sharing.js");
+Cu.import("resource://services-sync/async.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/sharing.js");
+Cu.import("resource://services-sync/util.js");
 
 Function.prototype.async = Async.sugar;
 

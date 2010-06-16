@@ -39,7 +39,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/constants.js");
+Cu.import("resource://services-sync/constants.js");
 
 let Status = {
   get login() this._login,

@@ -1,7 +1,7 @@
-Cu.import("resource://weave/dav.js");
-Cu.import("resource://weave/async.js");
-Cu.import("resource://weave/crypto.js");
-Cu.import("resource://weave/identity.js");
+Cu.import("resource://services-sync/async.js");
+Cu.import("resource://services-sync/crypto.js");
+Cu.import("resource://services-sync/dav.js");
+Cu.import("resource://services-sync/identity.js");
 Function.prototype.async = Async.sugar;
 
 let __fakeCryptoID = {

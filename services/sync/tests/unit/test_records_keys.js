@@ -1,9 +1,9 @@
 try {
-  Cu.import("resource://weave/log4moz.js");
-  Cu.import("resource://weave/util.js");
-  Cu.import("resource://weave/auth.js");
-  Cu.import("resource://weave/identity.js");
-  Cu.import("resource://weave/base_records/keys.js");
+  Cu.import("resource://services-sync/base_records/keys.js");
+  Cu.import("resource://services-sync/auth.js");
+  Cu.import("resource://services-sync/log4moz.js");
+  Cu.import("resource://services-sync/identity.js");
+  Cu.import("resource://services-sync/util.js");
 } catch (e) { do_throw(e); }
 
 function pubkey_handler(metadata, response) {

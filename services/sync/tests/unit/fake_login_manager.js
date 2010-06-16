@@ -1,4 +1,4 @@
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 // ----------------------------------------
 // Fake Sample Data

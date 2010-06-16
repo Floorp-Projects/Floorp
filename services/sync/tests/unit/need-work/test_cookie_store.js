@@ -1,4 +1,4 @@
-Components.utils.import("resource://weave/engines/cookies.js");
+Components.utils.import("resource://services-sync/engines/cookies.js");
 
 function FakeCookie( host, path, name, value,
                      isSecure, isHttpOnly, isSession, expiry ) {

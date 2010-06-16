@@ -41,10 +41,10 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/base_records/wbo.js");
-Cu.import("resource://weave/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/util.js");
 
 function CryptoWrapper(uri) {
   this.cleartext = {};

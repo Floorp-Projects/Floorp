@@ -63,7 +63,7 @@ WeaveService.prototype = {
       this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this.timer.initWithCallback({
         notify: function() {
-          Cu.import("resource://weave/service.js");
+          Cu.import("resource://services-sync/service.js");
         }
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;

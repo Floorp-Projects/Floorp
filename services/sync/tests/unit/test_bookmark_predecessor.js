@@ -1,6 +1,6 @@
 _("Make sure bad bookmarks can still get their predecessors");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/engines/bookmarks.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Starting with a clean slate of no bookmarks");

@@ -53,12 +53,12 @@ catch(ex) {
   Cu.import("resource://gre/modules/utils.js");
 }
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://weave/ext/Observers.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/stores.js");
-Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/type_records/bookmark.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/ext/Observers.js");
+Cu.import("resource://services-sync/stores.js");
+Cu.import("resource://services-sync/trackers.js");
+Cu.import("resource://services-sync/type_records/bookmark.js");
+Cu.import("resource://services-sync/util.js");
 
 function archiveBookmarks() {
   // Some nightly builds of 3.7 don't have this function

@@ -1,5 +1,5 @@
 _("Make sure json saves and loads from disk");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Do a simple write of an array to json and read");
