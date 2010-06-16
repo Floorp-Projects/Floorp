@@ -394,24 +394,9 @@ WeaveSvc.prototype = {
     let pref = Svc.Prefs.get("registerEngines");
     if (pref) {
       engines = pref.split(",");
-    } else {
-      // Fallback for the add-on case
-      switch (Svc.AppInfo.ID) {
-        case FENNEC_ID:
-          engines = ["Tab", "Bookmarks", "Form", "History", "Password"];
-          break;
-
-        case FIREFOX_ID:
-          engines = ["Bookmarks", "Form", "History", "Password", "Prefs", "Tab"];
-          break;
-
-        case SEAMONKEY_ID:
-          engines = ["Form", "History", "Password", "Tab"];
-          break;
-      }
     }
 
-    // Grab the actual engine and register them
+    // Grab the actual engines and register them
     Engines.register(engines.map(function(name) Weave[name + "Engine"]));
   },
 
