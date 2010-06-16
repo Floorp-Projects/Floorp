@@ -68,6 +68,11 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 NotCheckedSSE2; 
 #endif 
 
+#ifdef JS_CPU_X86
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
+#endif
+
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
     analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
@@ -343,8 +348,6 @@ mjit::Compiler::generateMethod()
             FrameEntry *fe = frame.peek(-1);
             frame.storeTo(fe, Address(JSFrameReg, offsetof(JSStackFrame, rval)), true);
             frame.pop();
-            /* :TODO: We only have to forget things that are closed over... */
-            frame.forgetEverything();
             emitReturn();
           }
           END_CASE(JSOP_RETURN)
@@ -697,11 +700,7 @@ mjit::Compiler::generateMethod()
           {
             JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
             frame.forgetEverything();
-            uint32 argc = GET_ARGC(PC);
-            masm.move(Imm32(argc), Registers::ArgReg1);
-            dispatchCall(stubs::Call);
-            frame.popn(argc + 2);
-            frame.pushSynced();
+            dispatchCall(stubs::Call, GET_ARGC(PC));
             JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
           }
           END_CASE(JSOP_CALL)
@@ -836,11 +835,7 @@ mjit::Compiler::generateMethod()
           {
             JaegerSpew(JSpew_Insns, " --- NEW OPERATOR --- \n");
             frame.forgetEverything();
-            uint32 argc = GET_ARGC(PC);
-            masm.move(Imm32(argc), Registers::ArgReg1);
-            dispatchCall(stubs::New);
-            frame.popn(argc + 2);
-            frame.pushSynced();
+            dispatchCall(stubs::New, GET_ARGC(PC));
             JaegerSpew(JSpew_Insns, " --- END NEW OPERATOR --- \n");
           }
           END_CASE(JSOP_NEW)
@@ -1382,10 +1377,120 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 void
 mjit::Compiler::emitReturn()
 {
-    stubCall(stubs::Return, Uses(0), Defs(0));
+    RegisterID t0 = frame.allocReg();
+
+    /*
+     * if (!f.inlineCallCount)
+     *     return;
+     */
+    Jump noInlineCalls = masm.branchPtr(Assembler::Equal,
+                                        FrameAddress(offsetof(VMFrame, inlineCallCount)),
+                                        ImmPtr(0));
+    stubcc.linkExit(noInlineCalls);
+#if defined(JS_CPU_ARM)
+    stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
+#endif
+    stubcc.masm.ret();
+
+    /* Debug hook - urgh. */
+    Jump debugHook = masm.branchPtr(Assembler::NotEqual,
+                                    Address(JSFrameReg, offsetof(JSStackFrame, hookData)),
+                                    ImmPtr(0));
+    stubcc.linkExit(debugHook);
+    stubcc.leave();
+    stubcc.call(stubs::DebugHook);
+    stubcc.rejoin(0);
+
+    /* Restore display. */
+    if (script->staticLevel < JS_DISPLAY_SIZE) {
+        RegisterID t1 = frame.allocReg();
+        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), t0);
+        masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, displaySave)), t1);
+        masm.storePtr(t1, Address(t0,
+                                  offsetof(JSContext, display) +
+                                  script->staticLevel * sizeof(JSStackFrame*)));
+        frame.freeReg(t1);
+    }
+
+    JS_ASSERT_IF(!fun, JSOp(*PC) == JSOP_STOP);
+
+    /*
+     * If there's a function object, deal with the fact that it can escape.
+     * Note that after we've placed the call object, all tracked state can
+     * be thrown away. This will happen anyway because the next live opcode
+     * (if any) must have an incoming edge.
+     *
+     * However, it's an optimization to throw it away early - the tracker
+     * won't be spilled on further exits or join points.
+     */
+    if (fun) {
+        if (fun->isHeavyweight()) {
+            /* There will always be a call object. */
+            prepareStubCall();
+            stubCall(stubs::PutCallObject, Uses(0), Defs(0));
+            frame.throwaway();
+        } else {
+            /* if (callobj) ... */
+            Jump callObj = masm.branchPtr(Assembler::NotEqual,
+                                          Address(JSFrameReg, offsetof(JSStackFrame, callobj)),
+                                          ImmPtr(0));
+            stubcc.linkExit(callObj);
+
+            frame.throwaway();
+
+            stubcc.leave();
+            stubcc.call(stubs::PutCallObject);
+            Jump j = stubcc.masm.jump();
+
+            /* if (arguments) ... */
+            Jump argsObj = masm.branch32(Assembler::Equal,
+                                         masm.tagOf(Address(JSFrameReg, offsetof(JSStackFrame, argsval))),
+                                         Imm32(JSVAL_MASK32_NONFUNOBJ));
+            stubcc.linkExit(argsObj);
+            stubcc.call(stubs::PutArgsObject);
+            stubcc.rejoin(0);
+            stubcc.crossJump(j, masm.label());
+        }
+    }
+
+    /* Fix rval - :TODO: lower into NEW */
+    masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, flags)), t0);
+    masm.and32(Imm32(JSFRAME_CONSTRUCTING), t0);
+    Jump j = masm.branchTest32(Assembler::NonZero, t0, t0);
+    stubcc.linkExit(j);
+    stubcc.leave();
+    stubcc.call(stubs::CopyThisv);
+    stubcc.rejoin(0);
+
+    /*
+     * r = fp->down
+     * a1 = f.cx
+     * f.fp = r
+     * cx->fp = r
+     */
+    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, down)), Registers::ReturnReg);
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ArgReg1);
+    masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, fp)));
+    masm.storePtr(Registers::ReturnReg, Address(Registers::ArgReg1, offsetof(JSContext, fp)));
+    masm.subPtr(ImmIntPtr(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
+
+    JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
+    JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
+
+    Address rval(JSFrameReg, offsetof(JSStackFrame, rval));
+    masm.load32(masm.payloadOf(rval), JSReturnReg_Data);
+    masm.load32(masm.tagOf(rval), JSReturnReg_Type);
+    masm.move(Registers::ReturnReg, JSFrameReg);
+    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), Registers::ReturnReg);
+#ifdef DEBUG
+    masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
+                  Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
+#endif
+
 #if defined(JS_CPU_ARM)
     masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
 #endif
+
     masm.ret();
 }
 
@@ -1407,8 +1512,9 @@ mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
 }
 
 void
-mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
+mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub, uint32 argc)
 {
+    masm.move(Imm32(argc), Registers::ArgReg1);
     masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
 
     /*
@@ -1423,6 +1529,12 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
      * (which realigns it to SP).
      */
     Jump j = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
+    stubcc.linkExit(j);
+
+    frame.popn(argc + 2);
+    frame.takeReg(JSReturnReg_Type);
+    frame.takeReg(JSReturnReg_Data);
+    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
 #ifndef JS_CPU_ARM
     /*
@@ -1440,8 +1552,8 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
     masm.push(Registers::ReturnReg);
 #endif
 
-    j.linkTo(masm.label(), &masm);
-    restoreFrameRegs();
+    stubcc.leave();
+    stubcc.rejoin(0);
 }
 
 void
