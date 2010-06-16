@@ -88,7 +88,7 @@ namespace nanojit
 
     const Register Assembler::argRegs[] = { A0, A1, A2, A3 };
     const Register Assembler::retRegs[] = { V0, V1 };
-    const Register Assembler::savedRegs[NumSavedRegs] = {
+    const Register Assembler::savedRegs[] = {
         S0, S1, S2, S3, S4, S5, S6, S7,
 #ifdef FPCALLEESAVED
         FS0, FS1, FS2, FS3, FS4, FS5

@@ -61,7 +61,7 @@ namespace nanojit
 
     const Register Assembler::argRegs[] = { I0, I1, I2, I3, I4, I5 };
     const Register Assembler::retRegs[] = { O0 };
-    const Register Assembler::savedRegs[] = { L1 };
+    const Register Assembler::savedRegs[] = { L1 }; // Dummy element not used, as NumSavedRegs == 0
 
     static const int kLinkageAreaSize = 68;
     static const int kcalleeAreaSize = 80; // The max size.
