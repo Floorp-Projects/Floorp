@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jsparse.h"
+#include "jsstaticcheck.h"
 #include "jsxml.h"
 
 inline bool
@@ -197,6 +198,173 @@ class AutoNamespaceArray : protected AutoGCRooter {
 
     JSXMLArray array;
 };
+
+#ifdef DEBUG
+class CompartmentChecker
+{
+  private:
+    JSContext *context;
+    JSCompartment *compartment;
+
+  public:
+    explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
+        check(cx->fp ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
+        VOUCH_DOES_NOT_REQUIRE_STACK();
+    }
+
+    /*
+     * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
+     * compartment mismatches.
+     */
+    static void fail(JSCompartment *c1, JSCompartment *c2) {
+        printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
+    }
+
+    void check(JSCompartment *c) {
+        if (c && c != context->runtime->defaultCompartment) {
+            if (!compartment)
+                compartment = c;
+            else if (c != compartment)
+                fail(compartment, c);
+        }
+    }
+
+    void check(JSPrincipals *) { /* nothing for now */ }
+
+    void check(JSObject *obj) {
+        if (obj)
+            check(obj->getCompartment(context));
+    }
+
+    void check(jsval v) {
+        if (!JSVAL_IS_PRIMITIVE(v))
+            check(JSVAL_TO_OBJECT(v));
+    }
+
+    void check(const ValueArray &arr) {
+        for (size_t i = 0; i < arr.length; i++)
+            check(arr.array[i]);
+    }
+    
+    void check(JSIdArray *ida) {
+        if (ida) {
+            for (jsint i = 0; i < ida->length; i++)
+                check(ID_TO_VALUE(ida->vector[i]));
+        }
+    }
+
+    void check(JSScript *script) {
+        if (script && script->u.object)
+            check(script->u.object);
+    }
+
+    void check(JSString *) { /* nothing for now */ }
+};
+
+#endif
+
+/*
+ * Don't perform these checks when called from a finalizer. The checking
+ * depends on other objects not having been swept yet.
+ */
+#define START_ASSERT_SAME_COMPARTMENT()                                       \
+    if (cx->runtime->gcRunning)                                               \
+        return;                                                               \
+    CompartmentChecker c(cx)
+
+template <class T1> inline void
+assertSameCompartment(JSContext *cx, T1 t1)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+#endif
+}
+
+template <class T1, class T2> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+#endif
+}
+
+template <class T1, class T2, class T3> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+    c.check(t3);
+#endif
+}
+
+template <class T1, class T2, class T3, class T4> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+    c.check(t3);
+    c.check(t4);
+#endif
+}
+
+template <class T1, class T2, class T3, class T4, class T5> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+    c.check(t3);
+    c.check(t4);
+    c.check(t5);
+#endif
+}
+
+#undef START_ASSERT_SAME_COMPARTMENT
+
+inline JSBool
+callJSNative(JSContext *cx, JSNative native, JSObject *thisobj, uintN argc, jsval *argv, jsval *rval)
+{
+    assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
+    JSBool ok = native(cx, thisobj, argc, argv, rval);
+    if (ok)
+        assertSameCompartment(cx, *rval);
+    return ok;
+}
+
+inline JSBool
+callJSFastNative(JSContext *cx, JSFastNative native, uintN argc, jsval *vp)
+{
+    assertSameCompartment(cx, ValueArray(vp, argc + 2));
+    JSBool ok = native(cx, argc, vp);
+    if (ok)
+        assertSameCompartment(cx, vp[0]);
+    return ok;
+}
+
+inline JSBool
+callJSPropertyOp(JSContext *cx, JSPropertyOp op, JSObject *obj, jsval idval, jsval *vp)
+{
+    assertSameCompartment(cx, obj, idval, *vp);
+    JSBool ok = op(cx, obj, idval, vp);
+    if (ok)
+        assertSameCompartment(cx, obj, *vp);
+    return ok;
+}
+
+inline JSBool
+callJSPropertyOpSetter(JSContext *cx, JSPropertyOp op, JSObject *obj, jsval idval, jsval *vp)
+{
+    assertSameCompartment(cx, obj, idval, *vp);
+    return op(cx, obj, idval, vp);
+}
 
 }
 

@@ -46,6 +46,8 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
+#include "jscntxtinlines.h"
+
 inline JSEmptyScope *
 JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 {
@@ -286,7 +288,7 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
      */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
-    return getterOp()(cx, obj, SPROP_USERID(this), vp);
+    return js::callJSPropertyOp(cx, getterOp(), obj, SPROP_USERID(this), vp);
 }
 
 inline bool
@@ -305,7 +307,7 @@ JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
     /* See the comment in JSScopeProperty::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
-    return setterOp()(cx, obj, SPROP_USERID(this), vp);
+    return js::callJSPropertyOpSetter(cx, setterOp(), obj, SPROP_USERID(this), vp);
 }
 
 #endif /* jsscopeinlines_h___ */
