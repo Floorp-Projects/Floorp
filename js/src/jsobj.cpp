@@ -4127,7 +4127,7 @@ AddPropertyHelper(JSContext *cx, JSClass *clasp, JSObject *obj, JSScope *scope,
     if (clasp->addProperty != JS_PropertyStub) {
         jsval nominal = *vp;
 
-        if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), vp))
+        if (!callJSPropertyOp(cx, clasp->addProperty, obj, SPROP_USERID(sprop), vp))
             return false;
         if (*vp != nominal) {
             if (SPROP_HAS_VALID_SLOT(sprop, scope))
@@ -4805,7 +4805,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
     if (!prop) {
         *vp = JSVAL_VOID;
 
-        if (!obj->getClass()->getProperty(cx, obj, ID_TO_VALUE(id), vp))
+        if (!callJSPropertyOp(cx, obj->getClass()->getProperty, obj, ID_TO_VALUE(id), vp))
             return JS_FALSE;
 
         PCMETER(getHow & JSGET_CACHE_RESULT && JS_PROPERTY_CACHE(cx).nofills++);
@@ -5262,7 +5262,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
          * a prototype, call the class's delProperty hook, passing rval as the
          * result parameter.
          */
-        return obj->getClass()->delProperty(cx, obj, ID_TO_VALUE(id), rval);
+        return callJSPropertyOp(cx, obj->getClass()->delProperty, obj, ID_TO_VALUE(id), rval);
     }
 
     sprop = (JSScopeProperty *)prop;
@@ -5273,7 +5273,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     }
 
     /* XXXbe called with obj locked */
-    if (!obj->getClass()->delProperty(cx, obj, SPROP_USERID(sprop), rval)) {
+    if (!callJSPropertyOp(cx, obj->getClass()->delProperty, obj, SPROP_USERID(sprop), rval)) {
         JS_UNLOCK_OBJ(cx, obj);
         return JS_FALSE;
     }
