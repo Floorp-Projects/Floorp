@@ -126,7 +126,7 @@ FrameState::evictReg(RegisterID reg)
 }
 
 JSC::MacroAssembler::RegisterID
-FrameState::evictSomething(uint32 mask)
+FrameState::evictSomeReg(uint32 mask)
 {
 #ifdef DEBUG
     bool fallbackSet = false;
@@ -413,7 +413,7 @@ FrameState::merge(Assembler &masm, uint32 iVD) const
 }
 
 JSC::MacroAssembler::RegisterID
-FrameState::copyData(FrameEntry *fe)
+FrameState::copyDataIntoReg(FrameEntry *fe)
 {
     JS_ASSERT(!fe->data.isConstant());
 
@@ -654,9 +654,9 @@ FrameState::storeLocal(uint32 n)
     if (localFe->isCopied()) {
         uncopy(localFe);
         if (!localFe->isCopied())
-            forgetRegs(localFe);
+            forgetAllRegs(localFe);
     } else {
-        forgetRegs(localFe);
+        forgetAllRegs(localFe);
     }
 
     localFe->resetUnsynced();
