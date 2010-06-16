@@ -981,54 +981,6 @@ JSScope::canProvideEmptyScope(JSObjectOps *ops, JSClass *clasp)
 }
 
 inline bool
-JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
-{
-    JS_ASSERT(!JSVAL_IS_NULL(this->id));
-    JS_ASSERT(!hasDefaultGetter());
-
-    if (hasGetterValue()) {
-        JS_ASSERT(!isMethod());
-        jsval fval = getterValue();
-        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
-    }
-
-    if (isMethod()) {
-        *vp = methodValue();
-
-        JSScope *scope = pobj->scope();
-        JS_ASSERT(scope->object == pobj);
-        return scope->methodReadBarrier(cx, this, vp);
-    }
-
-    /*
-     * |with (it) color;| ends up here, as do XML filter-expressions.
-     * Avoid exposing the With object to native getters.
-     */
-    if (obj->getClass() == &js_WithClass)
-        obj = js_UnwrapWithObject(cx, obj);
-    return getterOp()(cx, obj, SPROP_USERID(this), vp);
-}
-
-inline bool
-JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
-{
-    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
-
-    if (attrs & JSPROP_SETTER) {
-        jsval fval = setterValue();
-        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
-    }
-
-    if (attrs & JSPROP_GETTER)
-        return !!js_ReportGetterOnlyAssignment(cx);
-
-    /* See the comment in JSScopeProperty::get as to why we check for With. */
-    if (obj->getClass() == &js_WithClass)
-        obj = js_UnwrapWithObject(cx, obj);
-    return setterOp()(cx, obj, SPROP_USERID(this), vp);
-}
-
-inline bool
 JSScopeProperty::isSharedPermanent() const
 {
     return (~attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0;
