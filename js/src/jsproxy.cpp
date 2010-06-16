@@ -933,7 +933,8 @@ proxy_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *proxy = JSVAL_TO_OBJECT(argv[-2]);
     JS_ASSERT(proxy->isProxy());
     AutoPendingProxyOperation pending(cx, proxy);
-    return js_InternalCall(cx, obj, proxy->fslots[JSSLOT_PROXY_CALL], argc, argv, rval);
+    return !!cx->fp->getThisObject(cx) &&
+           js_InternalCall(cx, obj, proxy->fslots[JSSLOT_PROXY_CALL], argc, argv, rval);
 }
 
 JSBool
