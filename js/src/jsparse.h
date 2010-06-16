@@ -532,35 +532,6 @@ public:
                 pn_pos.begin.index + str->length() + 2 == pn_pos.end.index);
     }
 
-#ifdef JS_HAS_GENERATOR_EXPRS
-    /*
-     * True if this node is a desugared generator expression.
-     */
-    bool isGeneratorExpr() const {
-        if (PN_TYPE(this) == js::TOK_LP) {
-            JSParseNode *callee = this->pn_head;
-            if (PN_TYPE(callee) == js::TOK_FUNCTION) {
-                JSParseNode *body = (PN_TYPE(callee->pn_body) == js::TOK_UPVARS)
-                                    ? callee->pn_body->pn_tree
-                                    : callee->pn_body;
-                if (PN_TYPE(body) == js::TOK_LEXICALSCOPE)
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    JSParseNode *generatorExpr() const {
-        JS_ASSERT(isGeneratorExpr());
-        JSParseNode *callee = this->pn_head;
-        JSParseNode *body = PN_TYPE(callee->pn_body) == js::TOK_UPVARS
-            ? callee->pn_body->pn_tree
-            : callee->pn_body;
-        JS_ASSERT(PN_TYPE(body) == js::TOK_LEXICALSCOPE);
-        return body->pn_expr;
-    }
-#endif
-
     /*
      * Compute a pointer to the last element in a singly-linked list. NB: list
      * must be non-empty for correct PN_LAST usage -- this is asserted!
@@ -987,11 +958,6 @@ struct Parser : private js::AutoGCRooter
               FILE *fp, const char *filename, uintN lineno);
 
     void setPrincipals(JSPrincipals *prin);
-
-    const char *getFilename()
-    {
-        return tokenStream.getFilename();
-    }
 
     /*
      * Parse a top-level JS script.
