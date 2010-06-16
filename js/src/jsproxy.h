@@ -43,6 +43,7 @@
 #define jsproxy_h___
 
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsobj.h"
 
 namespace js {
@@ -59,9 +60,9 @@ class JSProxyHandler {
                                           JSPropertyDescriptor *desc) = 0;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 JSPropertyDescriptor *desc) = 0;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap) = 0;
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoValueVector &props) = 0;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
-    virtual bool enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap) = 0;
+    virtual bool enumerate(JSContext *cx, JSObject *proxy, js::AutoValueVector &props) = 0;
     virtual bool fix(JSContext *cx, JSObject *proxy, jsval *vp) = 0;
 
     /* ES5 Harmony derived proxy traps. */
@@ -69,7 +70,7 @@ class JSProxyHandler {
     virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
     /* Spidermonkey extensions. */
@@ -90,9 +91,9 @@ class JSProxy {
     static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, jsval *vp);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, jsval v);
-    static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    static bool enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    static bool enumerate(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     static bool fix(JSContext *cx, JSObject *proxy, jsval *vp);
 
     /* ES5 Harmony derived proxy traps. */
@@ -100,7 +101,7 @@ class JSProxy {
     static bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
     static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
-    static bool enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    static bool enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     static bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 };
 

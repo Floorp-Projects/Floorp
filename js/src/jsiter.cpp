@@ -274,17 +274,16 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
                 return false;
         } else {
             if (pobj->isProxy()) {
-                JSIdArray *ida;
+                AutoValueVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
-                    if (!JSProxy::enumerateOwn(cx, pobj, &ida))
+                    if (!JSProxy::enumerateOwn(cx, pobj, proxyProps))
                         return false;
                 } else {
-                    if (!JSProxy::enumerate(cx, pobj, &ida))
+                    if (!JSProxy::enumerate(cx, pobj, proxyProps))
                         return false;
                 }
-                AutoIdArray idar(cx, ida);
-                for (size_t n = 0; n < size_t(ida->length); ++n) {
-                    if (!Enumerate(cx, obj, pobj, ida->vector[n], true, flags, ht, props))
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    if (!Enumerate(cx, obj, pobj, (jsid) proxyProps[n], true, flags, ht, props))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
@@ -334,11 +333,9 @@ VectorToIdArray(JSContext *cx, AutoValueVector &props, JSIdArray **idap)
 }
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, JSIdArray **idap)
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
 {
-    AutoValueVector props(cx);
-    return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props) &&
-           VectorToIdArray(cx, props, idap);
+    return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
 }
 
 static inline bool
@@ -409,7 +406,7 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 }
 
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, jsval *vp)
+IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props, jsval *vp)
 {
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -418,7 +415,7 @@ JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, j
     *vp = OBJECT_TO_JSVAL(iterobj);
 
     NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0,
-                                                  ida->vector, ida->length);
+                                                  props.begin(), props.length());
     if (!ni)
         return false;
 

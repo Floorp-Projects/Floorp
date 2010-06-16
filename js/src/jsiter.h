@@ -86,13 +86,16 @@ struct NativeIterator {
 static const jsval JSVAL_NATIVE_ENUMERATE_COOKIE = SPECIAL_TO_JSVAL(0x220576);
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, JSIdArray **idap);
+VectorToIdArray(JSContext *cx, js::AutoValueVector &props, JSIdArray **idap);
+
+bool
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props);
 
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp);
 
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, jsval *vp);
+IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props, jsval *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should

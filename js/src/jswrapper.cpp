@@ -81,9 +81,9 @@ JSWrapper::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
 }
 
 bool
-JSWrapper::getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSWrapper::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
-    return GetPropertyNames(cx, wrappedObject(proxy), JSITER_OWNONLY | JSITER_HIDDEN, idap);
+    return GetPropertyNames(cx, wrappedObject(proxy), JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
 bool
@@ -97,9 +97,9 @@ JSWrapper::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-JSWrapper::enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSWrapper::enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
-    return GetPropertyNames(cx, wrappedObject(proxy), 0, idap);
+    return GetPropertyNames(cx, wrappedObject(proxy), 0, props);
 }
 
 bool
@@ -143,9 +143,9 @@ JSWrapper::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsva
 }
 
 bool
-JSWrapper::enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSWrapper::enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
-    return GetPropertyNames(cx, wrappedObject(proxy), JSITER_OWNONLY, idap);
+    return GetPropertyNames(cx, wrappedObject(proxy), JSITER_OWNONLY, props);
 }
 
 bool
