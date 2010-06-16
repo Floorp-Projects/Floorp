@@ -61,7 +61,6 @@ EXTRA_COMPONENTS = \
         MobileComponents.manifest \
         BrowserStartup.js \
         GeolocationPrompt.js \
-        AlertsService.js \
         XPIDialogService.js \
         DownloadManagerUI.js \
         HelperAppDialog.js \
@@ -73,6 +72,10 @@ EXTRA_COMPONENTS = \
         FormAutoComplete.js \
         LoginManager.js \
 	$(NULL)
+
+ifndef ANDROID
+EXTRA_COMPONENTS += AlertsService.js
+endif
 
 DIRS =  phone \
         $(NULL)

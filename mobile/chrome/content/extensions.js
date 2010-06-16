@@ -40,7 +40,11 @@ const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
 
 const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 
+#ifdef ANDROID
+const URI_GENERIC_ICON_XPINSTALL = "drawable://alertaddons";
+#else
 const URI_GENERIC_ICON_XPINSTALL = "chrome://browser/skin/images/alert-addons-30.png";
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
   Cu.import("resource://gre/modules/AddonManager.jsm");
@@ -784,6 +788,6 @@ AddonInstallListener.prototype = {
 
     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 message, true, "", observer);
+                                 message, true, "", observer, "addons");
   }
 };

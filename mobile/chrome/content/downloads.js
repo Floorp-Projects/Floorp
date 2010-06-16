@@ -37,7 +37,11 @@
 
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
+#ifdef ANDROID
+const URI_GENERIC_ICON_DOWNLOAD = "drawable://alertdownloads";
+#else
 const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
+#endif
 
 var DownloadsView = {
   _initialized: false,
@@ -422,7 +426,8 @@ var DownloadsView = {
 
       if (aTopic == "dl-start") {
         notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsStart", [download.displayName]), false, "", null);
+                                       strings.getFormattedString("alertDownloadsStart", [download.displayName]), false, "", null,
+                                       download.target.spec.replace("file:", "download:"));
       }
       else {
         let observer = {
@@ -433,7 +438,8 @@ var DownloadsView = {
         };
 
         notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsDone", [download.displayName]), true, "", observer);
+                                       strings.getFormattedString("alertDownloadsDone", [download.displayName]), true, "", observer,
+                                       download.target.spec.replace("file:", "download:"));
       }
     }
   },
