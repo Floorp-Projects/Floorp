@@ -656,42 +656,46 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   //       The latter two must refer to the container of an <Item>.
   //   options - An object with optional settings for this call. Currently the only one is dontArrange. 
   remove: function(a, options) {
-    var $el;  
-    var item;
-     
-    if(a.isAnItem) {
-      item = a;
-      $el = iQ(item.container);
-    } else {
-      $el = iQ(a);  
-      item = Items.item($el);
-    }
-    
-    if(typeof(options) == 'undefined')
-      options = {};
-    
-    var index = iQ.inArray(item, this._children);
-    if(index != -1)
-      this._children.splice(index, 1); 
-    
-    item.setParent(null);
-    item.removeClass("tabInGroup");
-    item.removeClass("inNewTabGroup")    
-    item.removeClass("stacked");
-    item.removeClass("stack-trayed");
-    item.setRotation(0);
-    item.setSize(item.defaultSize.x, item.defaultSize.y);
-
-    iQ($el.get(0)).droppable("enable");    
-    item.removeOnClose(this);
-    
-    if(typeof(item.setResizable) == 'function')
-      item.setResizable(true);
-
-    if(this._children.length == 0 && !this.locked.close && !this.getTitle() && !options.dontClose){
-      this.close();
-    } else if(!options.dontArrange) {
-      this.arrange();
+    try {
+      var $el;  
+      var item;
+       
+      if(a.isAnItem) {
+        item = a;
+        $el = iQ(item.container);
+      } else {
+        $el = iQ(a);  
+        item = Items.item($el);
+      }
+      
+      if(typeof(options) == 'undefined')
+        options = {};
+      
+      var index = iQ.inArray(item, this._children);
+      if(index != -1)
+        this._children.splice(index, 1); 
+      
+      item.setParent(null);
+      item.removeClass("tabInGroup");
+      item.removeClass("inNewTabGroup")    
+      item.removeClass("stacked");
+      item.removeClass("stack-trayed");
+      item.setRotation(0);
+      item.setSize(item.defaultSize.x, item.defaultSize.y);
+  
+      iQ($el.get(0)).droppable("enable");    
+      item.removeOnClose(this);
+      
+      if(typeof(item.setResizable) == 'function')
+        item.setResizable(true);
+  
+      if(this._children.length == 0 && !this.locked.close && !this.getTitle() && !options.dontClose){
+        this.close();
+      } else if(!options.dontArrange) {
+        this.arrange();
+      }
+    } catch(e) {
+      Utils.log(e);
     }
   },
   
