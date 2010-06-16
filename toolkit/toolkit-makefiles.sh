@@ -1207,13 +1207,13 @@ fi
 if [ "$MOZ_VORBIS" ]; then
  add_makefiles "
    $MAKEFILES_libvorbis
+   $MAKEFILES_libogg
  "
 fi
 
 if [ "$MOZ_OGG" ]; then
  add_makefiles "
    $MAKEFILES_libtheora
-   $MAKEFILES_libogg
    content/media/ogg/Makefile
  "
 fi
