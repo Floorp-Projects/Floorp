@@ -43,11 +43,11 @@ const Cu = Components.utils;
 const WEAVE_SYNC_PREFS = "extensions.weave.prefs.sync.";
 const WEAVE_PREFS_GUID = "preferences";
 
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/stores.js");
-Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/type_records/prefs.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/stores.js");
+Cu.import("resource://services-sync/trackers.js");
+Cu.import("resource://services-sync/type_records/prefs.js");
+Cu.import("resource://services-sync/util.js");
 
 function PrefsEngine() {
   SyncEngine.call(this, "Prefs");

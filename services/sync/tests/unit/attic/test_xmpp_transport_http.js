@@ -2,7 +2,7 @@ function LOG(aMsg) {
   dump("TEST_XMPP_TRANSPORT_HTTP: " + aMsg + "\n");
 }
 
-Components.utils.import( "resource://weave/xmpp/xmppClient.js" );
+Components.utils.import( "resource://services-sync/xmpp/xmppClient.js" );
 
 var tests = [];
 

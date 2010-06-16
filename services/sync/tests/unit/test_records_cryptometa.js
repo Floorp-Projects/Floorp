@@ -1,6 +1,6 @@
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/base_records/crypto.js");
-Cu.import("resource://weave/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Generating keypair to encrypt/decrypt symkeys");

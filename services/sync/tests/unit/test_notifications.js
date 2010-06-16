@@ -1,4 +1,4 @@
-Cu.import("resource://weave/notifications.js");
+Cu.import("resource://services-sync/notifications.js");
 
 function run_test() {
   var logStats = initTestLogging("Info");

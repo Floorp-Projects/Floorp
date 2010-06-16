@@ -41,12 +41,12 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/ext/Preferences.js");
-Cu.import("resource://weave/ext/Observers.js");
-Cu.import("resource://weave/ext/StringBundle.js");
-Cu.import("resource://weave/ext/Sync.js");
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/ext/Observers.js");
+Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://services-sync/ext/StringBundle.js");
+Cu.import("resource://services-sync/ext/Sync.js");
+Cu.import("resource://services-sync/log4moz.js");
 
 /*
  * Utility functions

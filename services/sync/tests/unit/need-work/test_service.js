@@ -1,6 +1,6 @@
-Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/async.js");
-Cu.import("resource://weave/crypto.js");
+Cu.import("resource://services-sync/async.js");
+Cu.import("resource://services-sync/crypto.js");
+Cu.import("resource://services-sync/log4moz.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -19,7 +19,7 @@ let __fakeDAVContents = {
   "public/pubkey" : '{"version":1,"algorithm":"RSA"}'
 };
 
-let Service = loadInSandbox("resource://weave/service.js");
+let Service = loadInSandbox("resource://services-sync/service.js");
 
 function TestService() {
   this.__superclassConstructor = Service.WeaveSvc;

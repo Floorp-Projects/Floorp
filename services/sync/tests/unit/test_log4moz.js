@@ -1,4 +1,4 @@
-Components.utils.import("resource://weave/log4moz.js");
+Components.utils.import("resource://services-sync/log4moz.js");
 
 function MockAppender(formatter) {
   this._formatter = formatter;

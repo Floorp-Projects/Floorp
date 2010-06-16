@@ -1,5 +1,5 @@
 _("Make sure makeGUID makes guids of the right length/characters");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   // XXX this could cause random failures as guids arent always unique...

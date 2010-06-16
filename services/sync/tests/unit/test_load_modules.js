@@ -34,8 +34,8 @@ const modules = [
 
 function run_test() {
   for each (let m in modules) {
-    _("Attempting to load resource://weave/" + m);
-    Cu.import("resource://weave/" + m, {});
+    _("Attempting to load resource://services-sync/" + m);
+    Cu.import("resource://services-sync/" + m, {});
   }
 }
 

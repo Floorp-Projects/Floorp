@@ -1,5 +1,5 @@
 _("Make sure lazySvc get the desired services");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Load the xul app info service as obj.app");

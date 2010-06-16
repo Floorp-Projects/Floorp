@@ -41,8 +41,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/util.js");
 
 function HistoryRec(uri) {
   CryptoWrapper.call(this, uri);

@@ -1,7 +1,7 @@
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/ext/Observers.js");
-Cu.import("resource://weave/ext/Sync.js");
+Cu.import("resource://services-sync/ext/Observers.js");
+Cu.import("resource://services-sync/ext/Sync.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("When imported, Weave.Service.onStartup is called");
@@ -15,7 +15,7 @@ function run_test() {
   Svc.Prefs.set("username", "johndoe");
 
   try {
-    Cu.import("resource://weave/service.js");
+    Cu.import("resource://services-sync/service.js");
 
     _("Service is enabled.");
     do_check_eq(Weave.Service.enabled, true);

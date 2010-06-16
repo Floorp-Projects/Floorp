@@ -1,6 +1,6 @@
-Cu.import("resource://weave/sharing.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/identity.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/sharing.js");
+Cu.import("resource://services-sync/util.js");
 
 function runTestGenerator() {
   let self = yield;

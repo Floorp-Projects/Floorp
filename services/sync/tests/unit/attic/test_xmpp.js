@@ -1,4 +1,4 @@
-Cu.import( "resource://weave/xmpp/xmppClient.js" );
+Cu.import( "resource://services-sync/xmpp/xmppClient.js" );
 
 function LOG(aMsg) {
   dump("TEST_XMPP: " + aMsg + "\n");

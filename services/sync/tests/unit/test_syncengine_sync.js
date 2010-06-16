@@ -1,14 +1,13 @@
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/resource.js");
-Cu.import("resource://weave/stores.js");
-Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/engines.js");
-
-Cu.import("resource://weave/base_records/wbo.js");
-Cu.import("resource://weave/base_records/keys.js");
-Cu.import("resource://weave/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/stores.js");
+Cu.import("resource://services-sync/trackers.js");
+Cu.import("resource://services-sync/util.js");
 
 /*
  * A fake engine implementation.

@@ -42,20 +42,19 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/ext/Observers.js");
-Cu.import("resource://weave/ext/Sync.js");
-Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/resource.js");
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/stores.js");
-Cu.import("resource://weave/trackers.js");
-
-Cu.import("resource://weave/base_records/wbo.js");
-Cu.import("resource://weave/base_records/keys.js");
-Cu.import("resource://weave/base_records/crypto.js");
-Cu.import("resource://weave/base_records/collection.js");
+Cu.import("resource://services-sync/base_records/collection.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/ext/Observers.js");
+Cu.import("resource://services-sync/ext/Sync.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/stores.js");
+Cu.import("resource://services-sync/trackers.js");
+Cu.import("resource://services-sync/util.js");
 
 // Singleton service, holds registered engines
 

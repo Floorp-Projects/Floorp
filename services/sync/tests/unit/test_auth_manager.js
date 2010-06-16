@@ -1,8 +1,8 @@
-Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/auth.js");
-Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/resource.js");
+Cu.import("resource://services-sync/auth.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/util.js");
 
 let logger;
 let Httpd = {};

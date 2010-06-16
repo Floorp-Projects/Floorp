@@ -1,5 +1,5 @@
 _("Making sure a failing sync reports a useful error");
-Cu.import("resource://weave/engines/bookmarks.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
 
 function run_test() {
   let engine = new BookmarksEngine();

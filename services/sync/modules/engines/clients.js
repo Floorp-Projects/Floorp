@@ -40,12 +40,12 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/ext/StringBundle.js");
-Cu.import("resource://weave/constants.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/stores.js");
-Cu.import("resource://weave/type_records/clients.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/ext/StringBundle.js");
+Cu.import("resource://services-sync/stores.js");
+Cu.import("resource://services-sync/type_records/clients.js");
+Cu.import("resource://services-sync/util.js");
 
 Utils.lazy(this, "Clients", ClientEngine);
 

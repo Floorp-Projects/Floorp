@@ -61,7 +61,7 @@ function loadInSandbox(aUri) {
 }
 
 function FakeTimerService() {
-  Cu.import("resource://weave/util.js");
+  Cu.import("resource://services-sync/util.js");
 
   this.callbackQueue = [];
 
@@ -87,7 +87,7 @@ function FakeTimerService() {
   Utils.makeTimerForCall = self.makeTimerForCall;
 };
 
-Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://services-sync/log4moz.js");
 function getTestLogger(component) {
   return Log4Moz.repository.getLogger("Testing");
 }
@@ -123,7 +123,7 @@ function initTestLogging(level) {
 }
 
 function FakePrefService(contents) {
-  Cu.import("resource://weave/util.js");
+  Cu.import("resource://services-sync/util.js");
   this.fakeContents = contents;
   Utils.__prefs = this;
 }
@@ -146,7 +146,7 @@ FakePrefService.prototype = {
 };
 
 function FakePasswordService(contents) {
-  Cu.import("resource://weave/util.js");
+  Cu.import("resource://services-sync/util.js");
 
   this.fakeContents = contents;
   let self = this;
@@ -312,8 +312,8 @@ function SyncTestingInfrastructure(engineFactory) {
     "xmpp.enabled" : false
   };
 
-  Cu.import("resource://weave/identity.js");
-  Cu.import("resource://weave/util.js");
+  Cu.import("resource://services-sync/identity.js");
+  Cu.import("resource://services-sync/util.js");
 
   ID.set('WeaveID',
          new Identity('Mozilla Services Encryption Passphrase', 'foo'));
@@ -427,7 +427,7 @@ function SyncTestingInfrastructure(engineFactory) {
 let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
 
 _("Setting the identity for passphrase");
-Cu.import("resource://weave/identity.js");
+Cu.import("resource://services-sync/identity.js");
 let passphrase = ID.set("WeaveCryptoID", new Identity());
 passphrase.password = "passphrase";
 

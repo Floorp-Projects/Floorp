@@ -1,5 +1,5 @@
 _("Make sure various combinations of anno arguments do the right get/set for pages/items");
-Cu.import("resource://weave/util.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("set an anno on an item 1");

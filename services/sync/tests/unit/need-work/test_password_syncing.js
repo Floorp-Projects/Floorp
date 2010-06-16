@@ -1,4 +1,4 @@
-Cu.import("resource://weave/engines/passwords.js");
+Cu.import("resource://services-sync/engines/passwords.js");
 
 load("fake_login_manager.js");
 
