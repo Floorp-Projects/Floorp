@@ -50,6 +50,7 @@
 
 #include "jsdtracef.h"
 
+#include "jscntxt.h"
 #include "jsscopeinlines.h"
 
 inline void
@@ -526,24 +527,7 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
-inline bool
-JSObject::isCallable()
-{
-    if (isNative())
-        return isFunction() || getClass()->call;
-
-    return !!map->ops->call;
-}
-
-static inline bool
-js_IsCallable(jsval v)
-{
-    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
-}
-
 namespace js {
-
-typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
 
 class AutoDescriptorArray : private AutoGCRooter
 {

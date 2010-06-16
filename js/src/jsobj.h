@@ -52,6 +52,7 @@
 #include "jshash.h" /* Added by JSIFY */
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsvector.h"
 
 namespace js { class AutoDescriptorArray; }
 
@@ -134,6 +135,10 @@ struct PropertyDescriptor {
     bool hasEnumerable : 1;
     bool hasConfigurable : 1;
 };
+
+namespace js {
+    typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+}
 
 JS_BEGIN_EXTERN_C
 
