@@ -281,9 +281,13 @@ js_ComputeGlobalThis(JSContext *cx, jsval *argv)
     return CallThisObjectHook(cx, thisp, argv);
 }
 
-static JSObject *
-ComputeThis(JSContext *cx, jsval *argv)
+JSObject *
+js_ComputeThis(JSContext *cx, jsval *argv)
 {
+    JS_ASSERT(argv[-1] != JSVAL_HOLE);  // check for SynthesizeFrame poisoning
+    if (JSVAL_IS_NULL(argv[-1]))
+        return js_ComputeGlobalThis(cx, argv);
+
     JSObject *thisp;
 
     JS_ASSERT(!JSVAL_IS_NULL(argv[-1]));
@@ -299,15 +303,6 @@ ComputeThis(JSContext *cx, jsval *argv)
         return js_ComputeGlobalThis(cx, argv);
 
     return CallThisObjectHook(cx, thisp, argv);
-}
-
-JSObject *
-js_ComputeThis(JSContext *cx, jsval *argv)
-{
-    JS_ASSERT(argv[-1] != JSVAL_HOLE);  // check for SynthesizeFrame poisoning
-    if (JSVAL_IS_NULL(argv[-1]))
-        return js_ComputeGlobalThis(cx, argv);
-    return ComputeThis(cx, argv);
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -433,112 +428,13 @@ class AutoPreserveEnumerators {
     }
 };
 
-/*
- * Find a function reference and its 'this' object implicit first parameter
- * under argc arguments on cx's stack, and call the function.  Push missing
- * required arguments, allocate declared local variables, and pop everything
- * when done.  Then push the return value.
- */
-JS_REQUIRES_STACK JS_FRIEND_API(JSBool)
-js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
+static JS_REQUIRES_STACK bool
+Invoke(JSContext *cx, JSFunction *fun, JSScript *script, JSNative native,
+       const InvokeArgsGuard &args, uintN flags)
 {
-    jsval *vp = args.getvp();
     uintN argc = args.getArgc();
-    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+    jsval *vp = args.getvp();
 
-    jsval v = vp[0];
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
-        return false;
-    }
-
-    JSObject *funobj = JSVAL_TO_OBJECT(v);
-    JSObject *parent = funobj->getParent();
-    JSClass *clasp = funobj->getClass();
-
-    /* Filled by the following if/else statement. */
-    JSNative native;
-    JSFunction *fun;
-    JSScript *script;
-    if (clasp != &js_FunctionClass) {
-#if JS_HAS_NO_SUCH_METHOD
-        if (clasp == &js_NoSuchMethodClass)
-            return NoSuchMethod(cx, argc, vp, flags);
-#endif
-
-        /* Function is inlined, all other classes use object ops. */
-        const JSObjectOps *ops = funobj->map->ops;
-
-        fun = NULL;
-        script = NULL;
-
-        /* Try a call or construct native object op. */
-        if (flags & JSINVOKE_CONSTRUCT) {
-            if (!JSVAL_IS_OBJECT(vp[1])) {
-                if (!js_PrimitiveToObject(cx, &vp[1]))
-                    return false;
-            }
-            native = ops->construct;
-        } else {
-            native = ops->call;
-        }
-        if (!native) {
-            js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
-            return false;
-        }
-    } else {
-        /* Get private data and set derived locals from it. */
-        fun = GET_FUNCTION_PRIVATE(cx, funobj);
-        if (FUN_INTERPRETED(fun)) {
-            native = NULL;
-            script = fun->u.i.script;
-            JS_ASSERT(script);
-
-            if (script->isEmpty()) {
-                if (flags & JSINVOKE_CONSTRUCT) {
-                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
-                    *vp = vp[1];
-                } else {
-                    *vp = JSVAL_VOID;
-                }
-                return true;
-            }
-        } else {
-            native = fun->u.n.native;
-            script = NULL;
-        }
-
-        if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
-            /* Handle bound method special case. */
-            vp[1] = OBJECT_TO_JSVAL(parent);
-        } else if (!JSVAL_IS_OBJECT(vp[1])) {
-            JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PRIMITIVE_THIS_TEST(fun, vp[1]))
-                goto start_call;
-        }
-    }
-
-    if (flags & JSINVOKE_CONSTRUCT) {
-        JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
-    } else {
-        /*
-         * We must call js_ComputeThis in case we are not called from the
-         * interpreter, where a prior bytecode has computed an appropriate
-         * |this| already.
-         *
-         * But we need to compute |this| eagerly only for so-called "slow"
-         * (i.e., not fast) native functions. Fast natives must use either
-         * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
-         * the appropriate this-computing bytecode, e.g., JSOP_THIS.
-         */
-        if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-            if (!js_ComputeThis(cx, vp + 2))
-                return false;
-            flags |= JSFRAME_COMPUTED_THIS;
-        }
-    }
-
-  start_call:
     if (native && fun && fun->isFastNative()) {
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
@@ -620,6 +516,7 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     cx->stack().pushInvokeFrame(cx, args, frame, regs);
 
     /* Now that the frame has been pushed, fix up the scope chain. */
+    JSObject *parent = JSVAL_TO_OBJECT(vp[0])->getParent();
     if (native) {
         /* Slow natives expect the caller's scopeChain as their scopeChain. */
         if (JSStackFrame *down = fp->down)
@@ -675,6 +572,110 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     fp->putActivationObjects(cx);
     *vp = fp->rval;
     return ok;
+}
+
+/*
+ * Find a function reference and its 'this' object implicit first parameter
+ * under argc arguments on cx's stack, and call the function.  Push missing
+ * required arguments, allocate declared local variables, and pop everything
+ * when done.  Then push the return value.
+ */
+JS_REQUIRES_STACK JS_FRIEND_API(JSBool)
+js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
+{
+    jsval *vp = args.getvp();
+    uintN argc = args.getArgc();
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+
+    jsval v = vp[0];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
+        return false;
+    }
+
+    JSObject *funobj = JSVAL_TO_OBJECT(v);
+    JSClass *clasp = funobj->getClass();
+
+    if (clasp == &js_FunctionClass) {
+        /* Get private data and set derived locals from it. */
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        JSNative native;
+        JSScript *script;
+        if (FUN_INTERPRETED(fun)) {
+            native = NULL;
+            script = fun->u.i.script;
+            JS_ASSERT(script);
+
+            if (script->isEmpty()) {
+                if (flags & JSINVOKE_CONSTRUCT) {
+                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+                    *vp = vp[1];
+                } else {
+                    *vp = JSVAL_VOID;
+                }
+                return true;
+            }
+        } else {
+            native = fun->u.n.native;
+            script = NULL;
+        }
+
+        if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
+            /* Handle bound method special case. */
+            vp[1] = OBJECT_TO_JSVAL(funobj->getParent());
+        } else if (!JSVAL_IS_OBJECT(vp[1])) {
+            JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
+            if (PRIMITIVE_THIS_TEST(fun, vp[1]))
+                return Invoke(cx, fun, script, native, args, flags);
+        }
+
+        if (flags & JSINVOKE_CONSTRUCT) {
+            JS_ASSERT(!JSVAL_IS_PRIMITIVE(args.getvp()[1]));
+        } else {
+            /*
+             * We must call js_ComputeThis in case we are not called from the
+             * interpreter, where a prior bytecode has computed an appropriate
+             * |this| already.
+             *
+             * But we need to compute |this| eagerly only for so-called "slow"
+             * (i.e., not fast) native functions. Fast natives must use either
+             * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
+             * the appropriate this-computing bytecode, e.g., JSOP_THIS.
+             */
+            if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
+                jsval *vp = args.getvp();
+                if (!js_ComputeThis(cx, vp + 2))
+                    return false;
+                flags |= JSFRAME_COMPUTED_THIS;
+            }
+        }
+        return Invoke(cx, fun, script, native, args, flags);
+    }
+
+#if JS_HAS_NO_SUCH_METHOD
+    if (clasp == &js_NoSuchMethodClass)
+        return NoSuchMethod(cx, argc, vp, flags);
+#endif
+
+    /* Function is inlined, all other classes use object ops. */
+    const JSObjectOps *ops = funobj->map->ops;
+
+    /* Try a call or construct native object op. */
+    JSNative native;
+    if (flags & JSINVOKE_CONSTRUCT) {
+        if (!JSVAL_IS_OBJECT(vp[1])) {
+            if (!js_PrimitiveToObject(cx, &vp[1]))
+                return false;
+        }
+        native = ops->construct;
+    } else {
+        native = ops->call;
+    }
+    if (!native) {
+        js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
+        return false;
+    }
+    return Invoke(cx, NULL, NULL, native, args, flags);
 }
 
 JSBool
