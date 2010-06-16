@@ -770,10 +770,10 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
     nsresult rv;
 
 #ifdef NS_FUNCTION_TIMER
-    nsAutoString path__(NS_LITERAL_STRING("N/A"));
-    aComponentFile->GetPath(path__);
+    nsCAutoString spec__("N/A");
+    aComponentURI->GetSpec(spec__);
     NS_TIME_FUNCTION_FMT("%s (line %d) (file: %s)", MOZ_FUNCTION_NAME,
-                         __LINE__, nsPromiseFlatCString(NS_LossyConvertUTF16toASCII(path__)).BeginReading());
+                         __LINE__, spec__.get());
 #endif
 
     if (!mInitialized) {
