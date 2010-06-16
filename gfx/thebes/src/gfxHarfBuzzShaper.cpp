@@ -77,15 +77,9 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
 
 gfxHarfBuzzShaper::~gfxHarfBuzzShaper()
 {
-    if (mCmapTable) {
-        hb_blob_destroy(mCmapTable);
-    }
-    if (mHmtxTable) {
-        hb_blob_destroy(mHmtxTable);
-    }
-    if (mHBFace) {
-        hb_face_destroy(mHBFace);
-    }
+    hb_blob_destroy(mCmapTable);
+    hb_blob_destroy(mHmtxTable);
+    hb_face_destroy(mHBFace);
 }
 
 /*
@@ -125,25 +119,10 @@ gfxHarfBuzzShaper::GetGlyph(hb_codepoint_t unicode,
     NS_ASSERTION(mFont->GetFontEntry()->HasCmapTable(),
                  "we cannot be using this font!");
 
-    if (!mCmapTable) {
-        mCmapTable = mFont->GetFontTable(TRUETYPE_TAG('c','m','a','p'));
-        if (!mCmapTable) {
-            NS_WARNING("failed to load cmap, glyphs will be missing");
-            return 0;
-        }
-    }
+    NS_ASSERTION(mCmapTable && (mCmapFormat > 0) && (mSubtableOffset > 0),
+                 "cmap data not correctly set up, expect disaster");
 
     const PRUint8* data = (const PRUint8*)hb_blob_lock(mCmapTable);
-
-    if (mCmapFormat < 0) {
-        PRBool symbol;
-        mCmapFormat =
-            gfxFontUtils::FindPreferredSubtable(data,
-                                                hb_blob_get_length(mCmapTable),
-                                                &mSubtableOffset,
-                                                &mUVSTableOffset,
-                                                &symbol);
-    }
 
     hb_codepoint_t gid;
     switch (mCmapFormat) {
@@ -226,25 +205,8 @@ gfxHarfBuzzShaper::GetGlyphMetrics(gfxContext *aContext,
     // font did not implement GetHintedGlyphWidth, so get an unhinted value
     // directly from the font tables
 
-    if (mNumLongMetrics == 0) {
-        mNumLongMetrics = -1;
-
-        // read this from the hhea table without caching the blob
-        hb_blob_t *hheaTable = mFont->GetFontTable(TRUETYPE_TAG('h','h','e','a'));
-        if (hb_blob_get_length(hheaTable) >= sizeof(HMetricsHeader)) {
-            const HMetricsHeader* hhea = reinterpret_cast<const HMetricsHeader*>
-                (hb_blob_lock(hheaTable));
-            mNumLongMetrics = hhea->numberOfHMetrics;
-            hb_blob_unlock(hheaTable);
-        }
-        hb_blob_destroy(hheaTable);
-
-        mHmtxTable = mFont->GetFontTable(TRUETYPE_TAG('h','m','t','x'));
-    }
-
-    if (mNumLongMetrics < 1) {
-        return;
-    }
+    NS_ASSERTION((mNumLongMetrics > 0) && mHmtxTable != nsnull,
+                 "font is lacking metrics, we shouldn't be here");
 
     if (glyph >= mNumLongMetrics) {
         glyph = mNumLongMetrics - 1;
@@ -342,6 +304,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     mFont->SetupCairoFont(aContext);
 
     if (!mHBFace) {
+        // set up the harfbuzz face etc the first time we use the font
+
         if (!sHBFontFuncs) {
             // static function callback pointers, initialized by the first
             // harfbuzz shaper used
@@ -366,6 +330,48 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         }
 
         mHBFace = hb_face_create_for_tables(HBGetTable, nsnull, this);
+
+        // get the cmap table and find offset to our subtable
+        mCmapTable = mFont->GetFontTable(TRUETYPE_TAG('c','m','a','p'));
+        if (!mCmapTable) {
+            NS_WARNING("failed to load cmap, glyphs will be missing");
+            return PR_FALSE;
+        }
+        const PRUint8* data = (const PRUint8*)hb_blob_lock(mCmapTable);
+        PRBool symbol;
+        mCmapFormat =
+            gfxFontUtils::FindPreferredSubtable(data,
+                                                hb_blob_get_length(mCmapTable),
+                                                &mSubtableOffset,
+                                                &mUVSTableOffset,
+                                                &symbol);
+        hb_blob_unlock(mCmapTable);
+
+        if (!mUseHintedWidths) {
+            // if font doesn't implement hinted widths, we will be reading
+            // the hmtx table directly;
+            // read mNumLongMetrics from hhea table without caching its blob,
+            // and preload/cache the hmtx table
+            hb_blob_t *hheaTable =
+                mFont->GetFontTable(TRUETYPE_TAG('h','h','e','a'));
+            if (hheaTable &&
+                hb_blob_get_length(hheaTable) >= sizeof(HMetricsHeader)) {
+                const HMetricsHeader* hhea =
+                    reinterpret_cast<const HMetricsHeader*>
+                        (hb_blob_lock(hheaTable));
+                mNumLongMetrics = hhea->numberOfHMetrics;
+                hb_blob_unlock(hheaTable);
+
+                mHmtxTable =
+                    mFont->GetFontTable(TRUETYPE_TAG('h','m','t','x'));
+            }
+            hb_blob_destroy(hheaTable);
+        }
+    }
+
+    if (mCmapFormat <= 0 || (!mUseHintedWidths && !mHmtxTable)) {
+        // unable to shape with this font
+        return PR_FALSE;
     }
 
     FontCallbackData fcd(this, aContext);
