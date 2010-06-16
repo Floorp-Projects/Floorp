@@ -439,10 +439,18 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   bool reset = false;
   if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    nsAutoString val;
-    GetHref(val);
-    if (!val.Equals(aValue)) {
+    // If we do not have a cached URI, we have some value here so we must reset
+    // our link state after calling the parent.
+    if (!Link::HasCachedURI()) {
       reset = true;
+    }
+    // However, if we have a cached URI, we'll want to see if the value changed.
+    else {
+      nsAutoString val;
+      GetHref(val);
+      if (!val.Equals(aValue)) {
+        reset = true;
+      }
     }
   }
 
