@@ -47,7 +47,7 @@ function WebInstallPrompt() { }
 
 WebInstallPrompt.prototype = {
   classDescription: "XPInstall Dialog Service",
-  contractID: "@mozilla.org/addons/web-install-confirm;1",
+  contractID: "@mozilla.org/addons/web-install-prompt;1",
   classID: Components.ID("{c1242012-27d8-477e-a0f1-0b098ffc329b}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallPrompt]),
 
