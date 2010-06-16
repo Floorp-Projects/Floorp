@@ -478,7 +478,7 @@ namespace nanojit
 
             // platform specific methods
         public:
-            const static Register savedRegs[NumSavedRegs];
+            const static Register savedRegs[NumSavedRegs+1]; // Allocate an extra element in case NumSavedRegs == 0
             DECLARE_PLATFORM_ASSEMBLER()
 
         private:

@@ -1932,7 +1932,7 @@ namespace nanojit
 
             AbiKind abi;
             LIns *state, *param1, *sp, *rp;
-            LIns* savedRegs[NumSavedRegs];
+            LIns* savedRegs[NumSavedRegs+1]; // Allocate an extra element in case NumSavedRegs == 0
 
         protected:
             friend class LirBufWriter;
