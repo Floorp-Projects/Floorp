@@ -72,7 +72,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
-#include "jsreflect.h"
 #include "jsxml.h"
 
 #include "prmjtime.h"
@@ -2659,24 +2658,6 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-ResolveClass(JSContext *cx, JSObject *obj, jsval id, JSBool *resolved)
-{
-    if (!JS_ResolveStandardClass(cx, obj, id, resolved))
-        return JS_FALSE;
-
-    if (! *resolved) {
-        JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, CLASS_ATOM_OFFSET(Reflect));
-        if (ATOM_KEY(atom) == id) {
-            if (!js_InitReflectClasses(cx, obj))
-                return JS_FALSE;
-            *resolved = JS_TRUE;
-        }
-    }
-
-    return JS_TRUE;
-}
-
-static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
 {
     ComplexObject *cpx;
@@ -2710,7 +2691,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **ob
     if (!(flags & JSRESOLVE_ASSIGNING)) {
         JSBool resolved;
 
-        if (!ResolveClass(cx, obj, id, &resolved))
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return JS_FALSE;
 
         if (resolved) {
@@ -2924,7 +2905,7 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     JS_ValueToBoolean(cx, v, &b);
     if (b && (flags & JSRESOLVE_ASSIGNING) == 0) {
-        if (!ResolveClass(cx, obj, id, &resolved))
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return JS_FALSE;
         if (resolved) {
             *objp = obj;
@@ -4633,7 +4614,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 
-    if (!ResolveClass(cx, obj, id, &resolved))
+    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
         return JS_FALSE;
     if (resolved) {
         *objp = obj;
