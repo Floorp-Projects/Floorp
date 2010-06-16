@@ -71,7 +71,7 @@ Tester.prototype = {
   },
 
   waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
-    if (this.currentTest && gBrowser.tabs.length > 1) {
+    if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
       let msg = "Found " + (gBrowser.tabs.length - 1) +
                 " unexpected tab(s) at the end of test run";      
       this.currentTest.addResult(new testResult(false, msg, "", false));
