@@ -126,7 +126,7 @@ window.TabItem = function(container, tab) {
   var self = this;
   this.tab.mirror.addOnClose(this, function(who, info) {
     TabItems.unregister(self);
-    Trenches.unregister(self.container);
+    self.removeTrenches();
   });   
      
   this.tab.mirror.addSubscriber(this, 'urlChanged', function(who, info) {

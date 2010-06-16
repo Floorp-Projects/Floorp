@@ -1,6 +1,7 @@
 // Class: Trench
 // Class for drag-snapping regions; called "trenches" as they are long and narrow.
 var Trench = function(element, xory, type, edge) {
+	this.id = Trenches.nextId++;
 	this.el = element;
 	this.$el = iQ(this.el);
 	this.xory = xory; // either "x" or "y"
@@ -71,47 +72,40 @@ Trench.prototype = {
 		}
 
 		if (!this.visibleTrench)
-			this.visibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-101});
+			this.visibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-102, opacity: 0.05});
 		var visibleTrench = this.visibleTrench;
 
+		if (!this.activeVisibleTrench)
+			this.activeVisibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-101});
+		var activeVisibleTrench = this.activeVisibleTrench;
+
 		if (this.active)
-			visibleTrench.css({opacity: 0.5});
+			activeVisibleTrench.css({opacity: 0.45});
 		else
-			visibleTrench.css({opacity: 0.05});
+			activeVisibleTrench.css({opacity: 0});
 			
-		if (this.type == "border")
+		if (this.type == "border") {
 			visibleTrench.css({backgroundColor:'red'});
-		else
+			activeVisibleTrench.css({backgroundColor:'red'});			
+		} else {
 			visibleTrench.css({backgroundColor:'blue'});
+			activeVisibleTrench.css({backgroundColor:'blue'});
+		}
 
 		visibleTrench.css(this.rect);
+		activeVisibleTrench.css(this.activeRect || this.rect);
 		iQ("body").append(visibleTrench);
+		iQ("body").append(activeVisibleTrench);
 	},
 	hide: function Trench_hide() {
 		if (this.visibleTrench)
 			this.visibleTrench.remove();
 	},
-	rectOverlaps: function Trench_rectOverlaps(rect, assumeConstantSize, keepProportional) {
+	rectOverlaps: function Trench_rectOverlaps(rect,edge,assumeConstantSize,keepProportional) {
 		var xRange = {min: rect.left, max: rect.left + rect.width};
 		var yRange = {min: rect.top, max: rect.top + rect.height};
 		
-		var edgeToCheck;
-		if (this.type == "border") {
-			if (this.edge == "left")
-				edgeToCheck = "right";
-			else if (this.edge == "right")
-				edgeToCheck = "left";
-			else if (this.edge == "top")
-				edgeToCheck = "bottom";
-			else if (this.edge == "bottom")
-				edgeToCheck = "top";
-		} else if (this.type == "guide") {
-			edgeToCheck = this.edge;
-		}
-
-		rect.adjustedEdge = edgeToCheck;
-
-		switch (edgeToCheck) {
+		switch (edge) {
 			case "left":
 				if (this.ruleOverlaps(rect.left, yRange)) {
 					rect.left = this.position;
@@ -162,29 +156,66 @@ Trench.prototype = {
 // global Trenches
 // used to track "trenches" in which the edges will snap.
 var Trenches = {
+	nextId: 0,
 	preferTop: true,
 	preferLeft: true,
+	activeTrenches: {},
 	trenches: [],
+	getById: function Trenches_getById(id) {
+		return this.trenches[id];
+	},
 	register: function Trenches_register(element, xory, type, edge) {
 		var trench = new Trench(element, xory, type, edge);
-		this.trenches.push(trench);
-		return trench;
+		this.trenches[trench.id] = trench;
+		return trench.id;
 	},
-	unregister: function Trenches_unregister(element) {
-		for (let i in this.trenches) {
-			if (this.trenches[i].el === element) {
-				this.trenches[i].hide();
-				delete this.trenches[i];
-			}
-		}
+	unregister: function Trenches_unregister(ids) {
+		if (!iQ.isArray(ids))
+			ids = [ids];
+		var self = this;
+		ids.forEach(function(id){
+			self.trenches[id].hide();
+			delete self.trenches[id];
+		});
+	},
+	comparePosition: function Trenches_comparePosition(a,b) {
+		return a.position - b.position;
 	},
 	activateOthersTrenches: function Trenches_activateOthersTrenches(element) {
+		var aT = this.activeTrenches;
+		aT.left = [];
+		aT.right = [];
+		aT.top = [];
+		aT.bottom = [];
+		this.safeRegionCache = {left:{},right:{},top:{},bottom:{}};
 		this.trenches.forEach(function(t) {
 			if (t.el === element)
 				return;
 			t.active = true;
 			t.show(); // debug
+			
+			var relevantEdge;
+			if (t.type == "border") {
+				if (t.edge == "left")
+					relevantEdge = "right";
+				else if (t.edge == "right")
+					relevantEdge = "left";
+				else if (t.edge == "top")
+					relevantEdge = "bottom";
+				else if (t.edge == "bottom")
+					relevantEdge = "top";
+			} else if (t.type == "guide" || t.type == "barrier") {
+				relevantEdge = t.edge;
+			}
+			
+			aT[relevantEdge].push({id: t.id, position: t.position, toString: function(){return '' + t.id + ':' + t.position}});
+			
 		});
+
+		aT.left.sort(this.comparePosition);
+		aT.right.sort(this.comparePosition);
+		aT.top.sort(this.comparePosition);
+		aT.bottom.sort(this.comparePosition);		
 	},
 	disactivate: function Trenches_disactivate() {
 		this.trenches.forEach(function(t) {
@@ -192,41 +223,114 @@ var Trenches = {
 			t.show();
 		});
 	},
+	snapEdge: function Trenches_snapEdge(rect,edge,assumeConstantSize,keepProportional) {
+
+		var aT = this.activeTrenches;
+
+		var position;
+		switch (edge) {
+			case 'left':
+				position = rect.left; break;
+			case 'right':
+				position = rect.left + rect.width; break;
+			case 'top':
+				position = rect.top; break;
+			case 'bottom':
+				position = rect.top + rect.height; break;
+		}
+		
+		var safeRegionCache = this.safeRegionCache;
+		
+		if ('min' in safeRegionCache[edge] && 'max' in safeRegionCache[edge]) {
+			if (safeRegionCache[edge].min < position && position < safeRegionCache[edge].max) {
+				return false;
+			}
+		}
+
+		// Find the relevant trenches to compare to:
+		// What we're doing here is planting a "rat" within the ordered list of edges that matter
+		// We then sort the resulting array, use indexOf on the rat, and figure out which trenches
+		// are closest to the edge in question.
+		var rat = {id:'rat',position:position};
+		var index = aT[edge].concat(rat).sort(this.comparePosition).indexOf(rat);
+
+		// Now we know to check aT[edge][index-1] and aT[edge][index]
+
+		var newRect;
+		var updated = false;
+		if (index-1 >= 0) {
+			var trench = this.getById(aT[edge][index-1].id);
+			newRect = trench.rectOverlaps(rect,edge,assumeConstantSize,keepProportional);
+			if (newRect) {
+				rect = newRect;
+				updated = true;
+				delete safeRegionCache[edge].min;
+			} else {
+				safeRegionCache[edge].min = trench.position + trench.radius;
+			}
+		} else {
+			safeRegionCache[edge].min = -10;
+		}
+		if (index < aT[edge].length) {
+			var trench = this.getById(aT[edge][index].id);
+			newRect = trench.rectOverlaps(rect,edge,assumeConstantSize,keepProportional);
+			if (newRect) {
+				rect = newRect;
+				updated = true;
+				delete safeRegionCache[edge].max;
+			} else {
+				safeRegionCache[edge].max = trench.position - trench.radius;
+			}
+		} else {
+			safeRegionCache[edge].max = Infinity;
+		}
+		
+		if (updated)
+			return rect;
+		else
+			return false;
+		
+	},
 	snap: function Trenches_snap(rect,assumeConstantSize,keepProportional) {
+		var aT = this.activeTrenches;
+		
 		var updated = false;
 		var updatedX = false;
 		var updatedY = false;
-		for (let i in this.trenches) {
-			var t = this.trenches[i];
-			if (!t.active)
-				continue;
-			// newRect will be a new rect, or false
-			var newRect = t.rectOverlaps(rect,assumeConstantSize,keepProportional);
-
+		
+		var newRect;
+		newRect = this.snapEdge(rect,(this.preferLeft?'left':'right'),assumeConstantSize,keepProportional);
+		if (newRect) {
+			rect = newRect;
+			updated = true;
+			updatedX = true;
+		}
+		
+		if (!assumeConstantSize || !updatedX) {
+			newRect = this.snapEdge(rect,(this.preferLeft?'right':'left'),assumeConstantSize,keepProportional);
 			if (newRect) {
-				if (assumeConstantSize && updatedX && updatedY)
-					break;
-				if (assumeConstantSize && updatedX && (newRect.adjustedEdge == "left"||newRect.adjustedEdge == "right"))
-					continue;
-				if (assumeConstantSize && updatedY && (newRect.adjustedEdge == "top"||newRect.adjustedEdge == "bottom"))
-					continue;
 				rect = newRect;
 				updated = true;
-	
-				// if updatedX, we don't need to update x any more.
-				if (newRect.adjustedEdge == "left" && this.preferLeft)
-					updatedX = true;
-				if (newRect.adjustedEdge == "right" && !this.preferLeft)
-					updatedX = true;
-	
-				// if updatedY, we don't need to update x any more.
-				if (newRect.adjustedEdge == "top" && this.preferTop)
-					updatedY = true;
-				if (newRect.adjustedEdge == "bottom" && !this.preferTop)
-					updatedY = true;
-
+				updatedX = true;
 			}
 		}
+		
+		newRect = this.snapEdge(rect,(this.preferTop?'top':'bottom'),assumeConstantSize,keepProportional);
+		if (newRect) {
+			rect = newRect;
+			updated = true;
+			updatedY = true;
+		}
+		
+		if (!assumeConstantSize || !updatedY) {
+			newRect = this.snapEdge(rect,(this.preferTop?'bottom':'top'),assumeConstantSize,keepProportional);
+			if (newRect) {
+				rect = newRect;
+				updated = true;
+				updatedY = true;
+			}
+		}
+		
 		if (updated)
 			return rect;
 		else

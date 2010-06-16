@@ -507,7 +507,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     this.removeAll();
     this._sendOnClose();
     Groups.unregister(this);
-		Trenches.unregister(this.container);
+		this.removeTrenches();
     iQ(this.container).fadeOut(function() {
       iQ(this).remove();
       Items.unsquish();
@@ -546,15 +546,15 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       var $el;
       if(a.isAnItem) {
         item = a;
-        $el = iQ(a.container);
+        $el = iQ(a.container);  
       } else {
         $el = iQ(a);
         item = Items.item($el);
       }
       
+			item.removeTrenches();
+      
       Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
-  
-			Trenches.unregister(a.container);
   
       if(!dropPos) 
         dropPos = {top:window.innerWidth, left:window.innerHeight};

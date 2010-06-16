@@ -203,7 +203,7 @@ window.Item.prototype = {
   //
   setParent: function(parent) {
     this.parent = parent;
-    Trenches.unregister(this.container);
+    this.removeTrenches();
     this.save();
   },
 
@@ -406,6 +406,9 @@ window.Item.prototype = {
   
   setTrenches: function(rect) {
 
+		if (this.parent !== null)
+			return;
+
 		var container = this.container;
 
 		if (!this.borderTrenches) {
@@ -416,10 +419,10 @@ window.Item.prototype = {
 			bT.bottom = Trenches.register(container,"y","border","bottom");
 		}
 		var bT = this.borderTrenches;
-		bT.left.setWithRect(rect);
-		bT.right.setWithRect(rect);
-		bT.top.setWithRect(rect);
-		bT.bottom.setWithRect(rect);
+		Trenches.getById(bT.left).setWithRect(rect);
+		Trenches.getById(bT.right).setWithRect(rect);
+		Trenches.getById(bT.top).setWithRect(rect);
+		Trenches.getById(bT.bottom).setWithRect(rect);
 				
 		if (!this.guideTrenches) {
 			var gT = this.guideTrenches = {};
@@ -429,12 +432,22 @@ window.Item.prototype = {
 			gT.bottom = Trenches.register(container,"y","guide","bottom");
 		}
 		var gT = this.guideTrenches;
-		gT.left.setWithRect(rect);
-		gT.right.setWithRect(rect);
-		gT.top.setWithRect(rect);
-		gT.bottom.setWithRect(rect);
+		Trenches.getById(gT.left).setWithRect(rect);
+		Trenches.getById(gT.right).setWithRect(rect);
+		Trenches.getById(gT.top).setWithRect(rect);
+		Trenches.getById(gT.bottom).setWithRect(rect);
 
   },
+  removeTrenches: function() {
+		for (let edge in this.borderTrenches) {
+			Trenches.unregister(this.borderTrenches[edge]); // unregister can take an array
+		}
+		this.borderTrenches = null;
+		for (let edge in this.guideTrenches) {
+			Trenches.unregister(this.guideTrenches[edge]); // unregister can take an array
+		}
+		this.guideTrenches = null;
+  }
 };  
 
 // ##########
