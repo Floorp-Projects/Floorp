@@ -193,14 +193,14 @@ class AutoNamespaces : protected AutoGCRooter {
 };
 
 #ifdef DEBUG
-class MixingChecker
+class CompartmentChecker
 {
   private:
     JSContext *context;
     JSCompartment *compartment;
 
   public:
-    explicit MixingChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
+    explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
         VOUCH_DOES_NOT_REQUIRE_STACK();
         check(cx->fp ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
     }
@@ -255,10 +255,10 @@ class MixingChecker
 #define START_ASSERT_SAME_COMPARTMENT()                                       \
     if (cx->runtime->gcRunning)                                               \
         return;                                                               \
-    MixingChecker c(cx)
+    CompartmentChecker c(cx)
 
 template <class T1> inline void
-ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1)
+assertSameCompartment(JSContext *cx, T1 t1)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -267,7 +267,7 @@ ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1)
 }
 
 template <class T1, class T2> inline void
-ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -277,7 +277,7 @@ ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2)
 }
 
 template <class T1, class T2, class T3> inline void
-ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2, T3 t3)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -288,7 +288,7 @@ ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2, T3 t3)
 }
 
 template <class T1, class T2, class T3, class T4> inline void
-ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -300,7 +300,7 @@ ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
 }
 
 template <class T1, class T2, class T3, class T4, class T5> inline void
-ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -317,37 +317,37 @@ ASSERT_SAME_COMPARTMENT(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 inline JSBool
 callJSNative(JSContext *cx, JSNative native, JSObject *thisobj, uintN argc, jsval *argv, jsval *rval)
 {
-    ASSERT_SAME_COMPARTMENT(cx, thisobj, ValueArray(argv, argc));
+    assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
     JSBool ok = native(cx, thisobj, argc, argv, rval);
     if (ok)
-        ASSERT_SAME_COMPARTMENT(cx, *rval);
+        assertSameCompartment(cx, *rval);
     return ok;
 }
 
 inline JSBool
 callJSFastNative(JSContext *cx, JSFastNative native, uintN argc, jsval *vp)
 {
-    ASSERT_SAME_COMPARTMENT(cx, ValueArray(vp, argc + 2));
+    assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
     if (ok)
-        ASSERT_SAME_COMPARTMENT(cx, vp[0]);
+        assertSameCompartment(cx, vp[0]);
     return ok;
 }
 
 inline JSBool
 callJSPropertyOp(JSContext *cx, JSPropertyOp op, JSObject *obj, jsval idval, jsval *vp)
 {
-    ASSERT_SAME_COMPARTMENT(cx, obj, idval, *vp);
+    assertSameCompartment(cx, obj, idval, *vp);
     JSBool ok = op(cx, obj, idval, vp);
     if (ok)
-        ASSERT_SAME_COMPARTMENT(cx, obj, *vp);
+        assertSameCompartment(cx, obj, *vp);
     return ok;
 }
 
 inline JSBool
 callJSPropertyOpSetter(JSContext *cx, JSPropertyOp op, JSObject *obj, jsval idval, jsval *vp)
 {
-    ASSERT_SAME_COMPARTMENT(cx, obj, idval, *vp);
+    assertSameCompartment(cx, obj, idval, *vp);
     return op(cx, obj, idval, vp);
 }
 
