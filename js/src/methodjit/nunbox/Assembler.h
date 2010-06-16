@@ -155,6 +155,14 @@ class Assembler : public BaseAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_NONFUNOBJ));
     }
 
+    Jump testFunObj(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, ImmTag(JSVAL_MASK32_FUNOBJ));
+    }
+
+    Jump testFunObj(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_FUNOBJ));
+    }
+
     Jump testDouble(Assembler::Condition cond, RegisterID reg) {
         Assembler::Condition opcond;
         if (cond == Assembler::Equal)

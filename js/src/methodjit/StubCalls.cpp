@@ -1028,30 +1028,6 @@ stubs::IncVp(VMFrame &f, Value *vp)
 }
 
 static inline bool
-DoInvoke(VMFrame &f, uint32 argc, Value *vp)
-{
-    JSContext *cx = f.cx;
-
-    if (vp->isFunObj()) {
-        JSObject *obj = &vp->asFunObj();
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
-
-        JS_ASSERT(!FUN_INTERPRETED(fun));
-        if (fun->flags & JSFUN_FAST_NATIVE) {
-            JS_ASSERT(fun->u.n.extra == 0);
-            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveValue::test(fun, vp[1]));
-            JSBool ok = ((FastNative)fun->u.n.native)(cx, argc, vp);
-            f.regs.sp = vp + 1;
-            return ok ? true : false;
-        }
-    }
-
-    JSBool ok = Invoke(cx, InvokeArgsGuard(vp, argc), 0);
-    f.regs.sp = vp + 1;
-    return ok ? true : false;
-}
-
-static inline bool
 InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 {
     JSContext *cx = f.cx;
@@ -1160,73 +1136,102 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     return ok;
 }
 
+void JS_FASTCALL
+stubs::SlowCall(VMFrame &f, uint32 argc)
+{
+    Value *vp = f.regs.sp - (argc + 2);
+
+    JS_ASSERT(!vp->isFunObj());
+
+    if (!Invoke(f.cx, InvokeArgsGuard(vp, argc), 0))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::NativeCall(VMFrame &f, uint32 argc)
+{
+    Value *vp = f.regs.sp - (argc + 2);
+    JSContext *cx = f.cx;
+
+    JS_ASSERT(vp->isFunObj());
+    JSObject *obj = &vp->asFunObj();
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+
+    JS_ASSERT(!fun->isInterpreted());
+    if (!fun->isFastNative()) {
+        if (!Invoke(cx, InvokeArgsGuard(vp, argc), 0))
+            THROW();
+        return;
+    }
+
+    FastNative fn = (FastNative)fun->u.n.native;
+    if (!fn(cx, argc, vp))
+        THROW();
+}
+
 void * JS_FASTCALL
 stubs::Call(VMFrame &f, uint32 argc)
 {
     Value *vp = f.regs.sp - (argc + 2);
 
-    if (vp->isFunObj()) {
-        JSObject *obj = &vp->asFunObj();
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
-        if (FUN_INTERPRETED(fun)) {
-            if (fun->u.i.script->isEmpty()) {
-                vp->setUndefined();
-                f.regs.sp = vp + 1;
-                return NULL;
-            }
+    JS_ASSERT(vp->isFunObj());
 
-            void *ret;
-            if (!InlineCall(f, 0, &ret, argc))
-                THROWV(NULL);
+    JSObject *obj = &vp->asFunObj();
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
 
-            f.cx->regs->pc = f.fp->script->code;
+    JS_ASSERT(FUN_INTERPRETED(fun));
 
-#if 0 /* def JS_TRACER */
-            if (ret && f.cx->jitEnabled && IsTraceableRecursion(f.cx)) {
-                /* Top of script should always have traceId 0. */
-                f.u.tracer.traceId = 0;
-                f.u.tracer.offs = 0;
-
-                /* cx.regs.sp is only set in InlineCall() if non-jittable. */
-                JS_ASSERT(f.cx->regs == &f.regs);
-
-                /*
-                 * NB: Normally, the function address is returned, and the
-                 * caller's JIT'd code will set f.scriptedReturn and jump.
-                 * Invoking the tracer breaks this in two ways:
-                 *  1) f.scriptedReturn is not yet set, so when pushing new
-                 *     inline frames, the call stack would get corrupted.
-                 *  2) If the tracer does not push new frames, but runs some
-                 *     code, the JIT'd code to set f.scriptedReturn will not
-                 *     be run.
-                 *
-                 * So, a simple hack: set f.scriptedReturn now.
-                 */
-                f.scriptedReturn = GetReturnAddress(f, f.fp);
-
-                void *newRet = InvokeTracer(f, Record_Recursion);
-
-                /* 
-                 * The tracer could have dropped us off anywhere. Hijack the
-                 * stub return address to JaegerFromTracer, which will restore
-                 * state correctly.
-                 */
-                if (newRet) {
-                    void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
-                    f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr)));
-                    return newRet;
-                }
-            }
-#endif
-
-            return ret;
-        }
+    if (fun->u.i.script->isEmpty()) {
+        vp->setUndefined();
+        f.regs.sp = vp + 1;
+        return NULL;
     }
 
-    if (!DoInvoke(f, argc, vp))
+    void *ret;
+    if (!InlineCall(f, 0, &ret, argc))
         THROWV(NULL);
 
-    return NULL;
+    f.cx->regs->pc = f.fp->script->code;
+
+#if 0 /* def JS_TRACER */
+    if (ret && f.cx->jitEnabled && IsTraceableRecursion(f.cx)) {
+        /* Top of script should always have traceId 0. */
+        f.u.tracer.traceId = 0;
+        f.u.tracer.offs = 0;
+
+        /* cx.regs.sp is only set in InlineCall() if non-jittable. */
+        JS_ASSERT(f.cx->regs == &f.regs);
+
+        /*
+         * NB: Normally, the function address is returned, and the
+         * caller's JIT'd code will set f.scriptedReturn and jump.
+         * Invoking the tracer breaks this in two ways:
+         *  1) f.scriptedReturn is not yet set, so when pushing new
+         *     inline frames, the call stack would get corrupted.
+         *  2) If the tracer does not push new frames, but runs some
+         *     code, the JIT'd code to set f.scriptedReturn will not
+         *     be run.
+         *
+         * So, a simple hack: set f.scriptedReturn now.
+         */
+        f.scriptedReturn = GetReturnAddress(f, f.fp);
+
+        void *newRet = InvokeTracer(f, Record_Recursion);
+
+        /* 
+         * The tracer could have dropped us off anywhere. Hijack the
+         * stub return address to JaegerFromTracer, which will restore
+         * state correctly.
+         */
+        if (newRet) {
+            void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
+            f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr)));
+            return newRet;
+        }
+    }
+#endif
+
+    return ret;
 }
 
 void JS_FASTCALL
@@ -1237,44 +1242,52 @@ stubs::CopyThisv(VMFrame &f)
         f.fp->rval = f.fp->thisv;
 }
 
+void JS_FASTCALL
+stubs::SlowNew(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
+    Value *vp = f.regs.sp - (argc + 2);
+
+    JS_ASSERT_IF(vp[0].isFunObj(),
+              !(GET_FUNCTION_PRIVATE(cx, &vp[0].asFunObj()))->isInterpreted());
+
+    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc), JS_TRUE))
+        THROW();
+}
+
 void * JS_FASTCALL
 stubs::New(VMFrame &f, uint32 argc)
 {
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    if (vp[0].isFunObj()) {
-        JSObject *funobj = &vp[0].asFunObj();
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-        if (fun->isInterpreted()) {
-            jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-            if (!funobj->getProperty(cx, id, &vp[1]))
-                THROWV(NULL);
+    JS_ASSERT(vp[0].isFunObj());
 
-            JSObject *proto = vp[1].isObject() ? &vp[1].asObject() : NULL;
-            JSObject *obj2 = NewObject(cx, &js_ObjectClass, proto, funobj->getParent());
-            if (!obj2)
-                THROWV(NULL);
+    JSObject *funobj = &vp[0].asFunObj();
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
-            if (fun->u.i.script->isEmpty()) {
-                vp[0].setNonFunObj(*obj2);
-                f.regs.sp = vp + 1;
-                return NULL;
-            }
+    JS_ASSERT(fun->isInterpreted());
 
-            vp[1].setNonFunObj(*obj2);
-            void *pret;
-            if (!InlineCall(f, JSFRAME_CONSTRUCTING, &pret, argc))
-                THROWV(NULL);
-            return pret;
-        }
-    }
-
-    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc), JS_FALSE))
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    if (!funobj->getProperty(cx, id, &vp[1]))
         THROWV(NULL);
 
-    f.regs.sp = vp + 1;
-    return NULL;
+    JSObject *proto = vp[1].isObject() ? &vp[1].asObject() : NULL;
+    JSObject *obj2 = NewObject(cx, &js_ObjectClass, proto, funobj->getParent());
+    if (!obj2)
+        THROWV(NULL);
+
+    if (fun->u.i.script->isEmpty()) {
+        vp[0].setNonFunObj(*obj2);
+        f.regs.sp = vp + 1;
+        return NULL;
+    }
+
+    vp[1].setNonFunObj(*obj2);
+    void *pret;
+    if (!InlineCall(f, JSFRAME_CONSTRUCTING, &pret, argc))
+        THROWV(NULL);
+    return pret;
 }
 
 void JS_FASTCALL
