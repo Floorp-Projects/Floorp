@@ -67,17 +67,19 @@ function test() {
         width: box.width,
         height: box.height
       })
+      .html('<div class="thumb" /><div class="tab-title" />')
       .appendTo('body');
       
     is($div.width(), box.width, 'widths match');
     is($div.height(), box.height, 'heights match');
     
     var tabItem = new TabItem($div.get(0), new TabStub());
-    box = tabItem.getBounds();
+    box = new Rect(20, 20, 200, 200);
     tabItem.setBounds(box); 
-    ok(box.equals(tabItem.getBounds(), 'set/get match'));
+    ok(box.equals(tabItem.getBounds()), 'set/get match');
     tabItem.reloadBounds();
-    ok(box.equals(tabItem.getBounds(), 'reload match'));   
+    var box2 = tabItem.getBounds();
+    ok(box.equals(box2), 'reload match');   
     
     // ___ done
     Utils.log('unit tests done', testsRun, (testsFailed ? testsFailed + ' tests failed!!' : ''));
