@@ -699,8 +699,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_APPLY)
           {
             JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
-            frame.forgetEverything();
-            dispatchCall(stubs::Call, GET_ARGC(PC));
+            inlineCallHelper(GET_ARGC(PC), false);
             JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
           }
           END_CASE(JSOP_CALL)
@@ -834,8 +833,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NEW)
           {
             JaegerSpew(JSpew_Insns, " --- NEW OPERATOR --- \n");
-            frame.forgetEverything();
-            dispatchCall(stubs::New, GET_ARGC(PC));
+            inlineCallHelper(GET_ARGC(PC), true);
             JaegerSpew(JSpew_Insns, " --- END NEW OPERATOR --- \n");
           }
           END_CASE(JSOP_NEW)
@@ -1453,15 +1451,6 @@ mjit::Compiler::emitReturn()
         }
     }
 
-    /* Fix rval - :TODO: lower into NEW */
-    masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, flags)), t0);
-    masm.and32(Imm32(JSFRAME_CONSTRUCTING), t0);
-    Jump j = masm.branchTest32(Assembler::NonZero, t0, t0);
-    stubcc.linkExit(j);
-    stubcc.leave();
-    stubcc.call(stubs::CopyThisv);
-    stubcc.rejoin(0);
-
     /*
      * r = fp->down
      * a1 = f.cx
@@ -1512,10 +1501,85 @@ mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
 }
 
 void
-mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub, uint32 argc)
+mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 {
+    FrameEntry *fe = frame.peek(-int(argc + 2));
+    bool typeKnown = fe->isTypeKnown();
+
+    if (typeKnown && fe->getTypeTag() != JSVAL_MASK32_FUNOBJ) {
+        VoidStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
+        masm.move(Imm32(argc), Registers::ArgReg1);
+        masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
+        frame.popn(argc + 2);
+        frame.pushSynced();
+        return;
+    }
+
+    bool hasTypeReg;
+    RegisterID type = Registers::ReturnReg;
+    RegisterID data = frame.tempRegForData(fe);
+    frame.pinReg(data);
+
+    Address addr = frame.addressOf(fe);
+
+    if (!typeKnown) {
+        if (frame.shouldAvoidTypeRemat(fe)) {
+            hasTypeReg = false;
+        } else {
+            type = frame.tempRegForType(fe);
+            hasTypeReg = true;
+            frame.pinReg(type);
+        }
+    }
+
+    /*
+     * We rely on the fact that syncAndKill() is not allowed to touch the
+     * registers we've preserved.
+     */
+    frame.forgetEverything();
+
+    Jump invokeCallDone;
+    if (!typeKnown) {
+        Jump j;
+        if (!hasTypeReg)
+            j = masm.testFunObj(Assembler::NotEqual, frame.addressOf(fe));
+        else
+            j = masm.testFunObj(Assembler::NotEqual, type);
+        stubcc.linkExit(j);
+        stubcc.leave();
+        stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+        stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
+        invokeCallDone = stubcc.masm.jump();
+    }
+
+    /* Get function private pointer. */
+    Address funPrivate(data, offsetof(JSObject, fslots) +
+                             JSSLOT_PRIVATE * sizeof(Value));
+    masm.loadData32(funPrivate, data);
+
+    /* Test if it's interpreted. */
+    frame.takeReg(data);
+    RegisterID t0 = frame.allocReg();
+    RegisterID t1 = frame.allocReg();
+    masm.load16(Address(data, offsetof(JSFunction, flags)), t0);
+    masm.move(t0, t1);
+    masm.and32(Imm32(JSFUN_KINDMASK), t1);
+    Jump notInterp = masm.branch32(Assembler::Below, t1, Imm32(JSFUN_INTERPRETED));
+    stubcc.linkExit(notInterp);
+
+    frame.freeReg(t0);
+    frame.freeReg(t1);
+    frame.freeReg(data);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+    stubcc.call(callingNew ? stubs::SlowNew : stubs::NativeCall);
+    Jump slowCallDone = stubcc.masm.jump();
+
+    /* Scripted call. */
     masm.move(Imm32(argc), Registers::ArgReg1);
-    masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
+    masm.stubCall(callingNew ? stubs::New : stubs::Call,
+                  PC, frame.stackDepth() + script->nfixed);
 
     /*
      * Stub call returns a pointer to JIT'd code, or NULL.
@@ -1530,11 +1594,6 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub, uint32 argc)
      */
     Jump j = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
     stubcc.linkExit(j);
-
-    frame.popn(argc + 2);
-    frame.takeReg(JSReturnReg_Type);
-    frame.takeReg(JSReturnReg_Data);
-    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
 #ifndef JS_CPU_ARM
     /*
@@ -1552,7 +1611,30 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub, uint32 argc)
     masm.push(Registers::ReturnReg);
 #endif
 
+    if (callingNew) {
+        /* Deal with primitive |this| */
+        masm.move(JSReturnReg_Type, Registers::ReturnReg);
+        masm.and32(Imm32(JSVAL_MASK32_OBJECT), Registers::ReturnReg);
+        Jump primitive = masm.branch32(Assembler::BelowOrEqual, Registers::ReturnReg,
+                                       Imm32(JSVAL_MASK32_CLEAR));
+        stubcc.linkExit(primitive);
+        FrameEntry *fe = frame.peek(-int(argc + 1));
+        Address thisv(frame.addressOf(fe));
+        stubcc.masm.loadTypeTag(thisv, JSReturnReg_Type);
+        stubcc.masm.loadData32(thisv, JSReturnReg_Data);
+        Jump primFix = stubcc.masm.jump();
+        stubcc.crossJump(primFix, masm.label());
+    }
+
+    frame.popn(argc + 2);
+    frame.takeReg(JSReturnReg_Type);
+    frame.takeReg(JSReturnReg_Data);
+    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
+
     stubcc.leave();
+    slowCallDone.linkTo(stubcc.masm.label(), &stubcc.masm);
+    if (!typeKnown)
+        invokeCallDone.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(0);
 }
 
