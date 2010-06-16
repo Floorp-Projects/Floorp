@@ -165,25 +165,24 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
 }
 
 bool
-JSProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
-    if (!getOwnPropertyNames(cx, proxy, idap))
+    JS_ASSERT(props.length() == 0);
+
+    AutoValueVector proxyProps(cx);
+    if (!getOwnPropertyNames(cx, proxy, proxyProps))
         return false;
-    AutoIdArray ida(cx, *idap);
-    size_t w = 0;
-    jsid *vector = (*idap)->vector;
+
     AutoDescriptor desc(cx);
-    for (size_t n = 0; n < ida.length(); ++n) {
-        JS_ASSERT(n >= w);
-        vector[w] = vector[n];
-        if (!getOwnPropertyDescriptor(cx, proxy, vector[n], &desc))
+    for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+        jsid id = proxyProps[n];
+        if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
             return false;
-        if (desc.obj && (desc.attrs & JSPROP_ENUMERATE))
-            ++w;
+        if (desc.obj && (desc.attrs & JSPROP_ENUMERATE) && !props.append(id))
+            return false;
     }
-    (*idap)->length = w;
-    ida.steal();
+
     return true;
 }
 
@@ -191,11 +190,10 @@ bool
 JSProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
-    JSIdArray *ida;
-    if (!enumerate(cx, proxy, &ida))
+    AutoValueVector props(cx);
+    if (!enumerate(cx, proxy, props))
         return false;
-    AutoIdArray idar(cx, ida);
-    return JSIdArrayToIterator(cx, proxy, flags, ida, vp);
+    return IdVectorToIterator(cx, proxy, flags, props, vp);
 }
 
 void
@@ -313,10 +311,12 @@ ValueToBool(JSContext *cx, jsval v, bool *bp)
 }
 
 bool
-ArrayToJSIdArray(JSContext *cx, jsval array, JSIdArray **idap)
+ArrayToIdVector(JSContext *cx, jsval array, AutoValueVector &props)
 {
+    JS_ASSERT(props.length() == 0);
+
     if (JSVAL_IS_PRIMITIVE(array))
-        return (*idap = NewIdArray(cx, 0)) != NULL;
+        return true;
 
     JSObject *obj = JSVAL_TO_OBJECT(array);
     jsuint length;
@@ -324,21 +324,20 @@ ArrayToJSIdArray(JSContext *cx, jsval array, JSIdArray **idap)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
         return false;
     }
-    AutoIdArray ida(cx, *idap = NewIdArray(cx, length));
-    if (!ida)
-        return false;
+
+    AutoIdRooter idr(cx);
     AutoValueRooter tvr(cx);
-    jsid *vector = (*idap)->vector;
     for (jsuint n = 0; n < length; ++n) {
-        if (!js_IndexToId(cx, n, &vector[n]))
+        if (!js_IndexToId(cx, n, idr.addr()))
             return false;
-        if (!obj->getProperty(cx, vector[n], tvr.addr()))
+        if (!obj->getProperty(cx, idr.id(), tvr.addr()))
             return false;
-        if (!JS_ValueToId(cx, tvr.value(), &vector[n]))
+        if (!JS_ValueToId(cx, tvr.value(), idr.addr()))
             return false;
-        vector[n] = js_CheckForStringIndex(vector[n]);
+        if (!props.append(js_CheckForStringIndex(idr.id())))
+            return false;
     }
-    *idap = ida.steal();
+
     return true;
 }
 
@@ -355,9 +354,9 @@ class JSScriptedProxyHandler : public JSProxyHandler {
                                           JSPropertyDescriptor *desc);
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 JSPropertyDescriptor *desc);
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoValueVector &props);
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props);
     virtual bool fix(JSContext *cx, JSObject *proxy, jsval *vp);
 
     /* ES5 Harmony derived proxy traps. */
@@ -365,7 +364,7 @@ class JSScriptedProxyHandler : public JSProxyHandler {
     virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
     /* Spidermonkey extensions. */
@@ -438,13 +437,13 @@ JSScriptedProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
 }
 
 bool
-JSScriptedProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSScriptedProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
     return FundamentalTrap(cx, handler, ATOM(getOwnPropertyNames), tvr.addr()) &&
            Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
-           ArrayToJSIdArray(cx, tvr.value(), idap);
+           ArrayToIdVector(cx, tvr.value(), props);
 }
 
 bool
@@ -458,13 +457,13 @@ JSScriptedProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *b
 }
 
 bool
-JSScriptedProxyHandler::enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSScriptedProxyHandler::enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
     return FundamentalTrap(cx, handler, ATOM(enumerate), tvr.addr()) &&
            Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
-           ArrayToJSIdArray(cx, tvr.value(), idap);
+           ArrayToIdVector(cx, tvr.value(), props);
 }
 
 bool
@@ -536,16 +535,16 @@ JSScriptedProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, 
 }
 
 bool
-JSScriptedProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSScriptedProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
     if (!DerivedTrap(cx, handler, ATOM(enumerateOwn), tvr.addr()))
         return false;
     if (!js_IsCallable(tvr.value()))
-        return JSProxyHandler::enumerateOwn(cx, proxy, idap);
+        return JSProxyHandler::enumerateOwn(cx, proxy, props);
     return Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
-           ArrayToJSIdArray(cx, tvr.value(), idap);
+           ArrayToIdVector(cx, tvr.value(), props);
 }
 
 bool
@@ -650,13 +649,13 @@ JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, jsval v)
 }
 
 bool
-JSProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     AutoPendingProxyOperation pending(cx, proxy);
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler))
-        return JSScriptedProxyHandler::singleton.getOwnPropertyNames(cx, proxy, idap);
-    return JSVAL_TO_HANDLER(handler)->getOwnPropertyNames(cx, proxy, idap);
+        return JSScriptedProxyHandler::singleton.getOwnPropertyNames(cx, proxy, props);
+    return JSVAL_TO_HANDLER(handler)->getOwnPropertyNames(cx, proxy, props);
 }
 
 bool
@@ -670,13 +669,13 @@ JSProxy::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-JSProxy::enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSProxy::enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     AutoPendingProxyOperation pending(cx, proxy);
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler))
-        return JSScriptedProxyHandler::singleton.enumerate(cx, proxy, idap);
-    return JSVAL_TO_HANDLER(handler)->enumerate(cx, proxy, idap);
+        return JSScriptedProxyHandler::singleton.enumerate(cx, proxy, props);
+    return JSVAL_TO_HANDLER(handler)->enumerate(cx, proxy, props);
 }
 
 bool
@@ -730,13 +729,13 @@ JSProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval 
 }
 
 bool
-JSProxy::enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap)
+JSProxy::enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
     AutoPendingProxyOperation pending(cx, proxy);
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler))
-        return JSScriptedProxyHandler::singleton.enumerateOwn(cx, proxy, idap);
-    return JSVAL_TO_HANDLER(handler)->enumerateOwn(cx, proxy, idap);
+        return JSScriptedProxyHandler::singleton.enumerateOwn(cx, proxy, props);
+    return JSVAL_TO_HANDLER(handler)->enumerateOwn(cx, proxy, props);
 }
 
 bool
