@@ -371,7 +371,7 @@ OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 18,  JOF_BYTE)
  * The local variable's slot number is the first immediate two-byte operand.
  * The function object's atom index is the second immediate operand.
  */
-OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING)
+OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING|JOF_TMPSLOT)
 
 /* Extended jumps. */
 OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)
