@@ -2134,7 +2134,6 @@ function IdentityHandler() {
 }
 
 IdentityHandler.prototype = {
-
   // Mode strings used to control CSS display
   IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
   IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
@@ -2158,37 +2157,8 @@ IdentityHandler.prototype = {
     this._identityPopupEncLabel = document.getElementById("identity-popup-encryption-label");
   },
 
-  /**
-   * Helper to parse out the important parts of _lastStatus (of the SSL cert in
-   * particular) for use in constructing identity UI strings
-   */
   getIdentityData: function() {
-    var result = {};
-    var status = this._lastStatus.QueryInterface(Ci.nsISSLStatus);
-    var cert = status.serverCert;
-
-    // Human readable name of Subject
-    result.subjectOrg = cert.organization;
-
-    // SubjectName fields, broken up for individual access
-    if (cert.subjectName) {
-      result.subjectNameFields = {};
-      cert.subjectName.split(",").forEach(function(v) {
-        var field = v.split("=");
-        this[field[0]] = field[1];
-      }, result.subjectNameFields);
-
-      // Call out city, state, and country specifically
-      result.city = result.subjectNameFields.L;
-      result.state = result.subjectNameFields.ST;
-      result.country = result.subjectNameFields.C;
-    }
-
-    // Human readable name of Certificate Authority
-    result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
-    result.cert = cert;
-
-    return result;
+    return this._lastStatus.serverCert;
   },
 
   /**
@@ -2196,16 +2166,18 @@ IdentityHandler.prototype = {
    * (if available) and, if necessary, update the UI to reflect this.
    */
   checkIdentity: function() {
-    let state = Browser.selectedTab.getIdentityState();
-    let location = getBrowser().contentWindow.location;
-    let currentStatus = getBrowser().securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+    let browser= getBrowser();
+    let state = browser.securityUI.state;
+    let location = browser.currentURI;
+    let currentStatus = browser.securityUI.SSLStatus;
 
     this._lastStatus = currentStatus;
     this._lastLocation = {};
+
     try {
       // make a copy of the passed in location to avoid cycles
-      this._lastLocation = { host: location.host, hostname: location.hostname, port: location.port };
-    } catch (ex) { }
+      this._lastLocation = { host: location.hostPort, hostname: location.host, port: location.port == -1 ? "" : location.port};
+    } catch(e) { }
 
     if (state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
@@ -2272,13 +2244,8 @@ IdentityHandler.prototype = {
       var tooltip = strings.getFormattedString("identity.identified.verifier",
                                                [iData.caOrg]);
 
-      // Check whether this site is a security exception. XPConnect does the right
-      // thing here in terms of converting _lastLocation.port from string to int, but
-      // the overrideService doesn't like undefined ports, so make sure we have
-      // something in the default case (bug 432241).
-      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
-                                                    (this._lastLocation.port || 443),
-                                                    iData.cert, {}, {}))
+      // Check whether this site is a security exception.
+      if (iData.isException)
         tooltip = strings.getString("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
@@ -3121,11 +3088,6 @@ Tab.prototype = {
        let [width, height] = BrowserView.Util.getBrowserDimensions(browser);
        BrowserView.Util.ensureMozScrolledAreaEvent(browser, width, height);
     }
-  },
-
-  /** Returns tab's identity state for updating security UI. */
-  getIdentityState: function getIdentityState() {
-    return this._listener.state;
   },
 
   startLoading: function startLoading() {

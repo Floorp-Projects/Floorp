@@ -52,6 +52,23 @@
 
   <binding id="local-browser" extends="chrome://global/content/bindings/browser.xml#browser">
     <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIFrameMessageListener">
+      <field name="_securityUI">null</field>
+      <property name="securityUI">
+        <getter><![CDATA[
+          if (!this._securityUI) {
+            const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
+            if (!this.hasAttribute("disablesecurity") && SECUREBROWSERUI_CONTRACTID in Components.classes) {
+              this.messageManager.sendAsyncMessage('SecurityUI:Init', { });
+            }
+          }
+
+          return this._securityUI || {};
+        ]]></getter>
+        <setter><![CDATA[
+          this._securityUI = val;
+        ]]></setter>
+      </property>
+
       <field name="_searchEngines">[]</field>
       <property name="searchEngines"
                 onget="return this._searchEngines"
@@ -241,10 +258,16 @@
 
               case "WebProgress:SecurityChange":
                 args = [
-                  { windowId: json.windowId, browser: this._browser, identity: json.identity },
+                  { windowId: json.windowId, browser: this._browser },
                   {},
                   json.state
                 ];
+
+                this._browser._securityUI = {
+                  SSLStatus: json.SSLStatus,
+                  state: json.state
+                }
+
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
                              "onSecurityChange",
                              args);
@@ -346,28 +369,6 @@
 
       <constructor>
         <![CDATA[
-          try {
-            if (!this.hasAttribute("disablehistory")) {
-              var os = Components.classes["@mozilla.org/observer-service;1"]
-                                 .getService(Components.interfaces.nsIObserverService);
-              os.addObserver(this, "browser:purge-session-history", false);
-              // wire up session history
-              this.webNavigation.sessionHistory = 
-                      Components.classes["@mozilla.org/browser/shistory;1"]
-                                .createInstance(Components.interfaces.nsISHistory);
-              // enable global history
-              this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-            }
-          }
-          catch (e) {
-            Components.utils.reportError(e);
-          }
-          try {
-            var securityUI = this.securityUI;
-          }
-          catch (e) {
-          }
-
           messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
           messageManager.addMessageListener("DOMTitleChanged", this);
           messageManager.addMessageListener("DOMLinkAdded", this);
@@ -565,10 +566,16 @@
 
               case "WebProgress:SecurityChange":
                 args = [
-                  { windowId: json.windowId, browser: this._browser, identity: json.identity },
+                  { windowId: json.windowId, browser: this._browser },
                   {},
                   json.state
                 ];
+
+                this._browser._securityUI = {
+                  SSLStatus: json.SSLStatus,
+                  state: json.state
+                }
+
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
                              "onSecurityChange",
                              args);
