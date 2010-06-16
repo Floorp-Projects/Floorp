@@ -157,6 +157,25 @@ InlineReturn(JSContext *cx)
     return ok;
 }
 
+void JS_FASTCALL
+mjit::stubs::DebugHook(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp;
+
+    void *hookData = fp->hookData;
+    JS_ASSERT(hookData);
+
+    JSBool interpReturnOK = JS_TRUE;
+    if (JSInterpreterHook hook = cx->debugHooks->callHook)
+        hook(cx, fp, JS_FALSE, &interpReturnOK, hookData);
+
+    if (!interpReturnOK) {
+        stubs::Return(f);
+        THROW();
+    }
+}
+
 void * JS_FASTCALL
 mjit::stubs::Return(VMFrame &f)
 {
@@ -1208,6 +1227,14 @@ stubs::Call(VMFrame &f, uint32 argc)
         THROWV(NULL);
 
     return NULL;
+}
+
+void JS_FASTCALL
+stubs::CopyThisv(VMFrame &f)
+{
+    JS_ASSERT(f.fp->flags & JSFRAME_CONSTRUCTING);
+    if (f.fp->rval.isPrimitive())
+        f.fp->rval = f.fp->thisv;
 }
 
 void * JS_FASTCALL
@@ -2879,5 +2906,20 @@ finally:
     ptrdiff_t offset = (originalPC + jumpOffset) - script->code;
     JS_ASSERT(script->nmap[offset]);
     return script->nmap[offset];
+}
+
+void JS_FASTCALL
+stubs::PutCallObject(VMFrame &f)
+{
+    JS_ASSERT(f.fp->callobj);
+    js_PutCallObject(f.cx, f.fp);
+    JS_ASSERT(f.fp->argsval.isNull());
+}
+
+void JS_FASTCALL
+stubs::PutArgsObject(VMFrame &f)
+{
+    JS_ASSERT(f.fp->argsval.isNonFunObj());
+    js_PutArgsObject(f.cx, f.fp);
 }
 

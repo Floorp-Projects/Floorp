@@ -224,6 +224,11 @@ public:
         sub32(Imm32(imm), dest);
     }
 
+    void subPtr(ImmPtr imm, Address address)
+    {
+        sub32(Imm32(imm), address);
+    }
+
     void xorPtr(RegisterID src, RegisterID dest)
     {
         xor32(src, dest);

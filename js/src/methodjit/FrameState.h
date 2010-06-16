@@ -345,6 +345,11 @@ class FrameState
     void forgetEverything();
 
     /*
+     * Throw away the entire frame state, without syncing anything.
+     */
+    void throwaway();
+
+    /*
      * Mark an existing slot with a type.
      */
     inline void learnType(FrameEntry *fe, JSValueMask32 tag);
