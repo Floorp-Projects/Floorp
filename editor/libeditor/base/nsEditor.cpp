@@ -4660,16 +4660,16 @@ nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
   PRUint32 segOffset, segLength = 1;
   if (aDirection == eNext) {
     segOffset = aOffset;
-    if (NS_IS_HIGH_SURROGATE(data[segOffset]) &&
-        segOffset + 1 < data.Length() &&
+    if (segOffset + 1 < data.Length() &&
+        NS_IS_HIGH_SURROGATE(data[segOffset]) &&
         NS_IS_LOW_SURROGATE(data[segOffset+1])) {
       // delete both halves of the surrogate pair
       ++segLength;
     }
   } else {
     segOffset = aOffset - 1;
-    if (NS_IS_LOW_SURROGATE(data[segOffset]) &&
-        segOffset > 0 &&
+    if (segOffset > 1 &&
+        NS_IS_LOW_SURROGATE(data[segOffset]) &&
         NS_IS_HIGH_SURROGATE(data[segOffset-1])) {
       ++segLength;
       --segOffset;
