@@ -696,14 +696,9 @@ UIClass.prototype = {
       code: function() {
       }
     }, {
-      name: 'home', 
-      code: function() {
-        location.href = '../../index.html';
-      }
-    }, {
       name: 'code docs', 
       code: function() {
-        location.href = '../../doc/index.html';
+        location.href = 'doc/index.html';
       }
     }, {
       name: 'tests', 

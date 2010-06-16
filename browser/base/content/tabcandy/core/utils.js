@@ -417,25 +417,6 @@ var Utils = {
     return files;
   },
 
-  getVisualizationNames: function(callback) {
-    var self = this;
-    this.getInstallDirectory("tabcandy@aza.raskin", function(dir) {
-      var names = [];
-      dir.append('content');
-      dir.append('candies');
-      var files = self.getFiles(dir);
-      var count = files.length;
-      var a;
-      for(a = 0; a < count; a++) {
-        var file = files[a];
-        if(file.isDirectory()) 
-          names.push(file.leafName);
-      }
- 
-      callback(names);
-    });
-  },
-    
   // ___ Logging
   
   ilog: function(){ 
