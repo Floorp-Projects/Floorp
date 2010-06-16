@@ -385,6 +385,12 @@ class FrameState
     inline Jump testNonFunObj(Assembler::Condition cond, FrameEntry *fe);
 
     /*
+     * Helper function. Tests if a slot's type is a funobj. Condition should
+     * be Equal or NotEqual.
+     */
+    inline Jump testFunObj(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
      * Marks a register such that it cannot be spilled by the register
      * allocator. Any pinned registers must be unpinned at the end of the op.
      * Note: This function should only be used on registers tied to FEs.
