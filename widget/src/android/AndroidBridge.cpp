@@ -100,6 +100,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;)[Ljava/lang/String;");
     jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
+    jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -258,6 +259,12 @@ AndroidBridge::GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aM
                                                                              jstrExt));
     nsJNIString jniStr(jstrType);
     aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+}
+
+void
+AndroidBridge::MoveTaskToBack()
+{
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jMoveTaskToBack);
 }
 
 void
