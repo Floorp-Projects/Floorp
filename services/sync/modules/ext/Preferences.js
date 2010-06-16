@@ -55,6 +55,8 @@ function Preferences(args) {
     if (isObject(args)) {
       if (args.branch)
         this._prefBranch = args.branch;
+      if (args.defaultBranch)
+        this._defaultBranch = args.defaultBranch;
       if (args.site)
         this._site = args.site;
     }
@@ -429,10 +431,15 @@ Preferences.prototype = {
    * @private
    */
   get _prefSvc() {
-    let prefSvc = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefService).
-                  getBranch(this._prefBranch).
-                  QueryInterface(Ci.nsIPrefBranch2);
+    let prefSvc = Cc["@mozilla.org/preferences-service;1"]
+                  .getService(Ci.nsIPrefService);
+    if (this._defaultBranch) {
+      prefSvc = prefSvc.getDefaultBranch(this._prefBranch);
+    } else {
+      prefSvc = prefSvc.getBranch(this._prefBranch)
+                .QueryInterface(Ci.nsIPrefBranch2);
+    }
+
     this.__defineGetter__("_prefSvc", function() prefSvc);
     return this._prefSvc;
   },
