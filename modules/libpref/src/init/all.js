@@ -96,6 +96,7 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("ui.use_native_colors", true);
 pref("ui.use_native_popup_windows", false);
+pref("ui.click_hold_context_menus", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
 pref("browser.display.use_system_colors",   false);
@@ -1726,7 +1727,6 @@ pref("ui.trackpoint_hack.enabled", -1);
 // Mac specific preference defaults
 pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
-pref("ui.click_hold_context_menus", false);
 
 // default fonts (in UTF8 and using canonical names)
 // to determine canonical font names, use a debug build and 
