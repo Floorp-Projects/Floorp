@@ -3,70 +3,38 @@
                       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
 <head>
-  <title>Switch</title>
+  <title>&nbsp;</title>
   <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-  <link rel="icon" href="chrome://tabcandy/content/tabcandy.png"/>
-  <style media="screen" type="text/css">
-
-    html {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-    }
-    
-    body {
-      margin: 20px;
-      padding: 0;
-    }
-    
-    li {
-    	margin-bottom: 5px;
-    	list-style-type: none;    
-    }
-    ul {
-    }
-    a {
-    	text-decoration: none;
-    }
-    h1 {
-    	margin-bottom: 10px;
-    }
-    
-  </style>
-  
+  <link rel="icon" href="chrome://tabcandy/content/img/core/tabcandy.png"/>
+  <link rel="stylesheet" href="css/app.css" type="text/css">
 </head>
 
 <body>
-  <h1>Pick a style:</h1>
-  <ul id="list">
-  </ul>
+  <a href="http://feedback.mozillalabs.com/forums/56804-tabcandy" target="new">
+    <div id="feedback" class="bottomButton">give feedback</div>
+  </a>
   
-  <h1>Development:</h1>
-  <ul>
-    <li><a href="doc/index.html">Code Documentation</a></li>
-    <li><a href="http://code.google.com/p/tabcandy/">Project Home</a></li>
-  </ul>
-  
-  <script type="text/javascript;version=1.8" src="js/core/jquery.js"></script>  
+  <div id="reset" class="bottomButton">reset</div>
+  <div id="showTrenchesWrap" style="position:fixed;bottom:30px;right:20px;"><input type="checkbox" id="showTrenches"></input> show trenches</div>
+  <div id="bg" />
+
+  <script type="text/javascript;version=1.8" src="js/core/stacktrace.js"></script>
+  <script type="text/javascript;version=1.8" src="js/core/iq.js"></script>
   <script type="text/javascript;version=1.8" src="js/core/utils.js"></script>
   <script type="text/javascript;version=1.8">
-
-    Utils.getVisualizationNames(function(names) {
-      var count = names.length;
-      var a;
-      for(a = 0; a < count; a++) {
-        var name = names[a];
-        var html = '<li><a href="candies/'
-          + name
-          + '/index.html">'
-          + name
-          + '</a></li>';
-          
-        $('#list').append(html);
-      }
-    });
-    
+  	Utils.log('it begins! --------------------');
+/*     Utils.testLogging(); */
   </script>
-
+  <script type="text/javascript;version=1.8" src="js/core/toolbar-button.js"></script>    
+  <script type="text/javascript;version=1.8" src="js/core/tabs.js"></script>
+  <script type="text/javascript;version=1.8" src="js/core/mirror.js"></script>
+  <script type="text/javascript;version=1.8" src="js/app/storage.js"></script>
+  <script type="text/javascript;version=1.8" src="js/app/items.js"></script>  
+  <script type="text/javascript;version=1.8" src="js/app/drag.js"></script>  
+  <script type="text/javascript;version=1.8" src="js/app/trench.js"></script>  
+  <script type="text/javascript;version=1.8" src="js/app/tabitems.js"></script>  
+  <script type="text/javascript;version=1.8" src="js/app/groups.js"></script>
+  <script type="text/javascript;version=1.8" src="js/app/ui.js"></script>  
+  
 </body>
 </html>
