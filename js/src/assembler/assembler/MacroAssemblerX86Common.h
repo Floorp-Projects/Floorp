@@ -471,6 +471,12 @@ public:
         m_assembler.mulsd_mr(src.offset, src.base, dest);
     }
 
+    void xorDouble(FPRegisterID src, FPRegisterID dest)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.xorpd_rr(src, dest);
+    }
+
     void convertInt32ToDouble(RegisterID src, FPRegisterID dest)
     {
         ASSERT(isSSE2Present());
