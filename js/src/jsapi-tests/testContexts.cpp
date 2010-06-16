@@ -94,28 +94,3 @@ BEGIN_TEST(testContexts_bug563735)
     return true;
 }
 END_TEST(testContexts_bug563735)
-
-BEGIN_TEST(testContexts_bug570746)
-{
-    JSRuntime *rt2 = JS_NewRuntime(8L * 1024 * 1024);
-    CHECK(rt2);
-
-    // Create and destroy first context.
-    JSContext *cx2 = JS_NewContext(rt2, 8192);
-    CHECK(cx2);
-    JS_BeginRequest(cx2);
-    JSObject *obj = JS_NewGlobalObject(cx2, getGlobalClass());
-    CHECK(obj);
-    CHECK(JS_AddObjectRoot(cx2, &obj));
-    JS_DestroyContext(cx2);
-
-    // Create and destroy second context.
-    cx2 = JS_NewContext(rt2, 8192);
-    CHECK(cx2);
-    CHECK(JS_RemoveObjectRoot(cx2, &obj));
-    JS_DestroyContext(cx2);
-
-    JS_DestroyRuntime(rt2);
-    return true;
-}
-END_TEST(testContexts_bug570746)
