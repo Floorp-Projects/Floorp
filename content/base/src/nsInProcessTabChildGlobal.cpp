@@ -183,6 +183,11 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
 void
 nsInProcessTabChildGlobal::Disconnect()
 {
+  nsCOMPtr<nsIDOMWindow> win = do_GetInterface(mDocShell);
+  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(win);
+  if (pwin) {
+    pwin->SetChromeEventHandler(pwin->GetChromeEventHandler());
+  }
   mDocShell = nsnull;
   mOwner = nsnull;
   mChromeMessageManager = nsnull;
