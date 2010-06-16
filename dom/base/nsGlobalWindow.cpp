@@ -2372,6 +2372,21 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
 #endif
 }
 
+void
+nsGlobalWindow::UpdateParentTarget()
+{
+  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
+  if (flo) {
+    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    if (fl) {
+      mParentTarget = fl->GetTabChildGlobalAsEventTarget();
+    }
+  }
+  if (!mParentTarget) {
+    mParentTarget = mChromeEventHandler;
+  }
+}
+
 nsresult
 nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -2414,19 +2429,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  if (!mParentTarget) {
-    nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
-    if (flo) {
-      nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-      if (fl) {
-        mParentTarget = fl->GetTabChildGlobalAsEventTarget();
-      }
-    }
-    if (!mParentTarget) {
-      mParentTarget = mChromeEventHandler;
-    }
-  }
-  aVisitor.mParentTarget = mParentTarget;
+  aVisitor.mParentTarget = GetParentTarget();
   return NS_OK;
 }
 
