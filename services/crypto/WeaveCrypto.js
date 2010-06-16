@@ -57,7 +57,7 @@ WeaveCrypto.prototype = {
     QueryInterface: XPCOMUtils.generateQI([Ci.IWeaveCrypto]),
 
     prefBranch : null,
-    debug      : true,  // extensions.weave.log.cryptoDebug
+    debug      : true,  // services.sync.log.cryptoDebug
     nss        : null,
     nss_t      : null,
 
@@ -79,7 +79,7 @@ WeaveCrypto.prototype = {
     init : function() {
         try {
             // Preferences. Add observer so we get notified of changes.
-            this.prefBranch = Services.prefs.getBranch("extensions.weave.log.");
+            this.prefBranch = Services.prefs.getBranch("services.sync.log.");
             this.prefBranch.QueryInterface(Ci.nsIPrefBranch2);
             this.prefBranch.addObserver("cryptoDebug", this.observer, false);
             this.observer._self = this;

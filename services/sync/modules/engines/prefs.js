@@ -40,7 +40,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const WEAVE_SYNC_PREFS = "extensions.weave.prefs.sync.";
+const WEAVE_SYNC_PREFS = "services.sync.prefs.sync.";
 const WEAVE_PREFS_GUID = "preferences";
 
 Cu.import("resource://services-sync/engines.js");
