@@ -6279,9 +6279,29 @@ js_ReportGetterOnlyAssignment(JSContext *cx)
 }
 
 JSCompartment *
-JSObject::getCompartment(JSContext *cx) {
+JSObject::getCompartment(JSContext *cx)
+{
     JSObject *obj = getGlobal();
-    JS_ASSERT(obj->getClass()->flags & JSCLASS_IS_GLOBAL);
+
+    JSClass *clasp = obj->getClass();
+    if (!(clasp->flags & JSCLASS_IS_GLOBAL)) {
+        // The magic AnyName object is runtime-wide.
+        if (clasp == &js_AnyNameClass)
+            return cx->runtime->defaultCompartment;
+
+        // The magic function namespace object is runtime-wide.
+        if (clasp == &js_NamespaceClass.base &&
+            obj->getNameURI() == ATOM_KEY(cx->runtime->atomState.lazy.functionNamespaceURIAtom)) {
+            return cx->runtime->defaultCompartment;
+        }
+
+        // Compile-time Function, Block, and RegExp objects are not parented.
+        if (clasp == &js_FunctionClass || clasp == &js_BlockClass || clasp == &js_RegExpClass) {
+            // This is a bogus answer, but it'll do for now.
+            return cx->runtime->defaultCompartment;
+        }
+        JS_NOT_REACHED("non-global object at end of scope chain");
+    }
     jsval v = obj->getReservedSlot(JSRESERVED_GLOBAL_COMPARTMENT);
     return (JSCompartment *) JSVAL_TO_PRIVATE(v);
 }
@@ -6373,10 +6393,10 @@ dumpValue(jsval val)
                 (void *) fun);
     } else if (JSVAL_IS_OBJECT(val)) {
         JSObject *obj = JSVAL_TO_OBJECT(val);
-        JSClass *cls = obj->getClass();
+        JSClass *clasp = obj->getClass();
         fprintf(stderr, "<%s%s at %p>",
-                cls->name,
-                cls == &js_ObjectClass ? "" : " object",
+                clasp->name,
+                clasp == &js_ObjectClass ? "" : " object",
                 (void *) obj);
     } else if (JSVAL_IS_INT(val)) {
         fprintf(stderr, "%d", JSVAL_TO_INT(val));
