@@ -480,8 +480,12 @@ BrowserView.prototype = {
     }
 
     this._browser = browser;
-    this._contentWindow = (browser) ? browser.contentWindow : null;
     this._browserViewportState = browserViewportState;
+    try {
+      this._contentWindow = browser.contentWindow;
+    } catch(e) {
+      this._contentWindow = null;
+    }
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
@@ -797,12 +801,6 @@ BrowserView.prototype = {
     let bvs = this._browserViewportState;
     if (bvs) {
       BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
-
-      if (dirtyAll) {
-        // We're about to mark the entire viewport dirty, so we can clear any
-        // queued afterPaint events that will cause redundant draws
-        BrowserView.Util.getBrowserDOMWindowUtils(this._browser).clearMozAfterPaintEvents();
-      }
 
       let vr = this.getVisibleRect();
       this._tileManager.viewportChangeHandler(bvs.viewportRect,

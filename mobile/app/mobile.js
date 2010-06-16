@@ -41,6 +41,7 @@ pref("general.useragent.extra.mobile", "@APP_UA_NAME_EXTRA@/@APP_VERSION_EXTRA@ 
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.remote", false);
 
 pref("toolkit.screen.lock", false);
 
