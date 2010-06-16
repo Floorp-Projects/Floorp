@@ -1968,7 +1968,7 @@ function getShortcutOrURI(aURL, aPostDataRef) {
 
   var engine = Services.search.getEngineByAlias(keyword);
   if (engine) {
-    var submission = engine.getSubmission(param, null);
+    var submission = engine.getSubmission(param);
     aPostDataRef.value = submission.postData;
     return submission.uri.spec;
   }
@@ -3143,7 +3143,7 @@ const BrowserSearch = {
     else
       engine = Services.search.defaultEngine;
 
-    var submission = engine.getSubmission(searchText, null); // HTML response
+    var submission = engine.getSubmission(searchText); // HTML response
 
     // getSubmission can return null if the engine doesn't have a URL
     // with a text/html response type.  This is unlikely (since
