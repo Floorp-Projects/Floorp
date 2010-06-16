@@ -232,8 +232,9 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 
 NativeIterator *
 NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 slength,
-                         uint32 key, jsval *parray, uint32 plength)
+                         uint32 key, AutoValueVector &props)
 {
+    size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
         cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
     if (!ni)
@@ -242,7 +243,7 @@ NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarr
     ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength)
-        memcpy(ni->props_array, parray, plength * sizeof(jsval));
+        memcpy(ni->props_array, props.begin(), plength * sizeof(jsval));
     ni->shapes_array = (uint32 *) ni->props_end;
     ni->shapes_length = slength;
     ni->shapes_key = key;
@@ -414,8 +415,7 @@ IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &p
 
     *vp = OBJECT_TO_JSVAL(iterobj);
 
-    NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0,
-                                                  props.begin(), props.length());
+    NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0, props);
     if (!ni)
         return false;
 
@@ -496,8 +496,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
         return false;
 
     NativeIterator *ni =
-        NativeIterator::allocate(cx, obj, flags, shapes.begin(), shapes.length(), key,
-                                 props.begin(), props.length());
+        NativeIterator::allocate(cx, obj, flags, shapes.begin(), shapes.length(), key, props);
     if (!ni)
         return false;
 

@@ -73,7 +73,7 @@ struct NativeIterator {
 
     static NativeIterator *allocate(JSContext *cx, JSObject *obj, uintN flags,
                                     uint32 *sarray, uint32 slength, uint32 key,
-                                    jsval *parray, uint32 plength);
+                                    js::AutoValueVector &props);
 
     void mark(JSTracer *trc);
 };
