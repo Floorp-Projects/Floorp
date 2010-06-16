@@ -409,17 +409,16 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-#ifdef DEBUG
   // Check to make sure that the database schema is correct again.
   NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
                schemaVersion == DB_SCHEMA_VERSION,
                "CreateTables failed!");
 
   // Turn on foreign key constraints in debug builds to catch bugs!
-  (void)connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "PRAGMA foreign_keys = ON;"
   ));
-#endif
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dbFile->GetPath(aDatabaseFilePath);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -493,13 +492,14 @@ IndexedDatabaseRequest::GetConnection(const nsAString& aDatabaseFilePath)
     NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
                  schemaVersion == DB_SCHEMA_VERSION,
                  "Wrong schema!");
-
-    // Turn on foreign key constraints in debug builds to catch bugs!
-    (void)connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA foreign_keys = ON;"
-    ));
   }
 #endif
+
+  // Turn on foreign key constraints in debug builds to catch bugs!
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = ON;"
+  ));
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   return connection.forget();
 }
