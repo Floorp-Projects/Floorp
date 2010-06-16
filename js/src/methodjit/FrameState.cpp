@@ -172,6 +172,13 @@ FrameState::forgetEverything()
 {
     syncAndKill(Registers::AvailRegs);
 
+    throwaway();
+}
+
+
+void
+FrameState::throwaway()
+{
     for (uint32 i = 0; i < tracker.nentries; i++)
         base[indexOfFe(tracker[i])] = NULL;
 
