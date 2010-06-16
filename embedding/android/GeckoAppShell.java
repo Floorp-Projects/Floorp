@@ -214,6 +214,10 @@ class GeckoAppShell
         }
     }
 
+    public static void moveTaskToBack() {
+        GeckoApp.mAppContext.moveTaskToBack(true);
+    }
+
     public static void returnIMEQueryResult(String result, int selectionStart, int selectionEnd) {
         GeckoApp.surfaceView.inputConnection.mSelectionStart = selectionStart;
         GeckoApp.surfaceView.inputConnection.mSelectionEnd = selectionEnd;

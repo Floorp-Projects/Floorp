@@ -110,6 +110,8 @@ public:
 
     void GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType);
 
+    void MoveTaskToBack();
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
@@ -159,6 +161,7 @@ protected:
     jmethodID jGetHandlersForMimeType;
     jmethodID jOpenUriExternal;
     jmethodID jGetMimeTypeFromExtension;
+    jmethodID jMoveTaskToBack;
 };
 
 }
