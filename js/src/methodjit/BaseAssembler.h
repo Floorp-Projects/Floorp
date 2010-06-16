@@ -173,6 +173,7 @@ class BaseAssembler : public JSC::MacroAssembler
 
     STUB_CALL_TYPE(JSObjStub);
     STUB_CALL_TYPE(VoidPtrStubUInt32);
+    STUB_CALL_TYPE(VoidStubUInt32);
 
 #undef STUB_CALL_TYPE
 

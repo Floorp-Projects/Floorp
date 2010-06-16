@@ -371,7 +371,8 @@ FrameState::syncAndKill(uint32 mask)
         if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
             JS_ASSERT(backing == fe);
             JS_ASSERT(fe->data.synced());
-            forgetReg(fe->data.reg());
+            if (regstate[fe->data.reg()].fe)
+                forgetReg(fe->data.reg());
             fe->data.setMemory();
         }
         if (!fe->type.synced()) {
@@ -383,7 +384,8 @@ FrameState::syncAndKill(uint32 mask)
         if (fe->type.inRegister() && kill.hasReg(fe->type.reg())) {
             JS_ASSERT(backing == fe);
             JS_ASSERT(fe->type.synced());
-            forgetReg(fe->type.reg());
+            if (regstate[fe->type.reg()].fe)
+                forgetReg(fe->type.reg());
             fe->type.setMemory();
         }
     }
