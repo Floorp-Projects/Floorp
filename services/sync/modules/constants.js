@@ -50,7 +50,7 @@ DEFAULT_SERVER:                        "@server_url@",
 UPDATED_DEV_URL:                       "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@xpi_type@",
 UPDATED_REL_URL:                       "http://www.mozilla.com/firefox/sync/updated.html",
 
-PREFS_BRANCH:                          "extensions.weave.",
+PREFS_BRANCH:                          "services.sync.",
 
 // Host "key" to access Weave Identity in the password manager
 PWDMGR_HOST:                           "chrome://weave",
