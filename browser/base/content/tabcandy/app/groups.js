@@ -473,7 +473,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     if(!isRect(this.bounds))
       Utils.trace('Group.setBounds: this.bounds is not a real rectangle!', this.bounds);
 
-		this.setTrenches(rect);
+		if (!this.isNewTabsGroup())
+			this.setTrenches(rect);
 
     this.save();
   },
