@@ -1528,10 +1528,8 @@ NewIdArray(JSContext *cx, jsint length)
 
     ida = (JSIdArray *)
         cx->calloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida) {
-        ida->self = ida;
+    if (ida)
         ida->length = length;
-    }
     return ida;
 }
 
@@ -1545,7 +1543,6 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
 {
     JSIdArray *rida;
 
-    JS_ASSERT(ida->self == ida);
     rida = (JSIdArray *)
            JS_realloc(cx, ida,
                       offsetof(JSIdArray, vector) + length * sizeof(jsval));
@@ -2664,7 +2661,7 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    cx->free(ida->self);
+    cx->free(ida);
 }
 
 JS_PUBLIC_API(JSBool)
