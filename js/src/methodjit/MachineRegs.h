@@ -230,6 +230,9 @@ struct FPRegisters {
         | (1 << JSC::X86Registers::xmm5)
         | (1 << JSC::X86Registers::xmm6)
         | (1 << JSC::X86Registers::xmm7);
+    /* FIXME: Temporary hack until FPRegister allocation exists. */
+    static const FPRegisterID First  = JSC::X86Registers::xmm0;
+    static const FPRegisterID Second = JSC::X86Registers::xmm1;
 #elif defined(JS_CPU_ARM)
     static const uint32 TotalFPRegisters = 4;
     static const uint32 TempFPRegs = 
@@ -237,6 +240,9 @@ struct FPRegisters {
         | (1 << JSC::ARMRegisters::d1)
         | (1 << JSC::ARMRegisters::d2)
         | (1 << JSC::ARMRegisters::d3);
+    /* FIXME: Temporary hack until FPRegister allocation exists. */
+    static const FPRegisterID First  = JSC::ARMRegisters::d0;
+    static const FPRegisterID Second = JSC::ARMRegisters::d1
 #else
 # error "Unsupported platform"
 #endif
