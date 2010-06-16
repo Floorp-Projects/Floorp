@@ -13964,10 +13964,10 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
 
     for (;;) {
         if (searchObj != globalObj) {
-            JSClass* cls = searchObj->getClass();
-            if (cls == &js_BlockClass) {
+            JSClass* clasp = searchObj->getClass();
+            if (clasp == &js_BlockClass) {
                 foundBlockObj = true;
-            } else if (cls == &js_CallClass &&
+            } else if (clasp == &js_CallClass &&
                        JSFUN_HEAVYWEIGHT_TEST(js_GetCallObjectFunction(searchObj)->flags)) {
                 foundCallObj = true;
             }
