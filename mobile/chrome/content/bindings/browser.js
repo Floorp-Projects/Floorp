@@ -58,9 +58,14 @@ let WebProgressListener = {
   },
 
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
+    let data = SecurityUI.getIdentityData();
+    let status = {
+      serverCert: data
+    };
+
     let json = {
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      identity: this._getIdentityData(),
+      SSLStatus: status,
       state: aState
     };
     sendSyncMessage("WebProgress:SecurityChange", json);
@@ -74,13 +79,16 @@ let WebProgressListener = {
     }
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+  }
+};
 
+
+let SecurityUI = {
   /**
    * Helper to parse out the important parts of the SSL cert for use in constructing
    * identity UI strings
    */
-  _getIdentityData: function() {
+  getIdentityData: function() {
     let result = {};
     let status = docShell.securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
 
@@ -120,8 +128,21 @@ let WebProgressListener = {
     }
 
     return result;
+  },
+
+  init: function() {
+    addMessageListener("SecurityUI:Init", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
+    let securityUI = Cc[SECUREBROWSERUI_CONTRACTID].createInstance(Ci.nsISecureBrowserUI);
+    securityUI.init(content);
   }
 };
+
+SecurityUI.init();
+
 
 let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
 webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
