@@ -5578,9 +5578,10 @@ GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
 JSBool
 js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSClass *clasp;
+    if (!cx->fp->getThisObject(cx))
+        return false;
 
-    clasp = JSVAL_TO_OBJECT(argv[-2])->getClass();
+    JSClass *clasp = JSVAL_TO_OBJECT(argv[-2])->getClass();
     if (!clasp->call) {
 #ifdef NARCISSUS
         JSObject *callee, *args;

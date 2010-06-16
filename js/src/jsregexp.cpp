@@ -5340,8 +5340,11 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 regexp_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return regexp_exec_sub(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv,
-                           JS_FALSE, rval);
+    if (!cx->fp->getThisObject(cx))
+        return false;
+
+    return !!cx->fp->getThisObject(cx) &&
+           regexp_exec_sub(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, JS_FALSE, rval);
 }
 
 #if JS_HAS_XDR
