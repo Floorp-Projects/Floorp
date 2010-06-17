@@ -1754,6 +1754,13 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   return nsEditor::SelectEntireDocument(aSelection);
 }
 
+already_AddRefed<nsPIDOMEventTarget>
+nsPlaintextEditor::GetPIDOMEventTarget()
+{
+  NS_IF_ADDREF(mEventTarget);
+  return mEventTarget.get();
+}
+
 
 
 #ifdef XP_MAC
