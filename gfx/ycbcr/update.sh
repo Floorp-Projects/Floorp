@@ -13,3 +13,4 @@ patch -p3 <export.patch
 patch -p3 <win64_mac64.patch
 patch -p3 <yv24.patch
 patch -p3 <row_c_fix.patch
+patch -p3 <bug572034_mac_64bit.patch
