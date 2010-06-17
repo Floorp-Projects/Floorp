@@ -111,6 +111,7 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
+#include "nsWebSocket.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -300,6 +301,9 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocket)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSSProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileDataProtocolHandler)
@@ -1526,6 +1530,21 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
     NS_XMLHTTPREQUEST_CID,
     NS_XMLHTTPREQUEST_CONTRACTID,
     nsXMLHttpRequestConstructor },
+
+  { "WebSocket",
+    NS_WEBSOCKET_CID,
+    NS_WEBSOCKET_CONTRACTID,
+    nsWebSocketConstructor },
+
+  { "WS Protocol Handler",
+    NS_WSPROTOCOLHANDLER_CID,
+    NS_WSPROTOCOLHANDLER_CONTRACTID,
+    nsWSProtocolHandlerConstructor },
+
+  { "WSS Protocol Handler",
+    NS_WSSPROTOCOLHANDLER_CID,
+    NS_WSSPROTOCOLHANDLER_CONTRACTID,
+    nsWSSProtocolHandlerConstructor },
 
   { "DOM Parser",
     NS_DOMPARSER_CID,
