@@ -59,7 +59,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
 class CommitHelper;
-class ObjectStoreInfo;
+struct ObjectStoreInfo;
 class TransactionThreadPool;
 
 class IDBTransactionRequest : public nsDOMEventTargetHelper,

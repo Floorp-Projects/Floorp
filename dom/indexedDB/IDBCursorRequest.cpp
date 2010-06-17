@@ -74,9 +74,11 @@ public:
                PRInt64 aObjectStoreID,
                const nsAString& aValue,
                const Key& aKey,
-               bool aAutoIncrement)
+               bool aAutoIncrement,
+               nsTArray<IndexUpdateInfo>& aIndexUpdateInfo)
   : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
-    mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement)
+    mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement),
+    mIndexUpdateInfo(aIndexUpdateInfo)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -88,6 +90,7 @@ private:
   const nsString mValue;
   const Key mKey;
   const bool mAutoIncrement;
+  nsTArray<IndexUpdateInfo>& mIndexUpdateInfo;
 };
 
 class RemoveHelper : public AsyncConnectionHelper
@@ -570,6 +573,12 @@ IDBCursorRequest::Update(nsIVariant* aValue,
     }
   }
 
+  nsTArray<IndexUpdateInfo> indexUpdateInfo;
+  rv = IDBObjectStoreRequest::GetIndexUpdateInfo(mObjectStore->GetObjectStoreInfo(),
+                                                 cx, clone.value(),
+                                                 indexUpdateInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIJSON> json(new nsJSON());
 
   nsString jsonValue;
@@ -581,7 +590,7 @@ IDBCursorRequest::Update(nsIVariant* aValue,
 
   nsRefPtr<UpdateHelper> helper =
     new UpdateHelper(mTransaction, request, mObjectStore->Id(), jsonValue, key,
-                     mObjectStore->IsAutoIncrement());
+                     mObjectStore->IsAutoIncrement(), indexUpdateInfo);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -662,7 +671,17 @@ UpdateHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     return nsIIDBDatabaseException::CONSTRAINT_ERR;
   }
 
-  // TODO update indexes if needed
+  // Update our indexes if needed.
+  if (!mIndexUpdateInfo.IsEmpty()) {
+    PRInt64 objectDataId = mAutoIncrement ? mKey.IntValue() : LL_MININT;
+    rv = IDBObjectStoreRequest::UpdateIndexes(mTransaction, mOSID, mKey,
+                                              mAutoIncrement, true,
+                                              objectDataId, mIndexUpdateInfo);
+    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
 
   rv = savepoint.Release();
   return NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;

@@ -45,13 +45,14 @@
 #include "mozilla/dom/indexedDB/IDBTransactionRequest.h"
 
 #include "nsIIDBObjectStoreRequest.h"
+#include "DatabaseInfo.h"
 
 struct JSContext;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 struct ObjectStoreInfo;
-struct IndexUpdateInfo;
+struct IndexInfo;
 
 class Key
 {
@@ -204,6 +205,12 @@ private:
   PRInt64 mInt;
 };
 
+struct IndexUpdateInfo
+{
+  IndexInfo info;
+  Key value;
+};
+
 class IDBObjectStoreRequest : public IDBRequest::Generator,
                               public nsIIDBObjectStoreRequest
 {
@@ -231,6 +238,22 @@ public:
                           const nsAString& aKeyPath,
                           JSContext** aCx,
                           Key& aValue);
+
+  static nsresult
+  GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
+                     JSContext* aCx,
+                     jsval aObject,
+                     nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+
+  static nsresult
+  UpdateIndexes(IDBTransactionRequest* aTransaction,
+                PRInt64 aObjectStoreId,
+                const Key& aObjectStoreKey,
+                bool aAutoIncrement,
+                bool aOverwrite,
+                PRInt64 aObjectDataId,
+                const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+
 
   bool TransactionIsOpen() const
   {
