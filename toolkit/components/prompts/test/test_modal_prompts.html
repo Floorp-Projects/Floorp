@@ -870,7 +870,7 @@ items = [];
 selectVal.value = null; // outparam, just making sure.
 isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
 is(isOK, true, "checked expected retval");
-is(selectVal.value, 0, "checking selected index");
+is(selectVal.value, -1, "checking selected index");
 ok(didDialog, "handleDialog was invoked");
 
 // ===== test 21 =====
