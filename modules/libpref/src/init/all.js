@@ -724,6 +724,10 @@ pref("network.ftp.control.qos", 0);
 
 // </http>
 
+// <ws>: WebSocket
+pref("network.websocket.enabled", false);
+// </ws>
+
 // If false, remote JAR files that are served with a content type other than
 // application/java-archive or application/x-jar will not be opened
 // by the jar channel.
