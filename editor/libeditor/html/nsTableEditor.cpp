@@ -1388,8 +1388,7 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
   } while (cell);
 
   // Things are messed up if we didn't find a cell in the row!
-  if (!cellInDeleteRow)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(cellInDeleteRow, NS_ERROR_FAILURE);
 
   // Delete the entire row
   nsCOMPtr<nsIDOMElement> parentRow;
@@ -2730,8 +2729,7 @@ nsHTMLEditor::GetTableSize(nsIDOMElement *aTable,
   nsITableLayout *tableLayoutObject;
   res = GetTableLayoutObject(table.get(), &tableLayoutObject);
   NS_ENSURE_SUCCESS(res, res);
-  if (!tableLayoutObject)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(tableLayoutObject, NS_ERROR_FAILURE);
 
   return tableLayoutObject->GetTableSize(*aRowCount, *aColCount); 
 }
@@ -3404,8 +3402,7 @@ nsHTMLEditor::AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PR
     NS_ENSURE_TRUE(cell, (col > 0) ? PR_TRUE : PR_FALSE);
 
     // Return as soon as a non-selected cell is found
-    if (!isSelected)
-      return PR_FALSE;
+    NS_ENSURE_TRUE(isSelected, PR_FALSE);
 
     NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in AllCellsInRowSelected");
   }
@@ -3434,8 +3431,7 @@ nsHTMLEditor::AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex,
     NS_ENSURE_TRUE(cell, (row > 0) ? PR_TRUE : PR_FALSE);
 
     // Return as soon as a non-selected cell is found
-    if (!isSelected)
-      return PR_FALSE;
+    NS_ENSURE_TRUE(isSelected, PR_FALSE);
   }
   return PR_TRUE;
 }

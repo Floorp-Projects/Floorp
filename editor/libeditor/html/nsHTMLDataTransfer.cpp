@@ -208,11 +208,9 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     nsCOMPtr<nsIDOMRange> range;
     res = selection->GetRangeAt(0, getter_AddRefs(range));
     NS_ENSURE_SUCCESS(res, res);
-    if (!range)
-      return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-    if (!nsrange)
-      return NS_ERROR_NO_INTERFACE;
+    NS_ENSURE_TRUE(nsrange, NS_ERROR_NO_INTERFACE);
 
     // create fragment for pasted html
     nsCOMPtr<nsIDOMDocumentFragment> docfrag;
@@ -224,8 +222,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     nsCOMPtr<nsIDOMNode> parent, junk;
     res = range->GetStartContainer(getter_AddRefs(parent));
     NS_ENSURE_SUCCESS(res, res);
-    if (!parent)
-      return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
     PRInt32 childOffset;
     res = range->GetStartOffset(&childOffset);
     NS_ENSURE_SUCCESS(res, res);
@@ -317,8 +314,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                 &targetOffset, &doContinue);
 
   NS_ENSURE_SUCCESS(res, res);
-  if (!doContinue)
-    return NS_OK;
+  NS_ENSURE_TRUE(doContinue, NS_OK);
 
   // if we have a destination / target node, we want to insert there
   // rather than in place of the selection
@@ -969,8 +965,7 @@ nsHTMLEditor::RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeLis
 nsresult
 nsHTMLEditor::AddInsertionListener(nsIContentFilter *aListener)
 {
-  if (!aListener)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
   // don't let a listener be added more than once
   if (mContentFilters.IndexOfObject(aListener) == -1)
@@ -985,8 +980,7 @@ nsHTMLEditor::AddInsertionListener(nsIContentFilter *aListener)
 nsresult
 nsHTMLEditor::RemoveInsertionListener(nsIContentFilter *aListener)
 {
-  if (!aListener)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
 
   if (!mContentFilters.RemoveObject(aListener))
     return NS_ERROR_FAILURE;
@@ -1028,8 +1022,7 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
 PRBool
 nsHTMLEditor::IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink)
 {
-  if (!aNode) 
-    return PR_FALSE;
+  NS_ENSURE_TRUE(aNode, PR_FALSE);
   if (outLink)
     *outLink = nsnull;
   nsCOMPtr<nsIDOMNode> tmp, node = aNode;
@@ -2534,8 +2527,7 @@ void RemoveBodyAndHead(nsIDOMNode *aNode)
  */
 nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
 {
-  if (!aStart)
-    return NS_OK;
+  NS_ENSURE_TRUE(aStart, NS_OK);
 
   nsCOMPtr<nsIDOMNode> child, tmp;
 
@@ -2600,8 +2592,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
                                                   PRInt32 *outStartOffset,
                                                   PRInt32 *outEndOffset)
 {
-  if (!outFragNode || !outStartNode || !outEndNode) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outFragNode && outStartNode && outEndNode, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   nsCOMPtr<nsIDOMNode> contextAsNode, tmp;  
   nsresult res = NS_OK;
@@ -2677,8 +2668,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     while (num--)
     {
       (*outStartNode)->GetFirstChild(getter_AddRefs(tmp));
-      if (!tmp)
-        return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
       tmp.swap(*outStartNode);
     }
 
@@ -2686,8 +2676,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     while (num--)
     {
       (*outEndNode)->GetLastChild(getter_AddRefs(tmp));
-      if (!tmp)
-        return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
       tmp.swap(*outEndNode);
     }
   }
@@ -2786,8 +2775,7 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                                 nsIDOMNode *aEndNode,
                                                 PRInt32 aEndOffset)
 {
-  if (!aFragmentAsNode) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aFragmentAsNode, NS_ERROR_NULL_POINTER);
 
   nsresult res;
 

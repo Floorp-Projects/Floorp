@@ -519,12 +519,10 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement,
                                      ChangeCSSInlineStyleTxn ** aTxn,
                                      PRBool aRemoveProperty)
 {
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
   *aTxn = new ChangeCSSInlineStyleTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
   return (*aTxn)->Init(mHTMLEditor, aElement, aAttribute, aValue, aRemoveProperty);
 }

@@ -72,15 +72,13 @@ NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
                                      nsIEditor  *aEditor)
 {
   NS_ASSERTION(aNode && aParent && aEditor, "bad arg");
-  if (!aNode || !aParent || !aEditor)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode && aParent && aEditor, NS_ERROR_NULL_POINTER);
 
   mNode = do_QueryInterface(aNode);
   mParent = do_QueryInterface(aParent);
   mOffset = aOffset;
   mEditor = aEditor;
-  if (!mNode || !mParent || !mEditor)
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(mNode && mParent && mEditor, NS_ERROR_INVALID_ARG);
   return NS_OK;
 }
 

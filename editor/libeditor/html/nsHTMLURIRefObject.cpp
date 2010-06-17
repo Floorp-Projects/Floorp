@@ -130,8 +130,7 @@ nsHTMLURIRefObject::Reset()
 NS_IMETHODIMP
 nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 {
-  if (!mNode)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
   nsAutoString tagName;
   nsresult rv = mNode->GetNodeName(tagName);
@@ -142,13 +141,11 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
   if (!mAttributes)
   {
     nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mNode));
-    if (!element)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
 
     mCurAttrIndex = 0;
     mNode->GetAttributes(getter_AddRefs(mAttributes));
-    if (!mAttributes)
-      return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mAttributes, NS_ERROR_NOT_INITIALIZED);
 
     rv = mAttributes->GetLength(&mAttributeCnt);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -290,10 +287,8 @@ nsHTMLURIRefObject::RewriteAllURIs(const nsAString & aOldPat,
 NS_IMETHODIMP
 nsHTMLURIRefObject::GetNode(nsIDOMNode** aNode)
 {
-  if (!mNode)
-    return NS_ERROR_NOT_INITIALIZED;
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   *aNode = mNode.get();
   NS_ADDREF(*aNode);
   return NS_OK;

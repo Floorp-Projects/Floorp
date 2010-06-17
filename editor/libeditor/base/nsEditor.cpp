@@ -485,8 +485,7 @@ nsEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)
 NS_IMETHODIMP 
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
-  if (!aDoc)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
   *aDoc = nsnull; // init out param
   NS_PRECONDITION(mDocWeak, "bad state, mDocWeak weak pointer not initialized");
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
@@ -499,8 +498,7 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
 nsresult 
 nsEditor::GetPresShell(nsIPresShell **aPS)
 {
-  if (!aPS)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aPS, NS_ERROR_NULL_POINTER);
   *aPS = nsnull; // init out param
   NS_PRECONDITION(mPresShellWeak, "bad state, null mPresShellWeak");
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
@@ -529,8 +527,7 @@ nsEditor::SetContentsMIMEType(const char * aContentsMIMEType)
 NS_IMETHODIMP
 nsEditor::GetSelectionController(nsISelectionController **aSel)
 {
-  if (!aSel)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
   *aSel = nsnull; // init out param
   NS_PRECONDITION(mSelConWeak, "bad state, null mSelConWeak");
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
@@ -551,8 +548,7 @@ nsEditor::DeleteSelection(EDirection aAction)
 NS_IMETHODIMP
 nsEditor::GetSelection(nsISelection **aSelection)
 {
-  if (!aSelection)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nsnull;
   nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mSelConWeak);
   NS_ENSURE_TRUE(selcon, NS_ERROR_NOT_INITIALIZED);
@@ -696,8 +692,7 @@ nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)
   NS_ENSURE_ARG_POINTER(aTxnManager);
   
   *aTxnManager = NULL;
-  if (!mTxnMgr)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mTxnMgr, NS_ERROR_FAILURE);
 
   NS_ADDREF(*aTxnManager = mTxnMgr);
   return NS_OK;
@@ -724,8 +719,7 @@ nsEditor::Undo(PRUint32 aCount)
 
   PRBool hasTxnMgr, hasTransaction = PR_FALSE;
   CanUndo(&hasTxnMgr, &hasTransaction);
-  if (!hasTransaction)
-    return result;
+  NS_ENSURE_TRUE(hasTransaction, result);
 
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
@@ -751,8 +745,7 @@ nsEditor::Undo(PRUint32 aCount)
 
 NS_IMETHODIMP nsEditor::CanUndo(PRBool *aIsEnabled, PRBool *aCanUndo)
 {
-  if (!aIsEnabled || !aCanUndo)
-     return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aIsEnabled && aCanUndo, NS_ERROR_NULL_POINTER);
   *aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr.get()));
   if (*aIsEnabled)
   {
@@ -778,8 +771,7 @@ nsEditor::Redo(PRUint32 aCount)
 
   PRBool hasTxnMgr, hasTransaction = PR_FALSE;
   CanRedo(&hasTxnMgr, &hasTransaction);
-  if (!hasTransaction)
-    return result;
+  NS_ENSURE_TRUE(hasTransaction, result);
 
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
@@ -805,8 +797,7 @@ nsEditor::Redo(PRUint32 aCount)
 
 NS_IMETHODIMP nsEditor::CanRedo(PRBool *aIsEnabled, PRBool *aCanRedo)
 {
-  if (!aIsEnabled || !aCanRedo)
-     return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aIsEnabled && aCanRedo, NS_ERROR_NULL_POINTER);
 
   *aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr.get()));
   if (*aIsEnabled)
@@ -870,8 +861,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     nsresult res = GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(res, res);
     mSelState = new nsSelectionState();
-    if (!mSelState)
-      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(mSelState, NS_ERROR_OUT_OF_MEMORY);
 
     mSelState->SaveSelection(selection);
   }
@@ -964,8 +954,7 @@ nsEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
   *aDocumentIsEmpty = PR_TRUE;
 
   nsIDOMElement *rootElement = GetRoot(); 
-  if (!rootElement)
-    return NS_ERROR_NULL_POINTER; 
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
 
   PRBool hasChildNodes;
   nsresult res = rootElement->HasChildNodes(&hasChildNodes);
@@ -1002,13 +991,11 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result))
     return result;
-  if (!selection)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     
   // get the root element 
   nsIDOMElement *rootElement = GetRoot(); 
-  if (!rootElement)
-    return NS_ERROR_NULL_POINTER; 
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
   
   // find first editable thingy
   nsCOMPtr<nsIDOMNode> firstNode;
@@ -1054,8 +1041,7 @@ nsEditor::EndOfDocument()
   
   // get the root element 
   nsIDOMElement *rootElement = GetRoot(); 
-  if (!rootElement)
-    return NS_ERROR_NULL_POINTER; 
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
 
   // get the length of the rot element 
   PRUint32 len; 
@@ -1069,8 +1055,7 @@ nsEditor::EndOfDocument()
 NS_IMETHODIMP
 nsEditor::GetDocumentModified(PRBool *outDocModified)
 {
-  if (!outDocModified)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outDocModified, NS_ERROR_NULL_POINTER);
 
   PRInt32  modCount = 0;
   GetModificationCount(&modCount);
@@ -1202,8 +1187,7 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
                             nsAString & aResultValue, 
                             PRBool *aResultIsSet)
 {
-  if (!aResultIsSet)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aResultIsSet, NS_ERROR_NULL_POINTER);
   *aResultIsSet=PR_FALSE;
   nsresult result=NS_OK;
   if (aElement)
@@ -1471,8 +1455,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
                            const nsAString *aValue,
                            PRBool aCloneAttributes)
 {
-  if (!inNode || !outNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inNode && outNode, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
   nsresult res = GetNodeLocation(inNode, address_of(parent), &offset);
@@ -1535,8 +1518,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
 nsresult
 nsEditor::RemoveContainer(nsIDOMNode *inNode)
 {
-  if (!inNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inNode, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
   
@@ -1584,8 +1566,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
                                 const nsAString *aAttribute,
                                 const nsAString *aValue)
 {
-  if (!inNode || !outNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inNode && outNode, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
   nsresult res = GetNodeLocation(inNode, address_of(parent), &offset);
@@ -1629,8 +1610,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
 nsresult
 nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
 {
-  if (!aNode || !aParent)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> oldParent;
   PRInt32 oldOffset;
@@ -1675,8 +1655,7 @@ nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
   // we don't keep ownership of the observers.  They must
   // remove themselves as observers before they are destroyed.
   
-  if (!aObserver)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aObserver, NS_ERROR_NULL_POINTER);
 
   // Make sure the listener isn't already on the list
   if (mEditorObservers.IndexOf(aObserver) == -1) 
@@ -1692,8 +1671,7 @@ nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
 NS_IMETHODIMP
 nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
 {
-  if (!aObserver)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(aObserver, NS_ERROR_FAILURE);
 
   if (!mEditorObservers.RemoveObject(aObserver))
     return NS_ERROR_FAILURE;
@@ -1716,8 +1694,7 @@ void nsEditor::NotifyEditorObservers(void)
 NS_IMETHODIMP
 nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
 {
-  if (!aListener)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
   // Make sure the listener isn't already on the list
   if (mActionListeners.IndexOf(aListener) == -1) 
@@ -1733,8 +1710,7 @@ nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
 NS_IMETHODIMP
 nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
 {
-  if (!aListener)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
 
   if (!mActionListeners.RemoveObject(aListener))
     return NS_ERROR_FAILURE;
@@ -1753,8 +1729,7 @@ nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
 NS_IMETHODIMP
 nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
 {
-  if (!aListener)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
   if (mDocStateListeners.IndexOf(aListener) == -1)
   {
@@ -1769,8 +1744,7 @@ nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
 NS_IMETHODIMP
 nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 {
-  if (!aListener)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
   if (!mDocStateListeners.RemoveObject(aListener))
     return NS_ERROR_FAILURE;
@@ -1954,25 +1928,21 @@ nsEditor::GetPhonetic(nsAString& aPhonetic)
 static nsresult
 GetEditorContentWindow(nsIDOMElement *aRoot, nsIWidget **aResult)
 {
-  if (!aRoot || !aResult)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aRoot && aResult, NS_ERROR_NULL_POINTER);
 
   *aResult = 0;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aRoot);
 
-  if (!content)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   // Not ref counted
   nsIFrame *frame = content->GetPrimaryFrame();
 
-  if (!frame)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   *aResult = frame->GetWindow();
-  if (!*aResult)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_FAILURE);
 
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -1981,16 +1951,14 @@ GetEditorContentWindow(nsIDOMElement *aRoot, nsIWidget **aResult)
 nsresult
 nsEditor::GetWidget(nsIWidget **aWidget)
 {
-  if (!aWidget)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aWidget, NS_ERROR_NULL_POINTER);
   *aWidget = nsnull;
 
   nsCOMPtr<nsIWidget> widget;
   nsresult res = GetEditorContentWindow(GetRoot(), getter_AddRefs(widget));
   if (NS_FAILED(res))
     return res;
-  if (!widget)
-    return NS_ERROR_NOT_AVAILABLE;
+  NS_ENSURE_TRUE(widget, NS_ERROR_NOT_AVAILABLE);
 
   NS_ADDREF(*aWidget = widget);
 
@@ -2121,13 +2089,11 @@ NS_IMETHODIMP
 nsEditor::CloneAttribute(const nsAString & aAttribute,
                          nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 {
-  if (!aDestNode || !aSourceNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDestNode && aSourceNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMElement> destElement = do_QueryInterface(aDestNode);
   nsCOMPtr<nsIDOMElement> sourceElement = do_QueryInterface(aSourceNode);
-  if (!destElement || !sourceElement)
-    return NS_ERROR_NO_INTERFACE;
+  NS_ENSURE_TRUE(destElement && sourceElement, NS_ERROR_NO_INTERFACE);
 
   nsAutoString attrValue;
   PRBool isAttrSet;
@@ -2149,28 +2115,24 @@ nsEditor::CloneAttribute(const nsAString & aAttribute,
 NS_IMETHODIMP
 nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 {
-  if (!aDestNode || !aSourceNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDestNode && aSourceNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMElement> destElement = do_QueryInterface(aDestNode);
   nsCOMPtr<nsIDOMElement> sourceElement = do_QueryInterface(aSourceNode);
-  if (!destElement || !sourceElement)
-    return NS_ERROR_NO_INTERFACE;
+  NS_ENSURE_TRUE(destElement && sourceElement, NS_ERROR_NO_INTERFACE);
 
   nsCOMPtr<nsIDOMNamedNodeMap> sourceAttributes;
   sourceElement->GetAttributes(getter_AddRefs(sourceAttributes));
   nsCOMPtr<nsIDOMNamedNodeMap> destAttributes;
   destElement->GetAttributes(getter_AddRefs(destAttributes));
-  if (!sourceAttributes || !destAttributes)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(sourceAttributes && destAttributes, NS_ERROR_FAILURE);
 
   nsAutoEditBatch beginBatching(this);
 
   // Use transaction system for undo only if destination
   //   is already in the document
   nsIDOMElement *rootElement = GetRoot();
-  if (!rootElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
 
   PRBool destInBody = PR_TRUE;
   nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
@@ -2520,8 +2482,7 @@ NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
   PRInt32 numListeners = mDocStateListeners.Count();
-  if (!numListeners)
-    return NS_OK;    // maybe there just aren't any.
+  NS_ENSURE_TRUE(numListeners, NS_OK);    // maybe there just aren't any.
  
   nsCOMArray<nsIDocumentStateListener> listeners(mDocStateListeners);
   nsresult rv = NS_OK;
@@ -2621,12 +2582,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
                                                PRUint32             aLength,
                                                DeleteTextTxn      **aTxn)
 {
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
   *aTxn = new DeleteTextTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
   return (*aTxn)->Init(this, aElement, aOffset, aLength, &mRangeUpdater);
 }
@@ -2638,12 +2597,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
                                          PRUint32    aOffset,
                                          SplitElementTxn **aTxn)
 {
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
   *aTxn = new SplitElementTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aNode, aOffset);
@@ -2653,12 +2610,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
                                              nsIDOMNode  *aRightNode,
                                              JoinElementTxn **aTxn)
 {
-  if (!aLeftNode || !aRightNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aLeftNode && aRightNode, NS_ERROR_NULL_POINTER);
 
   *aTxn = new JoinElementTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aLeftNode, aRightNode);
@@ -3023,8 +2978,7 @@ nsEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffs
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
   nsCOMPtr<nsIContent> cChild = do_QueryInterface(aChild);
-  if (!cChild || !content)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(cChild && content, NS_ERROR_NULL_POINTER);
 
   aOffset = content->IndexOf(cChild);
 
@@ -3500,8 +3454,7 @@ nsEditor::TagCanContainTag(const nsAString &aParentTag, const nsAString &aChildT
 PRBool 
 nsEditor::IsRootNode(nsIDOMNode *inNode) 
 {
-  if (!inNode)
-    return PR_FALSE;
+  NS_ENSURE_TRUE(inNode, PR_FALSE);
 
   nsIDOMElement *rootElement = GetRoot();
 
@@ -3796,8 +3749,7 @@ nsEditor::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
   
   nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
 
-  if (!parent) 
-    return resultNode;
+  NS_ENSURE_TRUE(parent, resultNode);
 
   resultNode = do_QueryInterface(parent->GetChildAt(aOffset));
 
@@ -3814,8 +3766,7 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
                                        nsIDOMNode **outStartNode,
                                        PRInt32 *outStartOffset)
 {
-  if (!outStartNode || !outStartOffset || !aSelection) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outStartNode && outStartOffset && aSelection, NS_ERROR_NULL_POINTER);
 
   *outStartNode = nsnull;
 
@@ -3833,8 +3784,7 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-  if (!range)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     
   if (NS_FAILED(range->GetStartContainer(outStartNode)))
     return NS_ERROR_FAILURE;
@@ -3854,8 +3804,7 @@ nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
                                        nsIDOMNode **outEndNode,
                                        PRInt32 *outEndOffset)
 {
-  if (!outEndNode || !outEndOffset) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outEndNode && outEndOffset, NS_ERROR_NULL_POINTER);
 
   *outEndNode = nsnull;
     
@@ -3871,8 +3820,7 @@ nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-  if (!range)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     
   if (NS_FAILED(range->GetEndContainer(outEndNode)))
     return NS_ERROR_FAILURE;
@@ -4456,12 +4404,10 @@ nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement,
                                    const nsAString& aValue,
                                    ChangeAttributeTxn ** aTxn)
 {
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
   *aTxn = new ChangeAttributeTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
   return (*aTxn)->Init(this, aElement, aAttribute, aValue, PR_FALSE);
 }
@@ -4472,12 +4418,10 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
                                       const nsAString& aAttribute,
                                       ChangeAttributeTxn ** aTxn)
 {
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
   *aTxn = new ChangeAttributeTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aElement, aAttribute, EmptyString(), PR_TRUE);
@@ -4489,12 +4433,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAString& aTag,
                                                   PRInt32         aPosition,
                                                   CreateElementTxn ** aTxn)
 {
-  if (!aParent)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aParent, NS_ERROR_NULL_POINTER);
 
   *aTxn = new CreateElementTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aTag, aParent, aPosition);
@@ -4506,12 +4448,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
                                                   PRInt32      aPosition,
                                                   InsertElementTxn ** aTxn)
 {
-  if (!aNode || !aParent)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
 
   *aTxn = new InsertElementTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(aNode, aParent, aPosition, this);
@@ -4520,12 +4460,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
 NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
                                              DeleteElementTxn ** aTxn)
 {
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
   *aTxn = new DeleteElementTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aElement, &mRangeUpdater);
@@ -4538,8 +4476,7 @@ nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
   NS_ASSERTION(aTxn, "illegal value- null ptr- aTxn");
      
   *aTxn = new IMETextTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(mIMETextNode, mIMETextOffset, mIMEBufferLength,
@@ -4551,8 +4488,7 @@ NS_IMETHODIMP
 nsEditor::CreateTxnForAddStyleSheet(nsCSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn)
 {
   *aTxn = new AddStyleSheetTxn();
-  if (! *aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE( *aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aSheet);
@@ -4564,8 +4500,7 @@ NS_IMETHODIMP
 nsEditor::CreateTxnForRemoveStyleSheet(nsCSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn)
 {
   *aTxn = new RemoveStyleSheetTxn();
-  if (! *aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE( *aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
 
   return (*aTxn)->Init(this, aSheet);
@@ -4579,8 +4514,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
                                       PRInt32 *aOffset,
                                       PRInt32 *aLength)
 {
-  if (!aTxn)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTxn, NS_ERROR_NULL_POINTER);
   *aTxn = nsnull;
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
@@ -4883,8 +4817,7 @@ nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
   if (NS_FAILED(result))
     return result;
 
-  if (!*aRange)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(*aRange, NS_ERROR_NULL_POINTER);
 
   result = (*aRange)->SetStart(aStartParent, aStartOffset);
 
@@ -4941,8 +4874,7 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   GetDocument(getter_AddRefs(tempDoc));
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(tempDoc);
-  if (!doc)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // XXX Wallpaper over editor bug (editor tries to create elements with an
   //     empty nodename).
@@ -4953,8 +4885,7 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   }
 
   nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
-  if (!tag)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(tag, NS_ERROR_OUT_OF_MEMORY);
 
   return doc->CreateElem(tag, nsnull, kNameSpaceID_XHTML, PR_FALSE, aContent);
 }
@@ -5149,8 +5080,7 @@ nsEditor::SwitchTextDirection()
     return rv;
 
   nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame)
-    return NS_ERROR_FAILURE; 
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE); 
 
   // Apply the opposite direction
   if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)

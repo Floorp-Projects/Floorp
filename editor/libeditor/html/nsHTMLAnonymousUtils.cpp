@@ -147,8 +147,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   *aReturn = nsnull;
 
   nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
-  if (!parentContent)
-    return NS_OK;
+  NS_ENSURE_TRUE(parentContent, NS_OK);
 
   // Get the document
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -166,8 +165,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
-  if (!newElement)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(newElement, NS_ERROR_FAILURE);
 
   // add the "hidden" class if needed
   if (aIsCreatedHidden) {
@@ -279,10 +277,9 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   NS_ENSURE_ARG_POINTER(aSelection);
 
   // early way out if all contextual UI extensions are disabled
-  if (!mIsObjectResizingEnabled &&
-      !mIsAbsolutelyPositioningEnabled &&
-      !mIsInlineTableEditingEnabled)
-    return NS_OK;
+  NS_ENSURE_TRUE(mIsObjectResizingEnabled ||
+      mIsAbsolutelyPositioningEnabled ||
+      mIsInlineTableEditingEnabled, NS_OK);
 
   // Don't change selection state if we're moving.
   if (mIsMoving) {
