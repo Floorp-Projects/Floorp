@@ -604,7 +604,8 @@ IDBTransactionRequest::GetMode(PRUint16* aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aMode = mMode;
+  *aMode = mMode == IDBTransactionRequest::FULL_LOCK ?
+           nsIIDBTransaction::READ_WRITE : mMode;
   return NS_OK;
 }
 
@@ -614,9 +615,32 @@ IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
-  PRUint32 count = mObjectStoreNames.Length();
+
+  nsTArray<nsString> stackArray;
+  nsTArray<nsString>* arrayOfNames;
+
+  if (mMode == IDBTransactionRequest::FULL_LOCK) {
+    DatabaseInfo* info;
+    if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
+      NS_ERROR("This should never fail!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (!info->GetObjectStoreNames(stackArray)) {
+      NS_ERROR("Out of memory!");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    arrayOfNames = &stackArray;
+  }
+  else {
+    arrayOfNames = &mObjectStoreNames;
+  }
+
+  PRUint32 count = arrayOfNames->Length();
   for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(mObjectStoreNames[index]), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(list->Add(arrayOfNames->ElementAt(index)),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
   list.forget(aObjectStores);
   return NS_OK;
