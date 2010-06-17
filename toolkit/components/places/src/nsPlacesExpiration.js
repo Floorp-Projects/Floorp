@@ -220,7 +220,7 @@ const EXPIRATION_QUERIES = {
        + "UNION ALL "
        + "SELECT v.id, IFNULL(h_t.url, h.url) AS url, "
        +        "v.visit_date AS visit_date, "
-       +        ":limit_uris AS expected_results "
+       +        ":limit_visits AS expected_results "
        + "FROM moz_historyvisits v "
        + "LEFT JOIN moz_places_temp AS h_t ON h_t.id = v.place_id "
        + "LEFT JOIN moz_places AS h ON h.id = v.place_id "
@@ -549,7 +549,7 @@ nsPlacesExpiration.prototype = {
       }
     }
     else if (aTopic == TOPIC_DEBUG_START_EXPIRATION) {
-      this._debugLimit = aData;
+      this._debugLimit = aData || -1; // Don't limit if unspecified.
       this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
     }
     else if (aTopic == TOPIC_IDLE_BEGIN) {
