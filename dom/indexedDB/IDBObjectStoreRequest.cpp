@@ -53,6 +53,7 @@
 #include "nsIVariant.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/storage.h"
@@ -315,14 +316,7 @@ GetKeyFromObject(JSContext* aCx,
   }
 
   if (JSVAL_IS_STRING(key)) {
-    JSString* str = JSVAL_TO_STRING(key);
-    size_t len = JS_GetStringLength(str);
-    if (!len) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    const PRUnichar* chars =
-      reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
-    aKey = nsDependentString(chars, len);
+    aKey = nsDependentJSString(key);
     return NS_OK;
   }
 
@@ -492,16 +486,7 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
     aValue = *JSVAL_TO_DOUBLE(value.value());
   }
   else if (JSVAL_IS_STRING(value.value())) {
-    JSString* str = JSVAL_TO_STRING(value.value());
-    size_t len = JS_GetStringLength(str);
-    if (len) {
-      const PRUnichar* chars =
-        reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
-      aValue = nsDependentString(chars, len);
-    }
-    else {
-      aValue = EmptyString();
-    }
+    aValue = nsDependentJSString(value.value());
   }
   else {
     // If the object doesn't have a value for our index then we leave it unset.
