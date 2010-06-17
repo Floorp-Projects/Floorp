@@ -143,6 +143,8 @@ public:
   }
 #endif
 
+  enum { FULL_LOCK = nsIIDBTransaction::SNAPSHOT_READ + 1 };
+
 private:
   IDBTransactionRequest();
   ~IDBTransactionRequest();

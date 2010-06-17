@@ -79,7 +79,7 @@ public:
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params
@@ -89,18 +89,18 @@ private:
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
-  CreateObjectStoreHelper(IDBDatabaseRequest* aDatabase,
+  CreateObjectStoreHelper(IDBTransactionRequest* aTransaction,
                           IDBRequest* aRequest,
                           const nsAString& aName,
                           const nsAString& aKeyPath,
                           bool aAutoIncrement)
-  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName),
+  : AsyncConnectionHelper(aTransaction, aRequest), mName(aName),
     mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement),
     mId(LL_MININT)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
   // In-params.
@@ -393,10 +393,22 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
+  nsTArray<nsString> objectStores;
+  nsString* name = objectStores.AppendElement(aName);
+  if (!name) {
+    NS_ERROR("Out of memory?");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsRefPtr<IDBTransactionRequest> transaction =
+    IDBTransactionRequest::Create(this, objectStores,
+                                  nsIIDBTransaction::READ_WRITE,
+                                  kDefaultDatabaseTimeoutSeconds);
+
   nsRefPtr<CreateObjectStoreHelper> helper =
-    new CreateObjectStoreHelper(this, request, aName, keyPath,
+    new CreateObjectStoreHelper(transaction, request, aName, keyPath,
                                 !!aAutoIncrement);
-  nsresult rv = helper->Dispatch(mConnectionThread);
+  nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -459,18 +471,13 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Lock the whole database
-  nsTArray<nsString> storesToOpen;
-  if (!info->GetObjectStoreNames(storesToOpen)) {
-    NS_ERROR("Out of memory?");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
 
+  // Lock the whole database
+  nsTArray<nsString> storesToOpen;
   nsRefPtr<IDBTransactionRequest> transaction =
     IDBTransactionRequest::Create(this, storesToOpen,
-                                  nsIIDBTransaction::READ_WRITE,
+                                  IDBTransactionRequest::FULL_LOCK,
                                   kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
@@ -705,7 +712,7 @@ SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 PRUint16
-SetVersionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
 {
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
@@ -714,7 +721,7 @@ SetVersionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   }
   info->version = mVersion;
 
-  return AsyncConnectionHelper::OnSuccess(aTarget);
+  return OK;
 }
 
 PRUint16
@@ -749,7 +756,7 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 PRUint16
-CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   nsAutoPtr<ObjectStoreInfo> info(new ObjectStoreInfo());
 
@@ -765,49 +772,12 @@ CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   }
   info.forget();
 
-  nsTArray<nsString> objectStores;
-  nsString* name = objectStores.AppendElement(mName);
-  if (!name) {
-    NS_ERROR("Out of memory?");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(mDatabase, objectStores,
-                                  nsIIDBTransaction::READ_WRITE,
-                                  kDefaultDatabaseTimeoutSeconds);
-
   nsCOMPtr<nsIIDBObjectStoreRequest> result;
-  nsresult rv = transaction->ObjectStore(mName, getter_AddRefs(result));
+  nsresult rv = mTransaction->ObjectStore(mName, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  aResult->SetAsISupports(result);
 
-  nsCOMPtr<nsIWritableVariant> variant =
-    do_CreateInstance(NS_VARIANT_CONTRACTID);
-  if (!variant) {
-    NS_ERROR("Couldn't create variant!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  variant->SetAsISupports(result);
-
-  if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
-    NS_ERROR("Failed to make variant readonly!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  nsCOMPtr<nsIDOMEvent> event =
-    IDBSuccessEvent::Create(mRequest, variant, transaction);
-  if (!event) {
-    NS_ERROR("Failed to create event!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
-
-  AutoTransactionRequestNotifier notifier(transaction);
-
-  PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
   return OK;
 }
 

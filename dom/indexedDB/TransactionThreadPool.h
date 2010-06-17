@@ -45,6 +45,8 @@
 
 #include "nsIObserver.h"
 
+#include "mozilla/Mutex.h"
+#include "mozilla/CondVar.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
@@ -57,8 +59,6 @@ class nsIThreadPool;
 BEGIN_INDEXEDDB_NAMESPACE
 
 class FinishTransactionRunnable;
-class TransactionInfo;
-class TransactionQueue;
 class QueuedDispatchInfo;
 
 class TransactionThreadPool : public nsIObserver
@@ -78,6 +78,61 @@ public:
                     bool aFinish = false);
 
 protected:
+  class TransactionQueue : public nsIRunnable
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+  
+    inline TransactionQueue(IDBTransactionRequest* aTransaction,
+                            nsIRunnable* aRunnable);
+  
+    inline void Dispatch(nsIRunnable* aRunnable);
+  
+    inline void Finish();
+  
+  private:
+    mozilla::Mutex mMutex;
+    mozilla::CondVar mCondVar;
+    IDBTransactionRequest* mTransaction;
+    nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> mQueue;
+    bool mShouldFinish;
+  };
+
+  struct TransactionObjectStoreInfo
+  {
+    TransactionObjectStoreInfo()
+    : writing(false), writerWaiting(false)
+    { }
+
+    nsString objectStoreName;
+    bool writing;
+    bool writerWaiting;
+  };
+
+  struct TransactionInfo
+  {
+    TransactionInfo()
+    : mode(nsIIDBTransaction::READ_ONLY)
+    { }
+
+    nsRefPtr<IDBTransactionRequest> transaction;
+    nsRefPtr<TransactionQueue> queue;
+    nsTArray<TransactionObjectStoreInfo> objectStoreInfo;
+    PRUint16 mode;
+  };
+
+  struct DatabaseTransactionInfo
+  {
+    DatabaseTransactionInfo()
+    : locked(false), lockPending(false)
+    { }
+
+    bool locked;
+    bool lockPending;
+    nsTArray<TransactionInfo> transactions;
+  };
+
   TransactionThreadPool();
   ~TransactionThreadPool();
 
@@ -91,7 +146,7 @@ protected:
 
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
-  nsClassHashtable<nsUint32HashKey, nsTArray<TransactionInfo> >
+  nsClassHashtable<nsUint32HashKey, DatabaseTransactionInfo>
     mTransactionsInProgress;
 
   nsTArray<QueuedDispatchInfo> mDelayedDispatchQueue;

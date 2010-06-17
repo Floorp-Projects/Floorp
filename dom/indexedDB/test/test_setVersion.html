@@ -14,15 +14,17 @@
 
 function testSteps()
 {
+  const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  var request = moz_indexedDB.open(name, description);
+  let request = moz_indexedDB.open(name, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  var event = yield;
+  let event = yield;
 
-  var db = event.result;
+  let db = event.result;
 
   // Check default state.
   is(db.version, "", "Correct default version for a new database.");
@@ -34,13 +36,60 @@ function testSteps()
 
   for (let i = 0; i < versions.length; i++) {
     let version = versions[i];
-    let request = db.setVersion(version);
+
+    request = db.setVersion(version);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
     is(db.version, version, "Database version number updated correctly");
+    is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
   }
+
+  let objectStoreNumber = 0;
+  let callbackCount = 0;
+  let lastObjectStore = 0;
+
+  for (; objectStoreNumber < 20;) {
+    request = db.createObjectStore(objectStoreNumber++, "");
+    request.onerror = errorHandler;
+    request.onsuccess = function(event) {
+      is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
+      callbackCount++;
+    }
+  }
+
+  let continueCreating = true;
+  while (continueCreating) {
+    request = db.createObjectStore(objectStoreNumber++, "");
+    request.onerror = errorHandler;
+    request.onsuccess = function(event) {
+      is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
+      callbackCount++;
+      if (callbackCount == 21) {
+        ok(objectStoreNumber > callbackCount, "more outstanding creates");
+        lastObjectStore = objectStoreNumber;
+
+        request = db.setVersion("11");
+        request.onerror = errorHandler;
+        request.onsuccess = function() {
+          is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
+          is(callbackCount, lastObjectStore,
+             "Version callback happened before other creates");
+          continueCreating = false;
+        }
+      }
+    }
+    SimpleTest.executeSoon(function() { testGenerator.next(); });
+    yield;
+  }
+
+  while (callbackCount < objectStoreNumber) {
+    SimpleTest.executeSoon(function() { testGenerator.next(); });
+    yield;
+  }
+
+  ok(callbackCount > lastObjectStore, "More callbacks after version");
 
   finishTest();
   yield;
