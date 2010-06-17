@@ -141,15 +141,13 @@ static JSBool
 obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSPropertySpec object_props[] = {
-    {js_proto_str, JSSLOT_PROTO, JSPROP_PERMANENT|JSPROP_SHARED, obj_getProto, obj_setProto},
+    {js_proto_str, 0, JSPROP_PERMANENT|JSPROP_SHARED, obj_getProto, obj_setProto},
     {0,0,0,0,0}
 };
 
 static JSBool
 obj_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JS_ASSERT(id == INT_TO_JSID(JSSLOT_PROTO));
-
     /* Let CheckAccess get the slot's value, based on the access mode. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
@@ -159,8 +157,6 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JS_ASSERT(id == INT_TO_JSID(JSSLOT_PROTO));
-
     if (!JSVAL_IS_OBJECT(*vp))
         return JS_TRUE;
 
@@ -181,7 +177,7 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
         return JS_FALSE;
 
-    return js_SetProtoOrParent(cx, obj, JSSLOT_PROTO, pobj, JS_TRUE);
+    return SetProto(cx, obj, pobj, JS_TRUE);
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
@@ -189,52 +185,6 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 #define object_props NULL
 
 #endif /* !JS_HAS_OBJ_PROTO_PROP */
-
-JSBool
-js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
-                    JSBool checkForCycles)
-{
-    JS_ASSERT(slot == JSSLOT_PARENT || slot == JSSLOT_PROTO);
-    JS_ASSERT_IF(!checkForCycles, obj != pobj);
-
-    if (slot == JSSLOT_PROTO) {
-        if (obj->isNative()) {
-            JS_LOCK_OBJ(cx, obj);
-            bool ok = !!js_GetMutableScope(cx, obj);
-            JS_UNLOCK_OBJ(cx, obj);
-            if (!ok)
-                return false;
-        }
-
-        /*
-         * Regenerate property cache shape ids for all of the scopes along the
-         * old prototype chain to invalidate their property cache entries, in
-         * case any entries were filled by looking up through obj.
-         */
-        JSObject *oldproto = obj;
-        while (oldproto && oldproto->isNative()) {
-            JS_LOCK_OBJ(cx, oldproto);
-            JSScope *scope = oldproto->scope();
-            scope->protoShapeChange(cx);
-            JSObject *tmp = oldproto->getProto();
-            JS_UNLOCK_OBJ(cx, oldproto);
-            oldproto = tmp;
-        }
-    }
-
-    if (!pobj || !checkForCycles) {
-        if (slot == JSSLOT_PROTO)
-            obj->setProto(pobj);
-        else
-            obj->setParent(pobj);
-    } else if (!js_SetProtoOrParentCheckingForCycles(cx, obj, slot, pobj)) {
-        const char *name = (slot == JSSLOT_PARENT) ? "parent" : js_proto_str;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
-                             name);
-        return false;
-    }
-    return true;
-}
 
 static JSHashNumber
 js_hash_object(const void *key)
@@ -3705,6 +3655,47 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 };
 
 JS_END_EXTERN_C
+
+namespace js {
+
+bool
+SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
+{
+    JS_ASSERT_IF(!checkForCycles, obj != proto);
+
+    if (obj->isNative()) {
+        JS_LOCK_OBJ(cx, obj);
+        bool ok = !!js_GetMutableScope(cx, obj);
+        JS_UNLOCK_OBJ(cx, obj);
+        if (!ok)
+            return false;
+    }
+
+    /*
+     * Regenerate property cache shape ids for all of the scopes along the
+     * old prototype chain to invalidate their property cache entries, in
+     * case any entries were filled by looking up through obj.
+     */
+    JSObject *oldproto = obj;
+    while (oldproto && oldproto->isNative()) {
+        JS_LOCK_OBJ(cx, oldproto);
+        JSScope *scope = oldproto->scope();
+        scope->protoShapeChange(cx);
+        JSObject *tmp = oldproto->getProto();
+        JS_UNLOCK_OBJ(cx, oldproto);
+        oldproto = tmp;
+    }
+
+    if (!proto || !checkForCycles) {
+        obj->setProto(proto);
+    } else if (!SetProtoCheckingForCycles(cx, obj, proto)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE, js_proto_str);
+        return false;
+    }
+    return true;
+}
+
+}
 
 JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,

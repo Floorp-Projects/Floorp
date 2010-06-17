@@ -2816,7 +2816,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     CHECK_REQUEST(cx);
-    return js_SetProtoOrParent(cx, obj, JSSLOT_PROTO, proto, JS_FALSE);
+    return SetProto(cx, obj, proto, JS_FALSE);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2832,7 +2832,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
-    return js_SetProtoOrParent(cx, obj, JSSLOT_PARENT, parent, JS_FALSE);
+    obj->setParent(parent);
+    return true;
 }
 
 JS_PUBLIC_API(JSObject *)

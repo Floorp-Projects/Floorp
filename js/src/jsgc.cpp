@@ -3766,11 +3766,11 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     GCTIMER_END(gckind == GC_LAST_CONTEXT);
 }
 
+namespace js {
+
 bool
-js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
-                                     uint32 slot, JSObject *pobj)
+SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
 {
-    JS_ASSERT(slot == JSSLOT_PARENT || slot == JSSLOT_PROTO);
     JSRuntime *rt = cx->runtime;
 
     /*
@@ -3802,28 +3802,22 @@ js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
         AutoUnlockGC unlock(rt);
 
         cycle = false;
-        for (JSObject *obj2 = pobj; obj2;) {
+        for (JSObject *obj2 = proto; obj2;) {
             obj2 = obj2->wrappedObject(cx);
             if (obj2 == obj) {
                 cycle = true;
                 break;
             }
-            obj2 = (slot == JSSLOT_PARENT) ? obj2->getParent() : obj2->getProto();
+            obj2 = obj2->getProto();
         }
-        if (!cycle) {
-            if (slot == JSSLOT_PARENT)
-                obj->setParent(pobj);
-            else
-                obj->setProto(pobj);
-        }
+        if (!cycle)
+            obj->setProto(proto);
     }
 
     EndGCSession(cx);
 
     return !cycle;
 }
-
-namespace js {
 
 JSCompartment *
 NewCompartment(JSContext *cx)
