@@ -148,8 +148,7 @@ nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
   while (!mIter->IsDone())
   {
     node = do_QueryInterface(mIter->GetCurrentNode());
-    if (!node)
-      return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
     if (functor(node))
     {
@@ -259,8 +258,7 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   GetHookEnumeratorFromDocument(aDoc, getter_AddRefs(enumerator));
-  if (!enumerator)
-    return PR_TRUE;
+  NS_ENSURE_TRUE(enumerator, PR_TRUE);
 
   PRBool hasMoreHooks = PR_FALSE;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) && hasMoreHooks)
@@ -275,8 +273,7 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
       PRBool doInsert = PR_TRUE;
       nsresult hookResult = override->OnPasteOrDrop(aDropEvent, aTrans, &doInsert);
       NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
-      if (!doInsert)
-        return PR_FALSE;
+      NS_ENSURE_TRUE(doInsert, PR_FALSE);
     }
   }
 

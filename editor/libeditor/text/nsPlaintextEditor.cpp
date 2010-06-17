@@ -149,8 +149,7 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
   NS_TIME_FUNCTION;
 
   NS_PRECONDITION(aDoc && aPresShell, "bad arg");
-  if (!aDoc || !aPresShell)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDoc && aPresShell, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK, rulesRes = NS_OK;
   
@@ -669,8 +668,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
       || *aAction == eToBeginningOfLine || *aAction == eToEndOfLine)
   {
     nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
-    if (!selCont)
-      return NS_ERROR_NO_INTERFACE;
+    NS_ENSURE_TRUE(selCont, NS_ERROR_NO_INTERFACE);
 
     switch (*aAction)
     {
@@ -952,11 +950,9 @@ nsPlaintextEditor::BeginComposition()
 NS_IMETHODIMP
 nsPlaintextEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 {
-  if (!aDocumentIsEmpty)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDocumentIsEmpty, NS_ERROR_NULL_POINTER);
   
-  if (!mRules)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
@@ -1013,8 +1009,7 @@ nsPlaintextEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
 NS_IMETHODIMP
 nsPlaintextEditor::GetMaxTextLength(PRInt32* aMaxTextLength)
 {
-  if (!aMaxTextLength)
-    return NS_ERROR_INVALID_POINTER;
+  NS_ENSURE_TRUE(aMaxTextLength, NS_ERROR_INVALID_POINTER);
   *aMaxTextLength = mMaxTextLength;
   return NS_OK;
 }
@@ -1025,8 +1020,7 @@ nsPlaintextEditor::GetMaxTextLength(PRInt32* aMaxTextLength)
 NS_IMETHODIMP 
 nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 {
-  if (! aWrapColumn)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE( aWrapColumn, NS_ERROR_NULL_POINTER);
 
   *aWrapColumn = mWrapColumn;
   return NS_OK;
@@ -1066,8 +1060,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // Ought to set a style sheet here ...
   // Probably should keep around an mPlaintextStyleSheet for this purpose.
   nsIDOMElement *rootElement = GetRoot();
-  if (!rootElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
 
   // Get the current style for this root element:
   NS_NAMED_LITERAL_STRING(styleName, "style");
@@ -1541,8 +1534,7 @@ nsPlaintextEditor::SharedOutputString(PRUint32 aFlags,
   nsCOMPtr<nsISelection> selection;
   nsresult rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!selection)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   rv = selection->GetIsCollapsed(aIsCollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1647,8 +1639,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString,
   }
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) 
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
@@ -1744,8 +1735,7 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   {
     // get root node
     nsIDOMElement *rootElement = GetRoot();
-    if (!rootElement)
-      return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
 
     // if it's empty don't select entire doc - that would select the bogus node
     return aSelection->Collapse(rootElement, 0);

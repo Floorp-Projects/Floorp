@@ -587,8 +587,7 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
                               PRBool *aCancel, 
                               PRBool *aHandled)
 {
-  if (!aInfo || !aCancel || !aHandled) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aInfo && aCancel && aHandled, NS_ERROR_NULL_POINTER);
 #if defined(DEBUG_ftang)
   printf("nsHTMLEditRules::WillDoAction action = %d\n", aInfo->action);
 #endif
@@ -727,8 +726,7 @@ nsHTMLEditRules::DidDoAction(nsISelection *aSelection,
 NS_IMETHODIMP 
 nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL)
 {
-  if (!aMixed || !aOL || !aUL || !aDL)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aMixed && aOL && aUL && aDL, NS_ERROR_NULL_POINTER);
   *aMixed = PR_FALSE;
   *aOL = PR_FALSE;
   *aUL = PR_FALSE;
@@ -779,8 +777,7 @@ nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *
 NS_IMETHODIMP 
 nsHTMLEditRules::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD)
 {
-  if (!aMixed || !aLI || !aDT || !aDD)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aMixed && aLI && aDT && aDD, NS_ERROR_NULL_POINTER);
   *aMixed = PR_FALSE;
   *aLI = PR_FALSE;
   *aDT = PR_FALSE;
@@ -842,8 +839,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   // this routine assumes that alignment is done ONLY via divs
 
   // default alignment is left
-  if (!aMixed || !aAlign)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aMixed && aAlign, NS_ERROR_NULL_POINTER);
   *aMixed = PR_FALSE;
   *aAlign = nsIHTMLEditor::eLeft;
 
@@ -855,8 +851,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   // get selection location
   nsCOMPtr<nsIDOMNode> parent;
   nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
-  if (!rootElem)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(rootElem, NS_ERROR_FAILURE);
 
   PRInt32 offset, rootOffset;
   res = nsEditor::GetNodeLocation(rootElem, address_of(parent), &rootOffset);
@@ -1005,8 +1000,7 @@ nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils, nsIDOMNode* 
 NS_IMETHODIMP 
 nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 {
-  if (!aCanIndent || !aCanOutdent)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(aCanIndent && aCanOutdent, NS_ERROR_FAILURE);
   *aCanIndent = PR_TRUE;    
   *aCanOutdent = PR_FALSE;
 
@@ -1015,8 +1009,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
   nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-  if (!selPriv)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(selPriv, NS_ERROR_FAILURE);
 
   // contruct a list of nodes to act on.
   nsCOMArray<nsIDOMNode> arrayOfNodes;
@@ -1112,8 +1105,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
   // This routine is *heavily* tied to our ui choices in the paragraph
   // style popup.  I can't see a way around that.
-  if (!aMixed)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aMixed, NS_ERROR_NULL_POINTER);
   *aMixed = PR_TRUE;
   outFormat.Truncate(0);
   
@@ -1790,8 +1782,7 @@ nsHTMLEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
 nsresult
 nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRBool *aHandled)
 {
-  if (!aSelection || !aHandled)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection && aHandled, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
   nsCOMPtr<nsIDOMNode> citeNode, selNode, leftCite, rightCite;
   PRInt32 selOffset, newOffset;
@@ -2252,8 +2243,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         rightParent = mHTMLEditor->GetBlockNodeParent(rightNode);
       
       // sanity checks
-      if (!leftParent || !rightParent)
-        return NS_ERROR_NULL_POINTER;  
+      NS_ENSURE_TRUE(leftParent && rightParent, NS_ERROR_NULL_POINTER);  
       if (leftParent == rightParent)
         return NS_ERROR_UNEXPECTED;  
       
@@ -2318,8 +2308,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         rightParent = mHTMLEditor->GetBlockNodeParent(rightNode);
       
       // sanity checks
-      if (!leftParent || !rightParent)
-        return NS_ERROR_NULL_POINTER;  
+      NS_ENSURE_TRUE(leftParent && rightParent, NS_ERROR_NULL_POINTER);  
       if (leftParent == rightParent)
         return NS_ERROR_UNEXPECTED;  
       
@@ -2575,8 +2564,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
 nsresult
 nsHTMLEditRules::InsertBRIfNeeded(nsISelection *aSelection)
 {
-  if (!aSelection)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   
   // get selection  
   nsCOMPtr<nsIDOMNode> node;
@@ -2613,8 +2601,7 @@ nsresult
 nsHTMLEditRules::GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection aAction, 
                                         nsCOMPtr<nsIDOMNode> *outSelNode, PRInt32 *outSelOffset)
 {
-  if (!aNode || !outSelNode || !outSelOffset)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode && outSelNode && outSelOffset, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK;
   
@@ -2752,8 +2739,7 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
       // theOffset, and pull them into leftlist.
       nsCOMPtr<nsIDOMNode> childToMove;
       nsCOMPtr<nsIContent> parent(do_QueryInterface(rightList));
-      if (!parent)
-        return NS_ERROR_NULL_POINTER;
+      NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
       nsIContent *child = parent->GetChildAt(theOffset);
       while (child)
@@ -4302,8 +4288,7 @@ nsHTMLEditRules::SplitBlock(nsIDOMNode *aBlock,
                             nsCOMPtr<nsIDOMNode> *aRightNode,
                             nsCOMPtr<nsIDOMNode> *aMiddleNode)
 {
-  if (!aBlock || !aStartChild || !aEndChild)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aBlock && aStartChild && aEndChild, NS_ERROR_NULL_POINTER);
   
   nsCOMPtr<nsIDOMNode> startParent, endParent, leftNode, rightNode;
   PRInt32 startOffset, endOffset, offset;
@@ -4443,8 +4428,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
   for (j=0; j<defcon; j++)
   {
     PropItem *propItem = mHTMLEditor->mDefaultStyles[j];
-    if (!propItem) 
-      return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(propItem, NS_ERROR_NULL_POINTER);
     PRBool bFirst, bAny, bAll;
 
     // GetInlineProperty also examine TypeInState.  The only gotcha here is that a cleared
@@ -5116,8 +5100,7 @@ nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode> &outA
 PRBool
 nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
 {
-  if (!aSelection) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   
   // don't need to touch collapsed selections
   PRBool bCollapsed;
@@ -5161,8 +5144,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   PRInt32 visOffset=0, firstBROffset=0;
   PRInt16 wsType;
   nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
-  if (!rootElement)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
 
   // find previous visible thingy before start of selection
   if ((selStartNode!=selCommon) && (selStartNode!=rootElement))
@@ -6018,8 +6000,7 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
   res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-  if (!selPriv)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(selPriv, NS_ERROR_FAILURE);
   // added this in so that ui code can ask to change an entire list, even if selection
   // is only in part of it.  used by list item dialog.
   if (aEntireList)
@@ -6651,8 +6632,7 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
   if (newBRneeded)
   {
     // if CR does not create a new P, default to BR creation
-    if (!doesCRCreateNewP)
-      return NS_OK;
+    NS_ENSURE_TRUE(doesCRCreateNewP, NS_OK);
 
     nsCOMPtr<nsIDOMNode> brNode;
     res =  mHTMLEditor->CreateBR(parent, offset, address_of(brNode));
@@ -6673,8 +6653,7 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
                                 nsCOMPtr<nsIDOMNode> *aSelNode, 
                                 PRInt32 *aOffset)
 {
-  if (!aPara || !aBRNode || !aSelNode || !*aSelNode || !aOffset || !aSelection) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aPara && aBRNode && aSelNode && *aSelNode && aOffset && aSelection, NS_ERROR_NULL_POINTER);
   nsresult res = NS_OK;
   
   // split para
@@ -7287,11 +7266,10 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
                                  PRInt32 *aOutMergeOffset)
 {
   // check parms
-  if (!aNodeLeft ||  
-      !aNodeRight || 
-      !aOutMergeParent ||
-      !aOutMergeOffset) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNodeLeft &&  
+      aNodeRight && 
+      aOutMergeParent &&
+      aOutMergeOffset, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK;
   // caller responsible for:
@@ -7353,8 +7331,7 @@ nsHTMLEditRules::GetTopEnclosingMailCite(nsIDOMNode *aNode,
                                          PRBool aPlainText)
 {
   // check parms
-  if (!aNode || !aOutCiteNode) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode && aOutCiteNode, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> node, parentNode;
@@ -7935,8 +7912,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
     nsCOMPtr<nsIDOMNode> node, parent;
 
     node = do_QueryInterface(iter->GetCurrentNode());
-    if (!node)
-      return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
     node->GetParentNode(getter_AddRefs(parent));
     
@@ -8165,8 +8141,7 @@ nsresult
 nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
 {
   // check parms
-  if (!aListItem || !aOutOfList) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aListItem && aOutOfList, NS_ERROR_NULL_POINTER);
   
   // init out params
   *aOutOfList = PR_FALSE;
