@@ -1744,11 +1744,13 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
 nsMediaCacheStream::~nsMediaCacheStream()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ASSERTION(mClosed, "Stream was not closed");
   NS_ASSERTION(!mPinCount, "Unbalanced Pin");
 
-  gMediaCache->ReleaseStream(this);
-  nsMediaCache::MaybeShutdown();
+  if (gMediaCache) {
+    NS_ASSERTION(mClosed, "Stream was not closed");
+    gMediaCache->ReleaseStream(this);
+    nsMediaCache::MaybeShutdown();
+  }
 }
 
 void
