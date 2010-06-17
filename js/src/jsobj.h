@@ -756,6 +756,7 @@ struct JSObject {
 
 #endif /* JS_THREADSAFE */
 
+#ifdef __cplusplus
 inline void
 OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 {
@@ -781,14 +782,7 @@ OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
             obj = xclasp->outerObject(cx, obj);
     }
 }
-
-class ValueArray {
-  public:
-    jsval *array;
-    size_t length;
-
-    ValueArray(jsval *v, size_t c) : array(v), length(c) {}
-};
+#endif
 
 extern JSClass  js_ObjectClass;
 extern JSClass  js_WithClass;
