@@ -77,9 +77,10 @@ public:
                bool aAutoIncrement,
                nsTArray<IndexUpdateInfo>& aIndexUpdateInfo)
   : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
-    mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement),
-    mIndexUpdateInfo(aIndexUpdateInfo)
-  { }
+    mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement)
+  {
+    mIndexUpdateInfo.SwapElements(aIndexUpdateInfo);
+  }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
@@ -90,7 +91,7 @@ private:
   const nsString mValue;
   const Key mKey;
   const bool mAutoIncrement;
-  nsTArray<IndexUpdateInfo>& mIndexUpdateInfo;
+  nsTArray<IndexUpdateInfo> mIndexUpdateInfo;
 };
 
 class RemoveHelper : public AsyncConnectionHelper
