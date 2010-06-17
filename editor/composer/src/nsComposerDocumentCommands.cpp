@@ -76,7 +76,7 @@ GetPresContextFromEditor(nsIEditor *aEditor, nsPresContext **aResult)
 
   nsCOMPtr<nsISelectionController> selCon;
   nsresult rv = aEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!selCon) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
@@ -116,7 +116,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
 
   nsRefPtr<nsPresContext> presContext;
   nsresult rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!presContext) return NS_ERROR_FAILURE;
 
   PRInt32 animationMode; 
@@ -136,11 +136,11 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
     if (!container) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     if (!docShell) return NS_ERROR_FAILURE;
 
     rv = docShell->SetAllowPlugins(allowPlugins);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -167,7 +167,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   // get pres context
   nsRefPtr<nsPresContext> presContext;
   rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!presContext) return NS_ERROR_FAILURE;
 
   PRInt32 animationMode;
@@ -178,7 +178,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
     // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
     rv = aParams->SetLongValue("imageAnimation",
                                presContext->ImageAnimationMode());
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   PRBool allowPlugins; 
@@ -189,14 +189,14 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
     if (!container) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     if (!docShell) return NS_ERROR_FAILURE;
 
     rv = docShell->GetAllowPlugins(&allowPlugins);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aParams->SetBooleanValue("plugins", allowPlugins);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;

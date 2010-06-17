@@ -105,7 +105,7 @@ nsDOMIterator::Init(nsIDOMRange* aRange)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!mIter) return NS_ERROR_FAILURE;
   return mIter->Init(aRange);
 }
@@ -115,7 +115,7 @@ nsDOMIterator::Init(nsIDOMNode* aNode)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!mIter) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
@@ -173,7 +173,7 @@ nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!mIter) return NS_ERROR_FAILURE;
   return mIter->Init(aRange);
 }
@@ -183,7 +183,7 @@ nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!mIter) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
@@ -205,7 +205,7 @@ nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *a
   do
   {
     res = node->GetParentNode(getter_AddRefs(parent));
-    if (NS_FAILED(res)) return PR_FALSE;
+    NS_ENSURE_SUCCESS(res, PR_FALSE);
     if (parent == aParent) 
     {
       if (aOffset)

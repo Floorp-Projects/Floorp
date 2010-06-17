@@ -262,7 +262,7 @@ nsComposerCommandsUpdater::PrimeUpdateTimer()
   {
     nsresult rv = NS_OK;
     mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   const PRUint32 kUpdateTimerDelay = 150;

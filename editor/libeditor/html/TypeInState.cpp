@@ -74,7 +74,7 @@ nsresult TypeInState::UpdateSelState(nsISelection *aSelection)
   PRBool isCollapsed = PR_FALSE;
   nsresult result = aSelection->GetIsCollapsed(&isCollapsed);
 
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (isCollapsed)
   {
@@ -101,7 +101,7 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
     PRBool isCollapsed = PR_FALSE;
     nsresult result = aSelection->GetIsCollapsed(&isCollapsed);
 
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     if (isCollapsed)
     {
@@ -110,7 +110,7 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
 
       result = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
 
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
 
       if (selNode && selNode == mLastSelectionContainer && selOffset == mLastSelectionOffset)
       {

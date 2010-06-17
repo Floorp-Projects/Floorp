@@ -115,7 +115,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
  
   //new call to use instead to get proper HTML element, bug# 39919
   nsresult result = mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   nsCOMPtr<nsIDOMElement>newElement = do_QueryInterface(newContent);
   if (!newElement) return NS_ERROR_NULL_POINTER;
   mNewNode = do_QueryInterface(newElement);
@@ -149,10 +149,10 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
       if (mOffsetInParent>count)
         mOffsetInParent = count;
       result = childNodes->Item(mOffsetInParent, getter_AddRefs(mRefNode));
-      if (NS_FAILED(result)) return result; // note, it's ok for mRefNode to be null.  that means append
+      NS_ENSURE_SUCCESS(result, result); // note, it's ok for mRefNode to be null.  that means append
 
       result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
-      if (NS_FAILED(result)) return result; 
+      NS_ENSURE_SUCCESS(result, result); 
 
       // only set selection to insertion point if editor gives permission
       PRBool bAdjustSelection;
@@ -161,12 +161,12 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
       {
         nsCOMPtr<nsISelection> selection;
         result = mEditor->GetSelection(getter_AddRefs(selection));
-        if (NS_FAILED(result)) return result;
+        NS_ENSURE_SUCCESS(result, result);
         if (!selection) return NS_ERROR_NULL_POINTER;
 
         PRInt32 offset=0;
         result = nsEditor::GetChildOffset(mNewNode, mParent, offset);
-        if (NS_FAILED(result)) return result;
+        NS_ENSURE_SUCCESS(result, result);
 
         result = selection->Collapse(mParent, offset+1);
         NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");

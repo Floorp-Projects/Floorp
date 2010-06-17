@@ -83,7 +83,7 @@ static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
     case nsIDOMCSSPrimitiveValue::CSS_PX:
       // the value is in pixels, just get it
       res = val->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_PX, &f);
-      if (NS_FAILED(res)) return 0;
+      NS_ENSURE_SUCCESS(res, 0);
       break;
     case nsIDOMCSSPrimitiveValue::CSS_IDENT: {
       // the value is keyword, we have to map these keywords into
@@ -163,7 +163,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   // Create a new node through the element factory
   nsCOMPtr<nsIContent> newContent;
   nsresult res = CreateHTMLContent(aTag, getter_AddRefs(newContent));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
   if (!newElement)
@@ -173,14 +173,14 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   if (aIsCreatedHidden) {
     res = newElement->SetAttribute(NS_LITERAL_STRING("class"),
                                    NS_LITERAL_STRING("hidden"));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   // add an _moz_anonclass attribute if needed
   if (!aAnonClass.IsEmpty()) {
     res = newElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
                                    aAnonClass);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   {
@@ -293,12 +293,12 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   // let's get the containing element of the selection
   nsresult res  = GetSelectionContainer(getter_AddRefs(focusElement));
   if (!focusElement) return NS_OK;
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   // what's its tag?
   nsAutoString focusTagName;
   res = focusElement->GetTagName(focusTagName);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   ToLowerCase(focusTagName);
   nsCOMPtr<nsIAtom> focusTagAtom = do_GetAtom(focusTagName);
 
@@ -307,7 +307,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
     // Absolute Positioning support is enabled, is the selection contained
     // in an absolutely positioned element ?
     res = GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(absPosElement));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   nsCOMPtr<nsIDOMElement> cellElement;
@@ -317,7 +317,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
     res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"),
                                       nsnull,
                                       getter_AddRefs(cellElement));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   if (mIsObjectResizingEnabled && cellElement) {
@@ -351,21 +351,21 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
     res = HideGrabber();
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
   if (mIsObjectResizingEnabled && mResizedObject &&
       mResizedObject != focusElement) {
     res = HideResizers();
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mResizedObject, "HideResizers failed");
   }
 
   if (mIsInlineTableEditingEnabled && mInlineEditedCell &&
       mInlineEditedCell != cellElement) {
     res = HideInlineTableEditingUI();
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
   }
 
@@ -379,7 +379,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
       res = RefreshResizers();
     else
       res = ShowResizers(focusElement);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   if (mIsAbsolutelyPositioningEnabled && absPosElement &&
@@ -388,7 +388,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
       res = RefreshGrabber();
     else
       res = ShowGrabberOnElement(absPosElement);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   if (mIsInlineTableEditingEnabled && cellElement &&
@@ -418,7 +418,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
   // Is the element positioned ? let's check the cheap way first...
   PRBool isPositioned = PR_FALSE;
   nsresult res = aElement->HasAttribute(NS_LITERAL_STRING("_moz_abspos"), &isPositioned);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!isPositioned) {
     // hmmm... the expensive way now...
     nsAutoString positionStr;
@@ -438,7 +438,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     // Get the all the computed css styles attached to the element node
     res = viewCSS->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     aBorderLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));
     aBorderTop  = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-top-width"));
@@ -460,7 +460,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     GetElementOrigin(aElement, aX, aY);
 
     res = nsElement->GetOffsetWidth(&aW);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     res = nsElement->GetOffsetHeight(&aH);
 
     aBorderLeft = 0;
