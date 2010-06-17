@@ -381,8 +381,7 @@ nsEditorSpellCheck::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aC
 
   nsresult rv = mSpellChecker->GetDictionaryList(&dictList);
 
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUnichar **tmpPtr = 0;
 

@@ -1031,8 +1031,7 @@ nsTransactionManager::EndTransaction()
 
       result = WillMergeNotify(topTransaction, tint, &doInterrupt);
 
-      if (NS_FAILED(result))
-        return result;
+      NS_ENSURE_SUCCESS(result, result);
 
       if (!doInterrupt) {
         result = topTransaction->Merge(tint, &didMerge);

@@ -134,8 +134,7 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 
   nsAutoString tagName;
   nsresult rv = mNode->GetNodeName(tagName);
-  if (NS_FAILED(rv))
-  return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Loop over attribute list:
   if (!mAttributes)

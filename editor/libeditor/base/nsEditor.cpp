@@ -989,8 +989,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   // get the selection
   nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     
   // get the root element 
@@ -1956,8 +1955,7 @@ nsEditor::GetWidget(nsIWidget **aWidget)
 
   nsCOMPtr<nsIWidget> widget;
   nsresult res = GetEditorContentWindow(GetRoot(), getter_AddRefs(widget));
-  if (NS_FAILED(res))
-    return res;
+  NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(widget, NS_ERROR_NOT_AVAILABLE);
 
   NS_ADDREF(*aWidget = widget);
@@ -1988,13 +1986,11 @@ nsEditor::ForceCompositionEnd()
 
   nsCOMPtr<nsIWidget> widget;
   nsresult res = GetWidget(getter_AddRefs(widget));
-  if (NS_FAILED(res))
-    return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   if (widget) {
     res = widget->ResetInputState();
-    if (NS_FAILED(res)) 
-      return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   return NS_OK;
@@ -2101,8 +2097,7 @@ nsEditor::CloneAttribute(const nsAString & aAttribute,
                                   aAttribute,
                                   attrValue,
                                   &isAttrSet);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (isAttrSet)
     rv = SetAttribute(destElement, aAttribute, attrValue);
   else
@@ -4200,8 +4195,7 @@ nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
   PRInt32 offsetOfNewNode;
   nsresult result = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode,
                                                           offsetOfNewNode);
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   nsCOMPtr<nsIDOMNode> newNode;
   result = CreateNode(aTag, parentSelectedNode, offsetOfNewNode,
@@ -4361,8 +4355,7 @@ nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
   
   PRBool  isTransientTransaction;
   rv = aTxn->GetIsTransient(&isTransientTransaction);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   if (!isTransientTransaction)
   {
@@ -4626,13 +4619,11 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
   // get the node and offset of the insertion point
   nsCOMPtr<nsIDOMNode> node;
   nsresult result = aRange->GetStartContainer(getter_AddRefs(node));
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   PRInt32 offset;
   result = aRange->GetStartOffset(&offset);
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   // determine if the insertion point is at the beginning, middle, or end of the node
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
@@ -4814,8 +4805,7 @@ nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
 {
   nsresult result;
   result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(*aRange, NS_ERROR_NULL_POINTER);
 
@@ -5076,8 +5066,7 @@ nsEditor::SwitchTextDirection()
 
   nsresult rv;
   nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *frame = content->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE); 

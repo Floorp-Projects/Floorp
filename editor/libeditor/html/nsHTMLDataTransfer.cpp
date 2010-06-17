@@ -1087,8 +1087,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
 {
   // Create generic Transferable for getting the data
   nsresult rv = CallCreateInstance("@mozilla.org/widget/transferable;1", aTransferable);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the nsITransferable interface for getting the data from the clipboard
   if (aTransferable)
@@ -1347,8 +1346,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewFileURI(getter_AddRefs(uri), fileObj);
-        if (NS_FAILED(rv))
-          return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
         
         nsCOMPtr<nsIURL> fileURL(do_QueryInterface(uri));
         if (fileURL)
@@ -1636,8 +1634,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       {
         PRInt32 rangeCount;
         rv = selection->GetRangeCount(&rangeCount);
-        if (NS_FAILED(rv)) 
-          return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         for (PRInt32 j = 0; j < rangeCount; j++)
         {
@@ -1841,8 +1838,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   // Get Clipboard Service
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // find out if we have our internal html flavor on the clipboard.  We don't want to mess
   // around with cfhtml if we do.
@@ -1943,8 +1939,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
   // Get Clipboard Service
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
     
   // Get the nsITransferable interface for getting the data from the clipboard.
   // use nsPlaintextEditor::PrepareTransferable() to force unicode plaintext data.
@@ -2571,8 +2566,7 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
     // inicate that we found the magical cookie and we don't want to spam the
     // console.
     rv = FindTargetNode(child, aResult);
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = child->GetNextSibling(getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(rv, rv);

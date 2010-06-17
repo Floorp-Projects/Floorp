@@ -58,8 +58,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult res = mEditor->GetPresShell(getter_AddRefs(shell));
-  if (NS_FAILED(res))
-    return res;
+  NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
   
   nsPresContext *context = shell->GetPresContext();

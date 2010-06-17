@@ -105,8 +105,7 @@ NS_IMETHODIMP nsTransactionList::ItemIsBatch(PRInt32 aIndex, PRBool *aIsBatch)
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
@@ -133,8 +132,7 @@ NS_IMETHODIMP nsTransactionList::GetItem(PRInt32 aIndex, nsITransaction **aItem)
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
@@ -161,8 +159,7 @@ NS_IMETHODIMP nsTransactionList::GetNumChildrenForItem(PRInt32 aIndex, PRInt32 *
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
@@ -189,8 +186,7 @@ NS_IMETHODIMP nsTransactionList::GetChildListForItem(PRInt32 aIndex, nsITransact
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 

@@ -262,11 +262,9 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   {
     // check current selection; set doTagRemoval if formatting should be removed
     rv = GetCurrentState(aEditor, aTagName, params);
-    if (NS_FAILED(rv)) 
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = params->GetBooleanValue(STATE_ALL, &doTagRemoval);
-    if (NS_FAILED(rv)) 
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (doTagRemoval)
@@ -340,8 +338,7 @@ nsListCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
 
   rv = GetCurrentState(aEditor, mTagName, params);
   rv = params->GetBooleanValue(STATE_ALL,&inList);
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString listType; listType.AssignWithConversion(mTagName);
   if (inList)
@@ -406,8 +403,7 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
     return rv;
   rv = GetCurrentState(aEditor, mTagName, params);
   rv = params->GetBooleanValue(STATE_ALL,&inList);
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (inList)
@@ -1038,8 +1034,7 @@ nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
   PRBool outMixed;
   nsresult rv = htmlEditor->GetAlignment(&outMixed, &firstAlign);
   
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   nsAutoString outStateString;
   switch (firstAlign)
@@ -1122,8 +1117,7 @@ nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aT
 
   nsCOMPtr<nsIDOMElement>  elt;
   nsresult rv = htmlEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString outStateString;
   if (elt)
@@ -1519,8 +1513,7 @@ nsInsertTagCommand::DoCommand(const char *aCmdName, nsISupports *refCon)
     nsresult rv;
     rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUTF16(mTagName),
                                            getter_AddRefs(domElem));
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return editor->InsertElementAtSelection(domElem, PR_TRUE);
   }
@@ -1566,12 +1559,10 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   nsCOMPtr<nsIDOMElement> domElem;
   rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUTF16(mTagName),
                                          getter_AddRefs(domElem));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = domElem->SetAttribute(attributeType, attrib);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // do actual insertion
   if (0 == nsCRT::strcmp(mTagName, "a"))
