@@ -554,12 +554,6 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       // These keys are handled on nsEditor, so, we can bypass
       // nsPlaintextEditor.
       return nsEditor::HandleKeyPressEvent(aKeyEvent);
-    case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-      // XXX nsPlaintextEditor doesn't consume the event by bug 569988,
-      // but nsHTMLEditor should eat the processed keypress event.
-      aKeyEvent->PreventDefault();
-      // This key is handled on nsPlaintextEditor.
-      return nsPlaintextEditor::HandleKeyPressEvent(aKeyEvent);
     case nsIDOMKeyEvent::DOM_VK_TAB: {
       if (IsPlaintextEditor()) {
         // If this works as plain text editor, e.g., mail editor for plain

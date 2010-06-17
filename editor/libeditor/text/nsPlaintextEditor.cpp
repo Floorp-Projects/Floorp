@@ -405,13 +405,6 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       }
       aKeyEvent->PreventDefault();
       return TypedText(EmptyString(), eTypedBreak);
-    case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-      // pass escape keypresses through as empty strings: needed for IME support
-      // XXX This might be broken, we should check the behavior, see bug 471322.
-      // XXX Even if this keypress event is handled, this doesn't consume the
-      // event. This is wrong behavior but we have serious problem,
-      // see bug 569988 and 570455.
-      return TypedText(EmptyString(), eTypedText);
   }
 
   // NOTE: On some keyboard layout, some characters are inputted with Control
