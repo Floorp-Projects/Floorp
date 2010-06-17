@@ -161,22 +161,8 @@ INDEX_TOO_BIG(jsuint index)
  * an atomized string.
  */
 JSBool
-js_IdIsIndex(jsid id, jsuint *indexp)
+js_StringIsIndex(JSString *str, jsuint *indexp)
 {
-    if (JSID_IS_INT(id)) {
-        jsint i;
-        i = JSID_TO_INT(id);
-        if (i < 0)
-            return JS_FALSE;
-        *indexp = (jsuint)i;
-        return JS_TRUE;
-    }
-
-    /* NB: id should be a string, but jsxml.c may call us with an object id. */
-    if (!JSID_IS_ATOM(id))
-        return JS_FALSE;
-
-    JSString *str = JSID_TO_STRING(id);
     jschar *cp = str->chars();
     if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
         jsuint index = JS7_UNDEC(*cp++);
@@ -273,7 +259,7 @@ js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
     JSString *str;
 
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return JS_TRUE;
     }
@@ -315,7 +301,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
          clasp == &js_ObjectClass)) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom) {
-            *idp = JSVAL_VOID;
+            *idp = JSID_VOID();
             return JS_TRUE;
         }
     } else {
@@ -427,7 +413,7 @@ static bool
 IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
           JSBool createAtom = JS_FALSE)
 {
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(int(index));
         return JS_TRUE;
     }
@@ -435,7 +421,7 @@ IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
     if (index <= jsuint(-1)) {
         if (!BigIndexToId(cx, obj, jsuint(index), createAtom, idp))
             return JS_FALSE;
-        if (hole && JSVAL_IS_VOID(*idp))
+        if (hole && JSID_IS_VOID(*idp))
             *hole = JS_TRUE;
         return JS_TRUE;
     }
@@ -519,7 +505,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr(), JS_TRUE))
         return JS_FALSE;
-    JS_ASSERT(!JSVAL_IS_VOID(idr.id()));
+    JS_ASSERT(!JSID_IS_VOID(idr.id()));
 
     Value tmp = v;
     return obj->setProperty(cx, idr.id(), &tmp);
@@ -546,7 +532,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr()))
         return JS_FALSE;
-    if (JSVAL_IS_VOID(idr.id()))
+    if (JSID_IS_VOID(idr.id()))
         return JS_TRUE;
 
     Value junk;
@@ -687,7 +673,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         for (;;) {
             if (!JS_CHECK_OPERATION_LIMIT(cx) || !JS_NextProperty(cx, iter, &id))
                 return false;
-            if (JSVAL_IS_VOID(id))
+            if (JSID_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
                 !obj->deleteProperty(cx, id, &junk)) {
@@ -710,7 +696,7 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, jsid id)
     JS_ASSERT(obj->isDenseArray());
 
     uint32 i;
-    return id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom) ||
+    return JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
            (js_IdIsIndex(id, &i) &&
             obj->getArrayLength() != 0 &&
             i < obj->getDenseArrayCapacity() &&
@@ -746,7 +732,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     uint32 i;
     if (!js_IdIsIndex(id, &i)) {
-        JS_ASSERT(id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
         IndexToValue(cx, obj->getArrayLength(), vp);
         return JS_TRUE;
     }
@@ -759,12 +745,12 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     uint32 i;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         IndexToValue(cx, obj->getArrayLength(), vp);
         return JS_TRUE;
     }
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
         *vp = obj->getProtoValue();
         return JS_TRUE;
     }
@@ -854,7 +840,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     uint32 i;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return array_length_setter(cx, obj, id, vp);
 
     if (!obj->isDenseArray())
@@ -974,7 +960,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     uint32 i = 0;       // init to shut GCC up
     JSBool isIndex;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
 
     isIndex = js_IdIsIndex(id, &i);
@@ -991,7 +977,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 static JSBool
 array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    *attrsp = id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)
+    *attrsp = JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)
         ? JSPROP_PERMANENT : JSPROP_ENUMERATE;
     return JS_TRUE;
 }
@@ -1012,7 +998,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     if (!obj->isDenseArray())
         return js_DeleteProperty(cx, obj, id, rval);
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         rval->setBoolean(false);
         return JS_TRUE;
     }

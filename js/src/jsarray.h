@@ -45,11 +45,49 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsobj.h"
+#include "jsatom.h"
 
 #define ARRAY_CAPACITY_MIN      7
 
 extern JSBool
-js_IdIsIndex(jsid id, jsuint *indexp);
+js_StringIsIndex(JSString *str, jsuint *indexp);
+
+inline JSBool
+js_IdIsIndex(jsid id, jsuint *indexp)
+{
+    if (JSID_IS_INT(id)) {
+        jsint i;
+        i = JSID_TO_INT(id);
+        if (i < 0)
+            return JS_FALSE;
+        *indexp = (jsuint)i;
+        return JS_TRUE;
+    }
+
+    if (JS_UNLIKELY(!JSID_IS_ATOM(id)))
+        return JS_FALSE;
+
+    return js_StringIsIndex(JSID_TO_STRING(id), indexp);
+}
+
+/* XML really wants to pretend jsvals are jsids. */
+inline JSBool
+js_IdValIsIndex(jsval id, jsuint *indexp)
+{
+    if (JSVAL_IS_INT(id)) {
+        jsint i;
+        i = JSVAL_TO_INT(id);
+        if (i < 0)
+            return JS_FALSE;
+        *indexp = (jsuint)i;
+        return JS_TRUE;
+    }
+
+    if (!JSVAL_IS_STRING(id))
+        return JS_FALSE;
+
+    return js_StringIsIndex(JSVAL_TO_STRING(id), indexp);
+}
 
 extern js::Class js_ArrayClass, js_SlowArrayClass;
 

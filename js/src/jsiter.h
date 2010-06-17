@@ -60,18 +60,40 @@
 
 struct NativeIterator {
     JSObject  *obj;
-    jsid      *props_array;
-    jsid      *props_cursor;
-    jsid      *props_end;
+    void      *props_array;
+    void      *props_cursor;
+    void      *props_end;
     uint32    *shapes_array;
     uint32    shapes_length;
     uint32    shapes_key;
     uintN     flags;
     JSObject  *next;
 
-    static NativeIterator *allocate(JSContext *cx, JSObject *obj, uintN flags,
-                                    uint32 *sarray, uint32 slength, uint32 key,
-                                    jsid *parray, uint32 plength);
+    jsid currentId() const {
+        JS_ASSERT((flags & JSITER_FOREACH) == 0);
+        return *reinterpret_cast<jsid *>(props_cursor);
+    }
+
+    void incIdCursor() {
+        JS_ASSERT((flags & JSITER_FOREACH) == 0);
+        props_cursor = reinterpret_cast<jsid *>(props_cursor) + 1;
+    }
+
+    const js::Value &currentValue() const {
+        JS_ASSERT((flags & JSITER_FOREACH) != 0);
+        return *reinterpret_cast<js::Value *>(props_cursor);
+    }
+
+    void incValueCursor() {
+        JS_ASSERT((flags & JSITER_FOREACH) != 0);
+        props_cursor = reinterpret_cast<js::Value *>(props_cursor) + 1;
+    }
+
+    static NativeIterator *allocateKeyIterator(JSContext *cx, uint32 slength,
+                                               const jsid *parray, uint32 plength);
+    static NativeIterator *allocateValueIterator(JSContext *cx, uint32 slength,
+                                                 const js::Value *parray, uint32 plength);
+    void init(JSObject *obj, uintN flags, uint32 *sarray, uint32 slength, uint32 key);
 
     void mark(JSTracer *trc);
 };

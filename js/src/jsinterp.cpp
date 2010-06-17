@@ -340,8 +340,8 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
             obj = &vp[0].asObject();
             if (!js_IsFunctionQName(cx, obj, &id))
                 return false;
-            if (id != 0)
-                vp[0] = ID_TO_VALUE(id);
+            if (!JSID_IS_VOID(id))
+                vp[0] = IdToValue(id);
         }
 #endif
         obj = NewObjectWithGivenProto(cx, &js_NoSuchMethodClass, NULL, NULL);
@@ -959,7 +959,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : isFunction
            ? js_function_str
            : js_var_str;
-    name = js_ValueToPrintableString(cx, ID_TO_VALUE(id));
+    name = js_ValueToPrintableString(cx, IdToValue(id));
     if (!name)
         return JS_FALSE;
     return !!JS_ReportErrorFlagsAndNumber(cx, report,
@@ -1138,7 +1138,7 @@ bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp)
 {
     int32_t i;
-    if (ValueFitsInInt32(v, &i)) {
+    if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
         *idp = INT_TO_JSID(i);
         return true;
     }
@@ -1152,7 +1152,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
         }
         if (!js_IsFunctionQName(cx, obj, idp))
             return JS_FALSE;
-        if (*idp != 0)
+        if (!JSID_IS_VOID(*idp))
             return JS_TRUE;
     }
 #endif
@@ -1984,12 +1984,19 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        *rval = ID_TO_VALUE(*ni->props_cursor);
-        if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
-            ni->props_cursor++;
+        if ((ni->flags & JSITER_FOREACH) == 0) {
+            jsid id = ni->currentId();
+            if (JSID_IS_ATOM(id)) {
+                rval->setString(JSID_TO_STRING(id));
+                ni->incIdCursor();
+                return true;
+            }
+            /* Take the slow path if we have to stringify a numeric property name. */
+        } else {
+            *rval = ni->currentValue();
+            ni->incValueCursor();
             return true;
         }
-        /* Take the slow path if we have to stringify a numeric property name. */
     }
     return js_IteratorNext(cx, iterobj, rval);
 }

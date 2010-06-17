@@ -184,6 +184,7 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_VALUEPTR          _JS_CTYPE(Value *,                _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CVALUEPTR         _JS_CTYPE(const Value *,          _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_SIZET             _JS_CTYPE(size_t,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
