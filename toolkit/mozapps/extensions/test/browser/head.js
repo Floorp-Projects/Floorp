@@ -2,7 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const RELATIVE_DIR = "browser/toolkit/mozapps/extensions/test/browser/";
+
+const TESTROOT = "http://example.com/" + RELATIVE_DIR;
+const TESTROOT2 = "http://example.org/" + RELATIVE_DIR;
+const CHROMEROOT = "chrome://mochikit/content/" + RELATIVE_DIR;
+
 const MANAGER_URI = "about:addons";
+const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 
 var gPendingTests = [];
@@ -22,6 +29,13 @@ function run_next_test() {
   info("Running test " + gTestsRun);
 
   gPendingTests.shift()();
+}
+
+function get_addon_file_url(aFilename) {
+  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+           getService(Ci.nsIChromeRegistry);
+  var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
+  return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
 function wait_for_view_load(aManagerWindow, aCallback) {
