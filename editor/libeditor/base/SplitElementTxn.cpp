@@ -261,10 +261,8 @@ NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAString& aString)
 
 NS_IMETHODIMP SplitElementTxn::GetNewNode(nsIDOMNode **aNewNode)
 {
-  if (!aNewNode)
-    return NS_ERROR_NULL_POINTER;
-  if (!mNewLeftNode)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(aNewNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NOT_INITIALIZED);
   *aNewNode = mNewLeftNode;
   NS_ADDREF(*aNewNode);
   return NS_OK;

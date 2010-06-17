@@ -188,8 +188,7 @@ nsHTMLEditor::CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsIDOMN
                                         aReturn);
 
   NS_ENSURE_SUCCESS(res, res);
-  if (!*aReturn)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(*aReturn, NS_ERROR_FAILURE);
 
   // add the mouse listener so we can detect a click on a resizer
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(*aReturn));
@@ -247,8 +246,7 @@ nsHTMLEditor::CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
                                         PR_TRUE,
                                         aReturn);
 
-  if (!*aReturn)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(*aReturn, NS_ERROR_FAILURE);
 
   return res;
 }
@@ -263,8 +261,7 @@ nsHTMLEditor::CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentN
                                         PR_TRUE,
                                         aReturn);
 
-  if (!*aReturn)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(*aReturn, NS_ERROR_FAILURE);
 
   return res;
 }
@@ -272,8 +269,7 @@ nsHTMLEditor::CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentN
 nsresult
 nsHTMLEditor::SetAllResizersPosition()
 {
-  if (!mTopLeftHandle)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mTopLeftHandle, NS_ERROR_FAILURE);
 
   PRInt32 x = mResizedObjectX;
   PRInt32 y = mResizedObjectY;
@@ -312,8 +308,7 @@ NS_IMETHODIMP
 nsHTMLEditor::RefreshResizers()
 {
   // nothing to do if resizers are not displayed...
-  if (!mResizedObject)
-    return NS_OK;
+  NS_ENSURE_TRUE(mResizedObject, NS_OK);
 
   nsresult res = GetPositionAndDimensions(mResizedObject,
                                           mResizedObjectX,
@@ -434,8 +429,7 @@ nsHTMLEditor::ShowResizersInner(nsIDOMElement *aResizedElement)
 NS_IMETHODIMP 
 nsHTMLEditor::HideResizers(void)
 {
-  if (!mResizedObject)
-    return NS_OK;
+  NS_ENSURE_TRUE(mResizedObject, NS_OK);
 
   // get the presshell's document observer interface.
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);

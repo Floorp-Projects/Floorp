@@ -354,8 +354,7 @@ nsTextEditRules::DidDoAction(nsISelection *aSelection,
   // Note that this won't prevent explicit selection setting from working.
   nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
 
-  if (!aSelection || !aInfo) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection && aInfo, NS_ERROR_NULL_POINTER);
     
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
@@ -388,8 +387,7 @@ nsTextEditRules::DidDoAction(nsISelection *aSelection,
 NS_IMETHODIMP
 nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
 {
-  if (!aDocumentIsEmpty)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDocumentIsEmpty, NS_ERROR_NULL_POINTER);
   
   *aDocumentIsEmpty = (mBogusNode != nsnull);
   return NS_OK;
@@ -403,8 +401,7 @@ nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
 nsresult
 nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
 {
-  if (!aSelection || !aCancel)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection && aCancel, NS_ERROR_NULL_POINTER);
   
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
@@ -1215,8 +1212,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   while (!iter->IsDone())
   {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(iter->GetCurrentNode());
-    if (!node)
-      return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
     if (mEditor->IsTextNode(node) && mEditor->IsEditable(node))
     {
@@ -1277,8 +1273,7 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
   if (IsSingleLineEditor())
     return NS_OK;
   nsIDOMNode *body = mEditor->GetRoot();
-  if (!body)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(body, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> lastChild;
   nsresult res = body->GetLastChild(getter_AddRefs(lastChild));
   // assuming CreateBogusNodeIfNeeded() has been called first
@@ -1469,12 +1464,10 @@ nsresult nsTextEditRules::HideLastPWInput() {
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMNode> selNode = GetTextNode(selection, mEditor);
-  if (!selNode)
-    return NS_OK;
+  NS_ENSURE_TRUE(selNode, NS_OK);
   
   nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(selNode));
-  if (!nodeAsText)
-    return NS_OK;
+  NS_ENSURE_TRUE(nodeAsText, NS_OK);
   
   nodeAsText->ReplaceData(mLastStart, mLastLength, hiddenText);
   selection->Collapse(selNode, start);

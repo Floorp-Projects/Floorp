@@ -254,16 +254,14 @@ ContentIsInTraversalRange(nsIContent *aContent,   PRBool aIsPreMode,
                           nsIDOMNode *aStartNode, PRInt32 aStartOffset,
                           nsIDOMNode *aEndNode,   PRInt32 aEndOffset)
 {
-  if (!aStartNode || !aEndNode || !aContent)
-    return PR_FALSE;
+  NS_ENSURE_TRUE(aStartNode && aEndNode && aContent, PR_FALSE);
 
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 indx = 0;
 
   ContentToParentOffset(aContent, getter_AddRefs(parentNode), &indx);
 
-  if (!parentNode)
-    return PR_FALSE;
+  NS_ENSURE_TRUE(parentNode, PR_FALSE);
 
   if (!aIsPreMode)
     ++indx;
@@ -284,8 +282,7 @@ ContentIsInTraversalRange(nsIDOMNSRange *aRange, nsIDOMNode* aNextNode, PRBool a
 {
   nsCOMPtr<nsIContent>  content(do_QueryInterface(aNextNode));
   nsCOMPtr<nsIDOMRange> range(do_QueryInterface(aRange));
-  if (!content || !range)
-    return PR_FALSE;
+  NS_ENSURE_TRUE(content && range, PR_FALSE);
 
 
 

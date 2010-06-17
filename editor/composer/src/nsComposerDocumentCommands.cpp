@@ -235,8 +235,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
                                            nsISupports *refCon)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) 
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified"))
   {
@@ -278,8 +277,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor) 
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool desireCSS;
     nsresult rvCSS = aParams->GetBooleanValue(STATE_ATTRIBUTE, &desireCSS);
@@ -293,8 +291,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor) 
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool insertBrOnReturn;
     nsresult rvBR = aParams->GetBooleanValue(STATE_ATTRIBUTE,
@@ -309,8 +306,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
-    if (!resizer)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(resizer, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
@@ -324,8 +320,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
-    if (!editor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
@@ -348,8 +343,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
   // The base editor owns most state info
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) 
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
   // Always get the enabled state
   PRBool outCmdEnabled = PR_FALSE;
@@ -380,8 +374,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool isCSS;
     htmleditor->GetIsCSSEnabled(&isCSS);
@@ -392,8 +385,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool createPOnReturn;
     htmleditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
@@ -404,8 +396,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
-    if (!resizer)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(resizer, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     resizer->GetObjectResizingEnabled(&enabled);
@@ -416,8 +407,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
-    if (!editor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     editor->GetInlineTableEditingEnabled(&enabled);

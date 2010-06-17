@@ -247,8 +247,7 @@ nsEditingSession::DisableJSAndPlugins(nsIDOMWindow *aWindow)
 NS_IMETHODIMP
 nsEditingSession::RestoreJSAndPlugins(nsIDOMWindow *aWindow)
 {
-  if (!mDisabledJSAndPlugins)
-    return NS_OK;
+  NS_ENSURE_TRUE(mDisabledJSAndPlugins, NS_OK);
 
   mDisabledJSAndPlugins = PR_FALSE;
 
@@ -303,8 +302,7 @@ const char* const gSupportedTextTypes[] = {
 PRBool
 IsSupportedTextType(const char* aMIMEType)
 {
-  if (!aMIMEType)
-    return PR_FALSE;
+  NS_ENSURE_TRUE(aMIMEType, PR_FALSE);
 
   PRInt32 i = 0;
   while (gSupportedTextTypes[i])
@@ -552,11 +550,9 @@ nsEditingSession::RemoveListenersAndControllers(nsIDOMWindow *aWindow,
 NS_IMETHODIMP
 nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
-  if (!mDoneSetup)
-    return NS_OK;
+  NS_ENSURE_TRUE(mDoneSetup, NS_OK);
 
-  if (!aWindow)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_NULL_POINTER);
 
   nsresult rv;
   
@@ -1166,8 +1162,7 @@ nsIDocShell *
 nsEditingSession::GetDocShellFromWindow(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  if (!window)
-    return nsnull;
+  NS_ENSURE_TRUE(window, nsnull);
 
   return window->GetDocShell();
 }
@@ -1404,8 +1399,7 @@ nsEditingSession::RestoreAnimationMode(nsIDOMWindow *aWindow)
 nsresult
 nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 {
-  if (!mDoneSetup)
-    return NS_OK;
+  NS_ENSURE_TRUE(mDoneSetup, NS_OK);
 
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
@@ -1433,8 +1427,7 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 nsresult
 nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
 {
-  if (!mDoneSetup)
-    return NS_OK;
+  NS_ENSURE_TRUE(mDoneSetup, NS_OK);
 
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
@@ -1477,8 +1470,7 @@ nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
   // Get editor
   nsCOMPtr<nsIEditor> editor;
   rv = GetEditorForWindow(aWindow, getter_AddRefs(editor));
-  if (!editor)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
 
   if (!mInteractive)
   {

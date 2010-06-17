@@ -225,8 +225,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
           while (!iter->IsDone())
           {
             node = do_QueryInterface(iter->GetCurrentNode());
-            if (!node)
-              return NS_ERROR_FAILURE;
+            NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
             if (IsEditable(node))
             { 
@@ -640,8 +639,7 @@ nsresult nsHTMLEditor::ApplyDefaultProperties()
   for (j=0; j<defcon; j++)
   {
     PropItem *propItem = mDefaultStyles[j];
-    if (!propItem) 
-      return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(propItem, NS_ERROR_NULL_POINTER);
     res = SetInlineProperty(propItem->tag, propItem->attr, propItem->value);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -1009,8 +1007,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                              nsAString *outValue,
                              PRBool aCheckDefaults)
 {
-  if (!aProperty)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
 
   nsresult result;
   *aAny=PR_FALSE;
@@ -1217,8 +1214,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
                                               PRBool *aAny, 
                                               PRBool *aAll)
 {
-  if (!aProperty || !aFirst || !aAny || !aAll)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
   const nsAString *att = nsnull;
   if (!aAttribute.IsEmpty())
     att = &aAttribute;
@@ -1237,8 +1233,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
                                               PRBool *aAll,
                                               nsAString &outValue)
 {
-  if (!aProperty || !aFirst || !aAny || !aAll)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
   const nsAString *att = nsnull;
   if (!aAttribute.IsEmpty())
     att = &aAttribute;
@@ -1391,8 +1386,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
         while (!iter->IsDone())
         {
           node = do_QueryInterface(iter->GetCurrentNode());
-          if (!node)
-            return NS_ERROR_FAILURE;
+          NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
           if (IsEditable(node))
           { 
@@ -1571,8 +1565,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
         while (!iter->IsDone())
         {
           node = do_QueryInterface(iter->GetCurrentNode());
-          if (!node)
-            return NS_ERROR_FAILURE;
+          NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
           if (IsEditable(node))
           { 
@@ -1843,8 +1836,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
 NS_IMETHODIMP 
 nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
 {
-  if (!aMixed)
-      return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(aMixed, NS_ERROR_FAILURE);
   *aMixed = PR_TRUE;
   outFace.Truncate();
 
@@ -1883,8 +1875,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
 NS_IMETHODIMP 
 nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
 {
-  if (!aMixed)
-      return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aMixed, NS_ERROR_NULL_POINTER);
   *aMixed = PR_TRUE;
   aOutColor.Truncate();
   

@@ -67,15 +67,13 @@ nsTransactionList::~nsTransactionList()
 /* readonly attribute long numItems; */
 NS_IMETHODIMP nsTransactionList::GetNumItems(PRInt32 *aNumItems)
 {
-  if (!aNumItems)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNumItems, NS_ERROR_NULL_POINTER);
 
   *aNumItems = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
 
-  if (!txMgr)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   nsresult result = NS_ERROR_FAILURE;
 
@@ -90,15 +88,13 @@ NS_IMETHODIMP nsTransactionList::GetNumItems(PRInt32 *aNumItems)
 /* boolean itemIsBatch (in long aIndex); */
 NS_IMETHODIMP nsTransactionList::ItemIsBatch(PRInt32 aIndex, PRBool *aIsBatch)
 {
-  if (!aIsBatch)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aIsBatch, NS_ERROR_NULL_POINTER);
 
   *aIsBatch = PR_FALSE;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
 
-  if (!txMgr)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   nsRefPtr<nsTransactionItem> item;
 
@@ -112,8 +108,7 @@ NS_IMETHODIMP nsTransactionList::ItemIsBatch(PRInt32 aIndex, PRBool *aIsBatch)
   if (NS_FAILED(result))
     return result;
 
-  if (!item)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   return item->GetIsBatch(aIsBatch);
 }
@@ -121,15 +116,13 @@ NS_IMETHODIMP nsTransactionList::ItemIsBatch(PRInt32 aIndex, PRBool *aIsBatch)
 /* nsITransaction getItem (in long aIndex); */
 NS_IMETHODIMP nsTransactionList::GetItem(PRInt32 aIndex, nsITransaction **aItem)
 {
-  if (!aItem)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aItem, NS_ERROR_NULL_POINTER);
 
   *aItem = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
 
-  if (!txMgr)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   nsRefPtr<nsTransactionItem> item;
 
@@ -143,8 +136,7 @@ NS_IMETHODIMP nsTransactionList::GetItem(PRInt32 aIndex, nsITransaction **aItem)
   if (NS_FAILED(result))
     return result;
 
-  if (!item)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   return item->GetTransaction(aItem);
 }
@@ -152,15 +144,13 @@ NS_IMETHODIMP nsTransactionList::GetItem(PRInt32 aIndex, nsITransaction **aItem)
 /* long getNumChildrenForItem (in long aIndex); */
 NS_IMETHODIMP nsTransactionList::GetNumChildrenForItem(PRInt32 aIndex, PRInt32 *aNumChildren)
 {
-  if (!aNumChildren)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNumChildren, NS_ERROR_NULL_POINTER);
 
   *aNumChildren = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
 
-  if (!txMgr)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   nsRefPtr<nsTransactionItem> item;
 
@@ -174,8 +164,7 @@ NS_IMETHODIMP nsTransactionList::GetNumChildrenForItem(PRInt32 aIndex, PRInt32 *
   if (NS_FAILED(result))
     return result;
 
-  if (!item)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   return item->GetNumberOfChildren(aNumChildren);
 }
@@ -183,15 +172,13 @@ NS_IMETHODIMP nsTransactionList::GetNumChildrenForItem(PRInt32 aIndex, PRInt32 *
 /* nsITransactionList getChildListForItem (in long aIndex); */
 NS_IMETHODIMP nsTransactionList::GetChildListForItem(PRInt32 aIndex, nsITransactionList **aTxnList)
 {
-  if (!aTxnList)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTxnList, NS_ERROR_NULL_POINTER);
 
   *aTxnList = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
 
-  if (!txMgr)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   nsRefPtr<nsTransactionItem> item;
 
@@ -205,13 +192,11 @@ NS_IMETHODIMP nsTransactionList::GetChildListForItem(PRInt32 aIndex, nsITransact
   if (NS_FAILED(result))
     return result;
 
-  if (!item)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   *aTxnList = (nsITransactionList *)new nsTransactionList(txMgr, item);
 
-  if (!*aTxnList)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxnList, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aTxnList);
 

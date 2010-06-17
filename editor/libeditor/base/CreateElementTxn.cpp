@@ -228,10 +228,8 @@ NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAString& aString)
 
 NS_IMETHODIMP CreateElementTxn::GetNewNode(nsIDOMNode **aNewNode)
 {
-  if (!aNewNode)
-    return NS_ERROR_NULL_POINTER;
-  if (!mNewNode)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(aNewNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mNewNode, NS_ERROR_NOT_INITIALIZED);
   *aNewNode = mNewNode;
   NS_ADDREF(*aNewNode);
   return NS_OK;

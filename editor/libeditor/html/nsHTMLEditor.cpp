@@ -255,8 +255,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
                    PRUint32 aFlags)
 {
   NS_PRECONDITION(aDoc && aPresShell, "bad arg");
-  if (!aDoc || !aPresShell)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDoc && aPresShell, NS_ERROR_NULL_POINTER);
 
   nsresult result = NS_OK, rulesRes = NS_OK;
 
@@ -538,8 +537,7 @@ nsHTMLEditor::BeginningOfDocument()
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res))
     return res;
-  if (!selection)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     
   // get the root element 
   nsIDOMElement *rootElement = GetRoot(); 
@@ -924,8 +922,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 {
   nsRefPtr<SetDocTitleTxn> txn = new SetDocTitleTxn();
-  if (!txn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(txn, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult result = txn->Init(this, &aTitle);
   if (NS_FAILED(result))
@@ -1327,8 +1324,7 @@ nsHTMLEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
 
 PRBool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
 {
-  if (!aNode) 
-    return PR_FALSE;
+  NS_ENSURE_TRUE(aNode, PR_FALSE);
   if (!nsTextEditUtils::IsBreak(aNode)) 
     return PR_FALSE;
   // check if there is a later node in block after br
@@ -1342,8 +1338,7 @@ PRBool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
     return PR_TRUE;
   
   // if we are right before block boundary, then br not visible
-  if (!nextNode) 
-    return PR_FALSE;  // this break is trailer in block, it's not visible
+  NS_ENSURE_TRUE(nextNode, PR_FALSE);  // this break is trailer in block, it's not visible
   if (IsBlockNode(nextNode))
     return PR_FALSE; // break is right before a block, it's not visible
     
@@ -1757,8 +1752,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
     return res;
 
   nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-  if (!nsrange)
-    return NS_ERROR_NO_INTERFACE;
+  NS_ENSURE_TRUE(nsrange, NS_ERROR_NO_INTERFACE);
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   res = nsrange->CreateContextualFragment(inputString,
                                           getter_AddRefs(docfrag));
@@ -2030,8 +2024,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
 
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
   
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
   
@@ -2369,8 +2362,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     nsCOMPtr<nsIDOMNode> blockParent = nodeToExamine;
     if (!isBlock) {
       blockParent = GetBlockNodeParent(nodeToExamine);
-      if (!blockParent)
-        return NS_OK;
+      NS_ENSURE_TRUE(blockParent, NS_OK);
     }
 
     // Make sure to not walk off onto the Document node
@@ -2984,8 +2976,7 @@ NODE_FOUND:
 NS_IMETHODIMP
 nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aReturn)
 {
-  if (!aReturn )
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aReturn , NS_ERROR_NULL_POINTER);
   
   // default is null - no element found
   *aReturn = nsnull;
@@ -3223,9 +3214,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
   if (aReturn)
     *aReturn = nsnull;
 
-  if (aTagName.IsEmpty() || !aReturn)
-//  if (!aTagName || !aReturn)
-    return NS_ERROR_NULL_POINTER;
+//  NS_ENSURE_TRUE(aTagName && aReturn, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(!aTagName.IsEmpty() && aReturn, NS_ERROR_NULL_POINTER);
     
   nsAutoString TagName(aTagName);
   ToLowerCase(TagName);
@@ -3329,8 +3319,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
         // Set all attributes found on the supplied anchor element
         nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
         aAnchorElement->GetAttributes(getter_AddRefs(attrMap));
-        if (!attrMap)
-          return NS_ERROR_FAILURE;
+        NS_ENSURE_TRUE(attrMap, NS_ERROR_FAILURE);
 
         PRUint32 count, i;
         attrMap->GetLength(&count);
@@ -3431,8 +3420,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAString& aAttribute, const 
   // Set the background color attribute on the body tag
   nsIDOMElement *bodyElement = GetRoot();
 
-  if (!bodyElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   // Use the editor method that goes through the transaction system
   return SetAttribute(bodyElement, aAttribute, aValue);
@@ -3441,8 +3429,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAString& aAttribute, const 
 NS_IMETHODIMP
 nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
 {
-  if (!aNodeList)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
 
   nsresult res;
 
@@ -3457,12 +3444,10 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
   {
     nsCOMPtr<nsIDOMDocument> domdoc;
     nsEditor::GetDocument(getter_AddRefs(domdoc));
-    if (!domdoc)
-      return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(domdoc, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-    if (!doc)
-      return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     iter->Init(doc->GetRootElement());
 
@@ -3542,8 +3527,7 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
   nsRefPtr<nsCSSStyleSheet> sheet;
   nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!sheet)
-    return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
 
   nsRefPtr<RemoveStyleSheetTxn> txn;
   rv = CreateTxnForRemoveStyleSheet(sheet, getter_AddRefs(txn));
@@ -3571,8 +3555,7 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
 
   // Make sure the pres shell doesn't disappear during the load.
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIURI> uaURI;
   nsresult rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
@@ -3587,8 +3570,7 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
     LoadSheetSync(uaURI, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
-  if (!sheet)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(sheet, NS_ERROR_NULL_POINTER);
 
   // Add the override style sheet
   // (This checks if already exists)
@@ -3633,8 +3615,7 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
   // cases.
   nsresult rv = RemoveStyleSheetFromList(aURL);
 
-  if (!sheet)
-    return NS_OK; /// Don't fail if sheet not found
+  NS_ENSURE_TRUE(sheet, NS_OK); /// Don't fail if sheet not found
 
   NS_ENSURE_TRUE(mPresShellWeak, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
@@ -3653,8 +3634,7 @@ nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
   nsRefPtr<nsCSSStyleSheet> sheet;
   nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!sheet)
-    return NS_OK; // Don't fail if sheet not found
+  NS_ENSURE_TRUE(sheet, NS_OK); // Don't fail if sheet not found
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
@@ -3730,8 +3710,7 @@ nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
     return NS_OK; //No sheet -- don't fail!
 
   *aStyleSheet = mStyleSheets[foundIndex];
-  if (!*aStyleSheet)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(*aStyleSheet, NS_ERROR_FAILURE);
 
   NS_ADDREF(*aStyleSheet);
 
@@ -3763,8 +3742,7 @@ nsHTMLEditor::GetURLForStyleSheet(nsCSSStyleSheet *aStyleSheet,
 NS_IMETHODIMP
 nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 {
-  if (!aNodeList)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
 
   nsresult res;
 
@@ -3779,12 +3757,10 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   {
     nsCOMPtr<nsIDOMDocument> domdoc;
     nsEditor::GetDocument(getter_AddRefs(domdoc));
-    if (!domdoc)
-      return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(domdoc, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-    if (!doc)
-      return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     iter->Init(doc->GetRootElement());
 
@@ -4047,12 +4023,10 @@ NS_IMETHODIMP
 nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 {
 #ifdef DEBUG
-  if (!outNumTests || !outNumTestsFailed)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outNumTests && outNumTestsFailed, NS_ERROR_NULL_POINTER);
 
   TextEditorTest *tester = new TextEditorTest();
-  if (!tester)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(tester, NS_ERROR_OUT_OF_MEMORY);
    
   tester->Run(this, outNumTests, outNumTestsFailed);
   delete tester;
@@ -4435,20 +4409,16 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 {
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsEditor::GetDocument(getter_AddRefs(domdoc));
-  if (!domdoc)
-    return 0;
+  NS_ENSURE_TRUE(domdoc, 0);
 
   nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-  if (!doc)
-    return 0;
+  NS_ENSURE_TRUE(doc, 0);
 
   nsCOMPtr<nsIContent> rootContent = doc->GetRootElement();
-  if (!rootContent)
-    return 0;
+  NS_ENSURE_TRUE(rootContent, 0);
 
   nsCOMPtr<nsIDOMNode> rootNode (do_QueryInterface(rootContent));
-  if (!rootNode)
-    return 0;
+  NS_ENSURE_TRUE(rootNode, 0);
 
   nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
   nsCOMPtr<nsIDOMNode> preNode;
@@ -4530,8 +4500,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 {
   nsIDOMElement *rootElement = GetRoot();  
-  if (!rootElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
 
   return aSelection->Collapse(rootElement,0);
 }
@@ -4548,8 +4517,7 @@ nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 nsresult
 nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
 {
-  if (!inNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inNode, NS_ERROR_NULL_POINTER);
   nsresult res;
   nsCOMPtr<nsIDOMNode> sibling, child, unused;
   
@@ -5010,8 +4978,7 @@ nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode,
                              PRBool *outIsEmptyNode, 
                              PRBool aSafeToAskFrames)
 {
-  if (!aNode || !outIsEmptyNode) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode && outIsEmptyNode, NS_ERROR_NULL_POINTER);
   *outIsEmptyNode = PR_TRUE;
   nsresult res = NS_OK;
 
@@ -5444,8 +5411,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           while (!iter->IsDone())
           {
             node = do_QueryInterface(iter->GetCurrentNode());
-            if (!node)
-              return NS_ERROR_FAILURE;
+            NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
             if (IsEditable(node))
             {
