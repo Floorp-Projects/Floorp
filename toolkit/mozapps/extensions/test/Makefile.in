@@ -48,14 +48,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_extensionmanager
 
-DIRS = \
-  xpinstall \
-  $(NULL)
-
 ifneq (mobile,$(MOZ_BUILD_APP))
- DIRS += browser
+ DIRS +=  \
+    xpinstall \
+    browser \
+    $(NULL)
 endif
-
 
 XPCSHELL_TESTS = \
   xpcshell \
