@@ -86,6 +86,8 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIHttpChannelAuthProvider.h"
 #include "mozilla/Mutex.h"
+#include "nsIDOMCloseEvent.h"
+#include "nsICryptoHash.h"
 
 using namespace mozilla;
 
@@ -98,8 +100,9 @@ static nsIThread *gWebSocketThread = nsnull;
 #define DEFAULT_BUFFER_SIZE 2048
 #define UTF_8_REPLACEMENT_CHAR    static_cast<PRUnichar>(0xFFFD)
 
-#define TIMEOUT_TRY_CONNECT_AGAIN 1000
-#define TIMEOUT_WAIT_FOR_SERVER_RESPONSE 20000
+#define TIMEOUT_TRY_CONNECT_AGAIN         1000
+#define TIMEOUT_WAIT_FOR_SERVER_RESPONSE  20000
+#define TIMEOUT_WAIT_FOR_CLOSING          5000
 
 #define ENSURE_TRUE_AND_FAIL_IF_FAILED(x, ret)                            \
   PR_BEGIN_MACRO                                                          \
@@ -191,6 +194,8 @@ static nsIThread *gWebSocketThread = nsnull;
 #define IS_HIGH_BIT_OF_BYTE_SET(_v) ((_v & 0x80) == 0x80)
 #define START_BYTE_OF_MESSAGE 0x00
 #define END_BYTE_OF_MESSAGE 0xff
+#define START_BYTE_OF_CLOSE_FRAME 0xff
+#define END_BYTE_OF_CLOSE_FRAME 0x00
 
 // nsIInterfaceRequestor will be the unambiguous class for this class
 class nsWebSocketEstablishedConnection: public nsIInterfaceRequestor,
@@ -201,8 +206,8 @@ class nsWebSocketEstablishedConnection: public nsIInterfaceRequestor,
                                         public nsIChannel,
                                         public nsIHttpAuthenticableChannel
 {
-friend class nsNetAddressComparator;
-friend class nsAutoCloseOwner;
+friend class nsWSNetAddressComparator;
+friend class nsWSAutoClose;
 
 public:
   nsWebSocketEstablishedConnection();
@@ -218,9 +223,9 @@ public:
   NS_DECL_NSICHANNEL
   NS_DECL_NSIPROXIEDCHANNEL
 
-  // nsIHttpAuthenticableChannel. We can't use
-  // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
-  // others.
+  // nsIHttpAuthenticableChannel.
+  // We can't use NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates
+  // cancel() and others.
   NS_IMETHOD GetRequestMethod(nsACString &method);
   NS_IMETHOD GetIsSSL(PRBool *aIsSSL);
   NS_IMETHOD GetProxyMethodIsConnect(PRBool *aProxyMethodIsConnect);
@@ -235,6 +240,12 @@ public:
   nsresult Init(nsWebSocket *aOwner);
   nsresult Disconnect();
 
+  // these are called always on the main thread (they dispatch themselves)
+  DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(Close)
+  DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(FailConnection)
+
+  PRBool ClosedCleanly() { return mClosedCleanly; }
+
   nsresult PostMessage(const nsString& aMessage);
   PRUint32 GetOutgoingBufferedAmount() { return mOutgoingBufferedAmount; }
 
@@ -246,18 +257,34 @@ private:
   // TryConnect ensures this by checking sWSsConnecting.
   // If there is a IP address entry there it tries again after
   // TIMEOUT_TRY_CONNECT_AGAIN milliseconds.
-  static void TryConnect(nsITimer *aTimer, void *aClosure);
+  static void TryConnect(nsITimer *aTimer,
+                         void     *aClosure);
 
   // We wait for the initial server response for
   // TIMEOUT_WAIT_FOR_SERVER_RESPONSE milliseconds
   static void TimerInitialServerResponseCallback(nsITimer *aTimer,
                                                  void     *aClosure);
 
+  // We wait TIMEOUT_WAIT_FOR_CLOSING milliseconds to the connection be closed
+  // after setting the readyState to CLOSING.
+  static void TimerForceCloseCallback(nsITimer *aTimer,
+                                      void     *aClosure);
+
+  // Similar to the Close method, but this one neither sends the close frame
+  // nor expects the connection to be closed (mStatus == CONN_CLOSED) to
+  // disconnect.
+  void ForceClose();
+
   nsresult DoConnect();
   nsresult HandleNewInputString(PRUint32 aStart);
   nsresult AddAuthorizationHeaders(nsCString& aAuthHeaderStr,
                                    PRBool     aIsProxyAuth);
   nsresult AddCookiesToRequest(nsCString& aAuthHeaderStr);
+  void GenerateSecKey(nsCString& aKey,
+                      PRUint32 *aNumber);
+  nsresult GenerateRequestKeys(nsCString& aKey1,
+                               nsCString& aKey2,
+                               nsCString& aKey3);
   PRBool UsingHttpProxy();
   nsresult Reset();
   void RemoveFromLoadGroup();
@@ -267,6 +294,8 @@ private:
                                const PRUnichar  *aError,
                                const PRUnichar **aFormatStrings,
                                PRUint32          aFormatStringsLen);
+  PRBool SentAlreadyTheCloseFrame()
+  { return mPostedCloseFrame && mOutgoingMessages.GetSize() == 0; }
 
   // auth specific methods
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(ProcessAuthentication)
@@ -276,9 +305,8 @@ private:
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(RemoveWSConnecting)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(HandleSetCookieHeader)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(DoInitialRequest)
-  DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(FailConnection)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(Connected)
-  DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(CloseOwner)
+  DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(FrameError)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(DispatchNewMessage)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(Retry)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(ResolveNextProxyAndConnect)
@@ -300,15 +328,17 @@ private:
                                     // here for fast access.
   nsDeque mReceivedMessages; // has nsCString* messages that need
                              // to be dispatched as message events
+  nsCString mExpectedMD5Challenge;
   nsWebSocket* mOwner; // WEAK
 
   // used in mHeaders
   enum {
-    kWebSocketOriginPos = 0,
-    kWebSocketLocationPos,
-    kWebSocketProtocolPos,
+    kUpgradePos = 0,
+    kConnectionPos,
+    kSecWebSocketOriginPos,
+    kSecWebSocketLocationPos,
+    kSecWebSocketProtocolPos,
     kSetCookiePos,
-    kSetCookie2Pos,
     kProxyAuthenticatePos,
     kServerPos,  // for digest auth
     kHeadersLen
@@ -340,21 +370,30 @@ private:
 
   nsCOMPtr<nsITimer> mTryConnectTimer;
   nsCOMPtr<nsITimer> mInitialServerResponseTimer;
-
-  // auth specific data
-  nsCString mProxyCredentials;
-  nsCString mCredentials;
-  PRPackedBool mAuthenticating;
-  nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
+  nsCOMPtr<nsITimer> mCloseFrameServerResponseTimer;
 
   // for nsIRequest implementation
   nsCString mRequestName;
   nsresult mFailureStatus;
 
+  // auth specific data
+  nsCString mProxyCredentials;
+  nsCString mCredentials;
+  nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
+  PRPackedBool mAuthenticating;
+
+  PRPackedBool mPostedCloseFrame;
+  PRPackedBool mClosedCleanly;
+
   /**
-   * A simple state machine used to manage connection status
+   * A simple state machine used to manage the flow status of the input/output
+   * streams of the connection.
    *
    * CONN_NOT_CONNECTED (initial state)              ->
+   *                          CONN_CONNECTING |
+   *                          CONN_CLOSED
+   *
+   * CONN_CONNECTING                                 ->
    *                          CONN_CONNECTING_TO_HTTP_PROXY |
    *                          CONN_SENDING_INITIAL_REQUEST |
    *                          CONN_CLOSED
@@ -395,8 +434,12 @@ private:
    *
    * CONN_WAITING_LF_CHAR_TO_CONNECTING               ->
    *                          CONN_SENDING_INITIAL_REQUEST |
-   *                          CONN_CONNECTED_AND_READY |
+   *                          CONN_READING_CHALLENGE_RESPONSE |
    *                          CONN_RETRYING_TO_AUTHENTICATE |
+   *                          CONN_CLOSED
+   *
+   * CONN_READING_CHALLENGE_RESPONSE                  ->
+   *                          CONN_CONNECTED_AND_READY |
    *                          CONN_CLOSED
    *
    * CONN_CONNECTED_AND_READY                         ->
@@ -406,6 +449,7 @@ private:
    *
    * CONN_HIGH_BIT_OF_FRAME_TYPE_SET                  ->
    *                          CONN_READING_AND_DISCARDING_LENGTH_BYTES |
+   *                          CONN_SENDING_ACK_CLOSE_FRAME |
    *                          CONN_CLOSED
    *
    * CONN_READING_AND_DISCARDING_LENGTH_BYTES         ->
@@ -416,14 +460,20 @@ private:
    *                          CONN_CONNECTED_AND_READY |
    *                          CONN_CLOSED
    *
+   * CONN_SENDING_ACK_CLOSE_FRAME ->
+   *                          CONN_CLOSED
+   *
    * CONN_CLOSED (final state)
    *
    */
 
   enum ConnectionStatus {
     CONN_NOT_CONNECTED,
+    CONN_CONNECTING,
+    // connecting to the http proxy
     CONN_RETRYING_TO_AUTHENTICATE,
     CONN_CONNECTING_TO_HTTP_PROXY,
+    // doing the websocket handshake
     CONN_SENDING_INITIAL_REQUEST,
     CONN_WAITING_RESPONSE_FOR_INITIAL_REQUEST,
     CONN_READING_FIRST_CHAR_OF_RESPONSE_HEADER_NAME,
@@ -431,12 +481,22 @@ private:
     CONN_READING_RESPONSE_HEADER_VALUE,
     CONN_WAITING_LF_CHAR_OF_RESPONSE_HEADER,
     CONN_WAITING_LF_CHAR_TO_CONNECTING,
+    CONN_READING_CHALLENGE_RESPONSE,
+    // the websocket connection is established
     CONN_CONNECTED_AND_READY,
     CONN_HIGH_BIT_OF_FRAME_TYPE_SET,
     CONN_READING_AND_DISCARDING_LENGTH_BYTES,
     CONN_HIGH_BIT_OF_FRAME_TYPE_NOT_SET,
+    // the websocket server requested to close the connection and because of
+    // this the close frame in acknowledgement is expected to be sent
+    CONN_SENDING_ACK_CLOSE_FRAME,
+    // the websocket connection is closed (or it is going to)
     CONN_CLOSED
   };
+  // Shared by both threads (the main and the socket ones).
+  // The initial states (CONN_NOT_CONNECTED, CONN_CONNECTING,
+  // CONN_CONNECTING_TO_HTTP_PROXY and CONN_SENDING_INITIAL_REQUEST) are set by
+  // the main thread. The other ones are set by the socket thread.
   ConnectionStatus mStatus;
 };
 
@@ -447,7 +507,7 @@ nsTArray<nsRefPtr<nsWebSocketEstablishedConnection> >*
 // Helper classes
 //------------------------------------------------------------------------------
 
-class nsNetAddressComparator
+class nsWSNetAddressComparator
 {
 public:
   // when comparing, if the connection is under a proxy it'll use its hostname,
@@ -458,21 +518,21 @@ public:
                   nsWebSocketEstablishedConnection* b) const;
 };
 
-class nsAutoCloseOwner
+class nsWSAutoClose
 {
 public:
-  nsAutoCloseOwner(nsWebSocketEstablishedConnection* conn) : mConnection(conn)
+  nsWSAutoClose(nsWebSocketEstablishedConnection* conn) : mConnection(conn)
   {}
 
-  ~nsAutoCloseOwner() { mConnection->CloseOwner(); }
+  ~nsWSAutoClose() { mConnection->Close(); }
 
 private:
   nsWebSocketEstablishedConnection* mConnection;
 };
 
 PRBool
-nsNetAddressComparator::Equals(nsWebSocketEstablishedConnection* a,
-                               nsWebSocketEstablishedConnection* b) const
+nsWSNetAddressComparator::Equals(nsWebSocketEstablishedConnection* a,
+                                 nsWebSocketEstablishedConnection* b) const
 {
   NS_ASSERTION(a->mOwner && b->mOwner, "Unexpected disconnected connection");
 
@@ -503,8 +563,8 @@ nsNetAddressComparator::Equals(nsWebSocketEstablishedConnection* a,
 }
 
 PRBool
-nsNetAddressComparator::LessThan(nsWebSocketEstablishedConnection* a,
-                                 nsWebSocketEstablishedConnection* b) const
+nsWSNetAddressComparator::LessThan(nsWebSocketEstablishedConnection* a,
+                                   nsWebSocketEstablishedConnection* b) const
 {
   NS_ASSERTION(a->mOwner && b->mOwner, "Unexpected disconnected connection");
 
@@ -578,8 +638,10 @@ nsWebSocketEstablishedConnection::nsWebSocketEstablishedConnection() :
   mReadingProxyConnectResponse(PR_FALSE),
   mCurrentProxyConfig(eNotResolvingProxy),
   mProxyFailureReason(NS_OK),
-  mAuthenticating(PR_FALSE),
   mFailureStatus(NS_OK),
+  mAuthenticating(PR_FALSE),
+  mPostedCloseFrame(PR_FALSE),
+  mClosedCleanly(PR_FALSE),
   mStatus(CONN_NOT_CONNECTED)
 {
   NS_ASSERTION(NS_IsMainThread(), "Not running on main thread");
@@ -595,6 +657,13 @@ nsWebSocketEstablishedConnection::PostData(nsCString *aBuffer,
                                            PRBool aIsMessage)
 {
   NS_ASSERTION(NS_IsMainThread(), "Not running on main thread");
+
+  if (mStatus == CONN_CLOSED) {
+    NS_ASSERTION(mOwner, "Posting data after disconnecting the websocket!");
+    // the tcp connection has been closed, but the main thread hasn't received
+    // the event for disconnecting the object yet.
+    return NS_BASE_STREAM_CLOSED;
+  }
 
   MutexAutoLock lockOut(mLockOutgoingMessages);
 
@@ -633,28 +702,28 @@ nsWebSocketEstablishedConnection::PostMessage(const nsString& aMessage)
 
   nsCOMPtr<nsICharsetConverterManager> ccm =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
 
   nsCOMPtr<nsIUnicodeEncoder> converter;
   rv = ccm->GetUnicodeEncoder("UTF-8", getter_AddRefs(converter));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
 
   rv = converter->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace,
                                          nsnull, UTF_8_REPLACEMENT_CHAR);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
 
   PRInt32 inLen = aMessage.Length();
   PRInt32 maxLen;
   rv = converter->GetMaxLength(aMessage.BeginReading(), inLen, &maxLen);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
   maxLen += 2;   // 2 bytes for START_BYTE_OF_MESSAGE and END_BYTE_OF_MESSAGE
 
   nsAutoPtr<nsCString> buf(new nsCString());
-  NS_ENSURE_TRUE(buf.get(), NS_ERROR_OUT_OF_MEMORY);
+  ENSURE_TRUE_AND_FAIL_IF_FAILED(buf.get(), NS_ERROR_OUT_OF_MEMORY);
 
   buf->SetLength(maxLen);
-  NS_ENSURE_TRUE(buf->Length() == static_cast<PRUint32>(maxLen),
-                 NS_ERROR_OUT_OF_MEMORY);
+  ENSURE_TRUE_AND_FAIL_IF_FAILED(buf->Length() == static_cast<PRUint32>(maxLen),
+                                 NS_ERROR_OUT_OF_MEMORY);
 
   char* start = buf->BeginWriting();
   *start = static_cast<char>(START_BYTE_OF_MESSAGE);
@@ -678,10 +747,13 @@ nsWebSocketEstablishedConnection::PostMessage(const nsString& aMessage)
   outLen += 2;
 
   buf->SetLength(outLen);
-  NS_ENSURE_TRUE(buf->Length() == static_cast<PRUint32>(outLen),
-                 NS_ERROR_UNEXPECTED);
+  ENSURE_TRUE_AND_FAIL_IF_FAILED(buf->Length() == static_cast<PRUint32>(outLen),
+                                 NS_ERROR_UNEXPECTED);
 
-  return PostData(buf.forget(), PR_TRUE);
+  rv = PostData(buf.forget(), PR_TRUE);
+  ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
+
+  return NS_OK;
 }
 
 IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(DoInitialRequest)
@@ -695,35 +767,107 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(DoInitialRequest)
   // GET resource HTTP/1.1
   buf->AppendLiteral("GET ");
   buf->Append(mOwner->mResource);
-  buf->AppendLiteral(" HTTP/1.1\r\n"
-                     "Upgrade: WebSocket\r\n"
-                     "Connection: Upgrade\r\n");
+  buf->AppendLiteral(" HTTP/1.1\r\n");
 
-  // Host
-  buf->AppendLiteral("Host: ");
-  buf->Append(mOwner->mAsciiHost);
-  buf->AppendLiteral(":");
-  buf->AppendInt(mOwner->mPort);
-  buf->AppendLiteral("\r\n");
+  nsCAutoString key_1, key_2, key_3;
+  rv = GenerateRequestKeys(key_1, key_2, key_3);
+  CHECK_SUCCESS_AND_FAIL_IF_FAILED(rv);
 
-  // Origin
-  buf->AppendLiteral("Origin: ");
-  buf->Append(mOwner->mOrigin);
-  buf->AppendLiteral("\r\n");
-  // WebSocket-Protocol
-  if (!mOwner->mProtocol.IsEmpty()) {
-    buf->AppendLiteral("WebSocket-Protocol: ");
-    buf->Append(mOwner->mProtocol);
-    buf->AppendLiteral("\r\n");
+  // the headers should be sent in a random order
+
+  enum eRequestHeader { upgradeHeader = 0, connectionHeader, hostHeader,
+                        originHeader, secWebSocketProtocolHeader,
+                        authorizationHeaders, cookieHeaders,
+                        secWebSocketKey1Header, secWebSocketKey2Header,
+                        numberRequestHeaders };
+  nsAutoTArray<PRUint32, numberRequestHeaders> headersToSend;
+  for (PRUint32 i = 0; i < numberRequestHeaders; ++i) {
+    headersToSend.AppendElement(i);
   }
-  // Authorization
-  rv = AddAuthorizationHeaders(*buf, PR_FALSE);
-  CHECK_SUCCESS_AND_FAIL_IF_FAILED(rv);
-  // Cookie
-  rv = AddCookiesToRequest(*buf);
-  CHECK_SUCCESS_AND_FAIL_IF_FAILED(rv);
-  // CR LF
+
+  while (!headersToSend.IsEmpty()) {
+    PRUint8 headerPosToSendNow = random() % headersToSend.Length();
+    eRequestHeader headerToSendNow =
+      static_cast<eRequestHeader>(headersToSend[headerPosToSendNow]);
+
+    switch (headerToSendNow)
+    {
+      case upgradeHeader:
+      {
+        buf->AppendLiteral("Upgrade: WebSocket\r\n");
+      }
+      break;
+
+      case connectionHeader:
+      {
+        buf->AppendLiteral("Connection: Upgrade\r\n");
+      }
+      break;
+
+      case hostHeader:
+      {
+        buf->AppendLiteral("Host: ");
+        buf->Append(mOwner->mAsciiHost);
+        buf->AppendLiteral(":");
+        buf->AppendInt(mOwner->mPort);
+        buf->AppendLiteral("\r\n");
+      }
+      break;
+
+      case originHeader:
+      {
+        buf->AppendLiteral("Origin: ");
+        buf->Append(mOwner->mOrigin);
+        buf->AppendLiteral("\r\n");
+      }
+      break;
+
+      case secWebSocketProtocolHeader:
+      {
+        if (!mOwner->mProtocol.IsEmpty()) {
+          buf->AppendLiteral("Sec-WebSocket-Protocol: ");
+          buf->Append(mOwner->mProtocol);
+          buf->AppendLiteral("\r\n");
+        }
+      }
+      break;
+
+      case authorizationHeaders:
+      {
+        rv = AddAuthorizationHeaders(*buf, PR_FALSE);
+        CHECK_SUCCESS_AND_FAIL_IF_FAILED(rv);
+      }
+      break;
+
+      case cookieHeaders:
+      {
+        rv = AddCookiesToRequest(*buf);
+        CHECK_SUCCESS_AND_FAIL_IF_FAILED(rv);
+      }
+      break;
+
+      case secWebSocketKey1Header:
+      {
+        buf->AppendLiteral("Sec-WebSocket-Key1: ");
+        buf->Append(key_1);
+        buf->AppendLiteral("\r\n");
+      }
+      break;
+
+      case secWebSocketKey2Header:
+      {
+        buf->AppendLiteral("Sec-WebSocket-Key2: ");
+        buf->Append(key_2);
+        buf->AppendLiteral("\r\n");
+      }
+      break;
+    }
+
+    headersToSend.RemoveElementAt(headerPosToSendNow);
+  }
+
   buf->AppendLiteral("\r\n");
+  buf->Append(key_3);
 
   mStatus = CONN_SENDING_INITIAL_REQUEST;
 
@@ -759,6 +903,9 @@ GetHttpResponseCode(const nsCString& aLine, PRUint32 aLen,
         responseCodeReadingState = 2;
       } else if (aLine[i] >= '0' && aLine[i] <= '9') {
         responseCode = 10 * responseCode + (aLine[i] - '0');
+        if (responseCode > 999) { // the response code must be three digits long
+          return NS_ERROR_UNEXPECTED;
+        }
       } else {
         return NS_ERROR_UNEXPECTED;
       }
@@ -819,34 +966,39 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
     }
     break;
 
+    case CONN_SENDING_ACK_CLOSE_FRAME:
+    case CONN_CLOSED:
+    {
+      mBytesInBuffer = 0;
+    }
+    break;
+
     case CONN_WAITING_RESPONSE_FOR_INITIAL_REQUEST:
     {
-      const char strResponseCheck[] =
-        "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
-        "Upgrade: WebSocket\r\n"
-        "Connection: Upgrade\r\n";
-      PRUint32 lengthStr = NS_ARRAY_LENGTH(strResponseCheck) - 1;
+      PRUint32 statusCode, lengthStr;
 
-      if (mBytesInBuffer < lengthStr) {
-        return NS_OK;
+      rv = GetHttpResponseCode(mBuffer, mBytesInBuffer, &statusCode,
+                               &lengthStr);
+      if (rv != NS_ERROR_IN_PROGRESS) {
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+
+        if (statusCode != 101) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        mReadingProxyConnectResponse = PR_FALSE;
+        mAuthenticating = PR_FALSE;
+
+        mStatus = CONN_READING_FIRST_CHAR_OF_RESPONSE_HEADER_NAME;
+        mBuffer.Cut(0, lengthStr);
+        mBytesInBuffer -= lengthStr;
+
+        // we have just received the server response. We must cancel this timer
+        // or it will fail the connection.
+        mInitialServerResponseTimer->Cancel();
+
+        return HandleNewInputString(0);
       }
-
-      if (memcmp(mBuffer.BeginReading(), strResponseCheck, lengthStr)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      mReadingProxyConnectResponse = PR_FALSE;
-      mAuthenticating = PR_FALSE;
-
-      mStatus = CONN_READING_FIRST_CHAR_OF_RESPONSE_HEADER_NAME;
-      mBuffer.Cut(0, lengthStr);
-      mBytesInBuffer -= lengthStr;
-
-      // we have just received the server response. We must cancel this timer
-      // or it will fail the connection.
-      mInitialServerResponseTimer->Cancel();
-
-      return HandleNewInputString(0);
     }
     break;
 
@@ -918,16 +1070,18 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
           headerPos = kProxyAuthenticatePos;
         }
       } else {
-        if (headerName.LowerCaseEqualsLiteral("websocket-origin")) {
-          headerPos = kWebSocketOriginPos;
-        } else if (headerName.LowerCaseEqualsLiteral("websocket-location")) {
-          headerPos = kWebSocketLocationPos;
-        } else if (headerName.LowerCaseEqualsLiteral("websocket-protocol")) {
-          headerPos = kWebSocketProtocolPos;
+        if (headerName.LowerCaseEqualsLiteral("upgrade")) {
+          headerPos = kUpgradePos;
+        } else if (headerName.LowerCaseEqualsLiteral("connection")) {
+          headerPos = kConnectionPos;
+        } else if (headerName.LowerCaseEqualsLiteral("sec-websocket-origin")) {
+          headerPos = kSecWebSocketOriginPos;
+        } else if (headerName.LowerCaseEqualsLiteral("sec-websocket-location")) {
+          headerPos = kSecWebSocketLocationPos;
+        } else if (headerName.LowerCaseEqualsLiteral("sec-websocket-protocol")) {
+          headerPos = kSecWebSocketProtocolPos;
         } else if (headerName.LowerCaseEqualsLiteral("set-cookie")) {
           headerPos = kSetCookiePos;
-        } else if (headerName.LowerCaseEqualsLiteral("set-cookie2")) {
-          headerPos = kSetCookie2Pos;
         }
       }
       if (headerPos == -1 && headerName.LowerCaseEqualsLiteral("server")) {
@@ -970,12 +1124,32 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
         return DoInitialRequest();
       }
 
+      mStatus = CONN_READING_CHALLENGE_RESPONSE;
+
+      mBuffer.Cut(0, aStart + 1);
+      mBytesInBuffer -= aStart + 1;
+      return HandleNewInputString(0);
+    }
+
+    case CONN_READING_CHALLENGE_RESPONSE:
+    {
+      NS_ENSURE_STATE(aStart == 0);
+
+      if (mBytesInBuffer < 16) {
+        return NS_OK;
+      }
+
+      const nsCSubstring& receivedMD5Challenge = Substring(mBuffer, 0, 16);
+      if (!mExpectedMD5Challenge.Equals(receivedMD5Challenge)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
       mStatus = CONN_CONNECTED_AND_READY;
       rv = Connected();
       NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
-      mBuffer.Cut(0, aStart + 1);
-      mBytesInBuffer -= aStart + 1;
+      mBuffer.Cut(0, aStart + 16);
+      mBytesInBuffer -= aStart + 16;
       return HandleNewInputString(0);
     }
 
@@ -998,6 +1172,7 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
     case CONN_HIGH_BIT_OF_FRAME_TYPE_SET:
     {
       PRUint32 i;
+      PRUint8 frameType = mBuffer[0];
       for (i = aStart; i < mBytesInBuffer; ++i) {
         PRUint8 b, bv;
         b = mBuffer[i];
@@ -1009,6 +1184,18 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
         mLengthToDiscard = mLengthToDiscard * 128 + bv;
 
         if (!IS_HIGH_BIT_OF_BYTE_SET(b)) {
+          // check if it is the close frame
+          if (mLengthToDiscard == 0 && frameType == START_BYTE_OF_CLOSE_FRAME) {
+            mBytesInBuffer = 0;
+            if (SentAlreadyTheCloseFrame()) {
+              mClosedCleanly = PR_TRUE;
+              mStatus = CONN_CLOSED;
+            } else {
+              mStatus = CONN_SENDING_ACK_CLOSE_FRAME;
+            }
+            return Close();
+          }
+          FrameError();
           mStatus = CONN_READING_AND_DISCARDING_LENGTH_BYTES;
           return HandleNewInputString(i + 1);
         }
@@ -1043,16 +1230,16 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
           if (frameType == START_BYTE_OF_MESSAGE) {
             // get the message, without the START_BYTE_OF_MESSAGE and
             // END_BYTE_OF_MESSAGE bytes
-            nsCString* dataMessage = new nsCString();
-            NS_ENSURE_TRUE(dataMessage, NS_ERROR_OUT_OF_MEMORY);
-            *dataMessage = Substring(mBuffer, 1, i - 1);
+            nsAutoPtr<nsCString> dataMessage(new nsCString());
+            NS_ENSURE_TRUE(dataMessage.get(), NS_ERROR_OUT_OF_MEMORY);
+            dataMessage->Assign(Substring(mBuffer, 1, i - 1));
 
             // push the new message onto our stack
             {
               MutexAutoLock lockIn(mLockReceivedMessages);
 
               PRInt32 sizeBefore = mReceivedMessages.GetSize();
-              mReceivedMessages.Push(dataMessage);
+              mReceivedMessages.Push(dataMessage.forget());
               NS_ENSURE_TRUE(mReceivedMessages.GetSize() == sizeBefore + 1,
                              NS_ERROR_OUT_OF_MEMORY);
             }
@@ -1060,6 +1247,8 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
             // and dispatch it
             rv = DispatchNewMessage();
             NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+          } else {
+            FrameError();
           }
 
           mBuffer.Cut(0, i + 1);
@@ -1135,6 +1324,108 @@ nsWebSocketEstablishedConnection::AddCookiesToRequest(nsCString& aStr)
   return NS_OK;
 }
 
+void
+nsWebSocketEstablishedConnection::GenerateSecKey(nsCString& aKey,
+                                                 PRUint32 *aNumber)
+{
+  PRUint32 i;
+
+  PRUint32 spaces = random() % 12 + 1;
+  PRUint32 max = PR_UINT32_MAX / spaces;
+  PRUint32 number = random() % max;
+  PRUint32 product = number * spaces;
+
+  nsCAutoString key;
+
+  key.AppendInt(product);
+
+  // Insert between one and twelve random characters from the ranges
+  // U+0021 to U+002F and U+003A to U+007E into the key at random
+  // positions.
+  PRUint32 numberOfCharsToInsert = random() % 12 + 1;
+  for (i = 0; i < numberOfCharsToInsert; ++i) {
+    PRUint32 posToInsert = random() % key.Length();
+    char charToInsert =
+      random() % 2 == 0 ?
+        static_cast<char>(0x21 + (random() % (0x2F - 0x21 + 1))) :
+        static_cast<char>(0x3A + (random() % (0x7E - 0x3A + 1)));
+
+    key.Insert(charToInsert, posToInsert);
+  }
+
+  // Insert /spaces/ U+0020 SPACE characters into the key at random
+  // positions other than the start or end of the string.
+  for (i = 0; i < spaces; ++i) {
+    PRUint32 posToInsert = random() % (key.Length() - 1) + 1;
+    key.Insert(static_cast<char>(0x20), posToInsert);
+  }
+
+  aKey = key;
+  *aNumber = number;
+}
+
+nsresult
+nsWebSocketEstablishedConnection::GenerateRequestKeys(nsCString& aKey1,
+                                                      nsCString& aKey2,
+                                                      nsCString& aKey3)
+{
+  nsresult rv;
+  PRUint32 i;
+
+  nsCAutoString key_1;
+  PRUint32 number_1;
+
+  nsCAutoString key_2;
+  PRUint32 number_2;
+
+  // generate the sec-keys headers values
+  GenerateSecKey(key_1, &number_1);
+  GenerateSecKey(key_2, &number_2);
+
+  // key3 must be a string consisting of eight random bytes
+  nsCAutoString key_3;
+  for (i = 0; i < 8; ++i) {
+    // get a byte between 1 and 255. 0x00 was discarted to prevent possible
+    // issues in ws servers. 
+    key_3 += static_cast<char>(random() % 0xff + 1);
+  }
+
+  // since we have the keys, we calculate the server md5 challenge response,
+  // which is the md5 string of the concatenation of /number_1/, expressed as
+  // a big-endian 32 bit integer, /number_2/, expressed as a big-endian
+  // 32 bit integer, and the eight bytes of /key_3/
+
+  nsCOMPtr<nsICryptoHash> md5CryptoHash =
+    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = md5CryptoHash->Init(nsICryptoHash::MD5);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint8 data[16];
+  for (i = 1; i <= 4; ++i) {
+    data[i - 1] = static_cast<PRUint8>(number_1 >> (32 - i * 8));
+  }
+  for (i = 1; i <= 4; ++i) {
+    data[i + 3] = static_cast<PRUint8>(number_2 >> (32 - i * 8));
+  }
+  for (i = 0; i < 8; ++i) {
+    data[i + 8] = static_cast<PRUint8>(key_3[i]);
+  }
+
+  rv = md5CryptoHash->Update(data, 16);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = md5CryptoHash->Finish(PR_FALSE, mExpectedMD5Challenge);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aKey1 = key_1;
+  aKey2 = key_2;
+  aKey3 = key_3;
+
+  return NS_OK;
+}
+
 PRBool
 nsWebSocketEstablishedConnection::UsingHttpProxy()
 {
@@ -1189,9 +1480,13 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(Connected)
 }
 IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_END
 
-IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(CloseOwner)
+IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(FrameError)
 {
-  mOwner->Close();
+  nsresult rv =
+    mOwner->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch the error event");
+  }
 }
 IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_END
 
@@ -1212,48 +1507,9 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(DispatchNewMessage)
       data = static_cast<nsCString*>(mReceivedMessages.PopFront());
     }
 
-    nsCOMPtr<nsIDocument> doc =
-       nsContentUtils::GetDocumentFromScriptContext(mOwner->mScriptContext);
-    rv = mOwner->CheckInnerWindowCorrectness();
-    if (NS_FAILED(rv) || !doc) {
-      continue;
-    }
-
-    // create an event that uses the MessageEvent interface,
-    // which does not bubble, is cancelable, and has no default action
-
-    nsCOMPtr<nsIDOMEvent> event;
-    rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
-                                        NS_LITERAL_STRING("messageevent"),
-                                        getter_AddRefs(event));
+    rv = mOwner->CreateAndDispatchMessageEvent(data);
     if (NS_FAILED(rv)) {
-      NS_WARNING("failed creating event");
-      return;
-    }
-
-    nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
-    rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                        PR_FALSE, PR_FALSE,
-                                        NS_ConvertUTF8toUTF16(*data),
-                                        NS_ConvertUTF8toUTF16(mOwner->mOrigin),
-                                        EmptyString(), nsnull);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("failed initializing message event");
-      return;
-    }
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-    rv = privateEvent->SetTrusted(PR_TRUE);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("failed trusting event");
-      return;
-    }
-
-    rv = nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(mOwner),
-                                             nsnull, event, nsnull, nsnull);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("failed dispatching message event");
-      return;
+      NS_WARNING("Failed to dispatch the message event");
     }
   }
 }
@@ -1344,6 +1600,8 @@ nsWebSocketEstablishedConnection::DoConnect()
 
   nsresult rv;
 
+  mStatus = CONN_CONNECTING;
+
   rv = AddWSConnecting();
   ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
 
@@ -1398,7 +1656,7 @@ nsWebSocketEstablishedConnection::DoConnect()
   }
 
   nsAutoPtr<nsCString> buf(new nsCString());
-  NS_ENSURE_TRUE(buf.get(), NS_ERROR_OUT_OF_MEMORY);
+  ENSURE_TRUE_AND_FAIL_IF_FAILED(buf.get(), NS_ERROR_OUT_OF_MEMORY);
 
   nsString strRequestTmp;
 
@@ -1436,14 +1694,14 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(AddWSConnecting)
 {
 #ifdef DEBUG
   PRUint32 index =
-    sWSsConnecting->BinaryIndexOf(this, nsNetAddressComparator());
+    sWSsConnecting->BinaryIndexOf(this, nsWSNetAddressComparator());
   NS_ASSERTION(index == nsTArray<PRNetAddr>::NoIndex,
                "The ws connection shouldn't be already added in the "
                "serialization list.");
 #endif
 
   PRBool inserted =
-    !!(sWSsConnecting->InsertElementSorted(this, nsNetAddressComparator()));
+    !!(sWSsConnecting->InsertElementSorted(this, nsWSNetAddressComparator()));
   NS_ASSERTION(inserted, "Couldn't insert the ws connection into the "
                          "serialization list.");
 }
@@ -1451,8 +1709,11 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_END
 
 IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(RemoveWSConnecting)
 {
+  if (mStatus == CONN_NOT_CONNECTED) {
+    return;
+  }
   PRUint32 index =
-    sWSsConnecting->BinaryIndexOf(this, nsNetAddressComparator());
+    sWSsConnecting->BinaryIndexOf(this, nsWSNetAddressComparator());
   if (index != nsTArray<PRNetAddr>::NoIndex) {
     sWSsConnecting->RemoveElementAt(index);
   }
@@ -1475,7 +1736,7 @@ nsWebSocketEstablishedConnection::TryConnect(nsITimer* aTimer,
   }
 
   PRUint32 index = sWSsConnecting->BinaryIndexOf(thisObject,
-                                                 nsNetAddressComparator());
+                                                 nsWSNetAddressComparator());
   if (index != nsTArray<PRNetAddr>::NoIndex) {
     // try again after TIMEOUT_TRY_CONNECT_AGAIN second
     rv = thisObject->mTryConnectTimer->
@@ -1506,6 +1767,23 @@ nsWebSocketEstablishedConnection::
   thisObject->FailConnection();
 }
 
+// static
+void
+nsWebSocketEstablishedConnection::TimerForceCloseCallback(nsITimer* aTimer,
+                                                          void* aClosure)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Not running on main thread");
+
+  nsRefPtr<nsWebSocketEstablishedConnection> thisObject =
+    static_cast<nsWebSocketEstablishedConnection*>(aClosure);
+
+  if (!thisObject->mOwner) { // we have been disconnected
+    return;
+  }
+
+  thisObject->ForceClose();
+}
+
 nsresult
 nsWebSocketEstablishedConnection::ProcessHeaders()
 {
@@ -1523,16 +1801,28 @@ nsWebSocketEstablishedConnection::ProcessHeaders()
     return NS_OK;
   }
 
-  // test the websocket-origin header
+  // test the upgrade header
 
-  nsCString responseOriginHeader = mHeaders[kWebSocketOriginPos];
+  if (!mHeaders[kUpgradePos].EqualsLiteral("WebSocket")) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // test the connection header
+
+  if (!mHeaders[kConnectionPos].LowerCaseEqualsLiteral("upgrade")) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // test the sec-websocket-origin header
+
+  nsCString responseOriginHeader = mHeaders[kSecWebSocketOriginPos];
   ToLowerCase(responseOriginHeader);
 
   if (!responseOriginHeader.Equals(mOwner->mOrigin)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // test the websocket-location header
+  // test the sec-websocket-location header
 
   nsCString validWebSocketLocation1, validWebSocketLocation2;
   validWebSocketLocation1.Append(mOwner->mSecure ? "wss://" : "ws://");
@@ -1550,14 +1840,14 @@ nsWebSocketEstablishedConnection::ProcessHeaders()
     validWebSocketLocation2.Append(mOwner->mResource);
   }
 
-  if (!mHeaders[kWebSocketLocationPos].Equals(validWebSocketLocation1) &&
-      !mHeaders[kWebSocketLocationPos].Equals(validWebSocketLocation2)) {
+  if (!mHeaders[kSecWebSocketLocationPos].Equals(validWebSocketLocation1) &&
+      !mHeaders[kSecWebSocketLocationPos].Equals(validWebSocketLocation2)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // handle the websocket-protocol header
+  // handle the sec-websocket-protocol header
   if (!mOwner->mProtocol.IsEmpty() &&
-      !mHeaders[kWebSocketProtocolPos].
+      !mHeaders[kSecWebSocketProtocolPos].
         Equals(mOwner->mProtocol)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1568,8 +1858,6 @@ nsWebSocketEstablishedConnection::ProcessHeaders()
     rv = HandleSetCookieHeader();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // TODO: handle the set-cookie2 header
 
   return NS_OK;
 }
@@ -1652,10 +1940,85 @@ nsWebSocketEstablishedConnection::PrintErrorOnConsole(const char *aBundleURI,
   return NS_OK;
 }
 
+IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(Close)
+{
+  nsresult rv;
+
+  if (mOwner->mReadyState == nsIWebSocket::CONNECTING) {
+    // we must not convey any failure information to scripts, so we just
+    // disconnect and maintain the owner WebSocket object in the CONNECTING
+    // state.
+    Disconnect();
+    return;
+  }
+
+  mOwner->SetReadyState(nsIWebSocket::CLOSING);
+  if (!mCloseFrameServerResponseTimer) {
+    mCloseFrameServerResponseTimer =
+      do_CreateInstance("@mozilla.org/timer;1", &rv);
+
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to create mCloseFrameServerResponseTimer.");
+    } else {
+      rv = mCloseFrameServerResponseTimer->
+        InitWithFuncCallback(TimerForceCloseCallback, this,
+                             TIMEOUT_WAIT_FOR_CLOSING, nsITimer::TYPE_ONE_SHOT);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to start the ForceClose timeout.");
+      }
+    }
+  }
+
+  if (mStatus == CONN_CLOSED) {
+    mOwner->SetReadyState(nsIWebSocket::CLOSED);
+    Disconnect();
+  } else if (!mPostedCloseFrame) {
+    nsAutoPtr<nsCString> closeFrame(new nsCString());
+    if (!closeFrame.get()) {
+      return;
+    }
+
+    closeFrame->SetLength(2);
+    if (closeFrame->Length() != 2) {
+      return;
+    }
+
+    closeFrame->SetCharAt(START_BYTE_OF_CLOSE_FRAME, 0);
+    closeFrame->SetCharAt(END_BYTE_OF_CLOSE_FRAME, 1);
+
+    rv = PostData(closeFrame.forget(), PR_FALSE);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to post the close frame");
+      return;
+    }
+
+    mPostedCloseFrame = PR_TRUE;
+  } else {
+    // Probably failed to send the close frame. Just disconnect.
+    Disconnect();
+  }
+}
+IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_END
+
+void
+nsWebSocketEstablishedConnection::ForceClose()
+{
+  if (mOwner->mReadyState == nsIWebSocket::CONNECTING) {
+    // we must not convey any failure information to scripts, so we just
+    // disconnect and maintain the owner WebSocket object in the CONNECTING
+    // state.
+    Disconnect();
+    return;
+  }
+  mOwner->SetReadyState(nsIWebSocket::CLOSING);
+  mOwner->SetReadyState(nsIWebSocket::CLOSED);
+  Disconnect();
+}
+
 IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(FailConnection)
 {
   nsresult rv;
-  nsAutoCloseOwner autoClose(this);
+  nsWSAutoClose autoClose(this);
 
   if (mFailureStatus == NS_OK) {
     mFailureStatus = NS_ERROR_UNEXPECTED;
@@ -1715,6 +2078,11 @@ nsWebSocketEstablishedConnection::Disconnect()
     if (mInitialServerResponseTimer) {
       mInitialServerResponseTimer->Cancel();
       mInitialServerResponseTimer = nsnull;
+    }
+
+    if (mCloseFrameServerResponseTimer) {
+      mCloseFrameServerResponseTimer->Cancel();
+      mCloseFrameServerResponseTimer = nsnull;
     }
 
     if (mProxyResolveCancelable) {
@@ -1940,13 +2308,7 @@ nsWebSocketEstablishedConnection::Cancel(nsresult aStatus)
 
   mFailureStatus = aStatus;
 
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &nsWebSocketEstablishedConnection::CloseOwner);
-  if (event) {
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-  }
-
-  return NS_OK;
+  return Close();
 }
 
 NOT_IMPLEMENTED_IF_FUNC_0(Suspend)
@@ -2126,7 +2488,7 @@ nsWebSocketEstablishedConnection::OnAuthCancelled(PRBool userCancel)
     return FailConnection();
   }
 
-  return CloseOwner();
+  return Close();
 }
 
 //-----------------------------------------------------------------------------
@@ -2139,6 +2501,10 @@ nsWebSocketEstablishedConnection::OnLookupComplete(nsICancelable *aRequest,
                                                    nsresult       aStatus)
 {
   NS_ASSERTION(NS_IsMainThread(), "Not running on main thread");
+
+  if (!mOwner) {
+    return NS_ERROR_ABORT;
+  }
 
   mDNSRequest = nsnull;
   mFailureStatus = aStatus;
@@ -2238,7 +2604,12 @@ nsWebSocketEstablishedConnection::OnInputStreamReady(nsIAsyncInputStream *aStrea
         // If we are asking for credentials then the old connection has been
         // closed. In this case we have to reset the WebSocket, not Close it.
         if (mStatus != CONN_RETRYING_TO_AUTHENTICATE) {
-          CloseOwner();
+          mStatus = CONN_CLOSED;
+          if (mStatus < CONN_CONNECTED_AND_READY) {
+            FailConnection();
+          } else {
+            Close();
+          }
         }
         mFailureStatus = NS_BASE_STREAM_CLOSED;
         return NS_BASE_STREAM_CLOSED;
@@ -2318,7 +2689,12 @@ nsWebSocketEstablishedConnection::OnOutputStreamReady(nsIAsyncOutputStream *aStr
           ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
 
           if (written == 0) {
-            CloseOwner();
+            mStatus = CONN_CLOSED;
+            if (mStatus < CONN_CONNECTED_AND_READY) {
+              FailConnection();
+            } else {
+              Close();
+            }
             mFailureStatus = NS_BASE_STREAM_CLOSED;
             return NS_BASE_STREAM_CLOSED;
           }
@@ -2362,6 +2738,13 @@ nsWebSocketEstablishedConnection::OnOutputStreamReady(nsIAsyncOutputStream *aStr
         rv = mSocketOutput->AsyncWait(this, 0, 0, gWebSocketThread);
         ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
       } else {
+        if (mStatus == CONN_SENDING_ACK_CLOSE_FRAME &&
+            SentAlreadyTheCloseFrame()) {
+          mClosedCleanly = PR_TRUE;
+          mStatus = CONN_CLOSED;
+          return Close();
+        }
+
         if (mStatus == CONN_SENDING_INITIAL_REQUEST ||
             mStatus == CONN_CONNECTING_TO_HTTP_PROXY) {
           if (mStatus == CONN_SENDING_INITIAL_REQUEST) {
@@ -2481,10 +2864,10 @@ NS_IMPL_RELEASE_INHERITED(nsWebSocket, nsDOMEventTargetWrapperCache)
  */
 NS_IMETHODIMP
 nsWebSocket::Initialize(nsISupports* aOwner,
-                        JSContext* cx,
-                        JSObject* obj,
-                        PRUint32 argc,
-                        jsval* argv)
+                        JSContext* aContext,
+                        JSObject* aObject,
+                        PRUint32 aArgc,
+                        jsval* aArgv)
 {
   nsAutoString urlParam, protocolParam;
 
@@ -2494,21 +2877,21 @@ nsWebSocket::Initialize(nsISupports* aOwner,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (argc != 1 && argc != 2) {
+  if (aArgc != 1 && aArgc != 2) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  JSAutoRequest ar(cx);
+  JSAutoRequest ar(aContext);
 
-  JSString* jsstr = JS_ValueToString(cx, argv[0]);
+  JSString* jsstr = JS_ValueToString(aContext, aArgv[0]);
   if (!jsstr) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
   urlParam.Assign(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(jsstr)),
                   JS_GetStringLength(jsstr));
 
-  if (argc == 2) {
-    jsstr = JS_ValueToString(cx, argv[1]);
+  if (aArgc == 2) {
+    jsstr = JS_ValueToString(aContext, aArgv[1]);
     if (!jsstr) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
@@ -2556,49 +2939,162 @@ nsWebSocket::EstablishConnection()
   return NS_OK;
 }
 
-nsresult
-nsWebSocket::SetReadyState(PRInt32 aNewReadyState)
+class nsWSCloseEvent : public nsRunnable
 {
-  if (mReadyState == aNewReadyState) {
-    return NS_OK;
+public:
+  nsWSCloseEvent(nsWebSocket *aWebSocket, PRBool aWasClean)
+    : mWebSocket(aWebSocket),
+      mWasClean(aWasClean)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    return mWebSocket->CreateAndDispatchCloseEvent(mWasClean);
   }
 
-  NS_ENSURE_TRUE((aNewReadyState == nsIWebSocket::OPEN) ||
-                 (aNewReadyState == nsIWebSocket::CLOSED),
-                 NS_ERROR_UNEXPECTED);
+private:
+  nsRefPtr<nsWebSocket> mWebSocket;
+  PRBool mWasClean;
+};
 
-  mReadyState = aNewReadyState;
-
+nsresult
+nsWebSocket::CreateAndDispatchSimpleEvent(const nsString& aName)
+{
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> doc =
-     nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
   rv = CheckInnerWindowCorrectness();
-  if (NS_FAILED(rv) || !doc) {
+  if (NS_FAILED(rv)) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDOMEvent> event;
   rv = NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // it doesn't bubble, and it isn't cancelable
-  if (mReadyState == nsIWebSocket::OPEN) {
-    rv = event->InitEvent(NS_LITERAL_STRING("open"), PR_FALSE, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else if (mReadyState == nsIWebSocket::CLOSED) {
-    rv = event->InitEvent(NS_LITERAL_STRING("close"), PR_FALSE, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-  }
+  rv = event->InitEvent(aName, PR_FALSE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
   rv = privateEvent->SetTrusted(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
-  rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+}
+
+nsresult
+nsWebSocket::CreateAndDispatchMessageEvent(nsCString *aData)
+{
+  nsresult rv;
+
+  rv = CheckInnerWindowCorrectness();
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  // create an event that uses the MessageEvent interface,
+  // which does not bubble, is not cancelable, and has no default action
+
+  nsCOMPtr<nsIDOMEvent> event;
+  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), nsnull, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
+  rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
+                                      PR_FALSE, PR_FALSE,
+                                      NS_ConvertUTF8toUTF16(*aData),
+                                      NS_ConvertUTF8toUTF16(mOrigin),
+                                      EmptyString(), nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  rv = privateEvent->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+}
+
+nsresult
+nsWebSocket::CreateAndDispatchCloseEvent(PRBool aWasClean)
+{
+  nsresult rv;
+
+  rv = CheckInnerWindowCorrectness();
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  // create an event that uses the CloseEvent interface,
+  // which does not bubble, is not cancelable, and has no default action
+
+  nsCOMPtr<nsIDOMEvent> event;
+  rv = NS_NewDOMCloseEvent(getter_AddRefs(event), nsnull, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMCloseEvent> closeEvent = do_QueryInterface(event);
+  rv = closeEvent->InitCloseEvent(NS_LITERAL_STRING("close"),
+                                  PR_FALSE, PR_FALSE,
+                                  aWasClean);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  rv = privateEvent->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+}
+
+void
+nsWebSocket::SetReadyState(PRUint16 aNewReadyState)
+{
+  nsresult rv;
+
+  if (mReadyState == aNewReadyState) {
+    return;
+  }
+
+  NS_ASSERTION((aNewReadyState == nsIWebSocket::OPEN) ||
+               (aNewReadyState == nsIWebSocket::CLOSING) ||
+               (aNewReadyState == nsIWebSocket::CLOSED),
+               "unexpected readyState");
+
+  if (aNewReadyState == nsIWebSocket::OPEN) {
+    NS_ASSERTION(mReadyState == nsIWebSocket::CONNECTING,
+                 "unexpected readyState transition");
+    mReadyState = aNewReadyState;
+
+    rv = CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("open"));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch the open event");
+    }
+    return;
+  }
+
+  if (aNewReadyState == nsIWebSocket::CLOSING) {
+    NS_ASSERTION((mReadyState == nsIWebSocket::CONNECTING) ||
+                 (mReadyState == nsIWebSocket::OPEN),
+                 "unexpected readyState transition");
+    mReadyState = aNewReadyState;
+    return;
+  }
+
+  if (aNewReadyState == nsIWebSocket::CLOSED) {
+    NS_ASSERTION(mReadyState == nsIWebSocket::CLOSING,
+                 "unexpected readyState transition");
+    mReadyState = aNewReadyState;
+
+    // The close event must be dispatched asynchronously.
+    nsCOMPtr<nsIRunnable> event =
+      new nsWSCloseEvent(this, mConnection->ClosedCleanly());
+
+    mOutgoingBufferedAmount += mConnection->GetOutgoingBufferedAmount();
+    mConnection = nsnull; // this is no longer necessary
+
+    rv = NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch the close event");
+    }
+  }
 }
 
 nsresult
@@ -2720,7 +3216,7 @@ nsWebSocket::GetURL(nsAString& aURL)
 }
 
 NS_IMETHODIMP
-nsWebSocket::GetReadyState(PRInt32 *aReadyState)
+nsWebSocket::GetReadyState(PRUint16 *aReadyState)
 {
   *aReadyState = mReadyState;
   return NS_OK;
@@ -2752,6 +3248,7 @@ nsWebSocket::GetBufferedAmount(PRUint32 *aBufferedAmount)
   }
 
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(open, mOnOpenListener)
+NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(error, mOnErrorListener)
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(close, mOnCloseListener)
 
@@ -2779,30 +3276,39 @@ nsWebSocket::Send(const nsAString& aData, PRBool *aRet)
     }
   }
 
-  if (mReadyState == nsIWebSocket::CLOSED) {
+  if (mReadyState == nsIWebSocket::CLOSING ||
+      mReadyState == nsIWebSocket::CLOSED) {
     mOutgoingBufferedAmount += NS_ConvertUTF16toUTF8(aData).Length();
     return NS_OK;
   }
 
   nsresult rv = mConnection->PostMessage(PromiseFlatString(aData));
   *aRet = NS_SUCCEEDED(rv);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebSocket::Close()
 {
-  if (mReadyState == nsIWebSocket::CLOSED) {
+  if (mReadyState == nsIWebSocket::CLOSING ||
+      mReadyState == nsIWebSocket::CLOSED) {
     return NS_OK;
   }
 
-  if (mConnection) {
-    mOutgoingBufferedAmount = mConnection->GetOutgoingBufferedAmount();
-    mConnection->Disconnect();
-    mConnection = nsnull;
+  if (mReadyState == nsIWebSocket::CONNECTING) {
+    mConnection->FailConnection();
+
+    // We need to set the readyState here because mConnection would set it
+    // only if first connected. Also, let the two readyState changes here
+    // for future extensions (for instance an onreadystatechange event)
+    SetReadyState(nsIWebSocket::CLOSING);
+    SetReadyState(nsIWebSocket::CLOSED);
+    return NS_OK;
   }
 
-  SetReadyState(nsIWebSocket::CLOSED);
+  // mReadyState == nsIWebSocket::OPEN
+  mConnection->Close();
 
   return NS_OK;
 }
