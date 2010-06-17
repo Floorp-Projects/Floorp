@@ -93,14 +93,14 @@ NS_IMETHODIMP PlaceholderTxn::UndoTransaction(void)
 {
   // undo txns
   nsresult res = EditAggregateTxn::UndoTransaction();
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   
   if (!mStartSel) return NS_ERROR_NULL_POINTER;
 
   // now restore selection
   nsCOMPtr<nsISelection> selection;
   res = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!selection) return NS_ERROR_NULL_POINTER;
   return mStartSel->RestoreSelection(selection);
 }
@@ -110,12 +110,12 @@ NS_IMETHODIMP PlaceholderTxn::RedoTransaction(void)
 {
   // redo txns
   nsresult res = EditAggregateTxn::RedoTransaction();
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   
   // now restore selection
   nsCOMPtr<nsISelection> selection;
   res = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!selection) return NS_ERROR_NULL_POINTER;
   return mEndSel.RestoreSelection(selection);
 }
@@ -290,7 +290,7 @@ NS_IMETHODIMP PlaceholderTxn::RememberEndingSelection()
 {
   nsCOMPtr<nsISelection> selection;
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!selection) return NS_ERROR_NULL_POINTER;
   return mEndSel.SaveSelection(selection);
 }

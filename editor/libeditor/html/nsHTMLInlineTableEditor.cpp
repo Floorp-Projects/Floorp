@@ -162,7 +162,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
       anonElement) {
     nsAutoString anonclass;
     nsresult res = aElement->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable")))
       return NS_OK;
@@ -171,7 +171,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
     nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
     PRInt32 rowCount, colCount;
     res = GetTableSize(tableElement, &rowCount, &colCount);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     PRBool hideUI = PR_FALSE;
     PRBool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
@@ -239,9 +239,9 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
   GetElementOrigin(mInlineEditedCell, xCell, yCell);
 
   nsresult res = nsElement->GetOffsetWidth(&wCell);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   res = nsElement->GetOffsetHeight(&hCell);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   PRInt32 xHoriz = xCell + wCell/2;
   PRInt32 yVert  = yCell + hCell/2;
@@ -250,7 +250,7 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
   nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
   PRInt32 rowCount, colCount;
   res = GetTableSize(tableElement, &rowCount, &colCount);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   SetAnonymousElementPosition(xHoriz-10, yCell-7,  mAddColumnBeforeButton);
 #ifdef DISABLE_TABLE_DELETION

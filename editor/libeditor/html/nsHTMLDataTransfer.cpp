@@ -184,24 +184,24 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
   // Get selection
   nsCOMPtr<nsISelection>selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   
   nsTextRulesInfo ruleInfo(nsTextEditRules::kLoadHTML);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
   {
     PRBool isCollapsed;
     res = selection->GetIsCollapsed(&isCollapsed);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     // Delete Selection, but only if it isn't collapsed, see bug #106269
     if (!isCollapsed) 
     {
       res = DeleteSelection(eNone);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
 
     // Get the first range in the selection, for context:
@@ -274,7 +274,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   nsresult res;
   nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   
   // create a dom document fragment that represents the structure to paste
   nsCOMPtr<nsIDOMNode> fragmentAsNode, streamStartParent, streamEndParent;
@@ -297,7 +297,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
     // fetch the paste insertion point from our selection
     res = GetStartNodeAndOffset(selection, getter_AddRefs(targetNode), &targetOffset);
     if (!targetNode) res = NS_ERROR_FAILURE;
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
   else
   {
@@ -411,7 +411,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
   {
@@ -419,7 +419,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
     // refresh our memory...
     res = GetStartNodeAndOffset(selection, getter_AddRefs(parentNode), &offsetOfNewNode);
     if (!parentNode) res = NS_ERROR_FAILURE;
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     // Adjust position based on the first node we are going to insert.
     NormalizeEOLInsertPosition(nodeList[0], address_of(parentNode), &offsetOfNewNode);
@@ -432,7 +432,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
         !IsVisBreak(wsObj.mEndReasonNode) )
     {
       res = DeleteNode(wsObj.mEndReasonNode);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
     
     // remeber if we are in a link.  
@@ -443,9 +443,9 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
     {
       nsCOMPtr<nsIDOMNode> temp;
       res = SplitNodeDeep(parentNode, parentNode, offsetOfNewNode, &offsetOfNewNode);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       res = parentNode->GetParentNode(getter_AddRefs(temp));
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       parentNode = temp;
     }
 
@@ -654,7 +654,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
       if (!nsHTMLEditUtils::IsTable(lastInsertNode))
       {
         res = GetLastEditableLeaf(lastInsertNode, address_of(selNode));
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
         tmp = selNode;
         while (tmp && (tmp != lastInsertNode))
         {
@@ -672,14 +672,14 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
       if (IsTextNode(selNode) || (IsContainer(selNode) && !nsHTMLEditUtils::IsTable(selNode)))  
       {
         res = GetLengthOfDOMNode(selNode, (PRUint32&)selOffset);
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
       }
       else // we need to find a container for selection.  Look up.
       {
         tmp = selNode;
         res = GetNodeLocation(tmp, address_of(selNode), &selOffset);
         ++selOffset;  // want to be *after* last leaf node in paste
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
       }
       
       // make sure we don't end up with selection collapsed after an invisible break node
@@ -687,7 +687,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
       PRInt32 outVisOffset=0;
       PRInt16 visType=0;
       res = wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode), &outVisOffset, &visType);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       if (visType == nsWSRunObject::eBreak)
       {
         // we are after a break.  Is it visible?  Despite the name, 
@@ -702,7 +702,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
           // we want to be inside any inline style prior to break
           nsWSRunObject wsRunObj(this, selNode, selOffset);
           res = wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode), &outVisOffset, &visType);
-          if (NS_FAILED(res)) return res;
+          NS_ENSURE_SUCCESS(res, res);
           if (visType == nsWSRunObject::eText ||
               visType == nsWSRunObject::eNormalWS)
           {
@@ -731,9 +731,9 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
         nsCOMPtr<nsIDOMNode> leftLink;
         PRInt32 linkOffset;
         res = SplitNodeDeep(link, selNode, selOffset, &linkOffset, PR_TRUE, address_of(leftLink));
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
         res = GetNodeLocation(leftLink, address_of(selNode), &selOffset);
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
         selection->Collapse(selNode, selOffset+1);
       }
     }
@@ -1485,7 +1485,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsresult rv;
   nsCOMPtr<nsIDragService> dragService = 
            do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession)); 
@@ -1499,17 +1499,17 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   // around with cfhtml if we do.
   PRBool bHavePrivateHTMLFlavor = PR_FALSE;
   rv = dragSession->IsDataFlavorSupported(kHTMLContext, &bHavePrivateHTMLFlavor);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // Get the nsITransferable interface for getting the data from the drop
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareHTMLTransferable(getter_AddRefs(trans), bHavePrivateHTMLFlavor);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
 
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Combine any deletion and drop insertion into one transaction
   nsAutoEditBatch beginBatching(this);
@@ -1522,14 +1522,14 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   // Source doc is null if source is *not* the current editor document
   nsCOMPtr<nsIDOMDocument> srcdomdoc;
   rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 i; 
   PRBool doPlaceCaret = PR_TRUE;
   for (i = 0; i < numItems; ++i)
   {
     rv = dragSession->GetData(trans, i);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
 
     // get additional html copy hints, if present
@@ -1591,24 +1591,24 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       // Current doc is destination
       nsCOMPtr<nsIDOMDocument>destdomdoc; 
       rv = GetDocument(getter_AddRefs(destdomdoc)); 
-      if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsISelection> selection;
       rv = GetSelection(getter_AddRefs(selection));
-      if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
       if (!selection) return NS_ERROR_FAILURE;
 
       PRBool isCollapsed;
       rv = selection->GetIsCollapsed(&isCollapsed);
-      if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
       
       // Parent and offset under the mouse cursor
       rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
-      if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
       if (!newSelectionParent) return NS_ERROR_FAILURE;
 
       rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
-      if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // XXX: This userSelectNode code is a workaround for bug 195957.
       //
@@ -1631,7 +1631,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
         rv = GetNodeLocation(userSelectNode, address_of(newSelectionParent),
                              &newSelectionOffset);
 
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
         if (!newSelectionParent) return NS_ERROR_FAILURE;
       }
 
@@ -1720,7 +1720,7 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   *aTransferable = nsnull;
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
   nsresult rv = SetupDocEncoder(getter_AddRefs(docEncoder));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
   // grab a string
@@ -1731,13 +1731,13 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   {
     // encode the selection as html with contextual info
     rv = docEncoder->EncodeToStringWithContext(parents, info, buffer);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else
   {
     // encode the selection
     rv = docEncoder->EncodeToString(buffer);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // if we have an empty string, we're done; otherwise continue
@@ -1749,7 +1749,7 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = dataWrapper->SetData(buffer);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /* create html flavor transferable */
   nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1");
@@ -1759,14 +1759,14 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   {
     // Add the unicode flavor to the transferable
     rv = trans->AddDataFlavor(kUnicodeMime);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // QI the data object an |nsISupports| so that when the transferable holds
     // onto it, it will addref the correct interface.
     nsCOMPtr<nsISupports> genericDataObj(do_QueryInterface(dataWrapper));
     rv = trans->SetTransferData(kUnicodeMime, genericDataObj,
                                 buffer.Length() * sizeof(PRUnichar));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else
   {
@@ -1779,19 +1779,19 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
     infoWrapper->SetData(info);
 
     rv = trans->AddDataFlavor(kHTMLMime);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIFormatConverter> htmlConverter =
              do_CreateInstance("@mozilla.org/widget/htmlformatconverter;1");
     NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
 
     rv = trans->SetConverter(htmlConverter);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISupports> genericDataObj(do_QueryInterface(dataWrapper));
     rv = trans->SetTransferData(kHTMLMime, genericDataObj,
                                 buffer.Length() * sizeof(PRUnichar));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!parents.IsEmpty())
     {
@@ -1993,7 +1993,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool haveFlavors;
 
@@ -2007,7 +2007,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
                                            NS_ARRAY_LENGTH(textHtmlEditorFlavors),
                                            aSelectionType, &haveFlavors);
   
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   *aCanPaste = haveFlavors;
   return NS_OK;
@@ -2080,20 +2080,20 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
   // get selection
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // give rules a chance to handle or cancel
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
   {
     nsCOMPtr<nsIDOMNode> newNode;
     res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("blockquote"), getter_AddRefs(newNode));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (!newNode) return NS_ERROR_NULL_POINTER;
 
     // Try to set type=cite.  Ignore it if this fails.
@@ -2126,7 +2126,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
   // Get Clipboard Service
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Create generic Transferable for getting the data
   nsCOMPtr<nsITransferable> trans =
@@ -2304,7 +2304,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   // get selection
   nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!selection) return NS_ERROR_NULL_POINTER;
   else
   {
@@ -2315,7 +2315,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
     nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
     PRBool cancel, handled;
     rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     if (cancel) return NS_OK; // rules canceled the operation
     if (!handled)
     {
@@ -2417,7 +2417,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   // get selection
   nsCOMPtr<nsISelection> selection;
   res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!selection) return NS_ERROR_NULL_POINTER;
   else
   {
@@ -2428,12 +2428,12 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
     nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
     PRBool cancel, handled;
     res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (cancel) return NS_OK; // rules canceled the operation
     if (!handled)
     {
       res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("blockquote"), getter_AddRefs(newNode));
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       if (!newNode) return NS_ERROR_NULL_POINTER;
 
       // Try to set type=cite.  Ignore it if this fails.

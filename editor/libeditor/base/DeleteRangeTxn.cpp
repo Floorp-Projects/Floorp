@@ -196,7 +196,7 @@ NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
     result = EditAggregateTxn::DoTransaction();
   }
 
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   
   // only set selection to deletion point if editor gives permission
   PRBool bAdjustSelection;
@@ -205,7 +205,7 @@ NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
   {
     nsCOMPtr<nsISelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (!selection) return NS_ERROR_NULL_POINTER;
     result = selection->Collapse(mStartParent, mStartOffset);
   }
@@ -274,7 +274,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
   {
     nsCOMPtr<nsIDOMNodeList> children;
     result = aStartParent->GetChildNodes(getter_AddRefs(children));
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (!children) return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG
@@ -287,7 +287,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
     {
       nsCOMPtr<nsIDOMNode> child;
       result = children->Item(i, getter_AddRefs(child));
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
       if (!child) return NS_ERROR_NULL_POINTER;
 
       nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
@@ -345,7 +345,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
   if (!iter) return NS_ERROR_NULL_POINTER;
 
   nsresult result = iter->Init(mRange);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   while (!iter->IsDone() && NS_SUCCEEDED(result))
   {

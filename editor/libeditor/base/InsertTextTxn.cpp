@@ -104,7 +104,7 @@ NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsresult result = mElement->InsertData(mOffset, mStringToInsert);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   // only set selection to insertion point if editor gives permission
   PRBool bAdjustSelection;
@@ -113,7 +113,7 @@ NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
   {
     nsCOMPtr<nsISelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (!selection) return NS_ERROR_NULL_POINTER;
     result = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
     NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");

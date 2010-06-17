@@ -317,7 +317,7 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
   PRBool bMixed;
   PRUnichar *tagStr;
   nsresult rv = GetListState(aEditor,&bMixed, &tagStr);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Need to use mTagName????
   PRBool inList = (0 == nsCRT::strcmp(tagStr,
@@ -380,7 +380,7 @@ nsListItemCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
 
   PRBool bMixed, bLI, bDT, bDD;
   nsresult rv = htmlEditor->GetListItemState(&bMixed, &bLI, &bDT, &bDD);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool inList = PR_FALSE;
   if (!bMixed)
@@ -414,7 +414,7 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   rv = params->GetBooleanValue(STATE_ALL,&inList);
   if (NS_FAILED(rv)) 
     return rv;
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   if (inList)
   {
@@ -422,7 +422,7 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
     PRBool bMixed;
     PRUnichar *tagStr;
     rv = GetListState(aEditor,&bMixed, &tagStr);
-    if (NS_FAILED(rv)) return rv; 
+    NS_ENSURE_SUCCESS(rv, rv); 
     if (tagStr)
     {
       if (!bMixed)
@@ -461,7 +461,7 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
     PRBool bMixed;
     PRUnichar *tagStr;
     nsresult rv = GetListState(editor, &bMixed, &tagStr);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     *outCmdEnabled = bMixed ? PR_TRUE : (tagStr && *tagStr);
     
@@ -816,7 +816,7 @@ nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
                                          EmptyString(),
                                          &firstHas, &anyHas, &allHas,
                                          outStateString);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString tOutStateString;
   tOutStateString.AssignWithConversion(outStateString);
@@ -851,15 +851,15 @@ nsFontSizeStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
       newState.EqualsLiteral("medium")) {
     // remove any existing font size, big or small
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("size"));  
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAtom> bigAtom = do_GetAtom("big");
     rv = htmlEditor->RemoveInlineProperty(bigAtom, EmptyString());  
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAtom> smallAtom = do_GetAtom("small");
     rv = htmlEditor->RemoveInlineProperty(smallAtom, EmptyString());  
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // set the size
     rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("size"),
@@ -1150,7 +1150,7 @@ nsAbsolutePositioningCommand::ToggleState(nsIEditor *aEditor, const char* aTagNa
 
   nsCOMPtr<nsIDOMElement>  elt;
   nsresult rv = htmlEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (elt) {
     // we have to remove positioning on an element
@@ -1185,7 +1185,7 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
   if (positionedElement) {
     PRInt32 z;
     nsresult res = htmlEditor->GetElementZIndex(positionedElement, &z);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     *outCmdEnabled = (z > 0);
   }
 

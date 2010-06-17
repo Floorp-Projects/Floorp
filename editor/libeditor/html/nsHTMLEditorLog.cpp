@@ -845,7 +845,7 @@ nsHTMLEditorLog::StartLogging(nsIFile *aLogFile)
   }
 
   result = NS_NewLocalFileOutputStream(getter_AddRefs(mFileStream), aLogFile);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (mTxnMgr)
   {

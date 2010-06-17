@@ -109,7 +109,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 
   nsCOMPtr<nsIDOMNodeList> childNodes;
   nsresult result = mParent->GetChildNodes(getter_AddRefs(childNodes));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   nsCOMPtr<nsIDOMNode>refNode;
   if (childNodes)
   {
@@ -119,7 +119,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
     // -1 is sentinel value meaning "append at end"
     if (mOffset == -1) mOffset = count;
     result = childNodes->Item(mOffset, getter_AddRefs(refNode));
-    if (NS_FAILED(result)) return result; 
+    NS_ENSURE_SUCCESS(result, result); 
     // note, it's ok for mRefNode to be null.  that means append
   }
 
@@ -127,7 +127,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!resultNode) return NS_ERROR_NULL_POINTER;
 
   // only set selection to insertion point if editor gives permission
@@ -137,7 +137,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
   {
     nsCOMPtr<nsISelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (!selection) return NS_ERROR_NULL_POINTER;
     // place the selection just after the inserted element
     selection->Collapse(mParent, mOffset+1);

@@ -271,10 +271,10 @@ ContentIsInTraversalRange(nsIContent *aContent,   PRBool aIsPreMode,
   PRInt32 startRes;
   PRInt32 endRes;
   nsresult rv = nsTextServicesDocument::ComparePoints(aStartNode, aStartOffset, parentNode, indx, &startRes);
-  if (NS_FAILED(rv)) return PR_FALSE;
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = nsTextServicesDocument::ComparePoints(aEndNode,   aEndOffset,   parentNode, indx,  &endRes);
-  if (NS_FAILED(rv)) return PR_FALSE;
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   return (startRes <= 0) && (endRes >= 0);
 }
