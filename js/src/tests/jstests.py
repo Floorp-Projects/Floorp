@@ -242,13 +242,13 @@ if __name__ == '__main__':
         if OPTIONS.valgrind:
             print >> sys.stderr, "--debug and --valgrind options are mutually exclusive"
             sys.exit(2)
-        debugger_prefix = [ 'gdb', '-q', '--args' ]
+        debugger_prefix = ['gdb', '-q', '--args']
     elif OPTIONS.valgrind:
-        debugger_prefix = [ 'valgrind' ]
+        debugger_prefix = ['valgrind']
         if os.uname()[0] == 'Darwin':
-            debugger_prefix += ['--dsymutil=yes']
+            debugger_prefix.append('--dsymutil=yes')
         if OPTIONS.valgrind_args:
-            debugger_prefix += [ valgrind_args ]
+            debugger_prefix.append(OPTIONS.valgrind_args)
         # Running under valgrind is not very useful if we don't show results.
         OPTIONS.show_output = True 
     else:
