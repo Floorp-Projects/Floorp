@@ -90,24 +90,6 @@
 #include "jsobjinlines.h"
 #include "jshashtable.h"
 
-/*
- * Include the headers for mmap.
- */
-#if defined(XP_WIN)
-# include <windows.h>
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-# include <unistd.h>
-# include <sys/mman.h>
-#endif
-/* On Mac OS X MAP_ANONYMOUS is not defined. */
-#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-# define MAP_ANONYMOUS MAP_ANON
-#endif
-#if !defined(MAP_ANONYMOUS)
-# define MAP_ANONYMOUS 0
-#endif
-
 using namespace js;
 
 /*
@@ -1211,6 +1193,8 @@ ConservativeGCStackMarker::markWord(jsuword w)
         /* Make sure the thing is not on the freelist of the arena. */
         JSGCThing *cursor = ainfo->freeList;
         while (cursor) {
+            JS_ASSERT((((jsuword) cursor) & GC_ARENA_MASK) % thingSize == 0);
+            JS_ASSERT(!IsMarkedGCThing(cursor));
             /* If the cursor moves past the thing, it's not in the freelist. */
             if (thing < cursor)
                 break;
@@ -1218,6 +1202,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
             /* If we find it on the freelist, it's dead. */
             if (thing == cursor)
                 RETURN(notlive);
+            JS_ASSERT_IF(cursor->link, cursor < cursor->link);
             cursor = cursor->link;
         }
     }
@@ -1278,18 +1263,21 @@ ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
 void
 ConservativeGCStackMarker::markRoots()
 {
-    /* Do conservative scanning of the stack. */
+    /* Do conservative scanning of the stack and registers. */
     for (ThreadDataIter i(trc->context->runtime); !i.empty(); i.popFront()) {
         JSThreadData *td = i.threadData();
         ConservativeGCThreadData *ctd = &td->conservativeGC;
         if (ctd->isEnabled()) {
+            jsuword *stackMin, *stackEnd;            
 #if JS_STACK_GROWTH_DIRECTION > 0
-            JS_ASSERT(td->nativeStackBase <= ctd->nativeStackTop);
-            markRange(td->nativeStackBase, ctd->nativeStackTop);
+            stackMin = td->nativeStackBase;
+            stackEnd = ctd->nativeStackTop;
 #else
-            JS_ASSERT(td->nativeStackBase >= ctd->nativeStackTop + 1);
-            markRange(ctd->nativeStackTop + 1, td->nativeStackBase);
+            stackMin = ctd->nativeStackTop + 1;
+            stackEnd = td->nativeStackBase;
 #endif
+            JS_ASSERT(stackMin <= stackEnd);
+            markRange(stackMin, stackEnd);
             markRange(ctd->registerSnapshot.words,
                       JS_ARRAY_END(ctd->registerSnapshot.words));
         }
