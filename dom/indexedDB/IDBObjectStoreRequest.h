@@ -45,7 +45,6 @@
 #include "mozilla/dom/indexedDB/IDBTransactionRequest.h"
 
 #include "nsIIDBObjectStoreRequest.h"
-#include "DatabaseInfo.h"
 
 struct JSContext;
 
@@ -53,6 +52,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 struct ObjectStoreInfo;
 struct IndexInfo;
+struct IndexUpdateInfo;
 
 class Key
 {
@@ -203,12 +203,6 @@ private:
   Type mType;
   nsString mString;
   PRInt64 mInt;
-};
-
-struct IndexUpdateInfo
-{
-  IndexInfo info;
-  Key value;
 };
 
 class IDBObjectStoreRequest : public IDBRequest::Generator,
