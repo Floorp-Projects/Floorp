@@ -451,24 +451,6 @@
     {0x82, 0xad, 0xa6, 0xa9, 0xbc, 0x5a, 0xd5, 0x99} \
 }
 
-// component implementing nsIPrompt
-//
-// NOTE: this implementation does not have any way to correctly parent itself,
-//       it is almost always wrong to get a prompt via this interface.
-//       use nsIWindowWatcher instead whenever possible.
-//
-#define NS_DEFAULTPROMPT_CONTRACTID \
-    "@mozilla.org/network/default-prompt;1"
-
-// component implementing nsIAuthPrompt
-//
-// NOTE: this implementation does not have any way to correctly parent itself,
-//       it is almost always wrong to get an auth prompt via this interface.
-//       use nsIWindowWatcher instead whenever possible.
-//
-#define NS_DEFAULTAUTHPROMPT_CONTRACTID \
-    "@mozilla.org/network/default-auth-prompt;1"
-
 /**
  * Contract ID for a service implementing nsIURIClassifier that identifies
  * phishing and malware sites.

@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+<?xml version="1.0"?> 
+
+<!-- ***** BEGIN LICENSE BLOCK *****
  Version: MPL 1.1/GPL 2.0/LGPL 2.1
 
  The contents of this file are subject to the Mozilla Public License Version
@@ -15,8 +17,8 @@
  March 31, 1998.
 
  The Initial Developer of the Original Code is
- Mozilla.
- Portions created by the Initial Developer are Copyright (C) 2007
+ Netscape Communications Corporation.
+ Portions created by the Initial Developer are Copyright (C) 1998-1999
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
@@ -33,22 +35,21 @@
  the provisions above, a recipient may use your version of this file under
  the terms of any one of the MPL, the GPL or the LGPL.
 
- ***** END LICENSE BLOCK ***** */
+ ***** END LICENSE BLOCK ***** -->
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+<!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
+ 
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+      onload="dialogOnLoad()"
+      ondialogaccept="return dialogOK();">
 
-#infoContainer {
-  max-width: 45em;
-}
-
-#info\.body {
-  -moz-user-focus: normal;
-  -moz-user-select: text;
-  cursor: text !important;
-  white-space: pre-wrap;
-}
-
-#loginLabel, #password1Label, #password2Label {
-  text-align: right;
-}
-
+  <script type="application/javascript" src="chrome://global/content/selectDialog.js" />
+  <keyset id="dialogKeys"/>
+  <vbox style="width: 24em;margin: 5px;">
+    <label id="info.txt"/>
+    <vbox>
+      <listbox id="list" rows="4" flex="1"/>
+    </vbox>
+  </vbox>
+</dialog>
