@@ -26,11 +26,11 @@ function testWebSocket () {
   ws.onclose = function(e) {
   }
   ws.onerror = function(e) {
-    is(false, "onerror called!");
+    ok(false, "onerror called!");
     SimpleTest.finish();
   }
   ws.onmessage = function(e) {
-    is(e.data, "Hello world!");
+    is(e.data, "Hello world!", "Wrong data");
     ws.close();
     SimpleTest.finish();
   }
