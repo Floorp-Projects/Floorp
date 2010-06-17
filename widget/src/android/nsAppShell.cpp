@@ -43,6 +43,7 @@
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
 
+#include "mozilla/Services.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -231,9 +232,25 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
+        obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application-forced", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application", nsnull);
+        obsServ->NotifyObservers(nsnull, "profile-change-net-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-change-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-before-change", context.get());
         nsCOMPtr<nsIAppStartup> appSvc = do_GetService("@mozilla.org/toolkit/app-startup;1");
         if (appSvc)
             appSvc->Quit(nsIAppStartup::eForceQuit);
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_PAUSING: {
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        obsServ->NotifyObservers(nsnull, "profile-before-change", nsnull);
         break;
     }
 

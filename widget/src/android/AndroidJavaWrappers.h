@@ -429,6 +429,7 @@ public:
         DRAW = 6,
         SIZE_CHANGED = 7,
         ACTIVITY_STOPPING = 8,
+        ACTIVITY_PAUSING = 9,
         dummy_java_enum_list_end
     };
 
