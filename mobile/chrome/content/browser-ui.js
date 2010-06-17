@@ -702,10 +702,19 @@ var BrowserUI = {
     let tab = Browser.selectedTab;
     let browser = tab.browser;
 
-    if (browser.canGoBack)
+    if (browser.canGoBack) {
       browser.goBack();
-    else if (tab.owner)
+    } else if (tab.owner) {
       this.closeTab(tab);
+    }
+#ifdef ANDROID
+    else if (Browser.tabs.length == 1) {
+      this.doCommand("cmd_quit");
+    } else {
+      this.closeTab(tab);
+      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+    }
+#endif
   },
 
   handleEvent: function handleEvent(aEvent) {
