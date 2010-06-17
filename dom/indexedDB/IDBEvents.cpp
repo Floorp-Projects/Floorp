@@ -518,3 +518,106 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
   cc->SetReturnValueWasSet(PR_TRUE);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
+{
+  // This is the slow path, need to do this better once XPIDL can pass raw
+  // jsvals.
+  NS_WARNING("Using a slow path for GetResult! Fix this now!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  jsval* retval;
+  rv = cc->GetRetValPtr(&retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mJSRuntime) {
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSAutoRequest ar(cx);
+
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
+                                  "GetSuccessEvent::mCachedValue");
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    mJSRuntime = rt;
+
+    // Swap into a stack array so that we don't hang on to the strings if
+    // something fails.
+    nsTArray<Key> keys;
+    if (!mKeys.SwapElements(keys)) {
+      NS_ERROR("Failed to swap elements!");
+      return NS_ERROR_FAILURE;
+    }
+
+    JSObject* array = JS_NewArrayObject(cx, 0, NULL);
+    if (!array) {
+      NS_ERROR("Failed to make array!");
+      return NS_ERROR_FAILURE;
+    }
+
+    mCachedValue = OBJECT_TO_JSVAL(array);
+
+    if (!keys.IsEmpty()) {
+      if (!JS_SetArrayLength(cx, array, jsuint(keys.Length()))) {
+        mCachedValue = JSVAL_VOID;
+        NS_ERROR("Failed to set array length!");
+        return NS_ERROR_FAILURE;
+      }
+
+      js::AutoValueRooter value(cx);
+
+      jsint count = jsint(keys.Length());
+
+      for (jsint index = 0; index < count; index++) {
+        const Key& key = keys[index];
+        NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
+
+        if (key.IsInt()) {
+          if (!JS_NewNumberValue(cx, key.IntValue(), value.addr())) {
+            mCachedValue = JSVAL_VOID;
+            NS_ERROR("Failed to make number value!");
+            return NS_ERROR_FAILURE;
+          }
+        }
+        else if (key.IsString()) {
+          const nsString& keyString = key.StringValue();
+          JSString* str = JS_NewUCStringCopyN(cx,
+                            reinterpret_cast<const jschar*>(keyString.get()),
+                            keyString.Length());
+          if (!str) {
+            mCachedValue = JSVAL_VOID;
+            NS_ERROR("Failed to make new string value!");
+            return NS_ERROR_FAILURE;
+          }
+
+          value.set(STRING_TO_JSVAL(str));
+        }
+        else {
+          NS_NOTREACHED("Bad key!");
+        }
+
+        if (!JS_SetElement(cx, array, index, value.addr())) {
+          mCachedValue = JSVAL_VOID;
+          NS_ERROR("Failed to set array element!");
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+  }
+
+  *retval = mCachedValue;
+  cc->SetReturnValueWasSet(PR_TRUE);
+  return NS_OK;
+}
