@@ -69,8 +69,6 @@ HTML_TAG(acronym, Span)
 HTML_TAG(address, Span)
 HTML_TAG(applet, SharedObject)
 HTML_TAG(area, Area)
-HTML_TAG(article, ) // HTMLElement instance
-HTML_TAG(aside, ) // HTMLElement instance
 #if defined(MOZ_MEDIA)
 HTML_TAG(audio, Audio)
 #endif
@@ -103,7 +101,6 @@ HTML_TAG(em, Span)
 HTML_TAG(embed, SharedObject)
 HTML_TAG(fieldset, FieldSet)
 HTML_TAG(font, Font)
-HTML_TAG(footer, ) // HTMLElement instance
 HTML_TAG(form, Form)
 HTML_TAG(frame, Frame)
 HTML_TAG(frameset, FrameSet)
@@ -114,8 +111,6 @@ HTML_TAG(h4, Heading)
 HTML_TAG(h5, Heading)
 HTML_TAG(h6, Heading)
 HTML_TAG(head, Shared)
-HTML_TAG(header, ) // HTMLElement instance
-HTML_TAG(hgroup, ) // HTMLElement instance
 HTML_TAG(hr, HR)
 HTML_TAG(html, Shared)
 HTML_TAG(i, Span)
@@ -137,7 +132,6 @@ HTML_TAG(marquee, Div)
 HTML_TAG(menu, Shared)
 HTML_TAG(meta, Meta)
 HTML_TAG(multicol, Span)
-HTML_TAG(nav, ) // HTMLElement instance
 HTML_TAG(nobr, Span)
 HTML_TAG(noembed, Div)
 HTML_TAG(noframes, Div)
@@ -155,7 +149,6 @@ HTML_TAG(q, Shared)
 HTML_TAG(s, Span)
 HTML_TAG(samp, Span)
 HTML_TAG(script, Script)
-HTML_TAG(section, ) // HTMLElement instance
 HTML_TAG(select, Select)
 HTML_TAG(small, Span)
 #if defined(MOZ_MEDIA)
