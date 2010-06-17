@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is iQ.
+ * The Original Code is iq.js.
  *
  * The Initial Developer of the Original Code is
  * Ian Gilman <ian@iangilman.com>.
@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Aza Raskin <aza@mozilla.com>
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Some portions copied from:
  * jQuery JavaScript Library v1.4.2
@@ -42,9 +43,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// ##########
+// **********
 // Title: iq.js
 // jQuery, hacked down to just the bits we need, with a bunch of other stuff added.
+
 (function( window, undefined ) {
 
 var iQ = function(selector, context) {
