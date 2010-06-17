@@ -55,6 +55,7 @@
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
+#include "DatabaseInfo.h"
 #include "IDBEvents.h"
 #include "IDBIndexRequest.h"
 #include "IDBObjectStoreRequest.h"

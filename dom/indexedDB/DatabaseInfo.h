@@ -43,6 +43,8 @@
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
 
+#include "IDBObjectStoreRequest.h"
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 struct DatabaseInfo
@@ -101,6 +103,12 @@ struct ObjectStoreInfo
 
   static void Remove(PRUint32 aDatabaseId,
                      const nsAString& aName);
+};
+
+struct IndexUpdateInfo
+{
+  IndexInfo info;
+  Key value;
 };
 
 END_INDEXEDDB_NAMESPACE
