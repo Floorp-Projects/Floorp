@@ -132,10 +132,16 @@ var Harness = {
       }
     }
     else if (window.document.location.href == PROMPT_URL) {
-      switch (window.gCommonDialogParam.GetInt(3)) {
-        case 0: window.document.documentElement.acceptDialog();
+        var promptType = window.gArgs.getProperty("promptType");
+        switch (promptType) {
+          case "alert":
+          case "alertCheck":
+          case "confirmCheck":
+          case "confirm":
+          case "confirmEx":
+                window.document.documentElement.acceptDialog();
                 break;
-        case 2: if (window.gCommonDialogParam.GetInt(4) != 1) {
+          case "promptUserAndPass":
                   // This is a login dialog, hopefully an authentication prompt
                   // for the xpi.
                   if (this.authenticationCallback) {
@@ -152,7 +158,9 @@ var Harness = {
                   else {
                     window.document.documentElement.cancelDialog();
                   }
-                }
+                break;
+          default:
+                ok(false, "prompt type " + promptType + " not handled in test.");
                 break;
       }
     }
