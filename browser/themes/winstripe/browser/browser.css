@@ -1054,7 +1054,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
-  min-height: .81cm;
+  min-height: .73cm;
 }
 
 .tabbrowser-tabs:not([overflow="true"]) {
@@ -1194,7 +1194,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 .tab-close-button:-moz-system-metric(touch-enabled) {
-  -moz-transform: scale(1.3);
+  -moz-transform: scale(1.2);
 }
 
 .tab-close-button:hover,
