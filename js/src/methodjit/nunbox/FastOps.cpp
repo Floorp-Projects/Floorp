@@ -1191,3 +1191,53 @@ mjit::Compiler::jsop_getelem()
     stubcc.rejoin(0);
 }
 
+static inline bool
+ReallySimpleStrictTest(FrameEntry *fe, JSValueMask32 &mask)
+{
+    if (!fe->isTypeKnown())
+        return false;
+    mask = fe->getTypeTag();
+    return mask == JSVAL_MASK32_NULL || mask == JSVAL_MASK32_UNDEFINED;
+}
+
+void
+mjit::Compiler::jsop_stricteq(JSOp op)
+{
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    Assembler::Condition cond = (op == JSOP_STRICTEQ) ? Assembler::Equal : Assembler::NotEqual;
+
+    /* Comparison against undefined or null is super easy. */
+    bool lhsTest;
+    JSValueMask32 mask;
+    if ((lhsTest = ReallySimpleStrictTest(lhs, mask)) || ReallySimpleStrictTest(rhs, mask)) {
+        FrameEntry *test = lhsTest ? rhs : lhs;
+
+        if (test->isTypeKnown()) {
+            frame.popn(2);
+            frame.push(BooleanTag((test->getTypeTag() == mask) == (op == JSOP_STRICTEQ)));
+            return;
+        }
+
+        /* This is only true if the other side is |null|. */
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+        if (frame.shouldAvoidTypeRemat(test))
+            masm.set32(cond, frame.addressOf(test), Imm32(mask), result);
+        else
+            masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
+        frame.popn(2);
+        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, result);
+        return;
+    }
+
+    prepareStubCall();
+    if (op == JSOP_STRICTEQ)
+        stubCall(stubs::StrictEq, Uses(2), Defs(1));
+    else
+        stubCall(stubs::StrictNe, Uses(2), Defs(1));
+    frame.popn(2);
+    frame.takeReg(Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+}
+
