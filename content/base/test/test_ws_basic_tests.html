@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Basic websocket test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472529">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var ws;
+
+var params = ["protocol", "resource", "origin", "end"];
+var results = ["test", "/tests/content/base/test/file_ws_basic_tests", "http://mochi.test:8888", "end"];
+
+function testWebSocket () {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  ws.onopen = function(e) {
+    for (var i = 0; i < params.length; ++i) {
+      document.getElementById('log').textContent += "sending " + params[i] + "\n";
+      ws.send(params[i]);
+    }
+  }
+  ws.onclose = function(e) {
+    is(results.length, 0, "All the messages should have been processed!");
+    SimpleTest.finish();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    document.getElementById('log').textContent += "\n" + e.data;
+    is(e.data, results[0], "Unexpected message");
+    results.shift();
+  }
+}
+
+function testWebSocket2() {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  var testCount = 1000; // Send lots of messages
+  var messageCount = 0;
+  var testMessage = "test message";
+  ws.onopen = function(e) {
+    for (var i = 0; i < testCount; ++i) {
+      ws.send(testMessage);
+    }
+    ws.send("end");
+  }
+  ws.onclose = function(e) {
+    is(messageCount, testCount, "Didn't receive all the messages!");
+    testWebSocket3();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    is(e.data, testMessage, "Wrong message");
+    ++messageCount;
+    document.getElementById('log').textContent = messageCount;
+    if (messageCount == testCount) {
+      this.onmessage = null;
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+<pre id="log">
+</pre>
+</pre>
+<div>
+
+
+</div>
+
+
+</body>
+</html>
