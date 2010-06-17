@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSON.h"
+#include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
@@ -563,14 +564,7 @@ IDBCursorRequest::Update(nsIVariant* aValue,
         return NS_ERROR_INVALID_ARG;
       }
 
-      JSString* str = JSVAL_TO_STRING(prop.value());
-      size_t len = JS_GetStringLength(str);
-      if (!len) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      const PRUnichar* chars =
-        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
-      if (key.StringValue() != nsDependentString(chars, len)) {
+      if (key.StringValue() != nsDependentJSString(prop.value())) {
         return NS_ERROR_INVALID_ARG;
       }
     }
