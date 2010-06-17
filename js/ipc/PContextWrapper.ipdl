@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PIFrameEmbedding;
 include protocol PTestShell;
 include protocol PObjectWrapper;
 
@@ -47,7 +46,7 @@ namespace jsipc {
 
 rpc protocol PContextWrapper
 {
-    manager PIFrameEmbedding or PTestShell;
+    manager PTestShell;
     manages PObjectWrapper;
 parent:
     async __delete__();

@@ -38,7 +38,6 @@
 
 #include "TabChild.h"
 #include "mozilla/dom/PContentProcessChild.h"
-#include "mozilla/jsipc/ContextWrapperChild.h"
 #include "mozilla/dom/PContentDialogChild.h"
 
 #include "nsIWebBrowser.h"
@@ -90,7 +89,6 @@
 #endif
 
 using namespace mozilla::dom;
-using namespace mozilla::jsipc;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -113,7 +111,7 @@ public:
 
 
 TabChild::TabChild()
-: mCx(nsnull), mContextWrapper(nsnull), mTabChildGlobal(nsnull)
+: mCx(nsnull), mTabChildGlobal(nsnull)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -634,19 +632,6 @@ TabChild::RecvsendKeyEvent(const nsString& aType,
   return true;
 }
 
-PContextWrapperChild*
-TabChild::AllocPContextWrapper()
-{
-    return new ContextWrapperChild(mCx);
-}
-
-bool
-TabChild::DeallocPContextWrapper(PContextWrapperChild* actor)
-{
-    delete actor;
-    return true;
-}
-
 mozilla::ipc::PDocumentRendererChild*
 TabChild::AllocPDocumentRenderer(
         const PRInt32& x,
@@ -1016,50 +1001,7 @@ TabChild::InitTabChildGlobal()
 
   JS_SetGlobalObject(cx, global);
 
-  mContextWrapper = new ContextWrapperChild(mCx);
-  SendPContextWrapperConstructor(mContextWrapper);
-
-  jsval cval;
-  if (JS_GetProperty(cx, global, "content", &cval) &&
-      JSVAL_IS_OBJECT(cval))
-      mContextWrapper->GetOrCreateWrapper(JSVAL_TO_OBJECT(cval),
-                                          true); // make global
   return true;
-}
-
-nsresult
-TabChild::GetObjectsForMessage(nsTArray<mozilla::jsipc::PObjectWrapperChild*>& aObjects)
-{
-  nsAXPCNativeCallContext* ncc = nsnull;
-  nsresult rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_STATE(ncc);
-
-  JSContext* ctx = nsnull;
-  rv = ncc->GetJSContext(&ctx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 argc;
-  jsval* argv = nsnull;
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  JSAutoRequest ar(ctx);
-
-  JSObject* obj = nsnull;
-  nsAutoGCRoot resultGCRoot(&obj, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // First parameter is the message name, second is the JSON.
-  for (PRUint32 i = 2; i < argc; ++i) {
-    if (JSVAL_IS_OBJECT(argv[i])) {
-      obj = JSVAL_TO_OBJECT(argv[i]);
-    } else if (!JS_ValueToObject(ctx, argv[i], &obj)) {
-      obj = nsnull;
-    }
-    // GetOrCreateWrapper is null safe!
-    aObjects.AppendElement(mContextWrapper->GetOrCreateWrapper(obj));
-  }
-  return NS_OK;
 }
 
 static
@@ -1068,10 +1010,8 @@ bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aJSON,
                              nsTArray<nsString>* aJSONRetVal)
 {
-  nsTArray<mozilla::jsipc::PObjectWrapperChild*> objects;
-  static_cast<TabChild*>(aCallbackData)->GetObjectsForMessage(objects);
   return static_cast<TabChild*>(aCallbackData)->
-    CallsendSyncMessageToParent(nsString(aMessage), nsString(aJSON), objects,
+    SendsendSyncMessageToParent(nsString(aMessage), nsString(aJSON),
                                 aJSONRetVal);
 }
 

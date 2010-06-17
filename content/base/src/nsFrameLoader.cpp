@@ -1758,25 +1758,6 @@ nsFrameLoader::SetDelayRemoteDialogs(PRBool aDelay)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetCrossProcessObjectWrapper(nsIVariant** cpow)
-{
-#ifdef MOZ_IPC
-   nsIXPConnect* xpc;
-   nsIThreadJSContextStack* stack;
-   JSContext* cx;
-   JSObject* global;
- 
-   if ((xpc = nsContentUtils::XPConnect()) &&
-       (stack = nsContentUtils::ThreadJSContextStack()) &&
-       NS_SUCCEEDED(stack->Peek(&cx)) && cx &&
-       mChildProcess->GetGlobalJSObject(cx, &global)) {
-     return xpc->JSToVariant(cx, OBJECT_TO_JSVAL(global), cpow);
-   }
-#endif
-   return NS_ERROR_NOT_AVAILABLE;
-}
-
 nsresult
 nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 {
