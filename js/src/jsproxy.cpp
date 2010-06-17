@@ -929,11 +929,12 @@ JS_FRIEND_API(JSClass) ObjectProxyClass = {
 JSBool
 proxy_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    JS_ASSERT(OBJECT_TO_JSVAL(obj) == cx->fp->thisv);
     JSObject *proxy = JSVAL_TO_OBJECT(argv[-2]);
     JS_ASSERT(proxy->isProxy());
     AutoPendingProxyOperation pending(cx, proxy);
-    return !!cx->fp->getThisObject(cx) &&
-           js_InternalCall(cx, obj, proxy->fslots[JSSLOT_PROXY_CALL], argc, argv, rval);
+    obj = cx->fp->getThisObject(cx);
+    return obj && js_InternalCall(cx, obj, proxy->fslots[JSSLOT_PROXY_CALL], argc, argv, rval);
 }
 
 JSBool
