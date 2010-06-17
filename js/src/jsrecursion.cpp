@@ -731,17 +731,8 @@ TraceRecorder::slurpInt32Slot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSid
 {
     LIns *mask_ins = lir->insLoad(LIR_ldi, addr_ins, offset + offsetof(jsval_layout, s.u.mask32), 
                                   ACC_OTHER);
-    guard(false,
-          lir->insEqI_0(lir->ins2(LIR_ori,
-                                  lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)),
-                                  lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)))),
-          exit);
-    LIns* space = lir->insAlloc(sizeof(int32));
-    LIns* args[] = { space, lir->ins2(LIR_addp, addr_ins, INS_CONST(offset)) };
-    LIns* result = lir->insCall(&js_TryUnboxInt32_ci, args);
-    guard(false, lir->insEqI_0(result), exit);
-    LIns* int32_ins = lir->insLoad(LIR_ldi, space, 0, ACC_OTHER);
-    return int32_ins;
+    guard(true, lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)), exit);
+    return lir->insLoad(LIR_ldi, addr_ins, offset + offsetof(jsval_layout, s.payload), ACC_OTHER);
 }
 
 JS_REQUIRES_STACK LIns*
@@ -749,13 +740,8 @@ TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSi
 {
     LIns *mask_ins = lir->insLoad(LIR_ldi, addr_ins, offset + offsetof(jsval_layout, s.u.mask32), 
                                   ACC_OTHER);
-    guard(false,
-          lir->insEqI_0(lir->ins2(LIR_ori,
-                                  lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)),
-                                  lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)))),
-          exit);
-    LIns* args[] = { lir->ins2(LIR_addp, addr_ins, INS_CONST(offset)) };
-    return lir->insCall(&js_UnboxDouble_ci, args);
+    guard(true, lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)), exit);
+    return lir->insLoad(LIR_ldd, addr_ins, offset + offsetof(jsval_layout, s.payload), ACC_OTHER);
 }
 
 JS_REQUIRES_STACK LIns*

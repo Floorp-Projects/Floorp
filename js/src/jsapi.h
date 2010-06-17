@@ -268,6 +268,12 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
     return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(l);
 }
 
+static JS_ALWAYS_INLINE JSBool
+JSVAL_MAY_BE_PRIVATE(jsval v)
+{
+    return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(v);
+}
+
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
                                  ? JS_LockGCThing(cx, JSVAL_TO_GCTHING(v))    \
@@ -3031,6 +3037,7 @@ class Value
      * uses of public jsval members in jsapi.h/jspubtd.h.
      */
     friend class PrimitiveValue;
+    friend jsdouble UnboxDoubleHelper(uint32 mask, uint32 payload);
 
   protected:
     /* Type masks */

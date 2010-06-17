@@ -103,13 +103,29 @@ js_imod(int32 a, int32 b)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
+namespace js {
+
+jsdouble JS_ALWAYS_INLINE
+UnboxDoubleHelper(uint32 mask, uint32 payload)
+{
+    if (mask == JSVAL_MASK32_INT32) {
+        return int32(payload);
+    } else {
+        Value v;
+        v.data.s.u.mask32 = mask;
+        v.data.s.payload.u32 = payload;
+        return v.asDouble();
+    }
+}
+
+}
 
 jsdouble FASTCALL
-js_UnboxDouble(Value *v)
+js_UnboxDouble(uint32 mask, uint32 payload)
 {
-    return v->asNumber();
+    return UnboxDoubleHelper(mask, payload);
 }
-JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, VALUEPTR, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_UnboxDouble, UINT32, UINT32, 1, ACC_NONE)
 
 int32 FASTCALL
 js_UnboxInt32(Value *v)
@@ -259,7 +275,11 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
-    return HasProperty(cx, obj, ATOM_TO_JSID(idstr));
+    jsid id;
+    if (!js_ValueToStringId(cx, StringTag(idstr), &id))
+        return JS_NEITHER;
+
+    return HasProperty(cx, obj, id);
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedProperty, CONTEXT, OBJECT, STRING, 0, ACC_STORE_ANY)
 

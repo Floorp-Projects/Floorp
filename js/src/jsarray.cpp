@@ -353,8 +353,9 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
     setDenseArrayCapacity(newcap);
 
     if (initializeAllSlots) {
-        for (uint32 i = oldcap; i < newcap; i++)
-            setDenseArrayElement(i, JS_ARRAY_HOLE);
+        Value *base = addressOfDenseArrayElement(0);
+        for (Value *vp = base + oldcap, *end = base + newcap; vp < end; ++vp)
+            vp->setMagic(JS_ARRAY_HOLE);
     }
 
     return true;
@@ -900,7 +901,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 
 #ifdef JS_TRACER
 
-static inline JSBool FASTCALL
+static JS_ALWAYS_INLINE JSBool FASTCALL
 dense_grow(JSContext* cx, JSObject* obj, jsint i, const Value &v)
 {
     /*
