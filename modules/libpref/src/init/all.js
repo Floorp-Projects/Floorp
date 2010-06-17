@@ -725,7 +725,7 @@ pref("network.ftp.control.qos", 0);
 // </http>
 
 // <ws>: WebSocket
-pref("network.websocket.enabled", false);
+pref("network.websocket.enabled", true);
 // </ws>
 
 // If false, remote JAR files that are served with a content type other than
