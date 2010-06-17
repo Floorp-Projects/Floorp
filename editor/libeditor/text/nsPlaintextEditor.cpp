@@ -167,7 +167,7 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
   // and "caret behaviour in selection" prefs
   GetDefaultEditorPrefs(mNewlineHandling, mCaretStyle);
 
-  if (NS_FAILED(rulesRes)) return rulesRes;
+  NS_ENSURE_SUCCESS(rulesRes, rulesRes);
   return res;
 }
 
@@ -331,7 +331,7 @@ NS_IMETHODIMP nsPlaintextEditor::InitRules()
 {
   // instantiate the rules for this text editor
   nsresult res = NS_NewTextEditRules(getter_AddRefs(mRules));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!mRules) return NS_ERROR_UNEXPECTED;
   return mRules->Init(this);
 }
@@ -483,20 +483,20 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
     {
       // split the text node
       res = SplitNode(node, theOffset, getter_AddRefs(tmp));
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       res = GetNodeLocation(node, address_of(tmp), &offset);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
     // create br
     res = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     *aInOutParent = tmp;
     *aInOutOffset = offset+1;
   }
   else
   {
     res = CreateNode(brType, node, theOffset, getter_AddRefs(brNode));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     (*aInOutOffset)++;
   }
 
@@ -506,11 +506,11 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
     nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
     res = GetNodeLocation(*outBRNode, address_of(parent), &offset);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     nsCOMPtr<nsISelection> selection;
     res = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
     if (aSelect == eNext)
     {
@@ -546,26 +546,26 @@ NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   PRBool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!bCollapsed)
   {
     res = DeleteSelection(nsIEditor::eNone);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
   res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   
   res = CreateBR(selNode, selOffset, outBRNode);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
     
   // position selection after br
   res = GetNodeLocation(*outBRNode, address_of(selNode), &selOffset);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
   selPriv->SetInterlinePosition(PR_TRUE);
   return selection->Collapse(selNode, selOffset+1);
@@ -661,7 +661,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
 
   PRBool bCollapsed;
   result = aSelection->GetIsCollapsed(&bCollapsed);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (*aAction == eNextWord || *aAction == ePreviousWord
       || (*aAction == eNext && bCollapsed)
@@ -748,7 +748,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   // pre-process
   nsCOMPtr<nsISelection> selection;
   result = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // If there is an existing selection when an extended delete is requested,
@@ -758,7 +758,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   //  existing selection without extending it.
   PRBool bCollapsed;
   result  = selection->GetIsCollapsed(&bCollapsed);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!bCollapsed &&
       (aAction == eNextWord || aAction == ePreviousWord ||
        aAction == eToBeginningOfLine || aAction == eToEndOfLine))
@@ -766,7 +766,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
     if (mCaretStyle == 1)
     {
       result = selection->CollapseToStart();
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
     }
     else
     { 
@@ -778,7 +778,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   ruleInfo.collapsedAction = aAction;
   PRBool cancel, handled;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!cancel && !handled)
   {
     result = DeleteSelectionImpl(aAction);
@@ -812,7 +812,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   // pre-process
   nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsAutoString resultString;
   // XXX can we trust instring to outlive ruleInfo,
@@ -825,7 +825,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
 
   PRBool cancel, handled;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!cancel && !handled)
   {
     // we rely on rules code for now - no default implementation
@@ -852,20 +852,20 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsCOMPtr<nsISelection> selection;
   nsresult res;
   res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // Batching the selection and moving nodes out from under the caret causes
   // caret turds. Ask the shell to invalidate the caret now to avoid the turds.
   nsCOMPtr<nsIPresShell> shell;
   res = GetPresShell(getter_AddRefs(shell));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   shell->MaybeInvalidateCaretPosition();
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertBreak);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
   {
     // create the new BR node
@@ -1073,7 +1073,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   NS_NAMED_LITERAL_STRING(styleName, "style");
   nsAutoString styleValue;
   nsresult res = rootElement->GetAttribute(styleName, styleValue);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   // We'll replace styles for these values:
   CutStyle("white-space", styleValue);
@@ -1282,7 +1282,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
 {
   nsCOMPtr<nsIPresShell> presShell;
   nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!presShell) return NS_ERROR_FAILURE;
 
   nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
@@ -1385,7 +1385,7 @@ nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
   {
     PRBool docEmpty;
     rv = GetDocumentIsEmpty(&docEmpty);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     if (docEmpty)
        return NS_OK;    // output nothing
@@ -1420,7 +1420,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
   // Get Clipboard Service
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Create generic Transferable for getting the data
   nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
@@ -1491,7 +1491,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   // get selection
   nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsAutoEditBatch beginBatching(this);
@@ -1501,7 +1501,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
   {
@@ -1575,17 +1575,17 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted
                           | nsIDocumentEncoder::OutputLFLineBreak,
                           &isCollapsed, current);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICiter> citer = new nsInternetCiter();
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!citer) return NS_ERROR_UNEXPECTED;
 
   nsString wrapped;
   PRUint32 firstLineOffset = 0;   // XXX need to reset this if there is a selection
   rv = citer->Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
                      wrapped);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (isCollapsed)    // rewrap the whole document
     SelectAll();
@@ -1604,19 +1604,19 @@ nsPlaintextEditor::StripCites()
   PRBool isCollapsed;
   nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted,
                                    &isCollapsed, current);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICiter> citer = new nsInternetCiter();
   if (!citer) return NS_ERROR_UNEXPECTED;
 
   nsString stripped;
   rv = citer->StripCites(current, stripped);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (isCollapsed)    // rewrap the whole document
   {
     rv = SelectAll();
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return InsertText(stripped);
@@ -1652,7 +1652,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString,
 
   nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   nsRefPtr<nsCaret> caretP = ps->GetCaret();
 

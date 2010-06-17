@@ -342,11 +342,11 @@ nsRangeUpdater::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsID
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
   nsresult result = nsEditor::GetNodeLocation(aOldRightNode, address_of(parent), &offset);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   
   // first part is same as inserting aNewLeftnode
   result = SelAdjInsertNode(parent,offset-1);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   // next step is to check for range enpoints inside aOldRightNode
   nsRangeStore *item;

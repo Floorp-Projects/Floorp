@@ -91,7 +91,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
 
   nsCOMPtr<nsIDOMNodeList> titleList;
   res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"), getter_AddRefs(titleList));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   // First assume we will NOT really do anything
   // (transaction will not be pushed on stack)
@@ -101,7 +101,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   if(titleList)
   {
     res = titleList->Item(0, getter_AddRefs(titleNode));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (titleNode)
     {
       // Delete existing child textnode of title node
@@ -134,7 +134,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
   nsCOMPtr<nsIDOMNodeList> headList;
   res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   if (!headList) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDOMNode>headNode;
@@ -149,7 +149,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
     // Didn't find one above: Create a new one
     nsCOMPtr<nsIDOMElement>titleElement;
     res = domDoc->CreateElement(NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (!titleElement) return NS_ERROR_FAILURE;
 
     titleNode = do_QueryInterface(titleElement);
@@ -159,7 +159,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
     // after all existing HEAD children
     nsCOMPtr<nsIDOMNodeList> children;
     res = headNode->GetChildNodes(getter_AddRefs(children));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (children)
       children->GetLength(&newTitleIndex);
   }
@@ -170,7 +170,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   {
     nsCOMPtr<nsIDOMText> textNode;
     res = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
     if (!newNode) return NS_ERROR_FAILURE;
 
@@ -185,7 +185,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
       // This is an undoable transaction
       res = editor->InsertNode(newNode, titleNode, 0);
     }
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   if (newTitleNode)
