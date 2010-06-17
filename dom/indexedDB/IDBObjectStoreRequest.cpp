@@ -69,12 +69,6 @@ USING_INDEXEDDB_NAMESPACE
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-struct IndexUpdateInfo
-{
-  IndexInfo info;
-  Key value;
-};
-
 END_INDEXEDDB_NAMESPACE
 
 namespace {
@@ -496,6 +490,197 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
   return NS_OK;
 }
 
+/* static */
+nsresult
+IDBObjectStoreRequest::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
+                                          JSContext* aCx,
+                                          jsval aObject,
+                                          nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+{
+  JSObject* cloneObj = nsnull;
+
+  PRUint32 count = aObjectStoreInfo->indexes.Length();
+  if (count && !JSVAL_IS_PRIMITIVE(aObject)) {
+    if (!aUpdateInfoArray.SetCapacity(count)) {
+      NS_ERROR("Out of memory!");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    cloneObj = JSVAL_TO_OBJECT(aObject);
+
+    for (PRUint32 indexesIndex = 0; indexesIndex < count; indexesIndex++) {
+      const IndexInfo& indexInfo = aObjectStoreInfo->indexes[indexesIndex];
+
+      const jschar* keyPathChars =
+        reinterpret_cast<const jschar*>(indexInfo.keyPath.BeginReading());
+      const size_t keyPathLen = indexInfo.keyPath.Length();
+
+      jsval keyPathValue;
+      JSBool ok = JS_GetUCProperty(aCx, cloneObj, keyPathChars, keyPathLen,
+                                   &keyPathValue);
+      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+      Key value;
+
+      if (JSVAL_IS_INT(keyPathValue)) {
+        value = JSVAL_TO_INT(keyPathValue);
+      }
+      else if (JSVAL_IS_DOUBLE(keyPathValue)) {
+        value = *JSVAL_TO_DOUBLE(keyPathValue);
+      }
+      else if (JSVAL_IS_STRING(keyPathValue)) {
+        JSString* str = JSVAL_TO_STRING(keyPathValue);
+        size_t len = JS_GetStringLength(str);
+        if (len) {
+          const PRUnichar* chars =
+            reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+          value = nsDependentString(chars, len);
+        }
+        else {
+          value = EmptyString();
+        }
+      }
+      else {
+        // Not a value we can do anything with, ignore it.
+        continue;
+      }
+
+      IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
+      updateInfo->info = indexInfo;
+      updateInfo->value = value;
+    }
+  }
+  else {
+    aUpdateInfoArray.Clear();
+  }
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+IDBObjectStoreRequest::UpdateIndexes(IDBTransactionRequest* aTransaction,
+                                     PRInt64 aObjectStoreId,
+                                     const Key& aObjectStoreKey,
+                                     bool aAutoIncrement,
+                                     bool aOverwrite,
+                                     PRInt64 aObjectDataId,
+                                     const nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+{
+#ifdef DEBUG
+  if (aAutoIncrement) {
+    NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
+  }
+  else {
+    NS_ASSERTION(aObjectDataId == LL_MININT, "Bad objectData id!");
+  }
+#endif
+
+  PRUint32 indexCount = aUpdateInfoArray.Length();
+  NS_ASSERTION(indexCount, "Don't call me!");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv;
+
+  if (!aAutoIncrement) {
+    stmt = aTransaction->GetCachedStatement(
+      "SELECT id "
+      "FROM object_data "
+      "WHERE object_store_id = :osid "
+      "AND key_value = :key_value"
+    );
+    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+
+    mozStorageStatementScoper scoper(stmt);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), aObjectStoreId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(!aObjectStoreKey.IsUnset(), "This shouldn't happen!");
+
+    NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+
+    if (aObjectStoreKey.IsInt()) {
+      rv = stmt->BindInt64ByName(keyValue, aObjectStoreKey.IntValue());
+    }
+    else if (aObjectStoreKey.IsString()) {
+      rv = stmt->BindStringByName(keyValue, aObjectStoreKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!hasResult) {
+      NS_ERROR("This is bad, we just added this value! Where'd it go?!");
+      return NS_ERROR_FAILURE;
+    }
+
+    aObjectDataId = stmt->AsInt64(0);
+  }
+
+  NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
+
+  for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
+    const IndexUpdateInfo& updateInfo = aUpdateInfoArray[indexIndex];
+
+    stmt = aTransaction->IndexUpdateStatement(updateInfo.info.autoIncrement,
+                                              updateInfo.info.unique,
+                                              aOverwrite);
+    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+
+    mozStorageStatementScoper scoper2(stmt);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                               updateInfo.info.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
+                               aObjectDataId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_NAMED_LITERAL_CSTRING(objectDataKey, "object_data_key");
+
+    if (aObjectStoreKey.IsInt()) {
+      rv = stmt->BindInt64ByName(objectDataKey, aObjectStoreKey.IntValue());
+    }
+    else if (aObjectStoreKey.IsString()) {
+      rv = stmt->BindStringByName(objectDataKey, aObjectStoreKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_NAMED_LITERAL_CSTRING(value, "value");
+
+    if (updateInfo.value.IsInt()) {
+      rv = stmt->BindInt64ByName(value, updateInfo.value.IntValue());
+    }
+    else if (updateInfo.value.IsString()) {
+      rv = stmt->BindStringByName(value, updateInfo.value.StringValue());
+    }
+    else if (updateInfo.value.IsUnset()) {
+      rv = stmt->BindStringByName(value, updateInfo.value.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Unknown key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->Execute();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
 ObjectStoreInfo*
 IDBObjectStoreRequest::GetObjectStoreInfo()
 {
@@ -600,62 +785,8 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
   ObjectStoreInfo* objectStoreInfo = GetObjectStoreInfo();
   NS_ENSURE_TRUE(objectStoreInfo, NS_ERROR_FAILURE);
 
-  JSObject* cloneObj = nsnull;
-
-  PRUint32 count = objectStoreInfo->indexes.Length();
-  if (count && !JSVAL_IS_PRIMITIVE(clone.value())) {
-    if (!aUpdateInfoArray.SetCapacity(count)) {
-      NS_ERROR("Out of memory!");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    cloneObj = JSVAL_TO_OBJECT(clone.value());
-
-    for (PRUint32 indexesIndex = 0; indexesIndex < count; indexesIndex++) {
-      const IndexInfo& indexInfo = objectStoreInfo->indexes[indexesIndex];
-
-      const jschar* keyPathChars =
-        reinterpret_cast<const jschar*>(indexInfo.keyPath.BeginReading());
-      const size_t keyPathLen = indexInfo.keyPath.Length();
-
-      jsval keyPathValue;
-      JSBool ok = JS_GetUCProperty(cx, cloneObj, keyPathChars, keyPathLen,
-                                   &keyPathValue);
-      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-      Key value;
-
-      if (JSVAL_IS_INT(keyPathValue)) {
-        value = JSVAL_TO_INT(keyPathValue);
-      }
-      else if (JSVAL_IS_DOUBLE(keyPathValue)) {
-        value = *JSVAL_TO_DOUBLE(keyPathValue);
-      }
-      else if (JSVAL_IS_STRING(keyPathValue)) {
-        JSString* str = JSVAL_TO_STRING(keyPathValue);
-        size_t len = JS_GetStringLength(str);
-        if (len) {
-          const PRUnichar* chars =
-            reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
-          value = nsDependentString(chars, len);
-        }
-        else {
-          value = EmptyString();
-        }
-      }
-      else {
-        // Not a value we can do anything with, ignore it.
-        continue;
-      }
-
-      IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
-      updateInfo->info = indexInfo;
-      updateInfo->value = value;
-    }
-  }
-  else {
-    aUpdateInfoArray.Clear();
-  }
+  rv = GetIndexUpdateInfo(objectStoreInfo, cx, clone.value(), aUpdateInfoArray);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
   rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
@@ -1326,7 +1457,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // Update our indexes if needed.
   if (!mIndexUpdateInfo.IsEmpty()) {
     PRInt64 objectDataId = mAutoIncrement ? mKey.IntValue() : LL_MININT;
-    rv = UpdateIndexes(aConnection, objectDataId);
+    rv = IDBObjectStoreRequest::UpdateIndexes(mTransaction, mOSID, mKey,
+                                              mAutoIncrement, mOverwrite,
+                                              objectDataId, mIndexUpdateInfo);
     if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
       return nsIIDBDatabaseException::CONSTRAINT_ERR;
     }
@@ -1393,125 +1526,6 @@ AddHelper::ModifyValueForNewKey()
 
   rv = json->EncodeFromJSVal(clone.addr(), cx, mValue);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-AddHelper::UpdateIndexes(mozIStorageConnection* aConnection,
-                         PRInt64 aObjectDataId)
-{
-#ifdef DEBUG
-  NS_ASSERTION(aConnection, "Null pointer!");
-  if (mAutoIncrement) {
-    NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
-  }
-  else {
-    NS_ASSERTION(aObjectDataId == LL_MININT, "Bad objectData id!");
-  }
-#endif
-
-  PRUint32 indexCount = mIndexUpdateInfo.Length();
-  NS_ASSERTION(indexCount, "Don't call me!");
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv;
-
-  if (!mAutoIncrement) {
-    stmt = mTransaction->GetCachedStatement(
-      "SELECT id "
-      "FROM object_data "
-      "WHERE object_store_id = :osid "
-      "AND key_value = :key_value"
-    );
-    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
-
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
-
-    NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
-
-    if (mKey.IsInt()) {
-      rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
-    }
-    else if (mKey.IsString()) {
-      rv = stmt->BindStringByName(keyValue, mKey.StringValue());
-    }
-    else {
-      NS_NOTREACHED("Unknown key type!");
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!hasResult) {
-      NS_ERROR("This is bad, we just added this value! Where'd it go?!");
-      return NS_ERROR_FAILURE;
-    }
-
-    aObjectDataId = stmt->AsInt64(0);
-  }
-
-  NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
-
-  for (PRUint32 indexIndex = 0; indexIndex < indexCount; indexIndex++) {
-    const IndexUpdateInfo& updateInfo = mIndexUpdateInfo[indexIndex];
-
-    stmt = mTransaction->IndexUpdateStatement(updateInfo.info.autoIncrement,
-                                              updateInfo.info.unique,
-                                              mOverwrite);
-    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
-
-    mozStorageStatementScoper scoper2(stmt);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
-                               updateInfo.info.id);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
-                               aObjectDataId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_NAMED_LITERAL_CSTRING(objectDataKey, "object_data_key");
-
-    if (mKey.IsInt()) {
-      rv = stmt->BindInt64ByName(objectDataKey, mKey.IntValue());
-    }
-    else if (mKey.IsString()) {
-      rv = stmt->BindStringByName(objectDataKey, mKey.StringValue());
-    }
-    else {
-      NS_NOTREACHED("Unknown key type!");
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_NAMED_LITERAL_CSTRING(value, "value");
-
-    if (updateInfo.value.IsInt()) {
-      rv = stmt->BindInt64ByName(value, updateInfo.value.IntValue());
-    }
-    else if (updateInfo.value.IsString()) {
-      rv = stmt->BindStringByName(value, updateInfo.value.StringValue());
-    }
-    else if (updateInfo.value.IsUnset()) {
-      rv = stmt->BindStringByName(value, updateInfo.value.StringValue());
-    }
-    else {
-      NS_NOTREACHED("Unknown key type!");
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->Execute();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
 
   return NS_OK;
 }
