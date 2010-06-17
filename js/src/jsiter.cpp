@@ -491,8 +491,9 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
     /* Store in *vp to protect it from GC (callers must root vp). */
     *vp = OBJECT_TO_JSVAL(iterobj);
 
+    /* NB: for (var p in null) succeeds by iterating over no properties. */
     AutoValueVector props(cx);
-    if (!Snapshot(cx, obj, flags, props))
+    if (JS_LIKELY(obj) && !Snapshot(cx, obj, flags, props))
         return false;
 
     NativeIterator *ni =
