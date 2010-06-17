@@ -40,9 +40,14 @@
 #include "Logging.h"
 #include "assembler/jit/ExecutableAllocator.h"
 #include "jstracer.h"
+#include "BaseAssembler.h"
 
 using namespace js;
 using namespace js::mjit;
+
+#ifdef JS_METHODJIT_PROFILE_STUBS
+static uint32 StubCallsForOp[255];
+#endif
 
 extern "C" void JS_FASTCALL
 SetVMFrameRegs(VMFrame &f)
@@ -537,6 +542,14 @@ void
 ThreadData::Finish()
 {
     delete execPool;
+#ifdef JS_METHODJIT_PROFILE_STUBS
+    FILE *fp = fopen("/tmp/stub-profiling", "wt");
+# define OPDEF(op,val,name,image,length,nuses,ndefs,prec,format) \
+    fprintf(fp, "%03d %s %d\n", val, #op, StubCallsForOp[val]);
+# include "jsopcode.tbl"
+# undef OPDEF
+    fclose(fp);
+#endif
 }
 
 bool
@@ -654,4 +667,13 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     }
 # endif
 }
+
+#ifdef JS_METHODJIT_PROFILE_STUBS
+void JS_FASTCALL
+mjit::ProfileStubCall(VMFrame &f)
+{
+    JSOp op = JSOp(*f.regs.pc);
+    StubCallsForOp[op]++;
+}
+#endif
 
