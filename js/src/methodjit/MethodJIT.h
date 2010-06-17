@@ -190,6 +190,9 @@ enum CompileStatus
     Compile_Error
 };
 
+void JS_FASTCALL
+ProfileStubCall(VMFrame &f);
+
 CompileStatus
 TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
 
