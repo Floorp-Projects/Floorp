@@ -4,8 +4,8 @@
 
 Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
 
-const updaterdf = "browser/toolkit/mozapps/extensions/test/browser/browser_updatessl.rdf";
-const redirect = "browser/toolkit/mozapps/extensions/test/browser/redirect.sjs?";
+const updaterdf = RELATIVE_DIR + "browser_updatessl.rdf";
+const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
 
 var gTests = [];

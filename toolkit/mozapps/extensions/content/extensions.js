@@ -1256,3 +1256,63 @@ var gDetailView = {
     this.updateState();
   }
 };
+
+
+var gDragDrop = {
+  onDragOver: function(aEvent) {
+    var types = aEvent.dataTransfer.types;
+    if (types.contains("text/uri-list") ||
+        types.contains("text/x-moz-url") ||
+        types.contains("application/x-moz-file"))
+      aEvent.preventDefault();
+  },
+
+  onDrop: function(aEvent) {
+    var dataTransfer = aEvent.dataTransfer; 
+    var urls = [];
+
+    // Convert every dropped item into a url
+    for (var i = 0; i < dataTransfer.mozItemCount; i++) {
+      var url = dataTransfer.mozGetDataAt("text/uri-list", i);
+      if (url) {
+        urls.push(url);
+        continue;
+      }
+
+      url = dataTransfer.mozGetDataAt("text/x-moz-url", i);
+      if (url) {
+        urls.push(url.split("\n")[0]);
+        continue;
+      }
+
+      var file = dataTransfer.mozGetDataAt("application/x-moz-file", i);
+      if (file) {
+        urls.push(Services.io.newFileURI(file).spec);
+        continue;
+      }
+    }
+
+    var pos = 0;
+    var installs = [];
+
+    function buildNextInstall() {
+      if (pos == urls.length) {
+        if (installs.length > 0) {
+          // Display the normal install confirmation for the installs
+          AddonManager.installAddonsFromWebpage("application/x-xpinstall", this,
+                                                null, installs);
+        }
+        return;
+      }
+
+      AddonManager.getInstallForURL(urls[pos++], function(aInstall) {
+        installs.push(aInstall);
+        buildNextInstall();
+      }, "application/x-xpinstall");
+    }
+
+    buildNextInstall();
+
+    aEvent.preventDefault();
+  }
+};

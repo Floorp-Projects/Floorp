@@ -46,7 +46,10 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="addons-page" title="&addons.windowTitle;">
+      id="addons-page" title="&addons.windowTitle;"
+      ondragenter="gDragDrop.onDragOver(event)"
+      ondragover="gDragDrop.onDragOver(event)"
+      ondrop="gDragDrop.onDrop(event)">
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>

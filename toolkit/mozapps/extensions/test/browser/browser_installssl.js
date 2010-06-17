@@ -5,8 +5,8 @@
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const xpi = "browser/toolkit/mozapps/extensions/test/browser/browser_installssl.xpi";
-const redirect = "browser/toolkit/mozapps/extensions/test/browser/redirect.sjs?";
+const xpi = RELATIVE_DIR + "addons/browser_installssl.xpi";
+const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
 
 var gTests = [];
