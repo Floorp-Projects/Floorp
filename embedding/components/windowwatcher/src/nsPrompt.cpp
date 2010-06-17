@@ -394,7 +394,7 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleSvc->CreateBundle("chrome://global/locale/prompts.properties",
+  rv = bundleSvc->CreateBundle("chrome://global/locale/commonDialogs.properties",
                                getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
