@@ -161,7 +161,6 @@ struct JSObjectOps {
     JSPropertyIdOp      deleteProperty;
     JSConvertOp         defaultValue;
     JSNewEnumerateOp    enumerate;
-    JSCheckAccessIdOp   checkAccess;
     JSTypeOfOp          typeOf;
     JSTraceOp           trace;
 
@@ -677,11 +676,6 @@ struct JSObject {
     JSBool enumerate(JSContext *cx, JSIterateOp op, jsval *statep,
                      jsid *idp) {
         return map->ops->enumerate(cx, this, op, statep, idp);
-    }
-
-    JSBool checkAccess(JSContext *cx, jsid id, JSAccessMode mode, jsval *vp,
-                       uintN *attrsp) {
-        return map->ops->checkAccess(cx, this, id, mode, vp, attrsp);
     }
 
     JSType typeOf(JSContext *cx) {
@@ -1210,9 +1204,13 @@ extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
+namespace js {
+
 extern JSBool
-js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-               jsval *vp, uintN *attrsp);
+CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+            jsval *vp, uintN *attrsp);
+
+}
 
 extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);

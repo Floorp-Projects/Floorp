@@ -3905,7 +3905,7 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp)
 {
     CHECK_REQUEST(cx);
-    return obj->checkAccess(cx, id, mode, vp, attrsp);
+    return CheckAccess(cx, obj, id, mode, vp, attrsp);
 }
 
 #ifdef JS_THREADSAFE

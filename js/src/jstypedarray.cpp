@@ -1315,7 +1315,6 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     _typedArray::obj_deleteProperty,                                           \
     js_DefaultValue,                                                           \
     _typedArray::obj_enumerate,                                                \
-    js_CheckAccess,                                                            \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \
     NULL,   /* thisObject */                                                   \
