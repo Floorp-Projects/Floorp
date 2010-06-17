@@ -420,7 +420,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   const char* baseStr;
   parentRes->GetValueConst(&baseStr);
   if (! baseStr) {
-    NS_ERROR("Could not reconstruct base uri\n");
+    NS_ERROR("Could not reconstruct base uri");
     return NS_ERROR_UNEXPECTED;
   }
 
