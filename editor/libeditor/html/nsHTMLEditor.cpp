@@ -374,6 +374,46 @@ nsHTMLEditor::GetRootElement(nsIDOMElement **aRootElement)
   return NS_OK;
 }
 
+already_AddRefed<nsIContent>
+nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
+{
+  NS_PRECONDITION(aNode->IsNodeOfType(nsINode::eDOCUMENT) ||
+                  aNode->IsNodeOfType(nsINode::eCONTENT),
+                  "aNode must be content or document node");
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDocument> doc = aNode->GetCurrentDoc();
+  if (!doc) {
+    return nsnull;
+  }
+
+  if (doc->HasFlag(NODE_IS_EDITABLE) || !content) {
+    content = doc->GetRootElement();
+    return content.forget();
+  }
+
+  // XXX If we have readonly flag, shouldn't return the element which has
+  // contenteditable="true"?  However, such case isn't there without chrome
+  // permission script.
+  if (IsReadonly()) {
+    // We still want to allow selection in a readonly editor.
+    content = do_QueryInterface(GetRoot());
+    return content.forget();
+  }
+
+  if (!content->HasFlag(NODE_IS_EDITABLE)) {
+    return nsnull;
+  }
+
+  // For non-readonly editors we want to find the root of the editable subtree
+  // containing aContent.
+  nsIContent *parent;
+  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
+    content = parent;
+  }
+  return content.forget();
+}
+
 nsresult
 nsHTMLEditor::CreateEventListeners()
 {

@@ -149,6 +149,7 @@ public:
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual PRBool HasFocus();
   virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
+  already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
 
   /* ------------ nsIEditorIMESupport overrides ------------ */
   NS_IMETHOD GetPreferredIMEState(PRUint32 *aState);

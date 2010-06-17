@@ -796,85 +796,37 @@ nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
  * nsIDOMFocusListener implementation
  */
 
-static already_AddRefed<nsIContent>
-FindSelectionRoot(nsEditor *aEditor, nsIContent *aContent)
-{
-  NS_PRECONDITION(aEditor, "aEditor must not be null");
-  nsIDocument *document = aContent->GetCurrentDoc();
-  if (!document) {
-    return nsnull;
-  }
-
-  nsIContent *root;
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    NS_IF_ADDREF(root = document->GetRootElement());
-
-    return root;
-  }
-
-  // XXX If the editor is HTML editor and has readonly flag, shouldn't return
-  // the element which has contenteditable="true"?  However, such case isn't
-  // there without chrome permission script.
-  if (aEditor->IsReadonly()) {
-    // We still want to allow selection in a readonly editor.
-    nsCOMPtr<nsIDOMElement> rootElement;
-    aEditor->GetRootElement(getter_AddRefs(rootElement));
-    if (!rootElement) {
-      return nsnull;
-    }
-
-    CallQueryInterface(rootElement, &root);
-
-    return root;
-  }
-
-  if (!aContent->HasFlag(NODE_IS_EDITABLE)) {
-    return nsnull;
-  }
-
-  // For non-readonly editors we want to find the root of the editable subtree
-  // containing aContent.
-  // XXX This is wrong in meaning of this method if the editor is form control.
-  // The editable form controls are also have NODE_IS_EDITABLE flag but it can
-  // be in contenteditable elements.  So, at this time, this climbs up to the
-  // root editable element.  But fortunately, we don't have any problem by
-  // another issue, see the XXX comment in focus event handler.
-  nsIContent *parent, *content = aContent;
-  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
-    content = parent;
-  }
-
-  NS_IF_ADDREF(content);
-
-  return content;
-}
-
 NS_IMETHODIMP
 nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG(aEvent);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
-
-  // turn on selection and caret
+  // Don't turn on selection and caret when the editor is disabled.
   if (mEditor->IsDisabled()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(target);
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsINode> node = do_QueryInterface(target);
+  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
-  PRBool targetIsEditableDoc = PR_FALSE;
-  nsCOMPtr<nsIContent> editableRoot;
-  if (content) {
+  // If the traget is a document node but it's not editable, we should ignore
+  // it because actual focused element's event is going to come.
+  if (node->IsNodeOfType(nsINode::eDOCUMENT) &&
+      !node->HasFlag(NODE_IS_EDITABLE)) {
+    return NS_OK;
+  }
+
+  if (node->IsNodeOfType(nsINode::eCONTENT)) {
     // XXX If the focus event target is a form control in contenteditable
     // element, perhaps, the parent HTML editor should do nothing by this
     // handler.  However, FindSelectionRoot() returns the root element of the
     // contenteditable editor.  So, the editableRoot value is invalid for
     // the plain text editor, and it will be set to the wrong limiter of
     // the selection.  However, fortunately, actual bugs are not found yet.
-    editableRoot = FindSelectionRoot(mEditor, content);
+    nsCOMPtr<nsIContent> editableRoot = mEditor->FindSelectionRoot(node);
 
     // make sure that the element is really focused in case an earlier
     // listener in the chain changed the focus.
@@ -888,50 +840,8 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
         return NS_OK;
     }
   }
-  else {
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(target);
-    targetIsEditableDoc = document && document->HasFlag(NODE_IS_EDITABLE);
-  }
 
-  nsCOMPtr<nsISelectionController> selCon;
-  mEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (selCon && (targetIsEditableDoc || editableRoot))
-  {
-    nsCOMPtr<nsISelection> selection;
-    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                         getter_AddRefs(selection));
-
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    if (presShell) {
-      nsRefPtr<nsCaret> caret = presShell->GetCaret();
-      if (caret) {
-        caret->SetIgnoreUserModify(PR_FALSE);
-        if (selection) {
-          caret->SetCaretDOMSelection(selection);
-        }
-      }
-    }
-
-    selCon->SetCaretReadOnly(mEditor->IsReadonly());
-    selCon->SetCaretEnabled(PR_TRUE);
-    selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-    selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-
-    nsCOMPtr<nsISelectionPrivate> selectionPrivate =
-      do_QueryInterface(selection);
-    if (selectionPrivate)
-    {
-      selectionPrivate->SetAncestorLimiter(editableRoot);
-    }
-
-    if (selection && !editableRoot) {
-      PRInt32 rangeCount;
-      selection->GetRangeCount(&rangeCount);
-      if (rangeCount == 0) {
-        mEditor->BeginningOfDocument();
-      }
-    }
-  }
+  mEditor->InitializeSelection(target);
   return NS_OK;
 }
 
