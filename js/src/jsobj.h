@@ -203,10 +203,9 @@ private:
 
 struct NativeIterator;
 
-const uint32 JS_INITIAL_NSLOTS = 5;
+const uint32 JS_INITIAL_NSLOTS = 4;
 
-const uint32 JSSLOT_PROTO   = 0;
-const uint32 JSSLOT_PARENT  = 1;
+const uint32 JSSLOT_PARENT  = 0;
 
 /*
  * The first available slot to store generic value. For JSCLASS_HAS_PRIVATE
@@ -215,7 +214,7 @@ const uint32 JSSLOT_PARENT  = 1;
  * tagging and should be accessed using the (get|set)Private methods of
  * JSObject.
  */
-const uint32 JSSLOT_PRIVATE = 2;
+const uint32 JSSLOT_PRIVATE = 1;
 
 const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
 
@@ -260,6 +259,7 @@ struct JSObject {
 
     JSObjectMap *map;                       /* property map, see jsscope.h */
     jsuword     classword;                  /* JSClass ptr | bits, see above */
+    JSObject    *proto;                     /* object's prototype */
     jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
     jsval       *dslots;                    /* dynamically allocated slots */
 
@@ -355,16 +355,16 @@ struct JSObject {
     inline jsval getReservedSlot(uintN index) const;
 
     JSObject *getProto() const {
-        return JSVAL_TO_OBJECT(fslots[JSSLOT_PROTO]);
+        return proto;
     }
 
     void clearProto() {
-        fslots[JSSLOT_PROTO] = JSVAL_NULL;
+        proto = NULL;
     }
 
     void setProto(JSObject *newProto) {
         setDelegateNullSafe(newProto);
-        fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(newProto);
+        proto = newProto;
     }
 
     JSObject *getParent() const {
@@ -1226,10 +1226,6 @@ extern JSBool
 js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JSBool
-js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
-                    JSBool checkForCycles);
-
-extern JSBool
 js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 /*
@@ -1333,5 +1329,12 @@ JSBool
 js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JS_END_EXTERN_C
+
+namespace js {
+
+extern bool
+SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
+
+}
 
 #endif /* jsobj_h___ */
