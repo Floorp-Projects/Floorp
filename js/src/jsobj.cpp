@@ -115,7 +115,6 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_DeleteProperty,
     js_DefaultValue,
     js_Enumerate,
-    js_CheckAccess,
     js_TypeOf,
     js_TraceObject,
     NULL,   /* thisObject */
@@ -151,10 +150,10 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JS_ASSERT(id == INT_TO_JSID(JSSLOT_PROTO));
 
-    /* Let obj->checkAccess get the slot's value, based on the access mode. */
+    /* Let CheckAccess get the slot's value, based on the access mode. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    return obj->checkAccess(cx, id, JSACC_PROTO, vp, &attrs);
+    return CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
 }
 
 static JSBool
@@ -179,7 +178,7 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!obj->checkAccess(cx, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
+    if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
         return JS_FALSE;
 
     return js_SetProtoOrParent(cx, obj, JSSLOT_PROTO, pobj, JS_TRUE);
@@ -1439,7 +1438,7 @@ obj_watch(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !obj->checkAccess(cx, propid, JSACC_WATCH, &value, &attrs))
+    if (!obj || !CheckAccess(cx, obj, propid, JSACC_WATCH, &value, &attrs))
         return JS_FALSE;
 
     *vp = JSVAL_VOID;
@@ -1670,7 +1669,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
      * Getters and setters are just like watchpoints from an access
      * control point of view.
      */
-    if (!obj->checkAccess(cx, id, JSACC_WATCH, &junk, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return obj->defineProperty(cx, id, JSVAL_VOID,
@@ -1703,7 +1702,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
      * Getters and setters are just like watchpoints from an access
      * control point of view.
      */
-    if (!obj->checkAccess(cx, id, JSACC_WATCH, &junk, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return obj->defineProperty(cx, id, JSVAL_VOID,
@@ -1784,8 +1783,8 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
     }
 
     obj = JSVAL_TO_OBJECT(vp[2]);
-    return obj->checkAccess(cx, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
-                            JSACC_PROTO, vp, &attrs);
+    return CheckAccess(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
+                       JSACC_PROTO, vp, &attrs);
 }
 
 extern JSBool
@@ -2130,8 +2129,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
          */
         jsval dummy;
         uintN dummyAttrs;
-        JS_ASSERT(obj->map->ops->checkAccess == js_CheckAccess);
-        if (!js_CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
+        if (!CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
             return JS_FALSE;
 
         return js_DefineProperty(cx, obj, desc.id, JSVAL_VOID,
@@ -2332,8 +2330,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
          * control point of view.
          */
         jsval dummy;
-        JS_ASSERT(obj2->map->ops->checkAccess == js_CheckAccess);
-        if (!js_CheckAccess(cx, obj2, desc.id, JSACC_WATCH, &dummy, &attrs)) {
+        if (!CheckAccess(cx, obj2, desc.id, JSACC_WATCH, &dummy, &attrs)) {
              obj2->dropProperty(cx, current);
              return JS_FALSE;
         }
@@ -2955,13 +2952,6 @@ with_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return obj->getProto()->enumerate(cx, enum_op, statep, idp);
 }
 
-static JSBool
-with_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                 jsval *vp, uintN *attrsp)
-{
-    return obj->getProto()->checkAccess(cx, id, mode, vp, attrsp);
-}
-
 static JSType
 with_TypeOf(JSContext *cx, JSObject *obj)
 {
@@ -2985,7 +2975,6 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_DeleteProperty,
     with_DefaultValue,
     with_Enumerate,
-    with_CheckAccess,
     with_TypeOf,
     js_TraceObject,
     with_ThisObject,
@@ -5426,9 +5415,11 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, jsval *statep, j
     return true;
 }
 
+namespace js {
+
 JSBool
-js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-               jsval *vp, uintN *attrsp)
+CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+            jsval *vp, uintN *attrsp)
 {
     JSBool writing;
     JSObject *pobj;
@@ -5437,6 +5428,9 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     JSScopeProperty *sprop;
     JSSecurityCallbacks *callbacks;
     JSCheckAccessOp check;
+
+    while (JS_UNLIKELY(obj->getClass() == &js_WithClass))
+        obj = obj->getProto();
 
     writing = (mode & JSACC_WRITE) != 0;
     switch (mode & JSACC_TYPEMASK) {
@@ -5466,15 +5460,11 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         }
 
         if (!pobj->isNative()) {
-            /* Avoid diverging for non-natives that reuse js_CheckAccess. */
-            if (pobj->map->ops->checkAccess == js_CheckAccess) {
-                if (!writing) {
-                    *vp = JSVAL_VOID;
-                    *attrsp = 0;
-                }
-                break;
+            if (!writing) {
+                *vp = JSVAL_VOID;
+                *attrsp = 0;
             }
-            return pobj->checkAccess(cx, id, mode, vp, attrsp);
+            break;
         }
 
         sprop = (JSScopeProperty *)prop;
@@ -5506,6 +5496,8 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         check = callbacks ? callbacks->checkObjectAccess : NULL;
     }
     return !check || check(cx, pobj, ID_TO_VALUE(id), mode, vp);
+}
+
 }
 
 JSType
@@ -5777,7 +5769,7 @@ CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     atom = cx->runtime->atomState.constructorAtom;
     JS_ASSERT(id == ATOM_TO_JSID(atom));
-    return obj->checkAccess(cx, ATOM_TO_JSID(atom), JSACC_READ, vp, &attrs);
+    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_READ, vp, &attrs);
 }
 
 static JSBool
@@ -5788,7 +5780,7 @@ CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     atom = cx->runtime->atomState.constructorAtom;
     JS_ASSERT(id == ATOM_TO_JSID(atom));
-    return obj->checkAccess(cx, ATOM_TO_JSID(atom), JSACC_WRITE, vp, &attrs);
+    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE, vp, &attrs);
 }
 
 JSBool

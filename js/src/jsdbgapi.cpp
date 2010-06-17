@@ -814,7 +814,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
      * If, by unwrapping and innerizing, we changed the object, check
      * again to make sure that we're allowed to set a watch point.
      */
-    if (origobj != obj && !obj->checkAccess(cx, propid, JSACC_WATCH, &v, &attrs))
+    if (origobj != obj && !CheckAccess(cx, obj, propid, JSACC_WATCH, &v, &attrs))
         return JS_FALSE;
 
     if (!obj->isNative()) {

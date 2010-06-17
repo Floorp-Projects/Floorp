@@ -310,12 +310,6 @@ typedef JSObjectOps *
  * returning false on error/exception, true on success with obj[id]'s last-got
  * value in *vp, and its attributes in *attrsp.  As for JSPropertyOp above, id
  * is either a string or an int jsval.
- *
- * See JSCheckAccessIdOp, below, for the JSObjectOps counterpart, which takes
- * a jsid (a tagged int or aligned, unique identifier pointer) rather than a
- * jsval.  The native js_ObjectOps.checkAccess simply forwards to the object's
- * clasp->checkAccess, so that both JSClass and JSObjectOps implementors may
- * specialize access checks.
  */
 typedef JSBool
 (* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,

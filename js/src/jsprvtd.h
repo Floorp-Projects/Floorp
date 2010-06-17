@@ -363,15 +363,6 @@ typedef JSBool
 (* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 /*
- * JSObjectOps.checkAccess type: check whether obj[id] may be accessed per
- * mode, returning false on error/exception, true on success with obj[id]'s
- * last-got value in *vp, and its attributes in *attrsp.
- */
-typedef JSBool
-(* JSCheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                      jsval *vp, uintN *attrsp);
-
-/*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
  * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
  */

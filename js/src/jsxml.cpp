@@ -5042,7 +5042,6 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_deleteProperty,
     xml_defaultValue,
     xml_enumerate,
-    js_CheckAccess,
     xml_typeOf,
     js_TraceObject,
     NULL,   /* thisObject */

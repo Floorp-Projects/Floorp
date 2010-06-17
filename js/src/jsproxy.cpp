@@ -902,7 +902,6 @@ JSObjectOps js_ObjectProxyObjectOps = {
     proxy_DeleteProperty,
     js_DefaultValue,
     js_Enumerate,
-    js_CheckAccess,
     proxy_TypeOf_obj,
     proxy_TraceObject,
     NULL,   /* thisObject */
@@ -997,7 +996,6 @@ JSObjectOps js_FunctionProxyObjectOps = {
     proxy_DeleteProperty,
     js_DefaultValue,
     js_Enumerate,
-    js_CheckAccess,
     proxy_TypeOf_fun,
     proxy_TraceObject,
     NULL,   /* thisObject */
