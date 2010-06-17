@@ -436,32 +436,31 @@ IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
                                             bool aUnique,
                                             bool aOverwrite)
 {
-  // XXX we may not want to replace!
   if (aAutoIncrement) {
     if (aUnique) {
       if (aOverwrite) {
         return GetCachedStatement(
           "INSERT OR REPLACE INTO ai_unique_index_data "
-            "(index_id, object_data_id, id, value) "
+            "(index_id, ai_object_data_id, id, value) "
           "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
         );
       }
       return GetCachedStatement(
         "INSERT INTO ai_unique_index_data "
-          "(index_id, object_data_id, id, value) "
+          "(index_id, aI_object_data_id, id, value) "
         "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
       );
     }
     if (aOverwrite) {
       return GetCachedStatement(
         "INSERT OR REPLACE INTO ai_index_data "
-          "(index_id, object_data_id, id, value) "
+          "(index_id, ai_object_data_id, id, value) "
         "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
       );
     }
     return GetCachedStatement(
       "INSERT INTO ai_index_data "
-        "(index_id, object_data_id, id, value) "
+        "(index_id, ai_object_data_id, id, value) "
       "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
     );
   }
@@ -504,6 +503,19 @@ IDBTransactionRequest::GetCachedStatement(const nsACString& aQuery)
 
   if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
     nsresult rv = mConnection->CreateStatement(aQuery, getter_AddRefs(stmt));
+#ifdef DEBUG
+    if (NS_FAILED(rv)) {
+      nsCString error;
+      error.AppendLiteral("The statement `");
+      error.Append(aQuery);
+      error.AppendLiteral("` failed to compile with the error message `");
+      nsCString msg;
+      (void)mConnection->GetLastErrorString(msg);
+      error.Append(msg);
+      error.AppendLiteral("`.");
+      NS_ERROR(error.get());
+    }
+#endif
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     if (!mCachedStatements.Put(aQuery, stmt)) {
