@@ -290,6 +290,7 @@ AutoGCRooter::trace(JSTracer *trc)
       case IDVECTOR: {
         Vector<jsid, 8> &vector = static_cast<AutoIdVector *>(this)->vector;
         MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
+        return;
       }
     }
 

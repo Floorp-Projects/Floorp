@@ -388,10 +388,10 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
  * property ops map.
  */
 extern JSBool JS_FASTCALL
-js_SetCallArg(JSContext *cx, JSObject *obj, uint32 slotid, js::Value *vp);
+js_SetCallArg(JSContext *cx, JSObject *obj, size_t slotid, js::Value *vp);
 
 extern JSBool JS_FASTCALL
-js_SetCallVar(JSContext *cx, JSObject *obj, uint32 slotid, js::Value *vp);
+js_SetCallVar(JSContext *cx, JSObject *obj, size_t slotid, js::Value *vp);
 
 /*
  * Slower version of js_GetCallVar used when call_resolve detects an attempt to
