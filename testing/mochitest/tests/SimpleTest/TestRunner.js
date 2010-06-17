@@ -142,7 +142,7 @@ TestRunner.runNextTest = function() {
         TestRunner._timeoutFactor = 1;
 
         if (TestRunner.logEnabled)
-            TestRunner.logger.log("TEST-START | " + url);
+            TestRunner.logger.log("TEST-START | " + url); // used by automation.py
 
         TestRunner._makeIframe(url, 0);
     } else {
@@ -166,6 +166,7 @@ TestRunner.runNextTest = function() {
         }
 
         if (TestRunner.logEnabled) {
+            TestRunner.logger.log("TEST-START | Shutdown"); // used by automation.py
             TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
             TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
             TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
@@ -173,7 +174,6 @@ TestRunner.runNextTest = function() {
         }
 
         if (TestRunner.onComplete) {
-            TestRunner.logger.log("TEST-START | Shutdown");
             TestRunner.onComplete();
         }
     }
