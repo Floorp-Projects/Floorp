@@ -46,7 +46,7 @@ interface nsIFrame;
 interface nsIChromeFrameMessageManager;
 interface nsIVariant;
 
-[scriptable, uuid(bd69ff3d-d2cb-4dee-94e4-c6948df7603a)]
+[scriptable, uuid(65d2c9e2-852c-48cf-a95d-9b82f1273c15)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -139,8 +139,6 @@ interface nsIFrameLoaderOwner : nsISupports
    */
   readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
-
-  readonly attribute nsIVariant crossProcessObjectWrapper;
 
   /**
    * Swap frame loaders with the given nsIFrameLoaderOwner.  This may
