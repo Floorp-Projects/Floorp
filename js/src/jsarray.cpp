@@ -839,7 +839,6 @@ static JSObjectOps js_SlowArrayObjectOps = {
     js_DeleteProperty,
     js_DefaultValue,
     js_Enumerate,
-    js_CheckAccess,
     array_typeOf,
     js_TraceObject,
     NULL,   /* thisObject */
@@ -1097,7 +1096,6 @@ JSObjectOps js_ArrayObjectOps = {
     array_deleteProperty,
     js_DefaultValue,
     js_Enumerate,
-    js_CheckAccess,
     array_typeOf,
     array_trace,
     NULL,   /* thisObject */
