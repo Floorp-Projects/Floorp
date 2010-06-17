@@ -709,7 +709,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                          ? js_InternalCall(cx, obj,
                                            CastAsObjectJSVal(wp->setter),
                                            1, vp, vp)
-                         : callJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
+                         : wp->setter(cx, obj, userid, vp));
 
             /* Evil code can cause us to have an arguments object. */
             if (frame.getFrame())
