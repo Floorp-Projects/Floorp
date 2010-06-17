@@ -1754,9 +1754,19 @@ mjit::Compiler::jsop_this()
      * :FIXME: We don't know whether it's a funobj or not... but we
      * DO know it's an object! This can help downstream opcodes.
      */
-    prepareStubCall();
-    stubCall(stubs::This, Uses(0), Defs(1));
-    frame.pushSynced();
+    RegisterID reg = frame.allocReg();
+    masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, flags)), reg);
+    masm.and32(Imm32(JSFRAME_COMPUTED_THIS), reg);
+    Jump j = masm.branchTest32(Assembler::Zero, reg, reg);
+    stubcc.linkExit(j);
+
+    stubcc.leave();
+    stubcc.call(stubs::This);
+
+    frame.freeReg(reg);
+    frame.push(Address(JSFrameReg, offsetof(JSStackFrame, thisv)));
+
+    stubcc.rejoin(0);
 }
 
 void
