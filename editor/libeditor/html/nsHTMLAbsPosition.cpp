@@ -82,7 +82,7 @@ nsHTMLEditor::AbsolutePositionSelection(PRBool aEnabled)
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(aEnabled ?
                            nsTextEditRules::kSetAbsolutePosition :
@@ -198,7 +198,7 @@ nsHTMLEditor::RelativeChangeZIndex(PRInt32 aChange)
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo((aChange < 0) ? nsTextEditRules::kDecreaseZIndex:
                                            nsTextEditRules::kIncreaseZIndex);
   PRBool cancel, handled;
@@ -322,7 +322,7 @@ nsHTMLEditor::HideGrabber()
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parentNode);
-  if (!parentContent) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(parentContent, NS_ERROR_NULL_POINTER);
 
   DeleteRefToAnonymousNode(mGrabber, parentContent, ps);
   mGrabber = nsnull;
@@ -429,14 +429,14 @@ nsHTMLEditor::EndMoving()
 {
   if (mPositioningShadow) {
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
     nsCOMPtr<nsIDOMNode> parentNode;
     nsresult res = mGrabber->GetParentNode(getter_AddRefs(parentNode));
     NS_ENSURE_SUCCESS(res, res);
 
     nsCOMPtr<nsIContent> parentContent( do_QueryInterface(parentNode) );
-    if (!parentContent) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
 
     DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
 
@@ -557,7 +557,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     nsCOMPtr<nsIDOMNodeList> childNodes;
     res = parentNode->GetChildNodes(getter_AddRefs(childNodes));
     NS_ENSURE_SUCCESS(res, res);
-    if (!childNodes) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(childNodes, NS_ERROR_NULL_POINTER);
     PRUint32 childCount;
     res = childNodes->GetLength(&childCount);
     NS_ENSURE_SUCCESS(res, res);
@@ -595,7 +595,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     NS_ENSURE_SUCCESS(res, res);
     if (!hasStyleOrIdOrClass && nsHTMLEditUtils::IsDiv(aElement)) {
       nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
-      if (!htmlRules) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
       res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
       NS_ENSURE_SUCCESS(res, res);
       res = RemoveContainer(aElement);

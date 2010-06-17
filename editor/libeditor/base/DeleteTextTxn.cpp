@@ -120,7 +120,7 @@ NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
     nsCOMPtr<nsISelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(result, result);
-    if (!selection) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     result = selection->Collapse(mElement, mOffset);
     NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of deletetext.");
   }

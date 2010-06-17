@@ -154,11 +154,11 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   nsCOMPtr<nsIDOMDocument> domDoc;
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  if (!doc) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // Get the pres shell
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Create a new node through the element factory
   nsCOMPtr<nsIContent> newContent;
@@ -292,7 +292,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   nsCOMPtr<nsIDOMElement> focusElement;
   // let's get the containing element of the selection
   nsresult res  = GetSelectionContainer(getter_AddRefs(focusElement));
-  if (!focusElement) return NS_OK;
+  NS_ENSURE_TRUE(focusElement, NS_OK);
   NS_ENSURE_SUCCESS(res, res);
 
   // what's its tag?
@@ -433,7 +433,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 
     nsCOMPtr<nsIDOMViewCSS> viewCSS;
     res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(viewCSS));
-    if (!viewCSS) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(viewCSS, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     // Get the all the computed css styles attached to the element node

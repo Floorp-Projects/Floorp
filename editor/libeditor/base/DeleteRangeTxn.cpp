@@ -206,7 +206,7 @@ NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
     nsCOMPtr<nsISelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(result, result);
-    if (!selection) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     result = selection->Collapse(mStartParent, mStartOffset);
   }
   else
@@ -275,7 +275,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
     nsCOMPtr<nsIDOMNodeList> children;
     result = aStartParent->GetChildNodes(getter_AddRefs(children));
     NS_ENSURE_SUCCESS(result, result);
-    if (!children) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(children, NS_ERROR_NULL_POINTER);
 
 #ifdef DEBUG
     PRUint32 childCount;
@@ -288,7 +288,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
       nsCOMPtr<nsIDOMNode> child;
       result = children->Item(i, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(result, result);
-      if (!child) return NS_ERROR_NULL_POINTER;
+      NS_ENSURE_TRUE(child, NS_ERROR_NULL_POINTER);
 
       nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
       if (!txn)
@@ -342,7 +342,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
 NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 {
   nsCOMPtr<nsIContentIterator> iter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1");
-  if (!iter) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
 
   nsresult result = iter->Init(mRange);
   NS_ENSURE_SUCCESS(result, result);

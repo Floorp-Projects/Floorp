@@ -149,7 +149,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 
   // disable plugins
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   mInteractive = aInteractive;
   mMakeWholeDocumentEditable = aMakeWholeDocumentEditable;
@@ -219,7 +219,7 @@ NS_IMETHODIMP
 nsEditingSession::DisableJSAndPlugins(nsIDOMWindow *aWindow)
 {
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   PRBool tmp;
   nsresult rv = docShell->GetAllowJavascript(&tmp);
@@ -253,7 +253,7 @@ nsEditingSession::RestoreJSAndPlugins(nsIDOMWindow *aWindow)
   mDisabledJSAndPlugins = PR_FALSE;
 
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsresult rv = docShell->SetAllowJavascript(mScriptsEnabled);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -429,12 +429,12 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   // Create editor and do other things 
   //  only if we haven't found some error above,
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell) return NS_ERROR_FAILURE;  
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);  
 
   if (!mInteractive) {
     // Disable animation of images in this document:
     nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    if (!utils) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
     rv = utils->GetImageAnimationMode(&mImageAnimationMode);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -468,12 +468,12 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIContentViewer> contentViewer;
   rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!contentViewer) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(contentViewer, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMDocument> domDoc;  
   rv = contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!domDoc) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   // Set up as a doc state listener
   // Important! We must have this to broadcast the "obs_documentCreated" message
@@ -484,7 +484,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIPresShell> presShell;
   rv = docShell->GetPresShell(getter_AddRefs(presShell));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!presShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
   rv = editor->Init(domDoc, presShell, nsnull /* root content */,
@@ -494,7 +494,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsISelection> selection;
   editor->GetSelection(getter_AddRefs(selection));
   nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
-  if (!selPriv) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(selPriv, NS_ERROR_FAILURE);
 
   rv = selPriv->AddSelectionListener(mStateMaintainer);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -844,19 +844,19 @@ nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  if (!doc) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   doc->SetDocumentURI(aURI);
 
   // Notify the location-changed observer that
   //  the document URL has changed
   nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShell);
   nsCOMPtr<nsPICommandUpdater> commandUpdater =
                                   do_QueryInterface(commandManager);
-  if (!commandUpdater) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
   return commandUpdater->CommandStatusChanged("obs_documentLocationChanged");
 }
@@ -953,7 +953,7 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress,
   if (domWindow)
   {
     nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
-    if (!docShell) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
     docShell->DetachEditorFromWindow();
   }
     
@@ -1003,7 +1003,7 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   }
 
   nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
-  if (!docShell) return NS_ERROR_FAILURE;       // better error handling?
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);       // better error handling?
 
   // cancel refresh from meta tags
   // we need to make sure that all pages in editor (whether editable or not)
@@ -1134,7 +1134,7 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
 
   nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   // cancel refresh from meta tags
   // we need to make sure that all pages in editor (whether editable or not)
@@ -1184,7 +1184,7 @@ nsEditingSession::GetEditorDocShellFromWindow(nsIDOMWindow *aWindow,
                                               nsIEditorDocShell** outDocShell)
 {
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   
   return docShell->QueryInterface(NS_GET_IID(nsIEditorDocShell), 
                                   (void **)outDocShell);
@@ -1206,7 +1206,7 @@ nsEditingSession::PrepareForEditing(nsIDOMWindow *aWindow)
   
   // register callback
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
-  if (!webProgress) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(webProgress, NS_ERROR_FAILURE);
 
   nsresult rv =
     webProgress->AddProgressListener(this,
@@ -1328,7 +1328,7 @@ nsEditingSession::SetContextOnControllerById(nsIControllers* aControllers,
   // ok with nil controller
   nsCOMPtr<nsIControllerContext> editorController =
                                        do_QueryInterface(controller);
-  if (!editorController) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(editorController, NS_ERROR_FAILURE);
 
   return editorController->SetCommandContext(aContext);
 }
@@ -1484,7 +1484,7 @@ nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
   {
     // Disable animation of images in this document:
     nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    if (!utils) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
     rv = utils->GetImageAnimationMode(&mImageAnimationMode);
     NS_ENSURE_SUCCESS(rv, rv);

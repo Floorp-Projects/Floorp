@@ -418,7 +418,7 @@ nsHTMLEditor::ShowResizersInner(nsIDOMElement *aResizedElement)
   nsCOMPtr<nsIDOMDocument> domDoc;
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  if (!doc) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc->GetWindow());
   if (!target) { return NS_ERROR_NULL_POINTER; }
