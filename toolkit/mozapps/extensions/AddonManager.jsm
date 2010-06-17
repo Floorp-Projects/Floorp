@@ -231,6 +231,22 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Unregisters an AddonProvider.
+   *
+   * @param  aProvider
+   *         The provider to unregister
+   */
+  unregisterProvider: function AMI_unregisterProvider(aProvider) {
+    this.providers = this.providers.filter(function(p) {
+      return p != aProvider;
+    });
+
+    // If we're unregistering after startup call this provider's shutdown.
+    if (this.started)
+      callProvider(aProvider, "shutdown");
+  },
+
+  /**
    * Shuts down the addon manager and all registered providers, this must clean
    * up everything in order for automated tests to fake restarts.
    */
@@ -748,6 +764,10 @@ var AddonManagerPrivate = {
 
   registerProvider: function AMP_registerProvider(aProvider) {
     AddonManagerInternal.registerProvider(aProvider);
+  },
+
+  unregisterProvider: function AMP_unregisterProvider(aProvider) {
+    AddonManagerInternal.unregisterProvider(aProvider);
   },
 
   shutdown: function AMP_shutdown() {

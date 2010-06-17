@@ -2,9 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 const xpi = RELATIVE_DIR + "addons/browser_installssl.xpi";
 const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
@@ -13,13 +10,11 @@ var gTests = [];
 
 function test() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 
   run_next_test();
 }
 
 function end_test() {
-  Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   var cos = Cc["@mozilla.org/security/certoverride;1"].
             getService(Ci.nsICertOverrideService);
   cos.clearValidityOverride("nocert.example.com", -1);
