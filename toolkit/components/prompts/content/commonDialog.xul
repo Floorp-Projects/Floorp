@@ -59,7 +59,7 @@
           <!-- Dialog title is inside dialog for OS X -->
           <description id="info.title"/>
 #endif
-          <description id="info.header" class="header"/>
+          <spacer style="height: 1em"/>
           <description id="info.body" context="contentAreaContextMenu" noinitialfocus="true"/>
         </vbox>
       </row>
@@ -70,10 +70,6 @@
       <row id ="password1Container" hidden="true" align="center">
         <label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
         <textbox type="password" id="password1Textbox"/>
-      </row>
-      <row id="password2Container" hidden="true" align="center">
-        <label id="password2Label" value="&editfield2.label;" control="password2Textbox"/>
-        <textbox type="password" id="password2Textbox"/>
       </row>
       <row id="checkboxContainer" hidden="true">
         <spacer/>
@@ -88,5 +84,5 @@
        So, by calling this inline, we guarantee the textboxes and checkboxes 
        above will have their bindings before initButtons is called, and the
        dialog will be intrinsically sized correctly. -->
-  <script type="application/javascript">showControls();</script>
+  <script type="application/javascript">earlyInit();</script>
 </dialog>
