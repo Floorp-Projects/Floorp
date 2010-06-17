@@ -81,6 +81,7 @@ public:
 
 protected:
   IDBEvent() : nsDOMEvent(nsnull, nsnull) { }
+  virtual ~IDBEvent() { }
 
   nsCOMPtr<nsISupports> mSource;
 };
@@ -159,8 +160,27 @@ public:
 
 private:
   nsString mValue;
+
+protected:
   jsval mCachedValue;
   JSRuntime* mJSRuntime;
+};
+
+class GetAllSuccessEvent : public GetSuccessEvent
+{
+public:
+  GetAllSuccessEvent(nsTArray<nsString>& aValues)
+  : GetSuccessEvent(EmptyString())
+  {
+    if (!mValues.SwapElements(aValues)) {
+      NS_ERROR("Failed to swap elements!");
+    }
+  }
+
+  NS_IMETHOD GetResult(nsIVariant** aResult);
+
+private:
+  nsTArray<nsString> mValues;
 };
 
 END_INDEXEDDB_NAMESPACE
