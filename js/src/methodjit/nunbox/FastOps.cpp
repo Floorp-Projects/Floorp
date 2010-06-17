@@ -1200,6 +1200,12 @@ ReallySimpleStrictTest(FrameEntry *fe, JSValueMask32 &mask)
     return mask == JSVAL_MASK32_NULL || mask == JSVAL_MASK32_UNDEFINED;
 }
 
+static inline bool
+BooleanStrictTest(FrameEntry *fe)
+{
+    return fe->isConstant() && fe->getTypeTag() == JSVAL_MASK32_BOOLEAN;
+}
+
 void
 mjit::Compiler::jsop_stricteq(JSOp op)
 {
@@ -1223,9 +1229,53 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         /* This is only true if the other side is |null|. */
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
         if (frame.shouldAvoidTypeRemat(test))
-            masm.set32(cond, frame.addressOf(test), Imm32(mask), result);
+            masm.set32(cond, masm.tagOf(frame.addressOf(test)), Imm32(mask), result);
         else
             masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
+        frame.popn(2);
+        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, result);
+        return;
+    }
+
+    /* Hardcoded booleans are easy too. */
+    if ((lhsTest = BooleanStrictTest(lhs)) || BooleanStrictTest(rhs)) {
+        FrameEntry *test = lhsTest ? rhs : lhs;
+
+        if (test->isTypeKnown() && test->getTypeTag() != JSVAL_MASK32_BOOLEAN) {
+            frame.popn(2);
+            frame.push(BooleanTag(op == JSOP_STRICTNE));
+            return;
+        }
+
+        if (test->isConstant()) {
+            frame.popn(2);
+            const Value &L = lhs->getValue();
+            const Value &R = rhs->getValue();
+            frame.push(BooleanTag((L.asBoolean() == R.asBoolean()) == (op == JSOP_STRICTEQ)));
+            return;
+        }
+
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+        
+        /* Is the other side boolean? */
+        Jump notBoolean;
+        if (!test->isTypeKnown())
+           notBoolean = frame.testBoolean(Assembler::NotEqual, test);
+
+        /* Do a dynamic test. */
+        bool val = lhsTest ? lhs->getValue().asBoolean() : rhs->getValue().asBoolean();
+        if (frame.shouldAvoidDataRemat(test))
+            masm.set32(cond, masm.payloadOf(frame.addressOf(test)), Imm32(val), result);
+        else
+            masm.set32(cond, frame.tempRegForData(test), Imm32(val), result);
+
+        if (!test->isTypeKnown()) {
+            Jump done = masm.jump();
+            notBoolean.linkTo(masm.label(), &masm);
+            masm.move(Imm32((op == JSOP_STRICTNE)), result);
+            done.linkTo(masm.label(), &masm);
+        }
+
         frame.popn(2);
         frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, result);
         return;
