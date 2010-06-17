@@ -51,6 +51,22 @@ interface nsIVariant;
 [scriptable, uuid(8c21dfc3-62fa-470e-bc92-7d115b0fac97)]
 interface nsIIDBIndexRequest : nsIIDBIndex
 {
+  nsIIDBRequest
+  get(in nsIVariant key);
+
+  nsIIDBRequest
+  getObject(in nsIVariant key);
+
+  [optional_argc]
+  nsIIDBRequest
+  getAll([optional /* null */] in nsIVariant key,
+         [optional /* unlimited */] in unsigned long limit);
+
+  [optional_argc]
+  nsIIDBRequest
+  getAllObjects([optional /* null */] in nsIVariant key,
+                [optional /* unlimited */] in unsigned long limit);
+
   [optional_argc]
   nsIIDBRequest
   openCursor([optional /* null */] in nsIIDBKeyRange range,
@@ -63,10 +79,4 @@ interface nsIIDBIndexRequest : nsIIDBIndex
                    [optional /* nsIIDBCursor::NEXT */]
                    in unsigned short direction,
                    [optional /* false */] in boolean preload);
-
-  nsIIDBRequest
-  getObject(in nsIVariant key);
-
-  nsIIDBRequest
-  get(in nsIVariant key);
 };

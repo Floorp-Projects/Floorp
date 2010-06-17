@@ -53,6 +53,8 @@
 #include "jsapi.h"
 #include "nsDOMEvent.h"
 
+#include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
+
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"
 #define COMPLETE_EVT_STR "complete"
@@ -181,6 +183,23 @@ public:
 
 private:
   nsTArray<nsString> mValues;
+};
+
+class GetAllKeySuccessEvent : public GetSuccessEvent
+{
+public:
+  GetAllKeySuccessEvent(nsTArray<Key>& aKeys)
+  : GetSuccessEvent(EmptyString())
+  {
+    if (!mKeys.SwapElements(aKeys)) {
+      NS_ERROR("Failed to swap elements!");
+    }
+  }
+
+  NS_IMETHOD GetResult(nsIVariant** aResult);
+
+private:
+  nsTArray<Key> mKeys;
 };
 
 END_INDEXEDDB_NAMESPACE
