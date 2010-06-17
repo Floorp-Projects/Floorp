@@ -148,6 +148,7 @@ public:
   NS_IMETHODIMP BeginningOfDocument();
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual PRBool HasFocus();
+  virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
 
   /* ------------ nsIEditorIMESupport overrides ------------ */
   NS_IMETHOD GetPreferredIMEState(PRUint32 *aState);
