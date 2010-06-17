@@ -215,18 +215,6 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
-/*
- * Set object's prototype or parent slot while checking that doing so would
- * not create a cycle in the proto or parent chain. The cycle check and slot
- * change are done only when all other requests are finished or suspended to
- * ensure exclusive access to the chain. If there is a cycle, return false
- * without reporting an error. Otherwise, set the proto or parent and return
- * true.
- */
-extern bool
-js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
-                                     uint32 slot, JSObject *pobj);
-
 #ifdef JS_THREADSAFE
 /*
  * This is a helper for code at can potentially run outside JS request to
@@ -541,6 +529,16 @@ extern void
 js_MarkTraps(JSTracer *trc);
 
 namespace js {
+
+/*
+ * Set object's prototype while checking that doing so would not create
+ * a cycle in the proto chain. The cycle check and proto change are done
+ * only when all other requests are finished or suspended to ensure exclusive
+ * access to the chain. If there is a cycle, return false without reporting
+ * an error. Otherwise, set the proto and return true.
+ */
+extern bool
+SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto);
 
 void
 TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);

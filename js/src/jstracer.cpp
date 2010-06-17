@@ -9396,6 +9396,24 @@ TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins)
     return stobj_get_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins);
 }
 
+LIns*
+TraceRecorder::stobj_get_parent(nanojit::LIns* obj_ins)
+{
+    return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
+}
+
+LIns*
+TraceRecorder::stobj_get_private(nanojit::LIns* obj_ins)
+{
+    return stobj_get_fslot(obj_ins, JSSLOT_PRIVATE);
+}
+
+LIns*
+TraceRecorder::stobj_get_proto(nanojit::LIns* obj_ins)
+{
+    return lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, proto), ACC_OTHER);
+}
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::box_jsval(jsval v, LIns* v_ins)
 {
