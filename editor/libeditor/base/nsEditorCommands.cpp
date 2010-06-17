@@ -679,8 +679,7 @@ nsSelectionMoveCommands::DoCommand(const char *aCommandName,
 
   nsCOMPtr<nsISelectionController> selCont;
   nsresult rv = editor->GetSelectionController(getter_AddRefs(selCont)); 
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selCont, NS_ERROR_FAILURE);
 
   // complete scroll commands

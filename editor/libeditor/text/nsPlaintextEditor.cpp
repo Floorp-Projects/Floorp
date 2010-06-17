@@ -300,8 +300,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
             nsCOMPtr<nsIDOMNode>resultNode; 
             // Create a new meta charset tag 
             result = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode)); 
-            if (NS_FAILED(result)) 
-              return NS_ERROR_FAILURE; 
+            NS_ENSURE_SUCCESS(result, NS_ERROR_FAILURE); 
 
             // Set attributes to the created element 
             if (resultNode && !characterSet.IsEmpty()) { 
@@ -1358,8 +1357,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
   rv = GetAndInitDocEncoder(aFormatType, aFlags, charsetStr, getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   return encoder->EncodeToString(aOutputString);
 }
 
@@ -1388,8 +1386,7 @@ nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
   rv = GetAndInitDocEncoder(aFormatType, aFlags, aCharset,
                             getter_AddRefs(encoder));
 
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return encoder->EncodeToStream(aOutputStream);
 }
@@ -1473,8 +1470,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   // Let the citer quote it for us:
   nsString quotedStuff;
   nsresult rv = citer->GetCiteString(aQuotedText, quotedStuff);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // It's best to put a blank line after the quoted text so that mails
   // written without thinking won't be so ugly.
@@ -1551,8 +1547,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
 {
   PRInt32 wrapCol;
   nsresult rv = GetWrapWidth(&wrapCol);
-  if (NS_FAILED(rv))
-    return NS_OK;
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   // Rewrap makes no sense if there's no wrap column; default to 72.
   if (wrapCol <= 0)

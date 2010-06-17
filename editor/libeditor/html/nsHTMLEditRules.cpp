@@ -562,15 +562,13 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
                                             mRangeItem.startNode, mRangeItem.startOffset,
                                             rangeStartParent, rangeStartOffset,
                                             rangeEndParent, rangeEndOffset);
-  if (NS_FAILED(res)) 
-    return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   // detect empty doc
   res = CreateBogusNodeIfNeeded(selection);
   
   // adjust selection HINT if needed
-  if (NS_FAILED(res)) 
-    return res;
+  NS_ENSURE_SUCCESS(res, res);
   
   if (!mDidExplicitlySetInterline)
   {
@@ -2746,8 +2744,7 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
       {
         childToMove = do_QueryInterface(child);
         res = mHTMLEditor->MoveNode(childToMove, leftList, -1);
-        if (NS_FAILED(res))
-          return res;
+        NS_ENSURE_SUCCESS(res, res);
 
         child = parent->GetChildAt(rightOffset);
       }

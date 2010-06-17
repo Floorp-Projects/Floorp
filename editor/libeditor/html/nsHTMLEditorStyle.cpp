@@ -691,14 +691,11 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         nsCOMPtr<nsIDOMNode> spanNode;
         res = InsertContainerAbove(aNode, address_of(spanNode),
                                    NS_LITERAL_STRING("span"));
-        if (NS_FAILED(res))
-          return res;
+        NS_ENSURE_SUCCESS(res, res);
         res = CloneAttribute(styleAttr, spanNode, aNode);
-        if (NS_FAILED(res))
-          return res;
+        NS_ENSURE_SUCCESS(res, res);
         res = CloneAttribute(classAttr, spanNode, aNode);
-        if (NS_FAILED(res))
-          return res;
+        NS_ENSURE_SUCCESS(res, res);
         if (hasStyleAttr)
         {
           // we need to remove the styles property corresponding to

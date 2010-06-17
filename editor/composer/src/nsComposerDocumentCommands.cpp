@@ -246,8 +246,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     // Should we fail if this param wasn't set?
     // I'm not sure we should be that strict
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (modified)
       return editor->IncrementModificationCount(1);
@@ -260,8 +259,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     NS_ENSURE_ARG_POINTER(aParams);
     PRBool isReadOnly; 
     nsresult rvRO = aParams->GetBooleanValue(STATE_ATTRIBUTE, &isReadOnly);
-    if (NS_FAILED(rvRO))
-      return rvRO;
+    NS_ENSURE_SUCCESS(rvRO, rvRO);
 
     PRUint32 flags;
     editor->GetFlags(&flags);
@@ -281,8 +279,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     PRBool desireCSS;
     nsresult rvCSS = aParams->GetBooleanValue(STATE_ATTRIBUTE, &desireCSS);
-    if (NS_FAILED(rvCSS))
-      return rvCSS;
+    NS_ENSURE_SUCCESS(rvCSS, rvCSS);
 
     return htmleditor->SetIsCSSEnabled(desireCSS);
   }
@@ -296,8 +293,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     PRBool insertBrOnReturn;
     nsresult rvBR = aParams->GetBooleanValue(STATE_ATTRIBUTE,
                                               &insertBrOnReturn);
-    if (NS_FAILED(rvBR))
-      return rvBR;
+    NS_ENSURE_SUCCESS(rvBR, rvBR);
 
     return htmleditor->SetReturnInParagraphCreatesNewParagraph(!insertBrOnReturn);
   }
@@ -310,8 +306,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     PRBool enabled;
     nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
-    if (NS_FAILED(rvOR))
-      return rvOR;
+    NS_ENSURE_SUCCESS(rvOR, rvOR);
 
     return resizer->SetObjectResizingEnabled(enabled);
   }
@@ -324,8 +319,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     PRBool enabled;
     nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
-    if (NS_FAILED(rvOR))
-      return rvOR;
+    NS_ENSURE_SUCCESS(rvOR, rvOR);
 
     return editor->SetInlineTableEditingEnabled(enabled);
   }

@@ -151,13 +151,11 @@ nsTransactionItem::GetNumberOfChildren(PRInt32 *aNumChildren)
 
   result = GetNumberOfUndoItems(&ui);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   result = GetNumberOfRedoItems(&ri);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   *aNumChildren = ui + ri;
 
@@ -174,8 +172,7 @@ nsTransactionItem::GetChild(PRInt32 aIndex, nsTransactionItem **aChild)
   PRInt32 numItems = 0;
   nsresult result = GetNumberOfChildren(&numItems);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (aIndex < 0 || aIndex >= numItems)
     return NS_ERROR_FAILURE;
@@ -187,8 +184,7 @@ nsTransactionItem::GetChild(PRInt32 aIndex, nsTransactionItem **aChild)
 
   result = GetNumberOfUndoItems(&numItems);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (numItems > 0 && aIndex < numItems) {
     NS_ENSURE_TRUE(mUndoStack, NS_ERROR_FAILURE);
@@ -202,8 +198,7 @@ nsTransactionItem::GetChild(PRInt32 aIndex, nsTransactionItem **aChild)
 
   result = GetNumberOfRedoItems(&numItems);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(mRedoStack && numItems != 0 && aIndex < numItems, NS_ERROR_FAILURE);
 
@@ -256,8 +251,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
     /* Undo all of the transaction items children! */
     result = mUndoStack->GetSize(&sz);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     while (sz-- > 0) {
       result = mUndoStack->Peek(getter_AddRefs(item));
@@ -320,8 +314,7 @@ nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
   if (mTransaction) {
     result = mTransaction->RedoTransaction();
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   result = RedoChildren(aTxMgr);
@@ -346,8 +339,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
   /* Redo all of the transaction items children! */
   result = mRedoStack->GetSize(&sz);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
 
   while (sz-- > 0) {

@@ -131,14 +131,12 @@ nsTransactionStack::Clear(void)
 
   result = Pop(getter_AddRefs(tx));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   while (tx) {
     result = Pop(getter_AddRefs(tx));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   return NS_OK;
@@ -184,14 +182,12 @@ nsTransactionRedoStack::Clear(void)
 
   result = PopBottom(getter_AddRefs(tx));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   while (tx) {
     result = PopBottom(getter_AddRefs(tx));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   return NS_OK;
