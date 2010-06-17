@@ -170,18 +170,23 @@ JSProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &pr
     JS_ASSERT(OperationInProgress(cx, proxy));
     JS_ASSERT(props.length() == 0);
 
-    AutoValueVector proxyProps(cx);
-    if (!getOwnPropertyNames(cx, proxy, proxyProps))
+    if (!getOwnPropertyNames(cx, proxy, props))
         return false;
 
+    /* Select only the enumerable properties through in-place iteration. */
     AutoDescriptor desc(cx);
-    for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-        jsid id = proxyProps[n];
+    size_t i = 0;
+    for (size_t j = 0, len = props.length(); j < len; j++) {
+        JS_ASSERT(i <= j);
+        jsid id = props[j];
         if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
             return false;
-        if (desc.obj && (desc.attrs & JSPROP_ENUMERATE) && !props.append(id))
-            return false;
+        if (desc.obj && (desc.attrs & JSPROP_ENUMERATE))
+            props[i++] = id;
     }
+
+    JS_ASSERT(i <= props.length());
+    props.resize(i);
 
     return true;
 }
