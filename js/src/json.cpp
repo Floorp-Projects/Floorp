@@ -285,7 +285,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
         outputValue = JSVAL_VOID;
 
         if (!usingWhitelist) {
-            if (!js_ValueToStringId(cx, ID_TO_VALUE(ida[i]), &id))
+            if (!js_ValueToStringId(cx, IdToValue(ida[i]), &id))
                 return JS_FALSE;
         } else {
             // skip non-index properties
@@ -331,7 +331,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
             return JS_FALSE;
 
         // Be careful below, this string is weakly rooted
-        JSString *s = js_ValueToString(cx, ID_TO_VALUE(id));
+        JSString *s = js_ValueToString(cx, IdToValue(id));
         if (!s)
             return JS_FALSE;
 
@@ -402,7 +402,7 @@ static JSBool
 CallReplacerFunction(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp)
 {
     if (scx->replacer && scx->replacer->isCallable()) {
-        jsval vec[2] = { ID_TO_JSVAL(id), *vp};
+        jsval vec[2] = { IdToJsval(id), *vp};
         if (!JS_CallFunctionValue(cx, holder, OBJECT_TO_JSVAL(scx->replacer), 2, vec, vp))
             return JS_FALSE;
     }
@@ -596,7 +596,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 
     // return reviver.call(holder, key, value);
     jsval value = *vp;
-    JSString *key = js_ValueToString(cx, ID_TO_VALUE(id));
+    JSString *key = js_ValueToString(cx, IdToValue(id));
     if (!key)
         return false;
 

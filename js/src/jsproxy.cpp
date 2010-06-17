@@ -108,7 +108,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return true;
     }
     if (desc.attrs & JSPROP_GETTER) {
-        return InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.getter),
+        return InternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.getter),
                                 JSACC_READ, 0, 0, vp);
     }
     if (desc.attrs & JSPROP_SHORTID)
@@ -127,7 +127,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (desc.obj) {
         if (desc.setter) {
             if (desc.attrs & JSPROP_SETTER) {
-                return InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.setter),
+                return InternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
                                         JSACC_READ, 0, 0, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
@@ -144,7 +144,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (desc.obj) {
         if (desc.setter) {
             if (desc.attrs & JSPROP_SETTER) {
-                return InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.setter),
+                return InternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
                                         JSACC_READ, 0, 0, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
@@ -191,10 +191,15 @@ bool
 JSProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
+
+    /* TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=572298 */
+    JS_ASSERT((flags & JSITER_FOREACH) == 0);
+
     JSIdArray *ida;
     if (!enumerate(cx, proxy, &ida))
         return false;
     AutoIdArray idar(cx, ida);
+
     return JSIdArrayToIterator(cx, proxy, flags, ida, vp);
 }
 
@@ -253,7 +258,7 @@ Trap(JSContext *cx, JSObject *handler, Value fval, uintN argc, Value* argv, Valu
 static bool
 Trap1(JSContext *cx, JSObject *handler, Value fval, jsid id, Value *rval)
 {
-    JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+    JSString *str = js_ValueToString(cx, IdToValue(id));
     if (!str)
         return false;
     rval->setString(str);
@@ -263,7 +268,7 @@ Trap1(JSContext *cx, JSObject *handler, Value fval, jsid id, Value *rval)
 static bool
 Trap2(JSContext *cx, JSObject *handler, Value fval, jsid id, Value v, Value *rval)
 {
-    JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+    JSString *str = js_ValueToString(cx, IdToValue(id));
     if (!str)
         return false;
     rval->setString(str);
@@ -297,8 +302,8 @@ MakePropertyDescriptorObject(JSContext *cx, jsid id, PropertyDescriptor *desc, V
         return true;
     }
     uintN attrs = desc->attrs;
-    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJSVal(desc->getter) : undefinedValue();
-    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJSVal(desc->setter) : undefinedValue();
+    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : undefinedValue();
+    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : undefinedValue();
     return js_NewPropertyDescriptorObject(cx, id, attrs, getter, setter, desc->value, vp);
 }
 
@@ -502,7 +507,7 @@ bool
 JSScriptedProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
-    JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+    JSString *str = js_ValueToString(cx, IdToValue(id));
     if (!str)
         return false;
     AutoValueRooter tvr(cx, StringTag(str));
@@ -519,7 +524,7 @@ bool
 JSScriptedProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
-    JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+    JSString *str = js_ValueToString(cx, IdToValue(id));
     if (!str)
         return false;
     AutoValueRooter tvr(cx, StringTag(str));
@@ -780,7 +785,7 @@ proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         return false;
 
     if (found) {
-        *propp = (JSProperty *)id;
+        *propp = (JSProperty *)0x1;
         *objp = obj;
     } else {
         *objp = NULL;

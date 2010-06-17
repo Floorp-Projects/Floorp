@@ -765,7 +765,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
-        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &id))
+        if (!js_ValueToStringId(cx, IdToValue(id), &id))
             return NULL;
         atom = JSID_TO_ATOM(id);
     } else {
@@ -805,10 +805,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     if (JSID_IS_INT(id)) {
         propid = id;
     } else {
-        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &propid))
+        if (!js_ValueToStringId(cx, IdToValue(id), &propid))
             return JS_FALSE;
         propid = js_CheckForStringIndex(propid);
-        idroot.set(ID_TO_VALUE(propid));
+        idroot.set(IdToValue(propid));
     }
 
     /*
@@ -1453,7 +1453,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                    JSPropertyDesc *pd)
 {
-    pd->id = ID_TO_JSVAL(sprop->id);
+    pd->id = IdToJsval(sprop->id);
 
     JSBool wasThrowing = cx->throwing;
     AutoValueRooter lastException(cx, cx->exception);
@@ -1495,7 +1495,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
         JSScopeProperty *aprop;
         for (aprop = scope->lastProperty(); aprop; aprop = aprop->parent) {
             if (aprop != sprop && aprop->slot == sprop->slot) {
-                pd->alias = ID_TO_JSVAL(aprop->id);
+                pd->alias = IdToJsval(aprop->id);
                 break;
             }
         }
