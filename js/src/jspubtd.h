@@ -168,9 +168,9 @@ typedef enum JSValueMask16
                            : uint16
 # endif
 {
-    JSVAL_MASK16_NULL      = (uint16)0x0001,
-    JSVAL_MASK16_UNDEFINED = (uint16)0x0002,
-    JSVAL_MASK16_INT32     = (uint16)0x0004,
+    JSVAL_MASK16_INT32     = (uint16)0x0001,
+    JSVAL_MASK16_NULL      = (uint16)0x0002,
+    JSVAL_MASK16_UNDEFINED = (uint16)0x0004,
     JSVAL_MASK16_STRING    = (uint16)0x0008,
     JSVAL_MASK16_NONFUNOBJ = (uint16)0x0010,
     JSVAL_MASK16_FUNOBJ    = (uint16)0x0020,
@@ -198,9 +198,9 @@ JSValueMask16;
 // make a 16-bit enum in C.
 typedef uint16 JSValueMask16;
 
-#define JSVAL_MASK16_NULL      ((uint16)0x0001)
-#define JSVAL_MASK16_UNDEFINED ((uint16)0x0002)
-#define JSVAL_MASK16_INT32     ((uint16)0x0004)
+#define JSVAL_MASK16_INT32     ((uint16)0x0001)
+#define JSVAL_MASK16_NULL      ((uint16)0x0002)
+#define JSVAL_MASK16_UNDEFINED ((uint16)0x0004)
 #define JSVAL_MASK16_STRING    ((uint16)0x0008)
 #define JSVAL_MASK16_NONFUNOBJ ((uint16)0x0010)
 #define JSVAL_MASK16_FUNOBJ    ((uint16)0x0020)
@@ -216,9 +216,9 @@ typedef uint16 JSValueMask16;
 
 #define JSVAL_MASK32_CLEAR      ((uint32)0xFFFF0000)
 
+#define JSVAL_MASK32_INT32      ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_INT32))
 #define JSVAL_MASK32_NULL       ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_NULL))
 #define JSVAL_MASK32_UNDEFINED  ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_UNDEFINED))
-#define JSVAL_MASK32_INT32      ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_INT32))
 #define JSVAL_MASK32_STRING     ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_STRING))
 #define JSVAL_MASK32_NONFUNOBJ  ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_NONFUNOBJ))
 #define JSVAL_MASK32_FUNOBJ     ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_FUNOBJ))
@@ -586,7 +586,8 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NUMBER_IMPL(jsval_layout l)
 {
     JSValueMask32 mask = l.s.u.mask32;
-    return mask < JSVAL_MASK32_CLEAR || mask == JSVAL_MASK32_INT32;
+    JS_ASSERT(mask != JSVAL_MASK32_CLEAR);
+    return mask <= JSVAL_MASK32_INT32;
 }
 
 static JS_ALWAYS_INLINE JSBool
