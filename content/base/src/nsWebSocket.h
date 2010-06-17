@@ -62,15 +62,17 @@
 
 #define NS_WEBSOCKET_CONTRACTID "@mozilla.org/websocket;1"
 
-class nsNetAddressComparator;
+class nsWSNetAddressComparator;
 class nsWebSocketEstablishedConnection;
+class nsWSCloseEvent;
 
 class nsWebSocket: public nsDOMEventTargetWrapperCache,
                    public nsIWebSocket,
                    public nsIJSNativeInitializer
 {
-friend class nsNetAddressComparator;
+friend class nsWSNetAddressComparator;
 friend class nsWebSocketEstablishedConnection;
+friend class nsWSCloseEvent;
 
 public:
   nsWebSocket();
@@ -81,8 +83,8 @@ public:
   NS_DECL_NSIWEBSOCKET
 
   // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                        PRUint32 argc, jsval* argv);
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
+                        JSObject* aObject, PRUint32 aArgc, jsval* aArgv);
 
   static void ReleaseGlobals();
 
@@ -90,9 +92,16 @@ protected:
   nsresult ParseURL(const nsString& aURL);
   nsresult SetProtocol(const nsString& aProtocol);
   nsresult EstablishConnection();
-  nsresult SetReadyState(PRInt32 aNewReadyState);
+
+  nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
+  nsresult CreateAndDispatchMessageEvent(nsCString *aData);
+  nsresult CreateAndDispatchCloseEvent(PRBool aWasClean);
+
+  // called from mConnection accordingly to the situation
+  void SetReadyState(PRUint16 aNewReadyState);
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnMessageListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnCloseListener;
 
@@ -107,7 +116,7 @@ protected:
   nsCOMPtr<nsIURI> mURI;
   nsCString mProtocol;
 
-  PRInt32 mReadyState;
+  PRUint16 mReadyState;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
