@@ -337,6 +337,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
     tabsMixIns.add({name: "onFocus"});
     tabsMixIns.add({name: "onClose"});
     tabsMixIns.add({name: "onOpen"});
+    tabsMixIns.add({name: "onMove"});
   
     tabs.__proto__ = trackedTabs.values;
   /*   Utils.log(tabs); */
@@ -371,25 +372,31 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           var chromeTab = event.originalTarget;
   
           switch (event.type) {
-          case "TabSelect":
-            tabsMixIns.bubble("onFocus",
-                             trackedTabs.get(chromeTab),
-                             true);
-            break;
-          case "TabOpen":
-            newBrowserTab(tabbrowser, chromeTab);
-            tabsMixIns.bubble("onOpen",
-                              trackedTabs.get(chromeTab),
-                              true);
-            break;
-          case "TabMove":
-            break;
-          case "TabClose":
-            tabsMixIns.bubble("onClose",
-                              trackedTabs.get(chromeTab),
-                              true);
-            unloadBrowserTab(chromeTab);
-            break;
+            case "TabSelect":
+              tabsMixIns.bubble("onFocus",
+                               trackedTabs.get(chromeTab),
+                               true);
+              break;
+
+            case "TabOpen":
+              newBrowserTab(tabbrowser, chromeTab);
+              tabsMixIns.bubble("onOpen",
+                                trackedTabs.get(chromeTab),
+                                true);
+              break;
+
+            case "TabMove":
+              tabsMixIns.bubble("onMove",
+                               trackedTabs.get(chromeTab),
+                               true);
+              break;
+
+            case "TabClose":
+              tabsMixIns.bubble("onClose",
+                                trackedTabs.get(chromeTab),
+                                true);
+              unloadBrowserTab(chromeTab);
+              break;
           }
         } catch (e) {
           Utils.log(e);
