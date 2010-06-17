@@ -1029,8 +1029,7 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
         // do we already have an editor here?
         nsCOMPtr<nsIEditor> editor;
         rv = editorDocShell->GetEditor(getter_AddRefs(editor));
-        if (NS_FAILED(rv))
-           return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         needsSetup = !editor;
       }

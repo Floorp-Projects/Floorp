@@ -833,8 +833,7 @@ nsHTMLEditorLog::StartLogging(nsIFile *aLogFile)
   {
     result = StopLogging();
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   result = NS_NewLocalFileOutputStream(getter_AddRefs(mFileStream), aLogFile);
@@ -893,15 +892,13 @@ nsHTMLEditorLog::Write(const char *aBuffer)
 
     result = mFileStream->Write(aBuffer, len, &retval);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
 #ifdef VERY_SLOW
 
     result = mFileStream->Flush();
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
 #endif // VERY_SLOW
   }
@@ -951,8 +948,7 @@ nsHTMLEditorLog::PrintUnicode(const nsAString &aString)
 
     nsresult result = Write(buf);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
     ++beginIter;
   }
 
@@ -968,13 +964,11 @@ nsHTMLEditorLog::PrintSelection()
 
   result = GetSelection(getter_AddRefs(selection));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   result = selection->GetRangeCount(&rangeCount);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   Write("selRanges = [ ");
 
@@ -988,40 +982,34 @@ nsHTMLEditorLog::PrintSelection()
   {
     result = selection->GetRangeAt(i, getter_AddRefs(range));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
     
     result = range->GetStartContainer(getter_AddRefs(startNode));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     NS_ENSURE_TRUE(startNode, NS_ERROR_NULL_POINTER);
 
     result = range->GetStartOffset(&startOffset);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     result = range->GetEndContainer(getter_AddRefs(endNode));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     NS_ENSURE_TRUE(endNode, NS_ERROR_NULL_POINTER);
 
     result = range->GetEndOffset(&endOffset);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     PRInt32 *offsetArray = 0;
     PRInt32 arrayLength = 0;
 
     result = GetNodeTreeOffsets(startNode, &offsetArray, &arrayLength);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     if (i != 0)
       Write(",\n              ");
@@ -1047,8 +1035,7 @@ nsHTMLEditorLog::PrintSelection()
 
       result = GetNodeTreeOffsets(endNode, &offsetArray, &arrayLength);
 
-      if (NS_FAILED(result))
-        return result;
+      NS_ENSURE_SUCCESS(result, result);
     }
 
     Write("[[");
@@ -1086,8 +1073,7 @@ nsHTMLEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = ele->GetTagName(tag);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   Write("n");
   WriteInt(aDepth);
@@ -1097,8 +1083,7 @@ nsHTMLEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = aNode->GetAttributes(getter_AddRefs(map));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   NS_ENSURE_TRUE(map, NS_ERROR_NULL_POINTER);
 
@@ -1107,22 +1092,19 @@ nsHTMLEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = map->GetLength(&len);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   for (i = 0; i < len; i++)
   {
     result = map->Item(i, getter_AddRefs(attr));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     NS_ENSURE_TRUE(attr, NS_ERROR_NULL_POINTER);
 
     result = PrintAttributeNode(attr, aDepth);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   result = PrintNodeChildren(aNode, aDepth);
@@ -1142,8 +1124,7 @@ nsHTMLEditorLog::PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = attr->GetName(str);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   Write("a");
   WriteInt(aDepth);
@@ -1153,8 +1134,7 @@ nsHTMLEditorLog::PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = attr->GetValue(str);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   Write("a");
   WriteInt(aDepth);
@@ -1182,8 +1162,7 @@ nsHTMLEditorLog::PrintNodeChildren(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = aNode->GetChildNodes(getter_AddRefs(list));
   
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (!list)
   {
@@ -1196,20 +1175,17 @@ nsHTMLEditorLog::PrintNodeChildren(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = list->GetLength(&len);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   for (i = 0; i < len; i++)
   {
     result = list->Item(i, getter_AddRefs(node));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     result = PrintNode(node, aDepth + 1);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     Write("n");
     WriteInt(aDepth);
@@ -1234,8 +1210,7 @@ nsHTMLEditorLog::PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   result = cd->GetData(str);
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   Write("n");
   WriteInt(aDepth);
@@ -1305,8 +1280,7 @@ nsHTMLEditorLog::GetNodeTreeOffsets(nsIDOMNode *aNode, PRInt32 **aResult, PRInt3
   {
     result = parent->GetParentNode(&parent);
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     if (parent)
       ++i;

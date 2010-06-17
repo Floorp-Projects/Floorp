@@ -225,8 +225,7 @@ nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   // get the selection and cache the position before editing
   nsCOMPtr<nsISelection> selection;
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) 
-    return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   selection->GetAnchorNode(getter_AddRefs(mCachedSelectionNode));
   selection->GetAnchorOffset(&mCachedSelectionOffset);
@@ -259,18 +258,15 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     res = mEditor->HandleInlineSpellCheck(action, selection,
                                           mCachedSelectionNode, mCachedSelectionOffset,
                                           nsnull, 0, nsnull, 0);
-    if (NS_FAILED(res)) 
-      return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
-    if (NS_FAILED(res)) 
-      return res;
+    NS_ENSURE_SUCCESS(res, res);
     
     // insure trailing br node
     res = CreateTrailingBRIfNeeded();
-    if (NS_FAILED(res)) 
-      return res;
+    NS_ENSURE_SUCCESS(res, res);
     
     /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
      * This is difficult, because we cannot know what the level is until after the Bidi algorithm
