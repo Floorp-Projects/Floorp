@@ -95,7 +95,8 @@ class nsHTMLEditor : public nsPlaintextEditor,
                      public nsITableEditor,
                      public nsIHTMLInlineTableEditor,
                      public nsIEditorStyleSheets,
-                     public nsICSSLoaderObserver
+                     public nsICSSLoaderObserver,
+                     public nsStubMutationObserver
 {
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
 
@@ -150,6 +151,11 @@ public:
   virtual PRBool HasFocus();
   virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
   already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
+
+  /* ------------ nsStubMutationObserver overrides --------- */
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   /* ------------ nsIEditorIMESupport overrides ------------ */
   NS_IMETHOD GetPreferredIMEState(PRUint32 *aState);
@@ -315,7 +321,8 @@ public:
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
-  
+  NS_IMETHOD PreDestroy(PRBool aDestroyingFrames);
+
   /** Internal, static version */
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock);
 

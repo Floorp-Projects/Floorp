@@ -245,6 +245,7 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsITableEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorStyleSheets)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsPlaintextEditor)
 
 
@@ -274,6 +275,10 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     // Init the plaintext editor
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
     if (NS_FAILED(result)) { return result; }
+
+    // Init mutation observer
+    nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
+    document->AddMutationObserver(this);
 
     // disable Composer-only features
     if (IsMailEditor())
@@ -332,6 +337,21 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
 
   if (NS_FAILED(rulesRes)) return rulesRes;
   return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::PreDestroy(PRBool aDestroyingFrames)
+{
+  if (mDidPreDestroy) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsINode> document = do_QueryReferent(mDocWeak);
+  if (document) {
+    document->RemoveMutationObserver(this);
+  }
+
+  return nsPlaintextEditor::PreDestroy(aDestroyingFrames);
 }
 
 NS_IMETHODIMP
@@ -3853,6 +3873,52 @@ NS_IMETHODIMP nsHTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
   }
 
   return nsEditor::InsertTextImpl(aStringToInsert, aInOutNode, aInOutOffset, aDoc);
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  nsStubMutationObserver overrides 
+#pragma mark -
+#endif
+
+void
+nsHTMLEditor::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
+                              nsIContent* aFirstNewContent,
+                              PRInt32 /* unused */)
+{
+  ContentInserted(aDocument, aContainer, nsnull, 0);
+}
+
+void
+nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+                              nsIContent* aChild, PRInt32 /* unused */)
+{
+  // XXX If we need aChild then nsEditor::ContentAppended should start passing
+  //     in the child.
+  if (!mRootElement)
+  {
+    // Need to remove the event listeners first because BeginningOfDocument
+    // could set a new root (and event target) and we won't be able to remove
+    // them from the old event target then.
+    RemoveEventListeners();
+    BeginningOfDocument();
+    InstallEventListeners();
+    SyncRealTimeSpell();
+  }
+}
+
+void
+nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
+                             nsIContent* aChild, PRInt32 aIndexInContainer)
+{
+  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(aChild);
+  if (elem == mRootElement)
+  {
+    RemoveEventListeners();
+    mRootElement = nsnull;
+    mEventTarget = nsnull;
+    InstallEventListeners();
+  }
 }
 
 #ifdef XP_MAC

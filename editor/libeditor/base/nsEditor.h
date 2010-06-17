@@ -99,8 +99,7 @@ class nsKeyEvent;
 class nsEditor : public nsIEditor,
                  public nsIEditorIMESupport,
                  public nsSupportsWeakReference,
-                 public nsIPhonetic,
-                 public nsStubMutationObserver
+                 public nsIPhonetic
 {
 public:
 
@@ -155,10 +154,6 @@ public:
   
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
-
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
 public:
 
