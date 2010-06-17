@@ -1556,7 +1556,7 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
     if (ctx_restore(ctx, &state) != 0)
       return -1;
 
-    if (r != 1)
+    if (r < 0)
       return -1;
   }
 
