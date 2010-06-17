@@ -37,7 +37,7 @@
 #define firefox_community Get Involved
 
 # LOCALIZATION NOTE (firefox_about):
-# link title for http://en-US.www.mozilla.com/en-US/firefox/about/
+# link title for http://en-US.www.mozilla.com/en-US/about/
 #define firefox_about About Us
 
 #unfilter emptyLines
