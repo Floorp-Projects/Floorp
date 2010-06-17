@@ -761,14 +761,12 @@ var Browser = {
   },
 
   addTab: function(uri, bringFront, aOwner) {
-    let newTab = new Tab();
+    let newTab = new Tab(uri);
     newTab.owner = aOwner || null;
     this._tabs.push(newTab);
 
     if (bringFront)
       this.selectedTab = newTab;
-
-    newTab.load(uri);
 
     let event = document.createEvent("Events");
     event.initEvent("TabOpen", true, false);
@@ -2958,7 +2956,7 @@ var OfflineApps = {
   }
 };
 
-function Tab() {
+function Tab(aURI) {
   this._id = null;
   this._browser = null;
   this._browserViewportState = null;
@@ -2974,7 +2972,7 @@ function Tab() {
   // toss if app needs more memory.
   this.lastSelected = 0;
 
-  this.create();
+  this.create(aURI);
 }
 
 Tab.prototype = {
@@ -3130,16 +3128,12 @@ Tab.prototype = {
     return this._loading;
   },
 
-  load: function load(uri) {
-    this._browser.setAttribute("src", uri);
-  },
-
-  create: function create() {
+  create: function create(aURI) {
     // Initialize a viewport state for BrowserView
     this._browserViewportState = BrowserView.Util.createBrowserViewportState();
 
     this._chromeTab = document.getElementById("tabs").addTab();
-    this._createBrowser();
+    this._createBrowser(aURI);
   },
 
   destroy: function destroy() {
@@ -3156,7 +3150,7 @@ Tab.prototype = {
     }
   },
 
-  _createBrowser: function _createBrowser() {
+  _createBrowser: function _createBrowser(aURI) {
     if (this._browser)
       throw "Browser already exists";
 
@@ -3167,8 +3161,9 @@ Tab.prototype = {
     browser.setAttribute("type", "content");
 
     let useRemote = gPrefService.getBoolPref("browser.tabs.remote");
-    browser.setAttribute("remote", useRemote ? "true" : "false");
-
+    let useLocal = aURI.indexOf("about") == 0 && aURI != "about:blank";
+    browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
+    
     // Append the browser to the document, which should start the page load
     document.getElementById("browsers").appendChild(browser);
 
@@ -3182,6 +3177,8 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT;
     this._listener = new ProgressController(this);
     browser.webProgress.addProgressListener(this._listener, flags);
+
+    browser.setAttribute("src", aURI);
   },
 
   _destroyBrowser: function _destroyBrowser() {

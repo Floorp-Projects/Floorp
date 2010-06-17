@@ -919,7 +919,7 @@ let ViewportHandler = {
       autoSize: autoSize,
       allowZoom: windowUtils.getDocumentMetadata("viewport-user-scalable") != "no"
     };
-  },
+  }
 };
 
 ViewportHandler.init();
