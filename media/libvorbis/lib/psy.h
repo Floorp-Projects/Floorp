@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: random psychoacoustics (not including preecho)
- last mod: $Id: psy.h 16227 2009-07-08 06:58:46Z xiphmont $
+ last mod: $Id: psy.h 16946 2010-03-03 16:12:40Z xiphmont $
 
  ********************************************************************/
 
@@ -57,8 +57,7 @@ typedef struct vorbis_info_psy{
 
   float max_curve_dB;
 
-  int normal_channel_p;
-  int normal_point_p;
+  int normal_p;
   int normal_start;
   int normal_partition;
   double normal_thresh;
@@ -122,12 +121,6 @@ extern void  *_vi_psy_dup(void *source);
 extern void   _vi_psy_free(vorbis_info_psy *i);
 extern vorbis_info_psy *_vi_psy_copy(vorbis_info_psy *i);
 
-extern void _vp_remove_floor(vorbis_look_psy *p,
-                             float *mdct,
-                             int *icodedflr,
-                             float *residue,
-                             int sliding_lowpass);
-
 extern void _vp_noisemask(vorbis_look_psy *p,
                           float *logmdct,
                           float *logmask);
@@ -148,38 +141,14 @@ extern void _vp_offset_and_mix(vorbis_look_psy *p,
 
 extern float _vp_ampmax_decay(float amp,vorbis_dsp_state *vd);
 
-extern float **_vp_quantize_couple_memo(vorbis_block *vb,
-                                        vorbis_info_psy_global *g,
-                                        vorbis_look_psy *p,
-                                        vorbis_info_mapping0 *vi,
-                                        float **mdct);
-
-extern void _vp_couple(int blobno,
-                       vorbis_info_psy_global *g,
-                       vorbis_look_psy *p,
-                       vorbis_info_mapping0 *vi,
-                       float **res,
-                       float **mag_memo,
-                       int   **mag_sort,
-                       int   **ifloor,
-                       int   *nonzero,
-                       int   sliding_lowpass);
-
-extern void _vp_noise_normalize(vorbis_look_psy *p,
-                                float *in,float *out,int *sortedindex);
-
-extern void _vp_noise_normalize_sort(vorbis_look_psy *p,
-                                     float *magnitudes,int *sortedindex);
-
-extern int **_vp_quantize_couple_sort(vorbis_block *vb,
-                                      vorbis_look_psy *p,
-                                      vorbis_info_mapping0 *vi,
-                                      float **mags);
-
-extern void hf_reduction(vorbis_info_psy_global *g,
-                         vorbis_look_psy *p,
-                         vorbis_info_mapping0 *vi,
-                         float **mdct);
-
+extern void _vp_couple_quantize_normalize(int blobno,
+                                          vorbis_info_psy_global *g,
+                                          vorbis_look_psy *p,
+                                          vorbis_info_mapping0 *vi,
+                                          float **mdct,
+                                          int   **iwork,
+                                          int    *nonzero,
+                                          int     sliding_lowpass,
+                                          int     ch);
 
 #endif
