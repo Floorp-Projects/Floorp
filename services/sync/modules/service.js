@@ -103,9 +103,6 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   keyGenEnabled: true,
 
-  // object for caching public and private keys
-  _keyPair: {},
-
   get username() {
     return Svc.Prefs.get("username", "").toLowerCase();
   },
@@ -287,11 +284,11 @@ WeaveSvc.prototype = {
       this._log.info("Weave Sync disabled");
 
     // Create Weave identities (for logging in, and for encryption)
-    ID.set('WeaveID', new Identity('Mozilla Services Password', this.username));
+    ID.set('WeaveID', new Identity(PWDMGR_PASSWORD_REALM, this.username));
     Auth.defaultAuthenticator = new BasicAuthenticator(ID.get('WeaveID'));
 
     ID.set('WeaveCryptoID',
-           new Identity('Mozilla Services Encryption Passphrase', this.username));
+           new Identity(PWDMGR_PASSPHRASE_REALM, this.username));
 
     this._updateCachedURLs();
 
@@ -764,7 +761,6 @@ WeaveSvc.prototype = {
 
     this._log.info("Logging out");
     this._loggedIn = false;
-    this._keyPair = {};
 
     // Cancel the sync timer now that we're logged out
     this._checkSyncStatus();
