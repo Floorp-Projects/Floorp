@@ -38,7 +38,6 @@
 const PREFIX_ITEM_URI = "urn:mozilla:item:";
 const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
 
-const PREF_GETADDONS_REPOSITORY = "extensions.getAddons.repository";
 const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 
 const URI_GENERIC_ICON_XPINSTALL = "chrome://browser/skin/images/alert-addons-30.png";
@@ -48,11 +47,15 @@ XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
   return AddonManager;
 });
 
+XPCOMUtils.defineLazyGetter(this, "AddonRepository", function() {
+  Cu.import("resource://gre/modules/AddonRepository.jsm");
+  return AddonRepository;
+});
+
 var ExtensionsView = {
   _pref: null,
   _ios: null,
   _strings: {},
-  _repo: null,
   _list: null,
   _localItem: null,
   _repoItem: null,
@@ -119,7 +122,7 @@ var ExtensionsView = {
   getElementForAddon: function ev_getElementForAddon(aKey) {
     let element = document.getElementById(PREFIX_ITEM_URI + aKey);
     if (!element && this._list)
-      element = this._list.getElementsByAttribute("xpiURL", aKey)[0];
+      element = this._list.getElementsByAttribute("sourceURL", aKey)[0];
     return element;
   },
 
@@ -235,15 +238,6 @@ var ExtensionsView = {
 
     this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
     this._search = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
-
-    let repository = "@mozilla.org/extensions/addon-repository;1";
-    try {
-      var repo = pref.getCharPref(PREF_GETADDONS_REPOSITORY);
-      if (repo in Components.classes)
-        repository = repo;
-    } catch (e) { }
-    this._repo = Cc[repository].createInstance(Ci.nsIAddonRepository);
-
     this._list = document.getElementById("addons-list");
     this._localItem = document.getElementById("addons-local");
     this._repoItem = document.getElementById("addons-repo");
@@ -413,10 +407,7 @@ var ExtensionsView = {
   },
 
   installFromRepo: function ev_installFromRepo(aItem) {
-    AddonManager.getInstallForURL(aItem.getAttribute("xpiURL"),
-                                  function(aInstall) { aInstall.install(); },
-                                  "application/x-xpinstall",
-                                  aItem.getAttribute("xpiHash"));
+    aItem.install.install();
 
     // display the progress bar early
     let opType = aItem.getAttribute("opType");
@@ -456,15 +447,15 @@ var ExtensionsView = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    if (this._repo.isSearching)
-      this._repo.cancelSearch();
+    if (AddonRepository.isSearching)
+      AddonRepository.cancelSearch();
 
     let strings = Elements.browserBundle;
     if (aTerms) {
       AddonSearchResults.selectFirstResult = aSelectFirstResult;
       this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                 strings.getString("addonsSearchStart.button"), false);
-      this._repo.searchAddons(aTerms, this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
+      AddonRepository.searchAddons(aTerms, this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
     }
     else {
       if (RecommendedSearchResults.cache) {
@@ -473,7 +464,7 @@ var ExtensionsView = {
       else {
         this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                   strings.getString("addonsSearchStart.button"), false);
-        this._repo.retrieveRecommendedAddons(this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
+        AddonRepository.retrieveRecommendedAddons(this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
       }
     }
   },
@@ -502,8 +493,8 @@ var ExtensionsView = {
       aAddons.sort(compare);
     }
 
-    var urlproperties = [ "iconURL", "homepageURL", "thumbnailURL", "xpiURL" ];
-    var properties = [ "name", "eula", "iconURL", "homepageURL", "thumbnailURL", "xpiURL", "xpiHash" ];
+    var urlproperties = [ "iconURL", "homepageURL" ];
+    var properties = [ "name", "iconURL", "homepageURL", "screenshots" ];
     var foundItem = false;
     for (let i = 0; i < aAddons.length; i++) {
       let addon = aAddons[i];
@@ -511,16 +502,19 @@ var ExtensionsView = {
       // Check for any items with potentially unsafe urls
       if (urlproperties.some(function (p) !this._isSafeURI(addon[p]), this))
         continue;
+      if (addon.screenshots &&
+          addon.screenshots.some(function (aScreenshot) !this._isSafeURI(aScreenshot), this))
+        continue;
 
       // Convert the numeric type to a string
       let types = {"2":"extension", "4":"theme", "8":"locale"};
       addon.type = types[addon.type];
 
       let listitem = this._createItem(addon, "search");
-      listitem.setAttribute("description", addon.summary);
+      listitem.setAttribute("description", addon.description);
       listitem.setAttribute("homepageURL", addon.homepageURL);
-      listitem.setAttribute("xpiURL", addon.xpiURL);
-      listitem.setAttribute("xpiHash", addon.xpiHash);
+      listitem.install = addon.install;
+      listitem.setAttribute("sourceURL", addon.install.sourceURL);
       if (!aIsRecommended)
         listitem.setAttribute("rating", addon.rating);
       let item = this._list.appendChild(listitem);
@@ -664,7 +658,7 @@ function searchFailed() {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIAddonSearchResultsCallback for the recommended search
+// callback for the recommended search
 var RecommendedSearchResults = {
   cache: null,
 
@@ -677,7 +671,7 @@ var RecommendedSearchResults = {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIAddonSearchResultsCallback for a standard search
+// callback for a standard search
 var AddonSearchResults = {
   // set by ExtensionsView
   selectFirstResult: false,
