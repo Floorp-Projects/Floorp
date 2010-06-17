@@ -78,7 +78,7 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
 
   // the resizers and the shadow will be anonymous children of the body
   nsIDOMElement *bodyElement = GetRoot();
-  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableAddColumnBefore"),
@@ -134,7 +134,7 @@ nsHTMLEditor::HideInlineTableEditingUI()
   nsIDOMElement *bodyElement = GetRoot();
 
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
-  if (!bodyContent) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(bodyContent, NS_ERROR_FAILURE);
 
   DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, ps);
   mAddColumnBeforeButton = nsnull;

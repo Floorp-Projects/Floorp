@@ -741,7 +741,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     if (!isCollapsed)
     {
       nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aEvent));
-      if (!nsuiEvent) return PR_FALSE;
+      NS_ENSURE_TRUE(nsuiEvent, PR_FALSE);
 
       nsCOMPtr<nsIDOMNode> parent;
       rv = nsuiEvent->GetRangeParent(getter_AddRefs(parent));

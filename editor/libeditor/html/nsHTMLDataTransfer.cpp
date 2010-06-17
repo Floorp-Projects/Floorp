@@ -145,7 +145,7 @@ static nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult
 
 static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
 {
-  if (!aNode) return nsnull;
+  NS_ENSURE_TRUE(aNode, nsnull);
   nsCOMPtr<nsIDOMNode> parent, tmp;
   aNode->GetParentNode(getter_AddRefs(parent));
   while (parent)
@@ -159,7 +159,7 @@ static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
 
 static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 {
-  if (!aNode) return nsnull;
+  NS_ENSURE_TRUE(aNode, nsnull);
   nsCOMPtr<nsIDOMNode> parent, tmp;
   aNode->GetParentNode(getter_AddRefs(parent));
   while (parent)
@@ -174,7 +174,7 @@ static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 
 NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
 {
-  if (!mRules) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
@@ -263,7 +263,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                     PRInt32 aDestOffset,
                                     PRBool aDeleteSelection)
 {
-  if (!mRules) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
@@ -889,7 +889,7 @@ nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
   nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
   nsresult rv = aNode->GetAttributes(getter_AddRefs(attrMap));
   NS_ENSURE_SUCCESS(rv, NS_OK);
-  if (!attrMap) return NS_OK; // assume errors here shouldn't cancel insertion
+  NS_ENSURE_TRUE(attrMap, NS_OK); // assume errors here shouldn't cancel insertion
 
   nsCOMPtr<nsIDOMNode> attrNode;
   rv = attrMap->GetNamedItem(attributeToModify, getter_AddRefs(attrNode));
@@ -930,10 +930,10 @@ nsHTMLEditor::RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeLis
   nsCOMPtr<nsIDOMDocument> domDoc;
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> destDoc = do_QueryInterface(domDoc);
-  if (!destDoc) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(destDoc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIURL> destURL = do_QueryInterface(destDoc->GetDocumentURI());
-  if (!destURL) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(destURL, NS_ERROR_FAILURE);
 
   // brade: eventually should look for a base url in the document if present
 
@@ -1489,7 +1489,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession)); 
-  if (!dragSession) return NS_OK;
+  NS_ENSURE_TRUE(dragSession, NS_OK);
 
   // transferable hooks here
   nsCOMPtr<nsIDOMDocument> domdoc;
@@ -1505,7 +1505,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareHTMLTransferable(getter_AddRefs(trans), bHavePrivateHTMLFlavor);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
+  NS_ENSURE_TRUE(trans, NS_OK);  // NS_ERROR_FAILURE; SHOULD WE FAIL?
 
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
@@ -1530,7 +1530,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   {
     rv = dragSession->GetData(trans, i);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
+    NS_ENSURE_TRUE(trans, NS_OK); // NS_ERROR_FAILURE; Should we fail?
 
     // get additional html copy hints, if present
     nsAutoString contextStr, infoStr;
@@ -1577,7 +1577,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       PRBool userWantsCopy = PR_FALSE;
 
       nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent(do_QueryInterface(aDropEvent));
-      if (!nsuiEvent) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(nsuiEvent, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aDropEvent));
       if (mouseEvent)
@@ -1596,7 +1596,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       nsCOMPtr<nsISelection> selection;
       rv = GetSelection(getter_AddRefs(selection));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (!selection) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
       PRBool isCollapsed;
       rv = selection->GetIsCollapsed(&isCollapsed);
@@ -1605,7 +1605,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       // Parent and offset under the mouse cursor
       rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (!newSelectionParent) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 
       rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1632,7 +1632,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
                              &newSelectionOffset);
 
         NS_ENSURE_SUCCESS(rv, rv);
-        if (!newSelectionParent) return NS_ERROR_FAILURE;
+        NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
       }
 
       // We never have to delete if selection is already collapsed
@@ -1826,7 +1826,7 @@ PRBool nsHTMLEditor::HavePrivateHTMLFlavor(nsIClipboard *aClipboard)
   // check the clipboard for our special kHTMLContext flavor.  If that is there, we know
   // we have our own internal html format on clipboard.
   
-  if (!aClipboard) return PR_FALSE;
+  NS_ENSURE_TRUE(aClipboard, PR_FALSE);
   PRBool bHavePrivateHTMLFlavor = PR_FALSE;
   
   const char* flavArray[] = { kHTMLContext };
@@ -2081,7 +2081,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
@@ -2094,7 +2094,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
     nsCOMPtr<nsIDOMNode> newNode;
     res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("blockquote"), getter_AddRefs(newNode));
     NS_ENSURE_SUCCESS(res, res);
-    if (!newNode) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(newNode, NS_ERROR_NULL_POINTER);
 
     // Try to set type=cite.  Ignore it if this fails.
     nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
@@ -2305,7 +2305,10 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  if (!selection)
+  {
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  }
   else
   {
     nsAutoEditBatch beginBatching(this);
@@ -2418,7 +2421,10 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   nsCOMPtr<nsISelection> selection;
   res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  if (!selection)
+  {
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  }
   else
   {
     nsAutoEditBatch beginBatching(this);
@@ -2434,7 +2440,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
     {
       res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("blockquote"), getter_AddRefs(newNode));
       NS_ENSURE_SUCCESS(res, res);
-      if (!newNode) return NS_ERROR_NULL_POINTER;
+      NS_ENSURE_TRUE(newNode, NS_ERROR_NULL_POINTER);
 
       // Try to set type=cite.  Ignore it if this fails.
       nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
@@ -2801,7 +2807,7 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
 
   nsCOMPtr<nsIDOMRange> docFragRange =
                           do_CreateInstance("@mozilla.org/content/range;1");
-  if (!docFragRange) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(docFragRange, NS_ERROR_OUT_OF_MEMORY);
 
   res = docFragRange->SetStart(aStartNode, aStartOffset);
   NS_ENSURE_SUCCESS(res, res);

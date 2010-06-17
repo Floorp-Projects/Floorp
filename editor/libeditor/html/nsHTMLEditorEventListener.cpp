@@ -103,7 +103,7 @@ nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
   NS_ENSURE_SUCCESS(res, res);
-  if (!target) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   PRInt32 clientX, clientY;
@@ -153,25 +153,25 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMNSEvent> internalEvent = do_QueryInterface(aMouseEvent);
   res = internalEvent->GetExplicitOriginalTarget(getter_AddRefs(target));
   NS_ENSURE_SUCCESS(res, res);
-  if (!target) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2))
   {
     nsCOMPtr<nsISelection> selection;
     mEditor->GetSelection(getter_AddRefs(selection));
-    if (!selection) return NS_OK;
+    NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node
     nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
-    if (!uiEvent) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset = 0;
 
     res = uiEvent->GetRangeParent(getter_AddRefs(parent));
     NS_ENSURE_SUCCESS(res, res);
-    if (!parent) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
     res = uiEvent->GetRangeOffset(&offset);
     NS_ENSURE_SUCCESS(res, res);
@@ -301,7 +301,7 @@ nsHTMLEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
   NS_ENSURE_SUCCESS(res, res);
-  if (!target) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   GetHTMLEditor()->DoInlineTableEditingAction(element);

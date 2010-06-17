@@ -172,7 +172,7 @@ NS_IMETHODIMP
 nsClearUndoCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
 { 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(editor, NS_ERROR_NOT_IMPLEMENTED);
   
   editor->EnableUndo(PR_FALSE);  // Turning off undo clears undo/redo stacks.
   editor->EnableUndo(PR_TRUE);   // This re-enables undo/redo.

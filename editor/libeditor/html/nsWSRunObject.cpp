@@ -451,7 +451,7 @@ nsWSRunObject::DeleteWSBackward()
   WSPoint point;
   res = GetCharBefore(mNode, mOffset, &point);  
   NS_ENSURE_SUCCESS(res, res);
-  if (!point.mTextNode) return NS_OK;  // nothing to delete
+  NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
   
   if (mPRE)  // easy case, preformatted ws
   {
@@ -506,7 +506,7 @@ nsWSRunObject::DeleteWSForward()
   WSPoint point;
   res = GetCharAfter(mNode, mOffset, &point);  
   NS_ENSURE_SUCCESS(res, res);
-  if (!point.mTextNode) return NS_OK;  // nothing to delete
+  NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
   
   if (mPRE)  // easy case, preformatted ws
   {
@@ -670,7 +670,7 @@ nsWSRunObject::AdjustWhitespace()
   // this routine examines a run of ws and tries to get rid of some unneeded nbsp's,
   // replacing them with regualr ascii space if possible.  Keeping things simple
   // for now and just trying to fix up the trailing ws in the run.
-  if (!mLastNBSPNode) return NS_OK; // nothing to do!
+  NS_ENSURE_TRUE(mLastNBSPNode, NS_OK); // nothing to do!
   nsresult res = NS_OK;
   WSFragment *curRun = mStartRun;
   while (curRun)
@@ -1020,7 +1020,7 @@ nsWSRunObject::GetRuns()
   
   // otherwise a little trickier.  shucks.
   mStartRun = new WSFragment();
-  if (!mStartRun) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(mStartRun, NS_ERROR_NULL_POINTER);
   mStartRun->mStartNode = mStartNode;
   mStartRun->mStartOffset = mStartOffset;
   
@@ -1035,7 +1035,7 @@ nsWSRunObject::GetRuns()
     
     // set up next run
     WSFragment *normalRun = new WSFragment();
-    if (!normalRun) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(normalRun, NS_ERROR_NULL_POINTER);
     mStartRun->mRight = normalRun;
     normalRun->mType = eNormalWS;
     normalRun->mStartNode = mFirstNBSPNode;
@@ -1072,7 +1072,7 @@ nsWSRunObject::GetRuns()
         
         // set up next run
         WSFragment *lastRun = new WSFragment();
-        if (!lastRun) return NS_ERROR_NULL_POINTER;
+        NS_ENSURE_TRUE(lastRun, NS_ERROR_NULL_POINTER);
         lastRun->mType = eTrailingWS;
         lastRun->mStartNode = mLastNBSPNode;
         lastRun->mStartOffset = mLastNBSPOffset+1;
@@ -1109,7 +1109,7 @@ nsWSRunObject::GetRuns()
     {
       // set up next run
       WSFragment *lastRun = new WSFragment();
-      if (!lastRun) return NS_ERROR_NULL_POINTER;
+      NS_ENSURE_TRUE(lastRun, NS_ERROR_NULL_POINTER);
       lastRun->mType = eTrailingWS;
       lastRun->mStartNode = mLastNBSPNode;
       lastRun->mStartOffset = mLastNBSPOffset+1;
@@ -1144,7 +1144,7 @@ nsresult
 nsWSRunObject::MakeSingleWSRun(PRInt16 aType)
 {
   mStartRun = new WSFragment();
-  if (!mStartRun) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(mStartRun, NS_ERROR_NULL_POINTER);
 
   mStartRun->mStartNode   = mStartNode;
   mStartRun->mStartOffset = mStartOffset;
@@ -1162,7 +1162,7 @@ nsWSRunObject::MakeSingleWSRun(PRInt16 aType)
 nsresult 
 nsWSRunObject::PrependNodeToList(nsIDOMNode *aNode)
 {
-  if (!aNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   if (!mNodeArray.InsertObjectAt(aNode, 0))
     return NS_ERROR_FAILURE;
   return NS_OK;
@@ -1171,7 +1171,7 @@ nsWSRunObject::PrependNodeToList(nsIDOMNode *aNode)
 nsresult 
 nsWSRunObject::AppendNodeToList(nsIDOMNode *aNode)
 {
-  if (!aNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   if (!mNodeArray.AppendObject(aNode))
     return NS_ERROR_FAILURE;
   return NS_OK;
@@ -1185,7 +1185,7 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
   // can't really recycle various getnext/prior routines because we
   // have special needs here.  Need to step into inline containers but
   // not block containers.
-  if (!aStartNode || !aBlockParent || !aPriorNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aStartNode && aBlockParent && aPriorNode, NS_ERROR_NULL_POINTER);
   
   nsresult res = aStartNode->GetPreviousSibling(getter_AddRefs(*aPriorNode));
   NS_ENSURE_SUCCESS(res, res);
@@ -1195,7 +1195,7 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
     // we have exhausted nodes in parent of aStartNode.
     res = curNode->GetParentNode(getter_AddRefs(temp));
     NS_ENSURE_SUCCESS(res, res);
-    if (!temp) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(temp, NS_ERROR_NULL_POINTER);
     if (temp == aBlockParent)
     {
       // we have exhausted nodes in the block parent.  The convention here is to return null.
@@ -1305,7 +1305,7 @@ nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
     // we have exhausted nodes in parent of aStartNode.
     res = curNode->GetParentNode(getter_AddRefs(temp));
     NS_ENSURE_SUCCESS(res, res);
-    if (!temp) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(temp, NS_ERROR_NULL_POINTER);
     if (temp == aBlockParent)
     {
       // we have exhausted nodes in the block parent.  The convention
@@ -1608,7 +1608,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
       if (!range)
       {
         range = do_CreateInstance("@mozilla.org/content/range;1");
-        if (!range) return NS_ERROR_OUT_OF_MEMORY;
+        NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
         res = range->SetStart(aStartNode, aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
         res = range->SetEnd(aEndNode, aEndOffset);
@@ -1703,7 +1703,7 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   else if (idx < (PRInt32)(numNodes-1))
   {
     nsIDOMNode* node = mNodeArray[idx+1];
-    if (!node) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
     outPoint->mTextNode = do_QueryInterface(node);
     if (!outPoint->mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
       // Not sure if this is needed, but it'll maintain the same
@@ -1739,7 +1739,7 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
   else if (idx)
   {
     nsIDOMNode* node = mNodeArray[idx-1];
-    if (!node) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
     outPoint->mTextNode = do_QueryInterface(node);
 
     PRUint32 len = outPoint->mTextNode->TextLength();
@@ -2054,7 +2054,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
 {    
   // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation. 
   // examine what is before and after the trailing nbsp, if any.
-  if (!aRun) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aRun, NS_ERROR_NULL_POINTER);
   WSPoint thePoint;
   PRBool leftCheck = PR_FALSE;
   PRBool spaceNBSP = PR_FALSE;
@@ -2170,7 +2170,7 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aO
   // this routine is called when we about to make this point in the ws abut an inserted break
   // or text, so we don't have to worry about what is after it.  What is after it now will 
   // end up after the inserted object.   
-  if (!aRun || !aNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aRun && aNode, NS_ERROR_NULL_POINTER);
   WSPoint thePoint;
   PRBool canConvert = PR_FALSE;
   nsresult res = GetCharBefore(aNode, aOffset, &thePoint);

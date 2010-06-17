@@ -152,7 +152,7 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 
     rv = mAttributes->GetLength(&mAttributeCnt);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!mAttributeCnt) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(mAttributeCnt, NS_ERROR_FAILURE);
     mCurAttrIndex = 0;
   }
 #ifdef DEBUG_akkana
@@ -319,7 +319,7 @@ nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
 {
   nsHTMLURIRefObject* refObject = new nsHTMLURIRefObject();
-  if (!refObject) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(refObject, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv = refObject->SetNode(aNode);
   if (NS_FAILED(rv)) {
     *aResult = 0;

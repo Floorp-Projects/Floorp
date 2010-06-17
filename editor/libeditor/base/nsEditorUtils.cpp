@@ -106,7 +106,7 @@ nsDOMIterator::Init(nsIDOMRange* aRange)
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   NS_ENSURE_SUCCESS(res, res);
-  if (!mIter) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mIter, NS_ERROR_FAILURE);
   return mIter->Init(aRange);
 }
 
@@ -116,7 +116,7 @@ nsDOMIterator::Init(nsIDOMNode* aNode)
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   NS_ENSURE_SUCCESS(res, res);
-  if (!mIter) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mIter, NS_ERROR_FAILURE);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
 }
@@ -174,7 +174,7 @@ nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
   NS_ENSURE_SUCCESS(res, res);
-  if (!mIter) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mIter, NS_ERROR_FAILURE);
   return mIter->Init(aRange);
 }
 
@@ -184,7 +184,7 @@ nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
   NS_ENSURE_SUCCESS(res, res);
-  if (!mIter) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mIter, NS_ERROR_FAILURE);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
 }
@@ -196,7 +196,7 @@ nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
 PRBool 
 nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
 {
-  if (!aNode && !aParent) return PR_FALSE;
+  NS_ENSURE_TRUE(aNode || aParent, PR_FALSE);
   if (aNode == aParent) return PR_FALSE;
   
   nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(aNode);
@@ -243,12 +243,12 @@ nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
                                                  nsISimpleEnumerator **aResult)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  if (!doc) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
-  if (!hookObj) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(hookObj, NS_ERROR_FAILURE);
 
   return hookObj->GetHookEnumerator(aResult);
 }

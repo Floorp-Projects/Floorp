@@ -84,10 +84,10 @@ NS_IMETHODIMP SetDocTitleTxn::RedoTransaction(void)
 nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMDocument> domDoc;
   nsresult res = editor->GetDocument(getter_AddRefs(domDoc));
-  if (!domDoc) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNodeList> titleList;
   res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"), getter_AddRefs(titleList));
@@ -135,11 +135,11 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   nsCOMPtr<nsIDOMNodeList> headList;
   res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList));
   NS_ENSURE_SUCCESS(res, res);
-  if (!headList) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(headList, NS_ERROR_FAILURE);
   
   nsCOMPtr<nsIDOMNode>headNode;
   headList->Item(0, getter_AddRefs(headNode));
-  if (!headNode) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(headNode, NS_ERROR_FAILURE);
 
   PRBool   newTitleNode = PR_FALSE;
   PRUint32 newTitleIndex = 0;
@@ -150,7 +150,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
     nsCOMPtr<nsIDOMElement>titleElement;
     res = domDoc->CreateElement(NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
     NS_ENSURE_SUCCESS(res, res);
-    if (!titleElement) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(titleElement, NS_ERROR_FAILURE);
 
     titleNode = do_QueryInterface(titleElement);
     newTitleNode = PR_TRUE;
@@ -172,7 +172,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
     res = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
     NS_ENSURE_SUCCESS(res, res);
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
-    if (!newNode) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(newNode, NS_ERROR_FAILURE);
 
     if (newTitleNode)
     {
@@ -205,7 +205,7 @@ NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAString& aString)
 
 NS_IMETHODIMP SetDocTitleTxn::GetIsTransient(PRBool *aIsTransient)
 {
-  if (!aIsTransient) return NS_ERROR_NULL_POINTER;  
+  NS_ENSURE_TRUE(aIsTransient, NS_ERROR_NULL_POINTER);  
   *aIsTransient = mIsTransient;
   return NS_OK;
 }
