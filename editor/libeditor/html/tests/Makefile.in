@@ -63,6 +63,7 @@ _TEST_FILES = \
 		test_htmleditor_keyevent_handling.html \
 		test_select_all_without_body.html \
 		file_select_all_without_body.html \
+		test_root_element_replacement.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

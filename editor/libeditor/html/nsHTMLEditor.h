@@ -448,7 +448,10 @@ protected:
   virtual nsresult InstallEventListeners();
   virtual void RemoveEventListeners();
 
+  PRBool ShouldReplaceRootElement();
+  void ResetRootElementAndEventTarget();
   nsresult GetBodyElement(nsIDOMHTMLElement** aBody);
+  already_AddRefed<nsINode> GetFocusedNode();
 
   // Return TRUE if aElement is a table-related elemet and caret was set
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);
