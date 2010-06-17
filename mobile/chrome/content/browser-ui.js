@@ -530,8 +530,17 @@ var BrowserUI = {
     let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
     let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
 
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    getBrowser().loadURIWithFlags(uri.spec, loadFlags, null, null);
+    // We need to keep about: pages opening in new "local" tabs. We also want to spawn
+    // new "remote" tabs if opening web pages from a "local" about: page.
+    let currentURI = getBrowser().currentURI;
+    let useLocal = (uri.schemeIs("about") && uri.spec != "about:blank");
+    let hasLocal = (currentURI.schemeIs("about") && currentURI.spec != "about:blank");
+    if (useLocal || hasLocal != useLocal) {
+      BrowserUI.newTab(uri.spec);
+    } else {
+      let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+      getBrowser().loadURIWithFlags(uri.spec, loadFlags, null, null);
+    }
 
     gHistSvc.markPageAsTyped(uri);
   },
