@@ -389,6 +389,10 @@ nsHTMLEditor::InstallEventListeners()
 {
   NS_ENSURE_TRUE(mDocWeak && mPresShellWeak && mEventListener,
                  NS_ERROR_NOT_INITIALIZED);
+
+  // NOTE: nsHTMLEditor doesn't need to initialize mEventTarget here because
+  // the target must be document node and it must be referenced as weak pointer.
+
   nsHTMLEditorEventListener* listener =
     reinterpret_cast<nsHTMLEditorEventListener*>(mEventListener.get());
   return listener->Connect(this);
@@ -5741,6 +5745,17 @@ nsHTMLEditor::HasFocus()
   }
   // If our window is focused, we're focused.
   return OurWindowHasFocus();
+}
+
+already_AddRefed<nsPIDOMEventTarget>
+nsHTMLEditor::GetPIDOMEventTarget()
+{
+  // Don't use getDocument here, because we have no way of knowing
+  // whether Init() was ever called.  So we need to get the document
+  // ourselves, if it exists.
+  NS_PRECONDITION(mDocWeak, "This editor has not been initialized yet");
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryReferent(mDocWeak.get());
+  return piTarget.forget();
 }
 
 nsresult
