@@ -2076,10 +2076,6 @@ BEGIN_CASE(JSOP_APPLY)
             for (jsval *v = newfp->slots(); v != newsp; ++v)
                 *v = JSVAL_VOID;
 
-            /* Scope with a call object parented by callee's parent. */
-            if (fun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-                goto error;
-
             /* Switch version if currentVersion wasn't overridden. */
             newfp->callerVersion = (JSVersion) cx->version;
             if (JS_LIKELY(cx->version == currentVersion)) {
@@ -2100,6 +2096,10 @@ BEGIN_CASE(JSOP_APPLY)
             fp = newfp;
             script = newscript;
             atoms = script->atomMap.vector;
+
+            /* Now that the new frame is rooted, maybe create a call object. */
+            if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+                goto error;
 
             /* Call the debugger hook if present. */
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
