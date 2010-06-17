@@ -149,36 +149,45 @@ var Tabbar = {
   //
   // Paramaters
   //  - An array of <Tab> objects.
-  showOnlyTheseTabs: function(tabs){
-    var visibleTabs = [];
-    // this.el.children is not a real array and does contain
-    // useful functions like filter or forEach. Convert it into a real array.
-    var tabBarTabs = [];
-    for( var i=0; i<this.el.children.length; i++ ){
-      tabBarTabs.push(this.el.children[i]);
+  showOnlyTheseTabs: function(tabs, options){
+    try { 
+      if(!options)
+        options = {};
+          
+      var visibleTabs = [];
+      // this.el.children is not a real array and does contain
+      // useful functions like filter or forEach. Convert it into a real array.
+      var tabBarTabs = [];
+      for( var i=0; i<this.el.children.length; i++ ){
+        tabBarTabs.push(this.el.children[i]);
+      }
+      
+      for each( var tab in tabs ){
+        var rawTab = tab.tab.raw;
+        var toShow = tabBarTabs.filter(function(testTab){
+          return testTab == rawTab;
+        }); 
+        visibleTabs = visibleTabs.concat( toShow );
+      }
+  
+      tabBarTabs.forEach(function(tab){
+        tab.collapsed = true;
+      });
+      
+      // Show all of the tabs in the group and move them (in order)
+      // that they appear in the group to the end of the tab strip.
+      // This way the tab order is matched up to the group's thumbnail
+      // order.
+      var self = this;
+      visibleTabs.forEach(function(tab){
+        tab.collapsed = false;
+        
+        if(!options.dontReorg)
+          Utils.getCurrentWindow().gBrowser.moveTabTo(tab, self.el.children.length-1);
+      });
+    } catch(e) {
+      Utils.log(e);
     }
-    
-    for each( var tab in tabs ){
-      var rawTab = tab.tab.raw;
-      var toShow = tabBarTabs.filter(function(testTab){
-        return testTab == rawTab;
-      }); 
-      visibleTabs = visibleTabs.concat( toShow );
-    }
-
-    tabBarTabs.forEach(function(tab){
-      tab.collapsed = true;
-    });
-    
-    // Show all of the tabs in the group and move them (in order)
-    // that they appear in the group to the end of the tab strip.
-    // This way the tab order is matched up to the group's thumbnail
-    // order.
-    var self = this;
-    visibleTabs.forEach(function(tab){
-      tab.collapsed = false;
-      Utils.getCurrentWindow().gBrowser.moveTabTo(tab, self.el.children.length-1);
-    });
   },
 
   // ----------
@@ -724,7 +733,7 @@ UIClass.prototype = {
       .change(function () {
         var index = iQ(this).val();
         try {
-          commands[index].code();
+          commands[index].code.apply(commands[index].element);
         } catch(e) {
           Utils.log('dev menu error', e);
         }
@@ -734,6 +743,12 @@ UIClass.prototype = {
     var commands = [{
       name: 'dev menu', 
       code: function() {
+      }
+    }, {
+      name: 'show trenches', 
+      code: function() {
+        Trenches.toggleShown();
+        iQ(this).html((Trenches.showDebug ? 'hide' : 'show') + ' trenches');
       }
     }, {
       name: 'code docs', 
@@ -760,10 +775,11 @@ UIClass.prototype = {
     var count = commands.length;
     var a;
     for(a = 0; a < count; a++) {
-      iQ('<option>')
+      commands[a].element = iQ('<option>')
         .val(a)
         .html(commands[a].name)
-        .appendTo($select);
+        .appendTo($select)
+        .get(0);
     }
   },
 

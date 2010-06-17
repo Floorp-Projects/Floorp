@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Ian Gilman <ian@iangilman.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -105,7 +106,7 @@ Trench.prototype = {
 		}
 	},
 	show: function Trench_show() { // DEBUG
-		if (!iQ('#showTrenches:checked').length) {
+		if (!Trenches.showDebug) {
 			this.hide();
 			return;
 		}
@@ -216,6 +217,7 @@ var Trenches = {
 	preferLeft: true,
 	activeTrenches: {},
 	trenches: [],
+	showDebug: false,
 	getById: function Trenches_getById(id) {
 		return this.trenches[id];
 	},
@@ -292,12 +294,12 @@ var Trenches = {
 			return false;
 	},
 	show: function Trenches_show() {
-		this.trenches.forEach(function(t){
+    this.trenches.forEach(function(t){
 			t.show();
 		});
-	}
+	}, 
+	toggleShown: function Trenches_toggleShown() {
+    this.showDebug = !this.showDebug;
+    this.show();
+  }
 };
-
-iQ('#showTrenches').change(function() {
-	Trenches.show();
-});
