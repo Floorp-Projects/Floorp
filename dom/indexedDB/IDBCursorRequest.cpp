@@ -535,7 +535,7 @@ IDBCursorRequest::Update(nsIVariant* aValue,
                               keyString.Length());
         NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
-        *prop.addr() = STRING_TO_JSVAL(str);
+        prop.set(STRING_TO_JSVAL(str));
       }
       else {
         NS_NOTREACHED("Bad key!");
