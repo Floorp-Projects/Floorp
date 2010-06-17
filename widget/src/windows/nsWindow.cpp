@@ -6925,8 +6925,10 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (mTransparencyMode == eTransparencyGlass)
     memset(&mGlassMargins, 0, sizeof mGlassMargins);
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   mTransparencyMode = aMode;
 
   SetupTranslucentWindowMemoryBitmap(aMode);
