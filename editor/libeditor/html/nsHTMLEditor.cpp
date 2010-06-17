@@ -3886,24 +3886,19 @@ nsHTMLEditor::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aFirstNewContent,
                               PRInt32 /* unused */)
 {
-  ContentInserted(aDocument, aContainer, nsnull, 0);
+  ContentInserted(aDocument, aContainer, aFirstNewContent, 0);
 }
 
 void
 nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aChild, PRInt32 /* unused */)
 {
-  // XXX If we need aChild then nsEditor::ContentAppended should start passing
-  //     in the child.
-  if (!mRootElement)
-  {
-    // Need to remove the event listeners first because BeginningOfDocument
-    // could set a new root (and event target) and we won't be able to remove
-    // them from the old event target then.
-    RemoveEventListeners();
-    BeginningOfDocument();
-    InstallEventListeners();
-    SyncRealTimeSpell();
+  if (!aChild || !aChild->IsElement()) {
+    return;
+  }
+
+  if (ShouldReplaceRootElement()) {
+    ResetRootElementAndEventTarget();
   }
 }
 
@@ -3911,13 +3906,8 @@ void
 nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                              nsIContent* aChild, PRInt32 aIndexInContainer)
 {
-  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(aChild);
-  if (elem == mRootElement)
-  {
-    RemoveEventListeners();
-    mRootElement = nsnull;
-    mEventTarget = nsnull;
-    InstallEventListeners();
+  if (SameCOMIdentity(aChild, mRootElement)) {
+    ResetRootElementAndEventTarget();
   }
 }
 
@@ -5864,6 +5854,47 @@ nsHTMLEditor::GetPIDOMEventTarget()
   return piTarget.forget();
 }
 
+PRBool
+nsHTMLEditor::ShouldReplaceRootElement()
+{
+  if (!mRootElement) {
+    // If we don't know what is our root element, we should find our root.
+    return PR_TRUE;
+  }
+
+  // If we temporary set document root element to mRootElement, but there is
+  // body element now, we should replace the root element by the body element.
+  nsCOMPtr<nsIDOMHTMLElement> docBody;
+  GetBodyElement(getter_AddRefs(docBody));
+  return !SameCOMIdentity(docBody, mRootElement);
+}
+
+void
+nsHTMLEditor::ResetRootElementAndEventTarget()
+{
+  // Need to remove the event listeners first because BeginningOfDocument
+  // could set a new root (and event target is set by InstallEventListeners())
+  // and we won't be able to remove them from the old event target then.
+  RemoveEventListeners();
+  mRootElement = nsnull;
+  nsresult rv = InstallEventListeners();
+  NS_ENSURE_SUCCESS(rv, );
+  NS_ENSURE_TRUE(mRootElement, );
+
+  rv = BeginningOfDocument();
+  NS_ENSURE_SUCCESS(rv, );
+
+  // When this editor has focus, we need to reset the selection limiter to
+  // new root.  Otherwise, that is going to be done when this gets focus.
+  nsCOMPtr<nsINode> node = GetFocusedNode();
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(node);
+  if (target) {
+    InitializeSelection(target);
+  }
+
+  SyncRealTimeSpell();
+}
+
 nsresult
 nsHTMLEditor::GetBodyElement(nsIDOMHTMLElement** aBody)
 {
@@ -5874,6 +5905,27 @@ nsHTMLEditor::GetBodyElement(nsIDOMHTMLElement** aBody)
   }
   nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
   return htmlDoc->GetBody(aBody);
+}
+
+already_AddRefed<nsINode>
+nsHTMLEditor::GetFocusedNode()
+{
+  if (!HasFocus()) {
+    return nsnull;
+  }
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ASSERTION(fm, "Focus manager is null");
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  fm->GetFocusedElement(getter_AddRefs(focusedElement));
+  if (focusedElement) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(focusedElement);
+    return node.forget();
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  nsCOMPtr<nsINode> node = do_QueryInterface(doc);
+  return node.forget();
 }
 
 PRBool
