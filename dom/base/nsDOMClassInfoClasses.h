@@ -84,6 +84,7 @@ DOMCI_CLASS(HTMLOptionsCollection)
 DOMCI_CLASS(HTMLCollection)
 
 // HTML element classes
+DOMCI_CLASS(HTMLElement)
 DOMCI_CLASS(HTMLAnchorElement)
 DOMCI_CLASS(HTMLAppletElement)
 DOMCI_CLASS(HTMLAreaElement)
