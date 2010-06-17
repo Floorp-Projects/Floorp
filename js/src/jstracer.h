@@ -1329,7 +1329,8 @@ class TraceRecorder
                                                        int v_spindex);
 
     JS_REQUIRES_STACK nanojit::LIns* unbox_value(const Value &v, nanojit::LIns *vaddr_ins, 
-                                                 ptrdiff_t offset, VMSideExit *exit);
+                                                 ptrdiff_t offset, VMSideExit *exit,
+                                                 bool force_double=false);
     JS_REQUIRES_STACK nanojit::LIns* unbox_value_load(const Value &v, nanojit::LIns *vload_ins,
                                                       VMSideExit *exit);
     JS_REQUIRES_STACK nanojit::LIns* unbox_int(const Value &v, nanojit::LIns *vaddr_ins, 
