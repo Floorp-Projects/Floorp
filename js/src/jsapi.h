@@ -336,6 +336,7 @@ JSID_TO_OBJECT(jsid id)
 static JS_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
+    JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
     jsid id;
     JSID_BITS(id) = ((size_t)obj | JSID_OBJECT_TYPE);

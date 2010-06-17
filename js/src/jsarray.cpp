@@ -278,7 +278,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
     JSAtom *atom;
     JS_STATIC_ASSERT((jsuint)-1 == 4294967295U);
 
-    JS_ASSERT(index > JSVAL_INT_MAX);
+    JS_ASSERT(index > JSID_INT_MAX);
 
     start = JS_ARRAY_END(buf);
     do {
