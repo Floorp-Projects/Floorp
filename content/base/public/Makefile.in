@@ -78,6 +78,7 @@ nsDOMFile.h \
 nsLineBreaker.h \
 nsReferencedElement.h \
 nsXMLNameSpaceMap.h \
+nsDOMEventTargetWrapperCache.h \
 $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
