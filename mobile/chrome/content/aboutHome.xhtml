@@ -296,11 +296,10 @@
     const kAddonsMaxDisplay = 2;
 
     function initAddons() {
-      let repository = "@mozilla.org/extensions/addon-repository;1";
-      let repo = Cc[repository].createInstance(Ci.nsIAddonRepository);
-      if (repo.isSearching)
-        repo.cancelSearch();
-      repo.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
+      Cu.import("resource://gre/modules/AddonRepository.jsm");
+      if (AddonRepository.isSearching)
+        AddonRepository.cancelSearch();
+      AddonRepository.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
     }
   ]]></script>
 </body>
