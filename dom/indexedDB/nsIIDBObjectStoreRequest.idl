@@ -59,7 +59,7 @@ interface nsIIDBObjectStoreRequest : nsIIDBObjectStore
   // Success fires IDBTransactionEvent, result == array of values for given keys
   [optional_argc]
   nsIIDBRequest
-  getAll(in nsIIDBKeyRange key,
+  getAll([optional /* null */] in nsIIDBKeyRange key,
          [optional /* unlimited */] in unsigned long limit);
 
   // Success fires IDBTransactionEvent, result == key
