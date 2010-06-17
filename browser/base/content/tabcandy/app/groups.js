@@ -368,18 +368,24 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------
+  // Function: getTitle
+  // Returns the title of this group as a string.
   getTitle: function() {
     var value = (this.$title ? this.$title.val() : '');
     return (value == this.defaultName ? '' : value);
   },
 
   // ----------  
+  // Function: setTitle
+  // Sets the title of this group with the given string
   setTitle: function(value) {
     this.$title.val(value); 
     this.save();
   },
 
   // ----------  
+  // Function: adjustTitleSize
+  // Used to adjust the width of the title box depending on group width and title size.
   adjustTitleSize: function() {
     Utils.assert('bounds needs to have been set', this.bounds);
     var w = Math.min(this.bounds.width - 35, Math.max(150, this.getTitle().length * 6));
@@ -389,6 +395,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
+  // Function: _getBoundingBox
+  // Given an array of DOM elements, returns a <Rect> with the union of their locations.
   _getBoundingBox: function(els) {
     var el;
     var boundingBox = {
@@ -399,10 +407,12 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     };
     boundingBox.height = boundingBox.bottom - boundingBox.top;
     boundingBox.width  = boundingBox.right - boundingBox.left;
-    return boundingBox;
+    return new Rect(boundingBox);
   },
   
   // ----------  
+  // Function: getContentBounds
+  // Returns a <Rect> for the group's content area (which doesn't include the title, etc). 
   getContentBounds: function() {
     var box = this.getBounds();
     var titleHeight = this.$titlebar.height();
@@ -419,6 +429,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
+  // Function: reloadBounds
+  // Sets the bounds based on the location of the group's container.
   reloadBounds: function() {
     var bb = iQ(this.container).bounds();
     
@@ -429,6 +441,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
+  // Function: setBounds
+  // Sets the bounds with the given <Rect>, animating unless <immediately> is false.
   setBounds: function(rect, immediately) {
     if(!isRect(rect)) {
       Utils.trace('Group.setBounds: rect is not a real rectangle!', rect);
@@ -1539,7 +1553,7 @@ window.Groups = {
     if(this._activeGroup)
       UI.tabBar.showOnlyTheseTabs( this._activeGroup._children );
     else if( this._activeGroup == null)
-      UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs());
+      UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs(), {dontReorg: true});
   },
   
   // ----------
