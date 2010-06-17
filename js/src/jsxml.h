@@ -268,7 +268,7 @@ js_GetFunctionNamespace(JSContext *cx, js::Value *vp);
 
 /*
  * If obj is QName corresponding to function::name, set *funidp to name's id,
- * otherwise set *funidp to 0.
+ * otherwise set *funidp to void.
  */
 JSBool
 js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp);

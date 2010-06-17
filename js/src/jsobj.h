@@ -70,7 +70,7 @@ CastAsObject(PropertyOp op)
 }
 
 inline Value
-CastAsObjectJSVal(PropertyOp op)
+CastAsObjectJsval(PropertyOp op)
 {
     return ObjectTag(*CastAsObject(op));
 }
@@ -1242,7 +1242,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
              js::Value *rval);
 
 extern JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, js::Value v, JSBool *bp);
+js_HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
 extern JSBool
 js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,

@@ -1062,6 +1062,7 @@ class TraceRecorder
     nanojit::LIns* insImmFun(JSFunction* fun);
     nanojit::LIns* insImmStr(JSString* str);
     nanojit::LIns* insImmSprop(JSScopeProperty* sprop);
+    nanojit::LIns* insImmId(jsid id);
     nanojit::LIns* p2i(nanojit::LIns* ins);
 
     /*
@@ -1336,9 +1337,12 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* unbox_string(const Value &v, nanojit::LIns *vaddr_ins, 
                                                   ptrdiff_t offset);
     JS_REQUIRES_STACK nanojit::LIns* unbox_object(nanojit::LIns *vaddr_ins, ptrdiff_t offset);
-    JS_REQUIRES_STACK nanojit::LIns* is_boxed_int(nanojit::LIns *vaddr_ins);
     JS_REQUIRES_STACK nanojit::LIns* is_boxed_object(nanojit::LIns *vaddr_ins);
     JS_REQUIRES_STACK nanojit::LIns* is_boxed_true(nanojit::LIns *vaddr_ins);
+
+    JS_REQUIRES_STACK nanojit::LIns* is_string_id(nanojit::LIns *id_ins);
+    JS_REQUIRES_STACK nanojit::LIns* unbox_string_id(nanojit::LIns *id_ins);
+    JS_REQUIRES_STACK nanojit::LIns* unbox_int_id(nanojit::LIns *id_ins);
 
     JS_REQUIRES_STACK void box_value(const Value &v, nanojit::LIns* v_ins, 
                                      nanojit::LIns *dstaddr_ins, ptrdiff_t offset);

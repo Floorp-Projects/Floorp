@@ -226,7 +226,6 @@ typedef uint32 JSValueMask32;
 #endif
 
 typedef VALUE_ALIGNMENT uint64 jsval;
-typedef VALUE_ALIGNMENT uint64 jsid;
 
 #define BUILD_JSVAL(mask32, payload) ((jsval)((((uint64)(uint32)(mask32)) << 32) | (uint32)(payload)))
 
@@ -619,6 +618,21 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(jsval_layout l)
     return JSVAL_IS_DOUBLE_IMPL(l);
 }
 
+/*
+ * JavaScript engine unboxed value representation
+ */
+
+#ifdef DEBUG
+typedef struct jsid
+{
+    size_t bits;
+} jsid;
+# define JSID_BITS(id) (id.bits)
+#else
+typedef size_t jsid;
+# define JSID_BITS(id) (id)
+#endif
+
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
 /*
@@ -660,7 +674,7 @@ typedef JSBool
  */
 typedef JSBool
 (* JSNewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                     jsval *statep, jsval *idp);
+                     jsval *statep, jsid *idp);
 
 /*
  * The old-style JSClass.enumerate op should define all lazy properties not
@@ -797,7 +811,7 @@ typedef JSBool
  * *bp otherwise.
  */
 typedef JSBool
-(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 /*
  * Deprecated function type for JSClass.mark. All new code should define
@@ -887,7 +901,7 @@ typedef uint32
  *
  */
 typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 /*
  * A generic type for functions mapping an object to another object, or null
@@ -1075,16 +1089,16 @@ typedef JSBool
 (* ConvertOp)(JSContext *cx, JSObject *obj, JSType type, Value *vp);
 typedef JSBool
 (* NewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                   Value *statep, jsval *idp);
+                   Value *statep, jsid *idp);
 typedef JSBool
-(* HasInstanceOp)(JSContext *cx, JSObject *obj, Value v, JSBool *bp);
+(* HasInstanceOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
 typedef JSBool
 (* CheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                   Value *vp);
 typedef JSObjectOps *
 (* GetObjectOps)(JSContext *cx, Class *clasp);
 typedef JSBool
-(* EqualityOp)(JSContext *cx, JSObject *obj, Value v, JSBool *bp);
+(* EqualityOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
 
 /*
  * Since jsval and Value are layout-compatible, pointers to otherwise-identical
@@ -1136,7 +1150,5 @@ JS_OBJ_IS_FUN_IMPL(JSObject *obj)
 {
     return ((JSPretendObject *)obj)->clasp == &js_FunctionClass;
 }
-
-
 
 #endif /* jspubtd_h___ */

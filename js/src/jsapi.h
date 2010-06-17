@@ -60,8 +60,6 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_VOID   BUILD_JSVAL(JSVAL_MASK32_UNDEFINED, 0)
 #define JSVAL_HOLE   BUILD_JSVAL(JSVAL_MASK32_MAGIC,     0)
 
-/* Predicates for type testing. */
-
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
 {
@@ -267,6 +265,138 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
     l.asBits = v;
     return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(l);
 }
+
+/************************************************************************/
+
+#define JSID_STRING_TYPE                 0x0
+#define JSID_INT_TYPE                    0x1
+#define JSID_OBJECT_TYPE                 0x2
+#define JSID_VOID_TYPE                   0x4
+#define JSID_DEFAULT_XML_NAMESPACE_TYPE  0x6
+#define JSID_TYPE_MASK                   0x7
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_STRING(jsid id)
+{
+    return (JSID_BITS(id) & JSID_TYPE_MASK) == 0;
+}
+
+static JS_ALWAYS_INLINE JSString *
+JSID_TO_STRING(jsid id)
+{
+    JS_ASSERT(JSID_IS_STRING(id));
+    return (JSString *)(JSID_BITS(id));
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_INT(jsid id)
+{
+    return !!(JSID_BITS(id) & JSID_INT_TYPE);
+}
+
+static JS_ALWAYS_INLINE int32
+JSID_TO_INT(jsid id)
+{
+    JS_ASSERT(JSID_IS_INT(id));
+    return ((int32)JSID_BITS(id)) >> 1;
+}
+
+#define JSID_INT_MIN  (-(1 << 30))
+#define JSID_INT_MAX  ((1 << 30) - 1)
+
+static JS_ALWAYS_INLINE JSBool
+INT_FITS_IN_JSID(int32 i)
+{
+    return ((jsuint)(i) - (jsuint)JSID_INT_MIN <=
+            (jsuint)(JSID_INT_MAX - JSID_INT_MIN));
+}
+
+static JS_ALWAYS_INLINE jsid
+INT_TO_JSID(int32 i)
+{
+    JS_ASSERT(INT_FITS_IN_JSID(i));
+    jsid id;
+    JSID_BITS(id) = ((i << 1) | JSID_INT_TYPE);
+    return id;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_OBJECT(jsid id)
+{
+    return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_OBJECT_TYPE;
+}
+
+static JS_ALWAYS_INLINE JSObject *
+JSID_TO_OBJECT(jsid id)
+{
+    JS_ASSERT(JSID_IS_OBJECT(id));
+    return (JSObject *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
+}
+
+static JS_ALWAYS_INLINE jsid
+OBJECT_TO_JSID(JSObject *obj)
+{
+    JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
+    jsid id;
+    JSID_BITS(id) = ((size_t)obj | JSID_OBJECT_TYPE);
+    return id;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_GCTHING(jsid id)
+{
+    return JSID_IS_STRING(id) || JSID_IS_OBJECT(id);
+}
+
+static JS_ALWAYS_INLINE void *
+JSID_TO_GCTHING(jsid id)
+{
+    return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
+}
+
+/*
+ * The magic XML namespace id is not a valid jsid. Global object classes in
+ * embeddings that enable JS_HAS_XML_SUPPORT (E4X) should handle this id.
+ */
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_DEFAULT_XML_NAMESPACE(jsid id)
+{
+    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_DEFAULT_XML_NAMESPACE_TYPE,
+                 JSID_BITS(id) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+    return ((size_t)JSID_BITS(id) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+}
+
+static JS_ALWAYS_INLINE jsid
+JSID_DEFAULT_XML_NAMESPACE()
+{
+    jsid id;
+    JSID_BITS(id) = JSID_DEFAULT_XML_NAMESPACE_TYPE;
+    return id;
+}
+
+/*
+ * A void jsid is not a valid id and only arises as an exceptional API return
+ * value, such as in JS_NextProperty.
+ */
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_VOID(jsid id)
+{
+    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_VOID_TYPE,
+                 JSID_BITS(id) == JSID_VOID_TYPE);
+    return ((size_t)JSID_BITS(id) == JSID_VOID_TYPE);
+}
+
+static JS_ALWAYS_INLINE jsid
+JSID_VOID()
+{
+    jsid id;
+    JSID_BITS(id) = JSID_VOID_TYPE;
+    return id;
+}
+
+/************************************************************************/
 
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
@@ -1617,13 +1747,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 
 /*
- * The magic XML namespace id is int-tagged, but not a valid integer jsval.
- * Global object classes in embeddings that enable JS_HAS_XML_SUPPORT (E4X)
- * should handle this id specially before converting id via JSVAL_TO_INT.
- */
-#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSVAL_VOID)
-
-/*
  * JSNewResolveOp flag bits.
  */
 #define JSRESOLVE_QUALIFIED     0x01    /* resolve a qualified property id */
@@ -2080,7 +2203,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
 
 /*
  * Return true on success with *idp containing the id of the next enumerable
- * property to visit using iterobj, or JSVAL_VOID if there is no such property
+ * property to visit using iterobj, or JSID_IS_VOID if there is no such property
  * left to visit.  Return false on error.
  */
 extern JS_PUBLIC_API(JSBool)

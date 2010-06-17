@@ -2566,7 +2566,7 @@ JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    *vp = ID_TO_JSVAL(id);
+    *vp = IdToJsval(id);
     return JS_TRUE;
 }
 
@@ -2635,7 +2635,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-    return js_HasInstance(cx, obj, Valueify(v), bp);
+    return js_HasInstance(cx, obj, Valueify(&v), bp);
 }
 
 JS_PUBLIC_API(void *)
@@ -3695,7 +3695,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             sprop = sprop->parent;
 
         if (!sprop) {
-            *idp = JSVAL_VOID;
+            *idp = JSID_VOID();
         } else {
             iterobj->setPrivate(sprop->parent);
             *idp = sprop->id;
@@ -3705,7 +3705,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
-            *idp = JSVAL_VOID;
+            *idp = JSID_VOID();
         } else {
             *idp = ida->vector[--i];
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Tag(i));
