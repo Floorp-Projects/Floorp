@@ -2771,7 +2771,7 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, PRUint32 len)
   
   while(NS_SUCCEEDED(rv) && len>0)
   {
-    readLimit = PR_MIN(NS_CRYPTO_HASH_BUFFER_SIZE, len);
+    readLimit = NS_MIN(PRUint32(NS_CRYPTO_HASH_BUFFER_SIZE), len);
     
     rv = data->Read(buffer, readLimit, &read);
     
@@ -2963,7 +2963,7 @@ NS_IMETHODIMP nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, PRUint32 a
   
   while(NS_SUCCEEDED(rv) && aLen > 0)
   {
-    readLimit = PR_MIN(NS_CRYPTO_HASH_BUFFER_SIZE, aLen);
+    readLimit = NS_MIN(PRUint32(NS_CRYPTO_HASH_BUFFER_SIZE), aLen);
     
     rv = aStream->Read(buffer, readLimit, &read);
     if (read == 0)
