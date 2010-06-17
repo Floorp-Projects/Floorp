@@ -42,6 +42,7 @@
 #include "nsIIDBDatabaseException.h"
 #include "nsIPrivateDOMEvent.h"
 
+#include "jscntxt.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSON.h"
@@ -379,7 +380,7 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
 {
   // This is the slow path, need to do this better once XPIDL can pass raw
   // jsvals.
-  NS_WARNING("Using a slow path for GetObject! Fix this now!");
+  NS_WARNING("Using a slow path for GetResult! Fix this now!");
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
@@ -399,6 +400,9 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
   }
 
   if (!mJSRuntime) {
+    nsString jsonValue = mValue;
+    mValue.Truncate();
+
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -414,12 +418,99 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
     mJSRuntime = rt;
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
-    rv = json->DecodeToJSVal(mValue, cx, &mCachedValue);
+    rv = json->DecodeToJSVal(jsonValue, cx, &mCachedValue);
     if (NS_FAILED(rv)) {
       mCachedValue = JSVAL_VOID;
 
       NS_ERROR("Failed to decode!");
       return rv;
+    }
+  }
+
+  *retval = mCachedValue;
+  cc->SetReturnValueWasSet(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
+{
+  // This is the slow path, need to do this better once XPIDL can pass raw
+  // jsvals.
+  NS_WARNING("Using a slow path for GetResult! Fix this now!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  jsval* retval;
+  rv = cc->GetRetValPtr(&retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mJSRuntime) {
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSAutoRequest ar(cx);
+
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
+                                  "GetSuccessEvent::mCachedValue");
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    mJSRuntime = rt;
+
+    // Swap into a stack array so that we don't hang on to the strings if
+    // something fails.
+    nsTArray<nsString> values;
+    if (!mValues.SwapElements(values)) {
+      NS_ERROR("Failed to swap elements!");
+      return NS_ERROR_FAILURE;
+    }
+
+    JSObject* array = JS_NewArrayObject(cx, 0, NULL);
+    if (!array) {
+      NS_ERROR("Failed to make array!");
+      return NS_ERROR_FAILURE;
+    }
+
+    mCachedValue = OBJECT_TO_JSVAL(array);
+
+    if (!values.IsEmpty()) {
+      if (!JS_SetArrayLength(cx, array, jsuint(values.Length()))) {
+        mCachedValue = JSVAL_VOID;
+        NS_ERROR("Failed to set array length!");
+        return NS_ERROR_FAILURE;
+      }
+
+      nsCOMPtr<nsIJSON> json(new nsJSON());
+      js::AutoValueRooter value(cx);
+
+      jsint count = jsint(values.Length());
+
+      for (jsint index = 0; index < count; index++) {
+        nsString jsonValue = values[index];
+        values[index].Truncate();
+
+        rv = json->DecodeToJSVal(jsonValue, cx, value.addr());
+        if (NS_FAILED(rv)) {
+          mCachedValue = JSVAL_VOID;
+          NS_ERROR("Failed to decode!");
+          return rv;
+        }
+
+        if (!JS_SetElement(cx, array, index, value.addr())) {
+          mCachedValue = JSVAL_VOID;
+          NS_ERROR("Failed to set array element!");
+          return NS_ERROR_FAILURE;
+        }
+      }
     }
   }
 

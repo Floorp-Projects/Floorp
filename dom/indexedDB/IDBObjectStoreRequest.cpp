@@ -244,6 +244,39 @@ private:
   nsRefPtr<IDBObjectStoreRequest> mObjectStore;
 };
 
+class GetAllHelper : public AsyncConnectionHelper
+{
+public:
+  GetAllHelper(IDBTransactionRequest* aTransaction,
+               IDBRequest* aRequest,
+               PRInt64 aObjectStoreID,
+               const Key& aLeftKey,
+               const Key& aRightKey,
+               const PRUint16 aKeyRangeFlags,
+               const PRUint32 aLimit,
+               bool aAutoIncrement)
+  : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
+    mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
+    mLimit(aLimit), mAutoIncrement(aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+
+protected:
+  // In-params.
+  const PRInt64 mOSID;
+  const Key mLeftKey;
+  const Key mRightKey;
+  const PRUint16 mKeyRangeFlags;
+  const PRUint32 mLimit;
+  const bool mAutoIncrement;
+
+private:
+  // Out-params.
+  nsTArray<nsString> mValues;
+};
+
 inline
 nsresult
 GetKeyFromObject(JSContext* aCx,
@@ -738,8 +771,44 @@ IDBObjectStoreRequest::GetAll(nsIIDBKeyRange* aKeyRange,
     return NS_ERROR_UNEXPECTED;
   }
 
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aOptionalArgCount < 2) {
+    aLimit = PR_UINT32_MAX;
+  }
+
+  Key leftKey, rightKey;
+  PRUint16 keyRangeFlags = 0;
+
+  nsresult rv;
+  if (aKeyRange) {
+    rv = aKeyRange->GetFlags(&keyRangeFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIVariant> variant;
+    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetKeyFromVariant(variant, leftKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aKeyRange->GetRight(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetKeyFromVariant(variant, rightKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<GetAllHelper> helper =
+    new GetAllHelper(mTransaction, request, mId, leftKey, rightKey,
+                     keyRangeFlags, aLimit, mAutoIncrement);
+
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1998,5 +2067,139 @@ RemoveIndexHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
     }
   }
 
+  return OK;
+}
+
+PRUint16
+GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  nsCString table;
+  nsCString keyColumn;
+
+  if (mAutoIncrement) {
+    table.AssignLiteral("ai_object_data");
+    keyColumn.AssignLiteral("id");
+  }
+  else {
+    table.AssignLiteral("object_data");
+    keyColumn.AssignLiteral("key_value");
+  }
+
+  NS_NAMED_LITERAL_CSTRING(osid, "osid");
+  NS_NAMED_LITERAL_CSTRING(leftKeyName, "left_key");
+  NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
+
+  nsCAutoString keyRangeClause;
+  if (!mLeftKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND ");
+    keyRangeClause.Append(keyColumn);
+    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+      keyRangeClause.AppendLiteral(" > :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" >= :");
+    }
+    keyRangeClause.Append(leftKeyName);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    keyRangeClause.AppendLiteral(" AND ");
+    keyRangeClause.Append(keyColumn);
+    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+      keyRangeClause.AppendLiteral(" < :");
+    }
+    else {
+      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
+      keyRangeClause.AppendLiteral(" <= :");
+    }
+    keyRangeClause.Append(rightKeyName);
+  }
+
+  nsCAutoString query("SELECT data FROM ");
+  query.Append(table);
+  query.AppendLiteral(" WHERE object_store_id = :");
+  query.Append(osid);
+  query.Append(keyRangeClause);
+  query.AppendLiteral(" ORDER BY ");
+  query.Append(keyColumn);
+  query.AppendLiteral(" ASC");
+
+  if (!mValues.SetCapacity(50)) {
+    NS_ERROR("Out of memory!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(osid, mOSID);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (!mLeftKey.IsUnset()) {
+    if (mLeftKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+    }
+    else if (mLeftKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  if (!mRightKey.IsUnset()) {
+    if (mRightKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+    }
+    else if (mRightKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  PRUint32 resultCount = 0;
+
+  PRBool hasResult;
+  while (resultCount++ < mLimit &&
+         NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (mValues.Capacity() == mValues.Length()) {
+      if (!mValues.SetCapacity(mValues.Capacity() * 2)) {
+        NS_ERROR("Out of memory!");
+        return nsIIDBDatabaseException::UNKNOWN_ERR;
+      }
+    }
+
+    nsString* value = mValues.AppendElement();
+    NS_ASSERTION(value, "Shouldn't fail if SetCapacity succeeded!");
+
+    rv = stmt->GetString(0, *value);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  return OK;
+}
+
+PRUint16
+GetAllHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  NS_ASSERTION(mValues.Length() <= mLimit, "Too many results!");
+
+  nsRefPtr<GetAllSuccessEvent> event(new GetAllSuccessEvent(mValues));
+
+  NS_ASSERTION(mValues.IsEmpty(), "Should have swapped!");
+
+  nsresult rv = event->Init(mRequest, mTransaction);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool dummy;
+  aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
   return OK;
 }
