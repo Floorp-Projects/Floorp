@@ -108,6 +108,7 @@ function initialize() {
 
 function shutdown() {
   gEventManager.shutdown();
+  gViewController.shutdown();
 }
 
 // Used by external callers to load a specific view into the manager
@@ -228,6 +229,7 @@ var gViewController = {
   viewPort: null,
   currentViewId: "",
   currentViewObj: null,
+  currentViewRequest: 0,
   previousViewId: "",
   viewObjects: {},
 
@@ -243,6 +245,10 @@ var gViewController = {
       view.initialize();
 
     window.controllers.appendController(this);
+  },
+
+  shutdown: function() {
+    this.currentViewRequest = 0;
   },
 
   parseViewId: function(aViewId) {
@@ -269,6 +275,7 @@ var gViewController = {
         let canHide = this.currentViewObj.hide();
         if (canHide === false)
           return;
+        this.viewPort.selectedPanel.removeAttribute("loading");
       } catch (e) {
         // this shouldn't be fatal
         Cu.reportError(e);
@@ -283,7 +290,15 @@ var gViewController = {
     this.currentViewObj = viewObj;
 
     this.viewPort.selectedPanel = this.currentViewObj.node;
-    this.currentViewObj.show(view.param);
+    this.viewPort.selectedPanel.setAttribute("loading", "true");
+    this.currentViewObj.show(view.param, ++this.currentViewRequest);
+  },
+
+  notifyViewChanged: function() {
+    this.viewPort.selectedPanel.removeAttribute("loading");
+    var event = document.createEvent("Events");
+    event.initEvent("ViewChanged", true, true);
+    this.currentViewObj.node.dispatchEvent(event);
   },
 
   commands: {
@@ -804,6 +819,7 @@ var gDiscoverView = {
       this._browser.goHome();
 
     gViewController.updateCommands();
+    gViewController.notifyViewChanged();
   },
 
   hide: function() { },
@@ -836,7 +852,7 @@ var gSearchView = {
     }, false);
   },
 
-  show: function(aQuery) {
+  show: function(aQuery, aRequest) {
     gHeader.setName(gStrings.ext.GetStringFromName("header-search"));
     this.showEmptyNotice(false);
 
@@ -848,6 +864,9 @@ var gSearchView = {
 
     var self = this;
     AddonManager.getAddonsByTypes(null, function(aAddonsList) {
+      if (gViewController && aRequest != gViewController.currentViewRequest)
+        return;
+
       var elementCount = 0;
       for (let i = 0; i < aAddonsList.length; i++) {
         let addon = aAddonsList[i];
@@ -870,6 +889,7 @@ var gSearchView = {
         self.showEmptyNotice(true);
 
       gViewController.updateCommands();
+      gViewController.notifyViewChanged();
     });
   },
 
@@ -966,7 +986,7 @@ var gListView = {
     }, false);
   },
 
-  show: function(aType) {
+  show: function(aType, aRequest) {
     gHeader.setName(gStrings.ext.GetStringFromName("header-" + aType));
     this.showEmptyNotice(false);
 
@@ -1006,19 +1026,24 @@ var gListView = {
         self.showEmptyNotice(true);
 
       gViewController.updateCommands();
+      gViewController.notifyViewChanged();
     }
 
+
     AddonManager.getAddonsByTypes(this._types, function(aAddonsList) {
+      if (gViewController && aRequest != gViewController.currentViewRequest)
+        return;
       addons = aAddonsList;
       updateList();
     });
 
     AddonManager.getInstallsByTypes(this._installTypes, function(aInstallsList) {
+      if (gViewController && aRequest != gViewController.currentViewRequest)
+        return;
       installs = aInstallsList;
       updateList();
       gEventManager.registerInstallListener(self);
     });
-
   },
 
   hide: function() {
@@ -1098,16 +1123,20 @@ var gDetailView = {
     }, true);
   },
 
-  show: function(aAddonId) {
+  show: function(aAddonId, aRequest) {
     var self = this;
-    this.node.setAttribute("loading", true);
     this._loadingTimer = setTimeout(function() {
       self.node.setAttribute("loading-extended", true);
     }, LOADING_MSG_DELAY);
     gHeader.showBackButton();
 
+    var view = gViewController.currentViewId;
+
     AddonManager.getAddonByID(aAddonId, function(aAddon) {
       self.clearLoading();
+
+      if (gViewController && aRequest != gViewController.currentViewRequest)
+        return;
 
       self._addon = aAddon;
       gEventManager.registerAddonListener(self, aAddon.id);
@@ -1144,6 +1173,7 @@ var gDetailView = {
       self.updateState();
 
       gViewController.updateCommands();
+      gViewController.notifyViewChanged();
     });
   },
 
@@ -1191,7 +1221,6 @@ var gDetailView = {
       this._loadingTimer = null;
     }
 
-    this.node.removeAttribute("loading");
     this.node.removeAttribute("loading-extended");
   },
 
