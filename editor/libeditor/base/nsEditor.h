@@ -661,6 +661,18 @@ public:
   // Whether the editor has focus or not.
   virtual PRBool HasFocus();
 
+  // FindSelectionRoot() returns a selection root of this editor when aNode
+  // gets focus.  aNode must be a content node or a document node.  When the
+  // target isn't a part of this editor, returns NULL.  If this is for
+  // designMode, you should set the document node to aNode except that an
+  // element in the document has focus.
+  virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode* aNode);
+
+  // Initializes selection and caret for the editor.  If aEventTarget isn't
+  // a host of the editor, i.e., the editor doesn't get focus, this does
+  // nothing.
+  nsresult InitializeSelection(nsIDOMEventTarget* aFocusEventTarget);
+
 protected:
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
