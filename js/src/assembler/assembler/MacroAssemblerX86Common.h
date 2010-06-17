@@ -1008,6 +1008,13 @@ public:
         m_assembler.movzbl_rr(dest, dest);
     }
 
+    void set32(Condition cond, Address left, Imm32 right, RegisterID dest)
+    {
+        m_assembler.cmpl_im(right.m_value, left.offset, left.base);
+        m_assembler.setCC_r(x86Condition(cond), dest);
+        m_assembler.movzbl_rr(dest, dest);
+    }
+
     void set32(Condition cond, RegisterID left, Imm32 right, RegisterID dest)
     {
         if (((cond == Equal) || (cond == NotEqual)) && !right.m_value)

@@ -181,6 +181,7 @@ class Compiler
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
     void jsop_getelem();
+    void jsop_stricteq(JSOp op);
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
