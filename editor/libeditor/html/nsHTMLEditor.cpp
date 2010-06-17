@@ -66,6 +66,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsISelectionController.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEventGroup.h"
@@ -331,6 +332,46 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
 
   if (NS_FAILED(rulesRes)) return rulesRes;
   return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetRootElement(nsIDOMElement **aRootElement)
+{
+  NS_ENSURE_ARG_POINTER(aRootElement);
+
+  if (mRootElement) {
+    return nsEditor::GetRootElement(aRootElement);
+  }
+
+  *aRootElement = nsnull;
+
+  // Use the HTML documents body element as the editor root if we didn't
+  // get a root element during initialization.
+
+  nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
+  nsresult rv = GetBodyElement(getter_AddRefs(bodyElement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (bodyElement) {
+    mRootElement = bodyElement;
+  } else {
+    // If there is no HTML body element,
+    // we should use the document root element instead.
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+    NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
+
+    rv = doc->GetDocumentElement(getter_AddRefs(mRootElement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // Document can have no elements
+    if (!mRootElement) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  *aRootElement = mRootElement;
+  NS_ADDREF(*aRootElement);
+
+  return NS_OK;
 }
 
 nsresult
@@ -5700,6 +5741,18 @@ nsHTMLEditor::HasFocus()
   }
   // If our window is focused, we're focused.
   return OurWindowHasFocus();
+}
+
+nsresult
+nsHTMLEditor::GetBodyElement(nsIDOMHTMLElement** aBody)
+{
+  NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryReferent(mDocWeak);
+  if (!htmlDoc) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
+  return htmlDoc->GetBody(aBody);
 }
 
 PRBool
