@@ -5570,7 +5570,10 @@ GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
 JSBool
 js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    if (!cx->fp->getThisObject(cx))
+    JSStackFrame *fp = cx->fp;
+    JS_ASSERT(OBJECT_TO_JSVAL(obj) == fp->thisv);
+    obj = fp->getThisObject(cx);
+    if (!obj)
         return false;
 
     JSClass *clasp = JSVAL_TO_OBJECT(argv[-2])->getClass();
