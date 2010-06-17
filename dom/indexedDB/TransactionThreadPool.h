@@ -83,14 +83,14 @@ protected:
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
-  
+
     inline TransactionQueue(IDBTransactionRequest* aTransaction,
                             nsIRunnable* aRunnable);
-  
+
     inline void Dispatch(nsIRunnable* aRunnable);
-  
+
     inline void Finish();
-  
+
   private:
     mozilla::Mutex mMutex;
     mozilla::CondVar mCondVar;
