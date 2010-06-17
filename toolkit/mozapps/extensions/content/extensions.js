@@ -60,6 +60,7 @@ const SEARCH_SCORE_MATCH_SUBSTRING = 0.3;
 
 const VIEW_DEFAULT = "addons://list/extension";
 
+const INTEGER_FIELDS = ["dateUpdated", "size", "relevancescore"];
 
 var gStrings = {};
 XPCOMUtils.defineLazyServiceGetter(gStrings, "bundleSvc",
@@ -603,14 +604,11 @@ function createItem(aObj, aIsInstall, aRequiresRestart) {
     // the binding handles the rest
     item.setAttribute("value", aObj.id);
 
-    var updated = "000000000000000"; // HACK: nsIXULSortService doesn't do numerical sorting (bug 379745)
     if (aObj.updateDate)
-      updated = (updated + aObj.updateDate.valueOf()).slice(-14);
-    item.setAttribute("dateUpdated", updated);
+      item.setAttribute("dateUpdated", aObj.updateDate.getTime());
 
-    var size = Math.floor(Math.random() * 1024 * 1024 * 2);
-    size = ("00000000000" + size).slice(-10); // HACK: nsIXULSortService doesn't do numerical sorting (bug 379745)
-    item.setAttribute("size", size); // XXXapi - bug 561261
+    if (aObj.size)
+      item.setAttribute("size", aObj.size);
   }
   return item;
 }
@@ -943,10 +941,15 @@ var gSearchView = {
   onSortChanged: function(aSortBy, aAscending) {
     var header = this._listBox.firstChild;
     this._listBox.removeChild(header);
+
+    var hints = aAscending ? "ascending" : "descending";
+    if (INTEGER_FIELDS.indexOf(aSortBy) >= 0)
+      hints += " integer";
+
     var sortService = Cc["@mozilla.org/xul/xul-sort-service;1"].
                       getService(Ci.nsIXULSortService);
-    sortService.sort(this._listBox, aSortBy,
-                     aAscending ? "ascending" : "descending");
+    sortService.sort(this._listBox, aSortBy, hints);
+
     this._listBox.insertBefore(header, this._listBox.firstChild);
   },
 
@@ -1055,10 +1058,13 @@ var gListView = {
   },
 
   onSortChanged: function(aSortBy, aAscending) {
+    var hints = aAscending ? "ascending" : "descending";
+    if (INTEGER_FIELDS.indexOf(aSortBy) >= 0)
+      hints += " integer";
+
     var sortService = Cc["@mozilla.org/xul/xul-sort-service;1"].
                       getService(Ci.nsIXULSortService);
-    sortService.sort(this._listBox, aSortBy,
-                     aAscending ? "ascending" : "descending");
+    sortService.sort(this._listBox, aSortBy, hints);
   },
 
   onNewInstall: function(aInstall) {
