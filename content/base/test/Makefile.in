@@ -394,6 +394,8 @@ _TEST_FILES2 = \
 		test_html_colors_quirks.html \
 		test_html_colors_standards.html \
 		test_bug571390.xul \
+		test_websocket_hello.html \
+		file_websocket_hello_wsh.py \
 		$(NULL)
 
 # This test fails on the Mac for some reason
