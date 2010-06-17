@@ -1273,15 +1273,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: reorderBasedOnTabOrder
   // Reorderes the tabs in a group based on the arrangment of the tabs
-  // shown in the tab bar. It doesn't it by sorting the children
+  // shown in the tab bar. It does it by sorting the children
   // of the group by the positions of their respective tabs in the
   // tab bar.
-  // 
-  // Parameters: 
-  //   topChild - the <Item> that should be displayed on top of a stack
-  reorderBasedOnTabOrder: function(topChild){    
-    this.topChild = topChild;
-    
+  reorderBasedOnTabOrder: function(){    
     var groupTabs = [];
     for( var i=0; i<UI.tabBar.el.children.length; i++ ){
       var tab = UI.tabBar.el.children[i];
@@ -1292,6 +1287,16 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     this._children.sort(function(a,b){
       return groupTabs.indexOf(a.tab.raw) - groupTabs.indexOf(b.tab.raw)
     });
+    
+    this.arrange({animate: false});
+    // this.arrange calls this.save for us
+  },
+  
+  // ----------
+  // Function: setTopChild
+  // Sets the <Item> that should be displayed on top when in stack mode.
+  setTopChild: function(topChild){    
+    this.topChild = topChild;
     
     this.arrange({animate: false});
     // this.arrange calls this.save for us

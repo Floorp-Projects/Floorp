@@ -338,6 +338,14 @@ window.Page = {
       return false;
     });
     
+    Tabs.onMove(function() {
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+        var activeGroup = Groups.getActiveGroup();
+        if( activeGroup )
+          activeGroup.reorderBasedOnTabOrder();                
+      }, 1);
+    });
+    
     Tabs.onFocus(function() {
       var focusTab = this;
       var currentTab = UI.currentTab;
@@ -362,9 +370,10 @@ window.Page = {
               item = null;
             
             self.setActiveTab(item);
+            
             var activeGroup = Groups.getActiveGroup();
             if( activeGroup )
-              activeGroup.reorderBasedOnTabOrder(item);        
+              activeGroup.setTopChild(item);        
     
             window.Groups.setActiveGroup(null);
             UI.resize(true);
