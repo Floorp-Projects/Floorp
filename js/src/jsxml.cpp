@@ -5258,7 +5258,7 @@ ValueToId(JSContext *cx, jsval v, AutoIdRooter *idr)
         if (!atom)
             return JS_FALSE;
         *idr->addr() = ATOM_TO_JSID(atom);
-    } else if (JSVAL_IS_OBJECT(v)) {
+    } else if (!JSVAL_IS_PRIMITIVE(v)) {
         *idr->addr() = OBJECT_TO_JSID(JSVAL_TO_OBJECT(v));
     } else {
         ReportBadXMLName(cx, Valueify(v));

@@ -618,9 +618,9 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     /* Store in *vp to protect it from GC (callers must root vp). */
     vp->setNonFunObj(*iterobj);
 
-    NativeIterator *ni = keysOnly
-                         ? SnapshotKeys(cx, obj, flags, shapes.begin(), shapes.length(), key)
-                         : SnapshotValues(cx, obj, flags, shapes.begin(), shapes.length(), key);
+    NativeIterator *ni = (flags & JSITER_FOREACH)
+                         ? SnapshotValues(cx, obj, flags, shapes.begin(), shapes.length(), key)
+                         : SnapshotKeys(cx, obj, flags, shapes.begin(), shapes.length(), key);
     if (!ni)
         return false;
 
