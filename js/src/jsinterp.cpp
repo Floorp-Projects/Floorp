@@ -543,7 +543,7 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
 #endif
-        JSBool ok = callJSFastNative(cx, (JSFastNative) native, argc, vp);
+        JSBool ok = ((JSFastNative) native)(cx, argc, vp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
         if (ok && !alreadyThrowing)
@@ -651,7 +651,7 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #endif
         /* Primitive |this| should not be passed to slow natives. */
         JSObject *thisp = JSVAL_TO_OBJECT(fp->thisv);
-        ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, &fp->rval);
+        ok = native(cx, thisp, fp->argc, fp->argv, &fp->rval);
         JS_ASSERT(cx->fp == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
