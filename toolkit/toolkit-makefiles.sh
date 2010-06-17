@@ -556,7 +556,6 @@ MAKEFILES_xpfe="
 MAKEFILES_embedding="
   embedding/Makefile
   embedding/base/Makefile
-  embedding/base/standalone/Makefile
   embedding/browser/Makefile
   embedding/browser/activex/src/Makefile
   embedding/browser/activex/src/common/Makefile
