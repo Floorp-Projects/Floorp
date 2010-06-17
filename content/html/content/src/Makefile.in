@@ -59,7 +59,6 @@ CPPSRCS		= \
 		nsFormSubmission.cpp \
 		nsImageMapUtils.cpp \
 		nsTextEditorState.cpp \
-		nsHTMLElement.cpp \
 		nsHTMLAnchorElement.cpp \
 		nsHTMLAreaElement.cpp \
 		nsHTMLBRElement.cpp \
