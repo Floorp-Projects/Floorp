@@ -1901,7 +1901,7 @@ ReplaceCallback(JSContext *cx, size_t count, void *p)
         return false;
 
     size_t growth = leftlen + replen;
-    if (!rdata.cb.growBy(growth))
+    if (!rdata.cb.growByUninitialized(growth))
         return false;
 
     jschar *chars = rdata.cb.begin() + rdata.index;

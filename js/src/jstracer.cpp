@@ -5844,7 +5844,7 @@ JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
-    if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
+    if (cx->fp->scopeChainObj()->getGlobal()->scope()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
     }
@@ -8226,6 +8226,13 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
     }
     if (f->isCall()) {
         const CallInfo* ci = f->callInfo();
+        if (ci == &js_UnboxDouble_ci) {
+            LIns *boxed = lir->insAlloc(sizeof(Value));
+            lir->insStore(fcallarg(f, 1), boxed, 0, ACC_OTHER);
+            lir->insStore(fcallarg(f, 0), boxed, sizeof(uint32), ACC_OTHER);
+            LIns* args[] = { boxed };
+            return lir->insCall(&js_UnboxInt32_ci, args);
+        }
         if (ci == &js_StringToNumber_ci) {
             LIns* args[] = { fcallarg(f, 1), fcallarg(f, 0) };
             return lir->insCall(&js_StringToInt32_ci, args);
@@ -9350,23 +9357,35 @@ TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins)
 }
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VMSideExit *exit)
+TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VMSideExit *exit,
+                           bool force_double)
 {
     AccSet accSet = vaddr_ins == lirbuf->sp ? ACC_STACK : ACC_OTHER;
     LIns *mask_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + offsetof(jsval_layout, s.u.mask32), 
                                   accSet);
-    if (v.isNumber()) {
+    if (v.isNumber() && force_double) {
         guard(false,
               lir->insEqI_0(lir->ins2(LIR_ori,
                                       lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)),
                                       lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)))),
               exit);
-        LIns* args[] = { lir->ins2(LIR_addp, vaddr_ins, INS_CONST(offset)) };
+        LIns *val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + offsetof(jsval_layout, s.payload),
+                                     accSet);
+        LIns* args[] = { val_ins, mask_ins };
         return lir->insCall(&js_UnboxDouble_ci, args);
     }
 
-    LIns *val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + offsetof(jsval_layout, s.payload),
-                                 accSet);
+    if (v.isInt32()) {
+        guard(true, lir->ins2(LIR_eqi, mask_ins, INS_CONST(JSVAL_MASK32_INT32)), exit);
+        return i2d(lir->insLoad(LIR_ldi, vaddr_ins, offset + offsetof(jsval_layout, s.payload), accSet));
+    }
+
+    if (v.isDouble()) {
+        guard(true, lir->ins2(LIR_ltui, mask_ins, INS_CONST(JSVAL_MASK32_CLEAR)), exit);
+        return lir->insLoad(LIR_ldd, vaddr_ins, offset + offsetof(jsval_layout, s.payload), accSet);
+    }
+
+    LIns *val_ins = NULL;
     uint32 mask;
     if (v.isUndefined()) {
         mask = JSVAL_MASK32_UNDEFINED;
@@ -9387,6 +9406,9 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
     } else {
         JS_NOT_REACHED("bad type");
     }
+    if (!val_ins)
+        val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + offsetof(jsval_layout, s.payload), 
+                               accSet);
     
     guard(true, lir->ins2(LIR_eqi, mask_ins, INS_CONST(mask)), exit);
     return val_ins;
@@ -12374,7 +12396,13 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         LIns* res_ins;
         LIns* args[] = { NULL, idx_ins, obj_ins, cx_ins };
         if (v.isNumber()) {
-            if (isPromoteInt(v_ins)) {
+            if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
+                LIns *boxed = lir->insAlloc(sizeof(Value));
+                lir->insStore(fcallarg(v_ins, 1), boxed, 0, ACC_OTHER);
+                lir->insStore(fcallarg(v_ins, 0), boxed, sizeof(uint32), ACC_OTHER);
+                args[0] = boxed;
+                res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
+            } else if (isPromoteInt(v_ins)) {
                 args[0] = demote(lir, v_ins);
                 res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
             } else {
@@ -13239,7 +13267,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
                          lir->ins2ImmI(LIR_lshp, pidx_ins, 3));
-    v_ins = unbox_value(*vp, addr_ins, 0, exit);
+    v_ins = unbox_value(*vp, addr_ins, 0, exit, true);
 
     /* Don't let the hole value escape. Turn it into an undefined. */
     if (vp->isMagic()) {
