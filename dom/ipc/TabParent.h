@@ -59,12 +59,6 @@ struct JSContext;
 struct JSObject;
 
 namespace mozilla {
-
-namespace jsipc {
-class PContextWrapperParent;
-class PObjectWrapperParent;
-}
-
 namespace dom {
 struct TabParentListenerInfo 
 {
@@ -119,10 +113,9 @@ public:
                                       bool* aAllowRefresh);
 
     virtual bool AnswercreateWindow(PIFrameEmbeddingParent** retval);
-    virtual bool AnswersendSyncMessageToParent(const nsString& aMessage,
-                                               const nsString& aJSON,
-                                               const nsTArray<PObjectWrapperParent*>&,
-                                               nsTArray<nsString>* aJSONRetVal);
+    virtual bool RecvsendSyncMessageToParent(const nsString& aMessage,
+                                             const nsString& aJSON,
+                                             nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvsendAsyncMessageToParent(const nsString& aMessage,
                                               const nsString& aJSON);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
@@ -181,9 +174,6 @@ public:
     virtual bool DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* actor);
 
 
-    virtual PContextWrapperParent* AllocPContextWrapper();
-    virtual bool DeallocPContextWrapper(PContextWrapperParent* actor);
-
     virtual PGeolocationRequestParent* AllocPGeolocationRequest(const IPC::URI& uri);
     virtual bool DeallocPGeolocationRequest(PGeolocationRequestParent* actor);
 
@@ -197,7 +187,6 @@ protected:
     bool ReceiveMessage(const nsString& aMessage,
                         PRBool aSync,
                         const nsString& aJSON,
-                        const nsTArray<PObjectWrapperParent*>* aObjects,
                         nsTArray<nsString>* aJSONRetVal = nsnull);
 
     TabParentListenerInfo* GetListenerInfo(nsIWebProgressListener *aListener);

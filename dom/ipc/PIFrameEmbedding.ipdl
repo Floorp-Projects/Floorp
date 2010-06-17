@@ -41,8 +41,6 @@ include protocol PContentProcess;
 include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
-include protocol PObjectWrapper;
-include protocol PContextWrapper;
 include protocol PGeolocationRequest;
 include protocol PContentDialog;
 
@@ -65,7 +63,6 @@ rpc protocol PIFrameEmbedding
     manages PDocumentRenderer;
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
-    manages PContextWrapper;
     manages PGeolocationRequest;
     manages PContentDialog;
 
@@ -101,9 +98,7 @@ parent:
 
     rpc createWindow() returns (PIFrameEmbedding window);
 
-    PContextWrapper();
-
-    rpc sendSyncMessageToParent(nsString aMessage, nsString aJSON, PObjectWrapper[] aObjects)
+    sync sendSyncMessageToParent(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
 
     sendAsyncMessageToParent(nsString aMessage, nsString aJSON);

@@ -42,7 +42,6 @@
 #include "mozilla/ipc/DocumentRendererShmemParent.h"
 #include "mozilla/ipc/DocumentRendererNativeIDParent.h"
 #include "mozilla/dom/ContentProcessParent.h"
-#include "mozilla/jsipc/ContextWrapperParent.h"
 
 #include "nsIURI.h"
 #include "nsFocusManager.h"
@@ -71,8 +70,6 @@ using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
 using mozilla::ipc::DocumentRendererNativeIDParent;
 using mozilla::dom::ContentProcessParent;
-using mozilla::jsipc::PContextWrapperParent;
-using mozilla::jsipc::ContextWrapperParent;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -460,21 +457,6 @@ TabParent::DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* act
     return true;
 }
 
-PContextWrapperParent*
-TabParent::AllocPContextWrapper()
-{
-    ContentProcessParent* cpp =
-        static_cast<ContentProcessParent*>(Manager());
-    return new ContextWrapperParent(cpp);
-}
-
-bool
-TabParent::DeallocPContextWrapper(PContextWrapperParent* actor)
-{
-    delete actor;
-    return true;
-}
-
 PGeolocationRequestParent*
 TabParent::AllocPGeolocationRequest(const IPC::URI& uri)
 {
@@ -486,19 +468,6 @@ TabParent::DeallocPGeolocationRequest(PGeolocationRequestParent* actor)
 {
   delete actor;
   return true;
-}
-
-JSBool
-TabParent::GetGlobalJSObject(JSContext* cx, JSObject** globalp)
-{
-    // TODO Unify this code with TestShellParent::GetGlobalJSObject.
-    nsTArray<PContextWrapperParent*> cwps(1);
-    ManagedPContextWrapperParent(cwps);
-    if (cwps.Length() < 1)
-        return JS_FALSE;
-    NS_ASSERTION(cwps.Length() == 1, "More than one PContextWrapper?");
-    ContextWrapperParent* cwp = static_cast<ContextWrapperParent*>(cwps[0]);
-    return cwp->GetGlobalJSObject(cx, globalp);
 }
 
 void
@@ -522,13 +491,11 @@ TabParent::SendKeyEvent(const nsAString& aType,
 }
 
 bool
-TabParent::AnswersendSyncMessageToParent(const nsString& aMessage,
-                                         const nsString& aJSON,
-                                         const nsTArray<PObjectWrapperParent*>& aObjects,
-                                         nsTArray<nsString>* aJSONRetVal)
+TabParent::RecvsendSyncMessageToParent(const nsString& aMessage,
+                                       const nsString& aJSON,
+                                       nsTArray<nsString>* aJSONRetVal)
 {
-  static_cast<ContentProcessParent*>(Manager())->ReportChildAlreadyBlocked();
-  return ReceiveMessage(aMessage, PR_TRUE, aJSON, &aObjects, aJSONRetVal);
+  return ReceiveMessage(aMessage, PR_TRUE, aJSON, aJSONRetVal);
 }
 
 bool
@@ -542,7 +509,6 @@ bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           PRBool aSync,
                           const nsString& aJSON,
-                          const nsTArray<PObjectWrapperParent*>* aObjects,
                           nsTArray<nsString>* aJSONRetVal)
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
@@ -554,7 +520,7 @@ TabParent::ReceiveMessage(const nsString& aMessage,
       JSContext* ctx = manager->GetJSContext();
       JSAutoRequest ar(ctx);
       jsval* dest;
-      PRUint32 len = aObjects ? aObjects->Length() : 0;
+      PRUint32 len = 0; //TODO: obtain a real value in bug 572685
       // Because we want JS messages to have always the same properties,
       // create array even if len == 0.
       JSObject* objectsArray =
@@ -566,11 +532,6 @@ TabParent::ReceiveMessage(const nsString& aMessage,
       nsresult rv = NS_OK;
       nsAutoGCRoot arrayGCRoot(&objectsArray, &rv);
       NS_ENSURE_SUCCESS(rv, false);
-      for (PRUint32 i = 0; i < len; ++i) {
-        mozilla::jsipc::ObjectWrapperParent* wrapper =
-          static_cast<mozilla::jsipc::ObjectWrapperParent*>(aObjects->ElementAt(i));
-        dest[i] = OBJECT_TO_JSVAL(wrapper ? wrapper->GetJSObject(ctx) : nsnull);
-      }
       
       manager->ReceiveMessage(mFrameElement,
                               aMessage,
