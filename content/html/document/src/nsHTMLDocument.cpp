@@ -1592,16 +1592,8 @@ nsHTMLDocument::GetBody(nsresult *aResult)
 
   // The document is most likely a frameset document so look for the
   // outer most frameset element
-  nsRefPtr<nsContentList> nodeList;
-
-  if (IsHTML()) {
-    nodeList = nsDocument::GetElementsByTagName(NS_LITERAL_STRING("frameset"));
-  } else {
-    nodeList =
-      nsDocument::GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                             NS_LITERAL_STRING("frameset"));
-  }
-
+  nsRefPtr<nsContentList> nodeList =
+    NS_GetContentList(this, nsGkAtoms::frameset, kNameSpaceID_XHTML);
   if (!nodeList) {
     *aResult = NS_ERROR_OUT_OF_MEMORY;
 
