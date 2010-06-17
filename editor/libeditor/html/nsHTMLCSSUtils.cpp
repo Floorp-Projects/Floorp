@@ -337,7 +337,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
     aNode->GetParentNode(getter_AddRefs(node));
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  if (!content) return PR_FALSE;
+  NS_ENSURE_TRUE(content, PR_FALSE);
 
   nsIAtom *tagName = content->Tag();
   // brade: should the above use nsEditor::GetTag(aNode)?
@@ -1383,10 +1383,10 @@ nsHTMLCSSUtils::GetInlineStyles(nsIDOMElement *aElement,
                                 nsIDOMCSSStyleDeclaration **aCssDecl,
                                 PRUint32 *aLength)
 {
-  if (!aElement || !aLength) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement && aLength, NS_ERROR_NULL_POINTER);
   *aLength = 0;
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(aElement);
-  if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
   nsresult res = inlineStyles->GetStyle(aCssDecl);
   if (NS_FAILED(res) || !aCssDecl) return NS_ERROR_NULL_POINTER;
   (*aCssDecl)->GetLength(aLength);

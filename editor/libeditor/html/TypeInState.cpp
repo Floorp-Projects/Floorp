@@ -69,7 +69,7 @@ TypeInState::~TypeInState()
 
 nsresult TypeInState::UpdateSelState(nsISelection *aSelection)
 {
-  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   
   PRBool isCollapsed = PR_FALSE;
   nsresult result = aSelection->GetIsCollapsed(&isCollapsed);
@@ -182,7 +182,7 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
   {
     // make a new propitem
     item = new PropItem(aProp,aAttr,aValue);
-    if (!item) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
     
     // add it to the list of set properties
     mSetArray.AppendElement(item);
@@ -213,7 +213,7 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
   
   // make a new propitem
   PropItem *item = new PropItem(aProp,aAttr,EmptyString());
-  if (!item) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
   
   // remove it from the list of set properties, if we have a match
   RemovePropFromSetList(aProp,aAttr);
@@ -231,7 +231,7 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
  */  
 nsresult TypeInState::TakeClearProperty(PropItem **outPropItem)
 {
-  if (!outPropItem) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outPropItem, NS_ERROR_NULL_POINTER);
   *outPropItem = nsnull;
   PRUint32 count = mClearedArray.Length();
   if (count)
@@ -249,7 +249,7 @@ nsresult TypeInState::TakeClearProperty(PropItem **outPropItem)
  */  
 nsresult TypeInState::TakeSetProperty(PropItem **outPropItem)
 {
-  if (!outPropItem) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outPropItem, NS_ERROR_NULL_POINTER);
   *outPropItem = nsnull;
   PRUint32 count = mSetArray.Length();
   if (count)
@@ -266,7 +266,7 @@ nsresult TypeInState::TakeSetProperty(PropItem **outPropItem)
 //                          cleared out.
 nsresult TypeInState::TakeRelativeFontSize(PRInt32 *outRelSize)
 {
-  if (!outRelSize) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outRelSize, NS_ERROR_NULL_POINTER);
   *outRelSize = mRelativeFontSize;
   mRelativeFontSize = 0;
   return NS_OK;

@@ -105,13 +105,13 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   nsCOMPtr<nsIDOMNode>leftParent;
   nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
   NS_ENSURE_SUCCESS(result, result);
-  if (!leftParent) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(leftParent, NS_ERROR_NULL_POINTER);
 
   // verify that mLeftNode and mRightNode have the same parent
   nsCOMPtr<nsIDOMNode>rightParent;
   result = mRightNode->GetParentNode(getter_AddRefs(rightParent));
   NS_ENSURE_SUCCESS(result, result);
-  if (!rightParent) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(rightParent, NS_ERROR_NULL_POINTER);
 
   if (leftParent==rightParent)
   {

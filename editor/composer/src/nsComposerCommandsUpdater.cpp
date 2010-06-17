@@ -304,7 +304,7 @@ nsresult
 nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
 {
   nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
-  if (!commandUpdater) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
   
   // This hardcoded list of commands is temporary.
@@ -358,7 +358,7 @@ nsresult
 nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 {
   nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
-  if (!commandUpdater) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
   commandUpdater->CommandStatusChanged(aCommand);
 

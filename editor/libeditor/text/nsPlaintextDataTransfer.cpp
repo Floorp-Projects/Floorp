@@ -162,7 +162,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
-  if (!dragSession) return NS_OK;
+  NS_ENSURE_TRUE(dragSession, NS_OK);
 
   // Current doc is destination
   nsCOMPtr<nsIDOMDocument> destdomdoc; 
@@ -173,7 +173,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareTransferable(getter_AddRefs(trans));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
+  NS_ENSURE_TRUE(trans, NS_OK);  // NS_ERROR_FAILURE; SHOULD WE FAIL?
 
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
@@ -188,12 +188,12 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   // We have to figure out whether to delete and relocate caret only once
   // Parent and offset are under the mouse cursor
   nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
-  if (!nsuiEvent) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(nsuiEvent, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> newSelectionParent;
   rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!newSelectionParent) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 
   PRInt32 newSelectionOffset;
   rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!selection) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   PRBool isCollapsed;
   rv = selection->GetIsCollapsed(&isCollapsed);
@@ -290,7 +290,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   {
     rv = dragSession->GetData(trans, i);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
+    NS_ENSURE_TRUE(trans, NS_OK); // NS_ERROR_FAILURE; Should we fail?
 
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
@@ -361,7 +361,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   nsCOMPtr<nsITransferable> trans;
   rv = PutDragDataInTransferable(getter_AddRefs(trans));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!trans) return NS_OK; // maybe there was nothing to copy?
+  NS_ENSURE_TRUE(trans, NS_OK); // maybe there was nothing to copy?
 
  /* get the drag service */
   nsCOMPtr<nsIDragService> dragService = 

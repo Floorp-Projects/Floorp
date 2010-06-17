@@ -332,7 +332,7 @@ NS_IMETHODIMP nsPlaintextEditor::InitRules()
   // instantiate the rules for this text editor
   nsresult res = NS_NewTextEditRules(getter_AddRefs(mRules));
   NS_ENSURE_SUCCESS(res, res);
-  if (!mRules) return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(mRules, NS_ERROR_UNEXPECTED);
   return mRules->Init(this);
 }
 
@@ -452,7 +452,7 @@ NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAString& aString,
 
 NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
 {
-  if (!aInOutParent || !*aInOutParent || !aInOutOffset || !outBRNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_SUCCESS(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nsnull;
   nsresult res;
   
@@ -469,7 +469,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
     PRUint32 len;
     nodeAsText->GetLength(&len);
     GetNodeLocation(node, address_of(tmp), &offset);
-    if (!tmp) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
     if (!theOffset)
     {
       // we are already set to go
@@ -538,7 +538,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, ns
 
 NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 {
-  if (!outBRNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nsnull;
 
   // calling it text insertion to trigger moz br treatment by rules
@@ -749,7 +749,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   nsCOMPtr<nsISelection> selection;
   result = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(result, result);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // If there is an existing selection when an extended delete is requested,
   //  platforms that use "caret-style" caret positioning collapse the
@@ -813,7 +813,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(result, result);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsAutoString resultString;
   // XXX can we trust instring to outlive ruleInfo,
   // XXX and ruleInfo not to refer to instring in its dtor?
@@ -853,7 +853,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsresult res;
   res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // Batching the selection and moving nodes out from under the caret causes
   // caret turds. Ask the shell to invalidate the caret now to avoid the turds.
@@ -1283,7 +1283,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsCOMPtr<nsIPresShell> presShell;
   nsresult rv = GetPresShell(getter_AddRefs(presShell));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!presShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
   formatType.AppendWithConversion(aFormatType);
@@ -1492,7 +1492,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!selection) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertText, nsIEditor::eNext);
@@ -1579,7 +1579,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
 
   nsCOMPtr<nsICiter> citer = new nsInternetCiter();
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!citer) return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(citer, NS_ERROR_UNEXPECTED);
 
   nsString wrapped;
   PRUint32 firstLineOffset = 0;   // XXX need to reset this if there is a selection
@@ -1607,7 +1607,7 @@ nsPlaintextEditor::StripCites()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICiter> citer = new nsInternetCiter();
-  if (!citer) return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(citer, NS_ERROR_UNEXPECTED);
 
   nsString stripped;
   rv = citer->StripCites(current, stripped);

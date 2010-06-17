@@ -176,12 +176,12 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
-  if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
   nsresult result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
   NS_ENSURE_SUCCESS(result, result);
-  if (!cssDecl) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(cssDecl, NS_ERROR_NULL_POINTER);
 
   nsAutoString propertyNameString;
   mProperty->ToString(propertyNameString);
@@ -273,11 +273,11 @@ nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
     mProperty->ToString(propertyNameString);
 
     nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
-    if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
     NS_ENSURE_SUCCESS(result, result);
-    if (!cssDecl) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(cssDecl, NS_ERROR_NULL_POINTER);
 
     if (aValue.IsEmpty()) {
       // an empty value means we have to remove the property

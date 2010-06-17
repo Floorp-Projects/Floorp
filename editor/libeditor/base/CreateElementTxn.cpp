@@ -109,7 +109,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 #endif
 
   NS_ASSERTION(mEditor && mParent, "bad state");
-  if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mEditor && mParent, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIContent> newContent;
  
@@ -117,13 +117,13 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
   nsresult result = mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(result, result);
   nsCOMPtr<nsIDOMElement>newElement = do_QueryInterface(newContent);
-  if (!newElement) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(newElement, NS_ERROR_NULL_POINTER);
   mNewNode = do_QueryInterface(newElement);
   // Try to insert formatting whitespace for the new node:
   mEditor->MarkNodeDirty(mNewNode);
  
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
-  if (!mNewNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(mNewNode, NS_ERROR_NULL_POINTER);
 
 #ifdef NS_DEBUG
   if (gNoisy)
@@ -162,7 +162,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
         nsCOMPtr<nsISelection> selection;
         result = mEditor->GetSelection(getter_AddRefs(selection));
         NS_ENSURE_SUCCESS(result, result);
-        if (!selection) return NS_ERROR_NULL_POINTER;
+        NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
         PRInt32 offset=0;
         result = nsEditor::GetChildOffset(mNewNode, mParent, offset);
@@ -192,7 +192,7 @@ NS_IMETHODIMP CreateElementTxn::UndoTransaction(void)
 #endif
 
   NS_ASSERTION(mEditor && mParent, "bad state");
-  if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mEditor && mParent, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIDOMNode> resultNode;
   return mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
@@ -205,7 +205,7 @@ NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
 #endif
 
   NS_ASSERTION(mEditor && mParent, "bad state");
-  if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mEditor && mParent, NS_ERROR_NOT_INITIALIZED);
 
   // first, reset mNewNode so it has no attributes or content
   nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(mNewNode);

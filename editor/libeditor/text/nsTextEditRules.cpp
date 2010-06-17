@@ -175,12 +175,12 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
     // create a range that is the entire body contents
     nsCOMPtr<nsIDOMRange> wholeDoc =
       do_CreateInstance("@mozilla.org/content/range;1");
-    if (!wholeDoc) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(wholeDoc, NS_ERROR_NULL_POINTER);
     wholeDoc->SetStart(body,0);
     nsCOMPtr<nsIDOMNodeList> list;
     res = body->GetChildNodes(getter_AddRefs(list));
     NS_ENSURE_SUCCESS(res, res);
-    if (!list) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(list, NS_ERROR_FAILURE);
 
     PRUint32 listCount;
     res = list->GetLength(&listCount);
@@ -483,7 +483,7 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   nsIDOMElement *rootElem = mEditor->GetRoot();
 
   nsCOMPtr<nsIDOMNode> root = do_QueryInterface(rootElem);
-  if (!root) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER);
   if (selNode != root) return NS_OK; // must be inside text node or somewhere other than end of root
 
   nsCOMPtr<nsIDOMNode> temp = mEditor->GetChildAt(selNode, selOffset);
@@ -519,7 +519,7 @@ GetTextNode(nsISelection *selection, nsEditor *editor) {
     // Get an nsINode from the nsIDOMNode
     nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
     // if node is null, return it to indicate there's no text
-    if (!node) return nsnull;
+    NS_ENSURE_TRUE(node, nsnull);
     // This should be the root node, walk the tree looking for text nodes
     nsNodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, nsnull, PR_TRUE);
     while (!editor->IsTextNode(selNode)) {
@@ -742,7 +742,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   nsCOMPtr<nsIDOMDocument>doc;
   res = mEditor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(res, res);
-  if (!doc) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
     
   if (aAction == kInsertTextIME) 
   { 
@@ -1007,13 +1007,13 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     PRInt32 startOffset;
     res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
     NS_ENSURE_SUCCESS(res, res);
-    if (!startNode) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
     
     PRBool bCollapsed;
     res = aSelection->GetIsCollapsed(&bCollapsed);
     NS_ENSURE_SUCCESS(res, res);
   
-    if (!bCollapsed) return NS_OK;
+    NS_ENSURE_TRUE(bCollapsed, NS_OK);
 
     // Test for distance between caret and text that will be deleted
     res = CheckBidiLevelForDeletion(aSelection, startNode, startOffset, aCollapsedAction, aCancel);
@@ -1041,7 +1041,7 @@ nsTextEditRules::DidDeleteSelection(nsISelection *aSelection,
   PRInt32 startOffset;
   nsresult res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
   NS_ENSURE_SUCCESS(res, res);
-  if (!startNode) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
   
   // delete empty text nodes at selection
   if (mEditor->IsTextNode(startNode))
@@ -1097,7 +1097,7 @@ nsTextEditRules:: DidUndo(nsISelection *aSelection, nsresult aResult)
     else
     {
       nsIDOMElement *theRoot = mEditor->GetRoot();
-      if (!theRoot) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
       nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
       if (node && mEditor->IsMozEditorBogusNode(node))
         mBogusNode = node;
@@ -1130,7 +1130,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
     else
     {
       nsIDOMElement *theRoot = mEditor->GetRoot();
-      if (!theRoot) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
       
       nsCOMPtr<nsIDOMNodeList> nodeList;
       res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
@@ -1144,7 +1144,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
         if (len != 1) return NS_OK;  // only in the case of one br could there be the bogus node
         nsCOMPtr<nsIDOMNode> node;
         nodeList->Item(0, getter_AddRefs(node));
-        if (!node) return NS_ERROR_NULL_POINTER;
+        NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
         if (mEditor->IsMozEditorBogusNode(node))
           mBogusNode = node;
       }
@@ -1195,7 +1195,7 @@ nsTextEditRules::DidOutputText(nsISelection *aSelection, nsresult aResult)
 nsresult
 nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
 {
-  if (!aRange) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aRange, NS_ERROR_NULL_POINTER);
   
   // convert any newlines in editable, preformatted text nodes 
   // into normal breaks.  this is because layout won't give us a place 
@@ -1258,7 +1258,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       res = mEditor->CreateTxnForDeleteText(textNode, offset, 1,
                                             getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res); 
-      if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
+      NS_ENSURE_TRUE(txn, NS_ERROR_OUT_OF_MEMORY);
       res = mEditor->DoTransaction(txn); 
       NS_ENSURE_SUCCESS(res, res); 
       
@@ -1283,7 +1283,7 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
   nsresult res = body->GetLastChild(getter_AddRefs(lastChild));
   // assuming CreateBogusNodeIfNeeded() has been called first
   NS_ENSURE_SUCCESS(res, res);  
-  if (!lastChild) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(lastChild, NS_ERROR_NULL_POINTER);
 
   if (!nsTextEditUtils::IsBreak(lastChild))
   {
@@ -1345,7 +1345,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
 
     // set mBogusNode to be the newly created <br>
     mBogusNode = brElement;
-    if (!mBogusNode) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(mBogusNode, NS_ERROR_NULL_POINTER);
 
     // give it a special attribute
     newContent->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
@@ -1512,7 +1512,7 @@ nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength)
 nsresult 
 nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode)
 {
-  if (!inParent || !outBRNode) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inParent && outBRNode, NS_ERROR_NULL_POINTER);
 
   nsresult res = mEditor->CreateBR(inParent, inOffset, outBRNode);
   NS_ENSURE_SUCCESS(res, res);
