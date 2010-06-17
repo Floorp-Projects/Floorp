@@ -1742,7 +1742,7 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   if (mData.IsEmpty()) {
     aResult->SetAsEmpty();
-    return NS_OK;
+    return OK;
   }
 
   nsRefPtr<IDBCursorRequest> cursor =

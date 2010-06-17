@@ -411,11 +411,16 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
                                   "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
+    mJSRuntime = rt;
+
     nsCOMPtr<nsIJSON> json(new nsJSON());
     rv = json->DecodeToJSVal(mValue, cx, &mCachedValue);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mCachedValue = JSVAL_VOID;
 
-    mJSRuntime = rt;
+      NS_ERROR("Failed to decode!");
+      return rv;
+    }
   }
 
   *retval = mCachedValue;
