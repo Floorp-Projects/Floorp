@@ -53,6 +53,8 @@ PREFS_BRANCH:                          "services.sync.",
 
 // Host "key" to access Weave Identity in the password manager
 PWDMGR_HOST:                           "chrome://weave",
+PWDMGR_PASSWORD_REALM:                 "Mozilla Services Password",
+PWDMGR_PASSPHRASE_REALM:               "Mozilla Services Encryption Passphrase",
 
 // Sync intervals for various clients configurations
 SINGLE_USER_SYNC:                      24 * 60 * 60 * 1000, // 1 day
