@@ -8,7 +8,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const xpi = "browser/toolkit/mozapps/extensions/test/browser/browser_installssl.xpi";
 const redirect = "browser/toolkit/mozapps/extensions/test/browser/redirect.sjs?";
 const SUCCESS = 0;
-const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 
 var gTests = [];
 

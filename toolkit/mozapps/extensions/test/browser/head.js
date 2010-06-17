@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const MANAGER_URI = "about:addons";
+const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
+
 var gPendingTests = [];
 var gTestsRun = 0;
 
@@ -19,6 +22,42 @@ function run_next_test() {
   info("Running test " + gTestsRun);
 
   gPendingTests.shift()();
+}
+
+function wait_for_view_load(aManagerWindow, aCallback) {
+  if (!aManagerWindow.gViewController.currentViewObj.node.hasAttribute("loading")) {
+    aCallback(aManagerWindow);
+    return;
+  }
+
+  aManagerWindow.document.addEventListener("ViewChanged", function() {
+    aManagerWindow.document.removeEventListener("ViewChanged", arguments.callee, false);
+    aCallback(aManagerWindow);
+  }, false);
+}
+
+function open_manager(aView, aCallback) {
+  function setup_manager(aManagerWindow) {
+    if (aView)
+      aManagerWindow.loadView(aView);
+
+    ok(aManagerWindow != null, "Should have an add-ons manager window");
+    is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
+
+    wait_for_view_load(aManagerWindow, aCallback);
+  }
+
+  if ("switchToTabHavingURI" in window) {
+    switchToTabHavingURI(MANAGER_URI, true, function(aBrowser) {
+      setup_manager(aBrowser.contentWindow.wrappedJSObject);
+    });
+    return;
+  }
+
+  openDialog("about:addons").addEventListener("load", function() {
+    this.removeEventListener("load", arguments.callee, false);
+    setup_manager(this);
+  }, false);
 }
 
 function CertOverrideListener(host, bits) {
