@@ -8108,20 +8108,6 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
   }
 }
 
-void
-nsCSSFrameConstructor::RestyleLaterSiblings(Element *aElement)
-{
-  for (nsIContent* sibling = aElement->GetNextSibling();
-       sibling;
-       sibling = sibling->GetNextSibling()) {
-    if (!sibling->IsElement())
-      continue;
-
-    RestyleElement(sibling->AsElement(), sibling->GetPrimaryFrame(),
-                   NS_STYLE_HINT_NONE);
-  }
-}
-
 nsresult
 nsCSSFrameConstructor::ContentStatesChanged(nsIContent* aContent1,
                                             nsIContent* aContent2,
@@ -11592,37 +11578,6 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
   }
 }
 
-
-void
-nsCSSFrameConstructor::ProcessOneRestyle(Element* aElement,
-                                         nsRestyleHint aRestyleHint,
-                                         nsChangeHint aChangeHint)
-{
-  NS_PRECONDITION(aElement, "Must have element");
-  
-  if (!aElement->IsInDoc() ||
-      aElement->GetCurrentDoc() != mDocument) {
-    // Content node has been removed from our document; nothing else
-    // to do here
-    return;
-  }
-  
-  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  if (aRestyleHint & eRestyle_Self) {
-    RestyleElement(aElement, primaryFrame, aChangeHint);
-  } else if (aChangeHint &&
-               (primaryFrame ||
-                (aChangeHint & nsChangeHint_ReconstructFrame))) {
-    // Don't need to recompute style; just apply the hint
-    nsStyleChangeList changeList;
-    changeList.AppendChange(primaryFrame, aElement, aChangeHint);
-    ProcessRestyledFrames(changeList);
-  }
-
-  if (aRestyleHint & eRestyle_LaterSiblings) {
-    RestyleLaterSiblings(aElement);
-  }
-}
 
 void
 nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)

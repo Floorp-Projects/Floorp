@@ -38,6 +38,7 @@
 
 #include "RestyleTracker.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsStyleChangeList.h"
 
 namespace mozilla {
 namespace css {
@@ -62,6 +63,43 @@ CollectRestyles(nsISupports* aElement,
   *restyleArrayPtr = currentRestyle + 1;
 
   return PL_DHASH_NEXT;
+}
+
+inline void
+RestyleTracker::ProcessOneRestyle(Element* aElement,
+                                  nsRestyleHint aRestyleHint,
+                                  nsChangeHint aChangeHint)
+{
+  if (aElement->GetCurrentDoc() != mFrameConstructor->mDocument) {
+    // Content node has been removed from our document; nothing else
+    // to do here
+    return;
+  }
+
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  if (aRestyleHint & eRestyle_Self) {
+    mFrameConstructor->RestyleElement(aElement, primaryFrame, aChangeHint);
+  } else if (aChangeHint &&
+             (primaryFrame ||
+              (aChangeHint & nsChangeHint_ReconstructFrame))) {
+    // Don't need to recompute style; just apply the hint
+    nsStyleChangeList changeList;
+    changeList.AppendChange(primaryFrame, aElement, aChangeHint);
+    mFrameConstructor->ProcessRestyledFrames(changeList);
+  }
+
+  if (aRestyleHint & eRestyle_LaterSiblings) {
+    for (nsIContent* sibling = aElement->GetNextSibling();
+         sibling;
+         sibling = sibling->GetNextSibling()) {
+      if (!sibling->IsElement())
+        continue;
+
+      mFrameConstructor->RestyleElement(sibling->AsElement(),
+                                        sibling->GetPrimaryFrame(),
+                                        NS_STYLE_HINT_NONE);
+    }
+  }
 }
 
 void
@@ -96,9 +134,9 @@ RestyleTracker::ProcessRestyles()
     for (RestyleEnumerateData* currentRestyle = restylesToProcess;
          currentRestyle != lastRestyle;
          ++currentRestyle) {
-      mFrameConstructor->ProcessOneRestyle(currentRestyle->mElement,
-                                           currentRestyle->mRestyleHint,
-                                           currentRestyle->mChangeHint);
+      ProcessOneRestyle(currentRestyle->mElement,
+                        currentRestyle->mRestyleHint,
+                        currentRestyle->mChangeHint);
     }
 
     count = mPendingRestyles.Count();
@@ -113,7 +151,6 @@ RestyleTracker::ProcessRestyles()
 #ifdef DEBUG
   mFrameConstructor->mPresShell->VerifyStyleTree();
 #endif
-
 }
 
 } // namespace css
