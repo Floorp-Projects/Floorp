@@ -1644,8 +1644,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCAutoString keyRangeClause;
   if (!mLeftKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND ");
-    keyRangeClause.Append(keyColumn);
+    keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
     if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
       keyRangeClause.AppendLiteral(" > :");
     }
@@ -1657,8 +1656,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   if (!mRightKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND ");
-    keyRangeClause.Append(keyColumn);
+    keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
     if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
       keyRangeClause.AppendLiteral(" < :");
     }
@@ -1669,30 +1667,27 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     keyRangeClause.Append(rightKeyName);
   }
 
-  nsCAutoString query("SELECT ");
-  query.Append(keyColumn);
-  query.AppendLiteral(", data FROM ");
-  query.Append(table);
-  query.AppendLiteral(" WHERE object_store_id = :");
-  query.Append(osid);
-  query.Append(keyRangeClause);
-  query.AppendLiteral(" ORDER BY ");
-  query.Append(keyColumn);
-
+  nsCString directionClause;
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
-      query.AppendLiteral(" DESC");
+      directionClause = NS_LITERAL_CSTRING(" DESC");
       break;
 
     case nsIIDBCursor::PREV:
     case nsIIDBCursor::PREV_NO_DUPLICATE:
-      query.AppendLiteral(" ASC");
+      directionClause = NS_LITERAL_CSTRING(" ASC");
       break;
 
     default:
       NS_NOTREACHED("Unknown direction type!");
   }
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
+                    NS_LITERAL_CSTRING(", data FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY ") +
+                    keyColumn + directionClause;
 
   if (!mData.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
@@ -1865,14 +1860,12 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     table.AssignLiteral("object_data");
     columns.AssignLiteral("id, data, key_value");
   }
-  nsCAutoString sql;
-  sql.AppendASCII("SELECT ");
-  sql += columns;
-  sql.AppendASCII(" FROM ");
-  sql += table;
-  sql.AppendASCII(" WHERE object_store_id = :osid");
 
-  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(sql);
+  nsCString query = NS_LITERAL_CSTRING("SELECT ") + columns +
+                    NS_LITERAL_CSTRING(" FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :osid");
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -2068,8 +2061,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCAutoString keyRangeClause;
   if (!mLeftKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND ");
-    keyRangeClause.Append(keyColumn);
+    keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
     if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
       keyRangeClause.AppendLiteral(" > :");
     }
@@ -2081,8 +2073,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   if (!mRightKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND ");
-    keyRangeClause.Append(keyColumn);
+    keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
     if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
       keyRangeClause.AppendLiteral(" < :");
     }
@@ -2093,14 +2084,16 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     keyRangeClause.Append(rightKeyName);
   }
 
-  nsCAutoString query("SELECT data FROM ");
-  query.Append(table);
-  query.AppendLiteral(" WHERE object_store_id = :");
-  query.Append(osid);
-  query.Append(keyRangeClause);
-  query.AppendLiteral(" ORDER BY ");
-  query.Append(keyColumn);
-  query.AppendLiteral(" ASC");
+  nsCAutoString limitClause;
+  if (mLimit != PR_UINT32_MAX) {
+    limitClause.AssignLiteral(" LIMIT ");
+    limitClause.AppendInt(mLimit);
+  }
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY ") +
+                    keyColumn + NS_LITERAL_CSTRING(" ASC") + limitClause;
 
   if (!mValues.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
@@ -2141,11 +2134,8 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
-  PRUint32 resultCount = 0;
-
   PRBool hasResult;
-  while (resultCount++ < mLimit &&
-         NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     if (mValues.Capacity() == mValues.Length()) {
       if (!mValues.SetCapacity(mValues.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
