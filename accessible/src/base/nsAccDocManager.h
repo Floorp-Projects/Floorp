@@ -93,6 +93,11 @@ protected:
    */
   void Shutdown();
 
+  inline nsDocAccessible* GetDocAccessibleFromCache(nsIDocument* aDocument) const
+  {
+    return mDocAccessibleCache.GetWeak(static_cast<void*>(aDocument));
+  }
+
 private:
   nsAccDocManager(const nsAccDocManager&);
   nsAccDocManager& operator =(const nsAccDocManager&);

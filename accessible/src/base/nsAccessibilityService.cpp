@@ -997,6 +997,30 @@ nsAccessibilityService::GetStringRelationType(PRUint32 aRelationType,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
+                                               nsIAccessible** aAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aAccessible);
+
+  // Search for an accessible in each of our per document accessible object
+  // caches. If we don't find it, and the given node is itself a document, check
+  // our cache of document accessibles (document cache). Note usually shutdown
+  // document accessibles are not stored in the document cache, however an
+  // "unofficially" shutdown document (i.e. not from nsAccDocManager) can still
+  // exist in the document cache.
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  nsAccessible* accessible = FindAccessibleInCache(static_cast<void*>(node));
+  if (!accessible) {
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
+    if (document)
+      accessible = GetDocAccessibleFromCache(document);
+  }
+
+  NS_IF_ADDREF(*aAccessible = accessible);
+  return NS_OK;
+}
+
 // nsIAccesibilityService
 nsAccessible*
 nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode, 
