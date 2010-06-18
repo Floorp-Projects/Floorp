@@ -39,6 +39,7 @@
 #include "nsAppShell.h"
 #include "nsWindow.h"
 #include "nsThreadUtils.h"
+#include "nsICommandLineRunner.h"
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
@@ -251,6 +252,28 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         nsCOMPtr<nsIObserverService> obsServ =
           mozilla::services::GetObserverService();
         obsServ->NotifyObservers(nsnull, "profile-before-change", nsnull);
+        break;
+    }
+
+    case AndroidGeckoEvent::LOAD_URI: {
+        nsCOMPtr<nsICommandLineRunner> cmdline
+            (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+        if (!cmdline)
+            break;
+
+        char *uri = ToNewUTF8String(curEvent->Characters());
+        if (!uri)
+            break;
+
+        char* argv[3] = {
+            "dummyappname",
+            "-remote",
+            uri
+        };
+        nsresult rv = cmdline->Init(3, argv, nsnull, nsICommandLine::STATE_REMOTE_AUTO);
+        if (NS_SUCCEEDED(rv))
+            cmdline->Run();
+        nsMemory::Free(uri);
         break;
     }
 
