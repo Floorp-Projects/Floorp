@@ -157,6 +157,8 @@ public:
    */
   virtual nsINode* GetNode() const { return mContent; }
   nsIContent* GetContent() const { return mContent; }
+  nsIDocument* GetDocumentNode() const
+    { return mContent ? mContent->GetOwnerDoc() : nsnull; }
 
   /**
    * Return node type information of DOM node associated with the accessible.

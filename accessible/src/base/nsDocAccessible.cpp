@@ -596,6 +596,8 @@ nsDocAccessible::RemoveAccessNodeFromCache(nsAccessible *aAccessible)
 PRBool
 nsDocAccessible::Init()
 {
+  NS_LOG_ACCDOCCREATE_FOR("document initialize", mDocument, this)
+
   // Initialize event queue.
   mEventQueue = new nsAccEventQueue(this);
   if (!mEventQueue)
@@ -630,8 +632,8 @@ nsDocAccessible::Shutdown()
   RemoveEventListeners();
 
   if (mParent) {
-    NS_LOG_ACCDOCDESTROY_FOR("remove document from outer doc", mDocument, this);
     mParent->RemoveChild(this);
+    mParent = nsnull;
   }
 
   mWeakShell = nsnull;  // Avoid reentrancy
