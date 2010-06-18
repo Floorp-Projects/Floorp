@@ -452,7 +452,8 @@ private:
   // XXXbz do we really need the aPrimaryFrame argument here?
   void RestyleElement(Element* aElement,
                       nsIFrame*       aPrimaryFrame,
-                      nsChangeHint    aMinHint);
+                      nsChangeHint    aMinHint,
+                      RestyleTracker& aRestyleTracker);
 
   nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
                                 nsIContent*                    aContent,

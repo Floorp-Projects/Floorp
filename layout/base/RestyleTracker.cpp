@@ -78,7 +78,8 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (aRestyleHint & eRestyle_Self) {
-    mFrameConstructor->RestyleElement(aElement, primaryFrame, aChangeHint);
+    mFrameConstructor->RestyleElement(aElement, primaryFrame, aChangeHint,
+                                      *this);
   } else if (aChangeHint &&
              (primaryFrame ||
               (aChangeHint & nsChangeHint_ReconstructFrame))) {
@@ -97,7 +98,8 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 
       mFrameConstructor->RestyleElement(sibling->AsElement(),
                                         sibling->GetPrimaryFrame(),
-                                        NS_STYLE_HINT_NONE);
+                                        NS_STYLE_HINT_NONE,
+                                        *this);
     }
   }
 }
