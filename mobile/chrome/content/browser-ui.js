@@ -1410,11 +1410,6 @@ var FormHelper = {
     return this._helperSpacer = document.getElementById("form-helper-spacer");
   },
 
-  get _selectContainer() {
-    delete this._selectContainer;
-    return this._selectContainer = document.getElementById("select-container");
-  },
-
   get _autofillContainer() {
     delete this._autofillContainer;
     return this._autofillContainer = document.getElementById("form-helper-autofill");
@@ -1463,11 +1458,7 @@ var FormHelper = {
     let currentIsSelect = this._isValidSelectElement(aNewElement);
 
     if (currentIsSelect && !previousIsSelect) {
-      this._selectContainer.style.maxHeight = (window.innerHeight / 1.8) + "px";
-
-      let rootNode = this._container;
-      rootNode.insertBefore(this._selectContainer, rootNode.lastChild);
-
+      SelectHelper.dock(this._container);
       SelectHelper.show(aNewElement);
     }
     else if (currentIsSelect && previousIsSelect) {
@@ -1475,10 +1466,7 @@ var FormHelper = {
       SelectHelper.show(aNewElement);
     }
     else if (!currentIsSelect && previousIsSelect) {
-      let rootNode = this._container.parentNode;
-      rootNode.insertBefore(this._selectContainer, rootNode.lastChild);
-
-      SelectHelper.close();
+      SelectHelper.hide();
     }
   },
 
@@ -1981,10 +1969,15 @@ MenulistWrapper.prototype = {
 };
 
 var SelectHelper = {
-  _panel: null,
   _list: null,
   _control: null,
   _selectedIndexes: [],
+  _docked: false,
+
+  get _panel() {
+    delete this._panel;
+    return this._panel = document.getElementById("select-container");
+  },
 
   _getSelectedIndexes: function() {
     let indexes = [];
@@ -2056,12 +2049,27 @@ var SelectHelper = {
       }
     }
 
-    this._panel = document.getElementById("select-container");
     this._panel.hidden = false;
+
+    if (!this._docked)
+      BrowserUI.pushPopup(this, this._panel);
 
     this._scrollElementIntoView(firstSelected);
 
     this._list.addEventListener("click", this, false);
+  },
+
+  dock: function dock(aContainer) {
+    aContainer.insertBefore(this._panel, aContainer.lastChild);
+    this._panel.style.maxHeight = (window.innerHeight / 1.8) + "px";
+    this._docked = true;
+  },
+
+  undock: function undock() {
+    let rootNode = Elements.stack;
+    rootNode.insertBefore(this._panel, rootNode.lastChild);
+    this._panel.style.maxHeight = "";
+    this._docked = false;
   },
 
   _scrollElementIntoView: function(aElement) {
@@ -2132,9 +2140,14 @@ var SelectHelper = {
     this._list = empty;
   },
 
-  close: function() {
+  hide: function() {
     this._list.removeEventListener("click", this, false);
     this._panel.hidden = true;
+    
+    if (this._docked)
+      this.undock();
+    else
+      BrowserUI.popPopup();
 
     this.reset();
   },
