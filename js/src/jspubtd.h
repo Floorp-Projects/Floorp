@@ -248,7 +248,7 @@ typedef uint32 JSValueMask32;
 # define VALUE_ALIGNMENT
 # define ASSERT_DOUBLE_ALIGN()
 #else
-# error "TODO: do something for compiler"
+# error "Need to add compiler support"
 #endif
 
 typedef VALUE_ALIGNMENT uint64 jsval;

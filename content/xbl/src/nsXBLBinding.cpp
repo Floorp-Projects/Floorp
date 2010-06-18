@@ -123,7 +123,7 @@ XBLFinalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XBLResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
            JSObject **objp)
 {
   // Note: if we get here, that means that the implementation for some binding
@@ -136,7 +136,7 @@ XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   JSObject* origObj = *objp;
   *objp = NULL;
 
-  if (!JSVAL_IS_STRING(id)) {
+  if (!JSID_IS_STRING(id)) {
     return JS_TRUE;
   }
 
