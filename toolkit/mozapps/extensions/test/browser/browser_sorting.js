@@ -32,7 +32,7 @@ function test() {
   }, {
     id: "test4@tests.mozilla.org",
     name: "canadian dictionary",
-    updateDate: new Date(0, 0, 01, 00, 00, 00),
+    updateDate: new Date(1970, 0, 01, 00, 00, 00),
     description: "foo",
   }, {
     id: "test5@tests.mozilla.org",
