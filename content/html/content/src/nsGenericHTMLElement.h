@@ -897,6 +897,9 @@ protected:
 // same time, so if it becomes an issue we can probably merge them into the
 // same bit.  --bz
 
+// Make sure we have enough space for those bits
+PR_STATIC_ASSERT(NODE_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
+
 //----------------------------------------------------------------------
 
 /**
