@@ -297,7 +297,6 @@ LayerManagerOGL::SetClippingRegion(const nsIntRegion& aClippingRegion)
 void
 LayerManagerOGL::BeginTransaction()
 {
-  NS_ASSERTION(mRootLayer, "Root not set");
 }
 
 void
