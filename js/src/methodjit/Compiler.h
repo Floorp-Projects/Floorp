@@ -168,6 +168,7 @@ class Compiler
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
+    void jsop_unbrand();
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
