@@ -219,6 +219,7 @@ IDBIndexRequest::Create(IDBObjectStoreRequest* aObjectStore,
   index->mName = aIndexInfo->name;
   index->mKeyPath = aIndexInfo->keyPath;
   index->mUnique = aIndexInfo->unique;
+  index->mAutoIncrement = aIndexInfo->autoIncrement;
 
   return index.forget();
 }
