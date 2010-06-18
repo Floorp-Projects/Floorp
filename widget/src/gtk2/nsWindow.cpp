@@ -220,6 +220,9 @@ static nsWindow* GetFirstNSWindowForGDKWindow (GdkWindow *aGdkWindow);
 extern "C" {
 #endif /* __cplusplus */
 #ifdef MOZ_X11
+static GdkFilterReturn popup_take_focus_filter (GdkXEvent *gdk_xevent,
+                                                GdkEvent *event,
+                                                gpointer data);
 static GdkFilterReturn plugin_window_filter_func (GdkXEvent *gdk_xevent,
                                                   GdkEvent *event,
                                                   gpointer data);
@@ -3103,6 +3106,9 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 void
 nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
+    NS_ASSERTION(mWindowType != eWindowType_popup,
+                 "Unexpected focus on a popup window");
+
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
     if (!mEnabled) {
         LOGFOCUS(("Container focus is blocked [%p]\n", (void *)this));
@@ -4094,16 +4100,37 @@ nsWindow::Create(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            // treat popups with a parent as top level windows
-            if (mParent) {
-                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", cBrand.get());
-                gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
-            }
-            else {
+            // The value of aParent contains a code: If a popup window has a
+            // non-NULL nsIWidget* aParent, it indicates that it should not be
+            // above all other windows (e.g a noautohide panel).
+            if (!aParent) {
+                // For most popups, use the standard GtkWindowType
+                // GTK_WINDOW_POPUP, which will use a Window with the
+                // override-redirect attribute (for temporary windows).
                 mShell = gtk_window_new(GTK_WINDOW_POPUP);
-                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            } else {
+                // For long-lived windows, their stacking order is managed by
+                // the window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
+                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                GtkWindow* gtkWin = GTK_WINDOW(mShell);
+                // ... but the window manager does not decorate this window,
+                // nor provide a separate taskbar icon.
+                gtk_window_set_decorated(gtkWin, FALSE);
+                gtk_window_set_skip_taskbar_hint(gtkWin, TRUE);
+                // Element focus is managed by the parent window so the
+                // WM_HINTS input field is set to False to tell the window
+                // manager not to set input focus to this window ...
+                gtk_window_set_accept_focus(gtkWin, FALSE);
+#ifdef MOZ_X11
+                // ... but when the window manager offers focus through
+                // WM_TAKE_FOCUS, focus is requested on the parent window.
+                gtk_widget_realize(mShell);
+                gdk_window_add_filter(mShell->window,
+                                      popup_take_focus_filter, NULL); 
+#endif
             }
+
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
 
             GdkWindowTypeHint gtkTypeHint;
             switch (aInitData->mPopupHint) {
@@ -5852,6 +5879,68 @@ focus_out_event_cb(GtkWidget *widget, GdkEventFocus *event)
 }
 
 #ifdef MOZ_X11
+// For long-lived popup windows that don't really take focus themselves but
+// may have elements that accept keyboard input when the parent window is
+// active, focus is handled specially.  These windows include noautohide
+// panels.  (This special handling is not necessary for temporary popups where
+// the keyboard is grabbed.)
+//
+// Mousing over or clicking on these windows should not cause them to steal
+// focus from their parent windows, so, the input field of WM_HINTS is set to
+// False to request that the window manager not set the input focus to this
+// window.  http://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
+//
+// However, these windows can still receive WM_TAKE_FOCUS messages from the
+// window manager, so they can still detect when the user has indicated that
+// they wish to direct keyboard input at these windows.  When the window
+// manager offers focus to these windows (after a mouse over or click, for
+// example), a request to make the parent window active is issued.  When the
+// parent window becomes active, keyboard events will be received.
+
+GdkFilterReturn
+popup_take_focus_filter(GdkXEvent *gdk_xevent,
+                        GdkEvent *event,
+                        gpointer data)
+{
+    XEvent* xevent = static_cast<XEvent*>(gdk_xevent);
+    if (xevent->type != ClientMessage)
+        return GDK_FILTER_CONTINUE;
+
+    XClientMessageEvent& xclient = xevent->xclient;
+    if (xclient.message_type != gdk_x11_get_xatom_by_name("WM_PROTOCOLS"))
+        return GDK_FILTER_CONTINUE;
+
+    Atom atom = xclient.data.l[0];
+    if (atom != gdk_x11_get_xatom_by_name("WM_TAKE_FOCUS"))
+        return GDK_FILTER_CONTINUE;
+
+    guint32 timestamp = xclient.data.l[1];
+
+    GtkWidget* widget = get_gtk_widget_for_gdk_window(event->any.window);
+    if (!widget)
+        return GDK_FILTER_CONTINUE;
+
+    GtkWindow* parent = gtk_window_get_transient_for(GTK_WINDOW(widget));
+    if (!parent)
+        return GDK_FILTER_CONTINUE;
+
+    if (gtk_window_is_active(parent))
+        return GDK_FILTER_REMOVE; // leave input focus on the parent
+
+    GdkWindow* parent_window = GTK_WIDGET(parent)->window;
+    if (!parent_window)
+        return GDK_FILTER_CONTINUE;
+
+    // In case the parent has not been deconified.
+    gdk_window_show_unraised(parent_window);
+
+    // Request focus on the parent window.
+    // Use gdk_window_focus rather than gtk_window_present to avoid
+    // raising the parent window.
+    gdk_window_focus(parent_window, timestamp);
+    return GDK_FILTER_REMOVE;
+}
+
 /* static */
 GdkFilterReturn
 plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
