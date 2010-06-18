@@ -131,7 +131,7 @@ struct JSFunction : public JSObject
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
-    union {
+    union U {
         struct {
             uint16      extra;    /* number of arg slots for local GC roots */
             uint16      spare;    /* reserved for future use */
@@ -140,7 +140,7 @@ struct JSFunction : public JSObject
                                      by this function */
             JSNativeTraceInfo *trcinfo;
         } n;
-        struct {
+        struct Scripted {
             uint16      nvars;    /* number of local variables */
             uint16      nupvars;  /* number of upvars (computable from script
                                      but here for faster access) */
