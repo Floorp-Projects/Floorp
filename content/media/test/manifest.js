@@ -102,6 +102,9 @@ var gPlayTests = [
   // Test playback of a webm file
   { name:"seek.webm", type:"video/webm", duration:3.966 },
 
+  // Test playback of a raw file
+  { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
+
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
   
 ];
