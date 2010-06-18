@@ -279,7 +279,7 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
-    return eRestyle_Self;
+    return eRestyle_Subtree;
   }
   
   return nsRestyleHint(0);
@@ -309,7 +309,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
       (mLinkRule || mVisitedRule || mActiveRule) &&
       element->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
-    return eRestyle_Self;
+    return eRestyle_Subtree;
   }
 
   // Don't worry about the mDocumentColorRule since it only applies
@@ -317,7 +317,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 
   // Handle the content style rules.
   if (element->IsAttributeMapped(aData->mAttribute)) {
-    return eRestyle_Self;
+    return eRestyle_Subtree;
   }
 
   return nsRestyleHint(0);

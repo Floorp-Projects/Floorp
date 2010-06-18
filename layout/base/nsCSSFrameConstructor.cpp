@@ -11358,7 +11358,7 @@ nsCSSFrameConstructor::RestyleForEmptyChange(Element* aContainer)
   // In some cases (:empty + E, :empty ~ E), a change if the content of
   // an element requires restyling its grandparent, because it changes
   // its parent's :empty state.
-  nsRestyleHint hint = eRestyle_Self;
+  nsRestyleHint hint = eRestyle_Subtree;
   nsIContent* grandparent = aContainer->GetParent();
   if (grandparent &&
       (grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
@@ -11408,7 +11408,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -11419,7 +11419,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
          cur;
          cur = cur->GetPreviousSibling()) {
       if (cur->IsElement()) {
-        PostRestyleEvent(cur->AsElement(), eRestyle_Self, NS_STYLE_HINT_NONE);
+        PostRestyleEvent(cur->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
         break;
       }
     }
@@ -11427,7 +11427,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
 }
 
 // Needed since we can't use PostRestyleEvent on non-elements (with
-// eRestyle_LaterSiblings or nsRestyleHint(eRestyle_Self |
+// eRestyle_LaterSiblings or nsRestyleHint(eRestyle_Subtree |
 // eRestyle_LaterSiblings) as appropriate).
 static void
 RestyleSiblingsStartingWith(nsCSSFrameConstructor *aFrameConstructor,
@@ -11438,7 +11438,7 @@ RestyleSiblingsStartingWith(nsCSSFrameConstructor *aFrameConstructor,
     if (sibling->IsElement()) {
       aFrameConstructor->
         PostRestyleEvent(sibling->AsElement(),
-                         nsRestyleHint(eRestyle_Self | eRestyle_LaterSiblings),
+                         nsRestyleHint(eRestyle_Subtree | eRestyle_LaterSiblings),
                          NS_STYLE_HINT_NONE);
       break;
     }
@@ -11486,7 +11486,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -11508,7 +11508,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
       }
       if (content->IsElement()) {
         if (passedChild) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self,
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
                            NS_STYLE_HINT_NONE);
         }
         break;
@@ -11525,7 +11525,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
       }
       if (content->IsElement()) {
         if (passedChild) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self,
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
                            NS_STYLE_HINT_NONE);
         }
         break;
@@ -11568,7 +11568,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -11590,7 +11590,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
       }
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self,
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
                            NS_STYLE_HINT_NONE);
         }
         break;
@@ -11603,7 +11603,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
          content = content->GetPreviousSibling()) {
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
         }
         break;
       }

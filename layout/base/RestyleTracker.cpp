@@ -143,7 +143,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
                   "Element has unexpected document");
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  if (aRestyleHint & eRestyle_Self) {
+  if (aRestyleHint & eRestyle_Subtree) {
     mFrameConstructor->RestyleElement(aElement, primaryFrame, aChangeHint,
                                       *this);
   } else if (aChangeHint &&
@@ -176,7 +176,7 @@ RestyleTracker::ProcessRestyles()
              sibling;
              sibling = sibling->GetNextSibling()) {
           if (sibling->IsElement() &&
-              AddPendingRestyle(sibling->AsElement(), eRestyle_Self,
+              AddPendingRestyle(sibling->AsElement(), eRestyle_Subtree,
                                 NS_STYLE_HINT_NONE)) {
               // Nothing else to do here; we'll handle the following
               // siblings when we get to |sibling| in laterSiblingArr.

@@ -144,7 +144,7 @@ inline PRBool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
  * descendants."  When no restyling is necessary, use |nsRestyleHint(0)|.
  */
 enum nsRestyleHint {
-  eRestyle_Self = 0x1,
+  eRestyle_Subtree = 0x1,
   eRestyle_LaterSiblings = 0x2
 };
 
