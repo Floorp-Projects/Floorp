@@ -604,8 +604,10 @@ function createItem(aObj, aIsInstall, aRequiresRestart) {
     // the binding handles the rest
     item.setAttribute("value", aObj.id);
 
+    // The XUL sort service only supports 32 bit integers so we strip the
+    // milliseconds to make this small enough
     if (aObj.updateDate)
-      item.setAttribute("dateUpdated", aObj.updateDate.getTime());
+      item.setAttribute("dateUpdated", aObj.updateDate.getTime() / 1000);
 
     if (aObj.size)
       item.setAttribute("size", aObj.size);
