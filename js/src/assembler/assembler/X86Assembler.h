@@ -717,7 +717,8 @@ public:
     
     void subl_im(int imm, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "subl       $0x%x, %d(%s)\n", imm, offset, nameIReg(4, base));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, GROUP1_OP_SUB, base, offset);
             m_formatter.immediate8(imm);

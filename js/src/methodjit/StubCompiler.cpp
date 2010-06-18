@@ -59,6 +59,12 @@ StubCompiler::init(uint32 nargs)
     return true;
 }
 
+void
+StubCompiler::linkExitDirect(Jump j, Label L)
+{
+    exits.append(CrossPatch(j, L));
+}
+
 /*
  * The "slow path" generation is interleaved with the main compilation phase,
  * though it is generated into a separate buffer. The fast path can "exit"
@@ -74,7 +80,7 @@ StubCompiler::linkExit(Jump j)
         Jump j2 = masm.jump();
         jumpList.append(j2);
     }
-    exits.append(CrossPatch(j, masm.label()));
+    linkExitDirect(j, masm.label());
     frame.sync(masm);
     lastGeneration = generation;
     JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");

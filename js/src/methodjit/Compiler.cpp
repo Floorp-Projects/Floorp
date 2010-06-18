@@ -170,6 +170,12 @@ mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *sco
 CompileStatus
 mjit::Compiler::generatePrologue()
 {
+    if (fun) {
+    }
+
+    invokeLabel = masm.label();
+    restoreFrameRegs();
+
 #ifdef JS_CPU_ARM
     /*
      * Unlike x86/x64, the return address is not pushed on the stack. To
@@ -183,12 +189,6 @@ mjit::Compiler::generatePrologue()
      */
     masm.storePtr(ARMRegisters::lr, FrameAddress(offsetof(VMFrame, scriptedReturn)));
 #endif
-
-    /*
-     * This saves us from having to load frame regs before every call, even if
-     * it's not always necessary.
-     */
-    restoreFrameRegs();
 
     return Compile_Okay;
 }
@@ -217,12 +217,13 @@ mjit::Compiler::finishThisUp()
     memcpy(result + masm.size(), stubcc.buffer(), stubcc.size());
 
     /* Build the pc -> ncode mapping. */
-    void **nmap = (void **)cx->calloc(sizeof(void *) * script->length);
+    void **nmap = (void **)cx->calloc(sizeof(void *) * script->length + 1);
     if (!nmap) {
         execPool->release();
         return Compile_Error;
     }
 
+    *nmap++ = (uint8 *)(result + masm.distanceOf(invokeLabel));
     script->nmap = nmap;
 
     for (size_t i = 0; i < script->length; i++) {
@@ -1499,7 +1500,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     bool typeKnown = fe->isTypeKnown();
 
     if (typeKnown && fe->getTypeTag() != JSVAL_MASK32_FUNOBJ) {
-        VoidStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
+        VoidPtrStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
         masm.move(Imm32(argc), Registers::ArgReg1);
         masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
         frame.popn(argc + 2);
@@ -1530,18 +1531,18 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      */
     frame.forgetEverything();
 
-    Jump invokeCallDone;
+    Label invoke;
     if (!typeKnown) {
         Jump j;
         if (!hasTypeReg)
             j = masm.testFunObj(Assembler::NotEqual, frame.addressOf(fe));
         else
             j = masm.testFunObj(Assembler::NotEqual, type);
+        invoke = stubcc.masm.label();
         stubcc.linkExit(j);
         stubcc.leave();
         stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
         stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
-        invokeCallDone = stubcc.masm.jump();
     }
 
     /* Get function private pointer. */
@@ -1549,43 +1550,65 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
                              JSSLOT_PRIVATE * sizeof(Value));
     masm.loadData32(funPrivate, data);
 
-    /* Test if it's interpreted. */
     frame.takeReg(data);
     RegisterID t0 = frame.allocReg();
     RegisterID t1 = frame.allocReg();
-    masm.load16(Address(data, offsetof(JSFunction, flags)), t0);
-    masm.move(t0, t1);
-    masm.and32(Imm32(JSFUN_KINDMASK), t1);
-    Jump notInterp = masm.branch32(Assembler::Below, t1, Imm32(JSFUN_INTERPRETED));
-    stubcc.linkExit(notInterp);
+
+    /* Test if the function is interpreted, and if not, take a slow path. */
+    {
+        masm.load16(Address(data, offsetof(JSFunction, flags)), t0);
+        masm.move(t0, t1);
+        masm.and32(Imm32(JSFUN_KINDMASK), t1);
+        Jump notInterp = masm.branch32(Assembler::Below, t1, Imm32(JSFUN_INTERPRETED));
+
+        if (!typeKnown) {
+            /* Re-use the existing stub, if possible. */
+            stubcc.linkExitDirect(notInterp, invoke);
+        } else {
+            /* Create a new slow path. */
+            invoke = stubcc.masm.label();
+            stubcc.linkExit(notInterp);
+            stubcc.leave();
+            stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+            stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
+        }
+    }
+
+    /* Test if it's not got compiled code. */
+    Address scriptAddr(data, offsetof(JSFunction, u) + offsetof(JSFunction::U::Scripted, script));
+    masm.loadPtr(scriptAddr, data);
+    Jump notCompiled = masm.branchPtr(Assembler::BelowOrEqual,
+                                      Address(data, offsetof(JSScript, ncode)),
+                                      ImmIntPtr(1));
+    {
+        stubcc.linkExitDirect(notCompiled, invoke);
+    }
 
     frame.freeReg(t0);
     frame.freeReg(t1);
     frame.freeReg(data);
-
-    stubcc.leave();
-    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-    stubcc.call(callingNew ? stubs::SlowNew : stubs::NativeCall);
-    Jump slowCallDone = stubcc.masm.jump();
 
     /* Scripted call. */
     masm.move(Imm32(argc), Registers::ArgReg1);
     masm.stubCall(callingNew ? stubs::New : stubs::Call,
                   PC, frame.stackDepth() + script->nfixed);
 
-    /*
-     * Stub call returns a pointer to JIT'd code, or NULL.
-     *
-     * If the function could not be JIT'd, it was already invoked using
-     * js_Interpret() or js_Invoke(). In that case, the stack frame has
-     * already been popped. We don't have to do any extra work, except
-     * update FpReg later on.
-     *
-     * Otherwise, pop the VMFrame's cached return address, then call
-     * (which realigns it to SP).
-     */
-    Jump j = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
-    stubcc.linkExit(j);
+    Jump invokeCallDone;
+    {
+        /*
+         * Stub call returns a pointer to JIT'd code, or NULL.
+         *
+         * If the function could not be JIT'd, it was already invoked using
+         * js_Interpret() or js_Invoke(). In that case, the stack frame has
+         * already been popped. We don't have to do any extra work.
+         */
+        Jump j = stubcc.masm.branchTestPtr(Assembler::NonZero, Registers::ReturnReg, Registers::ReturnReg);
+        stubcc.crossJump(j, masm.label());
+        if (callingNew)
+            invokeCallDone = stubcc.masm.jump();
+    }
+
+    /* Fast-path: return address contains scripted call. */
 
 #ifndef JS_CPU_ARM
     /*
@@ -1597,14 +1620,21 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 #endif
     masm.call(Registers::ReturnReg);
 
+    /*
+     * The scripted call returns a register triplet, containing the jsval and
+     * the current f.scriptedReturn.
+     */
 #ifdef JS_CPU_ARM
     masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, scriptedReturn)));
 #else
     masm.push(Registers::ReturnReg);
 #endif
 
+    /*
+     * Functions invoked with |new| can return, for some reason, primitive
+     * values. Just deal with this here.
+     */
     if (callingNew) {
-        /* Deal with primitive |this| */
         masm.move(JSReturnReg_Type, Registers::ReturnReg);
         masm.and32(Imm32(JSVAL_MASK32_OBJECT), Registers::ReturnReg);
         Jump primitive = masm.branch32(Assembler::BelowOrEqual, Registers::ReturnReg,
@@ -1616,6 +1646,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
         stubcc.masm.loadData32(thisv, JSReturnReg_Data);
         Jump primFix = stubcc.masm.jump();
         stubcc.crossJump(primFix, masm.label());
+        invokeCallDone.linkTo(stubcc.masm.label(), &stubcc.masm);
     }
 
     frame.popn(argc + 2);
@@ -1623,10 +1654,6 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
-    stubcc.leave();
-    slowCallDone.linkTo(stubcc.masm.label(), &stubcc.masm);
-    if (!typeKnown)
-        invokeCallDone.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(0);
 }
 

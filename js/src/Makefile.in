@@ -314,6 +314,7 @@ CPPSRCS += 	Assertions.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
 		ImmutableSync.cpp \
+		InvokeHelpers.cpp \
 		$(NULL)
 #		PICStubCompiler.cpp \
 

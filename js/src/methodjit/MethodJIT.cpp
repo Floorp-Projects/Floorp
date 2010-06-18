@@ -593,7 +593,7 @@ mjit::JaegerShot(JSContext *cx)
 #endif
 
     if (pc == script->code)
-        code = script->ncode;
+        code = script->nmap[-1];
     else
         code = script->nmap[pc - script->code];
 
@@ -652,7 +652,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     }
 
     if (script->nmap) {
-        cx->free(script->nmap);
+        cx->free(script->nmap - 1);
         script->nmap = NULL;
     }
     if (script->mics) {
