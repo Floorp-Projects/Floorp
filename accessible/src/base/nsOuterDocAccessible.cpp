@@ -159,16 +159,19 @@ nsOuterDocAccessible::DoAction(PRUint8 aIndex)
 void
 nsOuterDocAccessible::Shutdown()
 {
-  // Shutdown child document if any.
+  // XXX: sometimes outerdoc accessible is shutdown because of layout style
+  // change however the presshell of underlying document isn't destroyed and
+  // the document doesn't get pagehide events. Shutdown underlying document if
+  // any to avoid hanging document accessible.
+  NS_LOG_ACCDOCDESTROY_MSG("A11y outerdoc shutdown")
+  NS_LOG_ACCDOCDESTROY_ACCADDRESS("outerdoc", this)
+
   nsAccessible *childAcc = mChildren.SafeElementAt(0, nsnull);
   if (childAcc) {
-    nsRefPtr<nsDocAccessible> docAcc(do_QueryObject(childAcc));
-    NS_LOG_ACCDOCDESTROY_FOR("outerdoc document shutdown",
-                             docAcc->GetDOMDocument(), docAcc.get())
-    GetAccService()->ShutdownDocAccessiblesInTree(docAcc->GetDOMDocument());
+    NS_LOG_ACCDOCDESTROY("outerdoc's child document shutdown",
+                         childAcc->GetDocumentNode())
+    GetAccService()->ShutdownDocAccessiblesInTree(childAcc->GetDocumentNode());
   }
-
-  nsAccessible::InvalidateChildren();
 
   nsAccessibleWrap::Shutdown();
 }
@@ -201,6 +204,11 @@ nsOuterDocAccessible::AppendChild(nsAccessible *aAccessible)
     return PR_FALSE;
 
   aAccessible->SetParent(this);
+
+  NS_LOG_ACCDOCCREATE("append document to outerdoc",
+                      aAccessible->GetDocumentNode())
+  NS_LOG_ACCDOCCREATE_ACCADDRESS("outerdoc", this)
+
   return PR_TRUE;
 }
 
@@ -213,12 +221,18 @@ nsOuterDocAccessible::RemoveChild(nsAccessible *aAccessible)
     return PR_FALSE;
   }
 
+  NS_LOG_ACCDOCDESTROY("remove document from outerdoc",
+                       child->GetDocumentNode())
+  NS_LOG_ACCDOCDESTROY_ACCADDRESS("outerdoc", this)
+
   mChildren.RemoveElement(child);
+
   NS_ASSERTION(!mChildren.Length(),
                "This child document of outerdoc accessible wasn't removed!");
 
   return PR_TRUE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible protected

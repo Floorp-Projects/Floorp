@@ -1816,6 +1816,16 @@ PresShell::Destroy()
   if (mHaveShutDown)
     return;
 
+#ifdef ACCESSIBILITY
+  if (gIsAccessibilityActive) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->PresShellDestroyed(this);
+    }
+  }
+#endif // ACCESSIBILITY
+
   MaybeReleaseCapturingContent();
 
   mContentToScrollTo = nsnull;
