@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * A class which manages pending restyles.  This handles keeping track
+ * of what nodes restyles need to happen on and so forth.
+ */
+
 #include "RestyleTracker.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleChangeList.h"
