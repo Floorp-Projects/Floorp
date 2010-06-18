@@ -102,6 +102,11 @@ public:
   };
 
 private:
+  // Handle a single mPendingRestyles entry.
+  inline void ProcessOneRestyle(Element* aElement,
+                                nsRestyleHint aRestyleHint,
+                                nsChangeHint aChangeHint);
+  
   typedef nsDataHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS and one flag
