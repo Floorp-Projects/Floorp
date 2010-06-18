@@ -233,6 +233,19 @@ window.Rect.prototype = {
     this.top = a.top;
     this.width = a.width;
     this.height = a.height;
+  },
+  
+  // ----------
+  // Function: css
+  // Returns an object with the dimensions of this rectangle, suitable for passing into iQ.fn.css.
+  // You could of course just pass the rectangle straight in, but this is cleaner.
+  css: function() {
+    return {
+      left: this.left,
+      top: this.top,
+      width: this.width,
+      height: this.height
+    };
   }
 };
 
