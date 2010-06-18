@@ -44,9 +44,8 @@ WEAVE_ID:                              "@weave_id@",
 // Version of the data format this client supports. The data format describes
 // how records are packaged; this is separate from the Server API version and
 // the per-engine cleartext formats.
-STORAGE_VERSION:                       @storage_version@,
+STORAGE_VERSION:                       2,
 
-DEFAULT_SERVER:                        "@server_url@",
 UPDATED_DEV_URL:                       "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@xpi_type@",
 UPDATED_REL_URL:                       "http://www.mozilla.com/firefox/sync/updated.html",
 
