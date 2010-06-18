@@ -79,7 +79,8 @@ parent:
   SetPriority(PRUint16 priority);
 
 child:
-  OnStartRequest(nsHttpResponseHead responseHead);
+  OnStartRequest(nsHttpResponseHead responseHead,
+                 PRBool useResponseHead);
 
   OnDataAvailable(nsCString data, 
                   PRUint32  offset, 
