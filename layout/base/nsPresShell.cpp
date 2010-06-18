@@ -3626,14 +3626,19 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 void
 nsIPresShell::PostRecreateFramesFor(Element* aElement)
 {
-  FrameConstructor()->PostRestyleEvent(aElement, eRestyle_Subtree,
+  FrameConstructor()->PostRestyleEvent(aElement, nsRestyleHint(0),
                                        nsChangeHint_ReconstructFrame);
 }
 
 void
 nsIPresShell::RestyleForAnimation(Element* aElement)
 {
-  FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Subtree,
+  // eRestyle_Self is ok here because animations are always tied to a
+  // particular element and don't directly affect its kids.  The kids
+  // might have animations of their own, or inherit from aElement, but
+  // we handle all that during restyling; we don't need to _force_
+  // animation rule matching on the kids here.
+  FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Self,
                                                 NS_STYLE_HINT_NONE);
 }
 

@@ -143,9 +143,10 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
                   "Element has unexpected document");
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  if (aRestyleHint & eRestyle_Subtree) {
+  if (aRestyleHint & (eRestyle_Self | eRestyle_Subtree)) {
     mFrameConstructor->RestyleElement(aElement, primaryFrame, aChangeHint,
-                                      *this);
+                                      *this,
+                                      (aRestyleHint & eRestyle_Subtree) != 0);
   } else if (aChangeHint &&
              (primaryFrame ||
               (aChangeHint & nsChangeHint_ReconstructFrame))) {
