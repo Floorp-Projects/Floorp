@@ -333,6 +333,11 @@ class FrameState
     void syncAndKill(uint32 mask); 
 
     /*
+     * Syncs the entire frame for a call.
+     */
+    void syncForCall(uint32 argc);
+
+    /*
      * Clear all tracker entries, syncing all outstanding stores in the process.
      * The stack depth is in case some merge points' edges did not immediately
      * precede the current instruction.
@@ -439,6 +444,8 @@ class FrameState
      */
     void shimmy(uint32 n);
 
+    inline void addEscaping(uint32 local);
+
   private:
     inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type, bool weak);
     inline void forgetReg(RegisterID reg);
@@ -521,6 +528,9 @@ class FrameState
     RegisterState regstate[Assembler::TotalRegisters];
 
     mutable ImmutableSync reifier;
+
+    uint32 *escaping;
+    bool eval;
 };
 
 } /* namespace mjit */

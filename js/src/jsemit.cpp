@@ -3681,6 +3681,16 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         CG_SWITCH_TO_MAIN(cg);
     }
 
+    if (JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
+        !(cg->flags & TCF_FUN_USES_EVAL) &&
+        pn->pn_defn &&
+        (((JSDefinition *)pn)->pn_dflags & PND_CLOSED))
+    {
+        CG_SWITCH_TO_PROLOG(cg);
+        EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie);
+        CG_SWITCH_TO_MAIN(cg);
+    }
+
     if (result)
         *result = atomIndex;
     return JS_TRUE;

@@ -553,7 +553,14 @@ FrameState::dup2()
 inline void
 FrameState::pushLocal(uint32 n)
 {
-    pushCopyOf(indexOfFe(getLocal(n)));
+    if (!eval && !escaping[n]) {
+        pushCopyOf(indexOfFe(getLocal(n)));
+    } else {
+        JS_ASSERT_IF(base[localIndex(n)],
+                     entries[localIndex(n)].type.inMemory() &&
+                     entries[localIndex(n)].data.inMemory());
+        push(Address(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value)));
+    }
 }
 
 inline void
@@ -580,6 +587,13 @@ FrameState::eviscerate(FrameEntry *fe)
     fe->data.invalidate();
     fe->setNotCopied();
     fe->setCopyOf(NULL);
+}
+
+inline void
+FrameState::addEscaping(uint32 local)
+{
+    JS_ASSERT(!escaping[local]);
+    escaping[local] = 1;
 }
 
 } /* namspace mjit */
