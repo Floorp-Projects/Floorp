@@ -114,7 +114,8 @@ public:
 
 protected:
   void RefcountHitZero();
-  bool RecvOnStartRequest(const nsHttpResponseHead& responseHead);
+  bool RecvOnStartRequest(const nsHttpResponseHead& responseHead,
+                          const PRBool& useResponseHead);
   bool RecvOnDataAvailable(const nsCString& data, 
                            const PRUint32& offset,
                            const PRUint32& count);

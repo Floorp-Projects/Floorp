@@ -103,13 +103,18 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 //-----------------------------------------------------------------------------
 
 bool 
-HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead)
+HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
+                                     const PRBool& useResponseHead)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
   mState = HCC_ONSTART;
 
-  mResponseHead = new nsHttpResponseHead(responseHead);
+  if (useResponseHead)
+    mResponseHead = new nsHttpResponseHead(responseHead);
+  else
+    mResponseHead = nsnull;
+ 
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv)) {
@@ -121,7 +126,8 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead)
     return false;  
   }
 
-  SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+  if (mResponseHead)
+    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
   return true;
 }
