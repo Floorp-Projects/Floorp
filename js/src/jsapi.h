@@ -268,6 +268,18 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
 
 /************************************************************************/
 
+/*
+ * A jsid is an identifier for a property or method of an object which is
+ * either a 31-bit signed integer, interned string or object. If XML is
+ * enabled, there is an additional singleton jsid value; see
+ * JS_DEFAULT_XML_NAMESPACE_ID below. Finally, there is an additional jsid
+ * value, JSID_VOID, which does not occur in JS scripts but may be used to
+ * indicate the absence of a valid jsid.
+ *
+ * A jsid is not implicitly convertible to or from a jsval; JS_ValueToId or
+ * JS_IdToValue must be used instead.
+ */
+
 #define JSID_STRING_TYPE                 0x0
 #define JSID_INT_TYPE                    0x1
 #define JSID_OBJECT_TYPE                 0x2
@@ -402,7 +414,6 @@ JSID_IS_VOID(jsid id)
     return ((size_t)JSID_BITS(id) == JSID_VOID_TYPE);
 }
 
-/* TODO: explain the debug-only use of struct jsid */
 #ifdef DEBUG
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #else

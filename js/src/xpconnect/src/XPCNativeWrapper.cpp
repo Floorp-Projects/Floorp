@@ -385,10 +385,9 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
 static JSBool
 XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  jsid idAsId;
   JSPropertyDescriptor desc;
 
-  if (!JS_GetPropertyDescriptorById(cx, obj, idAsId, JSRESOLVE_QUALIFIED,
+  if (!JS_GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED,
                                     &desc)) {
     return JS_FALSE;
   }
