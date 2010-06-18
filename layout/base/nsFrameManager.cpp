@@ -982,7 +982,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     aMinChange =
       NS_SubtractHint(aMinChange, nsChangeHint_ClearAncestorIntrinsics);
   }
-  
+
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
   // and |pseudoContent| in sensible ways as well as making what
@@ -1023,6 +1023,15 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // comment above assertion at start of function.)
     nsIContent* content = localContent ? localContent : aParentContent;
 
+    if (content && content->IsElement()) {
+      RestyleTracker::RestyleData restyleData;
+      if (aRestyleTracker.GetRestyleData(content->AsElement(), &restyleData)) {
+        if (NS_UpdateHint(aMinChange, restyleData.mChangeHint)) {
+          aChangeList->AppendChange(aFrame, content, restyleData.mChangeHint);
+        }
+      }
+    }
+  
     nsStyleContext* parentContext;
     nsIFrame* resolvedChild = nsnull;
     // Get the frame providing the parent style context.  If it is a
@@ -1256,6 +1265,14 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         NS_ASSERTION(!undisplayed->mStyle->GetPseudo(),
                      "Shouldn't have random pseudo style contexts in the "
                      "undisplayed map");
+        RestyleTracker::RestyleData undisplayedRestyleData;
+        if (aRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
+                                           &undisplayedRestyleData)) {
+          // Nothing to do with it for now; when we don't
+          // automatically restyle our kids we'll need to handle that
+          // here.  We do want the GetRestyleData call, though, to
+          // preserve the restyle tracker's invariants.
+        }
         nsRefPtr<nsStyleContext> undisplayedContext =
           styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(), newContext);
         if (undisplayedContext) {

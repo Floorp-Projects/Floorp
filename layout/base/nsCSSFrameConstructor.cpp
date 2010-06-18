@@ -2337,6 +2337,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   if (!mTempFrameTreeState)
     state.mPresShell->CaptureHistoryState(getter_AddRefs(mTempFrameTreeState));
 
+  // Make sure that we'll handle restyles for this document element in
+  // the future.  We need this, because the document element might
+  // have stale restyle bits from a previous frame constructor for
+  // this document.  Unlike in AddFrameConstructionItems, it's safe to
+  // unset all element restyle flags, since we don't have any
+  // siblings.
+  aDocElement->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
+
   // --------- CREATE AREA OR BOX FRAME -------
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = mPresShell->StyleSet()->ResolveStyleFor(aDocElement,
@@ -5028,6 +5036,16 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
                                                  FrameConstructionItemList& aItems)
 {
   aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
+  if (aContent->IsElement()) {
+    // We can't just remove our pending restyle flags, since we may
+    // have restyle-later-siblings set on us.  But we _can_ remove the
+    // "is possible restyle root" flags, and need to.  Otherwise we can
+    // end up with stale such flags (e.g. if we used to have a
+    // display:none parent when our last restyle was posted and
+    // processed and now no longer do).
+    aContent->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS &
+                         ~ELEMENT_PENDING_RESTYLE_FLAGS);
+  }
 
   // don't create a whitespace frame if aParent doesn't want it
   if (!NeedFrameFor(aState, aParentFrame, aContent)) {
@@ -9625,7 +9643,13 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
          iter != last;
          ++iter) {
       PRInt32 i = iter.XBLInvolved() ? -1 : iter.position();
-      AddFrameConstructionItems(aState, *iter, i, aFrame, itemsToConstruct);
+      nsIContent* child = *iter;
+      // Frame construction item construction should not post
+      // restyles, so removing restyle flags here is safe.
+      if (child->IsElement()) {
+        child->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
+      }
+      AddFrameConstructionItems(aState, child, i, aFrame, itemsToConstruct);
     }
     itemsToConstruct.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
@@ -10949,6 +10973,13 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
         content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
       continue;
     }
+    if (content->IsElement()) {
+      // See comment explaining why we need to remove the "is possible
+      // restyle root" flags in AddFrameConstructionItems.  But note
+      // that we can remove all restyle flags, just like in
+      // ProcessChildren and for the same reason.
+      content->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
+    }
 
     nsRefPtr<nsStyleContext> childContext =
       ResolveStyleContext(parentStyleContext, content);
@@ -11402,11 +11433,14 @@ static void
 RestyleSiblingsStartingWith(nsCSSFrameConstructor *aFrameConstructor,
                             nsIContent *aStartingSibling /* may be null */)
 {
-  if (aStartingSibling) {
-    nsIContent* parent = aStartingSibling->GetParent();
-    if (parent && parent->IsElement()) {
-      aFrameConstructor->PostRestyleEvent(parent->AsElement(), eRestyle_Self,
-                                          NS_STYLE_HINT_NONE);
+  for (nsIContent *sibling = aStartingSibling; sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (sibling->IsElement()) {
+      aFrameConstructor->
+        PostRestyleEvent(sibling->AsElement(),
+                         nsRestyleHint(eRestyle_Self | eRestyle_LaterSiblings),
+                         NS_STYLE_HINT_NONE);
+      break;
     }
   }
 }
