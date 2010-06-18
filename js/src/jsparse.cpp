@@ -2531,6 +2531,8 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
             }
 
+            JSDefinition *outer_dn;
+
             if (!outer_ale)
                 outer_ale = tc->lexdeps.lookup(atom);
             if (outer_ale) {
@@ -2547,7 +2549,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                  * (see CompExprTransplanter::transplant, the PN_FUNC/PN_NAME
                  * case), and nowhere else, currently.
                  */
-                JSDefinition *outer_dn = ALE_DEFN(outer_ale);
+                outer_dn = ALE_DEFN(outer_ale);
 
                 if (dn != outer_dn) {
                     JSParseNode **pnup = &dn->dn_uses;
@@ -2570,14 +2572,18 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                     dn->pn_defn = false;
                     dn->pn_used = true;
                     dn->pn_lexdef = outer_dn;
+
+                    /* Mark the outer dn as escaping. */
                 }
             } else {
                 /* Add an outer lexical dependency for ale's definition. */
                 outer_ale = tc->lexdeps.add(tc->parser, atom);
                 if (!outer_ale)
                     return false;
-                ALE_SET_DEFN(outer_ale, ALE_DEFN(ale));
+                outer_dn = ALE_DEFN(ale);
+                ALE_SET_DEFN(outer_ale, outer_dn);
             }
+            outer_dn->pn_dflags |= PND_CLOSED;
         }
 
         if (funtc->lexdeps.count - foundCallee != 0) {

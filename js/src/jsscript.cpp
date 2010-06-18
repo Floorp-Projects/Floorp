@@ -78,7 +78,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 /* static */ const JSScript JSScript::emptyScriptConst = {
     const_cast<jsbytecode*>(emptyScriptCode),
     1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, 0, true, false, false, false, false,
-    const_cast<jsbytecode*>(emptyScriptCode),
+    false, const_cast<jsbytecode*>(emptyScriptCode),
     {0, NULL}, NULL, 0, 0, 0, NULL, {NULL}, reinterpret_cast<void*>(1)
 };
 
@@ -1095,6 +1095,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         script->strictModeCode = true;
     if (cg->flags & TCF_COMPILE_N_GO)
         script->compileAndGo = true;
+    if (cg->flags & TCF_FUN_USES_EVAL)
+        script->usesEval = true;
 
     if (cg->upvarList.count != 0) {
         JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);

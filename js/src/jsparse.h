@@ -466,9 +466,10 @@ public:
 #define PND_DEOPTIMIZED 0x400           /* former pn_used name node, pn_lexdef
                                            still valid, but this use no longer
                                            optimizable via an upvar opcode */
+#define PND_CLOSED      0x800           /* variable is closed over */
 
 /* Flags to propagate from uses to definition. */
-#define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG)
+#define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG | PND_CLOSED)
 
 /* PN_LIST pn_xflags bits. */
 #define PNX_STRCAT      0x01            /* TOK_PLUS list has string term */
@@ -489,6 +490,7 @@ public:
                                               is code evaluating destructuring
                                               arguments */
 #define PNX_HOLEY      0x400            /* array initialiser has holes */
+#define PNX_CLOSED     0x800            /* closed over */
 
     uintN frameLevel() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
