@@ -419,6 +419,7 @@ window.Page = {
   createGroupOnDrag: function(e){
 /*     e.preventDefault(); */
     const minSize = 60;
+    const minMinSize = 15;
     
     var startPos = {x:e.clientX, y:e.clientY}
     var phantom = iQ("<div>")
@@ -436,9 +437,18 @@ window.Page = {
       .appendTo("body");
     
     function updateSize(e){
-      var css = {width: e.clientX-startPos.x, height:e.clientY-startPos.y}
-      if( css.width > minSize || css.height > minSize ) css.opacity = 1;
-      else css.opacity = .7
+      var box = new Rect();
+      box.left = Math.min(startPos.x, e.clientX);
+      box.right = Math.max(startPos.x, e.clientX);
+      box.top = Math.min(startPos.y, e.clientY);
+      box.bottom = Math.max(startPos.y, e.clientY);
+
+      var css = box.css();      
+      if(css.width > minMinSize && css.height > minMinSize
+          && (css.width > minSize || css.height > minSize)) 
+        css.opacity = 1;
+      else 
+        css.opacity = .7
       
       phantom.css(css);
       e.preventDefault();     
@@ -459,10 +469,11 @@ window.Page = {
     }
     
     function finalize(e){
-      iQ("#bg, .phantom").unbind("mousemove", updateSize);
-      if( phantom.css("opacity") != 1 ) collapse();
+      iQ(window).unbind("mousemove", updateSize);
+      if( phantom.css("opacity") != 1 ) 
+        collapse();
       else{
-        var bounds = new Rect(startPos.x, startPos.y, phantom.width(), phantom.height())
+        var bounds = phantom.bounds();
 
         // Add all of the orphaned tabs that are contained inside the new group
         // to that group.
@@ -479,7 +490,7 @@ window.Page = {
       }
     }
     
-    iQ("#bg, .phantom").mousemove(updateSize)
+    iQ(window).mousemove(updateSize)
     iQ(window).one('mouseup', finalize);
     e.preventDefault();  
     return false;
