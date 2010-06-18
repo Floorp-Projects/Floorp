@@ -160,9 +160,9 @@ select > input[type="button"] {
   margin: 0px !important;
   padding: 0px !important;
   -moz-border-radius: 0;
-  -moz-background-size: 100% 90%;
   color: #414141;
 
+  background-size: 100% 90%;
   background-color: transparent;
   background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5) !important;
   background-position: -15px center !important;
