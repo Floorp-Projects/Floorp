@@ -1272,6 +1272,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_UNBRANDTHIS)
             jsop_this();
             jsop_unbrand();
+            frame.pop();
           END_CASE(JSOP_UNBRANDTHIS)
 
           BEGIN_CASE(JSOP_OBJTOSTR)
