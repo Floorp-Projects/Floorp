@@ -146,6 +146,8 @@ window.Group = function(listOfEls, options) {
     .click(function(){
       self.newTab();
     });
+    
+  this.$ntb.get(0).title = 'New tab';
   
   if( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
     
