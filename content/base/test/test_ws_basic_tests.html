@@ -31,7 +31,7 @@ function testWebSocket () {
   }
   ws.onclose = function(e) {
     is(results.length, 0, "All the messages should have been processed!");
-    SimpleTest.finish();
+    testWebSocket2();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
@@ -51,7 +51,7 @@ function testWebSocket2() {
   var testMessage = "test message";
   ws.onopen = function(e) {
     for (var i = 0; i < testCount; ++i) {
-      ws.send(testMessage);
+      ws.send(testMessage + (i + 1));
     }
     ws.send("end");
   }
@@ -64,12 +64,32 @@ function testWebSocket2() {
     SimpleTest.finish();
   }
   ws.onmessage = function(e) {
-    is(e.data, testMessage, "Wrong message");
     ++messageCount;
+    is(e.data, testMessage + messageCount, "Wrong message");
     document.getElementById('log').textContent = messageCount;
     if (messageCount == testCount) {
       this.onmessage = null;
     }
+  }
+}
+
+function testWebSocket3() {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  var longString = new Array(10000).join("-huge websocket message");
+  ws.onopen = function(e) {
+    ws.send(longString);
+  }
+  ws.onclose = function(e) {
+    SimpleTest.finish();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    is(e.data, longString, "Didn't get the huge message back!");
+    document.getElementById('log').textContent += "\nReceived the huge message";
+    this.close();
   }
 }
 
