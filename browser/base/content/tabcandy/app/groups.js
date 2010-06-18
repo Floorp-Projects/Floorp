@@ -1030,7 +1030,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         top: pos.top,
         left: pos.left
       }, {
-        duration: 350, 
+        duration: 200, 
         easing: 'tabcandyBounce'
       })
       .addClass("overlay");
