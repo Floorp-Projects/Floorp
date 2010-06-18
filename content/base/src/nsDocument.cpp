@@ -88,6 +88,7 @@
 #include "nsNodeUtils.h"
 #include "nsLayoutUtils.h" // for GetFrameForPoint
 #include "nsIFrame.h"
+#include "nsITabChild.h"
 
 #include "nsRange.h"
 #include "nsIDOMText.h"
@@ -1083,7 +1084,8 @@ nsExternalResourceMap::LoadgroupCallbacks::GetInterface(const nsIID & aIID,
                                                         void **aSink)
 {
   if (mCallbacks &&
-      (IID_IS(nsIPrompt) || IID_IS(nsIAuthPrompt) || IID_IS(nsIAuthPrompt2))) {
+      (IID_IS(nsIPrompt) || IID_IS(nsIAuthPrompt) || IID_IS(nsIAuthPrompt2) ||
+       IID_IS(nsITabChild))) {
     return mCallbacks->GetInterface(aIID, aSink);
   }
 

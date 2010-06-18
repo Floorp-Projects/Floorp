@@ -45,6 +45,7 @@
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
+#include "nsITabParent.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
@@ -85,7 +86,7 @@ bool operator==(const TabParentListenerInfo& lhs, const TabParentListenerInfo& r
 
 class ContentDialogParent : public PContentDialogParent {};
 
-class TabParent : public PIFrameEmbeddingParent, public nsIWebProgress
+class TabParent : public PIFrameEmbeddingParent, public nsITabParent, public nsIWebProgress
 {
 public:
     TabParent();

@@ -59,6 +59,8 @@ EXPORTS_mozilla/dom = \
   ContentProcessChild.h \
   ContentProcessParent.h \
   ContentProcessProcess.h \
+  TabParent.h \
+  TabChild.h \
   $(NULL)
 
 CPPSRCS = \
