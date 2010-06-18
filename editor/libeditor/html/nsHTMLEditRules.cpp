@@ -4539,6 +4539,10 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
       node->GetParentNode(getter_AddRefs(tmp));
       node = tmp;
     }
+    if (!mHTMLEditor->IsContainer(node))
+    {
+      return NS_OK;
+    }
     nsCOMPtr<nsIDOMNode> newNode;
     nsCOMPtr<nsIDOMText> nodeAsText;
     res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
