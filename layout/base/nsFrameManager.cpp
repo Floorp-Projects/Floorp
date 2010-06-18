@@ -1312,7 +1312,11 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       }
     }
 
-    if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
+    // Check whether we might need to create a new ::before frame.
+    // There's no need to do this if we're planning to reframe already
+    // or if we're not forcing restyles on kids.
+    if (!(aMinChange & nsChangeHint_ReconstructFrame) &&
+        childRestyleHint) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.  Neither can non-elements or leaf frames.
       if (!pseudoTag && localContent && localContent->IsElement() &&
@@ -1336,8 +1340,11 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       }
     }
 
-    
-    if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
+    // Check whether we might need to create a new ::after frame.
+    // There's no need to do this if we're planning to reframe already
+    // or if we're not forcing restyles on kids.
+    if (!(aMinChange & nsChangeHint_ReconstructFrame) &&
+        childRestyleHint) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.  Neither can non-elements or leaf frames.
       if (!pseudoTag && localContent && localContent->IsElement() &&
