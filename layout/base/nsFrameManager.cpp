@@ -962,6 +962,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsIContent        *aParentContent,
                                       nsStyleChangeList *aChangeList, 
                                       nsChangeHint       aMinChange,
+                                      nsRestyleHint      aRestyleHint,
                                       PRBool             aFireAccessibilityEvents,
                                       RestyleTracker&    aRestyleTracker)
 {
@@ -1029,9 +1030,16 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         if (NS_UpdateHint(aMinChange, restyleData.mChangeHint)) {
           aChangeList->AppendChange(aFrame, content, restyleData.mChangeHint);
         }
+        aRestyleHint = nsRestyleHint(aRestyleHint | restyleData.mRestyleHint);
       }
     }
-  
+
+    nsRestyleHint childRestyleHint = aRestyleHint;
+
+    if (childRestyleHint == eRestyle_Self) {
+      childRestyleHint = nsRestyleHint(0);
+    }
+
     nsStyleContext* parentContext;
     nsIFrame* resolvedChild = nsnull;
     // Get the frame providing the parent style context.  If it is a
@@ -1060,8 +1068,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // frame because it is visible or hidden withitn this frame.
       assumeDifferenceHint = ReResolveStyleContext(aPresContext, providerFrame,
                                                    aParentContent, aChangeList,
-                                                   aMinChange, PR_FALSE,
-                                                   aRestyleTracker);
+                                                   aMinChange, aRestyleHint,
+                                                   PR_FALSE, aRestyleTracker);
 
       // The provider's new context becomes the parent context of
       // aFrame's context.
@@ -1111,6 +1119,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // continuation).
       newContext = prevContinuationContext;
     }
+    else if (!aRestyleHint) {
+      newContext = styleSet->ReparentStyleContext(oldContext, parentContext);
+    }
     else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
@@ -1147,7 +1158,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                        nsCSSPseudoElements::ePseudo_PseudoElementCount,
                      "Unexpected pseudo type");
         if (pseudoTag == nsCSSPseudoElements::firstLetter) {
-          NS_ASSERTION(aFrame->GetType() == nsGkAtoms::letterFrame, 
+          NS_ASSERTION(aFrame->GetType() == nsGkAtoms::letterFrame,
                        "firstLetter pseudoTag without a nsFirstLetterFrame");
           nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
           pseudoContent = block->GetContent();
@@ -1162,6 +1173,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                    "non pseudo-element frame without content node");
       newContext = styleSet->ResolveStyleFor(content->AsElement(), parentContext);
     }
+
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
       if (!parentContext) {
@@ -1196,7 +1208,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       newContext = oldContext;  // new context failed, recover...
     }
 
-    // do additional contexts 
+    // do additional contexts
+    // XXXbz might be able to avoid selector matching here in some
+    // cases; won't worry about it for now.
     PRInt32 contextIndex = -1;
     while (1 == 1) {
       nsStyleContext* oldExtraContext = nsnull;
@@ -1265,16 +1279,22 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         NS_ASSERTION(!undisplayed->mStyle->GetPseudo(),
                      "Shouldn't have random pseudo style contexts in the "
                      "undisplayed map");
+        nsRestyleHint thisChildHint = childRestyleHint;
         RestyleTracker::RestyleData undisplayedRestyleData;
         if (aRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
                                            &undisplayedRestyleData)) {
-          // Nothing to do with it for now; when we don't
-          // automatically restyle our kids we'll need to handle that
-          // here.  We do want the GetRestyleData call, though, to
-          // preserve the restyle tracker's invariants.
+          thisChildHint =
+            nsRestyleHint(thisChildHint | undisplayedRestyleData.mRestyleHint);
         }
-        nsRefPtr<nsStyleContext> undisplayedContext =
-          styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(), newContext);
+        nsRefPtr<nsStyleContext> undisplayedContext;
+        if (thisChildHint) {
+          undisplayedContext =
+            styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(),
+                                      newContext);
+        } else {
+          undisplayedContext =
+            styleSet->ReparentStyleContext(undisplayed->mStyle, newContext);
+        }
         if (undisplayedContext) {
           const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
@@ -1410,6 +1430,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                     content, aChangeList,
                                     NS_SubtractHint(aMinChange,
                                                     nsChangeHint_ReflowFrame),
+                                    childRestyleHint,
                                     fireAccessibilityEvents,
                                     aRestyleTracker);
 
@@ -1417,6 +1438,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
               // as the out-of-flow frame
               ReResolveStyleContext(aPresContext, child, content,
                                     aChangeList, aMinChange,
+                                    childRestyleHint,
                                     fireAccessibilityEvents,
                                     aRestyleTracker);
             }
@@ -1424,6 +1446,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
               if (child != resolvedChild) {
                 ReResolveStyleContext(aPresContext, child, content,
                                       aChangeList, aMinChange,
+                                      childRestyleHint,
                                       fireAccessibilityEvents,
                                       aRestyleTracker);
               } else {
@@ -1448,7 +1471,8 @@ void
 nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame, 
                                       nsStyleChangeList *aChangeList,
                                       nsChangeHint       aMinChange,
-                                      RestyleTracker&    aRestyleTracker)
+                                      RestyleTracker&    aRestyleTracker,
+                                      PRBool             aRestyleDescendants)
 {
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, aFrame->GetContent(), aMinChange);
@@ -1473,7 +1497,10 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
       // Inner loop over next-in-flows of the current frame
       nsChangeHint frameChange =
         ReResolveStyleContext(GetPresContext(), frame, nsnull,
-                              aChangeList, topLevelChange, PR_TRUE,
+                              aChangeList, topLevelChange,
+                              aRestyleDescendants ?
+                                eRestyle_Subtree : eRestyle_Self,
+                              PR_TRUE,
                               aRestyleTracker);
       NS_UpdateHint(topLevelChange, frameChange);
 

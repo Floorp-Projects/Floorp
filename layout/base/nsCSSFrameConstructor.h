@@ -453,7 +453,8 @@ private:
   void RestyleElement(Element* aElement,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint,
-                      RestyleTracker& aRestyleTracker);
+                      RestyleTracker& aRestyleTracker,
+                      PRBool          aRestyleDescendants);
 
   nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
                                 nsIContent*                    aContent,

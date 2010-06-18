@@ -8102,7 +8102,8 @@ void
 nsCSSFrameConstructor::RestyleElement(Element        *aElement,
                                       nsIFrame       *aPrimaryFrame,
                                       nsChangeHint   aMinHint,
-                                      RestyleTracker& aRestyleTracker)
+                                      RestyleTracker& aRestyleTracker,
+                                      PRBool          aRestyleDescendants)
 {
   NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
@@ -8120,7 +8121,7 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
     nsStyleChangeList changeList;
     mPresShell->FrameManager()->
       ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint,
-                            aRestyleTracker);
+                            aRestyleTracker, aRestyleDescendants);
     ProcessRestyledFrames(changeList);
   } else {
     // no frames, reconstruct for content
@@ -11356,8 +11357,7 @@ void
 nsCSSFrameConstructor::RestyleForEmptyChange(Element* aContainer)
 {
   // In some cases (:empty + E, :empty ~ E), a change if the content of
-  // an element requires restyling its grandparent, because it changes
-  // its parent's :empty state.
+  // an element requires restyling its parent's siblings.
   nsRestyleHint hint = eRestyle_Subtree;
   nsIContent* grandparent = aContainer->GetParent();
   if (grandparent &&
@@ -11662,7 +11662,7 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   // Note: The restyle tracker we pass in here doesn't matter.
   mPresShell->FrameManager()->ComputeStyleChangeFor(mPresShell->GetRootFrame(),
                                                     &changeList, aExtraHint,
-                                                    mPendingRestyles);
+                                                    mPendingRestyles, PR_TRUE);
   // Process the required changes
   ProcessRestyledFrames(changeList);
   // Tell the style set it's safe to destroy the old rule tree.  We
