@@ -440,8 +440,9 @@ nsAccDocManager::RemoveListeners(nsIDocument *aDocument)
 nsDocAccessible*
 nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
 {
-  // Ignore temporary and hiding documents.
-  if (aDocument->IsInitialDocument() || !aDocument->IsVisible())
+  // Ignore temporary, hiding and svg resource documents.
+  if (aDocument->IsInitialDocument() || !aDocument->IsVisible() ||
+      aDocument->GetDisplayDocument())
     return nsnull;
 
   // Ignore documents without presshell.
