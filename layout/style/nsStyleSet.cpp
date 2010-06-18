@@ -1181,7 +1181,7 @@ static PRBool SheetHasDocumentStateStyle(nsIStyleRuleProcessor* aProcessor,
 {
   StatefulData* data = (StatefulData*)aData;
   if (aProcessor->HasDocumentStateDependentStyle(data)) {
-    data->mHint = eRestyle_Subtree;
+    data->mHint = eRestyle_Self;
     return PR_FALSE; // don't continue
   }
   return PR_TRUE; // continue
