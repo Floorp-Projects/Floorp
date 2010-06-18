@@ -141,7 +141,8 @@ public:
         T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS ,
         T_UTF8STRING        = TD_UTF8STRING       ,
         T_CSTRING           = TD_CSTRING          ,
-        T_ASTRING           = TD_ASTRING
+        T_ASTRING           = TD_ASTRING          ,
+        T_JSVAL             = TD_JSVAL
     };
 // NO DATA - this a flyweight wrapper
 };
