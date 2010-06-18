@@ -4060,21 +4060,15 @@ nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if(!rt)
         return NS_ERROR_FAILURE;
 
-    jsid idid;
     uintN attrs = 0;
 
     if(id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT))
-    {
-        idid = rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT);
         attrs = JSPROP_READONLY;
-    }
-    else if(id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE))
-        idid = rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE);
-    else
+    else if(id != rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE))
         return NS_OK;
 
     *objp = obj;
-    *_retval = JS_DefinePropertyById(cx, obj, idid, JSVAL_VOID, nsnull, nsnull,
+    *_retval = JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nsnull, nsnull,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      attrs);
     return NS_OK;
