@@ -184,6 +184,7 @@ class Compiler
     void jsop_setelem();
     void jsop_getelem();
     void jsop_stricteq(JSOp op);
+    void jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
 
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
