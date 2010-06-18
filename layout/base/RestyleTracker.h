@@ -35,13 +35,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef mozilla_css_RestyleTracker_h
-#define mozilla_css_RestyleTracker_h
 
 /**
  * A class which manages pending restyles.  This handles keeping track
  * of what nodes restyles need to happen on and so forth.
  */
+
+#ifndef mozilla_css_RestyleTracker_h
+#define mozilla_css_RestyleTracker_h
 
 #include "mozilla/dom/Element.h"
 #include "nsDataHashtable.h"
