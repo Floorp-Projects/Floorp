@@ -559,6 +559,86 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     stubcc.rejoin(1);
 }
 
+static inline bool
+CheckNullOrUndefined(FrameEntry *fe, JSValueMask32 &mask)
+{
+    if (!fe->isTypeKnown())
+        return false;
+    mask = fe->getTypeTag();
+    if (mask == JSVAL_MASK32_NULL)
+        return true;
+    else if (mask == JSVAL_MASK32_UNDEFINED)
+        return true;
+    return false;
+}
+
+void
+mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
+{
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    /* The compiler should have handled constant folding. */
+    JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
+
+    bool lhsTest;
+    JSValueMask32 mask;
+    if ((lhsTest = CheckNullOrUndefined(lhs, mask)) || CheckNullOrUndefined(rhs, mask)) {
+        /* What's the other mask? */
+        FrameEntry *test = lhsTest ? rhs : lhs;
+
+        if (test->isTypeKnown()) {
+            emitStubCmpOp(stub, target, fused);
+            return;
+        }
+
+        /* The other side must be null or undefined. */
+        RegisterID reg = frame.ownRegForType(test);
+        masm.and32(Imm32(JSVAL_MASK32_SINGLETON), reg);
+        
+        Assembler::Condition cond;
+        if (op == JSOP_EQ)
+            cond = Assembler::Above;
+        else
+            cond = Assembler::BelowOrEqual;
+
+        frame.pop();
+        frame.pop();
+
+        if (target) {
+            frame.forgetEverything();
+
+            if (fused == JSOP_IFEQ) {
+                if (op == JSOP_EQ)
+                    cond = Assembler::BelowOrEqual;
+                else
+                    cond = Assembler::Above;
+            } else {
+                if (op == JSOP_EQ)
+                    cond = Assembler::Above;
+                else
+                    cond = Assembler::BelowOrEqual;
+            }
+
+            Jump j = masm.branch32(cond, reg, Imm32(JSVAL_MASK32_CLEAR));
+            jumpInScript(j, target);
+        } else {
+            RegisterID resultReg = reg;
+            if (!(Registers::maskReg(reg) & Registers::SingleByteRegs))
+                resultReg = frame.allocReg(Registers::SingleByteRegs);
+
+            masm.set32(cond, reg, Imm32(JSVAL_MASK32_CLEAR), resultReg);
+
+            if (reg != resultReg)
+                frame.freeReg(reg);
+            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, resultReg);
+        }
+        return;
+    }
+
+    emitStubCmpOp(stub, target, fused);
+}
+
 void
 mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
@@ -571,7 +651,10 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     /* Always slow path... */
     if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_MASK32_INT32) ||
         (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_MASK32_INT32)) {
-        emitStubCmpOp(stub, target, fused);
+        if (op == JSOP_EQ || op == JSOP_NE)
+            jsop_equality(op, stub, target, fused);
+        else
+            emitStubCmpOp(stub, target, fused);
         return;
     }
 
