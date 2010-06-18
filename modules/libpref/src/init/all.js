@@ -2714,15 +2714,13 @@ pref("print.postscript.paper_size",    "letter");
 pref("print.postscript.orientation",   "portrait");
 pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
 
-// On GTK2 platform, we should use topmost window level for the default window
-// level of <panel> element of XUL. GTK2 has only two window types. One is
-// normal top level window, other is popup window. The popup window is always
-// topmost window level, therefore, we are using normal top level window for
-// non-topmost panel, but it is pretty hacky. On some Window Managers, we have
-// 2 problems:
-// 1. The non-topmost panel steals focus from its parent window at showing.
-// 2. The parent of non-topmost panel is not activated when the panel is hidden.
-// So, we have no reasons we should use non-toplevel window for popup.
+// Setting default_level_parent to true makes the default level for popup
+// windows "top" instead of "parent".  On GTK2 platform, this is implemented
+// with override-redirect windows which is the normal way to implement
+// temporary popup windows.  Setting this to false would make the default
+// level "parent" which is implemented with managed windows.
+// A problem with using managed windows is that metacity sometimes deactivates
+// the parent window when the managed popup is shown.
 pref("ui.panel.default_level_parent", true);
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
