@@ -164,7 +164,7 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 #endif
   BOOL mPluginComplexTextInputRequested;
 
-  NSOpenGLContext *mContext;
+  NSOpenGLContext *mGLContext;
 
   // Simple gestures support
   //
