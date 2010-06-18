@@ -3626,13 +3626,18 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 void
 nsIPresShell::PostRecreateFramesFor(Element* aElement)
 {
-  FrameConstructor()->PostRestyleEvent(aElement, eRestyle_Self,
+  FrameConstructor()->PostRestyleEvent(aElement, nsRestyleHint(0),
                                        nsChangeHint_ReconstructFrame);
 }
 
 void
 nsIPresShell::RestyleForAnimation(Element* aElement)
 {
+  // eRestyle_Self is ok here because animations are always tied to a
+  // particular element and don't directly affect its kids.  The kids
+  // might have animations of their own, or inherit from aElement, but
+  // we handle all that during restyling; we don't need to _force_
+  // animation rule matching on the kids here.
   FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Self,
                                                 NS_STYLE_HINT_NONE);
 }
@@ -4902,7 +4907,7 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
                                                 mDocument->GetRootElement(),
                                                 aStateMask)) {
     mFrameConstructor->PostRestyleEvent(mDocument->GetRootElement(),
-                                        eRestyle_Self, NS_STYLE_HINT_NONE);
+                                        eRestyle_Subtree, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
 }
@@ -5079,7 +5084,7 @@ nsIPresShell::ReconstructStyleDataInternal()
     return;
   }
   
-  mFrameConstructor->PostRestyleEvent(root, eRestyle_Self, NS_STYLE_HINT_NONE);
+  mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree, NS_STYLE_HINT_NONE);
 
 #ifdef ACCESSIBILITY
   InvalidateAccessibleSubtree(nsnull);
@@ -7742,6 +7747,36 @@ PresShell::Observe(nsISupports* aSubject,
 #endif
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;
+}
+
+PRBool
+nsIPresShell::AddRefreshObserverInternal(nsARefreshObserver* aObserver,
+                                         mozFlushType aFlushType)
+{
+  return GetPresContext()->RefreshDriver()->
+    AddRefreshObserver(aObserver, aFlushType);
+}
+
+/* virtual */ PRBool
+nsIPresShell::AddRefreshObserverExternal(nsARefreshObserver* aObserver,
+                                         mozFlushType aFlushType)
+{
+  return AddRefreshObserverInternal(aObserver, aFlushType);
+}
+
+PRBool
+nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
+                                            mozFlushType aFlushType)
+{
+  return GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(aObserver, aFlushType);
+}
+
+/* virtual */ PRBool
+nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
+                                            mozFlushType aFlushType)
+{
+  return RemoveRefreshObserverInternal(aObserver, aFlushType);
 }
 
 //------------------------------------------------------
