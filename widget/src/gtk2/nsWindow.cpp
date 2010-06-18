@@ -161,7 +161,6 @@ static PRBool     is_mouse_in_window(GdkWindow* aWindow,
                                      gdouble aMouseX, gdouble aMouseY);
 static nsWindow  *get_window_for_gtk_widget(GtkWidget *widget);
 static nsWindow  *get_window_for_gdk_window(GdkWindow *window);
-static nsWindow  *get_owning_window_for_gdk_window(GdkWindow *window);
 static GtkWidget *get_gtk_widget_for_gdk_window(GdkWindow *window);
 static GdkCursor *get_gtk_cursor(nsCursor aCursor);
 
@@ -3112,45 +3111,15 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     }
 #endif /* MOZ_X11 */
 
-    // Figure out if the focus widget is the child of this window.  If
-    // it is, send a deactivate event for it.
-    if (!gFocusWindow)
-        return;
-
-    GdkWindow *tmpWindow;
-    tmpWindow = (GdkWindow *)gFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
-    nsWindow *tmpnsWindow = get_window_for_gdk_window(tmpWindow);
-
-    while (tmpWindow && tmpnsWindow) {
-        // found it!
-        if (tmpnsWindow == this)
-            goto foundit;
-
-        tmpWindow = gdk_window_get_parent(tmpWindow);
-        if (!tmpWindow)
-            break;
-
-        tmpnsWindow = get_owning_window_for_gdk_window(tmpWindow);
+    if (gFocusWindow) {
+        nsRefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
+        if (gFocusWindow->mIMModule) {
+            gFocusWindow->mIMModule->OnBlurWindow(gFocusWindow);
+        }
+        gFocusWindow = nsnull;
     }
 
-    LOGFOCUS(("The focus widget was not a child of this window [%p]\n",
-              (void *)this));
-
-    return;
-
- foundit:
-
-    nsRefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
-    if (gFocusWindow->mIMModule) {
-        gFocusWindow->mIMModule->OnBlurWindow(gFocusWindow);
-    }
-
-    // We only dispatch a deactivate event if we are a toplevel
-    // window, otherwise the embedding code takes care of it.
-    if (NS_LIKELY(!gFocusWindow->mIsDestroyed))
-        DispatchDeactivateEvent();
-
-    gFocusWindow = nsnull;
+    DispatchDeactivateEvent();
 
     LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
 }
@@ -5476,19 +5445,6 @@ nsWindow *
 get_window_for_gdk_window(GdkWindow *window)
 {
     gpointer user_data = g_object_get_data(G_OBJECT(window), "nsWindow");
-
-    return static_cast<nsWindow *>(user_data);
-}
-
-/* static */
-nsWindow *
-get_owning_window_for_gdk_window(GdkWindow *window)
-{
-    GtkWidget *owningWidget = get_gtk_widget_for_gdk_window(window);
-    if (!owningWidget)
-        return nsnull;
-
-    gpointer user_data = g_object_get_data(G_OBJECT(owningWidget), "nsWindow");
 
     return static_cast<nsWindow *>(user_data);
 }
