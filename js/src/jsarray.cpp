@@ -301,7 +301,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
          clasp == &js_ObjectClass)) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom) {
-            *idp = JSID_VOID();
+            *idp = JSID_VOID;
             return JS_TRUE;
         }
     } else {

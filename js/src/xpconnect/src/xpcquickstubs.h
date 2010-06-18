@@ -100,7 +100,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv);
  */
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              JSObject *obj, jsval memberId);
+                              JSObject *obj, jsid memberId);
 
 /**
  * Fail after an XPCOM method returned rv.
@@ -140,7 +140,7 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
  */
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          jsval propId);
+                          jsid propId);
 
 
 /* Functions for converting values between COM and JS. */

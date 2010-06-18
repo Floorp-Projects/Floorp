@@ -2752,7 +2752,7 @@ IsFunctionQName(JSContext *cx, JSObject *qn, jsid *funidp)
          js_EqualStrings(uri, ATOM_TO_STRING(atom)))) {
         return JS_ValueToId(cx, STRING_TO_JSVAL(GetLocalName(qn)), funidp);
     }
-    *funidp = JSID_VOID();
+    *funidp = JSID_VOID;
     return JS_TRUE;
 }
 
@@ -2761,7 +2761,7 @@ js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp)
 {
     if (obj->getClass() == &js_QNameClass.base)
         return IsFunctionQName(cx, obj, funidp);
-    *funidp = JSID_VOID();
+    *funidp = JSID_VOID;
     return JS_TRUE;
 }
 
@@ -2819,7 +2819,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
         name = js_NewDependentString(cx, name, 1, name->length() - 1);
         if (!name)
             return NULL;
-        *funidp = JSID_VOID();
+        *funidp = JSID_VOID;
         return ToAttributeName(cx, STRING_TO_JSVAL(name));
     }
 
@@ -4282,7 +4282,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         /* 10-11. */
-        id = JSID_VOID();
+        id = JSID_VOID;
         primitiveAssign = !vxml && !IS_STAR(GetLocalName(nameqn));
 
         /* 12. */

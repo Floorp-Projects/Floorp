@@ -107,6 +107,10 @@ using namespace js;
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
+#ifdef DEBUG
+JS_PUBLIC_DATA(jsid) JSID_VOID = { (size_t)JSID_VOID_TYPE };
+#endif
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
@@ -3695,7 +3699,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             sprop = sprop->parent;
 
         if (!sprop) {
-            *idp = JSID_VOID();
+            *idp = JSID_VOID;
         } else {
             iterobj->setPrivate(sprop->parent);
             *idp = sprop->id;
@@ -3705,7 +3709,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
-            *idp = JSID_VOID();
+            *idp = JSID_VOID;
         } else {
             *idp = ida->vector[--i];
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Tag(i));
@@ -4752,6 +4756,12 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
     if (!str)
         cx->free(js);
     return str;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StringHasBeenInterned(JSString *str)
+{
+    return str->isAtomized();
 }
 
 JS_PUBLIC_API(JSString *)

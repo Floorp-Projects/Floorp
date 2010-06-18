@@ -81,7 +81,7 @@ public:
   // nsIScriptObjectPrincipal methods
   virtual nsIPrincipal* GetPrincipal();
 
-  static JSBool doCheckAccess(JSContext *cx, JSObject *obj, jsval id,
+  static JSBool doCheckAccess(JSContext *cx, JSObject *obj, jsid id,
                               PRUint32 accessType);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
@@ -104,7 +104,7 @@ protected:
 };
 
 JSBool
-nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsval id, PRUint32 accessType)
+nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUint32 accessType)
 {
   nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
@@ -129,7 +129,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsval id, PRUi
 
 static JSBool
 nsXBLDocGlobalObject_getProperty(JSContext *cx, JSObject *obj,
-                                 jsval id, jsval *vp)
+                                 jsid id, jsval *vp)
 {
   return nsXBLDocGlobalObject::
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
@@ -137,14 +137,14 @@ nsXBLDocGlobalObject_getProperty(JSContext *cx, JSObject *obj,
 
 static JSBool
 nsXBLDocGlobalObject_setProperty(JSContext *cx, JSObject *obj,
-                                 jsval id, jsval *vp)
+                                 jsid id, jsval *vp)
 {
   return nsXBLDocGlobalObject::
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 }
 
 static JSBool
-nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSObject *obj, jsval id,
+nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                                  JSAccessMode mode, jsval *vp)
 {
   PRUint32 translated;
@@ -173,7 +173,7 @@ nsXBLDocGlobalObject_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
+nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, jsid id)
 {
   JSBool did_resolve = JS_FALSE;
   return JS_ResolveStandardClass(cx, obj, id, &did_resolve);

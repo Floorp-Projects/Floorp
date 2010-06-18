@@ -119,6 +119,18 @@ LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
     return entry;
 }
 
+static inline jsid
+JSValHoldingJSIdToJSId(jsval v)
+{
+    if (JSVAL_IS_STRING(v))
+        return INTERNED_STRING_TO_JSID(JSVAL_TO_STRING(v));
+    if (JSVAL_IS_INT(v))
+        return INT_TO_JSID(JSVAL_TO_INT(v));
+    if (JSVAL_IS_VOID(v))
+        return JSID_VOID;
+    return OBJECT_TO_JSID(JSVAL_TO_OBJECT(v));
+}
+
 static JSBool
 PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -141,7 +153,8 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     JS_SET_RVAL(cx, vp, argval);
-    return (*popp)(cx, obj, v, vp);
+    jsid id = JSValHoldingJSIdToJSId(argval);
+    return (*popp)(cx, obj, id, vp);
 }
 
 static void
@@ -490,7 +503,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv)
  */
 static void
 GetMemberInfo(JSObject *obj,
-              jsval memberId,
+              jsid memberId,
               const char **ifaceName,
               const char **memberName)
 {
@@ -527,8 +540,8 @@ GetMemberInfo(JSObject *obj,
         }
     }
 
-    *memberName = (JSVAL_IS_STRING(memberId)
-                   ? JS_GetStringBytes(JSVAL_TO_STRING(memberId))
+    *memberName = (JSID_IS_STRING(memberId)
+                   ? JS_GetStringBytes(JSID_TO_STRING(memberId))
                    : "unknown");
 }
 
@@ -542,7 +555,7 @@ GetMethodInfo(JSContext *cx,
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
                  "JSFastNative callee should be Function object");
     JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
-    jsval methodId = str ? STRING_TO_JSVAL(str) : JSVAL_NULL;
+    jsid methodId = str ? INTERNED_STRING_TO_JSID(str) : JSID_VOID;
 
     GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceName, memberName);
 }
@@ -596,7 +609,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
-                              jsval memberId)
+                              jsid memberId)
 {
     const char *ifaceName, *memberName;
     GetMemberInfo(obj, memberId, &ifaceName, &memberName);
@@ -669,7 +682,7 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *obj, jsval propId)
+                          JSObject *obj, jsid propId)
 {
     const char *ifaceName, *memberName;
     GetMemberInfo(obj, propId, &ifaceName, &memberName);
