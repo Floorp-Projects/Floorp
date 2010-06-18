@@ -180,7 +180,8 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
     }
   } else if (mCanvasGLContext) {
     // we just need to create a texture that we'll use, the first time through
-    if (mTexture == 0) {
+    PRBool newTexture = mTexture == 0;
+    if (newTexture) {
       gl()->fGenTextures(1, (GLuint*)&mTexture);
 
       gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
