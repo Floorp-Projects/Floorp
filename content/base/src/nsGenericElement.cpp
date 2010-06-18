@@ -2882,7 +2882,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+               // And the restyle bits
+               ELEMENT_ALL_RESTYLE_FLAGS);
   }
 
   // If NODE_FORCE_XBL_BINDINGS was set we might have anonymous children
