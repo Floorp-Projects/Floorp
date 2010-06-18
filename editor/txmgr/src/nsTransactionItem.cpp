@@ -334,7 +334,8 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
   nsresult result = NS_OK;
   PRInt32 sz = 0;
 
-  NS_ENSURE_TRUE(mRedoStack, NS_OK);
+  if (!mRedoStack)
+    return NS_OK;
 
   /* Redo all of the transaction items children! */
   result = mRedoStack->GetSize(&sz);
