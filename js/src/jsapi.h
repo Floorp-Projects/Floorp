@@ -288,6 +288,19 @@ JSID_TO_STRING(jsid id)
     return (JSString *)(JSID_BITS(id));
 }
 
+JS_PUBLIC_API(JSBool)
+JS_StringHasBeenInterned(JSString *str);
+
+static JS_ALWAYS_INLINE jsid
+INTERNED_STRING_TO_JSID(JSString *str)
+{
+    jsid id;
+    JS_ASSERT(JS_StringHasBeenInterned(str));
+    JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+    JSID_BITS(id) = (size_t)str;
+    return id;
+}
+
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_INT(jsid id)
 {
@@ -314,8 +327,8 @@ INT_FITS_IN_JSID(int32 i)
 static JS_ALWAYS_INLINE jsid
 INT_TO_JSID(int32 i)
 {
-    JS_ASSERT(INT_FITS_IN_JSID(i));
     jsid id;
+    JS_ASSERT(INT_FITS_IN_JSID(i));
     JSID_BITS(id) = ((i << 1) | JSID_INT_TYPE);
     return id;
 }
@@ -336,9 +349,9 @@ JSID_TO_OBJECT(jsid id)
 static JS_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
+    jsid id;
     JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
-    jsid id;
     JSID_BITS(id) = ((size_t)obj | JSID_OBJECT_TYPE);
     return id;
 }
@@ -389,13 +402,30 @@ JSID_IS_VOID(jsid id)
     return ((size_t)JSID_BITS(id) == JSID_VOID_TYPE);
 }
 
-static JS_ALWAYS_INLINE jsid
-JSID_VOID()
+/* TODO: explain the debug-only use of struct jsid */
+#ifdef DEBUG
+extern JS_PUBLIC_DATA(jsid) JSID_VOID;
+#else
+# define JSID_VOID  ((jsid)JSID_VOID_TYPE)
+#endif
+
+#if defined(DEBUG) && defined(__cplusplus)
+/*
+ * Internally we can use C++ to allow jsids, which are structs in debug builds,
+ * to be compared with ==.
+ */
+static JS_ALWAYS_INLINE bool
+operator==(jsid lhs, jsid rhs)
 {
-    jsid id;
-    JSID_BITS(id) = JSID_VOID_TYPE;
-    return id;
+    return JSID_BITS(lhs) == JSID_BITS(rhs);
 }
+
+static JS_ALWAYS_INLINE bool
+operator!=(jsid lhs, jsid rhs)
+{
+    return JSID_BITS(lhs) != JSID_BITS(rhs);
+}
+#endif
 
 /************************************************************************/
 

@@ -44,7 +44,7 @@ typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleSetterT
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleGetterType)(nsAString &, nsISupports **, PRInt32 *);
 
 static JSBool
-Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
+Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                         CanvasStyleSetterType setfunc)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
@@ -86,7 +86,7 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 }
 
 static JSBool
-Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
+Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                         CanvasStyleGetterType getfunc)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
@@ -122,25 +122,25 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_SetStrokeStyle(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+nsIDOMCanvasRenderingContext2D_SetStrokeStyle(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return Canvas2D_SetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::SetStrokeStyle_multi);
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_GetStrokeStyle(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+nsIDOMCanvasRenderingContext2D_GetStrokeStyle(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return Canvas2D_GetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::GetStrokeStyle_multi);
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_SetFillStyle(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+nsIDOMCanvasRenderingContext2D_SetFillStyle(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return Canvas2D_SetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::SetFillStyle_multi);
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return Canvas2D_GetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::GetFillStyle_multi);
 }

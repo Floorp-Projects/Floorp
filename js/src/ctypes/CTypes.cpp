@@ -99,7 +99,7 @@ namespace CType {
   static JSBool CreateArray(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+  static JSBool HasInstance(JSContext* cx, JSObject* obj, const jsval *v, JSBool* bp);
 }
 
 namespace PointerType {
@@ -1317,6 +1317,62 @@ jsvalToSize(JSContext* cx, jsval val, bool allowString, size_t* result)
   return Convert<size_t>(jsdouble(*result)) == *result;
 }
 
+// Implicitly convert val to IntegerType, allowing jsint, jsdouble,
+// Int64, UInt64, and optionally a decimal or hexadecimal string argument.
+// (This is common code shared by jsvalToSize and the Int64/UInt64 constructors.)
+template<class IntegerType>
+static bool
+jsidToBigInteger(JSContext* cx,
+                  jsid val,
+                  bool allowString,
+                  IntegerType* result)
+{
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+
+  if (JSID_IS_INT(val)) {
+    // Make sure the integer fits in the alotted precision, and has the right
+    // sign.
+    jsint i = JSID_TO_INT(val);
+    return ConvertExact(i, result);
+  }
+  if (allowString && JSID_IS_STRING(val)) {
+    // Allow conversion from base-10 or base-16 strings, provided the result
+    // fits in IntegerType. (This allows an Int64 or UInt64 object to be passed
+    // to the JS array element operator, which will automatically call
+    // toString() on the object for us.)
+    return StringToInteger(cx, JSID_TO_STRING(val), result);
+  }
+  if (JSID_IS_OBJECT(val)) {
+    // Allow conversion from an Int64 or UInt64 object directly.
+    JSObject* obj = JSID_TO_OBJECT(val);
+
+    if (UInt64::IsUInt64(cx, obj)) {
+      // Make sure the integer fits in IntegerType.
+      JSUint64 i = Int64Base::GetInt(cx, obj);
+      return ConvertExact(i, result);
+    }
+
+    if (Int64::IsInt64(cx, obj)) {
+      // Make sure the integer fits in IntegerType.
+      JSInt64 i = Int64Base::GetInt(cx, obj);
+      return ConvertExact(i, result);
+    }
+  }
+  return false;
+}
+
+// Implicitly convert val to a size value, where the size value is represented
+// by size_t but must also fit in a jsdouble.
+static bool
+jsidToSize(JSContext* cx, jsid val, bool allowString, size_t* result)
+{
+  if (!jsidToBigInteger(cx, val, allowString, result))
+    return false;
+
+  // Also check that the result fits in a jsdouble.
+  return Convert<size_t>(jsdouble(*result)) == *result;
+}
+
 // Implicitly convert a size value to a jsval, ensuring that the size_t value
 // fits in a jsdouble.
 static JSBool
@@ -1899,7 +1955,7 @@ ImplicitConvert(JSContext* cx,
       while (1) {
         if (!JS_NextProperty(cx, iter, &id))
           return false;
-        if (JSVAL_IS_VOID(id))
+        if (JSID_IS_VOID(id))
           break;
 
         js::AutoValueRooter fieldVal(cx);
@@ -1910,7 +1966,7 @@ ImplicitConvert(JSContext* cx,
         }
 
         const FieldInfo* field = StructType::LookupField(cx, targetType,
-          Jsvalify(fieldVal.value()));
+                                                         fieldVal.value().asString());
         if (!field)
           return false;
 
@@ -3078,7 +3134,7 @@ CType::ToSource(JSContext* cx, uintN argc, jsval *vp)
 }
 
 JSBool
-CType::HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp)
+CType::HasInstance(JSContext* cx, JSObject* obj, const jsval *v, JSBool* bp)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
 
@@ -3089,10 +3145,10 @@ CType::HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp)
   JS_ASSERT(JS_GET_CLASS(cx, prototype) == &sCDataProtoClass);
 
   *bp = JS_FALSE;
-  if (JSVAL_IS_PRIMITIVE(v))
+  if (JSVAL_IS_PRIMITIVE(*v))
     return JS_TRUE;
 
-  JSObject* proto = JSVAL_TO_OBJECT(v);
+  JSObject* proto = JSVAL_TO_OBJECT(*v);
   while ((proto = JS_GetPrototype(cx, proto))) {
     if (proto == prototype) {
       *bp = JS_TRUE;
@@ -3684,8 +3740,8 @@ ArrayType::Getter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
   // Convert the index to a size_t and bounds-check it.
   size_t index;
   size_t length = GetLength(cx, typeObj);
-  bool ok = jsvalToSize(cx, idval, true, &index);
-  if (!ok && JSVAL_IS_STRING(idval)) {
+  bool ok = jsidToSize(cx, idval, true, &index);
+  if (!ok && JSID_IS_STRING(idval)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return JS_TRUE;
@@ -3719,8 +3775,8 @@ ArrayType::Setter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
   // Convert the index to a size_t and bounds-check it.
   size_t index;
   size_t length = GetLength(cx, typeObj);
-  bool ok = jsvalToSize(cx, idval, true, &index);
-  if (!ok && JSVAL_IS_STRING(idval)) {
+  bool ok = jsidToSize(cx, idval, true, &index);
+  if (!ok && JSID_IS_STRING(idval)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return JS_TRUE;
@@ -3822,7 +3878,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   // make sure we have one, and only one, property
   if (!JS_NextProperty(cx, iter, &id))
     return NULL;
-  if (!JSVAL_IS_VOID(id)) {
+  if (!JSID_IS_VOID(id)) {
     JS_ReportError(cx, "struct field descriptors must contain one property");
     return NULL;
   }
@@ -4236,12 +4292,11 @@ StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
 }
 
 const FieldInfo*
-StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
+StructType::LookupField(JSContext* cx, JSObject* obj, JSString *name)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
 
-  JSString* name = JSVAL_TO_STRING(idval);
   FieldInfoHash::Ptr ptr = GetFieldInfo(cx, obj)->lookup(name);
   if (ptr)
     return &ptr->value;
@@ -4332,7 +4387,7 @@ StructType::FieldGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
     return JS_FALSE;
   }
 
-  const FieldInfo* field = LookupField(cx, typeObj, idval);
+  const FieldInfo* field = LookupField(cx, typeObj, JSID_TO_STRING(idval));
   if (!field)
     return JS_FALSE;
 
@@ -4354,7 +4409,7 @@ StructType::FieldSetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
     return JS_FALSE;
   }
 
-  const FieldInfo* field = LookupField(cx, typeObj, idval);
+  const FieldInfo* field = LookupField(cx, typeObj, JSID_TO_STRING(idval));
   if (!field)
     return JS_FALSE;
 
@@ -4384,7 +4439,8 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  const FieldInfo* field = LookupField(cx, typeObj, JS_ARGV(cx, vp)[0]);
+  const FieldInfo* field = LookupField(cx, typeObj,
+                                       JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
   if (!field)
     return JS_FALSE;
 

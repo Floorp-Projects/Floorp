@@ -122,122 +122,65 @@ namespace parent {
 // always be used instead of casting an NPIdentifier to a jsval and using the
 // jsapi.
 
-#if JS_BITS_PER_WORD == 64
+JS_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(jsid));
 
-JS_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(jsval));
-
-static inline bool
-NPIdentifierIsString(NPIdentifer id)
+static inline jsid
+NPIdentifierToJSId(NPIdentifier id)
 {
-    return JSVAL_IS_STRING((jsval)id);
-}
-
-static inline JSString *
-NPIdentifierToString(NPIdentifer id)
-{
-    return JSVAL_TO_STRING((jsval)id);
+    jsid tmp;
+    JSID_BITS(tmp) = (size_t)id;
+    return tmp;
 }
 
 static inline NPIdentifier
-StringToNPIdentifier(JSString *str)
+JSIdToNPIdentifier(jsid id)
 {
-    return (NPIdentifier)STRING_TO_JSVAL(str);
+    return (NPIdentifier)JSID_BITS(id);
 }
-
-static inline bool
-NPIdentifierIsInt(NPIdentifer id)
-{
-    return JSVAL_IS_INT((jsval)id);
-}
-
-static inline jsint
-NPIdentifierToInt(NPIdentifer id)
-{
-    return JSVAL_TO_INT((jsval)id);
-}
-
-static inline bool
-IntToNPIdentifier(JSContext *, jsint i, NPIdentifier *pid)
-{
-    *pid = (NPIdentifier)INT_TO_JSVAL(i);
-    return true;
-}
-
-static inline bool
-NPIdentifierIsVoid(NPIdentifier id)
-{
-    return JSVAL_IS_VOID((NPIdentifier)id);
-}
-
-static const NPIdentifier NPIdentifier_VOID = (NPIdentifier)JSVAL_VOID;
-
-#else  /* JS_BITS_PER_WORD == 32 */
 
 static inline bool
 NPIdentifierIsString(NPIdentifier id)
 {
-    return ((size_t)id & 0x3) == 0;
+    return JSID_IS_STRING(NPIdentifierToJSId(id));
 }
 
 static inline JSString *
 NPIdentifierToString(NPIdentifier id)
 {
-    NS_ASSERTION(NPIdentifierIsString(id), "id must be string");
-    return (JSString *)id;
+    return JSID_TO_STRING(NPIdentifierToJSId(id));
 }
 
 static inline NPIdentifier
 StringToNPIdentifier(JSString *str)
 {
-    NS_ASSERTION(((size_t)str & 3) == 0, "Strings are assumed to be at least 4-byte aligned");
-    return (NPIdentifier)str;
+    return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(str));
 }
 
 static inline bool
 NPIdentifierIsInt(NPIdentifier id)
 {
-    return ((size_t)id & 1) != 0;
+    return JSID_IS_INT(NPIdentifierToJSId(id));
 }
 
 static inline jsint
 NPIdentifierToInt(NPIdentifier id)
 {
-    NS_ASSERTION(NPIdentifierIsInt(id), "id must be int");
-    return (jsint)id >> 1;
+    return JSID_TO_INT(NPIdentifierToJSId(id));
 }
 
 static inline NPIdentifier
 IntToNPIdentifier(jsint i)
 {
-    NS_ASSERTION(i < (1 << 30) - 1, "integer id is too big, will be truncated");
-    return (NPIdentifier)((i << 1) | 0x1);
+    return JSIdToNPIdentifier(INT_TO_JSID(i));
 }
 
 static inline bool
 NPIdentifierIsVoid(NPIdentifier id)
 {
-    return (size_t)id == 0x2;
+    return JSID_IS_VOID(NPIdentifierToJSId(id));
 }
 
-static const NPIdentifier NPIdentifier_VOID = (NPIdentifier)0x2;
-
-#endif
-
-static inline jsval
-NPIdentifierToJSVal(NPIdentifier id)
-{
-    if (NPIdentifierIsString(id))
-        return STRING_TO_JSVAL(NPIdentifierToString(id));
-    return INT_TO_JSVAL(NPIdentifierToInt(id));
-}
-
-static inline NPIdentifier
-JSValToNPIdentifier(jsval val)
-{
-    if (JSVAL_IS_STRING(val))
-        return StringToNPIdentifier(JSVAL_TO_STRING(val));
-    return IntToNPIdentifier(JSVAL_TO_INT(val));
-}
+#define NPIdentifier_VOID (JSIdToNPIdentifier(JSID_VOID))
 
 NPObject* NP_CALLBACK
 _getwindowobject(NPP npp);

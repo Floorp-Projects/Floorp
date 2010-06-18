@@ -3043,7 +3043,7 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
 }
 
 /* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterfaceInfo * *_retval)
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface;
     XPCNativeMember*  member;
@@ -3060,7 +3060,7 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterface
 }
 
 /* XPCNativeInterface FindInterfaceWithName (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsval name, nsIInterfaceInfo * *_retval)
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
     if(iface)
@@ -3256,7 +3256,7 @@ void
 XPCWrappedNative::HandlePossibleNameCaseError(JSContext* cx,
                                               XPCNativeSet* set,
                                               XPCNativeInterface* iface,
-                                              jsval name)
+                                              jsid name)
 {
     XPCCallContext ccx(JS_CALLER, cx);
     HandlePossibleNameCaseError(ccx, set, iface, name);
@@ -3267,7 +3267,7 @@ void
 XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
                                               XPCNativeSet* set,
                                               XPCNativeInterface* iface,
-                                              jsval name)
+                                              jsid name)
 {
     if(!ccx.IsValid())
         return;
@@ -3280,8 +3280,8 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
     XPCNativeInterface* localIface;
 
     /* PRUnichar->char->PRUnichar hack is to avoid pulling in i18n code. */
-    if(JSVAL_IS_STRING(name) &&
-       nsnull != (oldJSStr = JSVAL_TO_STRING(name)) &&
+    if(JSID_IS_STRING(name) &&
+       nsnull != (oldJSStr = JSID_TO_STRING(name)) &&
        nsnull != (oldStr = (PRUnichar*) JS_GetStringChars(oldJSStr)) &&
        oldStr[0] != 0 &&
        oldStr[0] >> 8 == 0 &&
@@ -3289,11 +3289,14 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
        nsnull != (newStr = nsCRT::strdup(oldStr)))
     {
         newStr[0] = (PRUnichar) nsCRT::ToLower((char)newStr[0]);
-        newJSStr = JS_NewUCStringCopyZ(ccx, (const jschar*)newStr);
+        newJSStr = JS_InternUCString(ccx, (const jschar*)newStr);
         nsCRT::free(newStr);
-        if(newJSStr && (set ?
-             set->FindMember(STRING_TO_JSVAL(newJSStr), &member, &localIface) :
-                        NS_PTR_TO_INT32(iface->FindMember(STRING_TO_JSVAL(newJSStr)))))
+        if (!newJSStr)
+            return;
+
+        jsid id = INTERNED_STRING_TO_JSID(newJSStr);
+        if(set ? set->FindMember(id, &member, &localIface)
+               : NS_PTR_TO_INT32(iface->FindMember(id)))
         {
             // found it!
             const char* ifaceName = set ?

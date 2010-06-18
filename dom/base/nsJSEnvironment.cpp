@@ -3041,10 +3041,10 @@ static JSPropertySpec OptionsProperties[] = {
 };
 
 static JSBool
-GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetOptionsProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  if (JSVAL_IS_INT(id)) {
-    uint32 optbit = (uint32) JSVAL_TO_INT(id);
+  if (JSID_IS_INT(id)) {
+    uint32 optbit = (uint32) JSID_TO_INT(id);
     if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
           optbit == JSOPTION_RELIMIT)
       *vp = (JS_GetOptions(cx) & optbit) ? JSVAL_TRUE : JSVAL_FALSE;
@@ -3053,10 +3053,10 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetOptionsProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  if (JSVAL_IS_INT(id)) {
-    uint32 optbit = (uint32) JSVAL_TO_INT(id);
+  if (JSID_IS_INT(id)) {
+    uint32 optbit = (uint32) JSID_TO_INT(id);
 
     // Don't let options other than strict, werror, or relimit be set -- it
     // would be bad if web page script could clear
