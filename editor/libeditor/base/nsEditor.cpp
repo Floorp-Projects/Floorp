@@ -3770,23 +3770,23 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
   nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
   nsCOMPtr<nsIEnumerator> enumerator;
   nsresult result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(result) || !enumerator)
-    return NS_ERROR_FAILURE;
-    
+  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
+
   enumerator->First(); 
   nsCOMPtr<nsISupports> currentItem;
-  if (NS_FAILED(enumerator->CurrentItem(getter_AddRefs(currentItem))))
-    return NS_ERROR_FAILURE;
+  result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+  NS_ENSURE_SUCCESS(result, result);
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
-    
-  if (NS_FAILED(range->GetStartContainer(outStartNode)))
-    return NS_ERROR_FAILURE;
-    
-  if (NS_FAILED(range->GetStartOffset(outStartOffset)))
-    return NS_ERROR_FAILURE;
-    
+
+  result = range->GetStartContainer(outStartNode);
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = range->GetStartOffset(outStartOffset);
+  NS_ENSURE_SUCCESS(result, result);
+
   return NS_OK;
 }
 
