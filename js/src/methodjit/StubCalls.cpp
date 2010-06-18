@@ -2468,3 +2468,10 @@ finally:
     return script->nmap[offset];
 }
 
+void JS_FASTCALL
+stubs::Unbrand(VMFrame &f)
+{
+    if (!f.regs.sp[-1].asObject().unbrand(f.cx))
+        THROW();
+}
+

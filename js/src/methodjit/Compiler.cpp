@@ -1265,6 +1265,15 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_INITMETHOD)
 
+          BEGIN_CASE(JSOP_UNBRAND)
+            jsop_unbrand();
+          END_CASE(JSOP_UNBRAND)
+
+          BEGIN_CASE(JSOP_UNBRANDTHIS)
+            jsop_this();
+            jsop_unbrand();
+          END_CASE(JSOP_UNBRANDTHIS)
+
           BEGIN_CASE(JSOP_OBJTOSTR)
             jsop_objtostr();
           END_CASE(JSOP_OBJTOSTR)
@@ -2162,5 +2171,12 @@ mjit::Compiler::jsop_getelem_slow()
     stubCall(stubs::GetElem, Uses(2), Defs(1));
     frame.popn(2);
     frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_unbrand()
+{
+    prepareStubCall();
+    stubCall(stubs::Unbrand, Uses(0), Defs(0));
 }
 
