@@ -430,6 +430,7 @@ public:
         SIZE_CHANGED = 7,
         ACTIVITY_STOPPING = 8,
         ACTIVITY_PAUSING = 9,
+        LOAD_URI = 10,
         dummy_java_enum_list_end
     };
 
