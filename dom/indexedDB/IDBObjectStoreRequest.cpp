@@ -996,17 +996,6 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // Obtain the list of indexes that we'll need to update.
-  nsTArray<IndexInfo> indexes;
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  if (!info) {
-    NS_ERROR("Unable to get info on object store!");
-    return NS_ERROR_UNEXPECTED;
-  }
-  for (nsTArray_base::size_type i = 0; i < info->indexes.Length(); i++) {
-    indexes.AppendElement(info->indexes[i]);
-  }
-
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
@@ -1046,17 +1035,6 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 
   if (key.IsUnset() || key.IsNull()) {
     return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  // Obtain the list of indexes that we'll need to update.
-  nsTArray<IndexInfo> indexes;
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  if (!info) {
-    NS_ERROR("Unable to get info on object store!");
-    return NS_ERROR_UNEXPECTED;
-  }
-  for (nsTArray_base::size_type i = 0; i < info->indexes.Length(); i++) {
-    indexes.AppendElement(info->indexes[i]);
   }
 
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();
