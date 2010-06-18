@@ -3626,14 +3626,14 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 void
 nsIPresShell::PostRecreateFramesFor(Element* aElement)
 {
-  FrameConstructor()->PostRestyleEvent(aElement, eRestyle_Self,
+  FrameConstructor()->PostRestyleEvent(aElement, eRestyle_Subtree,
                                        nsChangeHint_ReconstructFrame);
 }
 
 void
 nsIPresShell::RestyleForAnimation(Element* aElement)
 {
-  FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Self,
+  FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Subtree,
                                                 NS_STYLE_HINT_NONE);
 }
 
@@ -4902,7 +4902,7 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
                                                 mDocument->GetRootElement(),
                                                 aStateMask)) {
     mFrameConstructor->PostRestyleEvent(mDocument->GetRootElement(),
-                                        eRestyle_Self, NS_STYLE_HINT_NONE);
+                                        eRestyle_Subtree, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
 }
@@ -5079,7 +5079,7 @@ nsIPresShell::ReconstructStyleDataInternal()
     return;
   }
   
-  mFrameConstructor->PostRestyleEvent(root, eRestyle_Self, NS_STYLE_HINT_NONE);
+  mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree, NS_STYLE_HINT_NONE);
 
 #ifdef ACCESSIBILITY
   InvalidateAccessibleSubtree(nsnull);
