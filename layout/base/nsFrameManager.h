@@ -57,6 +57,12 @@
 #include "nsChangeHint.h"
 #include "nsFrameManagerBase.h"
 
+namespace mozilla {
+namespace css {
+class RestyleTracker;
+} // namespace css
+} // namespace mozilla
+
 /**
  * Frame manager interface. The frame manager serves two purposes:
  * <li>provides a service for mapping from content to frame and from
@@ -70,6 +76,8 @@
 
 class nsFrameManager : public nsFrameManagerBase
 {
+  typedef mozilla::css::RestyleTracker RestyleTracker;
+
 public:
   nsFrameManager() NS_HIDDEN;
   ~nsFrameManager() NS_HIDDEN;
@@ -151,7 +159,8 @@ public:
   NS_HIDDEN_(void)
     ComputeStyleChangeFor(nsIFrame* aFrame,
                           nsStyleChangeList* aChangeList,
-                          nsChangeHint aMinChange);
+                          nsChangeHint aMinChange,
+                          RestyleTracker& aRestyleTracker);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.
@@ -198,7 +207,8 @@ private:
                           nsIContent        *aParentContent,
                           nsStyleChangeList *aChangeList, 
                           nsChangeHint       aMinChange,
-                          PRBool             aFireAccessibilityEvents);
+                          PRBool             aFireAccessibilityEvents,
+                          RestyleTracker&    aRestyleTracker);
 };
 
 #endif

@@ -8083,7 +8083,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 void
 nsCSSFrameConstructor::RestyleElement(Element        *aElement,
                                       nsIFrame       *aPrimaryFrame,
-                                      nsChangeHint   aMinHint)
+                                      nsChangeHint   aMinHint,
+                                      RestyleTracker& aRestyleTracker)
 {
   NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
@@ -8100,7 +8101,8 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
   } else if (aPrimaryFrame) {
     nsStyleChangeList changeList;
     mPresShell->FrameManager()->
-      ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint);
+      ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint,
+                            aRestyleTracker);
     ProcessRestyledFrames(changeList);
   } else {
     // no frames, reconstruct for content
@@ -11623,8 +11625,10 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   nsStyleChangeList changeList;
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?
+  // Note: The restyle tracker we pass in here doesn't matter.
   mPresShell->FrameManager()->ComputeStyleChangeFor(mPresShell->GetRootFrame(),
-                                                    &changeList, aExtraHint);
+                                                    &changeList, aExtraHint,
+                                                    mPendingRestyles);
   // Process the required changes
   ProcessRestyledFrames(changeList);
   // Tell the style set it's safe to destroy the old rule tree.  We
