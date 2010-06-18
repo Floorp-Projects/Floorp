@@ -375,7 +375,8 @@ enum XPTTypeDescriptorTags {
     TD_PWSTRING_SIZE_IS  = 22,
     TD_UTF8STRING        = 23,
     TD_CSTRING           = 24,
-    TD_ASTRING           = 25
+    TD_ASTRING           = 25,
+    TD_JSVAL             = 26
 };
 
 struct XPTTypeDescriptor {

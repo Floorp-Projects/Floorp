@@ -2408,8 +2408,11 @@ CallMethodHelper::~CallMethodHelper()
                 delete (nsCString*) p;
             else if(dp->IsValCString())
                 delete (nsCString*) p;
-        }
+            else if(dp->IsValJSRoot())
+                JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
+        }   
     }
+
 }
 
 JSBool
@@ -2593,7 +2596,7 @@ CallMethodHelper::GatherAndConvertResults()
 
         if(paramInfo.IsRetval())
         {
-            if(!mCallContext.GetReturnValueWasSet())
+            if(!mCallContext.GetReturnValueWasSet() && type.TagPart() != nsXPTType::T_JSVAL)
                 mCallContext.SetRetVal(v);
         }
         else if(i < mArgc)
@@ -2756,6 +2759,22 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
         {
             dp->SetPtrIsData();
             dp->ptr = &dp->val;
+
+            if (type_tag == nsXPTType::T_JSVAL)
+            {
+                if (paramInfo.IsRetval())
+                {
+                    dp->ptr = mCallContext.GetRetVal();
+                }
+                else
+                {
+                    jsval *rootp = (jsval *)&dp->val.p;
+                    dp->ptr = rootp;
+                    *rootp = JSVAL_VOID;
+                    if (!JS_AddValueRoot(mCallContext, rootp))
+                        return JS_FALSE;
+                }
+            }
 
             if(type.IsPointer() &&
                type_tag != nsXPTType::T_INTERFACE &&
