@@ -509,7 +509,13 @@ LayerManagerOGL::Render()
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
-  mGLContext->fFinish();
+  // XXX this is an intermediate workaround for windows that are
+  // double-buffered by default on GLX systems.  The swap is a no-op
+  // everywhere else (and for non-double-buffered GLX windows).  If
+  // the swap is actually performed, it implicitly glFlush()s.
+  if (!mGLContext->SwapBuffers()) {
+    mGLContext->fFlush();
+  } 
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 }
