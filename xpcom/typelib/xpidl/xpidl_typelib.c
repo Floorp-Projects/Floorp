@@ -874,6 +874,10 @@ handle_iid_is:
                       td->prefix.flags = TD_CSTRING | XPT_TDP_POINTER;
                       if (IDL_tree_property_get(type, "ref"))
                           td->prefix.flags |= XPT_TDP_REFERENCE;
+                  } else if (IDL_tree_property_get(type, "jsval")) {
+                      td->prefix.flags = TD_JSVAL;
+                      if (IDL_tree_property_get(type, "ptr"))
+                          td->prefix.flags |= XPT_TDP_POINTER;
                   } else {
                       td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
                   }
