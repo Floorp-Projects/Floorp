@@ -87,7 +87,7 @@ void NeckoChild::DestroyNeckoChild()
 }
 
 PHttpChannelChild* 
-NeckoChild::AllocPHttpChannel()
+NeckoChild::AllocPHttpChannel(PIFrameEmbeddingChild* iframeEmbedding)
 {
   // We don't allocate here: see HttpChannelChild::AsyncOpen()
   NS_RUNTIMEABORT("AllocPHttpChannel should not be called");

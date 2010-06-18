@@ -41,6 +41,7 @@
 include protocol PContentProcess;
 include protocol PHttpChannel;
 include protocol PCookieService;
+include protocol PIFrameEmbedding;
 
 namespace mozilla {
 namespace net {
@@ -56,7 +57,7 @@ sync protocol PNecko
 parent:
   __delete__();
 
-  PHttpChannel();
+  PHttpChannel(PIFrameEmbedding iframeEmbedding);
   PCookieService();
 };
 

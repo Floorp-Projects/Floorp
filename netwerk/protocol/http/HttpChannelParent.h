@@ -42,11 +42,15 @@
 #define mozilla_net_HttpChannelParent_h
 
 #include "nsHttp.h"
+#include "mozilla/dom/PIFrameEmbeddingParent.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
+#include "nsITabParent.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace net {
@@ -64,7 +68,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIPROGRESSEVENTSINK
 
-  HttpChannelParent();
+  HttpChannelParent(PIFrameEmbeddingParent* iframeEmbedding);
   virtual ~HttpChannelParent();
 
 protected:
@@ -86,6 +90,7 @@ protected:
 
   virtual void ActorDestroy(ActorDestroyReason why);
 
+  nsCOMPtr<nsITabParent> mTabParent;
   nsCOMPtr<nsIChannel> mChannel;
   bool mIPCClosed;                // PHttpChannel actor has been Closed()
 };

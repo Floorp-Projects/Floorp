@@ -117,6 +117,8 @@ endif
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/xpcom/ds \
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
