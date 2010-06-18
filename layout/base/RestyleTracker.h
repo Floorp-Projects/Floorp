@@ -84,8 +84,10 @@ public:
   /**
    * Add a restyle for the given element to the tracker.
    */
-  inline void AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
-                                nsChangeHint aMinChangeHint);
+  void AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
+                         nsChangeHint aMinChangeHint) {
+    AddPendingRestyle(aElement, aRestyleHint, nsRestyleHint(0), aMinChangeHint);
+  }
 
   /**
    * Process the restyles we've been tracking.
@@ -102,6 +104,15 @@ public:
   };
 
 private:
+  /**
+   * Add a restyle for the given element to the tracker and remove the
+   * given bits from the existing restyle hint for the element, if
+   * there is one.
+   */
+  inline void AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
+                                nsRestyleHint aRestyleHintToRemove,
+                                nsChangeHint aMinChangeHint);
+
   // Handle a single mPendingRestyles entry.
   inline void ProcessOneRestyle(Element* aElement,
                                 nsRestyleHint aRestyleHint,
@@ -118,6 +129,7 @@ private:
 
 inline void RestyleTracker::AddPendingRestyle(Element* aElement,
                                               nsRestyleHint aRestyleHint,
+                                              nsRestyleHint aRestyleHintToRemove,
                                               nsChangeHint aMinChangeHint)
 {
   RestyleData existingData;
@@ -127,7 +139,8 @@ inline void RestyleTracker::AddPendingRestyle(Element* aElement,
   mPendingRestyles.Get(aElement, &existingData);
 
   existingData.mRestyleHint =
-    nsRestyleHint(existingData.mRestyleHint | aRestyleHint);
+    nsRestyleHint((existingData.mRestyleHint | aRestyleHint) &
+                  ~aRestyleHintToRemove);
   NS_UpdateHint(existingData.mChangeHint, aMinChangeHint);
 
   mPendingRestyles.Put(aElement, existingData);
