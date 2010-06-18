@@ -280,11 +280,13 @@ private:
   nsresult AddAuthorizationHeaders(nsCString& aAuthHeaderStr,
                                    PRBool     aIsProxyAuth);
   nsresult AddCookiesToRequest(nsCString& aAuthHeaderStr);
-  void GenerateSecKey(nsCString& aKey,
-                      PRUint32 *aNumber);
+
+  // Returns the related number of the generated key.
+  PRUint32 GenerateSecKey(nsCString& aKey);
   nsresult GenerateRequestKeys(nsCString& aKey1,
                                nsCString& aKey2,
                                nsCString& aKey3);
+
   PRBool UsingHttpProxy();
   nsresult Reset();
   void RemoveFromLoadGroup();
@@ -786,7 +788,7 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(DoInitialRequest)
   }
 
   while (!headersToSend.IsEmpty()) {
-    PRUint8 headerPosToSendNow = random() % headersToSend.Length();
+    PRUint8 headerPosToSendNow = rand() % headersToSend.Length();
     eRequestHeader headerToSendNow =
       static_cast<eRequestHeader>(headersToSend[headerPosToSendNow]);
 
@@ -1324,15 +1326,14 @@ nsWebSocketEstablishedConnection::AddCookiesToRequest(nsCString& aStr)
   return NS_OK;
 }
 
-void
-nsWebSocketEstablishedConnection::GenerateSecKey(nsCString& aKey,
-                                                 PRUint32 *aNumber)
+PRUint32
+nsWebSocketEstablishedConnection::GenerateSecKey(nsCString& aKey)
 {
   PRUint32 i;
 
-  PRUint32 spaces = random() % 12 + 1;
+  PRUint32 spaces = rand() % 12 + 1;
   PRUint32 max = PR_UINT32_MAX / spaces;
-  PRUint32 number = random() % max;
+  PRUint32 number = rand() % max;
   PRUint32 product = number * spaces;
 
   nsCAutoString key;
@@ -1342,13 +1343,13 @@ nsWebSocketEstablishedConnection::GenerateSecKey(nsCString& aKey,
   // Insert between one and twelve random characters from the ranges
   // U+0021 to U+002F and U+003A to U+007E into the key at random
   // positions.
-  PRUint32 numberOfCharsToInsert = random() % 12 + 1;
+  PRUint32 numberOfCharsToInsert = rand() % 12 + 1;
   for (i = 0; i < numberOfCharsToInsert; ++i) {
-    PRUint32 posToInsert = random() % key.Length();
+    PRUint32 posToInsert = rand() % key.Length();
     char charToInsert =
-      random() % 2 == 0 ?
-        static_cast<char>(0x21 + (random() % (0x2F - 0x21 + 1))) :
-        static_cast<char>(0x3A + (random() % (0x7E - 0x3A + 1)));
+      rand() % 2 == 0 ?
+        static_cast<char>(0x21 + (rand() % (0x2F - 0x21 + 1))) :
+        static_cast<char>(0x3A + (rand() % (0x7E - 0x3A + 1)));
 
     key.Insert(charToInsert, posToInsert);
   }
@@ -1356,12 +1357,12 @@ nsWebSocketEstablishedConnection::GenerateSecKey(nsCString& aKey,
   // Insert /spaces/ U+0020 SPACE characters into the key at random
   // positions other than the start or end of the string.
   for (i = 0; i < spaces; ++i) {
-    PRUint32 posToInsert = random() % (key.Length() - 1) + 1;
+    PRUint32 posToInsert = rand() % (key.Length() - 1) + 1;
     key.Insert(static_cast<char>(0x20), posToInsert);
   }
 
   aKey = key;
-  *aNumber = number;
+  return number;
 }
 
 nsresult
@@ -1379,15 +1380,15 @@ nsWebSocketEstablishedConnection::GenerateRequestKeys(nsCString& aKey1,
   PRUint32 number_2;
 
   // generate the sec-keys headers values
-  GenerateSecKey(key_1, &number_1);
-  GenerateSecKey(key_2, &number_2);
+  number_1 = GenerateSecKey(key_1);
+  number_2 = GenerateSecKey(key_2);
 
   // key3 must be a string consisting of eight random bytes
   nsCAutoString key_3;
   for (i = 0; i < 8; ++i) {
     // get a byte between 1 and 255. 0x00 was discarted to prevent possible
-    // issues in ws servers. 
-    key_3 += static_cast<char>(random() % 0xff + 1);
+    // issues in ws servers.
+    key_3 += static_cast<char>(rand() % 0xff + 1);
   }
 
   // since we have the keys, we calculate the server md5 challenge response,
@@ -1600,10 +1601,10 @@ nsWebSocketEstablishedConnection::DoConnect()
 
   nsresult rv;
 
-  mStatus = CONN_CONNECTING;
-
   rv = AddWSConnecting();
   ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
+
+  mStatus = CONN_CONNECTING;
 
   nsCOMPtr<nsISocketTransportService> sts =
     do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
@@ -2898,6 +2899,9 @@ nsWebSocket::Initialize(nsISupports* aOwner,
     protocolParam.
       Assign(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(jsstr)),
              JS_GetStringLength(jsstr));
+    if (protocolParam.IsEmpty()) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
   }
 
   nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aOwner);
