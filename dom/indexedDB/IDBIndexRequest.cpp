@@ -123,6 +123,28 @@ protected:
   nsTArray<Key> mKeys;
 };
 
+class GetAllObjectsHelper : public GetHelper
+{
+public:
+  GetAllObjectsHelper(IDBTransactionRequest* aTransaction,
+                      IDBRequest* aRequest,
+                      const Key& aKey,
+                      PRInt64 aId,
+                      bool aUnique,
+                      bool aAutoIncrement,
+                      const PRUint32 aLimit)
+  : GetHelper(aTransaction, aRequest, aKey, aId, aUnique, aAutoIncrement),
+    mLimit(aLimit)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+
+protected:
+  const PRUint32 mLimit;
+  nsTArray<nsString> mValues;
+};
+
 class OpenCursorHelper : public AsyncConnectionHelper
 {
 public:
@@ -382,8 +404,30 @@ IDBIndexRequest::GetAllObjects(nsIVariant* aKey,
                                nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  Key key;
+  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (key.IsNull()) {
+    key = Key::UNSETKEY;
+  }
+
+  if (aOptionalArgCount < 2) {
+    aLimit = PR_UINT32_MAX;
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<GetAllObjectsHelper> helper =
+    new GetAllObjectsHelper(mObjectStore->Transaction(), request, key, mId,
+                            mUnique, mAutoIncrement, aLimit);
+  rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -709,8 +753,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCString query = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
                     NS_LITERAL_CSTRING(" FROM ") + tableName +
                     NS_LITERAL_CSTRING(" WHERE ") + indexId  +
-                    NS_LITERAL_CSTRING(" = :") + indexId +
-                    keyClause;
+                    NS_LITERAL_CSTRING(" = :") + indexId + keyClause;
   
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -778,6 +821,126 @@ GetAllHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   nsRefPtr<GetAllKeySuccessEvent> event(new GetAllKeySuccessEvent(mKeys));
 
   NS_ASSERTION(mKeys.IsEmpty(), "Should have swapped!");
+
+  nsresult rv = event->Init(mRequest, mTransaction);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  PRBool dummy;
+  aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
+  return OK;
+}
+
+PRUint16
+GetAllObjectsHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_ASSERTION(aConnection, "Passed a null connection!");
+
+  if (!mValues.SetCapacity(50)) {
+    NS_ERROR("Out of memory!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsCString dataTableName;
+  nsCString objectDataId;
+  nsCString indexTableName;
+
+  if (mAutoIncrement) {
+    dataTableName.AssignLiteral("ai_object_data");
+    objectDataId.AssignLiteral("ai_object_data_id");
+    if (mUnique) {
+      indexTableName.AssignLiteral("ai_unique_index_data");
+    }
+    else {
+      indexTableName.AssignLiteral("ai_index_data");
+    }
+  }
+  else {
+    dataTableName.AssignLiteral("object_data");
+    objectDataId.AssignLiteral("object_data_id");
+    if (mUnique) {
+      indexTableName.AssignLiteral("unique_index_data");
+    }
+    else {
+      indexTableName.AssignLiteral("index_data");
+    }
+  }
+
+  NS_NAMED_LITERAL_CSTRING(indexId, "index_id");
+  NS_NAMED_LITERAL_CSTRING(value, "value");
+
+  nsCString keyClause;
+  if (!mKey.IsUnset()) {
+    keyClause = NS_LITERAL_CSTRING(" AND ") + value +
+                NS_LITERAL_CSTRING(" = :") + value;
+  }
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + dataTableName +
+                    NS_LITERAL_CSTRING(" INNER JOIN ") + indexTableName  +
+                    NS_LITERAL_CSTRING(" ON ") + dataTableName +
+                    NS_LITERAL_CSTRING(".id = ") + indexTableName +
+                    NS_LITERAL_CSTRING(".") + objectDataId +
+                    NS_LITERAL_CSTRING(" WHERE ") + indexId  +
+                    NS_LITERAL_CSTRING(" = :") + indexId + keyClause;
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(indexId, mId);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (!mKey.IsUnset()) {
+    if (mKey.IsInt()) {
+      rv = stmt->BindInt64ByName(value, mKey.IntValue());
+    }
+    else if (mKey.IsString()) {
+      rv = stmt->BindStringByName(value, mKey.StringValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key type!");
+    }
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+
+  PRUint32 resultCount = 0;
+
+  PRBool hasResult;
+  while(resultCount++ < mLimit &&
+        NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (mValues.Capacity() == mValues.Length()) {
+      if (!mValues.SetCapacity(mValues.Capacity() * 2)) {
+        NS_ERROR("Out of memory!");
+        return nsIIDBDatabaseException::UNKNOWN_ERR;
+      }
+    }
+
+    nsString* value = mValues.AppendElement();
+    NS_ASSERTION(value, "This shouldn't fail!");
+
+#ifdef DEBUG
+    {
+      PRInt32 keyType;
+      NS_ASSERTION(NS_SUCCEEDED(stmt->GetTypeOfIndex(0, &keyType)) &&
+                   keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                   "Bad SQLITE type!");
+    }
+#endif
+
+    rv = stmt->GetString(0, *value);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  return OK;
+}
+
+PRUint16
+GetAllObjectsHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  nsRefPtr<GetAllSuccessEvent> event(new GetAllSuccessEvent(mValues));
+
+  NS_ASSERTION(mValues.IsEmpty(), "Should have swapped!");
 
   nsresult rv = event->Init(mRequest, mTransaction);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
