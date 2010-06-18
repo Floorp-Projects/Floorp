@@ -498,6 +498,7 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->savedPC = JSStackFrame::sInvalidPC;
 #endif
     newfp->down = fp;
+    fp->savedPC = f.regs.pc;
     cx->setCurrentFrame(newfp);
 
     if (newscript->staticLevel < JS_DISPLAY_SIZE) {
