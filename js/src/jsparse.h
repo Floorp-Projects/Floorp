@@ -490,7 +490,6 @@ public:
                                               is code evaluating destructuring
                                               arguments */
 #define PNX_HOLEY      0x400            /* array initialiser has holes */
-#define PNX_CLOSED     0x800            /* closed over */
 
     uintN frameLevel() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
