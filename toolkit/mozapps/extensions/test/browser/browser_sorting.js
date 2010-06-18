@@ -8,7 +8,6 @@ var gManagerWindow;
 var gProvider;
 
 function test() {
-  return;
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
