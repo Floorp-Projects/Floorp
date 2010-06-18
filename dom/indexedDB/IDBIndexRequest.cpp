@@ -750,10 +750,17 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                 NS_LITERAL_CSTRING(" = :") + value;
   }
 
+  nsCString limitClause;
+  if (mLimit != PR_UINT32_MAX) {
+    limitClause = NS_LITERAL_CSTRING(" LIMIT ");
+    limitClause.AppendInt(mLimit);
+  }
+
   nsCString query = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
                     NS_LITERAL_CSTRING(" FROM ") + tableName +
                     NS_LITERAL_CSTRING(" WHERE ") + indexId  +
-                    NS_LITERAL_CSTRING(" = :") + indexId + keyClause;
+                    NS_LITERAL_CSTRING(" = :") + indexId + keyClause +
+                    limitClause;
   
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -776,11 +783,8 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
-  PRUint32 resultCount = 0;
-
   PRBool hasResult;
-  while(resultCount++ < mLimit &&
-        NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+  while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     if (mKeys.Capacity() == mKeys.Length()) {
       if (!mKeys.SetCapacity(mKeys.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
@@ -874,13 +878,20 @@ GetAllObjectsHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                 NS_LITERAL_CSTRING(" = :") + value;
   }
 
+  nsCString limitClause;
+  if (mLimit != PR_UINT32_MAX) {
+    limitClause = NS_LITERAL_CSTRING(" LIMIT ");
+    limitClause.AppendInt(mLimit);
+  }
+
   nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + dataTableName +
                     NS_LITERAL_CSTRING(" INNER JOIN ") + indexTableName  +
                     NS_LITERAL_CSTRING(" ON ") + dataTableName +
                     NS_LITERAL_CSTRING(".id = ") + indexTableName +
                     NS_LITERAL_CSTRING(".") + objectDataId +
                     NS_LITERAL_CSTRING(" WHERE ") + indexId  +
-                    NS_LITERAL_CSTRING(" = :") + indexId + keyClause;
+                    NS_LITERAL_CSTRING(" = :") + indexId + keyClause +
+                    limitClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -903,11 +914,8 @@ GetAllObjectsHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
-  PRUint32 resultCount = 0;
-
   PRBool hasResult;
-  while(resultCount++ < mLimit &&
-        NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+  while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     if (mValues.Capacity() == mValues.Length()) {
       if (!mValues.SetCapacity(mValues.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
@@ -955,6 +963,11 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(aConnection, "Passed a null connection!");
 
+  if (!mData.SetCapacity(50)) {
+    NS_ERROR("Out of memory!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
   nsCString table;
   nsCString keyColumn;
 
@@ -983,7 +996,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCAutoString keyRangeClause;
   if (!mLeftKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND value");
+    keyRangeClause = NS_LITERAL_CSTRING(" AND value");
     if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
       keyRangeClause.AppendLiteral(" > :");
     }
@@ -1006,32 +1019,25 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     keyRangeClause.Append(rightKeyName);
   }
 
-  nsCAutoString query("SELECT value, ");
-  query.Append(keyColumn);
-  query.AppendLiteral(" FROM ");
-  query.Append(table);
-  query.AppendLiteral(" WHERE index_id = :");
-  query.Append(indexId);
-  query.Append(keyRangeClause);
-  query.AppendLiteral(" ORDER BY value ");
-
+  nsCString directionClause;
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
-      query.AppendLiteral("DESC");
+      directionClause = NS_LITERAL_CSTRING("DESC");
       break;
 
     case nsIIDBCursor::PREV:
-      query.AppendLiteral("ASC");
+      directionClause = NS_LITERAL_CSTRING("ASC");
       break;
 
     default:
       NS_NOTREACHED("Unknown direction!");
   }
 
-  if (!mData.SetCapacity(50)) {
-    NS_ERROR("Out of memory!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
+  nsCString query = NS_LITERAL_CSTRING("SELECT value, ") + keyColumn +
+                    NS_LITERAL_CSTRING(" FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE index_id = :") + indexId +
+                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY value ") +
+                    directionClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -1146,6 +1152,11 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(aConnection, "Passed a null connection!");
 
+  if (!mData.SetCapacity(50)) {
+    NS_ERROR("Out of memory!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
   nsCString indexTable;
   nsCString objectTable;
 
@@ -1176,7 +1187,7 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCAutoString keyRangeClause;
   if (!mLeftKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND value");
+    keyRangeClause = NS_LITERAL_CSTRING(" AND value");
     if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
       keyRangeClause.AppendLiteral(" > :");
     }
@@ -1188,7 +1199,7 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   if (!mRightKey.IsUnset()) {
-    keyRangeClause.AppendLiteral(" AND value");
+    keyRangeClause += NS_LITERAL_CSTRING(" AND value");
     if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
       keyRangeClause.AppendLiteral(" < :");
     }
@@ -1199,14 +1210,14 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     keyRangeClause.Append(rightKeyName);
   }
 
-  nsCString directionString;
+  nsCString directionClause;
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
-      directionString.AssignLiteral(" DESC");
+      directionClause = NS_LITERAL_CSTRING(" DESC");
       break;
 
     case nsIIDBCursor::PREV:
-      directionString.AssignLiteral(" ASC");
+      directionClause = NS_LITERAL_CSTRING(" ASC");
       break;
 
     default:
@@ -1224,12 +1235,7 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                         NS_LITERAL_CSTRING(".id WHERE ") + indexId +
                         NS_LITERAL_CSTRING("= :") + indexId + keyRangeClause +
                         NS_LITERAL_CSTRING(" ORDER BY ") + indexTable +
-                        NS_LITERAL_CSTRING(".") + value + directionString;
-
-  if (!mData.SetCapacity(50)) {
-    NS_ERROR("Out of memory!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
-  }
+                        NS_LITERAL_CSTRING(".") + value + directionClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
