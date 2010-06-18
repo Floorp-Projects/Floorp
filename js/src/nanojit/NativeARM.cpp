@@ -1507,14 +1507,13 @@ Assembler::asm_store64(LOpcode op, LIns* value, int dr, LIns* base)
                 Register rb = findRegFor(base, GpRegs);
 
                 if (value->isImmD()) {
-                    underrunProtect(LD32_size*2 + 8);
-
-                    // XXX use another reg, get rid of dependency
+                    union {
+                        float       f;
+                        uint32_t    i;
+                    } imm;
+                    imm.f = (float)(value->immD());
                     asm_str(IP, rb, dr);
-                    asm_ld_imm(IP, value->immDlo(), false);
-                    asm_str(IP, rb, dr+4);
-                    asm_ld_imm(IP, value->immDhi(), false);
-
+                    asm_ld_imm(IP, imm.i);
                     return;
                 }
 
