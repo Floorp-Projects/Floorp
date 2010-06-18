@@ -48,12 +48,12 @@
 #include "nsIXBLService.h"
 #include "nsQuoteList.h"
 #include "nsCounterManager.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsCSSPseudoElements.h"
 #include "nsRefreshDriver.h"
+#include "RestyleTracker.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -83,6 +83,7 @@ class nsCSSFrameConstructor : public nsARefreshObserver
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::css::RestyleTracker RestyleTracker;
 
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {
@@ -307,12 +308,10 @@ private:
   // This function does not call ProcessAttachedQueue() on the binding manager.
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
+  friend class mozilla::css::RestyleTracker;
   void ProcessOneRestyle(Element* aElement,
                          nsRestyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
-
-  void ProcessPendingRestyleTable(
-           nsDataHashtable<nsISupportsHashKey, RestyleData>& aRestyles);
 
   void RestyleForEmptyChange(Element* aContainer);
 
@@ -1837,15 +1836,6 @@ private:
 
 public:
 
-  struct RestyleData {
-    nsRestyleHint mRestyleHint;  // What we want to restyle
-    nsChangeHint  mChangeHint;   // The minimal change hint for "self"
-  };
-
-  struct RestyleEnumerateData : public RestyleData {
-    nsCOMPtr<Element> mElement;
-  };
-
   friend class nsFrameConstructorState;
 
 private:
@@ -1910,8 +1900,8 @@ private:
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 
-  nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingRestyles;
-  nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingAnimationRestyles;
+  RestyleTracker mPendingRestyles;
+  RestyleTracker mPendingAnimationRestyles;
 
   static nsIXBLService * gXBLService;
 };
