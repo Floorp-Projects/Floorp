@@ -100,10 +100,13 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
   {
     PRBool isCollapsed = PR_FALSE;
     nsresult result = aSelection->GetIsCollapsed(&isCollapsed);
-
     NS_ENSURE_SUCCESS(result, result);
 
-    if (isCollapsed)
+    PRInt32 rangeCount = 0;
+    result = aSelection->GetRangeCount(&rangeCount);
+    NS_ENSURE_SUCCESS(result, result);
+
+    if (isCollapsed && rangeCount)
     {
       nsCOMPtr<nsIDOMNode> selNode;
       PRInt32 selOffset = 0;
