@@ -170,11 +170,32 @@ mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *sco
 CompileStatus
 mjit::Compiler::generatePrologue()
 {
-    if (fun) {
-    }
-
     invokeLabel = masm.label();
     restoreFrameRegs();
+
+    /*
+     * If there is no function, then this can only be called via JaegerShot(),
+     * which expects an existing frame to be initialized like the interpreter.
+     */
+    if (fun) {
+        Jump j = masm.jump();
+        invokeLabel = masm.label();
+        restoreFrameRegs();
+
+        /* Set locals to undefined. */
+        for (uint32 i = 0; i < script->nslots; i++) {
+            Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
+            masm.storeValue(UndefinedTag(), local);
+        }
+
+        /* Create the call object. */
+        if (fun->isHeavyweight()) {
+            prepareStubCall();
+            stubCall(stubs::GetCallObject, Uses(0), Defs(0));
+        }
+
+        j.linkTo(masm.label(), &masm);
+    }
 
 #ifdef JS_CPU_ARM
     /*
@@ -223,7 +244,7 @@ mjit::Compiler::finishThisUp()
         return Compile_Error;
     }
 
-    *nmap++ = (uint8 *)(result + masm.distanceOf(invokeLabel));
+    *nmap++ = result;
     script->nmap = nmap;
 
     for (size_t i = 0; i < script->length; i++) {
@@ -266,7 +287,7 @@ mjit::Compiler::finishThisUp()
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
-    script->ncode = result;
+    script->ncode = (uint8 *)(result + masm.distanceOf(invokeLabel));
 #ifdef DEBUG
     script->jitLength = masm.size() + stubcc.size();
 #endif
