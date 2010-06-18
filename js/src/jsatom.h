@@ -118,18 +118,6 @@ IdToJsval(jsid id)
 
 }
 
-#ifdef DEBUG
-/*
- * Internally we can use C++ to allow jsids, which are structs in debug builds,
- * to be compared with ==.
- */
-static JS_ALWAYS_INLINE bool
-operator==(jsid lhs, jsid rhs)
-{
-    return JSID_BITS(lhs) == JSID_BITS(rhs);
-}
-#endif
-
 #if JS_BYTES_PER_WORD == 4
 # define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
 #elif JS_BYTES_PER_WORD == 8

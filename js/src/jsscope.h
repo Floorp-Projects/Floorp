@@ -623,7 +623,7 @@ struct JSScopeProperty {
     };
 
     void insertFree(JSScopeProperty *&list) {
-        id = JSID_VOID();
+        id = JSID_VOID;
         next = list;
         prevp = &list;
         if (list)

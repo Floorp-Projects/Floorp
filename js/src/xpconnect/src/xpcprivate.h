@@ -950,7 +950,7 @@ public:
                    JSContext* cx    = nsnull,
                    JSObject* obj    = nsnull,
                    JSObject* funobj = nsnull,
-                   jsval id         = 0,
+                   jsid id          = JSID_VOID,
                    uintN argc       = NO_ARGS,
                    jsval *argv      = nsnull,
                    jsval *rval      = nsnull);
@@ -988,7 +988,7 @@ public:
     inline XPCNativeInterface*          GetInterface() const ;
     inline XPCNativeMember*             GetMember() const ;
     inline JSBool                       HasInterfaceAndMember() const ;
-    inline jsval                        GetName() const ;
+    inline jsid                         GetName() const ;
     inline JSBool                       GetStaticMemberIsLocal() const ;
     inline uintN                        GetArgc() const ;
     inline jsval*                       GetArgv() const ;
@@ -1001,8 +1001,8 @@ public:
     inline JSBool   GetDestroyJSContextInDestructor() const;
     inline void     SetDestroyJSContextInDestructor(JSBool b);
 
-    inline jsval GetResolveName() const;
-    inline jsval SetResolveName(jsval name);
+    inline jsid GetResolveName() const;
+    inline jsid SetResolveName(jsid name);
 
     inline XPCWrappedNative* GetResolvingWrapper() const;
     inline XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w);
@@ -1012,7 +1012,7 @@ public:
     inline JSObject* GetCallee() const;
     inline void SetCallee(JSObject* callee);
 
-    void SetName(jsval name);
+    void SetName(jsid name);
     void SetArgsAndResultPtr(uintN argc, jsval *argv, jsval *rval);
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
                      JSBool isSetter);
@@ -1055,7 +1055,7 @@ private:
               JSObject* obj,
               JSObject* funobj,
               JSBool getWrappedNative,
-              jsval name,
+              jsid name,
               uintN argc,
               jsval *argv,
               jsval *rval);
@@ -1110,7 +1110,7 @@ private:
     XPCNativeInterface*             mInterface;
     XPCNativeMember*                mMember;
 
-    jsval                           mName;
+    jsid                            mName;
     JSBool                          mStaticMemberIsLocal;
 
     uintN                           mArgc;
@@ -1284,7 +1284,7 @@ extern JSClass XPC_WN_Tearoff_JSClass;
 extern JSClass XPC_WN_NoHelper_Proto_JSClass;
 
 extern JSBool
-XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 extern JSObjectOps *
 XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz);
@@ -1557,7 +1557,7 @@ public:
                               XPCNativeInterface** pInterface,
                               XPCNativeMember**    pMember);
 
-    jsval   GetName() const {return mName;}
+    jsid   GetName() const {return mName;}
 
     PRUint16 GetIndex() const {return mIndex;}
 
@@ -1587,7 +1587,7 @@ public:
         {return IsAttribute() && !IsWritableAttribute();}
 
 
-    void SetName(jsval a) {mName = a;}
+    void SetName(jsid a) {mName = a;}
 
     void SetMethod(PRUint16 index)
         {mVal = JSVAL_NULL; mFlags = METHOD; mIndex = index;}
@@ -1624,7 +1624,7 @@ private:
 
 private:
     // our only data...
-    jsval    mName;
+    jsid     mName;
     jsval    mVal;
     PRUint16 mIndex;
     PRUint16 mFlags;
@@ -1648,11 +1648,11 @@ public:
     static XPCNativeInterface* GetISupports(XPCCallContext& ccx);
 
     inline nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo.get();}
-    inline jsval             GetName()          const {return mName;}
+    inline jsid              GetName()          const {return mName;}
 
     inline const nsIID* GetIID() const;
     inline const char*  GetNameString() const;
-    inline XPCNativeMember* FindMember(jsval name) const;
+    inline XPCNativeMember* FindMember(jsid name) const;
 
     inline JSBool HasAncestor(const nsIID* iid) const;
 
@@ -1686,7 +1686,7 @@ protected:
                                            nsIInterfaceInfo* aInfo);
 
     XPCNativeInterface();   // not implemented
-    XPCNativeInterface(nsIInterfaceInfo* aInfo, jsval aName)
+    XPCNativeInterface(nsIInterfaceInfo* aInfo, jsid aName)
         : mInfo(aInfo), mName(aName), mMemberCount(0)
                           {MOZ_COUNT_CTOR(XPCNativeInterface);}
     ~XPCNativeInterface() {MOZ_COUNT_DTOR(XPCNativeInterface);}
@@ -1698,7 +1698,7 @@ protected:
 
 private:
     nsCOMPtr<nsIInterfaceInfo> mInfo;
-    jsval                      mName;
+    jsid                       mName;
     PRUint16          mMemberCount;
     XPCNativeMember   mMembers[1]; // always last - object sized for array
 };
@@ -1769,13 +1769,13 @@ public:
 
     static void ClearCacheEntryForClassInfo(nsIClassInfo* classInfo);
 
-    inline JSBool FindMember(jsval name, XPCNativeMember** pMember,
+    inline JSBool FindMember(jsid name, XPCNativeMember** pMember,
                              PRUint16* pInterfaceIndex) const;
 
-    inline JSBool FindMember(jsval name, XPCNativeMember** pMember,
+    inline JSBool FindMember(jsid name, XPCNativeMember** pMember,
                              XPCNativeInterface** pInterface) const;
 
-    inline JSBool FindMember(jsval name,
+    inline JSBool FindMember(jsid name,
                              XPCNativeMember** pMember,
                              XPCNativeInterface** pInterface,
                              XPCNativeSet* protoSet,
@@ -1787,7 +1787,7 @@ public:
 
     inline XPCNativeInterface* FindInterfaceWithIID(const nsIID& iid) const;
 
-    inline XPCNativeInterface* FindNamedInterface(jsval name) const;
+    inline XPCNativeInterface* FindNamedInterface(jsid name) const;
 
     PRUint16 GetMemberCount() const {return mMemberCount;}
     PRUint16 GetInterfaceCount() const
@@ -2543,12 +2543,12 @@ public:
     HandlePossibleNameCaseError(XPCCallContext& ccx,
                                 XPCNativeSet* set,
                                 XPCNativeInterface* iface,
-                                jsval name);
+                                jsid name);
     static void
     HandlePossibleNameCaseError(JSContext* cx,
                                 XPCNativeSet* set,
                                 XPCNativeInterface* iface,
-                                jsval name);
+                                jsid name);
 
 #define  HANDLE_POSSIBLE_NAME_CASE_ERROR(context, set, iface, name) \
     XPCWrappedNative::HandlePossibleNameCaseError(context, set, iface, name)
@@ -3514,9 +3514,9 @@ public:
     XPCCallContext*  SetCallContext(XPCCallContext* ccx)
         {XPCCallContext* old = mCallContext; mCallContext = ccx; return old;}
 
-    jsval GetResolveName() const {return mResolveName;}
-    jsval SetResolveName(jsval name)
-        {jsval old = mResolveName; mResolveName = name; return old;}
+    jsid GetResolveName() const {return mResolveName;}
+    jsid SetResolveName(jsid name)
+        {jsid old = mResolveName; mResolveName = name; return old;}
 
     XPCWrappedNative* GetResolvingWrapper() const {return mResolvingWrapper;}
     XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w)
@@ -3561,7 +3561,7 @@ private:
     XPCJSContextStack*   mJSContextStack;
     XPCPerThreadData*    mNextThread;
     XPCCallContext*      mCallContext;
-    jsval                mResolveName;
+    jsid                 mResolveName;
     XPCWrappedNative*    mResolvingWrapper;
 
     nsIExceptionManager* mExceptionManager;
@@ -4007,7 +4007,7 @@ private:
 class NS_STACK_CLASS AutoResolveName
 {
 public:
-    AutoResolveName(XPCCallContext& ccx, jsval name
+    AutoResolveName(XPCCallContext& ccx, jsid name
                     MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
         : mTLS(ccx.GetThreadData()),
           mOld(mTLS->SetResolveName(name)),
@@ -4017,7 +4017,7 @@ public:
     ~AutoResolveName()
         {
 #ifdef DEBUG
-            jsval old = 
+            jsid old = 
 #endif
             mTLS->SetResolveName(mOld);
             NS_ASSERTION(old == mCheck, "Bad Nesting!");
@@ -4025,8 +4025,8 @@ public:
 
 private:
     XPCPerThreadData* mTLS;
-    jsval mOld;
-    jsval mCheck;
+    jsid mOld;
+    jsid mCheck;
     MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -4371,7 +4371,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 // Inlined utilities.
 
 inline JSBool
-xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval);
+xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id);
 
 inline jsid
 GetRTIdByIndex(JSContext *cx, uintN index);

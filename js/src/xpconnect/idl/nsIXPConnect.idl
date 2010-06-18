@@ -59,15 +59,15 @@
 
 /***************************************************************************/
 
-// NB: jsval is declared in nsIVariant.idl
+// NB: jsval and jsid are declared in nsIVariant.idl
 
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSClassPtr(JSClass);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValPtr(jsval);
+[ptr] native JSValConstPtr(const jsval);
       native JSPropertyOp(JSPropertyOp);
       native JSEqualityOp(JSEqualityOp);
-      native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
@@ -180,8 +180,8 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      */
 
     readonly attribute nsIXPConnect XPConnect;
-    nsIInterfaceInfo FindInterfaceWithMember(in jsval nameID);
-    nsIInterfaceInfo FindInterfaceWithName(in jsval nameID);
+    nsIInterfaceInfo FindInterfaceWithMember(in jsid nameID);
+    nsIInterfaceInfo FindInterfaceWithName(in jsid nameID);
 
     void debugDump(in short depth);
 

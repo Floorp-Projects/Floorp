@@ -193,9 +193,14 @@ typedef enum JSValueMask16
 __attribute__((packed))
 # endif
 JSValueMask16;
+
 #else  /* defined(__cplusplus) || !defined(_MSC_VER) */
-// We need this C API for MSVC, because MSVC doesn't allow us to
-// make a 16-bit enum in C.
+
+/*
+ * We need this C API for MSVC, because MSVC doesn't allow us to
+ * make a 16-bit enum in C.
+ */
+
 typedef uint16 JSValueMask16;
 
 #define JSVAL_MASK16_NULL      ((uint16)0x0001)

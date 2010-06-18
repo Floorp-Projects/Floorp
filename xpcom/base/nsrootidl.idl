@@ -121,6 +121,7 @@ typedef unsigned long       size_t;
 [ptr, astring] native AStringPtr(ignored);
 
 native jsval(jsval);
+native jsid(jsid);
 
 %{C++
 /* 

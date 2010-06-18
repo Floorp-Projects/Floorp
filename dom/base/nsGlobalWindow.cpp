@@ -9769,7 +9769,7 @@ nsNavigator::nsNavigator(nsIDocShell *aDocShell)
 
 nsNavigator::~nsNavigator()
 {
-  sPrefInternal_id = JSVAL_VOID;
+  sPrefInternal_id = JSID_VOID;
 }
 
 //*****************************************************************************
@@ -10196,8 +10196,8 @@ nsNavigator::TaintEnabled(PRBool *aReturn)
   return NS_OK;
 }
 
-jsval
-nsNavigator::sPrefInternal_id = JSVAL_VOID;
+jsid
+nsNavigator::sPrefInternal_id = JSID_VOID;
 
 NS_IMETHODIMP
 nsNavigator::Preference()
@@ -10235,9 +10235,9 @@ nsNavigator::Preference()
   JSAutoRequest ar(cx);
 
   //--Check to see if the caller is allowed to access prefs
-  if (sPrefInternal_id == JSVAL_VOID) {
+  if (sPrefInternal_id == JSID_VOID) {
     sPrefInternal_id =
-      STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
+      INTERNED_STRING_TO_JSID(::JS_InternString(cx, "preferenceinternal"));
   }
 
   PRUint32 action;

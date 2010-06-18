@@ -926,7 +926,7 @@ protected:
   nsRefPtr<nsGeolocation> mGeolocation;
   nsIDocShell* mDocShell; // weak reference
 
-  static jsval       sPrefInternal_id;
+  static jsid sPrefInternal_id;
 };
 
 class nsIURI;

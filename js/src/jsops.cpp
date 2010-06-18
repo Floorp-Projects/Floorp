@@ -1333,7 +1333,7 @@ BEGIN_CASE(JSOP_ELEMDEC)
      * Delay fetching of id until we have the object to ensure the proper
      * evaluation order. See bug 372331.
      */
-    id = JSID_VOID();
+    id = JSID_VOID;
     i = -2;
     goto fetch_incop_obj;
 
@@ -3433,7 +3433,7 @@ BEGIN_CASE(JSOP_SETTER)
       }
       case JSOP_SETELEM:
         rval = regs.sp[-1];
-        id = JSID_VOID();
+        id = JSID_VOID;
         i = -2;
       gs_pop_lval:
         FETCH_OBJECT(cx, i - 1, obj);
@@ -3454,7 +3454,7 @@ BEGIN_CASE(JSOP_SETTER)
 
         JS_ASSERT(regs.sp - fp->base() >= 3);
         rval = regs.sp[-1];
-        id = JSID_VOID();
+        id = JSID_VOID;
         i = -2;
       gs_get_lval:
       {
