@@ -308,7 +308,7 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
             NS_ERROR("bad value");
             return JS_FALSE;
     }
-    jsval name = member->GetName();
+    jsid name = member->GetName();
 
     nsIXPCSecurityManager* sm = xpcc->GetAppropriateSecurityManager(secFlag);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -400,12 +400,12 @@ JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& ifa
     jsval val;
     if(!JS_GetReservedSlot(ccx, funobj, 1, &val))
         return JS_FALSE;
-    if(!JSVAL_MAY_BE_PRIVATE(val))
+    if(!JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(val))
         return JS_FALSE;
     iface = reinterpret_cast<XPCNativeInterface*>(JSVAL_TO_PRIVATE(val));
     if(!JS_GetReservedSlot(ccx, funobj, 0, &val))
         return JS_FALSE;
-    if(!JSVAL_MAY_BE_PRIVATE(val))
+    if(!JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(val))
         return JS_FALSE;
     member = reinterpret_cast<XPCDispInterface::Member*>(JSVAL_TO_PRIVATE(val));
     return JS_TRUE;
@@ -443,7 +443,7 @@ XPC_IDispatch_CallMethod(JSContext* cx, JSObject* obj, uintN argc,
 {
     NS_ASSERTION(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION, "bad function");
     JSObject* funobj = JSVAL_TO_OBJECT(argv[-2]);
-    XPCCallContext ccx(JS_CALLER, cx, obj, funobj, 0, argc, argv, vp);
+    XPCCallContext ccx(JS_CALLER, cx, obj, funobj, INT_TO_JSID(0), argc, argv, vp);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
     ccx.SetArgsAndResultPtr(argc, argv, vp);
