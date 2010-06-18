@@ -3105,8 +3105,10 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     PRUint32 sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
     nsLayoutUtils::SurfaceFromElementResult res =
         nsLayoutUtils::SurfaceFromElement(imgElt, sfeFlags);
-    if (!res.mSurface)
-        return NS_ERROR_NOT_AVAILABLE;
+    if (!res.mSurface) {
+        // Spec says to silently do nothing if the element is still loading.
+        return res.mIsStillLoading ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+    }
 
 #ifndef WINCE
     // On non-CE, force a copy if we're using drawImage with our destination
