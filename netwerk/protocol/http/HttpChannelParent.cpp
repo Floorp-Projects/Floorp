@@ -192,10 +192,12 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   nsHttpChannel *chan = static_cast<nsHttpChannel *>(aRequest);
   nsHttpResponseHead *responseHead = chan->GetResponseHead();
-  NS_ABORT_IF_FALSE(responseHead, "Missing HTTP responseHead!");
 
-  if (mIPCClosed || !SendOnStartRequest(*responseHead))
+  if (mIPCClosed || !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
+                                        !!responseHead)) {
     return NS_ERROR_UNEXPECTED; 
+  }
+
   return NS_OK;
 }
 
