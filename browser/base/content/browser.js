@@ -7671,14 +7671,3 @@ var TabContextMenu = {
       getClosedTabCount(window) == 0;
   }
 };
-
-XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
-  Cu.import("resource://gre/modules/HUDService.jsm");
-  try {
-    return HUDService.consoleUI;
-  }
-  catch (ex) {
-    Components.utils.reportError(ex);
-  }
-});
-
