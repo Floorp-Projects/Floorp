@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/net/HttpChannelParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
@@ -51,13 +52,16 @@ namespace mozilla {
 namespace net {
 
 // C++ file contents
-HttpChannelParent::HttpChannelParent()
+HttpChannelParent::HttpChannelParent(PIFrameEmbeddingParent* iframeEmbedding)
 : mIPCClosed(false)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsIHttpProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &handler);
   NS_ASSERTION(handler, "no http handler");
+
+  mTabParent = do_QueryInterface(static_cast<nsITabParent*>(
+      static_cast<TabParent*>(iframeEmbedding)));
 }
 
 HttpChannelParent::~HttpChannelParent()

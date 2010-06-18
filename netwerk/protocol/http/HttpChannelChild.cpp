@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHttp.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 
@@ -348,7 +349,15 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   //
 
   // FIXME: bug 558623: Combine constructor and SendAsyncOpen into one IPC msg
-  gNeckoChild->SendPHttpChannelConstructor(this);
+
+  mozilla::dom::TabChild* tabChild = nsnull;
+  nsCOMPtr<nsITabChild> iTabChild;
+  GetCallback(iTabChild);
+  if (iTabChild) {
+    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+  }
+
+  gNeckoChild->SendPHttpChannelConstructor(this, tabChild);
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI), IPC::URI(mDocumentURI),
                 IPC::URI(mReferrer), mLoadFlags, mRequestHeaders, 

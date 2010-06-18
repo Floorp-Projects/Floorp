@@ -78,7 +78,7 @@ using mozilla::dom::ContentProcessParent;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS1(TabParent, nsIWebProgress)
+NS_IMPL_ISUPPORTS2(TabParent, nsITabParent, nsIWebProgress)
 
 TabParent::TabParent()
 {

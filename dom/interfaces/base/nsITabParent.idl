@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *  Honza Bambas <honzab.moz@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,51 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHttp.h"
-#include "mozilla/net/NeckoParent.h"
-#include "mozilla/net/HttpChannelParent.h"
-#include "mozilla/net/CookieServiceParent.h"
 
-namespace mozilla {
-namespace net {
+#include "domstubs.idl"
 
-// C++ file contents
-NeckoParent::NeckoParent()
+// Sole purpose is to be able to identify the concrete class nsTabParent
+[uuid(95c7c50b-6677-456f-9f1e-885e1cc272dc)]
+interface nsITabParent : nsISupports
 {
-}
-
-NeckoParent::~NeckoParent()
-{
-}
-
-PHttpChannelParent* 
-NeckoParent::AllocPHttpChannel(PIFrameEmbeddingParent* iframeEmbedding)
-{
-  HttpChannelParent *p = new HttpChannelParent(iframeEmbedding);
-  p->AddRef();
-  return p;
-}
-
-bool 
-NeckoParent::DeallocPHttpChannel(PHttpChannelParent* channel)
-{
-  HttpChannelParent *p = static_cast<HttpChannelParent *>(channel);
-  p->Release();
-  return true;
-}
-
-PCookieServiceParent* 
-NeckoParent::AllocPCookieService()
-{
-  return new CookieServiceParent();
-}
-
-bool 
-NeckoParent::DeallocPCookieService(PCookieServiceParent* cs)
-{
-  delete cs;
-  return true;
-}
-
-}} // mozilla::net
-
+};
