@@ -26,6 +26,11 @@ const EVENT_VALUE_CHANGE = nsIAccessibleEvent.EVENT_VALUE_CHANGE;
 var gA11yEventDumpID = "";
 
 /**
+ * Set up this variable to dump event processing into console.
+ */
+var gA11yEventDumpToConsole = false;
+
+/**
  * Executes the function when requested event is handled.
  *
  * @param aEventType  [in] event type
@@ -261,6 +266,9 @@ function eventQueue(aEventType)
     invoker = this.getNextInvoker();
 
     this.setEventHandler(invoker);
+
+    if (gA11yEventDumpToConsole)
+      dump("\nEvent queue: \n  invoke: " + invoker.getID() + "\n");
 
     if (invoker.invoke() == INVOKER_ACTION_FAILED) {
       // Invoker failed to prepare action, fail and finish tests.

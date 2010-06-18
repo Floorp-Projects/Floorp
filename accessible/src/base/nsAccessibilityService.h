@@ -124,6 +124,8 @@ public:
 
   virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
+  virtual void PresShellDestroyed(nsIPresShell* aPresShell);
+
   virtual nsresult FireAccessibleEvent(PRUint32 aEvent, nsIAccessible *aTarget);
 
   // nsAccessibiltiyService
