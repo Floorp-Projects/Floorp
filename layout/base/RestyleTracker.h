@@ -232,6 +232,6 @@ inline PRBool RestyleTracker::AddPendingRestyle(Element* aElement,
 }
 
 } // namespace css
-} // namespacs mozilla
+} // namespace mozilla
 
 #endif /* mozilla_css_RestyleTracker_h */
