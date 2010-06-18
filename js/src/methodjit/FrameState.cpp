@@ -67,9 +67,14 @@ FrameState::init(uint32 nargs)
         return true;
     }
 
+    uint32 nlocals = script->nslots;
+    if ((eval = script->usesEval))
+        nlocals = 0;
+
     uint8 *cursor = (uint8 *)cx->malloc(sizeof(FrameEntry) * nslots +       // entries[]
                                         sizeof(FrameEntry *) * nslots +     // base[]
-                                        sizeof(FrameEntry *) * nslots       // tracker.entries[]
+                                        sizeof(FrameEntry *) * nslots +     // tracker.entries[]
+                                        sizeof(uint32) * nlocals            // escaping[]
                                         );
     if (!cursor)
         return false;
@@ -89,6 +94,12 @@ FrameState::init(uint32 nargs)
     cursor += sizeof(FrameEntry *) * nslots;
 
     tracker.entries = (FrameEntry **)cursor;
+    cursor += sizeof(FrameEntry *) * nslots;
+
+    if (nlocals) {
+        escaping = (uint32 *)cursor;
+        memset(escaping, 0, sizeof(uint32) * nlocals);
+    }
 
     return true;
 }
@@ -339,6 +350,13 @@ FrameState::sync(Assembler &masm) const
                 masm.storeData32(backing->data.reg(), address);
         }
     }
+}
+
+void
+FrameState::syncForCall(uint32 argc)
+{
+    syncAndKill(Registers::AvailRegs);
+    freeRegs = Registers();
 }
 
 void
@@ -643,6 +661,15 @@ FrameState::uncopy(FrameEntry *original)
 void
 FrameState::storeLocal(uint32 n)
 {
+    if (eval || escaping[n]) {
+        JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),
+                     entries[localIndex(n)].type.inMemory() &&
+                     entries[localIndex(n)].data.inMemory());
+        Address local(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value));
+        storeTo(peek(-1), local, false);
+        return;
+    }
+
     FrameEntry *localFe = getLocal(n);
 
     /* Detect something like (x = x) which is a no-op. */
