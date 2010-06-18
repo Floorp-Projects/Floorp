@@ -303,15 +303,7 @@ public:
 
 private:
 
-  // Note: It's the caller's responsibility to make sure to wrap a
-  // ProcessOneRestyle call in a view update batch.
-  // This function does not call ProcessAttachedQueue() on the binding manager.
-  // If the caller wants that to happen synchronously, it needs to handle that
-  // itself.
   friend class mozilla::css::RestyleTracker;
-  void ProcessOneRestyle(Element* aElement,
-                         nsRestyleHint aRestyleHint,
-                         nsChangeHint aChangeHint);
 
   void RestyleForEmptyChange(Element* aContainer);
 
@@ -461,8 +453,6 @@ private:
   void RestyleElement(Element* aElement,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint);
-
-  void RestyleLaterSiblings(Element* aElement);
 
   nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
                                 nsIContent*                    aContent,
