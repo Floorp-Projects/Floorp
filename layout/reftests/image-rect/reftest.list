@@ -11,6 +11,6 @@ asserts(0-1) == background-draw-nothing-malformed-images.html background-draw-no
 == background-zoom-1.html background-zoom-1-ref.html
 == background-zoom-2.html background-zoom-2-ref.html
 == background-zoom-3.html background-zoom-3-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-zoom-4.html background-zoom-4-ref.html # bug 567370
+== background-zoom-4.html background-zoom-4-ref.html
 == dom-api-computed-style.html dom-api-ref.html
 == dom-api.html dom-api-ref.html
