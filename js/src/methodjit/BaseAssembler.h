@@ -254,10 +254,10 @@ class BaseAssembler : public JSC::MacroAssembler
 };
 
 /* Save some typing. */
-const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
+static const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
 
-} /* namespace js */
 } /* namespace mjit */
+} /* namespace js */
 
 #endif
 
