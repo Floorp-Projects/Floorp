@@ -1,8 +1,10 @@
 let testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
 let testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
+let testURL_03 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html#tab3";
 
 let new_tab_01;
 let new_tab_02;
+let new_tab_03;
 
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
@@ -52,9 +54,26 @@ function tab_switch_02() {
   BrowserUI.selectTab(new_tab_01);
   is(Browser.selectedTab.browser.currentURI.spec, testURL_01, "Tab Switch 01 URL Matches"); 
 
+  //Add new tab
+  new_tab_03 =  Browser.addTab(testURL_03, true, new_tab_01);
+  new_tab_03.browser.addEventListener("load", tab_switch_03, true);
+}
+
+function tab_switch_03() {
+  is(Browser.selectedTab.browser.currentURI.spec, testURL_03, "Tab Switch 03 URL Matches"); 
+  is(new_tab_03.owner, new_tab_01, "Tab 03 owned by tab 01"); 
+
+  Browser.closeTab(new_tab_03);
+  is(Browser.selectedTab, new_tab_01, "Closing tab 03 returns to owner"); 
+
+  done();
+}
+
+function done() {
   //Close new tab 
   Browser.closeTab(new_tab_01);
   Browser.closeTab(new_tab_02);
+  Browser.closeTab(new_tab_03);
   
   // We must finialize the tests
   finish();
