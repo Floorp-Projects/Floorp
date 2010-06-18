@@ -141,10 +141,10 @@ Trench.prototype = {
 		if (this.visibleTrench)
 			this.visibleTrench.remove();
 	},
-	rectOverlaps: function Trench_rectOverlaps(rect,edge,assumeConstantSize,keepProportional) {
+	rectOverlaps: function Trench_rectOverlaps(rect,assumeConstantSize,keepProportional) {
 		var xRange = {min: rect.left, max: rect.left + rect.width};
 		var yRange = {min: rect.top, max: rect.top + rect.height};
-		
+
 		var edgeToCheck;
 		if (this.type == "border") {
 			if (this.edge == "left")
