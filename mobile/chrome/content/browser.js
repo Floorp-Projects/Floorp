@@ -783,6 +783,8 @@ var Browser = {
       return;
 
     let tabIndex = this._tabs.indexOf(tab);
+    if (tabIndex == -1)
+      return;
 
     let nextTab = this._selectedTab;
     if (nextTab == tab) {
