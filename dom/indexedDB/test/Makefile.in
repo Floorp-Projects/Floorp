@@ -51,6 +51,7 @@ _TEST_FILES = \
   test_create_index.html \
   test_create_objectStore.html \
   test_cursors.html \
+  test_cursor_update_updates_indexes.html \
   test_event_source.html \
   test_getAll.html \
   test_global_data.html \

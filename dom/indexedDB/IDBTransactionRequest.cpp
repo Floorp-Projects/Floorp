@@ -359,7 +359,7 @@ IDBTransactionRequest::IndexGetStatement(bool aUnique,
     if (aUnique) {
       return GetCachedStatement(
         "SELECT ai_object_data_id "
-        "FROM unique_ai_index_data "
+        "FROM ai_unique_index_data "
         "WHERE index_id = :index_id "
         "AND value = :value"
       );
@@ -396,8 +396,8 @@ IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
       return GetCachedStatement(
         "SELECT data "
         "FROM ai_object_data "
-        "INNER JOIN unique_ai_index_data "
-        "ON object_data.id = unique_ai_index_data.ai_object_data_id "
+        "INNER JOIN ai_unique_index_data "
+        "ON ai_object_data.id = ai_unique_index_data.ai_object_data_id "
         "WHERE index_id = :index_id "
         "AND value = :value"
       );
@@ -406,7 +406,7 @@ IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
       "SELECT data "
       "FROM ai_object_data "
       "INNER JOIN ai_index_data "
-      "ON object_data.id = ai_index_data.ai_object_data_id "
+      "ON ai_object_data.id = ai_index_data.ai_object_data_id "
       "WHERE index_id = :index_id "
       "AND value = :value"
     );
