@@ -1019,6 +1019,7 @@ function DocumentLoaded()
     if (gURLs[0].type == TYPE_LOAD) {
         ++gTestResults.LoadOnly;
         dump("REFTEST TEST-PASS | " + gURLs[0].prettyPath + " | (LOAD ONLY)\n");
+        gCurrentCanvas = null;
         FinishTestItem();
         return;
     }
