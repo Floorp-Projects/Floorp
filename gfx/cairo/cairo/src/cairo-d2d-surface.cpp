@@ -632,6 +632,15 @@ static void _d2d_snapshot_detached(cairo_surface_t *surface)
     cairo_surface_destroy(surface);
 }
 
+/**
+ * This function will calculate the part of srcSurf which will possibly be used within
+ * the boundaries of d2dsurf given the current transformation mat. This is used to
+ * determine what the minimal part of a surface is that needs to be uploaded.
+ *
+ * \param d2dsurf D2D surface
+ * \param srcSurf Source surface for operation
+ * \param mat Transformation matrix applied to source
+ */
 static void
 _cairo_d2d_calculate_visible_rect(cairo_d2d_surface_t *d2dsurf, cairo_image_surface_t *srcSurf,
 				  cairo_matrix_t *mat,
@@ -667,7 +676,13 @@ _cairo_d2d_calculate_visible_rect(cairo_d2d_surface_t *d2dsurf, cairo_image_surf
     /* Calculate the offsets into the source image and the width of the part required */
     if ((UINT32)srcSurf->width > maxSize) {
 	*x = (int)MAX(0, floor(leftMost));
-	*width = (unsigned int)MIN(MAX(0, ceil(rightMost - *x)), srcSurf->width - *x);
+	/* Ensure that we get atleast 1 column of pixels as source, this will make EXTEND_PAD work */
+	if (*x < srcSurf->width) {
+	    *width = (unsigned int)MIN(MAX(1, ceil(rightMost - *x)), srcSurf->width - *x);
+	} else {
+	    *x = srcSurf->width - 1;
+	    *width = 1;
+	}
     } else {
 	*x = 0;
 	*width = srcSurf->width;
@@ -675,7 +690,13 @@ _cairo_d2d_calculate_visible_rect(cairo_d2d_surface_t *d2dsurf, cairo_image_surf
 
     if ((UINT32)srcSurf->height > maxSize) {
 	*y = (int)MAX(0, floor(topMost));
-	*height = (unsigned int)MIN(MAX(0, ceil(bottomMost - *y)), srcSurf->height - *y);
+	/* Ensure that we get atleast 1 row of pixels as source, this will make EXTEND_PAD work */
+	if (*y < srcSurf->height) {
+	    *height = (unsigned int)MIN(MAX(1, ceil(bottomMost - *y)), srcSurf->height - *y);
+	} else {
+	    *y = srcSurf->height - 1;
+	    *height = 1;
+	}
     } else {
 	*y = 0;
 	*height = srcSurf->height;
@@ -882,6 +903,12 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    UINT32 maxSize = d2dsurf->rt->GetMaximumBitmapSize() - 2;
 
 	    if ((UINT32)srcSurf->width > maxSize || (UINT32)srcSurf->height > maxSize) {
+		if (pattern->extend == CAIRO_EXTEND_REPEAT ||
+		    pattern->extend == CAIRO_EXTEND_REFLECT) {
+		    // XXX - we don't have code to deal with these yet.
+		    return NULL;
+		}
+
 		/* We cannot fit this image directly into a texture, start doing tricks to draw correctly anyway. */
 		partial = true;
 
