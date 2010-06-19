@@ -48,6 +48,7 @@
 #include "gfxFontUtils.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "gfxSkipChars.h"
 #include "gfxRect.h"
@@ -70,6 +71,8 @@ class gfxUserFontSet;
 class gfxUserFontData;
 
 class nsILanguageAtomService;
+
+typedef struct _hb_blob_t hb_blob_t;
 
 // We should eliminate these synonyms when it won't cause many merge conflicts.
 #define FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
@@ -171,6 +174,7 @@ public:
         mIsLocalUserFont(PR_FALSE), mStandardFace(aIsStandardFace),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+        mHasCmapTable(PR_FALSE),
         mCmapInitialized(PR_FALSE),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
@@ -191,6 +195,13 @@ public:
     PRBool IsItalic() const { return mItalic; }
     PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
     PRBool IsSymbolFont() const { return mSymbolFont; }
+
+    inline PRBool HasCmapTable() {
+        if (!mCmapInitialized) {
+            ReadCMAP();
+        }
+        return mHasCmapTable;
+    }
 
     inline PRBool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
@@ -217,7 +228,15 @@ public:
 
     const nsString& FamilyName();
 
-    already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold);
+    already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
+                                             PRBool aNeedsBold);
+
+    // Subclasses should override this if they can do something more efficient
+    // than getting tables with GetFontTable() and caching them in the entry.
+    //
+    // Note that some gfxFont implementations may not call this at all,
+    // if it is more efficient to get the table from the OS at that level.
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
     nsString         mName;
 
@@ -234,6 +253,7 @@ public:
     PRUint16         mWeight;
     PRInt16          mStretch;
 
+    PRPackedBool     mHasCmapTable;
     PRPackedBool     mCmapInitialized;
     gfxSparseBitSet  mCharacterMap;
     PRUint32         mUVSOffset;
@@ -256,6 +276,7 @@ protected:
         mStandardFace(PR_FALSE),
         mSymbolFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+        mHasCmapTable(PR_FALSE),
         mCmapInitialized(PR_FALSE),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
@@ -272,6 +293,61 @@ protected:
     }
 
     gfxFontFamily *mFamily;
+
+    /*
+     * Font table cache, to support GetFontTable for harfbuzz.
+     *
+     * The harfbuzz shaper (and potentially other clients) needs access to raw
+     * font table data. This needs to be cached so that it can be used
+     * repeatedly (each time we construct a text run; in some cases, for
+     * each character/glyph within the run) without re-fetching large tables
+     * every time.
+     * 
+     * Because we may instantiate many gfxFonts for the same physical font
+     * file (at different sizes), we should ensure that they can share a
+     * single cached copy of the font tables. To do this, we implement table
+     * access and caching on the fontEntry rather than the font itself.
+     *
+     * The default implementation uses GetFontTable() to read font table
+     * data into byte arrays, and caches these in a hashtable along with
+     * hb_blob_t wrappers. The entry can then return blobs to harfbuzz.
+     *
+     * Harfbuzz will "destroy" the blobs when it is finished with them;
+     * they are created with a destroy callback that removes them from
+     * the hashtable when all references are released.
+     */
+    class FontTableCacheEntry {
+    public:
+        // create a cache entry by adopting the content of an existing buffer
+        FontTableCacheEntry(nsTArray<PRUint8>& aBuffer,
+                            PRUint32 aTag,
+            nsClassHashtable<nsUint32HashKey,FontTableCacheEntry>& aCache);
+
+        ~FontTableCacheEntry() {
+            MOZ_COUNT_DTOR(FontTableCacheEntry);
+        }
+
+        hb_blob_t *GetBlob() const { return mBlob; }
+
+    protected:
+        // the data block, owned (via adoption) by the entry
+        nsTArray<PRUint8>  mData;
+        // a harfbuzz blob wrapper that we can return to clients
+        hb_blob_t         *mBlob;
+        // the blob destroy function needs to know the table tag
+        // and the owning hashtable, so that it can remove the entry
+        PRUint32           mTag;
+        nsClassHashtable<nsUint32HashKey,FontTableCacheEntry>&
+                           mCache;
+
+    private:
+        // not implemented
+        FontTableCacheEntry(const FontTableCacheEntry&);
+
+        static void Destroy(void *aUserData);
+    };
+
+    nsClassHashtable<nsUint32HashKey,FontTableCacheEntry> mFontTableCache;
 
 private:
     gfxFontEntry(const gfxFontEntry&);
@@ -667,7 +743,10 @@ private:
 class gfxFontShaper {
 public:
     gfxFontShaper(gfxFont *aFont)
-        : mFont(aFont) { }
+        : mFont(aFont)
+    {
+        NS_ASSERTION(aFont, "shaper requires a valid font!");
+    }
 
     virtual ~gfxFontShaper() { }
 
@@ -675,7 +754,10 @@ public:
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
-                               PRUint32 aRunLength) = 0;
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript) = 0;
+
+    gfxFont *GetFont() const { return mFont; }
 
 protected:
     // the font this shaper is working with
@@ -776,6 +858,46 @@ public:
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption) {
         // platforms where this actually matters should override
         return nsnull;
+    }
+
+    gfxFloat GetAdjustedSize() const {
+        return mAdjustedSize > 0.0 ? mAdjustedSize : mStyle.size;
+    }
+
+    float FUnitsToDevUnitsFactor() const {
+        // check this was set up during font initialization
+        NS_ASSERTION(mFUnitsConvFactor > 0.0f, "mFUnitsConvFactor not valid");
+        return mFUnitsConvFactor;
+    }
+
+    // check whether this is an sfnt we can potentially use with harfbuzz
+    PRBool FontCanSupportHarfBuzz() {
+        return mFontEntry->HasCmapTable();
+    }
+
+    // Access to raw font table data (needed for Harfbuzz):
+    // returns a pointer to data owned by the fontEntry or the OS,
+    // which will remain valid until released.
+    //
+    // Default implementations forward to the font entry, which
+    // maintains a shared table cache; however, subclasses may
+    // override if they can provide more efficient table access.
+
+    // Get pointer to a specific font table, or an empty blob if
+    // the table doesn't exist in the font
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag) {
+        return mFontEntry->GetFontTable(aTag);
+    }
+
+    // subclasses may provide hinted glyph widths (in font units);
+    // if they do not override this, harfbuzz will use unhinted widths
+    // derived from the font tables
+    virtual PRBool ProvidesHintedWidths() const {
+        return PR_FALSE;
+    }
+
+    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID) {
+        return -1;
     }
 
     // Font metrics
@@ -942,14 +1064,17 @@ public:
         return mFontEntry->GetUVSGlyph(aCh, aVS); 
     }
 
-    // Default implementation simply calls mShaper->InitTextRun().
+    // Default simply calls m[Platform|HarfBuzz]Shaper->InitTextRun().
     // Override if the font class wants to give special handling
     // to shaper failure.
-    virtual void InitTextRun(gfxContext *aContext,
-                             gfxTextRun *aTextRun,
-                             const PRUnichar *aString,
-                             PRUint32 aRunStart,
-                             PRUint32 aRunLength);
+    // Returns PR_FALSE if shaping failed (though currently we
+    // don't have any good way to handle that situation).
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript);
 
 protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
@@ -958,6 +1083,10 @@ protected:
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
+
+    gfxFloat                   mAdjustedSize;
+
+    float                      mFUnitsConvFactor; // conversion factor from font units to dev units
 
     // synthetic bolding for environments where this is not supported by the platform
     PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
@@ -969,7 +1098,15 @@ protected:
     // measurement by mathml code
     nsAutoPtr<gfxFont>         mNonAAFont;
 
-    nsAutoPtr<gfxFontShaper>   mShaper;
+    // we may switch between these shapers on the fly, based on the script
+    // of the text run being shaped
+    nsAutoPtr<gfxFontShaper>   mPlatformShaper;
+    nsAutoPtr<gfxFontShaper>   mHarfBuzzShaper;
+
+    // Create a default platform text shaper for this font.
+    // (TODO: This should become pure virtual once all font backends have
+    // been updated.)
+    virtual void CreatePlatformShaper() { }
 
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
@@ -1628,7 +1765,11 @@ public:
                    const DetailedGlyph *aGlyphs);
     void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aUnicodeChar);
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
-    
+
+    // If the character at aIndex is default-ignorable, set the glyph
+    // to be invisible-missing and return TRUE, else return FALSE
+    PRBool FilterIfIgnorable(PRUint32 aIndex);
+
     /**
      * Prefetch all the glyph extents needed to ensure that Measure calls
      * on this textrun not requesting tight boundingBoxes will succeed. Note
@@ -1946,10 +2087,21 @@ protected:
     // you should call this with the *first* bad font.
     void InitMetricsForBadFont(gfxFont* aBadFont);
 
+    // Set up the textrun glyphs, by finding script and font ranges
+    // and calling each font's InitTextRun() as appropriate
     void InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aLength);
+
+    // InitTextRun helper to handle a single script run
+    void InitTextRun(gfxContext *aContext,
+                     gfxTextRun *aTextRun,
+                     const PRUnichar *aString,
+                     PRUint32 aTotalLength,
+                     PRUint32 aScriptRunStart,
+                     PRUint32 aScriptRunEnd,
+                     PRInt32 aRunScript);
 
     /* If aResolveGeneric is true, then CSS/Gecko generic family names are
      * replaced with preferred fonts.

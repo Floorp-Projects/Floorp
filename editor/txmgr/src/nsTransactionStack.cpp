@@ -55,8 +55,7 @@ nsTransactionStack::~nsTransactionStack()
 nsresult
 nsTransactionStack::Push(nsTransactionItem *aTransaction)
 {
-  if (!aTransaction)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   /* nsDeque's Push() method adds new items at the back
    * of the deque.
@@ -70,8 +69,7 @@ nsTransactionStack::Push(nsTransactionItem *aTransaction)
 nsresult
 nsTransactionStack::Pop(nsTransactionItem **aTransaction)
 {
-  if (!aTransaction)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   /* nsDeque is a FIFO, so the top of our stack is actually
    * the back of the deque.
@@ -84,8 +82,7 @@ nsTransactionStack::Pop(nsTransactionItem **aTransaction)
 nsresult
 nsTransactionStack::PopBottom(nsTransactionItem **aTransaction)
 {
-  if (!aTransaction)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   /* nsDeque is a FIFO, so the bottom of our stack is actually
    * the front of the deque.
@@ -98,8 +95,7 @@ nsTransactionStack::PopBottom(nsTransactionItem **aTransaction)
 nsresult
 nsTransactionStack::Peek(nsTransactionItem **aTransaction)
 {
-  if (!aTransaction)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   if (!mQue.GetSize()) {
     *aTransaction = 0;
@@ -114,8 +110,7 @@ nsTransactionStack::Peek(nsTransactionItem **aTransaction)
 nsresult
 nsTransactionStack::GetItem(PRInt32 aIndex, nsTransactionItem **aTransaction)
 {
-  if (!aTransaction)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   if (aIndex < 0 || aIndex >= mQue.GetSize())
     return NS_ERROR_FAILURE;
@@ -136,14 +131,12 @@ nsTransactionStack::Clear(void)
 
   result = Pop(getter_AddRefs(tx));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   while (tx) {
     result = Pop(getter_AddRefs(tx));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   return NS_OK;
@@ -152,8 +145,7 @@ nsTransactionStack::Clear(void)
 nsresult
 nsTransactionStack::GetSize(PRInt32 *aStackSize)
 {
-  if (!aStackSize)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aStackSize, NS_ERROR_NULL_POINTER);
 
   *aStackSize = mQue.GetSize();
 
@@ -190,14 +182,12 @@ nsTransactionRedoStack::Clear(void)
 
   result = PopBottom(getter_AddRefs(tx));
 
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   while (tx) {
     result = PopBottom(getter_AddRefs(tx));
 
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   return NS_OK;

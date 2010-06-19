@@ -7,6 +7,8 @@
 #include "base/third_party/nss/blapi.h"
 #include "base/third_party/nss/sha256.h"
 
+using namespace nss;
+
 namespace base {
 
 void SHA256HashString(const std::string& str, void* output, size_t len) {

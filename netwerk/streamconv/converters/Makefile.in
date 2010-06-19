@@ -67,14 +67,6 @@ CPPSRCS += \
         $(NULL)
 endif
 
-# only include Gopher directory listing support if the Gopher
-# protocol is being built.
-ifneq (,$(filter gopher,$(NECKO_PROTOCOLS)))
-CPPSRCS += \
-		nsGopherDirListingConv.cpp \
-        $(NULL)
-endif
-
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
 		nsBinHexDecoder.cpp \

@@ -22,7 +22,7 @@ function get_auth_info() {
   return [ "testuser", "testpass" ];
 }
 
-function download_failed(install, status) {
+function download_failed(install) {
   ok(false, "Install should not have failed");
 }
 

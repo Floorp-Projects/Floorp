@@ -47,7 +47,7 @@ relativesrcdir  = toolkit/mozapps/plugins/tests
 TESTROOT = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 USE_STATIC_LIBS = 1
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
   browser_bug435788.js \
   pfs_bug435788_1.rdf \
@@ -75,7 +75,7 @@ $(TESTROOT):
 $(PROGRAMS): $(TESTROOT)/% : %$(BIN_SUFFIX)
 	cp $< $@
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 libs::
 	$(INSTALL) $(foreach f,$(_BROWSER_FILES),"$(srcdir)/$f") $(TESTROOT)
 

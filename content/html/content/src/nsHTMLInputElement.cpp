@@ -109,6 +109,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
+#include "nsContentCreatorFunctions.h"
 
 #include "nsTextEditRules.h"
 
@@ -133,6 +134,7 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 #define BF_IN_INTERNAL_ACTIVATE 8
 #define BF_CHECKED_IS_TOGGLED 9
 #define BF_INDETERMINATE 10
+#define BF_INHIBIT_RESTORATION 11
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -554,6 +556,8 @@ nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
     mBitField(0)
 {
   SET_BOOLBIT(mBitField, BF_PARSER_CREATING, aFromParser);
+  SET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION,
+      aFromParser & NS_FROM_PARSER_FRAGMENT);
   mInputData.mState = new nsTextEditorState(this);
   NS_ADDREF(mInputData.mState);
 }
@@ -571,6 +575,7 @@ nsHTMLInputElement::FreeData()
     nsMemory::Free(mInputData.mValue);
     mInputData.mValue = nsnull;
   } else {
+    UnbindFromFrame(nsnull);
     NS_IF_RELEASE(mInputData.mState);
   }
 }
@@ -2964,7 +2969,10 @@ nsHTMLInputElement::DoneCreatingElement()
   // Restore state as needed.  Note that disabled state applies to all control
   // types.
   //
-  PRBool restoredCheckedState = RestoreFormControlState(this, this);
+  PRBool restoredCheckedState =
+      GET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION) ?
+      PR_FALSE :
+      RestoreFormControlState(this, this);
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED

@@ -42,13 +42,16 @@
 #include "nsFormControlAccessible.h"
 #include "nsHyperTextAccessibleWrap.h"
 
+/**
+ * Accessible for HTML input@type="checkbox".
+ */
 class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 {
 
 public:
   enum { eAction_Click = 0 };
 
-  nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTMLCheckboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -60,11 +63,15 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+
+/**
+ * Accessible for HTML input@type="radio" element.
+ */
 class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 {
 
 public:
-  nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTMLRadioButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
@@ -72,13 +79,18 @@ public:
                                           PRInt32 *aSetSize);
 };
 
+
+/**
+ * Accessible for HTML input@type="button", @type="submit", @type="image"
+ * elements.
+ */
 class nsHTMLButtonAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:
   enum { eAction_Click = 0 };
 
-  nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTMLButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -91,13 +103,17 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+
+/**
+ * Accessible for HTML button element.
+ */
 class nsHTML4ButtonAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:
   enum { eAction_Click = 0 };
 
-  nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTML4ButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -109,13 +125,17 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+
+/**
+ * Accessible for HTML input@type="text" element.
+ */
 class nsHTMLTextFieldAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:
   enum { eAction_Click = 0 };
 
-  nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTMLTextFieldAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -134,10 +154,14 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+
+/**
+ * Accessible for HTML fieldset element.
+ */
 class nsHTMLGroupboxAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTMLGroupboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
@@ -151,10 +175,14 @@ protected:
   nsIContent* GetLegend();
 };
 
+
+/**
+ * Accessible for HTML legend element.
+ */
 class nsHTMLLegendAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLegendAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsHTMLLegendAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,

@@ -917,8 +917,6 @@ nsContentIterator::PrevNode(nsINode *aNode, nsTArray<PRInt32> *aIndexes)
 void
 nsContentIterator::First()
 {
-  NS_ASSERTION(mFirst, "No first node!");
-
   if (mFirst) {
 #ifdef DEBUG
     nsresult rv =

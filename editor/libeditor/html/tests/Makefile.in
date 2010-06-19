@@ -55,12 +55,15 @@ _TEST_FILES = \
 		test_bug480972.html \
 		test_bug484181.html \
 		test_bug487524.html \
+		test_bug520189.html \
 		test_bug525389.html \
 		test_bug537046.html \
+		test_bug550434.html \
 		test_contenteditable_focus.html \
 		test_htmleditor_keyevent_handling.html \
 		test_select_all_without_body.html \
 		file_select_all_without_body.html \
+		test_root_element_replacement.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

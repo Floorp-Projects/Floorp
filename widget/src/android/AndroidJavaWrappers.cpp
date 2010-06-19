@@ -309,6 +309,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case LOAD_URI: {
+            ReadCharactersField(jenv);
+            break;
+        }
+
         default:
             break;
     }
@@ -407,4 +412,17 @@ AndroidRect::Init(JNIEnv *jenv, jobject jobj)
         mRight = 0;
         mBottom = 0;
     }
+}
+
+nsJNIString::nsJNIString(jstring jstr)
+{
+    if (!jstr) {
+        SetIsVoid(PR_TRUE);
+        return;
+    }
+    const jchar* jCharPtr = JNI()->GetStringChars(jstr, false);
+    nsresult rv;
+    Assign(jCharPtr);
+    JNI()->ReleaseStringChars(jstr, jCharPtr);
+
 }

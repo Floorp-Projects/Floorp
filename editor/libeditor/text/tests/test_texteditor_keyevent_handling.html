@@ -318,8 +318,6 @@ function runTests()
 
     // Esc key:
     //   In all cases, esc key events are not consumed
-    //   XXX ESC key events should be consumed when it's handled,
-    //       however, there is a serious problem, see bug 569988.
     reset("abc");
     synthesizeKey("VK_ESCAPE", { });
     check(aDescription + "Esc", true, false, true, false);

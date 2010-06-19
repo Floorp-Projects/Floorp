@@ -47,7 +47,7 @@ interface nsIModule;
  * @note Implementations of this interface should be threadsafe,
  *       methods may be called from any thread.
  */
-[scriptable, uuid(9b328e24-4d85-4a9c-9cb7-f25e66f430c3)]
+[scriptable, uuid(F8A0C31B-8DB0-433B-AF7A-8D494799A229)]
 interface nsIModuleLoader : nsISupports
 {
   /**
@@ -61,4 +61,9 @@ interface nsIModuleLoader : nsISupports
    *           the module fails to load, e.g.: missing symbols, syntax errors
    */
   nsIModule loadModule(in nsILocalFile aFile);
+
+  /**
+   * nsIModuleLoader::LoadModule that can load from JARs
+   */
+  [noscript] nsIModule loadModuleFromJAR(in nsILocalFile aJAR, in ACString aPath);
 };

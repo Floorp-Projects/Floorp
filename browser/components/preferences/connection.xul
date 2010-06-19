@@ -70,8 +70,6 @@
       <preference id="network.proxy.ssl_port"     name="network.proxy.ssl_port"     type="int"/>
       <preference id="network.proxy.socks"        name="network.proxy.socks"        type="string"/>
       <preference id="network.proxy.socks_port"   name="network.proxy.socks_port"   type="int"/>
-      <preference id="network.proxy.gopher"       name="network.proxy.gopher"       type="string"/>
-      <preference id="network.proxy.gopher_port"  name="network.proxy.gopher_port"  type="int"/>
       <preference id="network.proxy.socks_version"  name="network.proxy.socks_version"  type="int"/>
       <preference id="network.proxy.no_proxies_on"  name="network.proxy.no_proxies_on"  type="string"/>
       <preference id="network.proxy.autoconfig_url" name="network.proxy.autoconfig_url" type="string"/>
@@ -89,8 +87,6 @@
       <preference id="network.proxy.backup.ssl_port"     name="network.proxy.backup.ssl_port"     type="int"/>
       <preference id="network.proxy.backup.socks"        name="network.proxy.backup.socks"        type="string"/>
       <preference id="network.proxy.backup.socks_port"   name="network.proxy.backup.socks_port"   type="int"/>
-      <preference id="network.proxy.backup.gopher"       name="network.proxy.backup.gopher"       type="string"/>
-      <preference id="network.proxy.backup.gopher_port"  name="network.proxy.backup.gopher_port"  type="int"/>
     </preferences>
     
     <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
@@ -154,18 +150,6 @@
                 <label value="&port.label;" accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port"/>
                 <textbox id="networkProxyFTP_Port" type="number" max="65535" size="5" preference="network.proxy.ftp_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
-              </hbox>
-            </row>
-            <row align="center">
-              <hbox pack="end">
-                <label value="&gopher.label;" accesskey="&gopher.accesskey;" control="networkProxyGopher"/>
-              </hbox>
-              <hbox align="center">
-                <textbox id="networkProxyGopher" flex="1" preference="network.proxy.gopher"
-                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('gopher', false);"/>
-                <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="networkProxyGopher_Port"/>
-                <textbox id="networkProxyGopher_Port" type="number" max="65535" size="5" preference="network.proxy.gopher_port"
-                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('gopher', true);"/>
               </hbox>
             </row>
             <row align="center">

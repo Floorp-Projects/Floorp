@@ -1,0 +1,358 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=520182
+-->
+<head>
+  <title>Test for Bug 520182</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=520182">Mozilla Bug 520182</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="a" src="about:blank"></iframe>
+  <iframe id="b" src="about:blank"></iframe>
+  <iframe id="c" src="about:blank"></iframe>
+  <div id="d" contenteditable="true"></div>
+  <div id="e" contenteditable="true"></div>
+  <div id="f" contenteditable="true"></div>
+  <iframe id="g" src="about:blank"></iframe>
+  <iframe id="h" src="about:blank"></iframe>
+  <div id="i" contenteditable="true"></div>
+  <div id="j" contenteditable="true"></div>
+  <iframe id="k" src="about:blank"></iframe>
+  <div id="l" contenteditable="true"></div>
+  <iframe id="m" src="about:blank"></iframe>
+  <div id="n" contenteditable="true"></div>
+  <iframe id="o" src="about:blank"></iframe>
+  <div id="p" contenteditable="true"></div>
+  <iframe id="q" src="about:blank"></iframe>
+  <div id="r" contenteditable="true"></div>
+  <iframe id="s" src="about:blank"></iframe>
+  <div id="t" contenteditable="true"></div>
+  <iframe id="u" src="about:blank"></iframe>
+  <div id="v" contenteditable="true"></div>
+  <iframe id="w" src="about:blank"></iframe>
+  <div id="x" contenteditable="true"></div>
+  <iframe id="y" src="about:blank"></iframe>
+  <div id="z" contenteditable="true"></div>
+  <iframe id="aa" src="about:blank"></iframe>
+  <div id="bb" contenteditable="true"></div>
+  <iframe id="cc" src="about:blank"></iframe>
+  <div id="dd" contenteditable="true"></div>
+  <iframe id="ee" src="about:blank"></iframe>
+  <div id="ff" contenteditable="true"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 520182 **/
+
+const dataPayload = "foo<iframe src=\"data:text/html,bar\"></iframe>baz";
+const jsPayload = "foo<iframe src=\"javascript:void('bar');\"></iframe>baz";
+const httpPayload = "foo<iframe src=\"http://mochi.test:8888/\"></iframe>baz";
+const scriptPayload ="foo<script>document.write(\"<iframe></iframe>\");</sc" + "ript>baz";
+const scriptExternalPayload = "foo<script src=\"data:text/javascript,document.write('<iframe></iframe>');\"></sc" + "ript>baz";
+const validStyle1Payload = "foo<style>#bar{color:red;}</style>baz";
+const validStyle2Payload = "foo<span style=\"color:red\">bar</span>baz";
+const validStyle3Payload = "foo<style>@font-face{font-family:xxx;src:'xxx.ttf';}</style>baz";
+const validStyle4Payload = "foo<style>@namespace xxx url(http://example.com/);</style>baz";
+const invalidStyle1Payload = "foo<style>#bar{-moz-binding:url('data:text/xml,<?xml version=\"1.0\"><binding xmlns=\"http://www.mozilla.org/xbl\"/>');}</style>baz";
+const invalidStyle2Payload = "foo<span style=\"-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot;/>');\">bar</span>baz";
+const invalidStyle3Payload = "foo<style>@import 'xxx.css';</style>baz";
+const invalidStyle4Payload = "foo<span style=\"@import 'xxx.css';\">bar</span>baz";
+const invalidStyle5Payload = "foo<span style=\"@font-face{font-family:xxx;src:'xxx.ttf';}\">bar</span>baz";
+const invalidStyle6Payload = "foo<span style=\"@namespace xxx url(http://example.com/);\">bar</span>baz";
+const nestedStylePayload = "foo<style>#bar1{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-1&quot;/>');<style></style>#bar2{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-2&quot;/>');</style>baz";
+
+var tests = [
+  {
+    id: "a",
+    isIFrame: true,
+    payload: dataPayload,
+    iframeCount: 0,
+    rootElement: function() document.getElementById("a").contentDocument.documentElement
+  },
+  {
+    id: "b",
+    isIFrame: true,
+    payload: jsPayload,
+    iframeCount: 0,
+    rootElement: function() document.getElementById("b").contentDocument.documentElement
+  },
+  {
+    id: "c",
+    isIFrame: true,
+    payload: httpPayload,
+    iframeCount: 0,
+    rootElement: function() document.getElementById("c").contentDocument.documentElement
+  },
+  {
+    id: "g",
+    isIFrame: true,
+    payload: scriptPayload,
+    rootElement: function() document.getElementById("g").contentDocument.documentElement,
+    iframeCount: 0
+  },
+  {
+    id: "h",
+    isIFrame: true,
+    payload: scriptExternalPayload,
+    rootElement: function() document.getElementById("h").contentDocument.documentElement,
+    iframeCount: 0
+  },
+  {
+    id: "d",
+    payload: dataPayload,
+    iframeCount: 0,
+    rootElement: function() document.getElementById("d")
+  },
+  {
+    id: "e",
+    payload: jsPayload,
+    iframeCount: 0,
+    rootElement: function() document.getElementById("e")
+  },
+  {
+    id: "f",
+    payload: httpPayload,
+    iframeCount: 0,
+    rootElement: function() document.getElementById("f")
+  },
+  {
+    id: "i",
+    payload: scriptPayload,
+    rootElement: function() document.getElementById("i"),
+    iframeCount: 0
+  },
+  {
+    id: "j",
+    payload: scriptExternalPayload,
+    rootElement: function() document.getElementById("j"),
+    iframeCount: 0
+  },
+  {
+    id: "k",
+    isIFrame: true,
+    payload: validStyle1Payload,
+    rootElement: function() document.getElementById("k").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+  },
+  {
+    id: "l",
+    payload: validStyle1Payload,
+    rootElement: function() document.getElementById("l"),
+    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+  },
+  {
+    id: "m",
+    isIFrame: true,
+    payload: validStyle2Payload,
+    rootElement: function() document.getElementById("m").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+  },
+  {
+    id: "n",
+    payload: validStyle2Payload,
+    rootElement: function() document.getElementById("n"),
+    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+  },
+  {
+    id: "o",
+    isIFrame: true,
+    payload: invalidStyle1Payload,
+    rootElement: function() document.getElementById("o").contentDocument.documentElement,
+    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+  },
+  {
+    id: "p",
+    payload: invalidStyle1Payload,
+    rootElement: function() document.getElementById("p"),
+    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+  },
+  {
+    id: "q",
+    isIFrame: true,
+    payload: invalidStyle2Payload,
+    rootElement: function() document.getElementById("q").contentDocument.documentElement,
+    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+  },
+  {
+    id: "r",
+    payload: invalidStyle2Payload,
+    rootElement: function() document.getElementById("r"),
+    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+  },
+  {
+    id: "s",
+    isIFrame: true,
+    payload: invalidStyle1Payload,
+    rootElement: function() document.getElementById("s").contentDocument.documentElement,
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+  },
+  {
+    id: "t",
+    payload: invalidStyle1Payload,
+    rootElement: function() document.getElementById("t"),
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+  },
+  {
+    id: "u",
+    isIFrame: true,
+    payload: invalidStyle2Payload,
+    rootElement: function() document.getElementById("u").contentDocument.documentElement,
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+  },
+  {
+    id: "v",
+    payload: invalidStyle2Payload,
+    rootElement: function() document.getElementById("v"),
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+  },
+  {
+    id: "w",
+    isIFrame: true,
+    payload: validStyle3Payload,
+    rootElement: function() document.getElementById("w").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style")
+  },
+  {
+    id: "x",
+    payload: validStyle3Payload,
+    rootElement: function() document.getElementById("x"),
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style")
+  },
+  {
+    id: "y",
+    isIFrame: true,
+    payload: invalidStyle5Payload,
+    rootElement: function() document.getElementById("y").contentDocument.documentElement,
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
+  },
+  {
+    id: "z",
+    payload: invalidStyle5Payload,
+    rootElement: function() document.getElementById("z"),
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
+  },
+  {
+    id: "aa",
+    isIFrame: true,
+    payload: nestedStylePayload,
+    rootElement: function() document.getElementById("aa").contentDocument.documentElement,
+    checkResult: function(html, text) {
+      is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
+      isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
+      is(text.indexOf("binding-2"), -1, "Should not have retained binding-2 as a tag");
+    }
+  },
+  {
+    id: "bb",
+    payload: nestedStylePayload,
+    rootElement: function() document.getElementById("bb"),
+    checkResult: function(html, text) {
+      is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
+      isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
+      is(text.indexOf("binding-2"), -1, "Should not have retained binding-2 as a tag");
+    }
+  },
+  {
+    id: "cc",
+    isIFrame: true,
+    payload: validStyle4Payload,
+    rootElement: function() document.getElementById("cc").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style")
+  },
+  {
+    id: "dd",
+    payload: validStyle4Payload,
+    rootElement: function() document.getElementById("dd"),
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style")
+  },
+  {
+    id: "ee",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("ee").contentDocument.documentElement,
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+  },
+  {
+    id: "ff",
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("ff"),
+    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+  }
+];
+
+function doNextTest() {
+  if (typeof testCounter == "undefined")
+    testCounter = 0;
+  else if (++testCounter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  runTest(tests[testCounter]);
+
+  doNextTest();
+}
+
+function runTest(test) {
+  var elem = document.getElementById(test.id);
+  if ("isIFrame" in test) {
+    elem.contentDocument.designMode = "on";
+    elem.contentWindow.focus();
+  } else
+    elem.focus();
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+                            .getService(Components.interfaces.nsIClipboard);
+
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+                        .createInstance(Components.interfaces.nsITransferable);
+  var data = Components.classes["@mozilla.org/supports-string;1"]
+                       .createInstance(Components.interfaces.nsISupportsString);
+  data.data = test.payload;
+  trans.addDataFlavor("text/html");
+  trans.setTransferData("text/html", data, data.data.length * 2);
+  clipboard.setData(trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
+
+  var mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                         .getInterface(Components.interfaces.nsIWebNavigation)
+                         .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                         .getInterface(Components.interfaces.nsIDOMWindow);
+
+  mainWindow.goDoCommand("cmd_paste");
+
+  if ("checkResult" in test) {
+    if ("isIFrame" in test) {
+      test.checkResult(elem.contentDocument.documentElement.innerHTML,
+        elem.contentDocument.documentElement.textContent);
+    } else {
+      test.checkResult(elem.innerHTML, elem.textContent);
+    }
+  } else {
+    var iframes = test.rootElement().querySelectorAll("iframe");
+    var expectedIFrameCount = ("iframeCount" in test) ? test.iframeCount : 1;
+    is(iframes.length, expectedIFrameCount, "Only " + expectedIFrameCount + " iframe should be pasted");
+    if (expectedIFrameCount > 0) {
+      ok(!iframes[0].hasAttribute("src"), "iframe should not have a src attrib");
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doNextTest);
+
+</script>
+</pre>
+</body>
+</html>
