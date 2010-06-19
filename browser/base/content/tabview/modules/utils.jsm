@@ -131,7 +131,7 @@ window.Rect.prototype = {
   
   // ----------
   set right(value) {
-      this.width = value - this.left;
+		this.width = value - this.left;
   },
 
   // ----------
@@ -141,9 +141,17 @@ window.Rect.prototype = {
   
   // ----------
   set bottom(value) {
-      this.height = value - this.top;
+		this.height = value - this.top;
+  },
+
+  get xRange() {
+		return new Range(this.left,this.right);
   },
   
+  get yRange() {
+		return new Range(this.top,this.bottom);
+  },
+
   // ----------
   intersects: function(rect) {
     return (rect.right > this.left
@@ -257,8 +265,13 @@ window.Rect.prototype = {
 // Constructor: Range
 // Creates a Range with the given min and max
 window.Range = function(min, max) {
-	this.min = min || 0;
-	this.max = max || 0;
+	if (isRange(min) && !max) { // if the one variable given is a range, copy it.
+		this.min = min.min;
+		this.max = min.max;
+	} else {
+		this.min = min || 0;
+		this.max = max || 0;
+	}
 };
 
 // ----------
