@@ -59,18 +59,6 @@
 #define PR_INT64_MIN (-PR_INT64_MAX - 1)
 #define PR_UINT64_MAX (~(PRUint64)(0))
 
-static PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32 &aResult)
-{
-  PRUint64 rl = static_cast<PRUint64>(a) * static_cast<PRUint64>(b);
-
-  if (rl > PR_UINT32_MAX) {
-    return PR_FALSE;
-  }
-
-  aResult = static_cast<PRUint32>(rl);
-
-  return PR_TRUE;
-}
 
 // This belongs in xpcom/monitor/Monitor.h, once we've made
 // mozilla::Monitor non-reentrant.
