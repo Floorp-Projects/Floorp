@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS execution context.
  */
@@ -46,7 +48,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define __STDC_LIMIT_MACROS
 #include "jsstdint.h"
 
 #include "jstypes.h"

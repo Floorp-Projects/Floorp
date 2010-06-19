@@ -119,12 +119,11 @@ public:
    * Return DOM element related with the given node, i.e.
    * a) itself if it is DOM element
    * b) parent element if it is text node
-   * c) body element if it is HTML document node
-   * d) document element if it is document node.
+   * c) otherwise nsnull
    *
    * @param aNode  [in] the given DOM node
    */
-  static already_AddRefed<nsIDOMElement> GetDOMElementFor(nsIDOMNode *aNode);
+  static nsIContent* GetDOMElementFor(nsIContent *aContent);
 
   /**
    * Return DOM node for the given DOM point.
@@ -135,12 +134,12 @@ public:
    * Return the nsIContent* to check for ARIA attributes on -- this may not
    * always be the DOM node for the accessible. Specifically, for doc
    * accessibles, it is not the document node, but either the root element or
-   * <body> in HTML. Similar with GetDOMElementFor() method.
+   * <body> in HTML.
    *
-   * @param aDOMNode  DOM node for the accessible that may be affected by ARIA
-   * @return          the nsIContent which may have ARIA markup
+   * @param aNode  [in] DOM node for the accessible that may be affected by ARIA
+   * @return        the nsIContent which may have ARIA markup
    */
-  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
+  static nsIContent* GetRoleContent(nsINode *aNode);
 
   /**
    * Is the first passed in node an ancestor of the second?
@@ -215,13 +214,13 @@ public:
    *
    * @param aNode  the DOM node hosted in the window.
    */
-  static nsIntPoint GetScreenCoordsForWindow(nsIDOMNode *aNode);
+  static nsIntPoint GetScreenCoordsForWindow(nsINode *aNode);
 
   /**
    * Return document shell tree item for the given DOM node.
    */
   static already_AddRefed<nsIDocShellTreeItem>
-    GetDocShellTreeItemFor(nsIDOMNode *aNode);
+    GetDocShellTreeItemFor(nsINode *aNode);
 
   /**
    * Return true if document is loading.
@@ -244,11 +243,6 @@ public:
   static PRBool IsErrorPage(nsIDocument *aDocument);
 
   /**
-   * Retrun frame for the given DOM element.
-   */
-  static nsIFrame* GetFrameFor(nsIDOMElement *aElm);
-
-  /**
    * Retrun true if the type of given frame equals to the given frame type.
    *
    * @param aFrame  the frame
@@ -259,11 +253,16 @@ public:
   /**
    * Return presShell for the document containing the given DOM node.
    */
-  static nsIPresShell *GetPresShellFor(nsIDOMNode *aNode)
+  static nsIPresShell *GetPresShellFor(nsINode *aNode)
   {
-    nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-    nsIDocument *document = node->GetOwnerDoc();
+    nsIDocument *document = aNode->GetOwnerDoc();
     return document ? document->GetPrimaryShell() : nsnull;
+  }
+  static already_AddRefed<nsIWeakReference> GetWeakShellFor(nsINode *aNode)
+  {
+    nsCOMPtr<nsIWeakReference> weakShell =
+      do_GetWeakReference(GetPresShellFor(aNode));
+    return weakShell.forget();
   }
 
   /**
@@ -340,9 +339,9 @@ public:
   /**
    * Return computed styles declaration for the given node.
    */
-  static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                          nsIDOMNode *aNode,
-                                          nsIDOMCSSStyleDeclaration **aCssDecl);
+  static already_AddRefed<nsIDOMCSSStyleDeclaration>
+    GetComputedStyleDeclaration(const nsAString& aPseudoElt,
+                                nsIContent *aContent);
 
   /**
    * Search element in neighborhood of the given element by tag name and
@@ -432,8 +431,8 @@ public:
   /**
    * Return tree box object from any levels DOMNode under the XUL tree.
    */
-  static void
-    GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
+  static already_AddRefed<nsITreeBoxObject>
+    GetTreeBoxObject(nsIContent* aContent);
 
   /**
    * Return first sensible column for the given tree box object.
@@ -487,11 +486,12 @@ public:
   /**
    * Generates frames for popup subtree.
    *
-   * @param aNode    [in] DOM node containing the menupopup element as a child
+   * @param aContent [in] DOM node containing the menupopup element as a child
    * @param aIsAnon  [in] specifies whether popup should be searched inside of
    *                  anonymous or explicit content
    */
-  static void GeneratePopupTree(nsIDOMNode *aNode, PRBool aIsAnon = PR_FALSE);
+  static void GeneratePopupTree(nsIContent *aContent,
+                                PRBool aIsAnon = PR_FALSE);
 };
 
 

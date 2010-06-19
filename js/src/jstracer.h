@@ -809,12 +809,14 @@ enum AbortableRecordingStatusCodes {
     ARECORD_ABORTED_code   = 2,
     ARECORD_CONTINUE_code  = 3,
     ARECORD_IMACRO_code    = 4,
-    ARECORD_COMPLETED_code = 5
+    ARECORD_IMACRO_ABORTED_code = 5,
+    ARECORD_COMPLETED_code = 6
 };
 AbortableRecordingStatus ARECORD_ERROR    = { ARECORD_ERROR_code };
 AbortableRecordingStatus ARECORD_STOP     = { ARECORD_STOP_code };
 AbortableRecordingStatus ARECORD_CONTINUE = { ARECORD_CONTINUE_code };
 AbortableRecordingStatus ARECORD_IMACRO   = { ARECORD_IMACRO_code };
+AbortableRecordingStatus ARECORD_IMACRO_ABORTED   = { ARECORD_IMACRO_ABORTED_code };
 AbortableRecordingStatus ARECORD_ABORTED =  { ARECORD_ABORTED_code };
 AbortableRecordingStatus ARECORD_COMPLETED =  { ARECORD_COMPLETED_code };
 
@@ -874,9 +876,10 @@ enum AbortableRecordingStatus {
                             // should goto error
     ARECORD_CONTINUE  = 2,  // see RECORD_CONTINUE
     ARECORD_IMACRO    = 3,  // see RECORD_IMACRO
-    ARECORD_ABORTED   = 4,  // Recording has already been aborted; the
+    ARECORD_IMACRO_ABORTED = 4, // see comment in TR::monitorRecording.
+    ARECORD_ABORTED   = 5,  // Recording has already been aborted; the
                             // interpreter should continue executing
-    ARECORD_COMPLETED = 5   // Recording completed successfully, the
+    ARECORD_COMPLETED = 6   // Recording completed successfully, the
                             // trace recorder has been deleted
 };
 

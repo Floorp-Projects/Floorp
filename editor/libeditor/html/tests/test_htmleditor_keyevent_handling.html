@@ -566,23 +566,23 @@ function runTests()
     //   In all cases, esc key events are not consumed
     reset("abc");
     synthesizeKey("VK_ESCAPE", { });
-    check(aDescription + "Esc", true, false, true, !aIsReadonly);
+    check(aDescription + "Esc", true, false, true, false);
 
     reset("abc");
     synthesizeKey("VK_ESCAPE", { shiftKey: true });
-    check(aDescription + "Shift+Esc", true, false, true, !aIsReadonly);
+    check(aDescription + "Shift+Esc", true, false, true, false);
 
     reset("abc");
     synthesizeKey("VK_ESCAPE", { ctrlKey: true });
-    check(aDescription + "Ctrl+Esc", true, false, true, !aIsReadonly);
+    check(aDescription + "Ctrl+Esc", true, false, true, false);
 
     reset("abc");
     synthesizeKey("VK_ESCAPE", { altKey: true });
-    check(aDescription + "Alt+Esc", true, false, true, !aIsReadonly);
+    check(aDescription + "Alt+Esc", true, false, true, false);
 
     reset("abc");
     synthesizeKey("VK_ESCAPE", { metaKey: true });
-    check(aDescription + "Meta+Esc", true, false, true, !aIsReadonly);
+    check(aDescription + "Meta+Esc", true, false, true, false);
 
     // typical typing tests:
     reset("");

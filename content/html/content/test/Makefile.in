@@ -162,7 +162,6 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug536895.html \
 		test_bug458037.xhtml \
 		test_bug556645.html \
-		test_bug559284.html \
 		test_bug551670.html \
 		test_bug346485.html \
 		test_bug555567.html \

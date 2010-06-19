@@ -42,10 +42,11 @@ function $(n) {
     return document.getElementById(n);
 }
 
-function makeTableCell(s, c) {
+function makeTableCell(content, c) {
     var td = document.createElement("td");
-    var text = document.createTextNode(s);
-    td.appendChild(text);
+    if (typeof content == "string")
+      content = document.createTextNode(content);
+    td.appendChild(content);
     if (c)
         td.setAttribute("class", c);
 
@@ -69,7 +70,7 @@ function makeTableRow() {
         if (typeof(arg) == "string") {
             row.appendChild(makeTableCell(arg));
         } else if (arg.__proto__ == Array.prototype) {
-            row.appendChild(makeAbbrNode(arg[0], arg[1]));
+            row.appendChild(makeTableCell(makeAbbrNode(arg[0], arg[1])));
         } else {
             row.appendChild(arg);
         }

@@ -481,7 +481,9 @@ nsChildView::nsChildView() : nsBaseWidget()
 #endif // PR_LOGGING
 
   memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
+#ifndef NP_NO_QUICKDRAW
   memset(&mPluginQDPort, 0, sizeof(mPluginQDPort));
+#endif
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
@@ -739,8 +741,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       UpdatePluginPort();
       if (mPluginIsCG)
         retVal = (void*)&mPluginCGContext;
+#ifndef NP_NO_QUICKDRAW
       else
         retVal = (void*)&mPluginQDPort;
+#endif
       break;
     }
   }
@@ -823,8 +827,8 @@ void nsChildView::UpdatePluginPort()
   NS_ASSERTION(mWindowType == eWindowType_plugin,
                "UpdatePluginPort called on non-plugin view");
 
-  NSWindow* cocoaWindow = [mView window];
 #if !defined(NP_NO_CARBON) || !defined(NP_NO_QUICKDRAW)
+  NSWindow* cocoaWindow = [mView window];
   WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
 #endif
 
@@ -962,6 +966,8 @@ LayerManager*
 nsChildView::GetLayerManager()
 {
   nsCocoaWindow* window = GetXULWindowWidget();
+  if (!window)
+    return nsnull;
   if (window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
     mLayerManager = NULL;
     mUseAcceleratedRendering = window->GetAcceleratedRendering();
@@ -2268,6 +2274,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  [mGLContext release];
   [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
   ChildViewMouseTracker::OnDestroyView(self);
@@ -2538,12 +2545,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [super lockFocus];
 
-  if (mContext) {
-    if ([mContext view] != self) {
-      [mContext setView:self];
+  if (mGLContext) {
+    if ([mGLContext view] != self) {
+      [mGLContext setView:self];
     }
 
-    [mContext makeCurrentContext];
+    [mGLContext makeCurrentContext];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2587,8 +2594,8 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
 
 -(void)update
 {
-  if (mContext) {
-    [mContext update];
+  if (mGLContext) {
+    [mGLContext update];
   }
 }
 
@@ -2662,12 +2669,13 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   if (mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager());
     manager->SetClippingRegion(paintEvent.region); 
-    if (!mContext) {
-      mContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+    if (!mGLContext) {
+      mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+      [mGLContext retain];
     }
-    [mContext makeCurrentContext];
+    [mGLContext makeCurrentContext];
     mGeckoChild->DispatchWindowEvent(paintEvent);
-    [mContext flushBuffer];
+    [mGLContext flushBuffer];
     return;
   }
 
@@ -3278,7 +3286,9 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+#ifndef NP_NO_CARBON  
   EventRecord carbonEvent;
+#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON  
@@ -3329,7 +3339,9 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+#ifndef NP_NO_CARBON
   EventRecord carbonEvent;
+#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON

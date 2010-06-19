@@ -297,10 +297,13 @@ asserts(15) asserts-if(MOZ_WIDGET_TOOLKIT=="windows",18) load 499885-1.xhtml # n
 load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
+load 508168-1.html
 load 508908-1.html
 load 505912-1.html
 load 509749-1.html
 load 511482.html
+load 512724-1.html
+load 512725-1.html
 load 513394-1.html
 load 514800-1.html
 load 515811-1.html
@@ -317,6 +320,8 @@ load 541277-2.html
 load 541714-1.html
 load 541714-2.html
 load 547338.xul
+load 547843-1.xhtml
 load 551635-1.html
 load 564368-1.xhtml
 load 564968.xhtml
+load 571618-1.svg

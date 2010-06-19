@@ -309,6 +309,7 @@ BrowserGlue.prototype = {
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function BG__onProfileShutdown() {
+#ifdef MOZ_UPDATER
 #ifdef WINCE
     // If there's a pending update, clear cache to free up disk space.
     try {
@@ -320,6 +321,7 @@ BrowserGlue.prototype = {
         cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
       }
     } catch (e) { }
+#endif
 #endif
     this._shutdownPlaces();
     this._sanitizer.onShutdown();

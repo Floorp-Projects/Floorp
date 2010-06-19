@@ -96,7 +96,7 @@
  * blocks for all streams.
  * 
  * The cache size is controlled by the media.cache_size preference
- * (which is in KB). The default size is 50MB.
+ * (which is in KB). The default size is 500MB.
  * 
  * The replacement policy predicts a "time of next use" for each block
  * in the cache. When we need to free a block, the block with the latest

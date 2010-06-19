@@ -218,9 +218,11 @@ GDIFontEntry::ReadCMAP()
 
     PRPackedBool  unicodeFont = PR_FALSE, symbolFont = PR_FALSE;
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
-                                         mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
+                                         mCharacterMap, mUVSOffset,
+                                         unicodeFont, symbolFont);
     mUnicodeFont = unicodeFont;
     mSymbolFont = symbolFont;
+    mHasCmapTable = NS_SUCCEEDED(rv);
 
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n", 
                                         NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
@@ -246,13 +248,19 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBo
 nsresult
 GDIFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 {
+    if (!IsTrueType()) {
+        return NS_ERROR_FAILURE;
+    }
+
     AutoDC dc;
     AutoSelectFont font(dc.GetDC(), &mLogFont);
     if (font.IsValid()) {
-        PRInt32 tableSize = ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
+        PRInt32 tableSize =
+            ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
         if (tableSize != GDI_ERROR) {
             if (aBuffer.SetLength(tableSize)) {
-                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, aBuffer.Elements(), tableSize);
+                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0,
+                              aBuffer.Elements(), tableSize);
                 return NS_OK;
             }
             return NS_ERROR_OUT_OF_MEMORY;

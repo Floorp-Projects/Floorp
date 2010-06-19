@@ -156,7 +156,7 @@ public:
    * Return true if the text attribute value on the given element equals with
    * predefined attribute value.
    */
-  virtual PRBool Equal(nsIDOMElement *aElm) = 0;
+  virtual PRBool Equal(nsIContent *aContent) = 0;
 };
 
 
@@ -196,10 +196,10 @@ public:
     return PR_TRUE;
   }
 
-  virtual PRBool Equal(nsIDOMElement *aElm)
+  virtual PRBool Equal(nsIContent *aContent)
   {
     T nativeValue;
-    PRBool isDefined = GetValueFor(aElm, &nativeValue);
+    PRBool isDefined = GetValueFor(aContent, &nativeValue);
 
     if (!mIsDefined && !isDefined)
       return PR_TRUE;
@@ -216,7 +216,7 @@ public:
 protected:
 
   // Return native value for the given DOM element.
-  virtual PRBool GetValueFor(nsIDOMElement *aElm, T *aValue) = 0;
+  virtual PRBool GetValueFor(nsIContent *aContent, T *aValue) = 0;
 
   // Format native value to text attribute value.
   virtual void Format(const T& aValue, nsAString& aFormattedValue) = 0;
@@ -244,8 +244,8 @@ protected:
 class nsLangTextAttr : public nsTextAttr<nsAutoString>
 {
 public:
-  nsLangTextAttr(nsHyperTextAccessible *aRootAcc, nsIDOMNode *aRootNode,
-                 nsIDOMNode *aNode);
+  nsLangTextAttr(nsHyperTextAccessible *aRootAcc, nsIContent *aRootContent,
+                 nsIContent *aContent);
 
   // nsITextAttr
   virtual nsIAtom *GetName() { return nsAccessibilityAtoms::language; }
@@ -253,7 +253,7 @@ public:
 protected:
 
   // nsTextAttr
-  virtual PRBool GetValueFor(nsIDOMElement *aElm, nsAutoString *aValue);
+  virtual PRBool GetValueFor(nsIContent *aElm, nsAutoString *aValue);
   virtual void Format(const nsAutoString& aValue, nsAString& aFormattedValue);
 
 private:
@@ -269,7 +269,8 @@ private:
 class nsCSSTextAttr : public nsTextAttr<nsAutoString>
 {
 public:
-  nsCSSTextAttr(PRUint32 aIndex, nsIDOMElement *aRootElm, nsIDOMElement *aElm);
+  nsCSSTextAttr(PRUint32 aIndex, nsIContent *aRootContent,
+                nsIContent *aContent);
 
   // nsITextAttr
   virtual nsIAtom *GetName();
@@ -277,7 +278,7 @@ public:
 protected:
 
   // nsTextAttr
-  virtual PRBool GetValueFor(nsIDOMElement *aElm, nsAutoString *aValue);
+  virtual PRBool GetValueFor(nsIContent *aContent, nsAutoString *aValue);
   virtual void Format(const nsAutoString& aValue, nsAString& aFormattedValue);
 
 private:
@@ -299,7 +300,7 @@ public:
 
 protected:
   // nsTextAttr
-  virtual PRBool GetValueFor(nsIDOMElement *aElm, nscolor *aValue);
+  virtual PRBool GetValueFor(nsIContent *aContent, nscolor *aValue);
   virtual void Format(const nscolor& aValue, nsAString& aFormattedValue);
 
 private:
@@ -323,7 +324,7 @@ public:
 protected:
 
   // nsTextAttr
-  virtual PRBool GetValueFor(nsIDOMElement *aElm, nscoord *aValue);
+  virtual PRBool GetValueFor(nsIContent *aContent, nscoord *aValue);
   virtual void Format(const nscoord& aValue, nsAString& aFormattedValue);
 
 private:
@@ -355,7 +356,7 @@ public:
 protected:
 
   // nsTextAttr
-  virtual PRBool GetValueFor(nsIDOMElement *aElm, PRInt32 *aValue);
+  virtual PRBool GetValueFor(nsIContent *aElm, PRInt32 *aValue);
   virtual void Format(const PRInt32& aValue, nsAString& aFormattedValue);
 
 private:

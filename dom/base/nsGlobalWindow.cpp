@@ -946,6 +946,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     mContext = nsnull;            // Forces Release
   }
   mChromeEventHandler = nsnull; // Forces Release
+  mParentTarget = nsnull;
 
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
 
@@ -1202,6 +1203,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameElement)
 
@@ -1235,6 +1237,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameElement)
 
@@ -2148,11 +2151,25 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
+  nsContentUtils::AddScriptRunner(
+    NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+
+  return NS_OK;
+}
+
+void
+nsGlobalWindow::DispatchDOMWindowCreated()
+{
+  // Fire DOMWindowCreated at chrome event listeners
+  nsContentUtils::DispatchChromeEvent(mDoc, mDocument, NS_LITERAL_STRING("DOMWindowCreated"),
+                                      PR_TRUE /* bubbles */,
+                                      PR_FALSE /* not cancellable */);
+
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
     nsAutoString origin;
-    nsIPrincipal* principal = aDocument->NodePrincipal();
+    nsIPrincipal* principal = mDoc->NodePrincipal();
     nsContentUtils::GetUTFOrigin(principal, origin);
     observerService->
       NotifyObservers(static_cast<nsIDOMWindow*>(this),
@@ -2161,8 +2178,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                         "content-document-global-created",
                       origin.get());
   }
-
-  return NS_OK;
 }
 
 void
@@ -2362,6 +2377,21 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
 #endif
 }
 
+void
+nsGlobalWindow::UpdateParentTarget()
+{
+  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
+  if (flo) {
+    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    if (fl) {
+      mParentTarget = fl->GetTabChildGlobalAsEventTarget();
+    }
+  }
+  if (!mParentTarget) {
+    mParentTarget = mChromeEventHandler;
+  }
+}
+
 nsresult
 nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -2404,16 +2434,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  nsPIDOMEventTarget* chromeTarget = mChromeEventHandler;
-  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
-  if (flo) {
-    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-    if (fl) {
-      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
-      chromeTarget = t ? t : chromeTarget;
-    }
-  }
-  aVisitor.mParentTarget = chromeTarget;
+  aVisitor.mParentTarget = GetParentTarget();
   return NS_OK;
 }
 
@@ -9274,10 +9295,18 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
         nsGlobalWindow *win =
           static_cast<nsGlobalWindow*>
                      (static_cast<nsPIDOMWindow*>(pWin));
-        win->SuspendTimeouts(aIncrease, aFreezeChildren);
-
         NS_ASSERTION(win->IsOuterWindow(), "Expected outer window");
         nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
+
+        // This is a bit hackish. Only freeze/suspend windows which are truly our
+        // subwindows.
+        nsCOMPtr<nsIContent> frame = do_QueryInterface(pWin->GetFrameElementInternal());
+        if (!mDoc || !frame || mDoc != frame->GetOwnerDoc() || !inner) {
+          continue;
+        }
+
+        win->SuspendTimeouts(aIncrease, aFreezeChildren);
+
         if (inner && aFreezeChildren) {
           inner->Freeze();
         }
@@ -9371,6 +9400,14 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
 
         NS_ASSERTION(win->IsOuterWindow(), "Expected outer window");
         nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
+
+        // This is a bit hackish. Only thaw/resume windows which are truly our
+        // subwindows.
+        nsCOMPtr<nsIContent> frame = do_QueryInterface(pWin->GetFrameElementInternal());
+        if (!mDoc || !frame || mDoc != frame->GetOwnerDoc() || !inner) {
+          continue;
+        }
+
         if (inner && aThawChildren) {
           inner->Thaw();
         }

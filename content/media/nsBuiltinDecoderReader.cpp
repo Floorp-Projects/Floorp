@@ -214,8 +214,12 @@ nsresult nsBuiltinDecoderReader::GetBufferedBytes(nsTArray<ByteRange>& aRanges)
       }
       FindStartTime(startOffset, startTime);
       if (startTime != -1 &&
-          (endTime = FindEndTime(endOffset) != -1))
+          ((endTime = FindEndTime(endOffset)) != -1))
       {
+        NS_ASSERTION(startOffset < endOffset,
+                     "Start offset must be before end offset");
+        NS_ASSERTION(startTime < endTime,
+                     "Start time must be before end time");
         aRanges.AppendElement(ByteRange(startOffset,
                                         endOffset,
                                         startTime,
