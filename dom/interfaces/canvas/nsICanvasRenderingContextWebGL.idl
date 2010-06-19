@@ -667,24 +667,24 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   nsIVariant getParameter(in WebGLenum pname);
 
   // Modified: void glGetBufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
-  void getBufferParameter(in WebGLenum target, in WebGLenum pname);
+  nsIVariant getBufferParameter(in WebGLenum target, in WebGLenum pname);
 
   WebGLenum getError();
 
   // Modified: void glGetFramebufferAttachmentParameteriv(WebGLenum target, WebGLenum attachment, WebGLenum pname, WebGLint* params);
-  void getFramebufferAttachmentParameter(in WebGLenum target, in WebGLenum attachment, in WebGLenum pname);
+  nsIVariant getFramebufferAttachmentParameter(in WebGLenum target, in WebGLenum attachment, in WebGLenum pname);
 
   // Modified: void glGetProgramiv(nsIWebGLProgram program, WebGLenum pname, WebGLint* params);
-  void getProgramParameter(in nsIWebGLProgram program, in WebGLenum pname);
+  nsIVariant getProgramParameter(in nsIWebGLProgram program, in WebGLenum pname);
 
   // Modified: void glGetProgramInfoLog(WebGLuint program, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
   DOMString getProgramInfoLog(in nsIWebGLProgram program);
 
   // Modified: void glGetRenderbufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
   //nsIWebGLIntArray getRenderbufferParameteriv(in WebGLenum target, in WebGLenum pname);
-  void getRenderbufferParameter(in WebGLenum target, in WebGLenum pname);
+  nsIVariant getRenderbufferParameter(in WebGLenum target, in WebGLenum pname);
 
-  void getShaderParameter(in nsIWebGLShader shader, in WebGLenum pname);
+  nsIVariant getShaderParameter(in nsIWebGLShader shader, in WebGLenum pname);
 
   // Modified: void glGetShaderInfoLog(WebGLuint shader, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
   DOMString getShaderInfoLog(in nsIWebGLShader shader);
@@ -694,7 +694,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   DOMString getShaderSource(in nsIWebGLShader shader);
 
-  void getTexParameter(in WebGLenum target, in WebGLenum pname);
+  nsIVariant getTexParameter(in WebGLenum target, in WebGLenum pname);
 
   void getUniform (in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
 
