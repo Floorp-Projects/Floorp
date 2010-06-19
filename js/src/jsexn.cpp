@@ -695,8 +695,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
          * called as functions, without operator new.  But as we do not give
          * each constructor a distinct JSClass, whose .name member is used by
-         * NewObject to find the class prototype, we must get the class
-         * prototype ourselves.
+         * NewNativeClassInstance to find the class prototype, we must get the
+         * class prototype ourselves.
          */
         if (!JSVAL_TO_OBJECT(argv[-2])->getProperty(cx,
                                                     ATOM_TO_JSID(cx->runtime->atomState
@@ -704,7 +704,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                                     rval)) {
             return JS_FALSE;
         }
-        obj = NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL);
+        JSObject *errProto = JSVAL_TO_OBJECT(*rval);
+        obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -1159,7 +1160,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = NewObject(cx, &js_ErrorClass, errProto, NULL);
+    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
     if (!errObject) {
         ok = JS_FALSE;
         goto out;

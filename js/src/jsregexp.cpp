@@ -5367,7 +5367,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         return JS_FALSE;
     }
     if (xdr->mode == JSXDR_DECODE) {
-        obj = NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass);
         if (!obj)
             return JS_FALSE;
         obj->clearParent();
@@ -5733,7 +5733,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Otherwise, replace obj with a new RegExp object. */
-        obj = NewObject(cx, &js_RegExpClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
         if (!obj)
             return JS_FALSE;
 
@@ -5788,7 +5788,7 @@ js_NewRegExpObject(JSContext *cx, TokenStream *ts,
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
-    obj = NewObject(cx, &js_RegExpClass, NULL, NULL);
+    obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
     if (!obj) {
         js_DestroyRegExp(cx, re);
         return NULL;
@@ -5804,7 +5804,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
     JS_ASSERT(proto);
     JS_ASSERT(proto->getClass() == &js_RegExpClass);
-    JSObject *clone = NewObjectWithGivenProto(cx, &js_RegExpClass, proto, NULL);
+    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
     if (!clone)
         return NULL;
     JSRegExp *re = static_cast<JSRegExp *>(obj->getPrivate());

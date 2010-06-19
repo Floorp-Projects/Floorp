@@ -1413,9 +1413,16 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
+    /*
+     * Runtime-shared empty scopes for well-known built-in objects that lack
+     * class prototypes (the usual locus of an emptyScope). Mnemonic: ABCDEW
+     */
     JSEmptyScope          *emptyArgumentsScope;
     JSEmptyScope          *emptyBlockScope;
     JSEmptyScope          *emptyCallScope;
+    JSEmptyScope          *emptyDeclEnvScope;
+    JSEmptyScope          *emptyEnumeratorScope;
+    JSEmptyScope          *emptyWithScope;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this

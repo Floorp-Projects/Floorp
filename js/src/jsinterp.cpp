@@ -355,10 +355,18 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
                 vp[0] = ID_TO_VALUE(id);
         }
 #endif
-        obj = NewObjectWithGivenProto(cx, &js_NoSuchMethodClass, NULL, NULL);
+        obj = js_NewGCObject(cx);
         if (!obj)
             return false;
-        obj->fslots[JSSLOT_FOUND_FUNCTION] = tvr.value();
+
+        /*
+         * Null map to cause prompt and safe crash if this object were to
+         * escape due to a bug. This will make the object appear to be a
+         * stillborn instance that needs no finalization, which is sound:
+         * NoSuchMethod helper objects own no manually allocated resources.
+         */
+        obj->map = NULL;
+        obj->init(&js_NoSuchMethodClass, NULL, NULL, tvr.value());
         obj->fslots[JSSLOT_SAVED_ID] = vp[0];
         vp[0] = OBJECT_TO_JSVAL(obj);
     }
