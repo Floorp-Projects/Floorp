@@ -117,6 +117,13 @@ EDITOR_ATOM(hr, "hr")
 EDITOR_ATOM(table, "table")
 EDITOR_ATOM(fieldset, "fieldset")
 EDITOR_ATOM(address, "address")
+EDITOR_ATOM(article, "article")
+EDITOR_ATOM(aside, "aside")
+EDITOR_ATOM(footer, "footer")
+EDITOR_ATOM(header, "header")
+EDITOR_ATOM(hgroup, "hgroup")
+EDITOR_ATOM(nav, "nav")
+EDITOR_ATOM(section, "section")
   // Unclear from 
   // DTD, block?
 EDITOR_ATOM(body, "body")
