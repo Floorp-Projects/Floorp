@@ -2134,7 +2134,7 @@ WebGLContext::ReadPixels(PRInt32 dummy)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
                               WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength)
 {
