@@ -241,13 +241,14 @@ function test8()
   ws.onclose = function(e)
   {
     shouldCloseNotCleanly(e);
-    doTest(9);
+    doTest(10);
   };
 
   ws._receivedCloseEvent = false;
   ws.close();
 }
 
+// Disabled for now
 function test9()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 9");
@@ -324,10 +325,11 @@ function test12()
     }
     ws.close();
     ws._receivedCloseEvent = false;
-    doTest(13);
+    doTest(16);
   };
 }
 
+// Disabled for now
 function test13()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 13");
@@ -344,6 +346,7 @@ function test13()
   ws._receivedCloseEvent = false;
 }
 
+// Disabled for now
 function test14()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 14");
@@ -354,12 +357,12 @@ function test14()
   ws.onclose = function(e)
   {
     shouldCloseCleanly(e);
-    doTest(16);
+    doTest(15);
   };
   ws._receivedCloseEvent = false;
 }
 
-// This test is disabled for now.
+// Disabled for now.
 function test15()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 15");
