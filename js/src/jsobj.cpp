@@ -316,7 +316,6 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         map->table = table;
         JS_KEEP_ATOMS(cx->runtime);
     }
-    
 
     /* From this point the control must flow either through out: or bad:. */
     ida = NULL;
@@ -1738,10 +1737,11 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
 }
 
 extern JSBool
-js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs, jsval getter, jsval setter, jsval value, jsval *vp)
+js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs, jsval getter, jsval setter,
+                               jsval value, jsval *vp)
 {
     /* We have our own property, so start creating the descriptor. */
-    JSObject *desc = NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *desc = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!desc)
         return false;
     *vp = OBJECT_TO_JSVAL(desc); /* Root and return. */
@@ -2501,7 +2501,7 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
     }
 
     jsval v = vp[2];
-    if (!JSVAL_IS_OBJECT(vp[2])) {
+    if (!JSVAL_IS_OBJECT(v)) {
         char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
             return JS_FALSE;
@@ -2512,11 +2512,11 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
     }
 
     /*
-     * It's plausible that it's safe to just use the context's global object,
-     * but since we're not completely sure, better safe than sorry.
+     * Use the callee's global as the parent of the new object to avoid dynamic
+     * scoping (i.e., using the caller's global).
      */
-    JSObject *obj =
-        NewObjectWithGivenProto(cx, &js_ObjectClass, JSVAL_TO_OBJECT(v), JS_GetScopeChain(cx));
+    JSObject *obj = NewObjectWithGivenProto(cx, &js_ObjectClass, JSVAL_TO_OBJECT(v),
+                                            JSVAL_TO_OBJECT(*vp)->getGlobal());
     if (!obj)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(obj); /* Root and prepare for eventual return. */
@@ -2612,7 +2612,7 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ASSERT(!argc || JSVAL_IS_NULL(argv[0]) || JSVAL_IS_VOID(argv[0]));
         if (JS_IsConstructing(cx))
             return JS_TRUE;
-        obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
         if (!obj)
             return JS_FALSE;
     }
@@ -2673,23 +2673,10 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
 JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NonEmptyObject, CONTEXT, CALLEE_PROTOTYPE, 0,
                      nanojit::ACC_STORE_ANY)
 
-
-static inline JSObject*
-NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto,
-                JSObject *parent, jsval privateSlotValue)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = js_NewGCObject(cx);
-    if (!obj)
-        return NULL;
-
-    obj->init(clasp, proto, parent, privateSlotValue);
-    return InitScopeForObject(cx, obj, clasp, proto, &js_ObjectOps) ? obj : NULL;
-}
-
 JSObject* FASTCALL
 js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
 {
+    JS_ASSERT(JS_ON_TRACE(cx));
     JS_ASSERT(ctor->isFunction());
 
     JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
@@ -2708,27 +2695,37 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
     JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
     jsval pval = sprop ? ctor->getSlot(sprop->slot) : JSVAL_HOLE;
 
+    JSObject *parent = ctor->getParent();
     JSObject *proto;
     if (!JSVAL_IS_PRIMITIVE(pval)) {
         /* An object in ctor.prototype, let's use it as the new instance's proto. */
         proto = JSVAL_TO_OBJECT(pval);
-    } else if (pval == JSVAL_HOLE) {
-        /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
-        proto = NewObject(cx, clasp, NULL, ctor->getParent());
-        if (!proto)
-            return NULL;
-        if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
-            return NULL;
     } else {
-        /* Primitive value in .prototype means we use Object.prototype for proto. */
-        if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]),
-                                  JSProto_Object, &proto)) {
+        /* A hole or a primitive: either way, we need to get Object.prototype. */
+        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
             return NULL;
+
+        if (pval == JSVAL_HOLE) {
+            /*
+             * No ctor.prototype was set, so we inline-expand and optimize
+             * fun_resolve's prototype creation code.
+             */
+            proto = NewNativeClassInstance(cx, clasp, proto, parent);
+            if (!proto)
+                return NULL;
+            if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
+                return NULL;
+        } else {
+            /*
+             * A primitive value in .prototype means to use Object.prototype
+             * for proto. See ES5 13.2.2 step 7.
+             */
         }
     }
 
-    return NewNativeObject(cx, clasp, proto, ctor->getParent(),
-                           JSObject::defaultPrivate(clasp));
+    if (proto->isNative())
+        return NewNativeClassInstance(cx, clasp, proto, parent);
+    return NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0,
@@ -2954,11 +2951,13 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
-    obj = NewObject(cx, &js_WithClass, proto, parent);
+    obj = js_NewGCObject(cx);
     if (!obj)
         return NULL;
-    obj->setPrivate(js_FloatingFrameIfGenerator(cx, cx->fp));
+    obj->init(&js_WithClass, proto, parent,
+              reinterpret_cast<jsval>(js_FloatingFrameIfGenerator(cx, cx->fp)));
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
+    obj->map = cx->runtime->emptyWithScope->hold();
 
     AutoObjectRooter tvr(cx, obj);
     JSObject *thisp = proto->thisObject(cx);
@@ -2976,8 +2975,11 @@ js_NewBlockObject(JSContext *cx)
      * Null obj's proto slot so that Object.prototype.* does not pollute block
      * scopes and to give the block object its own scope.
      */
-    JSObject *blockObj = NewObjectWithGivenProto(cx, &js_BlockClass, NULL, NULL);
-    JS_ASSERT_IF(blockObj, !OBJ_IS_CLONED_BLOCK(blockObj));
+    JSObject *blockObj = js_NewGCObject(cx);
+    if (!blockObj)
+        return NULL;
+    blockObj->init(&js_BlockClass, NULL, NULL, JSVAL_NULL);
+    blockObj->map = cx->runtime->emptyBlockScope->hold();
     return blockObj;
 }
 
@@ -2999,6 +3001,9 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
     clone->map = cx->runtime->emptyBlockScope->hold();
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
+
+    if (!js_EnsureReservedSlots(cx, clone, OBJ_BLOCK_COUNT(cx, proto)))
+        return NULL;
     return clone;
 }
 
@@ -3022,12 +3027,12 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
      */
     JS_ASSERT(obj->scope()->object != obj);
 
-    /* Block objects should not have reserved slots before they are put. */
-    JS_ASSERT(obj->numSlots() == JS_INITIAL_NSLOTS);
+    /* Block objects should have all reserved slots allocated early. */
+    uintN count = OBJ_BLOCK_COUNT(cx, obj);
+    JS_ASSERT(obj->numSlots() == JSSLOT_BLOCK_DEPTH + 1 + count);
 
     /* The block and its locals must be on the current stack for GC safety. */
     uintN depth = OBJ_BLOCK_DEPTH(cx, obj);
-    uintN count = OBJ_BLOCK_COUNT(cx, obj);
     JS_ASSERT(depth <= (size_t) (cx->regs->sp - StackBase(fp)));
     JS_ASSERT(count <= (size_t) (cx->regs->sp - StackBase(fp) - depth));
 
@@ -3038,12 +3043,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots()[depth];
     if (normalUnwind && count > 1) {
         --count;
-        JS_LOCK_OBJ(cx, obj);
-        if (!obj->allocSlots(cx, JS_INITIAL_NSLOTS + count))
-            normalUnwind = JS_FALSE;
-        else
-            memcpy(obj->dslots, fp->slots() + depth + 1, count * sizeof(jsval));
-        JS_UNLOCK_OBJ(cx, obj);
+        memcpy(obj->dslots, fp->slots() + depth + 1, count * sizeof(jsval));
     }
 
     /* We must clear the private slot even with errors. */
@@ -3288,18 +3288,12 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
 #endif
 
-static uint32
-block_reserveSlots(JSContext *cx, JSObject *obj)
-{
-    return OBJ_IS_CLONED_BLOCK(obj) ? OBJ_BLOCK_COUNT(cx, obj) : 0;
-}
-
 JSClass js_BlockClass = {
     "Block",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, block_reserveSlots
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JSObject *
@@ -3407,7 +3401,27 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         return NULL;
     }
 
-    /* Create a prototype object for this class. */
+    /*
+     * Create a prototype object for this class.
+     *
+     * FIXME: lazy standard (built-in) class initialization and even older
+     * eager boostrapping code rely on all of these properties:
+     *
+     * 1. NewObject attempting to compute a default prototype object when
+     *    passed null for proto; and
+     *
+     * 2. NewObject tolerating no default prototype (null proto slot value)
+     *    due to this js_InitClass call coming from js_InitFunctionClass on an
+     *    otherwise-uninitialized global.
+     *
+     * 3. NewObject allocating a JSFunction-sized GC-thing when clasp is
+     *    &js_FunctionClass, not a JSObject-sized (smaller) GC-thing.
+     *
+     * The JS_NewObjectForGivenProto and JS_NewObject APIs also allow clasp to
+     * be &js_FunctionClass (we could break compatibility easily). But fixing
+     * (3) is not enough without addressing the bootstrapping dependency on (1)
+     * and (2).
+     */
     proto = NewObject(cx, clasp, parent_proto, obj);
     if (!proto)
         return NULL;
@@ -3910,12 +3924,6 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
 {
     JSScope *scope = obj->scope();
     JS_ASSERT(scope->object == obj);
-
-    JSClass *clasp = obj->getClass();
-    if (scope->freeslot == JSSLOT_FREE(clasp) && clasp->reserveSlots) {
-        /* Adjust scope->freeslot to include computed reserved slots, if any. */
-        scope->freeslot += clasp->reserveSlots(cx, obj);
-    }
 
     if (scope->freeslot >= obj->numSlots() &&
         !obj->growSlots(cx, scope->freeslot + 1)) {
@@ -5690,6 +5698,28 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_TRUE;
 }
 
+bool
+js::FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject **protop,
+                       JSClass *clasp)
+{
+    jsval v;
+    if (!js_FindClassObject(cx, scope, protoKey, &v, clasp))
+        return false;
+
+    if (VALUE_IS_FUNCTION(cx, v)) {
+        JSObject *ctor = JSVAL_TO_OBJECT(v);
+        if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &v))
+            return false;
+    }
+
+    *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;
+    return true;
+}
+
+/*
+ * The first part of this function has been hand-expanded and optimized into
+ * NewBuiltinClassInstance in jsobjinlines.h.
+ */
 JSBool
 js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
                      JSObject **protop, JSClass *clasp)
@@ -5720,29 +5750,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
         }
     }
 
-    jsval v;
-    if (!js_FindClassObject(cx, scope, protoKey, &v, clasp))
-        return JS_FALSE;
-    if (VALUE_IS_FUNCTION(cx, v)) {
-        JSObject *ctor = JSVAL_TO_OBJECT(v);
-        if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &v))
-            return JS_FALSE;
-        if (!JSVAL_IS_PRIMITIVE(v)) {
-            /*
-             * Set the newborn root in case v is otherwise unreferenced.
-             * It's ok to overwrite newborn roots here, since the getter
-             * called just above could have.  Unlike the common GC rooting
-             * model, our callers do not have to protect protop thanks to
-             * this newborn root, since they all immediately create a new
-             * instance that delegates to this object, or just query the
-             * prototype for its class.
-             */
-            cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] =
-                JSVAL_TO_OBJECT(v);
-        }
-    }
-    *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;
-    return JS_TRUE;
+    return FindClassPrototype(cx, scope, protoKey, protop, clasp);
 }
 
 /*
@@ -5830,7 +5838,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     JS_ASSERT(!JSVAL_IS_OBJECT(*vp));
     JS_ASSERT(!JSVAL_IS_VOID(*vp));
     clasp = PrimitiveClasses[JSVAL_TAG(*vp) - 1];
-    obj = NewObject(cx, clasp, NULL, NULL);
+    obj = NewBuiltinClassInstance(cx, clasp);
     if (!obj)
         return JS_FALSE;
     obj->setPrimitiveThis(*vp);
@@ -6162,25 +6170,6 @@ js_Clear(JSContext *cx, JSObject *obj)
     JS_UNLOCK_OBJ(cx, obj);
 }
 
-/* On failure the function unlocks the object. */
-static bool
-ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
-                    uint32 index, uint32 limit)
-{
-    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
-
-    /* Check the computed, possibly per-instance, upper bound. */
-    if (clasp->reserveSlots)
-        limit += clasp->reserveSlots(cx, obj);
-    if (index >= limit) {
-        JS_UNLOCK_OBJ(cx, obj);
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_RESERVED_SLOT_RANGE);
-        return false;
-    }
-    return true;
-}
-
 bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
@@ -6189,14 +6178,8 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
         return true;
     }
 
-    JSClass *clasp = obj->getClass();
-    uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
-
+    uint32 slot = JSSLOT_START(obj->getClass()) + index;
     JS_LOCK_OBJ(cx, obj);
-    if (index >= limit && !ReservedSlotIndexOK(cx, obj, clasp, index, limit))
-        return false;
-
-    uint32 slot = JSSLOT_START(clasp) + index;
     *vp = (slot < obj->numSlots()) ? obj->getSlot(slot) : JSVAL_VOID;
     JS_UNLOCK_OBJ(cx, obj);
     return true;
@@ -6209,14 +6192,9 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
         return true;
 
     JSClass *clasp = obj->getClass();
+    uint32 slot = JSSLOT_START(clasp) + index;
 
     JS_LOCK_OBJ(cx, obj);
-#ifdef DEBUG
-    uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
-    JS_ASSERT(index < limit || ReservedSlotIndexOK(cx, obj, clasp, index, limit));
-#endif
-
-    uint32 slot = JSSLOT_START(clasp) + index;
     if (slot >= obj->numSlots()) {
         /*
          * At this point, obj may or may not own scope, and we may or may not
@@ -6224,8 +6202,6 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
          * be accurate for obj (see comment below).
          */
         uint32 nslots = JSSLOT_FREE(clasp);
-        if (clasp->reserveSlots)
-            nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
         if (!obj->allocSlots(cx, nslots)) {
             JS_UNLOCK_OBJ(cx, obj);

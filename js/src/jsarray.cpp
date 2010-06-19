@@ -3068,6 +3068,12 @@ static JSFunctionSpec array_static_methods[] = {
     JS_FS_END
 };
 
+static inline JSObject *
+NewDenseArrayObject(JSContext *cx)
+{
+    return NewObject(cx, &js_ArrayClass, NULL, NULL);
+}
+
 JSBool
 js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -3076,7 +3082,7 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* If called without new, replace obj with a new Array object. */
     if (!JS_IsConstructing(cx)) {
-        obj = NewObject(cx, &js_ArrayClass, NULL, NULL);
+        obj = NewDenseArrayObject(cx);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -3168,7 +3174,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, const jsval *vector, bool holey)
 {
-    JSObject *obj = NewObject(cx, &js_ArrayClass, NULL, NULL);
+    JSObject *obj = NewDenseArrayObject(cx);
     if (!obj)
         return NULL;
 

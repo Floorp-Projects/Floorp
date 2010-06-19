@@ -968,9 +968,16 @@ proxy_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
          */
         if (!JSProxy::get(cx, proxy, obj, ATOM_TO_JSID(ATOM(classPrototype)), rval))
             return false;
-        JSObject *proto = !JSVAL_IS_PRIMITIVE(*rval) ? JSVAL_TO_OBJECT(*rval) : NULL;
 
-        JSObject *newobj = NewObject(cx, &js_ObjectClass, proto, NULL);
+        JSObject *proto;
+        if (!JSVAL_IS_PRIMITIVE(*rval)) {
+            proto = JSVAL_TO_OBJECT(*rval);
+        } else {
+            if (!js_GetClassPrototype(cx, NULL, JSProto_Object, &proto))
+                return false;
+        }
+
+        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent());
         *rval = OBJECT_TO_JSVAL(newobj);
 
         /* If the call returns an object, return that, otherwise the original newobj. */
@@ -1210,9 +1217,16 @@ callable_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
         /* callable is the constructor, so get callable.prototype is the proto of the new object. */
         if (!callable->getProperty(cx, ATOM_TO_JSID(ATOM(classPrototype)), rval))
             return false;
-        JSObject *proto = !JSVAL_IS_PRIMITIVE(*rval) ? JSVAL_TO_OBJECT(*rval) : NULL;
 
-        JSObject *newobj = NewObject(cx, &js_ObjectClass, proto, NULL);
+        JSObject *proto;
+        if (!JSVAL_IS_PRIMITIVE(*rval)) {
+            proto = JSVAL_TO_OBJECT(*rval);
+        } else {
+            if (!js_GetClassPrototype(cx, NULL, JSProto_Object, &proto))
+                return false;
+        }
+
+        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent());
         *rval = OBJECT_TO_JSVAL(newobj);
 
         /* If the call returns an object, return that, otherwise the original newobj. */
@@ -1309,5 +1323,5 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
     }
     if (!JS_DefineFunctions(cx, module, static_methods))
         return NULL;
-    return obj;
+    return module;
 }
