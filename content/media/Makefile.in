@@ -73,10 +73,6 @@ CPPSRCS += \
   $(NULL)
 endif
 
-ifdef MOZ_RAW
-PARALLEL_DIRS += raw
-endif
-
 ifdef MOZ_OGG
 PARALLEL_DIRS += ogg
 endif
