@@ -721,9 +721,13 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void pixelStorei(in WebGLenum pname, in WebGLint param);
   void polygonOffset(in WebGLfloat factor, in WebGLfloat units);
 
-  // TBD
-  //ZZ void glReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height, WebGLenum format, WebGLenum type, void* pixels);
-  void readPixels(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height, in WebGLenum format, in WebGLenum type);
+  void readPixels([optional] in long dummy);
+  [noscript] void readPixels_array(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
+                                   in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+  [noscript] void readPixels_buf(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
+                                 in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+  [noscript] WebGLsizei readPixels_byteLength_old_API_deprecated(
+                            in WebGLsizei width, in WebGLsizei height, in WebGLenum format, in WebGLenum type);
 
   //void glReleaseShaderCompiler();
 

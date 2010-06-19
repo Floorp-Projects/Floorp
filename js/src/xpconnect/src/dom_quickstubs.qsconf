@@ -457,7 +457,6 @@ members = [
     '-nsICanvasRenderingContextWebGL.texParameteri',
     '-nsICanvasRenderingContextWebGL.getUniform',
     '-nsICanvasRenderingContextWebGL.getVertexAttrib',
-    '-nsICanvasRenderingContextWebGL.readPixels',
     '-nsICanvasRenderingContextWebGL.getShaderParameter',
     ]
 
@@ -813,6 +812,7 @@ customMethodCalls = {
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_ReadPixels': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_TexImage2D': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_TexSubImage2D': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_Uniform1iv': CUSTOM_QS_TN,
