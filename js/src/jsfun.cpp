@@ -674,6 +674,12 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 # define args_or_call_trace NULL
 #endif
 
+static uint32
+args_reserveSlots(JSContext *cx, JSObject *obj)
+{
+    return obj->getArgsLength();
+}
+
 /*
  * The Arguments class is not initialized via JS_InitClass, and must not be,
  * because its name is "Object".  Per ECMA, that causes instances of it to
@@ -697,7 +703,7 @@ JSClass js_ArgumentsClass = {
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
-    JS_CLASS_TRACE(args_or_call_trace), NULL
+    JS_CLASS_TRACE(args_or_call_trace), args_reserveSlots
 };
 
 const uint32 JSSLOT_CALLEE =                    JSSLOT_PRIVATE + 1;
@@ -1258,6 +1264,15 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     return JS_TRUE;
 }
 
+static uint32
+call_reserveSlots(JSContext *cx, JSObject *obj)
+{
+    JSFunction *fun;
+
+    fun = js_GetCallObjectFunction(obj);
+    return fun->countArgsAndVars();
+}
+
 JS_FRIEND_DATA(JSClass) js_CallClass = {
     "Call",
     JSCLASS_HAS_PRIVATE |
@@ -1270,7 +1285,7 @@ JS_FRIEND_DATA(JSClass) js_CallClass = {
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
-    JS_CLASS_TRACE(args_or_call_trace), NULL
+    JS_CLASS_TRACE(args_or_call_trace), call_reserveSlots
 };
 
 /* Generic function tinyids. */
@@ -1794,6 +1809,20 @@ JSFunction::countInterpretedReservedSlots() const
     return (u.i.nupvars == 0) ? 0 : u.i.script->upvars()->length;
 }
 
+static uint32
+fun_reserveSlots(JSContext *cx, JSObject *obj)
+{
+    /*
+     * We use getPrivate and not GET_FUNCTION_PRIVATE because during
+     * js_InitFunctionClass invocation the function is called before the
+     * private slot of the function object is set.
+     */
+    JSFunction *fun = (JSFunction *) obj->getPrivate();
+    return (fun && FUN_INTERPRETED(fun))
+           ? fun->countInterpretedReservedSlots()
+           : 0;
+}
+
 /*
  * Reserve two slots in all function objects for XPConnect.  Note that this
  * does not bloat every instance, only those on which reserved slots are set,
@@ -1810,7 +1839,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     NULL,             NULL,
     NULL,             NULL,
     js_XDRFunctionObject, fun_hasInstance,
-    JS_CLASS_TRACE(fun_trace), NULL
+    JS_CLASS_TRACE(fun_trace), fun_reserveSlots
 };
 
 static JSBool
@@ -2444,7 +2473,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
         return closure;
 
     uint32 nslots = fun->countInterpretedReservedSlots();
-    if (nslots == 0)
+    if (!nslots)
         return closure;
     if (!js_EnsureReservedSlots(cx, closure, nslots))
         return NULL;

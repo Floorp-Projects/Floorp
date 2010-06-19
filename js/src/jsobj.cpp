@@ -2954,13 +2954,11 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
-    obj = js_NewGCObject(cx);
+    obj = NewObject(cx, &js_WithClass, proto, parent);
     if (!obj)
         return NULL;
-    obj->init(&js_WithClass, proto, parent,
-              reinterpret_cast<jsval>(js_FloatingFrameIfGenerator(cx, cx->fp)));
+    obj->setPrivate(js_FloatingFrameIfGenerator(cx, cx->fp));
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
-    obj->map = cx->runtime->emptyWithScope->hold();
 
     AutoObjectRooter tvr(cx, obj);
     JSObject *thisp = proto->thisObject(cx);
@@ -3001,9 +2999,6 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
     clone->map = cx->runtime->emptyBlockScope->hold();
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
-
-    if (!js_EnsureReservedSlots(cx, clone, OBJ_BLOCK_COUNT(cx, proto)))
-        return NULL;
     return clone;
 }
 
@@ -3027,12 +3022,12 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
      */
     JS_ASSERT(obj->scope()->object != obj);
 
-    /* Block objects should have all reserved slots allocated early. */
-    uintN count = OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(obj->numSlots() == JSSLOT_BLOCK_DEPTH + 1 + count);
+    /* Block objects should not have reserved slots before they are put. */
+    JS_ASSERT(obj->numSlots() == JS_INITIAL_NSLOTS);
 
     /* The block and its locals must be on the current stack for GC safety. */
     uintN depth = OBJ_BLOCK_DEPTH(cx, obj);
+    uintN count = OBJ_BLOCK_COUNT(cx, obj);
     JS_ASSERT(depth <= (size_t) (cx->regs->sp - StackBase(fp)));
     JS_ASSERT(count <= (size_t) (cx->regs->sp - StackBase(fp) - depth));
 
@@ -3043,7 +3038,12 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots()[depth];
     if (normalUnwind && count > 1) {
         --count;
-        memcpy(obj->dslots, fp->slots() + depth + 1, count * sizeof(jsval));
+        JS_LOCK_OBJ(cx, obj);
+        if (!obj->allocSlots(cx, JS_INITIAL_NSLOTS + count))
+            normalUnwind = JS_FALSE;
+        else
+            memcpy(obj->dslots, fp->slots() + depth + 1, count * sizeof(jsval));
+        JS_UNLOCK_OBJ(cx, obj);
     }
 
     /* We must clear the private slot even with errors. */
@@ -3288,12 +3288,18 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
 #endif
 
+static uint32
+block_reserveSlots(JSContext *cx, JSObject *obj)
+{
+    return OBJ_IS_CLONED_BLOCK(obj) ? OBJ_BLOCK_COUNT(cx, obj) : 0;
+}
+
 JSClass js_BlockClass = {
     "Block",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, block_reserveSlots
 };
 
 JSObject *
@@ -3904,6 +3910,12 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
 {
     JSScope *scope = obj->scope();
     JS_ASSERT(scope->object == obj);
+
+    JSClass *clasp = obj->getClass();
+    if (scope->freeslot == JSSLOT_FREE(clasp) && clasp->reserveSlots) {
+        /* Adjust scope->freeslot to include computed reserved slots, if any. */
+        scope->freeslot += clasp->reserveSlots(cx, obj);
+    }
 
     if (scope->freeslot >= obj->numSlots() &&
         !obj->growSlots(cx, scope->freeslot + 1)) {
@@ -6145,6 +6157,25 @@ js_Clear(JSContext *cx, JSObject *obj)
     JS_UNLOCK_OBJ(cx, obj);
 }
 
+/* On failure the function unlocks the object. */
+static bool
+ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
+                    uint32 index, uint32 limit)
+{
+    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
+
+    /* Check the computed, possibly per-instance, upper bound. */
+    if (clasp->reserveSlots)
+        limit += clasp->reserveSlots(cx, obj);
+    if (index >= limit) {
+        JS_UNLOCK_OBJ(cx, obj);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_RESERVED_SLOT_RANGE);
+        return false;
+    }
+    return true;
+}
+
 bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
@@ -6153,8 +6184,14 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
         return true;
     }
 
-    uint32 slot = JSSLOT_START(obj->getClass()) + index;
+    JSClass *clasp = obj->getClass();
+    uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
+
     JS_LOCK_OBJ(cx, obj);
+    if (index >= limit && !ReservedSlotIndexOK(cx, obj, clasp, index, limit))
+        return false;
+
+    uint32 slot = JSSLOT_START(clasp) + index;
     *vp = (slot < obj->numSlots()) ? obj->getSlot(slot) : JSVAL_VOID;
     JS_UNLOCK_OBJ(cx, obj);
     return true;
@@ -6167,9 +6204,14 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
         return true;
 
     JSClass *clasp = obj->getClass();
-    uint32 slot = JSSLOT_START(clasp) + index;
 
     JS_LOCK_OBJ(cx, obj);
+#ifdef DEBUG
+    uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
+    JS_ASSERT(index < limit || ReservedSlotIndexOK(cx, obj, clasp, index, limit));
+#endif
+
+    uint32 slot = JSSLOT_START(clasp) + index;
     if (slot >= obj->numSlots()) {
         /*
          * At this point, obj may or may not own scope, and we may or may not
@@ -6177,6 +6219,8 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
          * be accurate for obj (see comment below).
          */
         uint32 nslots = JSSLOT_FREE(clasp);
+        if (clasp->reserveSlots)
+            nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
         if (!obj->allocSlots(cx, nslots)) {
             JS_UNLOCK_OBJ(cx, obj);

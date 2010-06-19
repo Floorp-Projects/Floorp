@@ -1739,12 +1739,17 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 PCMETER(cache->pchits++);
                 PCMETER(cache->addpchits++);
 
-                if (slot < obj->numSlots()) {
+                /*
+                 * Beware classes such as Function that use the
+                 * reserveSlots hook to allocate a number of reserved
+                 * slots that may vary with obj.
+                 */
+                if (slot < obj->numSlots() &&
+                    !obj->getClass()->reserveSlots) {
                     ++scope->freeslot;
                 } else {
                     if (!js_AllocSlot(cx, obj, &slot))
                         goto error;
-                    JS_ASSERT(slot + 1 == scope->freeslot);
                 }
 
                 /*
@@ -1752,16 +1757,12 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * if something created a hash table for scope, we must
                  * pay the price of JSScope::putProperty.
                  *
-                 * (A built-in object with a pre-allocated but not fixed
-                 * population of reserved slots  hook can cause scopes of the
-                 * same shape to have different freeslot values. Arguments,
-                 * Block, Call, and certain Function objects pre-allocate
-                 * reserveds lots this way. This is what causes the slot !=
-                 * sprop->slot case. See js_GetMutableScope. FIXME 558451)
+                 * (A reserveSlots hook can cause scopes of the same
+                 * shape to have different freeslot values. This is
+                 * what causes the slot != sprop->slot case. See
+                 * js_GetMutableScope.)
                  */
-                if (slot == sprop->slot && !scope->table) {
-                    scope->extend(cx, sprop);
-                } else {
+                if (slot != sprop->slot || scope->table) {
                     JSScopeProperty *sprop2 =
                         scope->putProperty(cx, sprop->id,
                                            sprop->getter(), sprop->setter(),
@@ -1772,6 +1773,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         goto error;
                     }
                     sprop = sprop2;
+                } else {
+                    scope->extend(cx, sprop);
                 }
 
                 /*
@@ -3249,6 +3252,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     lval = FETCH_OPND(-2);
     obj = JSVAL_TO_OBJECT(lval);
     JS_ASSERT(obj->isNative());
+    JS_ASSERT(!obj->getClass()->reserveSlots);
 
     JSScope *scope = obj->scope();
     PropertyCacheEntry *entry;
