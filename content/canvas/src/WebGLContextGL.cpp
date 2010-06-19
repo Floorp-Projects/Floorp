@@ -294,13 +294,54 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
 
 GL_SAME_METHOD_4(BlendColor, BlendColor, float, float, float, float)
 
-GL_SAME_METHOD_1(BlendEquation, BlendEquation, WebGLenum)
+NS_IMETHODIMP WebGLContext::BlendEquation(WebGLenum mode)
+{
+    if (!ValidateBlendEquationEnum(mode))
+        return ErrorInvalidEnum("BlendEquation: invalid mode");
 
-GL_SAME_METHOD_2(BlendEquationSeparate, BlendEquationSeparate, WebGLenum, WebGLenum)
+    MakeContextCurrent();
+    gl->fBlendEquation(mode);
+    return NS_OK;
+}
 
-GL_SAME_METHOD_2(BlendFunc, BlendFunc, WebGLenum, WebGLenum)
+NS_IMETHODIMP WebGLContext::BlendEquationSeparate(WebGLenum modeRGB, WebGLenum modeAlpha)
+{
+    if (!ValidateBlendEquationEnum(modeRGB)
+     || !ValidateBlendEquationEnum(modeAlpha))
+        return ErrorInvalidEnum("BlendEquationSeparate: invalid mode");
 
-GL_SAME_METHOD_4(BlendFuncSeparate, BlendFuncSeparate, WebGLenum, WebGLenum, WebGLenum, WebGLenum)
+    MakeContextCurrent();
+    gl->fBlendEquationSeparate(modeRGB, modeAlpha);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLContext::BlendFunc(WebGLenum sfactor, WebGLenum dfactor)
+{
+    if (!ValidateBlendFuncSrcEnum(sfactor))
+        return ErrorInvalidEnum("BlendFunc: invalid source factor");
+    if (!ValidateBlendFuncDstEnum(dfactor))
+        return ErrorInvalidEnum("BlendFunc: invalid destination factor");
+
+    MakeContextCurrent();
+    gl->fBlendFunc(sfactor, dfactor);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
+                                WebGLenum srcAlpha, WebGLenum dstAlpha)
+{
+    if (!ValidateBlendFuncSrcEnum(srcRGB)
+     || !ValidateBlendFuncSrcEnum(srcAlpha))
+        return ErrorInvalidEnum("BlendFuncSeparate: invalid source factor");
+    if (!ValidateBlendFuncDstEnum(dstRGB)
+     || !ValidateBlendFuncDstEnum(dstAlpha))
+        return ErrorInvalidEnum("BlendFuncSeparate: invalid destination factor");
+
+    MakeContextCurrent();
+    gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::BufferData(PRInt32 dummy)

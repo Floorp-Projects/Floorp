@@ -143,6 +143,49 @@ PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap)
     }
 }
 
+PRBool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode)
+{
+    switch (mode) {
+        case LOCAL_GL_FUNC_ADD:
+        case LOCAL_GL_FUNC_SUBTRACT:
+        case LOCAL_GL_FUNC_REVERSE_SUBTRACT:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor)
+{
+    switch (factor) {
+        case LOCAL_GL_ZERO:
+        case LOCAL_GL_ONE:
+        case LOCAL_GL_SRC_COLOR:
+        case LOCAL_GL_ONE_MINUS_SRC_COLOR:
+        case LOCAL_GL_DST_COLOR:
+        case LOCAL_GL_ONE_MINUS_DST_COLOR:
+        case LOCAL_GL_SRC_ALPHA:
+        case LOCAL_GL_ONE_MINUS_SRC_ALPHA:
+        case LOCAL_GL_DST_ALPHA:
+        case LOCAL_GL_ONE_MINUS_DST_ALPHA:
+        case LOCAL_GL_CONSTANT_COLOR:
+        case LOCAL_GL_ONE_MINUS_CONSTANT_COLOR:
+        case LOCAL_GL_CONSTANT_ALPHA:
+        case LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor)
+{
+    if(factor == LOCAL_GL_SRC_ALPHA_SATURATE)
+        return PR_TRUE;
+    else
+        return ValidateBlendFuncDstEnum(factor);
+}
+
 PRBool
 WebGLContext::InitAndValidateGL()
 {
