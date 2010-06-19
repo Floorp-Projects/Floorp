@@ -696,7 +696,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   nsIVariant getTexParameter(in WebGLenum target, in WebGLenum pname);
 
-  void getUniform (in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
+  nsIVariant getUniform(in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
 
   nsIWebGLUniformLocation getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
