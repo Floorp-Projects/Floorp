@@ -514,6 +514,11 @@ window.Items = {
   squishMode: 'squish', 
   
   // ----------
+  // Variable: defaultGutter
+  // How far apart Items should be from each other and from bounds
+  defaultGutter: 15,
+  
+  // ----------
   // Function: init
   // Initialize the object
   init: function() {
