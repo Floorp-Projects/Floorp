@@ -69,57 +69,57 @@ window.TabItem = function(container, tab) {
   // override dropOptions with custom tabitem methods
   // This is mostly to support the phantom groups.
   this.dropOptions.drop = function(e){
-		$target = iQ(this);  
-		iQ(this).removeClass("acceptsDrop");
-		var phantom = $target.data("phantomGroup")
-		
-		var group = drag.info.item.parent;
-		if( group == null ){
-			phantom.removeClass("phantom");
-			phantom.removeClass("group-content");
-			var group = new Group([$target, drag.info.$el], {container:phantom});
-		} else 
-			group.add( drag.info.$el );      
-	};
+    $target = iQ(this);  
+    iQ(this).removeClass("acceptsDrop");
+    var phantom = $target.data("phantomGroup")
+    
+    var group = drag.info.item.parent;
+    if( group == null ){
+      phantom.removeClass("phantom");
+      phantom.removeClass("group-content");
+      var group = new Group([$target, drag.info.$el], {container:phantom});
+    } else 
+      group.add( drag.info.$el );      
+  };
   this.dropOptions.over = function(e){
-		var $target = iQ(this);
+    var $target = iQ(this);
 
-		function elToRect($el){
-		 return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
-		}
+    function elToRect($el){
+     return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
+    }
 
-		var height = elToRect($target).height * 1.5 + 20;
-		var width = elToRect($target).width * 1.5 + 20;
-		var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
+    var height = elToRect($target).height * 1.5 + 20;
+    var width = elToRect($target).width * 1.5 + 20;
+    var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
 
-		var newLeft = unionRect.left + unionRect.width/2 - width/2;
-		var newTop = unionRect.top + unionRect.height/2 - height/2;
+    var newLeft = unionRect.left + unionRect.width/2 - width/2;
+    var newTop = unionRect.top + unionRect.height/2 - height/2;
 
-		iQ(".phantom").remove();
-		var phantom = iQ("<div>")
-			.addClass('group phantom group-content')
-			.css({
-				width: width,
-				height: height,
-				position:"absolute",
-				top: newTop,
-				left: newLeft,
-				zIndex: -99
-			})
-			.appendTo("body")
-			.hide()
-			.fadeIn();
-			
-		$target.data("phantomGroup", phantom);      
-	};
+    iQ(".phantom").remove();
+    var phantom = iQ("<div>")
+      .addClass('group phantom group-content')
+      .css({
+        width: width,
+        height: height,
+        position:"absolute",
+        top: newTop,
+        left: newLeft,
+        zIndex: -99
+      })
+      .appendTo("body")
+      .hide()
+      .fadeIn();
+      
+    $target.data("phantomGroup", phantom);      
+  };
   this.dropOptions.out =  function(e){      
-		var phantom = iQ(this).data("phantomGroup");
-		if(phantom) { 
-			phantom.fadeOut(function(){
-				iQ(this).remove();
-			});
-		}
-	}
+    var phantom = iQ(this).data("phantomGroup");
+    if(phantom) { 
+      phantom.fadeOut(function(){
+        iQ(this).remove();
+      });
+    }
+  }
   $div.draggable(this.dragOptions);
   $div.droppable(this.dropOptions);
   
@@ -319,9 +319,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     
     if(!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
-		
+    
     if (this.parent === null)
-			this.setTrenches(rect);
+      this.setTrenches(rect);
 
     this.save();
   },
@@ -381,10 +381,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         resize: function(){
           self.reloadBounds();
           var bounds = self.getBounds();
-					// OH SNAP!
-					var newRect = Trenches.snap(bounds,false,true);
-					if (newRect) // might be false if no changes were made
-						self.setBounds(bounds,true);
+          // OH SNAP!
+          var newRect = Trenches.snap(bounds,false,true);
+          if (newRect) // might be false if no changes were made
+            self.setBounds(bounds,true);
         },
         stop: function(){
           self.reloadBounds();
