@@ -354,11 +354,12 @@ function test14()
   ws.onclose = function(e)
   {
     shouldCloseCleanly(e);
-    doTest(15);
+    doTest(16);
   };
   ws._receivedCloseEvent = false;
 }
 
+// This test is disabled for now.
 function test15()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 15");
