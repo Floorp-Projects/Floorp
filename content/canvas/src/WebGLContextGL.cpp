@@ -2088,21 +2088,25 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, float, float)
 
 NS_IMETHODIMP
-WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height, WebGLenum format, WebGLenum type)
+WebGLContext::ReadPixels(PRInt32 dummy)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    return NS_ERROR_FAILURE;
+}
 
+NS_IMETHODIMP
+WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
+                              WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength)
+{
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         LogMessage("ReadPixels: Not allowed");
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("ReadPixels: negative size passed");
+
     WebGLsizei boundWidth = mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
     WebGLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
-    if (!CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight))
-        return ErrorInvalidOperation("ReadPixels: invalid dimensions (outside of framebuffer)");
 
     PRUint32 size = 0;
     switch (format) {
@@ -2141,18 +2145,129 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei he
     PRUint32 alignedRowSize = (plainRowSize + packAlignment-1) &
         ~PRUint32(packAlignment-1);
 
-    PRUint32 len = (height-1)*alignedRowSize + plainRowSize;
+    PRUint32 neededByteLength = (height-1)*alignedRowSize + plainRowSize;
 
-    JSObject *abufObject = js_CreateArrayBuffer(js.ctx, len);
-    if (!abufObject)
-        return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY, "readPixels: could not allocate buffer");
+    if(neededByteLength > byteLength)
+        return ErrorInvalidOperation("ReadPixels: buffer too small");
 
-    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(abufObject);
+    if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight)) {
+        // the easy case: we're not reading out-of-range pixels
+        gl->fReadPixels(x, y, width, height, format, type, data);
+    } else {
+        // the rectangle doesn't fit entirely in the bound buffer. We then have to set to zero the part
+        // of the buffer that correspond to out-of-range pixels. We don't want to rely on system OpenGL
+        // to do that for us, because passing out of range parameters to a buggy OpenGL implementation
+        // could conceivably allow to read memory we shouldn't be allowed to read. So we manually initialize
+        // the buffer to zero and compute the parameters to pass to OpenGL. We have to use an intermediate buffer
+        // to accomodate the potentially different strides (widths).
 
-    gl->fReadPixels((GLint) x, (GLint) y, width, height, format, type, (GLvoid *) abuf->data);
+        // zero the whole destination buffer. Too bad for the part that's going to be overwritten, we're not
+        // 100% efficient here, but in practice this is a quite rare case anyway.
+        memset(data, 0, byteLength);
 
-    JSObject *retval = js_CreateTypedArrayWithBuffer(js.ctx, js::TypedArray::TYPE_UINT8, abufObject, 0, len);
-    js.SetRetVal(retval);
+        if (   x >= boundWidth
+            || x+width <= 0
+            || y >= boundHeight
+            || y+height <= 0)
+        {
+            // we are completely outside of range, can exit now with buffer filled with zeros
+            return NS_OK;
+        }
+
+        // compute the parameters of the subrect we're actually going to call glReadPixels on
+        GLint   subrect_x      = PR_MAX(x, 0);
+        GLint   subrect_end_x  = PR_MIN(x+width, boundWidth);
+        GLsizei subrect_width  = subrect_end_x - subrect_x;
+
+        GLint   subrect_y      = PR_MAX(y, 0);
+        GLint   subrect_end_y  = PR_MIN(y+height, boundHeight);
+        GLsizei subrect_height = subrect_end_y - subrect_y;
+
+        // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
+        PRUint32 subrect_plainRowSize = subrect_width * size;
+        PRUint32 subrect_alignedRowSize = (subrect_plainRowSize + packAlignment-1) &
+            ~PRUint32(packAlignment-1);
+        PRUint32 subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
+
+        // create subrect buffer, call glReadPixels, copy pixels into destination buffer, delete subrect buffer
+        GLubyte *subrect_data = new GLubyte[subrect_byteLength];
+        gl->fReadPixels(subrect_x, subrect_y, subrect_width, subrect_height, format, type, subrect_data);
+        for (GLint y_inside_subrect = 0; y_inside_subrect < subrect_height; ++y_inside_subrect) {
+            GLint subrect_x_in_dest_buffer = subrect_x - x;
+            GLint subrect_y_in_dest_buffer = subrect_y - y;
+            memcpy(static_cast<GLubyte*>(data)
+                     + alignedRowSize * (subrect_y_in_dest_buffer + y_inside_subrect)
+                     + size * subrect_x_in_dest_buffer, // destination
+                   subrect_data + subrect_alignedRowSize * y_inside_subrect, // source
+                   subrect_plainRowSize); // size
+        }
+        delete [] subrect_data;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::ReadPixels_array(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
+                               WebGLenum format, WebGLenum type, js::TypedArray *pixels)
+{
+    return ReadPixels_base(x, y, width, height, format, type,
+                           pixels ? pixels->data : 0,
+                           pixels ? pixels->byteLength : 0);
+}
+
+NS_IMETHODIMP
+WebGLContext::ReadPixels_buf(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
+                             WebGLenum format, WebGLenum type, js::ArrayBuffer *pixels)
+{
+    return ReadPixels_base(x, y, width, height, format, type,
+                           pixels ? pixels->data : 0,
+                           pixels ? pixels->byteLength : 0);
+}
+
+NS_IMETHODIMP
+WebGLContext::ReadPixels_byteLength_old_API_deprecated(WebGLsizei width, WebGLsizei height,
+                             WebGLenum format, WebGLenum type, WebGLsizei *retval)
+{
+    *retval = 0;
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("ReadPixels: negative size passed");
+
+    PRUint32 size = 0;
+    switch (format) {
+      case LOCAL_GL_ALPHA:
+        size = 1;
+        break;
+      case LOCAL_GL_RGB:
+        size = 3;
+        break;
+      case LOCAL_GL_RGBA:
+        size = 4;
+        break;
+      default:
+        return ErrorInvalidEnum("ReadPixels: unsupported pixel format");
+    }
+
+    switch (type) {
+//         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+//         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+//         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+      case LOCAL_GL_UNSIGNED_BYTE:
+        break;
+      default:
+        return ErrorInvalidEnum("ReadPixels: unsupported pixel type");
+    }
+    PRUint32 packAlignment;
+    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*) &packAlignment);
+
+    PRUint32 plainRowSize = width*size;
+
+    // alignedRowSize = row size rounded up to next multiple of
+    // packAlignment which is a power of 2
+    PRUint32 alignedRowSize = (plainRowSize + packAlignment-1) &
+        ~PRUint32(packAlignment-1);
+
+    *retval = (height-1)*alignedRowSize + plainRowSize;
+
     return NS_OK;
 }
 
@@ -2874,14 +2989,6 @@ NS_IMETHODIMP
 WebGLContext::TexImage2D_dom_old_API_deprecated(WebGLenum target, WebGLint level, nsIDOMElement *elt,
                                                 PRBool flipY, PRBool premultiplyAlpha)
 {
-    static PRBool firsttime = PR_TRUE;
-
-    if (firsttime) {
-        LogMessage("The WebGL spec changed, TexImage2D is now taking at least 6 parameters, please "
-                   "adapt your JavaScript code as support for the old API will soon be dropped!");
-        firsttime = PR_FALSE;
-    }
-
     nsRefPtr<gfxImageSurface> isurf;
 
     nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
