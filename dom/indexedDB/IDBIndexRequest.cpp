@@ -477,12 +477,6 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
     aDirection = nsIIDBCursor::NEXT;
   }
 
-  if (aDirection == nsIIDBCursor::NEXT_NO_DUPLICATE ||
-      aDirection == nsIIDBCursor::PREV_NO_DUPLICATE) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   if (aPreload) {
     NS_NOTYETIMPLEMENTED("Implement me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -548,12 +542,6 @@ IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
   }
   else {
     aDirection = nsIIDBCursor::NEXT;
-  }
-
-  if (aDirection == nsIIDBCursor::NEXT_NO_DUPLICATE ||
-      aDirection == nsIIDBCursor::PREV_NO_DUPLICATE) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   if (aPreload) {
@@ -1019,13 +1007,30 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     keyRangeClause.Append(rightKeyName);
   }
 
+  nsCString groupClause;
+  switch (mDirection) {
+    case nsIIDBCursor::NEXT:
+    case nsIIDBCursor::PREV:
+      break;
+
+    case nsIIDBCursor::NEXT_NO_DUPLICATE:
+    case nsIIDBCursor::PREV_NO_DUPLICATE:
+      groupClause = NS_LITERAL_CSTRING(" GROUP BY value");
+      break;
+
+    default:
+      NS_NOTREACHED("Unknown direction!");
+  }
+
   nsCString directionClause;
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
+    case nsIIDBCursor::NEXT_NO_DUPLICATE:
       directionClause = NS_LITERAL_CSTRING("DESC");
       break;
 
     case nsIIDBCursor::PREV:
+    case nsIIDBCursor::PREV_NO_DUPLICATE:
       directionClause = NS_LITERAL_CSTRING("ASC");
       break;
 
@@ -1036,8 +1041,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCString query = NS_LITERAL_CSTRING("SELECT value, ") + keyColumn +
                     NS_LITERAL_CSTRING(" FROM ") + table +
                     NS_LITERAL_CSTRING(" WHERE index_id = :") + indexId +
-                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY value ") +
-                    directionClause;
+                    keyRangeClause + groupClause +
+                    NS_LITERAL_CSTRING(" ORDER BY value ") + directionClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -1210,13 +1215,31 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     keyRangeClause.Append(rightKeyName);
   }
 
+  nsCString groupClause;
+  switch (mDirection) {
+    case nsIIDBCursor::NEXT:
+    case nsIIDBCursor::PREV:
+      break;
+
+    case nsIIDBCursor::NEXT_NO_DUPLICATE:
+    case nsIIDBCursor::PREV_NO_DUPLICATE:
+      groupClause = NS_LITERAL_CSTRING(" GROUP BY ") + indexTable +
+                    NS_LITERAL_CSTRING(".") + value;
+      break;
+
+    default:
+      NS_NOTREACHED("Unknown direction!");
+  }
+
   nsCString directionClause;
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
+    case nsIIDBCursor::NEXT_NO_DUPLICATE:
       directionClause = NS_LITERAL_CSTRING(" DESC");
       break;
 
     case nsIIDBCursor::PREV:
+    case nsIIDBCursor::PREV_NO_DUPLICATE:
       directionClause = NS_LITERAL_CSTRING(" ASC");
       break;
 
@@ -1224,18 +1247,19 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       NS_NOTREACHED("Unknown direction!");
   }
 
-  nsCAutoString query = NS_LITERAL_CSTRING("SELECT ") + indexTable +
-                        NS_LITERAL_CSTRING(".") + value +
-                        NS_LITERAL_CSTRING(",") + objectTable +
-                        NS_LITERAL_CSTRING(".") + data +
-                        NS_LITERAL_CSTRING(" FROM ") + objectTable +
-                        NS_LITERAL_CSTRING(" INNER JOIN ") + indexTable +
-                        NS_LITERAL_CSTRING(" ON ") + indexTable +
-                        NS_LITERAL_CSTRING(".object_data_id = ") + objectTable +
-                        NS_LITERAL_CSTRING(".id WHERE ") + indexId +
-                        NS_LITERAL_CSTRING("= :") + indexId + keyRangeClause +
-                        NS_LITERAL_CSTRING(" ORDER BY ") + indexTable +
-                        NS_LITERAL_CSTRING(".") + value + directionClause;
+  nsCString query = NS_LITERAL_CSTRING("SELECT ") + indexTable +
+                    NS_LITERAL_CSTRING(".") + value +
+                    NS_LITERAL_CSTRING(",") + objectTable +
+                    NS_LITERAL_CSTRING(".") + data +
+                    NS_LITERAL_CSTRING(" FROM ") + objectTable +
+                    NS_LITERAL_CSTRING(" INNER JOIN ") + indexTable +
+                    NS_LITERAL_CSTRING(" ON ") + indexTable +
+                    NS_LITERAL_CSTRING(".object_data_id = ") + objectTable +
+                    NS_LITERAL_CSTRING(".id WHERE ") + indexId +
+                    NS_LITERAL_CSTRING("= :") + indexId + keyRangeClause +
+                    groupClause + NS_LITERAL_CSTRING(" ORDER BY ") +
+                    indexTable + NS_LITERAL_CSTRING(".") + value +
+                    directionClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
