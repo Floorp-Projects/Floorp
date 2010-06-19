@@ -70,7 +70,7 @@ class nsXFormsAccessible : public nsHyperTextAccessibleWrap,
                            public nsXFormsAccessibleBase
 {
 public:
-  nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXFormsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
 
@@ -125,7 +125,7 @@ protected:
 class nsXFormsContainerAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXFormsContainerAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -143,7 +143,7 @@ public:
 class nsXFormsEditableAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsEditableAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+  nsXFormsEditableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessibleEditableText
   NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
@@ -160,7 +160,7 @@ public:
 class nsXFormsSelectableAccessible : public nsXFormsEditableAccessible
 {
 public:
-  nsXFormsSelectableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXFormsSelectableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
@@ -178,7 +178,8 @@ protected:
 class nsXFormsSelectableItemAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsSelectableItemAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsXFormsSelectableItemAccessible(nsIContent *aContent,
+                                   nsIWeakReference *aShell);
 
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetNumActions(PRUint8 *aCount);

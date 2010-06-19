@@ -23,8 +23,8 @@ function get_auth_info() {
   return null;
 }
 
-function download_failed(install, status) {
-  is(status, AddonManager.ERROR_NETWORK_FAILURE, "Install should have failed");
+function download_failed(install) {
+  is(install.error, AddonManager.ERROR_NETWORK_FAILURE, "Install should have failed");
 }
 
 function install_ended(install, addon) {

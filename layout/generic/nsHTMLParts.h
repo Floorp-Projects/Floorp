@@ -235,6 +235,8 @@ NS_NewHTMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 // in nsContentSink.h
 nsresult
 NS_NewHTMLParanoidFragmentSink(nsIFragmentContentSink** aInstancePtrResult);
+nsresult
+NS_NewHTMLParanoidFragmentSink2(nsIFragmentContentSink** aInstancePtrResult);
 void
 NS_HTMLParanoidFragmentSinkShutdown();
 #endif /* nsHTMLParts_h___ */

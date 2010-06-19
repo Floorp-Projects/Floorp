@@ -111,6 +111,7 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
+#include "nsWebSocket.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -300,6 +301,9 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocket)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSSProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileDataProtocolHandler)
@@ -515,9 +519,11 @@ MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPla
 MAKE_CTOR(CreateHTMLFragmentSink,         nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink)
 MAKE_CTOR(CreateHTMLFragmentSink2,        nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink2)
 MAKE_CTOR(CreateHTMLParanoidFragmentSink, nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink)
+MAKE_CTOR(CreateHTMLParanoidFragmentSink2,nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink2)
 MAKE_CTOR(CreateXMLFragmentSink,          nsIFragmentContentSink,      NS_NewXMLFragmentContentSink)
 MAKE_CTOR(CreateXMLFragmentSink2,         nsIFragmentContentSink,      NS_NewXMLFragmentContentSink2)
 MAKE_CTOR(CreateXHTMLParanoidFragmentSink,nsIFragmentContentSink,      NS_NewXHTMLParanoidFragmentSink)
+MAKE_CTOR(CreateXHTMLParanoidFragmentSink2,nsIFragmentContentSink,     NS_NewXHTMLParanoidFragmentSink2)
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
@@ -1301,6 +1307,11 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
     NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID,
     CreateHTMLParanoidFragmentSink },
 
+  { "html paranoid fragment sink 2",
+    NS_HTMLPARANOIDFRAGMENTSINK2_CID,
+    NS_HTMLPARANOIDFRAGMENTSINK2_CONTRACTID,
+    CreateHTMLParanoidFragmentSink2 },
+
   { "HTML sanitizing content serializer",
     MOZ_SANITIZINGHTMLSERIALIZER_CID,
     MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID,
@@ -1320,6 +1331,11 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
     NS_XHTMLPARANOIDFRAGMENTSINK_CID,
     NS_XHTMLPARANOIDFRAGMENTSINK_CONTRACTID,
     CreateXHTMLParanoidFragmentSink },
+
+  { "xhtml paranoid fragment sink 2",
+    NS_XHTMLPARANOIDFRAGMENTSINK2_CID,
+    NS_XHTMLPARANOIDFRAGMENTSINK2_CONTRACTID,
+    CreateXHTMLParanoidFragmentSink2 },
 
   { "XBL Service",
     NS_XBLSERVICE_CID,
@@ -1397,7 +1413,7 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
 
   { "Document Loader Factory",
     NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID,
-    "@mozilla.org/content/document-loader-factory;1",
+    CONTENT_DLF_CONTRACTID,
     CreateContentDLF,
     nsContentDLF::RegisterDocumentFactories,
     nsContentDLF::UnregisterDocumentFactories },
@@ -1448,7 +1464,7 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
 
   { "Plugin Document Loader Factory",
     NS_PLUGINDOCLOADERFACTORY_CID,
-    "@mozilla.org/content/plugin/document-loader-factory;1",
+    PLUGIN_DLF_CONTRACTID,
     CreateContentDLF },
 
   { "Plugin Document",
@@ -1514,6 +1530,21 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
     NS_XMLHTTPREQUEST_CID,
     NS_XMLHTTPREQUEST_CONTRACTID,
     nsXMLHttpRequestConstructor },
+
+  { "WebSocket",
+    NS_WEBSOCKET_CID,
+    NS_WEBSOCKET_CONTRACTID,
+    nsWebSocketConstructor },
+
+  { "WS Protocol Handler",
+    NS_WSPROTOCOLHANDLER_CID,
+    NS_WSPROTOCOLHANDLER_CONTRACTID,
+    nsWSProtocolHandlerConstructor },
+
+  { "WSS Protocol Handler",
+    NS_WSSPROTOCOLHANDLER_CID,
+    NS_WSSPROTOCOLHANDLER_CONTRACTID,
+    nsWSSProtocolHandlerConstructor },
 
   { "DOM Parser",
     NS_DOMPARSER_CID,

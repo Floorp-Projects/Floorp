@@ -219,7 +219,7 @@ _VISITED_REFTEST_FILES = \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02-ref.svg \
 		$(NULL)
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
 		browser_bug453896.js \
 		bug453896_iframe.html \
@@ -233,7 +233,7 @@ libs:: $(_TEST_FILES)
 libs:: $(_VISITED_REFTEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 endif

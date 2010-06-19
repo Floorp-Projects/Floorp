@@ -928,7 +928,7 @@ function makePreview(row)
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
-  const regex = /^(https?|ftp|file|gopher|about|chrome|resource):/;
+  const regex = /^(https?|ftp|file|about|chrome|resource):/;
   var isProtocolAllowed = regex.test(url);
   if (/^data:/.test(url) && /^image\//.test(mimeType))
     isProtocolAllowed = true;

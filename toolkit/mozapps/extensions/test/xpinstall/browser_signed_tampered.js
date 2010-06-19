@@ -20,8 +20,8 @@ function confirm_install(window) {
   ok(false, "Should not offer to install");
 }
 
-function download_failed(install, status) {
-  is(status, AddonManager.ERROR_CORRUPT_FILE, "Install should fail");
+function download_failed(install) {
+  is(install.error, AddonManager.ERROR_CORRUPT_FILE, "Install should fail");
 }
 
 function finish_test(count) {

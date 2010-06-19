@@ -44,19 +44,7 @@
 #include "a11yGeneric.h"
 #include "nsAccDocManager.h"
 
-#include "nsCOMArray.h"
 #include "nsIObserver.h"
-
-class nsAccessNode;
-class nsAccessible;
-class nsIFrame;
-class nsIWeakReference;
-class nsIDOMNode;
-class nsObjectFrame;
-class nsIDocShell;
-class nsIPresShell;
-class nsIContent;
-struct nsRoleMapEntry;
 
 class nsAccessibilityService : public nsAccDocManager,
                                public nsIAccessibilityService,
@@ -136,17 +124,11 @@ public:
 
   virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
+  virtual void PresShellDestroyed(nsIPresShell* aPresShell);
+
   virtual nsresult FireAccessibleEvent(PRUint32 aEvent, nsIAccessible *aTarget);
 
   // nsAccessibiltiyService
-
-  /**
-   * Return presentation shell for the given node.
-   *
-   * @param aNode - the given DOM node.
-   */
-  static nsresult GetShellFromNode(nsIDOMNode *aNode,
-                                   nsIWeakReference **weakShell);
 
   /**
    * Return true if accessibility service has been shutdown.
@@ -163,13 +145,13 @@ public:
    *                       hidden
    */
   already_AddRefed<nsAccessible>
-    GetAccessible(nsIDOMNode *aNode, nsIPresShell *aPresShell,
+    GetAccessible(nsINode *aNode, nsIPresShell *aPresShell,
                   nsIWeakReference *aWeakShell, PRBool *aIsHidden = nsnull);
 
   /**
    * Return an accessible for the given DOM node.
    */
-  nsAccessible *GetAccessible(nsIDOMNode *aNode);
+  nsAccessible *GetAccessible(nsINode *aNode);
 
   /**
    * Return an accessible for a DOM node in the given pres shell.
@@ -177,7 +159,7 @@ public:
    * @param aNode       [in] the given node.
    * @param aPresShell  [in] the presentation shell of the given node.
    */
-  nsAccessible *GetAccessibleInWeakShell(nsIDOMNode *aNode,
+  nsAccessible *GetAccessibleInWeakShell(nsINode *aNode,
                                          nsIWeakReference *aPresShell);
 
   /**
@@ -187,18 +169,33 @@ public:
    * @param aCanCreate  [in] specifies if accessible can be created if it didn't
    *                     exist
    */
-  nsAccessible *GetContainerAccessible(nsIDOMNode *aNode, PRBool aCanCreate);
+  nsAccessible *GetContainerAccessible(nsINode *aNode, PRBool aCanCreate);
 
   /**
-   * Return an access node for the DOM node in the given presentation shell if
-   * the access node already exists, otherwise null.
+   * The same as getAccessibleFor method except it returns accessible only if
+   * it is attached, i.e. accessible is certified to be a descendant of the root
+   * accessible.
    *
-   * @param  aNode       [in] the DOM node to get an access node for
-   * @param  aPresShell  [in] the presentation shell which contains layout info
-   *                       for the DOM node
+   * XXX: this method must go away once we'll implement correct accessible tree.
+   *
+   * @param  aNode  [in] the DOM node to get an accessible for
+   * @return         the accessible for the given DOM node
    */
-  nsAccessNode* GetCachedAccessNode(nsIDOMNode *aNode,
-                                    nsIWeakReference *aShell);
+  nsAccessible *GetAttachedAccessibleFor(nsINode *aNode);
+
+  /**
+   * Return an DOM node that is relevant to attached accessible check. This
+   * node is either from bindings chain if given node is anonymous and owner
+   * binding denies accessible in anonymous content or given node (it's not
+   * important whether it is accessible or not). This method doesn't create
+   * accessible object for returned node.
+   *
+   * XXX: this method must go away once we'll implement correct accessible tree.
+   *
+   * @param  aNode  [in] the DOM node to get relevant content node
+   * @return         the DOM node for parent attached accessible
+   */
+  nsINode *GetRelevantContentNodeFor(nsINode *aNode);
 
   /**
    * Initialize an accessible and cache it. The method should be called for
@@ -212,6 +209,18 @@ public:
    */
   PRBool InitAccessible(nsAccessible *aAccessible,
                         nsRoleMapEntry *aRoleMapEntry);
+
+protected:
+  /**
+   * Return an accessible for the DOM node in the given presentation shell if
+   * the accessible already exists, otherwise null.
+   *
+   * @param  aNode       [in] the DOM node to get an access node for
+   * @param  aPresShell  [in] the presentation shell which contains layout info
+   *                       for the DOM node
+   */
+  nsAccessible *GetCachedAccessible(nsINode *aNode,
+                                    nsIWeakReference *aShell);
 
 private:
   // nsAccessibilityService creation is controlled by friend
@@ -234,20 +243,19 @@ private:
   /**
    * Return presentation shell, DOM node for the given frame.
    *
-   * @param aFrame - the given frame
-   * @param aShell [out] - presentation shell for DOM node associated with the
-   *                 given frame
-   * @param aContent [out] - DOM node associated with the given frame
+   * @param aFrame    [in] the given frame
+   * @param aShell    [out] presentation shell for DOM node associated with the
+   *                    given frame
+   * @param aContent  [out] DOM node associated with the given frame
    */
-  nsresult GetInfo(nsIFrame *aFrame,
-                   nsIWeakReference **aShell,
-                   nsIDOMNode **aContent);
+  nsresult GetInfo(nsIFrame *aFrame, nsIWeakReference **aShell,
+                   nsIContent **aContent);
 
   /**
    * Return accessible for HTML area element associated with an image map.
    */
   already_AddRefed<nsAccessible>
-    GetAreaAccessible(nsIFrame *aImageFrame, nsIDOMNode *aAreaNode,
+    GetAreaAccessible(nsIFrame *aImageFrame, nsINode *aAreaNode,
                       nsIWeakReference *aWeakShell);
 
   /**
@@ -255,20 +263,20 @@ private:
    * interface.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleByType(nsIDOMNode *aNode, nsIWeakReference *aWeakShell);
+    CreateAccessibleByType(nsIContent *aContent, nsIWeakReference *aWeakShell);
 
   /**
    * Create accessible for HTML node by tag name.
    */
   already_AddRefed<nsAccessible>
     CreateHTMLAccessibleByMarkup(nsIFrame *aFrame, nsIWeakReference *aWeakShell,
-                                 nsIDOMNode *aNode);
+                                 nsINode *aNode);
 
   /**
    * Create accessible if parent is a deck frame.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleForDeckChild(nsIFrame *aFrame, nsIDOMNode *aNode,
+    CreateAccessibleForDeckChild(nsIFrame *aFrame, nsIContent *aContent,
                                  nsIWeakReference *aWeakShell);
 
 #ifdef MOZ_XUL
@@ -276,7 +284,8 @@ private:
    * Create accessible for XUL tree element.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleForXULTree(nsIDOMNode *aNode, nsIWeakReference *aWeakShell);
+    CreateAccessibleForXULTree(nsIContent *aContent,
+                               nsIWeakReference *aWeakShell);
 #endif
 
   /**

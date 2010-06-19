@@ -53,8 +53,7 @@
 class nsOuterDocAccessible : public nsAccessibleWrap
 {
 public:
-  nsOuterDocAccessible(nsIDOMNode* aNode, 
-                       nsIWeakReference* aShell);
+  nsOuterDocAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -65,7 +64,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessNode
-  virtual nsresult Shutdown();
+  virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);

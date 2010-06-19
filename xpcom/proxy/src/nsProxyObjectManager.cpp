@@ -290,7 +290,7 @@ nsProxyObjectManager::GetClass(REFNSIID aIID, nsProxyEventClass **aResult)
     }
 
     nsIInterfaceInfoManager *iim =
-        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+        xptiInterfaceInfoManager::GetSingleton();
     if (!iim)
         return NS_ERROR_FAILURE;
 

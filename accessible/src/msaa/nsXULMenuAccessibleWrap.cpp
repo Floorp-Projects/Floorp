@@ -39,13 +39,13 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsINameSpaceManager.h"
 
-// --------------------------------------------------------
-// nsXULMenuAccessibleWrap Accessible
-// --------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// nsXULMenuAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
-nsXULMenuitemAccessibleWrap::nsXULMenuitemAccessibleWrap(nsIDOMNode *aDOMNode, 
-                                                         nsIWeakReference *aShell):
-nsXULMenuitemAccessible(aDOMNode, aShell)
+nsXULMenuitemAccessibleWrap::
+  nsXULMenuitemAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULMenuitemAccessible(aContent, aShell)
 {
 }
 
@@ -58,11 +58,9 @@ nsXULMenuitemAccessibleWrap::GetName(nsAString& aName)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(content, "Should not have gotten past nsXULMenuitemAccessible::GetName");
   
   nsAutoString accel;
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::acceltext, accel);
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::acceltext, accel);
   if (!accel.IsEmpty()) {
     aName += NS_LITERAL_STRING("\t") + accel;
   }

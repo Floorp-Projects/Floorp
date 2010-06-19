@@ -57,6 +57,7 @@
 
   // Alphabetical list of generic atoms
 ACCESSIBILITY_ATOM(button, "button")
+ACCESSIBILITY_ATOM(checkbox, "checkbox")
 ACCESSIBILITY_ATOM(col, "col")
 ACCESSIBILITY_ATOM(_empty, "")
 ACCESSIBILITY_ATOM(_false, "false")
@@ -64,7 +65,10 @@ ACCESSIBILITY_ATOM(image, "image")
 ACCESSIBILITY_ATOM(menu, "menu")
 ACCESSIBILITY_ATOM(menuButton, "menu-button")
 ACCESSIBILITY_ATOM(menugenerated, "menugenerated")
+ACCESSIBILITY_ATOM(multiple, "multiple")
+ACCESSIBILITY_ATOM(open, "open")
 ACCESSIBILITY_ATOM(password, "password")
+ACCESSIBILITY_ATOM(radio, "radio")
 ACCESSIBILITY_ATOM(reset, "reset")
 ACCESSIBILITY_ATOM(row, "row")
 ACCESSIBILITY_ATOM(submit, "submit")
@@ -122,6 +126,7 @@ ACCESSIBILITY_ATOM(label, "label")
 ACCESSIBILITY_ATOM(legend, "legend")
 ACCESSIBILITY_ATOM(li, "li")
 ACCESSIBILITY_ATOM(link, "link")
+ACCESSIBILITY_ATOM(listcell, "listcell") // XUL
 ACCESSIBILITY_ATOM(listcols, "listcols") // XUL
 ACCESSIBILITY_ATOM(listcol, "listcol") // XUL
 ACCESSIBILITY_ATOM(listhead, "listhead") // XUL
@@ -161,6 +166,7 @@ ACCESSIBILITY_ATOM(acceltext, "acceltext")
 ACCESSIBILITY_ATOM(accesskey, "accesskey")
 ACCESSIBILITY_ATOM(alt, "alt")
 ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
+ACCESSIBILITY_ATOM(checked, "checked")
 ACCESSIBILITY_ATOM(contenteditable, "contenteditable")
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(disabled, "disabled")
@@ -175,6 +181,7 @@ ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
 ACCESSIBILITY_ATOM(headers, "headers")   // HTML table
 ACCESSIBILITY_ATOM(hidden, "hidden")   // XUL tree columns
+ACCESSIBILITY_ATOM(hover, "hover") // XUL color picker
 ACCESSIBILITY_ATOM(href, "href") // XUL, XLink
 ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
@@ -183,12 +190,14 @@ ACCESSIBILITY_ATOM(longDesc, "longdesc")
 ACCESSIBILITY_ATOM(max, "max") // XUL
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
+ACCESSIBILITY_ATOM(_moz_menuactive, "_moz-menuactive") // XUL
 ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")
 ACCESSIBILITY_ATOM(popup, "popup")
 ACCESSIBILITY_ATOM(readonly, "readonly")
 ACCESSIBILITY_ATOM(scope, "scope") // HTML table
+ACCESSIBILITY_ATOM(seltype, "seltype") // XUL listbox
 ACCESSIBILITY_ATOM(simple, "simple") // XLink
 ACCESSIBILITY_ATOM(src, "src")
 ACCESSIBILITY_ATOM(selected, "selected")

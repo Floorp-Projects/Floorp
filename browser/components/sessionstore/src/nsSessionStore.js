@@ -1934,7 +1934,9 @@ SessionStoreService.prototype = {
       tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
     
     for (var t = 0; t < newTabCount; t++) {
-      tabs.push(t < openTabCount ? tabbrowser.tabs[t] : tabbrowser.addTab());
+      tabs.push(t < openTabCount ?
+                tabbrowser.tabs[t] :
+                tabbrowser.addTab("about:blank", {skipAnimation: true}));
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {
         tabbrowser.moveTabTo(tabs[t], t);

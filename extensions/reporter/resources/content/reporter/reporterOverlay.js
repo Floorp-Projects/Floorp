@@ -56,7 +56,6 @@ var reporterListener = {
         case "http":
         case "https":
         case "ftp":
-        case "gopher":
           isEnabled = true;
       }
     }

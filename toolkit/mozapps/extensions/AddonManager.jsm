@@ -231,6 +231,22 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Unregisters an AddonProvider.
+   *
+   * @param  aProvider
+   *         The provider to unregister
+   */
+  unregisterProvider: function AMI_unregisterProvider(aProvider) {
+    this.providers = this.providers.filter(function(p) {
+      return p != aProvider;
+    });
+
+    // If we're unregistering after startup call this provider's shutdown.
+    if (this.started)
+      callProvider(aProvider, "shutdown");
+  },
+
+  /**
    * Shuts down the addon manager and all registered providers, this must clean
    * up everything in order for automated tests to fake restarts.
    */
@@ -750,6 +766,10 @@ var AddonManagerPrivate = {
     AddonManagerInternal.registerProvider(aProvider);
   },
 
+  unregisterProvider: function AMP_unregisterProvider(aProvider) {
+    AddonManagerInternal.unregisterProvider(aProvider);
+  },
+
   shutdown: function AMP_shutdown() {
     AddonManagerInternal.shutdown();
   },
@@ -809,6 +829,22 @@ var AddonManager = {
   ERROR_INCORRECT_HASH: -2,
   // The downloaded file seems to be corrupted in some way.
   ERROR_CORRUPT_FILE: -3,
+  // An error occured trying to write to the filesystem.
+  ERROR_FILE_ACCESS: -4,
+
+  // These must be kept in sync with AddonUpdateChecker.
+  // No error was encountered.
+  UPDATE_STATUS_NO_ERROR: 0,
+  // The update check timed out
+  UPDATE_STATUS_TIMEOUT: -1,
+  // There was an error while downloading the update information.
+  UPDATE_STATUS_DOWNLOAD_ERROR: -2,
+  // The update information was malformed in some way.
+  UPDATE_STATUS_PARSE_ERROR: -3,
+  // The update information was not in any known format.
+  UPDATE_STATUS_UNKNOWN_FORMAT: -4,
+  // The update information was not correctly signed or there was an SSL error.
+  UPDATE_STATUS_SECURITY_ERROR: -5,
 
   // Constants to indicate why an update check is being performed
   // Update check has been requested by the user.

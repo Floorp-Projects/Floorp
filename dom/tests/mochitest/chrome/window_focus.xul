@@ -1085,7 +1085,7 @@ function modalWindowOpened(modalWindow)
   if (gPartialTabbing)
     elem.focus();
   else
-    pressTab();
+    synthesizeKey("VK_TAB", { }, modalWindow);
   is(fm.activeWindow, modalWindow, "modal activeWindow");
   is(fm.focusedElement, elem, "modal focusedElement");
 

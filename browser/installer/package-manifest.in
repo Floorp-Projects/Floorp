@@ -266,7 +266,6 @@
 @BINPATH@/components/FeedWriter.js
 @BINPATH@/components/fuelApplication.js
 @BINPATH@/components/WebContentConverter.js
-@BINPATH@/components/nsAddonRepository.js
 @BINPATH@/components/nsBrowserContentHandler.js
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.js
@@ -334,6 +333,7 @@
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
 @BINPATH@/components/nsINIProcessor.js
+@BINPATH@/components/nsPrompter.js
 
 ; Modules
 @BINPATH@/modules/*

@@ -571,9 +571,18 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
         nsIFrame* child = frame;
         nsIFrame* parent = frame->GetParent();
         // As long as we're on the last sibling, the parent doesn't have to be split.
+        // However, if the parent has a fluid continuation, we do have to make
+        // it non-fluid. This can happen e.g. when we have a first-letter frame
+        // and the end of the first-letter coincides with the end of a
+        // directional run.
         while (parent &&
                IsBidiSplittable(parent) &&
                !child->GetNextSibling()) {
+          nsIFrame* next = parent->GetNextInFlow();
+          if (next) {
+            parent->SetNextContinuation(next);
+            next->SetPrevContinuation(parent);
+          }
           child = parent;
           parent = child->GetParent();
         }

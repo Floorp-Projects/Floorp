@@ -9,6 +9,8 @@ const EVENT_FOCUS = nsIAccessibleEvent.EVENT_FOCUS;
 const EVENT_NAME_CHANGE = nsIAccessibleEvent.EVENT_NAME_CHANGE;
 const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 const EVENT_SCROLLING_START = nsIAccessibleEvent.EVENT_SCROLLING_START;
+const EVENT_SELECTION_ADD = nsIAccessibleEvent.EVENT_SELECTION_ADD;
+const EVENT_SELECTION_WITHIN = nsIAccessibleEvent.EVENT_SELECTION_WITHIN;
 const EVENT_SHOW = nsIAccessibleEvent.EVENT_SHOW;
 const EVENT_STATE_CHANGE = nsIAccessibleEvent.EVENT_STATE_CHANGE;
 const EVENT_TEXT_CARET_MOVED = nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED;
@@ -22,6 +24,11 @@ const EVENT_VALUE_CHANGE = nsIAccessibleEvent.EVENT_VALUE_CHANGE;
  * Set up this variable to dump events into DOM.
  */
 var gA11yEventDumpID = "";
+
+/**
+ * Set up this variable to dump event processing into console.
+ */
+var gA11yEventDumpToConsole = false;
 
 /**
  * Executes the function when requested event is handled.
@@ -259,6 +266,9 @@ function eventQueue(aEventType)
     invoker = this.getNextInvoker();
 
     this.setEventHandler(invoker);
+
+    if (gA11yEventDumpToConsole)
+      dump("\nEvent queue: \n  invoke: " + invoker.getID() + "\n");
 
     if (invoker.invoke() == INVOKER_ACTION_FAILED) {
       // Invoker failed to prepare action, fail and finish tests.

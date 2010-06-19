@@ -44,6 +44,9 @@
 #include "gfxUserFontSet.h"
 #include "cairo-win32.h"
 
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+
 /**
  * \brief Class representing a font face for a font entry.
  */
@@ -52,8 +55,11 @@ class gfxDWriteFont : public gfxFont
 public:
     gfxDWriteFont(gfxFontEntry *aFontEntry,
                   const gfxFontStyle *aFontStyle,
-                  PRBool aNeedsBold = PR_FALSE);
+                  PRBool aNeedsBold = PR_FALSE,
+                  AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
+
+    virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
     virtual nsString GetUniqueName();
 
@@ -69,20 +75,28 @@ public:
 
     IDWriteFontFace *GetFontFace() { return mFontFace.get(); }
 
+    // override gfxFont table access function to bypass gfxFontEntry cache,
+    // use DWrite API to get direct access to system font data
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
+
 protected:
+    virtual void CreatePlatformShaper();
+
     void ComputeMetrics();
 
     cairo_font_face_t *CairoFontFace();
 
     cairo_scaled_font_t *CairoScaledFont();
 
+    static void DestroyBlobFunc(void* userArg);
+
     nsRefPtr<IDWriteFontFace> mFontFace;
     cairo_font_face_t *mCairoFontFace;
     cairo_scaled_font_t *mCairoScaledFont;
 
-    gfxFloat mAdjustedSize;
     gfxFont::Metrics mMetrics;
     PRBool mNeedsOblique;
+    PRBool mNeedsBold;
 };
 
 #endif
