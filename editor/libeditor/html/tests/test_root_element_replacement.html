@@ -89,20 +89,27 @@ function onLoadIFrame()
 
   var frameDoc = gIFrame.contentWindow.document;
 
-  const kTest = kTests[gTestIndex];
-  ok(true, "Running " + kTest.description);
-  if (kTest.args.length == 1) {
-    kTest.initializer(frameDoc, gSetFocusToIFrame, kTest.args[0]);
-  } else {
-    ok(false, "kTests is broken at index=" + gTestIndex);
-  }
-
+  var selCon = gIFrame.contentWindow.
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIWebNavigation).
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsISelectionDisplay).
+    QueryInterface(Components.interfaces.nsISelectionController);
   var utils = window.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIDOMWindowUtils);
   const nsIDOMNode = Components.interfaces.nsIDOMNode;
 
   // move focus to the HTML editor
+  const kTest = kTests[gTestIndex];
+  ok(true, "Running " + kTest.description);
+  if (kTest.args.length == 1) {
+    kTest.initializer(frameDoc, gSetFocusToIFrame, kTest.args[0]);
+    ok(selCon.caretVisible, "caret isn't visible -- " + kTest.description);
+  } else {
+    ok(false, "kTests is broken at index=" + gTestIndex);
+  }
+
   is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
      "IME isn't enabled -- " + kTest.description);
   synthesizeKey("A", { }, gIFrame.contentWindow);
@@ -115,7 +122,9 @@ function onLoadIFrame()
        "the content of body isn't text node -- " + kTest.description);
     if (content.nodeType == nsIDOMNode.TEXT_NODE) {
       is(content.data, "ABC",
-       "the content of body text isn't 'ABC' -- " + kTest.description);
+         "the content of body text isn't 'ABC' -- " + kTest.description);
+      is(frameDoc.body.innerHTML, "ABC",
+         "the innerHTML of body isn't 'ABC' -- " + kTest.description);
     }
   }
 

@@ -150,7 +150,7 @@ public:
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual PRBool HasFocus();
   virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
-  already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
+  virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
 
   /* ------------ nsStubMutationObserver overrides --------- */
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
