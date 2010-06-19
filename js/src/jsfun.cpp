@@ -2085,7 +2085,6 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
 
     if (length > JS_ARGS_LENGTH_MAX)
         length = JS_ARGS_LENGTH_MAX;
-        return JS_FALSE;
 
     InvokeArgsGuard args;
     if (!cx->stack().pushInvokeArgs(cx, length, args))
