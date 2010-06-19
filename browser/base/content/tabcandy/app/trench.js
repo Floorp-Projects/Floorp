@@ -49,12 +49,12 @@ var Trench = function(element, xory, type, edge) {
   this.edge = edge; // "top", "left", "bottom", or "right"
 
   this.active = false;
-  this.gutter = 15;
+  this.gutter = Items.defaultGutter;
 
   // position is the position that we should snap to
   this.position = 0;
   // radius is how far away we should snap from
-  this.radius = 10;
+  this.radius = Trenches.defaultRadius;
 
   // theoretical range - this is along the perpendicular axis
   this.range = {min: 0, max: 10000};
@@ -175,7 +175,7 @@ Trench.prototype = {
         edgeToCheck = "bottom";
       else if (this.edge == "bottom")
         edgeToCheck = "top";
-    } else if (this.type == "guide") {
+    } else { // if trench type is guide or barrier...
       edgeToCheck = this.edge;
     }
 
@@ -292,6 +292,7 @@ Trench.prototype = {
 // used to track "trenches" in which the edges will snap.
 var Trenches = {
   nextId: 0,
+  defaultRadius: 10,
   preferTop: true,
   preferLeft: true,
   activeTrenches: {},
