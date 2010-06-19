@@ -1249,14 +1249,14 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCString query = NS_LITERAL_CSTRING("SELECT ") + indexTable +
                     NS_LITERAL_CSTRING(".") + value +
-                    NS_LITERAL_CSTRING(",") + objectTable +
+                    NS_LITERAL_CSTRING(", ") + objectTable +
                     NS_LITERAL_CSTRING(".") + data +
                     NS_LITERAL_CSTRING(" FROM ") + objectTable +
                     NS_LITERAL_CSTRING(" INNER JOIN ") + indexTable +
                     NS_LITERAL_CSTRING(" ON ") + indexTable +
                     NS_LITERAL_CSTRING(".object_data_id = ") + objectTable +
                     NS_LITERAL_CSTRING(".id WHERE ") + indexId +
-                    NS_LITERAL_CSTRING("= :") + indexId + keyRangeClause +
+                    NS_LITERAL_CSTRING(" = :") + indexId + keyRangeClause +
                     groupClause + NS_LITERAL_CSTRING(" ORDER BY ") +
                     indexTable + NS_LITERAL_CSTRING(".") + value +
                     directionClause;
