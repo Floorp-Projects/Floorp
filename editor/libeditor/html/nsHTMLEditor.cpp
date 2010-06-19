@@ -5835,6 +5835,11 @@ nsHTMLEditor::ResetRootElementAndEventTarget()
   mRootElement = nsnull;
   nsresult rv = InstallEventListeners();
   NS_ENSURE_SUCCESS(rv, );
+
+  // We must have mRootElement now.
+  nsCOMPtr<nsIDOMElement> root;
+  rv = GetRootElement(getter_AddRefs(root));
+  NS_ENSURE_SUCCESS(rv, );
   NS_ENSURE_TRUE(mRootElement, );
 
   rv = BeginningOfDocument();
