@@ -127,30 +127,30 @@ Trench.prototype = {
     // Border trenches are always only active for the length of this range.
     // Guide trenches, however, still use this value as its minRange.
     if (this.xory == "x")
-      var range = new Range(rect.top - this.gutter, rect.top + rect.height + this.gutter);
+      var range = new Range(rect.top - this.gutter, rect.bottom + this.gutter);
     else
-      var range = new Range(rect.left - this.gutter, rect.left + rect.width + this.gutter);
+      var range = new Range(rect.left - this.gutter, rect.right + this.gutter);
 
     if (this.type == "border") {
       // border trenches have a range, so set that too.
       if (this.edge == "left")
         this.setPosition(rect.left - this.gutter, range);
       else if (this.edge == "right")
-        this.setPosition(rect.left + rect.width + this.gutter, range);
+        this.setPosition(rect.right + this.gutter, range);
       else if (this.edge == "top")
         this.setPosition(rect.top - this.gutter, range);
       else if (this.edge == "bottom")
-        this.setPosition(rect.top + rect.height + this.gutter, range);
+        this.setPosition(rect.bottom + this.gutter, range);
     } else if (this.type == "guide") {
       // guide trenches have no range, but do have a minRange.
       if (this.edge == "left")    
         this.setPosition(rect.left, false, range);
       else if (this.edge == "right")
-        this.setPosition(rect.left + rect.width, false, range);
+        this.setPosition(rect.right, false, range);
       else if (this.edge == "top")
         this.setPosition(rect.top, false, range);
       else if (this.edge == "bottom")
-        this.setPosition(rect.top + rect.height, false, range);
+        this.setPosition(rect.bottom, false, range);
     }
   },
   show: function Trench_show() { // DEBUG
@@ -218,9 +218,9 @@ Trench.prototype = {
         }
         break;
       case "right":
-        if (this.ruleOverlaps(rect.left + rect.width, yRange)) {
+        if (this.ruleOverlaps(rect.right, yRange)) {
           if (assumeConstantSize) {
-            rect.left = this.position - rect.width;
+            rect.right = this.position;
           } else {
             var newWidth = this.position - rect.left;
             if (keepProportional)
@@ -237,9 +237,9 @@ Trench.prototype = {
         }
         break;
       case "bottom":
-        if (this.ruleOverlaps(rect.top + rect.height, xRange)) {
+        if (this.ruleOverlaps(rect.bottom, xRange)) {
           if (assumeConstantSize) {
-            rect.top = this.position - rect.height;
+            rect.bottom = this.position;
           } else {
             var newHeight = this.position - rect.top;
             if (keepProportional)
@@ -297,19 +297,19 @@ Trench.prototype = {
       var bounds = group.getBounds();
       var activeRange = new Range();
       if (trench.xory == 'y') { // if this trench is horizontal...
-        var yRange = {min: bounds.top, max: bounds.top + bounds.height};
+        var yRange = new Range(bounds.top, bounds.bottom);
         activeRange = trench.adjustRangeIfIntercept(bounds.left, yRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
-        activeRange = trench.adjustRangeIfIntercept(bounds.left + bounds.width, yRange);
+        activeRange = trench.adjustRangeIfIntercept(bounds.right, yRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
       } else { // if this trench is vertical...
-        var xRange = {min: bounds.left, max: bounds.left + bounds.width};
+        var xRange = new Range(bounds.left, bounds.right);
         activeRange = trench.adjustRangeIfIntercept(bounds.top, xRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
-        activeRange = trench.adjustRangeIfIntercept(bounds.top + bounds.height, xRange);
+        activeRange = trench.adjustRangeIfIntercept(bounds.bottom, xRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
       }
