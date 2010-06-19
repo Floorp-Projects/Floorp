@@ -257,8 +257,8 @@ window.Rect.prototype = {
 // Constructor: Range
 // Creates a Range with the given min and max
 window.Range = function(min, max) {
-	this.min = min;
-	this.max = max;
+	this.min = min || 0;
+	this.max = max || 0;
 };
 
 // ----------
@@ -269,23 +269,39 @@ window.isRange = function(r) {
 };
 
 window.Range.prototype = {  
+	// Variable: extent
+	// Equivalent to max-min
+	get extent() {
+		return (this.max - this.min);
+	},
+
+	set extent(extent) {
+		this.max = extent - this.min;
+	},
+
   // ----------
   // Function: contains
   // Whether the <Range> contains the given value or not
   //
   // Paramaters
-  //  - a number
+  //  - a number or <Range>
   contains: function(value) {
-    return( value >= this.min && value <= this.max );
+  	if (Utils.isNumber(value))
+			return ( value >= this.min && value <= this.max );
+		else if (isRange(value))
+			return ( value.min >= this.min && value.max <= this.max );
   },
   // ----------
   // Function: containsWithin
   // Whether the <Range>'s interior contains the given value or not
   //
   // Paramaters
-  //  - a number
+  //  - a number or <Range>
   containsWithin: function(value) {
-    return( value > this.min && value < this.max );
+  	if (Utils.isNumber(value))
+			return ( value > this.min && value < this.max );
+		else if (isRange(value))
+			return ( value.min > this.min && value.max < this.max );
   },
   
 };
