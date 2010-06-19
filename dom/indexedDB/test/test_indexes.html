@@ -18,6 +18,10 @@
       const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
       const NEXT = Components.interfaces.nsIIDBCursor.NEXT;
       const PREV = Components.interfaces.nsIIDBCursor.PREV;
+      const NEXT_NO_DUPLICATE =
+        Components.interfaces.nsIIDBCursor.NEXT_NO_DUPLICATE;
+      const PREV_NO_DUPLICATE =
+        Components.interfaces.nsIIDBCursor.PREV_NO_DUPLICATE;
 
       const name = window.location.pathname;
       const description = "My Test Database";
@@ -53,6 +57,15 @@
         { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
         { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } },
         { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
+        { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
+      ];
+
+      const objectStoreDataHeightSort = [
+        { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
+        { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } },
+        { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
+        { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
+        { key: "237-23-7737", value: { name: "Pat", height: 65 } },
         { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
       ];
 
@@ -774,6 +787,184 @@
       yield;
 
       is(keyIndex, 0, "Saw all the expected keys");
+
+      // Test NEXT_NO_DUPLICATE
+      keyIndex = 3;
+      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+
+      request = objectStore.index("height").openCursor(keyRange, NEXT);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.value, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      keyIndex = 4;
+      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+
+      request = objectStore.index("height").openCursor(keyRange,
+                                                       NEXT_NO_DUPLICATE);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.value, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      keyIndex = 5;
+
+      request = objectStore.index("height").openCursor(null,
+                                                       PREV_NO_DUPLICATE);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.value, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          if (keyIndex == 4) {
+            keyIndex--;
+          }
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
+
+      // Test NEXT_NO_DUPLICATE
+      keyIndex = 3;
+      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+
+      request = objectStore.index("height").openObjectCursor(keyRange, NEXT);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          cursor.continue();
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      keyIndex = 4;
+      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+
+      request = objectStore.index("height").openObjectCursor(keyRange,
+                                                             NEXT_NO_DUPLICATE);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          cursor.continue();
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      keyIndex = 5;
+
+      request = objectStore.index("height").openObjectCursor(null,
+                                                             PREV_NO_DUPLICATE);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          cursor.continue();
+          if (keyIndex == 4) {
+            keyIndex--;
+          }
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
 
       finishTest();
       yield;
