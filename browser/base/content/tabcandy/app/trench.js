@@ -284,7 +284,7 @@ Trench.prototype = {
       case "right":
         if (this.ruleOverlaps(rect.right, rect.yRange)) {
           if (assumeConstantSize) {
-            rect.right = this.position;
+            rect.left = this.position - rect.width;
           } else {
             var newWidth = this.position - rect.left;
             if (keepProportional)
@@ -303,7 +303,7 @@ Trench.prototype = {
       case "bottom":
         if (this.ruleOverlaps(rect.bottom, rect.xRange)) {
           if (assumeConstantSize) {
-            rect.bottom = this.position;
+            rect.top = this.position - rect.height;
           } else {
             var newHeight = this.position - rect.top;
             if (keepProportional)
