@@ -216,7 +216,7 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isD
     }
 
     if (!scope->table) {
-        if (slot < obj->numSlots() && !obj->getClass()->reserveSlots) {
+        if (slot < obj->numSlots()) {
             JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
             ++scope->freeslot;
         } else {

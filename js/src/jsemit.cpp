@@ -65,10 +65,12 @@
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
-#include "jsscopeinlines.h"
 #include "jsscript.h"
 #include "jsautooplen.h"        // generated headers last
 #include "jsstaticcheck.h"
+
+#include "jsobjinlines.h"
+#include "jsscopeinlines.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK  256     /* code allocation increment */
@@ -1845,9 +1847,8 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     if (depth < 0)
         return false;
 
-    for (uintN slot = JSSLOT_FREE(&js_BlockClass),
-               limit = slot + OBJ_BLOCK_COUNT(cx, blockObj);
-         slot < limit; slot++) {
+    uintN base = JSSLOT_FREE(&js_BlockClass);
+    for (uintN slot = base, limit = base + OBJ_BLOCK_COUNT(cx, blockObj); slot < limit; slot++) {
         jsval v = blockObj->getSlot(slot);
 
         /* Beware the empty destructuring dummy. */
@@ -1869,8 +1870,8 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 #endif
     }
 
-    blockObj->scope()->freeslot = JSSLOT_FREE(&js_BlockClass);
-    return blockObj->growSlots(cx, JSSLOT_FREE(&js_BlockClass));
+    blockObj->scope()->freeslot = base;
+    return blockObj->growSlots(cx, base);
 }
 
 /*

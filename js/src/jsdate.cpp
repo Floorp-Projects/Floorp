@@ -2343,7 +2343,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    JSObject *obj = NewObject(cx, &js_DateClass, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass);
     if (!obj || !SetUTCTime(cx, obj, msec_time))
         return NULL;
     return obj;

@@ -515,10 +515,13 @@ struct JSScope : public JSObjectMap
     static void finishRuntimeState(JSContext *cx);
 
     enum {
-        EMPTY_ARGUMENTS_SHAPE = 1,
-        EMPTY_BLOCK_SHAPE     = 2,
-        EMPTY_CALL_SHAPE      = 3,
-        LAST_RESERVED_SHAPE   = 3
+        EMPTY_ARGUMENTS_SHAPE   = 1,
+        EMPTY_BLOCK_SHAPE       = 2,
+        EMPTY_CALL_SHAPE        = 3,
+        EMPTY_DECL_ENV_SHAPE    = 4,
+        EMPTY_ENUMERATOR_SHAPE  = 5,
+        EMPTY_WITH_SHAPE        = 6,
+        LAST_RESERVED_SHAPE     = 6
     };
 };
 

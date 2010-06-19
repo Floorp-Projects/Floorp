@@ -48,6 +48,7 @@
 #include "jsscope.h"
 
 #include "jsnum.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
 using namespace js;

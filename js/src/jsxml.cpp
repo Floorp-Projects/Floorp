@@ -281,7 +281,7 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
 {
     JSObject *obj;
 
-    obj = NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
+    obj = NewBuiltinClassInstance(cx, &js_NamespaceClass.base);
     if (!obj)
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefix()));
@@ -471,7 +471,7 @@ static JSObject *
 NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
             JSClass *clasp = &js_QNameClass.base)
 {
-    JSObject *obj = NewObject(cx, clasp, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -584,7 +584,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             return JS_TRUE;
         }
 
-        obj = NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_NamespaceClass.base);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -691,7 +691,7 @@ QNameHelper(JSContext *cx, JSObject *obj, JSClass *clasp, intN argc,
          * Create and return a new QName or AttributeName object exactly as if
          * constructed.
          */
-        obj = NewObject(cx, clasp, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, clasp);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -7305,8 +7305,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
                 return JS_FALSE;
 
             do {
-                obj = NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL,
-                                              NULL);
+                obj = NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL, NULL);
                 if (!obj) {
                     ok = JS_FALSE;
                     break;
@@ -7589,8 +7588,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
                 return JS_FALSE;
         }
 
-        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass,
-                                            NULL, NULL);
+        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass, NULL, NULL);
         if (!filterobj)
             return JS_FALSE;
 
