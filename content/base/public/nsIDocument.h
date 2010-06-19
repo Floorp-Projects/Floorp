@@ -1276,6 +1276,16 @@ public:
 
   PRUint32 EventHandlingSuppressed() const { return mEventsSuppressed; }
 
+  /**
+   * Increment the number of external scripts being evaluated.
+   */
+  void BeginEvaluatingExternalScript() { ++mExternalScriptsBeingEvaluated; }
+
+  /**
+   * Decrement the number of external scripts being evaluated.
+   */
+  void EndEvaluatingExternalScript() { --mExternalScriptsBeingEvaluated; }
+
   PRBool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
 
   /**
@@ -1577,6 +1587,12 @@ protected:
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   PRUint32 mEventsSuppressed;
+
+  /**
+   * The number number of external scripts (ones with the src attribute) that
+   * have this document as their owner and that are being evaluated right now.
+   */
+  PRUint32 mExternalScriptsBeingEvaluated;
 
   nsString mPendingStateObject;
 
