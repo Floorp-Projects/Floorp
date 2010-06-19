@@ -39,68 +39,97 @@
 // Title: trench.js 
 
 // Class: Trench
+// 
 // Class for drag-snapping regions; called "trenches" as they are long and narrow.
+// 
+// Parameters:
+//   element - the DOM element for Item (Group or TabItem) from which the trench is projected
+//   xory - either "x" or "y": whether the trench's <position> is along the x- or y-axis.
+//     In other words, if "x", the trench is vertical; if "y", the trench is horizontal.
+//   type - either "border" or "guide". Border trenches mark the border of an Item.
+//     Guide trenches extend out (unless they are intercepted) and act as "guides".
+//   edge - which edge of the Item that this trench corresponds to. 
+//     Either "top", "left", "bottom", or "right".
 var Trench = function(element, xory, type, edge) {
+  //----------
+  // Variable: id
+  // The id for the Trench. Set sequentially via <Trenches.nextId>
   this.id = Trenches.nextId++;
+
+  // Initial parameters  
   this.el = element;
-  this.$el = iQ(this.el);
   this.xory = xory; // either "x" or "y"
-  this.type = type; // "border", "guide", or "barrier"
+  this.type = type; // "border" or "guide"
   this.edge = edge; // "top", "left", "bottom", or "right"
 
+  this.$el = iQ(this.el);
+
+  //----------
+  // Boolean: active
+  // Whether this trench is currently active or not.
+  // Basically every trench aside for those projected by the Item currently being dragged
+  // all become active.
   this.active = false;
   this.gutter = Items.defaultGutter;
 
-  // position is the position that we should snap to
+  //----------
+  // Variable: position
+  // position is the position that we should snap to.
   this.position = 0;
+
+  //----------
+  // Variable: radius
   // radius is how far away we should snap from
   this.radius = Trenches.defaultRadius;
 
+  //----------
+  // Variable: position
   // theoretical range - this is along the perpendicular axis
-  this.range = {min: 0, max: 10000};
+  this.range = new Range(0,10000);
   // minimum range
-  this.minRange = {min: 0, max: 0};
+  this.minRange = new Range(0,0);
   // active range
-  this.activeRange = {min: 0, max: 10000};
+  this.activeRange = new Range(0,10000);
 };
 Trench.prototype = {
   setPosition: function Trench_setPos(position, range, minRange) {
     this.position = position;
     
     // optionally, set the range.
-    if (range && 'min' in range && 'max' in range) {
-      this.range.min = range.min;
-      this.range.max = range.max;
+    if (isRange(range)) {
+      this.range = range;
     }
     
     // if there's a minRange, set that too.
-    if (minRange && 'min' in minRange && 'max' in minRange)
+    if (isRange(minRange))
       this.minRange = minRange;
     
     // set the appropriate bounds as a rect.
     if ( this.xory == "x" ) // horizontal
-      this.rect = new Rect ( this.position - this.radius, this.range.min, 2 * this.radius, this.range.max - this.range.min );
+      this.rect = new Rect ( this.position - this.radius, this.range.min, 2 * this.radius, this.range.extent );
     else
-      this.rect = new Rect ( this.range.min, this.position - this.radius, this.range.max - this.range.min, 2 * this.radius );
+      this.rect = new Rect ( this.range.min, this.position - this.radius, this.range.extent, 2 * this.radius );
       
     this.show(); // DEBUG
 
   },
   setActiveRange: function Trench_setActiveRect(activeRange) {
+    if (!isRange(activeRange))
+      return false;
     this.activeRange = activeRange;
     if ( this.xory == "x" ) // horizontal
-      this.activeRect = new Rect ( this.position - this.radius, this.activeRange.min, 2 * this.radius, this.activeRange.max - this.activeRange.min );
+      this.activeRect = new Rect ( this.position - this.radius, this.activeRange.min, 2 * this.radius, this.activeRange.extent );
     else
-      this.activeRect = new Rect ( this.activeRange.min, this.position - this.radius, this.activeRange.max - this.activeRange.min, 2 * this.radius );    
+      this.activeRect = new Rect ( this.activeRange.min, this.position - this.radius, this.activeRange.extent, 2 * this.radius );    
   },
   setWithRect: function Trench_setWithRect(rect) {
     // First, calculate the range for this trench.
     // Border trenches are always only active for the length of this range.
     // Guide trenches, however, still use this value as its minRange.
     if (this.xory == "x")
-      var range = {min: rect.top - this.gutter, max: rect.top + rect.height + this.gutter};
+      var range = new Range(rect.top - this.gutter, rect.top + rect.height + this.gutter);
     else
-      var range = {min: rect.left - this.gutter, max: rect.left + rect.width + this.gutter};
+      var range = new Range(rect.left - this.gutter, rect.left + rect.width + this.gutter);
 
     if (this.type == "border") {
       // border trenches have a range, so set that too.
@@ -162,8 +191,8 @@ Trench.prototype = {
       this.visibleTrench.remove();
   },
   rectOverlaps: function Trench_rectOverlaps(rect,assumeConstantSize,keepProportional) {
-    var xRange = {min: rect.left, max: rect.left + rect.width};
-    var yRange = {min: rect.top, max: rect.top + rect.height};
+    var xRange = new Range(rect.left, rect.right);
+    var yRange = new Range(rect.top, rect.bottom);
 
     var edgeToCheck;
     if (this.type == "border") {
@@ -225,11 +254,11 @@ Trench.prototype = {
   },
   ruleOverlaps: function Trench_ruleOverlaps(position, range) {
     return (this.position - this.radius <= position && position <= this.position + this.radius
-            && range.min <= this.activeRange.max && this.activeRange.min <= range.max);
+            && this.activeRange.contains(range));
   },
   adjustRangeIfIntercept: function Trench_adjustRangeIfIntercept(position, range) {
     if (this.position - this.radius > range.min && this.position + this.radius < range.max) {
-      var activeRange = {min:this.activeRange.min, max:this.activeRange.max};
+      var activeRange = new Range(this.activeRange.min,this.activeRange.max);
       
       // there are three ways this can go:
       // 1. position < minRange.min
@@ -266,7 +295,7 @@ Trench.prototype = {
       if (trench.el == group.container) // groups don't block their own trenches
         return;
       var bounds = group.getBounds();
-      var activeRange;
+      var activeRange = new Range();
       if (trench.xory == 'y') { // if this trench is horizontal...
         var yRange = {min: bounds.top, max: bounds.top + bounds.height};
         activeRange = trench.adjustRangeIfIntercept(bounds.left, yRange);
