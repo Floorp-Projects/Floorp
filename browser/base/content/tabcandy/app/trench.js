@@ -225,7 +225,7 @@ Trench.prototype = {
   },
   ruleOverlaps: function Trench_ruleOverlaps(position, range) {
     return (this.position - this.radius <= position && position <= this.position + this.radius
-            && range.min <= this.range.max && this.range.min <= range.max);
+            && range.min <= this.activeRange.max && this.activeRange.min <= range.max);
   },
   adjustRangeIfIntercept: function Trench_adjustRangeIfIntercept(position, range) {
     if (this.position - this.radius > range.min && this.position + this.radius < range.max) {
