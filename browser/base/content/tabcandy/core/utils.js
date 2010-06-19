@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Ian Gilman <ian@iangilman.com>
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -247,6 +248,46 @@ window.Rect.prototype = {
       height: this.height
     };
   }
+};
+
+// ##########  
+// Class: Range
+// A physical interval, with a min and max.
+//
+// Constructor: Range
+// Creates a Range with the given min and max
+window.Range = function(min, max) {
+	this.min = min;
+	this.max = max;
+};
+
+// ----------
+window.isRange = function(r) {
+  return (r 
+      && Utils.isNumber(r.min)
+      && Utils.isNumber(r.max));
+};
+
+window.Range.prototype = {  
+  // ----------
+  // Function: contains
+  // Whether the <Range> contains the given value or not
+  //
+  // Paramaters
+  //  - a number
+  contains: function(value) {
+    return( value >= this.min && value <= this.max );
+  },
+  // ----------
+  // Function: containsWithin
+  // Whether the <Range>'s interior contains the given value or not
+  //
+  // Paramaters
+  //  - a number
+  containsWithin: function(value) {
+    return( value > this.min && value < this.max );
+  },
+  
 };
 
 // ##########
