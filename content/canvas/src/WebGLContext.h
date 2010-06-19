@@ -317,7 +317,9 @@ protected:
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
     static PRBool ValidateCapabilityEnum(WebGLenum cap);
-
+    static PRBool ValidateBlendEquationEnum(WebGLuint cap);
+    static PRBool ValidateBlendFuncDstEnum(WebGLuint mode);
+    static PRBool ValidateBlendFuncSrcEnum(WebGLuint mode);
     void Invalidate();
 
     void MakeContextCurrent() { gl->MakeCurrent(); }
