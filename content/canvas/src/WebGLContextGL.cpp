@@ -1382,11 +1382,10 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
+WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     if (target != LOCAL_GL_ARRAY_BUFFER && target != LOCAL_GL_ELEMENT_ARRAY_BUFFER)
         return ErrorInvalidEnum("GetBufferParameter: invalid target");
@@ -1399,9 +1398,9 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
         case LOCAL_GL_BUFFER_ACCESS:
         case LOCAL_GL_BUFFER_MAPPED:
         {
-            PRInt32 iv = 0;
-            gl->fGetBufferParameteriv(target, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
+            GLint i = 0;
+            gl->fGetBufferParameteriv(target, pname, &i);
+            wrval->SetAsInt32(i);
         }
             break;
 
@@ -1409,15 +1408,16 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
             return ErrorInvalidEnum("GetBufferParameter: invalid parameter");
     }
 
+    *retval = wrval.forget().get();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum attachment, WebGLenum pname)
+WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum attachment, WebGLenum pname, nsIVariant **retval)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid target");
@@ -1439,9 +1439,9 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
         case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
         case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
         {
-            PRInt32 iv = 0;
-            gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
+            GLint i = 0;
+            gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
+            wrval->SetAsInt32(i);
         }
             break;
 
@@ -1449,15 +1449,16 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
             return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid parameter");
     }
 
+    *retval = wrval.forget().get();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
+WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     if (target != LOCAL_GL_RENDERBUFFER)
         return ErrorInvalidEnum("GetRenderbufferParameter: invalid target");
@@ -1475,15 +1476,17 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
         case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
         case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
         {
-            PRInt32 iv = 0;
-            gl->fGetRenderbufferParameteriv(target, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
+            GLint i = 0;
+            gl->fGetRenderbufferParameteriv(target, pname, &i);
+            wrval->SetAsInt32(i);
         }
             break;
 
         default:
             return ErrorInvalidEnum("GetRenderbufferParameter: invalid parameter");
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
@@ -1540,15 +1543,14 @@ WebGLContext::GetError(WebGLenum *_retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname)
+WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVariant **retval)
 {
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>(pobj, &progname))
         return ErrorInvalidOperation("GetProgramParameter: invalid program");
 
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
 
@@ -1561,24 +1563,26 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname)
         case LOCAL_GL_ACTIVE_ATTRIBUTES:
         case LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
         {
-            PRInt32 iv = 0;
-            gl->fGetProgramiv(progname, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
+            GLint i = 0;
+            gl->fGetProgramiv(progname, pname, &i);
+            wrval->SetAsInt32(i);
         }
             break;
         case LOCAL_GL_DELETE_STATUS:
         case LOCAL_GL_LINK_STATUS:
         case LOCAL_GL_VALIDATE_STATUS:
         {
-            PRInt32 iv = 0;
-            gl->fGetProgramiv(progname, pname, (GLint*) &iv);
-            js.SetBoolRetVal(PRBool(iv));
+            GLint i = 0;
+            gl->fGetProgramiv(progname, pname, &i);
+            wrval->SetAsBool(PRBool(i));
         }
             break;
 
         default:
             return ErrorInvalidEnum("GetProgramParameter: invalid parameter");
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
@@ -1743,13 +1747,20 @@ WebGLContext::TexParameter()
 #endif
 
 NS_IMETHODIMP
-WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
+WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
+
+    switch (target) {
+        case LOCAL_GL_TEXTURE_2D:
+        case LOCAL_GL_TEXTURE_CUBE_MAP:
+            break;
+        default:
+            return ErrorInvalidEnum("GetTexParameter: invalid target");
+    }
 
     switch (pname) {
         case LOCAL_GL_TEXTURE_MIN_FILTER:
@@ -1757,15 +1768,17 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
         case LOCAL_GL_TEXTURE_WRAP_S:
         case LOCAL_GL_TEXTURE_WRAP_T:
         {
-            PRInt32 i = 0;
+            GLint i = 0;
             gl->fGetTexParameteriv(target, pname, &i);
-            js.SetRetVal(i);
+            wrval->SetAsInt32(i);
         }
             break;
 
         default:
             return ErrorInvalidEnum("GetTexParameter: invalid parameter");
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
@@ -2506,15 +2519,14 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 
 
 NS_IMETHODIMP
-WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname)
+WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVariant **retval)
 {
     WebGLuint shadername;
     if (!GetGLName<WebGLShader>(sobj, &shadername))
         return ErrorInvalidOperation("GetShaderParameter: invalid shader");
 
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
 
@@ -2523,23 +2535,25 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname)
         case LOCAL_GL_INFO_LOG_LENGTH:
         case LOCAL_GL_SHADER_SOURCE_LENGTH:
         {
-            PRInt32 iv = 0;
-            gl->fGetShaderiv(shadername, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
+            GLint i = 0;
+            gl->fGetShaderiv(shadername, pname, &i);
+            wrval->SetAsInt32(i);
         }
             break;
         case LOCAL_GL_DELETE_STATUS:
         case LOCAL_GL_COMPILE_STATUS:
         {
-            PRInt32 iv = 0;
-            gl->fGetShaderiv(shadername, pname, (GLint*) &iv);
-            js.SetBoolRetVal(PRBool(iv));
+            GLint i = 0;
+            gl->fGetShaderiv(shadername, pname, &i);
+            wrval->SetAsBool(PRBool(i));
         }
             break;
 
         default:
             return NS_ERROR_NOT_IMPLEMENTED;
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
