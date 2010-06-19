@@ -2317,6 +2317,42 @@ GL_SAME_METHOD_3(StencilOp, StencilOp, WebGLenum, WebGLenum, WebGLenum)
 
 GL_SAME_METHOD_4(StencilOpSeparate, StencilOpSeparate, WebGLenum, WebGLenum, WebGLenum, WebGLenum)
 
+template<int format>
+inline void convert_pixel(PRUint8* dst, const PRUint8* src)
+{
+    // since has_alpha is a compile time constant, any if(has_alpha) evaluates
+    // at compile time, so has zero runtime cost.
+    enum { has_alpha = format == gfxASurface::ImageFormatARGB32 };
+
+#ifdef IS_LITTLE_ENDIAN
+    PRUint8 b = *src++;
+    PRUint8 g = *src++;
+    PRUint8 r = *src++;
+    PRUint8 a = *src;
+#else
+    PRUint8 a = *src++;
+    PRUint8 r = *src++;
+    PRUint8 g = *src++;
+    PRUint8 b = *src;
+#endif
+
+    if (has_alpha) {
+        // Convert to non-premultiplied color
+        if (a != 0) {
+            r = (r * 255) / a;
+            g = (g * 255) / a;
+            b = (b * 255) / a;
+        }
+    }
+
+    *dst++ = r;
+    *dst++ = g;
+    *dst++ = b;
+    if (has_alpha)
+        *dst = a;
+    else
+        *dst = 255;
+}
 
 nsresult
 WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
@@ -2347,94 +2383,45 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     if (width <= 0 || height <= 0)
         return NS_ERROR_FAILURE;
 
-    if (surf->Format() == gfxASurface::ImageFormatARGB32) {
-        PRUint8* src = surf->Data();
-        PRUint8* dst = surf->Data();
+    // this wants some SSE love
+    int row1 = 0, row2 = height-1;
+    for (; flipY ? (row1 <= row2) : (row1 < height); row1++, row2--) {
+        PRUint8 *row1_start = surf->Data() + row1 * surf->Stride();
+        PRUint8 *row1_end = row1_start + surf->Stride();
+        PRUint8 *row2_start = surf->Data() + row2 * surf->Stride();
 
-        // this wants some SSE love
-
-        for (int j = 0; j < height; j++) {
-            src = surf->Data() + j * surf->Stride();
-            // note that dst's stride is always tightly packed
-            for (int i = 0; i < width; i++) {
-#ifdef IS_LITTLE_ENDIAN
-                PRUint8 b = *src++;
-                PRUint8 g = *src++;
-                PRUint8 r = *src++;
-                PRUint8 a = *src++;
-#else
-                PRUint8 a = *src++;
-                PRUint8 r = *src++;
-                PRUint8 g = *src++;
-                PRUint8 b = *src++;
-#endif
-                // Convert to non-premultiplied color
-                if (a != 0) {
-                    r = (r * 255) / a;
-                    g = (g * 255) / a;
-                    b = (b * 255) / a;
+        if (flipY == PR_FALSE || row1 == row2) {
+            if (surf->Format() == gfxASurface::ImageFormatARGB32) {
+                for (PRUint8 *row1_ptr = row1_start; row1_ptr != row1_end; row1_ptr += 4) {
+                    convert_pixel<gfxASurface::ImageFormatARGB32>(row1_ptr, row1_ptr);
                 }
-
-                *dst++ = r;
-                *dst++ = g;
-                *dst++ = b;
-                *dst++ = a;
+            } else if (surf->Format() == gfxASurface::ImageFormatRGB24) {
+                for (PRUint8 *row1_ptr = row1_start; row1_ptr != row1_end; row1_ptr += 4) {
+                    convert_pixel<gfxASurface::ImageFormatRGB24>(row1_ptr, row1_ptr);
+                }
+            } else {
+                return NS_ERROR_FAILURE;
+            }
+        } else {
+            PRUint8 *row1_ptr = row1_start;
+            PRUint8 *row2_ptr = row2_start;
+            PRUint8 tmp[4];
+            if (surf->Format() == gfxASurface::ImageFormatARGB32) {
+                for (; row1_ptr != row1_end; row1_ptr += 4, row2_ptr += 4) {
+                    convert_pixel<gfxASurface::ImageFormatARGB32>(tmp, row1_ptr);
+                    convert_pixel<gfxASurface::ImageFormatARGB32>(row1_ptr, row2_ptr);
+                    *reinterpret_cast<PRUint32*>(row2_ptr) = *reinterpret_cast<PRUint32*>(tmp);
+                }
+            } else if (surf->Format() == gfxASurface::ImageFormatRGB24) {
+                for (; row1_ptr != row1_end; row1_ptr += 4, row2_ptr += 4) {
+                    convert_pixel<gfxASurface::ImageFormatRGB24>(tmp, row1_ptr);
+                    convert_pixel<gfxASurface::ImageFormatRGB24>(row1_ptr, row2_ptr);
+                    *reinterpret_cast<PRUint32*>(row2_ptr) = *reinterpret_cast<PRUint32*>(tmp);
+                }
+            } else {
+                return NS_ERROR_FAILURE;
             }
         }
-    } else if (surf->Format() == gfxASurface::ImageFormatRGB24) {
-        PRUint8* dst = surf->Data();
-
-        // this wants some SSE love
-
-        for (int j = 0; j < height; j++) {
-            PRUint8* src = surf->Data() + j * surf->Stride();
-            // note that dst's stride is always tightly packed
-            for (int i = 0; i < width; i++) {
-#ifdef IS_LITTLE_ENDIAN
-                PRUint8 b = *src++;
-                PRUint8 g = *src++;
-                PRUint8 r = *src++;
-                src++;
-#else
-                src++;
-                PRUint8 r = *src++;
-                PRUint8 g = *src++;
-                PRUint8 b = *src++;
-#endif
-
-                *dst++ = r;
-                *dst++ = g;
-                *dst++ = b;
-                *dst++ = 255;
-            }
-        }
-    } else {
-        return NS_ERROR_FAILURE;
-    }
-
-    if (flipY) {
-        nsRefPtr<gfxImageSurface> tmpsurf = new gfxImageSurface(res.mSize,
-                                                                gfxASurface::ImageFormatARGB32);
-        if (!tmpsurf || tmpsurf->CairoStatus())
-            return NS_ERROR_FAILURE;
-
-        nsRefPtr<gfxContext> tmpctx = new gfxContext(tmpsurf);
-
-        if (!tmpctx || tmpctx->HasError())
-            return NS_ERROR_FAILURE;
-
-        tmpctx->Translate(gfxPoint(0, res.mSize.height));
-        tmpctx->Scale(1.0, -1.0);
-
-        tmpctx->NewPath();
-        tmpctx->Rectangle(gfxRect(0, 0, res.mSize.width, res.mSize.height));
-
-        tmpctx->SetSource(res.mSurface);
-        tmpctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpctx->Fill();
-
-        NS_ADDREF(surf = tmpsurf);
-        tmpctx = nsnull;
     }
 
     res.mSurface.forget();
