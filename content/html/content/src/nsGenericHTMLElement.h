@@ -981,7 +981,6 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
   return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
 }
 
-
 /**
  * A macro to implement the getter and setter for a given string
  * valued content property. The method uses the generic GetAttr and
@@ -1318,6 +1317,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
   return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);         \
 }
 
+NS_DECLARE_NS_NEW_HTML_ELEMENT() // HTMLElement
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
