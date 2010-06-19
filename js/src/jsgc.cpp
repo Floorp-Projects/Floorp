@@ -2659,7 +2659,7 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case NAMESPACES: {
-        JSXMLArray &array = static_cast<AutoNamespaces *>(this)->array;
+        JSXMLArray &array = static_cast<AutoNamespaceArray *>(this)->array;
         TraceObjectVector(trc, reinterpret_cast<JSObject **>(array.vector), array.length);
         array.cursors->trace(trc);
         return;
