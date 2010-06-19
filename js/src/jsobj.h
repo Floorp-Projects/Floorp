@@ -978,7 +978,9 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
  * Ensure that the object has at least JSCLASS_RESERVED_SLOTS(clasp)+nreserved
  * slots. The function can be called only for native objects just created with
  * js_NewObject or its forms. In particular, the object should not be shared
- * between threads and its dslots array must be null.
+ * between threads and its dslots array must be null. nreserved must match the
+ * value that JSClass.reserveSlots (if any) would return after the object is
+ * fully initialized.
  */
 bool
 js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved);

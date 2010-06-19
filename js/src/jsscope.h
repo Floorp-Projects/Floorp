@@ -518,8 +518,7 @@ struct JSScope : public JSObjectMap
         EMPTY_ARGUMENTS_SHAPE = 1,
         EMPTY_BLOCK_SHAPE     = 2,
         EMPTY_CALL_SHAPE      = 3,
-        EMPTY_WITH_SHAPE      = 4,
-        LAST_RESERVED_SHAPE   = 4
+        LAST_RESERVED_SHAPE   = 3
     };
 };
 

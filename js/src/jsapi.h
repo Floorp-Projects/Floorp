@@ -1517,7 +1517,7 @@ struct JSClass {
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
     JSMarkOp            mark;
-    void                (*reserved0)(void);
+    JSReserveSlotsOp    reserveSlots;
 };
 
 struct JSExtendedClass {
