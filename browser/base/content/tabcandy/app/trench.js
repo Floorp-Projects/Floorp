@@ -258,9 +258,6 @@ Trench.prototype = {
   //   false - if rect does not overlap with this trench
   //   newRect - (<Rect>) an adjusted version of rect, if it is affected by this trench
   rectOverlaps: function Trench_rectOverlaps(rect,assumeConstantSize,keepProportional) {
-    var xRange = new Range(rect.left, rect.right);
-    var yRange = new Range(rect.top, rect.bottom);
-
     var edgeToCheck;
     if (this.type == "border") {
       if (this.edge == "left")
@@ -279,13 +276,13 @@ Trench.prototype = {
     
     switch (edgeToCheck) {
       case "left":
-        if (this.ruleOverlaps(rect.left, yRange)) {
+        if (this.ruleOverlaps(rect.left, rect.yRange)) {
           rect.left = this.position;
           return rect;
         }
         break;
       case "right":
-        if (this.ruleOverlaps(rect.right, yRange)) {
+        if (this.ruleOverlaps(rect.right, rect.yRange)) {
           if (assumeConstantSize) {
             rect.right = this.position;
           } else {
@@ -298,13 +295,13 @@ Trench.prototype = {
         }
         break;
       case "top":
-        if (this.ruleOverlaps(rect.top, xRange)) {
+        if (this.ruleOverlaps(rect.top, rect.xRange)) {
           rect.top = this.position;
           return rect;
         }
         break;
       case "bottom":
-        if (this.ruleOverlaps(rect.bottom, xRange)) {
+        if (this.ruleOverlaps(rect.bottom, rect.xRange)) {
           if (assumeConstantSize) {
             rect.bottom = this.position;
           } else {
@@ -345,7 +342,7 @@ Trench.prototype = {
   //   range - (<Range>) the target's range, on the trench's transverse axis
   adjustRangeIfIntercept: function Trench_adjustRangeIfIntercept(position, range) {
     if (this.position - this.radius > range.min && this.position + this.radius < range.max) {
-      var activeRange = new Range(this.activeRange.min,this.activeRange.max);
+      var activeRange = new Range(this.activeRange);
       
       // there are three ways this can go:
       // 1. position < minRange.min
@@ -389,19 +386,17 @@ Trench.prototype = {
       var bounds = group.getBounds();
       var activeRange = new Range();
       if (trench.xory == 'y') { // if this trench is horizontal...
-        var yRange = new Range(bounds.top, bounds.bottom);
-        activeRange = trench.adjustRangeIfIntercept(bounds.left, yRange);
+        activeRange = trench.adjustRangeIfIntercept(bounds.left, bounds.yRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
-        activeRange = trench.adjustRangeIfIntercept(bounds.right, yRange);
+        activeRange = trench.adjustRangeIfIntercept(bounds.right, bounds.yRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
       } else { // if this trench is vertical...
-        var xRange = new Range(bounds.left, bounds.right);
-        activeRange = trench.adjustRangeIfIntercept(bounds.top, xRange);
+        activeRange = trench.adjustRangeIfIntercept(bounds.top, bounds.xRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
-        activeRange = trench.adjustRangeIfIntercept(bounds.bottom, xRange);
+        activeRange = trench.adjustRangeIfIntercept(bounds.bottom, bounds.xRange);
         if (activeRange)
           trench.setActiveRange(activeRange);
       }
