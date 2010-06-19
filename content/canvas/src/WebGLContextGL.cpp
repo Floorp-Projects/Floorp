@@ -1785,7 +1785,7 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 
 /* any getUniform(in WebGLProgram program, in WebGLUniformLocation location) raises(DOMException); */
 NS_IMETHODIMP
-WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc)
+WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, nsIVariant **retval)
 {
     WebGLuint progname;
     WebGLProgram *prog;
@@ -1802,9 +1802,8 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc)
     if (location->ProgramGeneration() != prog->Generation())
         return ErrorInvalidValue("GetUniform: this uniform location is obsolete since the program has been relinked");
 
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
 
@@ -1843,21 +1842,38 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc)
     if (baseType == LOCAL_GL_FLOAT) {
         GLfloat fv[16];
         gl->fGetUniformfv(progname, location->Location(), fv);
-        if (unitSize == 1)
-            js.SetRetVal(fv[0]);
-        else
-            js.SetRetVal(fv, unitSize);
+        if (unitSize == 1) {
+            wrval->SetAsFloat(fv[0]);
+        } else {
+            wrval->SetAsArray(nsIDataType::VTYPE_FLOAT, nsnull,
+                              unitSize, static_cast<void*>(fv));
+        }
     } else if (baseType == LOCAL_GL_INT) {
         GLint iv[16];
         gl->fGetUniformiv(progname, location->Location(), iv);
-        if (unitSize == 1)
-            js.SetRetVal(iv[0]);
-        else
-            js.SetRetVal((PRInt32*)iv, unitSize);
-
+        if (unitSize == 1) {
+            wrval->SetAsInt32(iv[0]);
+        } else {
+            wrval->SetAsArray(nsIDataType::VTYPE_INT32, nsnull,
+                              unitSize, static_cast<void*>(iv));
+        }
+    } else if (baseType == LOCAL_GL_BOOL) {
+        GLint iv[16];
+        gl->fGetUniformiv(progname, location->Location(), iv);
+        if (unitSize == 1) {
+            wrval->SetAsBool(PRBool(iv[0]));
+        } else {
+            PRUint8 uv[16];
+            for (int k = 0; k < unitSize; k++)
+                uv[k] = PRUint8(iv[k]);
+            wrval->SetAsArray(nsIDataType::VTYPE_UINT8, nsnull,
+                              unitSize, static_cast<void*>(uv));
+        }
     } else {
-        js.SetRetValAsJSVal(JSVAL_NULL);
+        wrval->SetAsVoid();
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
@@ -3153,7 +3169,7 @@ WebGLContext::GetImageData(PRUint32 x, PRUint32 y, PRUint32 w, PRUint32 h)
 PRBool
 BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize)
 {
-        switch (uType) {
+    switch (uType) {
         case LOCAL_GL_INT:
         case LOCAL_GL_INT_VEC2:
         case LOCAL_GL_INT_VEC3:
@@ -3175,7 +3191,7 @@ BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *u
         case LOCAL_GL_BOOL_VEC2:
         case LOCAL_GL_BOOL_VEC3:
         case LOCAL_GL_BOOL_VEC4:
-            *baseType = LOCAL_GL_INT; // pretend these are int
+            *baseType = LOCAL_GL_BOOL; // pretend these are int
             break;
         default:
             return PR_FALSE;
