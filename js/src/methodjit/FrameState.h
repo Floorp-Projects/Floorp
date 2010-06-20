@@ -49,6 +49,15 @@
 namespace js {
 namespace mjit {
 
+struct StateRemat {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    union {
+        RegisterID reg : 5;
+        uint32 offset : 31;
+    };
+    bool inReg : 1;
+};
+
 /*
  * The FrameState keeps track of values on the frame during compilation.
  * The compiler can query FrameState for information about arguments, locals,
@@ -429,6 +438,8 @@ class FrameState
 #endif
 
     Address addressOf(const FrameEntry *fe) const;
+
+    inline StateRemat dataRematInfo(const FrameEntry *fe) const;
 
     /*
      * This is similar to freeReg(ownRegForData(fe)) - except no movement takes place.

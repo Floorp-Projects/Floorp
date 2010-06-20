@@ -77,6 +77,22 @@ class Assembler : public BaseAssembler
         return BaseIndex(address.base, address.index, address.scale, address.offset + TAG_OFFSET);
     }
 
+    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, RegisterID type, RegisterID data) {
+        JS_ASSERT(type != data);
+        Address address(obj, offsetof(JSObject, fslots) + slot * sizeof(Value));
+        if (slot >= JS_INITIAL_NSLOTS) {
+            loadPtr(Address(obj, offsetof(JSObject, dslots)), clobber);
+            address = Address(obj, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+        }
+        if (obj == type) {
+            loadData32(address, data);
+            loadTypeTag(address, type);
+        } else {
+            loadTypeTag(address, type);
+            loadData32(address, data);
+        }
+    }
+
     void loadTypeTag(Address address, RegisterID reg) {
         load32(Address(address.base, address.offset + TAG_OFFSET), reg);
     }

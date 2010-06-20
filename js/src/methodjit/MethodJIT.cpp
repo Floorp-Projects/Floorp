@@ -41,6 +41,8 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #include "jstracer.h"
 #include "BaseAssembler.h"
+#include "MonoIC.h"
+#include "PolyIC.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -569,6 +571,22 @@ ThreadData::removeScript(JSScript *script)
         picScripts.remove(p);
 }
 
+void
+ThreadData::purge(JSContext *cx)
+{
+    if (!cx->runtime->gcRegenShapes)
+        return;
+
+    for (ThreadData::ScriptSet::Enum e(picScripts); !e.empty(); e.popFront()) {
+        JSScript *script = e.front();
+        ic::PurgePICs(cx, script);
+        //PurgeMICs(cs, script);
+    }
+
+    picScripts.clear();
+}
+
+
 extern "C" JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
                                    uintptr_t inlineCallCount);
 
@@ -629,6 +647,12 @@ mjit::JaegerShot(JSContext *cx)
     return ok;
 }
 
+template <typename T>
+static inline void Destroy(T &t)
+{
+    t.~T();
+}
+
 void
 mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
@@ -641,13 +665,16 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitLength = 0;
 #endif
         
-#if defined(ENABLE_PIC) && ENABLE_PIC
+#if ENABLE_PIC
         if (script->pics) {
-            delete[] script->pics;
-            script->pics = NULL;
+            uint32 npics = script->numPICs();
+            for (uint32 i = 0; i < npics; i++) {
+                script->pics[i].releasePools();
+                Destroy(script->pics[i].execPools);
+            }
             JS_METHODJIT_DATA(cx).removeScript(script);
+            cx->free((uint8*)script->pics - sizeof(uint32));
         }
-        script->npics = 0;
 #endif
     }
 

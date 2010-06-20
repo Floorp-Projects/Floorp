@@ -56,6 +56,7 @@ public:
         JITCode& code = codeBlock->getJITCode();
         m_start = code.start();
         m_size = code.size();
+        mprot = true;
 
         if (mprot)
             ExecutableAllocator::makeWritable(m_start, m_size);

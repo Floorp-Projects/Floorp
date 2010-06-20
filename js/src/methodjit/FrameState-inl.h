@@ -596,6 +596,23 @@ FrameState::addEscaping(uint32 local)
     escaping[local] = 1;
 }
 
+inline StateRemat
+FrameState::dataRematInfo(const FrameEntry *fe) const
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+    StateRemat remat;
+    if (fe->data.inRegister()) {
+        remat.reg = fe->data.reg();
+        remat.inReg = true;
+    } else {
+        JS_ASSERT(fe->data.synced());
+        remat.offset = addressOf(fe).offset;
+        remat.inReg = false;
+    }
+    return remat;
+}
+
 } /* namspace mjit */
 } /* namspace js */
 

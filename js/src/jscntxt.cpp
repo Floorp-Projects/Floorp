@@ -587,6 +587,9 @@ JSThreadData::purge(JSContext *cx)
     if (cx->runtime->gcRegenShapes)
         traceMonitor.needFlush = JS_TRUE;
 #endif
+#ifdef JS_METHODJIT
+    jmData.purge(cx);
+#endif
 
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, this);
