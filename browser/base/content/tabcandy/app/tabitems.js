@@ -53,6 +53,7 @@ window.TabItem = function(container, tab) {
   this.isATabItem = true;
   this._zoomPrep = false;
   this.sizeExtra = new Point();
+  this.keepProportional = true;
 
   // ___ set up div
   var $div = iQ(container);
@@ -366,33 +367,14 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------  
   setResizable: function(value){
-    var self = this;
-    
     var $resizer = iQ('.expander', this.container);
+
+    this.resizeOptions.minWidth = TabItems.minTabWidth;
+    this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
+
     if(value) {
       $resizer.fadeIn();
-      iQ(this.container).resizable({
-        aspectRatio: true,
-        minWidth: TabItems.minTabWidth,
-        minHeight: TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth),
-        start: function(){
-          Trenches.activateOthersTrenches(self.container);
-        },
-        resize: function(){
-          self.reloadBounds();
-          var bounds = self.getBounds();
-          // OH SNAP!
-          var newRect = Trenches.snap(bounds,false,true);
-          if (newRect) // might be false if no changes were made
-            self.setBounds(bounds,true);
-        },
-        stop: function(){
-          self.reloadBounds();
-          self.setUserSize();        
-          self.pushAway();
-          Trenches.disactivate();
-        } 
-      });
+      iQ(this.container).resizable(this.resizeOptions);
     } else {
       $resizer.fadeOut();
       iQ(this.container).resizable('destroy');
