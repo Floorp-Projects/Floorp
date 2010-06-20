@@ -209,6 +209,9 @@ CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeCh
     return Compile_Okay;
 }
 
+void
+PurgeShapeDependencies(JSContext *cx);
+
 } /* namespace mjit */
 
 } /* namespace js */
@@ -221,3 +224,4 @@ extern "C" void JaegerThrowpoline();
 extern "C" void JaegerFromTracer();
 
 #endif /* jsjaeger_h__ */
+

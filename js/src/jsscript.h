@@ -189,6 +189,10 @@ struct JSScript {
                (char*)jcode < (char*)ncode + jitLength;
     }
 # endif
+
+    inline uint32 numPICs() {
+        return *(uint32*)((uint8 *)pics - sizeof(uint32));
+    }
 #endif
 #if 0 /* def JS_TRACER */
     js::TraceTreeCache  *trees; /* trace tree info. */

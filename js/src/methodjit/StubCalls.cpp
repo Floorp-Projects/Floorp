@@ -62,26 +62,13 @@
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
+#include "StubCalls-inl.h"
 
 #include "jsautooplen.h"
 
 using namespace js;
 using namespace js::mjit;
 using namespace JSC;
-
-#define THROW()  \
-    do {         \
-        void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
-        return;  \
-    } while (0)
-
-#define THROWV(v)       \
-    do {                \
-        void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
-        return v;       \
-    } while (0)
 
 void JS_FASTCALL
 mjit::stubs::BindName(VMFrame &f)
@@ -141,16 +128,6 @@ mjit::stubs::DebugHook(VMFrame &f)
                 THROW();                                                      \
         }                                                                     \
     JS_END_MACRO
-
-static inline JSObject *
-ValueToObject(JSContext *cx, Value *vp)
-{
-    if (vp->isObject())
-        return &vp->asObject();
-    if (!js_ValueToNonNullObject(cx, *vp, vp))
-        return NULL;
-    return &vp->asObject();
-}
 
 #define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp,onerr)                         \
     JS_BEGIN_MACRO                                                            \

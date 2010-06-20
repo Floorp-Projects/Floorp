@@ -313,6 +313,7 @@ CPPSRCS += 	Assertions.cpp \
 		FastOps.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
+		PolyIC.cpp \
 		ImmutableSync.cpp \
 		InvokeHelpers.cpp \
 		$(NULL)

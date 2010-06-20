@@ -47,6 +47,7 @@
 #include "CodeGenIncludes.h"
 #include "StubCompiler.h"
 #include "MonoIC.h"
+#include "PolyIC.h"
 
 namespace js {
 namespace mjit {
@@ -85,6 +86,21 @@ class Compiler
         bool dataWrite;
     };
 
+    struct PICGenInfo {
+        PICGenInfo(ic::PICInfo::Kind kind) : kind(kind)
+        { }
+        ic::PICInfo::Kind kind;
+        Label hotPathBegin;
+        Label storeBack;
+        Label slowPathStart;
+        RegisterID shapeReg;
+        RegisterID objReg;
+        Label shapeGuard;
+        uint32 atomIndex;
+        StateRemat objRemat;
+        Call callReturn;
+    };
+
     struct Uses {
         Uses(uint32 nuses)
           : nuses(nuses)
@@ -111,6 +127,7 @@ class Compiler
     FrameState frame;
     js::Vector<BranchPatch, 64> branchPatches;
     js::Vector<MICGenInfo, 64> mics;
+    js::Vector<PICGenInfo, 64> pics;
     StubCompiler stubcc;
     Label invokeLabel;
 
@@ -169,6 +186,7 @@ class Compiler
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_unbrand();
+    void jsop_getprop(uint32 atomIndex);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);

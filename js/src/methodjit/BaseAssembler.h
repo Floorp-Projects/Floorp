@@ -117,6 +117,11 @@ class BaseAssembler : public JSC::MacroAssembler
         load32(ptr, reg);
     }
 
+    void loadShape(RegisterID obj, RegisterID shape) {
+        loadPtr(Address(obj, offsetof(JSObject, map)), shape);
+        load32(Address(shape, offsetof(JSObjectMap, shape)), shape);
+    }
+
     /*
      * Finds and returns the address of a known object and slot.
      */
@@ -222,15 +227,15 @@ class BaseAssembler : public JSC::MacroAssembler
 
     Call call(void *fun) {
 #if defined(_MSC_VER) && defined(_M_X64)
-        masm.subPtr(JSC::MacroAssembler::Imm32(32),
-                    JSC::MacroAssembler::stackPointerRegister);
+        subPtr(JSC::MacroAssembler::Imm32(32),
+               JSC::MacroAssembler::stackPointerRegister);
 #endif
 
         Call cl = JSC::MacroAssembler::call();
 
 #if defined(_MSC_VER) && defined(_M_X64)
-        masm.addPtr(JSC::MacroAssembler::Imm32(32),
-                    JSC::MacroAssembler::stackPointerRegister);
+        addPtr(JSC::MacroAssembler::Imm32(32),
+               JSC::MacroAssembler::stackPointerRegister);
 #endif
 
         callPatches.append(CallPatch(differenceBetween(startLabel, cl), fun));

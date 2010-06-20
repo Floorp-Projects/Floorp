@@ -236,6 +236,7 @@ namespace mjit {
 
         bool addScript(JSScript *script);
         void removeScript(JSScript *script);
+        void purge(JSContext *cx);
     };
 }
 
