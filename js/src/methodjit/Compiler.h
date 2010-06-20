@@ -92,13 +92,16 @@ class Compiler
         ic::PICInfo::Kind kind;
         Label hotPathBegin;
         Label storeBack;
+        Label typeCheck;
         Label slowPathStart;
         RegisterID shapeReg;
         RegisterID objReg;
+        RegisterID typeReg;
         Label shapeGuard;
         uint32 atomIndex;
         StateRemat objRemat;
         Call callReturn;
+        bool hasTypeCheck;
     };
 
     struct Uses {
@@ -187,6 +190,7 @@ class Compiler
     void jsop_getelem_slow();
     void jsop_unbrand();
     void jsop_getprop(uint32 atomIndex);
+    void jsop_length();
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);

@@ -299,10 +299,18 @@ mjit::Compiler::finishThisUp()
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeReg = pics[i].shapeReg;
         script->pics[i].objReg = pics[i].objReg;
+        script->pics[i].typeReg = pics[i].typeReg;
         script->pics[i].objRemat = pics[i].objRemat.offset;
         script->pics[i].atomIndex = pics[i].atomIndex;
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].hotPathBegin);
+        script->pics[i].hasTypeCheck = pics[i].hasTypeCheck;
+        if (pics[i].hasTypeCheck) {
+            int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
+                             stubcc.masm.distanceOf(pics[i].slowPathStart);
+            JS_ASSERT(-int32(uint8(-distance)) == distance);
+            script->pics[i].typeCheckOffset = uint8(-distance);
+        }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
     }
 
@@ -723,10 +731,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETPROP)
 
           BEGIN_CASE(JSOP_LENGTH)
-            prepareStubCall();
-            stubCall(stubs::Length, Uses(1), Defs(1));
-            frame.pop();
-            frame.pushSynced();
+            jsop_length();
           END_CASE(JSOP_LENGTH)
 
           BEGIN_CASE(JSOP_GETELEM)
@@ -1821,39 +1826,95 @@ mjit::Compiler::jsop_getprop_slow()
     frame.pushSynced();
 }
 
+void
+mjit::Compiler::jsop_length()
+{
+    FrameEntry *top = frame.peek(-1);
+
+    if (top->isTypeKnown() && top->getTypeTag() == JSVAL_MASK32_STRING) {
+        if (top->isConstant()) {
+            JSString *str = top->getValue().asString();
+            Value v;
+            v.setNumber(str->length());
+            frame.pop();
+            frame.push(v);
+        } else {
+            RegisterID str = frame.ownRegForData(top);
+            masm.loadPtr(Address(str, offsetof(JSString, mLength)), str);
+            frame.pop();
+            frame.pushTypedPayload(JSVAL_MASK32_INT32, str);
+        }
+        return;
+    }
+
+#if ENABLE_PIC
+    jsop_getprop(ic::PICInfo::LENGTH_ATOM);
+#else
+    prepareStubCall();
+    stubCall(stubs::Length, Uses(1), Defs(1));
+    frame.pop();
+    frame.pushSynced();
+#endif
+}
+
 #if ENABLE_PIC
 void
 mjit::Compiler::jsop_getprop(uint32 atomIndex)
 {
     FrameEntry *top = frame.peek(-1);
 
-    /* If the incoming type is not an object, take a slow path. */
+    /* If the incoming type will never PIC, take slow path. */
     if (top->isTypeKnown() &&
         (top->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
-         top->getTypeTag() != JSVAL_MASK32_NONFUNOBJ)) {
+         top->getTypeTag() != JSVAL_MASK32_NONFUNOBJ))
+    {
+        JS_ASSERT_IF(atomIndex == ic::PICInfo::LENGTH_ATOM,
+                     top->getTypeTag() != JSVAL_MASK32_STRING);
         jsop_getprop_slow();
         return;
     }
 
+    /*
+     * These two must be loaded first. The objReg because the string path
+     * wants to read it, and the shapeReg because it could cause a spill that
+     * the string path wouldn't sink back.
+     */
+    RegisterID objReg = Registers::ReturnReg;
+    RegisterID shapeReg = Registers::ReturnReg;
+    if (atomIndex == ic::PICInfo::LENGTH_ATOM) {
+        objReg = frame.copyDataIntoReg(top);
+        shapeReg = frame.allocReg();
+    }
+
     PICGenInfo pic(ic::PICInfo::GET);
-    pic.hotPathBegin = masm.label();
 
     /* Guard that the type is an object. */
-    Jump typeMismatch;
-    bool typeMismatchSet = false;
+    Jump typeCheck;
     if (!top->isTypeKnown()) {
         JS_STATIC_ASSERT(JSVAL_MASK32_NONFUNOBJ < JSVAL_MASK32_FUNOBJ);
         RegisterID reg = frame.tempRegForType(top);
+        pic.typeReg = reg;
+
+        /* Start the hot path where it's easy to patch it. */
+        pic.hotPathBegin = masm.label();
         Jump j = masm.branch32(Assembler::Below, reg, Imm32(JSVAL_MASK32_NONFUNOBJ));
+
+        pic.typeCheck = stubcc.masm.label();
         stubcc.linkExit(j);
         stubcc.leave();
-        stubcc.call(stubs::GetProp);
-        typeMismatch = stubcc.masm.jump();
-        typeMismatchSet = true;
+        typeCheck = stubcc.masm.jump();
+        pic.hasTypeCheck = true;
+    } else {
+        pic.hotPathBegin = masm.label();
+        pic.hasTypeCheck = false;
+        pic.typeReg = Registers::ReturnReg;
     }
 
-    RegisterID shapeReg = frame.allocReg();
-    RegisterID objReg = frame.copyDataIntoReg(top);
+    if (atomIndex != ic::PICInfo::LENGTH_ATOM) {
+        objReg = frame.copyDataIntoReg(top);
+        shapeReg = frame.allocReg();
+    }
+
     pic.shapeReg = shapeReg;
     pic.atomIndex = atomIndex;
     pic.objRemat = frame.dataRematInfo(top);
@@ -1868,6 +1929,8 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
     stubcc.linkExit(j);
 
     stubcc.leave();
+    if (pic.hasTypeCheck)
+        typeCheck.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
     pic.callReturn = stubcc.call(ic::GetProp);
 
@@ -1883,14 +1946,12 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
     frame.pushRegs(shapeReg, objReg);
     pic.storeBack = masm.label();
 
-    if (typeMismatchSet)
-        typeMismatch.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(1);
 
     pics.append(pic);
 }
 
-#else
+#else /* ENABLE_PIC */
 
 void
 mjit::Compiler::jsop_getprop(uint32 atomIndex)

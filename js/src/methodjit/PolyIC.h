@@ -67,6 +67,8 @@ struct PICInfo {
         SET
     };
 
+    static const uint32 LENGTH_ATOM = 0xFFFFFFFF;
+
     Kind kind : 2;
 
     // State flags.
@@ -78,12 +80,14 @@ struct PICInfo {
     bool shapeRegHasBaseShape : 1;
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
+    RegisterID typeReg  : 5;        // reg used for checking type
+    bool hasTypeCheck   : 1;        // type check and reg are present
 
     // True if the last stub has an extra shape load at its start.
     bool startsWithShapeLoad : 1;
 
     // Number of stubs generated.
-    uint32 stubsGenerated : 8;
+    uint32 stubsGenerated : 5;
 
     // Offset from start of fast path to initial shape guard.
     int shapeGuard : 8;
@@ -111,6 +115,9 @@ struct PICInfo {
 
     // Offset from callReturn to the start of the slow case.
     JSC::CodeLocationLabel slowPathStart;
+
+    // Reverse offset from slowPathStart to the type check slow path.
+    uint8 typeCheckOffset;
 
     // Address of the start of the last generated stub, if any.
     JSC::CodeLocationLabel lastStubStart;
