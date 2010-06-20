@@ -212,7 +212,7 @@ window.Item.prototype = {
         self.reloadBounds();
         self.setUserSize();
         self.pushAway();
-        Trenches.disactivate();
+        resizeInfo.stop();
         resizeInfo = null;
       } 
     };
