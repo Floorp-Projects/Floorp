@@ -52,8 +52,8 @@ namespace mjit {
 struct StateRemat {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     union {
-        RegisterID reg : 5;
-        uint32 offset : 31;
+        RegisterID reg : 31;
+        uint32 offset  : 31;
     };
     bool inReg : 1;
 };

@@ -92,6 +92,7 @@ StubCompiler::leave()
     for (size_t i = 0; i < jumpList.length(); i++)
         jumpList[i].linkTo(masm.label(), &masm);
     jumpList.clear();
+    generation++;
 }
  
 void
@@ -120,7 +121,6 @@ StubCompiler::stubCall(void *ptr)
 JSC::MacroAssembler::Call
 StubCompiler::stubCall(void *ptr, uint32 slots)
 {
-    generation++;
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     Call cl = masm.stubCall(ptr, cc.getPC(), slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
