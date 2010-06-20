@@ -432,11 +432,6 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
     }
   }
 
-  if (mType != OBJECTSTORE && !key.IsUnset()) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
   NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
@@ -805,33 +800,52 @@ ContinueRunnable::Run()
     if (!mKey.IsUnset()) {
       NS_ASSERTION(!mKey.IsNull(), "Huh?!");
 
-      if (mCursor->mType != IDBCursorRequest::OBJECTSTORE) {
-        NS_NOTYETIMPLEMENTED("Implement me!");
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
       NS_WARNING("Using a slow O(n) search for continue(key), do something "
                  "smarter!");
 
       // Skip ahead to our next key match.
       PRInt32 index = PRInt32(mCursor->mDataIndex);
-      while (index >= 0) {
-        const Key& key = mCursor->mData[index].key;
-        if (mKey == key) {
+
+      if (mCursor->mType == IDBCursorRequest::INDEX) {
+        while (index >= 0) {
+          const Key& key = mCursor->mKeyData[index].key;
+          if (mKey == key) {
+            break;
+          }
+          if (key < mKey) {
+            index--;
+            continue;
+          }
+          index = -1;
           break;
         }
-        if (key < mKey) {
-          index--;
-          continue;
-        }
-        index = -1;
-        break;
-      }
 
-      if (index >= 0) {
-        mCursor->mDataIndex = PRUint32(index);
-        mCursor->mData.RemoveElementsAt(index + 1,
-                                        mCursor->mData.Length() - index - 1);
+        if (index >= 0) {
+          mCursor->mDataIndex = PRUint32(index);
+          mCursor->mKeyData.RemoveElementsAt(index + 1,
+                                             mCursor->mKeyData.Length() - index
+                                             - 1);
+        }
+      }
+      else {
+        while (index >= 0) {
+          const Key& key = mCursor->mData[index].key;
+          if (mKey == key) {
+            break;
+          }
+          if (key < mKey) {
+            index--;
+            continue;
+          }
+          index = -1;
+          break;
+        }
+
+        if (index >= 0) {
+          mCursor->mDataIndex = PRUint32(index);
+          mCursor->mData.RemoveElementsAt(index + 1,
+                                          mCursor->mData.Length() - index - 1);
+        }
       }
     }
 
