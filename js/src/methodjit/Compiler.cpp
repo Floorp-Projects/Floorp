@@ -1835,7 +1835,7 @@ mjit::Compiler::jsop_length()
         if (top->isConstant()) {
             JSString *str = top->getValue().asString();
             Value v;
-            v.setNumber(str->length());
+            v.setNumber(uint32(str->length()));
             frame.pop();
             frame.push(v);
         } else {
