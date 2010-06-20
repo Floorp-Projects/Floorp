@@ -61,6 +61,7 @@ var Drag = function(element, event) {
   this.startPosition = new Point(event.clientX, event.clientY);
   this.startTime = Utils.getMilliseconds();
   
+  this.item.isDragging = true;
   this.$el.data('isDragging', true);
   this.item.setZ(999999);
   
@@ -81,12 +82,12 @@ var Drag = function(element, event) {
 Drag.prototype = {
   // ----------  
   snap: function(event, ui){
-		var bounds = this.item.getBounds();
+    var bounds = this.item.getBounds();
 
-		// OH SNAP!
-		var newRect = Trenches.snap(bounds,true);
-		if (newRect) // might be false if no changes were made
-			this.item.setBounds(newRect,true);
+    // OH SNAP!
+    var newRect = Trenches.snap(bounds,true);
+    if (newRect) // might be false if no changes were made
+      this.item.setBounds(newRect,true);
 
     return ui;
   },
@@ -118,6 +119,7 @@ Drag.prototype = {
   // Function: stop
   // Called in response to a jQuery-UI draggable "stop" event.
   stop: function() {
+    this.item.isDragging = false;
     this.$el.data('isDragging', false);    
 
     // I'm commenting this out for a while as I believe it feels uncomfortable

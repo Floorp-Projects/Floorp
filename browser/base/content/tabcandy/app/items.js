@@ -104,6 +104,10 @@ window.Item = function() {
   // Variable: dropOptions
   // Used to pass into iQ.fn.droppable
   this.dropOptions = null;
+  
+  // Variable: isDragging
+  // Boolean for whether the item is currently being dragged or not.
+  this.isDragging = false;
 };
 
 window.Item.prototype = { 
