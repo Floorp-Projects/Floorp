@@ -65,6 +65,7 @@ var Drag = function(element, event) {
   this.$el.data('isDragging', true);
   this.item.setZ(999999);
   
+  this.safeWindowBounds = Items.getSafeWindowBounds();
   Trenches.activateOthersTrenches(this.el);
   
   // When a tab drag starts, make it the focused tab.
@@ -81,15 +82,93 @@ var Drag = function(element, event) {
 
 Drag.prototype = {
   // ----------  
-  snap: function(event, ui){
+  snap: function(event, ui, assumeConstantSize, keepProportional){
     var bounds = this.item.getBounds();
+    var update = false; // need to update
+    var updateX = false;
+    var updateY = false;
+    var newRect;
 
     // OH SNAP!
-    var newRect = Trenches.snap(bounds,true);
-    if (newRect) // might be false if no changes were made
-      this.item.setBounds(newRect,true);
+    if (!Keys.meta) { // if we aren't holding down the meta key...
+      newRect = Trenches.snap(bounds,assumeConstantSize,keepProportional);
+      if (newRect) { // might be false if no changes were made
+        update = true;
+        bounds = newRect;
+      }
+    }
+
+    // make sure the bounds are in the window.
+    newRect = this.snapToEdge(bounds,assumeConstantSize,keepProportional);
+    if (newRect) {
+      update = true;
+      bounds = newRect;
+    }
+
+    if (update)
+      this.item.setBounds(bounds,true);
 
     return ui;
+  },
+  
+  // --------
+  // Function: snapToEdge
+  // Returns a version of the bounds snapped to the edge if it is close enough. If not, 
+  // returns false. If <Keys.meta> is true, this function will simply enforce the 
+  // window edges.
+  // 
+  // Parameters:
+  //   rect - (<Rect>) current bounds of the object
+  //   assumeConstantSize - (boolean) whether the rect's dimensions are sacred or not
+  //   keepProportional - (boolean) if we are allowed to change the rect's size, whether the
+  //                                dimensions should scaled proportionally or not.
+  snapToEdge: function Drag_snapToEdge(rect, assumeConstantSize, keepProportional) {
+    var swb = this.safeWindowBounds;
+    var update = false;
+    var updateX = false;
+    var updateY = false;
+
+    var snapRadius = ( Keys.meta ? 0 : Trenches.defaultRadius );
+    if (rect.left < swb.left + snapRadius ) {
+      rect.left = swb.left;
+      update = true;
+      updateX = true;
+    }
+    
+    if (rect.right > swb.right - snapRadius) {
+      if (updateX || !assumeConstantSize) {
+        var newWidth = swb.right - rect.left;
+        if (keepProportional)
+          rect.height = rect.height * newWidth / rect.width;
+        rect.width = newWidth;
+        update = true;
+      } else if (!updateX || !Trenches.preferLeft) {
+        rect.left = swb.right - rect.width;
+        update = true;
+      }
+    }
+    if (rect.top < swb.top + snapRadius) {
+      rect.top = swb.top;
+      update = true;
+      updateY = true;
+    }
+    if (rect.bottom > swb.bottom - snapRadius) {
+      if (updateY || !assumeConstantSize) {
+        var newHeight = swb.bottom - rect.top;
+        if (keepProportional)
+          rect.width = rect.width * newHeight / rect.height;
+        rect.height = newHeight;
+        update = true;
+      } else if (!updateY || !Trenches.preferTop) {
+        rect.top = swb.bottom - rect.height;
+        update = true;
+      }
+    }
+    
+    if (update)
+      return rect;
+    else
+      return false;
   },
   
   // ----------  
@@ -101,7 +180,7 @@ Drag.prototype = {
       bb.left = ui.position.left;
       bb.top = ui.position.top;
       this.item.setBounds(bb, true);
-      ui = this.snap(event,ui);
+      ui = this.snap(event,ui,true);
 //    } else
 //      this.item.reloadBounds();
       
