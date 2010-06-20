@@ -161,8 +161,8 @@
           is(cursor.value, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -177,6 +177,8 @@
       }
       yield;
 
+      is(keyIndex, objectStoreData.length, "Saw all the expected keys");
+
       keyIndex = 0;
 
       request = objectStore.index("weight").openCursor(null, NEXT);
@@ -189,8 +191,8 @@
           is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
              "Correct value");
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
              "Correct key");
@@ -227,8 +229,8 @@
           is(cursor.value, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -481,8 +483,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -527,8 +529,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -574,8 +576,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -621,8 +623,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -668,8 +670,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -715,8 +717,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -762,8 +764,8 @@
                "Correct weight");
           }
 
-          let ok = cursor.continue();
-          is(ok, true, "Correct return from continue");
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
@@ -965,6 +967,176 @@
       yield;
 
       is(keyIndex, -1, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.index("name").openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          let nextKey = !keyIndex ? "Pat" : undefined;
+
+          let retval = cursor.continue(nextKey);
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          if (!keyIndex) {
+            keyIndex = 3;
+          }
+          else {
+            keyIndex++;
+          }
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, objectStoreData.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.index("name").openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          let nextKey = !keyIndex ? "Flo" : undefined;
+
+          let retval = cursor.continue(nextKey);
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+             "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, objectStoreData.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.index("name").openObjectCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let nextKey = !keyIndex ? "Pat" : undefined;
+
+          let retval = cursor.continue(nextKey);
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          if (!keyIndex) {
+            keyIndex = 3;
+          }
+          else {
+            keyIndex++;
+          }
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.index("name").openObjectCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          let nextKey = !keyIndex ? "Flo" : undefined;
+
+          let retval = cursor.continue(nextKey);
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct key");
+          is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataNameSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataNameSort[keyIndex].value.weight,
+               "Correct weight");
+          }
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
       finishTest();
       yield;
