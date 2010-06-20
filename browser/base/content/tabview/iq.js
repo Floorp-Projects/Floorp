@@ -1295,6 +1295,7 @@ iQ.extend({
     'mouseup',
     'mousedown',
     'mouseover',
+    'mouseout',
     'mousemove',
     'click',
     'resize',
