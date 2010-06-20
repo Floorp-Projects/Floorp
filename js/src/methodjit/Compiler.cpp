@@ -1842,16 +1842,13 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
     Jump typeMismatch;
     bool typeMismatchSet = false;
     if (!top->isTypeKnown()) {
+        JS_STATIC_ASSERT(JSVAL_MASK32_NONFUNOBJ < JSVAL_MASK32_FUNOBJ);
         RegisterID reg = frame.tempRegForType(top);
-        RegisterID type = frame.allocReg();
-        masm.move(reg, type);
-        masm.and32(Imm32(JSVAL_MASK32_OBJECT), type);
-        Jump j = masm.branch32(Assembler::BelowOrEqual, type, Imm32(JSVAL_MASK32_CLEAR));
+        Jump j = masm.branch32(Assembler::Below, reg, Imm32(JSVAL_MASK32_NONFUNOBJ));
         stubcc.linkExit(j);
         stubcc.leave();
         stubcc.call(stubs::GetProp);
         typeMismatch = stubcc.masm.jump();
-        frame.freeReg(type);
         typeMismatchSet = true;
     }
 
