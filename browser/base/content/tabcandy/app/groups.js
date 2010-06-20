@@ -808,11 +808,15 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
   
   // ----------
+  // Function: hideExpandControl
+  // Hide the control which expands a stacked group into a quick-look view.
   hideExpandControl: function(){
     this.$expander.hide();
   },
 
   // ----------
+  // Function: showExpandControl
+  // Show the control which expands a stacked group into a quick-look view.
   showExpandControl: function(){
     var childBB = this.getChild(0).getBounds();
     var dT = childBB.top - this.getBounds().top;
