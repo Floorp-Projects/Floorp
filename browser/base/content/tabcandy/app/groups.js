@@ -131,6 +131,7 @@ window.Group = function(listOfEls, options) {
     if( this.isNewTabsGroup() ) $container.addClass("newTabGroup");
   }
   
+  this.isDragging = false;
   $container
     .css({zIndex: -100})
     .data('isDragging', false)
@@ -146,6 +147,8 @@ window.Group = function(listOfEls, options) {
     .click(function(){
       self.newTab();
     });
+    
+  this.$ntb.get(0).title = 'New tab';
   
   if( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
     
@@ -250,7 +253,7 @@ window.Group = function(listOfEls, options) {
         if(!same)
           return;
         
-        if(!$container.data('isDragging')) {        
+        if(!self.isDragging) {        
           self.$titleShield.hide();
           self.$title.get(0).focus();
         }
@@ -536,8 +539,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     if(!isRect(this.bounds))
       Utils.trace('Group.setBounds: this.bounds is not a real rectangle!', this.bounds);
 
-		if (!this.isNewTabsGroup())
-			this.setTrenches(rect);
+    if (!this.isNewTabsGroup())
+      this.setTrenches(rect);
 
     this.save();
   },
@@ -574,7 +577,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     this.removeAll();
     this._sendOnClose();
     Groups.unregister(this);
-		this.removeTrenches();
+    this.removeTrenches();
     iQ(this.container).fadeOut(function() {
       iQ(this).remove();
       Items.unsquish();
@@ -621,7 +624,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         item = Items.item($el);
       }
       
-			item.removeTrenches();
+      item.removeTrenches();
       
       Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
   
@@ -1166,13 +1169,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var self = this;
     
     this.dropOptions.over = function(){
-			if( !self.isNewTabsGroup() )
-				iQ(this).addClass("acceptsDrop");
-		};
-		this.dropOptions.drop = function(event){
-			iQ(this).removeClass("acceptsDrop");
-			self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
-		};
+      if( !self.isNewTabsGroup() )
+        iQ(this).addClass("acceptsDrop");
+    };
+    this.dropOptions.drop = function(event){
+      iQ(this).removeClass("acceptsDrop");
+      self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
+    };
     
     if(!this.locked.bounds)
       iQ(container).draggable(this.dragOptions);
@@ -1241,10 +1244,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         resize: function(){
           self.reloadBounds();
           var bounds = self.getBounds();
-					// OH SNAP!
-					var newRect = Trenches.snap(bounds,false);
-					if (newRect) // might be false if no changes were made
-						self.setBounds(bounds,true);
+          // OH SNAP!
+          var newRect = Trenches.snap(bounds,false);
+          if (newRect) // might be false if no changes were made
+            self.setBounds(bounds,true);
         },
         stop: function(){
           self.reloadBounds();
