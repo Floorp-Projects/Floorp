@@ -76,7 +76,8 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Register
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
     analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
-    branchPatches(ContextAllocPolicy(cx)), mics(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
+    branchPatches(ContextAllocPolicy(cx)), mics(ContextAllocPolicy(cx)),
+    pics(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
 {
 }
 
@@ -238,7 +239,7 @@ mjit::Compiler::finishThisUp()
     memcpy(result + masm.size(), stubcc.buffer(), stubcc.size());
 
     /* Build the pc -> ncode mapping. */
-    void **nmap = (void **)cx->calloc(sizeof(void *) * script->length + 1);
+    void **nmap = (void **)cx->calloc(sizeof(void *) * (script->length + 1));
     if (!nmap) {
         execPool->release();
         return Compile_Error;
@@ -275,6 +276,34 @@ mjit::Compiler::finishThisUp()
         script->mics[i].typeConst = mics[i].typeConst;
         script->mics[i].dataConst = mics[i].dataConst;
         script->mics[i].dataWrite = mics[i].dataWrite;
+    }
+
+    if (pics.length()) {
+        uint8 *cursor = (uint8 *)cx->calloc(sizeof(ic::PICInfo) * pics.length() + sizeof(uint32));
+        if (!cursor) {
+            execPool->release();
+            return Compile_Error;
+        }
+        *(uint32*)cursor = pics.length();
+        cursor += sizeof(uint32);
+        script->pics = (ic::PICInfo *)cursor;
+    }
+
+    for (size_t i = 0; i < pics.length(); i++) {
+        script->pics[i].kind = pics[i].kind;
+        script->pics[i].shapeRegHasBaseShape = true;
+        script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
+        script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
+        script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
+        script->pics[i].callReturn = uint8((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
+                                           (uint8*)script->pics[i].slowPathStart.executableAddress());
+        script->pics[i].shapeReg = pics[i].shapeReg;
+        script->pics[i].objReg = pics[i].objReg;
+        script->pics[i].objRemat = pics[i].objRemat.offset;
+        script->pics[i].atomIndex = pics[i].atomIndex;
+        script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
+                                     masm.distanceOf(pics[i].hotPathBegin);
+        new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
     }
 
     /* Link fast and slow paths together. */
@@ -674,23 +703,23 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
             jsop_this();
-            jsop_getprop_slow();
+            jsop_getprop(fullAtomIndex(PC));
           END_CASE(JSOP_GETTHISPROP);
 
           BEGIN_CASE(JSOP_GETARGPROP)
             /* Push arg onto stack. */
             jsop_getarg(GET_SLOTNO(PC));
-            jsop_getprop_slow();
+            jsop_getprop(fullAtomIndex(&PC[ARGNO_LEN]));
           END_CASE(JSOP_GETARGPROP)
 
           BEGIN_CASE(JSOP_GETLOCALPROP)
             frame.pushLocal(GET_SLOTNO(PC));
-            jsop_getprop_slow();
+            jsop_getprop(fullAtomIndex(&PC[SLOTNO_LEN]));
           END_CASE(JSOP_GETLOCALPROP)
 
           BEGIN_CASE(JSOP_GETPROP)
           BEGIN_CASE(JSOP_GETXPROP)
-            jsop_getprop_slow();
+            jsop_getprop(fullAtomIndex(PC));
           END_CASE(JSOP_GETPROP)
 
           BEGIN_CASE(JSOP_LENGTH)
@@ -1791,6 +1820,87 @@ mjit::Compiler::jsop_getprop_slow()
     frame.pop();
     frame.pushSynced();
 }
+
+#if ENABLE_PIC
+void
+mjit::Compiler::jsop_getprop(uint32 atomIndex)
+{
+    FrameEntry *top = frame.peek(-1);
+
+    /* If the incoming type is not an object, take a slow path. */
+    if (top->isTypeKnown() &&
+        (top->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
+         top->getTypeTag() != JSVAL_MASK32_NONFUNOBJ)) {
+        jsop_getprop_slow();
+        return;
+    }
+
+    PICGenInfo pic(ic::PICInfo::GET);
+    pic.hotPathBegin = masm.label();
+
+    /* Guard that the type is an object. */
+    Jump typeMismatch;
+    bool typeMismatchSet = false;
+    if (!top->isTypeKnown()) {
+        RegisterID reg = frame.tempRegForType(top);
+        RegisterID type = frame.allocReg();
+        masm.move(reg, type);
+        masm.and32(Imm32(JSVAL_MASK32_OBJECT), type);
+        Jump j = masm.branch32(Assembler::BelowOrEqual, type, Imm32(JSVAL_MASK32_CLEAR));
+        stubcc.linkExit(j);
+        stubcc.leave();
+        stubcc.call(stubs::GetProp);
+        typeMismatch = stubcc.masm.jump();
+        frame.freeReg(type);
+        typeMismatchSet = true;
+    }
+
+    RegisterID shapeReg = frame.allocReg();
+    RegisterID objReg = frame.copyDataIntoReg(top);
+    pic.shapeReg = shapeReg;
+    pic.atomIndex = atomIndex;
+    pic.objRemat = frame.dataRematInfo(top);
+
+    /* Guard on shape. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
+    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    pic.shapeGuard = masm.label();
+    Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
+                           Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+    pic.slowPathStart = stubcc.masm.label();
+    stubcc.linkExit(j);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+    pic.callReturn = stubcc.call(ic::GetProp);
+
+    /* Load dslots. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+    /* Copy the slot value to the expression stack. */
+    Address slot(objReg, 1 << 24);
+    frame.pop();
+    masm.loadTypeTag(slot, shapeReg);
+    masm.loadData32(slot, objReg);
+    pic.objReg = objReg;
+    frame.pushRegs(shapeReg, objReg);
+    pic.storeBack = masm.label();
+
+    if (typeMismatchSet)
+        typeMismatch.linkTo(stubcc.masm.label(), &stubcc.masm);
+    stubcc.rejoin(1);
+
+    pics.append(pic);
+}
+
+#else
+
+void
+mjit::Compiler::jsop_getprop(uint32 atomIndex)
+{
+    jsop_getprop_slow();
+}
+#endif
 
 void
 mjit::Compiler::jsop_getarg(uint32 index)
