@@ -334,6 +334,14 @@ input.defaultName:hover{
   border: 1px solid transparent !important;  
 }
 
+.stackExpander{
+  position: absolute;
+  opacity: .5;
+  cursor: pointer;
+}
+
+.stackExpander:hover{ opacity: .7 !important; }
+
 /* Resizable
 ----------------------------------*/
 .resizer{

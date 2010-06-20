@@ -267,6 +267,14 @@ window.Group = function(listOfEls, options) {
       position: 'absolute'
     })
     .appendTo($container);
+    
+  // ___ Stack Expander
+  this.$expander = iQ("<img/>")
+    .addClass("stackExpander")
+    .appendTo($container)
+    .hide(); 
+  // TODO: Shouldn't there be an .attr for iQ?
+  this.$expander.get(0).src = 'chrome://tabcandy/content/img/app/stack-expander.png';    
   
   // ___ locking
   if(this.locked.bounds)
@@ -426,6 +434,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       box.height -= 33; // For new tab button
       
     return box;
+  },
+
+  // ----------  
+  // Function: getChildrenBounds
+  // Returns a <Rect> for the minimum area which contain the group's tabs.
+  getChildrenBounds: function() {
+    return this._getBoundingBox([child.container for each(child in this._children)]);
   },
   
   // ----------  
@@ -792,6 +807,29 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       this.$ntb.css(css);
   },
   
+  // ----------
+  hideExpandControl: function(){
+    this.$expander.hide();
+  },
+
+  // ----------
+  showExpandControl: function(){
+    var childBB = this.getChild(0).getBounds();
+    var dT = childBB.top - this.getBounds().top;
+    var dL = childBB.left - this.getBounds().left;
+    
+    this.$expander
+        .show()
+        .css({
+          opacity: .5,
+          top: dT + childBB.height + Math.min(7, (this.getBounds().bottom-childBB.bottom)/2),
+          // TODO: Why the magic -6? because the childBB.width seems to be over-sizing itself.
+          // But who can blame an object for being a bit optimistic when self-reporting size.
+          // It has to impress the ladies somehow.
+          left: dL + childBB.width/2 - this.$expander.width()/2 - 6,
+        });
+  },
+
   // ----------  
   // Function: shouldStack
   // Returns true if the group, given "count", should stack (instead of grid). 
@@ -873,6 +911,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       } else
         this._stackArrange(bb, options);
     }
+    
+    if( this._isStacked && !this.expanded) this.showExpandControl();
+    else this.hideExpandControl();
   },
   
   // ----------
@@ -988,14 +1029,25 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     }
 
     // ___ we're stacked, but command isn't held down
-    if( Keys.meta == false ){
+    /*if( Keys.meta == false ){
       Groups.setActiveGroup(self);
       return { shouldZoom: true };      
-    }
-      
+    }*/
+    
+    Utils.log("SHOULD EXPAND?", child)    
+    
+    Groups.setActiveGroup(self);
+    return { shouldZoom: true };    
+    
+    /*this.expand();
+    return {};*/
+  },
+  
+  expand: function(){
+    var self = this;
     // ___ we're stacked, and command is held down so expand
     Groups.setActiveGroup(self);
-    var startBounds = child.getBounds();
+    var startBounds = this.getChild(0).getBounds();
     var $tray = iQ("<div>").css({
       top: startBounds.top,
       left: startBounds.left,
@@ -1004,6 +1056,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       position: "absolute",
       zIndex: 99998
     }).appendTo("body");
+
 
     var w = 180;
     var h = w * (TabItems.tabHeight / TabItems.tabWidth) * 1.1;
@@ -1049,12 +1102,20 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         zIndex: 99997
       })
       .appendTo('body')
-      .mouseover(function() {
-        self.collapse();
-      })
       .click(function() { // just in case
         self.collapse();
       });
+
+    // There is a race-condition here. If there is
+    // a mouse-move while the shield is coming up
+    // it will collapse, which we don't want. Thus,
+    // we wait a little bit before adding this event
+    // handler.
+    setTimeout(function(){
+      $shield.mouseover(function() {
+        self.collapse();
+      });
+    }, 100);
       
     this.expanded = {
       $tray: $tray,
@@ -1062,9 +1123,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       bounds: new Rect(pos.left, pos.top, overlayWidth, overlayHeight)
     };
     
-    this.arrange();
-
-    return {};
+    this.arrange();    
   },
 
   // ----------
@@ -1137,7 +1196,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         if(className.indexOf('title-shield') != -1
             || className.indexOf('name') != -1
             || className.indexOf('close') != -1
-            || className.indexOf('newTabButton') != -1) {
+            || className.indexOf('newTabButton') != -1
+            || className.indexOf('stackExpander') != -1 ) {
           return;
         }
         
@@ -1160,6 +1220,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     });
     
     iQ(container).droppable(this.dropOptions);
+    
+    this.$expander.mousedown(function(){
+      self.expand();
+    });
   },
 
   // ----------  
