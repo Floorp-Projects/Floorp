@@ -981,12 +981,8 @@ function makePreview(row)
     newImage.id = "thepreviewimage";
     newImage.mozLoadFrom(item);
     newImage.controls = true;
-    physWidth = item.videoWidth;
-    physHeight = item.videoHeight;
-    width = item.width != -1 ? item.width : physWidth;
-    height = item.height != -1 ? item.height : physHeight;
-    newImage.width = width;
-    newImage.height = height;
+    width = physWidth = item.videoWidth;
+    height = physHeight = item.videoHeight;
 
     document.getElementById("theimagecontainer").collapsed = false;
     document.getElementById("brokenimagecontainer").collapsed = true;
