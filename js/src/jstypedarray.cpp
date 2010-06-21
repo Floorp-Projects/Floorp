@@ -1196,10 +1196,7 @@ void
 TypedArrayTemplate<int32>::copyIndexToValue(JSContext *cx, uint32 index, Value *vp)
 {
     int32 val = getIndex(index);
-    if (val <= JSVAL_INT_MAX)
-        vp->setInt32(val);
-    else
-        vp->setDouble(val);
+    vp->setInt32(val);
 }
 
 template<>
@@ -1207,10 +1204,7 @@ void
 TypedArrayTemplate<uint32>::copyIndexToValue(JSContext *cx, uint32 index, Value *vp)
 {
     uint32 val = getIndex(index);
-    if (val <= JSVAL_INT_MAX)
-        vp->setInt32(val);
-    else
-        vp->setDouble(val);
+    vp->setNumber(val);
 }
 
 template<>

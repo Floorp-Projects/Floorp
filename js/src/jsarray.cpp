@@ -244,16 +244,6 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
 }
 
-static inline void
-IndexToValue(JSContext *cx, jsdouble index, Value *vp)
-{
-    int32_t i;
-    if (JSDOUBLE_IS_INT32(index, i))
-        vp->setInt32(i);
-    else
-        vp->setDouble(index);
-}
-
 JSBool JS_FASTCALL
 js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
@@ -560,7 +550,7 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
     Value v;
     jsid id;
 
-    IndexToValue(cx, length, &v);
+    v.setNumber(length);
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     return obj->setProperty(cx, id, &v);
 }
@@ -605,7 +595,7 @@ array_length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     do {
         if (obj->isArray()) {
-            IndexToValue(cx, obj->getArrayLength(), vp);
+            vp->setNumber(obj->getArrayLength());
             return JS_TRUE;
         }
     } while ((obj = obj->getProto()) != NULL);
@@ -632,7 +622,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (oldlen == newlen)
         return true;
 
-    IndexToValue(cx, newlen, vp);
+    vp->setNumber(newlen);
     if (oldlen < newlen) {
         if (obj->isDenseArray())
             obj->setDenseArrayLength(newlen);
@@ -733,7 +723,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     uint32 i;
     if (!js_IdIsIndex(id, &i)) {
         JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
-        IndexToValue(cx, obj->getArrayLength(), vp);
+        vp->setNumber(obj->getArrayLength());
         return JS_TRUE;
     }
     *vp = obj->getDenseArrayElement(i);
@@ -746,7 +736,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     uint32 i;
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        IndexToValue(cx, obj->getArrayLength(), vp);
+        vp->setNumber(obj->getArrayLength());
         return JS_TRUE;
     }
 
@@ -1499,7 +1489,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     JS_ASSERT(start == MAXINDEX);
     AutoValueRooter tvr(cx);
     AutoIdRooter idr(cx);
-    Value idval(DoubleTag(MAXINDEX));
+    Value idval = DoubleTag(MAXINDEX);
     do {
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
@@ -2109,7 +2099,7 @@ array_push_slowly(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *
 
     /* Per ECMA-262, return the new array length. */
     jsdouble newlength = length + jsdouble(argc);
-    IndexToValue(cx, newlength, rval);
+    rval->setNumber(newlength);
     return js_SetLengthProperty(cx, obj, newlength);
 }
 
@@ -2131,7 +2121,7 @@ array_push1_dense(JSContext* cx, JSObject* obj, const Value &v, Value *rval)
     JS_ASSERT(obj->getDenseArrayElement(length).isMagic(JS_ARRAY_HOLE));
     obj->incDenseArrayCountBy(1);
     obj->setDenseArrayElement(length, v);
-    IndexToValue(cx, obj->getArrayLength(), rval);
+    rval->setNumber(obj->getArrayLength());
     return JS_TRUE;
 }
 
@@ -2327,7 +2317,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Follow Perl by returning the new array length. */
-    IndexToValue(cx, newlen, vp);
+    vp->setNumber(newlen);
     return JS_TRUE;
 }
 
