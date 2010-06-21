@@ -527,8 +527,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           if (hresult == S_OK && nsWindow::GetWindowsVersion() <= WIN7_VERSION) {
             LPCWSTR defThemes[] = {
               L"luna.msstyles",
-              L"royale.msstyles",
-              L"zune.msstyles",
               L"aero.msstyles"
             };
 

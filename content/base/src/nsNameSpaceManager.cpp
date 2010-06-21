@@ -287,7 +287,7 @@ nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  NS_ASSERTION(aNameSpaceID - 1 == mURIArray.Length(),
+  NS_ASSERTION(aNameSpaceID - 1 == (PRInt32) mURIArray.Length(),
                "BAD! AddNameSpace not called in right order!");
 
   nsString* uri = new nsString(aURI);

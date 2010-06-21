@@ -28,7 +28,7 @@ function doTest() {
   var tabMinWidth = gPrefService.getIntPref("browser.tabs.tabMinWidth");
   var tabCountForOverflow = Math.ceil(width(tabstrip) / tabMinWidth * 3);
   while (tabContainer.childNodes.length < tabCountForOverflow)
-    gBrowser.addTab();
+    gBrowser.addTab("about:blank", {skipAnimation: true});
 
   tabstrip.addEventListener("overflow", runOverflowTests, false);
 }

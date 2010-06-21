@@ -114,7 +114,7 @@
           return "remove iframe";
 
         return "change display style of iframe to " +
-          (aAction == kHide) ? "none" : "block";
+          ((aAction == kHide) ? "none" : "block");
       }
     }
 
@@ -143,6 +143,11 @@
 
       this.finalCheck = function openDialogWnd_finalCheck()
       {
+        this.finalCheckImpl();
+      }
+
+      this.finalCheckImpl = function openDialogWnd_finalCheckImpl()
+      {
         var accTree = {
           role: ROLE_APP_ROOT,
           children: [
@@ -157,7 +162,14 @@
 
         testAccessibleTree(this.mRootAcc, accTree);
 
+        var dlgDoc = this.mDialog.document;
+        ok(isAccessibleInCache(dlgDoc),
+           "The document accessible for '" + aURL + "' is not in cache!");
+
         this.mDialog.close();
+
+        ok(!isAccessibleInCache(dlgDoc),
+           "The document accessible for '" + aURL + "' is in cache still!");
       }
 
       this.getID = function openDialogWnd_getID()
@@ -166,12 +178,49 @@
       }
     }
 
+    function openWndShutdownDoc()
+    {
+      this.__proto__ =
+        new openDialogWnd("chrome://mochikit/content/a11y/accessible/events/docload_wnd.html");
+
+      var thisObj = this;
+      var docChecker = {
+        type: EVENT_HIDE,
+        get target()
+        {
+          var iframe = this.invoker.mDialog.document.getElementById("iframe");
+          this.invoker.iframeDoc = iframe.contentDocument;
+          return iframe;
+        },
+        invoker: thisObj
+      };
+
+      this.eventSeq.push(docChecker);
+
+      this.finalCheck = function openWndShutdownDoc_finalCheck()
+      {
+        // After timeout after event hide for iframe was handled the document
+        // accessible for iframe's document is in cache still.
+        ok(!isAccessibleInCache(this.iframeDoc),
+            "The document accessible for iframe is in cache still after iframe hide!");
+
+        this.finalCheckImpl();
+
+        // After the window is closed all alive subdocument accessibles should
+        // be shut down.
+        ok(!isAccessibleInCache(this.iframeDoc),
+           "The document accessible for iframe is in cache still!");
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
     var gQueue = null;
 
-    // var gA11yEventDumpID = "eventdump"; // debug stuff
+    // Debug stuff.
+    // gA11yEventDumpID = "eventdump";
+    // gA11yEventDumpToConsole = true;
 
     function doTests()
     {
@@ -183,6 +232,7 @@
       gQueue.push(new morphIFrame("iframe", kShow));
       gQueue.push(new morphIFrame("iframe", kRemove));
       gQueue.push(new openDialogWnd("about:"));
+      gQueue.push(new openWndShutdownDoc());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -208,6 +258,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=566103"
      title="Reorganize accessible document handling">
     Mozilla Bug 566103
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=571459"
+     title="Shutdown document accessible when presshell goes away">
+    Mozilla Bug 571459
   </a>
 
   <p id="display"></p>

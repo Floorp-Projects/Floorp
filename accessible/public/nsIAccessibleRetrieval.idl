@@ -56,7 +56,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(3e5cbd5c-dbab-4ea3-b82b-4cd6201d6fe0)]
+[scriptable, uuid(420f0f49-27c1-4ac1-b509-5aba4353909b)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -128,6 +128,16 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return - accessible relation type presented as human readable string
    */
   AString getStringRelationType(in unsigned long aRelationType);
+
+  /**
+   * Return an accessible for the given DOM node from the cache.
+   * @note  the method is intended for testing purposes
+   *
+   * @param aNode  [in] the DOM node to get an accessible for
+   *
+   * @return       cached accessible for the given DOM node if any
+   */
+  nsIAccessible getAccessibleFromCache(in nsIDOMNode aNode);
 };
 
 

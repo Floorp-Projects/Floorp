@@ -515,7 +515,7 @@ nsSize
 nsVideoFrame::GetVideoIntrinsicSize(nsIRenderingContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
-  nsIntSize size(300,150);
+  nsIntSize size(300, 150);
 
   if (ShouldDisplayPoster()) {
     // Use the poster image frame's size.
@@ -528,7 +528,7 @@ nsVideoFrame::GetVideoIntrinsicSize(nsIRenderingContext *aRenderingContext)
     }
   }
 
-  if (!HasVideoData()) {
+  if (!HasVideoElement()) {
     if (!aRenderingContext || !mFrames.FirstChild()) {
       // We just want our intrinsic ratio, but audio elements need no
       // intrinsic ratio, so just return "no ratio". Also, if there's

@@ -5092,6 +5092,17 @@ nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
   return doc;
 }
 
+/* static */
+PRBool
+nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, PR_FALSE));
+}
+
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
   : mString(aString), mService(nsnull)
 {

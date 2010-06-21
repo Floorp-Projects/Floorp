@@ -224,6 +224,13 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile)
     return NULL;
 }
 
+const mozilla::Module*
+nsNativeModuleLoader::LoadModuleFromJAR(nsILocalFile* aJARFile, const nsACString &aPath)
+{
+    NS_ERROR("Binary components cannot be loaded from JARs");
+    return NULL;
+}
+
 PLDHashOperator
 nsNativeModuleLoader::ReleaserFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)

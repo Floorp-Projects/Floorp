@@ -92,7 +92,8 @@ public:
 
   PRBool ThemeNeedsComboboxDropmarker();
 
-  virtual nsTransparencyMode GetWidgetTransparency(PRUint8 aWidgetType);
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
+                                             PRUint8 aWidgetType);
 
   nsNativeThemeGTK();
   virtual ~nsNativeThemeGTK();

@@ -43,7 +43,7 @@
 #include "nsRootAccessibleWrap.h"
 
 nsNativeRootAccessibleWrap::nsNativeRootAccessibleWrap(AtkObject *aAccessible):
-    nsRootAccessible(nsnull, nsnull)
+    nsRootAccessible(nsnull, nsnull, nsnull)
 {
     g_object_ref(aAccessible);
     mAtkObject = aAccessible;

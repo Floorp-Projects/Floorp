@@ -171,11 +171,17 @@ typedef struct PRExplodedTime {
 
 typedef PRTimeParameters (PR_CALLBACK *PRTimeParamFn)(const PRExplodedTime *gmt);
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+PR_END_EXTERN_C
+#endif
+
+namespace nspr {
+
 /**********************************************************************/
 /****************************** FUNCTIONS *****************************/
 /**********************************************************************/
 
-NSPR_API(PRTime)
+PRTime
 PR_ImplodeTime(const PRExplodedTime *exploded);
 
 /*
@@ -190,15 +196,14 @@ PR_ImplodeTime(const PRExplodedTime *exploded);
  *     should treat them as "read-only".
  */
 
-NSPR_API(void) PR_NormalizeTime(
-    PRExplodedTime *exploded, PRTimeParamFn params);
+void PR_NormalizeTime(PRExplodedTime *exploded, PRTimeParamFn params);
 
 /**********************************************************************/
 /*********************** TIME PARAMETER FUNCTIONS *********************/
 /**********************************************************************/
 
 /* Time parameters that represent Greenwich Mean Time */
-NSPR_API(PRTimeParameters) PR_GMTParameters(const PRExplodedTime *gmt);
+PRTimeParameters PR_GMTParameters(const PRExplodedTime *gmt);
 
 /*
  * This parses a time/date string into a PRTime
@@ -231,13 +236,11 @@ NSPR_API(PRTimeParameters) PR_GMTParameters(const PRExplodedTime *gmt);
  * the time string which you are parsing.
  */
 
-NSPR_API(PRStatus) PR_ParseTimeString (
+PRStatus PR_ParseTimeString (
 	const char *string,
 	PRBool default_to_gmt,
 	PRTime *result);
 
-#ifdef CHROMIUM_MOZILLA_BUILD
-PR_END_EXTERN_C
-#endif
+} // namespace nspr
 
 #endif  // BASE_PRTIME_H__

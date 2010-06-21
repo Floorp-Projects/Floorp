@@ -503,21 +503,10 @@ nsACProxyListener::GetInterface(const nsIID & aIID, void **aResult)
 
 /////////////////////////////////////////////
 
-nsXHREventTarget::~nsXHREventTarget()
-{
-  nsISupports *supports = static_cast<nsIXMLHttpRequestEventTarget*>(this);
-  nsContentUtils::ReleaseWrapper(supports, this);
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
-                                                  nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+                                                  nsDOMEventTargetWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
@@ -525,12 +514,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
-                                                nsDOMEventTargetHelper)
+                                                nsDOMEventTargetWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
@@ -539,12 +524,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
 
-NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetWrapperCache)
+NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetWrapperCache)
 
 NS_IMETHODIMP
 nsXHREventTarget::GetOnload(nsIDOMEventListener** aOnLoad)
@@ -1566,36 +1550,20 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
   return httpChannel;
 }
 
-inline PRBool
-IsSystemPrincipal(nsIPrincipal* aPrincipal)
-{
-  PRBool isSystem = PR_FALSE;
-  nsContentUtils::GetSecurityManager()->
-    IsSystemPrincipal(aPrincipal, &isSystem);
-  return isSystem;
-}
-
-static PRBool
-CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
-{
-  NS_ASSERTION(!IsSystemPrincipal(aPrincipal), "Shouldn't get here!");
-
-  nsCOMPtr<nsIURI> channelURI;
-  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, PR_FALSE));
-}
-
 nsresult
 nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
 {
   nsresult rv;
 
-  // First check if this is a same-origin request, or if cross-site requests
-  // are enabled.
-  if ((mState & XML_HTTP_REQUEST_XSITEENABLED) ||
-      CheckMayLoad(mPrincipal, aChannel)) {
+  // First check if cross-site requests are enabled
+  if ((mState & XML_HTTP_REQUEST_XSITEENABLED)) {
+    return NS_OK;
+  }
+
+  // or if this is a same-origin request.
+  NS_ASSERTION(!nsContentUtils::IsSystemPrincipal(mPrincipal),
+               "Shouldn't get here!");
+  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel)) {
     return NS_OK;
   }
 
@@ -1773,7 +1741,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   if (NS_FAILED(rv)) return rv;
 
   // Check if we're doing a cross-origin request.
-  if (IsSystemPrincipal(mPrincipal)) {
+  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
     // Chrome callers are always allowed to read from different origins.
     mState |= XML_HTTP_REQUEST_XSITEENABLED;
   }
@@ -1930,7 +1898,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIPrincipal> documentPrincipal = mPrincipal;
-  if (IsSystemPrincipal(documentPrincipal)) {
+  if (nsContentUtils::IsSystemPrincipal(documentPrincipal)) {
     // Don't give this document the system principal.  We need to keep track of
     // mPrincipal being system because we use it for various security checks
     // that should be passing, but the document data shouldn't get a system
@@ -2399,7 +2367,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (httpChannel) {
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
-    if (!IsSystemPrincipal(mPrincipal)) {
+    if (!nsContentUtils::IsSystemPrincipal(mPrincipal)) {
       nsCOMPtr<nsIURI> codebase;
       mPrincipal->GetURI(getter_AddRefs(codebase));
 

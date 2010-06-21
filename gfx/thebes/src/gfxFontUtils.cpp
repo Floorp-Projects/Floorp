@@ -60,6 +60,10 @@
 
 #define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
 
+#define UNICODE_BMP_LIMIT 0x10000
+
+using namespace mozilla; // for the AutoSwap_* types
+
 /* Unicode subrange table
  *   from: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
  *
@@ -230,45 +234,62 @@ static const struct UnicodeRangeTableEntry gUnicodeRanges[] = {
     { 111, 0x1D360, 0x1D37F, "Counting Rod Numerals" }
 };
 
+#pragma pack(1)
+
+typedef struct {
+    AutoSwap_PRUint16 format;
+    AutoSwap_PRUint16 reserved;
+    AutoSwap_PRUint32 length;
+    AutoSwap_PRUint32 language;
+    AutoSwap_PRUint32 numGroups;
+} Format12CmapHeader;
+
+typedef struct {
+    AutoSwap_PRUint32 startCharCode;
+    AutoSwap_PRUint32 endCharCode;
+    AutoSwap_PRUint32 startGlyphId;
+} Format12Group;
+
+#pragma pack()
+
 nsresult
-gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBitSet& aCharacterMap) 
+gfxFontUtils::ReadCMAPTableFormat12(const PRUint8 *aBuf, PRUint32 aLength,
+                                    gfxSparseBitSet& aCharacterMap) 
 {
-    enum {
-        OffsetFormat = 0,
-        OffsetReserved = 2,
-        OffsetTableLength = 4,
-        OffsetLanguage = 8,
-        OffsetNumberGroups = 12,
-        OffsetGroups = 16,
+    // Ensure table is large enough that we can safely read the header
+    NS_ENSURE_TRUE(aLength >= sizeof(Format12CmapHeader),
+                    NS_ERROR_GFX_CMAP_MALFORMED);
 
-        SizeOfGroup = 12,
-
-        GroupOffsetStartCode = 0,
-        GroupOffsetEndCode = 4
-    };
-    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_GFX_CMAP_MALFORMED);
-
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, 
+    // Sanity-check header fields
+    const Format12CmapHeader *cmap12 =
+        reinterpret_cast<const Format12CmapHeader*>(aBuf);
+    NS_ENSURE_TRUE(PRUint16(cmap12->format) == 12, 
                    NS_ERROR_GFX_CMAP_MALFORMED);
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, 
+    NS_ENSURE_TRUE(PRUint16(cmap12->reserved) == 0, 
                    NS_ERROR_GFX_CMAP_MALFORMED);
 
-    PRUint32 tablelen = ReadLongAt(aBuf, OffsetTableLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
-    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_GFX_CMAP_MALFORMED);
+    PRUint32 tablelen = cmap12->length;
+    NS_ENSURE_TRUE(tablelen >= sizeof(Format12CmapHeader) &&
+                   tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
 
-    NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, 
+    NS_ENSURE_TRUE(cmap12->language == 0, NS_ERROR_GFX_CMAP_MALFORMED);
+
+    // Check that the table is large enough for the group array
+    const PRUint32 numGroups = cmap12->numGroups;
+    NS_ENSURE_TRUE((tablelen - sizeof(Format12CmapHeader)) /
+                       sizeof(Format12Group) >= numGroups,
                    NS_ERROR_GFX_CMAP_MALFORMED);
 
-    const PRUint32 numGroups  = ReadLongAt(aBuf, OffsetNumberGroups);
-    NS_ENSURE_TRUE(tablelen >= 16 + (12 * numGroups), 
-                   NS_ERROR_GFX_CMAP_MALFORMED);
+    // The array of groups immediately follows the subtable header.
+    const Format12Group *group =
+        reinterpret_cast<const Format12Group*>(aBuf + sizeof(Format12CmapHeader));
 
-    const PRUint8 *groups = aBuf + OffsetGroups;
+    // Check that groups are in correct order and do not overlap,
+    // and record character coverage in aCharacterMap.
     PRUint32 prevEndCharCode = 0;
-    for (PRUint32 i = 0; i < numGroups; i++, groups += SizeOfGroup) {
-        const PRUint32 startCharCode = ReadLongAt(groups, GroupOffsetStartCode);
-        const PRUint32 endCharCode = ReadLongAt(groups, GroupOffsetEndCode);
+    for (PRUint32 i = 0; i < numGroups; i++, group++) {
+        const PRUint32 startCharCode = group->startCharCode;
+        const PRUint32 endCharCode = group->endCharCode;
         NS_ENSURE_TRUE((prevEndCharCode < startCharCode || i == 0) &&
                        startCharCode <= endCharCode &&
                        endCharCode <= CMAP_MAX_CODEPOINT, 
@@ -283,7 +304,8 @@ gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBi
 }
 
 nsresult 
-gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBitSet& aCharacterMap)
+gfxFontUtils::ReadCMAPTableFormat4(const PRUint8 *aBuf, PRUint32 aLength,
+                                   gfxSparseBitSet& aCharacterMap)
 {
     enum {
         OffsetFormat = 0,
@@ -360,7 +382,7 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
 }
 
 nsresult
-gfxFontUtils::ReadCMAPTableFormat14(PRUint8 *aBuf, PRUint32 aLength,
+gfxFontUtils::ReadCMAPTableFormat14(const PRUint8 *aBuf, PRUint32 aLength,
                                     PRUint8*& aTable)
 {
     enum {
@@ -435,7 +457,6 @@ gfxFontUtils::ReadCMAPTableFormat14(PRUint8 *aBuf, PRUint32 aLength,
             PRUint32 prevUnicode = 0;
             for (PRUint32 j = 0; j < numUVSMappings; j++, tables += SizeOfNonDefUVSTable) {
                 const PRUint32 unicodeValue = ReadUint24At(tables, NonDefUVSOffsetUnicodeValue);
-                const PRUint16 glyphID = ReadShortAt(tables, NonDefUVSOffsetGlyphID);
                 NS_ENSURE_TRUE((prevUnicode < unicodeValue || j == 0) &&
                                unicodeValue <= CMAP_MAX_CODEPOINT, 
                                NS_ERROR_GFX_CMAP_MALFORMED);
@@ -474,8 +495,9 @@ gfxFontUtils::ReadCMAPTableFormat14(PRUint8 *aBuf, PRUint32 aLength,
 #define isUVSEncoding(p, e)   ((p) == PLATFORM_ID_UNICODE && (e) == EncodingIDUVSForUnicodePlatform)
 
 PRUint32
-gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
-                                    PRUint32 *aTableOffset, PRUint32 *aUVSTableOffset,
+gfxFontUtils::FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
+                                    PRUint32 *aTableOffset,
+                                    PRUint32 *aUVSTableOffset,
                                     PRBool *aSymbolEncoding)
 {
     enum {
@@ -509,7 +531,7 @@ gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
     // save the format we want here
     PRUint32 keepFormat = 0;
 
-    PRUint8 *table = aBuf + SizeOfHeader;
+    const PRUint8 *table = aBuf + SizeOfHeader;
     for (PRUint16 i = 0; i < numTables; ++i, table += SizeOfTable) {
         const PRUint16 platformID = ReadShortAt(table, TableOffsetPlatformID);
         if (!acceptablePlatform(platformID))
@@ -552,13 +574,15 @@ gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
 }
 
 nsresult
-gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap,
+gfxFontUtils::ReadCMAP(const PRUint8 *aBuf, PRUint32 aBufLength,
+                       gfxSparseBitSet& aCharacterMap,
                        PRUint32& aUVSOffset,
                        PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
 {
     PRUint32 offset;
     PRBool   symbol;
-    PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset, &aUVSOffset, &symbol);
+    PRUint32 format = FindPreferredSubtable(aBuf, aBufLength,
+                                            &offset, &aUVSOffset, &symbol);
 
     if (format == 4) {
         if (symbol) {
@@ -568,19 +592,19 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
             aUnicodeFont = PR_TRUE;
             aSymbolFont = PR_FALSE;
         }
-        return ReadCMAPTableFormat4(aBuf + offset, aBufLength - offset, aCharacterMap);
+        return ReadCMAPTableFormat4(aBuf + offset, aBufLength - offset,
+                                    aCharacterMap);
     }
 
     if (format == 12) {
         aUnicodeFont = PR_TRUE;
         aSymbolFont = PR_FALSE;
-        return ReadCMAPTableFormat12(aBuf + offset, aBufLength - offset, aCharacterMap);
+        return ReadCMAPTableFormat12(aBuf + offset, aBufLength - offset,
+                                     aCharacterMap);
     }
 
     return NS_ERROR_FAILURE;
 }
-
-using namespace mozilla; // for the AutoSwap_* types
 
 #pragma pack(1)
 
@@ -636,11 +660,6 @@ gfxFontUtils::MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh)
     PRUint16 rangeShiftOver2;
     PRUint16 index;
 
-// not needed because PRUnichar cannot exceed 0xFFFF
-//    if (aCh >= 0x10000) {
-//        return 0;
-//    }
-
     segCount = (PRUint16)(cmap4->segCountX2) / 2;
 
     endCodes = &cmap4->arrays[0];
@@ -681,6 +700,54 @@ gfxFontUtils::MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh)
         return result;
     }
 
+    return 0;
+}
+
+PRUint32
+gfxFontUtils::MapCharToGlyphFormat12(const PRUint8 *aBuf, PRUint32 aCh)
+{
+    const Format12CmapHeader *cmap12 =
+        reinterpret_cast<const Format12CmapHeader*>(aBuf);
+
+    // We know that numGroups is within range for the subtable size
+    // because it was checked by ReadCMAPTableFormat12.
+    PRUint32 numGroups = cmap12->numGroups;
+
+    // The array of groups immediately follows the subtable header.
+    const Format12Group *groups =
+        reinterpret_cast<const Format12Group*>(aBuf + sizeof(Format12CmapHeader));
+
+    // For most efficient binary search, we want to work on a range that
+    // is a power of 2 so that we can always halve it by shifting.
+    // So we find the largest power of 2 that is <= numGroups.
+    // We will offset this range by rangeOffset so as to reach the end
+    // of the table, provided that doesn't put us beyond the target
+    // value from the outset.
+    PRUint32 powerOf2 = mozilla::FindHighestBit(numGroups);
+    PRUint32 rangeOffset = numGroups - powerOf2;
+    PRUint32 range = 0;
+    PRUint32 startCharCode;
+
+    if (groups[rangeOffset].startCharCode <= aCh) {
+        range = rangeOffset;
+    }
+
+    // Repeatedly halve the size of the range until we find the target group
+    while (powerOf2 > 1) {
+        powerOf2 >>= 1;
+        if (groups[range + powerOf2].startCharCode <= aCh) {
+            range += powerOf2;
+        }
+    }
+
+    // Check if the character is actually present in the range and return
+    // the corresponding glyph ID
+    startCharCode = groups[range].startCharCode;
+    if (startCharCode <= aCh && groups[range].endCharCode >= aCh) {
+        return groups[range].startGlyphId + aCh - startCharCode;
+    }
+
+    // Else it's not present, so return the .notdef glyph
     return 0;
 }
 
@@ -733,19 +800,23 @@ gfxFontUtils::MapUVSToGlyphFormat14(const PRUint8 *aBuf, PRUint32 aCh, PRUint32 
 }
 
 PRUint32
-gfxFontUtils::MapCharToGlyph(PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh)
+gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
+                             PRUnichar aCh)
 {
     PRUint32 offset;
     PRBool   symbol;
-    PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset, nsnull, &symbol);
+    PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset,
+                                            nsnull, &symbol);
 
-    if (format == 4)
-        return MapCharToGlyphFormat4(aBuf + offset, aCh);
-
-    // other formats not currently supported; this is used only for the
-    // Mac OS X 10.6 LiGothic font hack (bug 532346)
-
-    return 0;
+    switch (format) {
+    case 4:
+        return aCh < UNICODE_BMP_LIMIT ?
+            MapCharToGlyphFormat4(aBuf + offset, aCh) : 0;
+    case 12:
+        return MapCharToGlyphFormat12(aBuf + offset, aCh);
+    default:
+        return 0;
+    }
 }
 
 PRUint8 gfxFontUtils::CharRangeBit(PRUint32 ch) {

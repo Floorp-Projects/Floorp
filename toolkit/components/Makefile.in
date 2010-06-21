@@ -63,6 +63,7 @@ PARALLEL_DIRS += \
   parentalcontrols \
   passwordmgr \
   places \
+  prompts \
   startup \
   statusfilter \
   typeaheadfind \

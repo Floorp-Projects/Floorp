@@ -28,4 +28,3 @@
   locale/@AB_CD@/global-platform/mac/accessible.properties     (%chrome/accessibility/mac/accessible.properties)
   locale/@AB_CD@/global-platform/unix/accessible.properties    (%chrome/accessibility/unix/accessible.properties)
   locale/@AB_CD@/global/storage.properties                     (%chrome/storage.properties)
-  locale/@AB_CD@/global/prompts.properties                     (%chrome/prompts.properties)

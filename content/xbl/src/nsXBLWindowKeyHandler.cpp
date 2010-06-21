@@ -542,7 +542,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
           domDoc->GetElementById(command, getter_AddRefs(commandElt));
 
         if (!commandElt) {
-          NS_ERROR("A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!\n");
+          NS_ERROR("A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!");
           continue;
         }
       }

@@ -76,11 +76,11 @@ GetPresContextFromEditor(nsIEditor *aEditor, nsPresContext **aResult)
 
   nsCOMPtr<nsISelectionController> selCon;
   nsresult rv = aEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (NS_FAILED(rv)) return rv;
-  if (!selCon) return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
-  if (!presShell) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   NS_IF_ADDREF(*aResult = presShell->GetPresContext());
   return NS_OK;
@@ -112,12 +112,12 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   NS_ENSURE_ARG_POINTER(aParams);
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
   nsRefPtr<nsPresContext> presContext;
   nsresult rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
-  if (NS_FAILED(rv)) return rv;
-  if (!presContext) return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   PRInt32 animationMode; 
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
@@ -133,14 +133,14 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsISupports> container = presContext->GetContainer();
-    if (!container) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
-    if (NS_FAILED(rv)) return rv;
-    if (!docShell) return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
     rv = docShell->SetAllowPlugins(allowPlugins);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -156,7 +156,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
 
   // The base editor owns most state info
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
   // Always get the enabled state
   PRBool outCmdEnabled = PR_FALSE;
@@ -167,8 +167,8 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   // get pres context
   nsRefPtr<nsPresContext> presContext;
   rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
-  if (NS_FAILED(rv)) return rv;
-  if (!presContext) return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   PRInt32 animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
@@ -178,7 +178,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
     // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
     rv = aParams->SetLongValue("imageAnimation",
                                presContext->ImageAnimationMode());
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   PRBool allowPlugins; 
@@ -186,17 +186,17 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsISupports> container = presContext->GetContainer();
-    if (!container) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
-    if (NS_FAILED(rv)) return rv;
-    if (!docShell) return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
     rv = docShell->GetAllowPlugins(&allowPlugins);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aParams->SetBooleanValue("plugins", allowPlugins);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -235,8 +235,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
                                            nsISupports *refCon)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) 
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified"))
   {
@@ -247,8 +246,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     // Should we fail if this param wasn't set?
     // I'm not sure we should be that strict
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (modified)
       return editor->IncrementModificationCount(1);
@@ -261,8 +259,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     NS_ENSURE_ARG_POINTER(aParams);
     PRBool isReadOnly; 
     nsresult rvRO = aParams->GetBooleanValue(STATE_ATTRIBUTE, &isReadOnly);
-    if (NS_FAILED(rvRO))
-      return rvRO;
+    NS_ENSURE_SUCCESS(rvRO, rvRO);
 
     PRUint32 flags;
     editor->GetFlags(&flags);
@@ -278,13 +275,11 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor) 
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool desireCSS;
     nsresult rvCSS = aParams->GetBooleanValue(STATE_ATTRIBUTE, &desireCSS);
-    if (NS_FAILED(rvCSS))
-      return rvCSS;
+    NS_ENSURE_SUCCESS(rvCSS, rvCSS);
 
     return htmleditor->SetIsCSSEnabled(desireCSS);
   }
@@ -293,14 +288,12 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor) 
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool insertBrOnReturn;
     nsresult rvBR = aParams->GetBooleanValue(STATE_ATTRIBUTE,
                                               &insertBrOnReturn);
-    if (NS_FAILED(rvBR))
-      return rvBR;
+    NS_ENSURE_SUCCESS(rvBR, rvBR);
 
     return htmleditor->SetReturnInParagraphCreatesNewParagraph(!insertBrOnReturn);
   }
@@ -309,13 +302,11 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
-    if (!resizer)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(resizer, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
-    if (NS_FAILED(rvOR))
-      return rvOR;
+    NS_ENSURE_SUCCESS(rvOR, rvOR);
 
     return resizer->SetObjectResizingEnabled(enabled);
   }
@@ -324,13 +315,11 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
-    if (!editor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
-    if (NS_FAILED(rvOR))
-      return rvOR;
+    NS_ENSURE_SUCCESS(rvOR, rvOR);
 
     return editor->SetInlineTableEditingEnabled(enabled);
   }
@@ -348,8 +337,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
   // The base editor owns most state info
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) 
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
   // Always get the enabled state
   PRBool outCmdEnabled = PR_FALSE;
@@ -380,8 +368,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool isCSS;
     htmleditor->GetIsCSSEnabled(&isCSS);
@@ -392,8 +379,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
-    if (!htmleditor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
 
     PRBool createPOnReturn;
     htmleditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
@@ -404,8 +390,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
-    if (!resizer)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(resizer, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     resizer->GetObjectResizingEnabled(&enabled);
@@ -416,8 +401,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
-    if (!editor)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
     PRBool enabled;
     editor->GetInlineTableEditingEnabled(&enabled);
@@ -454,7 +438,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
  *
  *  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(mDocShell);
  *  nsCOMPtr<nsPICommandUpdater> commandUpdater = do_QueryInterface(commandManager);
- *  if (!commandUpdater) return NS_ERROR_FAILURE;
+ *  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
  *    commandUpdater->CommandStatusChanged(obs_documentCreated);
  *
  *  5. Use GetCommandStateParams() to obtain state information
@@ -539,10 +523,10 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
       nsCOMPtr<nsIDOMDocument> domDoc;
       editor->GetDocument(getter_AddRefs(domDoc));
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-      if (!doc) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
       nsIURI *uri = doc->GetDocumentURI();
-      if (!uri) return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
       return aParams->SetISupportsValue(STATE_DATA, (nsISupports*)uri);
     }

@@ -147,6 +147,16 @@ static PRBool IsChromeURI(nsIURI* aURI)
     return PR_FALSE;
 }
 
+static PRBool IsOverlayAllowed(nsIURI* aURI)
+{
+    PRBool canOverlay = PR_FALSE;
+    if (NS_SUCCEEDED(aURI->SchemeIs("about", &canOverlay)) && canOverlay)
+        return PR_TRUE;
+    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &canOverlay)) && canOverlay)
+        return PR_TRUE;
+    return PR_FALSE;
+}
+
 //----------------------------------------------------------------------
 //
 // Miscellaneous Constants
@@ -579,7 +589,7 @@ nsXULDocument::EndLoad()
         nsXULPrototypeCache::GetInstance()->WritePrototype(mCurrentPrototype);
     }
 
-    if (isChrome) {
+    if (IsOverlayAllowed(uri)) {
         nsCOMPtr<nsIXULOverlayProvider> reg =
             mozilla::services::GetXULOverlayProviderService();
 
@@ -608,7 +618,7 @@ nsXULDocument::EndLoad()
             }
         }
 
-        if (useXULCache) {
+        if (isChrome && useXULCache) {
             // If it's a chrome prototype document, then notify any
             // documents that raced to load the prototype, and awaited
             // its load completion via proto->AwaitLoadDone().
@@ -2600,8 +2610,8 @@ nsXULDocument::AddChromeOverlays()
 
     nsCOMPtr<nsIURI> docUri = mCurrentPrototype->GetURI();
 
-    /* overlays only apply to chrome, skip all content URIs */
-    if (!IsChromeURI(docUri)) return NS_OK;
+    /* overlays only apply to chrome or about URIs */
+    if (!IsOverlayAllowed(docUri)) return NS_OK;
 
     nsCOMPtr<nsIXULOverlayProvider> chromeReg =
         mozilla::services::GetXULOverlayProviderService();
@@ -2694,7 +2704,8 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     // In all other cases, the overlay is only allowed to load if
     // the master document and prototype document have the same origin.
 
-    if (!IsChromeURI(mDocumentURI)) {
+    PRBool documentIsChrome = IsChromeURI(mDocumentURI);
+    if (!documentIsChrome) {
         // Make sure we're allowed to load this overlay.
         rv = NodePrincipal()->CheckMayLoad(aURI, PR_TRUE);
         if (NS_FAILED(rv)) {
@@ -2704,9 +2715,11 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     }
 
     // Look in the prototype cache for the prototype document with
-    // the specified overlay URI.
+    // the specified overlay URI. Only use the cache if the containing
+    // document is chrome otherwise it may not have a system principal and
+    // the cached document will, see bug 565610.
     PRBool overlayIsChrome = IsChromeURI(aURI);
-    mCurrentPrototype = overlayIsChrome ?
+    mCurrentPrototype = overlayIsChrome && documentIsChrome ?
         nsXULPrototypeCache::GetInstance()->GetPrototype(aURI) : nsnull;
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
@@ -2806,8 +2819,10 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
         // the prototype cache; other XUL documents will be reloaded
         // each time.  We must do this after NS_OpenURI and AsyncOpen,
         // or chrome code will wrongly create a cached chrome channel
-        // instead of a real one.
-        if (useXULCache && overlayIsChrome) {
+        // instead of a real one. Prototypes are only cached when the
+        // document to be overlayed is chrome to avoid caching overlay
+        // scripts with incorrect principals, see bug 565610.
+        if (useXULCache && overlayIsChrome && documentIsChrome) {
             nsXULPrototypeCache::GetInstance()->PutPrototype(mCurrentPrototype);
         }
 

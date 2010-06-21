@@ -58,33 +58,27 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult res = mEditor->GetPresShell(getter_AddRefs(shell));
-  if (NS_FAILED(res))
-    return res;
-  if (!shell)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
   
   nsPresContext *context = shell->GetPresContext();
-  if (!context)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
   
   if (!context->BidiEnabled())
     return NS_OK;
   
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
-  if (!content)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
 
   PRUint8 levelBefore;
   PRUint8 levelAfter;
 
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(aSelection));
-  if (!privateSelection)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(privateSelection, NS_ERROR_NULL_POINTER);
   
   nsCOMPtr<nsFrameSelection> frameSelection;
   privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
-  if (!frameSelection)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
   
   nsPrevNextBidiLevels levels = frameSelection->
     GetPrevNextBidiLevels(content, aSelOffset, PR_TRUE);

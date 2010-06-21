@@ -7174,7 +7174,13 @@ TraceRecorder::monitorRecording(JSOp op)
 
         if (outOfMemory() || OverfullJITCache(&localtm)) {
             ResetJIT(cx, FR_OOM);
-            return ARECORD_ABORTED;
+
+            /*
+             * If the status returned was ARECORD_IMACRO, then we just
+             * changed cx->regs, we need to tell the interpreter to sync
+             * its local variables.
+             */
+            return status == ARECORD_IMACRO ? ARECORD_IMACRO_ABORTED : ARECORD_ABORTED;
         }
     } else {
         JS_ASSERT(status == ARECORD_COMPLETED ||

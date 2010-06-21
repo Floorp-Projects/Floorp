@@ -124,5 +124,5 @@ function run_test()
   testURI("jar:http://www.mozilla.com/file!/magic", "mozilla.com", "www.mozilla.com");
   testURI("file:///C:/Cool/Stuff/", "local file", "local file");
   testURI("moz-icon:file:///test.extension", "moz-icon resource", "moz-icon resource");
-  testURI("about:blank", "about resource", "about resource");
+  testURI("about:config", "about resource", "about resource");
 }

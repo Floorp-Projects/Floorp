@@ -1615,36 +1615,6 @@ enum nsDragDropEventStatus {
 #define NS_TEXTRANGE_CONVERTEDTEXT         0x04
 #define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT 0x05
 
-inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
-{
-#if defined(MOZ_X11) || defined(XP_MACOSX)
-  // bug 52416 (MOZ_X11)
-  // Lookup region (candidate window) of UNIX IME grabs
-  // input focus from Mozilla but wants to send IME event
-  // to redraw pre-edit (composed) string
-  // If Mozilla does not have input focus and event is IME,
-  // sends IME event to pre-focused element
-
-  // bug 417315 (XP_MACOSX)
-  // The commit event when the window is deactivating is sent after
-  // the next focused widget getting the focus.
-  // We need to send the commit event to last focused content.
-
-  return NS_IS_IME_RELATED_EVENT(aEvent);
-#elif defined(XP_WIN)
-  // bug 292263 (XP_WIN)
-  // If software keyboard has focus, it may send the key messages and
-  // the IME messages to pre-focused window. Therefore, if Mozilla
-  // doesn't have focus and event is key event or IME event, we should
-  // send the events to pre-focused element.
-
-  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
-         NS_IS_PLUGIN_EVENT(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
-#else
-  return PR_FALSE;
-#endif
-}
-
 /**
  * Whether the event should be handled by the frame of the mouse cursor
  * position or not.  When it should be handled there (e.g., the mouse events),
@@ -1675,6 +1645,23 @@ inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
 {
   return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
          NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
+}
+
+/**
+ * Whether the event should be handled by the focused content or not.  E.g.,
+ * key events, IME related events and other input events which are not handled
+ * by the frame of the mouse cursor position.
+ *
+ * NOTE: Even if this returns TRUE, the event isn't going to be handled by the
+ * application level active DOM window which is on another top level window.
+ * So, when the event is fired on a deactive window, the event is going to be
+ * handled by the last focused DOM element of the last focused DOM window in
+ * the last focused window.
+ */
+inline PRBool NS_IsEventTargetedAtFocusedContent(nsEvent* aEvent)
+{
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
+         NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_PLUGIN_EVENT(aEvent);
 }
 
 #endif // nsGUIEvent_h__

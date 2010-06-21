@@ -511,10 +511,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     nsIInterfaceInfoManager* iim =
         xptiInterfaceInfoManager::GetSingleton();
 
-    NS_TIME_FUNCTION_MARK("Next: try to register core/application components");
-    // "Re-register the world" if compreg.dat doesn't exist
-    // XXXTODO
-
     NS_TIME_FUNCTION_MARK("Next: register category providers");
 
     // After autoreg, but before we actually instantiate any components,

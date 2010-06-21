@@ -106,6 +106,12 @@
 #include <Path.h>
 #endif
 
+#ifdef MOZ_OMNIJAR
+#include "nsIZipReader.h"
+#include "mozilla/Omnijar.h"
+static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
+#endif
+
 #include "prlog.h"
 
 NS_COM PRLogModuleInfo* nsComponentManagerLog = nsnull;
@@ -138,6 +144,7 @@ const char inprocServerValueName[]="InprocServer";
 const char lastModValueName[]="LastModTimeStamp";
 const char nativeComponentType[]="application/x-mozilla-native";
 const char staticComponentType[]="application/x-mozilla-static";
+const char jarComponentType[]="application/x-mozilla-jarjs";
 const char versionValueName[]="VersionString";
 
 const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
@@ -184,6 +191,8 @@ static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
 #define COMPMGR_TIME_FUNCTION_CID(cid) do {} while (0)
 #define COMPMGR_TIME_FUNCTION_CONTRACTID(cid) do {} while (0)
 #endif
+
+#define kOMNIJAR_PREFIX  NS_LITERAL_CSTRING("resource:///")
 
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const

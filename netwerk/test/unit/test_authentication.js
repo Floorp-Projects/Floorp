@@ -37,7 +37,7 @@ AuthPrompt1.prototype = {
     function ap1_promptUP(title, text, realm, savePW, user, pw)
   {
     // Note that the realm here isn't actually the realm. it's a pw mgr key.
-    do_check_eq("localhost:4444 (" + this.expectedRealm + ")", realm);
+    do_check_eq("http://localhost:4444 (" + this.expectedRealm + ")", realm);
     if (text.indexOf(this.expectedRealm) == -1)
       do_throw("Text must indicate the realm");
     if (text.indexOf("localhost") == -1)

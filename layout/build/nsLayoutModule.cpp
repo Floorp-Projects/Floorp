@@ -110,6 +110,7 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
+#include "nsWebSocket.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -299,6 +300,9 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocket)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSSProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileDataProtocolHandler)
@@ -519,9 +523,11 @@ MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPla
 MAKE_CTOR(CreateHTMLFragmentSink,         nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink)
 MAKE_CTOR(CreateHTMLFragmentSink2,        nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink2)
 MAKE_CTOR(CreateHTMLParanoidFragmentSink, nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink)
+MAKE_CTOR(CreateHTMLParanoidFragmentSink2,nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink2)
 MAKE_CTOR(CreateXMLFragmentSink,          nsIFragmentContentSink,      NS_NewXMLFragmentContentSink)
 MAKE_CTOR(CreateXMLFragmentSink2,         nsIFragmentContentSink,      NS_NewXMLFragmentContentSink2)
 MAKE_CTOR(CreateXHTMLParanoidFragmentSink,nsIFragmentContentSink,      NS_NewXHTMLParanoidFragmentSink)
+MAKE_CTOR(CreateXHTMLParanoidFragmentSink2,nsIFragmentContentSink,     NS_NewXHTMLParanoidFragmentSink2)
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
@@ -818,6 +824,9 @@ NS_DEFINE_NAMED_CID(NS_FILEREADER_CID);
 NS_DEFINE_NAMED_CID(NS_FORMDATA_CID);
 NS_DEFINE_NAMED_CID(NS_FILEDATAPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_XMLHTTPREQUEST_CID);
+NS_DEFINE_NAMED_CID(NS_WEBSOCKET_CID);
+NS_DEFINE_NAMED_CID(NS_WSPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_WSSPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMPARSER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMSTORAGE_CID);
 NS_DEFINE_NAMED_CID(NS_DOMSTORAGE2_CID);
@@ -955,6 +964,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_FORMDATA_CID, false, NULL, nsFormDataConstructor },
   { &kNS_FILEDATAPROTOCOLHANDLER_CID, false, NULL, nsFileDataProtocolHandlerConstructor },
   { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
+  { &kNS_WEBSOCKET_CID, false, NULL, nsWebSocketConstructor },
+  { &kNS_WSPROTOCOLHANDLER_CID, false, NULL, nsWSProtocolHandlerConstructor },
+  { &kNS_WSSPROTOCOLHANDLER_CID, false, NULL, nsWSSProtocolHandlerConstructor },
   { &kNS_DOMPARSER_CID, false, NULL, nsDOMParserConstructor },
   { &kNS_DOMSTORAGE_CID, false, NULL, NS_NewDOMStorage },
   { &kNS_DOMSTORAGE2_CID, false, NULL, NS_NewDOMStorage2 },
@@ -1087,6 +1099,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_FORMDATA_CONTRACTID, &kNS_FORMDATA_CID },
   { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FILEDATA_SCHEME, &kNS_FILEDATAPROTOCOLHANDLER_CID },
   { NS_XMLHTTPREQUEST_CONTRACTID, &kNS_XMLHTTPREQUEST_CID },
+  { NS_WEBSOCKET_CONTRACTID, &kNS_WEBSOCKET_CID },
+  { NS_WSPROTOCOLHANDLER_CONTRACTID, &kNS_WSPROTOCOLHANDLER_CID },
+  { NS_WSSPROTOCOLHANDLER_CONTRACTID, &kNS_WSSPROTOCOLHANDLER_CID },
   { NS_DOMPARSER_CONTRACTID, &kNS_DOMPARSER_CID },
   { "@mozilla.org/dom/storage;1", &kNS_DOMSTORAGE_CID },
   { "@mozilla.org/dom/storage;2", &kNS_DOMSTORAGE2_CID },
