@@ -72,17 +72,11 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
                           jsval id, PRUint32 flags, 
                           JSObject * *objp, PRBool *_retval)
 {
-    JSObject *realObj;
-    wrapper->GetJSObject(&realObj);
+    JSBool resolved;
 
-    if(obj == realObj)
-    {
-        JSBool resolved;
-        *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
-        if(*_retval && resolved)
-            *objp = obj;
-    }
-
+    *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
+    if(*_retval && resolved)
+        *objp = obj;
     return NS_OK;
 }
 
