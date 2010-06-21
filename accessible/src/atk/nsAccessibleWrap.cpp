@@ -868,21 +868,11 @@ getChildCountCB(AtkObject *aAtkObj)
         return 0;
     }
 
-    PRInt32 count = 0;
-    nsCOMPtr<nsIAccessibleHyperText> hyperText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
-    if (hyperText) {
-        // If HyperText, then number of links matches number of children
-        hyperText->GetLinkCount(&count);
-    }
-    else {
-        nsCOMPtr<nsIAccessibleText> accText;
-        accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
-        if (!accText) {    // Accessible text that is not a HyperText has no children
-            accWrap->GetChildCount(&count);
-        }
-    }
-    return count;
+    // Links within hypertext accessible play role of accessible children in
+    // ATK since every embedded object is a link and text accessibles are
+    // ignored.
+    nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(accWrap);
+    return hyperText ? hyperText->GetLinkCount() : accWrap->GetChildCount();
 }
 
 AtkObject *
@@ -898,25 +888,12 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
         return nsnull;
     }
 
-    nsCOMPtr<nsIAccessible> accChild;
-    nsCOMPtr<nsIAccessibleHyperText> hyperText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
-    if (hyperText) {
-        // If HyperText, then number of links matches number of children.
-        // XXX Fix this so it is not O(n^2) to walk through the children
-        // (bug 566328).
-        nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-        hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
-        accChild = do_QueryInterface(hyperLink);
-    }
-    else {
-        nsCOMPtr<nsIAccessibleText> accText;
-        accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
-        if (!accText) {  // Accessible Text that is not HyperText has no children
-            accWrap->GetChildAt(aChildIndex, getter_AddRefs(accChild));
-        }
-    }
-
+    // Links within hypertext accessible play role of accessible children in
+    // ATK since every embedded object is a link and text accessibles are
+    // ignored.
+    nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(accWrap);
+    nsAccessible* accChild = hyperText ? hyperText->GetLinkAt(aChildIndex) :
+                                         accWrap->GetChildAt(aChildIndex);
     if (!accChild)
         return nsnull;
 
@@ -947,21 +924,12 @@ getIndexInParentCB(AtkObject *aAtkObj)
         return -1; // No parent
     }
 
-    PRInt32 currentIndex = 0;
-
-    PRInt32 childCount = parent->GetChildCount();
-    for (PRInt32 idx = 0; idx < childCount; idx++) {
-      nsAccessible *sibling = parent->GetChildAt(idx);
-      if (sibling == accWrap) {
-          return currentIndex;
-      }
-
-      if (nsAccUtils::IsEmbeddedObject(sibling)) {
-          ++ currentIndex;
-      }
-    }
-
-    return -1;
+    // Links within hypertext accessible play role of accessible children in
+    // ATK since every embedded object is a link and text accessibles are
+    // ignored.
+    nsRefPtr<nsHyperTextAccessible> hyperTextParent(do_QueryObject(parent));
+    return hyperTextParent ?
+        hyperTextParent->GetLinkIndex(accWrap) : parent->GetIndexOf(accWrap);
 }
 
 static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,

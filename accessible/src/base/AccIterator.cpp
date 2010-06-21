@@ -35,20 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccIterator.h"
+#include "AccIterator.h"
+
+#include "nsAccessible.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccIterator
 
-nsAccIterator::nsAccIterator(nsAccessible *aAccessible,
-                             AccIteratorFilterFuncPtr aFilterFunc,
-                             IterationType aIterationType) :
+AccIterator::AccIterator(nsAccessible *aAccessible,
+                         filters::FilterFuncPtr aFilterFunc,
+                         IterationType aIterationType) :
   mFilterFunc(aFilterFunc), mIsDeep(aIterationType != eFlatNav)
 {
   mState = new IteratorState(aAccessible);
 }
 
-nsAccIterator::~nsAccIterator()
+AccIterator::~AccIterator()
 {
   while (mState) {
     IteratorState *tmp = mState;
@@ -58,7 +60,7 @@ nsAccIterator::~nsAccIterator()
 }
 
 nsAccessible*
-nsAccIterator::GetNext()
+AccIterator::GetNext()
 {
   while (mState) {
     nsAccessible *child = mState->mParent->GetChildAt(mState->mIndex++);
@@ -86,8 +88,8 @@ nsAccIterator::GetNext()
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccIterator::IteratorState
 
-nsAccIterator::IteratorState::IteratorState(nsAccessible *aParent,
-                                            IteratorState *mParentState) :
+AccIterator::IteratorState::IteratorState(nsAccessible *aParent,
+                                          IteratorState *mParentState) :
   mParent(aParent), mIndex(0), mParentState(mParentState)
 {
 }
