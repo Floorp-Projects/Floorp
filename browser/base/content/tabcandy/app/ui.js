@@ -234,8 +234,23 @@ window.Page = {
     Navbar.show();    
     window.statusbar.visible = true;
     
+    this.setCloseButtonOnTabs();
+    
     // Mac Only
     Utils.getCurrentWindow().document.getElementById("main-window").removeAttribute("activetitlebarcolor");     
+  },
+  
+  setCloseButtonOnTabs : function() {
+    // XXX: we will need to modify the adjustTabstrip() to fix this when merging
+    // this extension to Firefox.
+    // http://mxr.mozilla.org/mozilla1.9.2/source/browser/base/content/tabbrowser.xml#3050
+    setTimeout(function() {
+      var tabContainer = Utils.getCurrentWindow().gBrowser.tabContainer;
+      if (tabContainer.mCloseButtons == 1 &&
+          tabContainer.getAttribute("overflow") != "true") {
+        tabContainer.setAttribute("closebuttons", "alltabs");
+      };
+    }, 50);
   },
   
   setupKeyHandlers: function(){
@@ -607,11 +622,12 @@ UIClass.prototype = {
       });
       
       // ___ Page
+      var currentWindow = Utils.getCurrentWindow();
       Page.init();
+      currentWindow.addEventListener(
+        "resize", function() { Page.setCloseButtonOnTabs(); }, false)
       
       // ___ Storage
-      var currentWindow = Utils.getCurrentWindow();
-      
       var data = Storage.readUIData(currentWindow);
       this.storageSanity(data);
        
