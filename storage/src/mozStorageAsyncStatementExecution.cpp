@@ -52,7 +52,6 @@
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageStatementData.h"
 #include "mozStorageAsyncStatementExecution.h"
-#include "SharedCacheUnlockNotify.h"
 
 namespace mozilla {
 namespace storage {
@@ -343,7 +342,7 @@ AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement)
     // lock the sqlite mutex so sqlite3_errmsg cannot change
     SQLiteMutexAutoLock lockedScope(mDBMutex);
 
-    int rc = moz_sqlite3_step(aStatement);
+    int rc = stepStmt(aStatement);
     // Stop if we have no more results.
     if (rc == SQLITE_DONE)
       return false;

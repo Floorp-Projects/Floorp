@@ -78,7 +78,6 @@ CPPSRCS = \
   mozStorageAsyncStatement.cpp \
   mozStorageAsyncStatementJSHelper.cpp \
   mozStorageAsyncStatementParams.cpp \
-  SharedCacheUnlockNotify.cpp \
   StorageBaseStatementInternal.cpp \
   SQLCollations.cpp \
   $(NULL)
