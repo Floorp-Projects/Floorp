@@ -822,7 +822,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     this.$expander
         .show()
         .css({
-          opacity: .5,
+          opacity: .2,
           top: dT + childBB.height + Math.min(7, (this.getBounds().bottom-childBB.bottom)/2),
           // TODO: Why the magic -6? because the childBB.width seems to be over-sizing itself.
           // But who can blame an object for being a bit optimistic when self-reporting size.
@@ -1116,7 +1116,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       $shield.mouseover(function() {
         self.collapse();
       });
-    }, 100);
+    }, 200);
       
     this.expanded = {
       $tray: $tray,
@@ -1210,12 +1210,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         // Don't zoom in to the last tab for the new tab group.
         if( self.isNewTabsGroup() ) 
           return;
-          
-        var activeTab = self.getActiveTab();
+        
+        // Zoom into the last-active tab when the group
+        // is clicked.
+        /*var activeTab = self.getActiveTab();
         if( activeTab ) 
           activeTab.zoomIn();
         else if(self.getChild(0))
-          self.getChild(0).zoomIn();
+          self.getChild(0).zoomIn();*/
           
         self._mouseDown = null;
     });
