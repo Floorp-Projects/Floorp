@@ -3215,7 +3215,7 @@ nsWebSocket::SetProtocol(const nsString& aProtocol)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsWebSocket::GetURL(nsAString& aURL)
+nsWebSocket::GetUrl(nsAString& aURL)
 {
   aURL = mOriginalURL;
   return NS_OK;
