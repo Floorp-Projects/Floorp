@@ -96,12 +96,12 @@
 #include "prprf.h"
 #include "nsIXULAppInfo.h"
 
-#if defined(MOZ_IPC)
-#include "nsIUUIDGenerator.h"
-
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 #endif
+
+#if defined(MOZ_IPC)
+#include "nsIUUIDGenerator.h"
 
 #if !defined(XP_MACOSX)
 using google_breakpad::CrashGenerationServer;
@@ -110,7 +110,7 @@ using google_breakpad::ClientInfo;
 
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
-#endif
+#endif // MOZ_IPC
 
 namespace CrashReporter {
 
