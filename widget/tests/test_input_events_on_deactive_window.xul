@@ -1,0 +1,251 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Testing composition, text and query content events"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<div id="content" style="display: none">
+</div>
+<p id="display">
+  <textarea id="textarea"></textarea>
+</p>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+var fm = Components.classes["@mozilla.org/focus-manager;1"].
+           getService(Components.interfaces.nsIFocusManager);
+var textarea = document.getElementById("textarea");
+var otherWindow;
+var timer;
+
+function runTests()
+{
+  textarea.focus();
+  is(fm.focusedElement, textarea, "we're deactive");
+  if (fm.focusedElement != textarea) {
+    SimpleTest.finish();
+    return;
+  }
+
+  otherWindow =
+    window.open("data:text/plain,this is an active window.", "_blank",
+                "chrome,width=100,height=100");
+  ok(otherWindow, "failed to open other window");
+  if (!otherWindow) {
+    SimpleTest.finish();
+    return;
+  }
+
+  SimpleTest.waitForFocus(startTests, otherWindow);
+  otherWindow.focus();
+}
+
+function startTests()
+{
+  clearTimeout(timer);
+  isnot(fm.focusedWindow, window, "we're not deactive");
+  if (fm.focusedWindow == window) {
+    otherWindow.close();
+    SimpleTest.finish();
+    return;
+  }
+
+  var keydownHandled, keypressHandled, keyupHandled, compositionstartHandled,
+      compositionendHandled, inputHandled;
+
+  function clear()
+  {
+    keydownHandled = false;
+    keypressHandled = false;
+    keyupHandled = false;
+    compositionstartHandled = false;
+    compositionendHandled = false;
+    inputHandled = false;
+  }
+
+  function onEvent(aEvent)
+  {
+    if (aEvent.type == "keydown") {
+      keydownHandled = true;
+    } else if (aEvent.type == "keypress") {
+      keypressHandled = true;
+    } else if (aEvent.type == "keyup") {
+      keyupHandled = true;
+    } else if (aEvent.type == "compositionstart") {
+      compositionstartHandled = true;
+    } else if (aEvent.type == "compositionend") {
+      compositionendHandled = true;
+    } else if (aEvent.type == "input") {
+      inputHandled = true;
+    } else {
+      ok(false, "handled unknown event: " + aEvent.type);
+    }
+  }
+
+  textarea.addEventListener("keydown", onEvent, false);
+  textarea.addEventListener("keypress", onEvent, false);
+  textarea.addEventListener("keyup", onEvent, false);
+  textarea.addEventListener("compositionstart", onEvent, false);
+  textarea.addEventListener("compositionend", onEvent, false);
+  textarea.addEventListener("input", onEvent, false);
+
+  startTestsInternal();
+
+  function startTestsInternal()
+  {
+    // key events
+    function checkKeyEvents(aKeydown, aKeypress, aKeyup, aInput, aDescription)
+    {
+      is(keydownHandled, aKeydown,
+         "keydown event is (not) handled: " + aDescription);
+      is(keypressHandled, aKeypress,
+         "keypress event is (not) handled: " + aDescription);
+      is(keyupHandled, aKeyup,
+         "keyup event is (not) handled: " + aDescription);
+      is(inputHandled, aInput,
+         "input event is (not) handled: " + aDescription);
+    }
+
+    function checkCompositionEvents(aStart, aEnd, aInput, aDescription)
+    {
+      is(compositionstartHandled, aStart,
+         "compositionstart event is (not) handled: " + aDescription);
+      is(compositionendHandled, aEnd,
+         "compositionend event is (not) handled: " + aDescription);
+      is(inputHandled, aInput,
+         "input event is (not) handled: " + aDescription);
+    }
+
+    clear();
+    synthesizeKey("a", { type: "keydown" });
+    checkKeyEvents(true, false, false, false, "a keydown");
+    clear();
+    synthesizeKey("a", { type: "keypress" });
+    checkKeyEvents(false, true, false, true, "a keypress");
+    is(textarea.value, "a", "textarea value isn't 'a'");
+    clear();
+    synthesizeKey("a", { type: "keyup" });
+    checkKeyEvents(false, false, true, false, "a keyup");
+    clear();
+    synthesizeKey("VK_BACK_SPACE", {});
+    checkKeyEvents(true, true, true, true, "VK_BACK_SPACE key events");
+    is(textarea.value, "", "textarea value isn't empty");
+
+    // IME events
+    const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+    clear();
+    // start composition
+    synthesizeComposition(true);
+    checkCompositionEvents(true, false, false, "compositionstart");
+    clear();
+    // input first character
+    synthesizeText(
+      { "composition":
+        { "string": "\u3089",
+          "clauses":
+          [
+            { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+          ]
+        },
+        "caret": { "start": 1, "length": 0 }
+      });
+    checkCompositionEvents(false, false, false, "composing");
+    var queryText = synthesizeQueryTextContent(0, 100);
+    ok(queryText, "query text event result is null");
+    if (!queryText) {
+      return;
+    }
+    ok(queryText.succeeded, "query text event failed");
+    if (!queryText.succeeded) {
+      return;
+    }
+    is(queryText.text, "\u3089", "composing text is incorrect");
+    var querySelectedText = synthesizeQuerySelectedText();
+    ok(querySelectedText, "query selected text event result is null");
+    if (!querySelectedText) {
+      return;
+    }
+    ok(querySelectedText.succeeded, "query selected text event failed");
+    if (!querySelectedText.succeeded) {
+      return;
+    }
+    is(querySelectedText.offset, 1,
+       "query selected text event returns wrong offset");
+    is(querySelectedText.text, "",
+       "query selected text event returns wrong selected text");
+    clear();
+    // commit composition
+    synthesizeText(
+      { "composition":
+        { "string": "\u3089",
+          "clauses":
+          [
+            { "length": 0, "attr": 0 }
+          ]
+        },
+        "caret": { "start": 1, "length": 0 }
+      });
+    checkCompositionEvents(false, false, false, "commit composition");
+    queryText = synthesizeQueryTextContent(0, 100);
+    ok(queryText, "query text event result is null after commit");
+    if (!queryText) {
+      return;
+    }
+    ok(queryText.succeeded, "query text event failed after commit");
+    if (!queryText.succeeded) {
+      return;
+    }
+    is(queryText.text, "\u3089", "composing text is incorrect after commit");
+    querySelectedText = synthesizeQuerySelectedText();
+    ok(querySelectedText,
+       "query selected text event result is null after commit");
+    if (!querySelectedText) {
+      return;
+    }
+    ok(querySelectedText.succeeded,
+       "query selected text event failed after commit");
+    if (!querySelectedText.succeeded) {
+      return;
+    }
+    is(querySelectedText.offset, 1,
+       "query selected text event returns wrong offset after commit");
+    is(querySelectedText.text, "",
+       "query selected text event returns wrong selected text after commit");
+    clear();
+    // end composition
+    synthesizeComposition(false);
+    checkCompositionEvents(false, true, true, "compositionend");
+  }
+
+  textarea.removeEventListener("keydown", onEvent, false);
+  textarea.removeEventListener("keypress", onEvent, false);
+  textarea.removeEventListener("keyup", onEvent, false);
+  textarea.removeEventListener("compositionstart", onEvent, false);
+  textarea.removeEventListener("compositionend", onEvent, false);
+  textarea.removeEventListener("input", onEvent, false);
+
+  otherWindow.close();
+
+  SimpleTest.finish();
+}
+
+
+]]>
+</script>
+</window>

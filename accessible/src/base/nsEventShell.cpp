@@ -52,23 +52,22 @@ nsEventShell::FireEvent(nsAccEvent *aEvent)
   if (!aEvent)
     return;
 
-  nsRefPtr<nsAccessible> acc = do_QueryObject(aEvent->GetAccessible());
-  NS_ENSURE_TRUE(acc,);
+  nsAccessible *accessible = aEvent->GetAccessible();
+  NS_ENSURE_TRUE(accessible,);
 
-  nsCOMPtr<nsIDOMNode> node;
-  aEvent->GetDOMNode(getter_AddRefs(node));
+  nsINode* node = aEvent->GetNode();
   if (node) {
     sEventTargetNode = node;
     sEventFromUserInput = aEvent->IsFromUserInput();
   }
 
-  acc->HandleAccEvent(aEvent);
+  accessible->HandleAccEvent(aEvent);
 
   sEventTargetNode = nsnull;
 }
 
 void
-nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+nsEventShell::FireEvent(PRUint32 aEventType, nsAccessible *aAccessible,
                         PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput)
 {
   NS_ENSURE_TRUE(aAccessible,);
@@ -80,7 +79,7 @@ nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
 }
 
 void 
-nsEventShell::GetEventAttributes(nsIDOMNode *aNode,
+nsEventShell::GetEventAttributes(nsINode *aNode,
                                  nsIPersistentProperties *aAttributes)
 {
   if (aNode != sEventTargetNode)
@@ -95,7 +94,7 @@ nsEventShell::GetEventAttributes(nsIDOMNode *aNode,
 // nsEventShell: private
 
 PRBool nsEventShell::sEventFromUserInput = PR_FALSE;
-nsCOMPtr<nsIDOMNode> nsEventShell::sEventTargetNode;
+nsCOMPtr<nsINode> nsEventShell::sEventTargetNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +102,7 @@ nsCOMPtr<nsIDOMNode> nsEventShell::sEventTargetNode;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccEventQueue::nsAccEventQueue(nsDocAccessible *aDocument):
-  mProcessingStarted(PR_FALSE), mDocument(aDocument), mFlushingEventsCount(0)
+  mObservingRefresh(PR_FALSE), mDocument(aDocument)
 {
 }
 
@@ -158,6 +157,13 @@ nsAccEventQueue::Push(nsAccEvent *aEvent)
 void
 nsAccEventQueue::Shutdown()
 {
+  if (mObservingRefresh) {
+    nsCOMPtr<nsIPresShell> shell = mDocument->GetPresShell();
+    if (!shell ||
+        shell->RemoveRefreshObserver(this, Flush_Display)) {
+      mObservingRefresh = PR_FALSE;
+    }
+  }
   mDocument = nsnull;
   mEvents.Clear();
 }
@@ -170,14 +176,19 @@ nsAccEventQueue::PrepareFlush()
 {
   // If there are pending events in the queue and events flush isn't planed
   // yet start events flush asynchronously.
-  if (mEvents.Length() > 0 && !mProcessingStarted) {
-    NS_DISPATCH_RUNNABLEMETHOD(Flush, this)
-    mProcessingStarted = PR_TRUE;
+  if (mEvents.Length() > 0 && !mObservingRefresh) {
+    nsCOMPtr<nsIPresShell> shell = mDocument->GetPresShell();
+    // Use a Flush_Display observer so that it will get called after
+    // style and ayout have been flushed.
+    if (shell &&
+        shell->AddRefreshObserver(this, Flush_Display)) {
+      mObservingRefresh = PR_TRUE;
+    }
   }
 }
 
 void
-nsAccEventQueue::Flush()
+nsAccEventQueue::WillRefresh(mozilla::TimeStamp aTime)
 {
   // If the document accessible is now shut down, don't fire events in it
   // anymore.
@@ -188,42 +199,31 @@ nsAccEventQueue::Flush()
   if (!presShell)
     return;
 
-  // Flush layout so that all the frame construction, reflow, and styles are
-  // up-to-date. This will ensure we can get frames for the related nodes, as
-  // well as get the most current information for calculating things like
-  // visibility. We don't flush the display because we don't care about
-  // painting. If no flush is necessary the method will simple return.
-  presShell->FlushPendingNotifications(Flush_Layout);
-
   // Process only currently queued events. Newly appended events during events
   // flushing won't be processed.
-  mFlushingEventsCount = mEvents.Length();
-  NS_ASSERTION(mFlushingEventsCount,
-               "How did we get here without events to fire?");
+  nsTArray < nsRefPtr<nsAccEvent> > events;
+  events.SwapElements(mEvents);
+  PRUint32 length = events.Length();
+  NS_ASSERTION(length, "How did we get here without events to fire?");
 
-  for (PRUint32 index = 0; index < mFlushingEventsCount; index ++) {
+  for (PRUint32 index = 0; index < length; index ++) {
 
     // No presshell means the document was shut down during event handling
     // by AT.
     if (!mDocument || !mDocument->HasWeakShell())
       break;
 
-    nsAccEvent *accEvent = mEvents[index];
+    nsAccEvent *accEvent = events[index];
     if (accEvent->mEventRule != nsAccEvent::eDoNotEmit)
       mDocument->ProcessPendingEvent(accEvent);
   }
 
-  // Mark we are ready to start event processing again.
-  mProcessingStarted = PR_FALSE;
-
-  // If the document accessible is alive then remove processed events from the
-  // queue (otherwise they were removed on shutdown already) and reinitialize
-  // queue processing callback if necessary (new events might occur duiring
-  // delayed event processing).
-  if (mDocument && mDocument->HasWeakShell()) {
-    mEvents.RemoveElementsAt(0, mFlushingEventsCount);
-    mFlushingEventsCount = 0;
-    PrepareFlush();
+  if (mEvents.Length() == 0) {
+    nsCOMPtr<nsIPresShell> shell = mDocument->GetPresShell();
+    if (!shell ||
+        shell->RemoveRefreshObserver(this, Flush_Display)) {
+      mObservingRefresh = PR_FALSE;
+    }
   }
 }
 
@@ -242,7 +242,7 @@ nsAccEventQueue::CoalesceEvents()
   switch(tailEvent->mEventRule) {
     case nsAccEvent::eCoalesceFromSameSubtree:
     {
-      for (PRInt32 index = tail - 1; index >= mFlushingEventsCount; index--) {
+      for (PRInt32 index = tail - 1; index >= 0; index--) {
         nsAccEvent* thisEvent = mEvents[index];
 
         if (thisEvent->mEventType != tailEvent->mEventType)
@@ -366,7 +366,7 @@ nsAccEventQueue::CoalesceEvents()
           // Do not emit thisEvent, also apply this result to sibling nodes of
           // thisNode.
           thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
-          ApplyToSiblings(mFlushingEventsCount, index, thisEvent->mEventType,
+          ApplyToSiblings(0, index, thisEvent->mEventType,
                           thisEvent->mNode, nsAccEvent::eDoNotEmit);
           continue;
         }
@@ -387,7 +387,7 @@ nsAccEventQueue::CoalesceEvents()
       // Used for focus event, coalesce more older event since focus event
       // for accessible can be duplicated by event for its document, we are
       // interested in focus event for accessible.
-      for (PRInt32 index = tail - 1; index >= mFlushingEventsCount; index--) {
+      for (PRInt32 index = tail - 1; index >= 0; index--) {
         nsAccEvent* thisEvent = mEvents[index];
         if (thisEvent->mEventType == tailEvent->mEventType &&
             thisEvent->mEventRule == tailEvent->mEventRule &&
@@ -402,7 +402,7 @@ nsAccEventQueue::CoalesceEvents()
     {
       // Check for repeat events, coalesce newly appended event by more older
       // event.
-      for (PRInt32 index = tail - 1; index >= mFlushingEventsCount; index--) {
+      for (PRInt32 index = tail - 1; index >= 0; index--) {
         nsAccEvent* accEvent = mEvents[index];
         if (accEvent->mEventType == tailEvent->mEventType &&
             accEvent->mEventRule == tailEvent->mEventRule &&
@@ -438,14 +438,14 @@ nsAccEventQueue::CoalesceReorderEventsFromSameSource(nsAccEvent *aAccEvent1,
                                                      nsAccEvent *aAccEvent2)
 {
   // Do not emit event2 if event1 is unconditional.
-  nsCOMPtr<nsAccReorderEvent> reorderEvent1 = do_QueryInterface(aAccEvent1);
+  nsAccReorderEvent *reorderEvent1 = downcast_accEvent(aAccEvent1);
   if (reorderEvent1->IsUnconditionalEvent()) {
     aAccEvent2->mEventRule = nsAccEvent::eDoNotEmit;
     return;
   }
 
   // Do not emit event1 if event2 is unconditional.
-  nsCOMPtr<nsAccReorderEvent> reorderEvent2 = do_QueryInterface(aAccEvent2);
+  nsAccReorderEvent *reorderEvent2 = downcast_accEvent(aAccEvent2);
   if (reorderEvent2->IsUnconditionalEvent()) {
     aAccEvent1->mEventRule = nsAccEvent::eDoNotEmit;
     return;
@@ -463,7 +463,7 @@ nsAccEventQueue::CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
                                                    nsAccEvent *aDescendantAccEvent)
 {
   // Do not emit descendant event if this event is unconditional.
-  nsCOMPtr<nsAccReorderEvent> reorderEvent = do_QueryInterface(aAccEvent);
+  nsAccReorderEvent *reorderEvent = downcast_accEvent(aAccEvent);
   if (reorderEvent->IsUnconditionalEvent())
     aDescendantAccEvent->mEventRule = nsAccEvent::eDoNotEmit;
 }

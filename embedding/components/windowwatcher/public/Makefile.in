@@ -55,7 +55,6 @@ XPIDLSRCS	= nsIDialogParamBlock.idl \
                   nsIPromptService2.idl \
                   nsPIPromptService.idl \
                   nsPIWindowWatcher.idl \
-                  nsIAuthPromptWrapper.idl \
                   nsIPromptFactory.idl \
                   $(NULL)
 

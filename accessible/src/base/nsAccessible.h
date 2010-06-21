@@ -50,6 +50,7 @@
 
 #include "nsStringGlue.h"
 #include "nsTArray.h"
+#include "nsRefPtrHashtable.h"
 
 class nsAccessible;
 class nsAccEvent;
@@ -92,7 +93,7 @@ class nsAccessible : public nsAccessNodeWrap,
                      public nsIAccessibleValue
 {
 public:
-  nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -107,7 +108,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   // nsAccessNode
 
-  virtual nsresult Shutdown();
+  virtual PRBool Init();
+  virtual void Shutdown();
 
   //////////////////////////////////////////////////////////////////////////////
   // Public methods
@@ -270,6 +272,13 @@ public:
    */
   nsAccessible* GetCachedFirstChild();
 
+#ifdef DEBUG
+  /**
+   * Return true if the access node is cached.
+   */
+  PRBool IsInCache();
+#endif
+
   //////////////////////////////////////////////////////////////////////////////
   // Miscellaneous methods
 
@@ -349,7 +358,7 @@ protected:
    * @param  aStartNode  [in] the DOM node to start from
    * @return              the resulting accessible
    */
-  nsAccessible *GetFirstAvailableAccessible(nsIDOMNode *aStartNode) const;
+  nsAccessible *GetFirstAvailableAccessible(nsINode *aStartNode) const;
 
   // Hyperlink helpers
   virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);

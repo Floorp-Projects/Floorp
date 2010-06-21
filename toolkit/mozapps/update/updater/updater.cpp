@@ -1429,10 +1429,11 @@ int NS_main(int argc, NS_tchar **argv)
         CloseHandle(parent);
         if (result != WAIT_OBJECT_0)
           return 1;
-        // The process may be signaled before it releases the executable image.
-        // This is a terrible hack, but it'll have to do for now :-(
-        Sleep(50);
       }
+
+      // The process may be signaled before it releases the executable image.
+      // This is a terrible hack, but it'll have to do for now :-(
+      Sleep(50);
 #else
       int status;
       waitpid(pid, &status, 0);

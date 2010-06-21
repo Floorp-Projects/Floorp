@@ -459,7 +459,15 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD IsEnabled(PRBool *aState) = 0;
 
     /**
-     * Give focus to this widget.
+     * Request activation of this window or give focus to this widget.
+     *
+     * @param aRaise If PR_TRUE, this function requests activation of this
+     *               widget's toplevel window.
+     *               If PR_FALSE, the appropriate toplevel window (which in
+     *               the case of popups may not be this widget's toplevel
+     *               window) is already active, and this function indicates
+     *               that keyboard events should be reported through the
+     *               aHandleEventFunction provided to this->Create().
      */
     NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE) = 0;
 

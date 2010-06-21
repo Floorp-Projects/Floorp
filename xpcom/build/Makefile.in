@@ -82,7 +82,7 @@ CPPSRCS += Omnijar.cpp
 endif
 
 SHARED_LIBRARY_LIBS = \
-		$(DEPTH)/chrome/src/chrome_s.$(LIB_SUFFIX) \
+		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
 		../io/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
 		../components/$(LIB_PREFIX)xpcomcomponents_s.$(LIB_SUFFIX) \

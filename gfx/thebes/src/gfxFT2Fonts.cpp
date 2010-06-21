@@ -238,7 +238,9 @@ FontEntry::CairoFontFace()
 nsresult
 FontEntry::ReadCMAP()
 {
-    if (mCmapInitialized) return NS_OK;
+    if (mCmapInitialized) {
+        return NS_OK;
+    }
 
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
@@ -254,8 +256,9 @@ FontEntry::ReadCMAP()
     NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
 
     nsAutoTArray<PRUint8,16384> buffer;
-    if (!buffer.AppendElements(len))
+    if (!buffer.AppendElements(len)) {
         return NS_ERROR_FAILURE;
+    }
     PRUint8 *buf = buffer.Elements();
 
     status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, buf, &len);
@@ -263,8 +266,10 @@ FontEntry::ReadCMAP()
 
     PRPackedBool unicodeFont;
     PRPackedBool symbolFont;
-    return gfxFontUtils::ReadCMAP(buf, len, mCharacterMap, mUVSOffset,
-                                  unicodeFont, symbolFont);
+    nsresult rv = gfxFontUtils::ReadCMAP(buf, len, mCharacterMap, mUVSOffset,
+                                         unicodeFont, symbolFont);
+    mHasCmapTable = NS_SUCCEEDED(rv);
+    return rv;
 }
 
 FontEntry *

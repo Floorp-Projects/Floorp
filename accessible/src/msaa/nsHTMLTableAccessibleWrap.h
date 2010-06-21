@@ -54,8 +54,8 @@ class nsHTMLTableAccessibleWrap : public nsHTMLTableAccessible,
                                   public CAccessibleTable
 {
 public:
-  nsHTMLTableAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-    nsHTMLTableAccessible(aNode, aShell){}
+  nsHTMLTableAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsHTMLTableAccessible(aContent, aShell) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -73,8 +73,8 @@ class nsHTMLTableCellAccessibleWrap : public nsHTMLTableCellAccessible,
                                       public CAccessibleTableCell
 {
 public:
-  nsHTMLTableCellAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-    nsHTMLTableCellAccessible(aNode, aShell) {}
+  nsHTMLTableCellAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsHTMLTableCellAccessible(aContent, aShell) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -92,9 +92,9 @@ class nsHTMLTableHeaderCellAccessibleWrap : public nsHTMLTableHeaderCellAccessib
                                             public CAccessibleTableCell
 {
 public:
-  nsHTMLTableHeaderCellAccessibleWrap(nsIDOMNode* aNode,
-                                      nsIWeakReference* aShell) :
-    nsHTMLTableHeaderCellAccessible(aNode, aShell) {}
+  nsHTMLTableHeaderCellAccessibleWrap(nsIContent *aContent,
+                                      nsIWeakReference *aShell) :
+    nsHTMLTableHeaderCellAccessible(aContent, aShell) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

@@ -783,6 +783,9 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // clip rect we provide, so we cannot advertise support for clipping within
   // the widget bounds.
   PRUint32 rendererFlags = gfxGdkNativeRenderer::DRAW_SUPPORTS_OFFSET;
+  if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque) {
+    rendererFlags |= gfxGdkNativeRenderer::DRAW_IS_OPAQUE;
+  }
 
   // translate everything so (0,0) is the top left of the drawingRect
   gfxContextAutoSaveRestore autoSR(ctx);
@@ -1127,6 +1130,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_RESIZER:
     // same as Windows to make our lives easier
     aResult->width = aResult->height = 15;
+    *aIsOverridable = PR_FALSE;
     break;
   case NS_THEME_TREEVIEW_TWISTY:
   case NS_THEME_TREEVIEW_TWISTY_OPEN:
@@ -1343,8 +1347,22 @@ nsNativeThemeGTK::ThemeNeedsComboboxDropmarker()
   return PR_FALSE;
 }
 
-nsTransparencyMode
-nsNativeThemeGTK::GetWidgetTransparency(PRUint8 aWidgetType)
+nsITheme::Transparency
+nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
-  return eTransparencyOpaque;
+  switch (aWidgetType) {
+  // These widgets always draw a default background.
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+  case NS_THEME_SCALE_HORIZONTAL:
+  case NS_THEME_SCALE_VERTICAL:
+  case NS_THEME_TOOLBAR:
+  case NS_THEME_MENUBAR:
+  case NS_THEME_MENUPOPUP:
+  case NS_THEME_WINDOW:
+  case NS_THEME_DIALOG:
+    return eOpaque;
+  }
+
+  return eUnknownTransparency;
 }

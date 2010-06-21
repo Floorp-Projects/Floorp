@@ -1001,7 +1001,6 @@ fi
 AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(WHOAMI, whoami, :)
 MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROG(UNZIP, unzip, :)
 MOZ_PATH_PROGS(ZIP, zip)
@@ -3302,7 +3301,7 @@ AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
 AC_CHECK_HEADERS(sys/quota.h)
-AC_CHECK_HEADERS(sys/sysmacros.h)
+AC_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
@@ -4950,7 +4949,7 @@ NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
-NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
@@ -5921,7 +5920,7 @@ if test -n "$MOZ_WEBM"; then
     else 
 
       dnl For Darwin x86, Darwin x86_64, Linux x86, and WINNT x86_64
-      dhl we can use YASM.
+      dnl we can use YASM.
       AC_MSG_CHECKING([for YASM assembler])
       AC_CHECK_PROGS(VPX_AS, yasm, "")
       if test -n "$VPX_AS"; then
@@ -8404,11 +8403,18 @@ AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
 
+dnl ========================================================
 dnl qcms
 dnl ========================================================
 
 QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
 AC_SUBST(QCMS_LIBS)
+
+dnl ========================================================
+dnl HarfBuzz
+dnl ========================================================
+MOZ_HARFBUZZ_LIBS='$(DEPTH)/gfx/harfbuzz/src/$(LIB_PREFIX)mozharfbuzz.$(LIB_SUFFIX)'
+AC_SUBST(MOZ_HARFBUZZ_LIBS)
 
 dnl ========================================================
 dnl disable xul

@@ -662,6 +662,8 @@ public:
     const nsAttrValue* mValue;
   };
 
+  // Be careful when using this method. This does *NOT* handle
+  // XUL prototypes. You may want to use GetAttrInfo.
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
   {
     return mAttrsAndChildren.GetAttr(aAttr);
@@ -745,6 +747,16 @@ public:
   }
   nsIDOMDOMTokenList* GetClassList(nsresult *aResult);
   PRBool MozMatchesSelector(const nsAString& aSelector);
+
+  /**
+   * Get the attr info for the given namespace ID and attribute name.  The
+   * namespace ID must not be kNameSpaceID_Unknown and the name must not be
+   * null.  Note that this can only return info on attributes that actually
+   * live on this element (and is only virtual to handle XUL prototypes).  That
+   * is, this should only be called from methods that only care about attrs
+   * that effectively live in mAttrsAndChildren.
+   */
+  virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsGenericElement)
 
@@ -862,16 +874,6 @@ protected:
     GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
                                    nsISupports** aTarget,
                                    PRBool* aDefer);
-
-  /**
-   * Get the attr info for the given namespace ID and attribute name.  The
-   * namespace ID must not be kNameSpaceID_Unknown and the name must not be
-   * null.  Note that this can only return info on attributes that actually
-   * live on this element (and is only virtual to handle XUL prototypes).  That
-   * is, this should only be called from methods that only care about attrs
-   * that effectively live in mAttrsAndChildren.
-   */
-  virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
 
   /**
    * Copy attributes and state to another element

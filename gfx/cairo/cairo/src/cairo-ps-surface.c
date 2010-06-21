@@ -3696,7 +3696,7 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
     if (surface->clipper.clip.path != NULL) {
 	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 
-	_cairo_output_stream_printf (surface->stream, "Q\n");
+	_cairo_output_stream_printf (surface->stream, "Q q\n");
 	_cairo_surface_clipper_reset (&surface->clipper);
     }
 }

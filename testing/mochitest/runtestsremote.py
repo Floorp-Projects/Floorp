@@ -185,14 +185,14 @@ class RemoteOptions(MochitestOptions):
     def verifyRemoteOptions(self, options, automation):
         options.remoteTestRoot = automation._devicemanager.getDeviceRoot()
 
-        options.utilityPath = options.remoteTestRoot + "/bin"
         options.certPath = options.remoteTestRoot + "/certs"
 
-        if options.remoteWebServer == None and os.name != "nt":
-          options.remoteWebServer = get_lan_ip()
-        elif os.name == "nt":
-          print "ERROR: you must specify a remoteWebServer ip address\n"
-          return None
+        if options.remoteWebServer == None:
+          if os.name != "nt":
+            options.remoteWebServer = get_lan_ip()
+          else:
+            print "ERROR: you must specify a remoteWebServer ip address\n"
+            return None
 
         options.webServer = options.remoteWebServer
 
@@ -205,18 +205,21 @@ class RemoteOptions(MochitestOptions):
 
         # Set up our options that we depend on based on the above
         productRoot = options.remoteTestRoot + "/" + automation._product
-        options.utilityPath = productRoot + "/bin"
+
+        # Set this only if the user hasn't set it
+        if (options.utilityPath == None):
+          options.utilityPath = productRoot + "/bin"
 
         # If provided, use cli value, otherwise reset as remoteTestRoot
         if (options.app == None):
-             options.app = productRoot + "/" + options.remoteProductName
+          options.app = productRoot + "/" + options.remoteProductName
 
         # Only reset the xrePath if it wasn't provided
         if (options.xrePath == None):
           if (automation._product == "fennec"):
-              options.xrePath = productRoot + "/xulrunner"
+            options.xrePath = productRoot + "/xulrunner"
           else:
-              options.xrePath = options.utilityPath
+            options.xrePath = options.utilityPath
 
         return options
 
@@ -280,7 +283,7 @@ class MochiRemote(Mochitest):
       xpcshell = "xpcshell"
       if (os.name == "nt"):
         xpcshell += ".exe"
-      
+
       if (options.utilityPath):
         paths.insert(0, options.utilityPath)
       options.utilityPath = self.findPath(paths, xpcshell)

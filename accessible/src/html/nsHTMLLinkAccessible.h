@@ -45,7 +45,7 @@
 class nsHTMLLinkAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLLinkAccessible(nsIContent *aContent, nsIWeakReference *aShell);
  
   NS_DECL_ISUPPORTS_INHERITED
 

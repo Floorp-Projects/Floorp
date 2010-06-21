@@ -411,6 +411,11 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 NS_IMETHODIMP
 nsWindow::SetSizeMode(PRInt32 aMode)
 {
+    switch (aMode) {
+        case nsSizeMode_Minimized:
+            AndroidBridge::Bridge()->MoveTaskToBack();
+            break;
+    }
     return NS_OK;
 }
 

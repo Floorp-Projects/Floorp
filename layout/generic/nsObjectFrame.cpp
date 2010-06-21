@@ -445,7 +445,9 @@ private:
 
 #ifdef XP_MACOSX
   NP_CGContext                              mCGPluginPortCopy;
+#ifndef NP_NO_QUICKDRAW
   NP_Port                                   mQDPluginPortCopy;
+#endif
   PRInt32                                   mInCGPaintLevel;
   nsIOSurface                              *mIOSurface;
   nsCARenderer                              mCARenderer;
@@ -1790,7 +1792,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
             NPEvent pluginEvent;
             pluginEvent.event = WM_WINDOWPOSCHANGED;
             pluginEvent.wParam = 0;
-            pluginEvent.lParam = (uint32)&winpos;
+            pluginEvent.lParam = (LPARAM)&winpos;
             inst->HandleEvent(&pluginEvent, nsnull);
           }
 
@@ -2479,7 +2481,9 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mTagText = nsnull;
 #ifdef XP_MACOSX
   memset(&mCGPluginPortCopy, 0, sizeof(NP_CGContext));
+#ifndef NP_NO_QUICKDRAW
   memset(&mQDPluginPortCopy, 0, sizeof(NP_Port));
+#endif
   mInCGPaintLevel = 0;
   mSentInitialTopLevelWindowEvent = PR_FALSE;
   mIOSurface = nsnull;

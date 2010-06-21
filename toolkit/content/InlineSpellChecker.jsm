@@ -220,7 +220,7 @@ InlineSpellChecker.prototype = {
       var item = menu.ownerDocument.createElement("menuitem");
       item.setAttribute("id", "spell-check-dictionary-" + list[i]);
       item.setAttribute("label", displayName);
-      item.setAttribute("type", "checkbox");
+      item.setAttribute("type", "radio");
       this.mDictionaryItems.push(item);
       if (curlang == list[i]) {
         item.setAttribute("checked", "true");

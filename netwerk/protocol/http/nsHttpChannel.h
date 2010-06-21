@@ -43,7 +43,6 @@
 
 #include "nsHttpTransaction.h"
 #include "nsHttpRequestHead.h"
-#include "nsHttpAuthCache.h"
 #include "nsHashPropertyBag.h"
 #include "nsInputStreamPump.h"
 #include "nsThreadUtils.h"
@@ -83,13 +82,12 @@
 #include "nsISupportsPriority.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
-#include "nsIProxiedChannel.h"
+#include "nsIHttpAuthenticableChannel.h"
 #include "nsITraceableChannel.h"
-#include "nsIAuthPromptCallback.h"
+#include "nsIHttpChannelAuthProvider.h"
 
 class nsHttpResponseHead;
 class nsAHttpConnection;
-class nsIHttpAuthenticator;
 class nsProxyInfo;
 
 //-----------------------------------------------------------------------------
@@ -109,10 +107,9 @@ class nsHttpChannel : public nsHashPropertyBag
                     , public nsIResumableChannel
                     , public nsISupportsPriority
                     , public nsIProtocolProxyCallback
-                    , public nsIProxiedChannel
+                    , public nsIHttpAuthenticableChannel
                     , public nsITraceableChannel
                     , public nsIApplicationCacheChannel
-                    , public nsIAuthPromptCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -135,7 +132,19 @@ public:
     NS_DECL_NSITRACEABLECHANNEL
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
     NS_DECL_NSIAPPLICATIONCACHECHANNEL
-    NS_DECL_NSIAUTHPROMPTCALLBACK
+
+    // nsIHttpAuthenticableChannel. We can't use
+    // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
+    // others.
+    NS_IMETHOD GetIsSSL(PRBool *aIsSSL);
+    NS_IMETHOD GetProxyMethodIsConnect(PRBool *aProxyMethodIsConnect);
+    NS_IMETHOD GetServerResponseHeader(nsACString & aServerResponseHeader);
+    NS_IMETHOD GetProxyChallenges(nsACString & aChallenges);
+    NS_IMETHOD GetWWWChallenges(nsACString & aChallenges);
+    NS_IMETHOD SetProxyCredentials(const nsACString & aCredentials);
+    NS_IMETHOD SetWWWCredentials(const nsACString & aCredentials);
+    NS_IMETHOD OnAuthAvailable();
+    NS_IMETHOD OnAuthCancelled(PRBool userCancel);
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -180,7 +189,6 @@ private:
     nsresult ProcessRedirection(PRUint32 httpStatus);
     PRBool   ShouldSSLProxyResponseContinue(PRUint32 httpStatus);
     nsresult ProcessFailedSSLConnect(PRUint32 httpStatus);
-    nsresult ProcessAuthentication(PRUint32 httpStatus);
     nsresult ProcessFallback(PRBool *fallingBack);
     PRBool   ResponseWouldVary();
 
@@ -226,41 +234,8 @@ private:
     nsresult ProcessPartialContent();
     nsresult OnDoneReadingPartialCacheEntry(PRBool *streamDone);
 
-    // auth specific methods
-    nsresult PrepareForAuthentication(PRBool proxyAuth);
-    nsresult GenCredsAndSetEntry(nsIHttpAuthenticator *, PRBool proxyAuth, const char *scheme, const char *host, PRInt32 port, const char *dir, const char *realm, const char *challenge, const nsHttpAuthIdentity &ident, nsCOMPtr<nsISupports> &session, char **result);
-    nsresult GetAuthenticator(const char *challenge, nsCString &scheme, nsIHttpAuthenticator **auth); 
-    void     ParseRealm(const char *challenge, nsACString &realm);
-    void     GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity&);
-    /**
-     * Following three methods return NS_ERROR_IN_PROGRESS when
-     * nsIAuthPrompt2.asyncPromptAuth method is called. This result indicates
-     * the user's decision will be gathered in a callback and is not an actual
-     * error.
-     */
-    nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
-    nsresult GetCredentialsForChallenge(const char *challenge, const char *scheme,  PRBool proxyAuth, nsIHttpAuthenticator *auth, nsAFlatCString &creds);
-    nsresult PromptForIdentity(PRUint32 level, PRBool proxyAuth, const char *realm, const char *authType, PRUint32 authFlags, nsHttpAuthIdentity &);
-
-    PRBool   ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt);
-    void     CheckForSuperfluousAuth();
-    void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *scheme, const char *host, PRInt32 port, const char *path, nsHttpAuthIdentity &ident);
-    void     AddAuthorizationHeaders();
-    nsresult GetCurrentPath(nsACString &);
-    /**
-     * Return all information needed to build authorization information,
-     * all paramters except proxyAuth are out parameters. proxyAuth specifies
-     * with what authorization we work (WWW or proxy).
-     */
-    nsresult GetAuthorizationMembers(PRBool proxyAuth, nsCSubstring& scheme, const char*& host, PRInt32& port, nsCSubstring& path, nsHttpAuthIdentity*& ident, nsISupports**& continuationState);
     nsresult DoAuthRetry(nsAHttpConnection *);
     PRBool   MustValidateBasedOnQueryUrl();
-    /**
-     * Method called to resume suspended transaction after we got credentials
-     * from the user. Called from OnAuthAvailable callback or OnAuthCancelled
-     * when credentials for next challenge were obtained synchronously.
-     */
-    nsresult ContinueOnAuthAvailable(const nsCSubstring& creds);
 
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;
@@ -311,25 +286,7 @@ private:
     nsCOMPtr<nsIApplicationCache>     mApplicationCache;
 
     // auth specific data
-    nsISupports                      *mProxyAuthContinuationState;
-    nsCString                         mProxyAuthType;
-    nsISupports                      *mAuthContinuationState;
-    nsCString                         mAuthType;
-    nsHttpAuthIdentity                mIdent;
-    nsHttpAuthIdentity                mProxyIdent;
-
-    // Reference to the prompt wating in prompt queue. The channel is
-    // responsible to call its cancel method when user in any way cancels
-    // this request.
-    nsCOMPtr<nsICancelable>           mAsyncPromptAuthCancelable;
-    // Saved in GetCredentials when prompt is asynchronous, the first challenge
-    // we obtained from the server with 401/407 response, will be processed in
-    // OnAuthAvailable callback.
-    nsCString                         mCurrentChallenge;
-    // Saved in GetCredentials when prompt is asynchronous, remaning challenges
-    // we have to process when user cancels the auth dialog for the current
-    // challenge.
-    nsCString                         mRemainingChallenges;
+    nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
 
     // Resumable channel specific data
     nsCString                         mEntityID;
@@ -367,12 +324,6 @@ private:
     PRUint32                          mTransactionReplaced      : 1;
     PRUint32                          mUploadStreamHasHeaders   : 1;
     PRUint32                          mAuthRetryPending         : 1;
-    // True when we need to authenticate to proxy, i.e. when we get 407
-    // response. Used in OnAuthAvailable and OnAuthCancelled callbacks.
-    PRUint32                          mProxyAuth                : 1;
-    PRUint32                          mTriedProxyAuth           : 1;
-    PRUint32                          mTriedHostAuth            : 1;
-    PRUint32                          mSuppressDefensiveAuth    : 1;
     PRUint32                          mResuming                 : 1;
     PRUint32                          mInitedCacheEntry         : 1;
     PRUint32                          mCacheForOfflineUse       : 1;

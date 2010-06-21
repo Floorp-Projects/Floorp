@@ -3216,9 +3216,11 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   if (HasNonZeroCorner(aCSSRootFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  nsTransparencyMode transparency;
+  nsITheme::Transparency transparency;
   if (aCSSRootFrame->IsThemed(&transparency))
-    return transparency;
+    return transparency == nsITheme::eTransparent
+         ? eTransparencyTransparent
+         : eTransparencyOpaque;
 
   if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
@@ -3439,6 +3441,14 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   if (node && ve) {
     nsHTMLVideoElement *video = static_cast<nsHTMLVideoElement*>(ve.get());
 
+    unsigned short readyState;
+    if (NS_SUCCEEDED(ve->GetReadyState(&readyState)) &&
+        (readyState == nsIDOMHTMLMediaElement::HAVE_NOTHING ||
+         readyState == nsIDOMHTMLMediaElement::HAVE_METADATA)) {
+      result.mIsStillLoading = PR_TRUE;
+      return result;
+    }
+
     // If it doesn't have a principal, just bail
     nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
     if (!principal)
@@ -3490,8 +3500,13 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
   PRUint32 status;
   imgRequest->GetImageStatus(&status);
-  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
+  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
+    // Spec says to use GetComplete, but that only works on
+    // nsIDOMHTMLImageElement, and we support all sorts of other stuff
+    // here.  Do this for now pending spec clarification.
+    result.mIsStillLoading = (status & imgIRequest::STATUS_ERROR) == 0;
     return result;
+  }
 
   // In case of data: URIs, we want to ignore principals;
   // they should have the originating content's principal,

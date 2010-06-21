@@ -67,6 +67,12 @@ public:
    * be freed.
    */
   virtual const Module* LoadModule(nsILocalFile* aFile) = 0;
+
+  /**
+   * Return the module for a file located within a JAR.
+   */
+  virtual const Module* LoadModuleFromJAR(nsILocalFile* aJARFile,
+                                          const nsACString& aPath) = 0;
 };
 NS_DEFINE_STATIC_IID_ACCESSOR(ModuleLoader, MOZILLA_MODULELOADER_PSEUDO_IID)
 

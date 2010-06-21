@@ -65,8 +65,6 @@ _TEST_FILES =	\
 		bug369950-subframe.xml \
 		bug495648.rdf \
 		decoration_line_rendering.js \
-		region_lib.js \
-		scrolling_helper.html \
 		test_bug66619.html \
 		test_bug114649.html \
 		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
@@ -108,7 +106,6 @@ _TEST_FILES =	\
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
-		test_scrolling.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208

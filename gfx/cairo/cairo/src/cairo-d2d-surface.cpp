@@ -390,28 +390,17 @@ _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface)
  */
 static void _cairo_d2d_update_surface_bitmap(cairo_d2d_surface_t *d2dsurf)
 {
-    if (!d2dsurf->backBuf) {
+    if (!d2dsurf->backBuf && d2dsurf->rt->GetPixelFormat().format != DXGI_FORMAT_A8_UNORM) {
 	return;
     }
-    ID3D10Texture2D *texture = _cairo_d2d_get_buffer_texture(d2dsurf);
+    
     if (!d2dsurf->surfaceBitmap) {
-	RefPtr<IDXGISurface> dxgiSurface;
-	D2D1_ALPHA_MODE alpha;
-	if (d2dsurf->base.content == CAIRO_CONTENT_COLOR) {
-	    alpha = D2D1_ALPHA_MODE_IGNORE;
-	} else {
-	    alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
-	}
-        /** Using DXGI_FORMAT_UNKNOWN will automatically use the texture's format. */
-	D2D1_BITMAP_PROPERTIES bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
-										   alpha));
-	texture->QueryInterface(&dxgiSurface);
-	d2dsurf->rt->CreateSharedBitmap(IID_IDXGISurface,
-					dxgiSurface,
-					&bitProps,
-					&d2dsurf->surfaceBitmap);
+	d2dsurf->rt->CreateBitmap(d2dsurf->rt->GetPixelSize(),
+				  D2D1::BitmapProperties(d2dsurf->rt->GetPixelFormat()),
+				  &d2dsurf->surfaceBitmap);
     }
-    D3D10Factory::Device()->CopyResource(texture, d2dsurf->surface);
+
+    d2dsurf->surfaceBitmap->CopyFromRenderTarget(NULL, d2dsurf->rt, NULL);
 }
 
 /**
@@ -644,6 +633,77 @@ static void _d2d_snapshot_detached(cairo_surface_t *surface)
 }
 
 /**
+ * This function will calculate the part of srcSurf which will possibly be used within
+ * the boundaries of d2dsurf given the current transformation mat. This is used to
+ * determine what the minimal part of a surface is that needs to be uploaded.
+ *
+ * \param d2dsurf D2D surface
+ * \param srcSurf Source surface for operation
+ * \param mat Transformation matrix applied to source
+ */
+static void
+_cairo_d2d_calculate_visible_rect(cairo_d2d_surface_t *d2dsurf, cairo_image_surface_t *srcSurf,
+				  cairo_matrix_t *mat,
+				  int *x, int *y, unsigned int *width, unsigned int *height)
+{
+    /** Leave room for extend_none space, 2 pixels */
+    UINT32 maxSize = d2dsurf->rt->GetMaximumBitmapSize() - 2;
+
+    /* Transform this surface to image surface space */
+    cairo_matrix_t invMat = *mat;
+    if (_cairo_matrix_is_invertible(mat)) {
+	/* If this is not invertible it will be rank zero, and invMat = mat is fine */
+	cairo_matrix_invert(&invMat);
+    }
+
+    RefPtr<IDXGISurface> surf;
+    d2dsurf->surface->QueryInterface(&surf);
+    DXGI_SURFACE_DESC desc;
+    surf->GetDesc(&desc);
+
+    double leftMost = 0;
+    double rightMost = desc.Width;
+    double topMost = 0;
+    double bottomMost = desc.Height;
+
+    _cairo_matrix_transform_bounding_box(&invMat, &leftMost, &topMost, &rightMost, &bottomMost, NULL);
+
+    leftMost -= 1;
+    topMost -= 1;
+    rightMost += 1;
+    bottomMost += 1;
+
+    /* Calculate the offsets into the source image and the width of the part required */
+    if ((UINT32)srcSurf->width > maxSize) {
+	*x = (int)MAX(0, floor(leftMost));
+	/* Ensure that we get atleast 1 column of pixels as source, this will make EXTEND_PAD work */
+	if (*x < srcSurf->width) {
+	    *width = (unsigned int)MIN(MAX(1, ceil(rightMost - *x)), srcSurf->width - *x);
+	} else {
+	    *x = srcSurf->width - 1;
+	    *width = 1;
+	}
+    } else {
+	*x = 0;
+	*width = srcSurf->width;
+    }
+
+    if ((UINT32)srcSurf->height > maxSize) {
+	*y = (int)MAX(0, floor(topMost));
+	/* Ensure that we get atleast 1 row of pixels as source, this will make EXTEND_PAD work */
+	if (*y < srcSurf->height) {
+	    *height = (unsigned int)MIN(MAX(1, ceil(bottomMost - *y)), srcSurf->height - *y);
+	} else {
+	    *y = srcSurf->height - 1;
+	    *height = 1;
+	}
+    } else {
+	*y = 0;
+	*height = srcSurf->height;
+    }
+}
+
+/**
  * This creates an ID2D1Brush that will fill with the correct pattern.
  * This function passes a -strong- reference to the caller, the brush
  * needs to be released, even if it is not unique.
@@ -788,8 +848,8 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 
 	RefPtr<ID2D1Bitmap> sourceBitmap;
 	bool partial = false;
-	unsigned int xoffset = 0;
-	unsigned int yoffset = 0;
+	int xoffset = 0;
+	int yoffset = 0;
 	unsigned int width;
 	unsigned int height;
 	unsigned char *data = NULL;
@@ -843,39 +903,17 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    UINT32 maxSize = d2dsurf->rt->GetMaximumBitmapSize() - 2;
 
 	    if ((UINT32)srcSurf->width > maxSize || (UINT32)srcSurf->height > maxSize) {
+		if (pattern->extend == CAIRO_EXTEND_REPEAT ||
+		    pattern->extend == CAIRO_EXTEND_REFLECT) {
+		    // XXX - we don't have code to deal with these yet.
+		    return NULL;
+		}
+
 		/* We cannot fit this image directly into a texture, start doing tricks to draw correctly anyway. */
 		partial = true;
+
 		/* First we check which part of the image is inside the viewable area. */
-  
-		/* Transform this surface to image surface space */
-		cairo_matrix_t invMat = mat;
-                if (_cairo_matrix_is_invertible(&mat)) {
-                  /* If this is not invertible it will be rank zero, and invMat = mat is fine */
-		  cairo_matrix_invert(&invMat);
-                }
-
-		RefPtr<IDXGISurface> surf;
-		d2dsurf->surface->QueryInterface(&surf);
-		DXGI_SURFACE_DESC desc;
-		surf->GetDesc(&desc);
-
-                double leftMost = 0;
-                double rightMost = desc.Width;
-                double topMost = 0;
-                double bottomMost = desc.Height;
-
-                _cairo_matrix_transform_bounding_box(&invMat, &leftMost, &topMost, &rightMost, &bottomMost, NULL);
-
-                leftMost -= 1;
-                topMost -= 1;
-                rightMost += 1;
-                bottomMost += 1;
-
-		/* Calculate the offsets into the source image and the width of the part required */
-		xoffset = (unsigned int)MAX(0, floor(leftMost));
-		yoffset = (unsigned int)MAX(0, floor(topMost));
-		width = (unsigned int)MIN(MAX(0, ceil(rightMost - xoffset)), srcSurf->width - xoffset);
-		height = (unsigned int)MIN(MAX(0, ceil(bottomMost - yoffset)), srcSurf->height - yoffset);
+  		_cairo_d2d_calculate_visible_rect(d2dsurf, srcSurf, &mat, &xoffset, &yoffset, &width, &height);
 
 	        cairo_matrix_translate(&mat, xoffset, yoffset);
 
@@ -893,6 +931,11 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
                      * this by 45 degrees and scale it to a size of 5x5 pixels and composite it to the destination,
                      * the composition will require all 10 original columns to do the best possible sampling.
 		     */
+		    RefPtr<IDXGISurface> surf;
+		    d2dsurf->surface->QueryInterface(&surf);
+		    DXGI_SURFACE_DESC desc;
+		    surf->GetDesc(&desc);
+
 		    unsigned int minSize = (unsigned int)ceil(sqrt(pow((float)desc.Width, 2) + pow((float)desc.Height, 2)));
 		    
 		    unsigned int newWidth = MIN(minSize, MIN(width, maxSize));
@@ -1445,12 +1488,17 @@ _cairo_d2d_create_similar(void			*surface,
 	goto FAIL_CREATESIMILAR;
     }
 
-    hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
-					 dxgiSurface,
-					 &bitProps,
-					 &newSurf->surfaceBitmap);
-    if (FAILED(hr)) {
-	goto FAIL_CREATESIMILAR;
+    if (desc.Format != DXGI_FORMAT_A8_UNORM) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+	if (FAILED(hr)) {
+	    goto FAIL_CREATESIMILAR;
+	}
     }
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
@@ -2337,12 +2385,19 @@ cairo_d2d_surface_create(cairo_format_t format,
 
     bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
 				      alpha));
-    hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
-					 dxgiSurface,
-					 &bitProps,
-					 &newSurf->surfaceBitmap);
 
-    if (FAILED(hr)) {
+    if (dxgiformat != DXGI_FORMAT_A8_UNORM) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+
+	if (FAILED(hr)) {
+	    goto FAIL_CREATE;
+	}
     }
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);

@@ -437,6 +437,11 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                      aPseudoType),
                   "Pseudo mismatch");
 
+  if (aVisitedRuleNode == aRuleNode) {
+    // No need to force creation of a visited style in this case.
+    aVisitedRuleNode = nsnull;
+  }
+
   // Ensure |aVisitedRuleNode != nsnull| corresponds to the need to
   // create an if-visited style context, and that in that case, we have
   // parentIfVisited set correctly.
@@ -1154,11 +1159,6 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   // a link.
   if (visitedContext) {
      visitedRuleNode = visitedContext->GetRuleNode();
-     if (visitedRuleNode == ruleNode) {
-       // We don't want to force creation of an if-visited style
-       // context if it's not actually needed.
-       visitedRuleNode = nsnull;
-     }
   }
 
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
