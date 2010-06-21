@@ -276,7 +276,7 @@ let DOMEvents =  {
           return;
 
         let json = {
-          location: document.documentURIObject.spec,
+          windowId: target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
           href: target.href,
           charset: document.characterSet,
           title: target.title,
