@@ -120,11 +120,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
-#ifdef MOZ_WIDGET_GTK2
-    mWsInfo.display = GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-    mWsInfo.display = QX11Info::display();
-#endif // MOZ_WIDGET_GTK2
+    mWsInfo.display = DefaultXDisplay();
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
