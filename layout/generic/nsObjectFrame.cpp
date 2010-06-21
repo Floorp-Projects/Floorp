@@ -4704,7 +4704,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #ifdef MOZ_X11
   // this code supports windowless plugins
   nsIWidget* widget = anEvent.widget;
-  XEvent pluginEvent;
+  XEvent pluginEvent = XEvent();
   pluginEvent.type = 0;
 
   switch(anEvent.eventStructType)
@@ -5574,7 +5574,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
 #ifdef MOZ_COMPOSITED_PLUGINS
   if (mWindow->type == NPWindowTypeDrawable) {
 #endif
-    XEvent pluginEvent;
+    XEvent pluginEvent = XEvent();
     XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
     // set the drawing info
     exposeEvent.type = GraphicsExpose;
