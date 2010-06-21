@@ -176,6 +176,10 @@ typedef struct JSCompartment     JSCompartment;
 
 #define JSVAL_NAN_PATTERN    ((uint16)0xFFFF)
 
+/*
+ * When we can ensure that the underlying type is uint32, use an enum so that
+ * symbolic type names show up in the debugger.
+ */
 #ifdef __cplusplus
 
 #if defined(_MSC_VER)
@@ -190,6 +194,7 @@ typedef struct JSCompartment     JSCompartment;
 # define JS_ENUM_FOOTER(id)                    __attribute__((packed))
 #endif
 
+/* Remember to propagate changes to #else case below. */
 JS_ENUM_HEADER(JSValueType, uint8)
 {
     JSVAL_TYPE_DOUBLE         = 0x0,
@@ -199,14 +204,15 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_BOOLEAN        = 0x4,
     JSVAL_TYPE_MAGIC          = 0x5,
     JSVAL_TYPE_NULL           = 0x6,
-    JSVAL_TYPE_NONFUNOBJ      = 0x7,  /* 0111 */
-    JSVAL_TYPE_FUNOBJ         = 0xF,  /* 1111 */
+    JSVAL_TYPE_NONFUNOBJ      = 0x7,
+    JSVAL_TYPE_FUNOBJ         = 0xF,
 
     /* Cannot not appear in any jsval ever; trace-jit only. */
     JSVAL_TYPE_BOXED          = 0x99,
     JSVAL_TYPE_UNINITIALIZED  = 0xcd
 } JS_ENUM_FOOTER(JSValueType);
 
+/* Remember to propagate changes to #else case below. */
 JS_ENUM_HEADER(JSValueTag, uint32)
 {
     JSVAL_TAG_CLEAR        = (uint32)(0xFFFF0000),
@@ -222,23 +228,36 @@ JS_ENUM_HEADER(JSValueTag, uint32)
 
 #else  /* defined(__cplusplus) */
 
+typedef uint8 JSValueType;
+
+#define JSVAL_TYPE_DOUBLE         ((uint8)0x0)
+#define JSVAL_TYPE_INT32          ((uint8)0x1)
+#define JSVAL_TYPE_UNDEFINED      ((uint8)0x2)
+#define JSVAL_TYPE_STRING         ((uint8)0x3)
+#define JSVAL_TYPE_BOOLEAN        ((uint8)0x4)
+#define JSVAL_TYPE_MAGIC          ((uint8)0x5)
+#define JSVAL_TYPE_NULL           ((uint8)0x6)
+#define JSVAL_TYPE_NONFUNOBJ      ((uint8)0x7)
+#define JSVAL_TYPE_FUNOBJ         ((uint8)0xF)
+#define JSVAL_TYPE_BOXED          ((uint8)0x99)
+#define JSVAL_TYPE_UNINITIALIZED  ((uint8)0xcd)
+
 typedef uint32 JSValueTag;
 
-#define JSVAL_TAG_INT32      ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32))
-#define JSVAL_TAG_UNDEFINED  ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED))
-#define JSVAL_TAG_STRING     ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING))
-#define JSVAL_TAG_BOOLEAN    ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN))
-#define JSVAL_TAG_MAGIC      ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC))
-#define JSVAL_TAG_NULL       ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL))
-#define JSVAL_TAG_NONFUNOBJ  ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NONFUNOBJ))
-#define JSVAL_TAG_FUNOBJ     ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_FUNOBJ))
+#define JSVAL_TAG_CLEAR           ((uint32)(0xFFFF0000))
+#define JSVAL_TAG_INT32           ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32))
+#define JSVAL_TAG_UNDEFINED       ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED))
+#define JSVAL_TAG_STRING          ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING))
+#define JSVAL_TAG_BOOLEAN         ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN))
+#define JSVAL_TAG_MAGIC           ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC))
+#define JSVAL_TAG_NULL            ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL))
+#define JSVAL_TAG_NONFUNOBJ       ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NONFUNOBJ))
+#define JSVAL_TAG_FUNOBJ          ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_FUNOBJ))
 
-#endif
+#endif  /* defined(__cplusplus) */
 
 #define JSVAL_LOWER_BOUND_OF_OBJ_OR_NULL JSVAL_TAG_NULL
 #define JSVAL_LOWER_BOUND_OF_OBJ         JSVAL_TAG_NONFUNOBJ
-
-typedef VALUE_ALIGNMENT uint64 jsval;
 
 typedef enum JSWhyMagic
 {
@@ -282,6 +301,7 @@ typedef union jsval_layout
 # error "Unsupported configuration"
 #endif
 
+typedef VALUE_ALIGNMENT uint64 jsval;
 
 #define BUILD_JSVAL(tag, payload) ((jsval)((((uint64)(uint32)(tag)) << 32) | (uint32)(payload)))
 
