@@ -69,6 +69,8 @@ protected:
 
   nsresult ChangeCharset(PRInt32 aCharset, char * aDest, 
       PRInt32 * aDestLength);
+  nsresult ConvertHankaku(const PRUnichar *aSrc, PRInt32 * aSrcLength,
+                          char *aDest, PRInt32 * aDestLength);
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
