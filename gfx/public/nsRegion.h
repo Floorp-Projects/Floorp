@@ -297,6 +297,11 @@ public:
   nsIntRegion& operator = (const nsIntRect& aRect) { mImpl = ToRect (aRect); return *this; }
   nsIntRegion& operator = (const nsIntRegion& aRegion) { mImpl = aRegion.mImpl; return *this; }
 
+  bool operator==(const nsIntRegion& aRgn) const
+  {
+    return IsEqual(aRgn);
+  }
+
   nsIntRegion& And  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
   {
     mImpl.And (aRgn1.mImpl, aRgn2.mImpl);
