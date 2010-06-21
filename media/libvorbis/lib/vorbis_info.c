@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2010             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: maintain the info structure, info <-> header packets
- last mod: $Id: info.c 16243 2009-07-10 02:49:31Z xiphmont $
+ last mod: $Id: info.c 17080 2010-03-26 06:59:58Z xiphmont $
 
  ********************************************************************/
 
@@ -31,8 +31,8 @@
 #include "misc.h"
 #include "os.h"
 
-#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.2.3"
-#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20090709"
+#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.1"
+#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20100325 (Everywhere)"
 
 /* helpers */
 static int ilog2(unsigned int v){
@@ -278,8 +278,8 @@ static int _vorbis_unpack_books(vorbis_info *vi,oggpack_buffer *opb){
   ci->books=oggpack_read(opb,8)+1;
   if(ci->books<=0)goto err_out;
   for(i=0;i<ci->books;i++){
-    ci->book_param[i]=_ogg_calloc(1,sizeof(*ci->book_param[i]));
-    if(vorbis_staticbook_unpack(opb,ci->book_param[i]))goto err_out;
+    ci->book_param[i]=vorbis_staticbook_unpack(opb);
+    if(!ci->book_param[i])goto err_out;
   }
 
   /* time backend settings; hooks are unused */
