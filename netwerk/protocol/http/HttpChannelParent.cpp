@@ -281,6 +281,14 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
 NS_IMETHODIMP 
 HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 {
+  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
+    if (!mTabParent)
+      return NS_NOINTERFACE;
+    return mTabParent->QueryInterface(aIID, result);
+  }
+
+  // TODO: 575494: once we're confident we're handling all needed interfaces,
+  // remove all code below and simply "return QueryInterface(aIID, result)"
   if (// Known interface calls:
 
       // FIXME: HTTP Authorization (bug 537782):
@@ -307,22 +315,16 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
       aIID.Equals(NS_GET_IID(nsIBadCertListener2))) 
   {
     return QueryInterface(aIID, result);
-  } 
-
-  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
-    if (!mTabParent)
-      return NS_NOINTERFACE;
-    return mTabParent->QueryInterface(aIID, result);
+  } else {
+    nsPrintfCString msg(2000, 
+       "HttpChannelParent::GetInterface: interface UUID=%s not yet supported! "
+       "Use 'grep -ri UUID <mozilla_src>' to find the name of the interface, "
+       "check http://tinyurl.com/255ojvu to see if a bug has already been "
+       "filed, and if not, add one and make it block bug 516730. Thanks!",
+       aIID.ToString());
+    NECKO_MAYBE_ABORT(msg);
+    return NS_NOINTERFACE;
   }
-
-  // Interface we haven't dealt with yet. Make sure we know by dying.
-  // - use "grep -ri [uuid] ROOT_SRC_DIR" with the uuid from the printf to
-  //   find the offending interface.
-  // - FIXME: make non-fatal before we ship
-  printf("*&*&*& HttpChannelParent::GetInterface: uuid=%s not impl'd yet! "
-         "File a bug!\n", 
-         aIID.ToString());
-  DROP_DEAD();
 }
 
 //-----------------------------------------------------------------------------
