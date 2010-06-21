@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *  Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,40 +35,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _ACCESSIBLE_HYPERTEXT_H
-#define _ACCESSIBLE_HYPERTEXT_H
+#ifndef AccCollector_h_
+#define AccCollector_h_
 
-#include "nsISupports.h"
+#include "filters.h"
 
-#include "CAccessibleText.h"
-#include "AccessibleHypertext.h"
+#include "nscore.h"
+#include "nsTArray.h"
 
-class CAccessibleHypertext: public CAccessibleText,
-                            public IAccessibleHypertext
+/**
+ * Collect accessible children complying with filter function. Provides quick
+ * access to accessible by index.
+ */
+class AccCollector
 {
 public:
+  AccCollector(nsAccessible* aRoot, filters::FilterFuncPtr aFilterFunc);
+  virtual ~AccCollector();
 
-  // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+  /**
+   * Return accessible count within the collection.
+   */
+  PRUint32 Count();
 
-  // IAccessibleText
-  FORWARD_IACCESSIBLETEXT(CAccessibleText)
+  /**
+   * Return an accessible from the collection at the given index.
+   */
+  nsAccessible* GetAccessibleAt(PRUint32 aIndex);
 
-  // IAccessibleHypertext
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nHyperlinks(
-      /* [retval][out] */ long *hyperlinkCount);
+  /**
+   * Return index of the given accessible within the collection.
+   */
+  PRInt32 GetIndexAt(nsAccessible* aAccessible);
 
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlink(
-      /* [in] */ long index,
-      /* [retval][out] */ IAccessibleHyperlink **hyperlink);
+protected:
+  /**
+   * Ensure accessible at the given index is stored and return it.
+   */
+  nsAccessible* EnsureNGetObject(PRUint32 aIndex);
 
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinkIndex(
-      /* [in] */ long charIndex,
-      /* [retval][out] */ long *hyperlinkIndex);
+  /**
+   * Ensure index for the given accessible is stored and return it.
+   */
+  PRInt32 EnsureNGetIndex(nsAccessible* aAccessible);
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
+  filters::FilterFuncPtr mFilterFunc;
+  nsAccessible* mRoot;
+  PRInt32 mRootChildIdx;
+
+  nsTArray<nsAccessible*> mObjects;
+
+private:
+  AccCollector();
+  AccCollector(const AccCollector&);
+  AccCollector& operator =(const AccCollector&);
 };
 
 #endif
-

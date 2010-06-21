@@ -50,6 +50,7 @@
 
 #include "nsStringGlue.h"
 #include "nsTArray.h"
+#include "nsRefPtrHashtable.h"
 
 class nsAccessible;
 class nsAccEvent;
