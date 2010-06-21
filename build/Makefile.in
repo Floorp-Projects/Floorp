@@ -71,6 +71,10 @@ endif
 
 DIRS += pgo
 
+ifeq (Android,$(OS_TARGET))
+  DIRS += mobile/sutagent/android
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/
