@@ -259,7 +259,7 @@
               <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
                 <!-- Content viewport -->
                 <html:div id="tile-container" style="overflow: hidden;">
-                  <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000;">
+                  <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;">
                   </html:canvas>
                 </html:div>
               </scrollbox>
