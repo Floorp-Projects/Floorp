@@ -632,8 +632,8 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     // get the selection and start a batch change
     nsCOMPtr<nsISelection>selection;
     result = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) { return result; }
-    if (!selection) { return NS_ERROR_NULL_POINTER; }
+    NS_ENSURE_SUCCESS(result, result);
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
     selPrivate->StartBatchChanges();
@@ -2477,7 +2477,8 @@ NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
   PRInt32 numListeners = mDocStateListeners.Count();
-  NS_ENSURE_TRUE(numListeners, NS_OK);    // maybe there just aren't any.
+  if (!numListeners)    // maybe there just aren't any.
+    return NS_OK;
  
   nsCOMArray<nsIDocumentStateListener> listeners(mDocStateListeners);
   nsresult rv = NS_OK;
