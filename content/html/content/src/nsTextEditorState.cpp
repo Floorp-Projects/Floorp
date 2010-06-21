@@ -1764,7 +1764,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
     }
     nsString value(aValue);
     nsContentUtils::PlatformToDOMLineBreaks(value);
-    *mValue = ToNewUTF8String(value);
+    CopyUTF16toUTF8(value, *mValue);
 
     // Update the frame display if needed
     if (mBoundFrame) {
