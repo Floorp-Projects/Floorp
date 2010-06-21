@@ -3080,6 +3080,10 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     
     // make sure we can put a list here
+    if (!mHTMLEditor->CanContainTag(parent, *aListType)) {
+      *aCancel = PR_TRUE;
+      return NS_OK;
+    }
     res = SplitAsNeeded(aListType, address_of(parent), &offset);
     NS_ENSURE_SUCCESS(res, res);
     res = mHTMLEditor->CreateNode(*aListType, parent, offset, getter_AddRefs(theList));
