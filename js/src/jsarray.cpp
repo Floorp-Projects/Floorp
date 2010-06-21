@@ -827,33 +827,6 @@ array_typeOf(JSContext *cx, JSObject *obj)
     return JSTYPE_OBJECT;
 }
 
-/* The same as js_ObjectOps except for the .enumerate and .call hooks. */
-static JSObjectOps js_SlowArrayObjectOps = {
-    NULL,
-    js_LookupProperty,
-    js_DefineProperty,
-    js_GetProperty,
-    js_SetProperty,
-    js_GetAttributes,
-    js_SetAttributes,
-    js_DeleteProperty,
-    js_DefaultValue,
-    js_Enumerate,
-    array_typeOf,
-    js_TraceObject,
-    NULL,   /* thisObject */
-    NULL,   /* call */
-    js_Construct,
-    js_HasInstance,
-    js_Clear
-};
-
-static JSObjectOps *
-slowarray_getObjectOps(JSContext *cx, JSClass *clasp)
-{
-    return &js_SlowArrayObjectOps;
-}
-
 static JSBool
 array_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
@@ -1127,8 +1100,7 @@ JSClass js_SlowArrayClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty, JS_PropertyStub, JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub,      JS_ResolveStub,  js_TryValueOf,    NULL,
-    slowarray_getObjectOps, NULL,           NULL,             NULL,
-    NULL,                  NULL,            NULL,             NULL
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 /*
@@ -1154,8 +1126,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         JS_ASSERT(arrayProto->getClass() == &js_SlowArrayClass);
         emptyShape = arrayProto->scope()->emptyScope->shape;
     }
-    JSScope *scope = JSScope::create(cx, &js_SlowArrayObjectOps, &js_SlowArrayClass, obj,
-                                     emptyShape);
+    JSScope *scope = JSScope::create(cx, &js_ObjectOps, &js_SlowArrayClass, obj, emptyShape);
     if (!scope)
         return JS_FALSE;
 
