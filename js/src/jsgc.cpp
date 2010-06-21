@@ -90,6 +90,13 @@
 #include "jsobjinlines.h"
 #include "jshashtable.h"
 
+#ifdef MOZ_VALGRIND
+# define JS_VALGRIND
+#endif
+#ifdef JS_VALGRIND
+# include <valgrind/memcheck.h>
+#endif
+
 using namespace js;
 
 /*
@@ -1106,6 +1113,16 @@ ConservativeGCStackMarker::dumpConservativeRoots()
 void
 ConservativeGCStackMarker::markWord(jsuword w)
 {
+    /*
+     * The conservative scanner may access words that valgrind considers as
+     * undefined. To avoid false positives and not to alter valgrind view of
+     * the memory we make as memcheck-defined the argument, a copy of the
+     * original word. See bug 572678.
+     */
+#ifdef JS_VALGRIND
+    VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
+#endif
+
 #define RETURN(x) do { CONSERVATIVE_METER(stats.x++); return; } while (0)
     /*
      * We assume that the compiler never uses sub-word alignment to store
