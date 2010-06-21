@@ -317,8 +317,8 @@ Point.prototype = {
 function Rect(x, y, w, h) {
   this.left = x;
   this.top = y;
-  this.right = x+w;
-  this.bottom = y+h;
+  this.right = x + w;
+  this.bottom = y + h;
 };
 
 Rect.fromRect = function fromRect(r) {
