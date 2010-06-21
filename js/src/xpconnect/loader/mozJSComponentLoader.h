@@ -158,9 +158,9 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             mCIDs = NULL;
             mContractIDs = NULL;
             mCategoryEntries = NULL;
-            getfactory = GetFactory;
-            loaded = NULL;
-            unloaded = NULL;
+            getFactoryProc = GetFactory;
+            loadProc = NULL;
+            unloadProc = NULL;
 
             global = nsnull;
             location = nsnull;

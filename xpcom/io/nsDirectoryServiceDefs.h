@@ -74,11 +74,6 @@
  */
 #define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
 
-/* Property will return the location of the application components
- * registry file.
- */
-#define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
-
 /* Property will return the location of the the XPCOM Shared Library.
  */
 #define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"

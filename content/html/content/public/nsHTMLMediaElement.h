@@ -250,20 +250,26 @@ public:
   // false here even if CanHandleMediaType would return true.
   static PRBool ShouldHandleMediaType(const char* aMIMEType);
 
+#ifdef MOZ_OGG
   static bool IsOggEnabled();
   static bool IsOggType(const nsACString& aType);
   static const char gOggTypes[3][16];
   static char const *const gOggCodecs[3];
+#endif
 
+#ifdef MOZ_WAVE
   static bool IsWaveEnabled();
   static bool IsWaveType(const nsACString& aType);
   static const char gWaveTypes[4][16];
   static char const *const gWaveCodecs[2];
+#endif
 
+#ifdef MOZ_WEBM
   static bool IsWebMEnabled();
   static bool IsWebMType(const nsACString& aType);
   static const char gWebMTypes[2][17];
   static char const *const gWebMCodecs[4];
+#endif
 
   /**
    * Called when a child source element is added to this media element. This
