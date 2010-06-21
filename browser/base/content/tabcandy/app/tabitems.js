@@ -60,7 +60,6 @@ window.TabItem = function(container, tab) {
   var self = this;
   
   $div.data('tabItem', this);
-  $div.data('isDragging', false);
   this.isDragging = false;
   
   // ___ superclass setup
@@ -139,7 +138,7 @@ window.TabItem = function(container, tab) {
     if(iQ(e.target).hasClass("close")) 
       tab.close();
     else {
-      if(!iQ(this).data('isDragging')) 
+      if(!Items.item(this).isDragging) 
         self.zoomIn();
     }
   });

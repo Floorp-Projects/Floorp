@@ -62,7 +62,6 @@ var Drag = function(element, event) {
   this.startTime = Utils.getMilliseconds();
   
   this.item.isDragging = true;
-  this.$el.data('isDragging', true);
   this.item.setZ(999999);
   
   this.safeWindowBounds = Items.getSafeWindowBounds();
@@ -199,7 +198,6 @@ Drag.prototype = {
   // Called in response to a jQuery-UI draggable "stop" event.
   stop: function() {
     this.item.isDragging = false;
-    this.$el.data('isDragging', false);    
 
     // I'm commenting this out for a while as I believe it feels uncomfortable
     // that groups go away when there is still a tab in them. I do this at
