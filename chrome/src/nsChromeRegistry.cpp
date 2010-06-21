@@ -55,6 +55,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
+#include "nsComponentManager.h"
 #include "nsStringEnumerator.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCOMPtr.h"
@@ -462,17 +463,8 @@ nsChromeRegistry::Init()
   // if not, somebody is doing work during XPCOM registration that they
   // shouldn't be doing. See bug 292549, where JS components are trying
   // to call Components.utils.import("chrome:///") early in registration
-
-  nsCOMPtr<nsIIOService> io (do_GetIOService());
-  if (!io) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIProtocolHandler> ph;
-  rv = io->GetProtocolHandler("jar", getter_AddRefs(ph));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIJARProtocolHandler> jph = do_QueryInterface(ph);
-  if (!jph)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ASSERTION(nsCOMPtr<nsIIOService>(mozilla::services::GetIOService()),
+               "I/O service not registered or available early enough?");
 
   if (!PL_DHashTableInit(&mPackagesHash, &kTableOps,
                          nsnull, sizeof(PackageEntry), 16))
@@ -530,8 +522,6 @@ nsChromeRegistry::Init()
     obsService->AddObserver(this, "command-line-startup", PR_TRUE);
     obsService->AddObserver(this, "profile-initial-state", PR_TRUE);
   }
-
-  CheckForNewChrome();
 
   mInitialized = PR_TRUE;
 
@@ -1147,101 +1137,12 @@ RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *ar
 NS_IMETHODIMP
 nsChromeRegistry::CheckForNewChrome()
 {
-  nsresult rv;
-
   PL_DHashTableEnumerate(&mPackagesHash, RemoveAll, nsnull);
   mOverlayHash.Clear();
   mStyleHash.Clear();
   mOverrideTable.Clear();
 
-  nsCOMPtr<nsIProperties> dirSvc (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(dirSvc, NS_ERROR_FAILURE);
-
-  // check the extra chrome directories
-  nsCOMPtr<nsISimpleEnumerator> chromeML;
-  rv = dirSvc->Get(NS_CHROME_MANIFESTS_FILE_LIST, NS_GET_IID(nsISimpleEnumerator),
-                   getter_AddRefs(chromeML));
-  if (NS_FAILED(rv)) {
-    // ok, then simply load all .manifest files in the app chrome dir.
-    nsCOMPtr<nsIFile> chromeDir;
-    rv = dirSvc->Get(NS_APP_CHROME_DIR, NS_GET_IID(nsIFile),
-                     getter_AddRefs(chromeDir));
-    if (NS_FAILED(rv))
-      return rv;
-    rv = NS_NewSingletonEnumerator(getter_AddRefs(chromeML), chromeDir);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  PRBool exists;
-  nsCOMPtr<nsISupports> next;
-  while (NS_SUCCEEDED(chromeML->HasMoreElements(&exists)) && exists) {
-    chromeML->GetNext(getter_AddRefs(next));
-    nsCOMPtr<nsILocalFile> lmanifest = do_QueryInterface(next);
-    if (!lmanifest) {
-      NS_ERROR("Directory enumerator returned a non-nsILocalFile");
-      continue;
-    }
-
-    PRBool isDir;
-    if (NS_SUCCEEDED(lmanifest->IsDirectory(&isDir)) && isDir) {
-      nsCOMPtr<nsISimpleEnumerator> entries;
-      rv = lmanifest->GetDirectoryEntries(getter_AddRefs(entries));
-      if (NS_FAILED(rv))
-        continue;
-
-      while (NS_SUCCEEDED(entries->HasMoreElements(&exists)) && exists) {
-        entries->GetNext(getter_AddRefs(next));
-        lmanifest = do_QueryInterface(next);
-        if (lmanifest) {
-          nsCAutoString leafName;
-          lmanifest->GetNativeLeafName(leafName);
-          if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".manifest"))) {
-            rv = ProcessManifest(lmanifest, PR_FALSE);
-            if (NS_FAILED(rv)) {
-              nsCAutoString path;
-              lmanifest->GetNativePath(path);
-              LogMessage("Failed to process chrome manifest '%s'.",
-                         path.get());
-
-            }
-          }
-        }
-      }
-    }
-    else {
-      rv = ProcessManifest(lmanifest, PR_FALSE);
-      if (NS_FAILED(rv)) {
-        nsCAutoString path;
-        lmanifest->GetNativePath(path);
-        LogMessage("Failed to process chrome manifest: '%s'.",
-                   path.get());
-      }
-    }
-  }
-
-  rv = dirSvc->Get(NS_SKIN_MANIFESTS_FILE_LIST, NS_GET_IID(nsISimpleEnumerator),
-                   getter_AddRefs(chromeML));
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  while (NS_SUCCEEDED(chromeML->HasMoreElements(&exists)) && exists) {
-    chromeML->GetNext(getter_AddRefs(next));
-    nsCOMPtr<nsILocalFile> lmanifest = do_QueryInterface(next);
-    if (!lmanifest) {
-      NS_ERROR("Directory enumerator returned a non-nsILocalFile");
-      continue;
-    }
-
-    rv = ProcessManifest(lmanifest, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      nsCAutoString path;
-      lmanifest->GetNativePath(path);
-      LogMessage("Failed to process chrome manifest: '%s'.",
-                 path.get());
-    }
-  }
-
+  nsComponentManagerImpl::gComponentManager->RereadChromeManifests();
   return NS_OK;
 }
 
@@ -1351,245 +1252,43 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
   return rv;
 }
 
-nsresult
-nsChromeRegistry::ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly)
+nsIURI*
+nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
 {
-  nsresult rv;
+  if (!mManifestURI) {
+    nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
+    if (!io) {
+      NS_WARNING("No IO service trying to process chrome manifests");
+      return NULL;
+    }
 
-  PRFileDesc* fd;
-  rv = aManifest->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 n, size;
-  char *buf;
-
-  size = PR_Available(fd);
-  if (size == -1) {
-    rv = NS_ERROR_UNEXPECTED;
-    goto mend;
+    io->NewFileURI(mFile, getter_AddRefs(mManifestURI));
   }
-
-  buf = (char *) malloc(size + 1);
-  if (!buf) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto mend;
-  }
-
-  n = PR_Read(fd, buf, size);
-  if (n > 0) {
-    buf[size] = '\0';
-    rv = ProcessManifestBuffer(buf, size, aManifest, aSkinOnly);
-  }
-  free(buf);
-
-mend:
-  PR_Close(fd);
-  return rv;
+  return mManifestURI;
 }
 
-static const char kWhitespace[] = "\t ";
-static const char kNewlines[]   = "\r\n";
-
-/**
- * Check for a modifier flag of the following forms:
- *   "flag"   (same as "true")
- *   "flag=yes|true|1"
- *   "flag="no|false|0"
- * @param aFlag The flag to compare.
- * @param aData The tokenized data to check; this is lowercased
- *              before being passed in.
- * @param aResult If the flag is found, the value is assigned here.
- * @return Whether the flag was handled.
- */
-static PRBool
-CheckFlag(const nsSubstring& aFlag, const nsSubstring& aData, PRBool& aResult)
+nsIXPConnect*
+nsChromeRegistry::ManifestProcessingContext::GetXPConnect()
 {
-  if (!StringBeginsWith(aData, aFlag))
-    return PR_FALSE;
+  if (!mXPConnect)
+    mXPConnect = do_GetService("@mozilla.org/js/xpc/XPConnect;1");
 
-  if (aFlag.Length() == aData.Length()) {
-    // the data is simply "flag", which is the same as "flag=yes"
-    aResult = PR_TRUE;
-    return PR_TRUE;
-  }
-
-  if (aData.CharAt(aFlag.Length()) != '=') {
-    // the data is "flag2=", which is not anything we care about
-    return PR_FALSE;
-  }
-
-  if (aData.Length() == aFlag.Length() + 1) {
-    aResult = PR_FALSE;
-    return PR_TRUE;
-  }
-
-  switch (aData.CharAt(aFlag.Length() + 1)) {
-  case '1':
-  case 't': //true
-  case 'y': //yes
-    aResult = PR_TRUE;
-    return PR_TRUE;
-
-  case '0':
-  case 'f': //false
-  case 'n': //no
-    aResult = PR_FALSE;
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return mXPConnect;
 }
 
-enum TriState {
-  eUnspecified,
-  eBad,
-  eOK
-};
-
-/**
- * Check for a modifier flag of the following form:
- *   "flag=string"
- *   "flag!=string"
- * @param aFlag The flag to compare.
- * @param aData The tokenized data to check; this is lowercased
- *              before being passed in.
- * @param aValue The value that is expected.
- * @param aResult If this is "ok" when passed in, this is left alone.
- *                Otherwise if the flag is found it is set to eBad or eOK.
- * @return Whether the flag was handled.
- */
-static PRBool
-CheckStringFlag(const nsSubstring& aFlag, const nsSubstring& aData,
-                const nsSubstring& aValue, TriState& aResult)
+already_AddRefed<nsIURI>
+nsChromeRegistry::ManifestProcessingContext::ResolveURI(const char* uri)
 {
-  if (aData.Length() < aFlag.Length() + 1)
-    return PR_FALSE;
+  nsIURI* baseuri = GetManifestURI();
+  if (!baseuri)
+    return NULL;
 
-  if (!StringBeginsWith(aData, aFlag))
-    return PR_FALSE;
+  nsCOMPtr<nsIURI> resolved;
+  nsresult rv = NS_NewURI(getter_AddRefs(resolved), uri, baseuri);
+  if (NS_FAILED(rv))
+    return NULL;
 
-  PRBool comparison = PR_TRUE;
-  if (aData[aFlag.Length()] != '=') {
-    if (aData[aFlag.Length()] == '!' &&
-        aData.Length() >= aFlag.Length() + 2 &&
-        aData[aFlag.Length() + 1] == '=')
-      comparison = PR_FALSE;
-    else
-      return PR_FALSE;
-  }
-
-  if (aResult != eOK) {
-    nsDependentSubstring testdata = Substring(aData, aFlag.Length() + (comparison ? 1 : 2));
-    if (testdata.Equals(aValue))
-      aResult = comparison ? eOK : eBad;
-    else
-      aResult = comparison ? eBad : eOK;
-  }
-
-  return PR_TRUE;
-}
-
-/**
- * Check for a modifier flag of the following form:
- *   "flag=version"
- *   "flag<=version"
- *   "flag<version"
- *   "flag>=version"
- *   "flag>version"
- * @param aFlag The flag to compare.
- * @param aData The tokenized data to check; this is lowercased
- *              before being passed in.
- * @param aValue The value that is expected. If this is empty then no
- *               comparison will match.
- * @param aChecker the version checker to use. If null, aResult will always
- *                 be eBad.
- * @param aResult If this is eOK when passed in, this is left alone.
- *                Otherwise if the flag is found it is set to eBad or eOK.
- * @return Whether the flag was handled.
- */
-
-#define COMPARE_EQ    1 << 0
-#define COMPARE_LT    1 << 1
-#define COMPARE_GT    1 << 2
-
-static PRBool
-CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
-                 const nsSubstring& aValue, nsIVersionComparator* aChecker,
-                 TriState& aResult)
-{
-  if (aData.Length() < aFlag.Length() + 2)
-    return PR_FALSE;
-
-  if (!StringBeginsWith(aData, aFlag))
-    return PR_FALSE;
-
-  if (aValue.Length() == 0) {
-    if (aResult != eOK)
-      aResult = eBad;
-    return PR_TRUE;
-  }
-
-  PRUint32 comparison;
-  nsAutoString testdata;
-
-  switch (aData[aFlag.Length()]) {
-  case '=':
-    comparison = COMPARE_EQ;
-    testdata = Substring(aData, aFlag.Length() + 1);
-    break;
-
-  case '<':
-    if (aData[aFlag.Length() + 1] == '=') {
-      comparison = COMPARE_EQ | COMPARE_LT;
-      testdata = Substring(aData, aFlag.Length() + 2);
-    }
-    else {
-      comparison = COMPARE_LT;
-      testdata = Substring(aData, aFlag.Length() + 1);
-    }
-    break;
-
-  case '>':
-    if (aData[aFlag.Length() + 1] == '=') {
-      comparison = COMPARE_EQ | COMPARE_GT;
-      testdata = Substring(aData, aFlag.Length() + 2);
-    }
-    else {
-      comparison = COMPARE_GT;
-      testdata = Substring(aData, aFlag.Length() + 1);
-    }
-    break;
-
-  default:
-    return PR_FALSE;
-  }
-
-  if (testdata.Length() == 0)
-    return PR_FALSE;
-
-  if (aResult != eOK) {
-    if (!aChecker) {
-      aResult = eBad;
-    }
-    else {
-      PRInt32 c;
-      nsresult rv = aChecker->Compare(NS_ConvertUTF16toUTF8(aValue),
-                                      NS_ConvertUTF16toUTF8(testdata), &c);
-      if (NS_FAILED(rv)) {
-        aResult = eBad;
-      }
-      else {
-        if ((c == 0 && comparison & COMPARE_EQ) ||
-            (c < 0 && comparison & COMPARE_LT) ||
-            (c > 0 && comparison & COMPARE_GT))
-          aResult = eOK;
-        else
-          aResult = eBad;
-      }
-    }
-  }
-
-  return PR_TRUE;
+  return resolved.forget();
 }
 
 static void
@@ -1602,566 +1301,234 @@ EnsureLowerCase(char *aBuf)
   }
 }
 
-nsresult
-nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
-                                        nsILocalFile* aManifest,
-                                        PRBool aSkinOnly)
+void
+nsChromeRegistry::ManifestContent(ManifestProcessingContext& cx, int lineno,
+                                  char *const * argv, bool platform, bool contentaccessible)
 {
-  nsresult rv;
+  char* package = argv[0];
+  char* uri = argv[1];
 
-  NS_NAMED_LITERAL_STRING(kPlatform, "platform");
-  NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
-  NS_NAMED_LITERAL_STRING(kApplication, "application");
-  NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
-  NS_NAMED_LITERAL_STRING(kOs, "os");
-  NS_NAMED_LITERAL_STRING(kOsVersion, "osversion");
+  EnsureLowerCase(package);
 
-  nsCOMPtr<nsIIOService> io (do_GetIOService());
-  if (!io) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
+  if (!resolved) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI '%s'.", uri);
+    return;
+  }
+
+  if (!CanLoadResource(resolved)) {
+    LogMessageWithContext(resolved, lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, cannot register non-local URI '%s' as content.",
+                          uri);
+    return;
+  }
+
+  PackageEntry* entry =
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
+                                                    & (const nsACString&) nsDependentCString(package),
+                                                    PL_DHASH_ADD));
+  if (!entry)
+    return;
+
+  entry->baseURI = resolved;
+
+  if (platform)
+    entry->flags |= PackageEntry::PLATFORM_PACKAGE;
+  if (contentaccessible)
+    entry->flags |= PackageEntry::CONTENT_ACCESSIBLE;
+  if (cx.GetXPConnect()) {
+    nsCAutoString urlp("chrome://");
+    urlp.Append(package);
+    urlp.Append('/');
+
+    cx.GetXPConnect()->FlagSystemFilenamePrefix(urlp.get(), true);
+  }
+}
+
+void
+nsChromeRegistry::ManifestLocale(ManifestProcessingContext& cx, int lineno,
+                                 char *const * argv, bool platform, bool contentaccessible)
+{
+  char* package = argv[0];
+  char* provider = argv[1];
+  char* uri = argv[2];
+
+  EnsureLowerCase(package);
+
+  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
+  if (!resolved) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI '%s'.", uri);
+    return;
+  }
+
+  if (!CanLoadResource(resolved)) {
+    LogMessageWithContext(resolved, lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, cannot register non-local URI '%s' as content.",
+                          uri);
+    return;
+  }
+
+  PackageEntry* entry =
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
+                                                    & (const nsACString&) nsDependentCString(package),
+                                                    PL_DHASH_ADD));
+  if (!entry)
+    return;
+
+  entry->locales.SetBase(nsDependentCString(provider), resolved);
+}
+
+void
+nsChromeRegistry::ManifestSkin(ManifestProcessingContext& cx, int lineno,
+                               char *const * argv, bool platform, bool contentaccessible)
+{
+  char* package = argv[0];
+  char* provider = argv[1];
+  char* uri = argv[2];
+
+  EnsureLowerCase(package);
+
+  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
+  if (!resolved) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI '%s'.", uri);
+    return;
+  }
+
+  if (!CanLoadResource(resolved)) {
+    LogMessageWithContext(resolved, lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, cannot register non-local URI '%s' as content.",
+                          uri);
+    return;
+  }
+
+  PackageEntry* entry =
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
+                                                    & (const nsACString&) nsDependentCString(package),
+                                                    PL_DHASH_ADD));
+  if (!entry)
+    return;
+
+  entry->skins.SetBase(nsDependentCString(provider), resolved);
+}
+
+void
+nsChromeRegistry::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
+                                  char *const * argv, bool platform, bool contentaccessible)
+{
+  char* base = argv[0];
+  char* overlay = argv[1];
+
+  nsCOMPtr<nsIURI> baseuri = cx.ResolveURI(base);
+  nsCOMPtr<nsIURI> overlayuri = cx.ResolveURI(overlay);
+  if (!baseuri || !overlayuri) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI.");
+    return;
+  }
+
+  if (!CanLoadResource(overlayuri)) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "Cannot register non-local URI '%s' as an overlay.", overlay);
+    return;
+  }
+
+  mOverlayHash.Add(baseuri, overlayuri);
+}
+
+void
+nsChromeRegistry::ManifestStyle(ManifestProcessingContext& cx, int lineno,
+                                char *const * argv, bool platform, bool contentaccessible)
+{
+  char* base = argv[0];
+  char* overlay = argv[1];
+
+  nsCOMPtr<nsIURI> baseuri = cx.ResolveURI(base);
+  nsCOMPtr<nsIURI> overlayuri = cx.ResolveURI(overlay);
+  if (!baseuri || !overlayuri) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI.");
+    return;
+  }
+
+  if (!CanLoadResource(overlayuri)) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "Cannot register non-local URI '%s' as a style overlay.", overlay);
+    return;
+  }
+
+  mStyleHash.Add(baseuri, overlayuri);
+}
+
+void
+nsChromeRegistry::ManifestOverride(ManifestProcessingContext& cx, int lineno,
+                                   char *const * argv, bool platform, bool contentaccessible)
+{
+  char* chrome = argv[0];
+  char* resolved = argv[1];
+
+  nsCOMPtr<nsIURI> chromeuri = cx.ResolveURI(chrome);
+  nsCOMPtr<nsIURI> resolveduri = cx.ResolveURI(resolved);
+  if (!chromeuri || !resolveduri) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI.");
+    return;
+  }
+
+  if (!CanLoadResource(resolveduri)) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "Cannot register non-local URI '%s' for an override.", resolved);
+    return;
+  }
+  mOverrideTable.Put(chromeuri, resolveduri);
+}
+
+void
+nsChromeRegistry::ManifestResource(ManifestProcessingContext& cx, int lineno,
+                                   char *const * argv, bool platform, bool contentaccessible)
+{
+  char* package = argv[0];
+  char* uri = argv[1];
+
+  EnsureLowerCase(package);
+  nsDependentCString host(package);
+
+  nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
+  if (!io) {
+    NS_WARNING("No IO service trying to process chrome manifests");
+    return;
+  }
 
   nsCOMPtr<nsIProtocolHandler> ph;
-  rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
+  if (NS_FAILED(rv))
+    return;
   
-  nsCOMPtr<nsIResProtocolHandler> rph (do_QueryInterface(ph));
-  if (!rph) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIURI> manifestURI;
-  rv = io->NewFileURI(aManifest, getter_AddRefs(manifestURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIXPConnect> xpc (do_GetService("@mozilla.org/js/xpc/XPConnect;1"));
-  nsCOMPtr<nsIVersionComparator> vc (do_GetService("@mozilla.org/xpcom/version-comparator;1"));
-
-  nsAutoString appID;
-  nsAutoString appVersion;
-  nsAutoString osTarget;
-  nsCOMPtr<nsIXULAppInfo> xapp (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
-  if (xapp) {
-    nsCAutoString s;
-    rv = xapp->GetID(s);
-    if (NS_SUCCEEDED(rv))
-      CopyUTF8toUTF16(s, appID);
-
-    rv = xapp->GetVersion(s);
-    if (NS_SUCCEEDED(rv))
-      CopyUTF8toUTF16(s, appVersion);
-    
-    nsCOMPtr<nsIXULRuntime> xruntime (do_QueryInterface(xapp));
-    if (xruntime) {
-      rv = xruntime->GetOS(s);
-      if (NS_SUCCEEDED(rv)) {
-        CopyUTF8toUTF16(s, osTarget);
-        ToLowerCase(osTarget);
-      }
-    }
-  }
-  
-  nsAutoString osVersion;
-#if defined(XP_WIN)
-  OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
-  if (GetVersionEx(&info)) {
-    nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
-                                         info.dwMajorVersion,
-                                         info.dwMinorVersion);
-  }
-#elif defined(XP_MACOSX)
-  SInt32 majorVersion, minorVersion;
-  if ((Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
-      (Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
-    nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
-                                         majorVersion,
-                                         minorVersion);
-  }
-#elif defined(MOZ_WIDGET_GTK2)
-  nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
-                                       gtk_major_version,
-                                       gtk_minor_version);
-#endif
-
-  char *token;
-  char *newline = buf;
-  PRUint32 line = 0;
-
-  // outer loop tokenizes by newline
-  while (nsnull != (token = nsCRT::strtok(newline, kNewlines, &newline))) {
-    ++line;
-
-    if (*token == '#') // ignore lines that begin with # as comments
-      continue;
-
-    char *whitespace = token;
-    token = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-    if (!token) continue;
-
-    if (!strcmp(token, "content")) {
-      if (aSkinOnly) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Ignoring content registration in skin-only manifest.");
-        continue;
-      }
-      char *package = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *uri     = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!package || !uri) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Malformed content registration.");
-        continue;
-      }
-
-      EnsureLowerCase(package);
-
-      // NOTE: We check for platform modifiers on content packages, but they
-      // are *applied* to content|skin|locale.
-
-      PRBool platform = PR_FALSE;
-      PRBool contentAccessible = PR_FALSE;
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-      TriState stOs = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckFlag(kPlatform, wtoken, platform) ||
-            CheckFlag(kContentAccessible, wtoken, contentAccessible) ||
-            CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad || 
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-
-      nsCOMPtr<nsIURI> resolved;
-      rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
-                      getter_AddRefs(resolved));
-      if (NS_FAILED(rv))
-        continue;
-
-      if (!CanLoadResource(resolved)) {
-        LogMessageWithContext(resolved, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as content.",
-                              uri);
-        continue;
-      }
-
-      PackageEntry* entry =
-        static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                            & (const nsACString&) nsDependentCString(package),
-                                                            PL_DHASH_ADD));
-      if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      entry->baseURI = resolved;
-
-      if (platform)
-        entry->flags |= PackageEntry::PLATFORM_PACKAGE;
-      if (contentAccessible)
-        entry->flags |= PackageEntry::CONTENT_ACCESSIBLE;
-      if (xpc) {
-        nsCAutoString urlp("chrome://");
-        urlp.Append(package);
-        urlp.Append('/');
-
-        rv = xpc->FlagSystemFilenamePrefix(urlp.get(), true);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-    else if (!strcmp(token, "locale")) {
-      if (aSkinOnly) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Ignoring locale registration in skin-only manifest.");
-        continue;
-      }
-      char *package  = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *provider = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *uri      = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!package || !provider || !uri) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Malformed locale registration.");
-        continue;
-      }
-
-      EnsureLowerCase(package);
-
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOs = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad ||
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-
-      nsCOMPtr<nsIURI> resolved;
-      rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
-                      getter_AddRefs(resolved));
-      if (NS_FAILED(rv))
-        continue;
-
-      if (!CanLoadResource(resolved)) {
-        LogMessageWithContext(resolved, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as a locale.",
-                              uri);
-        continue;
-      }
-
-      PackageEntry* entry =
-        static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                            & (const nsACString&) nsDependentCString(package),
-                                                            PL_DHASH_ADD));
-      if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      entry->locales.SetBase(nsDependentCString(provider), resolved);
-    }
-    else if (!strcmp(token, "skin")) {
-      char *package  = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *provider = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *uri      = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!package || !provider || !uri) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Malformed skin registration.");
-        continue;
-      }
-
-      EnsureLowerCase(package);
-
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOs = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad ||
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-
-      nsCOMPtr<nsIURI> resolved;
-      rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
-                      getter_AddRefs(resolved));
-      if (NS_FAILED(rv))
-        continue;
-
-      if (!CanLoadResource(resolved)) {
-        LogMessageWithContext(resolved, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as a skin.",
-                              uri);
-        continue;
-      }
-
-      PackageEntry* entry =
-        static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                            & (const nsACString&) nsDependentCString(package),
-                                                            PL_DHASH_ADD));
-      if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      entry->skins.SetBase(nsDependentCString(provider), resolved);
-    }
-    else if (!strcmp(token, "overlay")) {
-      if (aSkinOnly) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Ignoring overlay registration in skin-only manifest.");
-        continue;
-      }
-      char *base    = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *overlay = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!base || !overlay) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: malformed chrome overlay instruction.");
-        continue;
-      }
-
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOs = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad ||
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-
-      nsCOMPtr<nsIURI> baseuri, overlayuri;
-      rv  = io->NewURI(nsDependentCString(base), nsnull, nsnull,
-                       getter_AddRefs(baseuri));
-      rv |= io->NewURI(nsDependentCString(overlay), nsnull, nsnull,
-                       getter_AddRefs(overlayuri));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Could not make URIs for overlay directive. Ignoring.");
-        continue;
-      }
-
-      if (!CanLoadResource(overlayuri)) {
-        LogMessageWithContext(overlayuri, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as an overlay.",
-                              overlay);
-        continue;
-      }
-
-      mOverlayHash.Add(baseuri, overlayuri);
-    }
-    else if (!strcmp(token, "style")) {
-      char *base    = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *overlay = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!base || !overlay) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: malformed chrome style instruction.");
-        continue;
-      }
-
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOs = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad ||
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-
-      nsCOMPtr<nsIURI> baseuri, overlayuri;
-      rv  = io->NewURI(nsDependentCString(base), nsnull, nsnull,
-                      getter_AddRefs(baseuri));
-      rv |= io->NewURI(nsDependentCString(overlay), nsnull, nsnull,
-                       getter_AddRefs(overlayuri));
-      if (NS_FAILED(rv))
-        continue;
-
-      if (!CanLoadResource(overlayuri)) {
-        LogMessageWithContext(overlayuri, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as a style overlay.",
-                              overlay);
-        continue;
-      }
-
-      mStyleHash.Add(baseuri, overlayuri);
-    }
-    else if (!strcmp(token, "override")) {
-      if (aSkinOnly) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Ignoring override registration in skin-only manifest.");
-        continue;
-      }
-
-      char *chrome    = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *resolved  = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!chrome || !resolved) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: malformed chrome override instruction.");
-        continue;
-      }
-
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOs = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad ||
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-
-      nsCOMPtr<nsIURI> chromeuri, resolveduri;
-      rv  = io->NewURI(nsDependentCString(chrome), nsnull, nsnull,
-                      getter_AddRefs(chromeuri));
-      rv |= io->NewURI(nsDependentCString(resolved), nsnull, manifestURI,
-                       getter_AddRefs(resolveduri));
-      if (NS_FAILED(rv))
-        continue;
-
-      if (!CanLoadResource(resolveduri)) {
-        LogMessageWithContext(resolveduri, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as an override.",
-                              resolved);
-        continue;
-      }
-
-      mOverrideTable.Put(chromeuri, resolveduri);
-    }
-    else if (!strcmp(token, "resource")) {
-      if (aSkinOnly) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Ignoring resource registration in skin-only manifest.");
-        continue;
-      }
-
-      char *package = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      char *uri     = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
-      if (!package || !uri) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Malformed resource registration.");
-        continue;
-      }
-
-      EnsureLowerCase(package);
-
-      TriState stAppVersion = eUnspecified;
-      TriState stApp = eUnspecified;
-      TriState stOsVersion = eUnspecified;
-      TriState stOs = eUnspecified;
-
-      PRBool badFlag = PR_FALSE;
-
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
-             !badFlag) {
-        NS_ConvertASCIItoUTF16 wtoken(token);
-        ToLowerCase(wtoken);
-
-        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
-            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
-            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
-          continue;
-
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Unrecognized chrome registration modifier '%s'.",
-                              token);
-        badFlag = PR_TRUE;
-      }
-
-      if (badFlag || stApp == eBad || stAppVersion == eBad || 
-          stOs == eBad || stOsVersion == eBad)
-        continue;
-      
-      nsDependentCString host(package);
-
-      PRBool exists;
-      rv = rph->HasSubstitution(host, &exists);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (exists) {
-        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                              "Warning: Duplicate resource declaration for '%s' ignored.",
-                              package);
-        continue;
-      }
-
-      nsCOMPtr<nsIURI> resolved;
-      rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
-                      getter_AddRefs(resolved));
-      if (NS_FAILED(rv))
-        continue;
-
-      if (!CanLoadResource(resolved)) {
-        LogMessageWithContext(resolved, line, nsIScriptError::warningFlag,
-                              "Warning: cannot register non-local URI '%s' as a resource.",
-                              uri);
-        continue;
-      }
-
-      rv = rph->SetSubstitution(host, resolved);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
-                            "Warning: Ignoring unrecognized chrome manifest instruction.");
-    }
+  nsCOMPtr<nsIResProtocolHandler> rph = do_QueryInterface(ph);
+
+  PRBool exists = PR_FALSE;
+  rv = rph->HasSubstitution(host, &exists);
+  if (exists) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "Duplicate resource declaration for '%s' ignored.", package);
+    return;
   }
 
-  return NS_OK;
+  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
+  if (!resolved) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "During chrome registration, unable to create URI '%s'.", uri);
+    return;
+  }
+
+  if (!CanLoadResource(resolved)) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "Warning: cannot register non-local URI '%s' as a resource.",
+                          uri);
+    return;
+  }
+
+  rph->SetSubstitution(host, resolved);
 }
