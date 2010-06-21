@@ -508,8 +508,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     NS_TIME_FUNCTION_MARK("Next: interface info manager init");
 
     // The iimanager constructor searches and registers XPT files.
-    nsIInterfaceInfoManager* iim =
-        xptiInterfaceInfoManager::GetSingleton();
+    xptiInterfaceInfoManager::GetSingleton();
 
     NS_TIME_FUNCTION_MARK("Next: register category providers");
 

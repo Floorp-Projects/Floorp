@@ -2440,9 +2440,6 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   if (!file)
     return;
 
-  file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
-  file->Remove(PR_FALSE);
-
   if (aRemoveEMFiles) {
     file->SetNativeLeafName(NS_LITERAL_CSTRING("extensions.ini"));
     file->Remove(PR_FALSE);
@@ -3276,7 +3273,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     // Every time a profile is loaded by a build with a different version,
     // it updates the compatibility.ini file saying what version last wrote
-    // the compreg.dat.  On subsequent launches if the version matches, 
+    // the fastload caches.  On subsequent launches if the version matches, 
     // there is no need for re-registration.  If the user loads the same
     // profile in different builds the component registry must be
     // re-generated to prevent mysterious component loading failures.
@@ -3288,7 +3285,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
     else if (versionOK) {
       if (!cachesOK) {
-        // Remove compreg.dat, forcing component re-registration.
+        // Remove caches, forcing component re-registration.
         // The new list of additional components directories is derived from
         // information in "extensions.ini".
         RemoveComponentRegistries(profD, profLD, PR_FALSE);
@@ -3300,7 +3297,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Nothing need be done for the normal startup case.
     }
     else {
-      // Remove compreg.dat, forcing component re-registration
+      // Remove caches, forcing component re-registration
       // with the default set of components (this disables any potentially
       // troublesome incompatible XPCOM components). 
       RemoveComponentRegistries(profD, profLD, PR_TRUE);

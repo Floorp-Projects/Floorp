@@ -194,8 +194,8 @@ public:
 
         ~KnownModule()
         {
-            if (mLoaded && mModule->unloaded)
-                mModule->unloaded();
+            if (mLoaded && mModule->unloadProc)
+                mModule->unloadProc();
         }
 
         bool EnsureLoader();

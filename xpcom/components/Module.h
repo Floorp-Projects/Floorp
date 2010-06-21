@@ -57,15 +57,15 @@ struct Module
 
   struct CIDEntry;
 
-  typedef already_AddRefed<nsIFactory> (*GetFactoryProc)
+  typedef already_AddRefed<nsIFactory> (*GetFactoryProcPtr)
     (const Module& module, const CIDEntry& entry);
 
-  typedef nsresult (*ConstructorProc)(nsISupports* aOuter,
-                                      const nsIID& aIID,
-                                      void** aResult);
+  typedef nsresult (*ConstructorProcPtr)(nsISupports* aOuter,
+                                         const nsIID& aIID,
+                                         void** aResult);
 
-  typedef nsresult (*LoadedFunc)();
-  typedef void (*UnloadedFunc)();
+  typedef nsresult (*LoadFuncPtr)();
+  typedef void (*UnloadFuncPtr)();
 
   /**
    * The constructor callback is an implementation detail of the default binary
@@ -75,8 +75,8 @@ struct Module
   {
     const nsCID* cid;
     bool service;
-    GetFactoryProc getfactory;
-    ConstructorProc constructor;
+    GetFactoryProcPtr getFactoryProc;
+    ConstructorProcPtr constructorProc;
   };
 
   struct ContractIDEntry
@@ -99,19 +99,19 @@ struct Module
 
   /**
    * An array of CIDs (class IDs) implemented by this module. The final entry
-   * should be { NULL, false }
+   * should be { NULL }.
    */
   const CIDEntry* mCIDs;
 
   /**
    * An array of mappings from contractid to CID. The final entry should
-   * be { NULL, NULL }
+   * be { NULL }.
    */
   const ContractIDEntry* mContractIDs;
 
   /**
    * An array of category manager entries. The final entry should be
-   * { NULL, NULL, NULL }
+   * { NULL }.
    */
   const CategoryEntry* mCategoryEntries;
 
@@ -122,15 +122,15 @@ struct Module
    * also NULL, a generic factory is generated using the CIDEntry constructor
    * callback which must be non-NULL.
    */
-  GetFactoryProc getfactory;
+  GetFactoryProcPtr getFactoryProc;
 
   /**
    * Optional Function which are called when this module is loaded and
    * at shutdown. These are not C++ constructor/destructors to avoid
    * calling them too early in startup or too late in shutdown.
    */
-  LoadedFunc loaded;
-  UnloadedFunc unloaded;
+  LoadFuncPtr loadProc;
+  UnloadFuncPtr unloadProc;
 };
 
 } // namespace
