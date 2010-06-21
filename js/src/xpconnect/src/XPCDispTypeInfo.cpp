@@ -347,7 +347,7 @@ STDMETHODIMP XPCDispTypeInfo::GetDocumentation(
         return E_FAIL;
 
     XPCCallContext ccx(NATIVE_CALLER);
-    PRUnichar * chars = xpc_JSString2PRUnichar(ccx, mIDArray->Item(ccx, index));
+    PRUnichar * chars = xpc_JSString2PRUnichar(ccx, JSVAL_TO_STRING(mIDArray->Item(ccx, index)));
     if(!chars)
     {
         return E_FAIL;

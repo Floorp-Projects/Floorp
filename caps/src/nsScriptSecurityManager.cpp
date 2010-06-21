@@ -3077,11 +3077,11 @@ nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
     // Look up the policy for this class.
     // while this isn't a property we'll treat it as such, using ACCESS_CALL_METHOD
     JSAutoRequest ar(cx);
-    jsval cidVal = STRING_TO_JSVAL(::JS_InternString(cx, cid.get()));
+    jsid cidId = INTERNED_STRING_TO_JSID(::JS_InternString(cx, cid.get()));
 
     ClassInfoData nameData(nsnull, "ClassID");
     SecurityLevel securityLevel;
-    rv = LookupPolicy(subjectPrincipal, nameData, cidVal,
+    rv = LookupPolicy(subjectPrincipal, nameData, cidId,
                       nsIXPCSecurityManager::ACCESS_CALL_METHOD, 
                       nsnull, &securityLevel);
     if (NS_FAILED(rv))

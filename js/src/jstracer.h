@@ -326,46 +326,6 @@ public:
 #endif
 
 /*
- * The types of values calculated during tracing, used to specialize operations
- * to the types of those values.  These loosely correspond to the values of the
- * JSVAL_* language types, but we add a few further divisions to enable further
- * optimization at execution time.  Do not rely on this loose correspondence for
- * correctness without adding static assertions!
- *
- * The ifdefs enforce that this enum occupies only one byte of memory, where
- * possible.  If it doesn't, type maps will occupy more space but should
- * otherwise work correctly.  A static assertion in jstracer.cpp verifies that
- * this requirement is correctly enforced by these compilers.
- */
-enum TraceType_
-#if defined(_MSC_VER) && _MSC_VER >= 1400
-: int8_t
-#endif
-{
-    TT_OBJECT        =  0, /* pointer to JSObject whose class is not js_FunctionClass */
-    TT_INT32         =  1, /* 32-bit signed integer */
-    TT_DOUBLE        =  2, /* pointer to jsdouble */
-    TT_JSVAL         =  3, /* arbitrary jsval */
-    TT_STRING        =  4, /* pointer to JSString */
-    TT_NULL          =  5, /* null */
-    TT_SPECIAL       =  6, /* true, false, hole, or areturn (0, 1, 6, or 8) */
-    TT_VOID          =  7, /* undefined (2) */
-    TT_FUNCTION      =  8, /* pointer to JSObject whose class is js_FunctionClass */
-    TT_MAGIC         =  9, /* a 'magic' value, aka a hole */
-    TT_IGNORE        = 10
-}
-#if defined(__GNUC__) && defined(USE_TRACE_TYPE_ENUM)
-__attribute__((packed))
-#endif
-;
-
-#ifdef USE_TRACE_TYPE_ENUM
-typedef TraceType_ TraceType;
-#else
-typedef int8_t TraceType;
-#endif
-
-/*
  * This indicates an invalid type or error. Note that it should not be used in typemaps,
  * because it is the wrong size. It can only be used as a uint32, for example as the
  * return value from a function that returns a type as a uint32.
@@ -374,16 +334,16 @@ const uint32 TT_INVALID = uint32(-1);
 
 typedef Queue<uint16> SlotList;
 
-class TypeMap : public Queue<TraceType> {
+class TypeMap : public Queue<JSValueType> {
 public:
-    TypeMap(nanojit::Allocator* alloc) : Queue<TraceType>(alloc) {}
+    TypeMap(nanojit::Allocator* alloc) : Queue<JSValueType>(alloc) {}
     void set(unsigned stackSlots, unsigned ngslots,
-             const TraceType* stackTypeMap, const TraceType* globalTypeMap);
+             const JSValueType* stackTypeMap, const JSValueType* globalTypeMap);
     JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
                                                      unsigned stackSlots);
     bool matches(TypeMap& other) const;
-    void fromRaw(TraceType* other, unsigned numSlots);
+    void fromRaw(JSValueType* other, unsigned numSlots);
 };
 
 #define JS_TM_EXITCODES(_)    \
@@ -461,7 +421,7 @@ struct VMSideExit : public nanojit::SideExit
     FrameInfo* recursive_down;
     unsigned hitcount;
     unsigned slurpFailSlot;
-    TraceType slurpType;
+    JSValueType slurpType;
 
     /*
      * Ordinarily 0.  If a slow native function is atop the stack, the 1 bit is
@@ -481,20 +441,20 @@ struct VMSideExit : public nanojit::SideExit
         nativeCalleeWord = uintptr_t(callee) | (constructing ? 1 : 0);
     }
 
-    inline TraceType* stackTypeMap() {
-        return (TraceType*)(this + 1);
+    inline JSValueType* stackTypeMap() {
+        return (JSValueType*)(this + 1);
     }
 
-    inline TraceType& stackType(unsigned i) {
+    inline JSValueType& stackType(unsigned i) {
         JS_ASSERT(i < numStackSlots);
         return stackTypeMap()[i];
     }
 
-    inline TraceType* globalTypeMap() {
-        return (TraceType*)(this + 1) + this->numStackSlots;
+    inline JSValueType* globalTypeMap() {
+        return (JSValueType*)(this + 1) + this->numStackSlots;
     }
 
-    inline TraceType* fullTypeMap() {
+    inline JSValueType* fullTypeMap() {
         return stackTypeMap();
     }
 
@@ -637,8 +597,8 @@ struct FrameInfo {
     bool   is_constructing() const { return (argc & CONSTRUCTING_FLAG) != 0; }
 
     // The typemap just before the callee is called.
-    TraceType* get_typemap() { return (TraceType*) (this+1); }
-    const TraceType* get_typemap() const { return (TraceType*) (this+1); }
+    JSValueType* get_typemap() { return (JSValueType*) (this+1); }
+    const JSValueType* get_typemap() const { return (JSValueType*) (this+1); }
 };
 
 struct UnstableExit
@@ -733,10 +693,10 @@ struct TreeFragment : public LinkableFragment
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
     }
-    inline TraceType* globalTypeMap() {
+    inline JSValueType* globalTypeMap() {
         return typeMap.data() + nStackTypes;
     }
-    inline TraceType* stackTypeMap() {
+    inline JSValueType* stackTypeMap() {
         return typeMap.data();
     }
 
@@ -767,9 +727,9 @@ struct ArgsPrivateNative {
         return (ArgsPrivateNative*) new (alloc) char[sizeof(ArgsPrivateNative) + argc];
     }
 
-    TraceType *typemap()
+    JSValueType *typemap()
     {
-        return (TraceType*) (this+1);
+        return (JSValueType*) (this+1);
     }
 };
 
@@ -1052,8 +1012,8 @@ class TraceRecorder
     /* Temporary JSSpecializedNative used to describe non-specialized fast natives. */
     JSSpecializedNative             generatedSpecializedNative;
 
-    /* Temporary TraceType array used to construct temporary typemaps. */
-    js::Vector<TraceType, 256>      tempTypeMap;
+    /* Temporary JSValueType array used to construct temporary typemaps. */
+    js::Vector<JSValueType, 256>    tempTypeMap;
 
     /************************************************************* 10 bajillion member functions */
 
@@ -1093,7 +1053,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK void assertDownFrameIsConsistent(VMSideExit* anchor, FrameInfo* fi);
 
-    JS_REQUIRES_STACK void captureStackTypes(unsigned callDepth, TraceType* typeMap);
+    JS_REQUIRES_STACK void captureStackTypes(unsigned callDepth, JSValueType* typeMap);
 
     bool isGlobal(const Value* p) const;
     ptrdiff_t nativeGlobalSlot(const Value *p) const;
@@ -1101,10 +1061,10 @@ class TraceRecorder
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(const Value* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackSlot(const Value* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativespOffset(Value* p) const;
-    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, const Value* p, TraceType t,
+    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, const Value* p, JSValueType t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeFragment* tree, nanojit::LIns* sp, unsigned stackSlots,
-                                  unsigned callDepth, unsigned ngslots, TraceType* typeMap);
+                                  unsigned callDepth, unsigned ngslots, JSValueType* typeMap);
     void trackNativeStackUse(unsigned slots);
 
     JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
@@ -1116,9 +1076,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
                                                nanojit::LIns* d1, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpTypedSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
-                                                    uint32 mask, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpInt32Slot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
-                                                    VMSideExit* exit);
+                                                    JSValueTag mask, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
                                                      VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
@@ -1289,6 +1247,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus getProp(Value& v);
     JS_REQUIRES_STACK RecordingStatus getThis(nanojit::LIns*& this_ins);
 
+    JS_REQUIRES_STACK void storeHole(JSWhyMagic why, nanojit::LIns *addr_ins, ptrdiff_t offset,
+                                     nanojit::AccSet accSet);
     JS_REQUIRES_STACK AbortableRecordingStatus unboxNextValue(nanojit::LIns* &v_ins);
 
     JS_REQUIRES_STACK VMSideExit* enterDeepBailCall();
@@ -1407,7 +1367,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 
-    JS_REQUIRES_STACK TraceType determineSlotType(Value* vp);
+    JS_REQUIRES_STACK JSValueType determineSlotType(Value* vp);
 
     JS_REQUIRES_STACK RecordingStatus setUpwardTrackedVar(Value* stackVp, const Value& v,
                                                           nanojit::LIns* v_ins);
@@ -1422,7 +1382,7 @@ class TraceRecorder
     JS_REQUIRES_STACK void adjustCallerTypes(TreeFragment* f);
     JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner);
     JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit);
-    JS_REQUIRES_STACK void determineGlobalTypes(TraceType* typeMap);
+    JS_REQUIRES_STACK void determineGlobalTypes(JSValueType* typeMap);
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
     JS_REQUIRES_STACK TreeFragment* findNestedCompatiblePeer(TreeFragment* f);
     JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(TreeFragment* inner,
@@ -1447,7 +1407,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
-                  unsigned stackSlots, unsigned ngslots, TraceType* typeMap,
+                  unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
                   uint32 outerArgc, RecordReason reason);
 
@@ -1474,7 +1434,7 @@ class TraceRecorder
 public:
     static bool JS_REQUIRES_STACK
     startRecorder(JSContext*, VMSideExit*, VMFragment*,
-                  unsigned stackSlots, unsigned ngslots, TraceType* typeMap,
+                  unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
                   uint32 outerArgc, RecordReason reason);
 
@@ -1573,7 +1533,7 @@ extern void
 SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
 extern bool
-NativeToValue(JSContext* cx, Value& v, TraceType type, double* slot);
+NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot);
 
 #ifdef MOZ_TRACEVIS
 

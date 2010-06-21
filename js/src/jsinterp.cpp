@@ -385,19 +385,6 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
 
 namespace js {
 
-static const uint32 FAKE_NUMBER_MASK = JSVAL_MASK32_INT32 | PrimitiveValue::DOUBLE_MASK;
-
-const uint32 PrimitiveValue::Masks[PrimitiveValue::THISP_ARRAY_SIZE] = {
-    0,                                                             /* 000 */
-    JSVAL_MASK32_STRING,                                           /* 001 */
-    FAKE_NUMBER_MASK,                                              /* 010 */
-    FAKE_NUMBER_MASK | JSVAL_MASK32_STRING,                        /* 011 */
-    JSVAL_MASK32_BOOLEAN,                                          /* 100 */
-    JSVAL_MASK32_BOOLEAN | JSVAL_MASK32_STRING,                    /* 101 */
-    JSVAL_MASK32_BOOLEAN | FAKE_NUMBER_MASK,                       /* 110 */
-    JSVAL_MASK32_BOOLEAN | FAKE_NUMBER_MASK | JSVAL_MASK32_STRING  /* 111 */
-};
-
 class AutoPreserveEnumerators {
     JSContext *cx;
     JSObject *enumerators;
@@ -493,7 +480,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
             vp[1].setObjectOrNull(parent);
         } else if (vp[1].isPrimitive()) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PrimitiveValue::test(fun, vp[1]))
+            if (PrimitiveThisTest(fun, vp[1]))
                 goto start_call;
         }
     }
