@@ -49,6 +49,8 @@
 #include <gtk/gtk.h>
 #endif
 
+#include "mozilla/Services.h"
+
 #include "nsTextFormatter.h"
 #include "nsUnicharUtils.h"
 #include "nsVersionComparator.h"
@@ -463,9 +465,19 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf)
     if (!ok || stApp == eBad || stAppVersion == eBad || stOs == eBad || stOsVersion == eBad)
       continue;
 
-    if (directive->ischrome)
+    if (directive->ischrome) {
+      if (!nsChromeRegistry::gChromeRegistry) {
+        nsCOMPtr<nsIChromeRegistry> cr =
+          mozilla::services::GetChromeRegistryService();
+        if (!nsChromeRegistry::gChromeRegistry) {
+          LogMessageWithContext(aFile, line, "Chrome registry isn't available yet.");
+          continue;
+        }
+      }
+
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))
 	(chromecx, line, argv, platform, contentAccessible);
+    }
     else
       (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))
 	(mgrcx, line, argv);

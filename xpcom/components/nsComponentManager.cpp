@@ -250,7 +250,7 @@ ArenaStrdup(const char *s, PLArenaPool *arena)
 
 // this is safe to call during InitXPCOM
 static already_AddRefed<nsILocalFile>
-GetLocationFromDirectoryService(const char* prop, const char *const * append)
+GetLocationFromDirectoryService(const char* prop)
 {
     nsCOMPtr<nsIProperties> directoryService;
     nsDirectoryService::Create(nsnull,
@@ -267,13 +267,21 @@ GetLocationFromDirectoryService(const char* prop, const char *const * append)
     if (NS_FAILED(rv))
         return NULL;
 
-    while (append && *append) {
-        file->AppendNative(nsDependentCString(*append));
-        ++append;
-    }
     return file.forget();
 }
 
+static already_AddRefed<nsILocalFile>
+CloneAndAppend(nsILocalFile* aBase, const nsACString& append)
+{
+    nsCOMPtr<nsIFile> f;
+    aBase->Clone(getter_AddRefs(f));
+    if (!f)
+        return NULL;
+
+    nsCOMPtr<nsILocalFile> lf = do_QueryInterface(f);
+    f->AppendNative(append);
+    return lf.forget();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl
@@ -349,26 +357,33 @@ nsresult nsComponentManagerImpl::Init()
     if (mMon == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    static const char *const kComponents[] = { "components", NULL };
+    nsCOMPtr<nsILocalFile> greDir =
+        GetLocationFromDirectoryService(NS_GRE_DIR);
+    nsCOMPtr<nsILocalFile> appDir =
+        GetLocationFromDirectoryService(NS_XPCOM_CURRENT_PROCESS_DIR);
 
-    nsCOMPtr<nsILocalFile> greComponents =
-        GetLocationFromDirectoryService(NS_GRE_DIR, kComponents);
-
-    nsCOMPtr<nsILocalFile> appComponents =
-        GetLocationFromDirectoryService(NS_XPCOM_CURRENT_PROCESS_DIR, kComponents);
     InitializeStaticModules();
     InitializeModuleLocations();
 
-    ComponentLocation* l = sModuleLocations->InsertElementAt(0);
-    l->type = NS_COMPONENT_LOCATION;
-    l->location = appComponents;
+    NS_NAMED_LITERAL_CSTRING(strComponents, "components");
+    NS_NAMED_LITERAL_CSTRING(strChrome, "chrome");
+
+    ComponentLocation appLocations[2] = {
+        { NS_COMPONENT_LOCATION, CloneAndAppend(appDir, strComponents) },
+        { NS_COMPONENT_LOCATION, CloneAndAppend(appDir, strChrome) },
+    };
+    sModuleLocations->
+        InsertElementsAt(0, appLocations, NS_ARRAY_LENGTH(appLocations));
 
     PRBool equals = PR_FALSE;
-    appComponents->Equals(greComponents, &equals);
+    appDir->Equals(greDir, &equals);
     if (!equals) {
-        l = sModuleLocations->InsertElementAt(0);
-        l->type = NS_COMPONENT_LOCATION;
-        l->location = greComponents;
+        ComponentLocation greLocations[2] = {
+            { NS_COMPONENT_LOCATION, CloneAndAppend(greDir, strComponents) },
+            { NS_COMPONENT_LOCATION, CloneAndAppend(greDir, strChrome) },
+        };
+        sModuleLocations->
+            InsertElementsAt(0, greLocations, NS_ARRAY_LENGTH(greLocations));
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
