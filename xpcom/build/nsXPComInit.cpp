@@ -143,6 +143,9 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "mozilla/Services.h"
 #include "mozilla/FunctionTimer.h"
 
+#include "nsChromeRegistry.h"
+#include "nsChromeProtocolHandler.h"
+
 #ifdef MOZ_IPC
 #include "base/at_exit.h"
 #include "base/command_line.h"
@@ -264,6 +267,12 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
 static NS_DEFINE_CID(kSimpleUnicharStreamFactoryCID, NS_SIMPLE_UNICHAR_STREAM_FACTORY_CID);
 
+NS_DEFINE_NAMED_CID(NS_CHROMEREGISTRY_CID);
+NS_DEFINE_NAMED_CID(NS_CHROMEPROTOCOLHANDLER_CID);
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
+
 #define NS_PERSISTENTPROPERTIES_CID NS_IPERSISTENTPROPERTIES_CID /* sigh */
 #define NS_XPCOMPROXY_CID NS_PROXYEVENT_MANAGER_CID
 
@@ -293,6 +302,8 @@ const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
     { &kINIParserFactoryCID, false, CreateINIParserFactory },
     { &kSimpleUnicharStreamFactoryCID, false, CreateUnicharStreamFactory },
 #include "XPCOMModule.inc"
+    { &kNS_CHROMEREGISTRY_CID, false, NULL, nsChromeRegistryConstructor },
+    { &kNS_CHROMEPROTOCOLHANDLER_CID, false, NULL, nsChromeProtocolHandlerConstructor },
     { NULL }
 };
 #undef COMPONENT
@@ -300,6 +311,8 @@ const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
 #define COMPONENT(NAME, Ctor) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID },
 const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #include "XPCOMModule.inc"
+    { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", &kNS_CHROMEPROTOCOLHANDLER_CID },
     { NULL }
 };
 #undef COMPONENT
@@ -473,25 +486,18 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     NS_TIME_FUNCTION_MARK("Next: component manager init");
 
     // Create the Component/Service Manager
-    nsComponentManagerImpl *compMgr = new nsComponentManagerImpl();
-    if (compMgr == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(compMgr);
+    nsComponentManagerImpl::gComponentManager = new nsComponentManagerImpl();
+    NS_ADDREF(nsComponentManagerImpl::gComponentManager);
     
-    rv = compMgr->Init();
+    rv = nsComponentManagerImpl::gComponentManager->Init();
     if (NS_FAILED(rv))
     {
-        NS_RELEASE(compMgr);
+        NS_RELEASE(nsComponentManagerImpl::gComponentManager);
         return rv;
     }
 
-    nsComponentManagerImpl::gComponentManager = compMgr;
-
     if (result) {
-        nsIServiceManager *serviceManager =
-            static_cast<nsIServiceManager*>(compMgr);
-
-        NS_ADDREF(*result = serviceManager);
+        NS_ADDREF(*result = nsComponentManagerImpl::gComponentManager);
     }
 
     NS_TIME_FUNCTION_MARK("Next: cycle collector startup");

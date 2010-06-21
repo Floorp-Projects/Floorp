@@ -353,6 +353,7 @@ XRE_API(nsresult,
  */
 XRE_API(nsresult,
         XRE_AddStaticComponent, (const mozilla::Module* aComponent))
+
 /**
  * Register XPCOM components found in an array of files/directories.
  * This method may be called at any time before or after XRE_main or
@@ -361,9 +362,22 @@ XRE_API(nsresult,
  * @param aFiles An array of files or directories.
  * @param aFileCount the number of items in the aFiles array.
  * @note appdir/components is registered automatically.
+ *
+ * NS_COMPONENT_LOCATION specifies a location to search for binary XPCOM
+ * components as well as component/chrome manifest files.
+ *
+ * NS_SKIN_LOCATION specifies a location to search for chrome manifest files
+ * which are only allowed to register only skin packages and style overlays.
  */
+enum NSLocationType
+{
+  NS_COMPONENT_LOCATION,
+  NS_SKIN_LOCATION
+};
+
 XRE_API(nsresult,
-        XRE_AddComponentLocation, (nsILocalFile* aLocation))
+        XRE_AddComponentLocation, (NSLocationType aType,
+                                   nsILocalFile* aLocation))
 
 /**
  * Fire notifications to inform the toolkit about a new profile. This
