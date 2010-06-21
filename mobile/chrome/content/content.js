@@ -200,7 +200,7 @@ function getBoundingContentRect(contentElem) {
 function Coalescer() {
   this._pendingDirtyRect = new Rect(0, 0, 0, 0);
   this._pendingSizeChange = null;
-  this._timer = new Util.Timeout(this);
+  this._timer = null;
   // XXX When moving back and forward in docShell history, MozAfterPaint does not get called properly and
   // some dirty rectangles are never flagged properly.  To fix this, coalescer will fake a paint event that
   // dirties the entire viewport.
@@ -208,8 +208,15 @@ function Coalescer() {
 }
 
 Coalescer.prototype = {
-  notify: function notify() {
-    this.flush();
+  start: function startCoalescing() {
+    this._emptyPage();
+    this._timer = content.document.defaultView.setInterval(this, 1000);
+  },
+
+  stop: function stopCoalescing() {
+    content.document.defaultView.clearInterval(this._timer);
+    this._timer = null;
+    this.flush()
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -227,7 +234,7 @@ Coalescer.prototype = {
         let win = doc.defaultView;
         let scrollOffset = Util.getScrollOffset(win);
         if (win.parent != win) // We are only interested in root scroll pane changes
-	  return;
+          return;
         this.sizeChange(scrollOffset, aEvent.x, aEvent.y, aEvent.width, aEvent.height);
         break;
       }
@@ -248,16 +255,8 @@ Coalescer.prototype = {
   },
 
   /** Next scroll size change event will invalidate all previous content. See constructor. */
-  emptyPage: function emptyPage() {
+  _emptyPage: function _emptyPage() {
     this._incremental = false;
-  },
-
-  startCoalescing: function startCoalescing() {
-    this._timer.interval(1000);
-  },
-  
-  stopCoalescing: function stopCoalescing() {
-    this._timer.flush();
   },
 
   sizeChange: function sizeChange(scrollOffset, x, y, width, height) {
@@ -273,24 +272,24 @@ Coalescer.prototype = {
 
     // Clear any pending dirty rectangles since entire viewport will be invalidated
     // anyways.
-    var rect = this._pendingDirtyRect;
+    let rect = this._pendingDirtyRect;
     rect.top = rect.bottom;
     rect.left = rect.right;
 
-    if (!this._timer.isPending())
+    if (this._timer == null)
       this.flush()
   },
 
   dirty: function dirty(scrollOffset, clientRects) {
     if (!this._pendingSizeChange) {
-      var unionRect = this._pendingDirtyRect;
-      for (var i = clientRects.length - 1; i >= 0; i--) {
-        var e = clientRects.item(i);
+      let unionRect = this._pendingDirtyRect;
+      for (let i = clientRects.length - 1; i >= 0; i--) {
+        let e = clientRects.item(i);
         unionRect.expandToContain(new Rect(
           e.left + scrollOffset.x, e.top + scrollOffset.y, e.width, e.height));
       }
 
-      if (!this._timer.isPending())
+      if (this._timer == null)
         this.flush()
     }
   },
@@ -342,7 +341,7 @@ ProgressController.prototype = {
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     // ignore notification that aren't about the main document (iframes, etc)
-    var win = aWebProgress.DOMWindow;
+    let win = aWebProgress.DOMWindow;
     if (win != win.parent)
       return;
 
@@ -652,7 +651,7 @@ FormNavigator.prototype = {
     }
 
     // Second pass: Exclude all other radio buttons from the list.
-    var result = [];
+    let result = [];
     for (let i=0; i < nodes.length; i++) {
       let node = nodes[i];
       if (node.type == "radio" && chosenRadios[node.name] != node)
@@ -803,13 +802,12 @@ Content.prototype = {
 
   startLoading: function startLoading() {
     this._loading = true;
-    this._coalescer.emptyPage();
-    this._coalescer.startCoalescing();
+    this._coalescer.start();
   },
 
   stopLoading: function stopLoading() {
     this._loading = false;
-    this._coalescer.stopCoalescing();
+    this._coalescer.stop();
   },
 
   isSelected: function isSelected() {
