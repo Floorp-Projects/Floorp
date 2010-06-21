@@ -43,17 +43,38 @@
 
 #include "nsXULAppAPI.h"
 
-// Temporary: use while we figure out which XPCOM interfaces (from list
-// copied from nsHttpChannel) HttpChannel{Child|Parent}, etc., actually need to
-// implement.  I.e., implement interfaces as we need them, and if we never hit a
-// given interface, figure out if we can stop advertising it.
+#if defined(DEBUG) || defined(ENABLE_TESTS)
+# define NECKO_ERRORS_ARE_FATAL_DEFAULT true
+#else
+# define NECKO_ERRORS_ARE_FATAL_DEFAULT false
+#endif 
+
+// TODO: Eventually remove NECKO_MAYBE_ABORT and DROP_DEAD (bug 575494).
+// Still useful for catching listener interfaces we don't yet support across
+// processes, etc.
+
+#define NECKO_MAYBE_ABORT(msg)                                                 \
+  do {                                                                         \
+    bool abort = NECKO_ERRORS_ARE_FATAL_DEFAULT;                               \
+    const char *e = PR_GetEnv("NECKO_ERRORS_ARE_FATAL");                       \
+    if (e)                                                                     \
+      abort = (*e == '0') ? false : true;                                      \
+    if (abort) {                                                               \
+      msg.Append(" (set NECKO_ERRORS_ARE_FATAL=0 in your environment to "      \
+                      "convert this error into a warning.)");                  \
+      NS_RUNTIMEABORT(msg.get());                                              \
+    } else {                                                                   \
+      msg.Append(" (set NECKO_ERRORS_ARE_FATAL=1 in your environment to "      \
+                      "convert this warning into a fatal error.)");            \
+      NS_WARNING(msg.get());                                                   \
+    }                                                                          \
+  } while (0)
 
 #define DROP_DEAD()                                                            \
   do {                                                                         \
-    fprintf(stderr,                                                            \
-            "*&*&*&*&*&*&*&**&*&&*& FATAL ERROR: '%s' UNIMPLEMENTED: %s +%d",  \
-            __FUNCTION__, __FILE__, __LINE__);                                 \
-    NS_ABORT();                                                                \
+    nsPrintfCString msg(1000,"FATAL NECKO ERROR: '%s' UNIMPLEMENTED",          \
+                        __FUNCTION__);                                         \
+    NECKO_MAYBE_ABORT(msg);                                                    \
     return NS_ERROR_NOT_IMPLEMENTED;                                           \
   } while (0)
 
