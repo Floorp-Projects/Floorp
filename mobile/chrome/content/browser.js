@@ -575,7 +575,7 @@ var Browser = {
     // Force commonly used border-images into the image cache
     ImagePreloader.cache();
 
-    messageManager.addMessageListener("FennecViewportMetadata", this);
+    messageManager.addMessageListener("Browser:ViewportMetadata", this);
     messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     // broadcast a UIReady message so add-ons know we are finished with startup
@@ -1402,7 +1402,7 @@ var Browser = {
 
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
-      case "FennecViewportMetadata":
+      case "Browser:ViewportMetadata":
         let tab = Browser.getTabForBrowser(aMessage.target);
         tab.updateViewportMetadata(aMessage.json);
         break;
