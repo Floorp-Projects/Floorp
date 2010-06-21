@@ -334,10 +334,7 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
     // occur prior to the profile-after-change notification.
-    if (!strcmp(aProperty, NS_XPCOM_COMPONENT_REGISTRY_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
-    }
-    else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
+    if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("chrome"));
     }
   }

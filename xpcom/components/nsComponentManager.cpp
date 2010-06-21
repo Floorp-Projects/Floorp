@@ -168,16 +168,6 @@ NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 #define UID_STRING_LENGTH 39
 
-static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
-{
-    PR_snprintf(buf, UID_STRING_LENGTH, gIDFormat,
-                aCID.m0, (PRUint32) aCID.m1, (PRUint32) aCID.m2,
-                (PRUint32) aCID.m3[0], (PRUint32) aCID.m3[1],
-                (PRUint32) aCID.m3[2], (PRUint32) aCID.m3[3],
-                (PRUint32) aCID.m3[4], (PRUint32) aCID.m3[5],
-                (PRUint32) aCID.m3[6], (PRUint32) aCID.m3[7]);
-}
-
 #ifdef NS_FUNCTION_TIMER
 #define COMPMGR_TIME_FUNCTION_CID(cid)                                          \
   char cid_buf__[NSID_LENGTH] = { '\0' };                                      \
@@ -747,8 +737,8 @@ nsComponentManagerImpl::KnownModule::Load()
         }
     }
     if (!mLoaded) {
-        if (mModule->loaded) {
-            nsresult rv = mModule->loaded();
+        if (mModule->loadProc) {
+            nsresult rv = mModule->loadProc();
             if (NS_FAILED(rv)) {
                 mFailed = true;
                 return rv;
@@ -1491,17 +1481,26 @@ NS_IMETHODIMP
 nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
                                           nsIFactory* aFactory)
 {
-    nsAutoMonitor mon(mMon);
-    nsFactoryEntry* f = mFactories.Get(aClass);
-    if (!f || f->mFactory != aFactory)
-        return NS_ERROR_FACTORY_NOT_REGISTERED;
+    // Don't release the dying factory or service object until releasing
+    // the component manager monitor.
+    nsCOMPtr<nsIFactory> dyingFactory;
+    nsCOMPtr<nsISupports> dyingServiceObject;
 
-    mFactories.Remove(aClass);
+    {
+        nsAutoMonitor mon(mMon);
+        nsFactoryEntry* f = mFactories.Get(aClass);
+        if (!f || f->mFactory != aFactory)
+            return NS_ERROR_FACTORY_NOT_REGISTERED;
 
-    // This might leave a stale contractid -> factory mapping in place, so null
-    // out the factory entry (see nsFactoryEntry::GetFactory)
-    f->mFactory = NULL;
-    
+        mFactories.Remove(aClass);
+
+        // This might leave a stale contractid -> factory mapping in
+        // place, so null out the factory entry (see
+        // nsFactoryEntry::GetFactory)
+        f->mFactory.swap(dyingFactory);
+        f->mServiceObject.swap(dyingServiceObject);
+    }
+
     return NS_OK;
 }
 
@@ -1629,16 +1628,16 @@ nsFactoryEntry::GetFactory()
         if (!mModule->Load())
             return NULL;
 
-        if (mModule->Module()->getfactory) {
-            mFactory = mModule->Module()->getfactory(*mModule->Module(),
-                                                    *mCIDEntry);
+        if (mModule->Module()->getFactoryProc) {
+            mFactory = mModule->Module()->getFactoryProc(*mModule->Module(),
+                                                         *mCIDEntry);
         }
-        else if (mCIDEntry->getfactory) {
-            mFactory = mCIDEntry->getfactory(*mModule->Module(), *mCIDEntry);
+        else if (mCIDEntry->getFactoryProc) {
+            mFactory = mCIDEntry->getFactoryProc(*mModule->Module(), *mCIDEntry);
         }
         else {
-            NS_ASSERTION(mCIDEntry->constructor, "no getfactory or constructor");
-            mFactory = new mozilla::GenericFactory(mCIDEntry->constructor);
+            NS_ASSERTION(mCIDEntry->constructorProc, "no getfactory or constructor");
+            mFactory = new mozilla::GenericFactory(mCIDEntry->constructorProc);
         }
         if (!mFactory)
             return NULL;

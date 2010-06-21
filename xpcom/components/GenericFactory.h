@@ -49,19 +49,19 @@ namespace mozilla {
 class GenericFactory : public nsIFactory
 {
 public:
-  typedef Module::ConstructorProc ConstructorProc;
+  typedef Module::ConstructorProcPtr ConstructorProcPtr;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFACTORY
 
-  GenericFactory(ConstructorProc ctor)
+  GenericFactory(ConstructorProcPtr ctor)
     : mCtor(ctor)
   {
     NS_ASSERTION(mCtor, "GenericFactory with no constructor");
   }
 
 private:
-  ConstructorProc mCtor;
+  ConstructorProcPtr mCtor;
 };
 
 } // namespace mozilla

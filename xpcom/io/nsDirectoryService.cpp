@@ -81,7 +81,6 @@
 #include "SpecialSystemDirectory.h"
 #include "nsAppFileLocationProvider.h"
 
-#define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("compreg.dat")
 #define COMPONENT_DIRECTORY     NS_LITERAL_CSTRING("components")
 
 // define home directory
@@ -621,15 +620,6 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         inAtom == nsDirectoryService::sOS_CurrentProcessDirectory )
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-    }
-    else if (inAtom == nsDirectoryService::sComponentRegistry)
-    {
-        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-        if (!localFile)
-            return NS_ERROR_FAILURE;
-
-        localFile->AppendNative(COMPONENT_DIRECTORY);           
-        localFile->AppendNative(COMPONENT_REGISTRY_NAME);           
     }
     
     // Unless otherwise set, the core pieces of the GRE exist
