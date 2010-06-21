@@ -200,7 +200,7 @@ endif
 # "toolkit" - xpfe & toolkit
 #
 
-tier_platform_dirs += chrome profile
+tier_platform_dirs += profile
 
 # This must preceed xpfe
 ifdef MOZ_JPROF
