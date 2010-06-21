@@ -45,8 +45,6 @@
 #include "nsStaticComponents.h"
 #include "nsMemory.h"
 
-// #define NSGETMODULE(_name) _name##_NSGetModule
-
 #ifdef MOZ_AUTH_EXTENSION
 #define AUTH_MODULE    MODULE(nsAuthModule)
 #else
