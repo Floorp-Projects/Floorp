@@ -433,6 +433,8 @@ var BrowserUI = {
       PreferencesView.init();
       ConsoleView.init();
     });
+
+    FormMessageReceiver.start();
   },
 
   uninit : function() {
@@ -1448,10 +1450,16 @@ var BookmarkList = {
   }
 };
 
+/**
+ * Responsible for handling the interface for navigating forms and filling in information.
+ *  - Navigating forms is handled by next and previous buttons.
+ *  - When an element is focused, the browser view zooms in to the control.
+ *  - Provides autocomplete box for input fields.
+ */
 var FormHelper = {
   _open: false,
-  _utils: null,
-  _nodes: null,
+  _navigator: null,
+
   get _container() {
     delete this._container;
     return this._container = document.getElementById("form-helper-container");
@@ -1467,189 +1475,183 @@ var FormHelper = {
     return this._autofillContainer = document.getElementById("form-helper-autofill");
   },
 
-  _getRectForElement: function formHelper_getRectForElement(aElement) {
-    const kDistanceMax = 100;
-    let elRect = Browser.getBoundingContentRect(aElement);
-    let bv = Browser._browserView;
-
-    let labels = this.getLabelsFor(aElement);
-    for (let i=0; i<labels.length; i++) {
-      let labelRect = Browser.getBoundingContentRect(labels[i]);
-      if (labelRect.left < elRect.left) {
-        let isClose = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
-                      Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
-        if (isClose) {
-          let width = labelRect.width + elRect.width + (elRect.left - labelRect.left - labelRect.width);
-          return new Rect(labelRect.left, labelRect.top, width, elRect.height).expandToIntegers();
-        }
-      }
-    }
-    return elRect;
+  doAutoFill: function formHelperDoAutoFill(aElement) {
+    // Suggestions are only in <label>s. Ignore the rest.
+    if (aElement instanceof Ci.nsIDOMXULLabelElement)
+      this._navigator.getCurrent().autocomplete(aElement.value);
   },
 
-  _update: function(aPreviousElement, aNewElement) {
-    this._updateSelect(aPreviousElement, aNewElement);
-
-    // Setup autofill UI
-    if (aNewElement instanceof HTMLInputElement && aNewElement.type == "text") {
-      let suggestions = this._getSuggestions();
-      this._setSuggestions(suggestions);
-    } else {
-      this._autofillContainer.collapsed = true;
-    }
-
-    let height = Math.floor(this._container.getBoundingClientRect().height);
-    this._container.top = window.innerHeight - height;
-
-    document.getElementById("form-helper-previous").disabled = !this._getPrevious();
-    document.getElementById("form-helper-next").disabled = !this._getNext();
+  goToPrevious: function formHelperGoToPrevious() {
+    this._navigator.goToPrevious();
   },
 
-  _updateSelect: function(aPreviousElement, aNewElement) {
-    let previousIsSelect = this._isValidSelectElement(aPreviousElement);
-    let currentIsSelect = this._isValidSelectElement(aNewElement);
+  goToNext: function formHelperGoToNext() {
+    this._navigator.goToNext();
+  },
 
-    if (currentIsSelect && !previousIsSelect) {
-      SelectHelper.dock(this._container);
-      SelectHelper.show(aNewElement);
-    }
-    else if (currentIsSelect && previousIsSelect) {
-      SelectHelper.reset();
-      SelectHelper.show(aNewElement);
-    }
-    else if (!currentIsSelect && previousIsSelect) {
-      SelectHelper.hide();
+  updateAutocompleteFor: function updateAutocompleteFor(aElement) {
+    let suggestions = this.getAutocompleteSuggestions(aElement);
+    this._setSuggestions(suggestions);
+    
+    if (suggestions.length == 0) {
+      let height = Math.floor(this._container.getBoundingClientRect().height);
+      this._container.top = window.innerHeight - height;
+      let containerHeight = this._container.getBoundingClientRect().height;
+      this._helperSpacer.setAttribute("height", containerHeight);
     }
   },
 
-  _isValidElement: function(aElement) {
-    if (aElement.disabled)
-      return false;
-
-    if (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex"))
-      return this._isElementVisible(aElement);
-
-    if (this._isValidSelectElement(aElement) || aElement instanceof HTMLTextAreaElement)
-      return this._isElementVisible(aElement);
-
-    if (aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement) {
-      if (aElement.type == "hidden")
-        return false;
-      return this._isElementVisible(aElement);
-    }
-
-    return false;
-  },
-
-  _isValidSelectElement: function(aElement) {
-    return SelectHelper.canShowUIFor(aElement);
-  },
-
-  _isElementVisible: function(aElement) {
-    let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
-    if (!style)
-      return false;
-
-    let isVisible = (style.getPropertyValue("visibility") != "hidden");
-    let isOpaque = (style.getPropertyValue("opacity") != 0);
-
-    let rect = aElement.getBoundingClientRect();
-    return isVisible && isOpaque && (rect.height != 0 || rect.width != 0);
-  },
-
-  _getAllDocuments: function formHelper_getAllDocuments(aDocument, aResult) {
-    /** Recursively find all documents, including root document. */
-    aResult.push(aDocument);
-    let frames = aDocument.defaultView.frames;
-    if (!frames)
-      return aResult;
-
-    for (let i = 0; i < frames.length; i++)
-      this._getAllDocuments(frames[i].document, aResult);
-
-    return aResult;
-  },
-
-  _getAll: function() {
-    let elements = [];
-
-    // Retrieve all the nested iframes
-    let documents = [];
-    this._getAllDocuments(getBrowser().contentDocument, documents);
-
-    for (let i = 0; i < documents.length; i++) {
-      let nodes = documents[i].querySelectorAll("input, button, select, textarea, [role=button]");
-      nodes = this._filterRadioButtons(nodes).filter(this._isValidElement, this);
-      elements = elements.concat(nodes);
-    }
-
-    function orderByTabIndex(a, b) {
-      // for an explanation on tabbing navigation see
-      // http://www.w3.org/TR/html401/interact/forms.html#h-17.11.1
-      // In resume tab index navigation order is 1, 2, 3, ..., 32767, 0
-      if (a.tabIndex == 0 || b.tabIndex == 0)
-        return b.tabIndex;
-
-      return a.tabIndex > b.tabIndex;
-    }
-    return elements.sort(orderByTabIndex);
-  },
-
-  /**
-   * For each radio button group, remove all but the checked button
-   * if there is one, or the first button otherwise.
-   */
-  _filterRadioButtons: function(nodes) {
-    // First pass: Find the checked or first element in each group.
-    let chosenRadios = {};
-    for (let i=0; i < nodes.length; i++) {
-      let node = nodes[i];
-      if (node.type == "radio" && (!chosenRadios.hasOwnProperty(node.name) || node.checked))
-        chosenRadios[node.name] = node;
-    }
-
-    // Second pass: Exclude all other radio buttons from the list.
-    var result = [];
-    for (let i=0; i < nodes.length; i++) {
-      let node = nodes[i];
-      if (node.type == "radio" && chosenRadios[node.name] != node)
-        continue;
-      result.push(node);
-    }
-    return result;
-  },
-
-  _getPrevious: function() {
-    let index = this._nodes.indexOf(this._currentElement);
-    let node = (index != -1 ? this._nodes[--index] : null);
-    while (node && !this._isElementVisible(node))
-      node = this._nodes[--index];
-    return node;
-  },
-
-  _getNext: function() {
-    let index = this._nodes.indexOf(this._currentElement);
-    let node = (index != -1 ? this._nodes[++index] : null);
-    while (node && !this._isElementVisible(node))
-      node = this._nodes[++index];
-    return node;
-  },
-
-  _fac: Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete),
-  _getSuggestions: function() {
+  getAutocompleteSuggestions: function(aElement) {
     let suggestions = [];
-    let currentValue = this._currentElement.value;
-    let results = this._fac.autoCompleteSearch(this._currentElement.name, currentValue, this._currentElement, null);
+    let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
+    let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
     if (results.matchCount > 0) {
       for (let i = 0; i < results.matchCount; i++) {
         let value = results.getValueAt(i);
         suggestions.push(value);
       }
     }
-
     return suggestions;
   },
 
+  /**
+   * Shows form helper. If helper is already shown, then it selects the new element.
+   */
+  open: function formHelperOpen(navigator) {
+    let bv = Browser._browserView;
+
+    if (!this._open) {
+      this._open = true;
+      bv.ignorePageScroll(true);
+      this._container.hidden = false;
+      this._helperSpacer.hidden = false;
+    }
+
+    let lastWrapper = this._navigator ? this._navigator.getCurrent() : null;
+    this._navigator = navigator;
+    this._currentElementChange(lastWrapper, navigator.getCurrent());
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("FormUI", true, true, window, this._open);
+    this._container.dispatchEvent(evt);
+  },
+
+  close: function formHelperHide() {
+    if (!this._open)
+      return;
+
+    this._updateContainerForSelect(this._navigator.getCurrent(), null);
+
+    this._helperSpacer.hidden = true;
+
+    this._zoomFinish();
+
+    // give the form spacer area back to the content
+    let bv = Browser._browserView;
+    Browser.forceChromeReflow();
+    Browser.contentScrollboxScroller.scrollBy(0, 0);
+    bv.onAfterVisibleMove();
+
+    bv.ignorePageScroll(false);
+
+    this._container.hidden = true;
+    this._open = false;
+
+    if (this._navigator) {
+      this._navigator.endSession();
+      this._navigator = null;
+    }
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("FormUI", true, true, window, this._open);
+    this._container.dispatchEvent(evt);
+  },
+
+  /** The currently selected element has changed. */
+  _currentElementChange: function(lastWrapper, currentWrapper) {
+    this._updateContainer(lastWrapper, currentWrapper);
+    this._zoom(currentWrapper.getRect());
+  },
+
+  /** Update the form helper container to reflect new element user is editing. */
+  _updateContainer: function(aLastWrapper, aCurrentWrapper) {
+    this._updateContainerForSelect(aLastWrapper, aCurrentWrapper);
+
+    // Setup autofill UI
+    this.updateAutocompleteFor(this._navigator.getCurrent().element);
+
+    let height = Math.floor(this._container.getBoundingClientRect().height);
+    this._container.top = window.innerHeight - height;
+
+    let navigator = this._navigator;
+    document.getElementById("form-helper-previous").disabled = !navigator.hasPrevious();
+    document.getElementById("form-helper-next").disabled = !navigator.hasNext();
+
+    let containerHeight = this._container.getBoundingClientRect().height;
+    this._helperSpacer.setAttribute("height", containerHeight);
+  },
+
+  /** Helper for _updateContainer that handles the case where the new element is a select. */
+  _updateContainerForSelect: function(aLastWrapper, aCurrentWrapper) {
+    let lastHasChoices = aLastWrapper && aLastWrapper.hasChoices();
+    let currentHasChoices = aCurrentWrapper && aCurrentWrapper.hasChoices();
+
+    if (!lastHasChoices && currentHasChoices) {
+      SelectHelper.dock(this._container);
+      SelectHelper.show(aCurrentWrapper);
+    }
+    else if (lastHasChoices && currentHasChoices) {
+      SelectHelper.reset();
+      SelectHelper.show(aCurrentWrapper);
+    }
+    else if (lastHasChoices && !currentHasChoices) {
+      SelectHelper.hide();
+    }
+  },
+
+  /** Zoom and move viewport so that element is legible and touchable. */
+  _zoom: function formHelperZoom(elRect) {
+    let bv = Browser._browserView;
+    if (!bv.allowZoom)
+      return;
+
+    let zoomLevel = Browser._getZoomLevelForRect(bv.browserToViewportRect(elRect.clone()));
+    if (gPrefService.getBoolPref("formhelper.autozoom")) {
+      this._restore = {
+        zoom: bv.getZoomLevel(),
+        contentScrollOffset: Browser.getScrollboxPosition(Browser.contentScrollboxScroller),
+        pageScrollOffset: Browser.getScrollboxPosition(Browser.pageScrollboxScroller)
+      };
+
+      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+      let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
+
+      let caretRect = Rect.fromRect(this._navigator.getCurrent().element.caretRect);
+      if (caretRect) {
+        caretRect = Browser._browserView.browserToViewportRect(caretRect);
+        if (!zoomRect.contains(caretRect)) {
+          let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
+          zoomRect.translate(deltaX, deltaY);
+        }
+      }
+
+      Browser.setVisibleRect(zoomRect);
+    }
+  },
+
+  /** Element is no longer selected. Restore zoom level if setting is enabled. */
+  _zoomFinish: function _zoomFinish() {
+    let restore = this._restore;
+    if (restore && gPrefService.getBoolPref("formhelper.restore")) {
+      bv.setZoomLevel(restore.zoom);
+      Browser.contentScrollboxScroller.scrollTo(restore.contentScrollOffset.x,
+                                                restore.contentScrollOffset.y);
+      Browser.pageScrollboxScroller.scrollTo(restore.pageScrollOffset.x,
+                                             restore.pageScrollOffset.y);
+    }
+  },
+
+  /** Populate autofill container with list of strings for suggestions */
   _setSuggestions: function(aSuggestions) {
     let autofill = this._autofillContainer;
     while (autofill.hasChildNodes())
@@ -1664,251 +1666,46 @@ var FormHelper = {
     }
     autofill.appendChild(fragment);
     autofill.collapsed = !aSuggestions.length;
+  }
+};
+
+
+var FormMessageReceiver = {
+  start: function() {
+    messageManager.addMessageListener("FormAssist:Show", this);
+    messageManager.addMessageListener("FormAssist:Hide", this);
+    messageManager.addMessageListener("FormAssist:Update", this);
+    messageManager.addMessageListener("FormAssist:AutoComplete", this);
   },
 
-  doAutoFill: function formHelperDoAutoFill(aElement) {
-    if (!this._currentElement)
-     return;
+  receiveMessage: function(aMessage) {
+    let json = aMessage.json;
+    switch (aMessage.name) {
+      case "FormAssist:Update":
+        let bv = Browser._browserView;
+        let visible = bv.getVisibleRect();
+        let caretRect = bv.browserToViewportRect(Rect.fromRect(json.caretRect));
+        let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, visible);
 
-    // Suggestions are only in <label>s. Ignore the rest.
-    if (aElement instanceof Ci.nsIDOMXULLabelElement)
-      this._currentElement.value = aElement.value;
-  },
-
-  getLabelsFor: function(aElement) {
-    let associatedLabels = [];
-    if (this._isValidElement(aElement)) {
-      let labels = aElement.ownerDocument.getElementsByTagName("label");
-      for (let i=0; i<labels.length; i++) {
-        if (labels[i].getAttribute("for") == aElement.id)
-          associatedLabels.push(labels[i]);
-      }
-    }
-
-    if (aElement.parentNode instanceof HTMLLabelElement)
-      associatedLabels.push(aElement.parentNode);
-
-    return associatedLabels.filter(this._isElementVisible);
-  },
-
-  _currentElement: null,
-  getCurrentElement: function() {
-    return this._currentElement;
-  },
-
-  setCurrentElement: function(aElement) {
-    if (!aElement)
-      return;
-
-    let previousElement = this._currentElement;
-    this._currentElement = aElement;
-    this._utils = aElement.ownerDocument.defaultView
-                                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                                        .getInterface(Ci.nsIDOMWindowUtils);
-    try {
-      this._utils.QueryInterface(Ci.nsIDOMWindowUtils_1_9_2);
-    }
-    catch(e) {}
-
-    this._update(previousElement, aElement);
-
-    let containerHeight = this._container.getBoundingClientRect().height;
-    this._helperSpacer.setAttribute("height", containerHeight);
-
-    this.zoom(aElement);
-    gFocusManager.setFocus(aElement, Ci.nsIFocusManager.FLAG_NOSCROLL);
-  },
-
-  goToPrevious: function formHelperGoToPrevious() {
-    let previous = this._getPrevious();
-    this.setCurrentElement(previous);
-  },
-
-  goToNext: function formHelperGoToNext() {
-    let next = this._getNext();
-    this.setCurrentElement(next);
-  },
-
-  open: function formHelperOpen(aElement) {
-    if (this._open == true && aElement == this._currentElement &&
-        gFocusManager.focusedElement == this._currentElement)
-      return false;
-
-    this._open = true;
-    this._restore = { zoom: Browser._browserView.getZoomLevel(),
-                      scroll: Browser.getScrollboxPosition(Browser.contentScrollboxScroller)
-                    };
-
-    window.addEventListener("keyup", this, false);
-    let bv = Browser._browserView;
-    bv.ignorePageScroll(true);
-
-    this._container.hidden = false;
-    this._helperSpacer.hidden = false;
-
-    this._nodes = this._getAll();
-    this.setCurrentElement(aElement);
-
-    let evt = document.createEvent("UIEvents");
-    evt.initUIEvent("FormUI", true, true, window, this._open);
-    this._container.dispatchEvent(evt);
-
-    return true;
-  },
-
-  close: function formHelperHide() {
-    if (!this._open)
-      return;
-
-    this._updateSelect(this._currentElement, null);
-
-    this._helperSpacer.hidden = true;
-
-    // give the form spacer area back to the content
-    let bv = Browser._browserView;
-    Browser.forceChromeReflow();
-    Browser.contentScrollboxScroller.scrollBy(0, 0);
-    bv.onAfterVisibleMove();
-
-    bv.ignorePageScroll(false);
-
-    window.removeEventListener("keyup", this, false);
-    this._container.hidden = true;
-    this._currentElement = null;
-    this._utils = null;
-
-    if (gPrefService.getBoolPref("formhelper.restore") && this._restore) {
-      bv.setZoomLevel(this._restore.zoom);
-      Browser.contentScrollboxScroller.scrollTo(this._restore.scroll.x, this._restore.scroll.y);
-      bv.onAfterVisibleMove();
-      this._restore = null;
-    }
-
-    this._open = false;
-
-    let evt = document.createEvent("UIEvents");
-    evt.initUIEvent("FormUI", true, true, window, this._open);
-    this._container.dispatchEvent(evt);
-  },
-
-  handleEvent: function formHelperHandleEvent(aEvent) {
-    let isChromeFocused = gFocusManager.getFocusedElementForWindow(window, false, {}) == gFocusManager.focusedElement;
-    if (isChromeFocused)
-      return;
-
-    let currentElement = this.getCurrentElement();
-    switch (aEvent.keyCode) {
-      case aEvent.DOM_VK_DOWN:
-        if (currentElement instanceof HTMLTextAreaElement) {
-          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-          let isEnd = (currentElement.textLength == currentElement.selectionEnd);
-          if (!isEnd || existSelection)
-            return;
+        if (deltaX != 0 || deltaY != 0) {
+          Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
+          bv.onAfterVisibleMove();
         }
-
-        this.goToNext();
         break;
 
-      case aEvent.DOM_VK_UP:
-        if (currentElement instanceof HTMLTextAreaElement) {
-          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-          let isStart = (currentElement.selectionEnd == 0);
-          if (!isStart || existSelection)
-            return;
-        }
+      case "FormAssist:Show":
+        json.showNavigation ? FormHelper.open(new FormNavigator(json))
+                            : SelectHelper.show(new FormWrapper(json.current));
 
-        this.goToPrevious();
         break;
 
-      case aEvent.DOM_VK_RETURN:
-        break;
-
-      default:
-        let caret = this._getRectForCaret();
-        if (caret) {
-          let bv = Browser._browserView;
-
-          // If the caret is not into view we need to scroll to it
-          let visible = bv.getVisibleRect();
-          caret = bv.browserToViewportRect(caret);
-    
-          let [deltaX, deltaY] = this._getOffsetForCaret(caret, visible);
-    
-          // Scroll by the delta if we need to
-          if (deltaX != 0 || deltaY != 0) {
-            Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
-            bv.onAfterVisibleMove();
-          }
-        }
-
-        let target = aEvent.target;
-        if (currentElement instanceof HTMLInputElement && currentElement.type == "text") {
-          let suggestions = this._getSuggestions();
-          this._setSuggestions(suggestions);
-
-          let height = Math.floor(this._container.getBoundingClientRect().height);
-          this._container.top = window.innerHeight - height;
-          this._helperSpacer.setAttribute("height", height);
-
-          // XXX if we are at the bottom of the page we need to give back the content
-          // area by refreshing it
-          if (suggestions.length == 0) {
-            let bv = Browser._browserView;
-            Browser.forceChromeReflow();
-            Browser.contentScrollboxScroller.scrollBy(0, 0);
-            bv.onAfterVisibleMove();
-          }
-        } else if (currentElement == target && this._isValidSelectElement(target)) {
-          SelectHelper.unselectAll();
-          SelectHelper.selectByIndex(target.selectedIndex);
+      case "FormAssist:AutoComplete":
+        let current = json.current;
+        if (current.canAutocomplete) {
+          FormHelper.updateAutocompleteFor(current);
         }
         break;
     }
-  },
-
-  zoom: function formHelperZoom(aElement) {
-    let bv = Browser._browserView;
-    if (!bv.allowZoom)
-      return;
-
-    let zoomLevel = bv.getZoomLevel();
-    if (gPrefService.getBoolPref("formhelper.autozoom")) {
-      zoomLevel = Browser._getZoomLevelForElement(aElement);
-      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
-    }
-
-    let elRect = this._getRectForElement(aElement);
-    let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
-
-    let caretRect = this._getRectForCaret();
-    if (caretRect) {
-      caretRect = Browser._browserView.browserToViewportRect(caretRect);
-      if (!zoomRect.contains(caretRect)) {
-        let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
-        zoomRect.translate(deltaX, deltaY);
-      }
-    }
-
-    Browser.setVisibleRect(zoomRect);
-  },
-  
-  _getRectForCaret: function formHelper_getRectForCaret() {
-    let currentElement = this.getCurrentElement();
-    if ((currentElement instanceof HTMLTextAreaElement ||
-        (currentElement instanceof HTMLInputElement && currentElement.type == "text")) &&
-        gFocusManager.focusedElement == this._currentElement) {
-
-      let rect = this._utils.sendQueryContentEvent(this._utils.QUERY_CARET_RECT, currentElement.selectionEnd, 0, 0, 0);
-      if (!rect)
-        return null;
-
-      let bv = Browser._browserView;
-      let scroll = BrowserView.Util.getContentScrollOffset(Browser.selectedBrowser);
-      let caret = new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
-      return caret;
-    }
-    
-    return null;
   },
 
   _getOffsetForCaret: function formHelper_getOffsetForCaret(aCaretRect, aRect) {
@@ -1918,7 +1715,7 @@ var FormHelper = {
       deltaX = aCaretRect.right - aRect.right;
     if (aCaretRect.left < aRect.left)
       deltaX = aCaretRect.left - aRect.left;
-      
+
     // Determine if we need to move up or down to bring the caret into view
     let deltaY = 0;
     if (aCaretRect.bottom > aRect.bottom)
@@ -1927,176 +1724,135 @@ var FormHelper = {
       deltaY = aCaretRect.top - aRect.top;
 
     return [deltaX, deltaY];
-  },
-
-  canShowUIFor: function(aElement) {
-    if (!aElement)
-      return false;
-
-    // Some forms elements are valid in the sense that we want the Form
-    // Assistant to stop on it, but we don't want it to display when
-    // the user clicks on it
-    let formExceptions = {button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true};
-    if (aElement instanceof HTMLInputElement && formExceptions[aElement.type])
-      return false;
-
-    if (aElement instanceof HTMLButtonElement || (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex")))
-      return false;
-
-    return this._isValidElement(aElement);
   }
 };
 
-function SelectWrapper(aControl) {
-  this._control = aControl;
+function FormNavigator(navObject) {
+  this._navObject = navObject;
+  this._current = new FormWrapper(navObject.current);
 }
 
-SelectWrapper.prototype = {
-  get selectedIndex() { return this._control.selectedIndex; },
-  get multiple() { return this._control.multiple; },
-  get options() { return this._control.options; },
-  get children() { return this._control.children; },
-
-  getText: function(aChild) { return aChild.text; },
-  isOption: function(aChild) { return aChild instanceof HTMLOptionElement; },
-  isGroup: function(aChild) { return aChild instanceof HTMLOptGroupElement; },
-  select: function(aIndex, aSelected, aClearAll) {
-    let selectElement = this._control.QueryInterface(Ci.nsISelectElement);
-    selectElement.setOptionsSelectedByIndex(aIndex, aIndex, aSelected, aClearAll, false, true);
+FormNavigator.prototype = {
+  hasPrevious: function() {
+    return this._navObject.hasPrevious;
   },
-  focus: function() { this._control.focus(); },
-  fireOnChange: function() {
-    let control = this._control;
-    let evt = document.createEvent("Events");
-    evt.initEvent("change", true, true, window, 0,
-                  false, false,
-                  false, false, null);
-    setTimeout(function() {
-      control.dispatchEvent(evt)
-    }, 0);
+
+  hasNext: function() {
+    return this._navObject.hasNext;
+  },
+
+  getCurrent: function() {
+    return this._current;
+  },
+
+  endSession: function endSession() {
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Close", { });
+  },
+
+  goToPrevious: function goToPrevious() {
+    try {
+      let fl = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+      fl.activateRemoteFrame();
+    }
+    catch(e) {}
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Previous", { });
+  },
+
+  goToNext: function goToNext() {
+    try {
+      let fl = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+      fl.activateRemoteFrame();
+    }
+    catch(e) {}
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Next", { });
   }
 };
 
-function MenulistWrapper(aControl) {
-  this._control = aControl;
+function FormWrapper(aElementObject) {
+  this.element = aElementObject;
+  this._rect = Rect.fromRect(aElementObject.rect);
 }
 
-// Use wrappedJSObject when control is in content for extra protection
-// See bug 559792
-
-MenulistWrapper.prototype = {
-  get selectedIndex() {
-    let control = this._control.wrappedJSObject || this._control;
-    let result = control.selectedIndex;
-    return (typeof result == "number" && !isNaN(result) ? result : -1);
-  },
-  get multiple() { return false; },
-  get options() {
-    let control = this._control.wrappedJSObject || this._control;
-    return control.menupopup.children;
-  },
-  get children() {
-    let control = this._control.wrappedJSObject || this._control;
-    return control.menupopup.children;
+FormWrapper.prototype = {
+  hasChoices: function() {
+    return this.element.choiceData != null;
   },
 
-  getText: function(aChild) { return aChild.label; },
-  isOption: function(aChild) { return aChild instanceof Ci.nsIDOMXULSelectControlItemElement; },
-  isGroup: function(aChild) { return false },
-  select: function(aIndex, aSelected, aClearAll) {
-    let control = this._control.wrappedJSObject || this._control;
-    control.selectedIndex = aIndex;
+  choiceSelect: function(aIndex, aSelected, aClearAll) {
+    let json = {
+      index: aIndex,
+      selected: aSelected,
+      clearAll: aClearAll
+    };
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceSelect", json);
   },
-  focus: function() { this._control.focus(); },
-  fireOnChange: function() {
-    let control = this._control;
-    let evt = document.createEvent("XULCommandEvent");
-    evt.initCommandEvent("command", true, true, window, 0,
-                         false, false,
-                         false, false, null);
-    setTimeout(function() {
-      control.dispatchEvent(evt)
-    }, 0);
+
+  choiceChange: function() {
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceChange", { });
+  },
+
+  getChoiceData: function() {
+    return this.element.choiceData;
+  },
+
+  canAutocomplete: function() {
+    return this.element.canAutocomplete;
+  },
+
+  autocomplete: function(aValue) {
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aValue });
+  },
+
+  getRect: function() {
+    return this._rect;
   }
 };
 
+/**
+ * SelectHelper: Provides an interface for making a choice in a list.
+ *   Supports simultaneous selection of choices and group headers.
+ *   Needs a BasicWrapper for handling selected element. 
+ */
 var SelectHelper = {
   _list: null,
-  _control: null,
-  _selectedIndexes: [],
-  _docked: false,
+  _selectedIndexes: null,
+  _navigator: null,
 
   get _panel() {
     delete this._panel;
     return this._panel = document.getElementById("select-container");
   },
 
-  _getSelectedIndexes: function() {
-    let indexes = [];
-    let control = this._control;
+  show: function(wrapper) {
+    let choiceData = wrapper.getChoiceData();
+    this._wrapper = wrapper;
+    this._choiceData = choiceData;
 
-    if (control.multiple) {
-      for (let i = 0; i < control.options.length; i++) {
-        if (control.options[i].selected)
-          indexes.push(i);
-      }
-    }
-    else {
-      indexes.push(control.selectedIndex);
-    }
-
-    return indexes;
-  },
-
-  show: function(aControl) {
-    if (!aControl)
-      return;
-
-    if (aControl instanceof HTMLSelectElement)
-      this._control = new SelectWrapper(aControl);
-    else if (aControl instanceof Ci.nsIDOMXULMenuListElement)
-      this._control = new MenulistWrapper(aControl);
-    else
-      throw "Unknown list element";
-
-    this._selectedIndexes = this._getSelectedIndexes();
-
+    this._selectedIndexes = this._getSelectedIndexes(choiceData);
     this._list = document.getElementById("select-list");
-    this._list.setAttribute("multiple", this._control.multiple ? "true" : "false");
+    this._list.setAttribute("multiple", choiceData.multiple ? "true" : "false");
 
     let firstSelected = null;
 
-    let optionIndex = 0;
-    let children = this._control.children;
-    for (let i=0; i<children.length; i++) {
-      let child = children[i];
-      if (this._control.isGroup(child)) {
+    let choices = choiceData.choices;
+    for (let i = 0; i < choices.length; i++) {
+      let choice = choices[i];
+      if (choice.group) {
         let group = document.createElement("option");
-        group.setAttribute("label", child.label);
+        group.setAttribute("label", choice.text);
         this._list.appendChild(group);
         group.className = "optgroup";
-
-        let subchildren = child.children;
-        for (let ii=0; ii<subchildren.length; ii++) {
-          let subchild = subchildren[ii];
-          let item = document.createElement("option");
-          item.setAttribute("label", this._control.getText(subchild));
-          this._list.appendChild(item);
-          item.className = "in-optgroup";
-          item.optionIndex = optionIndex++;
-          if (subchild.selected) {
-            item.setAttribute("selected", "true");
-            firstSelected = firstSelected ? firstSelected : item;
-          }
-        }
-      } else if (this._control.isOption(child)) {
+      } else {
         let item = document.createElement("option");
-        item.setAttribute("label", this._control.getText(child));
+        item.setAttribute("label", choice.text);
+        item.optionIndex = choice.optionIndex;
+        item.choiceIndex = i;
+        if (choice.inGroup)
+          item.className = "in-optgroup";
         this._list.appendChild(item);
-        item.optionIndex = optionIndex++;
-        if (child.selected) {
+        if (choice.selected) {
           item.setAttribute("selected", "true");
-          firstSelected = firstSelected ? firstSelected : item;
+          firstSelected = firstSelected || item;
         }
       }
     }
@@ -2122,6 +1878,61 @@ var SelectHelper = {
     rootNode.insertBefore(this._panel, rootNode.lastChild);
     this._panel.style.maxHeight = "";
     this._docked = false;
+  },
+
+  reset: function() {
+    this._updateControl();
+    let empty = this._list.cloneNode(false);
+    this._list.parentNode.replaceChild(empty, this._list);
+    this._list = empty;
+    this._wrapper = null;
+    this._choiceData = null;
+    this._selectedIndexes = null;
+  },
+
+  hide: function() {
+    this._list.removeEventListener("click", this, false);
+    this._panel.hidden = true;
+
+    if (this._docked)
+      this.undock();
+    else
+      BrowserUI.popPopup();
+
+    this.reset();
+  },
+
+  unselectAll: function() {
+    let choices = this._choiceData.choices;
+    this._forEachOption(function(aItem, aIndex) {
+      aItem.selected = false;
+      choices[aIndex].selected = false;
+    });
+  },
+
+  selectByIndex: function(aIndex) {
+    let choices = this._choiceData.choices;
+    for (let i = 0; i < this._list.childNodes.length; i++) {
+      let option = this._list.childNodes[i];
+      if (option.optionIndex == aIndex) {
+        option.selected = true;
+        this._choices[i].selected = true;
+        this._scrollElementIntoView(option);
+        break;
+      }
+    }
+  },
+
+  _getSelectedIndexes: function(choiceData) {
+    let indexes = [];
+    let choices = choiceData.choices;
+    let choiceLength = choices.length;
+    for (let i = 0; i < choiceLength; i++) {
+      let choice = choices[i];
+      if (choice.selected)
+        indexes.push(choice.optionIndex);
+    }
+    return indexes;
   },
 
   _scrollElementIntoView: function(aElement) {
@@ -2152,17 +1963,17 @@ var SelectHelper = {
   },
 
   _forEachOption: function(aCallback) {
-      let children = this._list.children;
-      for (let i = 0; i < children.length; i++) {
-        let item = children[i];
-        if (!item.hasOwnProperty("optionIndex"))
-          continue;
-        aCallback(item, i);
-      }
+    let children = this._list.children;
+    for (let i = 0; i < children.length; i++) {
+      let item = children[i];
+      if (!item.hasOwnProperty("optionIndex"))
+        continue;
+      aCallback(item, i);
+    }
   },
 
   _updateControl: function() {
-    let currentSelectedIndexes = this._getSelectedIndexes();
+    let currentSelectedIndexes = this._getSelectedIndexes(this._choiceData);
 
     let isIdentical = currentSelectedIndexes.length == this._selectedIndexes.length;
     if (isIdentical) {
@@ -2175,52 +1986,7 @@ var SelectHelper = {
     }
 
     if (!isIdentical)
-      this._control.fireOnChange();
-  },
-
-  _isValidElement: function(aElement) {
-    if (!aElement || aElement.disabled)
-      return false;
-
-    return (aElement instanceof HTMLSelectElement) || (aElement instanceof Ci.nsIDOMXULMenuListElement);
-  },
-
-  reset: function() {
-    this._updateControl();
-    let empty = this._list.cloneNode(false);
-    this._list.parentNode.replaceChild(empty, this._list);
-    this._list = empty;
-  },
-
-  hide: function() {
-    this._list.removeEventListener("click", this, false);
-    this._panel.hidden = true;
-    
-    if (this._docked)
-      this.undock();
-    else
-      BrowserUI.popPopup();
-
-    this.reset();
-  },
-
-  canShowUIFor: function(aElement) {
-    return this._isValidElement(aElement);
-  },
-
-  unselectAll: function() {
-    this._forEachOption(function(aItem, aIndex) aItem.selected = false);
-  },
-
-  selectByIndex: function(aIndex) {
-    for (let i = 0; i < this._list.childNodes.length; i++) {
-      let option = this._list.childNodes[i];
-      if (option.optionIndex == aIndex) {
-        option.selected = true;
-        this._scrollElementIntoView(option);
-        break;
-      }
-    }
+      this._wrapper.choiceChange();
   },
 
   handleEvent: function(aEvent) {
@@ -2228,17 +1994,19 @@ var SelectHelper = {
       case "click":
         let item = aEvent.target;
         if (item && item.hasOwnProperty("optionIndex")) {
-          if (this._control.multiple) {
+          if (this._choiceData.multiple) {
             // Toggle the item state
             item.selected = !item.selected;
-            this._control.select(item.optionIndex, item.selected, false);
+            this._choiceData.choices[item.choiceIndex].selected = item.selected;
+            this._wrapper.choiceSelect(item.optionIndex, item.selected, false);
           }
           else {
             this.unselectAll();
 
             // Select the new one and update the control
             item.selected = true;
-            this._control.select(item.optionIndex, true, true);
+            this._choiceData.choices[item.choiceIndex].selected = true;
+            this._wrapper.choiceSelect(item.optionIndex, item.selected, true);
           }
         }
         break;

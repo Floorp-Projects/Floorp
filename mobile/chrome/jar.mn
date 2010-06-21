@@ -45,6 +45,7 @@ chrome.jar:
   content/TileManager.js               (TileManager.js)
 * content/InputHandler.js              (content/InputHandler.js)
 * content/Util.js                      (content/Util.js)
+  content/forms.js                     (content/forms.js)
 * content/preferences.js               (content/preferences.js)
   content/exceptions.js                (content/exceptions.js)
   content/extensions.js                (content/extensions.js)
