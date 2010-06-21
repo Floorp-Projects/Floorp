@@ -136,7 +136,6 @@ window.Group = function(listOfEls, options) {
   this.isDragging = false;
   $container
     .css({zIndex: -100})
-    .data('isDragging', false)
     .appendTo("body");
 /*     .dequeue(); */
         
