@@ -13208,29 +13208,17 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     jsuint capacity = obj->getDenseArrayCapacity();
     bool within = (jsuint(idx) < obj->getArrayLength() && jsuint(idx) < capacity);
     if (!within) {
-        /* If idx < 0, stay on trace (and read value as undefined, since this is a dense array). */
-        LIns* br1 = NULL;
-        if (MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32 && !idx_ins->isImmI()) {
-            /* Only 64-bit machines support large enough arrays for this. */
-            JS_ASSERT(sizeof(jsval) == 8);
-            br1 = lir->insBranch(LIR_jt,
-                                 lir->ins2ImmI(LIR_lti, idx_ins, 0),
-                                 NULL);
-        }
-
         /* If not idx < min(length, capacity), stay on trace (and read value as undefined). */
         JS_ASSERT(obj->isDenseArrayMinLenCapOk());
         LIns* minLenCap =
             addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
-        LIns* br2 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_ltup, pidx_ins, minLenCap),
-                                   NULL);
+        LIns* br = lir->insBranch(LIR_jf,
+                                  lir->ins2(LIR_ltup, pidx_ins, minLenCap),
+                                  NULL);
 
         lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
         LIns* label = lir->ins0(LIR_label);
-        if (br1)
-            br1->setTarget(label);
-        br2->setTarget(label);
+        br->setTarget(label);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -13238,15 +13226,6 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         v_ins = INS_VOID();
         addr_ins = NULL;
         return RECORD_CONTINUE;
-    }
-
-    /* Guard against negative index */
-    if (MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32 && !idx_ins->isImmI()) {
-        /* Only 64-bit machines support large enough arrays for this. */
-        JS_ASSERT(sizeof(jsval) == 8);
-        guard(false,
-              lir->ins2ImmI(LIR_lti, idx_ins, 0),
-              exit);
     }
 
     /* Guard array min(length, capacity). */
