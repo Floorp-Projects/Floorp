@@ -119,18 +119,6 @@ LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
     return entry;
 }
 
-static inline jsid
-JSValHoldingJSIdToJSId(jsval v)
-{
-    if (JSVAL_IS_STRING(v))
-        return INTERNED_STRING_TO_JSID(JSVAL_TO_STRING(v));
-    if (JSVAL_IS_INT(v))
-        return INT_TO_JSID(JSVAL_TO_INT(v));
-    if (JSVAL_IS_VOID(v))
-        return JSID_VOID;
-    return OBJECT_TO_JSID(JSVAL_TO_OBJECT(v));
-}
-
 static JSBool
 PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -152,8 +140,10 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    jsid id;
+    if (!JSVAL_TO_JSID(cx, &argval, &id))
+        return JS_FALSE;
     JS_SET_RVAL(cx, vp, argval);
-    jsid id = JSValHoldingJSIdToJSId(argval);
     return (*popp)(cx, obj, id, vp);
 }
 
