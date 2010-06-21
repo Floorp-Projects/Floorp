@@ -51,7 +51,6 @@ LIBXUL_LIBRARY = 1
 CPPSRCS		= \
 		nsCaseConversionImp2.cpp \
 		nsCategoryImp.cpp \
-		nsHankakuToZenkaku.cpp \
 		nsEntityConverter.cpp \
 		nsSaveAsCharset.cpp \
 		nsUnicodeNormalizer.cpp \
