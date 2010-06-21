@@ -304,7 +304,7 @@ function (compMgr, fileSpec, location, type)
     var catman = Components.classes[CATMAN_CONTRACTID].
                             getService(nsICategoryManager);
 
-    const JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY = "JavaScript global property";
+    const JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY = "JavaScript-global-property";
     catman.addCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
                             "sidebar",
                             SIDEBAR_CONTRACTID,

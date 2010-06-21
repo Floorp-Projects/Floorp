@@ -1421,7 +1421,7 @@ FeedWriter.prototype = {
   classID: Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}"),
   implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
   flags: Ci.nsIClassInfo.DOM_OBJECT,
-  _xpcom_categories: [{ category: "JavaScript global constructor",
+  _xpcom_categories: [{ category: "JavaScript-global-constructor",
                         entry: "BrowserFeedWriter"}],
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedWriter, Ci.nsIClassInfo,
                                          Ci.nsIDOMEventListener, Ci.nsIObserver,
