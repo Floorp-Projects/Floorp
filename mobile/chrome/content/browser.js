@@ -1232,36 +1232,6 @@ var Browser = {
     }
   },
 
-  getContentClientRects: function getContentClientRects(contentElem) {
-    // XXX don't copy getBoundingContentRect
-    let browser = Browser._browserView.getBrowser();
-
-    if (!browser)
-      return null;
-
-    let offset = BrowserView.Util.getContentScrollOffset(browser);
-    let nativeRects = contentElem.getClientRects();
-
-    // step out of iframes and frames, offsetting scroll values
-    let rect;
-    let cw = browser.contentWindow;
-    for (let frame = contentElem.ownerDocument.defaultView; frame != cw; frame = frame.parent) {
-      // adjust client coordinates' origin to be top left of iframe viewport
-      rect = frame.frameElement.getBoundingClientRect();
-      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
-      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
-      offset.add(rect.left + parseInt(left), rect.top + parseInt(top));
-    }
-
-    let result = [];
-    let r;
-    for (let i = nativeRects.length - 1; i >= 0; i--) {
-      r = nativeRects[i];
-      result.push(new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height));
-    }
-    return result;
-  },
-
   getBoundingContentRect: function getBoundingContentRect(contentElem) {
     let document = contentElem.ownerDocument;
     while(document.defaultView.frameElement)
@@ -1817,166 +1787,62 @@ const BrowserSearch = {
 /** Watches for mouse events in chrome and sends them to content. */
 function ContentCustomClicker(browserView) {
   this._browserView = browserView;
-  this._overlay = document.getElementById("content-overlay");
-  this._overlayTimeout = 0;
-  this._width = 0;
-  this._height = 0;
 }
 
 ContentCustomClicker.prototype = {
-    /** Dispatch a mouse event with chrome client coordinates. */
-    _dispatchMouseEvent: function _dispatchMouseEvent(element, name, cX, cY) {
-      let browser = this._browserView.getBrowser();
-      if (browser) {
-        let [x, y] = Browser.transformClientToBrowser(cX, cY);
-        let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-        let scrollX = {}, scrollY = {};
-        cwu.getScrollXY(false, scrollX, scrollY);
+  _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY) {
+    let browser = this._browserView.getBrowser();
+    let [x, y] = Browser.transformClientToBrowser(aX, aY);
+    browser.messageManager.sendAsyncMessage(aName, { x: x, y: y });
+  },
 
-        // the element can be out of the cX/cY point because of the touch radius
-        // ignore the redirection if the element is a HTMLHtmlElement (bug 562981)
-        let rect = Browser.getBoundingContentRect(element);
-        if (!rect.isEmpty() && !(element instanceof HTMLHtmlElement) &&
-            ((x < rect.left || (x > rect.left + rect.width)) || (y < rect.top || (y > rect.top + rect.height)))) {
+  mouseDown: function mouseDown(aX, aY) {
+    // Ensure that the content process has gets an activate event
+    let browser = this._browserView.getBrowser();
+    let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+    try {
+      fl.activateRemoteFrame();
+    } catch (e) {}
+    this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
+  },
 
-          let point = rect.center();
-          x = point.x;
-          y = point.y;
-        }
+  mouseUp: function mouseUp(aX, aY) {
+  },
 
-        x = x - scrollX.value;
-        y = y - scrollY.value;
-        cwu.sendMouseEvent(name, x, y, 0, 1, 0, true);
-      }
-    },
+  panBegin: function panBegin() {
+    TapHighlightHelper.hide();
+    let browser = this._browserView.getBrowser();
+    browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
+  },
 
-    /** Returns a node if selecting this node causes a focus. */
-    _getFocusable: function _getFocusable(node) {
-      if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label"))
-        return node;
-      return null;
-    },
+  singleClick: function singleClick(aX, aY, aModifiers) {
+    TapHighlightHelper.hide();
+    this._dispatchMouseEvent("Browser:MouseUp", aX, aY);
+    // TODO e10s: handle modifiers for clicks
+    //
+    //  if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
+    //  let uri = Util.getHrefForElement(element);
+    //  if (uri)
+    //    Browser.addTab(uri, false);
+    //  }
+  },
 
-    _showCanvas: function _showCanvas(cX, cY) {
-      // This code is sensitive to performance. Please profile changes you make to
-      // keep this running fast.
-      let bv = this._browserView;
-      let overlay = this._overlay;
-      let ctx = overlay.getContext("2d");
-      let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
-      let element = this._getFocusable(Browser.elementFromPoint(elementX, elementY));
-      if (!element)
-        return;
+  doubleClick: function doubleClick(aX1, aY1, aX2, aY2) {
+    TapHighlightHelper.hide();
+    let browser = this._browserView.getBrowser();
+    browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
 
-      let rects = Browser.getContentClientRects(element);
-      let union = rects.reduce(function(a, b) {
-        return a.expandToContain(b);
-      }, new Rect(0, 0, 0, 0)).map(bv.browserToViewport);
+    const kDoubleClickRadius = 32;
 
-      let vis = Browser.getVisibleRect();
-      let canvasArea = vis.intersect(union);
-      this._ensureSize(canvasArea.width, canvasArea.height);
+    let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
+    let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
+    if (isClickInRadius && !Browser.zoomToPoint(aX1, aY1))
+      Browser.zoomFromPoint(aX1, aY1);
+  },
 
-      ctx.save();
-      ctx.translate(-canvasArea.left, -canvasArea.top);
-      bv.browserToViewportCanvasContext(ctx);
-
-      overlay.style.left = canvasArea.left + "px";
-      overlay.style.top = canvasArea.top + "px";
-      ctx.fillStyle = "rgba(0, 145, 255, .5)";
-      let rect;
-      let i;
-      for (i = rects.length - 1; i >= 0; i--) {
-        rect = rects[i];
-        ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
-      }
-      ctx.restore();
-      overlay.style.display = "block";
-    },
-
-    /** Stop highlighting current element. */
-    _hideCanvas: function _hideCanvas() {
-      let overlay = this._overlay;
-      overlay.style.display = "none";
-      overlay.getContext("2d").clearRect(0, 0, this._width, this._height);
-
-      if (this._overlayTimeout) {
-        clearTimeout(this._overlayTimeout);
-        this._overlayTimeout = 0;
-      }
-    },
-
-    /** Make sure canvas is at least width x height. */
-    _ensureSize: function _ensureSize(width, height) {
-      if (this._width <= width) {
-        this._width = width;
-        this._overlay.width = width;
-      }
-      if (this._height <= height) {
-        this._height = height;
-        this._overlay.height = height;
-      }
-    },
-
-    mouseDown: function mouseDown(cX, cY) {
-      if (!this._overlayTimeout)
-        this._overlayTimeout = setTimeout(function(self) { self._showCanvas(cX, cY); }, kTapOverlayTimeout, this);
-    },
-
-    mouseUp: function mouseUp(cX, cY) {
-    },
-
-    panBegin: function panBegin() {
-      this._hideCanvas();
-    },
-
-    singleClick: function singleClick(cX, cY, modifiers) {
-      this._hideCanvas();
-
-      let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
-      let element = Browser.elementFromPoint(elementX, elementY);
-      if (modifiers == 0) {
-        if (element instanceof HTMLOptionElement)
-          element = element.parentNode;
-
-        if (gPrefService.getBoolPref("formhelper.enabled")) {
-          if (FormHelper.canShowUIFor(element) && FormHelper.open(element))
-            return;
-        }
-        else if (SelectHelper.canShowUIFor(element)) {
-          SelectHelper.show(element);
-          return;
-        }
-
-        gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-
-        let self = this;
-        Util.executeSoon(function() {
-          self._dispatchMouseEvent(element, "mousedown", cX, cY);
-          self._dispatchMouseEvent(element, "mouseup", cX, cY);
-        });
-      }
-      else if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
-        let uri = Util.getHrefForElement(element);
-        if (uri)
-          Browser.addTab(uri, false, Browser.selectedTab);
-      }
-    },
-
-    doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
-      this._hideCanvas();
-
-      const kDoubleClickRadius = 32;
-
-      let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
-      let isClickInRadius = (Math.abs(cX1 - cX2) < maxRadius && Math.abs(cY1 - cY2) < maxRadius);
-      if (isClickInRadius && !Browser.zoomToPoint(cX1, cY1))
-        Browser.zoomFromPoint(cX1, cY1);
-    },
-
-    toString: function toString() {
-      return "[ContentCustomClicker] { }";
-    }
+  toString: function toString() {
+    return "[ContentCustomClicker] { }";
+  }
 };
 
 /** Watches for mouse events in chrome and sends them to content. */

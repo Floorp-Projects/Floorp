@@ -6,8 +6,6 @@ const kTapOverlayTimeout = 200;
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
-let gIOService = Cc["@mozilla.org/network/io-service;1"]
-  .getService(Ci.nsIIOService);
 let gFocusManager = Cc["@mozilla.org/focus-manager;1"]
   .getService(Ci.nsIFocusManager);
 let gPrefService = Cc["@mozilla.org/preferences-service;1"]
@@ -145,6 +143,7 @@ const ElementTouchHelper = {
   }
 };
 
+
 /**
  * @param x,y Browser coordinates
  * @return Element at position, null if no active browser or no element found
@@ -162,8 +161,8 @@ function elementFromPoint(x, y) {
   while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
     // adjust client coordinates' origin to be top left of iframe viewport
     let rect = elem.getBoundingClientRect();
-    x = x - rect.left;
-    y = y - rect.top;
+    x -= rect.left;
+    y -= rect.top;
     let windowUtils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     elem = ElementTouchHelper.getClosest(windowUtils, x, y);
   }
@@ -171,20 +170,19 @@ function elementFromPoint(x, y) {
   return elem;
 }
 
-
-function getBoundingContentRect(contentElem) {
-  if (!contentElem)
+function getBoundingContentRect(aElement) {
+  if (!aElement)
     return new Rect(0, 0, 0, 0);
 
-  let document = contentElem.ownerDocument;
+  let document = aElement.ownerDocument;
   while(document.defaultView.frameElement)
     document = document.defaultView.frameElement.ownerDocument;
 
   let offset = Util.getScrollOffset(content);
-  let r = contentElem.getBoundingClientRect();
+  let r = aElement.getBoundingClientRect();
 
   // step out of iframes and frames, offsetting scroll values
-  for (let frame = contentElem.ownerDocument.defaultView; frame != content; frame = frame.parent) {
+  for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
     // adjust client coordinates' origin to be top left of iframe viewport
     let rect = frame.frameElement.getBoundingClientRect();
     let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
@@ -195,6 +193,29 @@ function getBoundingContentRect(contentElem) {
   return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
 }
 
+function getContentClientRects(aElement) {
+  let offset = Util.getScrollOffset(content);
+  let nativeRects = aElement.getClientRects();
+  // step out of iframes and frames, offsetting scroll values
+  for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
+    // adjust client coordinates' origin to be top left of iframe viewport
+    let rect = frame.frameElement.getBoundingClientRect();
+    let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+    let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+    offset.add(rect.left + parseInt(left), rect.top + parseInt(top));
+  }
+
+  let result = [];
+  for (let i = nativeRects.length - 1; i >= 0; i--) {
+    let r = nativeRects[i];
+    result.push({ left: r.left + offset.x,
+                  top: r.top + offset.y,
+                  width: r.width,
+                  height: r.height
+                });
+  }
+  return result;
+};
 
 /** Reponsible for sending messages about viewport size changes and painting. */
 function Coalescer() {
@@ -536,8 +557,7 @@ ContentFormManager.prototype = {
     let currentElement = this.getCurrent();
     let rect = currentElement.getCaretRect();
     return null;
-  },
-  
+  }
 };
 
 
@@ -678,9 +698,9 @@ FormNavigator.prototype = {
 function Content() {
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:Focus", this);
-  addMessageListener("Browser:Mousedown", this);
-  addMessageListener("Browser:Mouseup", this);
-  addMessageListener("Browser:CancelMouse", this);
+  addMessageListener("Browser:MouseDown", this);
+  addMessageListener("Browser:MouseUp", this);
+  addMessageListener("Browser:MouseCancel", this);
   addMessageListener("Browser:SaveAs", this);
 
   this._coalescer = new Coalescer();
@@ -693,16 +713,16 @@ function Content() {
   this._progressController.start();
 
   this._contentFormManager = new ContentFormManager();
-
-  this._mousedownTimeout = new Util.Timeout();
 }
 
 Content.prototype = {
   receiveMessage: function receiveMessage(aMessage) {
     let json = aMessage.json;
+    let x = json.x;
+    let y = json.y;
 
     switch (aMessage.name) {
-      case "Browser:Blur": 
+      case "Browser:Blur":
         docShell.isOffScreenBrowser = false;
         this._selected = false;
         break;
@@ -712,31 +732,44 @@ Content.prototype = {
         this._selected = true;
         break;
 
-      case "Browser:Mousedown":
-        this._mousedownTimeout.once(kTapOverlayTimeout, function() {
+      case "Browser:MouseDown":
+        if (this._overlayTimeout)
+          return;
+
+        this._overlayTimeout = content.document.defaultView.setTimeout(function() {
           let element = elementFromPoint(x, y);
-          gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-        });
+          if (!element || !element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label"))
+            return;
+
+          let rects = getContentClientRects(element);
+          sendSyncMessage("Browser:Highlight", { rects: rects });
+        }, kTapOverlayTimeout);
         break;
 
-      case "Browser:Mouseup":
-        this._mousedownTimeout.flush();
-
+      case "Browser:MouseUp":
         let element = elementFromPoint(x, y);
-        if (!this._contentFormManager.formAssist(element)) {
+        // the element can be out of the cX/cY point because of the touch radius
+        // ignore the redirection if the element is a HTMLHtmlElement (bug 562981)
+        let rect = getBoundingContentRect(element);
+        if (!rect.isEmpty() && !(element instanceof HTMLHtmlElement) &&
+           ((x < rect.left || (x > rect.left + rect.width)) || (y < rect.top || (y > rect.top + rect.height)))) {
+
+          let point = rect.center();
+          x = point.x;
+          y = point.y;
+        }
+
+        // XXX e10s bug 566288
+        // if (!this._contentFormManager.formAssist(element)) {
           this._sendMouseEvent("mousedown", element, x, y);
           this._sendMouseEvent("mouseup", element, x, y);
-        }
-        break;
+        // }
 
-      case "Browser:CancelMouse":
-        this._mousedownTimeout.clear();
-        // XXX there must be a better way than this to cancel the mouseover/focus?
-        this._sendMouseEvent("mouseup", null, -1000, -1000);
-        try {
-          content.document.activeElement.blur();
+      case "Browser:MouseCancel":
+        if (this._overlayTimeout) {
+          content.document.defaultView.clearTimeout(this._overlayTimeout);
+          this._overlayTimeout = 0;
         }
-        catch(e) {}
         break;
 
       case "Browser:SaveAs":

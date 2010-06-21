@@ -407,6 +407,7 @@ var BrowserUI = {
 
     // listen returns messages from content
     messageManager.addMessageListener("Browser:SaveAs:Return", this);
+    messageManager.addMessageListener("Browser:Highlight", this);
 
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
@@ -422,7 +423,7 @@ var BrowserUI = {
     messageManager.addMessageListener("DOMContentLoaded", function() {
       // We only want to delay one time
       messageManager.removeMessageListener("DOMContentLoaded", arguments.callee, true);
-      
+
       // We unhide the panelUI so the XBL and settings can initialize
       Elements.panelUI.hidden = false;
 
@@ -780,6 +781,7 @@ var BrowserUI = {
 
   receiveMessage: function receiveMessage(aMessage) {
     let browser = aMessage.target;
+    let json = aMessage.json;
     switch (aMessage.name) {
       case "DOMTitleChanged":
         this._titleChanged(browser);
@@ -795,7 +797,6 @@ var BrowserUI = {
           this._updateIcon(Browser.selectedBrowser.mIconURL);
         break;
       case "Browser:SaveAs:Return":
-        let json = aMessage.json;
         if (json.type != Ci.nsIPrintSettings.kOutputFormatPDF)
           return;
 
@@ -820,6 +821,15 @@ var BrowserUI = {
         }
         catch(e) {}
         gObserverService.notifyObservers(download, "dl-done", null);
+        break;
+
+      case "Browser:Highlight":
+        let rects = [];
+        for (let i = 0; i < json.rects.length; i++) {
+          let rect = json.rects[i];
+          rects.push(new Rect(rect.left, rect.top, rect.width, rect.height));
+        }
+        TapHighlightHelper.show(rects);
         break;
     }
 
@@ -981,6 +991,48 @@ var BrowserUI = {
     }
   }
 };
+
+var TapHighlightHelper = {
+  get _overlay() {
+    delete this._overlay;
+    return this._overlay = document.getElementById("content-overlay");
+  },
+
+  show: function show(aRects) {
+    let bv = Browser._browserView;
+    let union = aRects.reduce(function(a, b) {
+      return a.expandToContain(b);
+    }, new Rect(0, 0, 0, 0)).map(bv.browserToViewport);
+
+    let vis = Browser.getVisibleRect();
+    let canvasArea = vis.intersect(union);
+
+    let overlay = this._overlay;
+    overlay.width = canvasArea.width;
+    overlay.style.width = canvasArea.width + "px";
+    overlay.height = canvasArea.height;
+    overlay.style.height = canvasArea.height + "px";
+
+    let ctx = overlay.getContext("2d");
+    ctx.save();
+    ctx.translate(-canvasArea.left, -canvasArea.top);
+    bv.browserToViewportCanvasContext(ctx);
+
+    overlay.style.left = canvasArea.left + "px";
+    overlay.style.top = canvasArea.top + "px";
+    ctx.fillStyle = "rgba(0, 145, 255, .5)";
+    for (let i = aRects.length - 1; i >= 0; i--) {
+      let rect = aRects[i];
+      ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+    }
+    ctx.restore();
+    overlay.style.display = "block";
+  },
+
+  hide: function hide() {
+    this._overlay.style.display = "none";
+  }
+}
 
 var PageActions = {
   get _permissionManager() {
