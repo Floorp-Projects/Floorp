@@ -241,10 +241,10 @@ window.Page = {
   },
   
   setCloseButtonOnTabs : function() {
-    // XXX: we will need to modify the adjustTabstrip() to fix this when merging
+    // TODO: we will need to modify the adjustTabstrip() to fix this when merging
     // this extension to Firefox.
     // http://mxr.mozilla.org/mozilla1.9.2/source/browser/base/content/tabbrowser.xml#3050
-    setTimeout(function() {
+    iQ.timeout(function() { // iQ.timeout adds a try/catch to setTimeout
       var tabContainer = Utils.getCurrentWindow().gBrowser.tabContainer;
       if (tabContainer.mCloseButtons == 1 &&
           tabContainer.getAttribute("overflow") != "true") {
@@ -320,10 +320,6 @@ window.Page = {
   // ----------  
   init: function() {
     var self = this;
-/*  Ian suspects we don't need these lines
-    Utils.homeTab.raw.maxWidth = 60;
-    Utils.homeTab.raw.minWidth = 60;
-*/
         
     // When you click on the background/empty part of TabCandy
     // we create a new group.
@@ -336,6 +332,8 @@ window.Page = {
         
     Tabs.onClose(function(){
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+        Page.setCloseButtonOnTabs();        
+          
         // Only go back to the TabCandy tab when there you close the last
         // tab of a group.
         var group = Groups.getActiveGroup();
@@ -609,6 +607,7 @@ UIClass.prototype = {
       Tabs.onOpen(function(a, b) {
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           self.navBar.show();
+          Page.setCloseButtonOnTabs();
         }, 1);
       });
     
