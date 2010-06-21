@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *  Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,40 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _ACCESSIBLE_HYPERTEXT_H
-#define _ACCESSIBLE_HYPERTEXT_H
+#ifndef a11yFilters_h_
+#define a11yFilters_h_
 
-#include "nsISupports.h"
+class nsAccessible;
 
-#include "CAccessibleText.h"
-#include "AccessibleHypertext.h"
+/**
+ * Predefined filters used for nsAccIterator and nsAccCollector.
+ */
+namespace filters {
 
-class CAccessibleHypertext: public CAccessibleText,
-                            public IAccessibleHypertext
-{
-public:
+  /**
+   * Return true if the traversed accessible complies with filter.
+   */
+  typedef bool (*FilterFuncPtr) (nsAccessible*);
 
-  // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
-
-  // IAccessibleText
-  FORWARD_IACCESSIBLETEXT(CAccessibleText)
-
-  // IAccessibleHypertext
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nHyperlinks(
-      /* [retval][out] */ long *hyperlinkCount);
-
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlink(
-      /* [in] */ long index,
-      /* [retval][out] */ IAccessibleHyperlink **hyperlink);
-
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinkIndex(
-      /* [in] */ long charIndex,
-      /* [retval][out] */ long *hyperlinkIndex);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
-};
+  bool GetSelected(nsAccessible* aAccessible);
+  bool GetSelectable(nsAccessible* aAccessible);
+  bool GetRow(nsAccessible* aAccessible);
+  bool GetCell(nsAccessible* aAccessible);
+  bool GetEmbeddedObject(nsAccessible* aAccessible);
+}
 
 #endif
-

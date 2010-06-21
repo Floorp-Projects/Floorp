@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *  Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,40 +35,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _ACCESSIBLE_HYPERTEXT_H
-#define _ACCESSIBLE_HYPERTEXT_H
+#include "filters.h"
 
-#include "nsISupports.h"
+#include "nsAccessible.h"
+#include "nsAccUtils.h"
 
-#include "CAccessibleText.h"
-#include "AccessibleHypertext.h"
-
-class CAccessibleHypertext: public CAccessibleText,
-                            public IAccessibleHypertext
+bool
+filters::GetSelected(nsAccessible* aAccessible)
 {
-public:
+  return nsAccUtils::State(aAccessible) & nsIAccessibleStates::STATE_SELECTED;
+}
 
-  // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+bool
+filters::GetSelectable(nsAccessible* aAccessible)
+{
+  return nsAccUtils::State(aAccessible) & nsIAccessibleStates::STATE_SELECTABLE;
+}
 
-  // IAccessibleText
-  FORWARD_IACCESSIBLETEXT(CAccessibleText)
+bool
+filters::GetRow(nsAccessible* aAccessible)
+{
+  return nsAccUtils::Role(aAccessible) == nsIAccessibleRole::ROLE_ROW;
+}
 
-  // IAccessibleHypertext
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nHyperlinks(
-      /* [retval][out] */ long *hyperlinkCount);
+bool
+filters::GetCell(nsAccessible* aAccessible)
+{
+  PRUint32 role = nsAccUtils::Role(aAccessible);
+  return role == nsIAccessibleRole::ROLE_GRID_CELL ||
+      role == nsIAccessibleRole::ROLE_ROWHEADER ||
+      role == nsIAccessibleRole::ROLE_COLUMNHEADER;
+}
 
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlink(
-      /* [in] */ long index,
-      /* [retval][out] */ IAccessibleHyperlink **hyperlink);
-
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinkIndex(
-      /* [in] */ long charIndex,
-      /* [retval][out] */ long *hyperlinkIndex);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
-};
-
-#endif
-
+bool
+filters::GetEmbeddedObject(nsAccessible* aAccessible)
+{
+  return nsAccUtils::IsEmbeddedObject(aAccessible);
+}
