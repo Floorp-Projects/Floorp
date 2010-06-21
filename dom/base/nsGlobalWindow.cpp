@@ -7023,6 +7023,14 @@ nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
   }
 }
 
+static PRBool IsLink(nsIContent* aContent)
+{
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aContent);
+  return (anchor || (aContent &&
+                     aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                           nsGkAtoms::simple, eCaseMatters)));
+}
+
 void
 nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
                                PRUint32 aFocusMethod,
@@ -7042,18 +7050,19 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
 
   if (mFocusedNode) {
     // if a node was focused by a keypress, turn on focus rings for the
-    // window. Focus rings are always shown when the FLAG_SHOWRING flag is
-    // used, or for XUL elements on GTK, but in this case we set
-    // mShowFocusRingForContent, as we don't want this to be permanent for
-    // the window.
-    if (mFocusMethod == nsIFocusManager::FLAG_BYKEY) {
+    // window.
+    if (mFocusMethod & nsIFocusManager::FLAG_BYKEY) {
       mFocusByKeyOccurred = PR_TRUE;
-    } else if (aFocusMethod & nsIFocusManager::FLAG_SHOWRING
-#ifdef MOZ_WIDGET_GTK2
-             || mFocusedNode->IsXUL()
+    } else if (
+      // otherwise, we set mShowFocusRingForContent, as we don't want this to
+      // be permanent for the window. On Windows, focus rings are only shown
+      // when the FLAG_SHOWRING flag is used. On other platforms, focus rings
+      // are only hidden for clicks on links.
+#ifndef XP_WIN
+      !(mFocusMethod & nsIFocusManager::FLAG_BYMOUSE) || !IsLink(aNode) ||
 #endif
-            ) {
-      mShowFocusRingForContent = PR_TRUE;
+      aFocusMethod & nsIFocusManager::FLAG_SHOWRING) {
+        mShowFocusRingForContent = PR_TRUE;
     }
   }
 
@@ -9205,10 +9214,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
   // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
   // it easy to tell which link was last clicked when going back a page.
   nsIContent* focusedNode = inner->GetFocusedNode();
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(focusedNode);
-  if (anchor || (focusedNode &&
-                 focusedNode->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
-                                          nsGkAtoms::simple, eCaseMatters))) {
+  if (IsLink(focusedNode)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       nsCOMPtr<nsIDOMElement> focusedElement(do_QueryInterface(focusedNode));
