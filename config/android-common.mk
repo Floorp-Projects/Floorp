@@ -72,7 +72,3 @@ JAVAC_FLAGS = \
   -g \
   $(NULL)
 
-# Note that we're going to set up a dependency directly between embed_android.dex and the java files
-# Instead of on the .class files, since more than one .class file might be produced per .java file
-# The $JAVAFILES_IN are for any optional, interpolated java files that are needed.
-
