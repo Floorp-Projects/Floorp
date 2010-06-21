@@ -1100,9 +1100,16 @@
         <![CDATA[
           if (this.disabled || this.itemCount == 0)
             return;
-      
+
           this.focus();
-          SelectHelper.show(this);
+          try {
+            SelectHelper.show(new BasicWrapper(this));
+          }
+          catch(e) {
+            let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+            loader.loadSubScript("chrome://browser/content/forms.js", this);
+            SelectHelper.show(new BasicWrapper(this));
+          }
         ]]>
       </handler>
     </handlers>
