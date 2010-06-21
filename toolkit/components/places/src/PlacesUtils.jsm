@@ -1508,28 +1508,14 @@ var PlacesUtils = {
       }
     }
 
-    function writeScalarNode(aStream, aNode) {
-      // serialize to json
-      var jstr = PlacesUtils.toJSONString(aNode);
-      // write to stream
-      aStream.write(jstr, jstr.length);
-    }
+    function appendConvertedComplexNode(aNode, aSourceNode, aArray) {
+      var repr = {};
 
-    function writeComplexNode(aStream, aNode, aSourceNode) {
-      var escJSONStringRegExp = /(["\\])/g;
-      // write prefix
-      var properties = [];
-      for (let [name, value] in Iterator(aNode)) {
-        if (name == "annos")
-          value = PlacesUtils.toJSONString(value);
-        else if (typeof value == "string")
-          value = "\"" + value.replace(escJSONStringRegExp, '\\$1') + "\"";
-        properties.push("\"" + name.replace(escJSONStringRegExp, '\\$1') + "\":" + value);
-      }
-      var jStr = "{" + properties.join(",") + ",\"children\":[";
-      aStream.write(jStr, jStr.length);
+      for (let [name, value] in Iterator(aNode))
+        repr[name] = value;
 
       // write child nodes
+      var children = repr.children = [];
       if (!aNode.livemark) {
         asContainer(aSourceNode);
         var wasOpen = aSourceNode.containerOpen;
@@ -1540,19 +1526,17 @@ var PlacesUtils = {
           var childNode = aSourceNode.getChild(i);
           if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
             continue;
-          var written = serializeNodeToJSONStream(aSourceNode.getChild(i), i);
-          if (written && i < cc - 1)
-            aStream.write(",", 1);
+          appendConvertedNode(aSourceNode.getChild(i), i, children);
         }
         if (!wasOpen)
           aSourceNode.containerOpen = false;
       }
 
-      // write suffix
-      aStream.write("]}", 2);
+      aArray.push(repr);
+      return true;
     }
 
-    function serializeNodeToJSONStream(bNode, aIndex) {
+    function appendConvertedNode(bNode, aIndex, aArray) {
       var node = {};
 
       // set index in order received
@@ -1570,6 +1554,7 @@ var PlacesUtils = {
         // Tag root accept only folder nodes
         if (parent && parent.itemId == PlacesUtils.tagsFolderId)
           return false;
+
         // Check for url validity, since we can't halt while writing a backup.
         // This will throw if we try to serialize an invalid url and it does
         // not make sense saving a wrong or corrupt uri node.
@@ -1578,12 +1563,14 @@ var PlacesUtils = {
         } catch (ex) {
           return false;
         }
+
         addURIProperties(bNode, node);
       }
       else if (PlacesUtils.nodeIsContainer(bNode)) {
         // Tag containers accept only uri nodes
         if (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId)
           return false;
+
         addContainerProperties(bNode, node);
       }
       else if (PlacesUtils.nodeIsSeparator(bNode)) {
@@ -1597,14 +1584,21 @@ var PlacesUtils = {
       }
 
       if (!node.feedURI && node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER)
-        writeComplexNode(aStream, node, bNode);
-      else
-        writeScalarNode(aStream, node);
+        return appendConvertedComplexNode(node, bNode, aArray);
+
+      aArray.push(node);
       return true;
     }
 
     // serialize to stream
-    serializeNodeToJSONStream(aNode, null);
+    var array = [];
+    if (appendConvertedNode(aNode, null, array)) {
+      var json = JSON.stringify(array[0]);
+      aStream.write(json, json.length);
+    }
+    else {
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
   },
 
   /**

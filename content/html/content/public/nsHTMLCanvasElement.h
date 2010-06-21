@@ -83,6 +83,10 @@ public:
   // nsIDOMHTMLCanvasElement
   NS_DECL_NSIDOMHTMLCANVASELEMENT
 
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLCanvasElement,
+                                                     nsGenericHTMLElement)
+
   /**
    * Ask the canvas Element to return the primary frame, if any
    */

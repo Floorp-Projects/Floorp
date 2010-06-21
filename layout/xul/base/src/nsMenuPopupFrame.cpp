@@ -1629,6 +1629,13 @@ nsMenuPopupFrame::MoveToAttributePosition()
 void
 nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
+  nsIFrame* parent = GetParent();
+  if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+    // clear the open attribute on the parent menu
+    nsContentUtils::AddScriptRunner(
+      new nsUnsetAttrRunnable(parent->GetContent(), nsGkAtoms::open));
+  }
+
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm)
     pm->PopupDestroyed(this);

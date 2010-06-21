@@ -48,7 +48,7 @@ DIRS		+= mochitest \
 		$(NULL)
 XPCSHELL_TESTS = unit
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 	dirs += browser
 endif
 

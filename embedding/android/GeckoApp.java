@@ -76,6 +76,18 @@ abstract public class GeckoApp
             env = i.getStringExtra("env" + c);
             Log.i("GeckoApp", "env"+ c +": "+ env);
         }
+        String tmpdir = System.getProperty("java.io.tmpdir");
+        if (tmpdir == null) {
+          try {
+            File f = Environment.getDownloadCacheDirectory();
+            dalvik.system.TemporaryDirectory.setUpDirectory(f);
+            tmpdir = f.getPath();
+          } catch (Exception e) {
+            Log.e("GeckoApp", "error setting up tmp dir" + e);
+          }
+        }
+        GeckoAppShell.putenv("TMPDIR=" + tmpdir);
+
         GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
                                i.getStringExtra("args"),
                                i.getDataString());
@@ -137,8 +149,19 @@ abstract public class GeckoApp
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        final String action = intent.getAction();
+        if (Intent.ACTION_VIEW.equals(action)) {
+            String uri = intent.getDataString();
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
+            Log.i("GeckoApp","onNewIntent: "+uri);
+        }
+    }
+
+    @Override
     public void onPause()
     {
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
         // has come to the foreground yet; for Gecko, we may want to
         // stop repainting, for example.

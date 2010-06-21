@@ -47,6 +47,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsILocalFile.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsISimpleEnumerator.h"
@@ -815,6 +816,9 @@ nsXREDirProvider::DoStartup()
 
     static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
+    // Init the Extension Manager
+    nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
+    em->Observe(nsnull, "addons-startup", nsnull);
     obsSvc->NotifyObservers(nsnull, "profile-after-change", kStartup);
 
     // Any component that has registered for the profile-after-change category

@@ -468,8 +468,8 @@ PrivateBrowsingService.prototype = {
   },
 
   get helpInfo() {
-    return "  -private            Enable private browsing mode.\n" +
-           "  -private-toggle     Toggle private browsing mode.\n";
+    return "  -private           Enable private browsing mode.\n" +
+           "  -private-toggle    Toggle private browsing mode.\n";
   },
 
   // nsIPrivateBrowsingService

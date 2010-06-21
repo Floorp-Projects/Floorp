@@ -76,8 +76,7 @@ nsresult TextEditorTest::RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsF
 {
   nsresult result;
   
-  if (!outNumTests || !outNumTestsFailed)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(outNumTests && outNumTestsFailed, NS_ERROR_NULL_POINTER);
   
   *outNumTests = 0;
   *outNumTestsFailed = 0;
@@ -188,8 +187,7 @@ nsresult TextEditorTest::TestTextProperties()
   selection->Extend(textNode, length);
 
   nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mTextEditor));
-  if (!htmlEditor)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
 
   PRBool any = PR_FALSE;
   PRBool all = PR_FALSE;

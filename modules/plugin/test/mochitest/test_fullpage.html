@@ -11,9 +11,6 @@
 <body>
   <p id="display"></p>
 
-  <iframe src="loremipsum.xtest" streamtype="seek"></iframe>
-  <iframe id="testframe" name="testframe" onload="frameLoaded()"></iframe>
-
   <script type="application/javascript">
     SimpleTest.waitForExplicitFinish();
 
@@ -33,3 +30,6 @@
       SimpleTest.finish();
     }
   </script>
+
+  <iframe src="loremipsum.xtest" streamtype="seek"></iframe>
+  <iframe id="testframe" name="testframe" onload="frameLoaded()"></iframe>

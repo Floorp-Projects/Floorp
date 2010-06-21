@@ -107,7 +107,8 @@ gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
-                               PRUint32 aRunLength)
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript)
 {
     // aRunStart and aRunLength define the section of the textRun and of aString
     // that is to be drawn with this particular font

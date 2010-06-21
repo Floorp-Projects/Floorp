@@ -211,7 +211,7 @@ nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
   if (aPaletteDepth != 0) {
     // We're creating for a paletted image.
     if (aPaletteDepth > 8) {
-      NS_ERROR("This Depth is not supported\n");
+      NS_ERROR("This Depth is not supported");
       return NS_ERROR_FAILURE;
     }
 

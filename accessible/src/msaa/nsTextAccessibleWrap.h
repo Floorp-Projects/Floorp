@@ -49,9 +49,9 @@ class nsIRenderingContext;
 class nsTextAccessibleWrap : public nsTextAccessible, 
                              public ISimpleDOMText
 {
-  public:
-    nsTextAccessibleWrap(nsIDOMNode *, nsIWeakReference* aShell);
-    virtual ~nsTextAccessibleWrap() {}
+public:
+  nsTextAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell);
+  virtual ~nsTextAccessibleWrap() {}
 
     // IUnknown methods - see iunknown.h for documentation
     STDMETHODIMP_(ULONG) AddRef();

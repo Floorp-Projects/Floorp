@@ -71,6 +71,14 @@ Tester.prototype = {
   },
 
   waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
+    if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
+      let msg = "Found " + (gBrowser.tabs.length - 1) +
+                " unexpected tab(s) at the end of test run";      
+      this.currentTest.addResult(new testResult(false, msg, "", false));
+      while (gBrowser.tabs.length > 1)
+        gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+    }
+
     this.dumper.dump("TEST-INFO | checking window state\n");
     let windowsEnum = this._wm.getEnumerator("navigator:browser");
     while (windowsEnum.hasMoreElements()) {
@@ -115,6 +123,7 @@ Tester.prototype = {
     }
 
     this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
+    this.dumper.dump("TEST-START | Shutdown\n");
 
     this.dumper.done();
 
@@ -160,7 +169,7 @@ Tester.prototype = {
   },
 
   execTest: function Tester_execTest() {
-    this.dumper.dump("Running " + this.currentTest.path + "...\n");
+    this.dumper.dump("TEST-START | " + this.currentTest.path + "\n");
 
     // Load the tests into a testscope
     this.currentTest.scope = new testScope(this, this.currentTest);

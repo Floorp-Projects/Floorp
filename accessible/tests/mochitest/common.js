@@ -222,6 +222,8 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
     }
   }
 
+  acc.QueryInterface(nsIAccessNode);
+
   if (!aInterfaces)
     return acc;
 
@@ -392,6 +394,15 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
       }
     }
   }
+}
+
+/**
+ * Return true if accessible for the given node is in cache.
+ */
+function isAccessibleInCache(aNodeOrId)
+{
+  var node = getNode(aNodeOrId);
+  return gAccRetrieval.getAccessibleFromCache(node) ? true : false;
 }
 
 /**

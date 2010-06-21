@@ -67,7 +67,7 @@
 #include "nsITimer.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMProgressEvent.h"
-#include "nsDOMEventTargetHelper.h"
+#include "nsDOMEventTargetWrapperCache.h"
 
 class nsILoadGroup;
 
@@ -137,56 +137,17 @@ private:
   PRCList mList;
 };
 
-class nsXHREventTarget : public nsDOMEventTargetHelper,
-                         public nsIXMLHttpRequestEventTarget,
-                         public nsWrapperCache
+class nsXHREventTarget : public nsDOMEventTargetWrapperCache,
+                         public nsIXMLHttpRequestEventTarget
 {
 public:
-  virtual ~nsXHREventTarget();
+  virtual ~nsXHREventTarget() {}
   NS_DECL_ISUPPORTS_INHERITED
-
-  class NS_CYCLE_COLLECTION_INNERCLASS
-    : public NS_CYCLE_COLLECTION_CLASSNAME(nsDOMEventTargetHelper)
-  {
-    NS_IMETHOD RootAndUnlinkJSObjects(void *p);
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(nsXHREventTarget,
-                                                  nsDOMEventTargetHelper)
-    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);
-  };
-  NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
-
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXHREventTarget,
+                                           nsDOMEventTargetWrapperCache)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
   NS_FORWARD_NSIDOMNSEVENTTARGET(nsDOMEventTargetHelper::)
-
-  void GetParentObject(nsIScriptGlobalObject **aParentObject)
-  {
-    if (mOwner) {
-      CallQueryInterface(mOwner, aParentObject);
-    }
-    else {
-      *aParentObject = nsnull;
-    }
-  }
-
-  static nsXHREventTarget* FromSupports(nsISupports* aSupports)
-  {
-    nsPIDOMEventTarget* target =
-      static_cast<nsPIDOMEventTarget*>(aSupports);
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsPIDOMEventTarget> target_qi =
-        do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsPIDOMEventTarget pointer as the
-      // nsISupports pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(target_qi == target, "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<nsXHREventTarget*>(target);
-  }
 
 protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;

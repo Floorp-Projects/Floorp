@@ -119,6 +119,9 @@ protected:
 
 private:
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
+#ifdef MOZ_OMNIJAR
+  nsresult CheckOmnijarChrome();
+#endif
 
   static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,

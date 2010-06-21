@@ -72,6 +72,7 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug517163.html \
 		test_bug553407.html \
 		test_bug560351.html \
+		test_bug564330.html \
 		test_cows.html \
 		test_frameWrapping.html \
 		$(NULL)

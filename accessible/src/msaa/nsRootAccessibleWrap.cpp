@@ -45,10 +45,14 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-//----- nsRootAccessibleWrap -----
+////////////////////////////////////////////////////////////////////////////////
+// nsRootAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
-  nsRootAccessible(aDOMNode, aShell)
+nsRootAccessibleWrap::
+  nsRootAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
+                       nsIWeakReference *aShell) :
+  nsRootAccessible(aDocument, aRootContent, aShell)
 {
 }
 

@@ -105,6 +105,8 @@ _qimage_from_gfximage_format (gfxASurface::gfxImageFormat aFormat)
         return QImage::Format_ARGB32_Premultiplied;
     case gfxASurface::ImageFormatRGB24:
         return QImage::Format_RGB32;
+    case gfxASurface::ImageFormatRGB16_565:
+        return QImage::Format_RGB16;
     case gfxASurface::ImageFormatA8:
         return QImage::Format_Indexed8;
     case gfxASurface::ImageFormatA1:
@@ -625,12 +627,6 @@ PRBool
 nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
 {
     return PR_TRUE;
-}
-
-nsTransparencyMode
-nsNativeThemeQt::GetWidgetTransparency(PRUint8 aWidgetType)
-{
-  return eTransparencyOpaque;
 }
 
 void

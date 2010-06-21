@@ -107,7 +107,7 @@ interface nsIXULTemplateBuilder;
  * nsIRDFDataSource or a DOM node, and will always be the same one in between
  * calls to initializeForBuilding and done.
  */
-[scriptable, uuid(970f1c36-5d2e-4cbc-a1cf-e3327b50df71)]
+[scriptable, uuid(C257573F-444F-468A-BA27-DE979DC55FE4)]
 interface nsIXULTemplateQueryProcessor : nsISupports
 {
   /**
@@ -291,6 +291,8 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    * sorted in a natural order, for instance, based on the order the data in
    * stored in the datasource.
    *
+   * The sort hints are the flags in nsIXULSortService.
+   *
    * This method must only be called with results that were created by this
    * query processor.
    *
@@ -302,5 +304,6 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    */
    PRInt32 compareResults(in nsIXULTemplateResult aLeft,
                           in nsIXULTemplateResult aRight,
-                          in nsIAtom aVar);
+                          in nsIAtom aVar,
+                          in unsigned long aSortHints);
 };

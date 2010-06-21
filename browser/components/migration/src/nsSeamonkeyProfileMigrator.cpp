@@ -386,8 +386,6 @@ nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("network.proxy.ssl_port",                   Int),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.socks",                      String),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.socks_port",                 Int),
-  MAKESAMETYPEPREFTRANSFORM("network.proxy.gopher",                     String),
-  MAKESAMETYPEPREFTRANSFORM("network.proxy.gopher_port",                Int),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.no_proxies_on",              String),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.autoconfig_url",             String),
   MAKESAMETYPEPREFTRANSFORM("browser.display.foreground_color",         String),

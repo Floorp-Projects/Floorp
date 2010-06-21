@@ -103,6 +103,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     // ModuleLoader
     const mozilla::Module* LoadModule(nsILocalFile* aFile);
+    const mozilla::Module* LoadModuleFromJAR(nsILocalFile* aJARFile,
+                                             const nsACString& aPath);
 
  protected:
     static mozJSComponentLoader* sSelf;
@@ -110,7 +112,17 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsresult ReallyInit();
     void UnloadModules();
 
-    nsresult GlobalForLocation(nsILocalFile *aComponent,
+    nsresult FileKey(nsILocalFile* aFile, nsAString &aResult);
+    nsresult JarKey(nsILocalFile* aFile,
+                    const nsACString& aComponentPath,
+                    nsAString &aResult);
+
+    const mozilla::Module* LoadModuleImpl(nsILocalFile* aSourceFile,
+                                          nsAString &aKey,
+                                          nsIURI* aComponentURI);
+
+    nsresult GlobalForLocation(nsILocalFile* aComponentFile,
+                               nsIURI *aComponent,
                                JSObject **aGlobal,
                                char **location,
                                jsval *exception);
@@ -185,11 +197,11 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     friend class ModuleEntry;
 
     // Modules are intentionally leaked, but still cleared.
-    static PLDHashOperator ClearModules(nsIHashable* key, ModuleEntry*& entry, void* cx);
-    nsDataHashtable<nsHashableHashKey, ModuleEntry*> mModules;
+    static PLDHashOperator ClearModules(const nsAString& key, ModuleEntry*& entry, void* cx);
+    nsDataHashtable<nsStringHashKey, ModuleEntry*> mModules;
 
-    nsClassHashtable<nsHashableHashKey, ModuleEntry> mImports;
-    nsDataHashtable<nsHashableHashKey, ModuleEntry*> mInProgressImports;
+    nsClassHashtable<nsStringHashKey, ModuleEntry> mImports;
+    nsDataHashtable<nsStringHashKey, ModuleEntry*> mInProgressImports;
 
     PRBool mInitialized;
 };

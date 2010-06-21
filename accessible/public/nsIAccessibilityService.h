@@ -51,10 +51,10 @@ class nsIFrame;
 class nsIPresShell;
 class nsObjectFrame;
 
-// 9f43b315-53c6-4d46-9818-9c8593e91984
+// 10ff6dca-b219-4b64-9a4c-67a62b86edce
 #define NS_IACCESSIBILITYSERVICE_IID \
-{0x9f43b315, 0x53c6, 0x4d46,         \
-  {0x98, 0x18, 0x9c, 0x85, 0x93, 0xe9, 0x19, 0x84} }
+{ 0x10ff6dca, 0xb219, 0x4b64, \
+ { 0x9a, 0x4c, 0x67, 0xa6, 0x2b, 0x86, 0xed, 0xce } }
 
 class nsIAccessibilityService : public nsIAccessibleRetrieval
 {
@@ -165,6 +165,12 @@ public:
    * target. Used by layout.
    */
   virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget) = 0;
+
+  /**
+   * Notify the accessibility service that the given presshell is
+   * being destroyed.
+   */
+  virtual void PresShellDestroyed(nsIPresShell *aPresShell) = 0;
 
   /**
    * Fire accessible event of the given type for the given target.

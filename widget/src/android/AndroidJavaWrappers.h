@@ -429,6 +429,8 @@ public:
         DRAW = 6,
         SIZE_CHANGED = 7,
         ACTIVITY_STOPPING = 8,
+        ACTIVITY_PAUSING = 9,
+        LOAD_URI = 10,
         dummy_java_enum_list_end
     };
 
@@ -439,6 +441,12 @@ public:
         IME_GET_TEXT = 3,
         IME_DELETE_TEXT = 4
     };
+};
+
+class nsJNIString : public nsString
+{
+public:
+    nsJNIString(jstring jstr);
 };
 
 }

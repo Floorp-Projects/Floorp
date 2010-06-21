@@ -44,6 +44,9 @@
 #include "gfxFont.h"
 #include "gfxGDIFontList.h"
 
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+
 #include "cairo.h"
 
 class gfxGDIFont : public gfxFont
@@ -74,18 +77,24 @@ public:
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
     /* override to check for uniscribe failure and fall back to GDI */
-    virtual void InitTextRun(gfxContext *aContext,
-                             gfxTextRun *aTextRun,
-                             const PRUnichar *aString,
-                             PRUint32 aRunStart,
-                             PRUint32 aRunLength);
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript);
+
+    virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
+
+    // get hinted glyph width in pixels as 16.16 fixed-point value
+    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 
 protected:
+    virtual void CreatePlatformShaper();
+
     void Initialize(); // creates metrics and Cairo fonts
 
     void FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize);
-
-    gfxFloat              mAdjustedSize;
 
     HFONT                 mFont;
     cairo_font_face_t    *mFontFace;
@@ -95,6 +104,9 @@ protected:
     PRUint32              mSpaceGlyph;
 
     PRBool                mNeedsBold;
+
+    // cache of glyph widths in 16.16 fixed-point pixels
+    nsDataHashtable<nsUint32HashKey,PRInt32>    mGlyphWidths;
 };
 
 #endif /* GFX_GDIFONT_H */

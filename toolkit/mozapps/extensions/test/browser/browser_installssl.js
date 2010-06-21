@@ -2,25 +2,19 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-const xpi = "browser/toolkit/mozapps/extensions/test/browser/browser_installssl.xpi";
-const redirect = "browser/toolkit/mozapps/extensions/test/browser/redirect.sjs?";
+const xpi = RELATIVE_DIR + "addons/browser_installssl.xpi";
+const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
-const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 
 var gTests = [];
 
 function test() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 
   run_next_test();
 }
 
 function end_test() {
-  Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   var cos = Cc["@mozilla.org/security/certoverride;1"].
             getService(Ci.nsICertOverrideService);
   cos.clearValidityOverride("nocert.example.com", -1);
@@ -53,8 +47,8 @@ function run_install_tests(callback) {
           return false;
         },
 
-        onDownloadFailed: function(install, status) {
-          is(status, expectedStatus, message);
+        onDownloadFailed: function(install) {
+          is(install.error, expectedStatus, message);
           run_next_install_test();
         }
       });

@@ -146,6 +146,8 @@ gfxImageSurface::ComputeStride() const
         stride = mSize.width * 4;
     else if (mFormat == ImageFormatRGB24)
         stride = mSize.width * 4;
+    else if (mFormat == ImageFormatRGB16_565)
+        stride = mSize.width * 2;
     else if (mFormat == ImageFormatA8)
         stride = mSize.width;
     else if (mFormat == ImageFormatA1) {

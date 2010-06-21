@@ -140,8 +140,7 @@ members = [
     'nsIDOMNode.removeChild',
     'nsIDOMNode.hasAttributes',
     'nsIDOMNode.attributes',
-    'nsIDOMNodeList.item',
-    'nsIDOMNodeList.length',
+    'nsIDOMNodeList.*',
     'nsIDOMNodeSelector.querySelector',
     'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
@@ -458,7 +457,6 @@ members = [
     '-nsICanvasRenderingContextWebGL.texParameteri',
     '-nsICanvasRenderingContextWebGL.getUniform',
     '-nsICanvasRenderingContextWebGL.getVertexAttrib',
-    '-nsICanvasRenderingContextWebGL.readPixels',
     '-nsICanvasRenderingContextWebGL.getShaderParameter',
     ]
 
@@ -636,6 +634,9 @@ customMethodCalls = {
     'nsIDOMHTMLDocument_': {
         'thisType': 'nsHTMLDocument'
         },
+    'nsIDOMNodeList_GetLength': {
+        'thisType': 'nsINodeList'
+        },
     'nsIDOMHTMLDocument_Write': {
         'thisType': 'nsHTMLDocument',
         'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write'
@@ -811,6 +812,7 @@ customMethodCalls = {
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_ReadPixels': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_TexImage2D': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_TexSubImage2D': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_Uniform1iv': CUSTOM_QS_TN,

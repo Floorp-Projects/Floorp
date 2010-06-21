@@ -10,6 +10,7 @@ const Cc = Components.classes;
 // 1. moz-icon:[valid URL]
 // 2. moz-icon://[file name]
 // 3. moz-icon://stock/[icon identifier]
+// Plus we also support moz-icon://[valid URL] for backwards compatibility.
 
 // Main test entry point.
 function run_test() {
@@ -89,7 +90,29 @@ function run_test() {
   do_check_eq(exception, false);
   exception = false; // reset exception value
 
-  do_check_eq(fileURL != null, true);
+  do_check_neq(fileURL, null);
+
+  // Now test a file URI which has been created with an extra //
+  currentSpec = "moz-icon://file://foo.txt";
+  try {
+    uri = ioService.newURI(currentSpec, null, null);
+  } catch (e) {
+    exception = true;
+  }
+  do_check_eq(exception, false);
+  exception = false; // reset exception value
+
+  iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
+  let fileURL = null;
+  try {
+    fileURL = iconURI.iconURL.QueryInterface(Ci.nsIFileURL);
+  } catch (e) {
+    exception = true;
+  }
+  do_check_eq(exception, false);
+  exception = false; // reset exception value
+
+  do_check_neq(fileURL, null);
 
   // Now test a simple invalid icon URI. This should fail.
   currentSpec = "moz-icon:foo";

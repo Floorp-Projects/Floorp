@@ -226,6 +226,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #undef LOG
 #undef LOG_ENABLED
 #include "nsHttpAuthManager.h"
+#include "nsHttpChannelAuthProvider.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
 #include "nsHttpNTLMAuth.h"
@@ -236,6 +237,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNTLMAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpAuthManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpChannelAuthProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpActivityDistributor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
@@ -246,11 +248,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 #include "nsResProtocolHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsResURL)
-#endif
-
-#ifdef NECKO_PROTOCOL_gopher
-#include "nsGopherHandler.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_viewsource
@@ -277,7 +274,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStdURLParser)
 #include "nsStandardURL.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandardURL)
 
-NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsSimpleURI)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleURI)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleNestedURI)
 
@@ -305,11 +302,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMaemoNetworkLinkService, Init)
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 #endif
 
-#ifdef NECKO_PROTOCOL_gopher
-#include "nsGopherDirListingConv.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherDirListingConv)
-#endif
-
 #include "nsMultiMixedConv.h"
 #include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
@@ -327,7 +319,6 @@ nsresult NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** result);
 nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 
 #define FTP_TO_INDEX                 "?from=text/ftp-dir&to=application/http-index-format"
-#define GOPHER_TO_INDEX              "?from=text/gopher-dir&to=application/http-index-format"
 #define INDEX_TO_HTML                "?from=application/http-index-format&to=text/html"
 #define MULTI_MIXED_X                "?from=multipart/x-mixed-replace&to=*/*"
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
@@ -344,10 +335,8 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define BINHEX_TO_WILD               "?from=application/mac-binhex40&to=*/*"
 #endif
 
-
 static const mozilla::Module::CategoryEntry kNeckoCategories[] = {
     { NS_ISTREAMCONVERTER_KEY, FTP_TO_INDEX, "" },
-    { NS_ISTREAMCONVERTER_KEY, GOPHER_TO_INDEX, "" },
     { NS_ISTREAMCONVERTER_KEY, INDEX_TO_HTML, "" },
     { NS_ISTREAMCONVERTER_KEY, MULTI_MIXED_X, "" },
     { NS_ISTREAMCONVERTER_KEY, MULTI_MIXED, "" },
@@ -650,9 +639,6 @@ NS_DEFINE_NAMED_CID(NS_APPLEFILEDECODER_CID);
 #ifdef NECKO_PROTOCOL_ftp
 NS_DEFINE_NAMED_CID(NS_FTPDIRLISTINGCONVERTER_CID);
 #endif
-#ifdef NECKO_PROTOCOL_gopher
-NS_DEFINE_NAMED_CID(NS_GOPHERDIRLISTINGCONVERTER_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_NSINDEXEDTOHTMLCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_DIRINDEXPARSER_CID);
 NS_DEFINE_NAMED_CID(NS_MULTIMIXEDCONVERTER_CID);
@@ -676,6 +662,7 @@ NS_DEFINE_NAMED_CID(NS_HTTPBASICAUTH_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPDIGESTAUTH_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPNTLMAUTH_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPAUTHMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_HTTPCHANNELAUTHPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPACTIVITYDISTRIBUTOR_CID);
 #endif // !NECKO_PROTOCOL_http
 #ifdef NECKO_PROTOCOL_ftp
@@ -710,9 +697,6 @@ NS_DEFINE_NAMED_CID(NS_COOKIESERVICE_CID);
 #endif
 #ifdef NECKO_WIFI
 NS_DEFINE_NAMED_CID(NS_WIFI_MONITOR_COMPONENT_CID);
-#endif
-#ifdef NECKO_PROTOCOL_gopher
-NS_DEFINE_NAMED_CID(NS_GOPHERHANDLER_CID);
 #endif
 #ifdef NECKO_PROTOCOL_data
 NS_DEFINE_NAMED_CID(NS_DATAPROTOCOLHANDLER_CID);
@@ -770,9 +754,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #ifdef NECKO_PROTOCOL_ftp
     { &kNS_FTPDIRLISTINGCONVERTER_CID, false, NULL, CreateNewFTPDirListingConv },
 #endif
-#ifdef NECKO_PROTOCOL_gopher
-    { &kNS_GOPHERDIRLISTINGCONVERTER_CID, false, NULL, nsGopherDirListingConvConstructor },
-#endif
     { &kNS_NSINDEXEDTOHTMLCONVERTER_CID, false, NULL, nsIndexedToHTML::Create },
     { &kNS_DIRINDEXPARSER_CID, false, NULL, nsDirIndexParserConstructor },
     { &kNS_MULTIMIXEDCONVERTER_CID, false, NULL, CreateNewMultiMixedConvFactory },
@@ -796,6 +777,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_HTTPDIGESTAUTH_CID, false, NULL, nsHttpDigestAuthConstructor },
     { &kNS_HTTPNTLMAUTH_CID, false, NULL, nsHttpNTLMAuthConstructor },
     { &kNS_HTTPAUTHMANAGER_CID, false, NULL, nsHttpAuthManagerConstructor },
+    { &kNS_HTTPCHANNELAUTHPROVIDER_CID, false, NULL, nsHttpChannelAuthProviderConstructor },
     { &kNS_HTTPACTIVITYDISTRIBUTOR_CID, false, NULL, nsHttpActivityDistributorConstructor },
 #endif // !NECKO_PROTOCOL_http
 #ifdef NECKO_PROTOCOL_ftp
@@ -830,9 +812,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_WIFI
     { &kNS_WIFI_MONITOR_COMPONENT_CID, false, NULL, nsWifiMonitorConstructor },
-#endif
-#ifdef NECKO_PROTOCOL_gopher
-    { &kNS_GOPHERHANDLER_CID, false, NULL, nsGopherHandlerConstructor },
 #endif
 #ifdef NECKO_PROTOCOL_data
     { &kNS_DATAPROTOCOLHANDLER_CID, false, NULL, nsDataHandler::Create },
@@ -892,9 +871,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #ifdef NECKO_PROTOCOL_ftp
     { NS_ISTREAMCONVERTER_KEY FTP_TO_INDEX, &kNS_FTPDIRLISTINGCONVERTER_CID },
 #endif
-#ifdef NECKO_PROTOCOL_gopher
-    { NS_ISTREAMCONVERTER_KEY GOPHER_TO_INDEX, &kNS_GOPHERDIRLISTINGCONVERTER_CID },
-#endif
     { NS_ISTREAMCONVERTER_KEY INDEX_TO_HTML, &kNS_NSINDEXEDTOHTMLCONVERTER_CID },
     { NS_DIRINDEXPARSER_CONTRACTID, &kNS_DIRINDEXPARSER_CID },
     { NS_ISTREAMCONVERTER_KEY MULTI_MIXED_X, &kNS_MULTIMIXEDCONVERTER_CID },
@@ -925,6 +901,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "digest", &kNS_HTTPDIGESTAUTH_CID },
     { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "ntlm", &kNS_HTTPNTLMAUTH_CID },
     { NS_HTTPAUTHMANAGER_CONTRACTID, &kNS_HTTPAUTHMANAGER_CID },
+    { NS_HTTPCHANNELAUTHPROVIDER_CONTRACTID, &kNS_HTTPCHANNELAUTHPROVIDER_CID },
     { NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &kNS_HTTPACTIVITYDISTRIBUTOR_CID },
 #endif // !NECKO_PROTOCOL_http
 #ifdef NECKO_PROTOCOL_ftp
@@ -957,9 +934,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #endif
 #ifdef NECKO_WIFI
     { NS_WIFI_MONITOR_CONTRACTID, &kNS_WIFI_MONITOR_COMPONENT_CID },
-#endif
-#ifdef NECKO_PROTOCOL_gopher
-    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "gopher", &kNS_GOPHERHANDLER_CID },
 #endif
 #ifdef NECKO_PROTOCOL_data
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", &kNS_DATAPROTOCOLHANDLER_CID },

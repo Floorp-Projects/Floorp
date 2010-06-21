@@ -2187,7 +2187,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface) cairo_pure;
  * in cairo-xlib-surface.c--again see -Wswitch-enum).
  */
 #define CAIRO_FORMAT_INVALID ((unsigned int) -1)
-#define CAIRO_FORMAT_VALID(format) ((format) <= CAIRO_FORMAT_A1)
+#define CAIRO_FORMAT_VALID(format) ((format) <= CAIRO_FORMAT_RGB16_565)
 
 /* pixman-required stride alignment in bytes. */
 #define CAIRO_STRIDE_ALIGNMENT (sizeof (uint32_t))

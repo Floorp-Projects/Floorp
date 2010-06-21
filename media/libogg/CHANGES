@@ -1,3 +1,10 @@
+Version 1.2.0 (2010 March 25)
+
+* Alter default flushing behavior to span less often and use larger page 
+  sizes when packet sizes are large.
+* Build fixes for additional compilers
+* Documentation updates
+
 Version 1.1.4 (2009 June 24)
 
 * New async error reporting mechanism. Calls made after a fatal error are 

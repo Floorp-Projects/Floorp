@@ -234,6 +234,7 @@ namespace places {
     bool bookmark = aArguments->AsInt32(kArgIndexBookmark) ? true : false;
     nsAutoString tags;
     (void)aArguments->GetString(kArgIndexTags, tags);
+    PRInt32 openPageCount = aArguments->AsInt32(kArgIndexOpenPageCount);
 
     // Make sure we match all the filter requirements.  If a given restriction
     // is active, make sure the corresponding condition is not true.
@@ -241,7 +242,8 @@ namespace places {
       (HAS_BEHAVIOR(HISTORY) && visitCount == 0) ||
       (HAS_BEHAVIOR(TYPED) && !typed) ||
       (HAS_BEHAVIOR(BOOKMARK) && !bookmark) ||
-      (HAS_BEHAVIOR(TAG) && tags.IsVoid())
+      (HAS_BEHAVIOR(TAG) && tags.IsVoid()) ||
+      (HAS_BEHAVIOR(OPENPAGE) && openPageCount == 0)
     );
     if (!matches) {
       NS_IF_ADDREF(*_result = new IntegerVariant(0));
