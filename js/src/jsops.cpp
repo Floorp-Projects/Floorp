@@ -865,7 +865,7 @@ END_CASE(JSOP_BITAND)
                     DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);                 \
                 if (rval.isObject())                                          \
                     DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
-                if (BothString(lval, rval)) {                                 \
+                if (lval.isString() && rval.isString()) {                     \
                     JSString *l = lval.asString(), *r = rval.asString();      \
                     cond = js_EqualStrings(l, r) OP JS_TRUE;                  \
                 } else {                                                      \
@@ -951,14 +951,14 @@ END_CASE(JSOP_CASEX)
         Value lval = regs.sp[-2];                                             \
         bool cond;                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \
-        if (BothInt32(lval, rval)) {                                          \
+        if (lval.isInt32() && rval.isInt32()) {                               \
             cond = lval.asInt32() OP rval.asInt32();                          \
         } else {                                                              \
             if (lval.isObject())                                              \
                 DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
             if (rval.isObject())                                              \
                 DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
-            if (BothString(lval, rval)) {                                     \
+            if (lval.isString() && rval.isString()) {                         \
                 JSString *l = lval.asString(), *r = rval.asString();          \
                 cond = js_CompareStrings(l, r) OP 0;                          \
             } else {                                                          \
@@ -1036,7 +1036,7 @@ BEGIN_CASE(JSOP_ADD)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
 
-    if (BothInt32(lval, rval)) {
+    if (lval.isInt32() && rval.isInt32()) {
         int32_t l = lval.asInt32(), r = rval.asInt32();
         int32_t sum = l + r;
         regs.sp--;
@@ -1681,7 +1681,7 @@ BEGIN_CASE(JSOP_LENGTH)
         JSObject *obj = &vp->asObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
-            regs.sp[-1].setDouble(length);
+            regs.sp[-1].setInt32(length);
         } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
             uint32 length = obj->getArgsLength();
             JS_ASSERT(length < INT32_MAX);
@@ -1783,8 +1783,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         if (!rval.isFunObj() ||
-            !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()),
-                                  lval)) {
+            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 goto error;
         }
@@ -2358,7 +2357,7 @@ BEGIN_CASE(JSOP_APPLY)
             DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, vp);
 
             JS_ASSERT(fun->u.n.extra == 0);
-            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveValue::test(fun, vp[1]));
+            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(fun, vp[1]));
             JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
             DTrace::exitJSFun(cx, NULL, fun, *vp, vp);
             regs.sp = vp + 1;

@@ -106,13 +106,13 @@ JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 namespace js {
 
 jsdouble JS_ALWAYS_INLINE
-UnboxDoubleHelper(uint32 mask, uint32 payload)
+UnboxDoubleHelper(uint32 tag, uint32 payload)
 {
-    if (mask == JSVAL_MASK32_INT32) {
+    if (tag == JSVAL_TAG_INT32) {
         return int32(payload);
     } else {
         Value v;
-        v.data.s.u.mask32 = mask;
+        v.data.s.tag = (JSValueTag)tag;
         v.data.s.payload.u32 = payload;
         return v.asDouble();
     }
@@ -121,9 +121,9 @@ UnboxDoubleHelper(uint32 mask, uint32 payload)
 }
 
 jsdouble FASTCALL
-js_UnboxDouble(uint32 mask, uint32 payload)
+js_UnboxDouble(uint32 tag, uint32 payload)
 {
-    return UnboxDoubleHelper(mask, payload);
+    return UnboxDoubleHelper(tag, payload);
 }
 JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_UnboxDouble, UINT32, UINT32, 1, ACC_NONE)
 
