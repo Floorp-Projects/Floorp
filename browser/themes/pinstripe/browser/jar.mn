@@ -37,6 +37,7 @@ browser.jar:
   skin/classic/browser/Popup-blocked.png
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
+  skin/classic/browser/searchbar-dropmarker.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
   skin/classic/browser/Search-addengines.png
