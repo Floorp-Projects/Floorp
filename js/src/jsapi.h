@@ -285,17 +285,22 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
 #define JSID_DEFAULT_XML_NAMESPACE_TYPE  0x6
 #define JSID_TYPE_MASK                   0x7
 
+/*
+ * Do not use canonical 'id' for jsid parameters since this is a magic word in
+ * Objective-C++ which, apparently, wants to be able to #include jsapi.h.
+ */
+
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_STRING(jsid id)
+JSID_IS_STRING(jsid iden)
 {
-    return (JSID_BITS(id) & JSID_TYPE_MASK) == 0;
+    return (JSID_BITS(iden) & JSID_TYPE_MASK) == 0;
 }
 
 static JS_ALWAYS_INLINE JSString *
-JSID_TO_STRING(jsid id)
+JSID_TO_STRING(jsid iden)
 {
-    JS_ASSERT(JSID_IS_STRING(id));
-    return (JSString *)(JSID_BITS(id));
+    JS_ASSERT(JSID_IS_STRING(iden));
+    return (JSString *)(JSID_BITS(iden));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -304,24 +309,24 @@ JS_StringHasBeenInterned(JSString *str);
 static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
-    jsid id;
+    jsid iden;
     JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-    JSID_BITS(id) = (size_t)str;
-    return id;
+    JSID_BITS(iden) = (size_t)str;
+    return iden;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_INT(jsid id)
+JSID_IS_INT(jsid iden)
 {
-    return !!(JSID_BITS(id) & JSID_INT_TYPE);
+    return !!(JSID_BITS(iden) & JSID_INT_TYPE);
 }
 
 static JS_ALWAYS_INLINE int32
-JSID_TO_INT(jsid id)
+JSID_TO_INT(jsid iden)
 {
-    JS_ASSERT(JSID_IS_INT(id));
-    return ((int32)JSID_BITS(id)) >> 1;
+    JS_ASSERT(JSID_IS_INT(iden));
+    return ((int32)JSID_BITS(iden)) >> 1;
 }
 
 #define JSID_INT_MIN  (-(1 << 30))
@@ -337,45 +342,45 @@ INT_FITS_IN_JSID(int32 i)
 static JS_ALWAYS_INLINE jsid
 INT_TO_JSID(int32 i)
 {
-    jsid id;
+    jsid iden;
     JS_ASSERT(INT_FITS_IN_JSID(i));
-    JSID_BITS(id) = ((i << 1) | JSID_INT_TYPE);
-    return id;
+    JSID_BITS(iden) = ((i << 1) | JSID_INT_TYPE);
+    return iden;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_OBJECT(jsid id)
+JSID_IS_OBJECT(jsid iden)
 {
-    return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_OBJECT_TYPE;
+    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_OBJECT_TYPE;
 }
 
 static JS_ALWAYS_INLINE JSObject *
-JSID_TO_OBJECT(jsid id)
+JSID_TO_OBJECT(jsid iden)
 {
-    JS_ASSERT(JSID_IS_OBJECT(id));
-    return (JSObject *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
+    JS_ASSERT(JSID_IS_OBJECT(iden));
+    return (JSObject *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
 }
 
 static JS_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
-    jsid id;
+    jsid iden;
     JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
-    JSID_BITS(id) = ((size_t)obj | JSID_OBJECT_TYPE);
-    return id;
+    JSID_BITS(iden) = ((size_t)obj | JSID_OBJECT_TYPE);
+    return iden;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_GCTHING(jsid id)
+JSID_IS_GCTHING(jsid iden)
 {
-    return JSID_IS_STRING(id) || JSID_IS_OBJECT(id);
+    return JSID_IS_STRING(iden) || JSID_IS_OBJECT(iden);
 }
 
 static JS_ALWAYS_INLINE void *
-JSID_TO_GCTHING(jsid id)
+JSID_TO_GCTHING(jsid iden)
 {
-    return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
+    return (void *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
 }
 
 /*
@@ -384,19 +389,19 @@ JSID_TO_GCTHING(jsid id)
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_DEFAULT_XML_NAMESPACE(jsid id)
+JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_DEFAULT_XML_NAMESPACE_TYPE,
-                 JSID_BITS(id) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
-    return ((size_t)JSID_BITS(id) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_DEFAULT_XML_NAMESPACE_TYPE,
+                 JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+    return ((size_t)JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
 }
 
 static JS_ALWAYS_INLINE jsid
 JSID_DEFAULT_XML_NAMESPACE()
 {
-    jsid id;
-    JSID_BITS(id) = JSID_DEFAULT_XML_NAMESPACE_TYPE;
-    return id;
+    jsid iden;
+    JSID_BITS(iden) = JSID_DEFAULT_XML_NAMESPACE_TYPE;
+    return iden;
 }
 
 /*
@@ -405,11 +410,11 @@ JSID_DEFAULT_XML_NAMESPACE()
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_VOID(jsid id)
+JSID_IS_VOID(jsid iden)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_VOID_TYPE,
-                 JSID_BITS(id) == JSID_VOID_TYPE);
-    return ((size_t)JSID_BITS(id) == JSID_VOID_TYPE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_VOID_TYPE,
+                 JSID_BITS(iden) == JSID_VOID_TYPE);
+    return ((size_t)JSID_BITS(iden) == JSID_VOID_TYPE);
 }
 
 #ifdef DEBUG
