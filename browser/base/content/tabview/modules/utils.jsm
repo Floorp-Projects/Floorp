@@ -166,7 +166,7 @@ window.Rect.prototype = {
   // the bounding rect.
   // 
   // Paramaters
-  //  - A point
+  //  - A <Point>
   containsPoint: function(point){
     return( point.x > this.left
          && point.x < this.right
@@ -180,7 +180,7 @@ window.Rect.prototype = {
   // of the bounding rect.
   //
   // Paramaters
-  //  - A rect
+  //  - A <Rect>
   contains: function(rect){
     return( rect.left > this.left
          && rect.right < this.right
@@ -193,7 +193,6 @@ window.Rect.prototype = {
     return new Point(this.left + (this.width / 2), this.top + (this.height / 2));
   },
   
-  // ----------
   size: function() {
     return new Point(this.width, this.height);
   },
@@ -204,6 +203,12 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: inset
+  // Makes the rect smaller (if the arguments are positive) as if a margin is added all around
+  // the initial rect, with the margin widths (symmetric) being specified by the arguments.
+  //
+  // Paramaters
+  //  - A <Point> or two arguments: x and y
   inset: function(a, b) {
     if(typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
       b = a.y; 
@@ -217,6 +222,11 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: offset
+  // Moves (translates) the rect by the given vector.
+  //
+  // Paramaters
+  //  - A <Point> or two arguments: x and y
   offset: function(a, b) {
     if(typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
       this.left += a.x;
