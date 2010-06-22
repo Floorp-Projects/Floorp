@@ -286,11 +286,16 @@ NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
 
 static JSBool gClassObjectsWereInited = JS_FALSE;
 
+#define NULL_CID \
+{ 0x00000000, 0x0000, 0x0000, \
+  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
+
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)
-NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID, nsIClassInfo::THREADSAFE)
+NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID,
+                  nsIClassInfo::THREADSAFE, NULL_CID)
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSCID)
-NS_IMPL_CLASSINFO(nsJSCID, NULL, nsIClassInfo::THREADSAFE)
+NS_IMPL_CLASSINFO(nsJSCID, NULL, nsIClassInfo::THREADSAFE, NULL_CID)
 
 void xpc_InitJSxIDClassObjects()
 {

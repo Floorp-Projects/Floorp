@@ -50,7 +50,8 @@
 #include "nsIClassInfoImpl.h"
 
 NS_IMPL_CLASSINFO(nsSystemPrincipal, NULL,
-                  nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY)
+                  nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,
+                  NS_SYSTEMPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal,
                             nsIPrincipal,
                             nsISerializable)

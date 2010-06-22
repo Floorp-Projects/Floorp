@@ -42,6 +42,7 @@
 #include "nsIURI.h"
 #include "nsIClassInfoImpl.h"
 #include "nsCOMPtr.h"
+#include "nsCExternalHandlerService.h"
 
 #if (MOZ_PLATFORM_MAEMO == 5)
 #define APP_LAUNCH_BANNER_SERVICE           "com.nokia.hildon-desktop"
@@ -53,7 +54,7 @@
 
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
-NS_IMPL_CLASSINFO(nsDBusHandlerApp, NULL, 0)
+NS_IMPL_CLASSINFO(nsDBusHandlerApp, NULL, 0, NS_DBUSHANDLERAPP_CID)
 NS_IMPL_ISUPPORTS2_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
 
 ////////////////////////////////////////////////////////////////////////////////
