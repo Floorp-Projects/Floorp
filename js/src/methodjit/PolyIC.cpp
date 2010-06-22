@@ -307,7 +307,7 @@ class SetPropCompiler : public PICStubCompiler
         // to guard that we're not overwriting a function-valued property.
         Jump rebrand;
         JSScope *scope = obj->scope();
-        if (scope->branded() || scope->hasMethodBarrier()) {
+        if (scope->brandedOrHasMethodBarrier()) {
             masm.loadTypeTag(address, pic.shapeReg);
             rebrand = masm.branch32(Assembler::Equal, pic.shapeReg, Imm32(JSVAL_MASK32_FUNOBJ));
         }
@@ -382,21 +382,20 @@ class SetPropCompiler : public PICStubCompiler
         if (holder != obj)
             return disable("property not on object");
 
+        JSScope *scope = obj->scope();
         JSScopeProperty *sprop = (JSScopeProperty *)prop;
         if (!sprop->writable())
             return disable("readonly");
-        if (obj->scope()->sealed() && !sprop->hasSlot())
+        if (scope->sealed() && !sprop->hasSlot())
             return disable("what does this even mean");
 
         if (!sprop->hasDefaultSetter())
             return disable("setter");
-        if (!SPROP_HAS_VALID_SLOT(sprop, obj->scope()))
+        if (!SPROP_HAS_VALID_SLOT(sprop, scope))
             return disable("invalid slot");
 
-        bool needsBarrier = obj->scope()->branded() || obj->scope()->hasMethodBarrier();
-
         JS_ASSERT(obj == holder);
-        if (!pic.inlinePathPatched && !needsBarrier)
+        if (!pic.inlinePathPatched && !scope->brandedOrHasMethodBarrier())
             return patchInline(sprop);
         else
             return generateStub(sprop);
