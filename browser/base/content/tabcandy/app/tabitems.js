@@ -69,23 +69,24 @@ window.TabItem = function(container, tab) {
   // override dropOptions with custom tabitem methods
   // This is mostly to support the phantom groups.
   this.dropOptions.drop = function(e){
-    $target = iQ(this);  
-    iQ(this).removeClass("acceptsDrop");
+    $target = iQ(this.container);  
+    $target.removeClass("acceptsDrop");
     var phantom = $target.data("phantomGroup")
     
     var group = drag.info.item.parent;
     if( group == null ){
       phantom.removeClass("phantom");
       phantom.removeClass("group-content");
-      var group = new Group([$target, drag.info.$el], {container:phantom});
+      group = new Group([$target, drag.info.$el], {container:phantom});
     } else 
       group.add( drag.info.$el );      
   };
+  
   this.dropOptions.over = function(e){
-    var $target = iQ(this);
+    var $target = iQ(this.container);
 
     function elToRect($el){
-     return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
+      return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
     }
 
     var height = elToRect($target).height * 1.5 + 20;
@@ -112,16 +113,18 @@ window.TabItem = function(container, tab) {
       
     $target.data("phantomGroup", phantom);      
   };
-  this.dropOptions.out =  function(e){      
-    var phantom = iQ(this).data("phantomGroup");
+  
+  this.dropOptions.out = function(e){      
+    var phantom = iQ(this.container).data("phantomGroup");
     if(phantom) { 
       phantom.fadeOut(function(){
         iQ(this).remove();
       });
     }
-  }
-  $div.draggable(this.dragOptions);
-  $div.droppable(this.dropOptions);
+  };
+  
+  this.draggable();
+  this.droppable(true);
   
   // ___ more div setup
   $div.mousedown(function(e) {
@@ -373,10 +376,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
     if(value) {
       $resizer.fadeIn();
-      iQ(this.container).resizable(this.resizeOptions);
+      this.resizable(true);
     } else {
       $resizer.fadeOut();
-      iQ(this.container).resizable('destroy');
+      this.resizable(false);
     }
   },
   

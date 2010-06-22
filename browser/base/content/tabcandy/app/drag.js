@@ -52,30 +52,41 @@ var drag = {
 // 
 // ----------
 // Constructor: Drag
-// Called to create a Drag in response to a jQuery-UI draggable "start" event.
-var Drag = function(element, event) {
-  this.el = element;
-  this.$el = iQ(this.el);
-  this.item = Items.item(this.el);
-  this.parent = this.item.parent;
-  this.startPosition = new Point(event.clientX, event.clientY);
-  this.startTime = Utils.getMilliseconds();
-  
-  this.item.isDragging = true;
-  this.item.setZ(999999);
-  
-  this.safeWindowBounds = Items.getSafeWindowBounds();
-  Trenches.activateOthersTrenches(this.el);
-  
-  // When a tab drag starts, make it the focused tab.
-  if(this.item.isAGroup) {
-    var tab = Page.getActiveTab();
-    if(!tab || tab.parent != this.item) {
-      if(this.item._children.length)
-        Page.setActiveTab(this.item._children[0]);
+// Called to create a Drag in response to an <Item> draggable "start" event.
+// Note that it is also used partially during <Item>'s resizable method as well.
+// 
+// Parameters: 
+//   item - The <Item> being dragged
+//   event - The DOM event that kicks off the drag
+var Drag = function(item, event) {
+  try {
+    Utils.assert('item', item && item.isAnItem);
+    
+    this.item = item;
+    this.el = item.container;
+    this.$el = iQ(this.el);
+    this.parent = this.item.parent;
+    this.startPosition = new Point(event.clientX, event.clientY);
+    this.startTime = Utils.getMilliseconds();
+    
+    this.item.isDragging = true;
+    this.item.setZ(999999);
+    
+    this.safeWindowBounds = Items.getSafeWindowBounds();
+    Trenches.activateOthersTrenches(this.el);
+    
+    // When a tab drag starts, make it the focused tab.
+    if(this.item.isAGroup) {
+      var tab = Page.getActiveTab();
+      if(!tab || tab.parent != this.item) {
+        if(this.item._children.length)
+          Page.setActiveTab(this.item._children[0]);
+      }
+    } else {
+      Page.setActiveTab(this.item);
     }
-  } else {
-    Page.setActiveTab(this.item);
+  } catch(e) {
+    Utils.log(e);
   }
 };
 
@@ -106,8 +117,6 @@ Drag.prototype = {
 
     if (update)
       this.item.setBounds(bounds,true);
-
-    return ui;
   },
   
   // --------
@@ -172,16 +181,9 @@ Drag.prototype = {
   
   // ----------  
   // Function: drag
-  // Called in response to a jQuery-UI draggable "drag" event.
+  // Called in response to an <Item> draggable "drag" event.
   drag: function(event, ui) {
-//    if(this.item.isAGroup) {
-      var bb = this.item.getBounds();
-      bb.left = ui.position.left;
-      bb.top = ui.position.top;
-      this.item.setBounds(bb, true);
-      ui = this.snap(event,ui,true);
-//    } else
-//      this.item.reloadBounds();
+    this.snap(event,ui,true);
       
     if(this.parent && this.parent.expanded) {
       var now = Utils.getMilliseconds();
@@ -195,18 +197,9 @@ Drag.prototype = {
 
   // ----------  
   // Function: stop
-  // Called in response to a jQuery-UI draggable "stop" event.
+  // Called in response to an <Item> draggable "stop" event.
   stop: function() {
     this.item.isDragging = false;
-
-    // I'm commenting this out for a while as I believe it feels uncomfortable
-    // that groups go away when there is still a tab in them. I do this at
-    // the cost of symmetry. -- Aza
-    /*
-    if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
-        && this.parent._children.length == 1 && !this.parent.getTitle()) {
-      this.parent.remove(this.parent._children[0]);
-    }*/
 
     if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
         && this.parent._children.length == 0 && !this.parent.getTitle()) {
@@ -220,11 +213,9 @@ Drag.prototype = {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
       
-      this.item.reloadBounds();
       this.item.pushAway();
     }
     
     Trenches.disactivate();
-    
   }
 };

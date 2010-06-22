@@ -203,10 +203,7 @@ window.Group = function(listOfEls, options) {
           "padding-left": "1px"
         }, {
           duration: 200,
-          easing: 'tabcandyBounce',
-          complete: function(){
-            window.aza = self.$title;
-          }
+          easing: 'tabcandyBounce'
         });
     }
   };
@@ -694,7 +691,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       if( this.isNewTabsGroup() ) $el.addClass("inNewTabGroup")
       
       if(!wasAlreadyInThisGroup) {
-        iQ($el.get(0)).droppable("disable");
+        item.droppable(false);
         item.groupData = {};
     
         item.addOnClose(this, function() {
@@ -758,7 +755,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       item.setRotation(0);
       item.setSize(item.defaultSize.x, item.defaultSize.y);
   
-      iQ($el.get(0)).droppable("enable");    
+      item.droppable(true);    
       item.removeOnClose(this);
       
       if(typeof(item.setResizable) == 'function')
@@ -1172,16 +1169,16 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var self = this;
     
     this.dropOptions.over = function(){
-      if( !self.isNewTabsGroup() )
-        iQ(this).addClass("acceptsDrop");
+      if( !this.isNewTabsGroup() )
+        iQ(this.container).addClass("acceptsDrop");
     };
     this.dropOptions.drop = function(event){
-      iQ(this).removeClass("acceptsDrop");
-      self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
+      iQ(this.container).removeClass("acceptsDrop");
+      this.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
     };
     
     if(!this.locked.bounds)
-      iQ(container).draggable(this.dragOptions);
+      this.draggable();
     
     iQ(container)
       .mousedown(function(e){        
@@ -1224,7 +1221,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         self._mouseDown = null;
     });
     
-    iQ(container).droppable(this.dropOptions);
+    this.droppable(true);
     
     this.$expander.click(function(){
       self.expand();
@@ -1241,10 +1238,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
     if(value) {
       this.$resizer.fadeIn();
-      iQ(this.container).resizable(this.resizeOptions);
+      this.resizable(true);
     } else {
       this.$resizer.fadeOut();
-      iQ(this.container).resizable('destroy');
+      this.resizable(false);
     }
   },
   
