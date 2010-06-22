@@ -24,6 +24,11 @@
     background: transparent;
   }
 
+  #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
+    -moz-appearance: none;
+    background-color: #556;
+  }
+
   #toolbar-menubar:not(:-moz-lwtheme),
   #navigator-toolbox[tabsontop="true"] > #TabsToolbar:not(:-moz-lwtheme),
   #navigator-toolbox:not([tabsontop="true"]) > #nav-bar:not(:-moz-lwtheme),
