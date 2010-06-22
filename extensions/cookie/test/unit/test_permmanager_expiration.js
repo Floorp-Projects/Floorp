@@ -1,16 +1,17 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
-  // setup a profile directory
-  var dir = do_get_profile();
+// setup a profile directory
+var dir = do_get_profile();
 
-  // initialize the permission manager service
-  var pm = Cc["@mozilla.org/permissionmanager;1"]
-           .getService(Ci.nsIPermissionManager);
+// initialize the permission manager service
+var pm = Cc["@mozilla.org/permissionmanager;1"]
+         .getService(Ci.nsIPermissionManager);
 
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
-  var permURI = ios.newURI("http://example.com", null, null);
+var ios = Cc["@mozilla.org/network/io-service;1"]
+          .getService(Ci.nsIIOService);
+var permURI = ios.newURI("http://example.com", null, null);
 
 function run_test() {
 
