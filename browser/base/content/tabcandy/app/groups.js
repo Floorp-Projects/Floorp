@@ -200,10 +200,13 @@ window.Group = function(listOfEls, options) {
       self.$title
         .css({"background":"none"})
         .animate({
-          "paddingLeft": 1
+          "padding-left": 1
         }, {
-          duration: 350,
-          easing: 'tabcandyBounce'
+          duration: 200,
+          easing: 'tabcandyBounce',
+          complete: function(){
+            window.aza = self.$title;
+          }
         });
     }
   };
@@ -1182,7 +1185,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       iQ(container).draggable(this.dragOptions);
     
     iQ(container)
-      .mousedown(function(e){
+      .mousedown(function(e){        
         self._mouseDown = {
           location: new Point(e.clientX, e.clientY),
           className: e.target.className
