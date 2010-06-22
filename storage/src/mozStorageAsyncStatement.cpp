@@ -332,8 +332,9 @@ AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt)
 #endif
 
   if (!mAsyncStatement) {
-    int rc = prepareStmt(mDBConnection->GetNativeConnection(), mSQLString,
-                         &mAsyncStatement);
+    int rc = ::sqlite3_prepare_v2(mDBConnection->GetNativeConnection(),
+                                  mSQLString.get(), -1,
+                                  &mAsyncStatement, NULL);
     if (rc != SQLITE_OK) {
 #ifdef PR_LOGGING
       PR_LOG(gStorageLog, PR_LOG_ERROR,

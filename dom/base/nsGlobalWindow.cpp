@@ -216,8 +216,6 @@
 #endif
 #include "prlog.h"
 
-#include "mozilla/dom/indexedDB/IndexedDatabaseRequest.h"
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -934,7 +932,6 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mLocation = nsnull;
   mFrames = nsnull;
   mApplicationCache = nsnull;
-  mIndexedDB = nsnull;
 
   ClearControllers();
 
@@ -1103,8 +1100,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->Disconnect();
     mApplicationCache = nsnull;
   }
-
-  mIndexedDB = nsnull;
 
   if (aClearScope) {
     // NB: This might not clear our scope, but fire an event to do so
@@ -7593,19 +7588,6 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   }
 
   NS_ADDREF(*aLocalStorage = mLocalStorage);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetMoz_indexedDB(nsIIndexedDatabaseRequest** _retval)
-{
-  if (!mIndexedDB) {
-    mIndexedDB = mozilla::dom::indexedDB::IndexedDatabaseRequest::Create();
-    NS_ENSURE_TRUE(mIndexedDB, NS_ERROR_FAILURE);
-  }
-
-  nsCOMPtr<nsIIndexedDatabaseRequest> request(mIndexedDB);
-  request.forget(_retval);
   return NS_OK;
 }
 
