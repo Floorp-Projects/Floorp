@@ -48,11 +48,14 @@
     SimpleTest.waitForExplicitFinish();
 
     function runTest() {
+      // The mochitest page is added to history.
+      waitForClearHistory(continue_test);
+    }
+
+    function continue_test() {
       const Cc = Components.classes;
       const Ci = Components.interfaces;
       Components.utils.import("resource://gre/modules/Services.jsm");
-
-      PlacesUtils.bhistory.removeAllPages();
       PlacesUtils.history
                  .addVisit(Services.io.newURI("http://example.tld/", null, null),
                            Date.now() * 1000, null, PlacesUtils.history.TRANSITION_TYPED, false, 0);
@@ -73,10 +76,25 @@
       ok(true, "No exceptions thrown");
 
       // Cleanup.
-      PlacesUtils.bhistory.removeAllPages();
-
-      SimpleTest.finish();
+      waitForClearHistory(SimpleTest.finish);
     }
+
+    /**
+     * Clears history invoking callback when done.
+     */
+    function waitForClearHistory(aCallback) {
+      const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
+      let observer = {
+        observe: function(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
+          aCallback();
+        }
+      };
+      Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+      let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+               getService(Ci.nsINavHistoryService);
+      hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+   }
 
   ]]></script>
 </window>
