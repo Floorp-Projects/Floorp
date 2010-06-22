@@ -481,8 +481,8 @@ JSVAL_SAME_PRIMITIVE_TYPE_OR_BOTH_OBJECTS_IMPL(jsval_layout lhs, jsval_layout rh
 static JS_ALWAYS_INLINE JSValueType
 JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 {
-    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JSValueType t = (JSValueType)(l.s.tag & 0xF);
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JS_ASSERT(t >= JSVAL_TYPE_INT32 && t <= JSVAL_UPPER_TYPE_OF_OBJ_SET);
     return t;
 }
@@ -490,8 +490,8 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE JSValueTag
 JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
 {
-    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JSValueTag t = l.s.tag;
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JS_ASSERT(t >= JSVAL_TAG_INT32 && t <= JSVAL_UPPER_TAG_OF_OBJ_SET);
     return t;
 }
