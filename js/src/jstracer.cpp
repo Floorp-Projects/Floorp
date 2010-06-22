@@ -1015,9 +1015,10 @@ hasInt32Repr(const Value &v)
 {
     if (!v.isNumber())
         return false;
-    jsdouble d = v.asNumber();
-    int32_t i;
-    return !!JSDOUBLE_IS_INT32(d, i);
+    if (v.isInt32())
+        return true;
+    int32_t _;
+    return JSDOUBLE_IS_INT32(v.asDouble(), _);
 }
 
 static inline jsint
@@ -1039,50 +1040,21 @@ GetPromotedType(const Value &v)
 {
     if (v.isNumber())
         return JSVAL_TYPE_DOUBLE;
-    if (v.isObject()) {
-        if (v.isNull())
-            return JSVAL_TYPE_NULL;
-        if (v.isFunObj())
-            return JSVAL_TYPE_FUNOBJ;
-        return JSVAL_TYPE_NONFUNOBJ;
-    }
-    if (v.isString())
-        return JSVAL_TYPE_STRING;
-    if (v.isUndefined())
-        return JSVAL_TYPE_UNDEFINED;
-    if (v.isMagic())
-        return JSVAL_TYPE_MAGIC;
-    if (v.isNull())
-        return JSVAL_TYPE_NULL;
-    JS_ASSERT(v.isBoolean());
-    return JSVAL_TYPE_BOOLEAN;
+    return v.extractNonDoubleType();
 }
 
 /* Return JSVAL_TYPE_INT32 for all whole numbers that fit into signed 32-bit and the tag otherwise. */
 static inline JSValueType
 getCoercedType(const Value &v)
 {
-    if (hasInt32Repr(v))
-        return JSVAL_TYPE_INT32;
-    if (v.isDouble())
-        return JSVAL_TYPE_DOUBLE;
-    if (v.isObject()) {
-        if (v.isNull())
-            return JSVAL_TYPE_NULL;
-        if (v.isFunObj())
-            return JSVAL_TYPE_FUNOBJ;
-        return JSVAL_TYPE_NONFUNOBJ;
+    if (v.isNumber()) {
+        int32_t _;
+        return (v.isInt32() || JSDOUBLE_IS_INT32(v.asDouble(), _))
+               ? JSVAL_TYPE_INT32
+               : JSVAL_TYPE_DOUBLE;
     }
-    if (v.isString())
-        return JSVAL_TYPE_STRING;
-    if (v.isUndefined())
-        return JSVAL_TYPE_UNDEFINED;
-    if (v.isMagic())
-        return JSVAL_TYPE_MAGIC;
-    if (v.isNull())
-        return JSVAL_TYPE_NULL;
-    JS_ASSERT(v.isBoolean());
-    return JSVAL_TYPE_BOOLEAN;
+
+    return v.extractNonDoubleType();
 }
 
 /* Constant seed and accumulate step borrowed from the DJB hash. */
@@ -2563,38 +2535,58 @@ TraceRecorder::trackNativeStackUse(unsigned slots)
         tree->maxNativeStackSlots = slots;
 }
 
+JS_ALWAYS_INLINE void
+NonNumberValueToSlot(const Value &v, JSValueType type, double *slot)
+{
+    JS_STATIC_ASSERT(sizeof(Value) == sizeof(uint64));
+    JS_STATIC_ASSERT(offsetof(jsval_layout, s.payload) == 0);
+
+    JS_ASSERT(v.extractNonDoubleType() == type);
+
+#if JS_BITS_PER_WORD == 32
+    *(uint32 *)slot = v.data.s.payload.u32;
+#else
+# error "Here"
+#endif
+}
+
 /*
  * Unbox a jsval into a slot. Slots are wide enough to hold double values
  * directly (instead of storing a pointer to them). We assert instead of
  * type checking. The caller must ensure the types are compatible.
  */
-static void
-ValueToNative(JSContext* cx, const Value &v, JSValueType type, double* slot)
+static inline void
+ValueToNative(const Value &v, JSValueType type, double* slot)
 {
+    if (type > JSVAL_TYPE_INT32) {
+        NonNumberValueToSlot(v, type, slot);
+    } else if (type == JSVAL_TYPE_INT32) {
+#ifdef DEBUG
+        int32_t _;
+        JS_ASSERT_IF(v.isDouble(), JSDOUBLE_IS_INT32(v.asDouble(), _));
+#endif
+        *(int32_t *)slot = v.isInt32() ? v.asInt32() : (int32_t)v.asDouble();
+    } else {
+        JS_ASSERT(type == JSVAL_TYPE_DOUBLE);
+        *(double *)slot = v.asNumber();
+    }
+
+#ifdef DEBUG
     switch (type) {
       case JSVAL_TYPE_NONFUNOBJ: {
         JS_ASSERT(v.isNonFunObj());
-        JSObject *obj = &v.asObject();
-        *(JSObject**)slot = obj;
         debug_only_printf(LC_TMTracer,
-                          "object<%p:%s> ", (void*) obj,
-                          obj->getClass()->name);
+                          "object<%p:%s> ", (void*)*(JSObject **)slot,
+                          v.asNonFunObj().getClass()->name);
         return;
       }
 
       case JSVAL_TYPE_INT32:
-        if (v.isInt32())
-            *(jsint*)slot = v.asInt32();
-        else if (v.isIntDouble())
-            *(jsint*)slot = jsint(v.asDouble());
-        else
-            JS_ASSERT(v.isInt32());
-        debug_only_printf(LC_TMTracer, "int<%d> ", *(jsint*)slot);
+        debug_only_printf(LC_TMTracer, "int<%d> ", *(jsint *)slot);
         return;
 
       case JSVAL_TYPE_DOUBLE:
-        *(jsdouble*)slot = v.asNumber();
-        debug_only_printf(LC_TMTracer, "double<%g> ", v.asNumber());
+        debug_only_printf(LC_TMTracer, "double<%g> ", *(jsdouble *)slot);
         return;
 
       case JSVAL_TYPE_BOXED:
@@ -2602,55 +2594,43 @@ ValueToNative(JSContext* cx, const Value &v, JSValueType type, double* slot)
         return;
 
       case JSVAL_TYPE_STRING:
-        *(JSString**)slot = v.asString();
-        debug_only_printf(LC_TMTracer, "string<%p> ", (void*)(*(JSString**)slot));
+        debug_only_printf(LC_TMTracer, "string<%p> ", (void*)*(JSString**)slot);
         return;
 
       case JSVAL_TYPE_NULL:
         JS_ASSERT(v.isNull());
-        *(JSObject**)slot = NULL;
         debug_only_print0(LC_TMTracer, "null ");
         return;
 
       case JSVAL_TYPE_BOOLEAN:
         JS_ASSERT(v.isBoolean());
-        *(JSBool*)slot = v.asBoolean();
         debug_only_printf(LC_TMTracer, "special<%d> ", *(JSBool*)slot);
         return;
 
       case JSVAL_TYPE_UNDEFINED:
         JS_ASSERT(v.isUndefined());
-        *(int*)slot = UNBOXED_VOID;
         debug_only_print0(LC_TMTracer, "undefined ");
         return;
 
       case JSVAL_TYPE_MAGIC:
         JS_ASSERT(v.isMagic());
-#ifdef DEBUG
-        *(int*)slot = v.whyMagic();
-#else
-        *(int*)slot = 0;
-#endif
         debug_only_print0(LC_TMTracer, "hole ");
         return;
 
       case JSVAL_TYPE_FUNOBJ: {
-        JSObject* obj = &v.asFunObj();
-        *(JSObject**)slot = obj;
-#ifdef DEBUG
-        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
+        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.asFunObj());
         debug_only_printf(LC_TMTracer,
-                          "function<%p:%s> ", (void*) obj,
+                          "function<%p:%s> ", (void*)*(JSObject **)slot,
                           fun->atom
                           ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
                           : "unnamed");
-#endif
         return;
       }
       default:
         JS_NOT_REACHED("unexpected type");
         break;
     }
+#endif
 }
 
 void
@@ -2741,90 +2721,84 @@ TraceMonitor::mark(JSTracer* trc)
     }
 }
 
+JS_ALWAYS_INLINE void
+NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp)
+{
+    JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+    if (JS_LIKELY(type <= JSVAL_UPPER_TYPE_OF_OBJ_SET)) {
+        vp->data.s.payload.u32 = *(uint32_t *)slot;
+        vp->data.s.tag = (JSValueTag)(JSVAL_TAG_CLEAR | type);
+        return;
+    }
+
+    JS_ASSERT(type == JSVAL_TYPE_BOXED);
+    JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
+    *vp = *(Value *)slot;
+}
+
 /*
  * Box a value from the native stack back into the Value format.
  */
-bool
+static inline void
 NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
 {
-    int32_t i;
-    jsdouble d;
+    if (type == JSVAL_TYPE_DOUBLE)
+        v.setNumber(*slot);
+    else
+        NonDoubleNativeToValue(type, slot, &v);
+
+#ifdef DEBUG
     switch (type) {
       case JSVAL_TYPE_NONFUNOBJ:
-        v.setNonFunObj(**(JSObject**)slot);
         debug_only_printf(LC_TMTracer,
-                          "object<%p:%s> ", (void*) &v.asObject(),
-                          v.asObject().getClass()->name);
+                          "object<%p:%s> ",
+                          (void*) &v.asNonFunObj(),
+                          v.asNonFunObj().getClass()->name);
         break;
-
       case JSVAL_TYPE_INT32:
-        i = *(int32_t*)slot;
-        debug_only_printf(LC_TMTracer, "int<%d> ", i);
-        v.setInt32(i);
+        debug_only_printf(LC_TMTracer, "int<%d> ", v.asInt32());
         break;
-
       case JSVAL_TYPE_DOUBLE:
-        d = *slot;
-        debug_only_printf(LC_TMTracer, "double<%g> ", d);
-        if (JSDOUBLE_IS_INT32(d, i))
-            v.setInt32(i);
-        else
-            v.setDouble(d);
+        debug_only_printf(LC_TMTracer, "double<%g> ", v.asNumber());
         break;
-
       case JSVAL_TYPE_BOXED:
-        v = *(Value*)slot;
         debug_only_printf(LC_TMTracer, "box<%llx> ", v.asRawBits());
         break;
-
       case JSVAL_TYPE_STRING:
-        v.setString(*(JSString**)slot);
-        debug_only_printf(LC_TMTracer, "string<%p> ", (void*)(*(JSString**)slot));
+        debug_only_printf(LC_TMTracer, "string<%p> ", (void*)v.asString());
         break;
-
       case JSVAL_TYPE_NULL:
-        JS_ASSERT(*(JSObject**)slot == NULL);
-        v.setNull();
-        debug_only_printf(LC_TMTracer, "null<%p> ", (void*)(*(JSObject**)slot));
+        debug_only_print0(LC_TMTracer, "null ");
         break;
-
       case JSVAL_TYPE_BOOLEAN:
-        v.setBoolean(*(JSBool*)slot);
-        debug_only_printf(LC_TMTracer, "special<%d> ", *(JSBool*)slot);
+        debug_only_printf(LC_TMTracer, "bool<%d> ", v.asBoolean());
         break;
-
       case JSVAL_TYPE_UNDEFINED:
-        v.setUndefined();
         debug_only_print0(LC_TMTracer, "undefined ");
         break;
-
       case JSVAL_TYPE_MAGIC:
-        // TODO: in release builds, the constant is ignored (0 is used),
-        // but in debug builds, the constant matters and must reflect the
-        // source of the hole.  this means, when a hole is written, we need to
-        // transmit the 'why' code.
-        v.setMagic(JS_NO_CONSTANT); // FIXME
-        debug_only_print0(LC_TMTracer, "hole ");
+        debug_only_printf(LC_TMTracer, "magic<%d> ", v.whyMagic());
         break;
-
       case JSVAL_TYPE_FUNOBJ: {
-        JS_ASSERT((*(JSObject**)slot)->isFunction());
-        v.setObject(**(JSObject**)slot);
-#ifdef DEBUG
         JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.asFunObj());
         debug_only_printf(LC_TMTracer,
                           "function<%p:%s> ", (void*) &v.asFunObj(),
                           fun->atom
                           ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
                           : "unnamed");
-#endif
         break;
       }
       default:
         JS_NOT_REACHED("unexpected type");
         break;
     }
-    return true;
+#endif
+}
+
+void
+ExternNativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
+{
+    return NativeToValue(cx, v, type, slot);
 }
 
 class BuildNativeFrameVisitor : public SlotVisitorBase
@@ -2847,14 +2821,14 @@ public:
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d: ", n);
-        ValueToNative(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
+        ValueToNative(*vp, *mTypeMap++, &mGlobal[slot]);
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
     visitStackSlots(Value *vp, int count, JSStackFrame* fp) {
         for (int i = 0; i < count; ++i) {
             debug_only_printf(LC_TMTracer, "%s%d: ", stackSlotKind(), i);
-            ValueToNative(mCx, *vp++, *mTypeMap++, mStack++);
+            ValueToNative(*vp++, *mTypeMap++, mStack++);
         }
         return true;
     }
@@ -2888,8 +2862,7 @@ public:
     visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d=", n);
         JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
-        if (!NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]))
-            OutOfMemoryAbort();
+        NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
     }
 };
 
@@ -2927,10 +2900,8 @@ public:
             if (vp == mStop)
                 return false;
             debug_only_printf(LC_TMTracer, "%s%u=", stackSlotKind(), unsigned(i));
-            if (unsigned(mTypeMap - mInitTypeMap) >= mIgnoreSlots) {
-                if (!NativeToValue(mCx, *vp, *mTypeMap, mStack))
-                    OutOfMemoryAbort();
-            }
+            if (unsigned(mTypeMap - mInitTypeMap) >= mIgnoreSlots)
+                NativeToValue(mCx, *vp, *mTypeMap, mStack);
             vp++;
             mTypeMap++;
             mStack++;
@@ -3032,7 +3003,7 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
     JSStackFrame* fp = cx->display[upvarLevel];
     Value v = T::interp_get(fp, slot);
     JSValueType type = getCoercedType(v);
-    ValueToNative(cx, v, type, result);
+    ValueToNative(v, type, result);
     return type;
 }
 
@@ -3171,7 +3142,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
         v = T::slots(call)[slot];
     }
     JSValueType type = getCoercedType(v);
-    ValueToNative(cx, v, type, result);
+    ValueToNative(v, type, result);
     return type;
 }
 
@@ -3830,44 +3801,27 @@ TraceRecorder::adjustCallerTypes(TreeFragment* f)
     JS_ASSERT(f == f->root);
 }
 
-JS_REQUIRES_STACK JSValueType
+JS_REQUIRES_STACK inline JSValueType
 TraceRecorder::determineSlotType(Value* vp)
 {
-    JSValueType m;
-    LIns* i;
     if (vp->isNumber()) {
-        i = getFromTracker(vp);
+        LIns *i = getFromTracker(vp);
+        JSValueType t;
         if (i) {
-            m = isPromoteInt(i) ? JSVAL_TYPE_INT32 : JSVAL_TYPE_DOUBLE;
+            t = isPromoteInt(i) ? JSVAL_TYPE_INT32 : JSVAL_TYPE_DOUBLE;
         } else if (isGlobal(vp)) {
             int offset = tree->globalSlots->offsetOf(uint16(nativeGlobalSlot(vp)));
             JS_ASSERT(offset != -1);
-            m = importTypeMap[importStackSlots + offset];
+            t = importTypeMap[importStackSlots + offset];
         } else {
-            m = importTypeMap[nativeStackSlot(vp)];
+            t = importTypeMap[nativeStackSlot(vp)];
         }
-        JS_ASSERT(m != JSVAL_TYPE_UNINITIALIZED);
-    } else if (vp->isNonFunObj()) {
-        m = JSVAL_TYPE_NONFUNOBJ;
-    } else if (vp->isNull()) {
-        m = JSVAL_TYPE_NULL;
-    } else if (vp->isFunObj()) {
-        m = JSVAL_TYPE_FUNOBJ;
-    } else if (vp->isString()) {
-        m = JSVAL_TYPE_STRING;
-    } else if (vp->isBoolean()) {
-        m = JSVAL_TYPE_BOOLEAN;
-    } else if (vp->isUndefined()) {
-        /* N.B. void is JSVAL_SPECIAL. */
-        m = JSVAL_TYPE_UNDEFINED;
-    } else if (vp->isMagic()) {
-        /* N.B. hole is JSVAL_SPECIAL. */
-        m = JSVAL_TYPE_MAGIC;
-    } else {
-        JS_NOT_REACHED("value of unknown type");
+        JS_ASSERT(t != JSVAL_TYPE_UNINITIALIZED);
+        JS_ASSERT_IF(t == JSVAL_TYPE_INT32, hasInt32Repr(*vp));
+        return t;
     }
-    JS_ASSERT(m != JSVAL_TYPE_INT32 || hasInt32Repr(*vp));
-    return m;
+
+    return vp->extractNonDoubleType();
 }
 
 class DetermineTypesVisitor : public SlotVisitorBase
@@ -6040,66 +5994,82 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     }
 }
 
-static bool
-IsEntryTypeCompatible(Value* vp, JSValueType* m)
+#ifdef DEBUG
+static char
+ValueTypeTag(const Value &v)
+{
+    if (v.isInt32()) return 'I';
+    if (v.isDouble()) return 'D';
+    if (v.isString()) return 'S';
+    if (v.isFunObj()) return 'F';
+    if (v.isNonFunObj()) return 'O';
+    if (v.isBoolean()) return 'B';
+    if (v.isNull()) return 'N';
+    if (v.isUndefined()) return 'U';
+    if (v.isMagic()) return 'M';
+    return '?';
+}
+#endif
+
+static inline bool
+IsEntryTypeCompatible(Value* vp, JSValueType* typep)
 {
 #ifdef DEBUG
-    char tag = vp->typeTag();
+    char tag = ValueTypeTag(*vp);
+    debug_only_printf(LC_TMTracer, "%c/%c ", tag, typeChar[*typep]);
 #endif
-    debug_only_printf(LC_TMTracer, "%c/%c ", tag, typeChar[*m]);
 
-    switch (*m) {
+    JSValueType type = *typep;
+    Value v = *vp;
+
+    bool match;
+    if (type > JSVAL_TYPE_INT32) {
+        match = v.isNumber() ? false : (v.extractNonDoubleType() == type);
+    } else if (type == JSVAL_TYPE_INT32) {
+        int32_t _;
+        match = v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), _));
+    } else {
+        JS_ASSERT(type == JSVAL_TYPE_DOUBLE);
+        match = v.isNumber();
+    }
+
+#ifdef DEBUG
+    switch (type) {
       case JSVAL_TYPE_NONFUNOBJ:
-        if (vp->isNonFunObj())
-            return true;
         debug_only_printf(LC_TMTracer, "object != tag%c ", tag);
-        return false;
+        break;
       case JSVAL_TYPE_INT32:
-        if (vp->isInt32() || vp->isIntDouble())
-            return true;
-        debug_only_printf(LC_TMTracer, "int != tag%c(value=%lu) ", tag, (unsigned long) vp->asNumber());
-        return false;
+        debug_only_printf(LC_TMTracer, "int != tag%c ", tag);
+        break;
       case JSVAL_TYPE_DOUBLE:
-        if (vp->isNumber())
-            return true;
         debug_only_printf(LC_TMTracer, "double != tag%c ", tag);
-        return false;
+        break;
       case JSVAL_TYPE_BOXED:
         JS_NOT_REACHED("shouldn't see jsval type in entry");
-        return false;
+        break;
       case JSVAL_TYPE_STRING:
-        if (vp->isString())
-            return true;
         debug_only_printf(LC_TMTracer, "string != tag%c ", tag);
-        return false;
+        break;
       case JSVAL_TYPE_NULL:
-        if (vp->isNull())
-            return true;
         debug_only_printf(LC_TMTracer, "null != tag%c ", tag);
-        return false;
+        break;
       case JSVAL_TYPE_BOOLEAN:
-        if (vp->isBoolean())
-            return true;
         debug_only_printf(LC_TMTracer, "bool != tag%c ", tag);
-        return false;
+        break;
       case JSVAL_TYPE_UNDEFINED:
-        if (vp->isUndefined())
-            return true;
         debug_only_printf(LC_TMTracer, "undefined != tag%c ", tag);
-        return false;
+        break;
       case JSVAL_TYPE_MAGIC:
-        if (vp->isMagic())
-            return true;
         debug_only_printf(LC_TMTracer, "hole != tag%c ", tag);
-        return false;
+        break;
       default:
-        JS_ASSERT(*m == JSVAL_TYPE_FUNOBJ);
-        if (vp->isFunObj()) {
-            return true;
-        }
+        JS_ASSERT(type == JSVAL_TYPE_FUNOBJ);
         debug_only_printf(LC_TMTracer, "fun != tag%c ", tag);
-        return false;
+        break;
     }
+#endif
+
+    return match;
 }
 
 class TypeCompatibilityVisitor : public SlotVisitorBase
@@ -6637,13 +6607,11 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
              */
             JSValueType* typeMap = innermost->stackTypeMap();
             for (int i = 1; i <= cs.ndefs; i++) {
-                if (!NativeToValue(cx,
-                                   regs->sp[-i],
-                                   typeMap[innermost->numStackSlots - i],
-                                   (jsdouble *) state.deepBailSp
-                                   + innermost->sp_adj / sizeof(jsdouble) - i)) {
-                    OutOfMemoryAbort();
-                }
+                NativeToValue(cx,
+                              regs->sp[-i],
+                              typeMap[innermost->numStackSlots - i],
+                              (jsdouble *) state.deepBailSp
+                              + innermost->sp_adj / sizeof(jsdouble) - i);
             }
         }
         return;
@@ -9402,31 +9370,20 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
         return lir->insLoad(LIR_ldd, vaddr_ins, offset + sPayloadOffset, accSet);
     }
 
-    LIns *val_ins = NULL;
+    LIns *val_ins;
     JSValueTag mask;
     if (v.isUndefined()) {
         mask = JSVAL_TAG_UNDEFINED;
         val_ins = INS_VOID();
-    } else if (v.isMagic()) {
-        mask = JSVAL_TAG_MAGIC;
-    } else if (v.isBoolean()) {
-        mask = JSVAL_TAG_BOOLEAN;
     } else if (v.isNull()) {
         mask = JSVAL_TAG_NULL;
         val_ins = INS_NULL();
-    } else if (v.isNonFunObj()) {
-        mask = JSVAL_TAG_NONFUNOBJ;
-    } else if (v.isFunObj()) {
-        mask = JSVAL_TAG_FUNOBJ;
-    } else if (v.isString()) {
-        mask = JSVAL_TAG_STRING;
     } else {
-        JS_NOT_REACHED("bad type");
-    }
-    if (!val_ins)
+        mask = v.extractNonDoubleTag();
         val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + sPayloadOffset, 
                                accSet);
-    
+    }
+
     guard(true, lir->ins2(LIR_eqi, mask_ins, INS_CONST(mask)), exit);
     return val_ins;
 }
@@ -9459,7 +9416,7 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::is_boxed_object(LIns *vaddr_ins)
 {
     LIns *mask_ins = lir->insLoad(LIR_ldi, vaddr_ins, sTagOffset, ACC_OTHER);
-    return lir->ins2(LIR_geui, mask_ins, INS_CONSTU(JSVAL_LOWER_BOUND_OF_OBJ));
+    return lir->ins2(LIR_geui, mask_ins, INS_CONSTU(JSVAL_LOWER_TAG_OF_OBJ_SET));
 }
 
 JS_REQUIRES_STACK LIns*
@@ -9505,24 +9462,7 @@ TraceRecorder::box_value(const Value &v, nanojit::LIns* v_ins,
             lir->insStore(v_ins, dstaddr_ins, offset, ACC_OTHER);
         }
     } else {
-        JSValueTag mask;
-        if (v.isUndefined()) {
-            mask = JSVAL_TAG_UNDEFINED;
-        } else if (v.isMagic()) {
-            mask = JSVAL_TAG_MAGIC;
-        } else if (v.isBoolean()) {
-            mask = JSVAL_TAG_BOOLEAN;
-        } else if (v.isNull()) {
-            mask = JSVAL_TAG_NULL;
-        } else if (v.isNonFunObj()) {
-            mask = JSVAL_TAG_NONFUNOBJ;
-        } else if (v.isFunObj()) {
-            mask = JSVAL_TAG_FUNOBJ;
-        } else if (v.isString()) {
-            mask = JSVAL_TAG_STRING;
-        } else {
-            JS_NOT_REACHED("bad type");
-        }
+        JSValueTag mask = v.extractNonDoubleTag();
         lir->insStore(INS_CONSTU(mask), dstaddr_ins, 
                       offset + sTagOffset, ACC_OTHER);
         lir->insStore(v_ins, dstaddr_ins, 
