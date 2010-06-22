@@ -5137,78 +5137,16 @@ function makeFactory(ctor)
          };
 }
 
-/** The XPCOM module containing the HTTP server. */
-const module =
+const kServerCID = Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}");
+const kServerFactory = makeFactory(nsHttpServer);
+
+function NSGetFactory(cid)
 {
-  // nsISupports
-  QueryInterface: function(aIID)
-  {
-    if (Ci.nsIModule.equals(aIID) ||
-        Ci.nsISupports.equals(aIID))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  // nsIModule
-  registerSelf: function(compMgr, fileSpec, location, type)
-  {
-    compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
+  if (cid.equals(kServerCID)
+    return kServerFactory;
     
-    for (var key in this._objects)
-    {
-      var obj = this._objects[key];
-      compMgr.registerFactoryLocation(obj.CID, obj.className, obj.contractID,
-                                               fileSpec, location, type);
-    }
-  },
-  unregisterSelf: function (compMgr, location, type)
-  {
-    compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-
-    for (var key in this._objects)
-    {
-      var obj = this._objects[key];
-      compMgr.unregisterFactoryLocation(obj.CID, location);
-    }
-  },
-  getClassObject: function(compMgr, cid, iid)
-  {
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-    for (var key in this._objects)
-    {
-      if (cid.equals(this._objects[key].CID))
-        return this._objects[key].factory;
-    }
-    
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  canUnload: function(compMgr)
-  {
-    return true;
-  },
-
-  // private implementation
-  _objects:
-  {
-    server:
-    {
-      CID:         Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}"),
-      contractID:  "@mozilla.org/server/jshttp;1",
-      className:   "httpd.js server",
-      factory:     makeFactory(nsHttpServer)
-    }
-  }
-};
-
-
-/** NSGetModule, so this code can be used as a JS component. */
-function NSGetModule(compMgr, fileSpec)
-{
-  return module;
+  throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
 }
-
 
 /**
  * Creates a new HTTP server listening for loopback traffic on the given port,

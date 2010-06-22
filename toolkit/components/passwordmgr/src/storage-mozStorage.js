@@ -54,8 +54,6 @@ function LoginManagerStorage_mozStorage() { };
 
 LoginManagerStorage_mozStorage.prototype = {
 
-    classDescription  : "LoginManagerStorage_mozStorage",
-    contractID : "@mozilla.org/login-manager/storage/mozStorage;1",
     classID : Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerStorage]),
 
@@ -1562,6 +1560,4 @@ LoginManagerStorage_mozStorage.prototype = {
 }; // end of nsLoginManagerStorage_mozStorage implementation
 
 let component = [LoginManagerStorage_mozStorage];
-function NSGetModule(compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

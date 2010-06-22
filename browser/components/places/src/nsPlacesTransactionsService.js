@@ -47,7 +47,6 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
 const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
-const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -72,9 +71,7 @@ function placesTransactionsService() {
 }
 
 placesTransactionsService.prototype = {
-  classDescription: "Places Transaction Manager",
   classID: CLASS_ID,
-  contractID: CONTRACT_ID,
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIPlacesTransactionsService,
@@ -1187,7 +1184,4 @@ placesUntagURITransaction.prototype = {
   }
 };
 
-
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([placesTransactionsService]);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([placesTransactionsService]);

@@ -89,11 +89,8 @@ amContentHandler.prototype = {
                                      [null], [null], [null], null, 1);
   },
 
-  classDescription: "XPI Content Handler",
-  contractID: "@mozilla.org/uriloader/content-handler;1?type=" + XPI_CONTENT_TYPE,
   classID: Components.ID("{7beb3ba8-6ec3-41b4-b67c-da89b8518922}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentHandler])
 };
 
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([amContentHandler]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([amContentHandler]);

@@ -1,0 +1,3 @@
+component {B322A5C0-A419-484E-96BA-D7182163899F} nsUpdateTimerManager.js
+contract @mozilla.org/updates/timer-manager;1 {B322A5C0-A419-484E-96BA-D7182163899F}
+category profile-after-change nsUpdateTimerManager @mozilla.org/updates/timer-manager;1

@@ -1,0 +1,2 @@
+component {e35d5067-95bc-4029-8432-e8f1e431148d} nsContentDispatchChooser.js
+contract @mozilla.org/content-dispatch-chooser;1 {e35d5067-95bc-4029-8432-e8f1e431148d}

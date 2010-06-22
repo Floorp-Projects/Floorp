@@ -42,7 +42,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = pluginGlue.js
+EXTRA_COMPONENTS = pluginGlue.manifest
 
 ifdef ENABLE_TESTS
 DIRS += tests

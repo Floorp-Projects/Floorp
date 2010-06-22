@@ -1,0 +1,4 @@
+component {c31f4883-839b-45f6-82ad-a6a9bc5ad599} nsPrivateBrowsingService.js
+contract @mozilla.org/privatebrowsing;1 {c31f4883-839b-45f6-82ad-a6a9bc5ad599}
+category command-line-handler m-privatebrowsing @mozilla.org/privatebrowsing;1
+category app-startup nsPrivateBrowsingService service,@mozilla.org/privatebrowsing;1

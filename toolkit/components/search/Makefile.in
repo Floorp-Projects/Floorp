@@ -48,6 +48,7 @@ XPIDL_MODULE = toolkitsearch
 
 XPIDLSRCS = nsIBrowserSearchService.idl
 
+EXTRA_COMPONENTS = toolkitsearch.manifest
 EXTRA_PP_COMPONENTS = nsSearchService.js \
 	nsSearchSuggestions.js
 
