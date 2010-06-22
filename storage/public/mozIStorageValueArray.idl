@@ -110,44 +110,61 @@ interface mozIStorageValueArray : nsISupports {
    */
 
   inline PRInt32 AsInt32(PRUint32 idx) {
-    PRInt32 v;
-    GetInt32(idx, &v);
+    PRInt32 v = 0;
+    nsresult rv = GetInt32(idx, &v);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
+                      "Getting value failed, wrong column index?");
     return v;
   }
 
   inline PRInt64 AsInt64(PRUint32 idx) {
-    PRInt64 v;
-    GetInt64(idx, &v);
+    PRInt64 v = 0;
+    nsresult rv = GetInt64(idx, &v);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
+                      "Getting value failed, wrong column index?");
     return v;
   }
 
   inline double AsDouble(PRUint32 idx) {
-    double v;
-    GetDouble(idx, &v);
+    double v = 0.0;
+    nsresult rv = GetDouble(idx, &v);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
+                      "Getting value failed, wrong column index?");
     return v;
   }
 
   inline const char* AsSharedUTF8String(PRUint32 idx, PRUint32 *len) {
     const char *str = nsnull;
-    GetSharedUTF8String(idx, len, &str);
+    *len = 0;
+    nsresult rv = GetSharedUTF8String(idx, len, &str);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
+                      "Getting value failed, wrong column index?");
     return str;
   }
 
   inline const PRUnichar* AsSharedWString(PRUint32 idx, PRUint32 *len) {
     const PRUnichar *str = nsnull;
-    GetSharedString(idx, len, &str);
+    *len = 0;
+    nsresult rv = GetSharedString(idx, len, &str);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
+                      "Getting value failed, wrong column index?");
     return str;
   }
 
   inline const PRUint8* AsSharedBlob(PRUint32 idx, PRUint32 *len) {
     const PRUint8 *blob = nsnull;
-    GetSharedBlob(idx, len, &blob);
+    *len = 0;
+    nsresult rv = GetSharedBlob(idx, len, &blob);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
+                      "Getting value failed, wrong column index?");
     return blob;
   }
 
   inline PRBool IsNull(PRUint32 idx) {
     PRBool b = PR_FALSE;
-    GetIsNull(idx, &b);
+    nsresult rv = GetIsNull(idx, &b);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
+                      "Getting value failed, wrong column index?");
     return b;
   }
 
