@@ -200,7 +200,7 @@ window.Group = function(listOfEls, options) {
       self.$title
         .css({"background":"none"})
         .animate({
-          "padding-left": 1
+          "padding-left": "1px"
         }, {
           duration: 200,
           easing: 'tabcandyBounce',
