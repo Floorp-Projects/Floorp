@@ -68,7 +68,7 @@ public:
    * or 'ref' is aID. The nsCOMArray will be truncated and filled in with
    * nsIContent pointers.
    */
-  NS_IMETHOD GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;
+  virtual void GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;
 
   /**
    * Get the nsIScriptGlobalObjectOwner for this document.
