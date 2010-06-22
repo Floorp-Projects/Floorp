@@ -52,6 +52,8 @@ function start() {
   compareSnapshots_(normalButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal buttons.");
   // Release.
   sendMouseEvent("mouseup", button);
+  // make sure the button is focused as this doesn't happen on click on Mac
+  button.focus();
   takeSnapshot(normalFocusedButtonCanvas);
   compareSnapshots_(normalFocusedButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal focused buttons.");
   // Unfocus the button.

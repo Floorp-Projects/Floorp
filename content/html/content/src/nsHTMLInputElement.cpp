@@ -287,7 +287,7 @@ public:
   virtual PRBool AllowDrop();
 
   // nsIContent
-  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -3185,9 +3185,9 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
 }
 
 PRBool
-nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
+nsHTMLInputElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
 
@@ -3201,11 +3201,17 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
     return PR_FALSE;
   }
 
+#ifdef XP_MACOSX
+  const PRBool defaultFocusable = !aWithMouse;
+#else
+  const PRBool defaultFocusable = PR_TRUE;
+#endif
+
   if (mType == NS_FORM_INPUT_FILE) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_TRUE;
   }
 
@@ -3219,7 +3225,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 
   if (!aTabIndex) {
     // The other controls are all focusable
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
@@ -3230,13 +3236,13 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
   }
 
   if (mType != NS_FORM_INPUT_RADIO) {
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
   if (GetChecked()) {
     // Selected radio buttons are tabbable
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
@@ -3245,7 +3251,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   nsAutoString name;
   if (!container || !GetNameIfExists(name)) {
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
@@ -3254,7 +3260,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
   if (currentRadio) {
     *aTabIndex = -1;
   }
-  *aIsFocusable = PR_TRUE;
+  *aIsFocusable = defaultFocusable;
   return PR_FALSE;
 }
 

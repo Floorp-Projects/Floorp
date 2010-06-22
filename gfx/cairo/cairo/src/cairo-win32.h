@@ -177,6 +177,26 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
  * return error surfaces.
  */
 cairo_bool_t cairo_d2d_has_support();
+
+/**
+ * Get a DC for the current render target. When selecting the retention option this
+ * call can be relatively slow, since it may require reading back contents from the
+ * hardware surface.
+ *
+ * \note This must be matched by a call to ReleaseDC!
+ *
+ * \param retain_contents If true the current contents of the RT is copied to the DC,
+ * otherwise the DC is initialized to transparent black.
+ */
+HDC cairo_d2d_get_dc(cairo_surface_t *surface, cairo_bool_t retain_contents);
+
+/**
+ * Release the DC acquired through GetDC(). Optionally an update region may be specified
+ *
+ * \param updated_rect The area of the DC that was updated, if null the entire dc will
+ * be updated.
+ */
+void cairo_d2d_release_dc(cairo_surface_t *surcace, const cairo_rectangle_int_t *updated_rect);
 #endif
 
 CAIRO_END_DECLS

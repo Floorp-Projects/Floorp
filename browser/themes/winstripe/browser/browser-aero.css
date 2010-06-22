@@ -102,7 +102,8 @@
   /* Bug 413060, comment 16: Vista Aero is a special case where we use a
      tooltip appearance for the address bar popup panels */
   #identity-popup,
-  #editBookmarkPanel {
+  #editBookmarkPanel,
+  #notification-popup {
     -moz-appearance: tooltip;
     color: InfoText;
   }

@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2010             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: residue backend 0, 1 and 2 implementation
- last mod: $Id: res0.c 16552 2009-09-12 02:09:04Z xiphmont $
+ last mod: $Id: res0.c 16962 2010-03-11 07:30:34Z xiphmont $
 
  ********************************************************************/
 
@@ -30,6 +30,9 @@
 #include "codebook.h"
 #include "misc.h"
 #include "os.h"
+
+//#define TRAIN_RES 1
+//#define TRAIN_RESAUX 1
 
 #if defined(TRAIN_RES) || defined (TRAIN_RESAUX)
 #include <stdio.h>
@@ -58,6 +61,7 @@ typedef struct {
   float      training_min[8][64];
   float     tmin;
   float     tmax;
+  int       submap;
 #endif
 
 } vorbis_look_residue0;
@@ -88,7 +92,7 @@ void res0_free_look(vorbis_look_residue *i){
             codebook *statebook=look->partbooks[j][k];
 
             /* long and short into the same bucket by current convention */
-            sprintf(buffer,"res_part%d_pass%d.vqd",j,k);
+            sprintf(buffer,"res_sub%d_part%d_pass%d.vqd",look->submap,j,k);
             of=fopen(buffer,"a");
 
             for(l=0;l<statebook->entries;l++)
@@ -321,65 +325,71 @@ vorbis_look_residue *res0_look(vorbis_dsp_state *vd,
 }
 
 /* break an abstraction and copy some code for performance purposes */
-static int local_book_besterror(codebook *book,float *a){
-  int dim=book->dim,i,k,o;
-  int best=0;
-  encode_aux_threshmatch *tt=book->c->thresh_tree;
+static int local_book_besterror(codebook *book,int *a){
+  int dim=book->dim;
+  int i,j,o;
+  int minval=book->minval;
+  int del=book->delta;
+  int qv=book->quantvals;
+  int ze=(qv>>1);
+  int index=0;
+  /* assumes integer/centered encoder codebook maptype 1 no more than dim 8 */
+  int p[8]={0,0,0,0,0,0,0,0};
 
-  /* find the quant val of each scalar */
-  for(k=0,o=dim;k<dim;++k){
-    float val=a[--o];
-    i=tt->threshvals>>1;
-
-    if(val<tt->quantthresh[i]){
-      if(val<tt->quantthresh[i-1]){
-        for(--i;i>0;--i)
-          if(val>=tt->quantthresh[i-1])
-            break;
-      }
-    }else{
-
-      for(++i;i<tt->threshvals-1;++i)
-        if(val<tt->quantthresh[i])break;
-
+  if(del!=1){
+    for(i=0,o=dim;i<dim;i++){
+      int v = (a[--o]-minval+(del>>1))/del;
+      int m = (v<ze ? ((ze-v)<<1)-1 : ((v-ze)<<1));
+      index = index*qv+ (m<0?0:(m>=qv?qv-1:m));
+      p[o]=v*del+minval;
     }
-
-    best=(best*tt->quantvals)+tt->quantmap[i];
+  }else{
+    for(i=0,o=dim;i<dim;i++){
+      int v = a[--o]-minval;
+      int m = (v<ze ? ((ze-v)<<1)-1 : ((v-ze)<<1));
+      index = index*qv+ (m<0?0:(m>=qv?qv-1:m));
+      p[o]=v*del+minval;
+    }
   }
-  /* regular lattices are easy :-) */
 
-  if(book->c->lengthlist[best]<=0){
+  if(book->c->lengthlist[index]<=0){
     const static_codebook *c=book->c;
-    int i,j;
-    float bestf=0.f;
-    float *e=book->valuelist;
-    best=-1;
+    int best=-1;
+    /* assumes integer/centered encoder codebook maptype 1 no more than dim 8 */
+    int e[8]={0,0,0,0,0,0,0,0};
+    int maxval = book->minval + book->delta*(book->quantvals-1);
     for(i=0;i<book->entries;i++){
       if(c->lengthlist[i]>0){
-        float this=0.f;
+        int this=0;
         for(j=0;j<dim;j++){
-          float val=(e[j]-a[j]);
+          int val=(e[j]-a[j]);
           this+=val*val;
         }
-        if(best==-1 || this<bestf){
-          bestf=this;
-          best=i;
+        if(best==-1 || this<best){
+          memcpy(p,e,sizeof(p));
+          best=this;
+          index=i;
         }
       }
-      e+=dim;
+      /* assumes the value patterning created by the tools in vq/ */
+      j=0;
+      while(e[j]>=maxval)
+        e[j++]=0;
+      if(e[j]>=0)
+        e[j]+=book->delta;
+      e[j]= -e[j];
     }
   }
 
-  if(best>-1){
-    float *ptr=book->valuelist+best*dim;
+  if(index>-1){
     for(i=0;i<dim;i++)
-      *a++ -= *ptr++;
+      *a++ -= p[i];
   }
 
-  return(best);
+  return(index);
 }
 
-static int _encodepart(oggpack_buffer *opb,float *vec, int n,
+static int _encodepart(oggpack_buffer *opb,int *vec, int n,
                        codebook *book,long *acc){
   int i,bits=0;
   int dim=book->dim;
@@ -389,7 +399,7 @@ static int _encodepart(oggpack_buffer *opb,float *vec, int n,
     int entry=local_book_besterror(book,vec+i*dim);
 
 #ifdef TRAIN_RES
-    if(entry>0)
+    if(entry>=0)
       acc[entry]++;
 #endif
 
@@ -401,7 +411,7 @@ static int _encodepart(oggpack_buffer *opb,float *vec, int n,
 }
 
 static long **_01class(vorbis_block *vb,vorbis_look_residue *vl,
-                       float **in,int ch){
+                       int **in,int ch){
   long i,j,k;
   vorbis_look_residue0 *look=(vorbis_look_residue0 *)vl;
   vorbis_info_residue0 *info=look->info;
@@ -427,17 +437,17 @@ static long **_01class(vorbis_block *vb,vorbis_look_residue *vl,
   for(i=0;i<partvals;i++){
     int offset=i*samples_per_partition+info->begin;
     for(j=0;j<ch;j++){
-      float max=0.;
-      float ent=0.;
+      int max=0;
+      int ent=0;
       for(k=0;k<samples_per_partition;k++){
-        if(fabs(in[j][offset+k])>max)max=fabs(in[j][offset+k]);
-        ent+=fabs(rint(in[j][offset+k]));
+        if(abs(in[j][offset+k])>max)max=abs(in[j][offset+k]);
+        ent+=abs(in[j][offset+k]);
       }
       ent*=scale;
 
       for(k=0;k<possible_partitions-1;k++)
         if(max<=info->classmetric1[k] &&
-           (info->classmetric2[k]<0 || (int)ent<info->classmetric2[k]))
+           (info->classmetric2[k]<0 || ent<info->classmetric2[k]))
           break;
 
       partword[j][i]=k;
@@ -467,7 +477,7 @@ static long **_01class(vorbis_block *vb,vorbis_look_residue *vl,
 /* designed for stereo or other modes where the partition size is an
    integer multiple of the number of channels encoded in the current
    submap */
-static long **_2class(vorbis_block *vb,vorbis_look_residue *vl,float **in,
+static long **_2class(vorbis_block *vb,vorbis_look_residue *vl,int **in,
                       int ch){
   long i,j,k,l;
   vorbis_look_residue0 *look=(vorbis_look_residue0 *)vl;
@@ -486,17 +496,17 @@ static long **_2class(vorbis_block *vb,vorbis_look_residue *vl,float **in,
   char buffer[80];
 #endif
 
-  partword[0]=_vorbis_block_alloc(vb,n*ch/samples_per_partition*sizeof(*partword[0]));
-  memset(partword[0],0,n*ch/samples_per_partition*sizeof(*partword[0]));
+  partword[0]=_vorbis_block_alloc(vb,partvals*sizeof(*partword[0]));
+  memset(partword[0],0,partvals*sizeof(*partword[0]));
 
   for(i=0,l=info->begin/ch;i<partvals;i++){
-    float magmax=0.f;
-    float angmax=0.f;
+    int magmax=0;
+    int angmax=0;
     for(j=0;j<samples_per_partition;j+=ch){
-      if(fabs(in[0][l])>magmax)magmax=fabs(in[0][l]);
+      if(abs(in[0][l])>magmax)magmax=abs(in[0][l]);
       for(k=1;k<ch;k++)
-        if(fabs(in[k][l])>angmax)angmax=fabs(in[k][l]);
-        l++;
+        if(abs(in[k][l])>angmax)angmax=abs(in[k][l]);
+      l++;
     }
 
     for(j=0;j<possible_partitions-1;j++)
@@ -524,13 +534,18 @@ static long **_2class(vorbis_block *vb,vorbis_look_residue *vl,float **in,
 
 static int _01forward(oggpack_buffer *opb,
                       vorbis_block *vb,vorbis_look_residue *vl,
-                      float **in,int ch,
+                      int **in,int ch,
                       long **partword,
-                      int (*encode)(oggpack_buffer *,float *,int,
-                                    codebook *,long *)){
+                      int (*encode)(oggpack_buffer *,int *,int,
+                                    codebook *,long *),
+                      int submap){
   long i,j,k,s;
   vorbis_look_residue0 *look=(vorbis_look_residue0 *)vl;
   vorbis_info_residue0 *info=look->info;
+
+#ifdef TRAIN_RES
+  look->submap=submap;
+#endif
 
   /* move all this setup out later */
   int samples_per_partition=info->grouping;
@@ -544,7 +559,7 @@ static int _01forward(oggpack_buffer *opb,
 
 #ifdef TRAIN_RES
   for(i=0;i<ch;i++)
-    for(j=info->begin;j<end;j++){
+    for(j=info->begin;j<info->end;j++){
       if(in[i][j]>look->tmax)look->tmax=in[i][j];
       if(in[i][j]<look->tmin)look->tmin=in[i][j];
     }
@@ -599,7 +614,7 @@ static int _01forward(oggpack_buffer *opb,
               accumulator=look->training_data[s][partword[j][i]];
               {
                 int l;
-                float *samples=in[j]+offset;
+                int *samples=in[j]+offset;
                 for(l=0;l<samples_per_partition;l++){
                   if(samples[l]<look->training_min[s][partword[j][i]])
                     look->training_min[s][partword[j][i]]=samples[l];
@@ -698,54 +713,6 @@ static int _01inverse(vorbis_block *vb,vorbis_look_residue *vl,
   return(0);
 }
 
-#if 0
-/* residue 0 and 1 are just slight variants of one another. 0 is
-   interleaved, 1 is not */
-long **res0_class(vorbis_block *vb,vorbis_look_residue *vl,
-                  float **in,int *nonzero,int ch){
-  /* we encode only the nonzero parts of a bundle */
-  int i,used=0;
-  for(i=0;i<ch;i++)
-    if(nonzero[i])
-      in[used++]=in[i];
-  if(used)
-    /*return(_01class(vb,vl,in,used,_interleaved_testhack));*/
-    return(_01class(vb,vl,in,used));
-  else
-    return(0);
-}
-
-int res0_forward(vorbis_block *vb,vorbis_look_residue *vl,
-                 float **in,float **out,int *nonzero,int ch,
-                 long **partword){
-  /* we encode only the nonzero parts of a bundle */
-  int i,j,used=0,n=vb->pcmend/2;
-  for(i=0;i<ch;i++)
-    if(nonzero[i]){
-      if(out)
-        for(j=0;j<n;j++)
-          out[i][j]+=in[i][j];
-      in[used++]=in[i];
-    }
-  if(used){
-    int ret=_01forward(vb,vl,in,used,partword,
-                      _interleaved_encodepart);
-    if(out){
-      used=0;
-      for(i=0;i<ch;i++)
-        if(nonzero[i]){
-          for(j=0;j<n;j++)
-            out[i][j]-=in[used][j];
-          used++;
-        }
-    }
-    return(ret);
-  }else{
-    return(0);
-  }
-}
-#endif
-
 int res0_inverse(vorbis_block *vb,vorbis_look_residue *vl,
                  float **in,int *nonzero,int ch){
   int i,used=0;
@@ -759,36 +726,21 @@ int res0_inverse(vorbis_block *vb,vorbis_look_residue *vl,
 }
 
 int res1_forward(oggpack_buffer *opb,vorbis_block *vb,vorbis_look_residue *vl,
-                 float **in,float **out,int *nonzero,int ch,
-                 long **partword){
-  int i,j,used=0,n=vb->pcmend/2;
+                 int **in,int *nonzero,int ch, long **partword, int submap){
+  int i,used=0;
   for(i=0;i<ch;i++)
-    if(nonzero[i]){
-      if(out)
-        for(j=0;j<n;j++)
-          out[i][j]+=in[i][j];
+    if(nonzero[i])
       in[used++]=in[i];
-    }
 
   if(used){
-    int ret=_01forward(opb,vb,vl,in,used,partword,_encodepart);
-    if(out){
-      used=0;
-      for(i=0;i<ch;i++)
-        if(nonzero[i]){
-          for(j=0;j<n;j++)
-            out[i][j]-=in[used][j];
-          used++;
-        }
-    }
-    return(ret);
+    return _01forward(opb,vb,vl,in,used,partword,_encodepart,submap);
   }else{
     return(0);
   }
 }
 
 long **res1_class(vorbis_block *vb,vorbis_look_residue *vl,
-                  float **in,int *nonzero,int ch){
+                  int **in,int *nonzero,int ch){
   int i,used=0;
   for(i=0;i<ch;i++)
     if(nonzero[i])
@@ -812,7 +764,7 @@ int res1_inverse(vorbis_block *vb,vorbis_look_residue *vl,
 }
 
 long **res2_class(vorbis_block *vb,vorbis_look_residue *vl,
-                  float **in,int *nonzero,int ch){
+                  int **in,int *nonzero,int ch){
   int i,used=0;
   for(i=0;i<ch;i++)
     if(nonzero[i])used++;
@@ -827,34 +779,22 @@ long **res2_class(vorbis_block *vb,vorbis_look_residue *vl,
 
 int res2_forward(oggpack_buffer *opb,
                  vorbis_block *vb,vorbis_look_residue *vl,
-                 float **in,float **out,int *nonzero,int ch,
-                 long **partword){
+                 int **in,int *nonzero,int ch, long **partword,int submap){
   long i,j,k,n=vb->pcmend/2,used=0;
 
   /* don't duplicate the code; use a working vector hack for now and
      reshape ourselves into a single channel res1 */
   /* ugly; reallocs for each coupling pass :-( */
-  float *work=_vorbis_block_alloc(vb,ch*n*sizeof(*work));
+  int *work=_vorbis_block_alloc(vb,ch*n*sizeof(*work));
   for(i=0;i<ch;i++){
-    float *pcm=in[i];
+    int *pcm=in[i];
     if(nonzero[i])used++;
     for(j=0,k=i;j<n;j++,k+=ch)
       work[k]=pcm[j];
   }
 
   if(used){
-    int ret=_01forward(opb,vb,vl,&work,1,partword,_encodepart);
-    /* update the sofar vector */
-    if(out){
-      for(i=0;i<ch;i++){
-        float *pcm=in[i];
-        float *sofar=out[i];
-        for(j=0,k=i;j<n;j++,k+=ch)
-          sofar[j]+=pcm[j]-work[k];
-
-      }
-    }
-    return(ret);
+    return _01forward(opb,vb,vl,&work,1,partword,_encodepart,submap);
   }else{
     return(0);
   }

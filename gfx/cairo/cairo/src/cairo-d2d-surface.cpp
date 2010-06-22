@@ -1440,7 +1440,8 @@ _cairo_d2d_create_similar(void			*surface,
 								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
 											 alpha),
 								       dpiX,
-								       dpiY);
+								       dpiY,
+								       D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE);
 
     if (sizePixels.width < 1) {
 	sizePixels.width = 1;
@@ -1465,6 +1466,7 @@ _cairo_d2d_create_similar(void			*surface,
     desc.MipLevels = 1;
     desc.Usage = D3D10_USAGE_DEFAULT;
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+    desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
     RefPtr<ID3D10Texture2D> texture;
     RefPtr<IDXGISurface> dxgiSurface;
 
@@ -2248,6 +2250,7 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd,
     swapDesc.SampleDesc.Quality = 0;
     swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapDesc.BufferCount = 1;
+    swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE;
     swapDesc.OutputWindow = wnd;
     swapDesc.Windowed = TRUE;
 
@@ -2285,7 +2288,7 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd,
 					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
 					 dpiX,
 					 dpiY,
-					 D2D1_RENDER_TARGET_USAGE_NONE);
+					 D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE);
     hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(newSurf->backBuf,
 								   props,
 								   &newSurf->rt);
@@ -2353,6 +2356,7 @@ cairo_d2d_surface_create(cairo_format_t format,
     desc.MipLevels = 1;
     desc.Usage = D3D10_USAGE_DEFAULT;
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+    desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
     
     RefPtr<ID3D10Texture2D> texture;
     RefPtr<IDXGISurface> dxgiSurface;
@@ -2375,6 +2379,7 @@ cairo_d2d_surface_create(cairo_format_t format,
 
     props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
 					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
+    props.usage = D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
     hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
 								   props,
 								   &newSurf->rt);
@@ -2485,4 +2490,68 @@ cairo_d2d_has_support()
 	return false;
     }
     return true;
+}
+
+HDC
+cairo_d2d_get_dc(cairo_surface_t *surface, cairo_bool_t retain_contents)
+{
+    if (surface->type != CAIRO_SURFACE_TYPE_D2D) {
+        return NULL;
+    }
+    cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+
+    /* We'll pop the clip here manually so that we'll stay in drawing state if we
+     * already are, we need to ensure d2dsurf->isDrawing manually then though 
+     */
+
+    /* Clips aren't allowed as per MSDN docs */
+    _cairo_d2d_surface_pop_clip(d2dsurf);
+
+    if (!d2dsurf->isDrawing) {
+      /* GetDC must be called between BeginDraw/EndDraw */
+      d2dsurf->rt->BeginDraw();
+      d2dsurf->isDrawing = true;
+    }
+
+    RefPtr<ID2D1GdiInteropRenderTarget> interopRT;
+
+    d2dsurf->rt->QueryInterface(&interopRT);
+
+    HDC retval;
+    HRESULT rv;
+
+    rv = interopRT->GetDC(retain_contents ? D2D1_DC_INITIALIZE_MODE_COPY :
+	D2D1_DC_INITIALIZE_MODE_CLEAR, &retval);
+
+    if (FAILED(rv)) {
+	return NULL;
+    }
+
+    return retval;
+}
+
+void
+cairo_d2d_release_dc(cairo_surface_t *surface, const cairo_rectangle_int_t *updated_rect)
+{
+    if (surface->type != CAIRO_SURFACE_TYPE_D2D) {
+        return;
+    }
+    cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+
+    RefPtr<ID2D1GdiInteropRenderTarget> interopRT;
+
+    d2dsurf->rt->QueryInterface(&interopRT);
+
+    if (!updated_rect) {
+	interopRT->ReleaseDC(NULL);
+	return;
+    }
+    
+    RECT r;
+    r.left = updated_rect->x;
+    r.top = updated_rect->y;
+    r.right = r.left + updated_rect->width;
+    r.bottom = r.top + updated_rect->height;
+
+    interopRT->ReleaseDC(&r);
 }

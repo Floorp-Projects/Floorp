@@ -110,6 +110,8 @@ function earlyInit() {
         iconClass  = "authentication-icon question-icon";
         soundID    = Ci.nsISound.EVENT_PROMPT_DIALOG_OPEN;
         initTextbox("password1", gArgs.getProperty("pass"));
+        // Clear the label, since the message presumably indicates its purpose.
+        document.getElementById("password1Label").setAttribute("value", "");
         break;
       default:
         Cu.reportError("commonDialog opened for unknown type: " + promptType);

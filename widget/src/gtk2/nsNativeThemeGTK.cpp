@@ -1130,6 +1130,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_RESIZER:
     // same as Windows to make our lives easier
     aResult->width = aResult->height = 15;
+    *aIsOverridable = PR_FALSE;
     break;
   case NS_THEME_TREEVIEW_TWISTY:
   case NS_THEME_TREEVIEW_TWISTY_OPEN:

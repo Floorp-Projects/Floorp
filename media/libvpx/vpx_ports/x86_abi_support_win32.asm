@@ -66,6 +66,8 @@ SECTION_RODATA macro
                .const
                endm
 
+HIDDEN_DATA textequ <>
+
 .686p
 .XMM
 .model flat, C

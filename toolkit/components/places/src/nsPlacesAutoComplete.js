@@ -391,6 +391,11 @@ nsPlacesAutoComplete.prototype = {
   startSearch: function PAC_startSearch(aSearchString, aSearchParam,
                                         aPreviousResult, aListener)
   {
+    // If a previous query is running and the controller has not taken care
+    // of stopping it, kill it.
+    if ("_pendingQuery" in this)
+      this.stopSearch();
+
     // Note: We don't use aPreviousResult to make sure ordering of results are
     //       consistent.  See bug 412730 for more details.
 

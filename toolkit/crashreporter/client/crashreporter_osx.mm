@@ -272,8 +272,9 @@ static bool RestartApplication()
 {
   [self updateSubmit];
   NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-  [userDefaults setBool:[mSubmitReportButton state] == NSOnState
-   forKey:@"submitReport"];
+  [userDefaults setBool:([mSubmitReportButton state] == NSOnState)
+                 forKey:@"submitReport"];
+  [userDefaults synchronize];
 }
 
 -(IBAction)viewReportClicked:(id)sender

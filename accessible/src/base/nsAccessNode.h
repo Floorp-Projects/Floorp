@@ -52,7 +52,6 @@
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"
 #include "nsIStringBundle.h"
-#include "nsRefPtrHashtable.h"
 #include "nsWeakReference.h"
 
 class nsAccessNode;
