@@ -11122,6 +11122,8 @@ TraceRecorder::record_JSOP_DELNAME()
 JSBool JS_FASTCALL
 DeleteIntKey(JSContext* cx, JSObject* obj, int32 i)
 {
+    LeaveTraceIfGlobalObject(cx, obj);
+
     jsval v = JSVAL_FALSE;
     jsid id = INT_TO_JSID(i);
     if (!obj->deleteProperty(cx, id, &v))
@@ -11133,6 +11135,8 @@ JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, 0,
 JSBool JS_FASTCALL
 DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str)
 {
+    LeaveTraceIfGlobalObject(cx, obj);
+
     jsval v = JSVAL_FALSE;
     jsid id;
 
@@ -11153,6 +11157,8 @@ TraceRecorder::record_JSOP_DELPROP()
     jsval& lval = stackval(-1);
     if (JSVAL_IS_PRIMITIVE(lval))
         RETURN_STOP_A("JSOP_DELPROP on primitive base expression");
+    if (JSVAL_TO_OBJECT(lval) == globalObj)
+        RETURN_STOP_A("JSOP_DELPROP on global property");
 
     JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
     JS_ASSERT(ATOM_IS_STRING(atom));
@@ -11177,6 +11183,8 @@ TraceRecorder::record_JSOP_DELELEM()
     jsval& lval = stackval(-2);
     if (JSVAL_IS_PRIMITIVE(lval))
         RETURN_STOP_A("JSOP_DELELEM on primitive base expression");
+    if (JSVAL_TO_OBJECT(lval) == globalObj)
+        RETURN_STOP_A("JSOP_DELELEM on global property");
 
     jsval& idx = stackval(-1);
     LIns* rval_ins;
