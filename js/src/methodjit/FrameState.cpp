@@ -798,7 +798,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(sp - n >= spBase);
     int32 depth = 0 - int32(n);
-    storeLocal(indexOfFe(sp[depth - 1]) - nargs);
+    storeLocal(uint32(&sp[depth - 1] - locals));
     popn(n);
 }
 

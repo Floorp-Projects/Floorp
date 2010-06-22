@@ -1020,8 +1020,11 @@ mjit::Compiler::generateMethod()
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)
 
-          BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETPROP)
+            jsop_setprop(fullAtomIndex(PC));
+          END_CASE(JSOP_SETPROP)
+
+          BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETMETHOD)
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
@@ -1029,12 +1032,6 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(atom), Registers::ArgReg1);
             stubCall(stubs::SetName, Uses(2), Defs(1));
             JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
-            if (JSOp(PC[JSOP_SETNAME_LENGTH]) == JSOP_POP &&
-                !analysis[&PC[JSOP_SETNAME_LENGTH]].nincoming) {
-                frame.popn(2);
-                PC += JSOP_SETNAME_LENGTH + JSOP_POP_LENGTH;
-                break;
-            }
             frame.popn(2);
             frame.pushSynced();
           }
@@ -1818,6 +1815,17 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 }
 
 void
+mjit::Compiler::jsop_setprop_slow(uint32 atomIndex)
+{
+    JSAtom *atom = script->getAtom(atomIndex);
+    prepareStubCall();
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    stubCall(stubs::SetName, Uses(2), Defs(1));
+    JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
+    frame.shimmy(1);
+}
+
+void
 mjit::Compiler::jsop_getprop_slow()
 {
     prepareStubCall();
@@ -1951,12 +1959,24 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
     pics.append(pic);
 }
 
+void
+mjit::Compiler::jsop_setprop(uint32 atomIndex)
+{
+    jsop_setprop_slow(atomIndex);
+}
+
 #else /* ENABLE_PIC */
 
 void
 mjit::Compiler::jsop_getprop(uint32 atomIndex)
 {
-    jsop_getprop_slow();
+    jsop_getprop_slow(atomIndex);
+}
+
+void
+mjit::Compiler::jsop_setprop(uint32 atomIndex)
+{
+    jsop_setprop_slow(atomIndex);
 }
 #endif
 

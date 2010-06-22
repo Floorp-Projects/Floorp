@@ -191,6 +191,8 @@ class Compiler
     void jsop_unbrand();
     void jsop_getprop(uint32 atomIndex);
     void jsop_length();
+    void jsop_setprop(uint32 atomIndex);
+    void jsop_setprop_slow(uint32 atomIndex);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
