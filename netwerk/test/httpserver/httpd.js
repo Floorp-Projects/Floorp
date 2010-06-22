@@ -5142,7 +5142,7 @@ const kServerFactory = makeFactory(nsHttpServer);
 
 function NSGetFactory(cid)
 {
-  if (cid.equals(kServerCID)
+  if (cid.equals(kServerCID))
     return kServerFactory;
     
   throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
