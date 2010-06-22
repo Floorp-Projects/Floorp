@@ -141,7 +141,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     jsid id;
-    if (!JSVAL_TO_JSID(cx, &argval, &id))
+    if (!JS_ValueToId(cx, argval, &id))
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, argval);
     return (*popp)(cx, obj, id, vp);
