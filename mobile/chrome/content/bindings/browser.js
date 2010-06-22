@@ -302,3 +302,24 @@ let DOMEvents =  {
 };
 
 DOMEvents.init();
+
+let ContentScroll =  {
+  init: function() {
+    addMessageListener("Content:ScrollTo", this);
+    addMessageListener("Content:ScrollBy", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    let json = aMessage.json;
+    switch (aMessage.name) {
+      case "Content:ScrollTo":
+        content.scrollTo(json.x, json.y);
+        break;
+      case "Content:ScrollBy":
+        content.scrollBy(json.dx, json.dy);
+        break;
+    }
+  }
+};
+
+ContentScroll.init();
