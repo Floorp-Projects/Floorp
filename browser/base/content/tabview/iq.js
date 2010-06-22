@@ -525,6 +525,27 @@ iQ.fn = iQ.prototype = {
   },
   
   // ----------
+  // Function: attr
+  // Sets or gets an attribute on the element(s).
+  attr: function(key, value) {
+    try {
+      Utils.assert('string key', typeof key === 'string');
+      if(value === undefined) {
+        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
+        return this[0].getAttribute(key);
+      } else {
+    		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+    		  elem.setAttribute(key, value);
+    		}
+      }    
+    } catch(e) {
+      Utils.log(e);
+    }
+    
+    return this;
+  },
+
+  // ----------
   // Function: css
   css: function(a, b) {
     var properties = null;
