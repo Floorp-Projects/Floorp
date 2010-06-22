@@ -194,6 +194,47 @@ static const XTransform identity = { {
       (CAIRO_SURFACE_RENDER_HAS_PDF_OPERATORS(surface) &&	\
        (op) <= CAIRO_OPERATOR_HSL_LUMINOSITY))
 
+static Visual *
+_visual_for_xrender_format(Screen *screen,
+			    XRenderPictFormat *xrender_format)
+{
+    int d, v;
+    for (d = 0; d < screen->ndepths; d++) {
+	Depth *d_info = &screen->depths[d];
+	if (d_info->depth != xrender_format->depth)
+	    continue;
+
+	for (v = 0; v < d_info->nvisuals; v++) {
+	    Visual *visual = &d_info->visuals[v];
+
+	    switch (visual->class) {
+	    case TrueColor:
+		if (xrender_format->type != PictTypeDirect)
+		    continue;
+		break;
+	    case DirectColor:
+		/* Prefer TrueColor to DirectColor.
+		   (XRenderFindVisualFormat considers both TrueColor and
+		   DirectColor Visuals to match the same PictFormat.) */
+		continue;
+	    case StaticGray:
+	    case GrayScale:
+	    case StaticColor:
+	    case PseudoColor:
+		if (xrender_format->type != PictTypeIndexed)
+		    continue;
+		break;
+	    }
+
+	    if (xrender_format ==
+		XRenderFindVisualFormat (DisplayOfScreen(screen), visual))
+		return visual;
+	}
+    }
+
+    return NULL;
+}
+
 static cairo_status_t
 _cairo_xlib_surface_set_clip_region (cairo_xlib_surface_t *surface,
 				     cairo_region_t *region)
@@ -318,6 +359,9 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 	visual = NULL;
 	if (xrender_format == src->xrender_format)
 	    visual = src->visual;
+	else
+	    visual = _visual_for_xrender_format(src->screen->screen,
+					        xrender_format);
 
 	surface = (cairo_xlib_surface_t *)
 		  _cairo_xlib_surface_create_internal (src->screen, pix,
@@ -3183,6 +3227,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     cairo_xlib_screen_t *screen;
     cairo_surface_t *surface;
     cairo_status_t status;
+    Visual *visual;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
 	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
@@ -3193,8 +3238,11 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 
     X_DEBUG ((dpy, "create_with_xrender_format (drawable=%x)", (unsigned int) drawable));
 
+    if (format)
+    visual = _visual_for_xrender_format (scr, format);
+
     surface = _cairo_xlib_surface_create_internal (screen, drawable,
-						   NULL, format,
+						   visual, format,
 						   width, height, 0);
     _cairo_xlib_screen_destroy (screen);
 
@@ -3418,23 +3466,27 @@ cairo_xlib_surface_get_screen (cairo_surface_t *abstract_surface)
  * cairo_xlib_surface_get_visual:
  * @surface: a #cairo_xlib_surface_t
  *
- * Get the X Visual used for underlying X Drawable.
+ * Gets the X Visual associated with @surface, suitable for use with the
+ * underlying X Drawable.  If @surface was created by
+ * cairo_xlib_surface_create(), the return value is the Visual passed to that
+ * constructor.
  *
- * Return value: the visual.
+ * Return value: the Visual or %NULL if there is no appropriate Visual for
+ * @surface.
  *
  * Since: 1.2
  **/
 Visual *
-cairo_xlib_surface_get_visual (cairo_surface_t *abstract_surface)
+cairo_xlib_surface_get_visual (cairo_surface_t *surface)
 {
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
+    cairo_xlib_surface_t *xlib_surface = (cairo_xlib_surface_t *) surface;
 
-    if (! _cairo_surface_is_xlib (abstract_surface)) {
+    if (! _cairo_surface_is_xlib (surface)) {
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return NULL;
     }
 
-    return surface->visual;
+    return xlib_surface->visual;
 }
 
 /**
