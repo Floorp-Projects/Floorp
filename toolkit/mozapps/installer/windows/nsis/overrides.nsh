@@ -251,7 +251,7 @@
       StrCmp $9 'B0' +3
       GetLabelAddress $9 findfirst
       goto call
-      DetailPrint 'Search in: $R8'
+;      DetailPrint 'Search in: $R8'
 
       findfirst:
       FindFirst $0 $R7 '$R8\$4'
@@ -523,7 +523,7 @@
   TextFunc_TextCompareNoDetails${_OVERRIDE_S}_slow:
   StrCmp${_OVERRIDE_S} $4 '' TextFunc_TextCompareNoDetails${_OVERRIDE_S}_close
   StrCpy $6 ''
-  DetailPrint '$8. $9'
+;  DetailPrint '$8. $9'
   FileSeek $5 0
 
   TextFunc_TextCompareNoDetails${_OVERRIDE_S}_slownext:
