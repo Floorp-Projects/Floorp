@@ -132,12 +132,6 @@ nsresult TestRegular()
                           kCoreServiceA_CID, kExtServiceA_CID);
 }
 
-nsresult TestDeferred()
-{
-  return execRegOrderTest("TestDeferred", SERVICE_B_CONTRACT_ID,
-                          kCoreServiceB_CID, kExtServiceB_CID);
-}
-
 static already_AddRefed<nsILocalFile>
 GetRegDirectory(const char* basename, const char* dirname)
 {
@@ -171,8 +165,6 @@ int main(int argc, char** argv)
 
   int rv = 0;
   if (NS_FAILED(TestRegular()))
-    rv = 1;
-  if (NS_FAILED(TestDeferred()))
     rv = 1;
 
   return rv;
