@@ -332,7 +332,8 @@ CheckVersionFlag(const nsString& aFlag, const nsString& aData,
 }
 
 void
-ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf)
+ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
+              bool aChromeOnly)
 {
   nsresult rv;
 
@@ -478,7 +479,7 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf)
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))
 	(chromecx, line, argv, platform, contentAccessible);
     }
-    else
+    else if (!aChromeOnly)
       (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))
 	(mgrcx, line, argv);
   }
