@@ -444,6 +444,8 @@ struct JSObject {
     inline uint32 uncheckedGetDenseArrayCapacity() const;
 
   public:
+    static const uint32 DENSE_ARRAY_FIXED_RESERVED_SLOTS = 3;
+
     inline uint32 getArrayLength() const;
     inline void setDenseArrayLength(uint32 length);
     inline void setSlowArrayLength(uint32 length);
