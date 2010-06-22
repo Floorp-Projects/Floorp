@@ -11,7 +11,7 @@
 a {
   fill: blue;
 }
-a:link {
+a:link, a:visited {
   fill: red;
 }
   ]]>

@@ -1594,8 +1594,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       return NS_OK;
   }
 
-  if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL ||
-      aWidgetType == NS_THEME_SCALE_THUMB_VERTICAL) {
+  if (aWidgetType == NS_THEME_RESIZER) {
+    *aIsOverridable = PR_FALSE;
+  }
+  else if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL ||
+           aWidgetType == NS_THEME_SCALE_THUMB_VERTICAL) {
     *aIsOverridable = PR_FALSE;
     // on Vista, GetThemePartAndState returns odd values for
     // scale thumbs, so use a hardcoded size instead.
@@ -1815,6 +1818,14 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
                                       PRUint8 aWidgetType)
 {
   switch (aWidgetType) {
+    case NS_THEME_RESIZER:
+    {
+      // The classic native resizer has an opaque grey background which doesn't
+      // match the usually white background of the scrollable container, so
+      // only support the native resizer if not in a scrollframe.
+      nsIFrame* parentFrame = aFrame->GetParent();
+      return (!parentFrame || parentFrame->GetType() != nsWidgetAtoms::scrollFrame);
+    }
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
       // Classic non-flat menus are handled almost entirely through CSS.
@@ -1849,7 +1860,6 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_PANEL:
     case NS_THEME_STATUSBAR_RESIZER_PANEL:
-    case NS_THEME_RESIZER:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_PROGRESSBAR_CHUNK:
@@ -2034,6 +2044,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       else
 #endif
         (*aResult).width = (*aResult).height = 15;
+      *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
 #ifndef WINCE
