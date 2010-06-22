@@ -166,10 +166,6 @@ nsTheoraState::~nsTheoraState() {
 PRBool nsTheoraState::Init() {
   if (!mActive)
     return PR_FALSE;
-  mCtx = th_decode_alloc(&mInfo, mSetup);
-  if (mCtx == NULL) {
-    return mActive = PR_FALSE;
-  }
 
   PRInt64 n = mInfo.fps_numerator;
   PRInt64 d = mInfo.fps_denominator;
@@ -190,12 +186,25 @@ PRBool nsTheoraState::Init() {
   mPixelAspectRatio = (n == 0 || d == 0) ?
     1.0f : static_cast<float>(n) / static_cast<float>(d);
 
-  // Ensure the frame isn't larger than our prescribed maximum.
+  // Ensure the frame region isn't larger than our prescribed maximum.
   PRUint32 pixels;
+  if (!MulOverflow32(mInfo.frame_width, mInfo.frame_height, pixels) ||
+      pixels > MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT ||
+      pixels == 0)
+  {
+    return mActive = PR_FALSE;
+  }
+
+  // Ensure the picture region isn't larger than our prescribed maximum.
   if (!MulOverflow32(mInfo.pic_width, mInfo.pic_height, pixels) ||
       pixels > MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT ||
       pixels == 0)
   {
+    return mActive = PR_FALSE;
+  }
+
+  mCtx = th_decode_alloc(&mInfo, mSetup);
+  if (mCtx == NULL) {
     return mActive = PR_FALSE;
   }
 

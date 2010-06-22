@@ -250,11 +250,13 @@ struct RangePaintInfo {
   RangePaintInfo(nsIRange* aRange, nsIFrame* aFrame)
     : mRange(aRange), mBuilder(aFrame, PR_FALSE, PR_FALSE)
   {
+    MOZ_COUNT_CTOR(RangePaintInfo);
   }
 
   ~RangePaintInfo()
   {
     mList.DeleteAll();
+    MOZ_COUNT_DTOR(RangePaintInfo);
   }
 };
 

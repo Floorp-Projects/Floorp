@@ -474,7 +474,7 @@ nsHTMLSelectOptionAccessible::GetNameInternal(nsAString& aName)
 
 nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
 {
-  PRUint32 state;
+  PRUint32 state = 0;
   nsCOMPtr<nsIContent> content = GetSelectState(&state);
   if (state & nsIAccessibleStates::STATE_COLLAPSED) {
     if (content) {
@@ -504,7 +504,7 @@ nsHTMLSelectOptionAccessible::GetStateInternal(PRUint32 *aState,
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
-  PRUint32 selectState, selectExtState;
+  PRUint32 selectState = 0, selectExtState = 0;
   nsCOMPtr<nsIContent> selectContent = GetSelectState(&selectState,
                                                       &selectExtState);
   if (selectState & nsIAccessibleStates::STATE_INVISIBLE) {
@@ -799,11 +799,11 @@ nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOpti
     eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
   }
 
-  nsRefPtr<nsAccEvent> setAddRemoveEvent =
+  nsRefPtr<nsAccEvent> selAddRemoveEvent =
     new nsAccEvent(eventType, option);
 
-  if (setAddRemoveEvent)
-    option->GetDocAccessible()->FireDelayedAccessibleEvent(setAddRemoveEvent);
+  if (selAddRemoveEvent)
+    option->GetDocAccessible()->FireDelayedAccessibleEvent(selAddRemoveEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -812,6 +812,11 @@ nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOpti
 nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState,
                                                          PRUint32* aExtraState)
 {
+  *aState = 0;
+
+  if (aExtraState)
+    *aExtraState = 0;
+
   nsIContent *content = mContent;
   while (content && content->Tag() != nsAccessibilityAtoms::select) {
     content = content->GetParent();

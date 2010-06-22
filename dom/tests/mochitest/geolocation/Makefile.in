@@ -45,16 +45,14 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-        test_manyCurrentSerial.html \
-        test_manyCurrentConcurrent.html \
+		test_manyCurrentSerial.html \
+		test_manyCurrentConcurrent.html \
 		test_garbageWatch.html \
 		test_manyWatchConcurrent.html \
 		test_manyWatchSerial.html \
 		test_manyWindows.html \
 		test_allowCurrent.html \
 		test_allowWatch.html \
-		test_cancelCurrent.html \
-		test_cancelWatch.html \
 		test_clearWatch.html \
 		test_clearWatch_invalid.html \
 		test_timeoutWatch.html \
@@ -63,9 +61,14 @@ _TEST_FILES	= \
 		geolocation_common.js  \
 		geolocation.html \
 		test_optional_api_params.html \
-        network_geolocation.sjs \
+		network_geolocation.sjs \
 		$(NULL)
 
+ifndef MOZ_PHOENIX
+_TEST_FILES += test_cancelCurrent.html \
+               test_cancelWatch.html \
+               $(NULL)
+endif
 
 libs:: 	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

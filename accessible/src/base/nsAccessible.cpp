@@ -41,7 +41,7 @@
 
 #include "nsIXBLAccessible.h"
 
-#include "nsAccIterator.h"
+#include "AccIterator.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsDocAccessible.h"
@@ -2378,7 +2378,7 @@ NS_IMETHODIMP nsAccessible::GetSelectedChildren(nsIArray **aSelectedAccessibles)
     do_CreateInstance(NS_ARRAY_CONTRACTID);
   NS_ENSURE_STATE(selectedAccessibles);
 
-  nsAccIterator iter(this, nsAccIterator::GetSelected, nsAccIterator::eTreeNav);
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsIAccessible *selected = nsnull;
   while ((selected = iter.GetNext()))
     selectedAccessibles->AppendElement(selected, PR_FALSE);
@@ -2403,7 +2403,7 @@ NS_IMETHODIMP nsAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **aSelect
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsAccIterator iter(this, nsAccIterator::GetSelected, nsAccIterator::eTreeNav);
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsAccessible *selected = nsnull;
 
   PRInt32 count = 0;
@@ -2423,7 +2423,7 @@ NS_IMETHODIMP nsAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
   NS_ENSURE_ARG_POINTER(aSelectionCount);
   *aSelectionCount = 0;
 
-  nsAccIterator iter(this, nsAccIterator::GetSelected, nsAccIterator::eTreeNav);
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsAccessible *selected = nsnull;
   while ((selected = iter.GetNext()))
     ++(*aSelectionCount);
@@ -2485,7 +2485,7 @@ NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, PRBool *aIsSelected)
 NS_IMETHODIMP
 nsAccessible::ClearSelection()
 {
-  nsAccIterator iter(this, nsAccIterator::GetSelected, nsAccIterator::eTreeNav);
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsAccessible *selected = nsnull;
   while ((selected = iter.GetNext()))
     selected->SetSelected(PR_FALSE);
@@ -2495,7 +2495,7 @@ nsAccessible::ClearSelection()
 
 NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
 {
-  nsAccIterator iter(this, nsAccIterator::GetSelectable, nsAccIterator::eTreeNav);
+  AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
   nsAccessible *selectable = nsnull;
   while((selectable = iter.GetNext()))
     selectable->SetSelected(PR_TRUE);
