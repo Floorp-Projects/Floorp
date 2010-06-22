@@ -102,6 +102,7 @@ class Compiler
         StateRemat objRemat;
         Call callReturn;
         bool hasTypeCheck;
+        ValueRemat vr;
     };
 
     struct Uses {

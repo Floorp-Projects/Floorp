@@ -46,6 +46,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
+#include "RematInfo.h"
 
 #define ENABLE_PIC 1
 
@@ -69,40 +70,68 @@ struct PICInfo {
 
     static const uint32 LENGTH_ATOM = 0xFFFFFFFF;
 
+    union {
+        struct {
+            RegisterID typeReg  : 5;  // reg used for checking type
+            bool hasTypeCheck   : 1;  // type check and reg are present
+
+            // Reverse offset from slowPathStart to the type check slow path.
+            uint8 typeCheckOffset;
+
+            // Remat info for the object reg.
+            uint32 objRemat    : 20;
+            bool objNeedsRemat : 1;
+
+            // Offset from start of stub to jump target of second shape guard as Nitro
+            // asm data location. This is 0 if there is only one shape guard in the
+            // last stub.
+            int secondShapeGuard : 8;
+
+            // True if register R holds the base object shape along exits from the
+            // last stub.
+            bool shapeRegHasBaseShape : 1;
+        } get;
+        ValueRemat vr;
+    } u;
+
     Kind kind : 2;
 
     // State flags.
     bool hit : 1;                   // this PIC has been executed
     bool inlinePathPatched : 1;     // inline path has been patched
 
-    // True if register R holds the base object shape along exits from the
-    // last stub.
-    bool shapeRegHasBaseShape : 1;
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
-    RegisterID typeReg  : 5;        // reg used for checking type
-    bool hasTypeCheck   : 1;        // type check and reg are present
 
-    // True if the last stub has an extra shape load at its start.
-    bool startsWithShapeLoad : 1;
+    inline RegisterID typeReg() {
+        JS_ASSERT(kind == GET);
+        return u.get.typeReg;
+    }
+    inline bool hasTypeCheck() {
+        JS_ASSERT(kind == GET);
+        return u.get.hasTypeCheck;
+    }
+    inline uint32 objRemat() {
+        JS_ASSERT(kind == GET);
+        return u.get.objRemat;
+    }
+    inline bool objNeedsRemat() {
+        JS_ASSERT(kind == GET);
+        return u.get.objNeedsRemat;
+    }
+    inline bool shapeNeedsRemat() {
+        JS_ASSERT(kind == GET);
+        return u.get.shapeRegHasBaseShape;
+    }
 
     // Number of stubs generated.
     uint32 stubsGenerated : 5;
 
     // Offset from start of fast path to initial shape guard.
     int shapeGuard : 8;
-
-    // Offset from start of stub to jump target of second shape guard as Nitro
-    // asm data location. This is 0 if there is only one shape guard in the
-    // last stub.
-    int secondShapeGuard : 8;
-
+    
     // Index into the script's atom table.
     uint32 atomIndex;
-
-    // Remat info for the object reg.
-    uint32 objRemat    : 20;
-    bool objNeedsRemat : 1;
 
     // Address of inline fast-path.
     JSC::CodeLocationLabel fastPathStart;
@@ -115,9 +144,6 @@ struct PICInfo {
 
     // Offset from callReturn to the start of the slow case.
     JSC::CodeLocationLabel slowPathStart;
-
-    // Reverse offset from slowPathStart to the type check slow path.
-    uint8 typeCheckOffset;
 
     // Address of the start of the last generated stub, if any.
     JSC::CodeLocationLabel lastStubStart;
@@ -152,9 +178,11 @@ struct PICInfo {
     void reset() {
         hit = false;
         inlinePathPatched = false;
-        objNeedsRemat = false;
-        shapeRegHasBaseShape = true;
-        secondShapeGuard = 0;
+        if (kind == GET) {
+            u.get.secondShapeGuard = 0;
+            u.get.objNeedsRemat = false;
+            u.get.shapeRegHasBaseShape = true;
+        }
         stubsGenerated = 0;
         releasePools();
         execPools.clear();

@@ -291,7 +291,6 @@ mjit::Compiler::finishThisUp()
 
     for (size_t i = 0; i < pics.length(); i++) {
         script->pics[i].kind = pics[i].kind;
-        script->pics[i].shapeRegHasBaseShape = true;
         script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
         script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
         script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
@@ -299,17 +298,23 @@ mjit::Compiler::finishThisUp()
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeReg = pics[i].shapeReg;
         script->pics[i].objReg = pics[i].objReg;
-        script->pics[i].typeReg = pics[i].typeReg;
-        script->pics[i].objRemat = pics[i].objRemat.offset;
         script->pics[i].atomIndex = pics[i].atomIndex;
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].hotPathBegin);
-        script->pics[i].hasTypeCheck = pics[i].hasTypeCheck;
-        if (pics[i].hasTypeCheck) {
-            int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
-                             stubcc.masm.distanceOf(pics[i].slowPathStart);
-            JS_ASSERT(-int32(uint8(-distance)) == distance);
-            script->pics[i].typeCheckOffset = uint8(-distance);
+
+        if (pics[i].kind == ic::PICInfo::SET) {
+            script->pics[i].u.vr = pics[i].vr;
+        } else {
+            script->pics[i].u.get.typeReg = pics[i].typeReg;
+            script->pics[i].u.get.shapeRegHasBaseShape = true;
+            if (pics[i].hasTypeCheck) {
+                int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
+                                 stubcc.masm.distanceOf(pics[i].slowPathStart);
+                JS_ASSERT(-int32(uint8(-distance)) == distance);
+                script->pics[i].u.get.typeCheckOffset = uint8(-distance);
+            }
+            script->pics[i].u.get.hasTypeCheck = pics[i].hasTypeCheck;
+            script->pics[i].u.get.objRemat = pics[i].objRemat.offset;
         }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
     }
@@ -1963,6 +1968,127 @@ void
 mjit::Compiler::jsop_setprop(uint32 atomIndex)
 {
     jsop_setprop_slow(atomIndex);
+
+#if 0
+    FrameEntry *lhs = frame.peek(-2);
+    FrameEntry *rhs = frame.peek(-1);
+
+    /* If the incoming type will never PIC, take slow path. */
+    if (lhs->isTypeKnown() &&
+        (lhs->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
+         lhs->getTypeTag() != JSVAL_MASK32_NONFUNOBJ))
+    {
+        jsop_setprop_slow(atomIndex);
+        return;
+    }
+
+    PICGenInfo pic(ic::PICInfo::SET);
+    pic.atomIndex = atomIndex;
+
+    /* Guard that the type is an object. */
+    Jump typeCheck;
+    if (!lhs->isTypeKnown()) {
+        JS_STATIC_ASSERT(JSVAL_MASK32_NONFUNOBJ < JSVAL_MASK32_FUNOBJ);
+        RegisterID reg = frame.tempRegForType(lhs);
+        pic.typeReg = reg;
+
+        /* Start the hot path where it's easy to patch it. */
+        pic.hotPathBegin = masm.label();
+        Jump j = masm.branch32(Assembler::Below, reg, Imm32(JSVAL_MASK32_NONFUNOBJ));
+
+        pic.typeCheck = stubcc.masm.label();
+        stubcc.linkExit(j);
+        stubcc.leave();
+        stubcc.masm.move(ImmPtr(script->getAtom(atomIndex)), Registers::ArgReg1);
+        stubcc.call(stubs::SetName);
+        typeCheck = stubcc.masm.jump();
+        pic.hasTypeCheck = true;
+    } else {
+        pic.hotPathBegin = masm.label();
+        pic.hasTypeCheck = false;
+        pic.typeReg = Registers::ReturnReg;
+    }
+
+    /* Get the object into a mutable register. */
+    RegisterID objReg = frame.copyDataIntoReg(lhs);
+    pic.objReg = objReg;
+
+    /* Get info about the RHS and pin it. */
+    ValueRemat vr;
+    if (rhs->isConstant()) {
+        vr.isConstant = true;
+        vr.u.v = Jsvalify(rhs->getValue());
+    } else {
+        vr.isConstant = false;
+        vr.u.s.isTypeKnown = rhs->isTypeKnown();
+        if (vr.u.s.isTypeKnown) {
+            vr.u.s.type.mask = rhs->getTypeTag();
+        } else {
+            vr.u.s.type.reg = frame.tempRegForType(rhs);
+            frame.pinReg(vr.u.s.type.reg);
+        }
+        vr.u.s.data = frame.tempRegForData(rhs);
+        frame.pinReg(vr.u.s.data);
+    }
+    pic.vr = vr;
+
+    RegisterID shapeReg = frame.allocReg();
+    pic.shapeReg = shapeReg;
+    pic.objRemat = frame.dataRematInfo(lhs);
+
+    if (!vr.isConstant) {
+        if (!vr.u.s.isTypeKnown)
+            frame.unpinReg(vr.u.s.type.reg);
+        frame.unpinReg(vr.u.s.data);
+    }
+
+    /* Guard on shape. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
+    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    pic.shapeGuard = masm.label();
+    Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
+                           Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+
+    /* Slow path. */
+    {
+        pic.slowPathStart = stubcc.masm.label();
+        stubcc.linkExit(j);
+
+        stubcc.leave();
+        stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+        pic.callReturn = stubcc.call(ic::SetProp);
+    }
+
+    /* Load dslots. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+    /* Store RHS into object slot. */
+    Address slot(objReg, 1 << 24);
+    if (vr.isConstant) {
+        masm.storeValue(Valueify(vr.u.v), slot);
+    } else {
+        if (vr.u.s.isTypeKnown)
+            masm.storeTypeTag(ImmTag(vr.u.s.type.mask), slot);
+        else
+            masm.storeTypeTag(vr.u.s.type.reg, slot);
+        masm.storeData32(vr.u.s.data, slot);
+    }
+    frame.freeReg(objReg);
+    frame.freeReg(shapeReg);
+    pic.storeBack = masm.label();
+
+    /* "Pop under", taking out object (LHS) and leaving RHS. */
+    frame.shimmy(1);
+
+    /* Finish slow path. */
+    {
+        if (pic.hasTypeCheck)
+            typeCheck.linkTo(stubcc.masm.label(), &stubcc.masm);
+        stubcc.rejoin(1);
+    }
+
+    pics.append(pic);
+#endif
 }
 
 #else /* ENABLE_PIC */
