@@ -40,7 +40,25 @@
 #if !defined jsjaeger_remat_h__ && defined JS_METHODJIT
 #define jsjaeger_remat_h__
 
+#include "jscntxt.h"
 #include "assembler/assembler/MacroAssembler.h"
+
+/* Lightweight version of FrameEntry. */
+struct ValueRemat {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    union {
+        struct {
+            union {
+                RegisterID reg;
+                uint32 mask;
+            } type;
+            RegisterID data : 5;
+            bool isTypeKnown : 1;
+        } s;
+        jsval v;
+    } u;
+    bool isConstant;
+};
 
 /*
  * Describes how to rematerialize a value during compilation.
