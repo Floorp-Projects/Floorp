@@ -169,8 +169,7 @@ window.Group = function(listOfEls, options) {
     "<div class='title-container'>" +
       "<input class='name' value='" + (options.title || "") + "'/>" + 
       "<div class='title-shield' />" + 
-    "</div>" + 
-    "<div class='close' />";
+    "</div>";
        
   this.$titlebar = iQ('<div>')
     .addClass('titlebar')
@@ -180,10 +179,13 @@ window.Group = function(listOfEls, options) {
   this.$titlebar.css({
       position: "absolute",
     });
-    
-  var $close = iQ('.close', this.$titlebar).click(function() {
-    self.closeAll();
-  });
+  
+  var $close = iQ('<div>')
+    .addClass('close')
+    .click(function() {
+      self.closeAll();
+    })
+    .appendTo($container);
   
   // ___ Title 
   this.$titleContainer = iQ('.title-container', this.$titlebar);
