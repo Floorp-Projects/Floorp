@@ -1,6 +1,8 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 // This is copied from toolkit/components/content/js/lang.js.
 // It seems cleaner to copy this rather than #include from so far away.
 Function.prototype.inherits = function(parentCtor) {
@@ -36,51 +38,19 @@ function Init() {
   modScope.Init = function() {};
 }
 
-// Module object
-function SafebrowsingApplicationMod() {
-  this.firstTime = true;
-  this.cid = Components.ID("{c64d0bcb-8270-4ca7-a0b3-3380c8ffecb5}");
-  this.progid = "@mozilla.org/safebrowsing/application;1";
+function SafeBrowsingApplication()
+{
 }
-
-SafebrowsingApplicationMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
-  if (this.firstTime) {
-    this.firstTime = false;
-    throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-  }
-  compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-  compMgr.registerFactoryLocation(this.cid,
-                                  "Safebrowsing Application Module",
-                                  this.progid,
-                                  fileSpec,
-                                  loc,
-                                  type);
+SafeBrowsingApplication.prototype = {
+  classID: Components.ID("{c64d0bcb-8270-4ca7-a0b3-3380c8ffecb5}"),
+  _xpcom_factory: {
+    createInstance: function(outer, iid) {
+      if (outer != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      Init();
+      return new PROT_Application();
+    }
+  },
 };
 
-SafebrowsingApplicationMod.prototype.getClassObject = function(compMgr, cid, iid) {  
-  if (!cid.equals(this.cid))
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  if (!iid.equals(Ci.nsIFactory))
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-  return this.factory;
-}
-
-SafebrowsingApplicationMod.prototype.canUnload = function(compMgr) {
-  return true;
-}
-
-SafebrowsingApplicationMod.prototype.factory = {
-  createInstance: function(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    Init();
-    return new PROT_Application();
-  }
-};
-
-var ApplicationModInst = new SafebrowsingApplicationMod();
-
-function NSGetModule(compMgr, fileSpec) {
-  return ApplicationModInst;
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([SafeBrowsingApplication]);

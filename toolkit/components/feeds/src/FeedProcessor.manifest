@@ -1,0 +1,14 @@
+component {072a5c3d-30c6-4f07-b87f-9f63d51403f2} FeedProcessor.js
+contract @mozilla.org/feed-result;1 {072a5c3d-30c6-4f07-b87f-9f63d51403f2}
+component {5d0cfa97-69dd-4e5e-ac84-f253162e8f9a} FeedProcessor.js
+contract @mozilla.org/feed;1 {5d0cfa97-69dd-4e5e-ac84-f253162e8f9a}
+component {8e4444ff-8e99-4bdd-aa7f-fb3c1c77319f} FeedProcessor.js
+contract @mozilla.org/feed-entry;1 {8e4444ff-8e99-4bdd-aa7f-fb3c1c77319f}
+component {b992ddcd-3899-4320-9909-924b3e72c922} FeedProcessor.js
+contract @mozilla.org/feed-textconstruct;1 {b992ddcd-3899-4320-9909-924b3e72c922}
+component {414af362-9ad8-4296-898e-62247f25a20e} FeedProcessor.js
+contract @mozilla.org/feed-generator;1 {414af362-9ad8-4296-898e-62247f25a20e}
+component {95c963b7-20b2-11db-92f6-001422106990} FeedProcessor.js
+contract @mozilla.org/feed-person;1 {95c963b7-20b2-11db-92f6-001422106990}
+component {26acb1f0-28fc-43bc-867a-a46aabc85dd4} FeedProcessor.js
+contract @mozilla.org/feed-processor;1 {26acb1f0-28fc-43bc-867a-a46aabc85dd4}

@@ -117,6 +117,7 @@ endif
 
 EXTRA_COMPONENTS = \
 		$(srcdir)/nsProxyAutoConfig.js \
+		$(srcdir)/nsProxyAutoConfig.manifest \
 		$(NULL)
 
 EXTRA_JS_MODULES = \

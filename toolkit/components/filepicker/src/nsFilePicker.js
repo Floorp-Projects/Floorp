@@ -50,11 +50,10 @@
  * platform-specific code, you can't throw across an XPCOM method boundary.)
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const DEBUG = false; /* set to true to enable debug messages */
 
-const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
-const FILEPICKER_CID        = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
 const LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const APPSHELL_SERV_CONTRACTID  = "@mozilla.org/appshell/appShellService;1";
 const STRBUNDLE_SERV_CONTRACTID = "@mozilla.org/intl/stringbundle;1";
@@ -99,6 +98,16 @@ function nsFilePicker()
 }
 
 nsFilePicker.prototype = {
+  classID: Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
+
+  QueryInterface: function(iid) {
+    if (iid.equals(nsIFilePicker) ||
+        iid.equals(nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
 
   /* attribute nsILocalFile displayDirectory; */
   set displayDirectory(a) {
@@ -195,14 +204,6 @@ nsFilePicker.prototype = {
     this.mFilters.push(extensions);
   },
 
-  QueryInterface: function(iid) {
-    if (iid.equals(nsIFilePicker) ||
-        iid.equals(nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
   show: function() {
     var o = new Object();
     o.title = this.mTitle;
@@ -264,69 +265,11 @@ nsFilePicker.prototype = {
 }
 
 if (DEBUG)
-    debug = function (s) { dump("-*- filepicker: " + s + "\n"); }
+  debug = function (s) { dump("-*- filepicker: " + s + "\n"); };
 else
-    debug = function (s) {}
+  debug = function (s) {};
 
-/* module foo */
-
-var filePickerModule = new Object();
-
-filePickerModule.registerSelf =
-function (compMgr, fileSpec, location, type)
-{
-    debug("registering (all right -- a JavaScript module!)");
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-
-    compMgr.registerFactoryLocation(FILEPICKER_CID,
-                                    "FilePicker JS Component",
-#ifndef MOZ_WIDGET_GTK2
-                                    FILEPICKER_CONTRACTID,
-#else
-                                    "",
-#endif
-                                    fileSpec,
-                                    location,
-                                    type);
-}
-
-filePickerModule.getClassObject =
-function (compMgr, cid, iid) {
-    if (!cid.equals(FILEPICKER_CID))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    if (!iid.equals(Components.interfaces.nsIFactory))
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-    return filePickerFactory;
-}
-
-filePickerModule.canUnload =
-function(compMgr)
-{
-    debug("Unloading component.");
-    return true;
-}
-
-/* factory object */
-var filePickerFactory = new Object();
-
-filePickerFactory.createInstance =
-function (outer, iid) {
-    debug("CI: " + iid);
-    debug("IID:" + nsIFilePicker);
-    if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    return (new nsFilePicker()).QueryInterface(iid);
-}
-
-/* entrypoint */
-function NSGetModule(compMgr, fileSpec) {
-    return filePickerModule;
-}
-
-
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsFilePicker]);
 
 /* crap from strres.js that I want to use for string bundles since I can't include another .js file.... */
 

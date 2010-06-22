@@ -66,12 +66,8 @@ jsConsoleHandler.prototype = {
 
   helpInfo : "  -jsconsole         Open the Error console.\n",
 
-  classDescription: "jsConsoleHandler",
   classID: Components.ID("{2cd0c310-e127-44d0-88fc-4435c9ab4d4b}"),
-  contractID: "@mozilla.org/toolkit/console-clh;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
-  _xpcom_categories: [{category: "command-line-handler", entry: "b-jsconsole"}]
 };
 
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([jsConsoleHandler]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([jsConsoleHandler]);

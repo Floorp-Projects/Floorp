@@ -78,6 +78,7 @@ EXTRA_DSO_LDOPTS += \
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
 EXTRA_COMPONENTS = \
+  toolkitplaces.manifest \
   nsLivemarkService.js \
   nsTaggingService.js \
   nsPlacesDBFlush.js \

@@ -46,6 +46,7 @@ MODULE		= layout
 
 EXTRA_COMPONENTS= \
 		tp-cmdline.js \
+		tp-cmdline.manifest \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
