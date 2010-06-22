@@ -298,7 +298,7 @@ mjit::Compiler::finishThisUp()
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeReg = pics[i].shapeReg;
         script->pics[i].objReg = pics[i].objReg;
-        script->pics[i].atomIndex = pics[i].atomIndex;
+        script->pics[i].atom = pics[i].atom;
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].hotPathBegin);
 
@@ -716,23 +716,23 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
             jsop_this();
-            jsop_getprop(fullAtomIndex(PC));
+            jsop_getprop(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_GETTHISPROP);
 
           BEGIN_CASE(JSOP_GETARGPROP)
             /* Push arg onto stack. */
             jsop_getarg(GET_SLOTNO(PC));
-            jsop_getprop(fullAtomIndex(&PC[ARGNO_LEN]));
+            jsop_getprop(script->getAtom(fullAtomIndex(&PC[ARGNO_LEN])));
           END_CASE(JSOP_GETARGPROP)
 
           BEGIN_CASE(JSOP_GETLOCALPROP)
             frame.pushLocal(GET_SLOTNO(PC));
-            jsop_getprop(fullAtomIndex(&PC[SLOTNO_LEN]));
+            jsop_getprop(script->getAtom(fullAtomIndex(&PC[SLOTNO_LEN])));
           END_CASE(JSOP_GETLOCALPROP)
 
           BEGIN_CASE(JSOP_GETPROP)
           BEGIN_CASE(JSOP_GETXPROP)
-            jsop_getprop(fullAtomIndex(PC));
+            jsop_getprop(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_GETPROP)
 
           BEGIN_CASE(JSOP_LENGTH)
@@ -1026,7 +1026,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETPROP)
-            jsop_setprop(fullAtomIndex(PC));
+            jsop_setprop(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_SETNAME)
@@ -1820,9 +1820,8 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 }
 
 void
-mjit::Compiler::jsop_setprop_slow(uint32 atomIndex)
+mjit::Compiler::jsop_setprop_slow(JSAtom *atom)
 {
-    JSAtom *atom = script->getAtom(atomIndex);
     prepareStubCall();
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     stubCall(stubs::SetName, Uses(2), Defs(1));
@@ -1861,7 +1860,7 @@ mjit::Compiler::jsop_length()
     }
 
 #if ENABLE_PIC
-    jsop_getprop(ic::PICInfo::LENGTH_ATOM);
+    jsop_getprop(cx->runtime->atomState.lengthAtom);
 #else
     prepareStubCall();
     stubCall(stubs::Length, Uses(1), Defs(1));
@@ -1872,7 +1871,7 @@ mjit::Compiler::jsop_length()
 
 #if ENABLE_PIC
 void
-mjit::Compiler::jsop_getprop(uint32 atomIndex)
+mjit::Compiler::jsop_getprop(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
 
@@ -1881,7 +1880,7 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
         (top->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
          top->getTypeTag() != JSVAL_MASK32_NONFUNOBJ))
     {
-        JS_ASSERT_IF(atomIndex == ic::PICInfo::LENGTH_ATOM,
+        JS_ASSERT_IF(atom == cx->runtime->atomState.lengthAtom,
                      top->getTypeTag() != JSVAL_MASK32_STRING);
         jsop_getprop_slow();
         return;
@@ -1894,7 +1893,7 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
      */
     RegisterID objReg = Registers::ReturnReg;
     RegisterID shapeReg = Registers::ReturnReg;
-    if (atomIndex == ic::PICInfo::LENGTH_ATOM) {
+    if (atom == cx->runtime->atomState.lengthAtom) {
         objReg = frame.copyDataIntoReg(top);
         shapeReg = frame.allocReg();
     }
@@ -1923,13 +1922,13 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
         pic.typeReg = Registers::ReturnReg;
     }
 
-    if (atomIndex != ic::PICInfo::LENGTH_ATOM) {
+    if (atom != cx->runtime->atomState.lengthAtom) {
         objReg = frame.copyDataIntoReg(top);
         shapeReg = frame.allocReg();
     }
 
     pic.shapeReg = shapeReg;
-    pic.atomIndex = atomIndex;
+    pic.atom = atom;
     pic.objRemat = frame.dataRematInfo(top);
 
     /* Guard on shape. */
@@ -1965,7 +1964,7 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
 }
 
 void
-mjit::Compiler::jsop_setprop(uint32 atomIndex)
+mjit::Compiler::jsop_setprop(JSAtom *atom)
 {
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
@@ -1975,12 +1974,12 @@ mjit::Compiler::jsop_setprop(uint32 atomIndex)
         (lhs->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
          lhs->getTypeTag() != JSVAL_MASK32_NONFUNOBJ))
     {
-        jsop_setprop_slow(atomIndex);
+        jsop_setprop_slow(atom);
         return;
     }
 
     PICGenInfo pic(ic::PICInfo::SET);
-    pic.atomIndex = atomIndex;
+    pic.atom = atom;
 
     /* Guard that the type is an object. */
     Jump typeCheck;
@@ -1996,7 +1995,7 @@ mjit::Compiler::jsop_setprop(uint32 atomIndex)
         pic.typeCheck = stubcc.masm.label();
         stubcc.linkExit(j);
         stubcc.leave();
-        stubcc.masm.move(ImmPtr(script->getAtom(atomIndex)), Registers::ArgReg1);
+        stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
         stubcc.call(stubs::SetName);
         typeCheck = stubcc.masm.jump();
         pic.hasTypeCheck = true;
@@ -2090,15 +2089,15 @@ mjit::Compiler::jsop_setprop(uint32 atomIndex)
 #else /* ENABLE_PIC */
 
 void
-mjit::Compiler::jsop_getprop(uint32 atomIndex)
+mjit::Compiler::jsop_getprop(JSAtom *atom)
 {
-    jsop_getprop_slow(atomIndex);
+    jsop_getprop_slow();
 }
 
 void
-mjit::Compiler::jsop_setprop(uint32 atomIndex)
+mjit::Compiler::jsop_setprop(JSAtom *atom)
 {
-    jsop_setprop_slow(atomIndex);
+    jsop_setprop_slow(atom);
 }
 #endif
 

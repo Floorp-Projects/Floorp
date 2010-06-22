@@ -68,8 +68,6 @@ struct PICInfo {
         SET
     };
 
-    static const uint32 LENGTH_ATOM = 0xFFFFFFFF;
-
     union {
         struct {
             RegisterID typeReg  : 5;  // reg used for checking type
@@ -131,7 +129,7 @@ struct PICInfo {
     int shapeGuard : 8;
     
     // Index into the script's atom table.
-    uint32 atomIndex;
+    JSAtom *atom;
 
     // Address of inline fast-path.
     JSC::CodeLocationLabel fastPathStart;
