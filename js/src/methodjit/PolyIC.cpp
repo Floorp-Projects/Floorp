@@ -726,8 +726,8 @@ ic::GetProp(VMFrame &f, uint32 index)
     JSScript *script = f.fp->script;
     PICInfo &pic = script->pics[index];
 
-    JSAtom *atom;
-    if (pic.atomIndex == ic::PICInfo::LENGTH_ATOM) {
+    JSAtom *atom = pic.atom;
+    if (atom == f.cx->runtime->atomState.lengthAtom) {
         if (f.regs.sp[-1].isString()) {
             GetPropCompiler cc(f, script, NULL, pic, NULL, stubs::Length);
             if (!cc.generateStringLengthStub()) {
@@ -750,8 +750,6 @@ ic::GetProp(VMFrame &f, uint32 index)
             }
         }
         atom = f.cx->runtime->atomState.lengthAtom;
-    } else {
-        atom = script->getAtom(pic.atomIndex);
     }
 
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-1]);
@@ -779,7 +777,7 @@ SetPropSlow(VMFrame &f, uint32 index)
     ic::PICInfo &pic = script->pics[index];
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
 
-    JSAtom *atom = script->getAtom(pic.atomIndex);
+    JSAtom *atom = pic.atom;
     stubs::SetName(f, atom);
 }
 
@@ -792,7 +790,7 @@ ic::SetProp(VMFrame &f, uint32 index)
 
     JSScript *script = f.fp->script;
     ic::PICInfo &pic = script->pics[index];
-    JSAtom *atom = script->getAtom(pic.atomIndex);
+    JSAtom *atom = pic.atom;
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
 
 
