@@ -879,10 +879,10 @@ JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
     InitGCArenaLists(rt);
-    
+
     if (!rt->gcRootsHash.init(256))
         return false;
-    
+
     if (!rt->gcLocksHash.init(256))
         return false;
 
@@ -1133,7 +1133,21 @@ ConservativeGCStackMarker::markWord(jsuword w)
 
     CONSERVATIVE_METER(stats.unique++);
 
-    /* If this is an odd addresses or a tagged integer, skip it. */
+    /*
+     * We assume that the compiler never uses sub-word alignment to store
+     * pointers and does not tag pointers on its own. Thus we exclude words
+     * with JSVAL_INT (any odd words) or JSVAL_SPECIAL tags as they never
+     * point to GC things. We also exclude words with a double tag that point
+     * into a non-double. But, for example, on 32-bit platforms we cannot
+     * exclude a pointer into an object arena tagged with JSVAL_STRING. The
+     * latter is 4 and a compiler can store a pointer not to the object but
+     * rather a pointer to its second field.
+     */
+    JS_STATIC_ASSERT(JSVAL_INT == 1);
+    JS_STATIC_ASSERT(JSVAL_DOUBLE == 2);
+    JS_STATIC_ASSERT(JSVAL_STRING == 4);
+    JS_STATIC_ASSERT(JSVAL_SPECIAL == 6);
+
     if (w & 1)
         RETURN(oddaddress);
 
@@ -1141,7 +1155,6 @@ ConservativeGCStackMarker::markWord(jsuword w)
     jsuword tag = w & JSVAL_TAGMASK;
     jsuword p = w & ~(JSVAL_TAGMASK);
 
-    /* Also ignore tagged special values (they never contain pointers). */
     if (tag == JSVAL_SPECIAL)
         RETURN(wrongtag);
 
@@ -1176,25 +1189,44 @@ ConservativeGCStackMarker::markWord(jsuword w)
     JSGCArenaInfo *ainfo = a->getInfo();
 
     JSGCThing *thing;
+    uint32 traceKind;
     if (!ainfo->list) { /* doubles */
         if (tag && tag != JSVAL_DOUBLE)
             RETURN(wrongtag);
         JS_STATIC_ASSERT(JSVAL_TAGMASK == 7 && (sizeof(double) - 1) == 7);
         thing = (JSGCThing *) p;
+        traceKind = JSTRACE_DOUBLE;
     } else {
         if (tag == JSVAL_DOUBLE)
             RETURN(wrongtag);
+        traceKind = GetFinalizableArenaTraceKind(ainfo);
+#if JS_BYTES_PER_WORD == 8
+        if (tag == JSVAL_STRING && traceKind != JSVAL_STRING)
+            RETURN(wrongtag);
+#endif
+
         jsuword start = a->toPageStart();
         jsuword offset = p - start;
         size_t thingSize = ainfo->list->thingSize;
-        p = (start + offset - (offset % thingSize));
-        thing = (JSGCThing *) p;
+        offset -= offset % thingSize;
+
+        /*
+         * If GC_ARENA_SIZE % thingSize != 0 or when thingSize is not a power
+         * of two, thingSize-aligned pointer may point at the end of the last
+         * thing yet be inside the arena.
+         */
+        if (offset + thingSize > GC_ARENA_SIZE) {
+            JS_ASSERT(thingSize & (thingSize - 1));
+            RETURN(notarena);
+        }
+        thing = (JSGCThing *) (start + offset);
 
         /* Make sure the thing is not on the freelist of the arena. */
         JSGCThing *cursor = ainfo->freeList;
         while (cursor) {
             JS_ASSERT((((jsuword) cursor) & GC_ARENA_MASK) % thingSize == 0);
             JS_ASSERT(!IsMarkedGCThing(cursor));
+
             /* If the cursor moves past the thing, it's not in the freelist. */
             if (thing < cursor)
                 break;
@@ -1222,7 +1254,6 @@ ConservativeGCStackMarker::markWord(jsuword w)
         CONSERVATIVE_METER(stats.unmarked++);
     }
 
-    uint32 traceKind = GetArenaTraceKind(ainfo);
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     if (IS_GC_MARKING_TRACER(trc) && dumpFileName) {
         ConservativeRoot root = {thing, traceKind};
@@ -1268,7 +1299,7 @@ ConservativeGCStackMarker::markRoots()
         JSThreadData *td = i.threadData();
         ConservativeGCThreadData *ctd = &td->conservativeGC;
         if (ctd->isEnabled()) {
-            jsuword *stackMin, *stackEnd;            
+            jsuword *stackMin, *stackEnd;
 #if JS_STACK_GROWTH_DIRECTION > 0
             stackMin = td->nativeStackBase;
             stackEnd = ctd->nativeStackTop;
@@ -1522,7 +1553,7 @@ js_FinishGC(JSRuntime *rt)
 #endif
     FinishGCArenaLists(rt);
 
-#ifdef DEBUG 
+#ifdef DEBUG
     if (!rt->gcRootsHash.empty())
         CheckLeakedRoots(rt);
 #endif
@@ -2097,7 +2128,7 @@ JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
     GCLocks *locks;
-    
+
     if (!thing)
         return true;
     locks = &rt->gcLocksHash;
@@ -3107,7 +3138,7 @@ struct GCTimer {
 
                 if (!gcFile) {
                     gcFile = fopen("gcTimer.dat", "w");
-        
+
                     fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep,");
                     fprintf(gcFile, " FinObj, FinStr, FinDbl,");
                     fprintf(gcFile, " Destroy,  newChunks, destoyChunks\n");
@@ -3123,7 +3154,7 @@ struct GCTimer {
                         (double)(sweepStringEnd - sweepObjectEnd) / 1e6,
                         (double)(sweepDoubleEnd - sweepStringEnd) / 1e6,
                         (double)(sweepDestroyEnd - sweepDoubleEnd) / 1e6);
-                fprintf(gcFile, "%10d, %10d \n", newChunkCount, 
+                fprintf(gcFile, "%10d, %10d \n", newChunkCount,
                         destroyChunkCount);
                 fflush(gcFile);
 
