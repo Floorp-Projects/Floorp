@@ -463,7 +463,7 @@ let Utils = {
     // Standard JS exception
     if (e.stack)
       return "JS Stack trace: " + e.stack.trim().replace(/\n/g, " < ").
-        replace(/@(?:chrome|file):.*?([^\/\.]+\.\w+:)/g, "@$1");
+        replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
 
     return "No traceback available";
   },
