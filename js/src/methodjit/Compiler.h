@@ -98,7 +98,7 @@ class Compiler
         RegisterID objReg;
         RegisterID typeReg;
         Label shapeGuard;
-        uint32 atomIndex;
+        JSAtom *atom;
         StateRemat objRemat;
         Call callReturn;
         bool hasTypeCheck;
@@ -190,10 +190,10 @@ class Compiler
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_unbrand();
-    void jsop_getprop(uint32 atomIndex);
+    void jsop_getprop(JSAtom *atom);
     void jsop_length();
-    void jsop_setprop(uint32 atomIndex);
-    void jsop_setprop_slow(uint32 atomIndex);
+    void jsop_setprop(JSAtom *atom);
+    void jsop_setprop_slow(JSAtom *atom);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
