@@ -47,7 +47,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-#include "mozilla/dom/Element.h"
 
 PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
                                                   nsXMLEventsManager * aManager,
@@ -68,7 +67,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
     return PR_FALSE;
   nsAutoString handlerURIStr;
   PRBool hasHandlerURI = PR_FALSE;
-  nsIContent *handler = nsnull;
+  nsCOMPtr<nsIContent> handler;
   nsAutoString observerID;
   nsAutoString targetIdref;
   
@@ -88,8 +87,13 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
         //We support only XML Events Basic.
         docURI->Equals(handlerURL, &equals);
         if (equals) {
-          handler =
-            aDocument->GetElementById(NS_ConvertUTF8toUTF16(handlerRef));
+          nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(aDocument));
+          if (doc) {
+            nsCOMPtr<nsIDOMElement> domhandler;
+            doc->GetElementById(NS_ConvertUTF8toUTF16(handlerRef),
+                                getter_AddRefs(domhandler));
+            handler = do_QueryInterface(domhandler);
+          }
         }
       }
     }
@@ -116,7 +120,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
     aContent->AttrValueIs(nameSpaceID, nsGkAtoms::defaultAction,
                           nsGkAtoms::cancel, eCaseMatters);
 
-  nsIContent *observer;
+  nsCOMPtr<nsIContent> observer;
   if (!hasObserver) {
     if (!hasHandlerURI) //Parent should be the observer
       observer = aContent->GetParent();
@@ -124,9 +128,16 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
       observer = aContent;
   }
   else if (!observerID.IsEmpty()) {
-    observer = aDocument->GetElementById(observerID);
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(aDocument));
+    if (doc) {
+      nsCOMPtr<nsIDOMElement> el;
+      doc->GetElementById(observerID, getter_AddRefs(el));
+      observer = do_QueryInterface(el);
+    }
   }
-  nsCOMPtr<nsIDOMEventTarget> eventObserver(do_QueryInterface(observer));
+  nsCOMPtr<nsIDOMEventTarget> eventObserver;
+  if (observer)
+    eventObserver = do_QueryInterface(observer);
   if (eventObserver) {
     nsXMLEventsListener * eli = new nsXMLEventsListener(aManager,
                                                         aContent,

@@ -443,8 +443,7 @@ nsHTMLLabelElement::GetControlContent()
 
   nsCOMPtr<nsIFormControl> element = do_QueryInterface(content);
   if (element && element->IsLabelableControl()) {
-    // Transfer the reference count of element to the returned value.
-    element.forget();
+    NS_ADDREF(content);
     return content;
   }
 

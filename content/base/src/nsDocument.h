@@ -952,6 +952,7 @@ protected:
    * @returns PR_TRUE if aId looks correct, PR_FALSE otherwise.
    */
   static PRBool CheckGetElementByIdArg(const nsIAtom* aId);
+  nsIdentifierMapEntry* GetElementByIdInternal(nsIAtom* aID);
 
   void DispatchContentLoadedEvents();
 
