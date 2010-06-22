@@ -107,7 +107,13 @@ txXPathTreeWalker::moveToElementById(const nsAString& aID)
 
     nsCOMPtr<nsIContent> content;
     if (doc) {
-        content = doc->GetElementById(aID);
+        nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(doc);
+        NS_ASSERTION(document, "QI failed");
+
+        nsCOMPtr<nsIDOMElement> element;
+        document->GetElementById(aID, getter_AddRefs(element));
+
+        content = do_QueryInterface(element);
     }
     else {
         // We're in a disconnected subtree, search only that subtree.
