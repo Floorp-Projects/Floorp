@@ -213,15 +213,10 @@ nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
   if (!aDocument) {
     return;
   }
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
-  NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
 
-  // XXXbz we should really have a sane GetElementById on nsIDocument.
-  nsCOMPtr<nsIDOMElement> element;
-  domDoc->GetElementById(aRef, getter_AddRefs(element));
-  if (element) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-    mElement = content->AsElement();
+  Element *e = aDocument->GetElementById(aRef);
+  if (e) {
+    mElement = e;
   }
 }
 

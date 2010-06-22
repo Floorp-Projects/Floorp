@@ -1133,24 +1133,20 @@ nsXULDocument::ContentRemoved(nsIDocument* aDocument,
 // nsIXULDocument interface
 //
 
-NS_IMETHODIMP
+void
 nsXULDocument::GetElementsForID(const nsAString& aID,
                                 nsCOMArray<nsIContent>& aElements)
 {
     aElements.Clear();
 
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(aID);
-    if (!atom)
-        return NS_ERROR_OUT_OF_MEMORY;
-    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
+    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aID);
     if (entry) {
         entry->AppendAllIdContent(&aElements);
     }
-    nsRefMapEntry *refEntry = mRefMap.GetEntry(atom);
+    nsRefMapEntry *refEntry = mRefMap.GetEntry(aID);
     if (refEntry) {
         refEntry->AppendAll(&aElements);
     }
-    return NS_OK;
 }
 
 nsresult
@@ -1306,17 +1302,9 @@ nsXULDocument::Persist(const nsAString& aID,
 
     nsresult rv;
 
-    nsCOMPtr<nsIDOMElement> domelement;
-    rv = nsDocument::GetElementById(aID, getter_AddRefs(domelement));
-    if (NS_FAILED(rv)) return rv;
-
-    if (! domelement)
-        return NS_OK;
-
-    nsCOMPtr<nsIContent> element = do_QueryInterface(domelement);
-    NS_ASSERTION(element != nsnull, "null ptr");
+    nsIContent *element = nsDocument::GetElementById(aID);
     if (! element)
-        return NS_ERROR_UNEXPECTED;
+        return NS_OK;
 
     nsCOMPtr<nsIAtom> tag;
     PRInt32 nameSpaceID;
@@ -1647,23 +1635,17 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 Element*
 nsXULDocument::GetElementById(const nsAString& aId)
 {
-    nsCOMPtr<nsIAtom> atom(do_GetAtom(aId));
-    if (!atom) {
-        // This can only fail due OOM if the atom doesn't exist, in which
-        // case there couldn't possibly exist an entry for it.
-        return nsnull;
-    }
-
-    if (!CheckGetElementByIdArg(atom))
+    if (!CheckGetElementByIdArg(aId))
         return nsnull;
 
-    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
+    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
     if (entry) {
         Element* element = entry->GetIdElement();
         if (element)
             return element;
     }
-    nsRefMapEntry* refEntry = mRefMap.GetEntry(atom);
+
+    nsRefMapEntry* refEntry = mRefMap.GetEntry(aId);
     if (refEntry) {
         NS_ASSERTION(refEntry->GetFirstElement(),
                      "nsRefMapEntries should have nonempty content lists");
@@ -1903,10 +1885,7 @@ nsXULDocument::AddElementToRefMap(Element* aElement)
     nsAutoString value;
     GetRefMapAttribute(aElement, &value);
     if (!value.IsEmpty()) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(value);
-        if (!atom)
-            return NS_ERROR_OUT_OF_MEMORY;
-        nsRefMapEntry *entry = mRefMap.PutEntry(atom);
+        nsRefMapEntry *entry = mRefMap.PutEntry(value);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         if (!entry->AddElement(aElement))
@@ -1923,14 +1902,11 @@ nsXULDocument::RemoveElementFromRefMap(Element* aElement)
     nsAutoString value;
     GetRefMapAttribute(aElement, &value);
     if (!value.IsEmpty()) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(value);
-        if (!atom)
-            return;
-        nsRefMapEntry *entry = mRefMap.GetEntry(atom);
+        nsRefMapEntry *entry = mRefMap.GetEntry(value);
         if (!entry)
             return;
         if (entry->RemoveElement(aElement)) {
-            mRefMap.RemoveEntry(atom);
+            mRefMap.RawRemoveEntry(entry);
         }
     }
 }
@@ -3941,14 +3917,10 @@ nsXULDocument::OverlayForwardReference::Resolve()
     else {
         // The hook-up element has an id, try to match it with an element
         // with the same id in the base document.
-        nsCOMPtr<nsIDOMElement> domtarget;
-        rv = mDocument->GetElementById(id, getter_AddRefs(domtarget));
-        if (NS_FAILED(rv)) return eResolve_Error;
+        target = mDocument->GetElementById(id);
 
         // If we can't find the element in the document, defer the hookup
         // until later.
-        target = do_QueryInterface(domtarget);
-        NS_ASSERTION(!domtarget || target, "not an nsIContent");
         if (!target)
             return eResolve_Later;
 
@@ -4080,17 +4052,15 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     for (i = 0; i < childCount; ++i) {
         currContent = aOverlayNode->GetChildAt(0);
 
-        nsAutoString id;
-        currContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+        nsIAtom *idAtom = currContent->GetID();
 
-        nsCOMPtr<nsIDOMElement> nodeInDocument;
-        if (!id.IsEmpty()) {
-            nsCOMPtr<nsIDOMDocument> domDocument(
-                        do_QueryInterface(aTargetNode->GetDocument()));
-            if (!domDocument) return NS_ERROR_FAILURE;
+        nsIContent *elementInDocument = nsnull;
+        if (idAtom) {
+            nsIDocument *doc = aTargetNode->GetDocument();
+            if (!doc) return NS_ERROR_FAILURE;
 
-            rv = domDocument->GetElementById(id, getter_AddRefs(nodeInDocument));
-            if (NS_FAILED(rv)) return rv;
+            elementInDocument =
+                doc->GetElementById(nsDependentAtomString(idAtom));
         }
 
         // The item has an 'id' attribute set, and we need to check with
@@ -4098,24 +4068,21 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         // this locale. If so, we want to merge the subtree under that
         // node. Otherwise, we just do an append as if the element had
         // no id attribute.
-        if (nodeInDocument) {
+        if (elementInDocument) {
             // Given two parents, aTargetNode and aOverlayNode, we want
             // to call merge on currContent if we find an associated
             // node in the document with the same id as currContent that
             // also has aTargetNode as its parent.
 
-            nsCOMPtr<nsIDOMNode> nodeParent;
-            rv = nodeInDocument->GetParentNode(getter_AddRefs(nodeParent));
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIDOMElement> elementParent(do_QueryInterface(nodeParent));
+            nsIContent *elementParent = elementInDocument->GetParent();
 
-            nsAutoString parentID;
-            elementParent->GetAttribute(NS_LITERAL_STRING("id"), parentID);
-            if (aTargetNode->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
-                                         parentID, eCaseMatters)) {
+            nsIAtom *parentID = elementParent->GetID();
+            if (parentID &&
+                aTargetNode->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                                         nsDependentAtomString(parentID),
+                                         eCaseMatters)) {
                 // The element matches. "Go Deep!"
-                nsCOMPtr<nsIContent> childDocumentContent(do_QueryInterface(nodeInDocument));
-                rv = Merge(childDocumentContent, currContent, aNotify);
+                rv = Merge(elementInDocument, currContent, aNotify);
                 if (NS_FAILED(rv)) return rv;
                 rv = aOverlayNode->RemoveChildAt(0, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
@@ -4398,20 +4365,18 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
     }
 
     if (!posStr.IsEmpty()) {
-        nsCOMPtr<nsIDOMDocument> domDocument(
-               do_QueryInterface(aParent->GetDocument()));
-        if (!domDocument) return NS_ERROR_FAILURE;
+        nsIDocument *document = aParent->GetOwnerDoc();
+        if (!document) return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsIDOMElement> domElement;
+        nsIContent *content = nsnull;
 
         char* str = ToNewCString(posStr);
         char* rest;
         char* token = nsCRT::strtok(str, ", ", &rest);
 
         while (token) {
-            rv = domDocument->GetElementById(NS_ConvertASCIItoUTF16(token),
-                                             getter_AddRefs(domElement));
-            if (domElement)
+            content = document->GetElementById(NS_ConvertASCIItoUTF16(token));
+            if (content)
                 break;
 
             token = nsCRT::strtok(rest, ", ", &rest);
@@ -4420,12 +4385,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
         if (NS_FAILED(rv))
             return rv;
 
-        if (domElement) {
-            nsCOMPtr<nsIContent> content(do_QueryInterface(domElement));
-            NS_ASSERTION(content != nsnull, "null ptr");
-            if (!content)
-                return NS_ERROR_UNEXPECTED;
-
+        if (content) {
             PRInt32 pos = aParent->IndexOf(content);
 
             if (pos != -1) {
