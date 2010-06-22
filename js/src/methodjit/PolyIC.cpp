@@ -773,19 +773,12 @@ ic::GetProp(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetPropSlow(VMFrame &f, uint32 index)
 {
-    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
-    if  (!obj)
-        THROW();
-
     JSScript *script = f.fp->script;
     ic::PICInfo &pic = script->pics[index];
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
 
-    Value rval = f.regs.sp[-1];
     JSAtom *atom = script->getAtom(pic.atomIndex);
-    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1]))
-        THROW();
-    f.regs.sp[-2] = rval;
+    stubs::SetName(f, atom);
 }
 
 void
