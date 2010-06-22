@@ -4891,16 +4891,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
   }
 
   nsDependentJSString str(jsstr);
-  nsCOMPtr<nsISupports> result;
-
-  {
-    nsCOMPtr<nsIDOMDocument> dom_doc(do_QueryInterface(doc));
-    nsCOMPtr<nsIDOMElement> element;
-
-    dom_doc->GetElementById(str, getter_AddRefs(element));
-
-    result = element;
-  }
+  nsCOMPtr<nsISupports> result = document->GetElementById(str);
 
   if (!result) {
     doc->ResolveName(str, nsnull, getter_AddRefs(result));
