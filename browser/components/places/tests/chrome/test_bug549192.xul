@@ -45,12 +45,14 @@
     SimpleTest.waitForExplicitFinish();
 
     function runTest() {
+      // The mochitest page is added to history.
+      waitForClearHistory(continue_test);
+    }
+
+    function continue_test() {
       const Cc = Components.classes;
       const Ci = Components.interfaces;
       Components.utils.import("resource://gre/modules/Services.jsm");
-
-      // Cleanup.
-      PlacesUtils.bhistory.removeAllPages();
 
       // Add some visits.
       let vtime = Date.now() * 1000;
@@ -76,8 +78,13 @@
 
       // loop through the rows and check formatting
       let treeView = tree.view;
+      for (let i = 0; i < rc; i++) {
+        selection.select(rc);
+        let node = tree.selectedNode;
+        ok(true, "found " + node.title);
+      }
       let rc = treeView.rowCount;
-      ok(rc == 3, "Rows found.");
+      is(rc, 3, "Rows found.");
       let selection = treeView.selection;
       for (let i = 0; i < rc; i++) {
         selection.select(0);
@@ -89,10 +96,25 @@
       }
 
       // Cleanup.
-      PlacesUtils.bhistory.removeAllPages();
-
-      SimpleTest.finish();
+      waitForClearHistory(SimpleTest.finish);
     }
+
+    /**
+     * Clears history invoking callback when done.
+     */
+    function waitForClearHistory(aCallback) {
+      const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
+      let observer = {
+        observe: function(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
+          aCallback();
+        }
+      };
+      Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+      let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+               getService(Ci.nsINavHistoryService);
+      hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+   }
 
   ]]></script>
 </window>
