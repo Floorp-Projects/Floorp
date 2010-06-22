@@ -393,8 +393,10 @@ class SetPropCompiler : public PICStubCompiler
         if (!SPROP_HAS_VALID_SLOT(sprop, obj->scope()))
             return disable("invalid slot");
 
+        bool needsBarrier = obj->scope()->branded() || obj->scope()->hasMethodBarrier();
+
         JS_ASSERT(obj == holder);
-        if (!pic.inlinePathPatched && !obj->scope()->branded())
+        if (!pic.inlinePathPatched && !needsBarrier)
             return patchInline(sprop);
         else
             return generateStub(sprop);
