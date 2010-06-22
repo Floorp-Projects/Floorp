@@ -1142,7 +1142,7 @@ nsXULDocument::GetElementsForID(const nsAString& aID,
     nsCOMPtr<nsIAtom> atom = do_GetAtom(aID);
     if (!atom)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
+    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aID);
     if (entry) {
         entry->AppendAllIdContent(&aElements);
     }
@@ -1639,6 +1639,16 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 Element*
 nsXULDocument::GetElementById(const nsAString& aId)
 {
+    if (!CheckGetElementByIdArg(aId))
+        return nsnull;
+
+    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
+    if (entry) {
+        Element* element = entry->GetIdElement();
+        if (element)
+            return element;
+    }
+
     nsCOMPtr<nsIAtom> atom(do_GetAtom(aId));
     if (!atom) {
         // This can only fail due OOM if the atom doesn't exist, in which
@@ -1646,15 +1656,6 @@ nsXULDocument::GetElementById(const nsAString& aId)
         return nsnull;
     }
 
-    if (!CheckGetElementByIdArg(atom))
-        return nsnull;
-
-    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
-    if (entry) {
-        Element* element = entry->GetIdElement();
-        if (element)
-            return element;
-    }
     nsRefMapEntry* refEntry = mRefMap.GetEntry(atom);
     if (refEntry) {
         NS_ASSERTION(refEntry->GetFirstElement(),
