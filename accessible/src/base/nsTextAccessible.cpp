@@ -45,8 +45,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsTextAccessible::
-  nsTextAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell) :
-  nsLinkableAccessible(aDOMNode, aShell)
+  nsTextAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsLinkableAccessible(aContent, aShell)
 {
 }
 

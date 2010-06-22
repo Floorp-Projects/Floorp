@@ -65,8 +65,6 @@ _TEST_FILES =	\
 		bug369950-subframe.xml \
 		bug495648.rdf \
 		decoration_line_rendering.js \
-		region_lib.js \
-		scrolling_helper.html \
 		test_bug66619.html \
 		test_bug114649.html \
 		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
@@ -108,10 +106,9 @@ _TEST_FILES =	\
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
-		test_scrolling.html \
 		$(NULL)
 
-# Tests for bugs 441782 and 467672 don't pass reliably on Windows, because of bug 469208
+# Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += \
 		bidi_numeral_test.js \
@@ -198,6 +195,86 @@ _TEST_FILES += \
 		bug467672-5.html \
 		bug467672-5-ref.html \
 		test_bug499538-1.html \
+		test_bug570378-arabic-1a.html \
+		test_bug570378-arabic-1b.html \
+		test_bug570378-arabic-1c.html \
+		test_bug570378-arabic-1d.html \
+		test_bug570378-arabic-1e.html \
+		bug570378-arabic-1.html \
+		bug570378-arabic-1-ref.html \
+		test_bug570378-arabic-2a.html \
+		test_bug570378-arabic-2b.html \
+		test_bug570378-arabic-2c.html \
+		test_bug570378-arabic-2d.html \
+		test_bug570378-arabic-2e.html \
+		bug570378-arabic-2.html \
+		bug570378-arabic-2-ref.html \
+		test_bug570378-arabic-3a.html \
+		test_bug570378-arabic-3b.html \
+		test_bug570378-arabic-3c.html \
+		test_bug570378-arabic-3d.html \
+		test_bug570378-arabic-3e.html \
+		bug570378-arabic-3.html \
+		bug570378-arabic-3-ref.html \
+		test_bug570378-arabic-4a.html \
+		test_bug570378-arabic-4b.html \
+		test_bug570378-arabic-4c.html \
+		test_bug570378-arabic-4d.html \
+		test_bug570378-arabic-4e.html \
+		bug570378-arabic-4.html \
+		bug570378-arabic-4-ref.html \
+		test_bug570378-arabic-5a.html \
+		test_bug570378-arabic-5b.html \
+		test_bug570378-arabic-5c.html \
+		test_bug570378-arabic-5d.html \
+		test_bug570378-arabic-5e.html \
+		bug570378-arabic-5.html \
+		bug570378-arabic-5-ref.html \
+		test_bug570378-persian-1a.html \
+		test_bug570378-persian-1b.html \
+		test_bug570378-persian-1c.html \
+		test_bug570378-persian-1d.html \
+		test_bug570378-persian-1e.html \
+		test_bug570378-persian-1f.html \
+		test_bug570378-persian-1g.html \
+		bug570378-persian-1.html \
+		bug570378-persian-1-ref.html \
+		test_bug570378-persian-2a.html \
+		test_bug570378-persian-2b.html \
+		test_bug570378-persian-2c.html \
+		test_bug570378-persian-2d.html \
+		test_bug570378-persian-2e.html \
+		test_bug570378-persian-2f.html \
+		test_bug570378-persian-2g.html \
+		bug570378-persian-2.html \
+		bug570378-persian-2-ref.html \
+		test_bug570378-persian-3a.html \
+		test_bug570378-persian-3b.html \
+		test_bug570378-persian-3c.html \
+		test_bug570378-persian-3d.html \
+		test_bug570378-persian-3e.html \
+		test_bug570378-persian-3f.html \
+		test_bug570378-persian-3g.html \
+		bug570378-persian-3.html \
+		bug570378-persian-3-ref.html \
+		test_bug570378-persian-4a.html \
+		test_bug570378-persian-4b.html \
+		test_bug570378-persian-4c.html \
+		test_bug570378-persian-4d.html \
+		test_bug570378-persian-4e.html \
+		test_bug570378-persian-4f.html \
+		test_bug570378-persian-4g.html \
+		bug570378-persian-4.html \
+		bug570378-persian-4-ref.html \
+		test_bug570378-persian-5a.html \
+		test_bug570378-persian-5b.html \
+		test_bug570378-persian-5c.html \
+		test_bug570378-persian-5d.html \
+		test_bug570378-persian-5e.html \
+		test_bug570378-persian-5f.html \
+		test_bug570378-persian-5g.html \
+		bug570378-persian-5.html \
+		bug570378-persian-5-ref.html \
 		$(NULL)
 endif
 

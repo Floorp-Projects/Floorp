@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<head>
+<style type="text/css">
+
+[class~='t'] { display: table; }
+
+</style>
+</head>
+<body>
+
+<m:math><m:math class="t"/></m:math>
+
+</body>
+</html>

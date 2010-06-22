@@ -59,7 +59,7 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
 #endif
 {
 public:
-  nsHTMLObjectElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
+  nsHTMLObjectElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
   virtual ~nsHTMLObjectElement();
 
   // nsISupports
@@ -93,7 +93,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
-  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRUint32 GetDesiredIMEState();
 
   // Overriden nsIFormControl methods
@@ -144,7 +144,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Object)
 
 
 nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo,
-                                         PRBool aFromParser)
+                                         PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)
 {
@@ -283,7 +283,8 @@ nsHTMLObjectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 }
 
 PRBool
-nsHTMLObjectElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
+nsHTMLObjectElement::IsHTMLFocusable(PRBool aWithMouse,
+                                     PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   if (Type() == eType_Plugin) {
     // Has plugin content: let the plugin decide what to do in terms of
@@ -297,7 +298,7 @@ nsHTMLObjectElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
     return PR_FALSE;
   }
 
-  return nsGenericHTMLFormElement::IsHTMLFocusable(aIsFocusable, aTabIndex);
+  return nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex);
 }
 
 PRUint32

@@ -55,9 +55,7 @@ class nsBuiltinDecoderStateMachine;
 class nsVideoInfo {
 public:
   nsVideoInfo()
-    : mFramerate(0.0),
-      mPixelAspectRatio(1.0),
-      mCallbackPeriod(1),
+    : mPixelAspectRatio(1.0),
       mAudioRate(0),
       mAudioChannels(0),
       mFrame(0,0),
@@ -65,15 +63,8 @@ public:
       mHasVideo(PR_FALSE)
   {}
 
-  // Frames per second.
-  float mFramerate;
-
   // Pixel aspect ratio, as stored in the metadata.
   float mPixelAspectRatio;
-
-  // Length of a video frame in milliseconds, or the callback period if
-  // there's no audio.
-  PRUint32 mCallbackPeriod;
 
   // Samples per second.
   PRUint32 mAudioRate;
@@ -183,6 +174,7 @@ public:
                            ImageContainer* aContainer,
                            PRInt64 aOffset,
                            PRInt64 aTime,
+                           PRInt64 aEndTime,
                            const YCbCrBuffer &aBuffer,
                            PRBool aKeyframe,
                            PRInt64 aTimecode);
@@ -192,9 +184,10 @@ public:
   // frame is played; this frame is identical to the previous.
   static VideoData* CreateDuplicate(PRInt64 aOffset,
                                     PRInt64 aTime,
+                                    PRInt64 aEndTime,
                                     PRInt64 aTimecode)
   {
-    return new VideoData(aOffset, aTime, aTimecode);
+    return new VideoData(aOffset, aTime, aEndTime, aTimecode);
   }
 
   ~VideoData()
@@ -207,6 +200,9 @@ public:
 
   // Start time of frame in milliseconds.
   PRInt64 mTime;
+
+  // End time of frame in milliseconds;
+  PRInt64 mEndTime;
 
   // Codec specific internal time code. For Ogg based codecs this is the
   // granulepos.
@@ -221,27 +217,32 @@ public:
   PRPackedBool mKeyframe;
 
 public:
-  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aTimecode)
+  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aEndTime, PRInt64 aTimecode)
     : mOffset(aOffset),
       mTime(aTime),
+      mEndTime(aEndTime),
       mTimecode(aTimecode),
       mDuplicate(PR_TRUE),
       mKeyframe(PR_FALSE)
   {
     MOZ_COUNT_CTOR(VideoData);
+    NS_ASSERTION(aEndTime > aTime, "Frame must start before it ends.");
   }
 
   VideoData(PRInt64 aOffset,
             PRInt64 aTime,
+            PRInt64 aEndTime,
             PRBool aKeyframe,
             PRInt64 aTimecode)
     : mOffset(aOffset),
       mTime(aTime),
+      mEndTime(aEndTime),
       mTimecode(aTimecode),
       mDuplicate(PR_FALSE),
       mKeyframe(aKeyframe)
   {
     MOZ_COUNT_CTOR(VideoData);
+    NS_ASSERTION(aEndTime > aTime, "Frame must start before it ends.");
   }
 
 };
@@ -433,8 +434,8 @@ public:
                                    PRInt64& aOutStartTime);
 
   // Returns the end time of the last page which occurs before aEndOffset.
-  // This will not read past aEndOffset. Returns -1 on failure.
-  virtual PRInt64 FindEndTime(PRInt64 aEndOffset) = 0;
+  // This will not read past aEndOffset. Returns -1 on failure. 
+  virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
   // Moves the decode head to aTime milliseconds. aStartTime and aEndTime
   // denote the start and end times of the media.

@@ -210,7 +210,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 
 // construction, destruction
 nsGenericHTMLElement*
-NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {

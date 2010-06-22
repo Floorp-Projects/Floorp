@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace;">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="w"><content><div xmlns="http://www.w3.org/1999/xhtml"><children xmlns="http://www.mozilla.org/xbl"/></div></content></binding>
+  <binding id="empty"><content/></binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  document.getElementById("d").previousSibling.data += "C";
+  document.getElementById("d").style.MozBinding = "url('#empty')";
+}
+
+</script>
+
+</head>
+
+<body onload="boom();"><span>A&#x202E;<span style="-moz-binding: url('#w');"></span>B<span id="d" style="font-size: 80%; color: green;">D</span></span></body>
+</html>

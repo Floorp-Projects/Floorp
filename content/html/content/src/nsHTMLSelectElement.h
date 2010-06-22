@@ -244,7 +244,7 @@ class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
+  nsHTMLSelectElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -268,7 +268,7 @@ public:
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
@@ -491,6 +491,10 @@ protected:
    *  Used by nsSafeOptionListMutation.
    */
   PRPackedBool    mMutating;
+  /**
+   * True if DoneAddingChildren will get called but shouldn't restore state.
+   */
+  PRPackedBool    mInhibitStateRestoration;
   /** The number of non-options as children of the select */
   PRUint32  mNonOptionChildren;
   /** The number of optgroups anywhere under the select */

@@ -211,7 +211,7 @@ toolbarseparator {
   -moz-border-radius: @toolbarbuttonCornerRadius@;
   -moz-box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
-  -moz-background-origin: border;
+  background-origin: border-box;
 }
 
 #Console\:clear:active:hover {

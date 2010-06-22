@@ -232,6 +232,11 @@ struct THEBES_API gfxRGBA {
     }
 #endif
 
+    bool operator==(const gfxRGBA& other) const
+    {
+        return r == other.r && g == other.g && b == other.b && a == other.a;
+    }
+
     /**
      * Returns this color value as a packed 32-bit integer. This reconstructs
      * the int32 based on the given colorType, always in the native byte order.

@@ -71,14 +71,6 @@ function doTest() {
     }
   }
 
-  function testElementResizer()
-  {
-    var resizers = document.getElementsByTagName("resizer");
-    for (var r = 0; r < resizers.length; r++) {
-      resizers.setAttribute("element", "container");
-    }
-  }
-
   testResizer(-1, -1);
   testResizer(-1, 0);
   testResizer(-1, 1);
@@ -87,25 +79,43 @@ function doTest() {
   testResizer(1, -1);
   testResizer(1, 0);
   testResizer(1, 1);
+
+  var resizers = document.getElementsByTagName("resizer");
+  Array.forEach(resizers, function (element) {
+    is(getComputedStyle(element, "").cursor,
+       element.getAttribute("expectedcursor"),
+       "cursor for " + element.dir);
+  });
+
+  // now check the cursors in rtl. The bottomend resizer
+  // should be reversed
+  document.getElementById("bottomend").setAttribute("rtl", "true");
+  Array.forEach(resizers, function (element) {
+    is(getComputedStyle(element, "").cursor,
+       element.dir == "bottomend" ? "sw-resize" :
+         element.getAttribute("expectedcursor"),
+       "cursor for " + element.dir);
+  });
+
   window.close();
   window.opener.nextResizerTest();
 }
 ]]></script>
-	<hbox flex="1">
+	<hbox id="container" flex="1">
 		<vbox flex="1">
-			<resizer dir="topleft" flex="1"/>
-			<resizer dir="left" flex="1"/>
-			<resizer dir="bottomleft" flex="1"/>
+			<resizer dir="topleft" expectedcursor="nw-resize" flex="1"/>
+			<resizer dir="left" expectedcursor="ew-resize" flex="1"/>
+			<resizer dir="bottomleft" expectedcursor="sw-resize" flex="1"/>
 		</vbox>
 		<vbox flex="1">
-			<resizer dir="top" flex="1"/>
-			<hbox flex="1"/>
-			<resizer dir="bottom" flex="1"/>
+			<resizer dir="top" expectedcursor="ns-resize" flex="1"/>
+			<resizer id="bottomend" dir="bottomend" expectedcursor="se-resize" flex="1"/>
+			<resizer dir="bottom" expectedcursor="ns-resize" flex="1"/>
 		</vbox>
 		<vbox flex="1">
-			<resizer dir="topright" flex="1"/>
-			<resizer dir="right" flex="1"/>
-			<resizer dir="bottomright" flex="1"/>
+			<resizer dir="topright" expectedcursor="ne-resize" flex="1"/>
+			<resizer dir="right" expectedcursor="ew-resize" flex="1"/>
+			<resizer dir="bottomright" expectedcursor="se-resize" flex="1"/>
 		</vbox>
 	</hbox>
 </window>

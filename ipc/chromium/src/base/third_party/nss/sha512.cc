@@ -57,6 +57,8 @@
 #define PORT_Strlen(s) static_cast<uint32>(strlen(s))
 #define PORT_Memcpy memcpy
 
+namespace nss {
+
 /* ============= Common constants and defines ======================= */
 
 #define W ctx->u.w
@@ -1285,9 +1287,13 @@ void SHA384_Clone(SHA384Context *dest, SHA384Context *src)
 }
 #endif  /* Comment out unused code. */
 
+} // namespace nss
+
 /* ======================================================================= */
 #ifdef SELFTEST
 #include <stdio.h>
+
+using namespace nss;
 
 static const char abc[] = { "abc" };
 static const char abcdbc[] = {

@@ -273,6 +273,12 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
     return PL_DHASH_REMOVE;
 }
 
+NS_IMETHODIMP
+nsNativeModuleLoader::LoadModuleFromJAR(nsILocalFile* aJAR, const nsACString &aPath, nsIModule* *aResult)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 nsNativeModuleLoader::UnloadLibraries()
 {

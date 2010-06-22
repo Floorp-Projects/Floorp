@@ -289,9 +289,9 @@ var PluginInstallService = {
     gPluginInstaller.pluginInstallationProgress(pid, DOWNLOAD_FINISHED, null);
   },
 
-  onDownloadFailed: function(install, error) {
+  onDownloadFailed: function(install) {
     var pid = this.getPidForInstall(install);
-    switch (error) {
+    switch (install.error) {
     case AddonManager.ERROR_NETWORK_FAILURE:
       var errorMsg = getLocalizedError("error-228");
       break;
@@ -321,7 +321,7 @@ var PluginInstallService = {
     this._fireFinishedNotification();
   },
 
-  onInstallFailed: function(install, error) {
+  onInstallFailed: function(install) {
     var pid = this.getPidForInstall(install);
     gPluginInstaller.pluginInstallationProgress(pid, INSTALL_FINISHED,
                                                 getLocalizedError("error-203"));

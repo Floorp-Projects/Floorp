@@ -1839,7 +1839,8 @@ nsXULContentBuilder::CompareResultToNode(nsIXULTemplateResult* aResult,
     if (mSortState.direction == nsSortState_natural) {
         // sort in natural order
         nsresult rv = mQueryProcessor->CompareResults(aResult, match->mResult,
-                                                      nsnull, aSortOrder);
+                                                      nsnull, mSortState.sortHints,
+                                                      aSortOrder);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -1848,7 +1849,8 @@ nsXULContentBuilder::CompareResultToNode(nsIXULTemplateResult* aResult,
         PRInt32 length = mSortState.sortKeys.Count();
         for (PRInt32 t = 0; t < length; t++) {
             nsresult rv = mQueryProcessor->CompareResults(aResult, match->mResult,
-                                                          mSortState.sortKeys[t], aSortOrder);
+                                                          mSortState.sortKeys[t],
+                                                          mSortState.sortHints, aSortOrder);
             NS_ENSURE_SUCCESS(rv, rv);
 
             if (*aSortOrder)
@@ -1872,9 +1874,12 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
     nsresult rv;
 
     if (!mSortState.initialized) {
-        nsAutoString sort, sortDirection;
+        nsAutoString sort, sortDirection, sortHints;
         mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
         mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, sortDirection);
+        mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, sortHints);
+        sortDirection.AppendLiteral(" ");
+        sortDirection += sortHints;
         rv = XULSortServiceImpl::InitializeSortState(mRoot, aContainer,
                                                      sort, sortDirection, &mSortState);
         NS_ENSURE_SUCCESS(rv, rv);

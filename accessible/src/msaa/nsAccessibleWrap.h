@@ -103,9 +103,9 @@ class nsAccessibleWrap : public nsAccessible,
                          public IAccessible2,
                          public IEnumVARIANT
 {
-  public: // construction, destruction
-    nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
-    virtual ~nsAccessibleWrap();
+public: // construction, destruction
+  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell);
+  virtual ~nsAccessibleWrap();
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
@@ -311,7 +311,7 @@ class nsAccessibleWrap : public nsAccessible,
 
   // Helper methods
   static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
-  static HWND GetHWNDFor(nsIAccessible *aAccessible);
+  static HWND GetHWNDFor(nsAccessible *aAccessible);
   static HRESULT ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
                                         BSTR *aIA2Attributes);
 

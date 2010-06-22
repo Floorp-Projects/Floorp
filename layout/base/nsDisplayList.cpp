@@ -80,6 +80,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mInTransform(PR_FALSE),
       mSyncDecodeImages(PR_FALSE),
       mIsPaintingToWindow(PR_FALSE) {
+  MOZ_COUNT_CTOR(nsDisplayListBuilder);
   PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();
@@ -149,6 +150,7 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
+  MOZ_COUNT_DTOR(nsDisplayListBuilder);
 }
 
 PRUint32
@@ -675,7 +677,7 @@ PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
   if (mIsThemed)
-    return PR_FALSE;
+    return mThemeTransparency == nsITheme::eOpaque;
 
   nsStyleContext *bgSC;
   if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))

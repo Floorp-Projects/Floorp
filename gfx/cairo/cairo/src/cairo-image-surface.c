@@ -64,8 +64,10 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
 	return CAIRO_FORMAT_A8;
     case PIXMAN_a1:
 	return CAIRO_FORMAT_A1;
+    case PIXMAN_r5g6b5:
+	return CAIRO_FORMAT_RGB16_565;
     case PIXMAN_a8b8g8r8: case PIXMAN_x8b8g8r8: case PIXMAN_r8g8b8:
-    case PIXMAN_b8g8r8:   case PIXMAN_r5g6b5:   case PIXMAN_b5g6r5:
+    case PIXMAN_b8g8r8:   case PIXMAN_b5g6r5:
     case PIXMAN_a1r5g5b5: case PIXMAN_x1r5g5b5: case PIXMAN_a1b5g5r5:
     case PIXMAN_x1b5g5r5: case PIXMAN_a4r4g4b4: case PIXMAN_x4r4g4b4:
     case PIXMAN_a4b4g4r4: case PIXMAN_x4b4g4r4: case PIXMAN_r3g3b2:
@@ -354,6 +356,9 @@ _cairo_format_to_pixman_format_code (cairo_format_t format)
 	break;
     case CAIRO_FORMAT_RGB24:
 	ret = PIXMAN_x8r8g8b8;
+	break;
+    case CAIRO_FORMAT_RGB16_565:
+	ret = PIXMAN_r5g6b5;
 	break;
     case CAIRO_FORMAT_ARGB32:
     default:
@@ -731,6 +736,8 @@ _cairo_content_from_format (cairo_format_t format)
 	return CAIRO_CONTENT_COLOR_ALPHA;
     case CAIRO_FORMAT_RGB24:
 	return CAIRO_CONTENT_COLOR;
+    case CAIRO_FORMAT_RGB16_565:
+	return CAIRO_CONTENT_COLOR;
     case CAIRO_FORMAT_A8:
     case CAIRO_FORMAT_A1:
 	return CAIRO_CONTENT_ALPHA;
@@ -748,6 +755,8 @@ _cairo_format_bits_per_pixel (cairo_format_t format)
 	return 32;
     case CAIRO_FORMAT_RGB24:
 	return 32;
+    case CAIRO_FORMAT_RGB16_565:
+	return 16;
     case CAIRO_FORMAT_A8:
 	return 8;
     case CAIRO_FORMAT_A1:
@@ -1720,6 +1729,11 @@ _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
 	    return image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
 	else
 	    return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+    }
+
+    if (image->format == CAIRO_FORMAT_RGB16_565) {
+	image->transparency = CAIRO_IMAGE_IS_OPAQUE;
+	return CAIRO_IMAGE_IS_OPAQUE;
     }
 
     if (image->format != CAIRO_FORMAT_ARGB32)

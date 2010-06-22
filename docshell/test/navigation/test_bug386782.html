@@ -19,9 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     // the editable region is not in the root docshell (a less complicated case).  
 
   
-    //var test.window = null;
-    var testInterval = 3000;
-
     var gTests = [
       {
         // <html><body onload="document.designMode='on'"><p>designModeDocument</p></body></html>
@@ -53,8 +50,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
         return;
       }
       gTest = gTests[gTestNum];
-      gTest.window = window.open(gTest.url, gTest.name);
-      setTimeout(beginTest, testInterval);
+      gTest.window = window.open(gTest.url, gTest.name, "width=500,height=500");
+      gTest.window.addEventListener("load", function() {
+        SimpleTest.waitForFocus(beginTest, gTest.window);
+      }, false);
     }
 
     function beginTest() {
@@ -75,14 +74,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
       gTest.window.location = 'data:text/html;charset=utf-8,SomeOtherDocument';
-      setTimeout(goBack, testInterval);
-      
+      SimpleTest.waitForFocus(goBack, gTest.window);
     }
     
     function goBack() {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       gTest.window.history.back();
-      setTimeout(checkStillEditable, testInterval);
+      setTimeout(function() {
+        SimpleTest.waitForFocus(checkStillEditable, gTest.window);
+      }, 0);
     }
 
     function checkStillEditable() {

@@ -199,15 +199,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontT
         mForceGDI = PR_TRUE;
     mIsUserFont = aUserFontData != nsnull;
 
-    PRBool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
-                       < gfxWindowsPlatform::kWindowsVista);
-
-    PRBool useClearType = isXP && 
-        (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
-         (mIsUserFont && 
-          gfxWindowsPlatform::GetPlatform()->UseClearTypeForDownloadableFonts()));
-
-    InitLogFont(aFaceName, aFontType, useClearType);
+    InitLogFont(aFaceName, aFontType);
 }
 
 nsresult
@@ -226,9 +218,11 @@ GDIFontEntry::ReadCMAP()
 
     PRPackedBool  unicodeFont = PR_FALSE, symbolFont = PR_FALSE;
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
-                                         mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
+                                         mCharacterMap, mUVSOffset,
+                                         unicodeFont, symbolFont);
     mUnicodeFont = unicodeFont;
     mSymbolFont = symbolFont;
+    mHasCmapTable = NS_SUCCEEDED(rv);
 
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n", 
                                         NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
@@ -241,9 +235,9 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBo
     PRBool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
                        < gfxWindowsPlatform::kWindowsVista);
 
-    PRBool useClearType = isXP && 
+    PRBool useClearType = isXP && !aFontStyle->systemFont &&
         (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
-         (mIsUserFont && 
+         (mIsUserFont && !mIsLocalUserFont &&
           gfxWindowsPlatform::GetPlatform()->UseClearTypeForDownloadableFonts()));
 
     return new gfxGDIFont(this, aFontStyle, aNeedsBold, 
@@ -254,13 +248,19 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBo
 nsresult
 GDIFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 {
+    if (!IsTrueType()) {
+        return NS_ERROR_FAILURE;
+    }
+
     AutoDC dc;
     AutoSelectFont font(dc.GetDC(), &mLogFont);
     if (font.IsValid()) {
-        PRInt32 tableSize = ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
+        PRInt32 tableSize =
+            ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
         if (tableSize != GDI_ERROR) {
             if (aBuffer.SetLength(tableSize)) {
-                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, aBuffer.Elements(), tableSize);
+                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0,
+                              aBuffer.Elements(), tableSize);
                 return NS_OK;
             }
             return NS_ERROR_OUT_OF_MEMORY;
@@ -287,6 +287,7 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
     // do fake italic for us in that case.
     aLogFont->lfItalic         = aItalic;
     aLogFont->lfWeight         = aWeight;
+    aLogFont->lfQuality        = (aUseCleartype ? CLEARTYPE_QUALITY : DEFAULT_QUALITY);
 }
 
 PRBool 
@@ -356,8 +357,7 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
 
 void
 GDIFontEntry::InitLogFont(const nsAString& aName,
-                              gfxWindowsFontType aFontType,
-                              PRBool aUseCleartype)
+                              gfxWindowsFontType aFontType)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
@@ -372,7 +372,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
     mLogFont.lfOutPrecision   = FontTypeToOutPrecision(aFontType);
     mLogFont.lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
-    mLogFont.lfQuality        = (aUseCleartype ? CLEARTYPE_QUALITY : DEFAULT_QUALITY);
+    mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     // always force lfItalic if we want it.  Font selection code will
     // do its best to give us an italic font entry, but if no face exists
@@ -693,6 +693,7 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
         return nsnull;
 
     fe->mIsUserFont = PR_TRUE;
+    fe->mIsLocalUserFont = PR_TRUE;
     return fe;
 }
 

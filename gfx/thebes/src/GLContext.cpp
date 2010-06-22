@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -79,8 +80,8 @@ LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, PRBool tryplatform,
 
 PRFuncPtr
 LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
-				  const char *sym,
-				  PlatformLookupFunction lookupFunction)
+                                  const char *sym,
+                                  PlatformLookupFunction lookupFunction)
 {
     PRFuncPtr res = 0;
 
@@ -105,9 +106,9 @@ LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
 
 PRBool
 LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
-				 SymLoadStruct *firstStruct,
-				 PlatformLookupFunction lookupFunction,
-				 const char *prefix)
+                                 SymLoadStruct *firstStruct,
+                                 PlatformLookupFunction lookupFunction,
+                                 const char *prefix)
 {
     char sbuf[MAX_SYMBOL_LENGTH * 2];
 
@@ -194,12 +195,16 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fDepthRange, { "DepthRange", NULL } },
 #endif
         { (PRFuncPtr*) &fDisable, { "Disable", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fDisableClientState, { "DisableClientState", NULL } },
+#endif
         { (PRFuncPtr*) &fDisableVertexAttribArray, { "DisableVertexAttribArray", "DisableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fDrawArrays, { "DrawArrays", NULL } },
         { (PRFuncPtr*) &fDrawElements, { "DrawElements", NULL } },
         { (PRFuncPtr*) &fEnable, { "Enable", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fEnableClientState, { "EnableClientState", NULL } },
+#endif
         { (PRFuncPtr*) &fEnableVertexAttribArray, { "EnableVertexAttribArray", "EnableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fFinish, { "Finish", NULL } },
         { (PRFuncPtr*) &fFlush, { "Flush", NULL } },
@@ -217,7 +222,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fGetError, { "GetError", NULL } },
         { (PRFuncPtr*) &fGetProgramiv, { "GetProgramiv", "GetProgramivARB", NULL } },
         { (PRFuncPtr*) &fGetProgramInfoLog, { "GetProgramInfoLog", "GetProgramInfoLogARB", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fTexCoordPointer, { "TexCoordPointer", NULL } },
+#endif
         { (PRFuncPtr*) &fTexParameteri, { "TexParameteri", NULL } },
         { (PRFuncPtr*) &fTexParameterf, { "TexParameterf", NULL } },
         { (PRFuncPtr*) &fGetString, { "GetString", NULL } },
@@ -238,7 +245,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fLinkProgram, { "LinkProgram", "LinkProgramARB", NULL } },
         { (PRFuncPtr*) &fPixelStorei, { "PixelStorei", NULL } },
         { (PRFuncPtr*) &fPolygonOffset, { "PolygonOffset", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fReadBuffer,  { "ReadBuffer", NULL } },
+#endif
         { (PRFuncPtr*) &fReadPixels, { "ReadPixels", NULL } },
         { (PRFuncPtr*) &fSampleCoverage, { "SampleCoverage", NULL } },
         { (PRFuncPtr*) &fScissor, { "Scissor", NULL } },
@@ -248,7 +257,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fStencilMaskSeparate, { "StencilMaskSeparate", "StencilMaskSeparateEXT", NULL } },
         { (PRFuncPtr*) &fStencilOp, { "StencilOp", NULL } },
         { (PRFuncPtr*) &fStencilOpSeparate, { "StencilOpSeparate", "StencilOpSeparateEXT", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fTexEnvf, { "TexEnvf",  NULL } },
+#endif
         { (PRFuncPtr*) &fTexImage2D, { "TexImage2D", NULL } },
         { (PRFuncPtr*) &fTexSubImage2D, { "TexSubImage2D", NULL } },
         { (PRFuncPtr*) &fUniform1f, { "Uniform1f", NULL } },
@@ -281,7 +292,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fVertexAttrib2fv, { "VertexAttrib2fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib3fv, { "VertexAttrib3fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib4fv, { "VertexAttrib4fv", NULL } },
+#ifndef USE_GLES2
         { (PRFuncPtr*) &fVertexPointer, { "VertexPointer", NULL } },
+#endif
         { (PRFuncPtr*) &fViewport, { "Viewport", NULL } },
         { (PRFuncPtr*) &fCompileShader, { "CompileShader", NULL } },
         { (PRFuncPtr*) &fCopyTexImage2D, { "CopyTexImage2D", NULL } },
@@ -307,8 +320,8 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fIsRenderbuffer, { "IsRenderbuffer", "IsRenderbufferEXT", NULL } },
         { (PRFuncPtr*) &fRenderbufferStorage, { "RenderbufferStorage", "RenderbufferStorageEXT", NULL } },
 #if 0
-	{ (PRFuncPtr*) &fMapBuffer, { "MapBuffer", NULL } },
-	{ (PRFuncPtr*) &fUnmapBuffer, { "UnmapBuffer", NULL } },
+        { (PRFuncPtr*) &fMapBuffer, { "MapBuffer", NULL } },
+        { (PRFuncPtr*) &fUnmapBuffer, { "UnmapBuffer", NULL } },
 #endif
 
         { NULL, { NULL } },
@@ -316,8 +329,42 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
-
     return mInitialized;
+}
+
+PRBool
+GLContext::IsExtensionSupported(const char *extension)
+{
+    const GLubyte *extensions = NULL;
+    const GLubyte *start;
+    GLubyte *where, *terminator;
+
+    /* Extension names should not have spaces. */
+    where = (GLubyte *) strchr(extension, ' ');
+    if (where || *extension == '\0')
+        return PR_FALSE;
+
+    extensions = fGetString(LOCAL_GL_EXTENSIONS);
+    /* 
+     * It takes a bit of care to be fool-proof about parsing the
+     * OpenGL extensions string. Don't be fooled by sub-strings,
+     * etc. 
+     */
+    start = extensions;
+    for (;;) {
+        where = (GLubyte *) strstr((const char *) start, extension);
+        if (!where) {
+            break;
+        }
+        terminator = where + strlen(extension);
+        if (where == start || *(where - 1) == ' ') {
+            if (*terminator == ' ' || *terminator == '\0') {
+                return PR_TRUE;
+            }
+        }
+        start = terminator;
+    }
+    return PR_FALSE;
 }
 
 } /* namespace gl */

@@ -1,73 +1,10 @@
-<html> <head>
-<title>Simple access of geolocation</title>
-<head>
-<script>
-
-// This is copied from geolocation-common.js.  We do this so
-// that we do not document write ANYTHING to this page.
-
-function getNotificationBox()
-{
-  const Ci = Components.interfaces;
-  
-  function getChromeWindow(aWindow) {
-      var chromeWin = aWindow 
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShellTreeItem)
-          .rootTreeItem
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindow)
-          .QueryInterface(Ci.nsIDOMChromeWindow);
-      return chromeWin;
-  }
-
-  var notifyWindow = window.top;
-
-  var chromeWin = getChromeWindow(notifyWindow);
-
-  var notifyBox = chromeWin.getNotificationBox(notifyWindow);
-
-  return notifyBox;
-}
-
-
-function clickNotificationButton(aButtonIndex) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  // This is a bit of a hack. The notification doesn't have an API to
-  // trigger buttons, so we dive down into the implementation and twiddle
-  // the buttons directly.
-  var box = getNotificationBox();
-  var bar = box.getNotificationWithValue("geolocation");
-  var button = bar.getElementsByTagName("button").item(aButtonIndex);
-  button.doCommand();
-}
-
-const kAcceptButton = 0;
-const kDenyButton = 1;
-
-gotPosition = function(location){
-  document.location.href="http://www.mozilla.org";
-};
-
-failPosition = function(error){
-  document.location.href="http://www.mozilla.org";
-};
-
-function accept() {
-  clickNotificationButton(kAcceptButton);
-}
-
-navigator.geolocation.getCurrentPosition(gotPosition,
-                                         failPosition,
-                                         {timeout:30000});
-
-setTimeout(accept, 1000);
-
-</script>
-</head>
-<body>
-<p>
-</body>
+<html>
+  <head>
+    <title>Simple access of geolocation</title>
+  <head>
+    <script>
+      navigator.geolocation.getCurrentPosition(function () {}, null, {timeout:30000});
+    </script>
+  </head>
+  <body></body>
 </html>

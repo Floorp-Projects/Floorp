@@ -56,52 +56,13 @@ interface nsIDOMCSSPrimitiveValue;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(bd458843-1895-42c6-b7f9-f0ca88eeab6b)]
+[scriptable, uuid(ef16ff42-0256-4b48-ae87-b18a95b7f7d6)]
 interface nsIAccessNode : nsISupports
 {
   /**
    * The DOM node this nsIAccessNode is associated with.
    */
   readonly attribute nsIDOMNode DOMNode;
-
-  /**
-   * The number of DOM children for the DOM node, which
-   * matches the number of nsIAccessNode children for this
-   * nsIAccessNode.
-   */
-  readonly attribute long numChildren;
-  
-  /**
-   * Get the nth child of this node
-   * @param childNum Zero-based child index
-   * @return The nth nsIAccessNode child
-   */
-  nsIAccessNode getChildNodeAt(in long childNum);
-  
-  /**
-   * The parent nsIAccessNode
-   */
-  readonly attribute nsIAccessNode parentNode;
-
-  /**
-   * The first nsIAccessNode child
-   */
-  readonly attribute nsIAccessNode firstChildNode;
-
-  /**
-   * The last nsIAccessNode child
-   */
-  readonly attribute nsIAccessNode lastChildNode;
-  
-  /**
-   * The previous nsIAccessNode sibling
-   */
-  readonly attribute nsIAccessNode previousSiblingNode;
-
-  /**
-   * The next nsIAccessNode sibling
-   */
-  readonly attribute nsIAccessNode nextSiblingNode;
 
   /**
    * The document accessible that this access node resides in.

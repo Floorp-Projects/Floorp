@@ -76,10 +76,11 @@ def main(args=None):
   assert PACKAGES
   
   # create the virtualenv and install packages
-  os.environ.pop('PYTHONHOME', None)
-  call([sys.executable, 'virtualenv/virtualenv.py', destination])
+  env = os.environ.copy()
+  env.pop('PYTHONHOME', None)
+  call([sys.executable, 'virtualenv/virtualenv.py', destination], env=env)
   pip = os.path.join(destination, 'bin', 'pip')
-  call([pip, 'install'] + PACKAGES)
+  call([pip, 'install'] + PACKAGES, env=env)
 
 if __name__ == '__main__':
   main()

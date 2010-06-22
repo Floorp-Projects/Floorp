@@ -39,10 +39,12 @@
 #include "nsAppShell.h"
 #include "nsWindow.h"
 #include "nsThreadUtils.h"
+#include "nsICommandLineRunner.h"
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
 
+#include "mozilla/Services.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -231,9 +233,47 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
+        obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application-forced", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application", nsnull);
+        obsServ->NotifyObservers(nsnull, "profile-change-net-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-change-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-before-change", context.get());
         nsCOMPtr<nsIAppStartup> appSvc = do_GetService("@mozilla.org/toolkit/app-startup;1");
         if (appSvc)
             appSvc->Quit(nsIAppStartup::eForceQuit);
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_PAUSING: {
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        obsServ->NotifyObservers(nsnull, "profile-before-change", nsnull);
+        break;
+    }
+
+    case AndroidGeckoEvent::LOAD_URI: {
+        nsCOMPtr<nsICommandLineRunner> cmdline
+            (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+        if (!cmdline)
+            break;
+
+        char *uri = ToNewUTF8String(curEvent->Characters());
+        if (!uri)
+            break;
+
+        char* argv[3] = {
+            "dummyappname",
+            "-remote",
+            uri
+        };
+        nsresult rv = cmdline->Init(3, argv, nsnull, nsICommandLine::STATE_REMOTE_AUTO);
+        if (NS_SUCCEEDED(rv))
+            cmdline->Run();
+        nsMemory::Free(uri);
         break;
     }
 

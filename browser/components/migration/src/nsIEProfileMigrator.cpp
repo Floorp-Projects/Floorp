@@ -2151,8 +2151,6 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
       ProxyData data[] = {
         { "ftp=",     4, PR_FALSE, "network.proxy.ftp",
           "network.proxy.ftp_port"    },
-        { "gopher=",  7, PR_FALSE, "network.proxy.gopher",
-          "network.proxy.gopher_port" },
         { "http=",    5, PR_FALSE, "network.proxy.http",
           "network.proxy.http_port"   },
         { "https=",   6, PR_FALSE, "network.proxy.ssl",
@@ -2163,7 +2161,7 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
 
       PRInt32 startIndex = 0, count = 0;
       PRBool foundSpecificProxy = PR_FALSE;
-      for (PRUint32 i = 0; i < 5; ++i) {
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
         PRInt32 offset = buf.Find(NS_ConvertASCIItoUTF16(data[i].prefix));
         if (offset >= 0) {
           foundSpecificProxy = PR_TRUE;
@@ -2186,7 +2184,7 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
         // No proxy config for any specific type was found, assume 
         // the ProxyServer value is of the form host:port and that 
         // it applies to all protocols.
-        for (PRUint32 i = 0; i < 5; ++i)
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(data); ++i)
           SetProxyPref(buf, data[i].hostPref, data[i].portPref, aPrefs);
         aPrefs->SetBoolPref("network.proxy.share_proxy_settings", PR_TRUE);
       }

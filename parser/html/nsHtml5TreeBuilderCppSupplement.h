@@ -91,7 +91,13 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
   nsIContent** content = AllocateContentHandle();
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(aNamespace, aName, aAttributes, content);
+  treeOp->Init(aNamespace,
+               aName,
+               aAttributes,
+               content,
+               !!mSpeculativeLoadStage);
+  // mSpeculativeLoadStage is non-null only in the off-the-main-thread
+  // tree builder, which handles the network stream
   
   // Start wall of code for speculative loading and line numbers
   

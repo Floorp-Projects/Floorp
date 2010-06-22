@@ -18,6 +18,7 @@
  * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
  *                 David Einstein (deinst@world.std.com)
  *                 László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  *                 Davide Prina
  *                 Giuseppe Modugno
  *                 Gianluca Turconi
@@ -68,7 +69,7 @@
 #define H_OPT_PHON   (1 << 2)
 
 // see also csutil.hxx
-#define HENTRY_WORD(h) &(h->word)
+#define HENTRY_WORD(h) (h->word)
 
 // approx. number  of user defined words
 #define USERWORD 1000
@@ -82,7 +83,7 @@ struct hentry
   struct   hentry * next; // next word with same hash code
   struct   hentry * next_homonym; // next homonym word (with same hash code)
   char     var;       // variable fields (only for special pronounciation yet)
-  char     word;      // variable-length word (8-bit or UTF-8 encoding)
+  char     word[1];   // variable-length word (8-bit or UTF-8 encoding)
 };
 
 #endif
