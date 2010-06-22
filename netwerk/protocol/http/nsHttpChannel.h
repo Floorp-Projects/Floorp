@@ -206,7 +206,16 @@ private:
     nsresult ResolveProxy();
 
     // cache specific methods
-    nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);
+    nsresult OpenCacheEntry();
+    nsresult OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
+                                          nsCacheAccessMode aAccess,
+                                          nsresult aResult,
+                                          PRBool aSync);
+    nsresult OpenNormalCacheEntry(PRBool aSync);
+    nsresult OnNormalCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
+                                         nsCacheAccessMode aAccess,
+                                         nsresult aResult,
+                                         PRBool aSync);
     nsresult OpenOfflineCacheEntryForWriting();
     nsresult GenerateCacheKey(PRUint32 postID, nsACString &key);
     nsresult UpdateExpirationTime();
@@ -224,6 +233,7 @@ private:
     nsresult InstallOfflineCacheListener();
     void     MaybeInvalidateCacheEntryForSubsequentGet();
     nsCacheStoragePolicy DetermineStoragePolicy();
+    nsresult DetermineCacheAccess(nsCacheAccessMode *_retval);
     void     AsyncOnExamineCachedResponse();
 
     // Handle the bogus Content-Encoding Apache sometimes sends
@@ -278,6 +288,11 @@ private:
     nsCacheAccessMode                 mCacheAccess;
     PRUint32                          mPostID;
     PRUint32                          mRequestTime;
+
+    typedef nsresult (nsHttpChannel:: *nsOnCacheEntryAvailableCallback)(
+        nsICacheEntryDescriptor *, nsCacheAccessMode, nsresult, PRBool);
+    nsOnCacheEntryAvailableCallback   mOnCacheEntryAvailableCallback;
+    PRBool                            mAsyncCacheOpen;
 
     nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
     nsCacheAccessMode                 mOfflineCacheAccess;
