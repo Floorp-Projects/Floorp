@@ -244,11 +244,7 @@ FakeCryptoService.prototype = {
   },
 
   generateRandomBytes: function(aByteCount) {
-    var s = "";
-    for (var i=0; i < aByteCount; i++) {
-      s += String.fromCharCode(Math.floor(Math.random() * 256));
-    }
-    return btoa(s);
+    return "not-so-random-now-are-we-HA-HA-HA! >:)".slice(aByteCount);
   },
 
   wrapSymmetricKey: function(aSymmetricKey, aEncodedPublicKey) {
