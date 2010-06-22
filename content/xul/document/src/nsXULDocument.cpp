@@ -1133,24 +1133,20 @@ nsXULDocument::ContentRemoved(nsIDocument* aDocument,
 // nsIXULDocument interface
 //
 
-NS_IMETHODIMP
+void
 nsXULDocument::GetElementsForID(const nsAString& aID,
                                 nsCOMArray<nsIContent>& aElements)
 {
     aElements.Clear();
 
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(aID);
-    if (!atom)
-        return NS_ERROR_OUT_OF_MEMORY;
     nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aID);
     if (entry) {
         entry->AppendAllIdContent(&aElements);
     }
-    nsRefMapEntry *refEntry = mRefMap.GetEntry(atom);
+    nsRefMapEntry *refEntry = mRefMap.GetEntry(aID);
     if (refEntry) {
         refEntry->AppendAll(&aElements);
     }
-    return NS_OK;
 }
 
 nsresult
@@ -1649,14 +1645,7 @@ nsXULDocument::GetElementById(const nsAString& aId)
             return element;
     }
 
-    nsCOMPtr<nsIAtom> atom(do_GetAtom(aId));
-    if (!atom) {
-        // This can only fail due OOM if the atom doesn't exist, in which
-        // case there couldn't possibly exist an entry for it.
-        return nsnull;
-    }
-
-    nsRefMapEntry* refEntry = mRefMap.GetEntry(atom);
+    nsRefMapEntry* refEntry = mRefMap.GetEntry(aId);
     if (refEntry) {
         NS_ASSERTION(refEntry->GetFirstElement(),
                      "nsRefMapEntries should have nonempty content lists");
@@ -1896,10 +1885,7 @@ nsXULDocument::AddElementToRefMap(Element* aElement)
     nsAutoString value;
     GetRefMapAttribute(aElement, &value);
     if (!value.IsEmpty()) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(value);
-        if (!atom)
-            return NS_ERROR_OUT_OF_MEMORY;
-        nsRefMapEntry *entry = mRefMap.PutEntry(atom);
+        nsRefMapEntry *entry = mRefMap.PutEntry(value);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         if (!entry->AddElement(aElement))
@@ -1916,14 +1902,11 @@ nsXULDocument::RemoveElementFromRefMap(Element* aElement)
     nsAutoString value;
     GetRefMapAttribute(aElement, &value);
     if (!value.IsEmpty()) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(value);
-        if (!atom)
-            return;
-        nsRefMapEntry *entry = mRefMap.GetEntry(atom);
+        nsRefMapEntry *entry = mRefMap.GetEntry(value);
         if (!entry)
             return;
         if (entry->RemoveElement(aElement)) {
-            mRefMap.RemoveEntry(atom);
+            mRefMap.RawRemoveEntry(entry);
         }
     }
 }
