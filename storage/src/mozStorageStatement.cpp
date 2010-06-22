@@ -175,7 +175,8 @@ Statement::initialize(Connection *aDBConnection,
   sqlite3 *db = aDBConnection->GetNativeConnection();
   NS_ASSERTION(db, "We should never be called with a null sqlite3 database!");
 
-  int srv = prepareStmt(db, PromiseFlatCString(aSQLStatement), &mDBStatement);
+  int srv = ::sqlite3_prepare_v2(db, PromiseFlatCString(aSQLStatement).get(),
+                                 -1, &mDBStatement, NULL);
   if (srv != SQLITE_OK) {
 #ifdef PR_LOGGING
       PR_LOG(gStorageLog, PR_LOG_ERROR,
@@ -318,9 +319,9 @@ Statement::getAsyncStatement(sqlite3_stmt **_stmt)
 
   // If we do not yet have a cached async statement, clone our statement now.
   if (!mAsyncStatement) {
-    nsDependentCString sql(::sqlite3_sql(mDBStatement));
-    int rc = prepareStmt(mDBConnection->GetNativeConnection(), sql,
-                     &mAsyncStatement);
+    int rc = ::sqlite3_prepare_v2(mDBConnection->GetNativeConnection(),
+                                  ::sqlite3_sql(mDBStatement), -1,
+                                  &mAsyncStatement, NULL);
     if (rc != SQLITE_OK) {
       *_stmt = nsnull;
       return rc;
@@ -614,7 +615,7 @@ Statement::ExecuteStep(PRBool *_moreResults)
     // We have bound, so now we can clear our array.
     mParamsArray = nsnull;
   }
-  int srv = stepStmt(mDBStatement);
+  int srv = ::sqlite3_step(mDBStatement);
 
 #ifdef PR_LOGGING
   if (srv != SQLITE_ROW && srv != SQLITE_DONE) {
