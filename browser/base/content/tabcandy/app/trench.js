@@ -513,6 +513,10 @@ var Trenches = {
   snap: function Trenches_snap(rect,assumeConstantSize,keepProportional) {
     var aT = this.activeTrenches;
     
+    // if we're currently dragging over a drop-site, don't snap at all.
+    if (iQ(".acceptsDrop").length)
+      return;
+    
     var updated = false;
     var updatedX = false;
     var updatedY = false;
