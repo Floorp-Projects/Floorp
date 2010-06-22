@@ -495,10 +495,8 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 #ifdef JS_TRACER
             ArgsPrivateNative *argp = GetArgsPrivateNative(obj);
             if (argp) {
-                if (NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
-                    return true;
-                LeaveTrace(cx);
-                return false;
+                ExternNativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]);
+                return true;
             }
 #endif
 
