@@ -39,17 +39,15 @@
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsIHTMLDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsImageMapUtils.h"
 
 /*static*/
 already_AddRefed<nsIDOMHTMLMapElement>
 nsImageMapUtils::FindImageMap(nsIDocument *aDocument, 
-                                                    const nsAString &aUsemap)
+                              const nsAString &aUsemap)
 {
   if (!aDocument)
     return nsnull;
@@ -91,16 +89,12 @@ nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
     // XHTML. The attribute "name" is officially deprecated.  This
     // simplifies our life becase we can simply get the map with
     // getElementById().
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aDocument));
-    if (domDoc) {
-      nsCOMPtr<nsIDOMElement> element;
-      domDoc->GetElementById(usemap, getter_AddRefs(element));
+    nsIContent *element = aDocument->GetElementById(usemap);
 
-      if (element) {
-        nsIDOMHTMLMapElement* map;
-        CallQueryInterface(element, &map);
-        return map;
-      }
+    if (element) {
+      nsIDOMHTMLMapElement* map;
+      CallQueryInterface(element, &map);
+      return map;
     }
   }
   
