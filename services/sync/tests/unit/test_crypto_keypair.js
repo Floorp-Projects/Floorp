@@ -1,6 +1,7 @@
+Cu.import("resource://services-sync/util.js");
+
 function run_test() {
-  var cryptoSvc = Cc[cryptoContractID].
-                  getService(Ci.IWeaveCrypto);
+  let cryptoSvc = Svc.Crypto;
 
   var salt = cryptoSvc.generateRandomBytes(16);
   do_check_eq(salt.length, 24);

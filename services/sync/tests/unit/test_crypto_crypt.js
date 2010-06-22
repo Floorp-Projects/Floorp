@@ -1,6 +1,7 @@
+Cu.import("resource://services-sync/util.js");
+
 function run_test() {
-  var cryptoSvc = Cc[cryptoContractID].
-                  getService(Ci.IWeaveCrypto);
+  let cryptoSvc = Svc.Crypto;
 
   // First, do a normal run with expected usage... Generate a random key and
   // iv, encrypt and decrypt a string.
