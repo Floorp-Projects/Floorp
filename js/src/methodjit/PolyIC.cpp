@@ -395,12 +395,13 @@ class SetPropCompiler : public PICStubCompiler
             return disable("invalid slot");
 
         JS_ASSERT(obj == holder);
-        if (!pic.inlinePathPatched && !scope->brandedOrHasMethodBarrier())
+        if (!pic.inlinePathPatched &&
+            !scope->brandedOrHasMethodBarrier() &&
+            !obj->isDenseArray()) {
             return patchInline(sprop);
-        else
-            return generateStub(sprop);
+        } 
 
-        return true;
+        return generateStub(sprop);
     }
 };
 
@@ -581,14 +582,25 @@ class GetPropCompiler : public PICStubCompiler
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
         }
-        if (pic.shapeNeedsRemat()) {
-            masm.loadShape(pic.objReg, pic.shapeReg);
-            pic.u.get.shapeRegHasBaseShape = true;
+
+        Label start;
+        Jump shapeGuard;
+        if (obj->isDenseArray()) {
+            start = masm.label();
+            shapeGuard = masm.branchPtr(Assembler::NotEqual,
+                                        Address(pic.objReg, offsetof(JSObject, clasp)),
+                                        ImmPtr(obj->getClass()));
+        } else {
+            if (pic.shapeNeedsRemat()) {
+                masm.loadShape(pic.objReg, pic.shapeReg);
+                pic.u.get.shapeRegHasBaseShape = true;
+            }
+
+            start = masm.label();
+            shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
+                                               Imm32(obj->shape()));
         }
 
-        Label start = masm.label();
-        Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
-                                                Imm32(obj->shape()));
         if (!shapeMismatches.append(shapeGuard))
             return false;
 
@@ -655,6 +667,8 @@ class GetPropCompiler : public PICStubCompiler
 
         if (pic.stubsGenerated == MAX_STUBS)
             disable("max stubs reached");
+        if (obj->isDenseArray())
+            disable("dense array");
 
         return true;
     }
