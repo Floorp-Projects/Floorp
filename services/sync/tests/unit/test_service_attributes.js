@@ -193,3 +193,10 @@ function test_locked() {
   Weave.Service.unlock();
   do_check_eq(Weave.Service.locked, false);
 }
+
+function run_test() {
+  test_urlsAndIdentities();
+  test_syncID();
+  test_prefAttributes();
+  test_locked();
+}

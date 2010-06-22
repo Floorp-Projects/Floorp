@@ -111,3 +111,11 @@ function test_resetClient() {
     Svc.Prefs.resetBranch("");
   }
 }
+
+function run_test() {
+  test_url_attributes();
+  test_syncID();
+  test_lastSync();
+  test_toFetch();
+  test_resetClient();
+}

@@ -1007,3 +1007,21 @@ function test_syncFinish_deleteLotsInBatches() {
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
+
+function run_test() {
+  test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
+  test_syncStartup_metaGet404();
+  test_syncStartup_failedMetaGet();
+  test_syncStartup_serverHasNewerVersion();
+  test_syncStartup_syncIDMismatchResetsClient();
+  test_syncStartup_badKeyWipesServerData();
+  test_processIncoming_emptyServer();
+  test_processIncoming_createFromServer();
+  test_processIncoming_reconcile();
+  test_processIncoming_fetchNum();
+  test_uploadOutgoing_toEmptyServer();
+  test_uploadOutgoing_MAX_UPLOAD_RECORDS();
+  test_syncFinish_noDelete();
+  test_syncFinish_deleteByIds();
+  test_syncFinish_deleteLotsInBatches();
+}
