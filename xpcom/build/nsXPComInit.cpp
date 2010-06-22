@@ -489,6 +489,9 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     nsComponentManagerImpl::gComponentManager = new nsComponentManagerImpl();
     NS_ADDREF(nsComponentManagerImpl::gComponentManager);
     
+    rv = nsCycleCollector_startup();
+    if (NS_FAILED(rv)) return rv;
+
     rv = nsComponentManagerImpl::gComponentManager->Init();
     if (NS_FAILED(rv))
     {
@@ -501,9 +504,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     }
 
     NS_TIME_FUNCTION_MARK("Next: cycle collector startup");
-
-    rv = nsCycleCollector_startup();
-    if (NS_FAILED(rv)) return rv;
 
     NS_TIME_FUNCTION_MARK("Next: interface info manager init");
 
