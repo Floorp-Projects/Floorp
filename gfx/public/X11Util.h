@@ -45,6 +45,9 @@
 #if defined(MOZ_WIDGET_GTK2)
 #  include <gdk/gdkx.h>
 #elif defined(MOZ_WIDGET_QT)
+// X11/X.h has #define CursorShape 0, but Qt's qnamespace.h defines
+//   enum CursorShape { ... }.  Good times!
+#undef CursorShape
 #  include <QX11Info>
 #else
 #  error Unknown toolkit
