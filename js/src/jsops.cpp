@@ -1681,7 +1681,7 @@ BEGIN_CASE(JSOP_LENGTH)
         JSObject *obj = &vp->asObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
-            regs.sp[-1].setInt32(length);
+            regs.sp[-1].setNumber(length);
         } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
             uint32 length = obj->getArgsLength();
             JS_ASSERT(length < INT32_MAX);

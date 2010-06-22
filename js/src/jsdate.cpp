@@ -1177,7 +1177,7 @@ NowAsMillis()
 static JSBool
 date_now(JSContext *cx, uintN argc, Value *vp)
 {
-    vp->setNumber(NowAsMillis());
+    vp->setDouble(NowAsMillis());
     return JS_TRUE;
 }
 
@@ -1198,7 +1198,7 @@ GetUTCTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
 {
     if (!InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return JS_FALSE;
-    *dp = obj->getDateUTCTime().asDouble();
+    *dp = obj->getDateUTCTime().asNumber();
     return JS_TRUE;
 }
 
@@ -1222,9 +1222,9 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, Value *vp = NULL)
     JS_ASSERT(obj->getClass() == &js_DateClass);
 
     obj->setDateLocalTime(cx->runtime->NaNValue);
-    obj->setDateUTCTime(NumberTag(t));
+    obj->setDateUTCTime(DoubleTag(t));
     if (vp)
-        *vp = obj->getDateUTCTime();
+        vp->setDouble(t);
     return true;
 }
 
@@ -1238,7 +1238,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
     if (!obj || !InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return false;
 
-    jsdouble result = obj->getDateLocalTime().asDouble();
+    jsdouble result = obj->getDateLocalTime().asNumber();
     if (JSDOUBLE_IS_NaN(result)) {
         result = obj->getDateUTCTime().asDouble();
 
@@ -1246,7 +1246,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
         if (JSDOUBLE_IS_FINITE(result))
             result = LocalTime(result, cx);
 
-        obj->setDateLocalTime(NumberTag(result));
+        obj->setDateLocalTime(DoubleTag(result));
     }
 
     *dp = result;
