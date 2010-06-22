@@ -163,6 +163,16 @@ class Assembler : public BaseAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_INT32));
     }
 
+    Jump testPrimitive(Assembler::Condition cond, RegisterID reg) {
+        cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
+        return branch32(cond, reg, ImmTag(JSVAL_MASK32_NONFUNOBJ));
+    }
+
+    Jump testPrimitive(Assembler::Condition cond, Address address) {
+        cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_NONFUNOBJ));
+    }
+
     Jump testNonFunObj(Assembler::Condition cond, RegisterID reg) {
         return branch32(cond, reg, ImmTag(JSVAL_MASK32_NONFUNOBJ));
     }

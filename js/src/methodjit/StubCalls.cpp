@@ -2241,9 +2241,26 @@ stubs::InstanceOf(VMFrame &f)
     JSBool cond = JS_FALSE;
     if (!obj->map->ops->hasInstance(cx, obj, lref, &cond))
         THROWV(JS_FALSE);
+    f.regs.sp[-2].setBoolean(cond);
     return cond;
 }
 
+JSBool JS_FASTCALL
+stubs::FastInstanceOf(VMFrame &f)
+{
+    const Value &lref = f.regs.sp[-1];
+
+    if (lref.isPrimitive()) {
+        /*
+         * Throw a runtime error if instanceof is called on a function that
+         * has a non-object as its .prototype value.
+         */
+        js_ReportValueError(f.cx, JSMSG_BAD_PROTOTYPE, -1, f.regs.sp[-2], NULL);
+        THROWV(JS_FALSE);
+    }
+
+    return js_IsDelegate(f.cx, &lref.asObject(), f.regs.sp[-3]);
+}
 
 void JS_FASTCALL
 stubs::ArgCnt(VMFrame &f)

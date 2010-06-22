@@ -1049,11 +1049,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_THROW)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
-            prepareStubCall();
-            stubCall(stubs::InstanceOf, Uses(2), Defs(1));
-            frame.popn(2);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+            jsop_instanceof();
           END_CASE(JSOP_INSTANCEOF)
 
           BEGIN_CASE(JSOP_EXCEPTION)
@@ -1871,7 +1867,7 @@ mjit::Compiler::jsop_length()
 
 #if ENABLE_PIC
 void
-mjit::Compiler::jsop_getprop(JSAtom *atom)
+mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
 {
     FrameEntry *top = frame.peek(-1);
 
@@ -1902,7 +1898,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom)
 
     /* Guard that the type is an object. */
     Jump typeCheck;
-    if (!top->isTypeKnown()) {
+    if (doTypeCheck && !top->isTypeKnown()) {
         JS_STATIC_ASSERT(JSVAL_MASK32_NONFUNOBJ < JSVAL_MASK32_FUNOBJ);
         RegisterID reg = frame.tempRegForType(top);
         pic.typeReg = reg;
@@ -2089,7 +2085,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
 #else /* ENABLE_PIC */
 
 void
-mjit::Compiler::jsop_getprop(JSAtom *atom)
+mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck)
 {
     jsop_getprop_slow();
 }
@@ -2492,5 +2488,46 @@ mjit::Compiler::jsop_unbrand()
 {
     prepareStubCall();
     stubCall(stubs::Unbrand, Uses(0), Defs(0));
+}
+
+void
+mjit::Compiler::jsop_instanceof()
+{
+    FrameEntry *rhs = frame.peek(-1);
+
+    /*
+     * Optimize only function objects, as these will have js_FunctionClass and
+     * thus have fun_instanceOf, which we're inlining.
+     */
+
+    if (rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_MASK32_FUNOBJ) {
+        prepareStubCall();
+        stubCall(stubs::InstanceOf, Uses(2), Defs(1));
+        frame.popn(2);
+        frame.takeReg(Registers::ReturnReg);
+        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+        return;
+    }
+
+    Jump typeCheck;
+    if (!rhs->isTypeKnown()) {
+        Jump j = frame.testFunObj(Assembler::NotEqual, rhs);
+        stubcc.linkExit(j);
+    }
+
+    stubcc.leave();
+    stubcc.call(stubs::InstanceOf);
+
+    frame.dup();
+
+    jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false);
+
+    prepareStubCall();
+    stubCall(stubs::FastInstanceOf, Uses(3), Defs(1));
+    frame.takeReg(Registers::ReturnReg);
+    frame.popn(3);
+    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+
+    stubcc.rejoin(1);
 }
 
