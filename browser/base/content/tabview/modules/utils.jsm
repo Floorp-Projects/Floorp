@@ -194,6 +194,16 @@ window.Rect.prototype = {
   },
   
   // ----------
+  size: function() {
+    return new Point(this.width, this.height);
+  },
+  
+  // ----------
+  position: function() {
+    return new Point(this.left, this.top);
+  },
+  
+  // ----------
   inset: function(a, b) {
     if(typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
       b = a.y; 
