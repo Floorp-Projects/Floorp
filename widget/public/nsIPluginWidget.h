@@ -37,12 +37,9 @@
 
 #include "nsISupports.h"
 
-/* starting interface:    nsIPluginWidget */
-#define NS_IPLUGINWIDGET_IID_STR "034E8A7E-BE36-4039-B229-39C41E9D4CD2"
-
 #define NS_IPLUGINWIDGET_IID    \
-  { 0x034E8A7E, 0xBE36, 0x4039, \
-    { 0xB2, 0x29, 0x39, 0xC4, 0x1E, 0x9D, 0x4C, 0xD2 } }
+  { 0xEB9207E0, 0xD8F1, 0x44B9, \
+    { 0xB7, 0x52, 0xAF, 0x8E, 0x9F, 0x8E, 0xBD, 0xF7 } }
 
 struct nsIntPoint;
 class nsIPluginInstanceOwner;
@@ -64,6 +61,8 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
   NS_IMETHOD SetPluginEventModel(int inEventModel) = 0;
 
   NS_IMETHOD GetPluginEventModel(int* outEventModel) = 0;
+
+  NS_IMETHOD StartComplexTextInputForCurrentEvent() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPluginWidget, NS_IPLUGINWIDGET_IID)

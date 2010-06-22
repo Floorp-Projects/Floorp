@@ -67,8 +67,8 @@
     #include <fabdef.h>
 #endif
 
-#if defined(HAVE_SYS_QUOTA_H)
-#include <sys/sysmacros.h>
+#if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
+#define USE_LINUX_QUOTACTL
 #include <sys/quota.h>
 #endif
 
@@ -97,6 +97,11 @@
 #include <hildon-uri.h>
 #include <hildon-mime.h>
 #include <libosso.h>
+#endif
+
+#ifdef ANDROID
+#include "AndroidBridge.h"
+#include "nsIMIMEService.h"
 #endif
 
 #include "nsNativeCharsetUtils.h"
@@ -1231,7 +1236,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
      */
     *aDiskSpaceAvailable = (PRInt64)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
 
-#if defined(HAVE_SYS_STAT_H) || defined(HAVE_SYS_QUOTA_H)
+#if defined(USE_LINUX_QUOTACTL)
 
     if(!FillStatCache()) {
         // Return available size from statfs
@@ -1801,6 +1806,18 @@ nsLocalFile::Launch()
     
     return NS_ERROR_FAILURE;
 #endif
+#elif defined(ANDROID)
+    // Try to get a mimetype, if this fails just use the file uri alone
+    nsresult rv;
+    nsCAutoString type;
+    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1", &rv));
+    if (NS_SUCCEEDED(rv))
+        rv = mimeService->GetTypeFromFile(this, type);
+
+    nsDependentCString fileUri = NS_LITERAL_CSTRING("file://");
+    fileUri.Append(mPath);
+    mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
+    return bridge->OpenUriExternal(fileUri, type) ? NS_OK : NS_ERROR_FAILURE;
 #else
     return NS_ERROR_FAILURE;
 #endif

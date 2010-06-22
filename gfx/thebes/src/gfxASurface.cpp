@@ -318,7 +318,9 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
         return nsnull;
     }
 
-    return Wrap(surface);
+    nsRefPtr<gfxASurface> result = Wrap(surface);
+    cairo_surface_destroy(surface);
+    return result.forget();
 }
 
 int
@@ -406,6 +408,7 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
         case ImageFormatARGB32:
             return CONTENT_COLOR_ALPHA;
         case ImageFormatRGB24:
+        case ImageFormatRGB16_565:
             return CONTENT_COLOR;
         case ImageFormatA8:
         case ImageFormatA1:
@@ -415,6 +418,23 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
         default:
             return CONTENT_COLOR;
     }
+}
+
+PRInt32
+gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
+{
+    switch (format) {
+        case ImageFormatARGB32:
+        case ImageFormatRGB24:
+            return 4;
+        case ImageFormatRGB16_565:
+            return 2;
+        case ImageFormatA8:
+            return 1;
+        default:
+            NS_WARNING("Unknown byte per pixel value for Image format");
+    }
+    return 0;
 }
 
 /** Memory reporting **/

@@ -178,15 +178,25 @@ enum {
   // Set if the node has the accesskey attribute set.
   NODE_HAS_NAME                = 0x00800000U,
 
-  // Four bits for the script-type ID
+  // Two bits for the script-type ID.  Not enough to represent all
+  // nsIProgrammingLanguage values, but we don't care.  In practice,
+  // we can represent the ones we want, and we can fail the others at
+  // runtime.
   NODE_SCRIPT_TYPE_OFFSET =               24,
 
-  NODE_SCRIPT_TYPE_SIZE =                  4,
+  NODE_SCRIPT_TYPE_SIZE =                  2,
+
+  NODE_SCRIPT_TYPE_MASK =  (1 << NODE_SCRIPT_TYPE_SIZE) - 1,
 
   // Remaining bits are node type specific.
   NODE_TYPE_SPECIFIC_BITS_OFFSET =
     NODE_SCRIPT_TYPE_OFFSET + NODE_SCRIPT_TYPE_SIZE
 };
+
+PR_STATIC_ASSERT(PRUint32(nsIProgrammingLanguage::JAVASCRIPT) <=
+                   PRUint32(NODE_SCRIPT_TYPE_MASK));
+PR_STATIC_ASSERT(PRUint32(nsIProgrammingLanguage::PYTHON) <=
+                   PRUint32(NODE_SCRIPT_TYPE_MASK));
 
 // Useful inline function for getting a node given an nsIContent and an
 // nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
@@ -623,12 +633,10 @@ public:
    * using the destruction function given when that value was set.
    *
    * @param aPropertyName  name of property to destroy.
-   *
-   * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
    */
-  nsresult DeleteProperty(nsIAtom *aPropertyName)
+  void DeleteProperty(nsIAtom *aPropertyName)
   {
-    return DeleteProperty(0, aPropertyName);
+    DeleteProperty(0, aPropertyName);
   }
 
   /**
@@ -637,10 +645,8 @@ public:
    *
    * @param aCategory      category of property to destroy.
    * @param aPropertyName  name of property to destroy.
-   *
-   * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
    */
-  virtual nsresult DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName);
+  virtual void DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be

@@ -48,9 +48,12 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
+  AccCollector.cpp \
+  AccIterator.cpp \
+  filters.cpp \
+  nsAccDocManager.cpp \
   nsAccessNode.cpp \
   nsAccEvent.cpp \
-  nsAccIterator.cpp \
   nsARIAGridAccessible.cpp \
   nsARIAMap.cpp \
   nsDocAccessible.cpp \

@@ -142,7 +142,7 @@ TestRunner.runNextTest = function() {
         TestRunner._timeoutFactor = 1;
 
         if (TestRunner.logEnabled)
-            TestRunner.logger.log("Running " + url + "...");
+            TestRunner.logger.log("TEST-START | " + url); // used by automation.py
 
         TestRunner._makeIframe(url, 0);
     } else {
@@ -166,14 +166,16 @@ TestRunner.runNextTest = function() {
         }
 
         if (TestRunner.logEnabled) {
+            TestRunner.logger.log("TEST-START | Shutdown"); // used by automation.py
             TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
             TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
             TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
             TestRunner.logger.log("SimpleTest FINISHED");
         }
 
-        if (TestRunner.onComplete)
+        if (TestRunner.onComplete) {
             TestRunner.onComplete();
+        }
     }
 };
 
@@ -181,9 +183,12 @@ TestRunner.runNextTest = function() {
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(tests) {
-    if (TestRunner.logEnabled)
-        TestRunner.logger.debug("SimpleTest finished " +
-                                TestRunner._urls[TestRunner._currentTest]);
+    if (TestRunner.logEnabled) {
+        var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
+        TestRunner.logger.log("SimpleTest finished " +
+                              TestRunner._urls[TestRunner._currentTest] +
+                              " in " + runtime + "ms");
+    }
 
     TestRunner.updateUI(tests);
     TestRunner._currentTest++;

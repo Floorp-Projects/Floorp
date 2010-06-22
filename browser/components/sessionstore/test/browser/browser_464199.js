@@ -90,7 +90,7 @@ function test() {
                             test_state.windows[0]._closedTabs.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
     
-    let closedTabs = eval("(" + ss.getClosedTabData(newWin) + ")");
+    let closedTabs = JSON.parse(ss.getClosedTabData(newWin));
     is(closedTabs.length, test_state.windows[0]._closedTabs.length,
        "Closed tab list has the expected length");
     is(countByTitle(closedTabs, FORGET),
@@ -103,7 +103,7 @@ function test() {
              getService(Ci.nsIPrivateBrowsingService);
     pb.removeDataFromDomain("example.net");
     
-    closedTabs = eval("(" + ss.getClosedTabData(newWin) + ")");
+    closedTabs = JSON.parse(ss.getClosedTabData(newWin));
     is(closedTabs.length, remember_count,
        "The correct amout of tabs was removed");
     is(countByTitle(closedTabs, FORGET), 0,

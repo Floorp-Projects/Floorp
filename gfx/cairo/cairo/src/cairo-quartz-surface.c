@@ -234,7 +234,7 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
     }
 
     if (format == CAIRO_FORMAT_A8 || format == CAIRO_FORMAT_A1) {
-	float decode[] = {1.0, 0.0};
+	CGFloat decode[] = {1.0, 0.0};
 	image = CGImageMaskCreate (width, height,
 				   bitsPerComponent,
 				   bitsPerPixel,
@@ -2031,7 +2031,7 @@ _cairo_quartz_surface_acquire_image (void *abstract_surface,
     if (status == CAIRO_INT_STATUS_UNSUPPORTED && surface->cgLayer) {
         /* copy the layer into a Quartz bitmap context so we can get the data */
         cairo_surface_t *tmp =
-            cairo_quartz_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
+            cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32,
                                          surface->extents.width,
                                          surface->extents.height);
         cairo_quartz_surface_t *tmp_surface = (cairo_quartz_surface_t *) tmp;
@@ -2054,6 +2054,7 @@ _cairo_quartz_surface_acquire_image (void *abstract_surface,
             *image_out = (cairo_image_surface_t*)
                 cairo_surface_reference(tmp_surface->imageSurfaceEquiv);
             *image_extra = tmp;
+            status = CAIRO_STATUS_SUCCESS;
         } else {
             cairo_surface_destroy (tmp);
         }

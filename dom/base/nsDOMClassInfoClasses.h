@@ -84,6 +84,7 @@ DOMCI_CLASS(HTMLOptionsCollection)
 DOMCI_CLASS(HTMLCollection)
 
 // HTML element classes
+DOMCI_CLASS(HTMLElement)
 DOMCI_CLASS(HTMLAnchorElement)
 DOMCI_CLASS(HTMLAppletElement)
 DOMCI_CLASS(HTMLAreaElement)
@@ -423,11 +424,13 @@ DOMCI_CLASS(GeoPositionError)
 DOMCI_CLASS(CSSFontFaceRule)
 DOMCI_CLASS(CSSFontFaceStyleDecl)
 
+#if defined(MOZ_MEDIA)
 // WhatWG Video Element
 DOMCI_CLASS(HTMLVideoElement)
 DOMCI_CLASS(HTMLSourceElement)
 DOMCI_CLASS(HTMLMediaError)
 DOMCI_CLASS(HTMLAudioElement)
+#endif
 
 DOMCI_CLASS(ProgressEvent)
 
@@ -472,3 +475,7 @@ DOMCI_CLASS(TransitionEvent)
 DOMCI_CLASS(ContentFrameMessageManager)
 
 DOMCI_CLASS(FormData)
+
+// WebSocket
+DOMCI_CLASS(WebSocket)
+DOMCI_CLASS(CloseEvent)

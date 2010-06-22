@@ -691,8 +691,8 @@ public:
    *
    * If you also need to determine whether the parser is the one creating your
    * element (through createElement() or cloneNode() generally) then add a
-   * boolean aFromParser to the NS_NewXXX() constructor for your element and
-   * have the parser pass true.  See nsHTMLInputElement.cpp and
+   * PRUint32 aFromParser to the NS_NewXXX() constructor for your element and
+   * have the parser pass the appropriate flags. See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
    * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with

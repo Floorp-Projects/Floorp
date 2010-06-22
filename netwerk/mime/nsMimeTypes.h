@@ -104,6 +104,7 @@
 #define AUDIO_BASIC                         "audio/basic"
 #define AUDIO_OGG                           "audio/ogg"
 #define AUDIO_WAV                           "audio/x-wav"
+#define AUDIO_WEBM                          "audio/webm"
 
 #define IMAGE_GIF                           "image/gif"
 #define IMAGE_JPG                           "image/jpeg"
@@ -156,6 +157,7 @@
 
 #define VIDEO_MPEG                          "video/mpeg"
 #define VIDEO_OGG                           "video/ogg"
+#define VIDEO_WEBM                          "video/webm"
 #define APPLICATION_OGG                     "application/ogg"
 
 /* x-uuencode-apple-single. QuickMail made me do this. */

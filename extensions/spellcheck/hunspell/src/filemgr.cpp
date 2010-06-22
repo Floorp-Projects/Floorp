@@ -16,6 +16,7 @@
  * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
  * 
  * Contributor(s): László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -31,15 +32,9 @@
  *
  ******* END LICENSE BLOCK *******/
 
-#ifndef MOZILLA_CLIENT
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
-#else
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <string.h>
-#include <stdio.h> 
-#endif
+#include <stdio.h>
 
 #include "filemgr.hxx"
 
@@ -54,11 +49,12 @@ FileMgr::FileMgr(const char * file, const char * key) {
     fin = fopen(file, "r");
     if (!fin) {
         // check hzipped file
-        char * st = (char *) malloc(strlen(file) + strlen(HZIP_EXTENSION));
+        char * st = (char *) malloc(strlen(file) + strlen(HZIP_EXTENSION) + 1);
         if (st) {
             strcpy(st, file);
             strcat(st, HZIP_EXTENSION);
             hin = new Hunzip(st, key);
+            free(st);
         }
     }    
     if (!fin && !hin) fail(MSG_OPEN, file);

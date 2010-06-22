@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style type="text/css">
+
+td:first-letter { }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var tbody = document.getElementById("tbody");
+  document.documentElement.offsetHeight;
+  tbody.style.direction = "rtl";
+  document.documentElement.offsetHeight;
+  tbody.style.direction = "";
+  document.documentElement.offsetHeight;
+}
+
+</script>
+
+</head>
+<body onload="boom();">
+
+<table><tbody id="tbody"><tr><td><span>1 2</span></td></tr></tbody></table>
+
+</body>
+</html>

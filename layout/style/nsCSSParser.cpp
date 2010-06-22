@@ -817,7 +817,9 @@ CSSParserImpl::Reset()
   NS_ASSERTION(! mScannerInited, "resetting with scanner active");
   SetStyleSheet(nsnull);
   SetQuirkMode(PR_FALSE);
+#ifdef MOZ_SVG
   SetSVGMode(PR_FALSE);
+#endif // MOZ_SVG
   SetChildLoader(nsnull);
 }
 
@@ -5361,12 +5363,12 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty_background_position:
     return ParseBackgroundPosition();
   case eCSSProperty_background_attachment:
-  case eCSSProperty__moz_background_clip:
+  case eCSSProperty_background_clip:
   case eCSSProperty_background_image:
-  case eCSSProperty__moz_background_origin:
+  case eCSSProperty_background_origin:
   case eCSSProperty_background_repeat:
     return ParseBackgroundList(aPropID);
-  case eCSSProperty__moz_background_size:
+  case eCSSProperty_background_size:
     return ParseBackgroundSize();
   case eCSSProperty_border:
     return ParseBorderSide(kBorderTopIDs, PR_TRUE);
@@ -5657,7 +5659,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_border_start:
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
-  case eCSSProperty__moz_background_size:
+  case eCSSProperty_background_size:
   case eCSSProperty__moz_border_radius:
   case eCSSProperty__moz_border_radius_topLeft:
   case eCSSProperty__moz_border_radius_topRight:
@@ -5751,10 +5753,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundAttachmentKTable);
-  case eCSSProperty__moz_background_clip:
+  case eCSSProperty_background_clip:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBackgroundClipKTable);
+                        nsCSSProps::kBackgroundOriginKTable);
   case eCSSProperty_background_color:
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
@@ -5765,7 +5767,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty__moz_background_inline_policy:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundInlinePolicyKTable);
-  case eCSSProperty__moz_background_origin:
+  case eCSSProperty_background_origin:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundOriginKTable);
@@ -6323,8 +6325,8 @@ CSSParserImpl::ParseBackground()
     { &BackgroundItem::mImage,      eCSSProperty_background_image },
     { &BackgroundItem::mRepeat,     eCSSProperty_background_repeat },
     { &BackgroundItem::mAttachment, eCSSProperty_background_attachment },
-    { &BackgroundItem::mClip,       eCSSProperty__moz_background_clip },
-    { &BackgroundItem::mOrigin,     eCSSProperty__moz_background_origin }
+    { &BackgroundItem::mClip,       eCSSProperty_background_clip },
+    { &BackgroundItem::mOrigin,     eCSSProperty_background_origin }
   };
   nsCSSValueList *simpleHeads[NS_ARRAY_LENGTH(simpleValues)];
   nsCSSValueList **simpleTails[NS_ARRAY_LENGTH(simpleValues)];
@@ -6392,9 +6394,9 @@ CSSParserImpl::ParseBackground()
     mTempData.SetPropertyBit(eCSSProperty_background_repeat);
     mTempData.SetPropertyBit(eCSSProperty_background_attachment);
     mTempData.SetPropertyBit(eCSSProperty_background_position);
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
+    mTempData.SetPropertyBit(eCSSProperty_background_clip);
+    mTempData.SetPropertyBit(eCSSProperty_background_origin);
+    mTempData.SetPropertyBit(eCSSProperty_background_size);
     return PR_TRUE;
   }
   delete positionHead;
@@ -6429,6 +6431,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
          haveRepeat = PR_FALSE,
          haveAttach = PR_FALSE,
          havePosition = PR_FALSE,
+         haveOrigin = PR_FALSE,
          haveSomething = PR_FALSE;
   while (GetToken(PR_TRUE)) {
     nsCSSTokenType tt = mToken.mType;
@@ -6446,7 +6449,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
           keyword == eCSSKeyword__moz_initial) {
         if (haveSomething || !aFirstItem)
           return PR_FALSE;
-        haveColor = haveImage = haveRepeat = haveAttach = havePosition =
+        haveColor = haveImage = haveRepeat = haveAttach = havePosition = haveOrigin =
           PR_TRUE;
         GetToken(PR_TRUE); // undo the UngetToken above
         nsCSSValue val;
@@ -6504,26 +6507,13 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         if (!ParseBoxPositionValues(aItem.mPosition, PR_FALSE)) {
           return PR_FALSE;
         }
-#if 0
-    // This is commented out for now until we change
-    // -moz-background-clip to background-clip, -moz-background-origin
-    // to background-origin, change their value names to *-box, and add
-    // support for content-box on background-clip.
       } else if (nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kBackgroundClipKTable, dummy)) {
-        // For now, we use the background-clip table rather than have a special
-        // background-origin table, because we don't support 'content-box' on
-        // background-origin.
-        NS_ASSERTION(
-          nsCSSProps::kBackgroundClipKTable[0] == eCSSKeyword_border &&
-          nsCSSProps::kBackgroundClipKTable[2] == eCSSKeyword_padding &&
-          nsCSSProps::kBackgroundClipKTable[4] == eCSSKeyword_UNKNOWN,
-          "need to rewrite this code");
+                   nsCSSProps::kBackgroundOriginKTable, dummy)) {
         if (haveOrigin)
           return PR_FALSE;
         haveOrigin = PR_TRUE;
         if (!ParseSingleValueProperty(aItem.mOrigin,
-                                      eCSSProperty__moz_background_origin)) {
+                                      eCSSProperty_background_origin)) {
           NS_NOTREACHED("should be able to parse");
           return PR_FALSE;
         }
@@ -6531,12 +6521,9 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
                          NS_STYLE_BG_ORIGIN_BORDER);
         PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
                          NS_STYLE_BG_ORIGIN_PADDING);
-        // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
-        //                  NS_STYLE_BG_ORIGIN_CONTENT);
-        // When we support 'no-clip', this needs to be conditional on haveClip:
+        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
+                         NS_STYLE_BG_ORIGIN_CONTENT);
         aItem.mClip = aItem.mOrigin;
-      // We'd support 'no-clip' as an additional |else| here.
-#endif
       } else {
         if (haveColor)
           return PR_FALSE;
@@ -6772,7 +6759,7 @@ CSSParserImpl::ParseBackgroundSize()
     head->mXValue = valuePair.mXValue;
     head->mYValue.Reset();
     mTempData.mColor.mBackSize = head;
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
+    mTempData.SetPropertyBit(eCSSProperty_background_size);
     return ExpectEndProperty();
   }
 
@@ -6796,7 +6783,7 @@ CSSParserImpl::ParseBackgroundSize()
       break;
     }
     mTempData.mColor.mBackSize = head;
-    mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
+    mTempData.SetPropertyBit(eCSSProperty_background_size);
     return PR_TRUE;
   }
   delete head;
@@ -6804,7 +6791,7 @@ CSSParserImpl::ParseBackgroundSize()
 }
 
 /**
- * Parses two values that correspond to lengths for the -moz-background-size
+ * Parses two values that correspond to lengths for the background-size
  * property.  These can be one or two lengths (or the 'auto' keyword) or
  * percentages corresponding to the element's dimensions or the single keywords
  * 'contain' or 'cover'.  'initial' and 'inherit' must be handled by the caller

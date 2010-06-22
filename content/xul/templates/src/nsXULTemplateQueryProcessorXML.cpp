@@ -61,6 +61,7 @@
 #include "nsXULTemplateBuilder.h"
 #include "nsXULTemplateQueryProcessorXML.h"
 #include "nsXULTemplateResultXML.h"
+#include "nsXULSortService.h"
 
 NS_IMPL_ISUPPORTS1(nsXMLQuery, nsXMLQuery)
 
@@ -428,27 +429,22 @@ NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::CompareResults(nsIXULTemplateResult* aLeft,
                                                nsIXULTemplateResult* aRight,
                                                nsIAtom* aVar,
+                                               PRUint32 aSortHints,
                                                PRInt32* aResult)
 {
     *aResult = 0;
     if (!aVar)
-      return NS_OK;
-
-    // XXXndeakin - bug 379745
-    // it would be good for this to handle other types such as integers,
-    // so that sorting can be optimized for different types.
+        return NS_OK;
 
     nsAutoString leftVal;
     if (aLeft)
-      aLeft->GetBindingFor(aVar, leftVal);
+        aLeft->GetBindingFor(aVar, leftVal);
 
     nsAutoString rightVal;
     if (aRight)
-      aRight->GetBindingFor(aVar, rightVal);
+        aRight->GetBindingFor(aVar, rightVal);
 
-    // currently templates always sort case-insensitive
-    *aResult = ::Compare(leftVal, rightVal,
-                         nsCaseInsensitiveStringComparator());
+    *aResult = XULSortServiceImpl::CompareValues(leftVal, rightVal, aSortHints);
     return NS_OK;
 }
 

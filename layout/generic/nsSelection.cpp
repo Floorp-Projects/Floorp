@@ -779,7 +779,7 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
 {
   if (!mShell)
   {
-    NS_ERROR("fetch desired X failed\n");
+    NS_ERROR("fetch desired X failed");
     return NS_ERROR_FAILURE;
   }
   if (mDesiredXSet)
@@ -2158,6 +2158,12 @@ nsresult
 nsFrameSelection::CharacterExtendForDelete()
 {
   return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectCharacter);
+}
+
+nsresult
+nsFrameSelection::CharacterExtendForBackspace()
+{
+  return MoveCaret(nsIDOMKeyEvent::DOM_VK_BACK_SPACE, PR_TRUE, eSelectCharacter);
 }
 
 nsresult

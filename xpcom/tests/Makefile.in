@@ -49,6 +49,11 @@ MOZILLA_INTERNAL_API = 1
 endif
 
 DIRS		= dynamic services external
+
+ifdef MOZ_ENABLE_LIBXUL
+DIRS += xptinfo
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= windows
 endif

@@ -44,6 +44,8 @@
 
 #include "base/third_party/nss/blapit.h"
 
+namespace nss {
+
 /******************************************/
 
 extern SHA256Context *SHA256_NewContext(void);
@@ -97,5 +99,7 @@ extern unsigned int SHA384_FlattenSize(SHA384Context *cx);
 extern SECStatus SHA384_Flatten(SHA384Context *cx,unsigned char *space);
 extern SHA384Context * SHA384_Resurrect(unsigned char *space, void *arg);
 extern void SHA384_Clone(SHA384Context *dest, SHA384Context *src);
+
+} // namespace nss
 
 #endif /* _BLAPI_H_ */

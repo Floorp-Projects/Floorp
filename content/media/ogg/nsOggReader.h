@@ -126,9 +126,6 @@ private:
   // the page we're about to read.
   PRInt64 mPageOffset;
 
-  // Number of milliseconds of data video/audio data held in a frame.
-  PRUint32 mCallbackPeriod;
-
   // The granulepos of the last decoded Theora frame.
   PRInt64 mTheoraGranulepos;
 

@@ -56,7 +56,7 @@ class nsINodeInfo;
 
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
-                    PRBool aFromParser);
+                    PRUint32 aFromParser);
 
 typedef nsSVGGraphicElement nsSVGUseElementBase;
 

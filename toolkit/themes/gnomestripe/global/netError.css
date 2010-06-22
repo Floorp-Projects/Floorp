@@ -47,7 +47,7 @@ ul {
   padding: 3em;
   -moz-padding-start: 30px;
   background: url("moz-icon://stock/gtk-dialog-warning?size=dialog") left 0 no-repeat -moz-Field;
-  -moz-background-origin: content;
+  background-origin: content-box;
 }
 
 #errorPageContainer.certerror {

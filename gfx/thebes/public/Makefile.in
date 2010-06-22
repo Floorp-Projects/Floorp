@@ -74,7 +74,9 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 
 ifdef MOZ_X11
-EXPORTS += gfxXlibSurface.h
+EXPORTS += gfxXlibSurface.h \
+           GLXLibrary.h \
+           $(NULL)
 endif
 
 ifdef MOZ_PANGO 
@@ -94,6 +96,13 @@ EXPORTS += gfxFT2FontBase.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+
+ifdef MOZ_X11
+EXPORTS += gfxXlibSurface.h \
+           GLXLibrary.h \
+           $(NULL)
+endif
+
 ifdef MOZ_PANGO
 EXPORTS += gfxPangoFonts.h
 else

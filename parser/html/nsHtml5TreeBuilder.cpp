@@ -888,8 +888,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           switch(group) {
             case NS_HTML5TREE_BUILDER_HTML: {
 
-              addAttributesToHtml(attributes);
-              attributes = nsnull;
+              if (!fragment) {
+                addAttributesToHtml(attributes);
+                attributes = nsnull;
+              }
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_BASE:
@@ -903,8 +905,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             case NS_HTML5TREE_BUILDER_BODY: {
 
-              addAttributesToBody(attributes);
-              attributes = nsnull;
+              if (addAttributesToBody(attributes)) {
+                attributes = nsnull;
+              }
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_P:
@@ -1287,8 +1290,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           switch(group) {
             case NS_HTML5TREE_BUILDER_HTML: {
 
-              addAttributesToHtml(attributes);
-              attributes = nsnull;
+              if (!fragment) {
+                addAttributesToHtml(attributes);
+                attributes = nsnull;
+              }
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_BASE:
@@ -1357,8 +1362,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_LINK: {
@@ -1403,8 +1410,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_COL: {
@@ -1452,8 +1461,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_OPTION: {
@@ -1523,8 +1534,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
@@ -1555,8 +1568,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_NOFRAMES: {
@@ -1601,8 +1616,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_HEAD: {
@@ -1622,8 +1639,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_BODY: {
@@ -1717,8 +1736,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         switch(group) {
           case NS_HTML5TREE_BUILDER_HTML: {
 
-            addAttributesToHtml(attributes);
-            attributes = nsnull;
+            if (!fragment) {
+              addAttributesToHtml(attributes);
+              attributes = nsnull;
+            }
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
@@ -3305,15 +3326,17 @@ nsHtml5TreeBuilder::findLastOrRoot(PRInt32 group)
   return 0;
 }
 
-void 
+PRBool 
 nsHtml5TreeBuilder::addAttributesToBody(nsHtml5HtmlAttributes* attributes)
 {
   if (currentPtr >= 1) {
     nsHtml5StackNode* body = stack[1];
     if (body->group == NS_HTML5TREE_BUILDER_BODY) {
       addAttributesToElement(body->node, attributes);
+      return PR_TRUE;
     }
   }
+  return PR_FALSE;
 }
 
 void 
