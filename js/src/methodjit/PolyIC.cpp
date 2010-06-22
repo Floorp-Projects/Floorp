@@ -303,6 +303,15 @@ class SetPropCompiler : public PICStubCompiler
             address = Address(pic.objReg, (sprop->slot - JS_INITIAL_NSLOTS) * sizeof(Value));
         }
 
+        // If the scope is branded, or has a method barrier. It's now necessary
+        // to guard that we're not overwriting a function-valued property.
+        Jump rebrand;
+        JSScope *scope = obj->scope();
+        if (scope->branded() || scope->hasMethodBarrier()) {
+            masm.loadTypeTag(address, pic.shapeReg);
+            rebrand = masm.branch32(Assembler::Equal, pic.shapeReg, Imm32(JSVAL_MASK32_FUNOBJ));
+        }
+
         if (pic.u.vr.isConstant) {
             masm.storeValue(Valueify(pic.u.vr.u.v), address);
         } else {
@@ -325,6 +334,8 @@ class SetPropCompiler : public PICStubCompiler
         JSC::LinkBuffer buffer(&masm, ep);
         buffer.link(shapeMismatch, pic.slowPathStart);
         buffer.link(done, pic.storeBack);
+        if (scope->branded() || scope->hasMethodBarrier())
+            buffer.link(rebrand, pic.slowPathStart);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %d %d at %p\n",
                    (void*)&pic,
@@ -383,7 +394,7 @@ class SetPropCompiler : public PICStubCompiler
             return disable("invalid slot");
 
         JS_ASSERT(obj == holder);
-        if (!pic.inlinePathPatched)
+        if (!pic.inlinePathPatched && !obj->scope()->branded())
             return patchInline(sprop);
         else
             return generateStub(sprop);
