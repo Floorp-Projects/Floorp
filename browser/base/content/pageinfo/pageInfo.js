@@ -540,7 +540,7 @@ function processFrames()
     onProcessFrame.forEach(function(func) { func(doc); });
     var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
     gFrameList.shift();
-    setTimeout(doGrab, 16, iterator);
+    setTimeout(doGrab, 10, iterator);
     onFinished.push(selectImage);
   }
   else
@@ -549,13 +549,13 @@ function processFrames()
 
 function doGrab(iterator)
 {
-  for (var i = 0; i < 50; ++i)
+  for (var i = 0; i < 500; ++i)
     if (!iterator.nextNode()) {
       processFrames();
       return;
     }
 
-  setTimeout(doGrab, 16, iterator);
+  setTimeout(doGrab, 10, iterator);
 }
 
 function addImage(url, type, alt, elem, isBg)
