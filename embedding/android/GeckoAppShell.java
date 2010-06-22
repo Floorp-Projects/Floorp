@@ -82,6 +82,7 @@ class GeckoAppShell
     public static native void setInitialSize(int width, int height);
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
+    public static native void onResume();
 
     // java-side stuff
     public static void loadGeckoLibs() {
