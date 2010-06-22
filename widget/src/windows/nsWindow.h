@@ -502,7 +502,7 @@ protected:
   // Transparency
 #ifdef MOZ_XUL
   // Use layered windows to support full 256 level alpha translucency
-  nsRefPtr<gfxWindowsSurface> mTransparentSurface;
+  nsRefPtr<gfxASurface> mTransparentSurface;
   HDC                   mMemoryDC;
   nsTransparencyMode    mTransparencyMode;
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
