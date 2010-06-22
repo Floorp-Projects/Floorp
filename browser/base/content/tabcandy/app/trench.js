@@ -328,7 +328,7 @@ Trench.prototype = {
   //   range - (<Range>) the rule's range
   ruleOverlaps: function Trench_ruleOverlaps(position, range) {
     return (this.position - this.radius <= position && position <= this.position + this.radius
-            && this.activeRange.contains(range));
+            && this.activeRange.overlaps(range));
   },
   
   //----------
@@ -367,12 +367,13 @@ Trench.prototype = {
   // Computes and sets the <activeRange> for the trench, based on the <Groups> around.
   // This makes it so trenches' active ranges don't extend through other groups.
   calculateActiveRange: function Trench_calculateActiveRange() {
-    // only guide-type trenches need to set an active rect
+
+    // set it to the default: just the range itself.
+    this.setActiveRange(this.range);
+
+    // only guide-type trenches need to set a separate active range
     if (this.type != 'guide')
       return;
-
-    // first, reset the activeRange
-    this.setActiveRange(this.range);
 
     var groups = Groups.groups;
     var trench = this;
