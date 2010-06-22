@@ -403,7 +403,7 @@ nsresult nsComponentManagerImpl::Init()
 
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
-        RegisterLocation(l.type, l.location);
+        RegisterLocation(l.type, l.location, false);
     }
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
@@ -484,25 +484,27 @@ nsComponentManagerImpl::RegisterContractID(const mozilla::Module::ContractIDEntr
 
 void
 nsComponentManagerImpl::RegisterLocation(NSLocationType aType,
-                                         nsILocalFile* aLocation)
+                                         nsILocalFile* aLocation,
+                                         bool aChromeOnly)
 {
     nsCOMArray<nsILocalFile> manifests;
 
     PRBool directory = PR_FALSE;
     aLocation->IsDirectory(&directory);
     if (directory)
-        RegisterDirectory(aType, aLocation, manifests);
+        RegisterDirectory(aType, aLocation, manifests, aChromeOnly);
     else
-        RegisterFile(aType, aLocation, manifests);
+        RegisterFile(aType, aLocation, manifests, aChromeOnly);
 
     for (PRInt32 i = 0; i < manifests.Count(); ++i)
-        RegisterManifestFile(aType, manifests[i]);
+        RegisterManifestFile(aType, manifests[i], aChromeOnly);
 }
 
 void
 nsComponentManagerImpl::RegisterDirectory(NSLocationType aType,
                                           nsILocalFile* aDirectory,
-                                          nsCOMArray<nsILocalFile>& aManifests)
+                                          nsCOMArray<nsILocalFile>& aManifests,
+                                          bool aChromeOnly)
 {
     nsCOMPtr<nsISimpleEnumerator> entries;
     aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
@@ -517,7 +519,7 @@ nsComponentManagerImpl::RegisterDirectory(NSLocationType aType,
         if (!f)
             continue;
 
-        RegisterFile(aType, f, aManifests);
+        RegisterFile(aType, f, aManifests, aChromeOnly);
     }
 }
 
@@ -536,12 +538,13 @@ GetExtension(nsILocalFile* file, nsCString& extension)
 void
 nsComponentManagerImpl::RegisterFile(NSLocationType aType,
                                      nsILocalFile* aFile,
-                                     nsCOMArray<nsILocalFile>& aManifests)
+                                     nsCOMArray<nsILocalFile>& aManifests,
+                                     bool aChromeOnly)
 {
     nsCString extension;
     GetExtension(aFile, extension);
 
-    if (NS_COMPONENT_LOCATION == aType) {
+    if (NS_COMPONENT_LOCATION == aType && !aChromeOnly) {
         if (extension.EqualsLiteral("xpt")) {
             xptiInterfaceInfoManager::GetSingleton()
                 ->RegisterFile(aFile,
@@ -584,7 +587,8 @@ struct AutoCloseFD
 
 void
 nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
-                                             nsILocalFile* aFile)
+                                             nsILocalFile* aFile,
+                                             bool aChromeOnly)
 {
     nsresult rv;
 
@@ -610,7 +614,7 @@ nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
     }
 
     data[fileInfo.size] = '\0';
-    ParseManifest(aType, aFile, data);
+    ParseManifest(aType, aFile, data, aChromeOnly);
 }
 
 void
@@ -722,7 +726,10 @@ nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& cx, int line
 void
 nsComponentManagerImpl::RereadChromeManifests()
 {
-    NS_ERROR("XXX Not done!");
+    for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
+        ComponentLocation& l = sModuleLocations->ElementAt(i);
+        RegisterLocation(l.type, l.location, true);
+    }
 }
 
 bool
@@ -1720,7 +1727,7 @@ XRE_AddComponentLocation(NSLocationType aType, nsILocalFile* aLocation)
 
     if (nsComponentManagerImpl::gComponentManager &&
         nsComponentManagerImpl::NORMAL == nsComponentManagerImpl::gComponentManager->mStatus)
-        nsComponentManagerImpl::gComponentManager->RegisterLocation(aType, aLocation);
+        nsComponentManagerImpl::gComponentManager->RegisterLocation(aType, aLocation, false);
 
     return NS_OK;
 }
