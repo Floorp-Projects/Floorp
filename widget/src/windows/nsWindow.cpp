@@ -6887,13 +6887,16 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
+#ifdef CAIRO_HAS_D2D_SURFACE
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
     nsRefPtr<gfxD2DSurface> newSurface =
       new gfxD2DSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
     mTransparentSurface = newSurface;
     mMemoryDC = nsnull;
-  } else {
+  } else
+#endif
+  {
     nsRefPtr<gfxWindowsSurface> newSurface =
       new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
     mTransparentSurface = newSurface;
@@ -6982,20 +6985,24 @@ nsresult nsWindow::UpdateTranslucentWindow()
   RECT winRect;
   ::GetWindowRect(hWnd, &winRect);
 
+#ifdef CAIRO_HAS_D2D_SURFACE
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
     mMemoryDC = static_cast<gfxD2DSurface*>(mTransparentSurface.get())->
       GetDC(PR_TRUE);
   }
+#endif
   // perform the alpha blend
   PRBool updateSuccesful = 
     ::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA);
 
+#ifdef CAIRO_HAS_D2D_SURFACE
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
     nsIntRect r(0, 0, 0, 0);
     static_cast<gfxD2DSurface*>(mTransparentSurface.get())->ReleaseDC(&r);
   }
+#endif
 
   if (!updateSuccesful) {
     return NS_ERROR_FAILURE;
