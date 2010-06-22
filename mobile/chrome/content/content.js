@@ -603,12 +603,12 @@ let ViewportHandler = {
 
   resetMetadata: function resetMetadata() {
     this.metadata = null;
-    sendAsyncMessage("FennecViewportMetadata", {});
+    sendAsyncMessage("Browser:ViewportMetadata", {});
   },
 
   updateMetadata: function updateMetadata() {
     this.metadata = this.getViewportMetadata();
-    sendAsyncMessage("FennecViewportMetadata", this.metadata);
+    sendAsyncMessage("Browser:ViewportMetadata", this.metadata);
   },
 
   getViewportMetadata: function getViewportMetadata() {
