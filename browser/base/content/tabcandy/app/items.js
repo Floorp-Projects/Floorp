@@ -152,7 +152,7 @@ window.Item.prototype = {
 
     // ___ drag
     this.dragOptions = {
-      cancelClass: 'close',
+      cancelClass: 'close stackExpander',
       start: function(e, ui) {
         drag.info = new Drag(this, e);
       },
