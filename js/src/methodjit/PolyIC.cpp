@@ -143,16 +143,16 @@ class PICStubCompiler
 class PICRepatchBuffer : public JSC::RepatchBuffer
 {
     ic::PICInfo &pic;
+    JSC::CodeLocationLabel label;
 
   public:
-    PICRepatchBuffer(ic::PICInfo &ic)
-      : JSC::RepatchBuffer(ic.lastPathStart().executableAddress(),
-                           INLINE_PATH_LENGTH),
-        pic(ic)
+    PICRepatchBuffer(ic::PICInfo &ic, JSC::CodeLocationLabel path)
+      : JSC::RepatchBuffer(path.executableAddress(), INLINE_PATH_LENGTH),
+        pic(ic), label(path)
     { }
 
     void relink(int32 offset, JSC::CodeLocationLabel target) {
-        JSC::RepatchBuffer::relink(pic.lastPathStart().jumpAtOffset(offset), target);
+        JSC::RepatchBuffer::relink(label.jumpAtOffset(offset), target);
     }
 };
 
@@ -233,9 +233,10 @@ class SetPropCompiler : public PICStubCompiler
 
     bool patchInline(JSScopeProperty *sprop)
     {
+        JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
 
-        PICRepatchBuffer repatcher(pic);
+        PICRepatchBuffer repatcher(pic, pic.fastPathStart);
 
         int32 offset;
         if (sprop->slot < JS_INITIAL_NSLOTS) {
@@ -331,7 +332,7 @@ class SetPropCompiler : public PICStubCompiler
                    pic.stubsGenerated,
                    cs.executableAddress());
 
-        PICRepatchBuffer repatcher(pic);
+        PICRepatchBuffer repatcher(pic, pic.lastPathStart());
 
         // This function can patch either the inline fast path for a generated
         // stub. The stub omits the prefix of the inline fast path that loads
@@ -382,13 +383,10 @@ class SetPropCompiler : public PICStubCompiler
             return disable("invalid slot");
 
         JS_ASSERT(obj == holder);
-        if (!pic.inlinePathPatched) {
-            if (pic.stubsGenerated == 0)
-                patchInline(sprop);
-        } else {
-            JS_ASSERT(pic.stubsGenerated < ic::MAX_PIC_STUBS);
+        if (!pic.inlinePathPatched)
+            return patchInline(sprop);
+        else
             return generateStub(sprop);
-        }
 
         return true;
     }
@@ -469,7 +467,7 @@ class GetPropCompiler : public PICStubCompiler
         JaegerSpew(JSpew_PICs, "generate array length stub at %p\n",
                    start.executableAddress());
 
-        PICRepatchBuffer repatcher(pic);
+        PICRepatchBuffer repatcher(pic, pic.lastPathStart());
         patchPreviousToHere(repatcher, start);
 
         disable("array length done");
@@ -516,7 +514,7 @@ class GetPropCompiler : public PICStubCompiler
     bool patchInline(JSObject *holder, JSScopeProperty *sprop)
     {
         spew("patch", "inline");
-        PICRepatchBuffer repatcher(pic);
+        PICRepatchBuffer repatcher(pic, pic.fastPathStart);
 
         mjit::ThreadData &jm = JS_METHODJIT_DATA(f.cx);
         if (!jm.addScript(script)) {
@@ -637,7 +635,7 @@ class GetPropCompiler : public PICStubCompiler
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generated getprop stub at %p\n", cs.executableAddress());
 
-        PICRepatchBuffer repatcher(pic);
+        PICRepatchBuffer repatcher(pic, pic.lastPathStart()); 
         patchPreviousToHere(repatcher, cs);
 
         pic.stubsGenerated++;
@@ -695,19 +693,10 @@ class GetPropCompiler : public PICStubCompiler
         if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
             return disable("invalid slot");
 
-        if (obj == holder && !pic.inlinePathPatched) {
-            // :FIXME:
-            // Currently, we need this condition in order to patch the inline
-            // stub because that patching goes relative to fastPathStart, and
-            // that only points to the inline stub if no other stubs were
-            // generated. We should either lift that limitation or simplify by
-            // removing the inlinePathPatched flag, which is redundant now.
-            if (pic.stubsGenerated == 0)
-                return patchInline(holder, sprop);
-        } else {
-            JS_ASSERT(pic.stubsGenerated < ic::MAX_PIC_STUBS);
+        if (obj == holder && !pic.inlinePathPatched)
+            return patchInline(holder, sprop);
+        else
             return generateStub(holder, sprop);
-        }
 
         return true;
     }
