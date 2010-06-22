@@ -255,8 +255,8 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
                               uint8* rgb_buf,      // rcx
                               int width) {         // r8
   asm(
-  "jmp    Lconvertend\n"
-"Lconvertloop:"
+  "jmp    1f\n"
+"0:"
   "movzb  (%1),%%r10\n"
   "add    $0x1,%1\n"
   "movzb  (%2),%%r11\n"
@@ -276,13 +276,13 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
   "packuswb %%xmm2,%%xmm2\n"
   "movq   %%xmm2,0x0(%3)\n"
   "add    $0x8,%3\n"
-"Lconvertend:"
+"1:"
   "sub    $0x2,%4\n"
-  "jns    Lconvertloop\n"
+  "jns    0b\n"
 
-"Lconvertnext:"
+"2:"
   "add    $0x1,%4\n"
-  "js     Lconvertdone\n"
+  "js     3f\n"
 
   "movzb  (%1),%%r10\n"
   "movq   2048(%5,%%r10,8),%%xmm0\n"
@@ -295,7 +295,7 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
   "psraw  $0x6,%%xmm1\n"
   "packuswb %%xmm1,%%xmm1\n"
   "movd   %%xmm1,0x0(%3)\n"
-"Lconvertdone:"
+"3:"
   :
   : "r"(y_buf),  // %0
     "r"(u_buf),  // %1
@@ -314,8 +314,15 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
                               const uint8* v_buf,
                               uint8* rgb_buf,
                               int width);
+
+// It's necessary to specify the correct section for the following code,
+// otherwise it will be placed in whatever the current section is as this unit
+// is compiled.  Because GCC remembers the last section it emitted, we must
+// also revert to the previous section state at the end of the asm block.
   asm(
+  ".section .text\n"
   ".global FastConvertYUVToRGB32Row\n"
+  ".type FastConvertYUVToRGB32Row, @function\n"
 "FastConvertYUVToRGB32Row:\n"
   "pusha\n"
   "mov    0x24(%esp),%edx\n"
@@ -323,9 +330,9 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
   "mov    0x2c(%esp),%esi\n"
   "mov    0x30(%esp),%ebp\n"
   "mov    0x34(%esp),%ecx\n"
-  "jmp    convertend\n"
+  "jmp    1f\n"
 
-"convertloop:"
+"0:"
   "movzbl (%edi),%eax\n"
   "add    $0x1,%edi\n"
   "movzbl (%esi),%ebx\n"
@@ -344,12 +351,12 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
   "packuswb %mm2,%mm1\n"
   "movntq %mm1,0x0(%ebp)\n"
   "add    $0x8,%ebp\n"
-"convertend:"
+"1:"
   "sub    $0x2,%ecx\n"
-  "jns    convertloop\n"
+  "jns    0b\n"
 
   "and    $0x1,%ecx\n"
-  "je     convertdone\n"
+  "je     2f\n"
 
   "movzbl (%edi),%eax\n"
   "movq   kCoefficientsRgbY+2048(,%eax,8),%mm0\n"
@@ -361,9 +368,10 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
   "psraw  $0x6,%mm1\n"
   "packuswb %mm1,%mm1\n"
   "movd   %mm1,0x0(%ebp)\n"
-"convertdone:"
+"2:"
   "popa\n"
   "ret\n"
+  ".previous\n"
 );
 
 #endif
