@@ -43,6 +43,7 @@
 
 class nsILocalFile;
 
-void ParseManifest(NSLocationType type, nsILocalFile* file, char* buf);
+void ParseManifest(NSLocationType type, nsILocalFile* file, char* buf,
+                   bool aChromeOnly);
 
 #endif // ManifestParser_h
