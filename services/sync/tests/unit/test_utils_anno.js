@@ -6,17 +6,22 @@ function run_test() {
   Utils.anno(1, "anno", "hi");
   do_check_eq(Utils.anno(1, "anno"), "hi");
 
+  _("create a bookmark to a url so it exists");
+  let url = "about:";
+  let bmkid = Svc.Bookmark.insertBookmark(Svc.Bookmark.unfiledBookmarksFolder,
+                                          Utils.makeURI(url), -1, "");
+
   _("set an anno on a url");
-  Utils.anno("about:", "tation", "hello");
-  do_check_eq(Utils.anno("about:", "tation"), "hello");
+  Utils.anno(url, "tation", "hello");
+  do_check_eq(Utils.anno(url, "tation"), "hello");
 
   _("make sure getting it also works with a nsIURI");
-  let uri = Utils.makeURI("about:");
+  let uri = Utils.makeURI(url);
   do_check_eq(Utils.anno(uri, "tation"), "hello");
 
   _("make sure annotations get updated");
   Utils.anno(uri, "tation", "bye!");
-  do_check_eq(Utils.anno("about:", "tation"), "bye!");
+  do_check_eq(Utils.anno(url, "tation"), "bye!");
 
   _("sanity check that the item anno is still there");
   do_check_eq(Utils.anno(1, "anno"), "hi");
@@ -30,4 +35,7 @@ function run_test() {
     didThrow = true;
   }
   do_check_true(didThrow);
+
+  _("cleaning up the bookmark we created");
+  Svc.Bookmark.removeItem(bmkid);
 }
