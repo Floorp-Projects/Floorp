@@ -13779,11 +13779,7 @@ TraceRecorder::record_JSOP_ENDITER()
 JS_REQUIRES_STACK void
 TraceRecorder::storeHole(JSWhyMagic why, nanojit::LIns *addr_ins, ptrdiff_t offset, nanojit::AccSet accSet)
 {
-#ifdef DEBUG
     lir->insStore(INS_CONSTU(why), addr_ins, offset + sPayloadOffset, accSet);
-#else
-    lir->insStore(0, addr_ins, offset + sPayloadOffset, accSet);
-#endif
     lir->insStore(INS_CONSTU(JSVAL_TAG_MAGIC), addr_ins, offset + sTagOffset, accSet);
 }
 
