@@ -303,24 +303,31 @@ window.Item.prototype = {
   // Function: pushAway
   // Pushes all other items away so none overlap this Item.
   pushAway: function() {
-    var buffer = 2;
+    var buffer = Math.floor( Items.defaultGutter / 2 );
     
     var items = Items.getTopLevelItems();
-    iQ.each(items, function(index, item) {
+		// setup each Item's pushAwayData attribute:
+    iQ.each(items, function pushAway_setupPushAwayData(index, item) {
       var data = {};
       data.bounds = item.getBounds();
       data.startBounds = new Rect(data.bounds);
+			// Infinity = (as yet) unaffected
       data.generation = Infinity;
       item.pushAwayData = data;
     });
     
+    // The first item is a 0-generation pushed item. It all starts here.
     var itemsToPush = [this];
     this.pushAwayData.generation = 0;
 
     var pushOne = function(baseItem) {
+    	// the baseItem is an n-generation pushed item. (n could be 0)
       var baseData = baseItem.pushAwayData;
       var bb = new Rect(baseData.bounds);
+
+			// make the bounds larger, adding a +buffer margin to each side.
       bb.inset(-buffer, -buffer);
+			// bbc = center of the base's bounds
       var bbc = bb.center();
     
       iQ.each(items, function(index, item) {
@@ -328,136 +335,126 @@ window.Item.prototype = {
           return;
           
         var data = item.pushAwayData;
+        // if the item under consideration has already been pushed, or has a lower
+        // "generation" (and thus an implictly greater placement priority) then don't move it.
         if(data.generation <= baseData.generation)
           return;
-          
+        
+        // box = this item's current bounds, with a +buffer margin.
         var bounds = data.bounds;
         var box = new Rect(bounds);
         box.inset(-buffer, -buffer);
+        
+        // if the item under consideration overlaps with the base item...
         if(box.intersects(bb)) {
+        
+        	// Let's push it a little.
+        	
+        	// First, decide in which direction and how far to push. This is the offset.
           var offset = new Point();
-          var center = box.center(); 
+          // center = the current item's center.
+          var center = box.center();
+          
+          // Consider the relationship between the current item (box) + the base item.
+          // If it's more vertically stacked than "side by side"...
           if(Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
-/*             offset.x = Math.floor((Math.random() * 10) - 5); */
+          	// push vertically.
             if(center.y > bbc.y)
               offset.y = bb.bottom - box.top; 
             else
               offset.y = bb.top - box.bottom;
-          } else {
-/*             offset.y = Math.floor((Math.random() * 10) - 5); */
+          } else { // if they're more "side by side" than stacked vertically...
+          	// push horizontally.
             if(center.x > bbc.x)
               offset.x = bb.right - box.left; 
             else
               offset.x = bb.left - box.right;
           }
           
+          // Actually push the Item.
           bounds.offset(offset); 
+          
+          // This item now becomes an (n+1)-generation pushed item.
           data.generation = baseData.generation + 1;
+          // keep track of who pushed this item.
           data.pusher = baseItem;
+          // add this item to the queue, so that it, in turn, can push some other things.
           itemsToPush.push(item);
         }
       });
     };   
     
+    // push each of the itemsToPush, one at a time.
+    // itemsToPush starts with just [this], but pushOne can add more items to the stack.
+    // Maximally, this could run through all Items on the screen.
     while(itemsToPush.length)
       pushOne(itemsToPush.shift());         
 
     // ___ Squish!
-    var pageBounds = Items.getPageBounds();
-    if(Items.squishMode == 'squish') {
-      iQ.each(items, function(index, item) {
-        var data = item.pushAwayData;
-        if(data.generation == 0 || item.locked.bounds)
-          return;
-  
-        function apply(item, posStep, posStep2, sizeStep) {
-          var data = item.pushAwayData;
-          if(data.generation == 0)
-            return;
-            
-          var bounds = data.bounds;
-          bounds.width -= sizeStep.x; 
-          bounds.height -= sizeStep.y;
-          bounds.left += posStep.x;
-          bounds.top += posStep.y;
-          
-          if(!item.isAGroup) {
-            if(sizeStep.y > sizeStep.x) {
-              var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
-              bounds.left += (bounds.width - newWidth) / 2;
-              bounds.width = newWidth;
-            } else {
-              var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
-              bounds.top += (bounds.height - newHeight) / 2;
-              bounds.height = newHeight;
-            }
-          }
-          
-          var pusher = data.pusher;
-          if(pusher)  
-            apply(pusher, posStep.plus(posStep2), posStep2, sizeStep);
-        }
-  
-        var bounds = data.bounds;
-        var posStep = new Point();
-        var posStep2 = new Point();
-        var sizeStep = new Point();
+    var pageBounds = Items.getSafeWindowBounds();
+		iQ.each(items, function(index, item) {
+			var data = item.pushAwayData;
+			if(data.generation == 0 || item.locked.bounds)
+				return;
 
-        if(bounds.left < pageBounds.left) {      
-          posStep.x = pageBounds.left - bounds.left;
-          sizeStep.x = posStep.x / data.generation;
-          posStep2.x = -sizeStep.x;                
-        } else if(bounds.right > pageBounds.right) {      
-          posStep.x = pageBounds.right - bounds.right;
-          sizeStep.x = -posStep.x / data.generation;
-          posStep.x += sizeStep.x;
-          posStep2.x = sizeStep.x;
-        }
+			function apply(item, posStep, posStep2, sizeStep) {
+				var data = item.pushAwayData;
+				if(data.generation == 0)
+					return;
+					
+				var bounds = data.bounds;
+				bounds.width -= sizeStep.x; 
+				bounds.height -= sizeStep.y;
+				bounds.left += posStep.x;
+				bounds.top += posStep.y;
+				
+				if(!item.isAGroup) {
+					if(sizeStep.y > sizeStep.x) {
+						var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
+						bounds.left += (bounds.width - newWidth) / 2;
+						bounds.width = newWidth;
+					} else {
+						var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
+						bounds.top += (bounds.height - newHeight) / 2;
+						bounds.height = newHeight;
+					}
+				}
+				
+				var pusher = data.pusher;
+				if(pusher)  
+					apply(pusher, posStep.plus(posStep2), posStep2, sizeStep);
+			}
 
-        if(bounds.top < pageBounds.top) {      
-          posStep.y = pageBounds.top - bounds.top;
-          sizeStep.y = posStep.y / data.generation;
-          posStep2.y = -sizeStep.y;                
-        } else if(bounds.bottom > pageBounds.bottom) {      
-          posStep.y = pageBounds.bottom - bounds.bottom;
-          sizeStep.y = -posStep.y / data.generation;
-          posStep.y += sizeStep.y;
-          posStep2.y = sizeStep.y;
-        }
-  
-        if(posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
-          apply(item, posStep, posStep2, sizeStep);
-      });
-    } else if(Items.squishMode == 'all') {
-      var newPageBounds = null;
-      iQ.each(items, function(index, item) {
-        if(item.locked.bounds)
-          return;
-          
-        var data = item.pushAwayData;
-        var bounds = data.bounds;
-        newPageBounds = (newPageBounds ? newPageBounds.union(bounds) : new Rect(bounds));
-      });
-      
-      var wScale = pageBounds.width / newPageBounds.width;
-      var hScale = pageBounds.height / newPageBounds.height;
-      var scale = Math.min(hScale, wScale);
-      iQ.each(items, function(index, item) {
-        if(item.locked.bounds)
-          return;
-          
-        var data = item.pushAwayData;
-        var bounds = data.bounds;
+			var bounds = data.bounds;
+			var posStep = new Point();
+			var posStep2 = new Point();
+			var sizeStep = new Point();
 
-        bounds.left -= newPageBounds.left;
-        bounds.left *= scale;
-        bounds.width *= scale;
+			if(bounds.left < pageBounds.left) {      
+				posStep.x = pageBounds.left - bounds.left;
+				sizeStep.x = posStep.x / data.generation;
+				posStep2.x = -sizeStep.x;                
+			} else if(bounds.right > pageBounds.right) {      
+				posStep.x = pageBounds.right - bounds.right;
+				sizeStep.x = -posStep.x / data.generation;
+				posStep.x += sizeStep.x;
+				posStep2.x = sizeStep.x;
+			}
 
-        bounds.top -= newPageBounds.top;            
-        bounds.top *= scale;
-        bounds.height *= scale;
-      });
-    }
+			if(bounds.top < pageBounds.top) {      
+				posStep.y = pageBounds.top - bounds.top;
+				sizeStep.y = posStep.y / data.generation;
+				posStep2.y = -sizeStep.y;                
+			} else if(bounds.bottom > pageBounds.bottom) {      
+				posStep.y = pageBounds.bottom - bounds.bottom;
+				sizeStep.y = -posStep.y / data.generation;
+				posStep.y += sizeStep.y;
+				posStep2.y = sizeStep.y;
+			}
+
+			if(posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
+				apply(item, posStep, posStep2, sizeStep);
+		});
 
     // ___ Unsquish
     var pairs = [];
@@ -795,12 +792,6 @@ window.Item.prototype = {
 // Keeps track of all Items. 
 window.Items = {
   // ----------
-  // Variable: squishMode
-  // How to deal when things go off the edge.
-  // Options include: all, squish, push
-  squishMode: 'squish', 
-  
-  // ----------
   // Variable: defaultGutter
   // How far apart Items should be from each other and from bounds
   defaultGutter: 15,
@@ -992,7 +983,7 @@ window.Items = {
       });
     }
   
-    var pageBounds = Items.getPageBounds();
+    var pageBounds = Items.getSafeWindowBounds();
     iQ.each(pairs, function(index, pair) {
       var item = pair.item;
       if(item.locked.bounds || item == ignore)
