@@ -469,17 +469,6 @@ Content.prototype = {
 
       case "Browser:MouseUp":
         let element = elementFromPoint(x, y);
-        // the element can be out of the cX/cY point because of the touch radius
-        // ignore the redirection if the element is a HTMLHtmlElement (bug 562981)
-        let rect = getBoundingContentRect(element);
-        if (!rect.isEmpty() && !(element instanceof HTMLHtmlElement) &&
-           ((x < rect.left || (x > rect.left + rect.width)) || (y < rect.top || (y > rect.top + rect.height)))) {
-
-          let point = rect.center();
-          x = point.x;
-          y = point.y;
-        }
-
         if (!this._formAssistant.open(element)) {
           this._sendMouseEvent("mousedown", element, x, y);
           this._sendMouseEvent("mouseup", element, x, y);
@@ -536,21 +525,34 @@ Content.prototype = {
     }
   },
 
-  _sendMouseEvent: function _sendMouseEvent(name, element, x, y) {
-    let windowUtils = Util.getWindowUtils(content);
+  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {
     let scrollOffset = Util.getScrollOffset(content);
+    aX -= scrollOffset.x;
+    aY -= scrollOffset.y;
 
-    // the element can be out of the cX/cY point because of the touch radius
-    let rect = getBoundingContentRect(element);
-    if (!rect.isEmpty() && !(element instanceof HTMLHtmlElement) ||
-        x < rect.left || x > rect.right ||
-        y < rect.top || y > rect.bottom) {
-      let point = rect.center();
-      x = point.x;
-      y = point.y;
+    // the element can be out of the aX/aY point because of the touch radius
+    if (!(aElement instanceof HTMLHtmlElement)) {
+      let isTouchClick = true;
+      let rects = getContentClientRects(aElement);
+      for (let i = 0; i < rects.length; i++) {
+        let rect = rects[i];
+        if ((aX > rect.left && aX < (rect.left + rect.width)) &&
+            (aY > rect.top && aY < (rect.top + rect.height))) {
+          isTouchClick = false;
+          break;
+        }
+      }
+
+      if (isTouchClick) {
+        let rect = rects[0];
+        let point = (new Rect(rect.left, rect.top, rect.width, rect.height)).center();
+        aX = point.x;
+        aY = point.y;
+      }
     }
 
-    windowUtils.sendMouseEvent(name, x - scrollOffset.x, y - scrollOffset.y, 0, 1, 0, true);
+    let windowUtils = Util.getWindowUtils(content);
+    windowUtils.sendMouseEvent(aName, aX, aY, 0, 1, 0, true);
   },
 
   startLoading: function startLoading() {
