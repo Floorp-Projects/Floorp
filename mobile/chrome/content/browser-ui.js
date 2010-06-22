@@ -642,6 +642,8 @@ var BrowserUI = {
   },
 
   hidePanel: function hidePanel() {
+    if (!this.isPanelVisible())
+      return;
     Elements.panelUI.hidden = true;
     Elements.contentShowing.removeAttribute("disabled");
     this.blurFocusedElement();
@@ -1141,9 +1143,9 @@ var PageActions = {
 
     let browser = Browser.selectedBrowser;
     let fileName = getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
-    fileName = fileName.replace(/^\s+|\s+$/g, "");  // remove leading and trailing whitespace
+    fileName = fileName.trim();
 #ifdef MOZ_PLATFORM_MAEMO
-    fileName = fileName.replace(/[\*\:\?]+/g, " "); // remove illegal filename characters for Maemo
+    fileName = fileName.replace(/[\*\:\?]+/g, " ");
 #endif
     picker.defaultString = fileName + ".pdf";
 
