@@ -139,19 +139,14 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile)
         return r->mResult;
     }
 
-#ifdef DEBUG
-    // Only load components that end in the proper dynamic library suffix
-    nsCAutoString filePath;
-    aFile->GetNativePath(filePath);
-    NS_ASSERTION(StringEndsWith(filePath, NS_LITERAL_CSTRING(MOZ_DLL_SUFFIX)),
-                 "Invalid DLL passed to the native module loader");
-#endif
-
     nsCOMPtr<nsIHashable> hashedFile(do_QueryInterface(aFile));
     if (!hashedFile) {
         NS_ERROR("nsIFile is not nsIHashable");
         return NULL;
     }
+
+    nsCAutoString filePath;
+    aFile->GetNativePath(filePath);
 
     NativeLoadData data;
 
