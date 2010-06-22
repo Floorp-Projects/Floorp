@@ -48,7 +48,7 @@
 #include "nsWidgetAtoms.h"
 #include "nsGUIEvent.h"
 
-#include "mozilla/dom/Element.h"
+#include "nsIContent.h"
 #include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -104,19 +104,20 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
   mMenuGroupOwner->RegisterForContentChanges(mContent, this);
 
-  nsIDocument *doc = mContent->GetCurrentDoc();
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetCurrentDoc()));
 
   // if we have a command associated with this menu item, register for changes
   // to the command DOM node
-  if (doc) {
+  if (domDoc) {
     nsAutoString ourCommand;
     mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, ourCommand);
 
     if (!ourCommand.IsEmpty()) {
-      nsIContent *commandElement = doc->GetElementById(ourCommand);
+      nsCOMPtr<nsIDOMElement> commandElement;
+      domDoc->GetElementById(ourCommand, getter_AddRefs(commandElement));
 
       if (commandElement) {
-        mCommandContent = commandElement;
+        mCommandContent = do_QueryInterface(commandElement);
         // register to observe the command DOM element
         mMenuGroupOwner->RegisterForContentChanges(mCommandContent, this);
       }
@@ -145,12 +146,14 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
                                      nsWidgetAtoms::_true, eCaseMatters));
 
     // Set key shortcut and modifiers
-    if (doc) {
+    if (domDoc) {
       nsAutoString keyValue;
       mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
       if (!keyValue.IsEmpty()) {
-        nsIContent *keyContent = doc->GetElementById(keyValue);
-        if (keyContent) {
+        nsCOMPtr<nsIDOMElement> keyElement;
+        domDoc->GetElementById(keyValue, getter_AddRefs(keyElement));
+        if (keyElement) {
+          nsCOMPtr<nsIContent> keyContent(do_QueryInterface(keyElement));
           nsAutoString keyChar(NS_LITERAL_STRING(" "));
           keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
 

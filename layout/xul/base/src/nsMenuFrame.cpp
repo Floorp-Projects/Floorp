@@ -1015,12 +1015,13 @@ nsMenuFrame::BuildAcceleratorText()
     return;
 
   // Turn the document into a DOM document so we can use getElementById
-  nsIDocument *document = mContent->GetDocument();
-  if (!document)
+  nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(mContent->GetDocument()));
+  if (!domDocument)
     return;
 
-  nsIContent *keyElement = document->GetElementById(keyValue);
-  if (!keyElement) {
+  nsCOMPtr<nsIDOMElement> keyDOMElement;
+  domDocument->GetElementById(keyValue, getter_AddRefs(keyDOMElement));
+  if (!keyDOMElement) {
 #ifdef DEBUG
     nsAutoString label;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, label);
@@ -1033,6 +1034,10 @@ nsMenuFrame::BuildAcceleratorText()
 #endif
     return;
   }
+
+  nsCOMPtr<nsIContent> keyElement(do_QueryInterface(keyDOMElement));
+  if (!keyElement)
+    return;
 
   // get the string to display as accelerator text
   // check the key element's attributes in this order:
