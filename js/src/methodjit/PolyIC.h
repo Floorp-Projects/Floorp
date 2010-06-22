@@ -163,6 +163,7 @@ struct PICInfo {
 
 void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, uint32 index);
+void JS_FASTCALL SetProp(VMFrame &f, uint32 index);
 
 }
 } /* namespace mjit */

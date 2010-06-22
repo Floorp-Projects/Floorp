@@ -527,6 +527,10 @@ ic::GetProp(VMFrame &f, uint32 index)
     f.regs.sp[-1] = v;
 }
 
+void
+ic::SetProp(VMFrame &f, uint32 index)
+{
+}
 
 void
 ic::PurgePICs(JSContext *cx, JSScript *script)
