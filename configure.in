@@ -8618,6 +8618,12 @@ if test "$MOZ_PLACES"; then
   AC_DEFINE(MOZ_PLACES)
 fi
 
+dnl Build Sync Services if required
+AC_SUBST(MOZ_SERVICES_SYNC)
+if test -n "$MOZ_SERVICES_SYNC"; then
+  AC_DEFINE(MOZ_SERVICES_SYNC)
+fi
+
 dnl ========================================================
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
