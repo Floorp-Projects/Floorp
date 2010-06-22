@@ -1,13 +1,9 @@
-try {
-  Cu.import("resource://services-sync/base_records/crypto.js");
-  Cu.import("resource://services-sync/base_records/keys.js");
-  Cu.import("resource://services-sync/auth.js");
-  Cu.import("resource://services-sync/log4moz.js");
-  Cu.import("resource://services-sync/identity.js");
-  Cu.import("resource://services-sync/util.js");
-} catch (e) {
-  do_throw(e);
-}
+Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/auth.js");
+Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/util.js");
 
 let keys, cryptoMeta, cryptoWrap;
 
@@ -62,8 +58,7 @@ function run_test() {
     keys = PubKeys.createKeypair(passphrase,
                                  "http://localhost:8080/pubkey",
                                  "http://localhost:8080/privkey");
-    let crypto = Cc[cryptoContractID].
-                 getService(Ci.IWeaveCrypto);
+    let crypto = Svc.Crypto;
     keys.symkey = crypto.generateRandomKey();
     keys.wrappedkey = crypto.wrapSymmetricKey(keys.symkey, keys.pubkey.keyData);
 
