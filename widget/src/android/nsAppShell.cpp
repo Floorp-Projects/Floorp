@@ -79,6 +79,8 @@ nsAppShell::nsAppShell()
     : mQueueLock(nsnull),
       mCondLock(nsnull),
       mQueueCond(nsnull),
+      mPausedLock(nsnull),
+      mPaused(nsnull),
       mNumDraws(0)
 {
     gAppShell = this;
@@ -111,7 +113,9 @@ nsAppShell::Init()
 
     mQueueLock = PR_NewLock();
     mCondLock = PR_NewLock();
+    mPausedLock = PR_NewLock();
     mQueueCond = PR_NewCondVar(mCondLock);
+    mPaused = PR_NewCondVar(mPausedLock);
 
     return nsBaseAppShell::Init();
 }
@@ -252,6 +256,10 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         nsCOMPtr<nsIObserverService> obsServ =
           mozilla::services::GetObserverService();
         obsServ->NotifyObservers(nsnull, "profile-before-change", nsnull);
+
+        // The OS is sending us to the background, block this thread until 
+        // onResume is called to signal that we're back in the foreground
+        PR_WaitCondVar(mPaused, PR_INTERVAL_NO_TIMEOUT);
         break;
     }
 
@@ -344,6 +352,15 @@ nsAppShell::RemoveNextEvent()
         }
     }
     PR_Unlock(mQueueLock);
+}
+
+void
+nsAppShell::OnResume()
+{
+    PR_Lock(mPausedLock);
+    PR_NotifyCondVar(mPaused);
+    PR_Unlock(mPausedLock);
+
 }
 
 // Used by IPC code
