@@ -70,5 +70,6 @@ GenericClassInfo::GetFlags(PRUint32* flags)
 NS_IMETHODIMP
 GenericClassInfo::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aClassIDNoAlloc = mData->cid;
+  return NS_OK;
 }

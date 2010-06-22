@@ -52,6 +52,7 @@ public:
     GetInterfacesProc getinterfaces;
     GetLanguageHelperProc getlanguagehelper;
     PRUint32 flags;
+    nsCID cid;
   };
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -71,14 +72,13 @@ private:
   extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
      (PRUint32 * NS_OUTPARAM, nsIID *** NS_OUTPARAM);
 
-#define NS_DECL_CLASSINFO(_class) foobarstopcompilinghere;
-
-#define NS_IMPL_CLASSINFO(_class, _getlanguagehelper, _flags)           \
+#define NS_IMPL_CLASSINFO(_class, _getlanguagehelper, _flags, _cid)     \
   NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
   static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = { \
     NS_CI_INTERFACE_GETTER_NAME(_class),                                \
     _getlanguagehelper,                                                 \
-    _flags                                                              \
+    _flags,                                                             \
+    _cid,                                                               \
   };                                                                    \
   nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
 
