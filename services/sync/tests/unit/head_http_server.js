@@ -1,8 +1,5 @@
-let Httpd = {};
-Cu.import("resource://harness/modules/httpd.js", Httpd);
-
 function httpd_setup (handlers) {
-  let server = new Httpd.nsHttpServer();
+  let server = new nsHttpServer();
   for (let path in handlers) {
     server.registerPathHandler(path, handlers[path]);
   }

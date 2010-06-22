@@ -1,7 +1,14 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
+// Load httpd from the add-on test harness or from xpcshell and declare Cc, etc.
+// without a var/const so they don't get hoisted and conflict with load_httpd.
+if (this.do_load_httpd_js == null) {
+  Cc = Components.classes;
+  Ci = Components.interfaces;
+  Cr = Components.results;
+  Cu = Components.utils;
+  Cu.import("resource://harness/modules/httpd.js");
+}
+else
+  do_load_httpd_js();
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 

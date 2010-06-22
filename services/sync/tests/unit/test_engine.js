@@ -161,3 +161,12 @@ function test_sync() {
     engineObserver.reset();
   }
 }
+
+function run_test() {
+  test_members();
+  test_score();
+  test_resetClient();
+  test_wipeClient();
+  test_enabled();
+  test_sync();
+}

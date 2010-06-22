@@ -144,3 +144,9 @@ function test_updateCluster() {
     server.stop(function() {});
   }
 }
+
+function run_test() {
+  test_findCluster();
+  test_setCluster();
+  test_updateCluster();
+}

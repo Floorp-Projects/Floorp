@@ -6,8 +6,6 @@ Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
 let logger;
-let Httpd = {};
-Cu.import("resource://harness/modules/httpd.js", Httpd);
 
 function server_open(metadata, response) {
   let body;
@@ -131,7 +129,7 @@ function run_test() {
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
-  let server = new Httpd.nsHttpServer();
+  let server = new nsHttpServer();
   server.registerPathHandler("/open", server_open);
   server.registerPathHandler("/protected", server_protected);
   server.registerPathHandler("/404", server_404);
