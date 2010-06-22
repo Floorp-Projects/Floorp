@@ -22,6 +22,7 @@
  * Aza Raskin <aza@mozilla.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  * Ehsan Akhgari <ehsan@mozilla.com>
+ * Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -234,8 +235,23 @@ window.Page = {
     Navbar.show();    
     window.statusbar.visible = true;
     
+    this.setCloseButtonOnTabs();
+    
     // Mac Only
     Utils.getCurrentWindow().document.getElementById("main-window").removeAttribute("activetitlebarcolor");     
+  },
+  
+  setCloseButtonOnTabs : function() {
+    // TODO: we will need to modify the adjustTabstrip() to fix this when merging
+    // this extension to Firefox.
+    // http://mxr.mozilla.org/mozilla1.9.2/source/browser/base/content/tabbrowser.xml#3050
+    iQ.timeout(function() { // iQ.timeout adds a try/catch to setTimeout
+      var tabContainer = Utils.getCurrentWindow().gBrowser.tabContainer;
+      if (tabContainer.mCloseButtons == 1 &&
+          tabContainer.getAttribute("overflow") != "true") {
+        tabContainer.setAttribute("closebuttons", "alltabs");
+      };
+    }, 50);
   },
   
   setupKeyHandlers: function(){
@@ -305,10 +321,6 @@ window.Page = {
   // ----------  
   init: function() {
     var self = this;
-/*  Ian suspects we don't need these lines
-    Utils.homeTab.raw.maxWidth = 60;
-    Utils.homeTab.raw.minWidth = 60;
-*/
         
     // When you click on the background/empty part of TabCandy
     // we create a new group.
@@ -321,6 +333,8 @@ window.Page = {
         
     Tabs.onClose(function(){
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+        Page.setCloseButtonOnTabs();        
+          
         // Only go back to the TabCandy tab when there you close the last
         // tab of a group.
         var group = Groups.getActiveGroup();
@@ -594,6 +608,7 @@ UIClass.prototype = {
       Tabs.onOpen(function(a, b) {
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           self.navBar.show();
+          Page.setCloseButtonOnTabs();
         }, 1);
       });
     
@@ -607,11 +622,12 @@ UIClass.prototype = {
       });
       
       // ___ Page
+      var currentWindow = Utils.getCurrentWindow();
       Page.init();
+      currentWindow.addEventListener(
+        "resize", function() { Page.setCloseButtonOnTabs(); }, false)
       
       // ___ Storage
-      var currentWindow = Utils.getCurrentWindow();
-      
       var data = Storage.readUIData(currentWindow);
       this.storageSanity(data);
        
