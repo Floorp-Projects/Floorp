@@ -4219,6 +4219,11 @@ extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
     {0x1809fd50, 0x91e8, 0x11d5, \
       { 0x90, 0xf9, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
 
+// {DC524540-487E-4501-9AC7-AAA784B17C1C}
+#define XPCVARIANT_CID                                                        \
+    {0xdc524540, 0x487e, 0x4501,                                              \
+      { 0x9a, 0xc7, 0xaa, 0xa7, 0x84, 0xb1, 0x7c, 0x1c } }
+
 class XPCVariant : public nsIVariant
 {
 public:

@@ -81,7 +81,8 @@ CheckLoadURIFromScript(JSContext *aCx, const nsACString& aUriStr)
   return rv;
 }
 
-NS_IMPL_CLASSINFO(amInstallTrigger, NULL, nsIClassInfo::DOM_OBJECT)
+NS_IMPL_CLASSINFO(amInstallTrigger, NULL, nsIClassInfo::DOM_OBJECT,
+                  AM_InstallTrigger_CID)
 NS_IMPL_ISUPPORTS1_CI(amInstallTrigger, amIInstallTrigger)
 
 amInstallTrigger::amInstallTrigger()

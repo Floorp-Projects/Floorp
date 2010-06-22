@@ -75,6 +75,9 @@
 #define DEBUG_COMMANDLINE
 #endif
 
+#define NS_COMMANDLINE_CID \
+  { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } }
+
 class nsCommandLine : public nsICommandLineRunner
 {
 public:
@@ -114,7 +117,7 @@ nsCommandLine::nsCommandLine() :
 }
 
 
-NS_IMPL_CLASSINFO(nsCommandLine, NULL, 0)
+NS_IMPL_CLASSINFO(nsCommandLine, NULL, 0, NS_COMMANDLINE_CID)
 NS_IMPL_ISUPPORTS2_CI(nsCommandLine,
                       nsICommandLine,
                       nsICommandLineRunner)
@@ -709,9 +712,6 @@ nsCommandLine::GetHelpText(nsACString& aResult)
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandLine)
-
-#define NS_COMMANDLINE_CID \
-  { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } }
 
 NS_DEFINE_NAMED_CID(NS_COMMANDLINE_CID);
 
