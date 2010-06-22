@@ -6887,8 +6887,18 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-  mTransparentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
-  mMemoryDC = mTransparentSurface->GetDC();
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    nsRefPtr<gfxD2DSurface> newSurface =
+      new gfxD2DSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
+    mTransparentSurface = newSurface;
+    mMemoryDC = nsnull;
+  } else {
+    nsRefPtr<gfxWindowsSurface> newSurface =
+      new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
+    mTransparentSurface = newSurface;
+    mMemoryDC = newSurface->GetDC();
+  }
 }
 
 void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
@@ -6972,9 +6982,24 @@ nsresult nsWindow::UpdateTranslucentWindow()
   RECT winRect;
   ::GetWindowRect(hWnd, &winRect);
 
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    mMemoryDC = static_cast<gfxD2DSurface*>(mTransparentSurface.get())->
+      GetDC(PR_TRUE);
+  }
   // perform the alpha blend
-  if (!::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
+  PRBool updateSuccesful = 
+    ::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA);
+
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    nsIntRect r(0, 0, 0, 0);
+    static_cast<gfxD2DSurface*>(mTransparentSurface.get())->ReleaseDC(&r);
+  }
+
+  if (!updateSuccesful) {
     return NS_ERROR_FAILURE;
+  }
 #endif
 
   return NS_OK;
