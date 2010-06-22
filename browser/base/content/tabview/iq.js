@@ -631,10 +631,6 @@ iQ.fn = iQ.prototype = {
         for(var prop in css){
           prop = prop.replace( rupper, "-$1" ).toLowerCase();
           iQ(this).css(prop, cStyle.getPropertyValue(prop));
-          
-          // While we are looping through all of the CSS properties, it makes
-          // sense to add the default unit of "px" to any unadorned number.
-          if( typeof css[prop] == "number" ) css[prop] = css[prop] + "px"
         }    
       });
 
