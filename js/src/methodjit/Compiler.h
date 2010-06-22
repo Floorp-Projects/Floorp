@@ -190,10 +190,11 @@ class Compiler
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_unbrand();
-    void jsop_getprop(JSAtom *atom);
+    void jsop_getprop(JSAtom *atom, bool typeCheck = true);
     void jsop_length();
     void jsop_setprop(JSAtom *atom);
     void jsop_setprop_slow(JSAtom *atom);
+    void jsop_instanceof();
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);

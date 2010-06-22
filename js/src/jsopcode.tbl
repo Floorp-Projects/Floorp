@@ -279,7 +279,7 @@ OPDEF(JSOP_THROW,     110,js_throw_str, NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 /* 'in' and 'instanceof' ops. */
 OPDEF(JSOP_IN,        111,js_in_str,    js_in_str,    1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_INSTANCEOF,112,js_instanceof_str,js_instanceof_str,1,2,1,11,JOF_BYTE|JOF_LEFTASSOC)
+OPDEF(JSOP_INSTANCEOF,112,js_instanceof_str,js_instanceof_str,1,2,1,11,JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT)
 
 /* debugger op */
 OPDEF(JSOP_DEBUGGER,  113,"debugger",   NULL,         1,  0,  0,  0,  JOF_BYTE)
