@@ -1,0 +1,4 @@
+component {e6a3f533-4ffa-4615-8eb4-d4e72d883fa7} nsContentPrefService.js
+contract @mozilla.org/content-pref/service;1 {e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}
+component {8df290ae-dcaa-4c11-98a5-2429a4dc97bb} nsContentPrefService.js
+contract @mozilla.org/content-pref/hostname-grouper;1 {8df290ae-dcaa-4c11-98a5-2429a4dc97bb}

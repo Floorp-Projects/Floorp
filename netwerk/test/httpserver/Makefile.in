@@ -47,6 +47,7 @@ MODULE          = test_necko
 
 EXTRA_COMPONENTS = \
                    httpd.js \
+                   httpd.manifest \
                    $(NULL)
 
 XPIDLSRCS       = \

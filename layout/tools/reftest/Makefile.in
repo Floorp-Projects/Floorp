@@ -46,6 +46,7 @@ MODULE		= reftest
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
+		reftest-cmdline.manifest \
 		$(NULL)
 
 ifdef XPI_NAME

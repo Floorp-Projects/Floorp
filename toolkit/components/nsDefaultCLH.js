@@ -36,14 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const nsISupports              = Components.interfaces.nsISupports;
 
-const nsICategoryManager       = Components.interfaces.nsICategoryManager;
-const nsIComponentRegistrar    = Components.interfaces.nsIComponentRegistrar;
 const nsICommandLine           = Components.interfaces.nsICommandLine;
 const nsICommandLineHandler    = Components.interfaces.nsICommandLineHandler;
-const nsIFactory               = Components.interfaces.nsIFactory;
-const nsIModule                = Components.interfaces.nsIModule;
 const nsIPrefBranch            = Components.interfaces.nsIPrefBranch;
 const nsISupportsString        = Components.interfaces.nsISupportsString;
 const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
@@ -68,17 +66,13 @@ function getDirectoryService()
                    .getService(nsIProperties);
 }
 
-var nsDefaultCLH = {
+function nsDefaultCLH() { }
+nsDefaultCLH.prototype = {
+  classID: Components.ID("{6ebc941a-f2ff-4d56-b3b6-f7d0b9d73344}"),
+
   /* nsISupports */
 
-  QueryInterface : function clh_QI(iid) {
-    if (iid.equals(nsICommandLineHandler) ||
-        iid.equals(nsIFactory) ||
-        iid.equals(nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface : XPCOMUtils.generateQI([nsICommandLineHandler]),
 
   /* nsICommandLineHandler */
 
@@ -160,78 +154,6 @@ var nsDefaultCLH = {
   },
 
   helpInfo : "",
-
-  /* nsIFactory */
-
-  createInstance : function mdh_CI(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    return this.QueryInterface(iid);
-  },
-
-  lockFactory : function mdh_lock(lock) {
-    /* no-op */
-  }
 };
 
-const clh_contractID = "@mozilla.org/toolkit/default-clh;1";
-const clh_CID = Components.ID("{6ebc941a-f2ff-4d56-b3b6-f7d0b9d73344}");
-
-var Module = {
-  /* nsISupports */
-
-  QueryInterface : function mod_QI(iid) {
-    if (iid.equals(nsIModule) ||
-        iid.equals(nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  /* nsIModule */
-
-  getClassObject : function mod_gch(compMgr, cid, iid) {
-    if (cid.equals(clh_CID))
-      return nsDefaultCLH.QueryInterface(iid);
-
-    throw components.results.NS_ERROR_FAILURE;
-  },
-
-  registerSelf : function mod_regself(compMgr, fileSpec, location, type) {
-    var compReg = compMgr.QueryInterface(nsIComponentRegistrar);
-
-    compReg.registerFactoryLocation(clh_CID,
-                                    "nsDefaultCLH",
-                                    clh_contractID,
-                                    fileSpec,
-                                    location,
-                                    type);
-
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(nsICategoryManager);
-
-    catMan.addCategoryEntry("command-line-handler",
-                            "y-default",
-                            clh_contractID, true, true);
-  },
-
-  unregisterSelf : function mod_unreg(compMgr, location, type) {
-    var compReg = compMgr.QueryInterface(nsIComponentRegistrar);
-    compReg.unregisterFactoryLocation(clh_CID, location);
-
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(nsICategoryManager);
-
-    catMan.deleteCategoryEntry("command-line-handler",
-                               "y-default");
-  },
-
-  canUnload : function (compMgr) {
-    return true;
-  }
-};
-
-function NSGetModule(compMgr, fileSpec) {
-  return Module;
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDefaultCLH]);

@@ -1,0 +1,12 @@
+component {B3C290A6-3943-4B89-8BBE-C01EB7B3B311} nsUpdateService.js
+contract @mozilla.org/updates/update-service;1 {B3C290A6-3943-4B89-8BBE-C01EB7B3B311}
+category update-timer nsUpdateService @mozilla.org/updates/update-service;1,getService,background-update-timer,app.update.interval,86400
+component {093C2356-4843-4C65-8709-D7DBCBBE7DFB} nsUpdateService.js
+contract @mozilla.org/updates/update-manager;1 {093C2356-4843-4C65-8709-D7DBCBBE7DFB}
+component {898CDC9B-E43F-422F-9CC4-2F6291B415A3} nsUpdateService.js
+contract @mozilla.org/updates/update-checker;1 {898CDC9B-E43F-422F-9CC4-2F6291B415A3}
+component {27ABA825-35B5-4018-9FDD-F99250A0E722} nsUpdateService.js
+contract @mozilla.org/updates/update-prompt;1 {27ABA825-35B5-4018-9FDD-F99250A0E722}
+component {e43b0010-04ba-4da6-b523-1f92580bc150} nsUpdateServiceStub.js
+contract @mozilla.org/updates/update-service-stub;1 {e43b0010-04ba-4da6-b523-1f92580bc150}
+category profile-after-change nsUpdateServiceStub @mozilla.org/updates/update-service-stub;1

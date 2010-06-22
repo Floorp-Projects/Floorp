@@ -1693,13 +1693,7 @@ UpdateService.prototype = {
     return interfaces;
   },
 
-  classDescription: "Update Service",
-  contractID: "@mozilla.org/updates/update-service;1",
   classID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
-  _xpcom_categories: [{ category: CATEGORY_UPDATE_TIMER,
-                        value: "@mozilla.org/updates/update-service;1," +
-                               "getService,background-update-timer," +
-                                PREF_APP_UPDATE_INTERVAL + ",86400" }],
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIApplicationUpdateService,
                                          Ci.nsIAddonUpdateCheckListener,
@@ -1949,8 +1943,6 @@ UpdateManager.prototype = {
     }
   },
 
-  classDescription: "Update Manager",
-  contractID: "@mozilla.org/updates/update-manager;1",
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateManager, Ci.nsIObserver])
 };
@@ -2192,8 +2184,6 @@ Checker.prototype = {
     }
   },
 
-  classDescription: "Update Checker",
-  contractID: "@mozilla.org/updates/update-checker;1",
   classID: Components.ID("{898CDC9B-E43F-422F-9CC4-2F6291B415A3}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateChecker])
 };
@@ -3023,8 +3013,8 @@ UpdatePrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdatePrompt])
 };
 
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([UpdateService, Checker, UpdatePrompt, UpdateManager]);
+var components = [UpdateService, Checker, UpdatePrompt, UpdateManager];
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
 #if 0
 /**
