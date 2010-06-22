@@ -731,7 +731,7 @@ rd:
     times 4 dw 0x40
 
 align 16
-global sym(vp8_six_tap_mmx)
+global sym(vp8_six_tap_mmx) HIDDEN_DATA
 sym(vp8_six_tap_mmx):
     times 8 dw 0
     times 8 dw 0
@@ -791,7 +791,7 @@ sym(vp8_six_tap_mmx):
 
 
 align 16
-global sym(vp8_bilinear_filters_mmx)
+global sym(vp8_bilinear_filters_mmx) HIDDEN_DATA
 sym(vp8_bilinear_filters_mmx):
     times 8 dw 128
     times 8 dw 0
