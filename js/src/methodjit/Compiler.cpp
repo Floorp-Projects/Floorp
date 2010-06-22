@@ -1967,9 +1967,6 @@ mjit::Compiler::jsop_getprop(uint32 atomIndex)
 void
 mjit::Compiler::jsop_setprop(uint32 atomIndex)
 {
-    jsop_setprop_slow(atomIndex);
-
-#if 0
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
 
@@ -2088,7 +2085,6 @@ mjit::Compiler::jsop_setprop(uint32 atomIndex)
     }
 
     pics.append(pic);
-#endif
 }
 
 #else /* ENABLE_PIC */
