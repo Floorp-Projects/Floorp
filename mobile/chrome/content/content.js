@@ -254,7 +254,6 @@ Coalescer.prototype = {
       }
       case "MozApplicationManifest": {
         let doc = aEvent.originalTarget;
-
         sendAsyncMessage("Browser:MozApplicationManifest", {
           location: doc.documentURIObject.spec,
           manifest: doc.documentElement.getAttribute("manifest"),
@@ -263,7 +262,8 @@ Coalescer.prototype = {
         break;
       }
       case "scroll":
-        sendSyncMessage("Browser:PageScroll", {});
+        let scroll = Util.getScrollOffset(content);
+        sendSyncMessage("Browser:PageScroll", { scrollX: scroll.x, scrollY: scroll.y });
         break;
     }
   },

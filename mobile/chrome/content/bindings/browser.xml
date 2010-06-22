@@ -102,7 +102,7 @@
             case "pageshow":
               this.onPageShow(aMessage);
 
-              if (this.mIconURL == "")
+              if (this.mIconURL == "" && this._documentURI)
                 this.mIconURL = this.documentURI.prePath + "/favicon.ico";
               break;
 
@@ -326,19 +326,8 @@
             }
             // Delete the feeds cache if we're hiding the topmost page
             // (as opposed to one of its iframes).
-            // XXX e10s contentDocument is not accessible, we need to use
-            // outerWindowID
-            if (this.feeds && aMessage.target == this.contentDocument)
+            if (this.feeds && aMessage.target == this)
               this.feeds = null;
-            if (!this.docShell || !this.fastFind)
-              return;
-
-            var tabBrowser = this.getTabBrowser();
-            if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
-              this.fastFind.setDocShell(this.docShell);
-
-            if (this._scrollable)
-              this._autoScrollPopup.hidePopup();
          ]]>
         </body>
       </method>

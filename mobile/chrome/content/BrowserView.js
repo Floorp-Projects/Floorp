@@ -551,7 +551,8 @@ BrowserView.prototype = {
       return;
 
     // XXX shouldn't really make calls to Browser
-    Browser.scrollContentToBrowser();
+    let json = aMessage.json;
+    Browser.scrollContentToBrowser(json.scrollX, json.scrollY);
   },
 
   _ignorePageScroll: false,

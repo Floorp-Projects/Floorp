@@ -688,18 +688,16 @@ var Browser = {
     let browser = this.selectedBrowser;
     if (browser) {
       let scroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
-      let windowUtils = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-      browser.contentWindow.scrollTo(scroll.x, scroll.y);
+      browser.messageManager.sendAsyncMessage("Content:ScrollTo", { x: scroll.x, y: scroll.y });
     }
   },
 
   /** Update viewport to location of browser's scrollbars. */
-  scrollContentToBrowser: function scrollContentToBrowser() {
-    let pos = BrowserView.Util.getContentScrollOffset(this.selectedBrowser);
-    if (pos.y != 0)
+  scrollContentToBrowser: function scrollContentToBrowser(aScrollX, aScrollY) {
+    if (aScrollY != 0)
       Browser.hideTitlebar();
 
-    Browser.contentScrollboxScroller.scrollTo(pos.x, pos.y);
+    Browser.contentScrollboxScroller.scrollTo(aScrollX, aScrollY);
     this._browserView.onAfterVisibleMove();
   },
 
@@ -2728,7 +2726,7 @@ ProgressController.prototype = {
       Util.executeSoon(function() {
         let scroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
         if (scroll.isZero())
-          Browser.scrollContentToBrowser();
+          Browser.scrollContentToBrowser(0, 0);
       });
     }
     else {
