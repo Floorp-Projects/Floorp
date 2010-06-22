@@ -111,22 +111,6 @@ using namespace js;
 JS_PUBLIC_DATA(jsid) JSID_VOID = { (size_t)JSID_VOID_TYPE };
 #endif
 
-JS_FRIEND_API(JSBool)
-JSVAL_TO_JSID(JSContext *cx, const jsval *vp, jsid *id)
-{
-    const jsval &v = *vp;
-    if (JSVAL_IS_STRING(v))
-        return js_ValueToStringId(cx, js::Valueify(v), id);
-
-    if (JSVAL_IS_INT(v))
-        *id = INT_TO_JSID(JSVAL_TO_INT(v));
-    else if (JSVAL_IS_VOID(v))
-        *id = JSID_VOID;
-    else
-        *id = OBJECT_TO_JSID(JSVAL_TO_OBJECT(v));
-    return true;
-}
-
 JS_PUBLIC_API(int64)
 JS_Now()
 {
