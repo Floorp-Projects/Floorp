@@ -256,8 +256,13 @@ typedef uint32 JSValueTag;
 
 #endif  /* defined(__cplusplus) */
 
-#define JSVAL_LOWER_BOUND_OF_OBJ_OR_NULL JSVAL_TAG_NULL
-#define JSVAL_LOWER_BOUND_OF_OBJ         JSVAL_TAG_NONFUNOBJ
+/* Avoid ordering dependencies on the set { null, funobj, nonfunobj } */
+#define JSVAL_LOWER_TYPE_OF_OBJ_OR_NULL_SET JSVAL_TYPE_NULL
+#define JSVAL_LOWER_TYPE_OF_OBJ_SET         JSVAL_TYPE_NONFUNOBJ
+#define JSVAL_UPPER_TYPE_OF_OBJ_SET         JSVAL_TYPE_FUNOBJ
+#define JSVAL_LOWER_TAG_OF_OBJ_OR_NULL_SET  JSVAL_TAG_NULL
+#define JSVAL_LOWER_TAG_OF_OBJ_SET          JSVAL_TAG_NONFUNOBJ
+#define JSVAL_UPPER_TAG_OF_OBJ_SET          JSVAL_TAG_FUNOBJ
 
 typedef enum JSWhyMagic
 {
@@ -473,6 +478,24 @@ JSVAL_SAME_PRIMITIVE_TYPE_OR_BOTH_OBJECTS_IMPL(jsval_layout lhs, jsval_layout rh
     return (ltag < clear && rtag < clear) || (((ltag ^ rtag) & 0xFFFFFFF7) == 0);
 }
 
+static JS_ALWAYS_INLINE JSValueType
+JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
+{
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
+    JSValueType t = (JSValueType)(l.s.tag & 0xF);
+    JS_ASSERT(t >= JSVAL_TYPE_INT32 && t <= JSVAL_UPPER_TYPE_OF_OBJ_SET);
+    return t;
+}
+
+static JS_ALWAYS_INLINE JSValueTag
+JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
+{
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
+    JSValueTag t = l.s.tag;
+    JS_ASSERT(t >= JSVAL_TAG_INT32 && t <= JSVAL_UPPER_TAG_OF_OBJ_SET);
+    return t;
+}
+
 #elif JS_BITS_PER_WORD == 64
 
 # error "TODO"
@@ -505,14 +528,14 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT_IMPL(jsval_layout l)
 {
     JSValueTag tag = l.s.tag;
-    return tag >= JSVAL_LOWER_BOUND_OF_OBJ;
+    return tag >= JSVAL_LOWER_TAG_OF_OBJ_SET;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT_OR_NULL_IMPL(jsval_layout l)
 {
     JSValueTag tag = l.s.tag;
-    return tag >= JSVAL_LOWER_BOUND_OF_OBJ_OR_NULL;
+    return tag >= JSVAL_LOWER_TAG_OF_OBJ_OR_NULL_SET;
 }
 
 static JS_ALWAYS_INLINE JSBool

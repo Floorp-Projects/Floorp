@@ -1532,8 +1532,8 @@ GetBuiltinFunction(JSContext *cx, uintN index);
 extern void
 SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
-extern bool
-NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot);
+extern void
+ExternNativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot);
 
 #ifdef MOZ_TRACEVIS
 

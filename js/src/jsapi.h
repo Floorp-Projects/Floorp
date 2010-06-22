@@ -58,7 +58,6 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_FALSE  BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE)
 #define JSVAL_TRUE   BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE)
 #define JSVAL_VOID   BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0)
-#define JSVAL_HOLE   BUILD_JSVAL(JSVAL_TAG_MAGIC,     0)
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
@@ -3203,6 +3202,8 @@ class Value
      * uses of public jsval members in jsapi.h/jspubtd.h.
      */
     friend jsdouble UnboxDoubleHelper(uint32 mask, uint32 payload);
+    friend void NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp);
+    friend void NonNumberValueToSlot(const Value &v, JSValueType type, double *slot);
 
   protected:
     /* Type masks */
@@ -3419,8 +3420,6 @@ class Value
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
-    bool isIntDouble() const;
-
     int32 traceKind() const {
         JS_ASSERT(isGCThing());
         return JSVAL_TRACE_KIND_IMPL(data);
@@ -3508,20 +3507,13 @@ class Value
         return data.asBits;
     }
 
-#ifdef DEBUG
-    char typeTag() const {
-        if (isInt32()) return 'I';
-        if (isDouble()) return 'D';
-        if (isString()) return 'S';
-        if (isFunObj()) return 'F';
-        if (isNonFunObj()) return 'O';
-        if (isBoolean()) return 'B';
-        if (isNull()) return 'N';
-        if (isUndefined()) return 'U';
-        if (isMagic()) return 'H';
-        return '?';
+    JSValueType extractNonDoubleType() const {
+        return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
     }
-#endif
+
+    JSValueTag extractNonDoubleTag() const {
+        return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
+    }
 
     /* Swap two Values */
 
