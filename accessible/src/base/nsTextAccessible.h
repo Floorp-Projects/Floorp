@@ -47,7 +47,7 @@
 class nsTextAccessible : public nsLinkableAccessible
 {
 public:
-  nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsTextAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);

@@ -1,3 +1,4 @@
+/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,7 +46,7 @@
 #endif
 
 #include "GLDefs.h"
-#include "gfxTypes.h"
+#include "gfxRect.h"
 #include "nsISupportsImpl.h"
 #include "prlink.h"
 
@@ -59,6 +60,10 @@
 #define GLAPIENTRY
 #endif
 #define GLAPI
+#endif
+
+#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID)
+#define USE_GLES2 1
 #endif
 
 typedef char realGLboolean;
@@ -84,19 +89,19 @@ public:
     } SymLoadStruct;
 
     PRBool LoadSymbols(SymLoadStruct *firstStruct,
-		       PRBool tryplatform = PR_FALSE,
-		       const char *prefix = nsnull);
+                       PRBool tryplatform = PR_FALSE,
+                       const char *prefix = nsnull);
 
     /*
      * Static version of the functions in this class
      */
     static PRFuncPtr LookupSymbol(PRLibrary *lib,
-				  const char *symname,
-				  PlatformLookupFunction lookupFunction = nsnull);
+                                  const char *symname,
+                                  PlatformLookupFunction lookupFunction = nsnull);
     static PRBool LoadSymbols(PRLibrary *lib,
-			      SymLoadStruct *firstStruct,
-			      PlatformLookupFunction lookupFunction = nsnull,
-			      const char *prefix = nsnull);
+                              SymLoadStruct *firstStruct,
+                              PlatformLookupFunction lookupFunction = nsnull,
+                              const char *prefix = nsnull);
 protected:
     LibrarySymbolLoader() {
         mLibrary = nsnull;
@@ -125,13 +130,13 @@ public:
     virtual PRBool SetupLookupFunction() = 0;
 
     void *GetUserData(void *aKey) {
-	void *result = nsnull;
-	mUserData.Get(aKey, &result);
-	return result;
+        void *result = nsnull;
+        mUserData.Get(aKey, &result);
+        return result;
     }
 
     void SetUserData(void *aKey, void *aValue) {
-	mUserData.Put(aKey, aValue);
+        mUserData.Put(aKey, aValue);
     }
 
     enum NativeDataType {
@@ -143,12 +148,24 @@ public:
     };
 
     virtual void *GetNativeData(NativeDataType aType) { return NULL; }
+
+    /* If this is a PBuffer context, resize the pbufer to the given dimensions,
+     * keping the same format and attributes.  If the resize succeeds, return
+     * PR_TRUE.  Otherwise, or if this is not a pbuffer, return PR_FALSE.
+     *
+     * On a successful resize, the previous contents of the pbuffer are cleared,
+     * and the new contents are undefined.
+     */
+    virtual PRBool Resize(const gfxIntSize& aNewSize) { return PR_FALSE; }
+
 protected:
 
     PRBool mInitialized;
     nsDataHashtable<nsVoidPtrHashKey, void*> mUserData;
 
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
+
+    PRBool IsExtensionSupported(const char *extension);
 
     //
     // the wrapped functions

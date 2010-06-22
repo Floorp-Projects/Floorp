@@ -944,7 +944,11 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCSSParser parser(doc->CSSLoader());
 
   if (aUseSVGMode) {
+#ifdef MOZ_SVG
     parser.SetSVGMode(PR_TRUE);
+#else
+    NS_NOTREACHED("aUseSVGMode should not be set");
+#endif
   }
 
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
@@ -1595,7 +1599,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
-        case eCSSProperty__moz_background_size: {
+        case eCSSProperty_background_size: {
           const nsStyleBackground *bg =
             static_cast<const nsStyleBackground*>(styleStruct);
           nsCSSValuePairList *result = nsnull;

@@ -105,7 +105,8 @@ function test() {
     Watcher.allowClose = true;
     ok(Watcher.seen, "Should have seen a prompt dialog");
     ok(!window.closed, "Shouldn't have closed the window");
-    var win2 = OpenBrowserWindow();
+
+    var win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
     ok(win2 != null, "Should have been able to open a new window");
     win2.addEventListener("load", function() {
       win2.removeEventListener("load", arguments.callee, false);

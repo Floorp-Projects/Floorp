@@ -91,7 +91,7 @@ template = '''#filter emptyLines
 #define firefox_community %s
 
 # LOCALIZATION NOTE (firefox_about):
-# link title for http://www.mozilla.com/en-US/firefox/about/
+# link title for http://www.mozilla.com/en-US/about/
 #define firefox_about %s
 
 #unfilter emptyLines'''

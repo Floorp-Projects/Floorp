@@ -51,7 +51,6 @@
 #include "nsINativeAppSupport.h"
 #include "nsAppRunner.h"
 #include "nsComponentManagerUtils.h"
-#include "nsCommandLineServiceMac.h"
 #include "nsIServiceManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIAppStartup.h"
@@ -63,6 +62,8 @@
 #include "nsICommandLineRunner.h"
 #include "nsIMacDockSupport.h"
 #include "nsIStandaloneNativeMenu.h"
+#include "nsILocalFileMac.h"
+#include "nsString.h"
 
 @interface MacApplicationDelegate : NSObject
 {
@@ -152,14 +153,9 @@ SetupMacApplicationDelegate()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Opening the application is handled specially elsewhere,
-// don't define applicationOpenUntitledFile: .
-
 // The method that NSApplication calls upon a request to reopen, such as when
-// the Dock icon is clicked and no windows are open.
-
-// A "visible" window may be miniaturized, so we can't skip
-// nsCocoaNativeReOpen() if 'flag' is 'true'.
+// the Dock icon is clicked and no windows are open. A "visible" window may be
+// miniaturized, so we can't skip nsCocoaNativeReOpen() if 'flag' is 'true'.
 - (BOOL)applicationShouldHandleReopen:(NSApplication*)theApp hasVisibleWindows:(BOOL)flag
 {
   nsCOMPtr<nsINativeAppSupport> nas = do_CreateInstance(NS_NATIVEAPPSUPPORT_CONTRACTID);
@@ -175,19 +171,42 @@ SetupMacApplicationDelegate()
 
 // The method that NSApplication calls when documents are requested to be opened.
 // It will be called once for each selected document.
-
 - (BOOL)application:(NSApplication*)theApplication openFile:(NSString*)filename
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // Take advantage of the existing "command line" code for Macs.
-  nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
-  // URLWithString expects our string to be a legal URL with percent escapes.
-  filename = [filename stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-  // We don't actually care about Mac filetypes in this context, just pass a placeholder.
-  cmdLine.HandleOpenOneDoc((CFURLRef)[NSURL URLWithString:filename], 'abcd');
+  NSString *escapedPath = [filename stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 
-  return YES;
+  nsCOMPtr<nsILocalFileMac> inFile;
+  nsresult rv = NS_NewLocalFileWithCFURL((CFURLRef)[NSURL URLWithString:escapedPath], PR_TRUE, getter_AddRefs(inFile));
+  if (NS_FAILED(rv))
+    return NO;
+
+  nsCOMPtr<nsICommandLineRunner> cmdLine(do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+  if (!cmdLine) {
+    NS_ERROR("Couldn't create command line!");
+    return NO;
+  }
+
+  nsCString filePath;
+  rv = inFile->GetNativePath(filePath);
+  if (NS_FAILED(rv))
+    return NO;
+
+  nsCOMPtr<nsIFile> workingDir;
+  rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
+  if (NS_FAILED(rv))
+    return NO;
+
+  const char *argv[3] = {nsnull, "-file", filePath.get()};
+  rv = cmdLine->Init(3, const_cast<char**>(argv), workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  if (NS_FAILED(rv))
+    return NO;
+
+  if (NS_SUCCEEDED(cmdLine->Run()))
+    return YES;
+
+  return NO;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -195,23 +214,12 @@ SetupMacApplicationDelegate()
 // The method that NSApplication calls when documents are requested to be printed
 // from the Finder (under the "File" menu).
 // It will be called once for each selected document.
-
 - (BOOL)application:(NSApplication*)theApplication printFile:(NSString*)filename
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  // Take advantage of the existing "command line" code for Macs.
-  nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
-  // We don't actually care about Mac filetypes in this context, just pass a placeholder.
-  cmdLine.HandlePrintOneDoc((CFURLRef)[NSURL URLWithString:filename], 'abcd');
-
-  return YES;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+  return NO;
 }
 
 // Create the menu that shows up in the Dock.
-
 - (NSMenu*)applicationDockMenu:(NSApplication*)sender
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;

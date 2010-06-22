@@ -94,6 +94,10 @@ CMMSRCS = \
 		nsStandaloneNativeMenu.mm \
 		$(NULL)
 
+ifeq (x86_64,$(TARGET_CPU))
+CMMSRCS += ComplexTextInputPanel.mm
+endif
+
 XPIDLSRCS	+= \
 		nsPIWidgetCocoa.idl \
 		$(NULL)

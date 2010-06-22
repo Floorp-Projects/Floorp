@@ -222,14 +222,12 @@ nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
   return rv;
 }
 
-nsresult
+void
 nsINode::DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName)
 {
   nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable(aCategory)->DeleteProperty(this, aPropertyName);
+  if (doc)
+    doc->PropertyTable(aCategory)->DeleteProperty(this, aPropertyName);
 }
 
 void*
@@ -2884,7 +2882,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+               // And the restyle bits
+               ELEMENT_ALL_RESTYLE_FLAGS);
   }
 
   // If NODE_FORCE_XBL_BINDINGS was set we might have anonymous children
@@ -3483,14 +3483,13 @@ nsGenericElement::GetScriptTypeID() const
 {
     PtrBits flags = GetFlags();
 
-    /* 4 bits reserved for script-type ID. */
-    return (flags >> NODE_SCRIPT_TYPE_OFFSET) & 0x000F;
+    return (flags >> NODE_SCRIPT_TYPE_OFFSET) & NODE_SCRIPT_TYPE_MASK;
 }
 
 NS_IMETHODIMP
 nsGenericElement::SetScriptTypeID(PRUint32 aLang)
 {
-    if ((aLang & 0x000F) != aLang) {
+    if ((aLang & NODE_SCRIPT_TYPE_MASK) != aLang) {
         NS_ERROR("script ID too large!");
         return NS_ERROR_FAILURE;
     }

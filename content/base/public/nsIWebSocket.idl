@@ -1,0 +1,109 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Wellington Fernando de Macedo.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Wellington Fernando de Macedo <wfernandom2004@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMEventListener;
+interface nsIPrincipal;
+interface nsIScriptContext;
+interface nsPIDOMWindow;
+
+/**
+ * The nsIWebSocket interface enables Web applications to maintain
+ * bidirectional communications with server-side processes as described in:
+ *
+ * http://dev.w3.org/html5/websockets/
+ *
+ */
+[scriptable, uuid(4403cd57-07fc-477f-a062-d6ba7dd0781b)]
+interface nsIWebSocket : nsISupports
+{
+  readonly attribute DOMString url;
+
+  //ready state
+  const unsigned short CONNECTING = 0;
+  const unsigned short OPEN = 1;
+  const unsigned short CLOSING = 2;
+  const unsigned short CLOSED = 3;
+  readonly attribute unsigned short readyState;
+
+  readonly attribute unsigned long bufferedAmount;
+
+  // event handler attributes
+  attribute nsIDOMEventListener onopen;
+  attribute nsIDOMEventListener onmessage;
+  attribute nsIDOMEventListener onerror;
+  attribute nsIDOMEventListener onclose;
+
+  /**
+   * Transmits data using the connection.
+   *
+   * @param data The data to be transmited.
+   * @return if the connection is still established (and the data was queued or
+   *         sent successfully).
+   */
+  boolean send(in DOMString data);
+
+  /**
+   * Closes the Web Socket connection or connection attempt, if any.
+   * If the connection is already closed, it does nothing.
+   */
+  void close();
+
+  /**
+   * Initialize the object for use from C++ code with the principal, script
+   * context, and owner window that should be used.
+   *
+   * @param principal The principal to use for the request. This must not be
+   *                  null.
+   * @param scriptContext The script context to use for the request. May be
+   *                      null.
+   * @param ownerWindow The associated window for the request. May be null.
+   * @param url The url for opening the socket. This must not be empty, and
+   *            must have an absolute url, using either the ws or wss schemes.
+   * @param protocol  Specifies a sub-protocol that the server must support for
+   *                  the connection to be successful. If empty, no protocol is
+   *                  specified.
+   */
+  [noscript] void init(in nsIPrincipal principal,
+                       in nsIScriptContext scriptContext,
+                       in nsPIDOMWindow ownerWindow,
+                       in DOMString url,
+                       in DOMString protocol);
+};

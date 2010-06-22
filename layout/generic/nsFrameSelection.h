@@ -463,6 +463,12 @@ public:
   /*unsafe*/
   nsresult CharacterExtendForDelete();
 
+  /** CharacterExtendForBackspace extends the selection backward (logically) to
+   * the previous character cell, so that the selected cell can be deleted.
+   */
+  /*unsafe*/
+  nsresult CharacterExtendForBackspace();
+
   /** WordMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one word left or right.
    * @param aForward move forward in document.

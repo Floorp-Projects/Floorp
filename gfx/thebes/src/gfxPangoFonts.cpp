@@ -289,6 +289,7 @@ public:
             mPatterns.AppendElement();
             mPatterns[i].own(pattern);
         }
+        mIsLocalUserFont = PR_TRUE;
     }
 };
 

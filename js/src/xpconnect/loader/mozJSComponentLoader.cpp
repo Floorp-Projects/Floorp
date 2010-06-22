@@ -72,6 +72,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsIFileURL.h"
+#include "nsIJARURI.h"
 #include "nsNetUtil.h"
 #endif
 #include "jsxdrapi.h"
@@ -82,6 +83,9 @@
 #include "nsIConsoleService.h"
 #include "prmem.h"
 #include "plbase64.h"
+#if defined(XP_WIN)
+#include "nsILocalFileWin.h"
+#endif
 
 #if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND) || defined(MOZ_VTUNE) || defined(MOZ_TRACEVIS)
 #include "jsdbgapi.h"
@@ -660,23 +664,117 @@ mozJSComponentLoader::ReallyInit()
     return NS_OK;
 }
 
+nsresult
+mozJSComponentLoader::FileKey(nsILocalFile* aFile, nsAString &aResult)
+{
+    nsresult rv = NS_OK;
+    nsAutoString canonicalPath;
+
+#if defined(XP_WIN)
+    nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(aFile, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    winFile->GetCanonicalPath(canonicalPath);
+#else
+    aFile->GetPath(canonicalPath);
+#endif
+
+    aResult = NS_LITERAL_STRING("f");
+    aResult += canonicalPath;
+
+    return rv;
+}
+
+nsresult
+mozJSComponentLoader::JarKey(nsILocalFile* aFile,
+                             const nsACString &aComponentPath,
+                             nsAString &aResult)
+{
+    nsresult rv = NS_OK;
+    nsAutoString canonicalPath;
+
+#if defined(XP_WIN)
+    nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(aFile, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    winFile->GetCanonicalPath(canonicalPath);
+#else
+    aFile->GetPath(canonicalPath);
+#endif
+
+    aResult = NS_LITERAL_STRING("j");
+    aResult += canonicalPath;
+    AppendUTF8toUTF16(aComponentPath, aResult);
+
+    return rv;
+}
+
 NS_IMETHODIMP
 mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
                                  nsIModule* *aResult)
 {
+    nsCOMPtr<nsIURI> uri;
+    nsCAutoString spec;
+    NS_GetURLSpecFromActualFile(aComponentFile, spec);
+
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString hashstring;
+    rv = FileKey(aComponentFile, hashstring);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return LoadModuleImpl(aComponentFile,
+                          hashstring,
+                          uri, aResult);
+}
+
+NS_IMETHODIMP
+mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
+                                        const nsACString &aComponentPath,
+                                        nsIModule* *aResult)
+{
+#if !defined(XPCONNECT_STANDALONE)
+    nsresult rv;
+
+    nsCAutoString fileSpec;
+    NS_GetURLSpecFromActualFile(aJarFile, fileSpec);
+
+    nsCAutoString jarSpec("jar:");
+    jarSpec += fileSpec;
+    jarSpec += "!/";
+    jarSpec += aComponentPath;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), jarSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString hashstring;
+    rv = JarKey(aJarFile, aComponentPath, hashstring);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return LoadModuleImpl(aJarFile,
+                          hashstring,
+                          uri, aResult);
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult
+mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
+                                     nsAString &aKey,
+                                     nsIURI* aComponentURI,
+                                     nsIModule* *aResult)
+{
     nsresult rv;
 
 #ifdef NS_FUNCTION_TIMER
-    nsAutoString path__(NS_LITERAL_STRING("N/A"));
-    aComponentFile->GetPath(path__);
+    nsCAutoString spec__("N/A");
+    aComponentURI->GetSpec(spec__);
     NS_TIME_FUNCTION_FMT("%s (line %d) (file: %s)", MOZ_FUNCTION_NAME,
-                         __LINE__, nsPromiseFlatCString(NS_LossyConvertUTF16toASCII(path__)).BeginReading());
+                         __LINE__, spec__.get());
 #endif
-
-    nsCAutoString leafName;
-    aComponentFile->GetNativeLeafName(leafName);
-    if (!StringTail(leafName, 3).LowerCaseEqualsLiteral(".js"))
-        return NS_ERROR_INVALID_ARG;
 
     if (!mInitialized) {
         rv = ReallyInit();
@@ -684,14 +782,15 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
             return rv;
     }
 
-    nsCOMPtr<nsIHashable> lfhash(do_QueryInterface(aComponentFile));
-    if (!lfhash) {
-        NS_ERROR("nsLocalFile not implementing nsIHashable");
-        return NS_NOINTERFACE;
-    }
+    nsCAutoString uriStr;
+    rv = aComponentURI->GetSpec(uriStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!StringTail(uriStr, 3).LowerCaseEqualsLiteral(".js"))
+        return NS_ERROR_INVALID_ARG;
 
     ModuleEntry* mod;
-    if (mModules.Get(lfhash, &mod)) {
+    if (mModules.Get(aKey, &mod)) {
         NS_ASSERTION(mod->module, "Bad hashtable data!");
         NS_ADDREF(*aResult = mod->module);
         return NS_OK;
@@ -701,8 +800,8 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     if (!entry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = GlobalForLocation(aComponentFile, &entry->global, &entry->location,
-                           nsnull);
+    rv = GlobalForLocation(aSourceFile, aComponentURI, &entry->global,
+                           &entry->location, nsnull);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "GlobalForLocation failed!\n");
@@ -746,7 +845,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
 
     JSObject* file_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> file_holder;
-    rv = xpc->WrapNative(cx, entry->global, aComponentFile, 
+    rv = xpc->WrapNative(cx, entry->global, aSourceFile,
                          NS_GET_IID(nsIFile),
                          getter_AddRefs(file_holder));
 
@@ -769,11 +868,8 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     }
 
     if (JS_TypeOfValue(cx, NSGetModule_val) != JSTYPE_FUNCTION) {
-        nsCAutoString path;
-        aComponentFile->GetNativePath(path);
-
         JS_ReportError(cx, "%s has NSGetModule property that is not a function",
-                       path.get());
+                       uriStr.get());
         return NS_ERROR_FAILURE;
     }
     
@@ -808,7 +904,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     }
 
     // Cache this module for later
-    if (!mModules.Put(lfhash, entry))
+    if (!mModules.Put(aKey, entry))
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aResult = entry->module);
@@ -1103,7 +1199,8 @@ mozJSComponentLoader::WriteScript(nsIFastLoadService *flSvc, JSScript *script,
 }
 
 nsresult
-mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
+mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
+                                        nsIURI *aURI,
                                         JSObject **aGlobal,
                                         char **aLocation,
                                         jsval *exception)
@@ -1150,19 +1247,32 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
-    rv = xpc->WrapNative(cx, global, aComponent,
-                         NS_GET_IID(nsILocalFile),
-                         getter_AddRefs(locationHolder));
-    NS_ENSURE_SUCCESS(rv, rv);
+    bool realFile = false;
+    // need to be extra careful checking for URIs pointing to files
+    // EnsureFile may not always get called, especially on resource URIs
+    // so we need to call GetFile to make sure this is a valid file
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+    nsCOMPtr<nsIFile> testFile;
+    if (NS_SUCCEEDED(rv)) {
+        fileURL->GetFile(getter_AddRefs(testFile));
+    }
+    
+    if (testFile) {
+        realFile = true;
 
-    JSObject *locationObj;
-    rv = locationHolder->GetJSObject(&locationObj);
-    NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
+        rv = xpc->WrapNative(cx, global, aComponentFile,
+                             NS_GET_IID(nsILocalFile),
+                             getter_AddRefs(locationHolder));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!JS_DefineProperty(cx, global, "__LOCATION__",
-                           OBJECT_TO_JSVAL(locationObj), nsnull, nsnull, 0)) {
-        return NS_ERROR_FAILURE;
+        JSObject *locationObj;
+        rv = locationHolder->GetJSObject(&locationObj);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!JS_DefineProperty(cx, global, "__LOCATION__",
+                               OBJECT_TO_JSVAL(locationObj), nsnull, nsnull, 0))
+            return NS_ERROR_FAILURE;
     }
 
     nsCAutoString nativePath;
@@ -1173,7 +1283,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
 #ifdef XPCONNECT_STANDALONE
     localFile->GetNativePath(nativePath);
 #else
-    NS_GetURLSpecFromActualFile(aComponent, nativePath);
+    rv = aURI->GetSpec(nativePath);
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
     // Before compiling the script, first check to see if we have it in
@@ -1192,14 +1303,10 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         }
     }
 
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), nativePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     JSScript *script = nsnull;
 
     if (fastLoading) {
-        rv = ReadScript(flSvc, nativePath.get(), uri, cx, &script);
+        rv = ReadScript(flSvc, nativePath.get(), aURI, cx, &script);
         if (NS_SUCCEEDED(rv)) {
             LOG(("Successfully loaded %s from fastload\n", nativePath.get()));
             fastLoading = PR_FALSE; // no need to write out the script
@@ -1245,80 +1352,116 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
             JS_SetOptions(cx, oldopts | JSOPTION_DONT_REPORT_UNCAUGHT);
         }
 
+        if (realFile) {
 #ifdef HAVE_PR_MEMMAP
-        PRInt64 fileSize;
-        rv = aComponent->GetFileSize(&fileSize);
-        if (NS_FAILED(rv)) {
-            JS_SetOptions(cx, oldopts);
-            return rv;
-        }
+            PRInt64 fileSize;
+            rv = aComponentFile->GetFileSize(&fileSize);
+            if (NS_FAILED(rv)) {
+                JS_SetOptions(cx, oldopts);
+                return rv;
+            }
 
-        PRInt64 maxSize;
-        LL_UI2L(maxSize, PR_UINT32_MAX);
-        if (LL_CMP(fileSize, >, maxSize)) {
-            NS_ERROR("file too large");
-            JS_SetOptions(cx, oldopts);
-            return NS_ERROR_FAILURE;
-        }
+            PRInt64 maxSize;
+            LL_UI2L(maxSize, PR_UINT32_MAX);
+            if (LL_CMP(fileSize, >, maxSize)) {
+                NS_ERROR("file too large");
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FAILURE;
+            }
 
-        PRFileDesc *fileHandle;
-        rv = aComponent->OpenNSPRFileDesc(PR_RDONLY, 0, &fileHandle);
-        if (NS_FAILED(rv)) {
-            JS_SetOptions(cx, oldopts);
-            return NS_ERROR_FILE_NOT_FOUND;
-        }
+            PRFileDesc *fileHandle;
+            rv = aComponentFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fileHandle);
+            if (NS_FAILED(rv)) {
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FILE_NOT_FOUND;
+            }
 
-        // Make sure the file is closed, no matter how we return.
-        FileAutoCloser fileCloser(fileHandle);
+            // Make sure the file is closed, no matter how we return.
+            FileAutoCloser fileCloser(fileHandle);
 
-        PRFileMap *map = PR_CreateFileMap(fileHandle, fileSize,
-                                          PR_PROT_READONLY);
-        if (!map) {
-            NS_ERROR("Failed to create file map");
-            JS_SetOptions(cx, oldopts);
-            return NS_ERROR_FAILURE;
-        }
+            PRFileMap *map = PR_CreateFileMap(fileHandle, fileSize,
+                                              PR_PROT_READONLY);
+            if (!map) {
+                NS_ERROR("Failed to create file map");
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FAILURE;
+            }
 
-        // Make sure the file map is closed, no matter how we return.
-        FileMapAutoCloser mapCloser(map);
+            // Make sure the file map is closed, no matter how we return.
+            FileMapAutoCloser mapCloser(map);
 
-        PRUint32 fileSize32;
-        LL_L2UI(fileSize32, fileSize);
+            PRUint32 fileSize32;
+            LL_L2UI(fileSize32, fileSize);
 
-        char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
-        if (!buf) {
-            NS_WARNING("Failed to map file");
-            JS_SetOptions(cx, oldopts);
-            return NS_ERROR_FAILURE;
-        }
+            char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
+            if (!buf) {
+                NS_WARNING("Failed to map file");
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FAILURE;
+            }
 
-        script = JS_CompileScriptForPrincipals(cx, global,
-                                               jsPrincipals,
-                                               buf, fileSize32,
-                                               nativePath.get(), 1);
-        PR_MemUnmap(buf, fileSize32);
+            script = JS_CompileScriptForPrincipals(cx, global,
+                                                   jsPrincipals,
+                                                   buf, fileSize32,
+                                                   nativePath.get(), 1);
+            PR_MemUnmap(buf, fileSize32);
 
 #else  /* HAVE_PR_MEMMAP */
 
-        /**
-         * No memmap implementation, so fall back to using
-         * JS_CompileFileHandleForPrincipals().
-         */
+            /**
+             * No memmap implementation, so fall back to using
+             * JS_CompileFileHandleForPrincipals().
+             */
 
-        FILE *fileHandle;
-        rv = aComponent->OpenANSIFileDesc("r", &fileHandle);
-        if (NS_FAILED(rv)) {
-            JS_SetOptions(cx, oldopts);
-            return NS_ERROR_FILE_NOT_FOUND;
-        }
+            FILE *fileHandle;
+            rv = aComponentFile->OpenANSIFileDesc("r", &fileHandle);
+            if (NS_FAILED(rv)) {
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FILE_NOT_FOUND;
+            }
 
-        script = JS_CompileFileHandleForPrincipals(cx, global,
-                                                   nativePath.get(),
-                                                   fileHandle, jsPrincipals);
+            script = JS_CompileFileHandleForPrincipals(cx, global,
+                                                       nativePath.get(),
+                                                       fileHandle, jsPrincipals);
 
-        /* JS will close the filehandle after compilation is complete. */
+            /* JS will close the filehandle after compilation is complete. */
 #endif /* HAVE_PR_MEMMAP */
+        } else {
+            nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+            NS_ENSURE_SUCCESS(rv, rv);
 
+            nsCOMPtr<nsIChannel> scriptChannel;
+            rv = ioService->NewChannelFromURI(aURI, getter_AddRefs(scriptChannel));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIInputStream> scriptStream;
+            rv = scriptChannel->Open(getter_AddRefs(scriptStream));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            PRUint32 len, bytesRead;
+
+            rv = scriptStream->Available(&len);
+            NS_ENSURE_SUCCESS(rv, rv);
+            if (!len)
+                return NS_ERROR_FAILURE;
+
+            /* malloc an internal buf the size of the file */
+            nsAutoArrayPtr<char> buf(new char[len + 1]);
+            if (!buf)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            /* read the file in one swoop */
+            rv = scriptStream->Read(buf, len, &bytesRead);
+            if (bytesRead != len)
+                return NS_BASE_STREAM_OSERROR;
+
+            buf[len] = '\0';
+
+            script = JS_CompileScriptForPrincipals(cx, global,
+                                                   jsPrincipals,
+                                                   buf, bytesRead,
+                                                   nativePath.get(), 1);
+        }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
         // NB: The caller must stick exception into a rooted slot (probably on
@@ -1358,7 +1501,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
 
     if (fastLoading) {
         // We successfully compiled the script, so cache it in fastload.
-        rv = WriteScript(flSvc, script, aComponent, nativePath.get(), uri, cx);
+        rv = WriteScript(flSvc, script, aComponentFile, nativePath.get(), aURI, cx);
 
         // Don't treat failure to write as fatal, since we might be working
         // with a read-only fastload file.
@@ -1386,9 +1529,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     }
 
     /* Freed when we remove from the table. */
-    nsCAutoString path;
-    aComponent->GetNativePath(path);
-    *aLocation = ToNewCString(path);
+    *aLocation = ToNewCString(nativePath);
     if (!*aLocation) {
         *aGlobal = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1530,35 +1671,65 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     // Get the URI.
     nsCOMPtr<nsIURI> resURI;
     rv = ioService->NewURI(aLocation, nsnull, nsnull, getter_AddRefs(resURI));
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(resURI, &rv);
-    // If we don't have a file URL, then the location passed in is invalid.
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // figure out the resolved URI
+    nsCOMPtr<nsIChannel> scriptChannel;
+    rv = ioService->NewChannelFromURI(resURI, getter_AddRefs(scriptChannel));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
 
-    // Get the file belonging to it.
-    nsCOMPtr<nsIFile> file;
-    rv = fileURL->GetFile(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsILocalFile> componentFile = do_QueryInterface(file, &rv);
+    nsCOMPtr<nsIURI> resolvedURI;
+    rv = scriptChannel->GetURI(getter_AddRefs(resolvedURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIHashable> lfhash(do_QueryInterface(componentFile));
-    if (!lfhash) {
-        NS_ERROR("nsLocalFile not implementing nsIHashable");
-        return NS_NOINTERFACE;
+    // get the JAR if there is one
+    nsCOMPtr<nsIJARURI> jarURI;
+    jarURI = do_QueryInterface(resolvedURI, &rv);
+    nsCOMPtr<nsIFileURL> baseFileURL;
+    nsCAutoString jarEntry;
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIURI> baseURI;
+        rv = jarURI->GetJARFile(getter_AddRefs(baseURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        baseFileURL = do_QueryInterface(baseURI, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        jarURI->GetJAREntry(jarEntry);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        baseFileURL = do_QueryInterface(resolvedURI, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    nsCOMPtr<nsIFile> sourceFile;
+    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILocalFile> sourceLocalFile;
+    sourceLocalFile = do_QueryInterface(sourceFile, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString key;
+    if (jarEntry.IsEmpty()) {
+        rv = FileKey(sourceLocalFile, key);
+    } else {
+        rv = JarKey(sourceLocalFile, jarEntry, key);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     ModuleEntry* mod;
     nsAutoPtr<ModuleEntry> newEntry;
-    if (!mImports.Get(lfhash, &mod) && !mInProgressImports.Get(lfhash, &mod)) {
+    if (!mImports.Get(key, &mod) && !mInProgressImports.Get(key, &mod)) {
         newEntry = new ModuleEntry;
-        if (!newEntry || !mInProgressImports.Put(lfhash, newEntry))
+        if (!newEntry || !mInProgressImports.Put(key, newEntry))
             return NS_ERROR_OUT_OF_MEMORY;
 
         jsval exception = JSVAL_VOID;
-        rv = GlobalForLocation(componentFile, &newEntry->global,
+        rv = GlobalForLocation(sourceLocalFile, resURI, &newEntry->global,
                                &newEntry->location, &exception);
 
-        mInProgressImports.Remove(lfhash);
+        mInProgressImports.Remove(key);
 
         if (NS_FAILED(rv)) {
             *_retval = nsnull;
@@ -1652,7 +1823,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     // Cache this module for later
     if (newEntry) {
-        if (!mImports.Put(lfhash, newEntry))
+        if (!mImports.Put(key, newEntry))
             return NS_ERROR_OUT_OF_MEMORY;
         newEntry.forget();
     }

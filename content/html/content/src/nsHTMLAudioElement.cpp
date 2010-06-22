@@ -68,7 +68,7 @@
 #include "nsHTMLMediaError.h"
 
 nsGenericHTMLElement*
-NS_NewHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+NS_NewHTMLAudioElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
 {
   /*
    * nsHTMLAudioElement's will be created without a nsINodeInfo passed in
@@ -104,7 +104,7 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
 
 
-nsHTMLAudioElement::nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
+nsHTMLAudioElement::nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
   : nsHTMLMediaElement(aNodeInfo, aFromParser)
 {
 }

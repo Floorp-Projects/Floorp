@@ -93,6 +93,7 @@ public:
 
     gfxFontEntry* FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont);
 
+    // TODO: make this virtual, for lazily adding to the font list
     gfxFontFamily* FindFamily(const nsAString& aFamily);
 
     gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, PRBool& aNeedsBold);
@@ -177,15 +178,15 @@ protected:
     virtual PRBool RunLoader();
     virtual void FinishLoader();
 
-      // canonical family name ==> family entry (unique, one name per family entry)
+    // canonical family name ==> family entry (unique, one name per family entry)
     nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> mFontFamilies;
-  
-    // flag set after InitOtherFamilyNames is called upon first name lookup miss
-    PRPackedBool mOtherFamilyNamesInitialized;
 
     // other family name ==> family entry (not unique, can have multiple names per
-      // family entry, only names *other* than the canonical names are stored here)
+    // family entry, only names *other* than the canonical names are stored here)
     nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> mOtherFamilyNames;
+
+    // flag set after InitOtherFamilyNames is called upon first name lookup miss
+    PRPackedBool mOtherFamilyNamesInitialized;
 
     // flag set after fullname and Postcript name lists are populated
     PRPackedBool mFaceNamesInitialized;

@@ -486,12 +486,12 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser &aParser,
 
   PRInt32 networkProxyType = 0;
 
-  const char* protocols[4] = { "HTTP", "HTTPS", "FTP", "GOPHER" };
-  const char* protocols_l[4] = { "http", "https", "ftp", "gopher" };
+  const char* protocols[] = { "HTTP", "HTTPS", "FTP"  };
+  const char* protocols_l[] = { "http", "https", "ftp" };
   char toggleBuf[15], serverBuf[20], serverPrefBuf[20], 
        serverPortPrefBuf[25];
   PRInt32 enabled;
-  for (PRUint32 i = 0; i < 4; ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(protocols); ++i) {
     sprintf(toggleBuf, "Use %s", protocols[i]);
     GetInteger(aParser, "Proxy", toggleBuf, &enabled);
     if (enabled) {

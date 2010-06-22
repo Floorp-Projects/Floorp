@@ -284,6 +284,8 @@
 
     <popup id="placesContext"/>
 
+    <panel id="notification-popup" position="after_start" noautofocus="true" hidden="true"/>
+
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
@@ -380,6 +382,126 @@
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
   </popupset>
 
+#ifdef MENUBAR_CAN_AUTOHIDE
+  <hbox id="appmenu-button-container">
+    <button id="appmenu-button"
+            type="menu"
+            label="&brandShortName;"
+            style="-moz-user-focus: ignore;">
+      <menupopup>
+        <menuitem id="appmenu_newNavigator"
+                  label="&newNavigatorCmd.label;"
+                  key="key_newNavigator"
+                  command="cmd_newNavigator"/>
+        <menuseparator/>
+        <menuitem id="appmenu_savePage"
+                  label="&savePageCmd.label;"
+                  key="key_savePage"
+                  command="Browser:SavePage"/>
+        <menuitem id="appmenu_sendLink"
+                  label="&sendPageCmd.label;"
+                  command="Browser:SendLink"/>
+        <hbox flex="1">
+          <menuitem id="appmenu_print"
+                    flex="1"
+                    label="&appMenuPrintCmd.label;"
+                    key="printKb"
+                    command="cmd_print"/>
+          <menu class="split-menuitem-menu">
+            <menupopup>
+              <menuitem id="menu_printSetup"
+                        label="&printSetupCmd.label;"
+                        command="cmd_pageSetup"/>
+              <menuitem id="menu_printPreview"
+                        label="&printPreviewCmd.label;"
+                        command="cmd_printPreview"/>
+            </menupopup>
+          </menu>
+        </hbox>
+        <menuitem id="appmenu_find"
+                  label="&findOnCmd.label;"
+                  key="key_find"
+                  command="cmd_find"/>
+        <menuseparator/>
+        <menu id="appmenu_history"
+              label="&historyMenu.label;">
+          <menupopup id="appmenu_history_popup"
+                     placespopup="true"
+                     oncommand="this.parentNode._placesView._onCommand(event);"
+                     onclick="checkForMiddleClick(this, event);"
+                     onpopupshowing="if (!this.parentNode._placesView)
+                                       new HistoryMenu(event);"
+                     tooltip="bhTooltip"
+                     popupsinherittooltip="true">
+            <menuitem id="appmenu_sanitizeHistory"
+                      label="&clearRecentHistory.label;"
+                      key="key_sanitize"
+                      command="Tools:Sanitize"/>
+            <menuseparator/>
+            <menuitem id="appmenu_showAllHistory"
+                      label="&showAllHistoryCmd2.label;"
+                      key="showAllHistoryKb"
+                      command="Browser:ShowAllHistory"/>
+            <menuseparator class="hide-if-empty-places-result"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
+        <menu id="appmenu_customize"
+              label="&appMenuCustomize.label;">
+          <menupopup id="appmenu_customizeMenu"
+                     onpopupshowing="onViewToolbarsPopupShowing(event);">
+            <menuseparator/>
+            <menuitem command="cmd_ToggleTabsOnTop"
+                      type="checkbox"
+                      label="&viewTabsOnTop.label;"/>
+            <menuitem id="appmenu_toolbarLayout"
+                      label="&appMenuToolbarLayout.label;"
+                      command="cmd_CustomizeToolbars"/>
+            <menu id="appmenu_sidebars"
+                  label="&appMenuSidebars.label;">
+              <menupopup id="appmenu_sidebarMenu">
+                <menuitem id="appmenu_bookmarksSidebar"
+                          key="viewBookmarksSidebarKb"
+                          observes="viewBookmarksSidebar"/>
+                <menuitem id="appmenu_historySidebar"
+                          key="key_gotoHistory"
+                          observes="viewHistorySidebar"
+                          label="&historyButton.label;"/>
+              </menupopup>
+            </menu>
+            <menuseparator/>
+            <menuitem id="appmenu_openAddons"
+                      label="&addons.label;"
+                      command="Tools:Addons"/>
+          </menupopup>
+        </menu>
+        <menuitem id="appmenu_preferences"
+#ifdef XP_UNIX
+                  label="&preferencesCmdUnix.label;"
+#else
+                  label="&preferencesCmd.label;"
+#endif
+                  oncommand="openPreferences();"/>
+        <menuitem id="appmenu_openHelp"
+                  label="&appMenuHelp.label;"
+                  oncommand="openHelpLink('firefox-help')"
+                  onclick="checkForMiddleClick(this, event);"/>
+        <menuseparator/>
+        <menuitem id="appmenu_quit"
+#ifdef XP_WIN
+                  label="&quitApplicationCmdWin.label;"
+#else
+                  label="&quitApplicationCmd.label;"
+#ifdef XP_UNIX
+                  key="key_quitApplication"
+#endif
+#endif
+                  command="cmd_quitApplication"/>
+      </menupopup>
+    </button>
+  </hbox>
+#endif
+
   <toolbox id="navigator-toolbox"
            defaultmode="icons" mode="icons"
 #ifdef WINCE
@@ -391,7 +513,7 @@
              defaultset="menubar-items"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
-#ifdef XP_WIN
+#ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
 #endif
@@ -487,6 +609,9 @@
                  onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
+          <box id="notification-popup-box" hidden="true" align="center">
+            <image id="geo-notification-icon"/>
+          </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
                We only add the identity-box button to the tab order when the location bar

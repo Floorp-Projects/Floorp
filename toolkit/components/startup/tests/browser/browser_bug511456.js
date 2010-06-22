@@ -93,7 +93,7 @@ function test() {
 
   Services.wm.addListener(Watcher);
 
-  var win2 = OpenBrowserWindow();
+  var win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
   win2.addEventListener("load", function() {
     win2.removeEventListener("load", arguments.callee, false);
     gBrowser.selectedTab = gBrowser.addTab(TEST_URL);

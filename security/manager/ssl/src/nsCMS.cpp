@@ -718,7 +718,12 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
       goto loser;
     }
 
-    if (NSS_CMSSignedData_AddCertificate(sigd, ecert) != SECSuccess) {
+    // If signing and encryption cert are identical, don't add it twice.
+    PRBool addEncryptionCert =
+      (ecert && (!scert || !CERT_CompareCerts(ecert, scert)));
+
+    if (addEncryptionCert &&
+        NSS_CMSSignedData_AddCertificate(sigd, ecert) != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned - can't add own encryption certificate\n"));
       goto loser;
     }

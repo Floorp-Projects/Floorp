@@ -70,6 +70,7 @@ _TEST_FILES = \
 		allowed.sjs \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
+		can_play_type_webm.js \
 		cancellable_request.sjs \
 		dynamic_redirect.sjs \
 		file_access_controls.html \
@@ -158,7 +159,7 @@ _TEST_FILES += \
 endif
 endif
 
-# Ogg sample files
+# sample files
 _TEST_FILES += \
 		320x240.ogv \
 		448636.ogv \
@@ -192,6 +193,7 @@ _TEST_FILES += \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
+		seek.webm \
 		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \
@@ -238,6 +240,16 @@ _TEST_FILES += \
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
+		$(NULL)
+endif
+
+ifdef MOZ_WEBM
+_TEST_FILES += \
+		test_can_play_type_webm.html \
+		$(NULL)
+else
+_TEST_FILES += \
+		test_can_play_type_no_webm.html \
 		$(NULL)
 endif
 

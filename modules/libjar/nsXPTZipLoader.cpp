@@ -39,14 +39,9 @@
 
 
 #include "nsXPTZipLoader.h"
-#include "nsIZipReader.h"
-#include "nsXPIDLString.h"
+#include "nsJAR.h"
 #include "nsString.h"
 #include "nsStringEnumerator.h"
-
-static const char gCacheContractID[] =
-  "@mozilla.org/libjar/zip-reader-cache;1";
-static const PRUint32 gCacheSize = 1;
 
 nsXPTZipLoader::nsXPTZipLoader() {
 }
@@ -102,22 +97,15 @@ nsXPTZipLoader::EnumerateEntries(nsILocalFile* aFile,
     return NS_OK;
 }
 
-nsIZipReader*
+already_AddRefed<nsIZipReader>
 nsXPTZipLoader::GetZipReader(nsILocalFile* file)
 {
     NS_ASSERTION(file, "bad file");
     
-    if(!mCache)
-    {
-        mCache = do_CreateInstance(gCacheContractID);
-        if(!mCache || NS_FAILED(mCache->Init(gCacheSize)))
-            return nsnull;
-    }
+    nsCOMPtr<nsIZipReader> reader = new nsJAR();
+    nsresult rv = reader->Open(file);
+    if (NS_FAILED(rv))
+        return NULL;
 
-    nsIZipReader* reader = nsnull;
-
-    if(NS_FAILED(mCache->GetZip(file, &reader)))
-        return nsnull;
-
-    return reader;
+    return reader.forget();
 }

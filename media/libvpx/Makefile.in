@@ -1,0 +1,204 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla code.
+#
+# The Initial Developer of the Original Code is the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Chris Pearce <chris@pearce.org.nz>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DEFINES += -DHAVE_CONFIG_H=vpx_config.h
+
+MODULE = vpx
+LIBRARY_NAME = vpx
+FORCE_STATIC_LIB= 1
+
+LOCAL_INCLUDES += \
+  -I. \
+  -I$(topsrcdir)/media/libvpx \
+  -I$(topsrcdir)/media/libvpx/vp8/ \
+  -I$(topsrcdir)/media/libvpx/vp8/common/ \
+  -I$(topsrcdir)/media/libvpx/vp8/common/x86 \
+  -I$(topsrcdir)/media/libvpx/vp8/decoder \
+  -I$(topsrcdir)/media/libvpx/vp8/decoder/x86 \
+  -I$(topsrcdir)/media/libvpx/vpx_codec \
+  -I$(topsrcdir)/media/libvpx/vpx_mem/ \
+  -I$(topsrcdir)/media/libvpx/vpx_mem/include \
+  -I$(topsrcdir)/media/libvpx/vpx_ports/ \
+  -I$(topsrcdir)/media/libvpx/vpx_scale/ \
+  $(NULL)
+
+VPATH += \
+  $(srcdir)/vpx \
+  $(srcdir)/vpx/src \
+  $(srcdir)/vpx_mem \
+  $(srcdir)/vpx_mem/include \
+  $(srcdir)/vpx_ports \
+  $(srcdir)/vpx_scale \
+  $(srcdir)/vpx_scale/generic \
+  $(srcdir)/vp8 \
+  $(srcdir)/vp8/common \
+  $(srcdir)/vp8/common/generic \
+  $(srcdir)/vp8/common/x86 \
+  $(srcdir)/vp8/decoder \
+  $(srcdir)/vp8/decoder/generic \
+  $(srcdir)/vp8/decoder/x86 \
+  $(NULL)
+
+ASM_SUFFIX=asm
+AS=$(VPX_AS)
+ASFLAGS=$(VPX_ASFLAGS) -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/libvpx/vpx_ports/
+
+EXPORTS_NAMESPACES = vpx
+
+EXPORTS_vpx = \
+  vp8.h \
+  vp8cx.h \
+  vp8dx.h \
+  vp8e.h \
+  vpx_codec.h \
+  vpx_codec_impl_bottom.h \
+  vpx_codec_impl_top.h \
+  vpx_decoder.h \
+  vpx_decoder_compat.h \
+  vpx_encoder.h\
+  vpx_image.h \
+  vpx_mem_intrnl.h \
+  vpx_mem.h \
+  config.h \
+  mem.h \
+  vpx_integer.h \
+  vpx_timer.h \
+  x86.h \
+  scale_mode.h \
+  vpxscale.h \
+  yv12config.h \
+  yv12extend.h \
+  $(NULL)
+
+CSRCS += \
+  vpx_config_c.c \
+  systemdependent.c \
+  alloccommon.c \
+  blockd.c \
+  debugmodes.c \
+  dsystemdependent.c \
+  entropy.c \
+  entropymode.c \
+  entropymv.c \
+  extend.c \
+  filter_c.c \
+  findnearmv.c \
+  idctllm.c \
+  invtrans.c \
+  loopfilter.c \
+  loopfilter_filters.c \
+  mbpitch.c \
+  modecont.c \
+  modecontext.c \
+  postproc.c \
+  predictdc.c \
+  quant_common.c \
+  recon.c \
+  reconinter.c \
+  reconintra.c \
+  reconintra4x4.c \
+  segmentation_common.c \
+  setupintrarecon.c \
+  swapyv12buffer.c \
+  textblit.c \
+  treecoder.c \
+  dboolhuff.c \
+  decodemv.c \
+  decodframe.c \
+  demode.c \
+  dequantize.c \
+  detokenize.c \
+  onyxd_if.c \
+  threading.c \
+  vp8_dx_iface.c \
+  vpx_codec.c \
+  vpx_decoder.c \
+  vpx_decoder_compat.c \
+  vpx_encoder.c \
+  vpx_image.c \
+  vpx_mem.c \
+  gen_scalers.c \
+  vpxscale.c \
+  scalesystemdependant.c \
+  yv12config.c \
+  yv12extend.c \
+  $(NULL)
+
+ifdef VPX_X86_ASM
+# Building on an x86 platform with a supported assembler, include
+# the optimized assembly in the build.
+CSRCS += \
+  loopfilter_x86.c \
+  vp8_asm_stubs.c \
+  x86_systemdependent.c \
+  x86_dsystemdependent.c \
+  $(NULL)
+
+ASFILES += \
+  idctllm_mmx.asm \
+  iwalsh_mmx.asm \
+  iwalsh_sse2.asm \
+  loopfilter_mmx.asm \
+  loopfilter_sse2.asm \
+  postproc_mmx.asm \
+  postproc_sse2.asm \
+  recon_mmx.asm \
+  recon_sse2.asm \
+  subpixel_mmx.asm \
+  subpixel_sse2.asm \
+  dequantize_mmx.asm \
+  emms.asm \
+  $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+ifneq ($(OS_TEST),x86_64)
+ASFILES += \
+  safeseh.asm \
+  $(NULL)
+endif
+endif
+
+endif
+ 
+include $(topsrcdir)/config/rules.mk

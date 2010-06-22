@@ -502,7 +502,7 @@ NS_IMPL_ISUPPORTS5(nsCookieService,
 nsCookieService::nsCookieService()
  : mDBState(&mDefaultDBState)
  , mCookieBehavior(BEHAVIOR_ACCEPT)
- , mThirdPartySession(PR_TRUE)
+ , mThirdPartySession(PR_FALSE)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
  , mMaxCookiesPerHost(kMaxCookiesPerHost)
  , mCookiePurgeAge(kCookiePurgeAge)

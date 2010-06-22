@@ -38,17 +38,11 @@
 #ifndef __nsCaretAccessible_h__
 #define __nsCaretAccessible_h__
 
-#include "nsIWeakReference.h"
-#include "nsIAccessibleText.h"
-#include "nsIDOMNode.h"
+#include "nsHyperTextAccessible.h"
+
 #include "nsISelectionListener.h"
-#include "nsISelectionController.h"
-#include "nsRect.h"
 
 class nsRootAccessible;
-class nsIView;
-class nsIPresShell;
-class nsIWidget;
 
 /*
  * This special accessibility class is for the caret, which is really the currently focused selection.
@@ -92,7 +86,7 @@ public:
    * to via AddDocSelectionListener().
    * @param aFocusedNode   The node for the focused control
    */
-  nsresult SetControlSelectionListener(nsIDOMNode *aCurrentNode);
+  nsresult SetControlSelectionListener(nsIContent *aCurrentNode);
 
   /**
    * Stop listening to selection events for any control.
@@ -125,21 +119,26 @@ protected:
   nsresult NormalSelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel);
   nsresult SpellcheckSelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel);
 
+  /**
+   * Return selection controller for the given node.
+   */
   already_AddRefed<nsISelectionController>
-  GetSelectionControllerForNode(nsIDOMNode *aNode);
+    GetSelectionControllerForNode(nsIContent *aNode);
 
 private:
   // The currently focused control -- never a document.
   // We listen to selection for one control at a time (the focused one)
   // Document selection is handled separately via additional listeners on all active documents
   // The current control is set via SetControlSelectionListener()
-  nsCOMPtr<nsIDOMNode> mCurrentControl;  // Selection controller for the currently focused control
+
+  // Currently focused control.
+  nsCOMPtr<nsIContent> mCurrentControl;
 
   // Info for the the last selection event.
   // If it was on a control, then its control's selection. Otherwise, it's for
   // a document where the selection changed.
   nsCOMPtr<nsIWeakReference> mLastUsedSelection; // Weak ref to nsISelection
-  nsCOMPtr<nsIAccessibleText> mLastTextAccessible;
+  nsRefPtr<nsHyperTextAccessible> mLastTextAccessible;
   PRInt32 mLastCaretOffset;
 
   nsRootAccessible *mRootAccessible;
