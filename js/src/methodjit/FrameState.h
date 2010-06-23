@@ -323,7 +323,7 @@ class FrameState
     /*
      * Stores the top stack slot back to a local variable.
      */
-    void storeLocal(uint32 n);
+    void storeLocal(uint32 n, bool popGuaranteed = false);
 
     /*
      * Restores state from a slow path.
@@ -460,6 +460,13 @@ class FrameState
      * Caller guarantees the slots below have been observed and eviscerated.
      */
     void shimmy(uint32 n);
+
+    /*
+     * Stores the top item on the stack to a stack slot, count down from the
+     * current stack depth. For example, to move the top (-1) to -3, you would
+     * call shift(-2).
+     */
+    void shift(int32 n);
 
     inline void addEscaping(uint32 local);
 

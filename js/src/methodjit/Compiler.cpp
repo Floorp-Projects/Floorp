@@ -1150,15 +1150,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_CALLPROP)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall();
-            masm.move(ImmPtr(atom), Registers::ArgReg1);
-            stubCall(stubs::CallProp, Uses(1), Defs(2));
-            frame.pop();
-            frame.pushSynced();
-            frame.pushSynced();
-          }
+            jsop_callprop(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_CALLPROP)
 
           BEGIN_CASE(JSOP_GETUPVAR)
@@ -1835,6 +1827,17 @@ mjit::Compiler::jsop_getprop_slow()
 }
 
 void
+mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
+{
+    prepareStubCall();
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    stubCall(stubs::CallProp, Uses(1), Defs(2));
+    frame.pop();
+    frame.pushSynced();
+    frame.pushSynced();
+}
+
+void
 mjit::Compiler::jsop_length()
 {
     FrameEntry *top = frame.peek(-1);
@@ -1957,6 +1960,89 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     stubcc.rejoin(1);
 
     pics.append(pic);
+}
+
+void
+mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
+{
+    FrameEntry *top = frame.peek(-1);
+
+    PICGenInfo pic(ic::PICInfo::CALL);
+
+    JS_ASSERT(top->isTypeKnown());
+    JS_ASSERT(top->getTypeTag() == JSVAL_MASK32_FUNOBJ ||
+              top->getTypeTag() == JSVAL_MASK32_NONFUNOBJ);
+
+    pic.hotPathBegin = masm.label();
+    pic.hasTypeCheck = false;
+    pic.typeReg = Registers::ReturnReg;
+
+    RegisterID objReg = frame.copyDataIntoReg(top);
+    RegisterID shapeReg = frame.allocReg();
+
+    pic.shapeReg = shapeReg;
+    pic.atom = atom;
+    pic.objRemat = frame.dataRematInfo(top);
+
+    /* Guard on shape. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
+    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    pic.shapeGuard = masm.label();
+    Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
+                           Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+    pic.slowPathStart = stubcc.masm.label();
+    stubcc.linkExit(j);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+    pic.callReturn = stubcc.call(ic::CallProp);
+
+    /* Load dslots. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+    /* Copy the slot value to the expression stack. */
+    Address slot(objReg, 1 << 24);
+    masm.loadTypeTag(slot, shapeReg);
+    masm.loadData32(slot, objReg);
+    pic.objReg = objReg;
+    pic.storeBack = masm.label();
+
+    /*
+     * 1) Dup the |this| object.
+     * 2) Push the property value onto the stack.
+     * 3) Move the value below the dup'd |this|, uncopying it. This could
+     * generate code, thus the storeBack label being prior. This is safe
+     * as a stack transition, because JSOP_CALLPROP has JOF_TMPSLOT. It is
+     * also safe for correctness, because if we know the LHS is an object, it
+     * is the resulting vp[1].
+     */
+    frame.dup();
+    frame.pushRegs(shapeReg, objReg);
+    frame.shift(-2);
+
+    stubcc.rejoin(1);
+
+    pics.append(pic);
+}
+
+void
+mjit::Compiler::jsop_callprop(JSAtom *atom)
+{
+    FrameEntry *top = frame.peek(-1);
+
+    /* If the incoming type will never PIC, take slow path. */
+    if (top->isTypeKnown() &&
+        (top->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
+         top->getTypeTag() != JSVAL_MASK32_NONFUNOBJ))
+    {
+        jsop_callprop_slow(atom);
+        return;
+    }
+
+    if (top->isTypeKnown())
+        jsop_callprop_obj(atom);
+    else
+        jsop_callprop_slow(atom);
 }
 
 void
@@ -2088,6 +2174,12 @@ void
 mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck)
 {
     jsop_getprop_slow();
+}
+
+void
+mjit::Compiler::jsop_callprop(JSAtom *atom)
+{
+    jsop_callprop_slow(atom);
 }
 
 void

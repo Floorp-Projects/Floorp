@@ -659,14 +659,15 @@ FrameState::uncopy(FrameEntry *original)
 }
 
 void
-FrameState::storeLocal(uint32 n)
+FrameState::storeLocal(uint32 n, bool popGuaranteed)
 {
-    if (eval || escaping[n]) {
+    if (!popGuaranteed && (eval || escaping[n])) {
         JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),
                      entries[localIndex(n)].type.inMemory() &&
                      entries[localIndex(n)].data.inMemory());
         Address local(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value));
         storeTo(peek(-1), local, false);
+        getLocal(n)->resetSynced();
         return;
     }
 
@@ -800,5 +801,14 @@ FrameState::shimmy(uint32 n)
     int32 depth = 0 - int32(n);
     storeLocal(uint32(&sp[depth - 1] - locals));
     popn(n);
+}
+
+void
+FrameState::shift(int32 n)
+{
+    JS_ASSERT(n < 0);
+    JS_ASSERT(sp + n - 1 >= spBase);
+    storeLocal(uint32(&sp[n - 1] - locals), true);
+    pop();
 }
 
