@@ -81,6 +81,10 @@ ifdef MOZ_WAVE
 PARALLEL_DIRS += wave
 endif
 
+ifdef MOZ_WEBM
+PARALLEL_DIRS += webm
+endif
+
 ifdef ENABLE_TESTS
 PARALLEL_DIRS += test
 endif

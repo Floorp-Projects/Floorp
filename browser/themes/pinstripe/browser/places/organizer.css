@@ -91,7 +91,7 @@
   border: 1px solid @toolbarbuttonBorderColor@;
   -moz-box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
-  -moz-background-origin: border;
+  background-origin: border-box;
 }
 
 #placesToolbar > toolbarbutton:not([disabled="true"]):active:hover,

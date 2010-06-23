@@ -380,6 +380,8 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
   *_retval = PR_FALSE;
 
   if (!mInput) {
+    // Stop all searches in case they are async.
+    StopSearch();
     // Note: if now is after blur and IME end composition,
     // check mInput before calling.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=193544#c31
@@ -467,8 +469,19 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
           if (mRowCount) {
             OpenPopup();
           }
-        } else
+        } else {
+          // Stop all searches in case they are async.
+          StopSearch();
+
+          if (!mInput) {
+            // StopSearch() can call PostSearchCleanup() which might result
+            // in a blur event, which could null out mInput, so we need to check it
+            // again.  See bug #395344 for more details
+            return NS_OK;
+          }
+
           StartSearchTimer();
+        }
       }
     }
   } else if (   aKey == nsIDOMKeyEvent::DOM_VK_LEFT

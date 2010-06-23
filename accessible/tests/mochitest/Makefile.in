@@ -88,7 +88,6 @@ _TEST_FILES =\
 	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_nsApplicationAcc.html \
 		test_elm_plugin.html \
-		test_invalidate_accessnode.html \
 		test_name.html \
 		test_name.xul \
 		test_name_button.html \

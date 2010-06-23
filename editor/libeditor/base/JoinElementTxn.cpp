@@ -76,7 +76,7 @@ NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
   mLeftNode = do_QueryInterface(aLeftNode);
   nsCOMPtr<nsIDOMNode>leftParent;
   nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   if (!mEditor->IsModifiableNode(leftParent)) {
     return NS_ERROR_FAILURE;
   }
@@ -104,14 +104,14 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   // get the parent node
   nsCOMPtr<nsIDOMNode>leftParent;
   nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
-  if (NS_FAILED(result)) return result;
-  if (!leftParent) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_TRUE(leftParent, NS_ERROR_NULL_POINTER);
 
   // verify that mLeftNode and mRightNode have the same parent
   nsCOMPtr<nsIDOMNode>rightParent;
   result = mRightNode->GetParentNode(getter_AddRefs(rightParent));
-  if (NS_FAILED(result)) return result;
-  if (!rightParent) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_TRUE(rightParent, NS_ERROR_NULL_POINTER);
 
   if (leftParent==rightParent)
   {
@@ -126,7 +126,7 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
     {
       nsCOMPtr<nsIDOMNodeList> childNodes;
       result = mLeftNode->GetChildNodes(getter_AddRefs(childNodes));
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
       if (childNodes) 
       {
         childNodes->GetLength(&mOffset);

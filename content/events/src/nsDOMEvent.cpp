@@ -144,9 +144,9 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
 
   // Get the explicit original target (if it's anonymous make it null)
   {
-    mExplicitOriginalTarget = GetTargetFromFrame();
-    mTmpRealOriginalTarget = mExplicitOriginalTarget;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mExplicitOriginalTarget);
+    nsCOMPtr<nsIContent> content = GetTargetFromFrame();
+    mTmpRealOriginalTarget = do_QueryInterface(content);
+    mExplicitOriginalTarget = mTmpRealOriginalTarget;
     if (content && content->IsInAnonymousSubtree()) {
       mExplicitOriginalTarget = nsnull;
     }
@@ -203,7 +203,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPresContext);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTmpRealOriginalTarget)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mExplicitOriginalTarget)
+  // Always set mExplicitOriginalTarget to null, when 
+  // mTmpRealOriginalTarget doesn't point to any object!
+  tmp->mExplicitOriginalTarget = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
@@ -238,7 +240,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPresContext.get(), nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTmpRealOriginalTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mExplicitOriginalTarget)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIDOMEventInterface
@@ -292,7 +293,7 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 //
 // Get the actual event target node (may have been retargeted for mouse events)
 //
-already_AddRefed<nsIDOMEventTarget>
+already_AddRefed<nsIContent>
 nsDOMEvent::GetTargetFromFrame()
 {
   if (!mPresContext) { return nsnull; }
@@ -305,12 +306,7 @@ nsDOMEvent::GetTargetFromFrame()
   // get the real content
   nsCOMPtr<nsIContent> realEventContent;
   targetFrame->GetContentForEvent(mPresContext, mEvent, getter_AddRefs(realEventContent));
-  if (!realEventContent) { return nsnull; }
-
-  // Finally, we have the real content.  QI it and return.
-  nsIDOMEventTarget* target = nsnull;
-  CallQueryInterface(realEventContent, &target);
-  return target;
+  return realEventContent.forget();
 }
 
 NS_IMETHODIMP

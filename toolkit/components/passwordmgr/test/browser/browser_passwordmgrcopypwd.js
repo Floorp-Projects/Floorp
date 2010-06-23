@@ -71,14 +71,28 @@ function test() {
 
     // Test if "Copy Password" works
     function doTest() {
-        let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-        let data = "";
-        let polls = 0;
+        let doc = pwmgrdlg.document;
+        let selection = doc.getElementById("signonsTree").view.selection;
+        let menuitem = doc.getElementById("context-copypassword");
 
         function copyPassword() {
-            let doc = pwmgrdlg.document;
-            doc.getElementById("signonsTree").currentIndex = 2;
-            doc.getElementById("context-copypassword").doCommand();
+            selection.selectAll();
+            is(isMenuitemEnabled(), false, "Copy Password should be disabled");
+
+            selection.select(0);
+            is(isMenuitemEnabled(), true, "Copy Password should be enabled");
+
+            selection.clearSelection();
+            is(isMenuitemEnabled(), false, "Copy Password should be disabled");
+
+            selection.select(2);
+            is(isMenuitemEnabled(), true, "Copy Password should be enabled");
+            menuitem.doCommand();
+        }
+
+        function isMenuitemEnabled() {
+            doc.defaultView.UpdateCopyPassword();
+            return !menuitem.getAttribute("disabled");
         }
 
         function cleanUp() {

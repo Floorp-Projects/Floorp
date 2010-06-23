@@ -1,0 +1,21 @@
+<html>
+<head>
+  <title>Accessible events testing for document</title>
+  <script>
+    function hideIFrame()
+    {
+      var iframe = document.getElementById("iframe");
+
+      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+        getService(Components.interfaces.nsIAccessibleRetrieval);
+      accRetrieval.getAccessibleFor(iframe.contentDocument);
+
+      iframe.style.display = 'none';
+    }
+  </script>
+</head>
+
+<body onload="hideIFrame();">
+  <iframe id="iframe"></iframe>
+</body>
+</html>

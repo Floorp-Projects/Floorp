@@ -122,6 +122,16 @@ public:
      */
     void RemoveTextRun(gfxTextRun *aTextRun);
 
+    /**
+     * Flush all cached runs. Use when a setting change makes them obsolete.
+     */
+    void Flush() {
+        mCache.Clear(); 
+#ifdef DEBUG
+        mGeneration++;
+#endif
+    }
+
 #ifdef DEBUG
     PRUint32 mGeneration;
     void Dump();
@@ -1009,4 +1019,12 @@ gfxTextRunWordCache::RemoveTextRun(gfxTextRun *aTextRun)
     if (!gTextRunWordCache)
         return;
     gTextRunWordCache->RemoveTextRun(aTextRun);
+}
+
+void
+gfxTextRunWordCache::Flush()
+{
+    if (!gTextRunWordCache)
+        return;
+    gTextRunWordCache->Flush();
 }

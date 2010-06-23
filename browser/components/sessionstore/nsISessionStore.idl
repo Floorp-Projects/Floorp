@@ -182,7 +182,7 @@ interface nsISessionStore : nsISupports
   /**
    * @param aWindow      is the browser window to set the value for.
    * @param aKey         is the value's name.
-   * @param aStringValue is the value itself (use toSource/eval before setting JS objects).
+   * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
   void setWindowValue(in nsIDOMWindow aWindow, in AString aKey, in AString aStringValue);
   
@@ -203,7 +203,7 @@ interface nsISessionStore : nsISupports
   /**
    * @param aTab         is the tabbrowser tab to set the value for.
    * @param aKey         is the value's name.
-   * @param aStringValue is the value itself (use toSource/eval before setting JS objects).
+   * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
   void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
 

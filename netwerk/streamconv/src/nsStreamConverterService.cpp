@@ -222,7 +222,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     // Now we know the FROM and TO types are represented as keys in the hashtable.
     // Let's "connect" the verticies, making an edge.
 
-    nsCOMPtr<nsIAtom> vertex = do_GetAtom(toStr.get()); 
+    nsCOMPtr<nsIAtom> vertex = do_GetAtom(toStr); 
     if (!vertex) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ASSERTION(fromEdges, "something wrong in adjacency list construction");

@@ -1144,6 +1144,8 @@ public:
   };
 
   struct SurfaceFromElementResult {
+    SurfaceFromElementResult() : mIsStillLoading(PR_FALSE) {}
+
     /* mSurface will contain the resulting surface, or will be NULL on error */
     nsRefPtr<gfxASurface> mSurface;
     /* The size of the surface */
@@ -1152,6 +1154,9 @@ public:
     nsCOMPtr<nsIPrincipal> mPrincipal;
     /* Whether the element was "write only", that is, the bits should not be exposed to content */
     PRBool mIsWriteOnly;
+    /* Whether the element was still loading.  Some consumers need to handle
+       this case specially. */
+    PRBool mIsStillLoading;
   };
 
   static SurfaceFromElementResult SurfaceFromElement(nsIDOMElement *aElement,

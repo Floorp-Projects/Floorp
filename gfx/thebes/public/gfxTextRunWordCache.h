@@ -99,6 +99,12 @@ public:
      */
     static void RemoveTextRun(gfxTextRun *aTextRun);
 
+    /**
+     * Flush the textrun cache. This must be called if a configuration
+     * change that would affect textruns is applied.
+     */
+    static void Flush();
+
 protected:
     friend class gfxPlatform;
 

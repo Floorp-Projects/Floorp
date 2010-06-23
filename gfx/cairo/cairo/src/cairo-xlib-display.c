@@ -52,7 +52,7 @@ struct _cairo_xlib_display {
 
     int render_major;
     int render_minor;
-    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_A1 + 1];
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_RGB16_565 + 1];
 
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
@@ -616,13 +616,35 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	    pict_format = PictStandardA8; break;
 	case CAIRO_FORMAT_RGB24:
 	    pict_format = PictStandardRGB24; break;
+	case CAIRO_FORMAT_RGB16_565: {
+	    Visual *visual = NULL;
+	    Screen *screen = DefaultScreenOfDisplay(display->display);
+	    int j;
+	    for (j = 0; j < screen->ndepths; j++) {
+	        Depth *d = &screen->depths[j];
+	        if (d->depth == 16 && d->nvisuals && &d->visuals[0]) {
+	            if (d->visuals[0].red_mask   == 0xf800 &&
+	                d->visuals[0].green_mask == 0x7e0 &&
+	                d->visuals[0].blue_mask  == 0x1f)
+	                visual = &d->visuals[0];
+	            break;
+	        }
+	    }
+	    if (!visual) {
+	        CAIRO_MUTEX_UNLOCK (display->mutex);
+	        return NULL;
+	    }
+	    xrender_format = XRenderFindVisualFormat(display->display, visual);
+	    break;
+	}
 	default:
 	    ASSERT_NOT_REACHED;
 	case CAIRO_FORMAT_ARGB32:
 	    pict_format = PictStandardARGB32; break;
 	}
-	xrender_format = XRenderFindStandardFormat (display->display,
-		                                    pict_format);
+	if (!xrender_format)
+	    xrender_format = XRenderFindStandardFormat (display->display,
+		                                        pict_format);
 	display->cached_xrender_formats[format] = xrender_format;
     }
     CAIRO_MUTEX_UNLOCK (display->mutex);

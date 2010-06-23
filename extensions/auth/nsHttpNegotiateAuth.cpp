@@ -54,7 +54,7 @@
 #include "nsAuth.h"
 #include "nsHttpNegotiateAuth.h"
 
-#include "nsIHttpChannel.h"
+#include "nsIHttpAuthenticableChannel.h"
 #include "nsIProxiedChannel.h"
 #include "nsIAuthModule.h"
 #include "nsIServiceManager.h"
@@ -107,7 +107,7 @@ nsHttpNegotiateAuth::GetAuthFlags(PRUint32 *flags)
 // there is no correct way to get the users credentials.
 // 
 NS_IMETHODIMP
-nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
+nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                        const char *challenge,
                                        PRBool isProxyAuth,
                                        nsISupports **sessionState,
@@ -123,7 +123,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
     nsresult rv;
 
     nsCOMPtr<nsIURI> uri;
-    rv = httpChannel->GetURI(getter_AddRefs(uri));
+    rv = authChannel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv))
         return rv;
 
@@ -136,12 +136,8 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
             return NS_ERROR_ABORT;
         }
 
-        nsCOMPtr<nsIProxiedChannel> proxied =
-                do_QueryInterface(httpChannel);
-        NS_ENSURE_STATE(proxied);
-
         nsCOMPtr<nsIProxyInfo> proxyInfo;
-        proxied->GetProxyInfo(getter_AddRefs(proxyInfo));
+        authChannel->GetProxyInfo(getter_AddRefs(proxyInfo));
         NS_ENSURE_STATE(proxyInfo);
 
         proxyInfo->GetHost(service);
@@ -213,7 +209,7 @@ NS_IMPL_ISUPPORTS1(nsHttpNegotiateAuth, nsIHttpAuthenticator)
 // blob to pass to the server that requested "Negotiate" authentication.
 //
 NS_IMETHODIMP
-nsHttpNegotiateAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
+nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                          const char *challenge,
                                          PRBool isProxyAuth,
                                          const PRUnichar *domain,

@@ -540,7 +540,7 @@ function processFrames()
     onProcessFrame.forEach(function(func) { func(doc); });
     var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
     gFrameList.shift();
-    setTimeout(doGrab, 16, iterator);
+    setTimeout(doGrab, 10, iterator);
     onFinished.push(selectImage);
   }
   else
@@ -549,13 +549,13 @@ function processFrames()
 
 function doGrab(iterator)
 {
-  for (var i = 0; i < 50; ++i)
+  for (var i = 0; i < 500; ++i)
     if (!iterator.nextNode()) {
       processFrames();
       return;
     }
 
-  setTimeout(doGrab, 16, iterator);
+  setTimeout(doGrab, 10, iterator);
 }
 
 function addImage(url, type, alt, elem, isBg)
@@ -928,7 +928,7 @@ function makePreview(row)
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
-  const regex = /^(https?|ftp|file|gopher|about|chrome|resource):/;
+  const regex = /^(https?|ftp|file|about|chrome|resource):/;
   var isProtocolAllowed = regex.test(url);
   if (/^data:/.test(url) && /^image\//.test(mimeType))
     isProtocolAllowed = true;
@@ -981,12 +981,8 @@ function makePreview(row)
     newImage.id = "thepreviewimage";
     newImage.mozLoadFrom(item);
     newImage.controls = true;
-    physWidth = item.videoWidth;
-    physHeight = item.videoHeight;
-    width = item.width != -1 ? item.width : physWidth;
-    height = item.height != -1 ? item.height : physHeight;
-    newImage.width = width;
-    newImage.height = height;
+    width = physWidth = item.videoWidth;
+    height = physHeight = item.videoHeight;
 
     document.getElementById("theimagecontainer").collapsed = false;
     document.getElementById("brokenimagecontainer").collapsed = true;

@@ -12,6 +12,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
   var didRunAsync = false;
+  var global = Components.classes["@mozilla.org/globalmessagemanager;1"].getService(Components.interfaces.nsIChromeFrameMessageManager);
+  var globalListenerCallCount = 0;
+  function globalListener(m) {
+    ++globalListenerCallCount;
+    if (m.name == "sync") {
+      global.removeMessageListener("async", globalListener);
+      global.removeMessageListener("sync", globalListener);
+      global.removeMessageListener("global-sync", globalListener);
+      // Note, the result depends on what other windows are open.
+      opener.wrappedJSObject.ok(globalListenerCallCount >= 4,
+                                "Global listener should have been called at least 4 times!");
+
+      opener.setTimeout("done()", 0);
+      var i = document.getElementById("ifr");
+      i.parentNode.removeChild(i); // This is a crash test!
+      window.close();
+    }
+  }
 
   function asyncL(m) {
     didRunAsync = true;
@@ -23,20 +41,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     opener.wrappedJSObject.is(m.name, "sync", "Wrong message!");
     opener.wrappedJSObject.is(m.json.data, 1234, "Wrong data!");
     opener.wrappedJSObject.ok(didRunAsync, "Should have run async!");
-    opener.setTimeout("done()", 0);
-    var i = document.getElementById("ifr");
-    i.parentNode.removeChild(i); // This is a crash test!
-    window.close();
   }
 
   function loadScript() {
     // Async should be prosessed first!
-    messageManager.loadFrameScript("data:,sendAsyncMessage('async', { data: 1234 }); sendSyncMessage('sync', { data: 1234 });", true);
+    messageManager.loadFrameScript("data:,sendAsyncMessage('async', { data: 1234 }); sendSyncMessage('sync', { data: 1234 });", false);
   }
 
   function run() {
     messageManager.addMessageListener("async", asyncL);
     messageManager.addMessageListener("sync", syncL);
+    global.addMessageListener("async", globalListener);
+    global.addMessageListener("sync", globalListener);
+    global.addMessageListener("global-sync", globalListener);
+    global.loadFrameScript("data:,sendSyncMessage('global-sync', { data: 1234 });", true);
+
+    var oldValue = globalListenerCallCount;
+    var b = document.createElement("browser");
+    b.setAttribute("type", "content");
+    document.documentElement.appendChild(b);
+    opener.wrappedJSObject.is(globalListenerCallCount, oldValue + 1,
+                              "Wrong message count");
+
     setTimeout(loadScript, 0);
   }
 

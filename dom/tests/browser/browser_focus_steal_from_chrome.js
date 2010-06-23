@@ -32,20 +32,25 @@ function test() {
     { uri: "data:text/html,<body onload=\"setTimeout(function () {" +
            "  var element = document.getElementById('target');" +
            "  var event = document.createEvent('MouseEvent');" +
-           "  event.initMouseEvent('mousedown', true, true, window," +
-           "    0, 0, 0, 0, 0, false, false, false, false, 0, element);" +
-           "  element.dispatchEvent(event); }, 10);\">" +
-           "<button id='target'>button</button></body>",
-      tagName: "BUTTON", methodName: "mousedown event on the button element" },
-    { uri: "data:text/html,<body onload=\"setTimeout(function () {" +
-           "  var element = document.getElementById('target');" +
-           "  var event = document.createEvent('MouseEvent');" +
            "  event.initMouseEvent('click', true, true, window," +
            "    1, 0, 0, 0, 0, false, false, false, false, 0, element);" +
            "  element.dispatchEvent(event); }, 10);\">" +
            "<label id='target'><input></label></body>",
       tagName: "INPUT", methodName: "click event on the label element" },
   ];
+
+  if (navigator.platform.indexOf("Mac") == -1) {
+    // clicking buttons doesn't focus on mac, so skip this test
+    testingList.push(
+      { uri: "data:text/html,<body onload=\"setTimeout(function () {" +
+             "  var element = document.getElementById('target');" +
+             "  var event = document.createEvent('MouseEvent');" +
+             "  event.initMouseEvent('mousedown', true, true, window," +
+             "    0, 0, 0, 0, 0, false, false, false, false, 0, element);" +
+             "  element.dispatchEvent(event); }, 10);\">" +
+             "<button id='target'>button</button></body>",
+        tagName: "BUTTON", methodName: "mousedown event on the button element" });
+  }
 
   let testingIndex = -1;
   let canRetry;

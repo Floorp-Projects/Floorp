@@ -65,6 +65,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxPlatformFontList.h"
+#include "gfxTextRunWordCache.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"  // for pref changes callback notification
@@ -99,6 +100,7 @@ gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
     // XXX this could be made to only clear out the cache for the prefs that were changed
     // but it probably isn't that big a deal.
     gfxPlatformFontList::PlatformFontList()->ClearPrefFonts();
+    gfxFontCache::GetCache()->AgeAllGenerations();
     return NS_OK;
 }
 

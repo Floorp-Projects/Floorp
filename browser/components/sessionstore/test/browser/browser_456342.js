@@ -59,7 +59,7 @@ function test() {
     
     let ss = Cc["@mozilla.org/browser/sessionstore;1"]
                .getService(Ci.nsISessionStore);
-    let undoItems = eval("(" + ss.getClosedTabData(window) + ")");
+    let undoItems = JSON.parse(ss.getClosedTabData(window));
     let savedFormData = undoItems[0].state.entries[0].formdata;
     
     let countGood = 0, countBad = 0;

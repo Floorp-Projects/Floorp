@@ -87,8 +87,11 @@ class nsChromeRegistryChrome : public nsChromeRegistry
 #endif
 
   NS_HIDDEN_(nsresult) ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessManifestBuffer(char *aBuffer, PRInt32 aLength, nsILocalFile* aManifest, PRBool aSkinOnly);
+  NS_HIDDEN_(nsresult) ProcessManifestBuffer(char *aBuffer, PRInt32 aLength, nsIURI* aManifest, PRBool aSkinOnly);
 
+#ifdef MOZ_OMNIJAR
+  nsresult CheckOmnijarChrome();
+#endif
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
   NS_OVERRIDE nsresult GetBaseURIFromPackage(const nsCString& aPackage,
                                              const nsCString& aProvider,

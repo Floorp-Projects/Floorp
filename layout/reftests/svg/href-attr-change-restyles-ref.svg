@@ -8,7 +8,7 @@
 a {
   fill: blue;
 }
-a:link {
+a:link, a:visited {
   fill: red;
 }
   ]]>
@@ -19,7 +19,11 @@ a:link {
   </a>
 
   <a xlink:href="http://example.com/1">
-    <text x="10" y="100">Test anchor 2</text>
+    <text x="10" y="200">Test anchor 2</text>
+  </a>
+
+  <a xlink:href="">
+    <text x="10" y="300">Test anchor 3</text>
   </a>
 
 </svg>

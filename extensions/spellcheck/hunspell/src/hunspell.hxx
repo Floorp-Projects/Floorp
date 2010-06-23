@@ -18,6 +18,7 @@
  * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
  *                 David Einstein (deinst@world.std.com)
  *                 László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  *                 Davide Prina
  *                 Giuseppe Modugno
  *                 Gianluca Turconi
@@ -54,10 +55,12 @@
  *
  ******* END LICENSE BLOCK *******/
 
-#include "affixmgr.hxx"
+#include "hunvisapi.h"
+
 #include "hashmgr.hxx"
-#include "langnum.hxx"
+#include "affixmgr.hxx"
 #include "suggestmgr.hxx"
+#include "langnum.hxx"
 
 #define  SPELL_COMPOUND  (1 << 0)
 #define  SPELL_FORBIDDEN (1 << 1)
@@ -74,21 +77,7 @@
 #ifndef _MYSPELLMGR_HXX_
 #define _MYSPELLMGR_HXX_
 
-#ifdef HUNSPELL_STATIC
-	#define DLLEXPORT
-#else
-	#ifdef HUNSPELL_EXPORTS
-		#define DLLEXPORT  __declspec( dllexport )
-	#else
-		#define DLLEXPORT  __declspec( dllimport )
-	#endif
-#endif
-
-#ifdef W32
-class DLLEXPORT Hunspell
-#else
-class Hunspell
-#endif
+class LIBHUNSPELL_DLL_EXPORTED Hunspell
 {
   AffixMgr*       pAMgr;
   HashMgr*        pHMgr[MAXDIC];
@@ -200,6 +189,8 @@ public:
 
   struct cs_info * get_csconv();
   const char * get_version();
+
+  int get_langnum() const;
   
   /* experimental and deprecated functions */
 
@@ -211,7 +202,6 @@ public:
   /* spec. suggestions */
   int suggest_auto(char*** slst, const char * word);
   int suggest_pos_stems(char*** slst, const char * word);
-  char * get_possible_root();
 #endif
 
 private:

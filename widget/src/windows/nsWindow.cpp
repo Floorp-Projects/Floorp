@@ -2168,13 +2168,6 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
  *
  **************************************************************/
 
-#ifdef WINCE_WINDOWS_MOBILE
-static inline void AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion)
-{
-  aRegion->Union(aRect.left, aRect.top, aRect.right - aRect.left, aRect.bottom - aRect.top);
-}
-#endif
-
 // Invalidate this component visible area
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
@@ -2484,22 +2477,33 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         w->Invalidate(PR_FALSE);
       }
 
+      // Get the system clip twice, offset one by the delta. This will make
+      // systemClip contain the area of the systemClip, and movedSystemClip
+      // contain the area after scrolling that was covered by the systemClip.
+      HRGN systemClip = ::CreateRectRgn(0, 0, 0, 0);
+      HRGN movedSystemClip = ::CreateRectRgn(0, 0, 0, 0);
+      HDC dc = ::GetDC(mWnd);
+      ::GetRandomRgn(dc, systemClip, SYSRGN);
+      ::GetRandomRgn(dc, movedSystemClip, SYSRGN);
+      ::OffsetRgn(movedSystemClip, aDelta.x, aDelta.y);
+
+      // RGN_DIFF will return the parts inside 'systemClip' but -not- inside
+      // movedSystemClip. This is the area that was clipped (and possibly not
+      // properly updated) before.
+      ::CombineRgn(systemClip, systemClip, movedSystemClip, RGN_DIFF);
+
+      // The systemClip is in screen coordinates, we need client coordinates.
+      POINT p = { 0, 0 };
+      ::ClientToScreen(mWnd, &p);
+      ::OffsetRgn(systemClip, -p.x, -p.y);
+
       ::GetUpdateRgn(mWnd, updateRgn, FALSE);
       ::OffsetRgn(updateRgn, aDelta.x, aDelta.y);
+      ::CombineRgn(updateRgn, updateRgn, systemClip, RGN_OR);
 
-      if (gfxPlatform::GetDPI() != 96 &&
-          aDelta.y < 0 &&
-          clip.bottom == (mBounds.y + mBounds.height)) {
-        // XXX - bug 548935 - we can at high DPI settings scroll an undrawn
-        // row of pixels into view. This row should be invalidated to make
-        // sure it contains the correct content.
-        HRGN scrollRgn = ::CreateRectRgn(clip.left,
-                                         clip.bottom + aDelta.y - 1,
-                                         clip.right,
-                                         clip.bottom + aDelta.y);
-        ::CombineRgn(updateRgn, updateRgn, scrollRgn, RGN_OR);
-        ::DeleteObject((HGDIOBJ)scrollRgn);
-      }
+      ::DeleteObject((HGDIOBJ)systemClip);
+      ::DeleteObject((HGDIOBJ)movedSystemClip);
+      ::ReleaseDC(mWnd, dc);
     } else {
 #endif
       ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
@@ -2991,7 +2995,13 @@ gfxASurface *nsWindow::GetThebesSurface()
 #ifdef CAIRO_HAS_D2D_SURFACE
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
-    return (new gfxD2DSurface(mWnd));
+    gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR;
+#if defined(MOZ_XUL)
+    if (mTransparencyMode != eTransparencyOpaque) {
+      content = gfxASurface::CONTENT_COLOR_ALPHA;
+    }
+#endif
+    return (new gfxD2DSurface(mWnd, content));
   } else {
 #endif
     return (new gfxWindowsSurface(mWnd));
@@ -6877,8 +6887,18 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-  mTransparentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
-  mMemoryDC = mTransparentSurface->GetDC();
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    nsRefPtr<gfxD2DSurface> newSurface =
+      new gfxD2DSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
+    mTransparentSurface = newSurface;
+    mMemoryDC = nsnull;
+  } else {
+    nsRefPtr<gfxWindowsSurface> newSurface =
+      new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
+    mTransparentSurface = newSurface;
+    mMemoryDC = newSurface->GetDC();
+  }
 }
 
 void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
@@ -6917,13 +6937,19 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
 
   if (topWindow->mIsVisible)
     style |= WS_VISIBLE;
+  if (topWindow->mSizeMode == nsSizeMode_Maximized)
+    style |= WS_MAXIMIZE;
+  else if (topWindow->mSizeMode == nsSizeMode_Minimized)
+    style |= WS_MINIMIZE;
 
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (mTransparencyMode == eTransparencyGlass)
     memset(&mGlassMargins, 0, sizeof mGlassMargins);
+#endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   mTransparencyMode = aMode;
 
   SetupTranslucentWindowMemoryBitmap(aMode);
@@ -6956,9 +6982,24 @@ nsresult nsWindow::UpdateTranslucentWindow()
   RECT winRect;
   ::GetWindowRect(hWnd, &winRect);
 
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    mMemoryDC = static_cast<gfxD2DSurface*>(mTransparentSurface.get())->
+      GetDC(PR_TRUE);
+  }
   // perform the alpha blend
-  if (!::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
+  PRBool updateSuccesful = 
+    ::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA);
+
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+      gfxWindowsPlatform::RENDER_DIRECT2D) {
+    nsIntRect r(0, 0, 0, 0);
+    static_cast<gfxD2DSurface*>(mTransparentSurface.get())->ReleaseDC(&r);
+  }
+
+  if (!updateSuccesful) {
     return NS_ERROR_FAILURE;
+  }
 #endif
 
   return NS_OK;

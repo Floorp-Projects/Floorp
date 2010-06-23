@@ -489,7 +489,7 @@
         <parameter name="aWhere"/>
         <body><![CDATA[
           // null parameter below specifies HTML response for search
-          var submission = this.currentEngine.getSubmission(aData, null);
+          var submission = this.currentEngine.getSubmission(aData);
           openUILinkIn(submission.uri.spec, aWhere, null, submission.postData);
         ]]></body>
       </method>

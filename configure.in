@@ -1001,7 +1001,6 @@ fi
 AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(WHOAMI, whoami, :)
 MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROG(UNZIP, unzip, :)
 MOZ_PATH_PROGS(ZIP, zip)
@@ -3302,6 +3301,7 @@ AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
 AC_CHECK_HEADERS(sys/quota.h)
+AC_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
@@ -4908,8 +4908,13 @@ MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
 MOZ_SYDNEYAUDIO=
+MOZ_VORBIS=
 MOZ_WAVE=1
 MOZ_MEDIA=
+MOZ_WEBM=1
+VPX_AS=
+VPX_ASFLAGS=
+VPX_X86_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -4944,7 +4949,7 @@ NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
-NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
@@ -4966,8 +4971,6 @@ case "$target_os" in
             if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
                 NS_ENABLE_TSF=
             fi
-            XPC_IDISPATCH_SUPPORT=1
-            MOZ_NO_ACTIVEX_SUPPORT=
         fi
         if test -n "$NS_ENABLE_TSF"; then
             AC_DEFINE(NS_ENABLE_TSF)
@@ -5739,14 +5742,16 @@ dnl = Disable plugin support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(plugins,
 [  --disable-plugins       Disable plugins support],
-    MOZ_PLUGINS=,)
+    MOZ_PLUGINS=,
+    MOZ_PLUGINS=1)
 
 dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
 [  --disable-dbm       Disable building dbm],
-    NSS_DISABLE_DBM=1,)
+    NSS_DISABLE_DBM=1,
+    NSS_DISABLE_DBM=)
 
 dnl bi-directional support always on
 IBMBIDI=1
@@ -5796,7 +5801,8 @@ dnl Disable printing
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(printing,
 [  --disable-printing      Disable printing support],
-    NS_PRINTING=,)
+    NS_PRINTING=,
+    NS_PRINTING=1)
 
 if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
     AC_MSG_WARN([Printing does not work with Qt at this time. Omitting printing support.])
@@ -5854,15 +5860,15 @@ dnl ========================================================
 dnl = Disable Ogg Codecs
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(ogg,
-[  --disable-ogg           Disable Ogg Codec support],
-    MOZ_OGG=,)
-
-AC_SUBST(MOZ_OGG)
+[  --disable-ogg           Disable support for OGG media (Theora video and Vorbis audio)],
+    MOZ_OGG=,
+    MOZ_OGG=1)
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
+    MOZ_VORBIS=1
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5887,13 +5893,77 @@ if test -n "$MOZ_OGG"; then
 fi
 
 dnl ========================================================
+dnl = Disable VP8 decoder support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webm,
+[  --disable-webm         Disable support for WebM media (VP8 video and Vorbis audio)],
+    MOZ_WEBM=,
+    MOZ_WEBM=1)
+
+if test -n "$MOZ_WEBM"; then
+    AC_DEFINE(MOZ_WEBM)
+    MOZ_SYDNEYAUDIO=1
+    MOZ_MEDIA=1
+    MOZ_VORBIS=1
+
+    dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
+    dnl For Win32 (MSVC) we must use MASM.
+    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a "$GNU_CC" != "yes"; then
+        AC_MSG_CHECKING([for MASM assembler])
+        AC_CHECK_PROGS(VPX_AS, ml, "")
+        if test -n "$VPX_AS"; then
+          VPX_X86_ASM=1
+          VPX_AS='sh $(topsrcdir)/media/libvpx/yasm2masm-as.sh'
+        else
+            AC_MSG_ERROR([Need MASM (ml.exe) in order to assemble libvpx optimized assembly. Either disable webm (reconfigure with --disable-webm) or install MASM. MASM is included in the Windows 7 SDK, or you can download MASM directly from http://www.microsoft.com/downloads/details.aspx?familyid=7a1c9da0-0510-44a2-b042-7ef370530c64&displaylang=en])
+        fi
+    else 
+
+      dnl For Darwin x86, Darwin x86_64, Linux x86, and WINNT x86_64
+      dnl we can use YASM.
+      AC_MSG_CHECKING([for YASM assembler])
+      AC_CHECK_PROGS(VPX_AS, yasm, "")
+      if test -n "$VPX_AS"; then
+        dnl We have YASM, see if we have assembly on this platform.  
+        case "$OS_ARCH:$OS_TEST" in
+        Linux:x86|Linux:i?86)
+          VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+          VPX_X86_ASM=1
+        ;;
+        Linux:x86_64)
+          VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        Darwin:i?86)
+          VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        Darwin:x86_64)
+          VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        WINNT:x86_64)
+          VPX_ASFLAGS="-f x64 -rnasm -pnasm"
+          VPX_X86_ASM=1
+        ;;
+        esac
+      fi # end have YASM
+    fi # end !WINNT_x86_MSVC
+
+    if test -n "$VPX_X86_ASM"; then
+      AC_DEFINE(VPX_X86_ASM)
+    else
+      AC_MSG_WARN([No assembler or assembly support for libvpx, using unoptimized C routines.])
+    fi
+fi
+
+dnl ========================================================
 dnl = Disable Wave decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(wave,
 [  --disable-wave          Disable Wave decoder support],
-    MOZ_WAVE=,)
-
-AC_SUBST(MOZ_WAVE)
+    MOZ_WAVE=,
+    MOZ_WAVE=1)
 
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
@@ -5905,16 +5975,16 @@ dnl ========================================================
 dnl = Handle dependent SYDNEYAUDIO and MEDIA defines
 dnl ========================================================
 
-AC_SUBST(MOZ_SYDNEYAUDIO)
-
 if test -n "$MOZ_SYDNEYAUDIO"; then
     AC_DEFINE(MOZ_SYDNEYAUDIO)
 fi
 
-AC_SUBST(MOZ_MEDIA)
-
 if test -n "$MOZ_MEDIA"; then
     AC_DEFINE(MOZ_MEDIA)
+fi
+
+if test -n "$MOZ_VORBIS"; then
+    AC_DEFINE(MOZ_VORBIS)
 fi
 
 dnl ========================================================
@@ -5927,11 +5997,10 @@ if test -n "$MOZ_SYDNEYAUDIO"; then
 linux*)
       PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
-          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.])])
+          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
       ;;
    esac
 fi
-AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl Splashscreen
@@ -6004,7 +6073,8 @@ esac
 MOZ_ARG_ENABLE_BOOL(javaxpcom,
 [  --enable-javaxpcom
                           Enable Java-XPCOM bridge],
-    MOZ_JAVAXPCOM=1,)
+    MOZ_JAVAXPCOM=1,
+    MOZ_JAVAXPCOM=)
 
 case "$host_os" in
   cygwin*|msvc*|mks*)
@@ -6081,7 +6151,8 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
 [  --disable-crashreporter Disable breakpad crash reporting],
-    MOZ_CRASHREPORTER=,)
+    MOZ_CRASHREPORTER=,
+    MOZ_CRASHREPORTER=1)
 
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
@@ -6358,14 +6429,35 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
-    MOZ_INSTALLER=,)
+    MOZ_INSTALLER=,
+    MOZ_INSTALLER=1)
 if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
-    # Disable installer for Windows builds that use the new toolkit if NSIS
-    # isn't in the path.
-    MOZ_PATH_PROGS(MAKENSIS, makensis)
-    if test -z "$MAKENSIS" || test "$MAKENSIS" = ":"; then
-        AC_MSG_ERROR([To build the installer makensis is required in your path. To build without the installer reconfigure using --disable-installer.])
+    # Disable installer for Windows builds that use the new toolkit if the
+    # required major version and minimum minor version of Unicode NSIS isn't in
+    # the path.
+    REQ_NSIS_MAJOR_VER=2
+    MIN_NSIS_MINOR_VER=33
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
+    if test -z "$MAKENSISU" || test "$MAKENSISU" = ":"; then
+        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
     fi
+    changequote(,)
+    MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
+    changequote([,])
+    if test ! "$MAKENSISU_VER" == ""; then
+        MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
+        MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
+    fi
+    AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
+    if test "$MAKENSISU_VER" == "" ||
+       test ! "$MAKENSISU_MAJOR_VER" == "$REQ_NSIS_MAJOR_VER" ||
+       test ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
+    fi
+    AC_MSG_RESULT([yes])
+    MAKENSISU="${CYGWIN_WRAPPER} $MAKENSISU"
+
     # The Windows build for NSIS requires the iconv command line utility to
     # convert the charset of the locale files.
     MOZ_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
@@ -6397,7 +6489,10 @@ MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
     MOZ_UPDATER=,
     MOZ_UPDATER=1 )
-AC_SUBST(MOZ_UPDATER)
+
+if test -n "$MOZ_UPDATER"; then
+    AC_DEFINE(MOZ_UPDATER)
+fi
 
 # app update channel is 'default' when not supplied.
 MOZ_ARG_ENABLE_STRING([update-channel],
@@ -8312,11 +8407,18 @@ AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
 
+dnl ========================================================
 dnl qcms
 dnl ========================================================
 
 QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
 AC_SUBST(QCMS_LIBS)
+
+dnl ========================================================
+dnl HarfBuzz
+dnl ========================================================
+MOZ_HARFBUZZ_LIBS='$(DEPTH)/gfx/harfbuzz/src/$(LIB_PREFIX)mozharfbuzz.$(LIB_SUFFIX)'
+AC_SUBST(MOZ_HARFBUZZ_LIBS)
 
 dnl ========================================================
 dnl disable xul
@@ -8409,7 +8511,8 @@ dnl option to disable necko's wifi scanner
 dnl
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
 [  --disable-necko-wifi    Disable necko wifi scanner],
-    NECKO_WIFI=,)
+    NECKO_WIFI=,
+    NECKO_WIFI=1)
 
 if test "$OS_ARCH" = "OS2"; then
   dnl OS/2 implementation of Necko-WiFi support will be added in bug 506566
@@ -8581,6 +8684,7 @@ AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
+AC_SUBST(MOZ_UPDATER)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -8624,6 +8728,7 @@ AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
+AC_SUBST(MAKENSISU)
 
 AC_SUBST(WINCE)
 AC_SUBST(WINCE_SDK_DIR)
@@ -8746,6 +8851,17 @@ AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(MOZ_NSS_PATCH)
+
+AC_SUBST(MOZ_MEDIA)
+AC_SUBST(MOZ_SYDNEYAUDIO)
+AC_SUBST(MOZ_WAVE)
+AC_SUBST(MOZ_VORBIS)
+AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_OGG)
+AC_SUBST(MOZ_ALSA_LIBS)
+AC_SUBST(VPX_AS)
+AC_SUBST(VPX_ASFLAGS)
+AC_SUBST(VPX_X86_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

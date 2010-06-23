@@ -44,16 +44,17 @@
  */
 
 
-/*
- * Class nsAccessNodeWrap
- */
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessNodeWrap
+////////////////////////////////////////////////////////////////////////////////
 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
 
-nsAccessNodeWrap::nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  nsAccessNode(aNode, aShell)
+nsAccessNodeWrap::
+    nsAccessNodeWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsAccessNode(aContent, aShell)
 {
 }
 

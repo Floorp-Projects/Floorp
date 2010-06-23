@@ -55,7 +55,7 @@ public:
     virtual ~nsApplicationAccessibleWrap();
 
     // nsAccessNode
-    virtual nsresult Init();
+    virtual PRBool Init();
 
     // return the atk object for app root accessible
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);

@@ -59,12 +59,16 @@
 gfxContext::gfxContext(gfxASurface *surface) :
     mSurface(surface)
 {
+    MOZ_COUNT_CTOR(gfxContext);
+
     mCairo = cairo_create(surface->CairoSurface());
     mFlags = surface->GetDefaultContextFlags();
 }
 gfxContext::~gfxContext()
 {
     cairo_destroy(mCairo);
+
+    MOZ_COUNT_DTOR(gfxContext);
 }
 
 gfxASurface *

@@ -78,8 +78,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x7cbe5277, 0x5de8, 0x45e4, \
-  { 0x9c, 0x2d, 0x81, 0x37, 0xa9, 0x5b, 0x42, 0xc6 } }
+{ 0x4beac1da, 0x513e, 0x4a8b, \
+  { 0x96, 0x94, 0x1c, 0xf6, 0x4f, 0xba, 0xa8, 0x1c } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -109,6 +109,14 @@ public:
   }
 
   virtual void SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler) = 0;
+
+  nsPIDOMEventTarget* GetParentTarget()
+  {
+    if (!mParentTarget) {
+      UpdateParentTarget();
+    }
+    return mParentTarget;
+  }
 
   PRBool HasMutationListeners(PRUint32 aMutationEventType) const
   {
@@ -524,13 +532,19 @@ protected:
 
   void SetChromeEventHandlerInternal(nsPIDOMEventTarget* aChromeEventHandler) {
     mChromeEventHandler = aChromeEventHandler;
+    // mParentTarget will be set when the next event is dispatched.
+    mParentTarget = nsnull;
   }
+
+  virtual void UpdateParentTarget() = 0;
 
   // These two variables are special in that they're set to the same
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
   nsCOMPtr<nsPIDOMEventTarget> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
+
+  nsCOMPtr<nsPIDOMEventTarget> mParentTarget; // strong
 
   // These members are only used on outer windows.
   nsCOMPtr<nsIDOMElement> mFrameElement;

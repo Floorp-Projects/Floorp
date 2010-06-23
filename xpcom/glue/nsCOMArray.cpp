@@ -55,11 +55,7 @@ nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
 
 nsCOMArray_base::~nsCOMArray_base()
 {
-    PRInt32 count = Count(), i;
-    for (i = 0; i < count; ++i) {
-        nsISupports* obj = ObjectAt(i);
-        NS_IF_RELEASE(obj);
-    }                        
+  Clear();
 }
 
 PRInt32
@@ -135,9 +131,10 @@ nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
 {
     if (PRUint32(aIndex) < PRUint32(Count())) {
         nsISupports* element = ObjectAt(aIndex);
-        NS_IF_RELEASE(element);
 
-        return mArray.RemoveElementAt(aIndex);
+        PRBool result = mArray.RemoveElementAt(aIndex);
+        NS_IF_RELEASE(element);
+        return result;
     }
 
     return PR_FALSE;
@@ -155,8 +152,10 @@ ReleaseObjects(void* aElement, void*)
 void
 nsCOMArray_base::Clear()
 {
-    mArray.EnumerateForwards(ReleaseObjects, nsnull);
+    nsAutoVoidArray objects;
+    objects = mArray;
     mArray.Clear();
+    objects.EnumerateForwards(ReleaseObjects, nsnull);
 }
 
 PRBool
@@ -167,10 +166,15 @@ nsCOMArray_base::SetCount(PRInt32 aNewCount)
       return PR_FALSE;
 
     PRInt32 count = Count(), i;
-    for (i = aNewCount; i < count; ++i) {
-        nsISupports* obj = ObjectAt(i);
-        NS_IF_RELEASE(obj);
+    nsAutoVoidArray objects;
+    if (count > aNewCount) {
+        objects.SetCount(count - aNewCount);
+        for (i = aNewCount; i < count; ++i) {
+            objects.ReplaceElementAt(ObjectAt(i), i - aNewCount);
+        }
     }
-    return mArray.SetCount(aNewCount);
+    PRBool result = mArray.SetCount(aNewCount);
+    objects.EnumerateForwards(ReleaseObjects, nsnull);
+    return result;
 }
 

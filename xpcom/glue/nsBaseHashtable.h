@@ -135,6 +135,24 @@ public:
   }
 
   /**
+   * For pointer types, get the value, returning NULL if the entry is not
+   * present in the table.
+   *
+   * @param aKey the key to retrieve
+   * @return The found value, or NULL if no entry was found with the given key.
+   * @note If NULL values are stored in the table, it is not possible to
+   *       distinguish between a NULL value and a missing entry.
+   */
+  UserDataType Get(KeyType aKey) const
+  {
+    EntryType* ent = GetEntry(aKey);
+    if (!ent)
+      return NULL;
+
+    return ent->mData;
+  }
+
+  /**
    * put a new value for the associated key
    * @param aKey the key to put
    * @param aData the new data

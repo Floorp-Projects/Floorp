@@ -1554,9 +1554,12 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
   PRBool radiiAreOuter = PR_TRUE;
   gfxCornerSizes clippedRadii = aBGRadii;
   if (aBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
-    NS_ASSERTION(aBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
-                 "unexpected background-clip");
     nsMargin border = aForFrame->GetUsedBorder();
+    if (aBackgroundClip != NS_STYLE_BG_CLIP_PADDING) {
+      NS_ASSERTION(aBackgroundClip == NS_STYLE_BG_CLIP_CONTENT,
+                   "unexpected background-clip");
+      border += aForFrame->GetUsedPadding();
+    }
     aForFrame->ApplySkipSides(border);
     aBGClipArea->Deflate(border);
 
@@ -2269,8 +2272,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
       if (!aBGClipRect) {
-        PRUint8 newBackgroundClip =
-          isSolidBorder ? NS_STYLE_BG_CLIP_PADDING : layer.mClip;
+        PRUint8 newBackgroundClip = layer.mClip;
+        if (isSolidBorder && newBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
+          newBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
         if (currentBackgroundClip != newBackgroundClip) {
           currentBackgroundClip = newBackgroundClip;
           SetupBackgroundClip(ctx, currentBackgroundClip, aForFrame,
@@ -2326,9 +2330,9 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
    *   background-repeat
    *   background-attachment
    *   background-position
-   *   background-clip (-moz-background-clip)
-   *   background-origin (-moz-background-origin)
-   *   background-size (-moz-background-size)
+   *   background-clip
+   *   background-origin
+   *   background-size
    *   background-break (-moz-background-inline-policy)
    *
    * (background-color applies to the entire element and not to individual
@@ -2426,15 +2430,13 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   // but the origin of the tiling is based on the 'background-origin' area
   if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_BORDER && geometryFrame) {
     nsMargin border = geometryFrame->GetUsedBorder();
-    geometryFrame->ApplySkipSides(border);
-    bgPositioningArea.Deflate(border);
     if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
-      nsMargin padding = geometryFrame->GetUsedPadding();
-      geometryFrame->ApplySkipSides(padding);
-      bgPositioningArea.Deflate(padding);
+      border += geometryFrame->GetUsedPadding();
       NS_ASSERTION(aLayer.mOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
                    "unknown background-origin value");
     }
+    geometryFrame->ApplySkipSides(border);
+    bgPositioningArea.Deflate(border);
   }
 
   // For background-attachment:fixed backgrounds, we'll limit the area

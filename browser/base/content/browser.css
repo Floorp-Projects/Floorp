@@ -24,6 +24,27 @@ tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
 }
 
+.tabbrowser-tab:not([fadein]) {
+  max-width: 1px !important;
+  min-width: 1px !important;
+}
+
+.tabbrowser-tab[fadein] {
+  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
+}
+
+.tabbrowser-tab:not([fadein]) > .tab-text,
+.tabbrowser-tab:not([fadein]) > .tab-icon-image,
+.tabbrowser-tab:not([fadein]) > .tab-close-button {
+  opacity: 0 !important;
+}
+
+.tabbrowser-tab[fadein] > .tab-text,
+.tabbrowser-tab[fadein] > .tab-icon-image,
+.tabbrowser-tab[fadein] > .tab-close-button {
+  -moz-transition: opacity .25s;
+}
+
 #alltabs-popup {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
 }
@@ -71,6 +92,11 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 #browser-bottombox[lwthemefooter="true"] {
   background-repeat: no-repeat;
   background-position: bottom left;
+}
+
+.split-menuitem-menu > .menu-text,
+.split-menuitem-menu > .menu-accel-container {
+  display: none;
 }
 
 /* ::::: location bar ::::: */
@@ -164,6 +190,10 @@ toolbarbutton.bookmark-item {
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;
+}
+
+menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
+  display: none;
 }
 
 menuitem.spell-suggestion {

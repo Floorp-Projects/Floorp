@@ -81,6 +81,7 @@ _BROWSER_FILES = head.js \
                  browser_navigateaway.js \
                  browser_navigateaway2.js \
                  browser_bug540558.js \
+                 browser_relative.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \

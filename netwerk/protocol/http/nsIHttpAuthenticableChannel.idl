@@ -1,0 +1,141 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Wellington Fernando de Macedo.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Wellington Fernando de Macedo <wfernandom2004@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIProxiedChannel.idl"
+#include "nsIChannel.idl"
+
+interface nsILoadGroup;
+interface nsIURI;
+interface nsIInterfaceRequestor;
+
+[scriptable, uuid(701093ac-5c7f-429c-99e3-423b041fccb4)]
+interface nsIHttpAuthenticableChannel : nsIProxiedChannel
+{
+    /**
+     * If the channel being authenticated is using SSL.
+     */
+    readonly attribute boolean isSSL;
+    
+    /**
+     * Returns if the proxy HTTP method used is CONNECT. If no proxy is being
+     * used it must return PR_FALSE.
+     */
+    readonly attribute boolean proxyMethodIsConnect;
+
+    /**
+     * Cancels the current request. See nsIRequest.
+     */
+    void cancel(in nsresult aStatus);
+
+    /**
+     * The load flags of this request. See nsIRequest.
+     */
+    readonly attribute nsLoadFlags loadFlags;
+
+    /**
+     * The URI corresponding to the channel. See nsIChannel.
+     */
+    readonly attribute nsIURI URI;
+
+    /**
+     * The load group of this request. It is here for querying its
+     * notificationCallbacks. See nsIRequest.
+     */
+    readonly attribute nsILoadGroup loadGroup;
+
+    /**
+     * The notification callbacks for the channel. See nsIChannel.
+     */
+    readonly attribute nsIInterfaceRequestor notificationCallbacks;
+
+    /**
+     * The HTTP request method. See nsIHttpChannel.
+     */
+    readonly attribute ACString requestMethod;
+
+    /**
+     * The "Server" response header.
+     * Return NS_ERROR_NOT_AVAILABLE if not available.
+     */
+    readonly attribute ACString serverResponseHeader;
+
+    /**
+     * The Proxy-Authenticate response header.
+     */
+    readonly attribute ACString proxyChallenges;
+
+    /**
+     * The WWW-Authenticate response header.
+     */
+    readonly attribute ACString WWWChallenges;
+
+    /**
+     * Sets the Proxy-Authorization request header. An empty string 
+     * will clear it.
+     */
+    void setProxyCredentials(in ACString credentials);
+
+    /**
+     * Sets the Authorization request header. An empty string
+     * will clear it.
+     */
+    void setWWWCredentials(in ACString credentials);
+
+    /**
+     * Called when authentication information is ready and has been set on this
+     * object using setWWWCredentials/setProxyCredentials. Implementations can
+     * continue with the request and send the given information to the server.
+     *
+     * It is called asynchronously from
+     * nsIHttpChannelAuthProvider::processAuthentication if that method returns
+     * NS_ERROR_IN_PROGRESS.
+     *
+     * @note  Any exceptions thrown from this method should be ignored.
+     */
+    void onAuthAvailable();
+
+    /**
+     * Notifies that the prompt was cancelled. It is called asynchronously
+     * from nsIHttpChannelAuthProvider::processAuthentication if that method
+     * returns NS_ERROR_IN_PROGRESS.
+     *
+     * @param userCancel
+     *        If the user was cancelled has cancelled the authentication prompt.
+     */
+    void onAuthCancelled(in boolean userCancel);
+};

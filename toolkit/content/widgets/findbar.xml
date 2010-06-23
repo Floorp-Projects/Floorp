@@ -1343,30 +1343,22 @@
               aEvent.getPreventDefault())
             return false;
 
-          var win = document.commandDispatcher.focusedWindow;
-          if (win)
-            if (!this._mimeTypeIsTextBased(win.document.contentType))
-              return false;
-
           var elt = document.commandDispatcher.focusedElement;
           if (elt) {
-            if (elt instanceof HTMLInputElement) {
-              // block FAYT when an <input> textfield element is focused
-              var inputType = elt.type;
-              switch (inputType) {
-                case "text":
-                case "password":
-                case "file":
-                  return false;
-              }
-            }
-            else if (elt instanceof HTMLTextAreaElement ||
-                     elt instanceof HTMLSelectElement ||
-                     elt instanceof HTMLIsIndexElement ||
-                     elt instanceof HTMLObjectElement ||
-                     elt instanceof HTMLEmbedElement)
+            if (elt instanceof NSHTMLInputElement && elt.mozIsTextField(false))
+              return false;
+
+            if (elt instanceof HTMLTextAreaElement ||
+                elt instanceof HTMLSelectElement ||
+                elt instanceof HTMLIsIndexElement ||
+                elt instanceof HTMLObjectElement ||
+                elt instanceof HTMLEmbedElement)
               return false;
           }
+
+          var win = document.commandDispatcher.focusedWindow;
+          if (win && !this._mimeTypeIsTextBased(win.document.contentType))
+              return false;
 
           // disable FAYT in about:config and about:blank to prevent FAYT
           // opening unexpectedly - to fix bugs 264562, 267150, 269712

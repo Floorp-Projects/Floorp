@@ -359,6 +359,21 @@ private:
 
 #pragma pack()
 
+// Return just the highest bit of the given value, i.e., the highest
+// power of 2 that is <= value, or zero if the input value is zero.
+inline PRUint32
+FindHighestBit(PRUint32 value)
+{
+    // propagate highest bit into all lower bits of the value
+    value |= (value >> 1);
+    value |= (value >> 2);
+    value |= (value >> 4);
+    value |= (value >> 8);
+    value |= (value >> 16);
+    // isolate the leftmost bit
+    return (value & ~(value >> 1));
+}
+
 } // namespace mozilla
 
 // used for overlaying name changes without touching original font data
@@ -490,35 +505,39 @@ public:
     }
 
     static nsresult
-    ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, 
+    ReadCMAPTableFormat12(const PRUint8 *aBuf, PRUint32 aLength, 
                           gfxSparseBitSet& aCharacterMap);
 
     static nsresult 
-    ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, 
+    ReadCMAPTableFormat4(const PRUint8 *aBuf, PRUint32 aLength, 
                          gfxSparseBitSet& aCharacterMap);
 
     static nsresult
-    ReadCMAPTableFormat14(PRUint8 *aBuf, PRUint32 aLength, 
+    ReadCMAPTableFormat14(const PRUint8 *aBuf, PRUint32 aLength, 
                           PRUint8*& aTable);
 
     static PRUint32
-    FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
+    FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
                           PRUint32 *aTableOffset, PRUint32 *aUVSTableOffset,
                           PRBool *aSymbolEncoding);
 
     static nsresult
-    ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap,
+    ReadCMAP(const PRUint8 *aBuf, PRUint32 aBufLength,
+             gfxSparseBitSet& aCharacterMap,
              PRUint32& aUVSOffset,
              PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont);
 
     static PRUint32
     MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh);
 
+    static PRUint32
+    MapCharToGlyphFormat12(const PRUint8 *aBuf, PRUint32 aCh);
+
     static PRUint16
     MapUVSToGlyphFormat14(const PRUint8 *aBuf, PRUint32 aCh, PRUint32 aVS);
 
     static PRUint32
-    MapCharToGlyph(PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh);
+    MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh);
 
 #ifdef XP_WIN
 

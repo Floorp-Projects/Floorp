@@ -55,10 +55,11 @@ function getVisibleMenuItems(aMenu) {
             } else {
               ok(item.id, "child menuitem #" + i + " has an ID");
             }
-            ok(item.label.length, "menuitem " + item.id + " has a label");
+            var label = item.getAttribute("label");
+            ok(label.length, "menuitem " + item.id + " has a label");
             if (isSpellSuggestion) {
               is(key, "", "Spell suggestions shouldn't have an access key");
-              items.push("*" + item.label);
+              items.push("*" + label);
             } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
                        item.id != "spell-no-suggestions") {
               ok(key, "menuitem " + item.id + " has an access key");

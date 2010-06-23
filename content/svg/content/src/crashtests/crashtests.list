@@ -45,4 +45,6 @@ load 435209-1.svg
 load 436418-mpathRoot-1.svg
 load 448244-1.svg
 load 466576-1.xhtml
-load 535691-1.svg
+asserts(0-2) load 535691-1.svg # Bug 535691
+load 539167-1.svg
+load 573316-1.svg

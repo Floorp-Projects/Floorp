@@ -530,8 +530,9 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   }
 
   nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
-  nsRefPtr<gfxASurface> surface = presShell->RenderNode(dragNode, &clipRegion,
-                                                        pnt, aScreenDragRect);
+  nsRefPtr<gfxASurface> surface =
+    presShell->RenderNode(dragNode, aRegion ? &clipRegion : nsnull,
+                          pnt, aScreenDragRect);
 
   // if an image was specified, reposition the drag rectangle to
   // the supplied offset in mImageX and mImageY.

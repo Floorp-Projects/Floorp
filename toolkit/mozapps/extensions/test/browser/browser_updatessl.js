@@ -4,22 +4,19 @@
 
 Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
 
-const updaterdf = "browser/toolkit/mozapps/extensions/test/browser/browser_updatessl.rdf";
-const redirect = "browser/toolkit/mozapps/extensions/test/browser/redirect.sjs?";
+const updaterdf = RELATIVE_DIR + "browser_updatessl.rdf";
+const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
-const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 
 var gTests = [];
 
 function test() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 
   run_next_test();
 }
 
 function end_test() {
-  Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   var cos = Cc["@mozilla.org/security/certoverride;1"].
             getService(Ci.nsICertOverrideService);
   cos.clearValidityOverride("nocert.example.com", -1);

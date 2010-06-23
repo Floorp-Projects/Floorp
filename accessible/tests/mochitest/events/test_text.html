@@ -19,12 +19,44 @@
           src="chrome://mochikit/content/a11y/accessible/events.js"></script>
 
   <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
     /**
-     * Invokers.
+     * Base text remove invoker and checker.
+     */
+    function textRemoveChecker(aID, aStart, aEnd, aText)
+    {
+      this.target = getNode(aID);
+      this.type = EVENT_TEXT_REMOVED;
+
+      this.check = function textRemoveChecker_check(aEvent)
+      {
+        aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
+        is(aEvent.start, aStart, "Wrong start offset for " + prettyName(aID));
+        is(aEvent.length, aEnd - aStart, "Wrong length for" + prettyName(aID));
+        is(aEvent.isInserted(), false,
+           "Text was removed for " + prettyName(aID));
+        is(aEvent.modifiedText, aText,
+           "Wrong removed text " + prettyName(aID));
+      }
+    }
+
+    function textRemoveInvoker(aID, aStart, aEnd, aText)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new textRemoveChecker(aID, aStart, aEnd, aText)
+      ];
+    }
+
+    /**
+     * Remove inaccessible child node containing text accessibles.
      */
     function removeChildSpan(aID)
     {
-      this.DOMNode = getNode(aID);
+      this.__proto__ = new textRemoveInvoker(aID, 0, 5, "33322");
 
       this.invoke = function removeChildSpan_invoke()
       {
@@ -32,25 +64,96 @@
         this.DOMNode.removeChild(this.DOMNode.firstChild);
       }
 
-      this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_REMOVED, this.DOMNode)
-      ];
-
-      this.check = function removeChildSpan_check(aEvent)
-      {
-        aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
-        is(aEvent.length, 5, "Wrong length of removed text");
-      }
-
-      this.getID = function focusElmWhileSubdocIsFocused_getID()
+      this.getID = function removeChildSpan_getID()
       {
         return "Remove inaccessible span containing accessible nodes" + prettyName(aID);
       }
     }
 
     /**
-     * Do tests.
+     * Remove child embedded accessible.
      */
+    function removeChildDiv(aID, aChildId)
+    {
+      this.__proto__ = new textRemoveInvoker(aID, 5, 6,
+                                             String.fromCharCode(0xfffc));
+
+      this.invoke = function removeChildDiv_invoke()
+      {
+        var childDiv = this.DOMNode.childNodes[aChildId];
+
+        // Ensure accessible is created to get text remove event when it's
+        // removed.
+        getAccessible(childDiv);
+
+        this.DOMNode.removeChild(childDiv);
+      }
+
+      this.getID = function removeChildDiv_getID()
+      {
+        return "Remove accessible div from the middle of text accessible " +
+          prettyName(aID);
+      }
+    }
+
+    /**
+     * Remove text from HTML input.
+     */
+    function removeTextFromInput(aID, aStart, aEnd, aText)
+    {
+      this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
+
+      this.eventSeq.push(new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode));
+
+      this.invoke = function removeTextFromInput_invoke()
+      {
+        const nsIDOMNSEditableElement =
+          Components.interfaces.nsIDOMNSEditableElement;
+
+        this.DOMNode.focus();
+        this.DOMNode.setSelectionRange(aStart, aEnd);
+
+        synthesizeKey("VK_DELETE", {});
+      }
+
+      this.getID = function removeTextFromInput_getID()
+      {
+        return "Remove text from " + aStart + " to " + aEnd + " for " +
+          prettyName(aID);
+      }
+    }
+
+    /**
+     * Remove text data from text node of editable area.
+     */
+    function removeTextFromEditable(aID, aStart, aEnd, aText, aTextNode)
+    {
+      this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
+
+      this.invoke = function removeTextFromEditable_invoke()
+      {
+        this.DOMNode.focus();
+
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.setStart(this.textNode, aStart);
+        range.setEnd(this.textNode, aEnd);
+        selection.addRange(range);
+
+        synthesizeKey("VK_DELETE", {});
+      }
+
+      this.getID = function removeTextFromEditable_getID()
+      {
+        return "Remove text from " + aStart + " to " + aEnd + " for " +
+          prettyName(aID);
+      }
+
+      this.textNode = getNode(aTextNode);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
     var gQueue = null;
     // gA11yEventDumpID = "eventdump"; // debug stuff
 
@@ -61,6 +164,19 @@
       // Text remove event on inaccessible child HTML span removal containing
       // accessible text nodes.
       gQueue.push(new removeChildSpan("p"));
+
+      // Remove embedded character.
+      gQueue.push(new removeChildDiv("div", 1));
+
+      // Text remove from text node within hypertext accessible.
+      gQueue.push(new removeTextFromInput("input", 1, 3, "al"));
+
+      // bug 570691
+      todo(false, "Fix text change events from editable area, see bug 570691");
+      //var textNode = getNode("editable").firstChild;
+      //gQueue.push(new removeTextFromEditable("editable", 1, 3, "al", textNode));
+      //textNode = getNode("editable2").firstChild.firstChild;
+      //gQueue.push(new removeTextFromEditable("editable2", 1, 3, "al", textNode));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -77,6 +193,11 @@
      title=" wrong length of text remove event when inaccessible node containing accessible nodes is removed">
     Mozilla Bug 566293
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570710"
+     title="Avoid extra array traversal during text event creation">
+    Mozilla Bug 570710
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -85,5 +206,9 @@
   <div id="eventdump"></div>
 
   <p id="p"><span><span>333</span><span>22</span></span>1111</p>
+  <div id="div">hello<div>hello</div>hello</div>
+  <input id="input" value="value">
+  <div contentEditable="true" id="editable">value</div>
+  <div contentEditable="true" id="editable2"><span>value</span></div>
 </body>
 </html>
