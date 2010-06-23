@@ -73,6 +73,16 @@ var Trench = function(element, xory, type, edge) {
   this.$el = iQ(this.el);
 
   //----------
+  // Variable: dom
+  // (array) DOM elements for visible reflexes of the Trench
+  this.dom = [];
+
+  //----------
+  // Variable: showGuide
+  // (boolean) Whether this trench will project a visible guide (dotted line) or not.
+  this.showGuide = false;
+
+  //----------
   // Variable: active
   // (boolean) Whether this trench is currently active or not.
   // Basically every trench aside for those projected by the Item currently being dragged
@@ -140,10 +150,13 @@ Trench.prototype = {
     if (!isRange(activeRange))
       return false;
     this.activeRange = activeRange;
-    if ( this.xory == "x" ) // horizontal
-      this.activeRect = new Rect ( this.position - this.radius, this.activeRange.min, 2 * this.radius, this.activeRange.extent );
-    else
-      this.activeRect = new Rect ( this.activeRange.min, this.position - this.radius, this.activeRange.extent, 2 * this.radius );    
+    if ( this.xory == "x" ) { // horizontal
+      this.activeRect = new Rect( this.position - this.radius, this.activeRange.min, 2 * this.radius, this.activeRange.extent );
+      this.guideRect = new Rect( this.position, this.activeRange.min, 0, this.activeRange.extent );
+    } else { // vertical
+      this.activeRect = new Rect( this.activeRange.min, this.position - this.radius, this.activeRange.extent, 2 * this.radius );
+      this.guideRect = new Rect( this.activeRange.min, this.position, this.activeRange.extent, 0 );
+    }
   },
   
   //----------
@@ -191,24 +204,38 @@ Trench.prototype = {
   
   //----------
   // Function: show
-  // If <Trenches.showDebug> is true, we will draw the trench.
   // 
-  // Active portions are drawn with 0.5 opacity. If <active> is false, the entire trench will be
+  // Show guide (dotted line), if <showGuide> is true.
+  // 
+  // If <Trenches.showDebug> is true, we will draw the trench. Active portions are drawn with 0.5
+  // opacity. If <active> is false, the entire trench will be
   // very translucent.
   show: function Trench_show() { // DEBUG
+
+    if (this.active && this.showGuide) {
+      if (!this.dom.guideTrench)
+        this.dom.guideTrench = iQ("<div/>").css({position: 'absolute', zIndex: -101, opacity: 0.9, borderTop: '1px dashed black', borderLeft: '1px dashed black', id: 'guideTrench'+this.id});
+      var guideTrench = this.dom.guideTrench;
+      guideTrench.css(this.guideRect);
+      iQ("body").append(guideTrench);
+    } else {
+      if (this.dom.guideTrench)
+        this.dom.guideTrench.remove();
+    }
+
     if (!Trenches.showDebug) {
-      this.hide();
+      this.hide( true ); // true for dontHideGuides
       return;
     }
 
-    if (!this.visibleTrench)
-      this.visibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-102, opacity: 0.05, id: 'visibleTrench'+this.id});
-    var visibleTrench = this.visibleTrench;
+    if (!this.dom.visibleTrench)
+      this.dom.visibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-103, opacity: 0.05, id: 'visibleTrench'+this.id});
+    var visibleTrench = this.dom.visibleTrench;
 
-    if (!this.activeVisibleTrench) {
-      this.activeVisibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-101, id: 'activeVisibleTrench'+this.id});
+    if (!this.dom.activeVisibleTrench) {
+      this.dom.activeVisibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-102, id: 'activeVisibleTrench'+this.id});
     }
-    var activeVisibleTrench = this.activeVisibleTrench;
+    var activeVisibleTrench = this.dom.activeVisibleTrench;
 
     if (this.active)
       activeVisibleTrench.css({opacity: 0.45});
@@ -232,9 +259,13 @@ Trench.prototype = {
   //----------
   // Function: hide
   // Hide the trench.
-  hide: function Trench_hide() {
-    if (this.visibleTrench)
-      this.visibleTrench.remove();
+  hide: function Trench_hide( dontHideGuides ) {
+    if (this.dom.visibleTrench)
+      this.dom.visibleTrench.remove();
+    if (this.dom.activeVisibleTrench)
+      this.dom.activeVisibleTrench.remove();
+    if (!dontHideGuides && this.dom.guideTrench)
+      this.dom.guideTrench.remove();
   },
 
   //----------
@@ -491,8 +522,19 @@ var Trenches = {
   disactivate: function Trenches_disactivate() {
     this.trenches.forEach(function(t) {
       t.active = false;
-      t.show();
+      t.showGuide = false;
+      t.hide();
     });
+  },
+
+  // ---------
+  // Function: hideGuides
+  // Hide all guides (dotted lines) en masse.
+  hideGuides: function Trenches_hideGuides() {
+    this.trenches.forEach(function(t) {
+      t.showGuide = false;
+      t.show();
+    });    
   },
 
   // ---------
@@ -514,13 +556,14 @@ var Trenches = {
     var aT = this.activeTrenches;
     
     // if we're currently dragging over a drop-site, don't snap at all.
-    if (iQ(".acceptsDrop").length)
+    if (iQ(".acceptsDrop").length) {
+      Trenches.hideGuides();
       return;
+    }
     
     var updated = false;
     var updatedX = false;
     var updatedY = false;
-    
     for (let i in this.trenches) {
       var t = this.trenches[i];
       if (!t.active)
@@ -528,15 +571,20 @@ var Trenches = {
       // newRect will be a new rect, or false
       var newRect = t.rectOverlaps(rect,assumeConstantSize,keepProportional);
 
-      if (newRect) {
+      if (newRect) { // if rectOverlaps returned an updated rect...
+      
         if (assumeConstantSize && updatedX && updatedY)
           break;
         if (assumeConstantSize && updatedX && (newRect.adjustedEdge == "left"||newRect.adjustedEdge == "right"))
           continue;
         if (assumeConstantSize && updatedY && (newRect.adjustedEdge == "top"||newRect.adjustedEdge == "bottom"))
           continue;
-         rect = newRect;
-         updated = true;
+
+        rect = newRect;
+        updated = true;
+        // turn on the guide
+        t.showGuide = true;
+        t.show();
   
         // if updatedX, we don't need to update x any more.
         if (newRect.adjustedEdge == "left" && this.preferLeft)
@@ -550,13 +598,18 @@ var Trenches = {
         if (newRect.adjustedEdge == "bottom" && !this.preferTop)
           updatedY = true;
 
+      } else if (t.showGuide) { // make sure to turn it off
+        t.showGuide = false;
+        t.show();
       }
-    }    
-
-    if (updated)
+    }
+    
+    if (updated) {
       return rect;
-    else
+    } else {
+      Trenches.hideGuides();
       return false;
+    }
   },
 
   // ---------

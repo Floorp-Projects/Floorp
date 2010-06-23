@@ -108,6 +108,8 @@ Drag.prototype = {
         update = true;
         bounds = newRect;
       }
+    } else {
+      Trenches.hideGuides();
     }
 
     // make sure the bounds are in the window.
