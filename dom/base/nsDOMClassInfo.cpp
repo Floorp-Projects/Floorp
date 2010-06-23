@@ -8021,7 +8021,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   jsval len_val;
   JSAutoRequest ar(cx);
-  JSBool ok = JS_LookupProperty(cx, obj, "length", &len_val);
+  JSBool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
   if (ok && JSVAL_IS_INT(len_val)) {
     PRInt32 length = JSVAL_TO_INT(len_val);
