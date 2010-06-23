@@ -49,9 +49,8 @@ namespace js {
 
 /* No-op wrapper handler base class. */
 class JSWrapper : public JSProxyHandler {
-    JSObject *mWrappedObject;
-
-    JS_FRIEND_API(JSWrapper(JSObject *));
+  protected:
+    JS_FRIEND_API(JSWrapper());
 
   public:
     JS_FRIEND_API(virtual ~JSWrapper());
@@ -80,19 +79,47 @@ class JSWrapper : public JSProxyHandler {
     virtual JS_FRIEND_API(bool) iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
     /* Spidermonkey extensions. */
-    virtual JS_FRIEND_API(void) finalize(JSContext *cx, JSObject *proxy);
     virtual JS_FRIEND_API(void) trace(JSTracer *trc, JSObject *proxy);
-    virtual JS_FRIEND_API(const void *) family();
 
     static JS_FRIEND_API(JSWrapper) singleton;
 
-    static JS_FRIEND_API(JSObject *) wrap(JSContext *cx, JSObject *obj,
-                                          JSObject *proto, JSObject *parent,
-                                          JSString *className);
+    static JS_FRIEND_API(JSObject *) New(JSContext *cx, JSObject *obj,
+                                         JSObject *proto, JSObject *parent,
+                                         JSProxyHandler *handler);
 
-    inline JSObject *wrappedObject(JSObject *proxy) {
-        return mWrappedObject ? mWrappedObject : JSVAL_TO_OBJECT(proxy->getProxyPrivate());
+    static inline JSObject *wrappedObject(JSObject *proxy) {
+        return JSVAL_TO_OBJECT(proxy->getProxyPrivate());
     }
+};
+
+class AutoCompartment
+{
+  public:
+    JSContext * const context;
+    JSCompartment * const origin;
+    JSObject * const target;
+    JSCompartment * const destination;
+  private:
+    LazilyConstructed<ExecuteFrameGuard> frame;
+    JSFrameRegs regs;
+
+  public:
+    AutoCompartment(JSContext *cx, JSObject *target);
+    ~AutoCompartment();
+
+    bool entered() const { return context->compartment == destination; }
+    bool enter();
+    void leave();
+
+    jsval *getvp() {
+        JS_ASSERT(entered());
+        return frame.ref().getvp();
+    }
+
+  private:
+    // Prohibit copying.
+    AutoCompartment(const AutoCompartment &);
+    AutoCompartment & operator=(const AutoCompartment &);
 };
 
 }

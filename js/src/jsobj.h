@@ -54,7 +54,7 @@
 #include "jsprvtd.h"
 #include "jsvector.h"
 
-namespace js { class AutoDescriptorArray; }
+namespace js { class AutoDescriptorArray; class JSProxyHandler; }
 
 /*
  * A representation of ECMA-262 ed. 5's internal property descriptor data
@@ -591,7 +591,7 @@ struct JSObject {
      * Proxy-specific getters and setters.
      */
 
-    inline jsval getProxyHandler() const;
+    inline js::JSProxyHandler *getProxyHandler() const;
     inline jsval getProxyPrivate() const;
     inline void setProxyPrivate(jsval priv);
 
@@ -715,6 +715,9 @@ struct JSObject {
     inline bool isProxy() const;
     inline bool isObjectProxy() const;
     inline bool isFunctionProxy() const;
+
+    bool isCrossCompartmentWrapper() const;
+    JSObject *unwrap();
 
     inline bool unbrand(JSContext *cx);
 };
@@ -1340,6 +1343,13 @@ namespace js {
 
 extern bool
 SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
+
+}
+
+namespace js {
+
+extern JSString *
+obj_toStringHelper(JSContext *cx, JSObject *obj);
 
 }
 

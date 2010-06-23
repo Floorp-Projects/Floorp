@@ -63,6 +63,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsproxy.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -1818,54 +1819,70 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JS_CLASS_TRACE(fun_trace), NULL
 };
 
-static JSBool
-fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, jsval *vp)
+namespace js {
+
+JSString *
+fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
 {
-    jsval fval;
-    JSObject *obj;
-    JSFunction *fun;
-    JSString *str;
-
-    fval = JS_THIS(cx, vp);
-    if (JSVAL_IS_NULL(fval))
-        return JS_FALSE;
-
-    if (!VALUE_IS_FUNCTION(cx, fval)) {
+    if (!obj->isFunction()) {
+        if (obj->isProxy())
+            return JSProxy::fun_toString(cx, obj, indent);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
                              js_Function_str, js_toString_str,
-                             JS_GetTypeName(cx, JS_TypeOfValue(cx, fval)));
-        return JS_FALSE;
+                             "object");
+        return NULL;
     }
 
-    obj = JSVAL_TO_OBJECT(fval);
-    if (argc != 0) {
-        if (!ValueToECMAUint32(cx, vp[2], &indent))
-            return JS_FALSE;
-    }
-
-    JS_ASSERT(JS_ObjectIsFunction(cx, obj));
-    fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
     if (!fun)
-        return JS_TRUE;
-    str = JS_DecompileFunction(cx, fun, (uintN)indent);
-    if (!str)
-        return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+        return NULL;
+    return JS_DecompileFunction(cx, fun, indent);
+}
+
 }
 
 static JSBool
 fun_toString(JSContext *cx, uintN argc, jsval *vp)
 {
-    return fun_toStringHelper(cx, 0, argc,  vp);
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(vp[0]));
+    JS_ASSERT(!FUN_INTERPRETED(fun));
+    uint32_t indent = 0;
+
+    if (argc != 0 && !ValueToECMAUint32(cx, vp[2], &indent))
+        return false;
+
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+
+    JSString *str = fun_toStringHelper(cx, obj, indent);
+    if (!str)
+        return false;
+
+    *vp = STRING_TO_JSVAL(str);
+    return true;
 }
 
 #if JS_HAS_TOSOURCE
 static JSBool
 fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    return fun_toStringHelper(cx, JS_DONT_PRETTY_PRINT, argc, vp);
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(vp[0]));
+    JS_ASSERT(!FUN_INTERPRETED(fun));
+
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+
+    JSString *str = fun_toStringHelper(cx, obj, JS_DONT_PRETTY_PRINT);
+    if (!str)
+        return false;
+
+    *vp = STRING_TO_JSVAL(str);
+    return true;
 }
 #endif
 

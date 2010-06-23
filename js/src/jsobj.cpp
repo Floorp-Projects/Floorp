@@ -817,31 +817,21 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif /* JS_HAS_TOSOURCE */
 
-static JSBool
-obj_toString(JSContext *cx, uintN argc, jsval *vp)
+namespace js {
+
+JSString *
+obj_toStringHelper(JSContext *cx, JSObject *obj)
 {
-    JSObject *obj;
-    jschar *chars;
-    size_t nchars;
-    const char *clazz, *prefix;
-    JSString *str;
+    if (obj->isProxy())
+        return JSProxy::obj_toString(cx, obj);
 
-    obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-    if (obj->isProxy()) {
-        if (!GetProxyObjectClass(cx, obj, &clazz))
-            return false;
-    } else {
-        obj = obj->wrappedObject(cx);
-        clazz = obj->getClass()->name;
-    }
-    nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
-    chars = (jschar *) cx->malloc((nchars + 1) * sizeof(jschar));
+    const char *clazz = obj->wrappedObject(cx)->getClass()->name;
+    size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
+    jschar *chars = (jschar *) cx->malloc((nchars + 1) * sizeof(jschar));
     if (!chars)
-        return JS_FALSE;
+        return NULL;
 
-    prefix = "[object ";
+    const char *prefix = "[object ";
     nchars = 0;
     while ((chars[nchars] = (jschar)*prefix) != 0)
         nchars++, prefix++;
@@ -850,13 +840,27 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     chars[nchars++] = ']';
     chars[nchars] = 0;
 
-    str = js_NewString(cx, chars, nchars);
-    if (!str) {
+    JSString *str = js_NewString(cx, chars, nchars);
+    if (!str)
         cx->free(chars);
-        return JS_FALSE;
-    }
+    return str;
+}
+
+}
+
+static JSBool
+obj_toString(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+
+    JSString *str = js::obj_toStringHelper(cx, obj);
+    if (!str)
+        return false;
+
     *vp = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -3631,20 +3635,20 @@ JSObject::shrinkSlots(JSContext *cx, size_t nslots)
 bool
 js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
 {
-    JS_ASSERT(obj->isNative());
-
     uintN nslots = JSSLOT_FREE(obj->getClass()) + nreserved;
     if (nslots > obj->numSlots() && !obj->allocSlots(cx, nslots))
         return false;
 
-    JSScope *scope = obj->scope();
-    if (!scope->isSharedEmpty()) {
+    if (obj->isNative()) {
+        JSScope *scope = obj->scope();
+        if (!scope->isSharedEmpty()) {
 #ifdef JS_THREADSAFE
-        JS_ASSERT(scope->title.ownercx->thread == cx->thread);
+            JS_ASSERT(scope->title.ownercx->thread == cx->thread);
 #endif
-        JS_ASSERT(scope->freeslot == JSSLOT_FREE(obj->getClass()));
-        if (scope->freeslot < nslots)
-            scope->freeslot = nslots;
+            JS_ASSERT(scope->freeslot == JSSLOT_FREE(obj->getClass()));
+            if (scope->freeslot < nslots)
+                scope->freeslot = nslots;
+        }
     }
     return true;
 }
@@ -6115,8 +6119,10 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
         else if (IS_GC_MARKING_TRACER(trc))
             (void) clasp->mark(cx, obj, trc);
     }
-    if (clasp->flags & JSCLASS_IS_GLOBAL)
-        obj->getCompartment(cx)->marked = true;
+    if (clasp->flags & JSCLASS_IS_GLOBAL) {
+        JSCompartment *compartment = obj->getCompartment(cx);
+        compartment->marked = true;
+    }
 
     obj->traceProtoAndParent(trc);
 
