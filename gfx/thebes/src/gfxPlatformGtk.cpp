@@ -164,12 +164,6 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)
 {
     nsRefPtr<gfxASurface> newSurface = nsnull;
-    PRBool sizeOk = PR_TRUE;
-
-    if (size.width >= GDK_PIXMAP_SIZE_MAX ||
-        size.height >= GDK_PIXMAP_SIZE_MAX)
-        sizeOk = PR_FALSE;
-
 #ifdef MOZ_X11
     // XXX we really need a different interface here, something that passes
     // in more context, including the display and/or target surface type that
@@ -178,7 +172,6 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     if (!display)
         return nsnull;
 
-    GdkPixmap* pixmap = nsnull;
     // try to optimize it for 16bpp default screen
     if (gfxASurface::ImageFormatRGB24 == imageFormat
         && 16 == gdk_visual_get_system()->depth)
@@ -187,37 +180,20 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     XRenderPictFormat* xrenderFormat =
         gfxXlibSurface::FindRenderFormat(display, imageFormat);
 
-    if (xrenderFormat && sizeOk) {
-        pixmap = gdk_pixmap_new(nsnull, size.width, size.height,
-                                xrenderFormat->depth);
-
-        if (pixmap) {
-            gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
-            newSurface = new gfxXlibSurface(display,
-                                            GDK_PIXMAP_XID(GDK_DRAWABLE(pixmap)),
-                                            xrenderFormat,
-                                            size);
-        }
-
-        if (newSurface && newSurface->CairoStatus() == 0) {
-            // set up the surface to auto-unref the gdk pixmap when
-            // the surface is released
-            SetGdkDrawable(newSurface, GDK_DRAWABLE(pixmap));
-        } else {
+    if (xrenderFormat) {
+        newSurface = new gfxXlibSurface(display, xrenderFormat, size);
+        if (newSurface && newSurface->CairoStatus() != 0) {
             // something went wrong with the surface creation.
             // Ignore and let's fall back to image surfaces.
             newSurface = nsnull;
         }
-
-        // always unref; SetGdkDrawable takes its own ref
-        if (pixmap)
-            g_object_unref(pixmap);
     }
 #endif
 
 #ifdef MOZ_DFB
-    if (sizeOk)
+    if (size.width < GDK_PIXMAP_SIZE_MAX && size.height < GDK_PIXMAP_SIZE_MAX) {
         newSurface = new gfxDirectFBSurface(size, imageFormat);
+    }
 #endif
 
 
