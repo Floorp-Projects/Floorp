@@ -104,7 +104,7 @@
 #endif
 
 #ifdef XP_WIN
-#include <windows.h>
+#include "jswin.h"
 #endif
 
 using namespace js;
@@ -5069,6 +5069,10 @@ main(int argc, char **argv, char **envp)
     JSBool jsdbc;
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
+#ifdef XP_WIN
+    DWORD oldmode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    SetErrorMode(oldmode | SEM_NOGPFAULTERRORBOX);
+#endif
 
     CheckHelpMessages();
 #ifdef HAVE_SETLOCALE

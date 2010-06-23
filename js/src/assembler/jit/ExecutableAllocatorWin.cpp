@@ -28,7 +28,7 @@
 
 #if ENABLE_ASSEMBLER && WTF_PLATFORM_WIN_OS
 
-#include "windows.h"
+#include "jswin.h"
 
 namespace JSC {
 

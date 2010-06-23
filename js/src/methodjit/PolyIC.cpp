@@ -804,7 +804,7 @@ SetPropSlow(VMFrame &f, uint32 index)
     stubs::SetName(f, atom);
 }
 
-void
+void JS_FASTCALL
 ic::SetProp(VMFrame &f, uint32 index)
 {
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);

@@ -41,7 +41,7 @@
 
 
 #ifdef XP_WIN
-# include <windows.h>
+# include "jswin.h"
 
 # ifdef _MSC_VER
 #  pragma warning( disable: 4267 4996 4146 )
