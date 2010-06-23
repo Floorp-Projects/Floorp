@@ -1312,10 +1312,6 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &
 /*
  * Precondition: obj must be locked.
  */
-extern JSBool
-js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
-                JSBool exactAllocation);
-
 extern JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);
 

@@ -315,7 +315,9 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
         return JS_TRUE;
     }
 
-    if (newcap > MAX_DSLOTS_LENGTH) {
+    /* Silence warning */
+    size_t newcapBig = newcap;
+    if (newcapBig > MAX_DSLOTS_LENGTH) {
         js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
@@ -1446,7 +1448,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
         if (newlen > obj->getArrayLength())
             obj->setDenseArrayLength(newlen);
 
-        JS_ASSERT(count < size_t(-1) / sizeof(Value));
+        JS_ASSERT(count < uint32(-1) / sizeof(Value));
         if (targetType == TargetElementsMayContainValues) {
             jsuint valueCount = 0;
             for (jsuint i = 0; i < count; i++) {
