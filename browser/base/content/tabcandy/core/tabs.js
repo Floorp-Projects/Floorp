@@ -491,10 +491,21 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         },
   
         get raw() { return chromeTab; },
-  
+
+        isFocused: function() {
+          let focused = false;
+          if (browser) {
+            if (tabbrowser.selectedTab == chromeTab) {
+              focused = true;
+            }
+          }
+          return focused;
+        },
+
         focus: function focus() {
-          if (browser)
+          if (browser) {
             tabbrowser.selectedTab = chromeTab;
+          }
         },
   
         close: function close() {
