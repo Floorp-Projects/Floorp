@@ -1866,6 +1866,10 @@ HeadsUpDisplay.prototype = {
     this.HUDBox.setAttribute("id", this.hudId);
     this.HUDBox.setAttribute("class", "hud-box");
 
+    var height = Math.ceil((this.contentWindow.innerHeight * .33)) + "px";
+    var style = "height: " + height + ";";
+    this.HUDBox.setAttribute("style", style);
+
     let outerWrap = this.makeXULNode("vbox");
     outerWrap.setAttribute("class", "hud-outer-wrapper");
     outerWrap.setAttribute("flex", "1");
@@ -2417,7 +2421,7 @@ JSTerm.prototype = {
     }
     else {
       var idx = this.historyPlaceHolder++;
-      if (idx > (len + 1)) {
+      if (idx > (this.history.length + 1)) {
         return;
       }
       var inputVal = this.history[idx + 1];
