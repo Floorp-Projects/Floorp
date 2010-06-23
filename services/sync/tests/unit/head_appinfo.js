@@ -58,3 +58,7 @@ registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"
                           XULAppInfoFactory);
 
 }
+
+// Provide resource://services-sync if it isn't already available
+let weaveService = Cc["@mozilla.org/weave/service;1"].getService();
+weaveService.wrappedJSObject.addResourceAlias();
