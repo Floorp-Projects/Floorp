@@ -72,7 +72,11 @@ var Drag = function(item, event) {
     this.item.isDragging = true;
     this.item.setZ(999999);
     
-    this.safeWindowBounds = Items.getSafeWindowBounds();
+    if (this.item.isATabItem)
+      this.safeWindowBounds = Items.getSafeWindowBounds( true );
+    else
+      this.safeWindowBounds = Items.getSafeWindowBounds( );
+
     Trenches.activateOthersTrenches(this.el);
     
     // When a tab drag starts, make it the focused tab.
