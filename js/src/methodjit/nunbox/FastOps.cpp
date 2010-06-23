@@ -449,10 +449,16 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     || op == JSOP_MUL
 #endif /* JS_CPU_ARM */
     ) {
+        bool isStringResult = (op == JSOP_ADD) &&
+                              ((lhs->isTypeKnown() && lhs->getTypeTag() == JSVAL_MASK32_STRING) ||
+                               (rhs->isTypeKnown() && rhs->getTypeTag() == JSVAL_MASK32_STRING));
         prepareStubCall();
         stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
-        frame.pushSynced();
+        if (isStringResult)
+            frame.pushSyncedType(JSVAL_MASK32_STRING);
+        else
+            frame.pushSynced();
         return;
     }
 
