@@ -319,6 +319,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     }
 
     this._updateDebugBounds();
+    rect = this.getBounds(); // ensure that it's a <Rect>
     
     if(!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
