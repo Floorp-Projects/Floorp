@@ -104,9 +104,6 @@ static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
 static void
 FreeContext(JSContext *cx);
 
-static void
-MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs);
-
 #ifdef DEBUG
 JS_REQUIRES_STACK bool
 CallStack::contains(const JSStackFrame *fp) const
@@ -538,7 +535,6 @@ JSThreadData::finish()
     JS_ASSERT(gcFreeLists.isEmpty());
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
         JS_ASSERT(!scriptsToGC[i]);
-    JS_ASSERT(!localRootStack);
     JS_ASSERT(!conservativeGC.isEnabled());
 #endif
 
@@ -560,14 +556,12 @@ JSThreadData::mark(JSTracer *trc)
 #ifdef JS_TRACER
     traceMonitor.mark(trc);
 #endif
-    if (localRootStack)
-        MarkLocalRoots(trc, localRootStack);
 }
 
 void
 JSThreadData::purge(JSContext *cx)
 {
-    purgeGCFreeLists();
+    gcFreeLists.purge();
 
     js_PurgeGSNCache(&gsnCache);
 
@@ -590,17 +584,6 @@ JSThreadData::purge(JSContext *cx)
     memset(cachedNativeIterators, 0, sizeof(cachedNativeIterators));
 
     dtoaCache.s = NULL;
-}
-
-void
-JSThreadData::purgeGCFreeLists()
-{
-    if (!localRootStack) {
-        gcFreeLists.purge();
-    } else {
-        JS_ASSERT(gcFreeLists.isEmpty());
-        localRootStack->gcFreeLists.purge();
-    }
 }
 
 #ifdef JS_THREADSAFE
@@ -751,7 +734,7 @@ js_PurgeThreads(JSContext *cx)
              * The following is potentially suboptimal as it also zeros the
              * caches in data, but the code simplicity wins here.
              */
-            thread->data.purgeGCFreeLists();
+            thread->data.gcFreeLists.purge();
             DestroyThread(thread);
             e.removeFront();
         } else {
@@ -1360,236 +1343,6 @@ js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
         JS_DHashTableRawRemove(table, &entry->hdr);
     else
         JS_DHashTableOperate(table, key, JS_DHASH_REMOVE);
-}
-
-JSBool
-js_EnterLocalRootScope(JSContext *cx)
-{
-    JSThreadData *td = JS_THREAD_DATA(cx);
-    JSLocalRootStack *lrs = td->localRootStack;
-    if (!lrs) {
-        lrs = (JSLocalRootStack *) js_malloc(sizeof *lrs);
-        if (!lrs) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        lrs->scopeMark = JSLRS_NULL_MARK;
-        lrs->rootCount = 0;
-        lrs->topChunk = &lrs->firstChunk;
-        lrs->firstChunk.down = NULL;
-        td->gcFreeLists.moveTo(&lrs->gcFreeLists);
-        td->localRootStack = lrs;
-    }
-
-    /* Push lrs->scopeMark to save it for restore when leaving. */
-    int mark = js_PushLocalRoot(cx, lrs, INT_TO_JSVAL(lrs->scopeMark));
-    if (mark < 0)
-        return JS_FALSE;
-    lrs->scopeMark = (uint32) mark;
-    return true;
-}
-
-void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
-{
-    JSLocalRootStack *lrs;
-    uint32 mark, m, n;
-    JSLocalRootChunk *lrc;
-
-    /* Defend against buggy native callers. */
-    lrs = JS_THREAD_DATA(cx)->localRootStack;
-    JS_ASSERT(lrs && lrs->rootCount != 0);
-    if (!lrs || lrs->rootCount == 0)
-        return;
-
-    mark = lrs->scopeMark;
-    JS_ASSERT(mark != JSLRS_NULL_MARK);
-    if (mark == JSLRS_NULL_MARK)
-        return;
-
-    /* Free any chunks being popped by this leave operation. */
-    m = mark >> JSLRS_CHUNK_SHIFT;
-    n = (lrs->rootCount - 1) >> JSLRS_CHUNK_SHIFT;
-    while (n > m) {
-        lrc = lrs->topChunk;
-        JS_ASSERT(lrc != &lrs->firstChunk);
-        lrs->topChunk = lrc->down;
-        js_free(lrc);
-        --n;
-    }
-
-    /*
-     * Pop the scope, restoring lrs->scopeMark.  If rval is a GC-thing, push
-     * it on the caller's scope, or store it in lastInternalResult if we are
-     * leaving the outermost scope.  We don't need to allocate a new lrc
-     * because we can overwrite the old mark's slot with rval.
-     */
-    lrc = lrs->topChunk;
-    m = mark & JSLRS_CHUNK_MASK;
-    lrs->scopeMark = (uint32) JSVAL_TO_INT(lrc->roots[m]);
-    if (JSVAL_IS_GCTHING(rval) && !JSVAL_IS_NULL(rval)) {
-        if (mark == 0) {
-            cx->weakRoots.lastInternalResult = rval;
-        } else {
-            /*
-             * Increment m to avoid the "else if (m == 0)" case below.  If
-             * rval is not a GC-thing, that case would take care of freeing
-             * any chunk that contained only the old mark.  Since rval *is*
-             * a GC-thing here, we want to reuse that old mark's slot.
-             */
-            lrc->roots[m++] = rval;
-            ++mark;
-        }
-    }
-    lrs->rootCount = (uint32) mark;
-
-    /*
-     * Free the stack eagerly, risking malloc churn.  The alternative would
-     * require an lrs->entryCount member, maintained by Enter and Leave, and
-     * tested by the GC in addition to the cx->localRootStack non-null test.
-     *
-     * That approach would risk hoarding 264 bytes (net) per context.  Right
-     * now it seems better to give fresh (dirty in CPU write-back cache, and
-     * the data is no longer needed) memory back to the malloc heap.
-     */
-    if (mark == 0) {
-        JSThreadData *td = JS_THREAD_DATA(cx);
-        JS_ASSERT(td->gcFreeLists.isEmpty());
-        lrs->gcFreeLists.moveTo(&td->gcFreeLists);
-        td->localRootStack = NULL;
-        js_free(lrs);
-    } else if (m == 0) {
-        lrs->topChunk = lrc->down;
-        js_free(lrc);
-    }
-}
-
-void
-js_ForgetLocalRoot(JSContext *cx, jsval v)
-{
-    JSLocalRootStack *lrs;
-    uint32 i, j, m, n, mark;
-    JSLocalRootChunk *lrc, *lrc2;
-    jsval top;
-
-    lrs = JS_THREAD_DATA(cx)->localRootStack;
-    JS_ASSERT(lrs && lrs->rootCount);
-    if (!lrs || lrs->rootCount == 0)
-        return;
-
-    /* Prepare to pop the top-most value from the stack. */
-    n = lrs->rootCount - 1;
-    m = n & JSLRS_CHUNK_MASK;
-    lrc = lrs->topChunk;
-    top = lrc->roots[m];
-
-    /* Be paranoid about calls on an empty scope. */
-    mark = lrs->scopeMark;
-    JS_ASSERT(mark < n);
-    if (mark >= n)
-        return;
-
-    /* If v was not the last root pushed in the top scope, find it. */
-    if (top != v) {
-        /* Search downward in case v was recently pushed. */
-        i = n;
-        j = m;
-        lrc2 = lrc;
-        while (--i > mark) {
-            if (j == 0)
-                lrc2 = lrc2->down;
-            j = i & JSLRS_CHUNK_MASK;
-            if (lrc2->roots[j] == v)
-                break;
-        }
-
-        /* If we didn't find v in this scope, assert and bail out. */
-        JS_ASSERT(i != mark);
-        if (i == mark)
-            return;
-
-        /* Swap top and v so common tail code can pop v. */
-        lrc2->roots[j] = top;
-    }
-
-    /* Pop the last value from the stack. */
-    lrc->roots[m] = JSVAL_NULL;
-    lrs->rootCount = n;
-    if (m == 0) {
-        JS_ASSERT(n != 0);
-        JS_ASSERT(lrc != &lrs->firstChunk);
-        lrs->topChunk = lrc->down;
-        cx->free(lrc);
-    }
-}
-
-int
-js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
-{
-    uint32 n, m;
-    JSLocalRootChunk *lrc;
-
-    n = lrs->rootCount;
-    m = n & JSLRS_CHUNK_MASK;
-    if (n == 0 || m != 0) {
-        /*
-         * At start of first chunk, or not at start of a non-first top chunk.
-         * Check for lrs->rootCount overflow.
-         */
-        if ((uint32)(n + 1) == 0) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TOO_MANY_LOCAL_ROOTS);
-            return -1;
-        }
-        lrc = lrs->topChunk;
-        JS_ASSERT(n != 0 || lrc == &lrs->firstChunk);
-    } else {
-        /*
-         * After lrs->firstChunk, trying to index at a power-of-two chunk
-         * boundary: need a new chunk.
-         */
-        lrc = (JSLocalRootChunk *) js_malloc(sizeof *lrc);
-        if (!lrc) {
-            js_ReportOutOfMemory(cx);
-            return -1;
-        }
-        lrc->down = lrs->topChunk;
-        lrs->topChunk = lrc;
-    }
-    lrs->rootCount = n + 1;
-    lrc->roots[m] = v;
-    return (int) n;
-}
-
-static void
-MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs)
-{
-    uint32 n, m, mark;
-    JSLocalRootChunk *lrc;
-    jsval v;
-
-    n = lrs->rootCount;
-    if (n == 0)
-        return;
-
-    mark = lrs->scopeMark;
-    lrc = lrs->topChunk;
-    do {
-        while (--n > mark) {
-            m = n & JSLRS_CHUNK_MASK;
-            v = lrc->roots[m];
-            JS_ASSERT(JSVAL_IS_GCTHING(v) && v != JSVAL_NULL);
-            JS_SET_TRACING_INDEX(trc, "local_root", n);
-            js_CallValueTracerIfGCThing(trc, v);
-            if (m == 0)
-                lrc = lrc->down;
-        }
-        m = n & JSLRS_CHUNK_MASK;
-        mark = JSVAL_TO_INT(lrc->roots[m]);
-        if (m == 0)
-            lrc = lrc->down;
-    } while (n != 0);
-    JS_ASSERT(!lrc);
 }
 
 static void
@@ -2438,7 +2191,7 @@ JSContext::checkMallocGCPressure(void *p)
              * allocator. We cannot touch the free lists on other threads as
              * their manipulation is not thread-safe.
              */
-            JS_THREAD_DATA(this)->purgeGCFreeLists();
+            JS_THREAD_DATA(this)->gcFreeLists.purge();
             js_TriggerGC(this, true);
         }
     }

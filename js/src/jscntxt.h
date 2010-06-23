@@ -957,29 +957,6 @@ struct JSFunctionMeter {
 # undef identity
 #endif
 
-struct JSLocalRootChunk;
-
-#define JSLRS_CHUNK_SHIFT       8
-#define JSLRS_CHUNK_SIZE        JS_BIT(JSLRS_CHUNK_SHIFT)
-#define JSLRS_CHUNK_MASK        JS_BITMASK(JSLRS_CHUNK_SHIFT)
-
-struct JSLocalRootChunk {
-    jsval               roots[JSLRS_CHUNK_SIZE];
-    JSLocalRootChunk    *down;
-};
-
-struct JSLocalRootStack {
-    uint32              scopeMark;
-    uint32              rootCount;
-    JSLocalRootChunk    *topChunk;
-    JSLocalRootChunk    firstChunk;
-
-    /* See comments in js_NewFinalizableGCThing. */
-    JSGCFreeLists       gcFreeLists;
-};
-
-const uint32 JSLRS_NULL_MARK = uint32(-1);
-
 #define NATIVE_ITER_CACHE_LOG2  8
 #define NATIVE_ITER_CACHE_MASK  JS_BITMASK(NATIVE_ITER_CACHE_LOG2)
 #define NATIVE_ITER_CACHE_SIZE  JS_BIT(NATIVE_ITER_CACHE_LOG2)
@@ -1010,9 +987,6 @@ struct JSThreadData {
 
     /* Property cache for faster call/get/set invocation. */
     js::PropertyCache   propertyCache;
-
-    /* Optional stack of heap-allocated scoped local GC roots. */
-    JSLocalRootStack    *localRootStack;
 
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
@@ -1055,7 +1029,6 @@ struct JSThreadData {
     void finish();
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
-    void purgeGCFreeLists();
 };
 
 #ifdef JS_THREADSAFE
@@ -2766,29 +2739,6 @@ js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
 extern void
 js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
                  JSResolvingEntry *entry, uint32 generation);
-
-/*
- * Local root set management.
- *
- * NB: the jsval parameters below may be properly tagged jsvals, or GC-thing
- * pointers cast to (jsval).  This relies on JSObject's tag being zero, but
- * on the up side it lets us push int-jsval-encoded scopeMark values on the
- * local root stack.
- */
-extern JSBool
-js_EnterLocalRootScope(JSContext *cx);
-
-#define js_LeaveLocalRootScope(cx) \
-    js_LeaveLocalRootScopeWithResult(cx, JSVAL_NULL)
-
-extern void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval);
-
-extern void
-js_ForgetLocalRoot(JSContext *cx, jsval v);
-
-extern int
-js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v);
 
 /*
  * Report an exception, which is currently realized as a printf-style format

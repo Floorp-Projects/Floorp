@@ -994,116 +994,14 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
  */
 #define JS_TYPED_ROOTING_API
 
-/*
- * The last GC thing of each type (object, string, double, external string
- * types) created on a given context is kept alive until another thing of the
- * same type is created, using a newborn root in the context.  These newborn
- * roots help native code protect newly-created GC-things from GC invocations
- * activated before those things can be rooted using local or global roots.
- *
- * However, the newborn roots can also entrain great gobs of garbage, so the
- * JS_GC entry point clears them for the context on which GC is being forced.
- * Embeddings may need to do likewise for all contexts.
- *
- * See the scoped local root API immediately below for a better way to manage
- * newborns in cases where native hooks (functions, getters, setters, etc.)
- * create many GC-things, potentially without connecting them to predefined
- * local roots such as *rval or argv[i] in an active native function.  Using
- * JS_EnterLocalRootScope disables updating of the context's per-gc-thing-type
- * newborn roots, until control flow unwinds and leaves the outermost nesting
- * local root scope.
- */
 extern JS_PUBLIC_API(void)
 JS_ClearNewbornRoots(JSContext *cx);
 
-/*
- * Scoped local root management allows native functions, getter/setters, etc.
- * to avoid worrying about the newborn root pigeon-holes, overloading local
- * roots allocated in argv and *rval, or ending up having to call JS_Add*Root
- * and JS_Remove*Root to manage global roots temporarily.
- *
- * Instead, calling JS_EnterLocalRootScope and JS_LeaveLocalRootScope around
- * the body of the native hook causes the engine to allocate a local root for
- * each newborn created in between the two API calls, using a local root stack
- * associated with cx.  For example:
- *
- *    JSBool
- *    my_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
- *    {
- *        JSBool ok;
- *
- *        if (!JS_EnterLocalRootScope(cx))
- *            return JS_FALSE;
- *        ok = my_GetPropertyBody(cx, obj, id, vp);
- *        JS_LeaveLocalRootScope(cx);
- *        return ok;
- *    }
- *
- * NB: JS_LeaveLocalRootScope must be called once for every prior successful
- * call to JS_EnterLocalRootScope.  If JS_EnterLocalRootScope fails, you must
- * not make the matching JS_LeaveLocalRootScope call.
- *
- * JS_LeaveLocalRootScopeWithResult(cx, rval) is an alternative way to leave
- * a local root scope that protects a result or return value, by effectively
- * pushing it in the caller's local root scope.
- *
- * In case a native hook allocates many objects or other GC-things, but the
- * native protects some of those GC-things by storing them as property values
- * in an object that is itself protected, the hook can call JS_ForgetLocalRoot
- * to free the local root automatically pushed for the now-protected GC-thing.
- *
- * JS_ForgetLocalRoot works on any GC-thing allocated in the current local
- * root scope, but it's more time-efficient when called on references to more
- * recently created GC-things.  Calling it successively on other than the most
- * recently allocated GC-thing will tend to average the time inefficiency, and
- * may risk O(n^2) growth rate, but in any event, you shouldn't allocate too
- * many local roots if you can root as you go (build a tree of objects from
- * the top down, forgetting each latest-allocated GC-thing immediately upon
- * linking it to its parent).
- */
-extern JS_PUBLIC_API(JSBool)
-JS_EnterLocalRootScope(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_LeaveLocalRootScope(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval);
-
-extern JS_PUBLIC_API(void)
-JS_ForgetLocalRoot(JSContext *cx, void *thing);
-
-#ifdef __cplusplus
-JS_END_EXTERN_C
-
-class JSAutoLocalRootScope {
-  public:
-    JSAutoLocalRootScope(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_EnterLocalRootScope(mContext);
-    }
-    ~JSAutoLocalRootScope() {
-        JS_LeaveLocalRootScope(mContext);
-    }
-
-    void forget(void *thing) {
-        JS_ForgetLocalRoot(mContext, thing);
-    }
-
-  protected:
-    JSContext *mContext;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-#if 0
-  private:
-    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
-    static void operator delete(void *, size_t) { };
-#endif
-};
-
-JS_BEGIN_EXTERN_C
-#endif
+/* Obsolete rooting APIs. */
+#define JS_EnterLocalRootScope(cx) (true)
+#define JS_LeaveLocalRootScope(cx) ((void) 0)
+#define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
+#define JS_ForgetLocalRoot(cx, thing) ((void) 0)
 
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)
