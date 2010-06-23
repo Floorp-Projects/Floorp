@@ -2452,8 +2452,6 @@ function Tab(aURI) {
   this._listener = null;
   this._loading = false;
   this._chromeTab = null;
-  this._resizeAndPaint = Util.bind(this._resizeAndPaint, this);
-
   this.owner = null;
 
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
@@ -2474,37 +2472,6 @@ Tab.prototype = {
 
   get chromeTab() {
     return this._chromeTab;
-  },
-
-  /**
-   * Throttles redraws to once every 2 seconds while loading the page, zooming to fit page if
-   * user hasn't started zooming.
-   */
-  _resizeAndPaint: function _resizeAndPaint() {
-    let bv = Browser._browserView;
-
-    bv.commitBatchOperation();
-
-    // kick ourselves off 2s later while we're still loading
-    bv.beginBatchOperation();
-    this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
-  },
-
-  _startResizeAndPaint: function _startResizeAndPaint() {
-    if (this._loadingTimeout)
-      throw "Already have a loading timeout";
-
-    Browser._browserView.beginBatchOperation();
-    this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
-  },
-
-  _stopResizeAndPaint: function _stopResizeAndPaint() {
-    if (!this._loadingTimeout)
-      throw "No loading timeout!";
-
-    clearTimeout(this._loadingTimeout);
-    delete this._loadingTimeout;
-    Browser._browserView.commitBatchOperation();
   },
 
   /** Update browser styles when the viewport metadata changes. */
@@ -2581,18 +2548,14 @@ Tab.prototype = {
 
     this._loading = true;
 
-    if (!this._loadingTimeout) {
-      let bv = Browser._browserView;
+    let bv = Browser._browserView;
 
-      this._startResizeAndPaint();
-      if (this == Browser.selectedTab) {
-        bv.invalidateEntireView();
-        bv.setAggressive(false);
-        // Sync up browser so previous and forward scroll positions are set. This is a good time to do
-        // this because the resulting invalidation is irrelevant.
-        bv.ignorePageScroll(true);
-        Browser.scrollBrowserToContent();
-      }
+    if (this == Browser.selectedTab) {
+      bv.setAggressive(false);
+      // Sync up browser so previous and forward scroll positions are set. This is a good time to do
+      // this because the resulting invalidation is irrelevant.
+      bv.ignorePageScroll(true);
+      Browser.scrollBrowserToContent();
     }
   },
 
@@ -2605,8 +2568,6 @@ Tab.prototype = {
       bv.ignorePageScroll(false);
       bv.setAggressive(true);
     }
-
-    this._stopResizeAndPaint();
   },
 
   isLoading: function isLoading() {
