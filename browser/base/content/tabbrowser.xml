@@ -2787,12 +2787,17 @@
       ]]></handler>
 
       <handler event="click"><![CDATA[
-        if (event.button != 1 || event.target.localName != "tab")
+        if (event.button != 1)
           return;
 
-        if (this.childNodes.length > 1 ||
-            !this._closeWindowWithLastTab)
-          this.tabbrowser.removeTab(event.target);
+        if (event.target.localName == "tab") {
+          if (this.childNodes.length > 1 || !this._closeWindowWithLastTab)
+            this.tabbrowser.removeTab(event.target);
+        } else if (event.originalTarget.localName == "box") {
+          BrowserOpenTab();
+        } else {
+          return;
+        }
 
         event.stopPropagation();
       ]]></handler>

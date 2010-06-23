@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,15 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla installer build scripts.
+# The Original Code is  HUDService code.
 #
-# The Initial Developer of the Original Code is
-# Robert Strong <robert.bugzilla@gmail.com>
-#
-# Portions created by the Initial Developer are Copyright (C) 2005
-# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
+# The Initial Developer of the Original Code is Mozilla Corporation.
+# 
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   David Dahl <ddahl@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,23 +36,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Read a removed-files manifest and create an NSIS include file to delete the
-# files and directories specified in the first part of the installation phase
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-# deleteThisFile/deleteThisFolder instructions suitable for an install.js
-# script. This simply processes <> to stdout.
+include $(DEPTH)/config/autoconf.mk
 
-while (<>) {
-    m|^\s*(\S+)\s*$|;
-    my $file = $1;
-    next if ($file eq "");
+MODULE = hudservice
 
-    $file =~ s/\//\\/g;
-    if ($file =~ m|\\$|) {
-        print "Dir: \\$file\n";
-    }
-    else {
-        print "File: \\$file\n";
-    }
-}
+EXTRA_JS_MODULES = HUDService.jsm \
+		$(NULL)
 
+ifdef ENABLE_TESTS
+	DIRS += tests
+endif
+
+include $(topsrcdir)/config/rules.mk

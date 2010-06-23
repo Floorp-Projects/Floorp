@@ -73,7 +73,7 @@ function getChromeWindow()
 function getNotificationBox()
 {
   var chromeWin = getChromeWindow();
-  var notifyBox = chromeWin.getNotificationBox(notifyWindow);
+  var notifyBox = chromeWin.getNotificationBox(window.top);
 
   return notifyBox;
 }

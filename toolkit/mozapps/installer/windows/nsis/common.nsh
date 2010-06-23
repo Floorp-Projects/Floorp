@@ -3399,7 +3399,7 @@
 
 
 ################################################################################
-# Macros for parsing and updating the uninstall.log and removed-files.log
+# Macros for parsing and updating the uninstall.log
 
 /**
  * Updates the uninstall.log with new files added by software update.
@@ -3508,209 +3508,6 @@
 !macroend
 
 /**
- * Updates the uninstall.log with entries from uninstall.bak. The uninstall.bak
- * is the uninstall.log renamed to uninstall.bak at the beginning of the
- * installation
- *
- * When modifying this macro be aware that TextCompareNoDetails uses all
- * registers except $R0-$R9 so be cautious. Callers of this macro are not
- * affected.
- */
-!macro UpdateFromPreviousLog
-
-  !ifndef UpdateFromPreviousLog
-    !insertmacro FileJoin
-    !insertmacro GetLongPath
-    !insertmacro TextCompareNoDetails
-    !insertmacro TrimNewLines
-
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define UpdateFromPreviousLog "!insertmacro UpdateFromPreviousLogCall"
-
-    Function UpdateFromPreviousLog
-      Push $R9
-      Push $R8
-      Push $R7
-      Push $R6
-      Push $R5
-      Push $R4
-      Push $R3
-      Push $R2
-      Push $R1
-      Push $R0
-      Push $9
-
-      ; Diff and add missing entries from the previous file log if it exists
-      IfFileExists "$INSTDIR\uninstall\uninstall.bak" +1 end
-      ${DeleteFile} "$INSTDIR\uninstall\uninstall.tmp"
-      FileOpen $R3 "$INSTDIR\uninstall\uninstall.tmp" w
-      ${TextCompareNoDetails} "$INSTDIR\uninstall\uninstall.bak" "$INSTDIR\uninstall\uninstall.log" "SlowDiff" "UpdateFromPreviousLog_AddToLog"
-      FileClose $R3
-      IfErrors +2
-      ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$INSTDIR\uninstall\uninstall.tmp" "$INSTDIR\uninstall\uninstall.log"
-
-      ${DeleteFile} "$INSTDIR\uninstall\uninstall.bak"
-      ${DeleteFile} "$INSTDIR\uninstall\uninstall.tmp"
-
-      end:
-
-      Pop $9
-      Pop $R0
-      Pop $R1
-      Pop $R2
-      Pop $R3
-      Pop $R4
-      Pop $R5
-      Pop $R6
-      Pop $R7
-      Pop $R8
-      Push $R9
-    FunctionEnd
-
-    Function UpdateFromPreviousLog_AddToLog
-      ${TrimNewLines} "$9" $9
-      StrCmp $9 "" end +1
-      FileWrite $R3 "$9$\r$\n"
-      ${LogMsg} "Added To Uninstall Log: $9"
-
-      end:
-      Push 0
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro UpdateFromPreviousLogCall
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Call UpdateFromPreviousLog
-  !verbose pop
-!macroend
-
-/**
- * Parses the removed-files.log to remove files, and directories prior to
- * installing.
- *
- * When modifying this macro be aware that LineFind uses all registers except
- * $R0-$R3 so be cautious. Callers of this macro are not affected.
- */
-!macro ParseRemovedFilesLog
-
-  !ifndef ParseRemovedFilesLog
-    !insertmacro LineFind
-    !insertmacro TrimNewLines
-
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define ParseRemovedFilesLog "!insertmacro ParseRemovedFilesLogCall"
-
-    Function ParseRemovedFilesLog
-      Push $R9
-      Push $R8
-      Push $R7
-      Push $R6
-      Push $R5
-      Push $R4
-      Push $R3
-      Push $R2
-      Push $R1
-      Push $R0
-
-      IfFileExists "$EXEDIR\removed-files.log" +1 end
-      ${LogHeader} "Removing Obsolete Files and Directories"
-      ${LineFind} "$EXEDIR\removed-files.log" "/NUL" "1:-1" "ParseRemovedFilesLog_RemoveFile"
-      ${LineFind} "$EXEDIR\removed-files.log" "/NUL" "1:-1" "ParseRemovedFilesLog_RemoveDir"
-
-      end:
-
-      Pop $R0
-      Pop $R1
-      Pop $R2
-      Pop $R3
-      Pop $R4
-      Pop $R5
-      Pop $R6
-      Pop $R7
-      Pop $R8
-      Pop $R9
-    FunctionEnd
-
-    Function ParseRemovedFilesLog_RemoveFile
-      ${TrimNewLines} "$R9" $R9
-      StrCpy $R1 "$R9" 5
-
-      StrCmp $R1 "File:" +1 end
-      StrCpy $R9 "$R9" "" 6
-      IfFileExists "$INSTDIR$R9" +1 end
-
-      ClearErrors
-      ${DeleteFile} "$INSTDIR$R9"
-      IfErrors +3 +1
-      ${LogMsg} "Deleted File: $INSTDIR$R9"
-      GoTo end
-
-      ClearErrors
-      Rename "$INSTDIR$R9" "$INSTDIR$R9.moz-delete"
-      IfErrors +1 reboot_delete
-
-      ; Original file will be deleted on reboot
-      Delete /REBOOTOK "$INSTDIR$R9"
-      ${LogMsg} "Delayed Delete File (Reboot Required): $INSTDIR$R9"
-      GoTo end
-
-      ; Renamed file will be deleted on reboot
-      reboot_delete:
-      Delete /REBOOTOK "$INSTDIR$R9.moz-delete"
-      ${LogMsg} "Delayed Delete File (Reboot Required): $INSTDIR$R9.moz-delete"
-      GoTo end
-
-      end:
-      ClearErrors
-
-      Push 0
-    FunctionEnd
-
-    ; The xpinstall based installer removed directories even when they aren't
-    ; empty so this does as well.
-    Function ParseRemovedFilesLog_RemoveDir
-      ${TrimNewLines} "$R9" $R9
-      StrCpy $R1 "$R9" 4
-      StrCmp "$R1" "Dir:" +1 end
-      StrCpy $R9 "$R9" "" 5
-      StrCpy $R1 "$R9" "" -1
-
-      StrCmp "$R1" "\" +1 +2
-      StrCpy $R9 "$R9" -1
-
-      IfFileExists "$INSTDIR$R9" +1 end
-      ClearErrors
-      RmDir /r "$INSTDIR$R9"
-      IfErrors +1 +3
-      ${LogMsg} "** ERROR Removing Directory: $INSTDIR$R9 **"
-      GoTo end
-
-      ${LogMsg} "Removed Directory: $INSTDIR$R9"
-
-      end:
-      ClearErrors
-
-      Push 0
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro ParseRemovedFilesLogCall
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Call ParseRemovedFilesLog
-  !verbose pop
-!macroend
-
-/**
  * Copies files from a source directory to a destination directory with logging
  * to the uninstall.log. If any destination files are in use a reboot will be
  * necessary to complete the installation and the reboot flag (see IfRebootFlag
@@ -3811,11 +3608,11 @@
       ClearErrors
       CreateDirectory "$0"
       IfFileExists "$0" +1 err_create_dir  ; protect against looping.
-      ${LogMsg}  "Created Directory: $0"
+      ${LogMsg} "Created Directory: $0"
       StrCmp $R6 "" end copy_file
 
       err_create_dir:
-      ${LogMsg}  "** ERROR Creating Directory: $0 **"
+      ${LogMsg} "** ERROR Creating Directory: $0 **"
       MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$R4$\r$\n$\r$\n$0$\r$\n$\r$\n$R5" IDRETRY retry
       ${OnEndCommon}
       Quit
@@ -3878,6 +3675,160 @@
   Push "${_PREFIX_ERROR_CREATEDIR}"
   Push "${_SUFFIX_ERROR_CREATEDIR}"
   Call CopyFilesFromDir
+  !verbose pop
+!macroend
+
+/**
+ * Parses the uninstall.log on install to first remove a previous installation's
+ * files and then their directories if empty prior to installing.
+ *
+ * When modifying this macro be aware that LineFind uses all registers except
+ * $R0-$R3 so be cautious. Callers of this macro are not affected.
+ */
+!macro OnInstallUninstall
+
+  !ifndef OnInstallUninstall
+    !insertmacro GetParent
+    !insertmacro LineFind
+    !insertmacro TrimNewLines
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define OnInstallUninstall "!insertmacro OnInstallUninstallCall"
+
+    Function OnInstallUninstall
+      Push $R9
+      Push $R8
+      Push $R7
+      Push $R6
+      Push $R5
+      Push $R4
+      Push $R3
+      Push $R2
+      Push $R1
+      Push $R0
+      Push $TmpVal
+
+      IfFileExists "$INSTDIR\uninstall\uninstall.log" +1 end
+
+      ${LogHeader} "Removing Previous Installation"
+
+      ; Copy the uninstall log file to a temporary file
+      GetTempFileName $TmpVal
+      CopyFiles /SILENT /FILESONLY "$INSTDIR\uninstall\uninstall.log" "$TmpVal"
+
+      ; Delete files
+      ${LineFind} "$TmpVal" "/NUL" "1:-1" "RemoveFilesCallback"
+
+      ; Remove empty directories
+      ${LineFind} "$TmpVal" "/NUL" "1:-1" "RemoveDirsCallback"
+
+      ; Delete the temporary uninstall log file
+      Delete /REBOOTOK "$TmpVal"
+
+      ; Delete the uninstall log file
+      Delete "$INSTDIR\uninstall\uninstall.log"
+
+      end:
+      ClearErrors
+
+      Pop $TmpVal
+      Pop $R0
+      Pop $R1
+      Pop $R2
+      Pop $R3
+      Pop $R4
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Pop $R9
+    FunctionEnd
+
+    Function RemoveFilesCallback
+      ${TrimNewLines} "$R9" $R9
+      StrCpy $R1 "$R9" 5       ; Copy the first five chars
+
+      StrCmp "$R1" "File:" +1 end
+      StrCpy $R9 "$R9" "" 6    ; Copy string starting after the 6th char
+      StrCpy $R0 "$R9" 1       ; Copy the first char
+
+      StrCmp "$R0" "\" +1 end  ; If this isn't a relative path goto end
+      StrCmp "$R9" "\install.log" end +1 ; Skip the install.log
+      StrCmp "$R9" "\MapiProxy_InUse.dll" end +1 ; Skip the MapiProxy_InUse.dll
+      StrCmp "$R9" "\mozMapi32_InUse.dll" end +1 ; Skip the mozMapi32_InUse.dll
+
+      StrCpy $R1 "$INSTDIR$R9" ; Copy the install dir path and suffix it with the string
+      IfFileExists "$R1" +1 end
+
+      ClearErrors
+      Delete "$R1"
+      IfErrors +3 +1
+      ${LogMsg} "Deleted File: $R1"
+      GoTo end
+
+      ClearErrors
+      Rename "$R1" "$R1.moz-delete"
+      IfErrors +4 +1
+      Delete /REBOOTOK "$R1.moz-delete"
+      ${LogMsg} "Delayed Delete File (Reboot Required): $R1.moz-delete"
+      GoTo end
+
+      ; Check if the file exists in the source. If it does the new file will
+      ; replace the existing file when the system is rebooted. If it doesn't
+      ; the file will be deleted when the system is rebooted.
+      IfFileExists "$EXEDIR\nonlocalized$R9" end +1
+      IfFileExists "$EXEDIR\localized$R9" end +1
+      IfFileExists "$EXEDIR\optional$R9" end +1
+      Delete /REBOOTOK "$R1"
+      ${LogMsg} "Delayed Delete File (Reboot Required): $R1"
+
+      end:
+      ClearErrors
+
+      Push 0
+    FunctionEnd
+
+    ; Using locate will leave file handles open to some of the directories
+    ; which will prevent the deletion of these directories. This parses the
+    ; uninstall.log and uses the file entries to find / remove empty
+    ; directories.
+    Function RemoveDirsCallback
+      ${TrimNewLines} "$R9" $R9
+      StrCpy $R0 "$R9" 5          ; Copy the first five chars
+      StrCmp "$R0" "File:" +1 end
+
+      StrCpy $R9 "$R9" "" 6       ; Copy string starting after the 6th char
+      StrCpy $R0 "$R9" 1          ; Copy the first char
+
+      StrCpy $R1 "$INSTDIR$R9"    ; Copy the install dir path and suffix it with the string
+      StrCmp "$R0" "\" loop end   ; If this isn't a relative path goto end
+
+      loop:
+      ${GetParent} "$R1" $R1         ; Get the parent directory for the path
+      StrCmp "$R1" "$INSTDIR" end +1 ; If the directory is the install dir goto end
+
+      IfFileExists "$R1" +1 loop  ; Only try to remove the dir if it exists
+      ClearErrors
+      RmDir "$R1"     ; Remove the dir
+      IfErrors end +1  ; If we fail there is no use trying to remove its parent dir
+      ${LogMsg} "Deleted Directory: $R1"
+      GoTo loop
+
+      end:
+      ClearErrors
+
+      Push 0
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro OnInstallUninstallCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call OnInstallUninstall
   !verbose pop
 !macroend
 
@@ -4326,12 +4277,8 @@
   !define INSTALLTYPE_BASIC     1
 !endif
 
-!ifndef INSTALLTYPE_ADVANCED
-  !define INSTALLTYPE_ADVANCED  2
-!endif
-
 !ifndef INSTALLTYPE_CUSTOM
-  !define INSTALLTYPE_CUSTOM    4
+  !define INSTALLTYPE_CUSTOM    2
 !endif
 
 /**
@@ -4796,16 +4743,12 @@
 !macroend
 
 /**
- * Called from the MUI preDirectory function
- *
- * $R9 = returned value from GetSingleInstallPath, CheckDiskSpace, and
- *       CanWriteToInstallDir macros
+ * Called from the MUI leaveOptions function to set the value of $INSTDIR.
  */
-!macro PreDirectoryCommon
+!macro LeaveOptionsCommon
 
-  !ifndef PreDirectoryCommon
+  !ifndef LeaveOptionsCommon
     !insertmacro CanWriteToInstallDir
-    !insertmacro CheckDiskSpace
     !insertmacro GetLongPath
 
 !ifndef NO_INSTDIR_FROM_REG
@@ -4814,28 +4757,43 @@
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
-    !define PreDirectoryCommon "!insertmacro PreDirectoryCommonCall"
+    !define LeaveOptionsCommon "!insertmacro LeaveOptionsCommonCall"
 
-    Function PreDirectoryCommon
+    Function LeaveOptionsCommon
       Push $R9
 
-!ifndef NO_INSTDIR_PREDIRCOMMON
 !ifndef NO_INSTDIR_FROM_REG
       SetShellVarContext all      ; Set SHCTX to HKLM
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
-      StrCmp "$R9" "false" +1 fix_install_dir
+      StrCmp "$R9" "false" +1 finish_get_install_dir
 
       SetShellVarContext current  ; Set SHCTX to HKCU
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
-      fix_install_dir:
+      finish_get_install_dir:
       StrCmp "$R9" "false" +2 +1
       StrCpy $INSTDIR "$R9"
 !endif
-!endif
 
-      IfFileExists "$INSTDIR" +1 check_install_dir
+      ; If the user doesn't have write access to the installation directory set
+      ; the installation directory to a subdirectory of the All Users application
+      ; directory and if the user can't write to that location set the installation
+      ; directory to a subdirectory of the users local application directory
+      ; (e.g. non-roaming).
+      ${CanWriteToInstallDir} $R9
+      StrCmp "$R9" "false" +1 finish_check_install_dir
+
+      SetShellVarContext all      ; Set SHCTX to All Users
+      StrCpy $INSTDIR "$APPDATA\${BrandFullName}\"
+      ${CanWriteToInstallDir} $R9
+      StrCmp "$R9" "false" +2 +1
+      StrCpy $INSTDIR "$LOCALAPPDATA\${BrandFullName}\"
+
+      finish_check_install_dir:
+      IfFileExists "$INSTDIR" +3 +1
+      Pop $R9
+      Return
 
       ; Always display the long path if the path already exists.
       ${GetLongPath} "$INSTDIR" $INSTDIR
@@ -4846,7 +4804,39 @@
       ; http://www.nullsoft.com/free/nsis/makensis.htm#InstallDir
       StrCpy $INSTDIR "$INSTDIR\"
 
-      check_install_dir:
+      Pop $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro LeaveOptionsCommonCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call LeaveOptionsCommon
+  !verbose pop
+!macroend
+
+/**
+ * Called from the MUI preDirectory function to verify there is enough disk
+ * space for the installation and the installation directory is writable.
+ *
+ * $R9 = returned value from CheckDiskSpace and CanWriteToInstallDir macros
+ */
+!macro PreDirectoryCommon
+
+  !ifndef PreDirectoryCommon
+    !insertmacro CanWriteToInstallDir
+    !insertmacro CheckDiskSpace
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define PreDirectoryCommon "!insertmacro PreDirectoryCommonCall"
+
+    Function PreDirectoryCommon
+      Push $R9
+
       IntCmp $InstallType ${INSTALLTYPE_CUSTOM} end +1 +1
       ${CanWriteToInstallDir} $R9
       StrCmp "$R9" "false" end +1
@@ -4942,8 +4932,7 @@
   !ifndef InstallStartCleanupCommon
     !insertmacro CleanVirtualStore
     !insertmacro EndUninstallLog
-    !insertmacro ParseRemovedFilesLog
-    !insertmacro UpdateFromPreviousLog
+    !insertmacro OnInstallUninstall
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -4951,7 +4940,7 @@
 
     Function InstallStartCleanupCommon
 
-      ; Remove files not removed by parsing the removed-files.log
+      ; Remove files not removed by parsing the uninstall.log
       Delete "$INSTDIR\install_wizard.log"
       Delete "$INSTDIR\install_status.log"
 
@@ -4967,8 +4956,7 @@
       Delete "$INSTDIR\uninstall\uninstall.ini"
       Delete "$INSTDIR\uninstall\cleanup.log"
       Delete "$INSTDIR\uninstall\uninstall.update"
-      IfFileExists "$INSTDIR\uninstall\uninstall.log" +1 +2
-      Rename "$INSTDIR\uninstall\uninstall.log" "$INSTDIR\uninstall\uninstall.bak"
+      ${OnInstallUninstall}
 
       ; Since we write to the uninstall.log in this directory during the
       ; installation create the directory if it doesn't already exist.
@@ -4978,9 +4966,6 @@
       ; Remove files that may be left behind by the application in the
       ; VirtualStore directory.
       ${CleanVirtualStore}
-
-      ; Remove the files and directories in the removed-files.log
-      ${ParseRemovedFilesLog}
     FunctionEnd
 
     !verbose pop
@@ -5002,7 +4987,6 @@
 
   !ifndef InstallEndCleanupCommon
     !insertmacro EndUninstallLog
-    !insertmacro UpdateFromPreviousLog
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -5012,7 +4996,6 @@
 
       ; Close the file handle to the uninstall.log
       ${EndUninstallLog}
-      ${UpdateFromPreviousLog}
 
     FunctionEnd
 
@@ -5278,7 +5261,7 @@
  * installation. This also adds the fhInstallLog and fhUninstallLog vars used
  * for logging.
  *
- * $fhInstallLog   = filehandle for $INSTDIR\install.log
+ * $fhInstallLog = filehandle for $INSTDIR\install.log
  *
  * @param   _APP_NAME
  *          Typically the BrandFullName
@@ -5556,8 +5539,8 @@
  * @param   _FILE_NAME
  *          The 
  *
- * $R6 = 
- * $R7 = 
+ * $R6 = return value from ReadIniStr for the shortcut file name
+ * $R7 = counter for supporting multiple shortcuts in the same location
  * $R8 = _SECTION_NAME
  * $R9 = _FILE_NAME
  */

@@ -118,7 +118,9 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, XRenderPictFormat *format, const gf
 }
 
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
-    : mPixmapTaken(PR_FALSE), mSize(-1.0, -1.0)
+    : mPixmapTaken(PR_FALSE),
+      mSize(cairo_xlib_surface_get_width(csurf),
+            cairo_xlib_surface_get_height(csurf))
 {
     mDrawable = cairo_xlib_surface_get_drawable(csurf);
     mDisplay = cairo_xlib_surface_get_display(csurf);
