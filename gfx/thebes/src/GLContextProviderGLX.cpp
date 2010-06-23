@@ -324,6 +324,9 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
     int matchIndex = -1;
     for (int i = 0; i < numConfigs; i++) {
         XVisualInfo *info = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
+        if (!info) {
+            continue;
+        }
         if (isATI) {
             if (AreCompatibleVisuals(vi, info)) {
                 matchIndex = i;
