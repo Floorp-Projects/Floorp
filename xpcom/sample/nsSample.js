@@ -51,6 +51,6 @@ mySample.prototype = {
  * XPCOMUtils.generateNSGetModule is for Mozilla 1.9.2 (Firefox 3.6).
  */
 if (XPCOMUtils.generateNSGetFactory)
-    NSGetFactory = XPCOMUtils.generateNSGetFactory([mySample]);
+    var NSGetFactory = XPCOMUtils.generateNSGetFactory([mySample]);
 else
-    NSGetModule = XPCOMUtils.generateNSGetModule([mySample]);
+    var NSGetModule = XPCOMUtils.generateNSGetModule([mySample]);

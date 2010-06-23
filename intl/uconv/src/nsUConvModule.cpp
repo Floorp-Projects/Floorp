@@ -1233,10 +1233,7 @@ static const mozilla::Module kUConvModule = {
   mozilla::Module::kVersion,
   kUConvCIDs,
   kUConvContracts,
-  kUConvCategories,
-  NULL,
-  NULL,
-  NULL
+  kUConvCategories
 };
 
 NSMODULE_DEFN(nsUConvModule) = &kUConvModule;
