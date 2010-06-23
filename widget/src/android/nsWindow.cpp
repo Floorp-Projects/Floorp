@@ -136,6 +136,8 @@ nsWindow::nsWindow() :
 nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
+    if (gFocusedWindow == this)
+        gFocusedWindow = nsnull;
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
