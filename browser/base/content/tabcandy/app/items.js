@@ -237,6 +237,21 @@ window.Item.prototype = {
     Utils.assert('this.bounds', isRect(this.bounds));
     return new Rect(this.bounds);    
   },
+
+  // ----------
+  // Function: overlapsWithOtherItems
+  // Returns true if this Item overlaps with any other Item on the screen.
+  overlapsWithOtherItems: function() {
+		var self = this;
+		var items = Items.getTopLevelItems();
+		var bounds = this.getBounds();
+		return items.some(function(item) {
+			if (item == self) // can't overlap with yourself.
+				return false;
+			var myBounds = item.getBounds();
+			return myBounds.intersects(bounds);
+		} );
+  },
   
   // ----------
   // Function: setPosition

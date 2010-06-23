@@ -100,7 +100,9 @@ Drag.prototype = {
     var newRect;
 
     // OH SNAP!
-    if (!Keys.meta) { // if we aren't holding down the meta key...
+    if ( !Keys.meta                           // if we aren't holding down the meta key...
+        && !this.item.overlapsWithOtherItems() // and we aren't on top of anything else...
+        ) { 
       newRect = Trenches.snap(bounds,assumeConstantSize,keepProportional);
       if (newRect) { // might be false if no changes were made
         update = true;
