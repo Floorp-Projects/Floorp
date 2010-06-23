@@ -156,34 +156,33 @@ public:
             }
         }
 #define SYMBOL(name) \
-	{ (PRFuncPtr*) &f##name, { "egl" #name, NULL } }
+    { (PRFuncPtr*) &f##name, { "egl" #name, NULL } }
 
-	LibrarySymbolLoader::SymLoadStruct earlySymbols[] = {
-	    SYMBOL(GetDisplay),
-	    SYMBOL(GetCurrentContext),
-	    SYMBOL(MakeCurrent),
-	    SYMBOL(DestroyContext),
-	    SYMBOL(CreateContext),
-	    SYMBOL(DestroySurface),
-	    SYMBOL(CreateWindowSurface),
-	    SYMBOL(CreatePbufferSurface),
-	    SYMBOL(CreatePixmapSurface),
-	    SYMBOL(BindAPI),
-	    SYMBOL(Initialize),
-	    SYMBOL(ChooseConfig),
-	    SYMBOL(GetError),
-	    SYMBOL(GetConfigs),
-	    SYMBOL(GetConfigAttrib),
-	    SYMBOL(WaitNative),
-	    SYMBOL(GetProcAddress),
-	    { NULL, { NULL } }
-	};
+        LibrarySymbolLoader::SymLoadStruct earlySymbols[] = {
+            SYMBOL(GetDisplay),
+            SYMBOL(GetCurrentContext),
+            SYMBOL(MakeCurrent),
+            SYMBOL(DestroyContext),
+            SYMBOL(CreateContext),
+            SYMBOL(DestroySurface),
+            SYMBOL(CreateWindowSurface),
+            SYMBOL(CreatePbufferSurface),
+            SYMBOL(CreatePixmapSurface),
+            SYMBOL(BindAPI),
+            SYMBOL(Initialize),
+            SYMBOL(ChooseConfig),
+            SYMBOL(GetError),
+            SYMBOL(GetConfigs),
+            SYMBOL(GetConfigAttrib),
+            SYMBOL(WaitNative),
+            SYMBOL(GetProcAddress),
+            { NULL, { NULL } }
+        };
 
-	if (!LibrarySymbolLoader::LoadSymbols(mEGLLibrary, &earlySymbols[0])) {
-	    NS_WARNING("Couldn't find required entry points in EGL library (early init)");
-	    return PR_FALSE;
-	}
-
+        if (!LibrarySymbolLoader::LoadSymbols(mEGLLibrary, &earlySymbols[0])) {
+            NS_WARNING("Couldn't find required entry points in EGL library (early init)");
+            return PR_FALSE;
+        }
 
         mInitialized = PR_TRUE;
         return PR_TRUE;
@@ -197,15 +196,15 @@ private:
 class GLContextEGL : public GLContext
 {
 public:
-    GLContextEGL(EGLDisplay aDisplay, EGLConfig aConfig, 
+    GLContextEGL(EGLDisplay aDisplay, EGLConfig aConfig,
                  EGLSurface aSurface, EGLContext aContext)
-        : mDisplay(aDisplay), mConfig(aConfig), 
+        : mDisplay(aDisplay), mConfig(aConfig),
           mSurface(aSurface), mContext(aContext){}
 
     ~GLContextEGL()
     {
         sEGLLibrary.fDestroyContext(mDisplay, mContext);
-	sEGLLibrary.fDestroySurface(mDisplay, mSurface);
+        sEGLLibrary.fDestroySurface(mDisplay, mSurface);
     }
 
     PRBool Init()
@@ -221,15 +220,15 @@ public:
 
     PRBool MakeCurrent()
     {
-	PRBool succeeded = PR_TRUE;
+        PRBool succeeded = PR_TRUE;
 
-	// Assume that EGL has the same problem as WGL does,
-	// where MakeCurrent with an already-current context is
-	// still expensive.
-	if (sEGLLibrary.fGetCurrentContext() != mContext) {
-	    succeeded = sEGLLibrary.fMakeCurrent(mDisplay, mSurface, mSurface, mContext);
-	    NS_ASSERTION(succeeded, "Failed to make GL context current!");
-	}
+        // Assume that EGL has the same problem as WGL does,
+        // where MakeCurrent with an already-current context is
+        // still expensive.
+        if (sEGLLibrary.fGetCurrentContext() != mContext) {
+            succeeded = sEGLLibrary.fMakeCurrent(mDisplay, mSurface, mSurface, mContext);
+            NS_ASSERTION(succeeded, "Failed to make GL context current!");
+        }
 
         return succeeded;
     }
@@ -247,7 +246,7 @@ public:
             return mContext;
 
         case NativePBuffer:
-	    return mSurface;
+            return mSurface;
 
         default:
             return nsnull;
@@ -311,14 +310,14 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
 
     context = sEGLLibrary.fCreateContext(display, config, 0, cxattribs);
     if (!context) {
-	sEGLLibrary.fDestroySurface(display, surface);
+        sEGLLibrary.fDestroySurface(display, surface);
         return nsnull;
     }
 
     nsRefPtr<GLContextEGL> glContext = new GLContextEGL(display, config, surface, context);
 
     if (!glContext->Init())
-	return nsnull;
+        return nsnull;
 
     return glContext.forget().get();
 }
@@ -337,7 +336,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &a
 
     display = sEGLLibrary.fGetDisplay(EGL_DEFAULT_DISPLAY);
     if (!sEGLLibrary.fInitialize(display, NULL, NULL))
-	return nsnull;
+        return nsnull;
 
     nsTArray<int> attribs;
 
@@ -363,12 +362,12 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &a
     int numConfigs = 32;
 
     if (!sEGLLibrary.fChooseConfig(display, attribs.Elements(),
-				   configs, numConfigs,
-				   &numConfigs))
-	return nsnull;
+                                   configs, numConfigs,
+                                   &numConfigs))
+        return nsnull;
 
     if (numConfigs == 0)
-	return nsnull;
+        return nsnull;
 
     // shrug
     config = configs[0];
@@ -381,7 +380,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &a
 
     surface = sEGLLibrary.fCreatePbufferSurface(display, config, pbattrs);
     if (!surface)
-	return nsnull;
+        return nsnull;
 
     sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API);
 
@@ -392,14 +391,14 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &a
 
     context = sEGLLibrary.fCreateContext(display, config, EGL_NO_CONTEXT, cxattrs);
     if (!context) {
-	sEGLLibrary.fDestroySurface(display, surface);
-	return nsnull;
+        sEGLLibrary.fDestroySurface(display, surface);
+        return nsnull;
     }
 
     nsRefPtr<GLContextEGL> glContext = new GLContextEGL(display, config, surface, context);
 
     if (!glContext->Init())
-	return nsnull;
+        return nsnull;
 
     return glContext.forget().get();
 }
