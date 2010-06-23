@@ -2927,6 +2927,18 @@ static JSClass sandbox_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+class AutoCrossCompartmentCall
+{
+  public:
+    AutoCrossCompartmentCall() : call(NULL) {}
+    ~AutoCrossCompartmentCall() {
+        if (call)
+            JS_LeaveCrossCompartmentCall(call);
+    }
+
+    JSCrossCompartmentCall *call;
+};
+
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy, bool split)
 {
@@ -2934,26 +2946,27 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
     if (!obj)
         return NULL;
 
-    JSCrossCompartmentCall *call = JS_EnterCrossCompartmentCall(cx, obj);
-    if (!call)
-        return NULL;
+    {
+        AutoCrossCompartmentCall ac;
+        ac.call = JS_EnterCrossCompartmentCall(cx, obj);
+        if (!ac.call)
+            return NULL;
 
-    bool ok = true;
-    if (split) {
-        obj = split_setup(cx, JS_TRUE);
-        ok = !!obj;
+        if (split) {
+            obj = split_setup(cx, JS_TRUE);
+            if (!obj)
+                return NULL;
+        }
+        if (!lazy && !JS_InitStandardClasses(cx, obj))
+            return NULL;
+
+        AutoValueRooter root(cx, BOOLEAN_TO_JSVAL(lazy));
+        if (!JS_SetProperty(cx, obj, "lazy", root.addr()))
+            return NULL;
+
+        if (split)
+            obj = split_outerObject(cx, obj);
     }
-    if (!lazy)
-        ok = ok && JS_InitStandardClasses(cx, obj);
-
-    AutoValueRooter root(cx, BOOLEAN_TO_JSVAL(lazy));
-    ok = ok && JS_SetProperty(cx, obj, "lazy", root.addr());
-    if (ok && split)
-        obj = split_outerObject(cx, obj);
-
-    JS_LeaveCrossCompartmentCall(call);
-    if (!ok)
-        return NULL;
 
     AutoObjectRooter objroot(cx, obj);
     if (!cx->compartment->wrap(cx, objroot.addr()))
@@ -4997,16 +5010,16 @@ bad:
 int
 shell(JSContext *cx, int argc, char **argv, char **envp)
 {
-    JS_BeginRequest(cx);
+    JSAutoRequest ar(cx);
+    AutoCrossCompartmentCall ac;
 
-    JSCrossCompartmentCall *call;
-    JSObject *glob = NewGlobalObject(cx, &call);
+    JSObject *glob = NewGlobalObject(cx, &ac.call);
     if (!glob)
         return 1;
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
     if (!envobj || !JS_SetPrivate(cx, envobj, envp))
-        goto bad;
+        return 1;
 
 #ifdef JSDEBUGGER
     /*
@@ -5014,7 +5027,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     */
     jsdc = JSD_DebuggerOnForUser(rt, NULL, NULL);
     if (!jsdc)
-        goto bad;
+        return 1;
     JSD_JSContextInUse(jsdc, cx);
 #ifdef JSD_LOWLEVEL_SOURCE
     JS_SetSourceHandler(rt, SendSourceToJSDebugger, jsdc);
@@ -5022,7 +5035,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 #ifdef JSDEBUGGER_JAVA_UI
     jsdjc = JSDJ_CreateContext();
     if (! jsdjc)
-        goto bad;
+        return 1;
     JSDJ_SetJSDContext(jsdjc, jsdc);
     java_env = JSDJ_CreateJavaVMAndStartDebugger(jsdjc);
     /*
@@ -5044,12 +5057,11 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     ShellWorkerHooks hooks;
     if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
         !js::workers::init(cx, &hooks, glob, &gWorkers)) {
-        goto bad;
+        return 1;
     }
 #endif
 
-    int result;
-    result = ProcessArgs(cx, glob, argv, argc);
+    int result = ProcessArgs(cx, glob, argv, argc);
 
 #ifdef JS_THREADSAFE
     js::workers::finish(cx, gWorkers);
@@ -5068,14 +5080,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     }
 #endif  /* JSDEBUGGER */
 
-out:
-    JS_LeaveCrossCompartmentCall(call);
-    JS_EndRequest(cx);
     return result;
-
-bad:
-    result = 1;
-    goto out;
 }
 
 int
