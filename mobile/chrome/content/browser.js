@@ -2690,10 +2690,10 @@ Tab.prototype = {
     if (!this._browser)
       return;
 
-    let bv = Browser._browserView;
-    let browserView = (Browser.selectedBrowser == this._browser && bv.isDefaultZoom()) ? Browser._browserView 
-                                                                                       : null;
-    this._chromeTab.updateThumbnail(this._browser, browserView);
+    // XXX: We don't know the size of the browser at this time and we can't fallback
+    // to contentWindow.innerWidth and .innerHeight. The viewport meta data is not
+    // even set yet. So fallback to something sane for now.
+    this._chromeTab.updateThumbnail(this._browser, 800, 500);
   },
 
   toString: function() {
@@ -2728,4 +2728,24 @@ var ImagePreloader = {
       image.src = "chrome://browser/skin/images/" + images[i] + size + ".png";
     }
   }
+}
+
+
+// Helper used to hide IPC / non-IPC differences for renering to a canvas
+function rendererFactory(aBrowser, aCanvas) {
+  if (aBrowser.contentWindow) {
+    let wrapper = {};
+    wrapper.ctx = aCanvas.getContext("2d");
+    wrapper.drawContent = function(aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
+      this.ctx.drawWindow(aBrowser.contentWindow, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+    };
+    return wrapper;
+  }
+
+  let wrapper = {};
+  wrapper.ctx = aCanvas.MozGetIPCContext("2d");
+  wrapper.drawContent = function(aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
+    this.ctx.asyncDrawXULElement(aBrowser, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+  };
+  return wrapper;
 }

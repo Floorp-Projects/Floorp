@@ -586,7 +586,7 @@
 
       <property name="contentWindow"
                 readonly="true"
-                onget="throw 'Not Remoteable'"/>
+                onget="return null"/>
 
       <property name="sessionHistory"
                 onget="throw 'sessionHistory: Not Remoteable'"
