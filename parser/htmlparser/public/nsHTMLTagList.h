@@ -133,6 +133,7 @@ HTML_TAG(li, LI)
 HTML_TAG(link, Link)
 HTML_TAG(listing, Span)
 HTML_TAG(map, Map)
+HTML_TAG(mark, ) // HTMLElement instance
 HTML_TAG(marquee, Div)
 HTML_TAG(menu, Shared)
 HTML_TAG(meta, Meta)
