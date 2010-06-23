@@ -1060,7 +1060,7 @@ private:
 
 ScopedXPCOMStartup::~ScopedXPCOMStartup()
 {
-  NS_RELEASE(gNativeAppSupport);
+  NS_IF_RELEASE(gNativeAppSupport);
 
   if (mServiceManager) {
 #ifdef XP_MACOSX
