@@ -63,19 +63,18 @@ var Harness = {
     AddonManager.addInstallListener(this);
     this.installCount = 0;
     this.pendingCount = 0;
+
+    var self = this;
+    registerCleanupFunction(function() {
+      Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+      Services.obs.removeObserver(self, "addon-install-blocked");
+      Services.wm.removeListener(self);
+
+      AddonManager.removeInstallListener(self);
+    });
   },
 
   finish: function() {
-    Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
-    Services.obs.removeObserver(this, "addon-install-blocked");
-    Services.wm.removeListener(this);
-
-    var win = Services.wm.getMostRecentWindow("Extension:Manager");
-    if (win)
-      win.close();
-
-    AddonManager.removeInstallListener(this);
-
     AddonManager.getAllInstalls(function(installs) {
       is(installs.length, 0, "Should be no active installs at the end of the test");
       finish();
