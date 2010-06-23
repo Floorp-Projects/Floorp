@@ -615,6 +615,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
+    PaintTracker pt;
+
     NPCocoaEvent evcopy = event.event;
 
     if (evcopy.type == NPCocoaEventDrawRect) {
@@ -685,6 +687,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
+
+    PaintTracker pt;
 
     NPCocoaEvent evcopy = event.event;
     nsIOSurface* surf = nsIOSurface::LookupSurface(surfaceid);
