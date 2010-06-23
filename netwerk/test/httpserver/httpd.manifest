@@ -1,2 +1,2 @@
 component {54ef6f81-30af-4b1d-ac55-8ba811293e41} httpd.js
-contract 54ef6f81-30af-4b1d-ac55-8ba811293e41 {@mozilla.org/server/jshttp;1}
+contract @mozilla.org/server/jshttp;1 {54ef6f81-30af-4b1d-ac55-8ba811293e41}
