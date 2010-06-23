@@ -215,7 +215,7 @@ window.Item.prototype = {
       minWidth: 90,
       minHeight: 90,
       start: function(e,ui){
-      	resizeInfo = new Drag(this, e);
+      	resizeInfo = new Drag(this, e, true); // true = isResizing
       },
       resize: function(e,ui){
         resizeInfo.snap(e,ui, false, self.keepProportional);

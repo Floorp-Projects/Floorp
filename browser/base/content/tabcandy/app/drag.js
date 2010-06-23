@@ -58,10 +58,12 @@ var drag = {
 // Parameters: 
 //   item - The <Item> being dragged
 //   event - The DOM event that kicks off the drag
-var Drag = function(item, event) {
+//   isResizing - (boolean) is this a resizing instance? or (if false) dragging?
+var Drag = function(item, event, isResizing) {
   try {
     Utils.assert('item', item && item.isAnItem);
     
+    this.isResizing = isResizing || false;
     this.item = item;
     this.el = item.container;
     this.$el = iQ(this.el);
@@ -72,7 +74,7 @@ var Drag = function(item, event) {
     this.item.isDragging = true;
     this.item.setZ(999999);
     
-    if (this.item.isATabItem)
+    if (this.item.isATabItem && !isResizing)
       this.safeWindowBounds = Items.getSafeWindowBounds( true );
     else
       this.safeWindowBounds = Items.getSafeWindowBounds( );
