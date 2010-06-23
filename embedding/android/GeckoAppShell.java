@@ -72,6 +72,8 @@ class GeckoAppShell
 
     static private boolean gRestartScheduled = false;
 
+    static protected Timer mSoftKBTimer;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -174,14 +176,24 @@ class GeckoAppShell
     }
 
     public static void showIME(int state) {
-        InputMethodManager imm = (InputMethodManager) 
-            GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
         GeckoApp.surfaceView.mIMEState = state;
-        if (state != 0)
-            imm.showSoftInput(GeckoApp.surfaceView, 0);
-        else
-            imm.hideSoftInputFromWindow(GeckoApp.surfaceView.getWindowToken(), 0);
+
+        if (mSoftKBTimer == null) {
+            mSoftKBTimer = new Timer();
+            mSoftKBTimer.schedule(new TimerTask() {
+                public void run() {
+                    InputMethodManager imm = (InputMethodManager) 
+                        GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                    if (GeckoApp.surfaceView.mIMEState != 0)
+                        imm.showSoftInput(GeckoApp.surfaceView, 0);
+                    else
+                        imm.hideSoftInputFromWindow(GeckoApp.surfaceView.getWindowToken(), 0);
+                    mSoftKBTimer = null;
+                    
+                }
+            }, 200);
+        }
     }
 
     public static void enableAccelerometer(boolean enable) {
