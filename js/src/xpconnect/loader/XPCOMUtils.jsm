@@ -190,7 +190,14 @@ var XPCOMUtils = {
                                                                  aInterfaceName)
   {
     this.defineLazyGetter(aObject, aName, function XPCU_serviceLambda() {
-      return Cc[aContract].getService(Ci[aInterfaceName]);
+      try {
+        return Cc[aContract].getService(Ci[aInterfaceName]);
+      }
+      catch (e) {
+        dump("Error getting contract: " + aContract + ": " + e);
+        Components.utils.reportError("Error getting contract: " + aContract + ": " + e);
+        throw e;
+      }
     });
   },
 

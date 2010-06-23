@@ -289,7 +289,7 @@ private:
 };
 
 
-#define NS_MAX_FILENAME_LEN	1024
+#define NS_MAX_FILENAME_LEN     1024
 
 #define NS_ERROR_IS_DIR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 24)
 
@@ -311,4 +311,3 @@ struct nsFactoryEntry
 };
 
 #endif // nsComponentManager_h__
-
