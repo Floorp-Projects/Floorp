@@ -1946,6 +1946,24 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
 }
 
 void JS_FASTCALL
+stubs::WrapPrimitiveThis(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+    const Value &funv = f.regs.sp[-2];
+    const Value &thisv = f.regs.sp[-1];
+
+    JS_ASSERT(thisv.isPrimitive());
+
+    /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
+    if (!funv.isFunObj() ||
+        !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &funv.asFunObj()),
+                              thisv)) {
+        if (!js_PrimitiveToObject(cx, &f.regs.sp[-1]))
+            THROW();
+    }
+}
+
+void JS_FASTCALL
 stubs::Length(VMFrame &f)
 {
     JSFrameRegs &regs = f.regs;
