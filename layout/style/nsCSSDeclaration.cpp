@@ -172,14 +172,14 @@ nsCSSDeclaration::AppendStorageToString(nsCSSProperty aProperty,
               aProperty == eCSSProperty__moz_transform_origin) &&
              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
              pair->mXValue.GetUnit() != eCSSUnit_Initial) ||
-            (aProperty == eCSSProperty__moz_background_size &&
+            (aProperty == eCSSProperty_background_size &&
              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
              pair->mXValue.GetUnit() != eCSSUnit_Initial &&
              pair->mXValue.GetUnit() != eCSSUnit_Enumerated)) {
           // Only output a Y value if it's different from the X value,
           // or if it's a background-position value other than 'initial'
           // or 'inherit', or if it's a -moz-transform-origin value other
-          // than 'initial' or 'inherit', or if it's a -moz-background-size
+          // than 'initial' or 'inherit', or if it's a background-size
           // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
           aResult.Append(PRUnichar(' '));
           AppendCSSValueToString(aProperty, pair->mYValue, aResult);
@@ -973,11 +973,11 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       const nsCSSValuePairList *position =
         * data->ValuePairListStorageFor(eCSSProperty_background_position);
       const nsCSSValueList *clip =
-        * data->ValueListStorageFor(eCSSProperty__moz_background_clip);
+        * data->ValueListStorageFor(eCSSProperty_background_clip);
       const nsCSSValueList *origin =
-        * data->ValueListStorageFor(eCSSProperty__moz_background_origin);
+        * data->ValueListStorageFor(eCSSProperty_background_origin);
       const nsCSSValuePairList *size =
-        * data->ValuePairListStorageFor(eCSSProperty__moz_background_size);
+        * data->ValuePairListStorageFor(eCSSProperty_background_size);
       for (;;) {
         if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
             size->mYValue.GetUnit() != eCSSUnit_Auto) {
@@ -1005,29 +1005,24 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                      "should have returned early for real inherit/initial");
         if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
             origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
-#if 0
-    // This is commented out for now until we change
-    // -moz-background-clip to background-clip, -moz-background-origin
-    // to background-origin, change their value names to *-box, and add
-    // support for content-box on background-clip.
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
                            NS_STYLE_BG_ORIGIN_BORDER);
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
                            NS_STYLE_BG_ORIGIN_PADDING);
-          // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
-          //                  NS_STYLE_BG_ORIGIN_CONTENT);
+          PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
+                           NS_STYLE_BG_ORIGIN_CONTENT);
+          // The shorthand only has a single clip/origin value which
+          // sets both properties.  So if they're different (and
+          // non-default), we can't represent the state using the
+          // shorthand.
           if (clip->mValue != origin->mValue) {
             aValue.Truncate();
             return NS_OK;
           }
 
           aValue.Append(PRUnichar(' '));
-          AppendCSSValueToString(eCSSProperty__moz_background_clip,
+          AppendCSSValueToString(eCSSProperty_background_clip,
                                  clip->mValue, aValue);
-#else
-          aValue.Truncate();
-          return NS_OK;
-#endif
         }
 
         image = image->mNext;

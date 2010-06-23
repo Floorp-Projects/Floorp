@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function z()
+{
+  var q = document.getElementById("q");
+
+  for (var r = 0; r < 100; ++r) {
+    // dump(r + "\n");
+    q.style.width = r + "px";
+    document.documentElement.offsetHeight;
+  }
+}
+
+</script>
+</head>
+<body onload="z();">
+
+<div style="font-family: monospace;" id="q"><div id="w" style="word-spacing: 1px">AAA <span style="white-space: pre-line; font-weight: 500;">BB C 
+ </span></div></div>
+ 
+</body></html>

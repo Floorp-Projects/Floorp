@@ -44,12 +44,13 @@
 #include "nsAutoPtr.h"
 #include "nsBaseWidgetAccessible.h"
 
-class nsIWeakReference;
-
+/**
+ * Used for text nodes within HTML document.
+ */
 class nsHTMLTextAccessible : public nsTextAccessibleWrap
 {
 public:
-  nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLTextAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -63,19 +64,25 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+/**
+ * Used for HTML hr element.
+ */
 class nsHTMLHRAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLHRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLHRAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
 };
 
+/**
+ * Used for HTML br element.
+ */
 class nsHTMLBRAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLBRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLBRAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -83,10 +90,13 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+/**
+ * Used for HTML label element.
+ */
 class nsHTMLLabelAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLLabelAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -95,10 +105,13 @@ public:
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
 };
 
+/**
+ * Used for bullet of HTML list item element (for example, HTML li).
+ */
 class nsHTMLListBulletAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLListBulletAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell,
+  nsHTMLListBulletAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                              const nsAString& aBulletText);
 
   // nsIAccessNode
@@ -108,7 +121,7 @@ public:
   NS_IMETHOD GetName(nsAString& aName);
 
   // nsAccessNode
-  virtual nsresult Shutdown();
+  virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -128,11 +141,13 @@ protected:
   nsString mBulletText;
 };
 
+/**
+ * Used for HTML list (like HTML ul).
+ */
 class nsHTMLListAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLListAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-    nsHyperTextAccessibleWrap(aDOMNode, aShell) { }
+  nsHTMLListAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -142,10 +157,13 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+/**
+ * Used for HTML list item (e.g. HTML li).
+ */
 class nsHTMLLIAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
+  nsHTMLLIAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                      const nsAString& aBulletText);
 
   // nsISupports
@@ -155,7 +173,7 @@ public:
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
   // nsAccessNode
-  virtual nsresult Shutdown();
+  virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);

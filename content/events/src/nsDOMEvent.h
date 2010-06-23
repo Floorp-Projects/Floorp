@@ -209,13 +209,13 @@ protected:
 
   // Internal helper functions
   nsresult SetEventType(const nsAString& aEventTypeArg);
-  already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
+  already_AddRefed<nsIContent> GetTargetFromFrame();
   nsresult ReportWrongPropertyAccessWarning(const char* aPropertyName);
 
   nsEvent*                    mEvent;
   nsRefPtr<nsPresContext>     mPresContext;
   nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
-  nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
+  nsIDOMEventTarget*          mExplicitOriginalTarget;
   nsString                    mCachedType;
   PRPackedBool                mEventIsInternal;
   PRPackedBool                mPrivateDataDuplicated;

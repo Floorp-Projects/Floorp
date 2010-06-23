@@ -428,8 +428,10 @@ public:
                     PRInt32 w, PRInt32 h);
  
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+    // nsISupports interface + CC
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
 
     // nsIDOMCanvasRenderingContext2D interface
     NS_DECL_NSIDOMCANVASRENDERINGCONTEXT2D
@@ -513,9 +515,11 @@ protected:
     PRPackedBool mIsBackSurfaceReadable;
 #endif
 
-    // the canvas element informs us when it's going away,
-    // so these are not nsCOMPtrs
-    nsHTMLCanvasElement* mCanvasElement;
+    // the canvas element we're a context of
+    nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
+    nsHTMLCanvasElement *HTMLCanvasElement() {
+        return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
+    }
 
     // If mCanvasElement is not provided, then a docshell is
     nsCOMPtr<nsIDocShell> mDocShell;
@@ -774,12 +778,20 @@ protected:
     friend struct nsCanvasBidiProcessor;
 };
 
-NS_IMPL_ADDREF(nsCanvasRenderingContext2D)
-NS_IMPL_RELEASE(nsCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCanvasRenderingContext2D)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCanvasElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCanvasRenderingContext2D)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCanvasElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(CanvasRenderingContext2D, nsCanvasRenderingContext2D)
 
-NS_INTERFACE_MAP_BEGIN(nsCanvasRenderingContext2D)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCanvasRenderingContext2D)
@@ -979,7 +991,7 @@ nsCanvasRenderingContext2D::ApplyStyle(Style aWhichStyle,
     nsCanvasPattern* pattern = CurrentState().patternStyles[aWhichStyle];
     if (pattern) {
         if (mCanvasElement)
-            CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
+            CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(),
                                                   pattern->Principal(),
                                                   pattern->GetForceWriteOnly());
 
@@ -1010,15 +1022,17 @@ nsCanvasRenderingContext2D::ApplyStyle(Style aWhichStyle,
 nsresult
 nsCanvasRenderingContext2D::Redraw()
 {
-    if (!mCanvasElement)
+    if (!mCanvasElement) {
+        NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
         return NS_OK;
+    }
 
     if (mIsEntireFrameInvalid)
         return NS_OK;
 
     mIsEntireFrameInvalid = PR_TRUE;
 
-    mCanvasElement->InvalidateFrame();
+    HTMLCanvasElement()->InvalidateFrame();
 
     return NS_OK;
 }
@@ -1026,8 +1040,10 @@ nsCanvasRenderingContext2D::Redraw()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
 {
-    if (!mCanvasElement)
+    if (!mCanvasElement) {
+        NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
         return NS_OK;
+    }
 
     if (mIsEntireFrameInvalid)
         return NS_OK;
@@ -1035,7 +1051,7 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
     if (++mInvalidateCount > kCanvasMaxInvalidateCount)
         return Redraw();
 
-    mCanvasElement->InvalidateFrame(&r);
+    HTMLCanvasElement()->InvalidateFrame(&r);
 
     return NS_OK;
 }
@@ -1376,7 +1392,6 @@ nsCanvasRenderingContext2D::GetImageFormat() const
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetCanvasElement(nsHTMLCanvasElement* aCanvasElement)
 {
-    // don't hold a ref to this!
     mCanvasElement = aCanvasElement;
 
     return NS_OK;
@@ -1385,12 +1400,8 @@ nsCanvasRenderingContext2D::SetCanvasElement(nsHTMLCanvasElement* aCanvasElement
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 {
-    if (mCanvasElement == nsnull) {
-        *canvas = nsnull;
-        return NS_OK;
-    }
+    NS_IF_ADDREF(*canvas = mCanvasElement);
 
-    NS_ADDREF(*canvas = static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
     return NS_OK;
 }
 
@@ -2250,8 +2261,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
      * string is equal to the old one.
      */
 
-    nsCOMPtr<nsIContent> content =
-        do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
     if (!content && !mDocShell) {
         NS_WARNING("Canvas element must be an nsIContent and non-null or a docshell must be provided");
         return NS_ERROR_FAILURE;
@@ -2604,8 +2614,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     if (aMaxWidth < 0)
         return NS_ERROR_INVALID_ARG;
 
-    nsCOMPtr<nsIContent> content =
-        do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
     if (!content && !mDocShell) {
         NS_WARNING("Canvas element must be an nsIContent and non-null or a docshell must be provided");
         return NS_ERROR_FAILURE;
@@ -3305,8 +3314,10 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     PRUint32 sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
     nsLayoutUtils::SurfaceFromElementResult res =
         nsLayoutUtils::SurfaceFromElement(imgElt, sfeFlags);
-    if (!res.mSurface)
-        return NS_ERROR_NOT_AVAILABLE;
+    if (!res.mSurface) {
+        // Spec says to silently do nothing if the element is still loading.
+        return res.mIsStillLoading ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+    }
 
 #ifndef WINCE
     // On non-CE, force a copy if we're using drawImage with our destination
@@ -3325,7 +3336,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     PRBool forceWriteOnly = res.mIsWriteOnly;
 
     if (mCanvasElement)
-        CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, principal, forceWriteOnly);
+        CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(), principal, forceWriteOnly);
 
     gfxContextPathAutoSaveRestore pathSR(mThebes, PR_FALSE);
 
@@ -3843,7 +3854,17 @@ nsCanvasRenderingContext2D::GetImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
     if (!mValid)
         return NS_ERROR_FAILURE;
 
-    if (mCanvasElement && mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
+    if (!mCanvasElement && !mDocShell) {
+        NS_ERROR("No canvas element and no docshell in GetImageData!!!");
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    // Check only if we have a canvas element; if we were created with a docshell,
+    // then it's special internal use.
+    if (mCanvasElement &&
+        HTMLCanvasElement()->IsWriteOnly() &&
+        !nsContentUtils::IsCallerTrustedForRead())
+    {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_SECURITY_ERR;
     }

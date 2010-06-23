@@ -50,8 +50,8 @@ namespace mozilla {
 namespace dom {
 
 #define MOZILLA_DOM_LINK_IMPLEMENTATION_IID \
-  { 0x2be8af0, 0x32a5, 0x41dd, \
-    { 0xa7, 0x68, 0x12, 0x55, 0xc4, 0x9a, 0xd4, 0xc5 } }
+  { 0xa687a99c, 0x3893, 0x45c0, \
+    {0x8e, 0xab, 0xb8, 0xf7, 0xd7, 0x9e, 0x9e, 0x7b } }
 
 class Link : public nsISupports
 {
@@ -107,6 +107,8 @@ public:
 
 protected:
   virtual ~Link();
+
+  bool HasCachedURI() const { return !!mCachedURI; }
 
 private:
   /**

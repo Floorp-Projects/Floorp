@@ -47,7 +47,6 @@ PARALLEL_DIRS = \
   data \
   file \
   ftp \
-  gopher \
   http \
   res \
   viewsource \

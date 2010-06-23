@@ -56,9 +56,17 @@ class imgIRequest;
 class nsNodeInfoManager;
 class nsGenericHTMLElement;
 
+/**
+ * Constants for passing as aFromParser
+ */
+#define NS_NOT_FROM_PARSER 0
+#define NS_FROM_PARSER_NETWORK 1
+#define NS_FROM_PARSER_DOCUMENT_WRITE (1 << 1)
+#define NS_FROM_PARSER_FRAGMENT (1 << 2)
+
 nsresult
 NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
-              nsINodeInfo* aNodeInfo, PRBool aFromParser);
+              nsINodeInfo* aNodeInfo, PRUint32 aFromParser);
 
 nsresult
 NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
@@ -101,13 +109,13 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
-                  PRBool aFromParser);
+                  PRUint32 aFromParser);
 
 // First argument should be nsHTMLTag, but that adds dependency to parser
 // for a bunch of files.
 already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(PRUint32 aNodeType, nsINodeInfo *aNodeInfo,
-                  PRBool aFromParser);
+                  PRUint32 aFromParser);
 
 #ifdef MOZ_MATHML
 nsresult
@@ -122,7 +130,7 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
 #ifdef MOZ_SVG
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo* aNodeInfo,
-                 PRBool aFromParser);
+                 PRUint32 aFromParser);
 #endif
 
 nsresult

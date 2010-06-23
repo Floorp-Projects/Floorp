@@ -37,9 +37,9 @@
 #include "cairo.h"
 #include "cairo-win32.h"
 
-gfxD2DSurface::gfxD2DSurface(HWND aWnd)
+gfxD2DSurface::gfxD2DSurface(HWND aWnd, gfxContentType aContent)
 {
-    Init(cairo_d2d_surface_create_for_hwnd(aWnd));
+    Init(cairo_d2d_surface_create_for_hwnd(aWnd, (cairo_content_t)aContent));
 }
 
 gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
@@ -72,4 +72,25 @@ gfxD2DSurface::Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip)
     rect.width = aClip.width;
     rect.height = aClip.height;
     cairo_d2d_scroll(CairoSurface(), aDelta.x, aDelta.y, &rect);
+}
+
+HDC
+gfxD2DSurface::GetDC(PRBool aRetainContents)
+{
+    return cairo_d2d_get_dc(CairoSurface(), aRetainContents);
+}
+
+void
+gfxD2DSurface::ReleaseDC(const nsIntRect *aUpdatedRect)
+{
+    if (!aUpdatedRect) {
+        return cairo_d2d_release_dc(CairoSurface(), NULL);
+    }
+
+    cairo_rectangle_int_t rect;
+    rect.x = aUpdatedRect->x;
+    rect.y = aUpdatedRect->y;
+    rect.width = aUpdatedRect->width;
+    rect.height = aUpdatedRect->height;
+    cairo_d2d_release_dc(CairoSurface(), &rect);
 }

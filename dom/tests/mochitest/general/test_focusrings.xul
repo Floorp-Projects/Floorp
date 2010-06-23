@@ -9,6 +9,8 @@
         src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script type="application/javascript"
         src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
 <html:style xmlns:html="http://www.w3.org/1999/xhtml" type="text/css">
 * { outline: none; }
@@ -21,8 +23,37 @@
 
 SimpleTest.waitForExplicitFinish();
 
+function setOrRestoreTabFocus(newValue) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = Components.interfaces.nsIPrefService;
+  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                                   .getBranch("accessibility.");
+  if (!newValue) {
+    if (prefs.prefHasUserValue("tabfocus")) {
+      prefs.clearUserPref("tabfocus");
+    }
+  } else {
+    prefs.setIntPref("tabfocus", newValue);
+  }
+}
+
+function snapShot(element) {
+  var rect = element.getBoundingClientRect();
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserRead');
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.setAttribute("width", rect.width + 12);
+  canvas.setAttribute("height", rect.height + 12);
+  var ctx = canvas.getContext("2d");
+  ctx.drawWindow(window, rect.left - 6, rect.top - 6, rect.width + 6, rect.height + 6,
+                 "transparent");
+  return canvas;
+}
+
 function runTest()
 {
+  setOrRestoreTabFocus(7);
+
   var isMac = (navigator.platform.indexOf("Mac") >= 0);
   var isWin = (navigator.platform.indexOf("Win") >= 0);
 
@@ -32,19 +63,26 @@ function runTest()
     is(outline, visible ? "2px" : "0px", testid);
   }
 
-  checkFocus($("l1"), false, "initial appearance");
+  // make sure that a focus ring appears on the focused button
+  if (navigator.platform.indexOf("Mac") >= 0) {
+    var focusedButton = $("b3");
+    ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true)[0], "unfocused shows no ring");
+    focusedButton.focus();
+    ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), false)[0], "focus shows ring");
+  }
 
-  $("l1").focus();
+  checkFocus($("l1"), false, "initial appearance");
 
   // we can't really test the situation on Windows where a dialog doesn't show
   // focus rings until a key is pressed, as the default state depends on what
   // kind of real user input, mouse or key, was last entered. But we can handle
-  // the test regardless of which user input last occured.
+  // the test regardless of which user input last occurred.
+  $("l1").focus();
   var expectedVisible = (!isWin || getComputedStyle($("l1"), "").outlineWidth == "2px");
+  testHTMLElements(isMac, isWin && !expectedVisible);
 
-  var listExpectedVisible = isMac ? false: expectedVisible;
-
-  checkFocus($("l1"), listExpectedVisible, "appearance on list after focus() with :moz-focusring");
+  $("l1").focus();
+  checkFocus($("l1"), expectedVisible, "appearance on list after focus() with :moz-focusring");
   $("l2").focus();
 
   checkFocus($("l2"), true, "appearance on list after focus() with :focus");
@@ -52,12 +90,15 @@ function runTest()
   is(getComputedStyle($("l1"), "").outlineWidth, "0px", "appearance on previous list after focus() with :focus");
 
   synthesizeMouse($("l1"), 4, 4, { });
-  checkFocus($("l1"), listExpectedVisible, "appearance on list after mouse focus with :moz-focusring");
+  checkFocus($("l1"), expectedVisible, "appearance on list after mouse focus with :moz-focusring");
   synthesizeMouse($("l2"), 4, 4, { });
   checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
 
   synthesizeMouse($("b1"), 4, 4, { });
   checkFocus($("b1"), !isMac && expectedVisible, "appearance on button after mouse focus with :moz-focusring");
+  if (navigator.platform.indexOf("Mac") >= 0) {
+    ok(compareSnapshots(snapShot($("b1")), snapShot($("b2")), false)[0], "focus after mouse shows no ring");
+  }
 
   synthesizeMouse($("b2"), 4, 4, { });
   checkFocus($("b2"), !isMac, "appearance on button after mouse focus with :focus");
@@ -67,7 +108,53 @@ function runTest()
   synthesizeKey("VK_TAB", { });
   checkFocus($("l3"), true, "appearance on list after tab focus");
 
+  setOrRestoreTabFocus(0);
   SimpleTest.finish();
+}
+
+var htmlElements = [
+  "<button id='elem'>Button</button>",
+  "<input id='elem' class='canfocus'>",
+  "<input id='elem' type='password' class='canfocus'>",
+  "<input id='elem' type='button'>",
+  "<textarea id='elem' class='canfocus'></textarea>",
+  "<select id='elem' class='canfocus'><option>One</select>",
+  "<select id='elem' rows='5' class='canfocus'><option>One</select>",
+  "<div id='elem' tabindex='0' style='width: 10px; height: 10px;'></div>",
+  "<a href='about:blank' class='canfocus' onclick='return false;'>about:blank</a>",
+];
+
+function testHTMLElements(isMac, expectedNoRingsOnWin)
+{
+  var childwin = frames[0];
+  var childdoc = childwin.document;
+  var container = childdoc.getElementById("container");
+  for (var e = 0; e < htmlElements.length; e++) {
+    container.innerHTML = htmlElements[e];
+
+    var elem = container.firstChild;
+
+    var shouldFocus = !isMac || (elem.className == "canfocus");
+    var ringSize = (shouldFocus ? (expectedNoRingsOnWin ? 2 : 1) : 0) + "px";
+    if (elem.localName == "a")
+      ringSize = "0px";
+
+    synthesizeMouse(elem, 8, 8, { }, childwin);
+    is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + htmlElements[e]);
+    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize, "mouse click on " + htmlElements[e] + " ring");
+
+    if (childdoc.activeElement)
+      childdoc.activeElement.blur();
+
+    ringSize = (elem.localName == "a" ? "0" : (expectedNoRingsOnWin ? 2 : 1)) + "px";
+
+    elem.focus();
+    is(childdoc.activeElement, elem, "focus() on " + htmlElements[e]);
+    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize,
+       "focus() on " + htmlElements[e] + " ring");
+
+    childdoc.activeElement.blur();
+  }
 }
 
 SimpleTest.waitForFocus(runTest);
@@ -80,6 +167,9 @@ SimpleTest.waitForFocus(runTest);
 <listbox id="l3" class="plain" height="20"/>
 <button id="b1" label="Button"/>
 <button id="b2" label="Button"/>
+<button id="b3" label="Button"/>
+
+<iframe id="child" src="data:text/html,&lt;html&gt;&lt;style&gt;* { outline: none; -moz-appearance: none; } #elem:focus { outline: 2px solid red; } #elem:-moz-focusring { outline: 1px solid blue; }&lt;/style&gt;&lt;div id='container'&gt;&lt;/html&gt;"/>
 
 <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 

@@ -13,6 +13,8 @@ HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 == textbox-align-baseline-1.xul textbox-align-baseline-1-ref.xul # test for bug 494901
 == textbox-setsize.xul textbox-setsize-ref.xul
 == textarea-resize.html textarea-resize-ref.html
+# an offset seems to apply to the native resizer on windows so skip this test for now
+skip-if(MOZ_WIDGET_TOOLKIT=="windows") == textarea-resize-background.html textarea-resize-background-ref.html
 != textarea-ltr.html textarea-rtl.html
 != textarea-ltr-scrollbar.html textarea-rtl-scrollbar.html
 != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html

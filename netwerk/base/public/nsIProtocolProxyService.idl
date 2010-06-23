@@ -52,7 +52,7 @@ interface nsIURI;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(e38ab577-786e-4a7f-936b-7ae4c7d877b2)]
+[scriptable, uuid(d7ec6237-162e-40f5-a2b4-46ccd5fa83c9)]
 interface nsIProtocolProxyService : nsISupports
 {
     /**
@@ -70,6 +70,39 @@ interface nsIProtocolProxyService : nsISupports
      * being present.
      */
     const unsigned long RESOLVE_NON_BLOCKING = 1 << 0;
+
+    /**
+     * When the proxy configuration is manual this flag may be passed to the
+     * resolve and asyncResolve methods to request to prefer the SOCKS proxy
+     * to HTTP ones.
+     */
+    const unsigned long RESOLVE_PREFER_SOCKS_PROXY = 1 << 1;
+
+    /**
+     * When the proxy configuration is manual this flag may be passed to the
+     * resolve and asyncResolve methods to request to not analyze the uri's
+     * scheme specific proxy. When this flag is set the main HTTP proxy is the
+     * preferred one.
+     *
+     * NOTE: if RESOLVE_PREFER_SOCKS_PROXY is set then the SOCKS proxy is
+     *       the preferred one.
+     *
+     * NOTE: if RESOLVE_PREFER_HTTPS_PROXY is set then the HTTPS proxy
+     *       is the preferred one.
+     */
+    const unsigned long RESOLVE_IGNORE_URI_SCHEME = 1 << 2;
+
+    /**
+     * When the proxy configuration is manual this flag may be passed to the
+     * resolve and asyncResolve methods to request to prefer the HTTPS proxy
+     * to the others HTTP ones.
+     *
+     * NOTE: RESOLVE_PREFER_SOCKS_PROXY takes precedence over this flag.
+     *
+     * NOTE: This flag implies RESOLVE_IGNORE_URI_SCHEME.
+     */
+    const unsigned long RESOLVE_PREFER_HTTPS_PROXY =
+        (1 << 3) | RESOLVE_IGNORE_URI_SCHEME;
 
     /**
      * This method returns a nsIProxyInfo instance that identifies a proxy to
@@ -228,4 +261,19 @@ interface nsIProtocolProxyService : nsISupports
      *        The nsIProtocolProxyFilter instance to be unregistered.
      */
     void unregisterFilter(in nsIProtocolProxyFilter aFilter);
+
+     /**
+      * These values correspond to the possible integer values for the
+      * network.proxy.type preference.
+      */ 
+     const unsigned long PROXYCONFIG_DIRECT   = 0;
+     const unsigned long PROXYCONFIG_MANUAL   = 1;
+     const unsigned long PROXYCONFIG_PAC      = 2;
+     const unsigned long PROXYCONFIG_WPAD     = 4;
+     const unsigned long PROXYCONFIG_SYSTEM   = 5;
+
+     /**
+      * This attribute specifies the current type of proxy configuration.
+      */
+     readonly attribute unsigned long proxyConfigType;
 };

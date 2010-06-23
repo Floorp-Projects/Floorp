@@ -107,7 +107,7 @@ NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
   nsresult result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
   NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
   result = mElement->DeleteData(mOffset, mNumCharsToDelete);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   if (mRangeUpdater) 
     mRangeUpdater->SelAdjDeleteText(mElement, mOffset, mNumCharsToDelete);
@@ -119,8 +119,8 @@ NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
   {
     nsCOMPtr<nsISelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) return result;
-    if (!selection) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_SUCCESS(result, result);
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     result = selection->Collapse(mElement, mOffset);
     NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of deletetext.");
   }

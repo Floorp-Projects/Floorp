@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(b5c3ffc4-f48a-4f25-86e1-4cf79db1bcbb)]
+[scriptable, uuid(bc5795ab-bcb5-448b-b3c7-a111bead7c26)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -171,6 +171,14 @@ interface nsISelectionController : nsISelectionDisplay
     * this method is used internally for handling del key.
     */
     [noscript] void characterExtendForDelete();
+
+   /**
+    * CharacterExtendForBackspace will extend the selection one character cell
+    * backward in the document.
+    * this method is used internally for handling backspace key only when we're
+    * after UTF-16 surrogates.
+    */
+    [noscript] void characterExtendForBackspace();
 
    /** WordMove will move the selection one word forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE

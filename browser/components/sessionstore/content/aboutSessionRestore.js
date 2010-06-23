@@ -59,8 +59,7 @@ window.onload = function() {
   event.initUIEvent("input", true, true, window, 0);
   sessionData.dispatchEvent(event);
   
-  var s = new Components.utils.Sandbox("about:blank");
-  gStateObject = Components.utils.evalInSandbox("(" + sessionData.value + ")", s);
+  gStateObject = JSON.parse(sessionData.value);
   
   initTreeView();
   
@@ -121,7 +120,7 @@ function restoreSession() {
       ix--;
     }
   }
-  var stateString = gStateObject.toSource();
+  var stateString = JSON.stringify(gStateObject);
   
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   var top = getBrowserWindow();
@@ -238,7 +237,7 @@ function restoreSingleTab(aIx, aShifted) {
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   var tabState = gStateObject.windows[item.parent.ix]
                              .tabs[aIx - gTreeData.indexOf(item.parent) - 1];
-  ss.setTabState(newTab, tabState.toSource());
+  ss.setTabState(newTab, JSON.stringify(tabState));
   
   // respect the preference as to whether to select the tab (the Shift key inverses)
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);

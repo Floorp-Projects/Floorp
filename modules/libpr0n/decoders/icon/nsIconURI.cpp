@@ -251,13 +251,13 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
     return NS_OK;
   }
 
-  if (!strncmp("//", iconPath.get(), 2))
+  if (StringBeginsWith(iconPath, NS_LITERAL_CSTRING("//")))
   {
     // Sanity check this supposed dummy file name.
     if (iconPath.Length() > SANE_FILE_NAME_LEN)
       return NS_ERROR_MALFORMED_URI;
-    mFileName.Assign(Substring(iconPath, 2));
-    return NS_OK;
+    iconPath.Cut(0, 2);
+    mFileName.Assign(iconPath);
   }
 
   nsresult rv;
@@ -265,17 +265,14 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  rv = ioService->NewURI(iconPath, nsnull, nsnull, getter_AddRefs(uri));
-  if (NS_SUCCEEDED(rv) && uri)
-  {
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
-    if (NS_SUCCEEDED(rv) && url)
-    {
-      mIconURL = url;
-    }
-  }
+  ioService->NewURI(iconPath, nsnull, nsnull, getter_AddRefs(uri));
+  mIconURL = do_QueryInterface(uri);
+  if (mIconURL)
+    mFileName.Truncate();
+  else if (mFileName.IsEmpty())
+    return NS_ERROR_MALFORMED_URI;
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

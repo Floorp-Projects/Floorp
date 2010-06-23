@@ -81,8 +81,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
 {
   NS_ASSERTION(aElement, "illegal value- null ptr- aElement");
   NS_ASSERTION(aTextRangeList, "illegal value- null ptr - aTextRangeList");
-  if (!aElement || !aTextRangeList)
-     return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement && aTextRangeList, NS_ERROR_NULL_POINTER);
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mReplaceLength = aReplaceLength;
@@ -101,7 +100,7 @@ NS_IMETHODIMP IMETextTxn::DoTransaction(void)
 #endif
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
   // advance caret: This requires the presentation shell to get the selection.
   nsresult result;
@@ -124,7 +123,7 @@ NS_IMETHODIMP IMETextTxn::UndoTransaction(void)
 #endif
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
   nsresult result = mElement->DeleteData(mOffset, mStringToInsert.Length());
   if (NS_SUCCEEDED(result))
@@ -143,8 +142,7 @@ NS_IMETHODIMP IMETextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   NS_ASSERTION(aDidMerge, "illegal vaule- null ptr- aDidMerge");
   NS_ASSERTION(aTransaction, "illegal vaule- null ptr- aTransaction");
-  if (!aDidMerge || !aTransaction)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aDidMerge && aTransaction, NS_ERROR_NULL_POINTER);
     
 #ifdef DEBUG_IMETXN
   printf("Merge IME Text element = %p\n", mElement.get());
@@ -218,8 +216,7 @@ static SelectionType TextRangeToSelection(int aTextRangeType)
 NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aTextRangeList)
 {
   NS_ASSERTION(aTextRangeList, "illegal value- null ptr- aTextRangeList");
-  if (!aTextRangeList)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aTextRangeList, NS_ERROR_NULL_POINTER);
   aResult = mStringToInsert;
   *aTextRangeList = mRangeList;
   return NS_OK;
@@ -267,7 +264,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     // run through the text range list, if any
     //
     nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
-    if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
     PRUint16      textRangeListLength,selectionStart,selectionEnd,
                   textRangeType;

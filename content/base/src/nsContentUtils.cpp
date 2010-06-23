@@ -180,6 +180,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "BasicLayers.h"
 #include "nsFocusManager.h"
 #include "nsTextEditorState.h"
+#include "nsIPluginHost.h"
+#include "nsICategoryManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -203,6 +205,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsContentDLF.h"
 
 using namespace mozilla::dom;
 
@@ -2199,8 +2202,7 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
     nameStart = (uriEnd + 1);
     if (nameEnd)  {
       const PRUnichar *prefixStart = nameEnd + 1;
-      *aPrefix = NS_NewAtom(NS_ConvertUTF16toUTF8(prefixStart,
-                                                  pos - prefixStart));
+      *aPrefix = NS_NewAtom(Substring(prefixStart, pos));
     }
     else {
       nameEnd = pos;
@@ -2213,8 +2215,7 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
     nameEnd = pos;
     *aPrefix = nsnull;
   }
-  *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
-                                                 nameEnd - nameStart));
+  *aLocalName = NS_NewAtom(Substring(nameStart, nameEnd));
 }
 
 // static
@@ -5090,6 +5091,17 @@ nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
   return doc;
 }
 
+/* static */
+PRBool
+nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, PR_FALSE));
+}
+
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
   : mString(aString), mService(nsnull)
 {
@@ -5784,6 +5796,10 @@ MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
   // need to match *all* of the classes
   ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
   PRInt32 length = info->mClasses.Count();
+  if (!length) {
+    // If we actually had no classes, don't match.
+    return PR_FALSE;
+  }
   PRInt32 i;
   for (i = 0; i < length; ++i) {
     if (!classAttr->Contains(info->mClasses.ObjectAt(i),
@@ -5802,19 +5818,15 @@ DestroyClassNameArray(void* aData)
   delete info;
 }
 
-// static
-nsresult
-nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
-                                       const nsAString& aClasses,
-                                       nsIDOMNodeList** aReturn)
+static void*
+AllocClassMatchingInfo(nsINode* aRootNode,
+                       const nsString* aClasses)
 {
-  NS_PRECONDITION(aRootNode, "Must have root node");
-  
   nsAttrValue attrValue;
-  attrValue.ParseAtomArray(aClasses);
+  attrValue.ParseAtomArray(*aClasses);
   // nsAttrValue::Equals is sensitive to order, so we'll send an array
   ClassMatchingInfo* info = new ClassMatchingInfo;
-  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(info, nsnull);
 
   if (attrValue.Type() == nsAttrValue::eAtomArray) {
     info->mClasses.AppendObjects(*(attrValue.GetAtomArrayValue()));
@@ -5822,27 +5834,27 @@ nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
     info->mClasses.AppendObject(attrValue.GetAtomValue());
   }
 
-  nsBaseContentList* elements;
-  if (info->mClasses.Count() > 0) {
-    info->mCaseTreatment =
-      aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
-        eCompatibility_NavQuirks ?
-          eIgnoreCase : eCaseMatters;
+  info->mCaseTreatment =
+    aRootNode->GetOwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks ?
+    eIgnoreCase : eCaseMatters;
+  return info;
+}
 
-    elements =
-      NS_GetFuncStringContentList(aRootNode, MatchClassNames,
-                                  DestroyClassNameArray, info,
-                                  aClasses).get();
-  } else {
-    delete info;
-    info = nsnull;
-    elements = new nsBaseContentList();
-    NS_IF_ADDREF(elements);
-  }
-  if (!elements) {
-    delete info;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+// static
+
+nsresult
+nsContentUtils::GetElementsByClassName(nsINode* aRootNode,
+                                       const nsAString& aClasses,
+                                       nsIDOMNodeList** aReturn)
+{
+  NS_PRECONDITION(aRootNode, "Must have root node");
+  
+  nsContentList* elements =
+    NS_GetFuncStringContentList(aRootNode, MatchClassNames,
+                                DestroyClassNameArray,
+                                AllocClassMatchingInfo,
+                                aClasses).get();
+  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   // Transfer ownership
   *aReturn = elements;
@@ -6042,3 +6054,54 @@ nsIContentUtils::IsSafeToRunScript()
   return nsContentUtils::IsSafeToRunScript();
 }
 
+already_AddRefed<nsIDocumentLoaderFactory>
+nsIContentUtils::FindInternalContentViewer(const char* aType,
+                                           ContentViewerType* aLoaderType)
+{
+  if (aLoaderType) {
+    *aLoaderType = TYPE_UNSUPPORTED;
+  }
+
+  // one helper factory, please
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  if (!catMan)
+    return NULL;
+
+  FullPagePluginEnabledType pluginEnabled = NOT_ENABLED;
+
+  nsCOMPtr<nsIPluginHost> pluginHost =
+    do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
+  if (pluginHost) {
+    pluginHost->IsFullPagePluginEnabledForType(aType, &pluginEnabled);
+  }
+
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+
+  if (OVERRIDE_BUILTIN == pluginEnabled) {
+    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_PLUGIN;
+    }
+    return docFactory.forget();
+  }
+
+  nsXPIDLCString contractID;
+  nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aType, getter_Copies(contractID));
+  if (NS_SUCCEEDED(rv)) {
+    docFactory = do_GetService(contractID);
+    if (docFactory && aLoaderType) {
+      *aLoaderType = contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID) ? TYPE_CONTENT : TYPE_UNKNOWN;
+    }   
+    return docFactory.forget();
+  }
+
+  if (AVAILABLE == pluginEnabled) {
+    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_PLUGIN;
+    }
+    return docFactory.forget();
+  }
+
+  return NULL;
+}

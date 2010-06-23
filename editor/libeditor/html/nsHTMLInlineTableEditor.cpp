@@ -78,7 +78,7 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
 
   // the resizers and the shadow will be anonymous children of the body
   nsIDOMElement *bodyElement = GetRoot();
-  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
                          NS_LITERAL_STRING("mozTableAddColumnBefore"),
@@ -134,7 +134,7 @@ nsHTMLEditor::HideInlineTableEditingUI()
   nsIDOMElement *bodyElement = GetRoot();
 
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
-  if (!bodyContent) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(bodyContent, NS_ERROR_FAILURE);
 
   DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, ps);
   mAddColumnBeforeButton = nsnull;
@@ -162,7 +162,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
       anonElement) {
     nsAutoString anonclass;
     nsresult res = aElement->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable")))
       return NS_OK;
@@ -171,7 +171,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
     nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
     PRInt32 rowCount, colCount;
     res = GetTableSize(tableElement, &rowCount, &colCount);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     PRBool hideUI = PR_FALSE;
     PRBool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
@@ -239,9 +239,9 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
   GetElementOrigin(mInlineEditedCell, xCell, yCell);
 
   nsresult res = nsElement->GetOffsetWidth(&wCell);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   res = nsElement->GetOffsetHeight(&hCell);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   PRInt32 xHoriz = xCell + wCell/2;
   PRInt32 yVert  = yCell + hCell/2;
@@ -250,7 +250,7 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
   nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
   PRInt32 rowCount, colCount;
   res = GetTableSize(tableElement, &rowCount, &colCount);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   SetAnonymousElementPosition(xHoriz-10, yCell-7,  mAddColumnBeforeButton);
 #ifdef DISABLE_TABLE_DELETION

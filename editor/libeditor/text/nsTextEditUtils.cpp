@@ -104,8 +104,7 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
 PRBool 
 nsTextEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
 {
-  if (!node)
-    return PR_FALSE;
+  NS_ENSURE_TRUE(node, PR_FALSE);
 
   nsCOMPtr<nsIDOMElement> rootElement;
   editor->GetRootElement(getter_AddRefs(rootElement));

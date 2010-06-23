@@ -48,7 +48,7 @@
  * completely implemented. So while this format value is currently
  * deprecated, it may eventually acquire complete support in the future.
  */
-#define CAIRO_FORMAT_RGB16_565 4
+/* #define CAIRO_FORMAT_RGB16_565 4 */
 
 #define CAIRO_FONT_TYPE_ATSUI CAIRO_FONT_TYPE_QUARTZ
 

@@ -44,36 +44,46 @@
 
 /**
  * A cross-platform interface that deals with text which contains hyperlinks.
+ * Each link is an embedded object representing exactly 1 character within
+ * the hypertext.
+ *
+ * Current implementation assumes every embedded object is a link.
  */
 
-[scriptable, uuid(d56bd454-8ff3-4edc-b266-baeada00267b)]
+[scriptable, uuid(b33684e2-090c-4e1d-a3d9-f4b46f4237b9)]
 interface nsIAccessibleHyperText : nsISupports
 {
   /**
-   * Returns the number of links contained within this hypertext object.
+   * Return the number of links contained within this hypertext object.
    */
   readonly attribute long linkCount;
 
-  /*
-   * Returns the link index at the given character index.
-   * Each link is an embedded object representing exactly 1 character within
-   * the hypertext.
+  /**
+   * Return link accessible at the given index.
    *
-   * @param charIndex  the 0-based character index.
+   * @param index  [in] 0-based index of the link that is to be retrieved
    *
-   * @returns long  0-based link's index.
-   * A return value of -1 indicates no link is present at that index.
+   * @return       link accessible or null if there is no link at that index
    */
-  long getLinkIndex(in long charIndex);
+  nsIAccessibleHyperLink getLinkAt(in long index);
 
   /**
-   * Retrieves the nsIAccessibleHyperLink object at the given link index.
+   * Return index of the given link.
    *
-   * @param linkIndex  0-based index of the link that is to be retrieved.
-   * This can be retrieved via getLinkIndex (see above).
+   * @param link  [in] link accessible the index is requested for
    *
-   * @returns nsIAccessibleHyperLink  Object representing the link properties
-   * or NS_ERROR_INVALID_ARG if there is no link at that index.
+   * @return      index of the given link or null if there's no link within
+   *                hypertext accessible
    */
-  nsIAccessibleHyperLink getLink(in long linkIndex);
+  long getLinkIndex(in nsIAccessibleHyperLink link);
+
+  /*
+   * Return link index at the given offset within hypertext accessible.
+   *
+   * @param offset  [in] the 0-based character index
+   *
+   * @return        0-based link's index or -1 if no link is present at that
+   *                  offset
+   */
+  long getLinkIndexAtOffset(in long offset);
 };

@@ -183,7 +183,13 @@
         if (className == "expertBadCert") {
           showSecuritySection();
         }
-        
+
+        if (err == "cspFrameAncestorBlocked") {
+          // Remove the "Try again" button for CSP frame ancestors violation, since it's
+          // almost certainly useless. (Bug 553180)
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+
         if (err == "nssBadCert") {
           // Remove the "Try again" button for security exceptions, since it's
           // almost certainly useless.

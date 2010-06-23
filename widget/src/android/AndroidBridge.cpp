@@ -97,7 +97,10 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
-
+    jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;)[Ljava/lang/String;");
+    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;)Z");
+    jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
+    jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -210,6 +213,58 @@ AndroidBridge::NotifyXreExit()
 {
     ALOG("xre exiting");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyXreExit);
+}
+
+void
+AndroidBridge::GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray)
+{
+    NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    jstring jstr = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, 
+                                                  jGetHandlersForMimeType, 
+                                                  jstr);
+    jobjectArray arr = static_cast<jobjectArray>(obj);
+    if (!arr)
+        return;
+    jsize len = mJNIEnv->GetArrayLength(arr);
+    for (jsize i = 0; i < len; i+=2) {
+        jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));
+        nsJNIString jniStr(jstr);
+        aStringArray->AppendString(jniStr);
+    } 
+}
+
+PRBool
+AndroidBridge::OpenUriExternal(nsCString& aUriSpec, nsCString& aMimeType) 
+{
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
+    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    jstring jstrUri = mJNIEnv->NewString(wUriSpec.get(), wUriSpec.Length());
+    jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass,
+                                            jOpenUriExternal,
+                                            jstrUri, jstrType);
+}
+
+void
+AndroidBridge::GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType) {
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
+    jstring jstrExt = mJNIEnv->NewString(wFileExt.get(), wFileExt.Length());
+    jstring jstrType =  static_cast<jstring>(mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                                                             jGetMimeTypeFromExtension,
+                                                                             jstrExt));
+    nsJNIString jniStr(jstrType);
+    aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+}
+
+void
+AndroidBridge::MoveTaskToBack()
+{
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jMoveTaskToBack);
 }
 
 void

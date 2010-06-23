@@ -318,6 +318,10 @@ MAKEFILES_libvorbis="
   media/libvorbis/include/vorbis/Makefile
 "
 
+MAKEFILES_libvpx="
+  media/libvpx/Makefile
+"
+
 MAKEFILES_libtheora="
   media/libtheora/Makefile
   media/libtheora/lib/Makefile
@@ -331,10 +335,17 @@ MAKEFILES_libogg="
   media/libogg/include/Makefile
   media/libogg/include/ogg/Makefile
 "
+
 MAKEFILES_libsydneyaudio="
   media/libsydneyaudio/Makefile
   media/libsydneyaudio/include/Makefile
   media/libsydneyaudio/src/Makefile
+"
+
+MAKEFILES_libnestegg="
+  media/libnestegg/Makefile
+  media/libnestegg/include/Makefile
+  media/libnestegg/src/Makefile
 "
 
 MAKEFILES_plugin="
@@ -367,7 +378,6 @@ MAKEFILES_netwerk="
   netwerk/protocol/data/Makefile
   netwerk/protocol/file/Makefile
   netwerk/protocol/ftp/Makefile
-  netwerk/protocol/gopher/Makefile
   netwerk/protocol/http/Makefile
   netwerk/protocol/res/Makefile
   netwerk/protocol/viewsource/Makefile
@@ -511,8 +521,6 @@ MAKEFILES_xpcom="
   xpcom/proxy/tests/Makefile
   xpcom/sample/Makefile
   xpcom/threads/Makefile
-  xpcom/tools/Makefile
-  xpcom/tools/registry/Makefile
   xpcom/stub/Makefile
   xpcom/windbgdlg/Makefile
   xpcom/system/Makefile
@@ -550,7 +558,6 @@ MAKEFILES_xpfe="
 MAKEFILES_embedding="
   embedding/Makefile
   embedding/base/Makefile
-  embedding/base/standalone/Makefile
   embedding/browser/Makefile
   embedding/browser/activex/src/Makefile
   embedding/browser/activex/src/common/Makefile
@@ -1199,12 +1206,25 @@ if [ "$MOZ_MEDIA" ]; then
  "
 fi
 
-if [ "$MOZ_OGG" ]; then
+if [ "$MOZ_VORBIS" ]; then
  add_makefiles "
    $MAKEFILES_libvorbis
-   $MAKEFILES_libtheora
    $MAKEFILES_libogg
+ "
+fi
+
+if [ "$MOZ_OGG" ]; then
+ add_makefiles "
+   $MAKEFILES_libtheora
    content/media/ogg/Makefile
+ "
+fi
+
+if [ "$MOZ_WEBM" ]; then
+ add_makefiles "
+   $MAKEFILES_libvpx
+   $MAKEFILES_libnestegg
+   content/media/webm/Makefile
  "
 fi
 

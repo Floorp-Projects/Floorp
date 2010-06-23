@@ -131,6 +131,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug517224.html \
 		test_bug524175.html \
 		test_bug534804.html \
+		test_bug573255.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style_no_pseudo.html \
@@ -219,7 +220,7 @@ _VISITED_REFTEST_FILES = \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02-ref.svg \
 		$(NULL)
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
 		browser_bug453896.js \
 		bug453896_iframe.html \
@@ -233,7 +234,7 @@ libs:: $(_TEST_FILES)
 libs:: $(_VISITED_REFTEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 endif

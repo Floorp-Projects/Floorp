@@ -1,5 +1,23 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+resizer {
+  -moz-appearance: resizer;
+  background: url("chrome://global/skin/icons/resizer.png") no-repeat;
+  cursor: se-resize;
+  width: 15px;
+  height: 15px;
+}
+
+resizer[rtl="true"],
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+  background: url("chrome://global/skin/icons/resizer-rtl.png") no-repeat;
+}
+
+resizer[dir="bottomleft"],
+resizer[dir="bottomend"][rtl="true"] {
+  cursor: sw-resize;
+}
+
 resizer[dir="top"],
 resizer[dir="bottom"] {
   cursor: ns-resize;
@@ -14,21 +32,6 @@ resizer[dir="topleft"] {
   cursor: nw-resize;
 }
 
-resizer[dir="bottomright"],
-resizer[dir="bottomend"]:-moz-locale-dir(ltr) {
-  cursor: se-resize;
-}
-
 resizer[dir="topright"] {
   cursor: ne-resize;
-}
-
-resizer[dir="bottomleft"],
-resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
-  cursor: sw-resize;
-}
-
-resizer[dir="bottomright"]:-moz-locale-dir(ltr),
-resizer[dir="bottomend"] {
-  -moz-appearance: resizer;
 }

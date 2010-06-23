@@ -1,0 +1,12 @@
+
+- kern/GPOS interaction
+
+- Use size_t in sanitize?
+- Buffer error handling?
+- Better define HB_INTERNAL
+- Future-proof metrics struct
+
+hb-ot:
+- Rename hb_internal_glyph_info_t to hb_ot_glyph_info_t
+- Add query API for aalt-like features
+- HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH vs LookupType::... mess

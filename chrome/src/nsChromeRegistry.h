@@ -44,6 +44,7 @@
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsIPrefBranch.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULOverlayProvider.h"
@@ -119,6 +120,8 @@ protected:
   virtual nsresult GetFlagsFromPackage(const nsCString& aPackage,
                                        PRUint32* aFlags) = 0;
 
+  nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
+
   static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
@@ -141,6 +144,8 @@ protected:
 
   // "Override" table (chrome URI string -> real URI)
   nsInterfaceHashtable<nsURIHashKey, nsIURI> mOverrideTable;
+
+
 };
 
 #endif // nsChromeRegistry_h

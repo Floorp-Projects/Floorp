@@ -52,7 +52,7 @@ DIRS = \
   xpinstall \
   $(NULL)
 
-ifeq (browser,$(MOZ_BUILD_APP))
+ifneq (mobile,$(MOZ_BUILD_APP))
  DIRS += browser
 endif
 

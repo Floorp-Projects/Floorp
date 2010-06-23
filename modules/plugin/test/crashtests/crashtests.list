@@ -4,3 +4,4 @@ load 48856-1.html
 load 110650-1.html
 skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") script 539897-1.html
 script 540114-1.html
+load 570884.html

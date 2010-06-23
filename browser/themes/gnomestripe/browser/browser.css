@@ -955,6 +955,34 @@ toolbar[iconsize="small"] #fullscreen-button {
   padding: 10px;
 }
 
+/* Notification popup */
+#notification-popup {
+  margin: 4px 0;
+  min-width: 280px;
+  padding: 10px;
+}
+
+.popup-notification-icon {
+  width: 64px;
+  height: 64px;
+  -moz-margin-end: 10px;
+}
+
+.popup-notification-icon[popupid="geolocation"] {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+}
+
+/* Notification icon box */
+#notification-popup-box {
+  margin: 0 3px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+  width: 16px;
+  height: 16px;
+}
+
 /* Feed icon */
 #feed-button,
 #feed-button > .button-box,
@@ -1393,17 +1421,18 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-box-shadow: none;
 }
 
-/* Ctrl-Tab */
-
-#ctrlTab-panel {
-  padding: 10px;
-}
-
-.ctrlTab-favicon[src] {
+.ctrlTab-favicon[src],
+.allTabs-favicon[src] {
   background-color: white;
   width: 20px;
   height: 20px;
   padding: 2px;
+}
+
+/* Ctrl-Tab */
+
+#ctrlTab-panel {
+  padding: 10px;
 }
 
 .ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
@@ -1430,11 +1459,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 #allTabs-filter {
   -moz-margin-start: 36px;
   -moz-margin-end: 0;
-}
-
-.allTabs-favicon {
-  margin-top: 1px;
-  -moz-margin-start: 1px;
 }
 
 .allTabs-preview-label {

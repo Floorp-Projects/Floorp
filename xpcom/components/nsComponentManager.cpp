@@ -100,6 +100,12 @@
 #include <Path.h>
 #endif
 
+#ifdef MOZ_OMNIJAR
+#include "nsIZipReader.h"
+#include "mozilla/Omnijar.h"
+static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
+#endif
+
 #include "prlog.h"
 
 NS_COM PRLogModuleInfo* nsComponentManagerLog = nsnull;
@@ -132,6 +138,7 @@ const char inprocServerValueName[]="InprocServer";
 const char lastModValueName[]="LastModTimeStamp";
 const char nativeComponentType[]="application/x-mozilla-native";
 const char staticComponentType[]="application/x-mozilla-static";
+const char jarComponentType[]="application/x-mozilla-jarjs";
 const char versionValueName[]="VersionString";
 
 const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
@@ -178,6 +185,8 @@ static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
 #define COMPMGR_TIME_FUNCTION_CID(cid) do {} while (0)
 #define COMPMGR_TIME_FUNCTION_CONTRACTID(cid) do {} while (0)
 #endif
+
+#define kOMNIJAR_PREFIX  NS_LITERAL_CSTRING("resource:///")
 
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
@@ -1167,6 +1176,10 @@ ClassIDWriter(PLDHashTable *table,
 
     case NS_LOADER_TYPE_NATIVE:
         loaderName = nativeComponentType;
+        break;
+
+    case NS_LOADER_TYPE_JAR:
+        loaderName = jarComponentType;
         break;
 
     default:
@@ -2752,6 +2765,9 @@ nsComponentManagerImpl::LoaderForType(LoaderType aType)
     if (aType == NS_LOADER_TYPE_NATIVE)
         return &mNativeModuleLoader;
 
+    if (aType == NS_LOADER_TYPE_JAR)
+        return nsnull;
+
     NS_ASSERTION(aType >= 0 && PRUint32(aType) < mLoaderData.Length(),
                  "LoaderType out of range");
 
@@ -2809,6 +2825,9 @@ nsComponentManagerImpl::GetLoaderType(const char *typeStr)
 
     if (!strcmp(typeStr, nativeComponentType))
         return NS_LOADER_TYPE_NATIVE;
+
+    if (!strcmp(typeStr, jarComponentType))
+        return NS_LOADER_TYPE_JAR;
 
     const nsDependentCString type(typeStr);
 
@@ -3393,6 +3412,106 @@ nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEnumerator)
 
 // nsIComponentRegistrar
 
+#ifdef MOZ_OMNIJAR
+void
+nsComponentManagerImpl::AutoRegisterJar()
+{
+    nsresult rv;
+    nsCOMPtr<nsIZipReader> jarReader = do_CreateInstance(kZipReaderCID, &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("could not get jar reader");
+        return;
+    }
+
+    nsIModuleLoader *jsLoader = LoaderForType(GetLoaderType("text/javascript"));
+    if (!jsLoader) {
+        NS_ERROR("could not get JS loader");
+        return;
+    }
+
+    nsCOMPtr<nsILocalFile> omniJar(mozilla::OmnijarPath());
+    if (!omniJar) {
+        return;
+    }
+
+    rv = jarReader->Open(omniJar);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Failed to open omniJar");
+        return;
+    }
+
+    nsCOMPtr<nsIUTF8StringEnumerator> compEnum;
+    rv = jarReader->FindEntries("components/*.js$",
+                                getter_AddRefs(compEnum));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Failed to get js enumerator for omniJar");
+        return;
+    }
+
+    nsTArray<DeferredModule> deferred;
+
+    nsCAutoString compName;
+    PRBool more;
+    while (NS_SUCCEEDED((rv = compEnum->HasMore(&more))) && more) {
+        rv = compEnum->GetNext(compName);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("Failed to get name from js enumerator");
+            continue;
+        }
+
+        nsCAutoString entryspec(kOMNIJAR_PREFIX);
+        entryspec += compName;
+
+        nsCOMPtr<nsIModule> module;
+        rv = jsLoader->LoadModuleFromJAR(omniJar, compName, getter_AddRefs(module));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("Failed to load JS component from JAR");
+            continue;
+        }
+
+        nsCOMPtr<nsIFile> fakeFile;
+        rv = omniJar->Clone(getter_AddRefs(fakeFile));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("Failed to clone fake local file for JS component");
+            continue;
+        }
+
+        nsCOMPtr<nsILocalFile> fakeNativeFile = do_QueryInterface(fakeFile);
+
+        PRInt32 startIdx = compName.RFindChar('/') + 1;
+        rv = fakeNativeFile->AppendNative(Substring(compName, startIdx));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("Failed to create fake local file for JS component");
+            continue;
+        }
+
+        rv = module->RegisterSelf(this, fakeNativeFile,
+                                  entryspec.get(),
+                                  jarComponentType);
+        if (NS_ERROR_FACTORY_REGISTER_AGAIN == rv) {
+            DeferredModule *d = deferred.AppendElement();
+            if (!d) {
+                NS_ERROR("Failed to allocate DeferredModule");
+                continue;
+            }
+
+            d->file = fakeNativeFile;
+            d->location = entryspec;
+            d->module = module;
+        }
+    }
+
+    for (PRInt32 i = 0; i < deferred.Length(); i++) {
+        DeferredModule &d = deferred[i];
+        rv = d.module->RegisterSelf(this, d.file,
+                                    d.location.get(),
+                                    jarComponentType);
+        if (NS_FAILED(rv))
+            NS_ERROR("js component failed to load on reregistration");
+    }
+}
+#endif /* MOZ_OMNIJAR */
+
 static void
 RegisterStaticModule(const char *key, nsIModule* module,
                      nsTArray<DeferredModule> &deferred)
@@ -3450,6 +3569,10 @@ nsComponentManagerImpl::AutoRegister(nsIFile *aSpec)
         // Set them up now, so that JS components don't go into
         // the leftovers list.
         GetAllLoaders();
+
+#ifdef MOZ_OMNIJAR
+        AutoRegisterJar();
+#endif
     }
 
     LoaderType curLoader = GetLoaderCount();
@@ -3735,6 +3858,43 @@ nsFactoryEntry::GetFactory(nsIFactory **aFactory)
                 mStaticModuleLoader.
                 GetModuleFor(mLocationKey,
                              getter_AddRefs(module));
+        }
+        else if (mLoaderType == NS_LOADER_TYPE_JAR) {
+            nsComponentManagerImpl::gComponentManager->GetAllLoaders();
+
+            nsIModuleLoader *jsLoader =
+                nsComponentManagerImpl::gComponentManager->
+                    LoaderForType(nsComponentManagerImpl::gComponentManager->
+                        GetLoaderType("text/javascript"));
+            if (!jsLoader) {
+                NS_ERROR("could not get JS loader");
+                NS_ERROR(mLocationKey);
+                return NS_ERROR_FAILURE;
+            }
+
+            // currently we assume all NS_LOADER_TYPE_JAR cases point to 
+            // entries in the omnijar.
+#ifdef MOZ_OMNIJAR
+            nsCOMPtr<nsILocalFile> omniJar(mozilla::OmnijarPath());
+            if (!omniJar) {
+                NS_ERROR("could not get omnijar");
+                return NS_ERROR_FAILURE;
+            }
+
+            if (strlen(mLocationKey) < kOMNIJAR_PREFIX.Length()) {
+                NS_ERROR("invalid mLocationKey");
+                return NS_ERROR_FAILURE;
+            }
+
+            rv = jsLoader->LoadModuleFromJAR(omniJar,
+                                             nsDependentCSubstring(nsDependentCString(mLocationKey), kOMNIJAR_PREFIX.Length()),
+                                             getter_AddRefs(module));
+            if (NS_FAILED(rv))
+                NS_ERROR("Failed to load JS component from JAR");
+#else
+            NS_ERROR("Omnijar not enabled");
+            return NS_ERROR_FAILURE;
+#endif
         }
         else {
             nsCOMPtr<nsILocalFile> moduleFile;
