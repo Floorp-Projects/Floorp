@@ -63,6 +63,9 @@
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
 
 #include "jsautooplen.h"
 

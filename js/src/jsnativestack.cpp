@@ -41,7 +41,7 @@
 #include "jsnativestack.h"
 
 #ifdef XP_WIN
-# include <windows.h>
+# include "jswin.h"
 
 #elif defined(XP_OS2)
 # define INCL_DOSPROCESS

@@ -96,7 +96,7 @@
  * Include the headers for mmap.
  */
 #if defined(XP_WIN)
-# include <windows.h>
+# include "jswin.h"
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
 # include <unistd.h>
