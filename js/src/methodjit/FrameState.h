@@ -228,8 +228,8 @@ class FrameState
 
     /*
      * Returns a register that is guaranteed to contain the frame entry's
-     * data payload. The compiler may not modify the contents of the register,
-     * though it may explicitly free it.
+     * data payload. The compiler may not modify the contents of the register.
+     * The compiler should NOT explicitly free it.
      */
     inline RegisterID tempRegForData(FrameEntry *fe);
 

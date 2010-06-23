@@ -55,7 +55,6 @@ void JS_FASTCALL Interrupt(VMFrame &f);
 void JS_FASTCALL InitElem(VMFrame &f, uint32 last);
 void JS_FASTCALL InitProp(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL InitMethod(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL EndInit(VMFrame &f);
 JSString * JS_FASTCALL ConcatN(VMFrame &f, uint32 argc);
 
 void * JS_FASTCALL Call(VMFrame &f, uint32 argc);

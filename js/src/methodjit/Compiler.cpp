@@ -956,8 +956,18 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_ENDINIT)
-            prepareStubCall();
-            stubCall(stubs::EndInit, Uses(0), Defs(0));
+          {
+            FrameEntry *fe = frame.peek(-1);
+            RegisterID traversalReg = frame.allocReg();
+            JS_ASSERT(!fe->isConstant());
+            RegisterID objReg = frame.tempRegForData(fe);
+            masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), traversalReg);
+            masm.storePtr(objReg,
+                          Address(traversalReg,
+                                  offsetof(JSContext,
+                                           weakRoots.finalizableNewborns[FINALIZE_OBJECT])));
+            frame.freeReg(traversalReg);
+          }
           END_CASE(JSOP_ENDINIT)
 
           BEGIN_CASE(JSOP_INITPROP)
