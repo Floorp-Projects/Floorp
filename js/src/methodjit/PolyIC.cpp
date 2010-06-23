@@ -44,6 +44,8 @@
 #include "jsscope.h"
 #include "jsnum.h"
 #include "jsscopeinlines.h"
+#include "jspropertycache.h"
+#include "jspropertycacheinlines.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -409,7 +411,7 @@ class GetPropCompiler : public PICStubCompiler
 {
     JSObject *obj;
     JSAtom *atom;
-    VoidStub stub;
+    void   *stub;
     int lastStubSecondShapeGuard;
 
     /* Offsets for patching, computed manually as reverse from the storeBack. */
@@ -426,7 +428,15 @@ class GetPropCompiler : public PICStubCompiler
   public:
     GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
                     VoidStub stub)
-      : PICStubCompiler("getprop", f, script, pic), obj(obj), atom(atom), stub(stub),
+      : PICStubCompiler("getprop", f, script, pic), obj(obj), atom(atom),
+        stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
+        lastStubSecondShapeGuard(pic.u.get.secondShapeGuard)
+    { }
+
+    GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
+                    VoidStubUInt32 stub)
+      : PICStubCompiler("callprop", f, script, pic), obj(obj), atom(atom),
+        stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
         lastStubSecondShapeGuard(pic.u.get.secondShapeGuard)
     { }
 
@@ -822,16 +832,151 @@ ic::SetProp(VMFrame &f, uint32 index)
     f.regs.sp[-2] = rval;
 }
 
+static void JS_FASTCALL
+CallPropSlow(VMFrame &f, uint32 index)
+{
+    JSScript *script = f.fp->script;
+    ic::PICInfo &pic = script->pics[index];
+    stubs::CallProp(f, pic.atom);
+}
+
+void JS_FASTCALL
+ic::CallProp(VMFrame &f, uint32 index)
+{
+    JSContext *cx = f.cx;
+    JSFrameRegs &regs = f.regs;
+
+    JSScript *script = f.fp->script;
+    ic::PICInfo &pic = script->pics[index];
+    JSAtom *origAtom = pic.atom;
+
+    Value lval;
+    lval = regs.sp[-1];
+
+    Value objv;
+    if (lval.isObject()) {
+        objv = lval;
+    } else {
+        JSProtoKey protoKey;
+        if (lval.isString()) {
+            protoKey = JSProto_String;
+        } else if (lval.isNumber()) {
+            protoKey = JSProto_Number;
+        } else if (lval.isBoolean()) {
+            protoKey = JSProto_Boolean;
+        } else {
+            JS_ASSERT(lval.isNull() || lval.isUndefined());
+            js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
+            THROW();
+        }
+        JSObject *pobj;
+        if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
+            THROW();
+        objv.setNonFunObj(*pobj);
+    }
+
+    JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
+    Value rval;
+
+    bool usePIC = true;
+
+    PropertyCacheEntry *entry;
+    JSObject *obj2;
+    JSAtom *atom;
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+    if (!atom) {
+        if (entry->vword.isFunObj()) {
+            rval.setFunObj(entry->vword.toFunObj());
+        } else if (entry->vword.isSlot()) {
+            uint32 slot = entry->vword.toSlot();
+            JS_ASSERT(slot < obj2->scope()->freeslot);
+            rval = obj2->lockedGetSlot(slot);
+        } else {
+            JS_ASSERT(entry->vword.isSprop());
+            JSScopeProperty *sprop = entry->vword.toSprop();
+            NATIVE_GET(cx, &objv.asObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
+                       THROW());
+        }
+        regs.sp++;
+        regs.sp[-2] = rval;
+        regs.sp[-1] = lval;
+        goto end_callprop;
+    }
+
+    /*
+     * Cache miss: use the immediate atom that was loaded for us under
+     * PropertyCache::test.
+     */
+    jsid id;
+    id = ATOM_TO_JSID(origAtom);
+
+    regs.sp++;
+    regs.sp[-1].setNull();
+    if (lval.isObject()) {
+        if (!js_GetMethod(cx, &objv.asObject(), id,
+                          JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                          ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                          : JSGET_NO_METHOD_BARRIER,
+                          &rval)) {
+            THROW();
+        }
+        regs.sp[-1] = objv;
+        regs.sp[-2] = rval;
+    } else {
+        JS_ASSERT(objv.asObject().map->ops->getProperty == js_GetProperty);
+        if (!js_GetPropertyHelper(cx, &objv.asObject(), id,
+                                  JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
+                                  &rval)) {
+            THROW();
+        }
+        regs.sp[-1] = lval;
+        regs.sp[-2] = rval;
+    }
+
+  end_callprop:
+    /* Wrap primitive lval in object clothing if necessary. */
+    if (lval.isPrimitive()) {
+        /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
+        if (!rval.isFunObj() ||
+            !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()),
+                                  lval)) {
+            if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
+                THROW();
+            usePIC = false;
+        }
+    }
+
+    if (usePIC) {
+        if (lval.isObject() && pic.isFastCall()) {
+            JS_ASSERT(&lval.asObject() == &objv.asObject());
+            JSObject *obj = &objv.asObject();
+            GetPropCompiler cc(f, script, obj, pic, origAtom, CallPropSlow);
+            if (!cc.update()) {
+                cc.disable("error");
+                THROW();
+            }
+        }
+    }
+
+#if JS_HAS_NO_SUCH_METHOD
+    if (JS_UNLIKELY(rval.isUndefined())) {
+        regs.sp[-2].setString(ATOM_TO_STRING(origAtom));
+        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+            THROW();
+    }
+#endif
+}
+
 void
 ic::PurgePICs(JSContext *cx, JSScript *script)
 {
     uint32 npics = script->numPICs();
     for (uint32 i = 0; i < npics; i++) {
         ic::PICInfo &pic = script->pics[i];
-        if (pic.kind == ic::PICInfo::GET)
-            GetPropCompiler::reset(pic);
-        else
+        if (pic.kind == ic::PICInfo::SET)
             SetPropCompiler::reset(pic);
+        else
+            GetPropCompiler::reset(pic);
         pic.reset();
     }
 }

@@ -116,35 +116,6 @@ mjit::stubs::DebugHook(VMFrame &f)
         THROW();
 }
 
-#define NATIVE_SET(cx,obj,sprop,entry,vp)                                     \
-    JS_BEGIN_MACRO                                                            \
-        if (sprop->hasDefaultSetter() &&                                      \
-            (sprop)->slot != SPROP_INVALID_SLOT &&                            \
-            !obj->scope()->brandedOrHasMethodBarrier()) {                     \
-            /* Fast path for, e.g., plain Object instance properties. */      \
-            obj->setSlot(sprop->slot, *vp);                                   \
-        } else {                                                              \
-            if (!js_NativeSet(cx, obj, sprop, false, vp))                     \
-                THROW();                                                      \
-        }                                                                     \
-    JS_END_MACRO
-
-#define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp,onerr)                         \
-    JS_BEGIN_MACRO                                                            \
-        if (sprop->hasDefaultGetter()) {                                      \
-            /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
-                      !sprop->hasDefaultSetter());                            \
-            if (((sprop)->slot != SPROP_INVALID_SLOT))                        \
-                *(vp) = (pobj)->lockedGetSlot((sprop)->slot);                 \
-            else                                                              \
-                (vp)->setUndefined();                                         \
-        } else {                                                              \
-            if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
-                onerr;                                                        \
-        }                                                                     \
-    JS_END_MACRO
-
 void JS_FASTCALL
 mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
 {
