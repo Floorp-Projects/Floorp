@@ -1088,19 +1088,6 @@ var Browser = {
     this.setVisibleRect(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
   },
 
-  /**
-   * Find the needed zoom level for zooming on an element
-   */
-  _getZoomLevelForElement: function _getZoomLevelForElement(element) {
-    const margin = 15;
-
-    let bv = this._browserView;
-    let elRect = bv.browserToViewportRect(Browser.getBoundingContentRect(element));
-
-    let vis = bv.getVisibleRect();
-    return bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
-  },
-
   /** Rect should be in viewport coordinates. */
   _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
     const margin = 15;
@@ -1108,28 +1095,6 @@ var Browser = {
     let bv = this._browserView;
     let vis = bv.getVisibleRect();
     return bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (rect.width + margin * 2));
-  },
-
-  /**
-   * Find an appropriate zoom rect for an element, if it exists.
-   * @return Rect in viewport coordinates
-   * */
-  _getZoomRectForElement: function _getZoomRectForElement(element, elementY) {
-    let bv = this._browserView;
-    let oldZoomLevel = bv.getZoomLevel();
-    let zoomLevel = this._getZoomLevelForElement(element);
-    let zoomRatio = oldZoomLevel / zoomLevel;
-
-    // Don't zoom in a marginal amount, but be more lenient for the first zoom.
-    // > 2/3 means operation increases the zoom level by less than 1.5
-    // > 9/10 means operation increases the zoom level by less than 1.1
-    let zoomTolerance = (bv.isDefaultZoom()) ? .9 : .6666;
-    if (zoomRatio >= zoomTolerance) {
-      return null;
-    } else {
-      let elRect = this.getBoundingContentRect(element);
-      return this._getZoomRectForPoint(elRect.center().x, elementY, zoomLevel);
-    }
   },
 
   /**
@@ -1192,11 +1157,8 @@ var Browser = {
   zoomToPoint: function zoomToPoint(cX, cY) {
     let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
     let zoomRect = null;
-    let element = this.elementFromPoint(elementX, elementY);
     let bv = this._browserView;
-    if (element)
-      zoomRect = this._getZoomRectForElement(element, elementY);
-    if (!zoomRect && bv.isDefaultZoom())
+    if (bv.isDefaultZoom())
       zoomRect = this._getZoomRectForPoint(elementX, elementY, bv.getZoomLevel() * 2);
 
     if (zoomRect)
@@ -1213,32 +1175,6 @@ var Browser = {
       let zoomRect = this._getZoomRectForPoint(elementX, elementY, zoomLevel);
       this.setVisibleRect(zoomRect);
     }
-  },
-
-  getBoundingContentRect: function getBoundingContentRect(contentElem) {
-    let document = contentElem.ownerDocument;
-    while(document.defaultView.frameElement)
-      document = document.defaultView.frameElement.ownerDocument;
-
-    let tab = Browser.getTabForDocument(document);
-    if (!tab || !tab.browser)
-      return null;
-
-    let browser = tab.browser;
-    let offset = BrowserView.Util.getContentScrollOffset(browser);
-
-    let r = contentElem.getBoundingClientRect();
-
-    // step out of iframes and frames, offsetting scroll values
-    for (let frame = contentElem.ownerDocument.defaultView; frame != browser.contentWindow; frame = frame.parent) {
-      // adjust client coordinates' origin to be top left of iframe viewport
-      let rect = frame.frameElement.getBoundingClientRect();
-      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
-      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
-      offset.add(rect.left + parseInt(left), rect.top + parseInt(top));
-    }
-
-    return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
   },
 
   /**
@@ -1280,42 +1216,6 @@ var Browser = {
    */
   transformClientToBrowser: function transformClientToBrowser(cX, cY) {
     return this.clientToBrowserView(cX, cY).map(this._browserView.viewportToBrowser);
-  },
-
-  /**
-   * @param x,y Browser coordinates
-   * @return Element at position, null if no active browser or no element found
-   */
-  elementFromPoint: function elementFromPoint(x, y) {
-    let browser = this._browserView.getBrowser();
-    if (!browser)
-      return null;
-
-    // browser's elementFromPoint expect browser-relative client coordinates.
-    // subtract browser's scroll values to adjust
-    let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-    let scrollX = {}, scrollY = {};
-    cwu.getScrollXY(false, scrollX, scrollY);
-    x = x - scrollX.value;
-    y = y - scrollY.value;
-    let elem = ElementTouchHelper.getClosest(cwu, x, y);
-
-    // step through layers of IFRAMEs and FRAMES to find innermost element
-    while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
-      // adjust client coordinates' origin to be top left of iframe viewport
-      let win = elem.ownerDocument.defaultView;
-      let left = win.getComputedStyle(elem, "").borderLeftWidth;
-      let top = win.getComputedStyle(elem, "").borderTopWidth;
-
-      let rect = elem.getBoundingClientRect();
-      x = Math.max(0, x - (rect.left + parseInt(left)));
-      y = Math.max(0, y - (rect.top + parseInt(top)));
-
-      let windowUtils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      elem = ElementTouchHelper.getClosest(windowUtils, x, y);
-    }
-
-    return elem;
   },
 
   /**
@@ -1363,10 +1263,9 @@ var Browser = {
   }
 };
 
+
 Browser.MainDragger = function MainDragger(browserView) {
   this.bv = browserView;
-  this.draggedFrame = null;
-  this.contentScrollbox = null;
 };
 
 Browser.MainDragger.prototype = {
@@ -1381,57 +1280,6 @@ Browser.MainDragger.prototype = {
     // loading state is going (and already, the idle timer is bigger during loading so it doesn't fit
     // into the aggressive flag).
     this.bv._idleServiceObserver.pause();
-
-    let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
-    let element = Browser.elementFromPoint(x, y);
-
-    this.draggedFrame = null;
-    this.contentScrollbox = null;
-
-    // Check if we are in a scrollable HTML element
-    let htmlElement = element;
-    if (htmlElement && htmlElement instanceof HTMLElement) {
-      let win = htmlElement.ownerDocument.defaultView;
-      for (; htmlElement; htmlElement = htmlElement.parentNode) {
-        try {
-          let cs = win.getComputedStyle(htmlElement, null);
-          let overflowX = cs.getPropertyValue("overflow-x");
-          let overflowY = cs.getPropertyValue("overflow-y");
-
-          let scrollableY = overflowY != "hidden" && overflowY != "visible" && htmlElement.clientHeight < htmlElement.scrollHeight;
-          let scrollableX = overflowX != "hidden" && overflowX != "visible" && htmlElement.clientWidth  < htmlElement.scrollWidth
-            && !(htmlElement instanceof HTMLSelectElement); // Bug 295977
-
-          if (scrollableX || scrollableY) {
-            this.contentScrollbox = this._createDivScrollBox(htmlElement);
-            return;
-          }
-        } catch(e) {}
-      }
-    }
-
-    // Check if we are in XUL land
-    let xulElement = element;
-    if (xulElement && xulElement instanceof XULElement) {
-      for (; xulElement; xulElement = xulElement.parentNode) {
-        if (xulElement.localName == "treechildren") {
-          this.contentScrollbox = this._createTreeScrollBox(xulElement.parentNode);
-          return;
-        }
-        let wrapper = xulElement.wrappedJSObject;
-        let scrollable = false;
-        try {
-          scrollable = (wrapper.scrollBoxObject != null) || (wrapper.boxObject.QueryInterface(Ci.nsIScrollBoxObject));
-        } catch(e) {}
-        if (scrollable) {
-          this.contentScrollbox = wrapper.scrollBoxObject || wrapper.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-          return;
-        }
-      }
-    }
-
-    if (element)
-      this.draggedFrame = element.ownerDocument.defaultView;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1447,27 +1295,11 @@ Browser.MainDragger.prototype = {
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
-    let elem = this.draggedFrame;
     let doffset = new Point(dx, dy);
     let render = false;
 
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);
-
-    // do HTML overflow or XUL panning
-    if (this.contentScrollbox && !doffset.isZero()) {
-      this._panScrollbox(this.contentScrollbox, doffset);
-      render = true;
-    }
-
-    // Do all iframe panning
-    if (elem) {
-      while (elem.frameElement && !doffset.isZero()) {
-        this._panFrame(elem, doffset);
-        elem = elem.frameElement;
-        render = true;
-      }
-    }
 
     // Do content panning
     this._panScroller(Browser.contentScrollboxScroller, doffset);
@@ -1485,79 +1317,6 @@ Browser.MainDragger.prototype = {
       this.bv.renderNow();
 
     return !doffset.equals(dx, dy);
-  },
-
-  /**
-  * builds a minimal implementation of scrollBoxObject for div
-  */
-  _createDivScrollBox: function(div) {
-    let sbo = {
-      getScrolledSize: function(width, height) {
-        width.value = div.scrollWidth;
-        height.value = div.scrollHeight;
-      },
-  
-      getPosition: function(x, y) {
-        x.value = div.scrollLeft;
-        y.value = div.scrollTop;
-      },
-  
-      scrollBy: function(dx, dy) {
-        div.scrollTop += dy;
-        div.scrollLeft += dx;
-      }
-   }
-   return sbo;
-  },
-
- /**
-  * builds a minimal implementation of scrollBoxObject for trees
-  */
-  _createTreeScrollBox: function(tree) {
-    let treeBox = tree.boxObject.QueryInterface(Ci.nsITreeBoxObject);
-    let sbo = {
-      pageLength: treeBox.getPageLength(),
-      rowHeight: treeBox.rowHeight,
-      rowWidth: treeBox.rowWidth,
-      rowCount: treeBox.view.rowCount,
-      targetY: treeBox.getFirstVisibleRow() * treeBox.rowHeight,
-      getScrolledSize: function(width, height) {
-        width.value = this.rowWidth;
-        height.value = this.rowHeight * this.rowCount;
-      },
-
-      getPosition: function(x, y) {
-        x.value = treeBox.horizontalPosition;
-        y.value = this.targetY;
-      },
-
-      scrollBy: function(dx, dy) {
-        this.targetY += dy;
-        if (this.targetY < 0)
-          this.targetY = 0;
-        let targetRow = Math.floor(this.targetY / this.rowHeight);
-        if ((targetRow + this.pageLength) > this.rowCount) {
-          targetRow = this.rowCount - this.pageLength;
-          this.targetY = targetRow * this.rowHeight;
-        }
-        treeBox.scrollToRow(targetRow);
-        treeBox.scrollToHorizontalPosition(treeBox.horizontalPosition + dx);
-      }
-    }
-    return sbo;
-  },
-
-  /**
-   * pans a scrollbox, updating doffset
-   */
-  _panScrollbox: function(sbo, doffset) {
-    let origX = {}, origY = {}, newX = {}, newY = {};
-
-    sbo.getPosition(origX, origY);
-    sbo.scrollBy(doffset.x, doffset.y);
-    sbo.getPosition(newX, newY);
-
-    doffset.subtract(newX.value - origX.value, newY.value - origY.value);
   },
 
   /** Return offset that pans controls away from screen. Updates doffset with leftovers. */
@@ -1587,20 +1346,9 @@ Browser.MainDragger.prototype = {
     scroller.scrollBy(doffset.x, doffset.y);
     let { x: x1, y: y1 } = Browser.getScrollboxPosition(scroller);
     doffset.subtract(x1 - x0, y1 - y0);
-  },
-
-  /** Pan frame by the given amount. Updates doffset with leftovers. */
-  _panFrame: function _panFrame(frame, doffset) {
-    let origX = {}, origY = {}, newX = {}, newY = {};
-    let windowUtils = frame.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
-    windowUtils.getScrollXY(false, origX, origY);
-    frame.scrollBy(doffset.x, doffset.y);
-    windowUtils.getScrollXY(false, newX, newY);
-
-    doffset.subtract(newX.value - origX.value, newY.value - origY.value);
   }
 };
+
 
 function nsBrowserAccess()
 {
@@ -1673,6 +1421,7 @@ nsBrowserAccess.prototype = {
     return Browser.browsers.some(function (browser) browser.contentWindow == aWindow);
   }
 };
+
 
 const BrowserSearch = {
   observe: function bs_observe(aSubject, aTopic, aData) {
@@ -1767,6 +1516,7 @@ const BrowserSearch = {
   }
 }
 
+
 /** Watches for mouse events in chrome and sends them to content. */
 function ContentCustomClicker(browserView) {
   this._browserView = browserView;
@@ -1828,6 +1578,7 @@ ContentCustomClicker.prototype = {
   }
 };
 
+
 /** Watches for mouse events in chrome and sends them to content. */
 function ContentCustomKeySender(browserView) {
   this._browserView = browserView;
@@ -1850,119 +1601,6 @@ ContentCustomKeySender.prototype = {
   }
 };
 
-/** Watches for mouse click in content and redirect them to the best found target **/
-const ElementTouchHelper = {
-  get radius() {
-    delete this.radius;
-    return this.radius = { "top": gPrefService.getIntPref("browser.ui.touch.top"),
-                           "right": gPrefService.getIntPref("browser.ui.touch.right"),
-                           "bottom": gPrefService.getIntPref("browser.ui.touch.bottom"),
-                           "left": gPrefService.getIntPref("browser.ui.touch.left")
-                         };
-  },
-
-  get weight() {
-    delete this.weight;
-    return this.weight = { "visited": gPrefService.getIntPref("browser.ui.touch.weight.visited")
-                         };
-  },
-
-  /* Retrieve the closest element to a point by looking at borders position */
-  getClosest: function getClosest(aWindowUtils, aX, aY) {
-    let target = aWindowUtils.elementFromPoint(aX, aY,
-                                               true,   /* ignore root scroll frame*/
-                                               false); /* don't flush layout */
-
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top,
-                                                   this.radius.right,
-                                                   this.radius.bottom,
-                                                   this.radius.left, true, false);
-
-    // return early if the click is just over a clickable element
-    if (this._isElementClickable(target, nodes))
-      return target;
-
-    let threshold = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < nodes.length; i++) {
-      let current = nodes[i];
-      if (!current.mozMatchesSelector || !this._isElementClickable(current))
-        continue;
-
-      let rect = current.getBoundingClientRect();
-      let distance = this._computeDistanceFromRect(aX, aY, rect);
-
-      // increase a little bit the weight for already visited items
-      if (current && current.mozMatchesSelector("*:visited"))
-        distance *= (this.weight.visited / 100);
-
-      if (distance < threshold) {
-        target = current;
-        threshold = distance;
-      }
-    }
-
-    return target;
-  },
-
-  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
-  _clickableEvents: ["mousedown", "mouseup", "click"],
-  _hasMouseListener: function _hasMouseListener(aElement) {
-    let els = this._els;
-    let listeners = els.getListenerInfoFor(aElement, {});
-    for (let i = 0; i < listeners.length; i++) {
-      if (this._clickableEvents.indexOf(listeners[i].type) != -1)
-        return true;
-    }
-  },
-
-  _isElementClickable: function _isElementClickable(aElement, aElementsInRect) {
-    let isClickable = this._hasMouseListener(aElement);
-
-    // If possible looks in the parents node to find a target
-    if (aElement && !isClickable && aElementsInRect) {
-      let parentNode = aElement.parentNode;
-      let count = aElementsInRect.length;
-      for (let i = 0; i < count && parentNode; i++) {
-        if (aElementsInRect[i] != parentNode)
-          continue;
-
-        isClickable = this._hasMouseListener(parentNode);
-        if (isClickable)
-          break;
-
-        parentNode = parentNode.parentNode;
-      }
-    }
-
-    return aElement && (isClickable || aElement.mozMatchesSelector("*:link,*:visited,*[role=button],button,input,select,label"));
-  },
-
-  _computeDistanceFromRect: function _computeDistanceFromRect(aX, aY, aRect) {
-    let x = 0, y = 0;
-    let xmost = aRect.left + aRect.width;
-    let ymost = aRect.top + aRect.height;
-
-    // compute horizontal distance from left/right border depending if X is
-    // before/inside/after the element's rectangle
-    if (aRect.left < aX && aX < xmost)
-      x = Math.min(xmost - aX, aX - aRect.left);
-    else if (aX < aRect.left)
-      x = aRect.left - aX;
-    else if (aX > xmost)
-      x = aX - xmost;
-
-    // compute vertical distance from top/bottom border depending if Y is
-    // above/inside/below the element's rectangle
-    if (aRect.top < aY && aY < ymost)
-      y = Math.min(ymost - aY, aY - aRect.top);
-    else if (aY < aRect.top)
-      y = aRect.top - aY;
-    if (aY > ymost)
-      y = aY - ymost;
-
-    return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-  }
-};
 
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
@@ -3059,7 +2697,7 @@ Tab.prototype = {
   },
 
   toString: function() {
-    return "[Tab " + (this._browser ? this._browser.contentURI.spec : "(no browser)") + "]";
+    return "[Tab " + (this._browser ? this._browser.currentURI.spec : "(no browser)") + "]";
   }
 };
 
