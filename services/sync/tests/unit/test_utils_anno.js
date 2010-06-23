@@ -2,14 +2,14 @@ _("Make sure various combinations of anno arguments do the right get/set for pag
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  _("set an anno on an item 1");
-  Utils.anno(1, "anno", "hi");
-  do_check_eq(Utils.anno(1, "anno"), "hi");
-
   _("create a bookmark to a url so it exists");
   let url = "about:";
   let bmkid = Svc.Bookmark.insertBookmark(Svc.Bookmark.unfiledBookmarksFolder,
                                           Utils.makeURI(url), -1, "");
+
+  _("set an anno on the bookmark ");
+  Utils.anno(bmkid, "anno", "hi");
+  do_check_eq(Utils.anno(bmkid, "anno"), "hi");
 
   _("set an anno on a url");
   Utils.anno(url, "tation", "hello");
@@ -24,7 +24,7 @@ function run_test() {
   do_check_eq(Utils.anno(url, "tation"), "bye!");
 
   _("sanity check that the item anno is still there");
-  do_check_eq(Utils.anno(1, "anno"), "hi");
+  do_check_eq(Utils.anno(bmkid, "anno"), "hi");
 
   _("invalid uris don't get annos");
   let didThrow = false;
