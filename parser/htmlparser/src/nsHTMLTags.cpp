@@ -123,6 +123,10 @@ static const PRUnichar sHTMLTagUnicodeName_embed[] =
   {'e', 'm', 'b', 'e', 'd', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_fieldset[] =
   {'f', 'i', 'e', 'l', 'd', 's', 'e', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_figcaption[] =
+  {'f', 'i', 'g', 'c', 'a', 'p', 't', 'i', 'o', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_figure[] =
+  {'f', 'i', 'g', 'u', 'r', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_font[] =
   {'f', 'o', 'n', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_footer[] =
@@ -185,6 +189,8 @@ static const PRUnichar sHTMLTagUnicodeName_listing[] =
   {'l', 'i', 's', 't', 'i', 'n', 'g', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_map[] =
   {'m', 'a', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_mark[] =
+  {'m', 'a', 'r', 'k', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_marquee[] =
   {'m', 'a', 'r', 'q', 'u', 'e', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_menu[] =

@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=569988
+-->
+<head>
+  <title>Test for Bug 569988</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=569988">Mozilla Bug 569988</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 569988 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+var gPromptInput = null;
+var gPromptWindow = null;
+
+function runTest()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  function WindowObserver()
+  {
+    Components.classes["@mozilla.org/observer-service;1"].
+               getService(Components.interfaces.nsIObserverService).
+               addObserver(this, "domwindowopened", false);
+  }
+  WindowObserver.prototype = {
+    QueryInterface: function (iid) {
+      if (iid.equals(Components.interfaces.nsIObserver) ||
+          iid.equals(Components.interfaces.nsISupports)) {
+        return this;
+      }
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    observe: function (subject, topic, data) {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      if (topic === "domwindowopened") {
+        ok(true, "prompt window is created");
+        gPromptWindow =
+          subject.QueryInterface(Components.interfaces.nsIDOMWindow);
+        gPromptWindow.addEventListener("load", onPromptLoad, false);
+      }
+    }
+  };
+
+  var observer = new WindowObserver();
+
+  prompt("summary", "text");
+  ok(true, "prompt is closed");
+
+  Components.classes["@mozilla.org/observer-service;1"].          
+             getService(Components.interfaces.nsIObserverService).
+             removeObserver(observer, "domwindowopened");
+  SimpleTest.finish();
+}
+
+function onPromptLoad()
+{
+  ok(true, "onPromptLoad is called");
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  gPromptWindow.removeEventListener("load", onPromptLoad, false);
+  gPromptInput = gPromptWindow.document.getElementById("loginTextbox");
+  gPromptInput.addEventListener("focus", onPromptFocus, false);
+}
+
+function onPromptFocus()
+{
+  ok(true, "onPromptFocus is called");
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  gPromptInput.removeEventListener("focus", onPromptFocus, false);
+  var systemGroup =
+    Components.classes["@mozilla.org/eventlistenerservice;1"].
+      getService(Components.interfaces.nsIEventListenerService).
+      systemEventGroup;
+  gPromptInput.QueryInterface(Components.interfaces.nsIDOM3EventTarget);
+  var isPrevented = false;
+  var listener = {
+    handleEvent: function _hv(aEvent)
+    {
+      isPrevented = aEvent.getPreventDefault();
+    }
+  };
+  gPromptInput.addGroupedEventListener("keypress", listener, false,
+                                       systemGroup);
+  synthesizeKey("VK_ESCAPE", { }, gPromptWindow);
+  gPromptInput.removeGroupedEventListener("keypress", listener, false,
+                                          systemGroup);
+
+  ok(!isPrevented, "ESC key event is prevented by editor");
+  if (isPrevented) {
+    gPromptWindow.close();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

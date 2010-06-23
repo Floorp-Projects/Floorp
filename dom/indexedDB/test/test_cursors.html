@@ -1,0 +1,371 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const NOT_FOUND_ERR =
+        Components.interfaces.nsIIDBDatabaseException.NOT_FOUND_ERR;
+      const NEXT = Components.interfaces.nsIIDBCursor.NEXT;
+      const PREV = Components.interfaces.nsIIDBCursor.PREV;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
+      const sortedKeys = [-1, 0, 1, 10, 2000, "a", "b", "q", "two", "z"];
+
+      is(keys.length, sortedKeys.length, "Good key setup");
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+
+      request = db.createObjectStore("autoIncrement", "", true);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let objectStore = event.result;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        ok(!event.result, "No results");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.createObjectStore("autoIncrementKeyPath", "foo", true);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      objectStore = event.result;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        ok(!event.result, "No results");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.createObjectStore("keyPath", "foo");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      objectStore = event.result;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        ok(!event.result, "No results");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.createObjectStore("foo", "");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      objectStore = event.result;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        ok(!event.result, "No results");
+        testGenerator.next();
+      }
+      yield;
+
+      let keyIndex = 0;
+
+      for (let i in keys) {
+        request = objectStore.add("foo", keys[i]);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          if (++keyIndex == keys.length) {
+            testGenerator.next();
+          }
+        };
+      }
+      yield;
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
+
+          try {
+            cursor.continue();
+            ok(false, "continue twice should throw");
+          }
+          catch (e) {
+            ok(true, "continue twice should throw");
+          }
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all added items");
+
+      keyIndex = 4;
+
+      let range = moz_indexedDB.makeBoundKeyRange(2000, "q");
+      request = objectStore.openCursor(range);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 8, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let retval = keyIndex ? cursor.continue() : cursor.continue("b");
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex += keyIndex ? 1: 6;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let retval = keyIndex ? cursor.continue() : cursor.continue(10);
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex += keyIndex ? 1: 3;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let retval = keyIndex ? cursor.continue() : cursor.continue("c");
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
+      keyIndex = 0;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          if (keyIndex == 4) {
+            request = cursor.update("bar");
+            request.onerror = errorHandler;
+            request.onsuccess = function(event) {
+              keyIndex++;
+              cursor.continue();
+            };
+          }
+          else {
+            keyIndex++;
+            cursor.continue();
+          }
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+
+      request = objectStore.get(sortedKeys[4]);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, "bar", "Update succeeded");
+
+      request = objectStore.modify("foo", sortedKeys[4]);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      keyIndex = 0;
+
+      let gotRemoveEvent = false;
+      let retval = false;
+
+      request = objectStore.openCursor(null, NEXT);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          if (keyIndex == 4) {
+            request = cursor.remove();
+            request.onerror = errorHandler;
+            request.onsuccess = function(event) {
+              is(event.result, sortedKeys[4], "Correct key");
+              is(keyIndex, 5, "Got result of remove before next continue");
+              gotRemoveEvent = true;
+            };
+          }
+
+          keyIndex++;
+          cursor.continue();
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, keys.length, "Saw all the expected keys");
+      is(gotRemoveEvent, true, "Saw the remove event");
+
+      request = objectStore.get(sortedKeys[4]);
+      request.onerror = new ExpectError(NOT_FOUND_ERR);
+      request.onsuccess = unexpectedSuccessHandler;
+      event = yield;
+
+      request = objectStore.add("foo", sortedKeys[4]);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      keyIndex = sortedKeys.length - 1;
+
+      request = objectStore.openCursor(null, PREV);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.result;
+        if (cursor) {
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          let retval = cursor.continue();
+          is(retval, true, "Correct return from continue");
+
+          is(cursor.key, sortedKeys[keyIndex], "Correct key");
+          is(cursor.value, "foo", "Correct value");
+
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all added items");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

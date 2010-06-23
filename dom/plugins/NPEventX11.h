@@ -40,18 +40,9 @@
 #ifndef mozilla_dom_plugins_NPEventX11_h
 #define mozilla_dom_plugins_NPEventX11_h 1
 
-#if defined(MOZ_WIDGET_GTK2)
-#  include <gdk/gdkx.h>
-#elif defined(MOZ_WIDGET_QT)
-// X11/X.h has #define CursorShape 0, but Qt's qnamespace.h defines
-//   enum CursorShape { ... }.  Good times!
-#  undef CursorShape
-#  include <QX11Info>
-#else
-#  error Implement me for your toolkit
-#endif
-
 #include "npapi.h"
+
+#include "mozilla/X11Util.h"
 
 namespace mozilla {
 
@@ -115,39 +106,16 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
     }
 
 private:
-    static Display* GetXDisplay(const XAnyEvent& ev)
-    {
-        // TODO: get Display* from Window in |ev|
-
-        // FIXME: do this using Xlib
-#if defined(MOZ_WIDGET_GTK2)
-        return GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-        return QX11Info::display();
-#endif
-    }
-
-    static Display* GetXDisplay(const XErrorEvent& ev)
-    {
-        // TODO: get Display* from Window in |ev|
-
-        // FIXME: do this using Xlib
-#if defined(MOZ_WIDGET_GTK2)
-        return GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-        return QX11Info::display();
-#endif
-    }
-
     static void SetXDisplay(XEvent& ev)
     {
+        Display* display = mozilla::DefaultXDisplay();
         if (ev.type >= KeyPress) {
-            ev.xany.display = GetXDisplay(ev.xany);
+            ev.xany.display = display;
         }
         else {
             // XXX assuming that this is an error event
             // (type == 0? not clear from Xlib.h)
-            ev.xerror.display = GetXDisplay(ev.xerror);
+            ev.xerror.display = display;
         }
     }
 };

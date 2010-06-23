@@ -68,6 +68,8 @@ public:
 
     void PostEvent(mozilla::AndroidGeckoEvent *event);
     void RemoveNextEvent();
+    void OnResume();
+
 protected:
     virtual void ScheduleNativeEventCallback();
     virtual ~nsAppShell();
@@ -75,7 +77,9 @@ protected:
     int mNumDraws;
     PRLock *mQueueLock;
     PRLock *mCondLock;
+    PRLock *mPausedLock;
     PRCondVar *mQueueCond;
+    PRCondVar *mPaused;
     nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
 
     mozilla::AndroidGeckoEvent *GetNextEvent();

@@ -79,6 +79,11 @@ button[type="menu-button"] {
   border: none;
 }
 
+.button-menubutton-button {
+  -moz-appearance: none;
+  margin: 0;
+}
+
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
   -moz-appearance: none !important;

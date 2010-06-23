@@ -127,6 +127,9 @@ extern "C" {
 #include "gfxPlatformGtk.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "Layers.h"
+#include "LayerManagerOGL.h"
+#include "GLContextProvider.h"
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
@@ -714,6 +717,9 @@ nsWindow::Destroy(void)
 {
     if (mIsDestroyed || !mCreated)
         return NS_OK;
+
+    /** Need to clean our LayerManager up while still alive */
+    mLayerManager = NULL;
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
@@ -2354,6 +2360,17 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return TRUE;
     }
 
+    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
+    {
+        mozilla::layers::LayerManagerOGL *manager = static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager());
+        manager->SetClippingRegion(event.region);
+
+        nsEventStatus status;
+        DispatchEvent(&event, status);
+        g_free(rects);
+        return TRUE;
+    }
+            
     nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
     if (NS_UNLIKELY(!ctx)) {
         g_free(rects);
@@ -6747,6 +6764,25 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
     return result;
 }
 #endif
+
+mozilla::layers::LayerManager*
+nsWindow::GetLayerManager()
+{
+    GtkWidget *topWidget;
+    GetToplevelWidget(&topWidget);
+
+    nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
+    if (!topWindow) {
+        return nsBaseWidget::GetLayerManager();
+    }
+
+    if (mUseAcceleratedRendering != topWindow->GetAcceleratedRendering()) {
+        mLayerManager = NULL;
+        mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
+    }
+
+    return nsBaseWidget::GetLayerManager();
+}
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*

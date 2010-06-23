@@ -55,7 +55,7 @@
 
 <stringbundle id="configBundle" src="chrome://global/locale/config.properties"/>
 
-<popup id="configContext" onpopupshowing="if (event.target == this) updateContextMenu();">
+<menupopup id="configContext" onpopupshowing="if (event.target == this) updateContextMenu();">
   <menuitem id="toggleSelected" default="true"
             label="&toggle.label;" accesskey="&toggle.accesskey;"
             oncommand="ModifySelected();"/>
@@ -74,7 +74,7 @@
     </menupopup>
   </menu>
   <menuitem id="resetSelected" label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
-</popup>
+</menupopup>
 
 <keyset id="configTreeKeyset" disabled="true">
   <key keycode="VK_ENTER" oncommand="ModifySelected();"/>

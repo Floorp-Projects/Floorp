@@ -3080,6 +3080,10 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     
     // make sure we can put a list here
+    if (!mHTMLEditor->CanContainTag(parent, *aListType)) {
+      *aCancel = PR_TRUE;
+      return NS_OK;
+    }
     res = SplitAsNeeded(aListType, address_of(parent), &offset);
     NS_ENSURE_SUCCESS(res, res);
     res = mHTMLEditor->CreateNode(*aListType, parent, offset, getter_AddRefs(theList));
@@ -4539,6 +4543,10 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
       node->GetParentNode(getter_AddRefs(tmp));
       node = tmp;
     }
+    if (!mHTMLEditor->IsContainer(node))
+    {
+      return NS_OK;
+    }
     nsCOMPtr<nsIDOMNode> newNode;
     nsCOMPtr<nsIDOMText> nodeAsText;
     res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
@@ -5727,11 +5735,12 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
       PRBool bIsEmptyNode = PR_FALSE;
       // check for body
       nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
-      NS_ENSURE_TRUE(rootElement, NS_ERROR_UNEXPECTED);
-      nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
-      if (block != rootNode)
+      nsCOMPtr<nsINode> rootNode = do_QueryInterface(rootElement);
+      nsCOMPtr<nsINode> blockNode = do_QueryInterface(block);
+      NS_ENSURE_TRUE(rootNode && blockNode, NS_ERROR_UNEXPECTED);
+      // Make sure we don't go higher than our root element in the content tree
+      if (!nsContentUtils::ContentIsDescendantOf(rootNode, blockNode))
       {
-        // ok, not body, check if empty
         res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
       }
       if (bIsEmptyNode)

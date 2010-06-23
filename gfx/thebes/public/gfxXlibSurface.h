@@ -71,12 +71,7 @@ public:
 
     virtual ~gfxXlibSurface();
 
-    const gfxIntSize& GetSize() {
-        if (mSize.width == -1 || mSize.height == -1)
-            DoSizeQuery();
-
-        return mSize;
-    }
+    const gfxIntSize& GetSize() { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }

@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: single-block PCM synthesis
- last mod: $Id: synthesis.c 16227 2009-07-08 06:58:46Z xiphmont $
+ last mod: $Id: synthesis.c 17027 2010-03-25 05:21:20Z xiphmont $
 
  ********************************************************************/
 
@@ -47,14 +47,15 @@ int vorbis_synthesis(vorbis_block *vb,ogg_packet *op){
 
   /* read our mode and pre/post windowsize */
   mode=oggpack_read(opb,b->modebits);
-  if(mode==-1) {
+  if(mode==-1){
     return(OV_EBADPACKET);
   }
 
   vb->mode=mode;
-  if(!ci->mode_param[mode]) {
-    return(OV_EBADPACKET); 
+  if(!ci->mode_param[mode]){
+    return(OV_EBADPACKET);
   }
+
   vb->W=ci->mode_param[mode]->blockflag;
   if(vb->W){
 
@@ -62,7 +63,9 @@ int vorbis_synthesis(vorbis_block *vb,ogg_packet *op){
        only for window selection */
     vb->lW=oggpack_read(opb,1);
     vb->nW=oggpack_read(opb,1);
-    if(vb->nW==-1)   return(OV_EBADPACKET);
+    if(vb->nW==-1){
+      return(OV_EBADPACKET);
+    }
   }else{
     vb->lW=0;
     vb->nW=0;
@@ -108,9 +111,14 @@ int vorbis_synthesis_trackonly(vorbis_block *vb,ogg_packet *op){
 
   /* read our mode and pre/post windowsize */
   mode=oggpack_read(opb,b->modebits);
-  if(mode==-1)return(OV_EBADPACKET);
+  if(mode==-1) {
+    return(OV_EBADPACKET);
+  }
 
   vb->mode=mode;
+  if(!ci->mode_param[mode]) {
+    return(OV_EBADPACKET); 
+  }
   vb->W=ci->mode_param[mode]->blockflag;
   if(vb->W){
     vb->lW=oggpack_read(opb,1);

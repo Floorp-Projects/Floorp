@@ -1,0 +1,295 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+
+      request = db.createObjectStore("foo", "", true);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let objectStore = event.result;
+
+      request = objectStore.add({});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let key1 = event.result;
+
+      request = objectStore.modify({}, key1);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key1, "modify gave the same key back");
+
+      let key2 = 10;
+
+      request = objectStore.addOrModify({}, key2);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key2, "modify gave the same key back");
+
+      key2 = 100;
+
+      request = objectStore.add({}, key2);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key2, "modify gave the same key back");
+
+      try {
+        objectStore.addOrModify({});
+        ok(false, "addOrModify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "addOrModify with no key threw");
+      }
+
+      try {
+        objectStore.modify({});
+        ok(false, "modify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "modify with no key threw");
+      }
+
+      try {
+        objectStore.remove();
+        ok(false, "remove with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "remove with no key threw");
+      }
+
+      request = db.createObjectStore("bar", "", false);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      objectStore = event.result;
+
+      try {
+        objectStore.add({});
+        ok(false, "add with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with no key threw");
+      }
+
+      try {
+        objectStore.addOrModify({});
+        ok(false, "addOrModify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "addOrModify with no key threw");
+      }
+
+      try {
+        objectStore.modify({});
+        ok(false, "modify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "modify with no key threw");
+      }
+
+      try {
+        objectStore.remove();
+        ok(false, "remove with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "remove with no key threw");
+      }
+
+      request = db.createObjectStore("baz", "id", false);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      objectStore = event.result;
+
+      try {
+        objectStore.add({});
+        ok(false, "add with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with no key threw");
+      }
+
+      try {
+        objectStore.addOrModify({});
+        ok(false, "addOrModify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "addOrModify with no key threw");
+      }
+
+      try {
+        objectStore.modify({});
+        ok(false, "modify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "modify with no key threw");
+      }
+
+      try {
+        objectStore.remove();
+        ok(false, "remove with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "remove with no key threw");
+      }
+
+      key1 = 10;
+
+      request = objectStore.add({id:key1});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key1, "add gave back the same key");
+
+      request = objectStore.modify({id:10});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key1, "modify gave back the same key");
+
+      request = objectStore.addOrModify({id:10});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key1, "addOrModify gave back the same key");
+
+      request = objectStore.add({id:10});
+      request.onerror = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      yield;
+
+      request = objectStore.add({}, null);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(typeof(event.result), "string", "Good generated key");
+
+      try {
+        objectStore.modify({}, null);
+        ok(false, "modify with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "modify with null key threw");
+      }
+
+      try {
+        objectStore.addOrModify({}, null);
+        ok(false, "addOrModify with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "addOrModify with null key threw");
+      }
+
+      try {
+        objectStore.remove({}, null);
+        ok(false, "remove with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "remove with null key threw");
+      }
+
+      request = db.createObjectStore("bazing", "id", true);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      objectStore = event.result;
+
+      request = objectStore.add({});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      key1 = event.result;
+
+      request = objectStore.modify({id:key1});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key1, "modify gave the same key back");
+
+      key2 = 10;
+
+      request = objectStore.addOrModify({id:key2});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key2, "modify gave the same key back");
+
+      try {
+        objectStore.addOrModify({});
+        ok(false, "addOrModify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "addOrModify with no key threw");
+      }
+
+      try {
+        objectStore.modify({});
+        ok(false, "modify with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "modify with no key threw");
+      }
+
+      try {
+        objectStore.remove();
+        ok(false, "remove with no key should throw!");
+      }
+      catch (e) {
+        ok(true, "remove with no key threw");
+      }
+
+      request = objectStore.remove(key2);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

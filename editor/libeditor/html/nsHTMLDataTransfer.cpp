@@ -2705,10 +2705,15 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
   nsCOMPtr<nsIFragmentContentSink> fragSink(do_QueryInterface(sink));
   NS_ENSURE_TRUE(fragSink, NS_ERROR_FAILURE);
 
-  // Allow style elements and attributes
   nsCOMPtr<nsIParanoidFragmentContentSink> paranoidSink(do_QueryInterface(sink));
   NS_ASSERTION(paranoidSink, "Our content sink is paranoid");
-  paranoidSink->AllowStyles();
+  if (bContext) {
+    // Allow comemnts for the context to catch our placeholder cookie
+    paranoidSink->AllowComments();
+  } else {
+    // Allow style elements and attributes for the actual content
+    paranoidSink->AllowStyles();
+  }
 
   fragSink->SetTargetDocument(aTargetDocument);
 

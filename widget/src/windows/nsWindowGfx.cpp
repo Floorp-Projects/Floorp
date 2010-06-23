@@ -416,7 +416,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
-          if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) && eTransparencyTransparent == mTransparencyMode) {
+          if ((IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) &&
+              eTransparencyTransparent == mTransparencyMode) {
             if (mTransparentSurface == nsnull)
               SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
             targetSurface = mTransparentSurface;
@@ -545,7 +547,8 @@ DDRAW_FAILED:
           }
 
 #ifdef MOZ_XUL
-          if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) &&
+          if ((IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))&&
               eTransparencyTransparent == mTransparencyMode) {
             // Data from offscreen drawing surface was copied to memory bitmap of transparent
             // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
