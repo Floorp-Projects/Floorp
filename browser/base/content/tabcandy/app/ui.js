@@ -66,33 +66,7 @@ Navbar = {
     }
 
     return null;    
-  },
-
-  // ----------
-  show: function() {    
-    var el = this.el;
-    if(el)
-      el.collapsed = false; 
-    else { // needs a little longer to get going
-      var self = this;
-      iQ.timeout(function() {
-        self.show();
-      }, 300); 
-    }
-  },
-
-  // ----------
-  hide: function() {    
-    var el = this.el;
-    if(el)
-      el.collapsed = true; 
-    else { // needs a little longer to get going
-      var self = this;
-      iQ.timeout(function() {
-        self.hide();
-      }, 300); 
-    }
-  },
+  }
 };
 
 // ##########
@@ -114,17 +88,6 @@ var Tabbar = {
   // ----------
   get height() {
     return window.Tabs[0].raw.parentNode.getBoundingClientRect().height;
-  },
-
-  // ----------
-  hide: function() {
-    var self = this;
-    self.el.collapsed = true;    
-  },
-
-  // ----------
-  show: function() {
-    this.el.collapsed = false;
   },
   
   // ----------
@@ -199,10 +162,7 @@ var Tabbar = {
       var tab = this.el.children[i];
       tab.collapsed = false;
     }
-  },
-
-  // ----------
-  get isHidden(){ return this.el.collapsed; }
+  }
 }
 
 // ##########
@@ -213,34 +173,64 @@ window.Page = {
   startY: 70,
   
   show: function(){
-    Utils.homeTab.focus();
     this.hideChrome();
   },
-  
+
   isTabCandyFocused: function(){
-    return Utils.homeTab.contentDocument == UI.currentTab.contentDocument;    
+    return !Utils.getCurrentWindow().document.getElementById("tab-candy").hidden;
   },
   
   hideChrome: function(){
-    Tabbar.hide();
-    Navbar.hide();
-    window.statusbar.visible = false;  
-        
+    let currentWin = Utils.getCurrentWindow();
+    currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;
+
     // Mac Only
-    Utils.getCurrentWindow().document.getElementById("main-window").setAttribute("activetitlebarcolor", "#C4C4C4");
+    Utils.getCurrentWindow().document.getElementById("main-window").
+      setAttribute("activetitlebarcolor", "#C4C4C4");
   },
   
   showChrome: function(){
-    Tabbar.show();  
-    Navbar.show();    
-    window.statusbar.visible = true;
-    
+    let currentWin = Utils.getCurrentWindow();
+    currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
+
     this.setCloseButtonOnTabs();
     
     // Mac Only
-    Utils.getCurrentWindow().document.getElementById("main-window").removeAttribute("activetitlebarcolor");     
+    Utils.getCurrentWindow().document.getElementById("main-window").
+      removeAttribute("activetitlebarcolor");
   },
+
+  showTabCandy : function() {
+    let self = this;
+
+    let currentTab = UI.currentTab;
+    let item = null;
+
+    if(currentTab && currentTab.mirror)
+      item = TabItems.getItemByTabElement(currentTab.mirror.el);
+
+    if(item) {
+      // If there was a previous currentTab we want to animate
+      // its mirror for the zoom out.
+      // Note that we start the animation on the chrome thread.
+
+      // Zoom out!
+      item.zoomOut(function() {
+        if(!currentTab.mirror) // if the tab's been destroyed
+          item = null;
+
+        self.setActiveTab(item);
+
+        let activeGroup = Groups.getActiveGroup();
+        if( activeGroup )
+          activeGroup.setTopChild(item);
   
+        window.Groups.setActiveGroup(null);
+        UI.resize(true);
+      });
+    }
+  },
+
   setCloseButtonOnTabs : function() {
     // TODO: we will need to modify the adjustTabstrip() to fix this when merging
     // this extension to Firefox.
@@ -292,7 +282,6 @@ window.Page = {
         case 38: // Up
           norm = function(a, me){return a.y < me.y}
           break;
-        case 49: // Command-1
         case 69: // Command-E
           if( Keys.meta ) if( self.getActiveTab() ) self.getActiveTab().zoomIn();
           break;
@@ -324,10 +313,13 @@ window.Page = {
         
     // When you click on the background/empty part of TabCandy
     // we create a new group.
-    iQ(Utils.homeTab.contentDocument).mousedown(function(e){
+    let tabCandyContentDoc =
+      Utils.getCurrentWindow().document.getElementById("tab-candy").
+        contentDocument;
+    iQ(tabCandyContentDoc).mousedown(function(e){
       if( e.originalTarget.id == "bg" )
         Page.createGroupOnDrag(e)
-    })
+    });
 
     this.setupKeyHandlers();
         
@@ -364,71 +356,39 @@ window.Page = {
       var focusTab = this;
       var currentTab = UI.currentTab;
       
-      // If we switched to TabCandy window...
-      if( focusTab.contentWindow == window ){
-        UI.focused = true;
-        Page.hideChrome();
+      Page.showChrome();
 
-        var item = null;
-        if(currentTab && currentTab.mirror)
-          item = TabItems.getItemByTabElement(currentTab.mirror.el);
-        
-        if(item) {
-          // If there was a previous currentTab we want to animate
-          // its mirror for the zoom out.
-          // Note that we start the animation on the chrome thread.
-          
-          // Zoom out!
-          item.zoomOut(function() {
-            if(!currentTab.mirror) // if the tab's been destroyed 
-              item = null;
-            
-            self.setActiveTab(item);
-            
-            var activeGroup = Groups.getActiveGroup();
-            if( activeGroup )
-              activeGroup.setTopChild(item);        
-    
-            window.Groups.setActiveGroup(null);
-            UI.resize(true);
-          });
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+        if(focusTab != UI.currentTab) {
+          // things have changed while we were in timeout
+          return;
         }
-      } else { // switched to another tab
-        UI.focused = false;
-        Page.showChrome();
 
-        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-          if(focusTab != UI.currentTab) // things have changed while we were in timeout
-            return;
-            
-          var newItem = null;
-          if(focusTab && focusTab.mirror)
-            newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
+        let newItem = null;
+        if(focusTab && focusTab.mirror)
+          newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
 
-          if(newItem) 
-            Groups.setActiveGroup(newItem.parent);
-            
-          UI.tabBar.show();  
-          
-          // ___ prepare for when we return to TabCandy
-          var oldItem = null;
-          if(currentTab && currentTab.mirror)
-            oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
-            
-          if(newItem != oldItem) {
-            if(oldItem)
-              oldItem.setZoomPrep(false);
+        if(newItem)
+          Groups.setActiveGroup(newItem.parent);
 
-            if(newItem)
-              newItem.setZoomPrep(true);
-          }
-        }, 1);
-      }
-      
+        // ___ prepare for when we return to TabCandy
+        let oldItem = null;
+        if(currentTab && currentTab.mirror)
+          oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+
+        if(newItem != oldItem) {
+          if(oldItem)
+            oldItem.setZoomPrep(false);
+
+          if(newItem)
+            newItem.setZoomPrep(true);
+        }
+      }, 1);
+        
       UI.currentTab = focusTab;
     });
   },
-  
+
   // ----------  
   createGroupOnDrag: function(e){
 /*     e.preventDefault(); */
@@ -554,9 +514,9 @@ window.Page = {
 // Class: UIClass
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass(){ 
-  if(window.Tabs) 
+  if(window.Tabs)
     this.init();
-  else { 
+  else {
     var self = this;
     TabsManager.addSubscriber(this, 'load', function() {
       self.init();
@@ -587,10 +547,6 @@ UIClass.prototype = {
       // Used to facilitate zooming down from a previous tab. 
       this.currentTab = Utils.activeTab;
       
-      // Variable: focused
-      // Keeps track of whether Tab Candy is focused. 
-      this.focused = (Utils.activeTab == Utils.homeTab);
-      
       var self = this;
       
       this.setBrowserKeyHandler();
@@ -601,19 +557,13 @@ UIClass.prototype = {
       iQ("#reset").click(function(){
         self.reset();
       });
-      
-      // ___ Navbar
-      if(this.focused) {
-        Page.hideChrome();
-      }
-      
+
       Tabs.onOpen(function(a, b) {
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-          self.navBar.show();
           Page.setCloseButtonOnTabs();
         }, 1);
       });
-    
+
       iQ(window).bind('beforeunload', function() {
         // Things may not all be set up by now, so check for everything
         if(self.showChrome)
@@ -624,50 +574,60 @@ UIClass.prototype = {
       });
       
       // ___ Page
-      var currentWindow = Utils.getCurrentWindow();
+      let currentWindow = Utils.getCurrentWindow();
       Page.init();
       currentWindow.addEventListener(
+        "tabcandyshow", function() {
+          Page.hideChrome();
+          Page.showTabCandy();
+        }, false)
+      currentWindow.addEventListener(
+        "tabcandyhide", function() { Page.showChrome(); }, false)
+      currentWindow.addEventListener(
         "resize", function() { Page.setCloseButtonOnTabs(); }, false)
-      
+
       // ___ Storage
-      var data = Storage.readUIData(currentWindow);
-      this.storageSanity(data);
-       
-      var groupsData = Storage.readGroupsData(currentWindow);
-      var firstTime = !groupsData || iQ.isEmptyObject(groupsData);
-      var groupData = Storage.readGroupData(currentWindow);
-      Groups.reconstitute(groupsData, groupData);
-      
-      TabItems.init();
-      
-      if(firstTime) {
-        var items = TabItems.getItems();
-        iQ.each(items, function(index, item) {
-          if(item.parent)
-            item.parent.remove(item);
+      // the session store isn't ready when browser starts so a delay is used.
+      iQ.timeout(function(){
+        let data = Storage.readUIData(currentWindow);
+        self.storageSanity(data);
+
+        let groupsData = Storage.readGroupsData(currentWindow);
+        let firstTime = !groupsData || iQ.isEmptyObject(groupsData);
+        let groupData = Storage.readGroupData(currentWindow);
+        Groups.reconstitute(groupsData, groupData);
+
+        TabItems.init();
+
+        if(firstTime) {
+          let items = TabItems.getItems();
+          iQ.each(items, function(index, item) {
+            if(item.parent)
+              item.parent.remove(item);
+          });
+
+          let box = Items.getPageBounds();
+          box.inset(10, 10);
+          let options = {padding: 10};
+          Items.arrange(items, box, options);
+        } else
+          TabItems.reconstitute();
+
+        // ___ resizing
+        if(data.pageBounds) {
+          self.pageBounds = data.pageBounds;
+          self.resize(true);
+        } else
+          self.pageBounds = Items.getPageBounds();
+
+        iQ(window).resize(function() {
+          self.resize();
         });
-            
-        var box = Items.getPageBounds();
-        box.inset(10, 10);
-        var options = {padding: 10};
-        Items.arrange(items, box, options);
-      } else
-        TabItems.reconstitute();
-      
-      // ___ resizing
-      if(data.pageBounds) {
-        this.pageBounds = data.pageBounds;
-        this.resize(true);
-      } else 
-        this.pageBounds = Items.getPageBounds();    
-      
-      iQ(window).resize(function() {
-        self.resize();
-      });
-            
-      // ___ Done
-      this.initialized = true;
-      this.save(); // for this.pageBounds
+
+        // ___ Done
+        self.initialized = true;
+        self.save(); // for this.pageBounds
+      }, 100);
     }catch(e) {
       Utils.log("Error in UIClass(): " + e);
       Utils.log(e.fileName);
@@ -1056,4 +1016,3 @@ UIClass.prototype = {
 window.UI = new UIClass();
 
 })();
-

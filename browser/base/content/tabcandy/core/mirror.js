@@ -208,8 +208,9 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
 // Class: TabMirror
 // A singleton that manages all of the <Mirror>s in the system.
 var TabMirror = function() {
-  if(window.Tabs) 
+  if(window.Tabs) {
     this.init();
+  }
   else { 
     var self = this;
     TabsManager.addSubscriber(this, 'load', function() {
@@ -224,7 +225,7 @@ TabMirror.prototype = {
   // Set up the necessary tracking to maintain the <Mirror>s.
   init: function(){
     var self = this;
-        
+
     // When a tab is opened, create the mirror
     Tabs.onOpen(function() { 
       var tab = this;
@@ -240,7 +241,7 @@ TabMirror.prototype = {
         self.update(tab);
       }, 1);
     });
-    
+
     // When a tab is closed, unlink.    
     Tabs.onClose( function(){
       var tab = this;
@@ -248,15 +249,15 @@ TabMirror.prototype = {
         self.unlink(tab);
       }, 1);
     });
-    
+
     // For each tab, create the link.
     Tabs.forEach(function(tab){
       self.link(tab);
-    });    
-     
+    });
+
     this.paintingPaused = 0;
     this.heartbeatIndex = 0;  
-    this._fireNextHeartbeat();    
+    this._fireNextHeartbeat();
   },
   
   _heartbeat: function() {
