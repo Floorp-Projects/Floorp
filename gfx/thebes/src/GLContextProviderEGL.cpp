@@ -601,17 +601,15 @@ GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
     }
 
 
-    if (aCreateContext) {
-        EGLint cxattribs[] = {
-            LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
-            LOCAL_EGL_NONE
-        };
+    EGLint cxattribs[] = {
+        LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
+        LOCAL_EGL_NONE
+    };
 
-        context = sEGLLibrary.fCreateContext(display, configs[i], 0, cxattribs);
-        if (!context) {
-            sEGLLibrary.fDestroySurface(display, surface);
-            return nsnull;
-        }
+    context = sEGLLibrary.fCreateContext(display, configs[i], 0, cxattribs);
+    if (!context) {
+        sEGLLibrary.fDestroySurface(display, surface);
+        return nsnull;
     }
 
     nsRefPtr<GLContextEGL> glContext =
