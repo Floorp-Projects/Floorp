@@ -58,6 +58,8 @@
 #include "nsURLHelper.h"
 #include "nsEscape.h"
 
+#include "mozilla/Omnijar.h"
+
 static NS_DEFINE_CID(kResURLCID, NS_RESURL_CID);
 
 static nsResProtocolHandler *gResHandler = nsnull;
