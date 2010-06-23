@@ -65,9 +65,11 @@ SimpleTest.waitForExplicitFinish();
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-const HELPERAPP_DIALOG_CID = "@mozilla.org/helperapplauncherdialog;1";
-const HELPERAPP_DIALOG_ID = Components.ID(Components.classes[HELPERAPP_DIALOG_CID].number);
-const HELPERAPP_DIALOG_DESCRIPTION = "Helper App Dialog Test Service";
+const HELPERAPP_DIALOG_CONTRACT = "@mozilla.org/helperapplauncherdialog;1";
+const HELPERAPP_DIALOG_CID = Components.ID(Components.classes[HELPERAPP_DIALOG_CONTRACT].number);
+
+const FAKE_CID = Components.classes["@mozilla.org/uuid-generator;1"].
+  getService(Components.interfaces.nsIUUIDGenerator).generateUUID();
 
 function HelperAppLauncherDialog() {}
 HelperAppLauncherDialog.prototype = {
@@ -102,18 +104,20 @@ var factory = {
   }
 };
 
+dump("RegisterFactory...\n");
 Components.manager
           .QueryInterface(Components.interfaces.nsIComponentRegistrar)
-          .registerFactory(HELPERAPP_DIALOG_ID,
-                           HELPERAPP_DIALOG_DESCRIPTION,
-                           HELPERAPP_DIALOG_CID,
+          .registerFactory(FAKE_CID, "",
+                           HELPERAPP_DIALOG_CONTRACT,
                            factory);
 
 function finish_test() {
+  dump("UnregisterFactory...\n");
   Components.manager
             .QueryInterface(Components.interfaces.nsIComponentRegistrar)
-            .unregisterFactory(HELPERAPP_DIALOG_ID,
-                               factory);
+            .registerFactory(HELPERAPP_DIALOG_CID, "",
+                             HELPERAPP_DIALOG_CONTRACT,
+                             null);
   SimpleTest.finish();
 }
 
