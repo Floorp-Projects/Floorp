@@ -55,7 +55,6 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include "gfxASurface.h"
 #include "gfxXlibSurface.h"
 typedef Display *EGLNativeDisplayType;
 typedef Pixmap   EGLNativePixmapType;
@@ -81,6 +80,7 @@ typedef void *EGLNativeWindowType;
 
 #endif
 
+#include "gfxASurface.h"
 #include "GLContextProvider.h"
 #include "nsDebug.h"
 
