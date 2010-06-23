@@ -516,4 +516,11 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp);
 
 JS_END_EXTERN_C
 
+namespace js {
+
+extern JSString *
+fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
+
+}
+
 #endif /* jsfun_h___ */

@@ -1136,7 +1136,7 @@ struct GCPtrHasher
     static HashNumber hash(void *key) {
         return HashNumber(uintptr_t(key) >> JSVAL_TAGBITS);
     }
-    
+
     static bool match(void *l, void *k) {
         return l == k;
     }
@@ -1144,15 +1144,45 @@ struct GCPtrHasher
 
 typedef HashMap<void *, const char *, GCPtrHasher, SystemAllocPolicy> GCRoots;
 typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
-                
+
+struct WrapperHasher
+{
+    typedef jsval Lookup;
+    
+    static HashNumber hash(jsval key) {
+        return GCPtrHasher::hash(JSVAL_TO_GCTHING(key));
+    }
+
+    static bool match(jsval l, jsval k) {
+        return l == k;
+    }
+};
+
+typedef HashMap<jsval, jsval, WrapperHasher, SystemAllocPolicy> WrapperMap;
+
+class AutoValueVector;
+
 } /* namespace js */
 
 struct JSCompartment {
     JSRuntime *rt;
     bool marked;
+    js::WrapperMap crossCompartmentWrappers;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
+
+    bool init();
+
+    bool wrap(JSContext *cx, jsval *vp);
+    bool wrap(JSContext *cx, JSString **strp);
+    bool wrap(JSContext *cx, JSObject **objp);
+    bool wrapId(JSContext *cx, jsid *idp);
+    bool wrap(JSContext *cx, JSPropertyDescriptor *desc);
+    bool wrap(JSContext *cx, js::AutoValueVector &props);
+    bool wrapException(JSContext *cx);
+
+    void sweep(JSContext *cx);
 };
 
 struct JSRuntime {
@@ -2153,24 +2183,6 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 }
 
 namespace js {
-
-class AutoNewCompartment {
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JS_FRIEND_API(AutoNewCompartment(JSContext *cx));
-    JS_FRIEND_API(~AutoNewCompartment());
-
-    JS_FRIEND_API(bool) init();
-};
-
-class AutoCompartment {
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JS_FRIEND_API(AutoCompartment(JSContext *cx, JSObject *obj));
-    JS_FRIEND_API(~AutoCompartment());
-};
 
 class AutoGCRooter {
   public:

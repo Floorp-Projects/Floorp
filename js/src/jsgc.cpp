@@ -2789,12 +2789,6 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
             static_cast<JSEmptyScope *>(scope)->dropFromGC(cx);
         else
             scope->destroy(cx);
-    } else {
-        if (obj->isProxy()) {
-            jsval handler = obj->getProxyHandler();
-            if (JSVAL_IS_PRIMITIVE(handler))
-                ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->finalize(cx, obj);
-        }
     }
     if (obj->hasSlotsArray())
         obj->freeSlotsArray(cx);
@@ -3204,6 +3198,27 @@ BackgroundSweepTask::run()
 
 #endif /* JS_THREADSAFE */
 
+static void
+SweepCompartments(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    JSCompartment **read = rt->compartments.begin();
+    JSCompartment **end = rt->compartments.end();
+    JSCompartment **write = read;
+    while (read < end) {
+        JSCompartment *compartment = (*read++);
+        if (compartment->marked) {
+            compartment->marked = false;
+            *write++ = compartment;
+            /* Remove dead wrappers from the compartment map. */
+            compartment->sweep(cx);
+        } else {
+            delete compartment;
+        }
+    }
+    rt->compartments.resize(write - rt->compartments.begin());
+}
+
 /*
  * Common cache invalidation and so forth that must be done before GC. Even if
  * GCUntilDone calls GC several times, this work only needs to be done once.
@@ -3370,7 +3385,7 @@ GC(JSContext *cx  GCTIMER_PARAM)
     SweepDoubles(rt);
     TIMESTAMP(sweepDoubleEnd);
 
-    js::SweepCompartments(cx);
+    SweepCompartments(cx);
 
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
@@ -3793,7 +3808,7 @@ NewCompartment(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = new JSCompartment(rt);
-    if (!compartment) {
+    if (!compartment || !compartment->init()) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
@@ -3807,26 +3822,6 @@ NewCompartment(JSContext *cx)
     }
 
     return compartment;
-}
-
-void
-SweepCompartments(JSContext *cx)
-{
-    JSRuntime *rt = cx->runtime;
-    JSCompartment **read = rt->compartments.begin();
-    JSCompartment **end = rt->compartments.end();
-    JSCompartment **write = read;
-    while (read < end) {
-        JSCompartment *compartment = (*read);
-        if (compartment->marked) {
-            compartment->marked = false;
-            *write++ = compartment;
-        } else {
-            delete compartment;
-        }
-        ++read;
-    }
-    rt->compartments.resize(write - rt->compartments.begin());
 }
 
 }

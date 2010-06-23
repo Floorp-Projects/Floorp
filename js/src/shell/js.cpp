@@ -216,6 +216,15 @@ JS_EXTERN_API(void)     add_history(char *line);
 JS_END_EXTERN_C
 #endif
 
+static void
+ReportException(JSContext *cx)
+{
+    if (JS_IsExceptionPending(cx)) {
+        if (!JS_ReportPendingException(cx))
+            JS_ClearPendingException(cx);
+    }
+}
+
 class ToString {
 public:
     ToString(JSContext *aCx, jsval v, JSBool aThrow = JS_FALSE)
@@ -223,10 +232,8 @@ public:
     , mThrow(aThrow)
     {
         mStr = JS_ValueToString(cx, v);
-        if (!aThrow && !mStr && JS_IsExceptionPending(cx)) {
-            if (!JS_ReportPendingException(cx))
-                JS_ClearPendingException(cx);
-        }
+        if (!aThrow && !mStr)
+            ReportException(cx);
         JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
     ~ToString() {
@@ -1647,10 +1654,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             if (str) {
               bytes = JS_GetStringBytes(str);
             } else {
-              if (JS_IsExceptionPending(cx)) {
-                if (!JS_ReportPendingException(cx))
-                  JS_ClearPendingException(cx);
-              }
+              ReportException(cx);
               bytes = "N/A";
             }
             fprintf(gOutFile, " function %u (%s)", index, bytes);
@@ -2268,10 +2272,7 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (tmpstr) {
         func = JS_GetStringBytes(tmpstr);
     } else {
-        if (JS_IsExceptionPending(cx)) {
-            if (!JS_ReportPendingException(cx))
-                JS_ClearPendingException(cx);
-        }
+        ReportException(cx);
         func = "error decompiling fun";
     }
     fprintf(gOutFile,
@@ -2926,98 +2927,100 @@ static JSClass sandbox_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+static JSObject *
+NewSandbox(JSContext *cx, bool lazy, bool split)
+{
+    JSObject *obj = JS_NewCompartmentAndGlobalObject(cx, &sandbox_class);
+    if (!obj)
+        return NULL;
+
+    JSCrossCompartmentCall *call = JS_EnterCrossCompartmentCall(cx, obj);
+    if (!call)
+        return NULL;
+
+    bool ok = true;
+    if (split) {
+        obj = split_setup(cx, JS_TRUE);
+        ok = !!obj;
+    }
+    if (!lazy)
+        ok = ok && JS_InitStandardClasses(cx, obj);
+
+    AutoValueRooter root(cx, BOOLEAN_TO_JSVAL(lazy));
+    ok = ok && JS_SetProperty(cx, obj, "lazy", root.addr());
+    if (ok && split)
+        obj = split_outerObject(cx, obj);
+
+    JS_LeaveCrossCompartmentCall(call);
+    if (!ok)
+        return NULL;
+
+    AutoObjectRooter objroot(cx, obj);
+    if (!cx->compartment->wrap(cx, objroot.addr()))
+        return NULL;
+    return objroot.object();
+}
+
 static JSBool
 EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
+    bool ok;
     JSString *str;
-    JSObject *sobj;
-    JSContext *scx;
-    const jschar *src;
-    size_t srclen;
-    JSBool lazy, split, ok;
-    JSStackFrame *fp;
-
-    sobj = NULL;
+    JSObject *sobj = NULL;
     if (!JS_ConvertArguments(cx, argc, argv, "S / o", &str, &sobj))
-        return JS_FALSE;
+        return false;
 
-    scx = NewContext(JS_GetRuntime(cx));
-    if (!scx) {
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
-    }
-    JS_SetOptions(scx, JS_GetOptions(cx));
-
-    JS_TransferRequest(cx, scx);
-    src = JS_GetStringChars(str);
-    srclen = JS_GetStringLength(str);
-    split = lazy = JS_FALSE;
+    const jschar *src = JS_GetStringChars(str);
+    size_t srclen = JS_GetStringLength(str);
+    bool split = false, lazy = false;
     if (srclen == 4) {
         if (src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
-            lazy = JS_TRUE;
+            lazy = true;
             srclen = 0;
         }
     } else if (srclen == 5) {
         if (src[0] == 's' && src[1] == 'p' && src[2] == 'l' && src[3] == 'i' && src[4] == 't') {
-            split = lazy = JS_TRUE;
+            split = lazy = true;
             srclen = 0;
         }
     }
 
     if (!sobj) {
-        sobj = split
-               ? split_setup(scx, JS_TRUE)
-               : JS_NewGlobalObject(scx, &sandbox_class);
-        if (!sobj || (!lazy && !JS_InitStandardClasses(scx, sobj))) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        AutoValueRooter root(scx, BOOLEAN_TO_JSVAL(lazy));
-        ok = JS_SetProperty(scx, sobj, "lazy", root.addr());
-        if (!ok)
-            goto out;
-        if (split)
-            sobj = split_outerObject(scx, sobj);
+        sobj = NewSandbox(cx, lazy, split);
+        if (!sobj)
+            return false;
     }
 
-    if (srclen == 0) {
-        *rval = OBJECT_TO_JSVAL(sobj);
-        ok = JS_TRUE;
-    } else {
-        fp = JS_GetScriptedCaller(cx, NULL);
-        JS_SetGlobalObject(scx, sobj);
-        JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
-        OBJ_TO_INNER_OBJECT(scx, sobj);
-        if (!sobj) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
-            JS_TransferRequest(scx, cx);
-            JS_ReportError(cx, "Invalid scope argument to evalcx");
-            DestroyContext(scx, false);
-            return JS_FALSE;
-        }
+    *rval = OBJECT_TO_JSVAL(sobj);
+    if (srclen == 0)
+        return true;
 
-        ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
-                                 fp->script->filename,
-                                 JS_PCToLineNumber(cx, fp->script,
-                                                   fp->pc(cx)),
-                                 rval);
+    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+    JSCrossCompartmentCall *call = NULL;
+    if (sobj->isCrossCompartmentWrapper()) {
+        sobj = sobj->unwrap();
+        call = JS_EnterCrossCompartmentCall(cx, sobj);
+        if (!call)
+            return false;
     }
 
-out:
-    jsval exceptionValue = JSVAL_NULL;
-    JSBool exception = !ok && JS_GetPendingException(scx, &exceptionValue);
+    OBJ_TO_INNER_OBJECT(cx, sobj);
+    ok = !!sobj;
+    if (ok && !(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+        JS_ReportError(cx, "Invalid scope argument to evalcx");
+        ok = false;
+    }
+    ok = ok && JS_EvaluateUCScript(cx, sobj, src, srclen,
+                                   fp->script->filename,
+                                   JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
+                                   rval);
 
-    JS_TransferRequest(scx, cx);
-    if (exception)
-        JS_SetPendingException(cx, exceptionValue);
-    else if (!ok)
-        JS_ClearPendingException(cx);
+    if (call) {
+        JS_LeaveCrossCompartmentCall(call);
+        ok = ok && cx->compartment->wrap(cx, rval);
+    }
 
-    DestroyContext(scx, false);
     return ok;
 }
 
@@ -3848,7 +3851,9 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
         return true;
     }
 
-    JSObject *wrapped = JSWrapper::wrap(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
+                                       &JSWrapper::singleton);
     if (!wrapped)
         return false;
 
@@ -4911,36 +4916,53 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx)
+NewGlobalObject(JSContext *cx, JSCrossCompartmentCall **callp)
 {
-    JSObject *glob = JS_NewGlobalObject(cx, &global_class);
+    JSCrossCompartmentCall *call = NULL;
+    JSObject *glob;
+
+    if (callp) {
+        glob = JS_NewCompartmentAndGlobalObject(cx, &global_class);
+        if (!glob)
+            return NULL;
+        call = JS_EnterCrossCompartmentCall(cx, glob);
+        if (!call)
+            return NULL;
+    } else {
+        glob = JS_NewGlobalObject(cx, &global_class);
+        if (!glob)
+            return NULL;
+    }
+
 #ifdef LAZY_STANDARD_CLASSES
     JS_SetGlobalObject(cx, glob);
 #else
     if (!JS_InitStandardClasses(cx, glob))
-        return NULL;
+        goto bad;
 #endif
 #ifdef JS_HAS_CTYPES
     if (!JS_InitCTypesClass(cx, glob))
-        return NULL;
+        goto bad;
 #endif
     if (!JS_DefineFunctions(cx, glob, shell_functions))
-        return NULL;
+        goto bad;
 
-    JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
-    if (!it)
-        return NULL;
-    if (!JS_DefineProperties(cx, it, its_props))
-        return NULL;
-    if (!JS_DefineFunctions(cx, it, its_methods))
-        return NULL;
+    {
+        JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
+        if (!it)
+            goto bad;
+        if (!JS_DefineProperties(cx, it, its_props))
+            goto bad;
+        if (!JS_DefineFunctions(cx, it, its_methods))
+            goto bad;
 
-    if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
-                           its_setter, 0))
-        return NULL;
-    if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
-                           its_setter, JSPROP_READONLY))
-        return NULL;
+        if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
+                               its_setter, 0))
+            goto bad;
+        if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
+                               its_setter, JSPROP_READONLY))
+            goto bad;
+    }
 
 #ifdef NARCISSUS
     {
@@ -4948,39 +4970,43 @@ NewGlobalObject(JSContext *cx)
         static const char Object_prototype[] = "Object.prototype";
 
         if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
-            return NULL;
+            goto bad;
 
         if (!JS_EvaluateScript(cx, glob,
                                Object_prototype, sizeof Object_prototype - 1,
                                NULL, 0, &v)) {
-            return NULL;
+            goto bad;
         }
         if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
                                defineProperty, 5, 0)) {
-            return NULL;
+            goto bad;
         }
     }
 #endif
 
+    if (callp)
+        *callp = call;
     return glob;
+
+bad:
+    if (call)
+        JS_LeaveCrossCompartmentCall(call);
+    return NULL;
 }
 
 int
 shell(JSContext *cx, int argc, char **argv, char **envp)
 {
-    AutoNewCompartment compartment(cx);
-    if (!compartment.init())
-        return 1;
-
     JS_BeginRequest(cx);
 
-    JSObject *glob = NewGlobalObject(cx);
+    JSCrossCompartmentCall *call;
+    JSObject *glob = NewGlobalObject(cx, &call);
     if (!glob)
         return 1;
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
     if (!envobj || !JS_SetPrivate(cx, envobj, envp))
-        return 1;
+        goto bad;
 
 #ifdef JSDEBUGGER
     /*
@@ -4988,7 +5014,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     */
     jsdc = JSD_DebuggerOnForUser(rt, NULL, NULL);
     if (!jsdc)
-        return 1;
+        goto bad;
     JSD_JSContextInUse(jsdc, cx);
 #ifdef JSD_LOWLEVEL_SOURCE
     JS_SetSourceHandler(rt, SendSourceToJSDebugger, jsdc);
@@ -4996,7 +5022,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 #ifdef JSDEBUGGER_JAVA_UI
     jsdjc = JSDJ_CreateContext();
     if (! jsdjc)
-        return 1;
+        goto bad;
     JSDJ_SetJSDContext(jsdjc, jsdc);
     java_env = JSDJ_CreateJavaVMAndStartDebugger(jsdjc);
     /*
@@ -5013,16 +5039,17 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 #ifdef JS_THREADSAFE
     class ShellWorkerHooks : public js::workers::WorkerHooks {
     public:
-        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
+        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx, NULL); }
     };
     ShellWorkerHooks hooks;
     if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
         !js::workers::init(cx, &hooks, glob, &gWorkers)) {
-        return 1;
+        goto bad;
     }
 #endif
 
-    int result = ProcessArgs(cx, glob, argv, argc);
+    int result;
+    result = ProcessArgs(cx, glob, argv, argc);
 
 #ifdef JS_THREADSAFE
     js::workers::finish(cx, gWorkers);
@@ -5041,9 +5068,14 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     }
 #endif  /* JSDEBUGGER */
 
+out:
+    JS_LeaveCrossCompartmentCall(call);
     JS_EndRequest(cx);
-
     return result;
+
+bad:
+    result = 1;
+    goto out;
 }
 
 int

@@ -74,9 +74,13 @@ class JSProxyHandler {
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
     /* Spidermonkey extensions. */
+    virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
+    virtual bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                           uintN argc, jsval *argv, jsval *rval);
+    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
+    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
     virtual void finalize(JSContext *cx, JSObject *proxy);
     virtual void trace(JSTracer *trc, JSObject *proxy);
-    virtual const void *family() = 0;
 };
 
 /* Dispatch point for handlers that executes the appropriate C++ or scripted traps. */
@@ -103,16 +107,21 @@ class JSProxy {
     static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
     static bool enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     static bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
+
+    /* Spidermonkey extensions. */
+    static bool call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
+    static bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                          uintN argc, jsval *argv, jsval *rval);
+    static JSString *obj_toString(JSContext *cx, JSObject *proxy);
+    static JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
 };
 
 /* Shared between object and function proxies. */
 const uint32 JSSLOT_PROXY_HANDLER = JSSLOT_PRIVATE + 0;
-/* Object proxies only. */
-const uint32 JSSLOT_PROXY_CLASS = JSSLOT_PRIVATE + 1;
-const uint32 JSSLOT_PROXY_PRIVATE = JSSLOT_PRIVATE + 2;
+const uint32 JSSLOT_PROXY_PRIVATE = JSSLOT_PRIVATE + 1;
 /* Function proxies only. */
-const uint32 JSSLOT_PROXY_CALL = JSSLOT_PRIVATE + 1;
-const uint32 JSSLOT_PROXY_CONSTRUCT = JSSLOT_PRIVATE + 2;
+const uint32 JSSLOT_PROXY_CALL = JSSLOT_PRIVATE + 2;
+const uint32 JSSLOT_PROXY_CONSTRUCT = JSSLOT_PRIVATE + 3;
 
 extern JS_FRIEND_API(JSClass) ObjectProxyClass;
 extern JS_FRIEND_API(JSClass) FunctionProxyClass;
@@ -138,41 +147,33 @@ JSObject::isProxy() const
     return isObjectProxy() || isFunctionProxy();
 }
 
-inline jsval
+inline js::JSProxyHandler *
 JSObject::getProxyHandler() const
 {
     JS_ASSERT(isProxy());
-    jsval handler = fslots[js::JSSLOT_PROXY_HANDLER];
-    JS_ASSERT(JSVAL_IS_OBJECT(handler) || JSVAL_IS_INT(handler));
-    return handler;
+    jsval handler = getSlot(js::JSSLOT_PROXY_HANDLER);
+    return (js::JSProxyHandler *) JSVAL_TO_PRIVATE(handler);
 }
 
 inline jsval
 JSObject::getProxyPrivate() const
 {
-    JS_ASSERT(isObjectProxy());
-    return fslots[js::JSSLOT_PROXY_PRIVATE];
+    JS_ASSERT(isProxy());
+    return getSlot(js::JSSLOT_PROXY_PRIVATE);
 }
 
 inline void
 JSObject::setProxyPrivate(jsval priv)
 {
-    JS_ASSERT(isObjectProxy());
-    fslots[js::JSSLOT_PROXY_PRIVATE] = priv;
+    JS_ASSERT(isProxy());
+    setSlot(js::JSSLOT_PROXY_PRIVATE, priv);
 }
 
 namespace js {
 
 JS_FRIEND_API(JSObject *)
-NewObjectProxy(JSContext *cx, jsval handler, JSObject *proto, JSObject *parent,
-               JSString *className);
-
-JS_FRIEND_API(JSObject *)
-NewFunctionProxy(JSContext *cx, jsval handler, JSObject *proto, JSObject *parent,
-                 JSObject *call, JSObject *construct);
-
-JS_FRIEND_API(JSBool)
-GetProxyObjectClass(JSContext *cx, JSObject *proxy, const char **namep);
+NewProxyObject(JSContext *cx, JSProxyHandler *handler, jsval priv, JSObject *proto, JSObject *parent,
+               JSObject *call = NULL, JSObject *construct = NULL);
 
 JS_FRIEND_API(JSBool)
 FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp);

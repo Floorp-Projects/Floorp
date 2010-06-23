@@ -564,6 +564,14 @@ class AutoDescriptor : private AutoGCRooter, public JSPropertyDescriptor
         value = JSVAL_VOID;
     }
 
+    AutoDescriptor(JSContext *cx, JSPropertyDescriptor *desc) : AutoGCRooter(cx, DESCRIPTOR) {
+        obj = desc->obj;
+        attrs = desc->attrs;
+        getter = desc->getter;
+        setter = desc->setter;
+        value = desc->value;
+    }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
 };
 

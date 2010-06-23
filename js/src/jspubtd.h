@@ -155,6 +155,7 @@ typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 typedef struct JSSecurityCallbacks JSSecurityCallbacks;
 typedef struct JSONParser        JSONParser;
 typedef struct JSCompartment     JSCompartment;
+typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
 
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
