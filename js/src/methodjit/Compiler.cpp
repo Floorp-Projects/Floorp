@@ -1160,7 +1160,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_CALLPROP)
-            jsop_callprop(script->getAtom(fullAtomIndex(PC)));
+            if (!jsop_callprop(script->getAtom(fullAtomIndex(PC))))
+                return Compile_Error;
           END_CASE(JSOP_CALLPROP)
 
           BEGIN_CASE(JSOP_GETUPVAR)
@@ -1836,7 +1837,7 @@ mjit::Compiler::jsop_getprop_slow()
     frame.pushSynced();
 }
 
-void
+bool
 mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
 {
     prepareStubCall();
@@ -1845,6 +1846,7 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
     frame.pop();
     frame.pushSynced();
     frame.pushSynced();
+    return true;
 }
 
 void
@@ -1972,7 +1974,59 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     pics.append(pic);
 }
 
-void
+bool
+mjit::Compiler::jsop_callprop_str(JSAtom *atom)
+{
+    if (!script->compileAndGo) {
+        jsop_callprop_slow(atom);
+        return true; 
+    }
+
+    /* Bake in String.prototype. Is this safe? */
+    JSObject *obj;
+    if (!js_GetClassPrototype(cx, NULL, JSProto_String, &obj))
+        return false;
+
+    /* Force into a register because getprop won't expect a constant. */
+    RegisterID reg = frame.allocReg();
+    masm.move(ImmPtr(obj), reg);
+    frame.pushTypedPayload(JSVAL_MASK32_NONFUNOBJ, reg);
+
+    /* Get the property. */
+    jsop_getprop(atom);
+
+    /* Perform a swap. */
+    frame.dup2();
+    frame.shift(-3);
+    frame.shift(-1);
+
+    /* 4) Test if the function can take a primitive. */
+    FrameEntry *funFe = frame.peek(-2);
+    JS_ASSERT(!funFe->isTypeKnown());
+
+    RegisterID temp = frame.allocReg();
+    Jump notFun = frame.testFunObj(Assembler::NotEqual, funFe);
+    Address fslot(frame.tempRegForData(funFe),
+                  offsetof(JSObject, fslots) + JSSLOT_PRIVATE * sizeof(Value));
+    masm.loadData32(fslot, temp);
+    masm.load16(Address(temp, offsetof(JSFunction, flags)), temp);
+    masm.and32(Imm32(JSFUN_THISP_STRING), temp);
+    Jump noPrim = masm.branchTest32(Assembler::Zero, temp, temp);
+    {
+        stubcc.linkExit(noPrim);
+        stubcc.leave();
+        stubcc.call(stubs::WrapPrimitiveThis);
+    }
+
+    frame.freeReg(temp);
+    notFun.linkTo(masm.label(), &masm);
+    
+    stubcc.rejoin(1);
+
+    return true;
+}
+
+bool
 mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
@@ -2033,9 +2087,11 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     stubcc.rejoin(1);
 
     pics.append(pic);
+
+    return true;
 }
 
-void
+bool
 mjit::Compiler::jsop_callprop(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
@@ -2045,14 +2101,14 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
         (top->getTypeTag() != JSVAL_MASK32_FUNOBJ &&
          top->getTypeTag() != JSVAL_MASK32_NONFUNOBJ))
     {
-        jsop_callprop_slow(atom);
-        return;
+        if (top->getTypeTag() == JSVAL_MASK32_STRING)
+            return jsop_callprop_str(atom);
+        return jsop_callprop_slow(atom);
     }
 
     if (top->isTypeKnown())
-        jsop_callprop_obj(atom);
-    else
-        jsop_callprop_slow(atom);
+        return jsop_callprop_obj(atom);
+    return jsop_callprop_slow(atom);
 }
 
 void
