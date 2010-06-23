@@ -56,7 +56,6 @@ WeaveService.prototype = {
       let os = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
       os.addObserver(this, "final-ui-startup", true);
-      this.addResourceAlias();
       break;
 
     case "final-ui-startup":
@@ -69,26 +68,6 @@ WeaveService.prototype = {
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }
-  },
-
-  addResourceAlias: function() {
-    let ioService = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService);
-    let resProt = ioService.getProtocolHandler("resource")
-                  .QueryInterface(Ci.nsIResProtocolHandler);
-
-
-    // Only create alias if resource://services-sync doesn't already exist.
-    if (resProt.hasSubstitution("services-sync"))
-      return;
-
-    let uri = ioService.newURI("resource://gre/modules/services-sync",
-                               null, null);
-    let file = uri.QueryInterface(Ci.nsIFileURL)
-               .file.QueryInterface(Ci.nsILocalFile);
-
-    let aliasURI = ioService.newFileURI(file);
-    resProt.setSubstitution("services-sync", aliasURI);
   }
 };
 
@@ -156,3 +135,19 @@ function NSGetModule(compMgr, fileSpec) {
   ]);
 }
 
+(function addResourceAlias() {
+  let ioService = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+  let resProt = ioService.getProtocolHandler("resource").
+                QueryInterface(Ci.nsIResProtocolHandler);
+
+  // Only create alias if resource://services-sync doesn't already exist.
+  if (resProt.hasSubstitution("services-sync"))
+    return;
+
+  let uri = ioService.newURI("resource://gre/modules/services-sync", null, null);
+  let file = uri.QueryInterface(Ci.nsIFileURL).file.QueryInterface(Ci.nsILocalFile);
+
+  let aliasURI = ioService.newFileURI(file);
+  resProt.setSubstitution("services-sync", aliasURI);
+})();
