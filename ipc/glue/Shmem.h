@@ -145,6 +145,17 @@ public:
     return *this;
   }
 
+  bool operator==(const Shmem& aRhs) const
+  {
+    // need to compare IDs because of AdoptShmem(); two Shmems might
+    // refer to the same segment but with different IDs for different
+    // protocol trees.  (NB: it's possible for this method to
+    // spuriously return true if AdoptShmem() gives the same ID for
+    // two protocol trees, but I don't think that can cause any
+    // problems since the Shmems really would be indistinguishable.)
+    return mSegment == aRhs.mSegment && mId == aRhs.mId;
+  }
+
   // Returns whether this Shmem is writable by you, and thus whether you can
   // transfer writability to another actor.
   bool
