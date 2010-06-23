@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +13,20 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Indexed Database.
  *
  * The Initial Developer of the Original Code is
- *   Neil Deakin <enndeakin@sympatico.ca>
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,41 +38,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsISupports.idl"
+
+interface nsIDOMEventListener;
 
 /**
- * Interface for a client side storage. See
- * http://www.whatwg.org/specs/web-apps/current-work/#scs-client-side and
- * http://www.w3.org/TR/IndexedDB/ for more information.
- *
- * Allows access to contextual storage areas.
+ * IDBReqeust interface.  See
+ * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
+ * information.
  */
-
-interface nsIDOMStorageObsolete;
-interface nsIDOMStorage;
-interface nsIDOMStorageList;
-interface nsIIndexedDatabaseRequest;
-
-[scriptable, uuid(b6f6efd8-1bdc-43af-b8ef-6685d6260931)]
-interface nsIDOMStorageWindow : nsISupports
+[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
+interface nsIIDBRequest : nsISupports
 {
-  /**
-   * Session storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage sessionStorage;
+  void
+  abort();
 
-  /**
-   * Global storage, accessible by domain.
-   */
-  readonly attribute nsIDOMStorageList globalStorage;
+  const unsigned short INITIAL = 0;
+  const unsigned short LOADING = 1;
+  const unsigned short DONE = 2;
+  readonly attribute unsigned short readyState;
 
-  /**
-   * Local storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage localStorage;
+  attribute nsIDOMEventListener onsuccess;
 
-  /**
-   * Indexed Databases for the current browsing context.
-   */
-  readonly attribute nsIIndexedDatabaseRequest moz_indexedDB;
+  attribute nsIDOMEventListener onerror;
 };
