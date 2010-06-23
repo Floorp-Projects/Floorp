@@ -9,8 +9,12 @@ const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
 
 var gTests = [];
+var gStart = 0;
+var gLast = 0;
 
 function test() {
+  gStart = Date.now();
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   run_next_test();
@@ -24,6 +28,7 @@ function end_test() {
   cos.clearValidityOverride("untrusted.example.com", -1);
   cos.clearValidityOverride("expired.example.com", -1);
 
+  info("All tests completed in " + (Date.now() - gStart) + "ms");
   finish();
 }
 
@@ -37,6 +42,7 @@ function run_update_tests(callback) {
       callback();
       return;
     }
+    gLast = Date.now();
 
     let [url, expectedStatus, message] = gTests.shift();
     AddonUpdateChecker.checkForUpdates("addon1@tests.mozilla.org", "extension",
@@ -44,11 +50,13 @@ function run_update_tests(callback) {
       onUpdateCheckComplete: function(updates) {
         is(updates.length, 1);
         is(SUCCESS, expectedStatus, message);
+        info("Update test ran in " + (Date.now() - gLast) + "ms");
         run_next_update_test();
       },
 
       onUpdateCheckError: function(status) {
         is(status, expectedStatus, message);
+        info("Update test ran in " + (Date.now() - gLast) + "ms");
         run_next_update_test();
       }
     });

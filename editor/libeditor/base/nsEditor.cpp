@@ -632,8 +632,8 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     // get the selection and start a batch change
     nsCOMPtr<nsISelection>selection;
     result = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) { return result; }
-    if (!selection) { return NS_ERROR_NULL_POINTER; }
+    NS_ENSURE_SUCCESS(result, result);
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
     selPrivate->StartBatchChanges();
@@ -2477,7 +2477,8 @@ NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
   PRInt32 numListeners = mDocStateListeners.Count();
-  NS_ENSURE_TRUE(numListeners, NS_OK);    // maybe there just aren't any.
+  if (!numListeners)    // maybe there just aren't any.
+    return NS_OK;
  
   nsCOMArray<nsIDocumentStateListener> listeners(mDocStateListeners);
   nsresult rv = NS_OK;
@@ -3770,23 +3771,23 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
   nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
   nsCOMPtr<nsIEnumerator> enumerator;
   nsresult result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(result) || !enumerator)
-    return NS_ERROR_FAILURE;
-    
+  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
+
   enumerator->First(); 
   nsCOMPtr<nsISupports> currentItem;
-  if (NS_FAILED(enumerator->CurrentItem(getter_AddRefs(currentItem))))
-    return NS_ERROR_FAILURE;
+  result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+  NS_ENSURE_SUCCESS(result, result);
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
-    
-  if (NS_FAILED(range->GetStartContainer(outStartNode)))
-    return NS_ERROR_FAILURE;
-    
-  if (NS_FAILED(range->GetStartOffset(outStartOffset)))
-    return NS_ERROR_FAILURE;
-    
+
+  result = range->GetStartContainer(outStartNode);
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = range->GetStartOffset(outStartOffset);
+  NS_ENSURE_SUCCESS(result, result);
+
   return NS_OK;
 }
 

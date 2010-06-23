@@ -70,7 +70,6 @@ class nsHtml5Portability;
 class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
-    static jArray<PRUnichar,PRInt32> ISINDEX_PROMPT;
     static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
@@ -194,6 +193,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void insertFosterParentedChild(nsIContent** child, nsIContent** table, nsIContent** stackParent);
     void insertFosterParentedCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length, nsIContent** table, nsIContent** stackParent);
     void appendCharacters(nsIContent** parent, PRUnichar* buf, PRInt32 start, PRInt32 length);
+    void appendIsindexPrompt(nsIContent** parent);
     void appendComment(nsIContent** parent, PRUnichar* buf, PRInt32 start, PRInt32 length);
     void appendCommentToDocument(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void addAttributesToElement(nsIContent** element, nsHtml5HtmlAttributes* attributes);

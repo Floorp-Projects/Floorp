@@ -213,6 +213,11 @@ cp $1/objdir/x86-linux-gcc/vpx_config.c vpx_config_x86-linux-gcc.c
 cp $1/objdir/x86-linux-gcc/vpx_config.asm vpx_config_x86-linux-gcc.asm
 cp $1/objdir/x86-linux-gcc/vpx_config.h vpx_config_x86-linux-gcc.h
 
+# Config files for x86_64-linux-gcc
+cp $1/objdir/x86_64-linux-gcc/vpx_config.c vpx_config_x86-linux-gcc.c
+cp $1/objdir/x86_64-linux-gcc/vpx_config.asm vpx_config_x86-linux-gcc.asm
+cp $1/objdir/x86_64-linux-gcc/vpx_config.h vpx_config_x86-linux-gcc.h
+
 # Copy config files for mac...
 cp $1/objdir/x86-darwin9-gcc/vpx_config.c vpx_config_x86-darwin9-gcc.c
 cp $1/objdir/x86-darwin9-gcc/vpx_config.asm vpx_config_x86-darwin9-gcc.asm
@@ -238,3 +243,5 @@ done
 patch -p3 < reduce-warnings-1.patch
 patch -p3 < splitmv-bounds.patch
 patch -p3 < subpixel-qword.patch
+# Patch to make asm globals symbol hidden so linking succeeds on x86-64.
+patch -p3 < subpixel-hidden.patch

@@ -159,6 +159,9 @@ protected:
     virtual bool RecvTest17(const nsTArray<Op>& sa);
 
     NS_OVERRIDE
+    virtual bool RecvTest18(const nsTArray<nsIntRegion>& ra);
+
+    NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why)
     {
         if (NormalShutdown != why)
@@ -224,6 +227,7 @@ private:
     void Test15();
     void Test16();
     void Test17();
+    void Test18();
 
     nsTArray<PTestDataStructuresSubChild*> mKids;
 };

@@ -955,6 +955,34 @@ toolbar[iconsize="small"] #fullscreen-button {
   padding: 10px;
 }
 
+/* Notification popup */
+#notification-popup {
+  margin: 4px 0;
+  min-width: 280px;
+  padding: 10px;
+}
+
+.popup-notification-icon {
+  width: 64px;
+  height: 64px;
+  -moz-margin-end: 10px;
+}
+
+.popup-notification-icon[popupid="geolocation"] {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+}
+
+/* Notification icon box */
+#notification-popup-box {
+  margin: 0 3px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geo.png);
+  width: 16px;
+  height: 16px;
+}
+
 /* Feed icon */
 #feed-button,
 #feed-button > .button-box,

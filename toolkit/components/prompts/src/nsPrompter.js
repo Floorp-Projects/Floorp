@@ -312,7 +312,7 @@ let PromptUtils = {
 
         // Suppress "the site says: $realm" when we synthesized a missing realm.
         if (!authInfo.realm && !isProxy)
-            realm = null;
+            realm = "";
 
         // Trim obnoxiously long realms.
         if (realm.length > 150) {

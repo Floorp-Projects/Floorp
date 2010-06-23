@@ -517,8 +517,6 @@ MAKEFILES_xpcom="
   xpcom/proxy/tests/Makefile
   xpcom/sample/Makefile
   xpcom/threads/Makefile
-  xpcom/tools/Makefile
-  xpcom/tools/registry/Makefile
   xpcom/stub/Makefile
   xpcom/windbgdlg/Makefile
   xpcom/system/Makefile

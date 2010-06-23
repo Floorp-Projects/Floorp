@@ -787,6 +787,10 @@ PlacesTreeView.prototype = {
     if (!this._tree || !this._result)
       return;
 
+    // Nothing to do for the root node.
+    if (aNode == this._rootNode)
+      return;
+
     let row = this._getRowForNode(aNode);
     if (row == -1)
       return;

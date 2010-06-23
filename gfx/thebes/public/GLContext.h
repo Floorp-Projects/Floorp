@@ -158,6 +158,21 @@ public:
      */
     virtual PRBool Resize(const gfxIntSize& aNewSize) { return PR_FALSE; }
 
+    /**
+     * If this context wraps a double-buffered target, swap the back
+     * and front buffers.  It should be assumed that after a swap, the
+     * contents of the new back buffer are undefined.
+     */
+    virtual PRBool SwapBuffers() { return PR_FALSE; }
+
+    /**
+     * Defines a two-dimensional texture image for context target surface
+     */
+    virtual PRBool BindTexImage() { return PR_FALSE; }
+    /*
+     * Releases a color buffer that is being used as a texture
+     */
+    virtual PRBool ReleaseTexImage() { return PR_FALSE; }
 protected:
 
     PRBool mInitialized;

@@ -138,12 +138,16 @@
     %endmacro
   %endif
   %endif
+  %define HIDDEN_DATA
 %else
   %macro GET_GOT 1
   %endmacro
   %define GLOBAL wrt rip
   %ifidn __OUTPUT_FORMAT__,elf64
     %define WRT_PLT wrt ..plt
+    %define HIDDEN_DATA :data hidden
+  %else
+    %define HIDDEN_DATA
   %endif
 %endif
 %ifnmacro GET_GOT

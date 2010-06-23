@@ -1,0 +1,103 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+
+function testSteps()
+{
+  const IDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+  const IDBDatabaseException = Components.interfaces.nsIIDBDatabaseException;
+  const name = window.location.pathname;
+  const description = "My Test Database";
+
+  var request = moz_indexedDB.open(name, description);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  var event = yield;
+
+  var db = event.result;
+
+  var data = [
+    { name: "inline key; key generator",
+      autoIncrement: true,
+      storedObject: {name: "Lincoln"},
+      keyName: "id",
+      keyValue: undefined,
+    },
+    { name: "inline key; no key generator",
+      autoIncrement: false,
+      storedObject: {id: 1, name: "Lincoln"},
+      keyName: "id",
+      keyValue: undefined,
+    },
+    { name: "out of line key; key generator",
+      autoIncrement: true,
+      storedObject: {name: "Lincoln"},
+      keyName: null,
+      keyValue: undefined,
+    },
+    { name: "out of line key; no key generator",
+      autoIncrement: false,
+      storedObject: {name: "Lincoln"},
+      keyName: null,
+      keyValue: 1,
+    }
+  ];
+
+  for (let i = 0; i < data.length; i++) {
+    let test = data[i];
+    let request = db.createObjectStore(test.name, test.keyName,
+                                       test.autoIncrement);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let objectStore = event.result;
+    request = objectStore.add(test.storedObject, test.keyValue);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let id = event.result;
+    request = objectStore.get(id);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    // Sanity check!
+    is(test.storedObject.name, event.result.name,
+                  "The correct object was stored.");
+
+    request = objectStore.remove(id);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    // Make sure it was removed.
+    request = objectStore.get(id);
+    request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
+    request.onsuccess = unexpectedSuccessHandler;
+    event = yield;
+  }
+
+  finishTest();
+  yield;
+}
+
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

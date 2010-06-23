@@ -80,9 +80,11 @@ NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
                                  x_shift);
   }
 
+#ifdef ARCH_CPU_X86_FAMILY
   // MMX used for FastConvertYUVToRGB32Row requires emms instruction.
   if (has_mmx)
     EMMS();
+#endif
 }
 
 }  // namespace gfx

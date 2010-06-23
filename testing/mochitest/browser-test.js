@@ -72,11 +72,13 @@ Tester.prototype = {
 
   waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
     if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
-      let msg = "Found " + (gBrowser.tabs.length - 1) +
-                " unexpected tab(s) at the end of test run";      
-      this.currentTest.addResult(new testResult(false, msg, "", false));
-      while (gBrowser.tabs.length > 1)
-        gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+      while (gBrowser.tabs.length > 1) {
+        let lastTab = gBrowser.tabContainer.lastChild;
+        let msg = "Found an unexpected tab at the end of test run: " +
+                  lastTab.linkedBrowser.currentURI.spec;
+        this.currentTest.addResult(new testResult(false, msg, "", false));
+        gBrowser.removeTab(lastTab);
+      }
     }
 
     this.dumper.dump("TEST-INFO | checking window state\n");
