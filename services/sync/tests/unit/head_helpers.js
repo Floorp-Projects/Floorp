@@ -240,7 +240,8 @@ FakeCryptoService.prototype = {
   },
 
   generateRandomIV: function() {
-    return "fake-random-iv";
+    // A base64-encoded IV is 24 characters long
+    return "fake-fake-fake-random-iv";
   },
 
   generateRandomBytes: function(aByteCount) {

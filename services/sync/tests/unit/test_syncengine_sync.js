@@ -274,7 +274,7 @@ function test_syncStartup_metaGet404() {
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     _("New bulk key was uploaded");
-    key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
+    let key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
     do_check_eq(key.wrapped, "fake-symmetric-key-0");
     do_check_eq(key.hmac, "fake-symmetric-key-0                                            ");
 
