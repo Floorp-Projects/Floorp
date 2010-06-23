@@ -308,13 +308,13 @@ js_Invoke(JSContext *cx, const js::InvokeArgsGuard &args, uintN flags);
  * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
  */
 #define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
-    js_InternalInvoke(cx, obj, fval, 0, argc, argv, rval)
+    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, 0, argc, argv, rval)
 
 #define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
-    js_InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
+    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
 
 extern JSBool
-js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
+js_InternalInvoke(JSContext *cx, jsval thisv, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool

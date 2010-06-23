@@ -5559,22 +5559,22 @@ GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
 #endif
 
 JSBool
-js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+js_Call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSStackFrame *fp = cx->fp;
-    JS_ASSERT(OBJECT_TO_JSVAL(obj) == fp->thisv);
-    obj = fp->getThisObject(cx);
+    JSObject *obj = fp->getThisObject(cx);
     if (!obj)
         return false;
+    JS_ASSERT(OBJECT_TO_JSVAL(obj) == fp->thisv);
 
-    JSClass *clasp = JSVAL_TO_OBJECT(argv[-2])->getClass();
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    JSClass *clasp = callee->getClass();
     if (!clasp->call) {
 #ifdef NARCISSUS
-        JSObject *callee, *args;
+        JSObject *args;
         jsval fval, nargv[3];
         JSBool ok;
 
-        callee = JSVAL_TO_OBJECT(argv[-2]);
         if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &fval))
             return JS_FALSE;
         if (VALUE_IS_FUNCTION(cx, fval)) {
@@ -5588,21 +5588,24 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return js_InternalCall(cx, callee, fval, 3, nargv, rval);
         }
         if (JSVAL_IS_OBJECT(fval) && JSVAL_TO_OBJECT(fval) != callee) {
-            argv[-2] = fval;
-            ok = js_Call(cx, obj, argc, argv, rval);
-            argv[-2] = OBJECT_TO_JSVAL(callee);
+            vp[0] = fval;
+            ok = js_Call(cx, argc, vp);
+            vp[0] = OBJECT_TO_JSVAL(callee);
             return ok;
         }
 #endif
-        js_ReportIsNotFunction(cx, &argv[-2], 0);
+        js_ReportIsNotFunction(cx, &vp[0], 0);
         return JS_FALSE;
     }
-    return clasp->call(cx, obj, argc, argv, rval);
+    AutoValueRooter rval(cx);
+    JSBool ok = clasp->call(cx, obj, argc, JS_ARGV(cx, vp), rval.addr());
+    if (ok)
+        JS_SET_RVAL(cx, vp, rval.value());
+    return ok;
 }
 
 JSBool
-js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval)
+js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSClass *clasp;
 
@@ -5629,7 +5632,9 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
         if (JSVAL_IS_OBJECT(cval) && JSVAL_TO_OBJECT(cval) != callee) {
             argv[-2] = cval;
-            ok = js_Call(cx, obj, argc, argv, rval);
+            ok = js_Call(cx, argc, argv - 2);
+            if (ok)
+                *rval = argv[-2];
             argv[-2] = OBJECT_TO_JSVAL(callee);
             return ok;
         }

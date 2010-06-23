@@ -363,6 +363,14 @@ typedef JSBool
 (* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 /*
+ * The type of ops->call. Same argument types as JSFastNative, but a different
+ * contract. A JSCallOp expects a dummy stack frame with the caller's
+ * scopeChain.
+ */
+typedef JSBool
+(* JSCallOp)(JSContext *cx, uintN argc, jsval *vp);
+
+/*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
  * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
  */
