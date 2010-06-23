@@ -1925,34 +1925,6 @@ JS_ClearNewbornRoots(JSContext *cx)
     JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_EnterLocalRootScope(JSContext *cx)
-{
-    CHECK_REQUEST(cx);
-    return js_EnterLocalRootScope(cx);
-}
-
-JS_PUBLIC_API(void)
-JS_LeaveLocalRootScope(JSContext *cx)
-{
-    CHECK_REQUEST(cx);
-    js_LeaveLocalRootScope(cx);
-}
-
-JS_PUBLIC_API(void)
-JS_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
-{
-    CHECK_REQUEST(cx);
-    js_LeaveLocalRootScopeWithResult(cx, rval);
-}
-
-JS_PUBLIC_API(void)
-JS_ForgetLocalRoot(JSContext *cx, void *thing)
-{
-    CHECK_REQUEST(cx);
-    js_ForgetLocalRoot(cx, (jsval) thing);
-}
-
 #ifdef DEBUG
 
 JS_PUBLIC_API(void)
