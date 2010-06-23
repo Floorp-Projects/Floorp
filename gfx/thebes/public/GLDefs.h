@@ -57,7 +57,9 @@ typedef unsigned char GLubyte;
 typedef unsigned short GLushort;
 typedef float GLfloat;
 typedef float GLclampf;
+#ifndef GLdouble_defined
 typedef double GLdouble;
+#endif
 typedef double GLclampd;
 typedef void GLvoid;
 
