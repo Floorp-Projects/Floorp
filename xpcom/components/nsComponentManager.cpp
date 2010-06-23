@@ -1509,10 +1509,10 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
     if (oldf)
         return NS_ERROR_FACTORY_EXISTS;
 
-    mFactories.Put(aClass, f.forget());
-
     if (aContractID)
         mContractIDs.Put(nsDependentCString(aContractID), f);
+
+    mFactories.Put(aClass, f.forget());
 
     return NS_OK;
 }
