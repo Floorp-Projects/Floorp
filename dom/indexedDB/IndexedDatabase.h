@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +13,20 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Indexed Database.
  *
  * The Initial Developer of the Original Code is
- *   Neil Deakin <enndeakin@sympatico.ca>
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,41 +38,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef mozilla_dom_indexeddb_indexeddatabase_h__
+#define mozilla_dom_indexeddb_indexeddatabase_h__
 
-/**
- * Interface for a client side storage. See
- * http://www.whatwg.org/specs/web-apps/current-work/#scs-client-side and
- * http://www.w3.org/TR/IndexedDB/ for more information.
- *
- * Allows access to contextual storage areas.
- */
+#include "nsIProgrammingLanguage.h"
 
-interface nsIDOMStorageObsolete;
-interface nsIDOMStorage;
-interface nsIDOMStorageList;
-interface nsIIndexedDatabaseRequest;
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
 
-[scriptable, uuid(b6f6efd8-1bdc-43af-b8ef-6685d6260931)]
-interface nsIDOMStorageWindow : nsISupports
-{
-  /**
-   * Session storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage sessionStorage;
+#define BEGIN_INDEXEDDB_NAMESPACE \
+  namespace mozilla { namespace dom { namespace indexedDB {
 
-  /**
-   * Global storage, accessible by domain.
-   */
-  readonly attribute nsIDOMStorageList globalStorage;
+#define END_INDEXEDDB_NAMESPACE \
+  } /* namespace indexedDB */ } /* namepsace dom */ } /* namespace mozilla */
 
-  /**
-   * Local storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage localStorage;
+#define USING_INDEXEDDB_NAMESPACE \
+  using namespace mozilla::dom::indexedDB;
 
-  /**
-   * Indexed Databases for the current browsing context.
-   */
-  readonly attribute nsIIndexedDatabaseRequest moz_indexedDB;
-};
+#endif // mozilla_dom_indexeddb_indexeddatabase_h__

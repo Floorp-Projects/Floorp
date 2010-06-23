@@ -1,0 +1,91 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStores = [ "foo", "bar" ];
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
+
+      for (let i in objectStores) {
+        request = db.createObjectStore(objectStores[i], "", true);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          if (db.objectStoreNames.length == objectStores.length) {
+            event.transaction.oncomplete = grabEventAndContinueHandler;
+          }
+        };
+      }
+      yield;
+
+      is(db.objectStoreNames.length, objectStores.length,
+         "Correct objectStoreNames list");
+
+      for (let i = 0; i < 50; i++) {
+        let stepNumber = 0;
+
+        request = db.transaction(["foo"], READ_WRITE)
+                    .objectStore("foo")
+                    .add({});
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          ok(stepNumber == 1 || stepNumber == 2, "This callback came before 3");
+          stepNumber++;
+        }
+
+        request = db.transaction(["foo", "bar"], READ_WRITE)
+                    .objectStore("bar")
+                    .add({});
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          is(stepNumber, 3, "This callback came in at 3");
+          stepNumber++;
+          event.transaction.oncomplete = grabEventAndContinueHandler;
+        }
+
+        request = db.transaction(["bar"], READ_WRITE)
+                    .objectStore("bar")
+                    .add({});
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          ok(stepNumber == 1 || stepNumber == 2, "This callback came before 3");
+          stepNumber++;
+        }
+
+        stepNumber++;
+        yield;
+
+        is(stepNumber, 4, "All callbacks received");
+      }
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
