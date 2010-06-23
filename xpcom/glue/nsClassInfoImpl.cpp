@@ -40,7 +40,6 @@ GenericClassInfo::GetContractID(char** contractid)
 NS_IMETHODIMP
 GenericClassInfo::GetClassDescription(char** description)
 {
-  NS_ERROR("GetClassDescription not implemented");
   *description = NULL;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
