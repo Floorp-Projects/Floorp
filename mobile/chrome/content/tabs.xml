@@ -40,27 +40,21 @@
 
       <method name="updateThumbnail">
         <parameter name="browser"/>
-        <parameter name="browserView"/>
+        <parameter name="width"/>
+        <parameter name="height"/>
         <body>
           <![CDATA[
             const tabWidth = 106;
             const tabHeight = 64;
 
-            let destCanvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
-
-            if (browserView) {
-              browserView.renderToCanvas(destCanvas, tabWidth, tabHeight);
-            } else {
-              let domWin = browser.contentWindow;
-              let ctx = destCanvas.getContext("2d");
-              let width = domWin.innerWidth;
-              let height = domWin.innerHeight;
-              ctx.clearRect(0, 0, tabWidth, tabHeight);
-              ctx.save();
-              ctx.scale(tabWidth / width, tabHeight / height);
-              ctx.drawWindow(domWin, 0, 0, width, height, "white");
-              ctx.restore();
-            }
+            let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+            let renderer = rendererFactory(browser, canvas)
+            let ctx = renderer.ctx;
+            ctx.clearRect(0, 0, tabWidth, tabHeight);
+            ctx.save();
+            ctx.scale(tabWidth / width, tabHeight / height);
+            renderer.drawContent(0, 0, width, height, "white");
+            ctx.restore();
           ]]>
         </body>
       </method>

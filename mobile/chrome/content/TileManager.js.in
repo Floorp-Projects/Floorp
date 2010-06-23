@@ -99,25 +99,6 @@ const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^9 = 512
 const kTileCrawlTimeCap = 100;    // millis
 const kTileCrawlComeAgain = 0;    // millis
 
-// Helper used to hide IPC / non-IPC differences for renering to a canvas
-function rendererFactory(isRemote, aCanvas, aBrowser) {
-  if (isRemote) {
-    let wrapper = {};
-    wrapper.ctx = aCanvas.MozGetIPCContext("2d");
-    wrapper.drawContent = function(aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
-      this.ctx.asyncDrawXULElement(aBrowser, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
-    };
-    return wrapper;
-  }
-
-  let wrapper = {};
-  wrapper.ctx = aCanvas.getContext("2d");
-  wrapper.drawContent = function(aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
-    this.ctx.drawWindow(aBrowser.contentWindow, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
-  };
-  return wrapper;
-}
-
 
 /**
  * The Tile Manager!
@@ -401,7 +382,7 @@ TileManager.prototype = {
     let bv = this._browserView;
     let tc = this._tileCache;
 
-    let renderer = rendererFactory(!bv._contentWindow, destCanvas, bv._browser);
+    let renderer = rendererFactory(bv._browser, destCanvas);
     let ctx = renderer.ctx;
 
     bv.viewportToBrowserRect(srcRect);
@@ -777,7 +758,7 @@ TileManager.Tile.prototype = {
 
     browserView.viewportToBrowserRect(rect);
 
-    let renderer = rendererFactory(!browserView._contentWindow, this._canvas, browserView._browser);
+    let renderer = rendererFactory(browserView._browser, this._canvas);
     let ctx = renderer.ctx;
 
     ctx.save();

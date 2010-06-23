@@ -235,7 +235,6 @@ BrowserView.prototype = {
     this._container = container;
     this._browser = null;
     this._browserViewportState = null;
-    this._contentWindow = null;
     this._renderMode = 0;
     this._offscreenDepth = 0;
 
@@ -481,11 +480,6 @@ BrowserView.prototype = {
 
     this._browser = browser;
     this._browserViewportState = browserViewportState;
-    try {
-      this._contentWindow = browser.contentWindow;
-    } catch(e) {
-      this._contentWindow = null;
-    }
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
