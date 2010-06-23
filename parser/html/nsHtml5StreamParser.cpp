@@ -51,6 +51,7 @@
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5RefPtr.h"
+#include "nsIScriptError.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -959,6 +960,17 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       mFirstBuffer = speculation->GetBuffer();
       mFirstBuffer->setStart(speculation->GetStart());
       mTokenizer->setLineNumber(speculation->GetStartLineNumber());
+
+      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                      "SpeculationFailed",
+                                      nsnull, 0,
+                                      mExecutor->GetDocument()->GetDocumentURI(),
+                                      EmptyString(),
+                                      speculation->GetStartLineNumber(),
+                                      0,
+                                      nsIScriptError::warningFlag,
+                                      "DOM Events");
+
       nsHtml5UTF16Buffer* buffer = mFirstBuffer->next;
       while (buffer) {
         buffer->setStart(0);
