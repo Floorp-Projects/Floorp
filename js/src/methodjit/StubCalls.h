@@ -70,7 +70,6 @@ void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutArgsObject(VMFrame &f);
 void JS_FASTCALL CopyThisv(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
-void JS_FASTCALL WrapPrimitiveThis(VMFrame &f);
 
 void JS_FASTCALL BindName(VMFrame &f);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
