@@ -194,10 +194,9 @@ class Compiler
     void jsop_length();
     void jsop_setprop(JSAtom *atom);
     void jsop_setprop_slow(JSAtom *atom);
-    bool jsop_callprop_slow(JSAtom *atom);
-    bool jsop_callprop(JSAtom *atom);
-    bool jsop_callprop_obj(JSAtom *atom);
-    bool jsop_callprop_str(JSAtom *atom);
+    void jsop_callprop_slow(JSAtom *atom);
+    void jsop_callprop(JSAtom *atom);
+    void jsop_callprop_obj(JSAtom *atom);
     void jsop_instanceof();
 
     /* Fast opcodes. */
