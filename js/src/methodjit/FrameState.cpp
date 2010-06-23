@@ -466,6 +466,39 @@ FrameState::copyDataIntoReg(FrameEntry *fe)
 }
 
 JSC::MacroAssembler::RegisterID
+FrameState::copyTypeIntoReg(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->type.isConstant());
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    if (fe->type.inRegister()) {
+        RegisterID reg = fe->type.reg();
+        if (freeRegs.empty()) {
+            if (!fe->type.synced())
+                syncType(fe, addressOf(fe), masm);
+            fe->type.setMemory();
+            regstate[reg].fe = NULL;
+        } else {
+            RegisterID newReg = allocReg();
+            masm.move(reg, newReg);
+            reg = newReg;
+        }
+        return reg;
+    }
+
+    RegisterID reg = allocReg();
+
+    if (!freeRegs.empty())
+        masm.move(tempRegForType(fe), reg);
+    else
+        masm.loadTypeTag(addressOf(fe), reg);
+
+    return reg;
+}
+
+JSC::MacroAssembler::RegisterID
 FrameState::ownRegForType(FrameEntry *fe)
 {
     JS_ASSERT(!fe->type.isConstant());

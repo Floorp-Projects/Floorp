@@ -1975,6 +1975,92 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
 }
 
 bool
+mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
+{
+    FrameEntry *top = frame.peek(-1);
+
+    /*
+     * These two must be loaded first. The objReg because the string path
+     * wants to read it, and the shapeReg because it could cause a spill that
+     * the string path wouldn't sink back.
+     */
+    RegisterID objReg = frame.copyDataIntoReg(top);
+    RegisterID shapeReg = frame.allocReg();
+
+    PICGenInfo pic(ic::PICInfo::CALL);
+
+    /* Guard that the type is an object. */
+    JS_STATIC_ASSERT(JSVAL_MASK32_NONFUNOBJ < JSVAL_MASK32_FUNOBJ);
+    pic.typeReg = frame.copyTypeIntoReg(top);
+
+    /* Start the hot path where it's easy to patch it. */
+    pic.hotPathBegin = masm.label();
+
+    /*
+     * Guard that the value is an object. This part needs some extra gunk
+     * because the leave() after the shape guard will emit a jump from this
+     * path to the final call. We need a label in between that jump, which
+     * will be the target of patched jumps in the PIC.
+     */
+    Jump typeCheck = masm.branch32(Assembler::Below, pic.typeReg, Imm32(JSVAL_MASK32_NONFUNOBJ));
+    stubcc.linkExit(typeCheck);
+    stubcc.leave();
+    Jump typeCheckDone = stubcc.masm.jump();
+
+    pic.typeCheck = stubcc.masm.label();
+    pic.hasTypeCheck = true;
+    pic.objReg = objReg;
+    pic.shapeReg = shapeReg;
+    pic.atom = atom;
+    pic.objRemat = frame.dataRematInfo(top);
+
+    /*
+     * Store the type and object back. Don't bother keeping them in registers,
+     * since a sync will be needed for the upcoming call.
+     */
+    uint32 thisvSlot = frame.frameDepth();
+    Address thisv = Address(JSFrameReg, sizeof(JSStackFrame) + thisvSlot * sizeof(Value));
+    masm.storeTypeTag(pic.typeReg, thisv);
+    masm.storeData32(pic.objReg, thisv);
+    frame.freeReg(pic.typeReg);
+
+    /* Guard on shape. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
+    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    pic.shapeGuard = masm.label();
+    Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
+                           Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+    pic.slowPathStart = stubcc.masm.label();
+    stubcc.linkExit(j);
+
+    /* Slow path. */
+    stubcc.leave();
+    typeCheckDone.linkTo(stubcc.masm.label(), &stubcc.masm);
+    stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+    pic.callReturn = stubcc.call(ic::CallProp);
+
+    /* Adjust the frame. None of this will generate code. */
+    frame.pop();
+    frame.pushRegs(shapeReg, objReg);
+    frame.pushSynced();
+
+    /* Load dslots. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+    /* Copy the slot value to the expression stack. */
+    Address slot(objReg, 1 << 24);
+    masm.loadTypeTag(slot, shapeReg);
+    masm.loadData32(slot, objReg);
+    pic.storeBack = masm.label();
+
+    stubcc.rejoin(1);
+
+    pics.append(pic);
+
+    return true;
+}
+
+bool
 mjit::Compiler::jsop_callprop_str(JSAtom *atom)
 {
     if (!script->compileAndGo) {
@@ -2108,7 +2194,7 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 
     if (top->isTypeKnown())
         return jsop_callprop_obj(atom);
-    return jsop_callprop_slow(atom);
+    return jsop_callprop_generic(atom);
 }
 
 void

@@ -93,9 +93,8 @@ struct AutoPropertyDropper
 
 class PICStubCompiler
 {
-    const char *type;
-
   protected:
+    const char *type;
     VMFrame &f;
     JSScript *script;
     ic::PICInfo &pic;
@@ -642,6 +641,8 @@ class GetPropCompiler : public PICStubCompiler
         } else {
             pic.u.get.secondShapeGuard = 0;
         }
+
+        /* Load the value out of the object. */
         masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
         Jump done = masm.jump();
 
@@ -667,7 +668,7 @@ class GetPropCompiler : public PICStubCompiler
         // The final exit jumps to the store-back in the inline stub.
         buffer.link(done, pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
-        JaegerSpew(JSpew_PICs, "generated getprop stub at %p\n", cs.executableAddress());
+        JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
         PICRepatchBuffer repatcher(pic, pic.lastPathStart()); 
         patchPreviousToHere(repatcher, cs);
@@ -946,16 +947,19 @@ ic::CallProp(VMFrame &f, uint32 index)
         }
     }
 
+    JSObject *obj = lval.isObject() ? &objv.asObject() : NULL;
+    GetPropCompiler cc(f, script, obj, pic, origAtom, CallPropSlow);
     if (usePIC) {
-        if (lval.isObject() && pic.isFastCall()) {
-            JS_ASSERT(&lval.asObject() == &objv.asObject());
-            JSObject *obj = &objv.asObject();
-            GetPropCompiler cc(f, script, obj, pic, origAtom, CallPropSlow);
+        if (obj) {
             if (!cc.update()) {
                 cc.disable("error");
                 THROW();
             }
+        } else {
+            cc.disable("primitive");
         }
+    } else {
+        cc.disable("wrapped primitive");
     }
 
 #if JS_HAS_NO_SUCH_METHOD
