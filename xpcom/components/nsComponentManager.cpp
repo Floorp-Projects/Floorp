@@ -1487,6 +1487,21 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
                                         const char* aContractID,
                                         nsIFactory* aFactory)
 {
+    if (!aFactory) {
+        // If a null factory is passed in, this call just wants to reset
+        // the contract ID to point to an existing CID entry.
+        if (!aContractID)
+            return NS_ERROR_INVALID_ARG;
+
+        nsAutoMonitor mon(mMon);
+        nsFactoryEntry* oldf = mFactories.Get(aClass);
+        if (!oldf)
+            return NS_ERROR_FACTORY_NOT_REGISTERED;
+
+        mContractIDs.Put(nsDependentCString(aContractID), oldf);
+        return NS_OK;
+    }
+
     nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aFactory));
 
     nsAutoMonitor mon(mMon);
@@ -1495,7 +1510,10 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
         return NS_ERROR_FACTORY_EXISTS;
 
     mFactories.Put(aClass, f.forget());
-    mContractIDs.Put(nsDependentCString(aContractID), f);
+
+    if (aContractID)
+        mContractIDs.Put(nsDependentCString(aContractID), f);
+
     return NS_OK;
 }
 

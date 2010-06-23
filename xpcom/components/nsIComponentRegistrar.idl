@@ -54,8 +54,10 @@ interface nsIComponentRegistrar : nsISupports
      *
      * @param aClass      : CID of object
      * @param aClassName  : Class Name of CID (unused)
-     * @param aContractID : ContractID associated with CID aClass
+     * @param aContractID : ContractID associated with CID aClass (optional)
      * @param aFactory    : Factory that will be registered for CID aClass
+     *                      If aFactory is null, the contract will be associated
+     *                      with a previously registered CID.
      */
     void registerFactory(in nsCIDRef aClass, 
                          in string aClassName,
