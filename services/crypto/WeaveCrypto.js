@@ -512,7 +512,9 @@ WeaveCrypto.prototype = {
         outputBuffer = this._commonCrypt(input, outputBuffer, symmetricKey, iv, this.nss.CKA_DECRYPT);
 
         // outputBuffer contains UTF-8 data, let js-ctypes autoconvert that to a JS string.
-        return outputBuffer.readString();
+        // XXX Bug 573842: wrap the string from ctypes to get a new string, so
+        // we don't hit bug 573841.
+        return "" + outputBuffer.readString() + "";
     },
 
 
