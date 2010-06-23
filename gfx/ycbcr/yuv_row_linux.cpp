@@ -11,8 +11,8 @@
 
 extern "C" {
 
-#if defined(ARCH_CPU_ARM_FAMILY)
-// ARM implementation uses C fallback
+#ifndef ARCH_CPU_X86_FAMILY
+// non-x86 implementation uses C fallback
 void FastConvertYUVToRGB32Row(const uint8* y_buf,
                               const uint8* u_buf,
                               const uint8* v_buf,
@@ -246,8 +246,72 @@ MMX_ALIGNED(int16 kCoefficientsRgbY[768][4]) = {
   RGBV(0xFC), RGBV(0xFD), RGBV(0xFE), RGBV(0xFF),
 };
 
+#ifdef __SUNPRO_CC
+#pragma align 16 (kCoefficientsRgbY)
+#endif
+
 #if defined(ARCH_CPU_X86_64)
 
+#ifdef __SUNPRO_CC
+// AMD64 ABI uses register parameters.
+void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
+                              const uint8* u_buf,  // rsi
+                              const uint8* v_buf,  // rdx
+                              uint8* rgb_buf,      // rcx
+                              int width) {         // r8
+  asm(
+  "jmp    convertend\n"
+"convertloop:"
+  "movzbq (%1),%%r10\n"
+  "add    $0x1,%1\n"
+  "movzbq (%2),%%r11\n"
+  "add    $0x1,%2\n"
+  "movq   2048(%5,%%r10,8),%%xmm0\n"
+  "movzbq (%0),%%r10\n"
+  "movq   4096(%5,%%r11,8),%%xmm1\n"
+  "movzbq 0x1(%0),%%r11\n"
+  "paddsw %%xmm1,%%xmm0\n"
+  "movq   (%5,%%r10,8),%%xmm2\n"
+  "add    $0x2,%0\n"
+  "movq   (%5,%%r11,8),%%xmm3\n"
+  "paddsw %%xmm0,%%xmm2\n"
+  "paddsw %%xmm0,%%xmm3\n"
+  "shufps $0x44,%%xmm3,%%xmm2\n"
+  "psraw  $0x6,%%xmm2\n"
+  "packuswb %%xmm2,%%xmm2\n"
+  "movq   %%xmm2,0x0(%3)\n"
+  "add    $0x8,%3\n"
+"convertend:"
+  "sub    $0x2,%4\n"
+  "jns    convertloop\n"
+
+"convertnext:"
+  "add    $0x1,%4\n"
+  "js     convertdone\n"
+
+  "movzbq (%1),%%r10\n"
+  "movq   2048(%5,%%r10,8),%%xmm0\n"
+  "movzbq (%2),%%r10\n"
+  "movq   4096(%5,%%r10,8),%%xmm1\n"
+  "paddsw %%xmm1,%%xmm0\n"
+  "movzbq (%0),%%r10\n"
+  "movq   (%5,%%r10,8),%%xmm1\n"
+  "paddsw %%xmm0,%%xmm1\n"
+  "psraw  $0x6,%%xmm1\n"
+  "packuswb %%xmm1,%%xmm1\n"
+  "movd   %%xmm1,0x0(%3)\n"
+"convertdone:"
+  :
+  : "r"(y_buf),  // %0
+    "r"(u_buf),  // %1
+    "r"(v_buf),  // %2
+    "r"(rgb_buf),  // %3
+    "r"(width),  // %4
+    "r" (&kCoefficientsRgbY)  // %5
+  : "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
+);
+}
+#else // __SUNPRO_CC
 // AMD64 ABI uses register paremters.
 void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
                               const uint8* u_buf,  // rsi
@@ -306,9 +370,69 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
   : "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
 );
 }
+#endif // __SUNPRO_CC
 
-#else
+#else // ARCH_CPU_X86_64
 
+#ifdef __SUNPRO_CC
+void FastConvertYUVToRGB32Row(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
+                              int width) {
+  asm(
+  "pusha\n"
+  "mov    %eax,%ebp\n"
+  "jmp    convertend\n"
+
+"convertloop:"
+  "movzbl (%edi),%eax\n"
+  "add    $0x1,%edi\n"
+  "movzbl (%esi),%ebx\n"
+  "add    $0x1,%esi\n"
+  "movq   kCoefficientsRgbY+2048(,%eax,8),%mm0\n"
+  "movzbl (%edx),%eax\n"
+  "paddsw kCoefficientsRgbY+4096(,%ebx,8),%mm0\n"
+  "movzbl 0x1(%edx),%ebx\n"
+  "movq   kCoefficientsRgbY(,%eax,8),%mm1\n"
+  "add    $0x2,%edx\n"
+  "movq   kCoefficientsRgbY(,%ebx,8),%mm2\n"
+  "paddsw %mm0,%mm1\n"
+  "paddsw %mm0,%mm2\n"
+  "psraw  $0x6,%mm1\n"
+  "psraw  $0x6,%mm2\n"
+  "packuswb %mm2,%mm1\n"
+  "movntq %mm1,0x0(%ebp)\n"
+  "add    $0x8,%ebp\n"
+"convertend:"
+  "sub    $0x2,%ecx\n"
+  "jns    convertloop\n"
+
+  "and    $0x1,%ecx\n"
+  "je     convertdone\n"
+
+  "movzbl (%edi),%eax\n"
+  "movq   kCoefficientsRgbY+2048(,%eax,8),%mm0\n"
+  "movzbl (%esi),%eax\n"
+  "paddsw kCoefficientsRgbY+4096(,%eax,8),%mm0\n"
+  "movzbl (%edx),%eax\n"
+  "movq   kCoefficientsRgbY(,%eax,8),%mm1\n"
+  "paddsw %mm0,%mm1\n"
+  "psraw  $0x6,%mm1\n"
+  "packuswb %mm1,%mm1\n"
+  "movd   %mm1,0x0(%ebp)\n"
+"convertdone:"
+  "popa\n"
+  :
+  : "d"(y_buf),  // %edx
+    "D"(u_buf),  // %edi
+    "S"(v_buf),  // %esi
+    "a"(rgb_buf),  // %eax
+    "c"(width)  // %ecx
+  : "memory"
+);
+}
+#else //  __SUNPRO_CC
 void FastConvertYUVToRGB32Row(const uint8* y_buf,
                               const uint8* u_buf,
                               const uint8* v_buf,
@@ -374,7 +498,8 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
   ".previous\n"
 );
 
-#endif
-#endif // ARCH_CPU_ARM_FAMILY
+#endif // __SUNPRO_CC
+#endif // ARCH_CPU_X86_64
+#endif // !ARCH_CPU_X86_FAMILY
 }  // extern "C"
 
