@@ -305,7 +305,7 @@ nsComponentManagerImpl::nsComponentManagerImpl()
 {
 }
 
-#define CONTRACTID_HASHTABLE_INITIAL_SIZE	2048
+#define CONTRACTID_HASHTABLE_INITIAL_SIZE   2048
 
 nsTArray<const mozilla::Module*>* nsComponentManagerImpl::sStaticModules;
 
