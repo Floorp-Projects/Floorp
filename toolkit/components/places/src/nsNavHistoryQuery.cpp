@@ -175,6 +175,7 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_TAG "tag"
 #define QUERYKEY_NOTTAGS "!tags"
 #define QUERYKEY_ASYNC_ENABLED "asyncEnabled"
+#define QUERYKEY_TRANSITION "transition"
 
 inline void AppendAmpersandIfNonempty(nsACString& aString)
 {
@@ -524,6 +525,14 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
                              NS_LITERAL_CSTRING(QUERYKEY_NOTTAGS),
                              query,
                              &nsINavHistoryQuery::GetTagsAreNot);
+ 
+    // transitions
+    const nsTArray<PRUint32>& transitions = query->Transitions();
+    for (PRUint32 i = 0; i < transitions.Length(); ++i) {
+      AppendAmpersandIfNonempty(queryString);
+      queryString += NS_LITERAL_CSTRING(QUERYKEY_TRANSITION "=");
+      AppendInt64(queryString, transitions[i]);
+    }
   }
 
   // sorting
@@ -687,6 +696,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
   nsTArray<PRInt64> folders;
   nsTArray<nsString> tags;
+  nsTArray<PRUint32> transitions;
   for (PRUint32 i = 0; i < aTokens.Length(); i ++) {
     const QueryKeyValuePair& kvp = aTokens[i];
 
@@ -800,6 +810,18 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTTAGS)) {
       SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetTagsAreNot);
 
+    // transition
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_TRANSITION)) {
+      PRUint32 transition = kvp.value.ToInteger(&rv);
+      if (NS_SUCCEEDED(rv)) {
+        if (!transitions.Contains(transition))
+          NS_ENSURE_TRUE(transitions.AppendElement(transition),
+                         NS_ERROR_OUT_OF_MEMORY);
+      }
+      else {
+        NS_WARNING("Invalid Int32 transition value.");
+      }
+
     // new query component
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SEPARATOR)) {
 
@@ -812,6 +834,12 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
         rv = query->SetTags(tags);
         NS_ENSURE_SUCCESS(rv, rv);
         tags.Clear();
+      }
+
+      if (transitions.Length() > 0) {
+        rv = query->SetTransitions(transitions);
+        NS_ENSURE_SUCCESS(rv, rv);
+        transitions.Clear();
       }
 
       query = new nsNavHistoryQuery();
@@ -893,6 +921,11 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
   if (tags.Length() > 0) {
     rv = query->SetTags(tags);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (transitions.Length() > 0) {
+    rv = query->SetTransitions(transitions);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1332,6 +1365,40 @@ NS_IMETHODIMP nsNavHistoryQuery::SetFolders(const PRInt64 *aFolders,
                                   aFolders, aFolderCount)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetTransitions(PRUint32* aCount,
+                                                PRUint32** aTransitions)
+{
+  PRUint32 count = mTransitions.Length();
+  PRUint32* transitions = nsnull;
+  if (count > 0) {
+    transitions = reinterpret_cast<PRUint32*>
+                  (NS_Alloc(count * sizeof(PRUint32)));
+    NS_ENSURE_TRUE(transitions, NS_ERROR_OUT_OF_MEMORY);
+    for (PRUint32 i = 0; i < count; ++i) {
+      transitions[i] = mTransitions[i];
+    }
+  }
+  *aCount = count;
+  *aTransitions = transitions;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetTransitionCount(PRUint32* aCount)
+{
+  *aCount = mTransitions.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::SetTransitions(const PRUint32* aTransitions,
+                                                PRUint32 aCount)
+{
+  if (!mTransitions.ReplaceElementsAt(0, mTransitions.Length(), aTransitions,
+                                      aCount))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }

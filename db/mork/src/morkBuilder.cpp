@@ -308,7 +308,7 @@ morkBuilder::OnPortEnd(morkEnv* ev, const morkSpan& inSpan)
 morkBuilder::OnNewGroup(morkEnv* ev, const morkPlace& inPlace, mork_gid inGid)
 {
   MORK_USED_1(inPlace);
-  // mParser_InGroup = morkBool_kTrue;
+  mParser_InGroup = morkBool_kTrue;
   mork_pos startPos = inPlace.mPlace_Pos;
 
   morkStore* store = mBuilder_Store;

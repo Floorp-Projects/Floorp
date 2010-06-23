@@ -39,6 +39,7 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "WGLLibrary.h"
+#include "gfxASurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -409,6 +410,12 @@ GLContextProvider::CreatePBuffer(const gfxIntSize& aSize, const ContextFormat& a
     glContext->Init();
 
     return glContext.forget().get();
+}
+
+already_AddRefed<GLContext>
+GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+{
+    return nsnull;
 }
 
 } /* namespace gl */

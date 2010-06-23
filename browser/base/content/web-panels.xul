@@ -80,15 +80,15 @@
 
   <popupset id="mainPopupSet">
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
-    <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this)
-                             return true;
-                           gContextMenu = new nsContextMenu(this, getPanelBrowser());
-                           return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this)
-                            gContextMenu = null;">
+    <menupopup id="contentAreaContextMenu"
+               onpopupshowing="if (event.target != this)
+                                 return true;
+                               gContextMenu = new nsContextMenu(this, getPanelBrowser());
+                               return gContextMenu.shouldDisplay;"
+               onpopuphiding="if (event.target == this)
+                                gContextMenu = null;">
 #include browser-context.inc
-    </popup>
+    </menupopup>
   </popupset>
 
   <commandset id="editMenuCommands"/> 

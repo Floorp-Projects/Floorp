@@ -35,6 +35,8 @@
 + locale/@AB_CD@/global/finddialog.dtd                  (%chrome/global/finddialog.dtd)
 + locale/@AB_CD@/global/finddialog.properties           (%chrome/global/finddialog.properties)
   locale/@AB_CD@/global/globalKeys.dtd                  (%chrome/global/globalKeys.dtd)
+* locale/@AB_CD@/global/headsUpDisplay.dtd              (%chrome/global/headsUpDisplay.dtd)
++ locale/@AB_CD@/global/headsUpDisplay.properties       (%chrome/global/headsUpDisplay.properties)
 + locale/@AB_CD@/global/intl.css                        (%chrome/global/intl.css)
 + locale/@AB_CD@/global/intl.properties                 (%chrome/global/intl.properties)
 + locale/@AB_CD@/global/keys.properties                 (%chrome/global/keys.properties)

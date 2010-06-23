@@ -147,6 +147,8 @@ HTML_TAG("dt", "Span");
 HTML_TAG("em", "Span");
 HTML_TAG("embed", "Embed", [ "nsIDOMGetSVGDocument" ], objectIfaces);
 HTML_TAG("fieldset", "FieldSet");
+HTML_TAG("figcaption", "") // HTMLElement
+HTML_TAG("figure", "") // HTMLElement
 HTML_TAG("font", "Font");
 HTML_TAG("footer", "") // HTMLElement
 HTML_TAG("form", "Form", [], [ "nsIWebProgressListener" ]);
@@ -182,6 +184,7 @@ HTML_TAG("li", "LI");
 HTML_TAG("link", "Link", [ "nsIDOMLinkStyle" ]);
 HTML_TAG("listing", "Span");
 HTML_TAG("map", "Map");
+HTML_TAG("mark", ""); // HTMLElement
 HTML_TAG("marquee", "Div");
 HTML_TAG("menu", "Menu");
 HTML_TAG("meta", "Meta");
@@ -198,7 +201,7 @@ HTML_TAG("optgroup", "OptGroup");
 HTML_TAG("option", "Option");
 HTML_TAG("p", "Paragraph");
 HTML_TAG("param", "Param");
-HTML_TAG("plaintext", "Span");
+HTML_TAG("plaintext", ""); // HTMLElement
 HTML_TAG("pre", "Pre");
 HTML_TAG("q", "Quote");
 HTML_TAG("s", "Span");
@@ -228,7 +231,7 @@ HTML_TAG("u", "Span");
 HTML_TAG("ul", "UList");
 HTML_TAG("var", "Span");
 HTML_TAG("wbr", "WBR");
-HTML_TAG("xmp", "Span");
+HTML_TAG("xmp", ""); // HTMLElement
 
 function tagName(aTag) {
   return "<" + aTag + ">";

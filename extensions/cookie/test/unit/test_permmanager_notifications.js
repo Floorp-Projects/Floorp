@@ -1,5 +1,6 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
 // setup a profile directory
 var dir = do_get_profile();
