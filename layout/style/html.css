@@ -526,6 +526,11 @@ nobr {
   white-space: nowrap;
 }
 
+mark {
+  background: yellow;
+  color: black;
+}
+
 /* titles */
 abbr[title], acronym[title] {
   border-bottom: dotted 1px;
