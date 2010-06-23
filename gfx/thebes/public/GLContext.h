@@ -165,6 +165,14 @@ public:
      */
     virtual PRBool SwapBuffers() { return PR_FALSE; }
 
+    /**
+     * Defines a two-dimensional texture image for context target surface
+     */
+    virtual PRBool BindTexImage() { return PR_FALSE; }
+    /*
+     * Releases a color buffer that is being used as a texture
+     */
+    virtual PRBool ReleaseTexImage() { return PR_FALSE; }
 protected:
 
     PRBool mInitialized;
