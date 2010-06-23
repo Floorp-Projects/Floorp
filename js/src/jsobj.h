@@ -166,7 +166,7 @@ struct JSObjectOps {
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
-    JSNative            call;
+    JSCallOp            call;
     JSNative            construct;
     JSHasInstanceOp     hasInstance;
     JSFinalizeOp        clear;
@@ -1224,7 +1224,7 @@ extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+js_Call(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
 js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
