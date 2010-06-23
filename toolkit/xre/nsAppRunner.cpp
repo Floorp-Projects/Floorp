@@ -1118,7 +1118,9 @@ static const mozilla::Module::CIDEntry kXRECIDs[] = {
 static const mozilla::Module::ContractIDEntry kXREContracts[] = {
   { XULAPPINFO_SERVICE_CONTRACTID, &kAPPINFO_CID },
   { XULRUNTIME_SERVICE_CONTRACTID, &kAPPINFO_CID },
+#ifdef MOZ_CRASHREPORTER
   { NS_CRASHREPORTER_CONTRACTID, &kAPPINFO_CID },
+#endif
   { NS_PROFILESERVICE_CONTRACTID, &kProfileServiceCID },
   { NS_NATIVEAPPSUPPORT_CONTRACTID, &kNativeAppSupportCID },
   { NULL }
