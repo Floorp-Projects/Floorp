@@ -326,6 +326,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
    notifications are */
 .notification-anchor-icon {
   display: none;
+  -moz-user-focus: normal;
 }
 
 #notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
