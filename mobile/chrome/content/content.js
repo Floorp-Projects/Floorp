@@ -214,7 +214,8 @@ function getContentClientRects(aElement) {
 function Coalescer() {
   this._pendingDirtyRect = new Rect(0, 0, 0, 0);
   this._pendingSizeChange = null;
-  this._timer = null;
+  this._timer = new Util.Timeout(this);
+
   // XXX When moving back and forward in docShell history, MozAfterPaint does not get called properly and
   // some dirty rectangles are never flagged properly.  To fix this, coalescer will fake a paint event that
   // dirties the entire viewport.
@@ -222,15 +223,17 @@ function Coalescer() {
 }
 
 Coalescer.prototype = {
-  start: function startCoalescing() {
+  start: function start() {
     this._emptyPage();
-    this._timer = content.document.defaultView.setInterval(this, 1000);
+    this._timer.interval(1000);
   },
 
-  stop: function stopCoalescing() {
-    content.document.defaultView.clearInterval(this._timer);
-    this._timer = null;
-    this.flush()
+  stop: function stop() {
+    this._timer.flush();
+  },
+
+  notify: function notify() {
+    this.flush();
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -290,7 +293,7 @@ Coalescer.prototype = {
     rect.top = rect.bottom;
     rect.left = rect.right;
 
-    if (this._timer == null)
+    if (!this._timer.isPending())
       this.flush()
   },
 
@@ -303,7 +306,7 @@ Coalescer.prototype = {
           e.left + scrollOffset.x, e.top + scrollOffset.y, e.width, e.height));
       }
 
-      if (this._timer == null)
+      if (!this._timer.isPending())
         this.flush()
     }
   },
