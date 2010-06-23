@@ -104,6 +104,7 @@ Drag.prototype = {
     var updateX = false;
     var updateY = false;
     var newRect;
+    var snappedTrenches = {};
 
     // OH SNAP!
     if ( !Keys.meta                           // if we aren't holding down the meta key...
@@ -112,6 +113,7 @@ Drag.prototype = {
       newRect = Trenches.snap(bounds,assumeConstantSize,keepProportional);
       if (newRect) { // might be false if no changes were made
         update = true;
+        snappedTrenches = newRect.snappedTrenches || {};
         bounds = newRect;
       }
     } else {
@@ -123,6 +125,18 @@ Drag.prototype = {
     if (newRect) {
       update = true;
       bounds = newRect;
+      iQ.extend(snappedTrenches,newRect.snappedTrenches);
+    }
+
+    Trenches.hideGuides();
+    for (let edge in snappedTrenches) {
+      let trench = snappedTrenches[edge];
+      if (typeof trench == 'object') {
+        trench.showGuide = true;
+        trench.show();
+      } else if (trench === 'edge') {
+        // show the edge.
+      }
     }
 
     if (update)
@@ -145,12 +159,14 @@ Drag.prototype = {
     var update = false;
     var updateX = false;
     var updateY = false;
+    var snappedTrenches = {};
 
     var snapRadius = ( Keys.meta ? 0 : Trenches.defaultRadius );
     if (rect.left < swb.left + snapRadius ) {
       rect.left = swb.left;
       update = true;
       updateX = true;
+      snappedTrenches.left = 'edge';
     }
     
     if (rect.right > swb.right - snapRadius) {
@@ -164,11 +180,14 @@ Drag.prototype = {
         rect.left = swb.right - rect.width;
         update = true;
       }
+      snappedTrenches.right = 'edge';
+      delete snappedTrenches.left;
     }
     if (rect.top < swb.top + snapRadius) {
       rect.top = swb.top;
       update = true;
       updateY = true;
+      snappedTrenches.top = 'edge';
     }
     if (rect.bottom > swb.bottom - snapRadius) {
       if (updateY || !assumeConstantSize) {
@@ -181,11 +200,14 @@ Drag.prototype = {
         rect.top = swb.bottom - rect.height;
         update = true;
       }
+      snappedTrenches.top = 'edge';
+      delete snappedTrenches.bottom;
     }
     
-    if (update)
+    if (update) {
+      rect.snappedTrenches = snappedTrenches;
       return rect;
-    else
+    } else
       return false;
   },
   
