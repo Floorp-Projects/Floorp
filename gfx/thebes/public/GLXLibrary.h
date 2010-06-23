@@ -47,11 +47,6 @@ class GLXLibrary
 public:
     GLXLibrary() : mInitialized(PR_FALSE), mOGLLibrary(nsnull) {}
 
-    typedef GLXContext (GLAPIENTRY * PFNGLXCREATECONTEXTPROC) (Display*,
-                                                               XVisualInfo*,
-                                                               GLXContext,
-                                                               Bool);
-    PFNGLXCREATECONTEXTPROC xCreateContext;
     typedef void (GLAPIENTRY * PFNGLXDELETECONTEXTPROC) (Display*,
                                                          GLXContext);
     PFNGLXDELETECONTEXTPROC xDeleteContext;
@@ -70,6 +65,10 @@ public:
                                                               const int *,
                                                               int *);
     PFNGLXCHOOSEFBCONFIG xChooseFBConfig;
+    typedef GLXFBConfig* (GLAPIENTRY * PFNGLXGETFBCONFIGS) (Display *,
+                                                            int,
+                                                            int *);
+    PFNGLXGETFBCONFIGS xGetFBConfigs;
     typedef GLXPbuffer (GLAPIENTRY * PFNGLXCREATEPBUFFER) (Display *,
                                                            GLXFBConfig,
                                                            const int *);
@@ -87,7 +86,20 @@ public:
     typedef XVisualInfo* (GLAPIENTRY * PFNGLXGETVISUALFROMFBCONFIG) (Display *,
                                                                      GLXFBConfig);
     PFNGLXGETVISUALFROMFBCONFIG xGetVisualFromFBConfig;
-    
+    typedef int (GLAPIENTRY * PFNGLXGETFBCONFIGATTRIB) (Display *, 
+                                                        GLXFBConfig,
+                                                        int,
+                                                        int *);
+    PFNGLXGETFBCONFIGATTRIB xGetFBConfigAttrib;
+
+    typedef void (GLAPIENTRY * PFNGLXSWAPBUFFERS) (Display *,
+                                                   GLXDrawable);
+    PFNGLXSWAPBUFFERS xSwapBuffers;
+    typedef const char * (GLAPIENTRY * PFNGLXQUERYSERVERSTRING) (Display *,
+                                                                 int,
+                                                                 int);
+    PFNGLXQUERYSERVERSTRING xQueryServerString;
+
     PRBool EnsureInitialized();
 
 private:

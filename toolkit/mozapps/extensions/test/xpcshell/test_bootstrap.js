@@ -100,7 +100,7 @@ function check_test_1() {
       dir.append("bootstrap1@tests.mozilla.org");
       dir.append("bootstrap.js");
       let uri = Services.io.newFileURI(dir).spec;
-      do_check_eq(b1.getResourceURL("bootstrap.js"), uri);
+      do_check_eq(b1.getResourceURI("bootstrap.js").spec, uri);
 
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         do_check_eq(list.length, 0);
