@@ -363,6 +363,10 @@ struct JSObject {
     }
 
     void setProto(JSObject *newProto) {
+#ifdef DEBUG
+        for (JSObject *obj = newProto; obj; obj = obj->getProto())
+            JS_ASSERT(obj != this);
+#endif
         setDelegateNullSafe(newProto);
         proto = newProto;
     }
@@ -376,17 +380,18 @@ struct JSObject {
     }
 
     void setParent(JSObject *newParent) {
+#ifdef DEBUG
+        for (JSObject *obj = newParent; obj; obj = obj->getParent())
+            JS_ASSERT(obj != this);
+#endif
         setDelegateNullSafe(newParent);
         fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(newParent);
     }
 
     void traceProtoAndParent(JSTracer *trc) const {
-        JSObject *proto = getProto();
-        if (proto)
+        if (JSObject *proto = getProto())
             JS_CALL_OBJECT_TRACER(trc, proto, "__proto__");
-
-        JSObject *parent = getParent();
-        if (parent)
+        if (JSObject *parent = getParent())
             JS_CALL_OBJECT_TRACER(trc, parent, "parent");
     }
 
