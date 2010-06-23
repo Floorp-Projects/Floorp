@@ -80,7 +80,7 @@
 #include "jscntxtinlines.h"
 
 #ifdef XP_WIN
-# include <windows.h>
+# include "jswin.h"
 #elif defined(XP_OS2)
 # define INCL_DOSMEMMGR
 # include <os2.h>
@@ -2121,7 +2121,7 @@ js_InvokeOperationCallback(JSContext *cx)
      * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
-    JS_ATOMIC_CLEAR_MASK(&cx->interruptFlags,
+    JS_ATOMIC_CLEAR_MASK((jsword*)&cx->interruptFlags,
                          JSContext::INTERRUPT_OPERATION_CALLBACK);
 
     /*
