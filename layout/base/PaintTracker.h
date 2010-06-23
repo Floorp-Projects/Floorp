@@ -14,6 +14,7 @@ public:
   }
   ~PaintTracker() {
     NS_ASSERTION(gPaintTracker > 0, "Mismatched constructor/destructor");
+    --gPaintTracker;
   }
 
   static bool IsPainting() {
