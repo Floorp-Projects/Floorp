@@ -218,6 +218,7 @@ class CompartmentChecker
      */
     static void fail(JSCompartment *c1, JSCompartment *c2) {
         printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
+        JS_NOT_REACHED("compartment mismatch");
     }
 
     void check(JSCompartment *c) {

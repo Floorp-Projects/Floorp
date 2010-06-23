@@ -211,6 +211,8 @@ struct JSStackFrame
         }
         return false;
     }
+
+    bool isDummyFrame() const { return !script && !fun; }
 };
 
 namespace js {

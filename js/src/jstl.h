@@ -344,6 +344,11 @@ class LazilyConstructed
         JS_ASSERT(constructed);
         return asT();
     }
+
+    void destroy() {
+        ref().~T();
+        constructed = false;
+    }
 };
 
 

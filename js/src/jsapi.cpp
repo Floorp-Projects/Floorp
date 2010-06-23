@@ -86,6 +86,7 @@
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
+#include "jswrapper.h"
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
@@ -566,8 +567,10 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
-    if (!(defaultCompartment = new JSCompartment(this)))
+    if (!(defaultCompartment = new JSCompartment(this)) ||
+        !defaultCompartment->init()) {
         return false;
+    }
 
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
@@ -1087,6 +1090,30 @@ JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
     return "JavaScript-C 1.8.0 pre-release 1 2007-10-03";
+}
+
+JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
+{
+    CHECK_REQUEST(cx);
+
+    AutoCompartment *call = new AutoCompartment(cx, target);
+    if (!call)
+        return NULL;
+    if (!call->enter()) {
+        delete call;
+        return NULL;
+    }
+    return reinterpret_cast<JSCrossCompartmentCall *>(call);
+}
+
+JS_PUBLIC_API(void)
+JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
+{
+    AutoCompartment *realcall = reinterpret_cast<AutoCompartment *>(call);
+    CHECK_REQUEST(realcall->context);
+    realcall->leave();
+    delete realcall;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2883,6 +2910,22 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     if (obj && !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
                                    PRIVATE_TO_JSVAL(cx->compartment)))
         return false;
+    return obj;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp)
+{
+    CHECK_REQUEST(cx);
+    JSCompartment *compartment = NewCompartment(cx);
+    if (!compartment)
+        return NULL;
+
+    JSCompartment *saved = cx->compartment;
+    cx->compartment = compartment;
+    JSObject *obj = JS_NewGlobalObject(cx, clasp);
+    cx->compartment = saved;
+
     return obj;
 }
 
@@ -4869,10 +4912,11 @@ JS_IsRunning(JSContext *cx)
 #ifdef JS_TRACER
     JS_ASSERT_IF(JS_TRACE_MONITOR(cx).tracecx == cx, cx->fp);
 #endif
-    return cx->fp != NULL;
+    JSStackFrame *fp = cx->fp;
+    while (fp && fp->isDummyFrame())
+        fp = fp->down;
+    return fp != NULL;
 }
-
-
 
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
