@@ -931,14 +931,20 @@ JS_FRIEND_API(JSClass) ObjectProxyClass = {
 };
 
 JSBool
-proxy_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+proxy_Call(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_ASSERT(OBJECT_TO_JSVAL(obj) == cx->fp->thisv);
-    JSObject *proxy = JSVAL_TO_OBJECT(argv[-2]);
+    JSObject *proxy = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     JS_ASSERT(proxy->isProxy());
     AutoPendingProxyOperation pending(cx, proxy);
-    obj = cx->fp->getThisObject(cx);
-    return obj && js_InternalCall(cx, obj, proxy->fslots[JSSLOT_PROXY_CALL], argc, argv, rval);
+    JSObject *obj = cx->fp->getThisObject(cx);
+    if (!obj)
+        return false;
+    AutoValueRooter rval(cx);
+    JSBool ok = js_InternalInvoke(cx, vp[1], proxy->fslots[JSSLOT_PROXY_CALL], 0,
+                                  argc, JS_ARGV(cx, vp), rval.addr());
+    if (ok)
+        JS_SET_RVAL(cx, vp, rval.value());
+    return ok;
 }
 
 JSBool
@@ -1210,8 +1216,10 @@ callable_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
         *rval = OBJECT_TO_JSVAL(newobj);
 
         /* If the call returns an object, return that, otherwise the original newobj. */
-        if (!js_InternalCall(cx, newobj, callable->fslots[JSSLOT_CALLABLE_CALL], argc, argv, rval))
+        if (!js_InternalCall(cx, newobj, callable->fslots[JSSLOT_CALLABLE_CALL],
+                             argc, argv, rval)) {
             return false;
+        }
         if (JSVAL_IS_PRIMITIVE(*rval))
             *rval = OBJECT_TO_JSVAL(newobj);
 

@@ -429,7 +429,19 @@ class AutoPreserveEnumerators {
 };
 
 static JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, JSFunction *fun, JSScript *script, JSNative native,
+callJSNative(JSContext *cx, JSCallOp callOp, JSObject *thisp, uintN argc, jsval *argv, jsval *rval)
+{
+    jsval *vp = argv - 2;
+    if (callJSFastNative(cx, callOp, argc, vp)) {
+        *rval = JS_RVAL(cx, vp);
+        return true;
+    }
+    return false;
+}
+
+template <typename T>
+static JS_REQUIRES_STACK bool
+Invoke(JSContext *cx, JSFunction *fun, JSScript *script, T native,
        const InvokeArgsGuard &args, uintN flags)
 {
     uintN argc = args.getArgc();
@@ -463,7 +475,6 @@ Invoke(JSContext *cx, JSFunction *fun, JSScript *script, JSNative native,
             nmissing = (minargs > argc ? minargs - argc : 0) + fun->u.n.extra;
             nvars = 0;
         }
-
     } else {
         nvars = nmissing = 0;
     }
@@ -518,7 +529,7 @@ Invoke(JSContext *cx, JSFunction *fun, JSScript *script, JSNative native,
     /* Now that the frame has been pushed, fix up the scope chain. */
     JSObject *parent = JSVAL_TO_OBJECT(vp[0])->getParent();
     if (native) {
-        /* Slow natives expect the caller's scopeChain as their scopeChain. */
+        /* Slow natives and call ops expect the caller's scopeChain as their scopeChain. */
         if (JSStackFrame *down = fp->down)
             fp->scopeChain = down->scopeChain;
 
@@ -546,9 +557,10 @@ Invoke(JSContext *cx, JSFunction *fun, JSScript *script, JSNative native,
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
 #endif
-        /* Primitive |this| should not be passed to slow natives. */
+
         JSObject *thisp = JSVAL_TO_OBJECT(fp->thisv);
         ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, &fp->rval);
+
         JS_ASSERT(cx->fp == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -575,7 +587,7 @@ Invoke(JSContext *cx, JSFunction *fun, JSScript *script, JSNative native,
 }
 
 /*
- * Find a function reference and its 'this' object implicit first parameter
+ * Find a function reference and its 'this' value implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
  * required arguments, allocate declared local variables, and pop everything
  * when done.  Then push the return value.
@@ -661,25 +673,28 @@ js_Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     const JSObjectOps *ops = funobj->map->ops;
 
     /* Try a call or construct native object op. */
-    JSNative native;
     if (flags & JSINVOKE_CONSTRUCT) {
         if (!JSVAL_IS_OBJECT(vp[1])) {
             if (!js_PrimitiveToObject(cx, &vp[1]))
                 return false;
         }
-        native = ops->construct;
-    } else {
-        native = ops->call;
+        JSNative native = ops->construct;
+        if (!native) {
+            js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
+            return false;
+        }
+        return Invoke(cx, NULL, NULL, native, args, flags);
     }
-    if (!native) {
+    JSCallOp callOp = ops->call;
+    if (!callOp) {
         js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
         return false;
     }
-    return Invoke(cx, NULL, NULL, native, args, flags);
+    return Invoke(cx, NULL, NULL, callOp, args, flags);
 }
 
 JSBool
-js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
+js_InternalInvoke(JSContext *cx, jsval thisv, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval)
 {
     LeaveTrace(cx);
@@ -689,7 +704,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
         return JS_FALSE;
 
     args.getvp()[0] = fval;
-    args.getvp()[1] = OBJECT_TO_JSVAL(obj);
+    args.getvp()[1] = thisv;
     memcpy(args.getvp() + 2, argv, argc * sizeof(jsval));
 
     if (!js_Invoke(cx, args, flags))
