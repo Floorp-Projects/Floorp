@@ -1,5 +1,5 @@
 # Removed-files.in is processed at build time to create a list of files that
-# should be removed during an application update and by the Windows installer.
+# should be removed during an application update.
 # These files are in alphabetical order, except that files removed only on
 # certain platforms are after all of the regular files and obsolete Talkback and
 # Inspector files are at the very end.

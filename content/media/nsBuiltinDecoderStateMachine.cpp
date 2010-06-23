@@ -250,7 +250,7 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
       videoPlaying = mReader->DecodeVideoFrame(skipToNextKeyframe, currentTime);
       {
         MonitorAutoEnter mon(mDecoder->GetMonitor());
-        if (mDecoder->mDecoderPosition >= initialDownloadPosition) {
+        if (mDecoder->mDecoderPosition > initialDownloadPosition) {
           mBufferExhausted = PR_TRUE;
         }
       }
@@ -266,7 +266,7 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
       audioPlaying = mReader->DecodeAudioData();
       {
         MonitorAutoEnter mon(mDecoder->GetMonitor());
-        if (mDecoder->mDecoderPosition >= initialDownloadPosition) {
+        if (mDecoder->mDecoderPosition > initialDownloadPosition) {
           mBufferExhausted = PR_TRUE;
         }
       }

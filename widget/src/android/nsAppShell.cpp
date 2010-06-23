@@ -43,6 +43,7 @@
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
+#include "nsIPrefService.h"
 
 #include "mozilla/Services.h"
 #include "prenv.h"
@@ -79,6 +80,8 @@ nsAppShell::nsAppShell()
     : mQueueLock(nsnull),
       mCondLock(nsnull),
       mQueueCond(nsnull),
+      mPausedLock(nsnull),
+      mPaused(nsnull),
       mNumDraws(0)
 {
     gAppShell = this;
@@ -111,7 +114,9 @@ nsAppShell::Init()
 
     mQueueLock = PR_NewLock();
     mCondLock = PR_NewLock();
+    mPausedLock = PR_NewLock();
     mQueueCond = PR_NewCondVar(mCondLock);
+    mPaused = PR_NewCondVar(mPausedLock);
 
     return nsBaseAppShell::Init();
 }
@@ -238,7 +243,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
         obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
         obsServ->NotifyObservers(nsnull, "quit-application-forced", nsnull);
-        obsServ->NotifyObservers(nsnull, "quit-application", nsnull);
         obsServ->NotifyObservers(nsnull, "profile-change-net-teardown", context.get());
         obsServ->NotifyObservers(nsnull, "profile-change-teardown", context.get());
         obsServ->NotifyObservers(nsnull, "profile-before-change", context.get());
@@ -249,9 +253,16 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
     }
 
     case AndroidGeckoEvent::ACTIVITY_PAUSING: {
-        nsCOMPtr<nsIObserverService> obsServ =
-          mozilla::services::GetObserverService();
-        obsServ->NotifyObservers(nsnull, "profile-before-change", nsnull);
+        // We really want to send a notification like profile-before-change,
+        // but profile-before-change ends up shutting some things down instead
+        // of flushing data
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs)
+            prefs->SavePrefFile(nsnull);
+
+        // The OS is sending us to the background, block this thread until 
+        // onResume is called to signal that we're back in the foreground
+        PR_WaitCondVar(mPaused, PR_INTERVAL_NO_TIMEOUT);
         break;
     }
 
@@ -344,6 +355,15 @@ nsAppShell::RemoveNextEvent()
         }
     }
     PR_Unlock(mQueueLock);
+}
+
+void
+nsAppShell::OnResume()
+{
+    PR_Lock(mPausedLock);
+    PR_NotifyCondVar(mPaused);
+    PR_Unlock(mPausedLock);
+
 }
 
 // Used by IPC code

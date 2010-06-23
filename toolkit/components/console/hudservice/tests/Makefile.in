@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,19 +12,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Firefox installer build scripts.
+# The Original Code is HUDService code.
 #
 # The Initial Developer of the Original Code is
-# Benjamin Smedberg <benjamin@smedbergs.us>
-#
-# Portions created by the Initial Developer are Copyright (C) 2005
-# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#     David Dahl <ddahl@mozilla.com>  (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,25 +36,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Read a removed-files manifest and create a set of
-# deleteThisFile/deleteThisFolder instructions suitable for an install.js
-# script. This simply processes <> to stdout.
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-print "function removeOldFiles() {\n";
+include $(DEPTH)/config/autoconf.mk
 
-while (<>) {
-    m|^\s*(\S+)\s*$|;
-    my $file = $1;
+MODULE		= test_hudservice
 
-    next if ($file eq "");
+DIRS = browser
 
-    if ($file =~ m|/$|) {
-	chop $file;
-	print "  deleteThisFolder(\"Program\", \"$file\");\n";
-    }
-    else {
-	print "  deleteThisFile(\"Program\", \"$file\");\n";
-    }
-}
-
-print "}\n";
+include $(topsrcdir)/config/rules.mk

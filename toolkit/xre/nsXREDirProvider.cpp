@@ -816,7 +816,11 @@ nsXREDirProvider::DoStartup()
     obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
     // Init the Extension Manager
     nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
-    em->Observe(nsnull, "addons-startup", nsnull);
+    if (em) {
+      em->Observe(nsnull, "addons-startup", nsnull);
+    } else {
+      NS_WARNING("Failed to create Addons Manager.");
+    }
     obsSvc->NotifyObservers(nsnull, "profile-after-change", kStartup);
 
     // Any component that has registered for the profile-after-change category

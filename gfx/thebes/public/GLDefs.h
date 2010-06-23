@@ -57,7 +57,9 @@ typedef unsigned char GLubyte;
 typedef unsigned short GLushort;
 typedef float GLfloat;
 typedef float GLclampf;
+#ifndef GLdouble_defined
 typedef double GLdouble;
+#endif
 typedef double GLclampd;
 typedef void GLvoid;
 
@@ -3166,6 +3168,12 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_EGL_MULTISAMPLE_RESOLVE         0x3099
 #define LOCAL_EGL_CONTEXT_CLIENT_TYPE         0x3097
 #define LOCAL_EGL_CONTEXT_CLIENT_VERSION      0x3098
+#define LOCAL_EGL_BACK_BUFFER                 0x3084
+#define LOCAL_EGL_TEXTURE_RGB                 0x305D
+#define LOCAL_EGL_TEXTURE_RGBA                0x305E
+#define LOCAL_EGL_TEXTURE_2D                  0x305F
+#define LOCAL_EGL_NATIVE_PIXMAP_KHR           0x30B0
+#define LOCAL_EGL_IMAGE_PRESERVED_KHR         0x30D2
 #define LOCAL_EGL_FALSE                       0
 #define LOCAL_EGL_TRUE                        1
 

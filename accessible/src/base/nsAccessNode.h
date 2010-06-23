@@ -120,10 +120,10 @@ public:
    */
   already_AddRefed<nsINode> GetCurrentFocus();
 
-    /**
-     * Returns true when the accessible is defunct.
-     */
-    virtual PRBool IsDefunct();
+  /**
+   * Returns true when the accessible is defunct.
+   */
+  virtual PRBool IsDefunct() { return !mContent; }
 
   /**
    * Initialize the access node object, add it to the cache.
