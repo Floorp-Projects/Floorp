@@ -24,6 +24,11 @@
     background: transparent;
   }
 
+  #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
+    -moz-appearance: none;
+    background-color: #556;
+  }
+
   #toolbar-menubar:not(:-moz-lwtheme),
   #navigator-toolbox[tabsontop="true"] > #TabsToolbar:not(:-moz-lwtheme),
   #navigator-toolbox:not([tabsontop="true"]) > #nav-bar:not(:-moz-lwtheme),
@@ -102,7 +107,8 @@
   /* Bug 413060, comment 16: Vista Aero is a special case where we use a
      tooltip appearance for the address bar popup panels */
   #identity-popup,
-  #editBookmarkPanel {
+  #editBookmarkPanel,
+  #notification-popup {
     -moz-appearance: tooltip;
     color: InfoText;
   }

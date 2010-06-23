@@ -458,6 +458,36 @@ members = [
     '-nsICanvasRenderingContextWebGL.getUniform',
     '-nsICanvasRenderingContextWebGL.getVertexAttrib',
     '-nsICanvasRenderingContextWebGL.getShaderParameter',
+
+    # dom/indexedDB
+    'nsIIDBCursor.*',
+    'nsIIDBCursorRequest.*',
+    'nsIIDBDatabase.*',
+    'nsIIDBDatabaseException.*',
+    'nsIIDBDatabaseRequest.*',
+    'nsIIDBEvent.*',
+    'nsIIDBErrorEvent.*',
+    'nsIIDBIndex.*',
+    'nsIIDBIndexRequest.*',
+    'nsIIDBKeyRange.*',
+    'nsIIDBObjectStore.*',
+    'nsIIDBObjectStoreRequest.*',
+    'nsIIDBRequest.*',
+# Remove once XPIDL can handle jsvals
+#    'nsIIDBSuccessEvent.*',
+    'nsIIDBTransaction.*',
+    'nsIIDBTransactionEvent.*',
+    'nsIIDBTransactionRequest.*',
+    'nsIIndexedDatabaseRequest.*',
+# Remove once XPIDL can handle jsvals
+    '-nsIIDBObjectStoreRequest.add',
+    '-nsIIDBObjectStoreRequest.modify',
+    '-nsIIDBObjectStoreRequest.addOrModify',
+    '-nsIIDBCursorRequest.continue',
+    '-nsIIDBCursorRequest.value',
+    '-nsIIDBCursorRequest.update',
+    '-nsIIDBIndexRequest.openCursor',
+    '-nsIIDBIndexRequest.openObjectCursor'
     ]
 
 # Most interfaces can be found by searching the includePath; to find

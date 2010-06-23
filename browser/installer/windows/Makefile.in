@@ -129,10 +129,6 @@ $(CONFIG_DIR)/setup.exe::
 	    $(CONFIG_DIR)/$$i; \
 	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
-ifeq ($(CONFIG_DIR),instgen)
-	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/make-installremoves.pl \
-	  ../removed-files > $(CONFIG_DIR)/removed-files.log
-endif
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) \
 	  $(srcdir)/nsis/defines.nsi.in | iconv -f UTF-8 -t UTF-16LE | \
 	  cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \

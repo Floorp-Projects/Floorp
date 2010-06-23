@@ -51,7 +51,7 @@ function run_test() {
 
       do_check_neq(addon, null);
       do_check_true(addon.hasResource("binary"));
-      let uri = Services.io.newURI(addon.getResourceURL("binary"), "UTF-8", null);
+      let uri = addon.getResourceURI("binary");
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
       let file = uri.file;
       do_check_true(file.exists());

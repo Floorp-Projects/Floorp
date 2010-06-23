@@ -139,6 +139,14 @@ __defineSetter__("PluralForm", function (val) {
   return this.PluralForm = val;
 });
 
+XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
+  return new tmp.PopupNotifications(gBrowser,
+                                    document.getElementById("notification-popup"),
+                                    document.getElementById("notification-popup-box"));
+});
+
 let gInitialPages = [
   "about:blank",
   "about:privatebrowsing",
@@ -988,14 +996,6 @@ function BrowserStartup() {
   }
 
   if (window.opener && !window.opener.closed) {
-    let openerFindBar = window.opener.gFindBarInitialized ?
-                        window.opener.gFindBar : null;
-    if (openerFindBar &&
-        !openerFindBar.hidden &&
-        openerFindBar.findMode == openerFindBar.FIND_NORMAL) {
-      gFindBar.open();
-    }
-
     let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     // If the opener had a sidebar, open the same sidebar in our window.
     // The opener can be the hidden window too, if we're coming from the state
@@ -4098,6 +4098,8 @@ var XULBrowserWindow = {
         // persist across the first location change.
         let nBox = gBrowser.getNotificationBox(selectedBrowser);
         nBox.removeTransientNotifications();
+
+        PopupNotifications.locationChange();
       }
     }
 
@@ -7671,3 +7673,14 @@ var TabContextMenu = {
       getClosedTabCount(window) == 0;
   }
 };
+
+XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
+  Cu.import("resource://gre/modules/HUDService.jsm");
+  try {
+    return HUDService.consoleUI;
+  }
+  catch (ex) {
+    Components.utils.reportError(ex);
+  }
+});
+

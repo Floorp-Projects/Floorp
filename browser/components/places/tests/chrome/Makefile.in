@@ -50,6 +50,7 @@ _CHROME_TEST_FILES = \
 	test_0_multiple_left_pane.xul \
 	test_0_bug510634.xul \
 	test_bug549192.xul \
+	test_bug549491.xul \
 	$(NULL)
 
 libs:: $(_CHROME_TEST_FILES)

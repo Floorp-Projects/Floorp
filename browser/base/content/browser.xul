@@ -244,8 +244,8 @@
       </tree>
     </panel>
 
-    <popup id="toolbar-context-menu"
-           onpopupshowing="onViewToolbarsPopupShowing(event);">
+    <menupopup id="toolbar-context-menu"
+               onpopupshowing="onViewToolbarsPopupShowing(event);">
       <menuseparator/>
       <menuitem command="cmd_ToggleTabsOnTop"
                 type="checkbox"
@@ -255,15 +255,15 @@
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
-    </popup>
+    </menupopup>
 
-    <popup id="blockedPopupOptions" 
-           onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+    <menupopup id="blockedPopupOptions" 
+               onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
       <menuitem observes="blockedPopupAllowSite"/>
       <menuitem observes="blockedPopupEditSettings"/>
       <menuitem observes="blockedPopupDontShowMessage"/>
       <menuseparator observes="blockedPopupsSeparator"/>
-    </popup>
+    </menupopup>
 
     <menupopup id="autohide-context"
            onpopupshowing="FullScreen.getAutohide(this.firstChild);">
@@ -276,13 +276,15 @@
                 oncommand="BrowserFullScreen();"/>
     </menupopup>
 
-    <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this) return true; updateEditUIVisibility(); gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
+    <menupopup id="contentAreaContextMenu"
+               onpopupshowing="if (event.target != this) return true; updateEditUIVisibility(); gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
+               onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
 #include browser-context.inc
-    </popup>
+    </menupopup>
 
-    <popup id="placesContext"/>
+    <menupopup id="placesContext"/>
+
+    <panel id="notification-popup" position="after_start" noautofocus="true" hidden="true"/>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
@@ -607,6 +609,9 @@
                  onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
+          <box id="notification-popup-box" hidden="true" align="center">
+            <image id="geo-notification-icon"/>
+          </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
                We only add the identity-box button to the tab order when the location bar

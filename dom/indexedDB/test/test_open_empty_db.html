@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+
+      let request;
+
+      try {
+        request = moz_indexedDB.open("", "");
+        ok(false, "Open with empty name should have thrown!");
+      }
+      catch(e) {
+        is(request, undefined, "Shouldn't be set to anything");
+      }
+
+      try {
+        request = moz_indexedDB.open(null, "");
+        ok(false, "Open with null name should have thrown!");
+      }
+      catch(e) {
+        is(request, undefined, "Shouldn't be set to anything");
+      }
+
+      request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+      is(db.name, name, "Bad name");
+      is(db.description, description, "Bad description");
+      is(db.version, "", "Bad version");
+      is(db.objectStoreNames.length, 0, "Bad objectStores list");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

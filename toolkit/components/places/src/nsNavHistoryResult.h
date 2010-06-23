@@ -665,7 +665,6 @@ protected:
   void CancelAsyncOpen(PRBool aRestart);
   nsresult NotifyOnStateChange(PRUint16 aOldState);
 
-  PRBool mAsyncEnabled;
   nsCOMPtr<mozIStoragePendingStatement> mAsyncPendingStmt;
   PRBool mAsyncCanceledState;
 };

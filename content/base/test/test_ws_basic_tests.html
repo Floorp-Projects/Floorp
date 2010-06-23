@@ -30,7 +30,9 @@ function forcegc(){
 }
 
 function testWebSocket () {
+  var url = "ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests";
   ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  is(ws.url, url, "Wrong Websocket.url!");
   ws.onopen = function(e) {
     for (var i = 0; i < params.length; ++i) {
       document.getElementById('log').textContent += "sending " + params[i] + "\n";

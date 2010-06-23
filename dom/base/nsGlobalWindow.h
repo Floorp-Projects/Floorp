@@ -101,6 +101,7 @@
 #include "nsPIDOMEventTarget.h"
 #include "nsIArray.h"
 #include "nsIContent.h"
+#include "nsIIndexedDatabaseRequest.h"
 #include "nsFrameMessageManager.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
@@ -828,6 +829,8 @@ protected:
   nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
+
+  nsCOMPtr<nsIIndexedDatabaseRequest> mIndexedDB;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.

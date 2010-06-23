@@ -44,7 +44,12 @@
 #include "prtypes.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
+#include "gfx3DMatrix.h"
+#include "gfxColor.h"
 #include "gfxMatrix.h"
+#include "gfxPattern.h"
+#include "nsRect.h"
+#include "nsRegion.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -52,6 +57,8 @@
 
 
 namespace mozilla {
+
+typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 
 // XXX there are out of place and might be generally useful.  Could
 // move to nscore.h or something.
@@ -250,6 +257,7 @@ struct ParamTraits<nsTArray<E> >
       return false;
     }
 
+    aResult->SetCapacity(length);
     for (PRUint32 index = 0; index < length; index++) {
       E* element = aResult->AppendElement();
       if (!(element && ReadParam(aMsg, aIter, element))) {
@@ -332,6 +340,98 @@ struct ParamTraits<gfxMatrix>
 };
 
 template<>
+struct ParamTraits<gfx3DMatrix>
+{
+  typedef gfx3DMatrix paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+#define Wr(_f)  WriteParam(msg, param. _f)
+    Wr(_11); Wr(_12); Wr(_13); Wr(_14);
+    Wr(_21); Wr(_22); Wr(_23); Wr(_24);
+    Wr(_31); Wr(_32); Wr(_33); Wr(_34);
+    Wr(_41); Wr(_42); Wr(_43); Wr(_44);
+#undef Wr
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+#define Rd(_f)  ReadParam(msg, iter, &result-> _f)
+    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) &&
+            Rd(_21) && Rd(_22) && Rd(_23) && Rd(_24) &&
+            Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
+            Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44));
+#undef Rd
+  }
+};
+
+ template<>
+struct ParamTraits<mozilla::GraphicsFilterType>
+{
+  typedef mozilla::GraphicsFilterType paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    switch (param) {
+    case gfxPattern::FILTER_FAST:
+    case gfxPattern::FILTER_GOOD:
+    case gfxPattern::FILTER_BEST:
+    case gfxPattern::FILTER_NEAREST:
+    case gfxPattern::FILTER_BILINEAR:
+    case gfxPattern::FILTER_GAUSSIAN:
+      WriteParam(msg, int32(param));
+      return;
+
+    default:
+      NS_RUNTIMEABORT("not reached");
+      return;
+    }
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    int32 filter;
+    if (!ReadParam(msg, iter, &filter))
+      return false;
+
+    switch (filter) {
+    case gfxPattern::FILTER_FAST:
+    case gfxPattern::FILTER_GOOD:
+    case gfxPattern::FILTER_BEST:
+    case gfxPattern::FILTER_NEAREST:
+    case gfxPattern::FILTER_BILINEAR:
+    case gfxPattern::FILTER_GAUSSIAN:
+      *result = paramType(filter);
+      return true;
+
+    default:
+      return false;
+    }
+  }
+};
+template<>
+struct ParamTraits<gfxRGBA>
+{
+  typedef gfxRGBA paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.r);
+    WriteParam(msg, param.g);
+    WriteParam(msg, param.b);
+    WriteParam(msg, param.a);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->r) &&
+            ReadParam(msg, iter, &result->g) &&
+            ReadParam(msg, iter, &result->b) &&
+            ReadParam(msg, iter, &result->a));
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::void_t>
 {
   typedef mozilla::void_t paramType;
@@ -354,6 +454,91 @@ struct ParamTraits<mozilla::null_t>
   {
     *aResult = paramType();
     return true;
+  }
+};
+
+template<>
+struct ParamTraits<nsIntPoint>
+{
+  typedef nsIntPoint paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.x);
+    WriteParam(msg, param.y);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->x) &&
+            ReadParam(msg, iter, &result->y));
+  }
+};
+
+template<>
+struct ParamTraits<nsIntRect>
+{
+  typedef nsIntRect paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.x);
+    WriteParam(msg, param.y);
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->x) &&
+            ReadParam(msg, iter, &result->y) &&
+            ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
+
+template<>
+struct ParamTraits<nsIntRegion>
+{
+  typedef nsIntRegion paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    nsIntRegionRectIterator it(param);
+    while (const nsIntRect* r = it.Next())
+      WriteParam(msg, *r);
+    // empty rects are sentinel values because nsRegions will never
+    // contain them
+    WriteParam(msg, nsIntRect());
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    nsIntRect rect;
+    while (ReadParam(msg, iter, &rect)) {
+      if (rect.IsEmpty())
+        return true;
+      result->Or(*result, rect);
+    }
+    return false;
+  }
+};
+
+template<>
+struct ParamTraits<nsIntSize>
+{
+  typedef nsIntSize paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height); 
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
   }
 };
 

@@ -270,6 +270,12 @@ while (<>) {
             print $line;
         }
 
+    } elsif ($line =~ "Test timed out") {
+        # Temporary logging for debugging mochitests bug 569237 et al
+        print $line;
+        system qw(xprop -root);
+        system qw(xwininfo -tree -root);
+
     } else {
         print $line;
     }

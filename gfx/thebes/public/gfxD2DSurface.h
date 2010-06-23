@@ -60,6 +60,8 @@ public:
     void Present();
     void Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip);
 
+    HDC GetDC(PRBool aRetainContents);
+    void ReleaseDC(const nsIntRect *aUpdatedRect);
 };
 
 #endif /* GFX_D2DSURFACE_H */

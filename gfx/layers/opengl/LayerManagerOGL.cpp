@@ -85,6 +85,7 @@ LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
   : mWidget(aWidget)
   , mBackBufferFBO(0)
   , mBackBufferTexture(0)
+  , mBackBufferSize(-1, -1)
   , mHasBGRA(0)
 {
 }
@@ -320,12 +321,6 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   mTarget = NULL;
 }
 
-void
-LayerManagerOGL::SetRoot(Layer *aLayer)
-{
-  mRootLayer = static_cast<LayerOGL*>(aLayer->ImplData());;
-}
-
 already_AddRefed<ThebesLayer>
 LayerManagerOGL::CreateThebesLayer()
 {
@@ -374,6 +369,12 @@ LayerManagerOGL::MakeCurrent()
   mGLContext->MakeCurrent();
 }
 
+LayerOGL*
+LayerManagerOGL::RootLayer() const
+{
+  return static_cast<LayerOGL*>(mRoot->ImplData());
+}
+
 void
 LayerManagerOGL::Render()
 {
@@ -403,7 +404,7 @@ LayerManagerOGL::Render()
   // helping us with anything -- we draw to a specific location in the
   // front buffer as it is.
 
-  const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
+  const nsIntRect *clipRect = mRoot->GetClipRect();
 
   if (clipRect) {
     mGLContext->fScissor(clipRect->x, clipRect->y,
@@ -420,7 +421,7 @@ LayerManagerOGL::Render()
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   // Render our layers.
-  mRootLayer->RenderLayer(mBackBufferFBO, nsIntPoint(0, 0));
+  RootLayer()->RenderLayer(mBackBufferFBO, nsIntPoint(0, 0));
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
@@ -509,7 +510,13 @@ LayerManagerOGL::Render()
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
-  mGLContext->fFinish();
+  // XXX this is an intermediate workaround for windows that are
+  // double-buffered by default on GLX systems.  The swap is a no-op
+  // everywhere else (and for non-double-buffered GLX windows).  If
+  // the swap is actually performed, it implicitly glFlush()s.
+  if (!mGLContext->SwapBuffers()) {
+    mGLContext->fFlush();
+  } 
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 }

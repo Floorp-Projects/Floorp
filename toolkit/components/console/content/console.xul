@@ -79,7 +79,7 @@
   </keyset>
 
   <popupset id="ContextMenus">
-    <popup id="ConsoleContext">
+    <menupopup id="ConsoleContext">
       <menuitem type="radio" id="Console:sortAscend"
                 label="&sortFirst.label;" accesskey="&sortFirst.accesskey;"
                 oncommand="changeSortOrder('forward');"/>
@@ -89,7 +89,7 @@
       <menuseparator/>
       <menuitem id="menu_copy_cm" command="cmd_copy"
                 label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
-    </popup>
+    </menupopup>
   </popupset>
   
   <toolbox id="console-toolbox">

@@ -4727,7 +4727,7 @@ function AddonWrapper(aAddon) {
       return aAddon.iconURL;
 
     if (this.hasResource("icon.png"))
-      return this.getResourceURL("icon.png");
+      return this.getResourceURI("icon.png").spec;
 
     return null;
   }, this);
@@ -4776,7 +4776,7 @@ function AddonWrapper(aAddon) {
     let screenshots = [];
 
     if (aAddon.type == "theme" && this.hasResource("preview.png"))
-      screenshots.push(this.getResourceURL("preview.png"));
+      screenshots.push(this.getResourceURI("preview.png").spec);
 
     return screenshots;
   });
@@ -4901,7 +4901,7 @@ function AddonWrapper(aAddon) {
     return result;
   },
 
-  this.getResourceURL = function(aPath) {
+  this.getResourceURI = function(aPath) {
     let bundle = null;
     if (aAddon instanceof DBAddonInternal) {
       bundle = aAddon._sourceBundle = aAddon._installLocation
@@ -4913,10 +4913,10 @@ function AddonWrapper(aAddon) {
 
     if (bundle.isDirectory()) {
       bundle.append(aPath);
-      return Services.io.newFileURI(bundle).spec;
+      return Services.io.newFileURI(bundle);
     }
 
-    return buildJarURI(bundle, aPath).spec;
+    return buildJarURI(bundle, aPath);
   }
 }
 
