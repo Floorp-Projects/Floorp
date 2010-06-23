@@ -129,6 +129,8 @@ public:
     virtual PRBool MakeCurrent() = 0;
     virtual PRBool SetupLookupFunction() = 0;
 
+    virtual void WindowDestroyed() {}
+
     void *GetUserData(void *aKey) {
         void *result = nsnull;
         mUserData.Get(aKey, &result);
@@ -173,6 +175,20 @@ public:
      * Releases a color buffer that is being used as a texture
      */
     virtual PRBool ReleaseTexImage() { return PR_FALSE; }
+
+    virtual GLuint CreateTexture()
+    {
+        GLuint tex;
+        MakeCurrent();
+        fGenTextures(1, &tex);
+        return tex;
+    }
+
+    virtual void DestroyTexture(GLuint tex)
+    {
+        MakeCurrent();
+        fDeleteTextures(1, &tex); 
+    }
 protected:
 
     PRBool mInitialized;
