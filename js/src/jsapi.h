@@ -196,7 +196,7 @@ JSVAL_IS_BOOLEAN(jsval v)
 {
     jsval_layout l;
     l.asBits = v;
-    return l.s.tag == JSVAL_TAG_BOOLEAN;
+    return JSVAL_IS_BOOLEAN_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -205,7 +205,7 @@ JSVAL_TO_BOOLEAN(jsval v)
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     l.asBits = v;
-    return l.s.payload.boo;
+    return JSVAL_TO_BOOLEAN_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsval
@@ -3198,9 +3198,11 @@ class Value
      * break this encapsulation should be listed as friends below. Also see
      * uses of public jsval members in jsapi.h/jspubtd.h.
      */
+#ifdef JS_TRACER
     friend jsdouble UnboxDoubleHelper(uint32 mask, uint32 payload);
     friend void NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp);
     friend void NonNumberValueToSlot(const Value &v, JSValueType type, double *slot);
+#endif
 
   protected:
     /* Type masks */
@@ -3212,7 +3214,6 @@ class Value
         JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
         JS_STATIC_ASSERT(sizeof(JSBool) == 4);
         JS_STATIC_ASSERT(sizeof(JSWhyMagic) <= 4);
-        JS_STATIC_ASSERT(sizeof(((jsval_layout *)0)->s.payload) == 4);
         JS_STATIC_ASSERT(sizeof(jsval) == 8);
     }
 
@@ -3328,7 +3329,7 @@ class Value
         JSValueType type = arg ? JS_OBJ_IS_FUN_IMPL(arg) ? JSVAL_TYPE_FUNOBJ
                                                          : JSVAL_TYPE_NONFUNOBJ
                                : JSVAL_TYPE_NULL;
-	    data = OBJECT_TO_JSVAL_IMPL(type, arg);
+        data = OBJECT_TO_JSVAL_IMPL(type, arg);
     }
 
     inline void setObjectOrUndefined(JSObject *arg) {
@@ -3447,7 +3448,7 @@ class Value
 
     int32 asInt32() const {
         JS_ASSERT(isInt32());
-        return data.s.payload.i32;
+        return JSVAL_TO_INT32_IMPL(data);
     }
 
     double asDouble() const {
@@ -3492,7 +3493,7 @@ class Value
 
     bool asBoolean() const {
         JS_ASSERT(isBoolean());
-        return data.s.payload.boo;
+        return JSVAL_TO_BOOLEAN_IMPL(data);
     }
 
     uint32 asRawUint32() const {
@@ -3508,9 +3509,11 @@ class Value
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
     }
 
+#if JS_BITS_PER_WORD == 32
     JSValueTag extractNonDoubleTag() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
     }
+#endif
 
     /* Swap two Values */
 
@@ -3538,12 +3541,12 @@ class Value
     }
 
     void setPrivate(void *ptr) {
-		data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
+        data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
     }
 
     void *asPrivate() const {
-		JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
-		return JSVAL_TO_PRIVATE_PTR_IMPL(data);
+        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+        return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
 
     void setPrivateUint32(uint32 ui) {
@@ -3551,13 +3554,13 @@ class Value
     }
 
     uint32 asPrivateUint32() const {
-		JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
-		return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
+        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+        return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
     }
 
     uint32 &asPrivateUint32Ref() {
-		JS_ASSERT(isDouble());
-		return data.s.payload.u32;
+        JS_ASSERT(isDouble());
+        return data.s.payload.u32;
     }
 
     /* Tracing support API. 

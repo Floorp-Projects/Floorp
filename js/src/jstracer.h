@@ -321,17 +321,6 @@ public:
     }
 };
 
-#if defined(_MSC_VER) && _MSC_VER >= 1400 || (defined(__GNUC__) && __GNUC__ >= 4)
-#define USE_TRACE_TYPE_ENUM
-#endif
-
-/*
- * This indicates an invalid type or error. Note that it should not be used in typemaps,
- * because it is the wrong size. It can only be used as a uint32, for example as the
- * return value from a function that returns a type as a uint32.
- */
-const uint32 TT_INVALID = uint32(-1);
-
 typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<JSValueType> {
