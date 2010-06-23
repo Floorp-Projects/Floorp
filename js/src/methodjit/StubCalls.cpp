@@ -1383,15 +1383,6 @@ stubs::NewInitObject(VMFrame &f, uint32 empty)
 }
 
 void JS_FASTCALL
-stubs::EndInit(VMFrame &f)
-{
-    JS_ASSERT(f.regs.sp - f.fp->base() >= 1);
-    const Value &lref = f.regs.sp[-1];
-    JS_ASSERT(lref.isObject());
-    f.cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = &lref.asObject();
-}
-
-void JS_FASTCALL
 stubs::InitElem(VMFrame &f, uint32 last)
 {
     JSContext *cx = f.cx;
