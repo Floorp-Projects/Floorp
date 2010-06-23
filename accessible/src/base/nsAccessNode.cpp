@@ -257,31 +257,13 @@ void nsAccessNode::ShutdownXPAccessibility()
   NotifyA11yInitOrShutdown(PR_FALSE);
 }
 
-PRBool
-nsAccessNode::IsDefunct()
+already_AddRefed<nsIPresShell>
+nsAccessNode::GetPresShell()
 {
-  if (!mContent)
-    return PR_TRUE;
-
-  // Call GetPresShell() since the accessible may be shut down in it.
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  return !presShell;
-}
-
-already_AddRefed<nsIPresShell> nsAccessNode::GetPresShell()
-{
-  nsIPresShell *presShell = nsnull;
+  nsIPresShell* presShell = nsnull;
   if (mWeakShell)
     CallQueryReferent(mWeakShell.get(), &presShell);
-  if (!presShell) {
-    if (mWeakShell) {
-      // If our pres shell has died, but we're still holding onto
-      // a weak reference, our accessibles are no longer relevant
-      // and should be shut down
-      Shutdown();
-    }
-    return nsnull;
-  }
+
   return presShell;
 }
 

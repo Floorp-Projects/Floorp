@@ -50,6 +50,7 @@ toolbarbutton {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
+toolbarbutton[open="true"],
 toolbarbutton:not([disabled="true"]):active:hover {
   text-shadow: none;
 }
@@ -119,13 +120,14 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-align: center;
   -moz-box-pack: center;
   -moz-box-orient: vertical;
+  text-shadow: inherit;
 }
 
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none !important;
-  border: none !important;
+  border: none;
   background-color: transparent !important;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
   width: auto;

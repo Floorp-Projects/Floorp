@@ -86,6 +86,11 @@
     SimpleTest.waitForExplicitFinish();
 
     function runTest() {
+      // The mochitest page is added to history.
+      waitForClearHistory(continue_test);
+    }
+
+    function continue_test() {
       const Cc = Components.classes;
       const Ci = Components.interfaces;
 
@@ -108,9 +113,6 @@
       midnight.setMinutes(0);
       midnight.setSeconds(0);
       midnight.setMilliseconds(0);
-
-      // Cleanup.
-      bh.removeAllPages();
 
       // Add a visit 1ms before midnight.
       hs.addVisit(uri("http://before.midnight.com/"),
@@ -196,10 +198,25 @@
       }
       // Cleanup.
       bs.removeItem(itemId);
-      bh.removeAllPages();
-
-      SimpleTest.finish();
+      waitForClearHistory(SimpleTest.finish);
     }
+
+    /**
+     * Clears history invoking callback when done.
+     */
+    function waitForClearHistory(aCallback) {
+      const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
+      let observer = {
+        observe: function(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
+          aCallback();
+        }
+      };
+      Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+      let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+               getService(Ci.nsINavHistoryService);
+      hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+   }
 
   ]]>
   </script>

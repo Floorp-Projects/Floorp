@@ -87,9 +87,6 @@ public:
     return nsnull;
   }
 
-  /** Call on shutdown to release globals */
-  static void Shutdown();
-
   /**
    * Handle QI for the standard DOM interfaces (DOMNode, DOMElement,
    * DOMHTMLElement) and handles tearoffs for other standard interfaces.

@@ -136,6 +136,8 @@ nsWindow::nsWindow() :
 nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
+    if (gFocusedWindow == this)
+        gFocusedWindow = nsnull;
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
@@ -636,8 +638,12 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::IME_EVENT:
             TopWindow()->UserActivity();
-            if (gFocusedWindow)
+            if (gFocusedWindow) {
                 gFocusedWindow->OnIMEEvent(ae);
+            } else {
+                NS_WARNING("Sending unexpected IME event to top window");
+                TopWindow()->OnIMEEvent(ae);
+            }
             break;
 
         default:
