@@ -47,7 +47,7 @@ class nsIDocument;
     { 0xa4, 0xf4, 0xec, 0xbc, 0x03, 0x52, 0x9a, 0x7e } }
 
 #define NS_I_PARANOID_FRAGMENT_CONTENT_SINK_IID \
-  { 0x59ec77f5, 0x9e9b, 0x4040, \
+  { 0x69ec77f5, 0x9e9b, 0x4040, \
     { 0xbd, 0xe7, 0x4e, 0xd0, 0x13, 0xa6, 0x21, 0x74 } }
 
 /**
@@ -117,6 +117,11 @@ public:
    * Allow the content sink to accept style elements and attributes.
    */
   virtual void AllowStyles() = 0;
+
+  /**
+   * Allow the content sink to accept comments.
+   */
+  virtual void AllowComments() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIParanoidFragmentContentSink,
