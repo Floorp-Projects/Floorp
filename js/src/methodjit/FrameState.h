@@ -273,6 +273,12 @@ class FrameState
     RegisterID copyDataIntoReg(FrameEntry *fe);
 
     /*
+     * Allocates a register for a FrameEntry's type, such that the compiler
+     * can modify it in-place. The actual FE is not modified.
+     */
+    RegisterID copyTypeIntoReg(FrameEntry *fe);
+
+    /*
      * Types don't always have to be in registers, sometimes the compiler
      * can use addresses and avoid spilling. If this FrameEntry has a synced
      * address and no register, this returns true.

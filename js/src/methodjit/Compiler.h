@@ -198,6 +198,7 @@ class Compiler
     bool jsop_callprop(JSAtom *atom);
     bool jsop_callprop_obj(JSAtom *atom);
     bool jsop_callprop_str(JSAtom *atom);
+    bool jsop_callprop_generic(JSAtom *atom);
     void jsop_instanceof();
 
     /* Fast opcodes. */
