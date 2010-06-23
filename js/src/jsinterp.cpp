@@ -696,22 +696,14 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
         return JS_FALSE;
 
     /*
-     * Store *rval in the a scoped local root if a scope is open, else in
-     * the lastInternalResult pigeon-hole GC root, solely so users of
-     * js_InternalInvoke and its direct and indirect (js_ValueToString for
-     * example) callers do not need to manage roots for local, temporary
-     * references to such results.
+     * Store *rval in the lastInternalResult pigeon-hole GC root, solely
+     * so users of js_InternalInvoke and its direct and indirect
+     * (js_ValueToString for example) callers do not need to manage roots
+     * for local, temporary references to such results.
      */
     *rval = *args.getvp();
-    if (JSVAL_IS_GCTHING(*rval) && *rval != JSVAL_NULL) {
-        JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
-        if (lrs) {
-            if (js_PushLocalRoot(cx, lrs, *rval) < 0)
-                return JS_FALSE;
-        } else {
-            cx->weakRoots.lastInternalResult = *rval;
-        }
-    }
+    if (JSVAL_IS_GCTHING(*rval) && *rval != JSVAL_NULL)
+        cx->weakRoots.lastInternalResult = *rval;
 
     return JS_TRUE;
 }

@@ -91,6 +91,22 @@ using namespace js;
  * - JSCLASS_DOCUMENT_OBSERVER support -- live two-way binding to Gecko's DOM!
  */
 
+static inline bool
+js_EnterLocalRootScope(JSContext *cx)
+{
+    return true;
+}
+
+static inline void
+js_LeaveLocalRootScope(JSContext *cx)
+{
+}
+
+static inline void
+js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
+{
+}
+
 #ifdef XML_METERING
 static struct {
     jsrefcount  qname;
@@ -2944,8 +2960,6 @@ DeepCopySetInLRS(JSContext *cx, JSXMLArray *from, JSXMLArray *to, JSXML *parent,
     JSXML *kid2;
     JSString *str;
 
-    JS_ASSERT(JS_THREAD_DATA(cx)->localRootStack);
-
     n = from->length;
     if (!to->setCapacity(cx, n))
         return JS_FALSE;
@@ -3000,9 +3014,6 @@ DeepCopyInLRS(JSContext *cx, JSXML *xml, uintN flags)
     JSBool ok;
     uint32 i, n;
     JSObject *ns, *ns2;
-
-    /* Our caller must be protecting newborn objects. */
-    JS_ASSERT(JS_THREAD_DATA(cx)->localRootStack);
 
     JS_CHECK_RECURSION(cx, return NULL);
 
@@ -4379,9 +4390,6 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result)
     JSXML *target, *base;
     JSObject *targetprop;
     jsval id, tv;
-
-    /* Our caller must be protecting newborn objects. */
-    JS_ASSERT(JS_THREAD_DATA(cx)->localRootStack);
 
     if (list->xml_class != JSXML_CLASS_LIST || list->xml_kids.length != 0) {
         if (!js_GetXMLObject(cx, list))
