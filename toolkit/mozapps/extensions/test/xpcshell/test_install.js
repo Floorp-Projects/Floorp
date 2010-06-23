@@ -60,7 +60,7 @@ function run_test_1() {
 
     let file = do_get_addon("test_install1");
     let uri = Services.io.newFileURI(file).spec;
-    do_check_eq(install.addon.getResourceURL("install.rdf"), "jar:" + uri + "!/install.rdf");
+    do_check_eq(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");
     do_check_eq(install.addon.iconURL, "jar:" + uri + "!/icon.png");
     do_check_eq(install.iconURL, null);
 
@@ -132,7 +132,7 @@ function check_test_1() {
           dir.append("addon1@tests.mozilla.org");
           dir.append("install.rdf");
           let uri = Services.io.newFileURI(dir).spec;
-          do_check_eq(a1.getResourceURL("install.rdf"), uri);
+          do_check_eq(a1.getResourceURI("install.rdf").spec, uri);
 
           a1.uninstall();
           restartManager(0);

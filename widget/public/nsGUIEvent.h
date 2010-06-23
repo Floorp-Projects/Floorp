@@ -103,9 +103,7 @@ class nsHashKey;
 #endif // MOZ_SVG
 
 #define NS_QUERY_CONTENT_EVENT            33
-#ifdef MOZ_MEDIA
-#define NS_MEDIA_EVENT                    34
-#endif // MOZ_MEDIA
+
 #define NS_DRAG_EVENT                     35
 #define NS_NOTIFYPAINT_EVENT              36
 #define NS_SIMPLE_GESTURE_EVENT           37
@@ -401,8 +399,6 @@ class nsHashKey;
 #define NS_RATECHANGE          (NS_MEDIA_EVENT_START+17)
 #define NS_DURATIONCHANGE      (NS_MEDIA_EVENT_START+18)
 #define NS_VOLUMECHANGE        (NS_MEDIA_EVENT_START+19)
-#define NS_MEDIA_ABORT         (NS_MEDIA_EVENT_START+20)
-#define NS_MEDIA_ERROR         (NS_MEDIA_EVENT_START+21)
 #endif // MOZ_MEDIA
 
 // paint notification events

@@ -3755,6 +3755,8 @@
 
       StrCmp "$R0" "\" +1 end  ; If this isn't a relative path goto end
       StrCmp "$R9" "\install.log" end +1 ; Skip the install.log
+      StrCmp "$R9" "\MapiProxy_InUse.dll" end +1 ; Skip the MapiProxy_InUse.dll
+      StrCmp "$R9" "\mozMapi32_InUse.dll" end +1 ; Skip the mozMapi32_InUse.dll
 
       StrCpy $R1 "$INSTDIR$R9" ; Copy the install dir path and suffix it with the string
       IfFileExists "$R1" +1 end

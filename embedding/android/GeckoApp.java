@@ -161,6 +161,8 @@ abstract public class GeckoApp
     @Override
     public void onPause()
     {
+
+        Log.i("GeckoApp", "pause");
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
         // has come to the foreground yet; for Gecko, we may want to
@@ -176,6 +178,10 @@ abstract public class GeckoApp
     @Override
     public void onResume()
     {
+        Log.i("GeckoApp", "resume");
+        GeckoAppShell.onResume();
+        if (surfaceView != null)
+            surfaceView.mSurfaceNeedsRedraw = true;
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
         super.onResume();

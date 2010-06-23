@@ -478,7 +478,7 @@ public: // out virtual morkParser methods, data flow parser to subclass
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected parser helper methods
 
-  void ParseLoop(morkEnv* ev); // find parse continuation and resume
+  void ParseChunk(morkEnv* ev); // find parse continuation and resume
 
   void StartParse(morkEnv* ev); // prepare for parsing
   void StopParse(morkEnv* ev); // terminate parsing & call needed methods

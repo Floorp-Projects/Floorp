@@ -7,9 +7,26 @@ const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
 
 var gTests = [];
+var gStart = 0;
+var gLast = 0;
+var gPendingInstall = null;
 
 function test() {
+  gStart = Date.now();
+  requestLongerTimeout(2);
   waitForExplicitFinish();
+
+  registerCleanupFunction(function() {
+    if (gPendingInstall) {
+      gTests = [];
+      ok(false, "Timed out in the middle of downloading " + gPendingInstall.sourceURL);
+      try {
+        gPendingInstall.cancel();
+      }
+      catch (e) {
+      }
+    }
+  });
 
   run_next_test();
 }
@@ -22,6 +39,7 @@ function end_test() {
   cos.clearValidityOverride("untrusted.example.com", -1);
   cos.clearValidityOverride("expired.example.com", -1);
 
+  info("All tests completed in " + (Date.now() - gStart) + "ms");
   finish();
 }
 
@@ -35,20 +53,26 @@ function run_install_tests(callback) {
       callback();
       return;
     }
+    gLast = Date.now();
 
     let [url, expectedStatus, message] = gTests.shift();
     AddonManager.getInstallForURL(url, function(install) {
+      gPendingInstall = install;
       install.addListener({
         onDownloadEnded: function(install) {
           is(SUCCESS, expectedStatus, message);
-          run_next_install_test();
+          info("Install test ran in " + (Date.now() - gLast) + "ms");
           // Don't proceed with the install
           install.cancel();
+          gPendingInstall = null;
+          run_next_install_test();
           return false;
         },
 
         onDownloadFailed: function(install) {
           is(install.error, expectedStatus, message);
+          info("Install test ran in " + (Date.now() - gLast) + "ms");
+          gPendingInstall = null;
           run_next_install_test();
         }
       });

@@ -25,8 +25,8 @@
   </commandset>
 
   <popupset id="contentAreaContextSet">
-    <popup id="contentAreaContextMenu"
-           onpopupshowing="goUpdateCommand('cmd_copy')">
+    <menupopup id="contentAreaContextMenu"
+               onpopupshowing="goUpdateCommand('cmd_copy')">
       <menuitem id="context-copy"
                 label="&copyCmd.label;"
                 accesskey="&copyCmd.accesskey;"
@@ -36,7 +36,7 @@
                 label="&selectAllCmd.label;"
                 accesskey="&selectAllCmd.accesskey;"
                 command="cmd_selectAll"/>
-    </popup>
+    </menupopup>
   </popupset>
 
   <hbox id="filler" style="min-width: 0%;">

@@ -54,6 +54,7 @@ CPP_UNIT_TESTS = \
   test_mutex.cpp \
   test_binding_params.cpp \
   test_true_async.cpp \
+  test_unlock_notify.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG

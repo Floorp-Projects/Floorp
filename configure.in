@@ -6703,7 +6703,7 @@ else
     dnl === SQLITE_ENABLE_FTS3 check ===
     dnl ================================
     dnl check to see if the system SQLite package is compiled with
-    dnl SQLITE_THREADSAFE enabled.
+    dnl SQLITE_ENABLE_FTS3 enabled.
     AC_MSG_CHECKING(for SQLITE_ENABLE_FTS3 support in system SQLite)
     _SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $SQLITE_CFLAGS"
@@ -6726,6 +6726,35 @@ else
     LIBS="$_SAVE_LIBS"
     if test "x$ac_cv_sqlite_enable_fts3" = "xno"; then
         AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_FTS3.])
+    fi
+
+    dnl =========================================
+    dnl === SQLITE_ENABLE_UNLOCK_NOTIFY check ===
+    dnl =========================================
+    dnl check to see if the system SQLite package is compiled with
+    dnl SQLITE_ENABLE_UNLOCK_NOTIFY enabled.
+    AC_MSG_CHECKING(for SQLITE_ENABLE_UNLOCK_NOTIFY support in system SQLite)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
+    _SAVE_LIBS="$LIBS"
+    LIBS="$LIBS $SQLITE_LIBS"
+    AC_CACHE_VAL(ac_cv_sqlite_enable_unlock_notify,[
+        AC_TRY_RUN([
+            #include "sqlite3.h"
+
+            int main(int argc, char **argv){
+              return !sqlite3_compileoption_used("SQLITE_ENABLE_UNLOCK_NOTIFY");
+            }],
+            ac_cv_sqlite_enable_unlock_notify=yes,
+            ac_cv_sqlite_enable_unlock_notify=no,
+            ac_cv_sqlite_enable_unlock_notify=no
+        )
+    ])
+    AC_MSG_RESULT($ac_cv_sqlite_enable_unlock_notify)
+    CFLAGS="$_SAVE_CFLAGS"
+    LIBS="$_SAVE_LIBS"
+    if test "x$ac_cv_sqlite_enable_unlock_notify" = "xno"; then
+        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_UNLOCK_NOTIFY.])
     fi
 fi
 

@@ -996,14 +996,6 @@ function BrowserStartup() {
   }
 
   if (window.opener && !window.opener.closed) {
-    let openerFindBar = window.opener.gFindBarInitialized ?
-                        window.opener.gFindBar : null;
-    if (openerFindBar &&
-        !openerFindBar.hidden &&
-        openerFindBar.findMode == openerFindBar.FIND_NORMAL) {
-      gFindBar.open();
-    }
-
     let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     // If the opener had a sidebar, open the same sidebar in our window.
     // The opener can be the hidden window too, if we're coming from the state
@@ -7681,3 +7673,14 @@ var TabContextMenu = {
       getClosedTabCount(window) == 0;
   }
 };
+
+XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
+  Cu.import("resource://gre/modules/HUDService.jsm");
+  try {
+    return HUDService.consoleUI;
+  }
+  catch (ex) {
+    Components.utils.reportError(ex);
+  }
+});
+
