@@ -7,8 +7,10 @@ if (this.do_load_httpd_js == null) {
   Cu = Components.utils;
   Cu.import("resource://harness/modules/httpd.js");
 }
-else
+else {
   do_load_httpd_js();
+  do_get_profile();
+}
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
