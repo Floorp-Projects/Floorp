@@ -101,25 +101,32 @@ struct PICInfo {
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
 
+    inline bool isGet() {
+        return kind == GET || kind == CALL;
+    }
     inline RegisterID typeReg() {
-        JS_ASSERT(kind == GET);
+        JS_ASSERT(isGet());
         return u.get.typeReg;
     }
     inline bool hasTypeCheck() {
-        JS_ASSERT(kind == GET);
+        JS_ASSERT(isGet());
         return u.get.hasTypeCheck;
     }
     inline uint32 objRemat() {
-        JS_ASSERT(kind == GET);
+        JS_ASSERT(isGet());
         return u.get.objRemat;
     }
     inline bool objNeedsRemat() {
-        JS_ASSERT(kind == GET);
+        JS_ASSERT(isGet());
         return u.get.objNeedsRemat;
     }
     inline bool shapeNeedsRemat() {
-        JS_ASSERT(kind == GET);
+        JS_ASSERT(isGet());
         return u.get.shapeRegHasBaseShape;
+    }
+    inline bool isFastCall() {
+        JS_ASSERT(kind == CALL);
+        return !hasTypeCheck();
     }
 
     // Number of stubs generated.
@@ -190,6 +197,7 @@ struct PICInfo {
 void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL SetProp(VMFrame &f, uint32 index);
+void JS_FASTCALL CallProp(VMFrame &f, uint32 index);
 
 }
 } /* namespace mjit */
