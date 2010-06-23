@@ -2725,7 +2725,7 @@ JS_ALWAYS_INLINE void
 NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp)
 {
     JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
-    if (JS_LIKELY(type <= JSVAL_UPPER_TYPE_OF_OBJ_SET)) {
+    if (JS_LIKELY(type <= JSVAL_UPPER_INCL_TYPE_OF_OBJ_SET)) {
         vp->data.s.payload.u32 = *(uint32_t *)slot;
         vp->data.s.tag = (JSValueTag)(JSVAL_TAG_CLEAR | type);
         return;
@@ -9416,7 +9416,7 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::is_boxed_object(LIns *vaddr_ins)
 {
     LIns *mask_ins = lir->insLoad(LIR_ldi, vaddr_ins, sTagOffset, ACC_OTHER);
-    return lir->ins2(LIR_geui, mask_ins, INS_CONSTU(JSVAL_LOWER_TAG_OF_OBJ_SET));
+    return lir->ins2(LIR_geui, mask_ins, INS_CONSTU(JSVAL_LOWER_INCL_TAG_OF_OBJ_SET));
 }
 
 JS_REQUIRES_STACK LIns*
