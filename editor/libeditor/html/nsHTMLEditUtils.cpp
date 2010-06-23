@@ -490,9 +490,9 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 #define GROUP_FORMCONTROL      (1 << 6)
 
 // address, applet, article, aside, blockquote, button, center, del, dir, div,
-// dl, fieldset, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, hr,
-// iframe, ins, isindex, map, menu, nav, noframes, noscript, object, ol, p, pre,
-// table, section, ul
+// dl, fieldset, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup,
+// hr, iframe, ins, isindex, map, menu, nav, noframes, noscript, object, ol, p,
+// pre, table, section, ul
 #define GROUP_BLOCK            (1 << 7)
 
 // frame, frameset
@@ -540,6 +540,9 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 
 // h1, h2, h3, h4, h5, h6
 #define GROUP_HEADING          (1 << 22)
+
+// figcaption
+#define GROUP_FIGCAPTION       (1 << 23)
 
 #define GROUP_INLINE_ELEMENT \
   (GROUP_FONTSTYLE | GROUP_PHRASE | GROUP_SPECIAL | GROUP_FORMCONTROL | \
@@ -610,6 +613,9 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(em, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(embed, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
   ELEM(fieldset, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
+  ELEM(figcaption, PR_TRUE, PR_FALSE, GROUP_FIGCAPTION, GROUP_FLOW_ELEMENT),
+  ELEM(figure, PR_TRUE, PR_TRUE, GROUP_BLOCK,
+       GROUP_FLOW_ELEMENT | GROUP_FIGCAPTION),
   ELEM(font, PR_TRUE, PR_TRUE, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(footer, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(form, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
