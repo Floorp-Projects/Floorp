@@ -55,7 +55,7 @@ class nsIWeakReference;
 class nsXULColumnsAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULColumnsAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULColumnsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -69,7 +69,7 @@ public:
 class nsXULColumnItemAccessible : public nsLeafAccessible
 {
 public:
-  nsXULColumnItemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULColumnItemAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
@@ -90,7 +90,7 @@ class nsXULListboxAccessible : public nsXULSelectableAccessible,
                                public nsIAccessibleTable
 {
 public:
-  nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULListboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsXULListboxAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -117,7 +117,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   
-  nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULListitemAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsXULListitemAccessible() {}
 
   // nsIAccessible
@@ -150,7 +150,7 @@ class nsXULListCellAccessible : public nsHyperTextAccessibleWrap,
                                 public nsIAccessibleTableCell
 {
 public:
-  nsXULListCellAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULListCellAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

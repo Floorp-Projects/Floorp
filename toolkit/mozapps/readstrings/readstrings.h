@@ -64,7 +64,7 @@ int ReadStrings(const NS_tchar *path, StringTable *results);
  */
 int ReadStrings(const NS_tchar *path,
                 const char *keyList,
-                int numStrings,
+                unsigned int numStrings,
                 char results[][MAX_TEXT_LEN],
                 const char *section = NULL);
 

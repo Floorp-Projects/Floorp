@@ -42,6 +42,7 @@
 #include "gfxGDIFont.h"
 #include "gfxGDIShaper.h"
 #include "gfxUniscribeShaper.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxContext.h"
 
@@ -70,7 +71,6 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
                        PRBool aNeedsBold,
                        AntialiasOption anAAOption)
     : gfxFont(aFontEntry, aFontStyle, anAAOption),
-      mAdjustedSize(0.0),
       mFont(NULL),
       mFontFace(nsnull),
       mScaledFont(nsnull),
@@ -78,10 +78,8 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
       mSpaceGlyph(0),
       mNeedsBold(aNeedsBold)
 {
-    if (static_cast<GDIFontEntry*>(GetFontEntry())->mForceGDI) {
-        mShaper = new gfxGDIShaper(this);
-    } else {
-        mShaper = new gfxUniscribeShaper(this);
+    if (FontCanSupportHarfBuzz()) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
     }
 }
 
@@ -99,6 +97,16 @@ gfxGDIFont::~gfxGDIFont()
     delete mMetrics;
 }
 
+void
+gfxGDIFont::CreatePlatformShaper()
+{
+    if (static_cast<GDIFontEntry*>(mFontEntry.get())->mForceGDI) {
+        mPlatformShaper = new gfxGDIShaper(this);
+    } else {
+        mPlatformShaper = new gfxUniscribeShaper(this);
+    }
+}
+
 gfxFont*
 gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
@@ -106,34 +114,38 @@ gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
                           &mStyle, mNeedsBold, anAAOption);
 }
 
-void
+PRBool
 gfxGDIFont::InitTextRun(gfxContext *aContext,
                         gfxTextRun *aTextRun,
                         const PRUnichar *aString,
                         PRUint32 aRunStart,
-                        PRUint32 aRunLength)
+                        PRUint32 aRunLength,
+                        PRInt32 aRunScript)
 {
     if (!mMetrics) {
         Initialize();
     }
     if (!mIsValid) {
         NS_WARNING("invalid font! expect incorrect text rendering");
-        return;
+        return PR_FALSE;
     }
-    PRBool ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                     aRunStart, aRunLength);
-    if (!ok) {
+    PRBool ok = gfxFont::InitTextRun(aContext, aTextRun, aString,
+                                     aRunStart, aRunLength, aRunScript);
+    if (!ok && mPlatformShaper) {
         // shaping failed; if we were using uniscribe, fall back to GDI
         GDIFontEntry *fe = static_cast<GDIFontEntry*>(GetFontEntry());
         if (!fe->mForceGDI) {
             NS_WARNING("uniscribe failed, switching to GDI shaper");
             fe->mForceGDI = PR_TRUE;
-            mShaper = new gfxGDIShaper(this);
-            ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                      aRunStart, aRunLength);
+            mPlatformShaper = new gfxGDIShaper(this);
+            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength,
+                                              aRunScript);
+            NS_WARN_IF_FALSE(ok, "GDI shaper failed!");
         }
     }
-    NS_WARN_IF_FALSE(ok, "shaper failed, expect broken or missing text");
+
+    return ok;
 }
 
 const gfxFont::Metrics&
@@ -166,6 +178,7 @@ gfxGDIFont::SetupCairoFont(gfxContext *aContext)
         return PR_FALSE;
     }
     cairo_set_scaled_font(aContext->GetCairo(), mScaledFont);
+    cairo_win32_scaled_font_select_font(mScaledFont, DCFromContext(aContext));
     return PR_TRUE;
 }
 
@@ -235,6 +248,9 @@ gfxGDIFont::Initialize()
         gfxFloat typEmHeight = (double)oMetrics.otmAscent - (double)oMetrics.otmDescent;
         mMetrics->emAscent = ROUND(mMetrics->emHeight * (double)oMetrics.otmAscent / typEmHeight);
         mMetrics->emDescent = mMetrics->emHeight - mMetrics->emAscent;
+        if (oMetrics.otmEMSquare > 0) {
+            mFUnitsConvFactor = GetAdjustedSize() / oMetrics.otmEMSquare;
+        }
     } else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
@@ -364,3 +380,25 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
                     (mAntialiasOption == kAntialiasSubpixel) ? PR_TRUE : PR_FALSE);
 }
 
+PRInt32
+gfxGDIFont::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+{
+    if (!mGlyphWidths.IsInitialized()) {
+        mGlyphWidths.Init(200);
+    }
+
+    PRInt32 width;
+    if (mGlyphWidths.Get(aGID, &width)) {
+        return width;
+    }
+
+    int devWidth;
+    if (GetCharWidthI(DCFromContext(aCtx), aGID, 1, NULL, &devWidth)) {
+        // ensure width is positive, 16.16 fixed-point value
+        width = (devWidth & 0x7fff) << 16;
+        mGlyphWidths.Put(aGID, width);
+        return width;
+    }
+
+    return -1;
+}

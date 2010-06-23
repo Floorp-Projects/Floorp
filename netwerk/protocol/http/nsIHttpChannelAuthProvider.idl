@@ -1,0 +1,108 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Wellington Fernando de Macedo.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Wellington Fernando de Macedo <wfernandom2004@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsICancelable.idl"
+
+interface nsIHttpChannel;
+interface nsIHttpAuthenticableChannel;
+
+/**
+ * nsIHttpChannelAuthProvider
+ *
+ * This interface is intended for providing authentication for http-style
+ * channels, like nsIHttpChannel and nsIWebSocket, which implement the
+ * nsIHttpAuthenticableChannel interface.
+ *
+ * When requesting pages AddAuthorizationHeaders MUST be called
+ * in order to get the http cached headers credentials. When the request is
+ * unsuccessful because of receiving either a 401 or 407 http response code
+ * ProcessAuthentication MUST be called and the page MUST be requested again
+ * with the new credentials that the user has provided. After a successful
+ * request, checkForSuperfluousAuth MAY be called, and disconnect MUST be
+ * called.
+ */
+
+[scriptable, uuid(c68f3def-c7c8-4ee8-861c-eef49a48b702)]
+interface nsIHttpChannelAuthProvider : nsICancelable
+{
+  /**
+   * Initializes the http authentication support for the channel.
+   * Implementations must hold a weak reference of the channel.
+   */
+  void init(in nsIHttpAuthenticableChannel channel);
+
+  /**
+   * Upon receipt of a server challenge, this function is called to determine
+   * the credentials to send.
+   *
+   * @param httpStatus
+   *        the http status received.
+   * @param sslConnectFailed
+   *        if the last ssl tunnel connection attempt was or not successful.
+   * @param callback
+   *        the callback to be called when it returns NS_ERROR_IN_PROGRESS.
+   *        The implementation must hold a weak reference.
+   *
+   * @returns NS_OK if the credentials were got and set successfully.
+   *          NS_ERROR_IN_PROGRESS if the credentials are going to be asked to
+   *                               the user. The channel reference must be
+   *                               alive until the feedback from
+   *                               nsIHttpAuthenticableChannel's methods or
+   *                               until disconnect be called.
+   */
+  void processAuthentication(in unsigned long httpStatus,
+                             in boolean sslConnectFailed);
+
+  /**
+   * Add credentials from the http auth cache.
+   */
+  void addAuthorizationHeaders();
+
+  /**
+   * Check if an unnecessary(and maybe malicious) url authentication has been
+   * provided.
+   */
+  void checkForSuperfluousAuth();
+
+  /**
+   * Cancel pending user auth prompts and release the callback and channel
+   * weak references.
+   */
+  void disconnect(in nsresult status);
+};

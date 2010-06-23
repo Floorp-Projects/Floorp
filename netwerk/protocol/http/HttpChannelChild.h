@@ -94,8 +94,6 @@ public:
   HttpChannelChild();
   virtual ~HttpChannelChild();
 
-  nsresult Init(nsIURI *uri);
-
   // Methods HttpBaseChannel didn't implement for us or that we override.
   //
   // nsIRequest

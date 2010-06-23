@@ -26,6 +26,8 @@
 == continuous-inline-5b.html continuous-inline-5-ref.html
 == background-redraw-237766.html background-redraw-237766-ref.html
 
+== background-clip-1.html background-clip-1-ref.html
+
 == background-size-auto-auto.html background-size-auto-ref.html
 == background-size-auto.html background-size-auto-ref.html
 == background-size-contain.html background-size-contain-ref.html

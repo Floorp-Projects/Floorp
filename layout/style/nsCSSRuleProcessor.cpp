@@ -2329,10 +2329,17 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
-inline PRBool
-IsSiblingOperator(PRUnichar oper)
+static inline nsRestyleHint RestyleHintForOp(PRUnichar oper)
 {
-  return oper == PRUnichar('+') || oper == PRUnichar('~');
+  if (oper == PRUnichar('+') || oper == PRUnichar('~')) {
+    return eRestyle_LaterSiblings;
+  }
+
+  if (oper != PRUnichar(0)) {
+    return eRestyle_Subtree;
+  }
+
+  return eRestyle_Self;
 }
 
 nsRestyleHint
@@ -2355,8 +2362,7 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
     for(; iter != end; ++iter) {
       nsCSSSelector* selector = *iter;
 
-      nsRestyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
-        eRestyle_LaterSiblings : eRestyle_Self;
+      nsRestyleHint possibleChange = RestyleHintForOp(selector->mOperator);
 
       // If hint already includes all the bits of possibleChange,
       // don't bother calling SelectorMatches, since even if it returns false
@@ -2397,8 +2403,7 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
 {
   AttributeRuleProcessorData *data = aData->data;
 
-  nsRestyleHint possibleChange = IsSiblingOperator(aSelector->mOperator) ?
-    eRestyle_LaterSiblings : eRestyle_Self;
+  nsRestyleHint possibleChange = RestyleHintForOp(aSelector->mOperator);
 
   // If enumData->change already includes all the bits of possibleChange, don't
   // bother calling SelectorMatches, since even if it returns false
@@ -2430,7 +2435,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
         aData->mNameSpaceID == kNameSpaceID_XUL &&
         aData->mElement == aData->mElement->GetOwnerDoc()->GetRootElement())
       {
-        data.change = nsRestyleHint(data.change | eRestyle_Self);
+        data.change = nsRestyleHint(data.change | eRestyle_Subtree);
       }
   }
 

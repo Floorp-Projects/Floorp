@@ -65,6 +65,7 @@ _TEST_FILES_0 = \
 	image_green.png \
 	image_green-redirect \
 	image_green-redirect^headers^ \
+	test_drawImageIncomplete.html \
 	$(NULL)
 
 # xor and lighter aren't well handled by cairo; they mostly work, but we don't want

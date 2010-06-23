@@ -451,24 +451,6 @@
     {0x82, 0xad, 0xa6, 0xa9, 0xbc, 0x5a, 0xd5, 0x99} \
 }
 
-// component implementing nsIPrompt
-//
-// NOTE: this implementation does not have any way to correctly parent itself,
-//       it is almost always wrong to get a prompt via this interface.
-//       use nsIWindowWatcher instead whenever possible.
-//
-#define NS_DEFAULTPROMPT_CONTRACTID \
-    "@mozilla.org/network/default-prompt;1"
-
-// component implementing nsIAuthPrompt
-//
-// NOTE: this implementation does not have any way to correctly parent itself,
-//       it is almost always wrong to get an auth prompt via this interface.
-//       use nsIWindowWatcher instead whenever possible.
-//
-#define NS_DEFAULTAUTHPROMPT_CONTRACTID \
-    "@mozilla.org/network/default-auth-prompt;1"
-
 /**
  * Contract ID for a service implementing nsIURIClassifier that identifies
  * phishing and malware sites.
@@ -572,6 +554,18 @@
     0xe0fa,                                          \
     0x4c49,                                          \
     {0x9f, 0xd4, 0xe0, 0x65, 0xe8, 0x55, 0x68, 0xf4} \
+}
+
+#define NS_HTTPCHANNELAUTHPROVIDER_CLASSNAME \
+    "nsHttpChannelAuthProvider"
+#define NS_HTTPCHANNELAUTHPROVIDER_CONTRACTID \
+    "@mozilla.org/network/http-channel-auth-provider;1"
+#define NS_HTTPCHANNELAUTHPROVIDER_CID \
+{ /* 02f5a8d8-4ef3-48b1-b527-8a643056abbd */         \
+    0x02f5a8d8,                                      \
+    0x4ef3,                                          \
+    0x48b1,                                          \
+    {0xb5, 0x27, 0x8a, 0x64, 0x30, 0x56, 0xab, 0xbd} \
 }
 
 #define NS_HTTPACTIVITYDISTRIBUTOR_CLASSNAME \

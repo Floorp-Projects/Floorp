@@ -71,6 +71,11 @@ endif
 
 DIRS += pgo
 
+# See bug 567945 - disabling to get back green on Android
+#ifeq (Android,$(OS_TARGET))
+#  DIRS += mobile/sutagent/android
+#endif
+
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/

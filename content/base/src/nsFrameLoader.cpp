@@ -1381,8 +1381,6 @@ nsFrameLoader::MaybeCreateDocShell()
     mDocShell->SetChromeEventHandler(chromeEventHandler);
   }
 
-  EnsureMessageManager();
-
   // This is nasty, this code (the do_GetInterface(mDocShell) below)
   // *must* come *after* the above call to
   // mDocShell->SetChromeEventHandler() for the global window to get
@@ -1406,6 +1404,8 @@ nsFrameLoader::MaybeCreateDocShell()
     NS_WARNING("Something wrong when creating the docshell for a frameloader!");
     return NS_ERROR_FAILURE;
   }
+
+  EnsureMessageManager();
 
   return NS_OK;
 }
@@ -1847,7 +1847,9 @@ NS_IMETHODIMP
 nsFrameLoader::GetMessageManager(nsIChromeFrameMessageManager** aManager)
 {
   EnsureMessageManager();
-  NS_IF_ADDREF(*aManager = mMessageManager);
+  if (mMessageManager) {
+    CallQueryInterface(mMessageManager, aManager);
+  }
   return NS_OK;
 }
 
@@ -1899,12 +1901,13 @@ nsFrameLoader::EnsureMessageManager()
                                                 nsnull,
                                                 SendAsyncMessageToChild,
                                                 LoadScript,
-                                                this,
+                                                nsnull,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
                                                 cx);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
     mChildMessageManager =
       new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
+    mMessageManager->SetCallbackData(this);
   }
   return NS_OK;
 }

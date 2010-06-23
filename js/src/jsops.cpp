@@ -82,9 +82,11 @@
                 moreInterrupts = true;
                 break;
               case ARECORD_IMACRO:
+              case ARECORD_IMACRO_ABORTED:
                 atoms = COMMON_ATOMS_START(&rt->atomState);
                 op = JSOp(*regs.pc);
-                DO_OP();    /* keep interrupting for op. */
+                if (status == ARECORD_IMACRO)
+                    DO_OP();    /* keep interrupting for op. */
                 break;
               case ARECORD_ERROR:
                 // The code at 'error:' aborts the recording.

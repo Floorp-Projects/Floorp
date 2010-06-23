@@ -48,11 +48,7 @@ using mozilla::plugins::PluginProcessChild;
 #include "nsExceptionHandler.h"
 #include "nsDebug.h"
 
-#ifdef MOZ_WIDGET_GTK2
-#include <gdk/gdkx.h>
-#elif defined(MOZ_WIDGET_QT)
-#include <QX11Info>
-#endif
+#include "mozilla/X11Util.h"
 #include <X11/Xlib.h>
 
 #define BUFSIZE 2048 // What Xlib uses with XGetErrorDatabaseText
@@ -201,11 +197,7 @@ InstallX11ErrorHandler()
 {
   XSetErrorHandler(X11Error);
 
-#ifdef MOZ_WIDGET_GTK2
-  Display *display = GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-  Display *display = QX11Info::display();
-#endif
+  Display *display = mozilla::DefaultXDisplay();
   NS_ASSERTION(display, "No X display");
   if (PR_GetEnv("MOZ_X_SYNC")) {
     XSynchronize(display, True);

@@ -40,12 +40,11 @@
 //#define USEWEAKREFS // (haven't quite figured that out yet)
 
 #include "nsWindowWatcher.h"
+#include "nsAutoWindowStateHelper.h"
 
 #include "nsAutoLock.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
-#include "nsPrompt.h"
-#include "nsPromptService.h"
 #include "nsWWJSUtils.h"
 #include "plstr.h"
 #include "nsIContentUtils.h"
@@ -62,6 +61,7 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMModalContentWindow.h"
+#include "nsIPrompt.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
@@ -329,10 +329,9 @@ nsresult JSContextAutoPopper::Push(JSContext *cx)
 
 NS_IMPL_ADDREF(nsWindowWatcher)
 NS_IMPL_RELEASE(nsWindowWatcher)
-NS_IMPL_QUERY_INTERFACE4(nsWindowWatcher,
+NS_IMPL_QUERY_INTERFACE3(nsWindowWatcher,
                          nsIWindowWatcher,
                          nsIPromptFactory,
-                         nsIAuthPromptAdapterFactory,
                          nsPIWindowWatcher)
 
 nsWindowWatcher::nsWindowWatcher() :
@@ -1065,54 +1064,46 @@ nsWindowWatcher::GetWindowEnumerator(nsISimpleEnumerator** _retval)
 NS_IMETHODIMP
 nsWindowWatcher::GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval)
 {
-  return NS_NewPrompter(_retval, aParent);
+  // This is for backwards compat only. Callers should just use the prompt service directly.
+  nsresult rv;
+  nsCOMPtr<nsIPromptFactory> factory = do_GetService("@mozilla.org/prompter;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return factory->GetPrompt(aParent, NS_GET_IID(nsIPrompt), reinterpret_cast<void**>(_retval));
 }
 
 NS_IMETHODIMP
 nsWindowWatcher::GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval)
 {
-  return NS_NewAuthPrompter(_retval, aParent);
+  // This is for backwards compat only. Callers should just use the prompt service directly.
+  nsresult rv;
+  nsCOMPtr<nsIPromptFactory> factory = do_GetService("@mozilla.org/prompter;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return factory->GetPrompt(aParent, NS_GET_IID(nsIAuthPrompt), reinterpret_cast<void**>(_retval));
 }
 
 NS_IMETHODIMP
 nsWindowWatcher::GetPrompt(nsIDOMWindow *aParent, const nsIID& aIID,
                            void **_retval)
 {
-  if (aIID.Equals(NS_GET_IID(nsIPrompt)))
-    return NS_NewPrompter(reinterpret_cast<nsIPrompt**>(_retval), aParent);
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
-    return NS_NewAuthPrompter(reinterpret_cast<nsIAuthPrompt**>(_retval),
-                              aParent);
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv = NS_NewAuthPrompter2(reinterpret_cast<nsIAuthPrompt2**>
-                                                      (_retval),
-                                      aParent);
-    if (rv == NS_NOINTERFACE) {
-      // Return an wrapped nsIAuthPrompt (if we can)
-      nsCOMPtr<nsIAuthPrompt> prompt;
-      rv = NS_NewAuthPrompter(getter_AddRefs(prompt), aParent);
-      if (NS_SUCCEEDED(rv)) {
-        NS_WrapAuthPrompt(prompt,
-                          reinterpret_cast<nsIAuthPrompt2**>(_retval));
-        if (!*_retval)
-          rv = NS_ERROR_NOT_AVAILABLE;
-      }
-    }
+  // This is for backwards compat only. Callers should just use the prompt service directly.
+  nsresult rv;
+  nsCOMPtr<nsIPromptFactory> factory = do_GetService("@mozilla.org/prompter;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = factory->GetPrompt(aParent, aIID, _retval);
 
-    return rv;
+  // Allow for an embedding implementation to not support nsIAuthPrompt2.
+  if (rv == NS_NOINTERFACE && aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
+    nsCOMPtr<nsIAuthPrompt> oldPrompt;
+    rv = factory->GetPrompt(aParent,
+                            NS_GET_IID(nsIAuthPrompt),
+                            getter_AddRefs(oldPrompt));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_WrapAuthPrompt(oldPrompt, reinterpret_cast<nsIAuthPrompt2**>(_retval));
+    if (!*_retval)
+      rv = NS_ERROR_NOT_AVAILABLE;
   }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-nsWindowWatcher::CreateAdapter(nsIAuthPrompt* aPrompt, nsIAuthPrompt2** _retval)
-{
-  *_retval = new AuthPromptWrapper(aPrompt);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*_retval);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

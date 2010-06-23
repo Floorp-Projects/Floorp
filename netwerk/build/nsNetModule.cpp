@@ -233,6 +233,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #undef LOG
 #undef LOG_ENABLED
 #include "nsHttpAuthManager.h"
+#include "nsHttpChannelAuthProvider.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
 #include "nsHttpNTLMAuth.h"
@@ -243,6 +244,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNTLMAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpAuthManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpChannelAuthProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpActivityDistributor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
@@ -253,11 +255,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 #include "nsResProtocolHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsResURL)
-#endif
-
-#ifdef NECKO_PROTOCOL_gopher
-#include "nsGopherHandler.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_viewsource
@@ -284,7 +281,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStdURLParser)
 #include "nsStandardURL.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandardURL)
 
-NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsSimpleURI)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleURI)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleNestedURI)
 
@@ -312,11 +309,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMaemoNetworkLinkService, Init)
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 #endif
 
-#ifdef NECKO_PROTOCOL_gopher
-#include "nsGopherDirListingConv.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherDirListingConv)
-#endif
-
 #include "nsMultiMixedConv.h"
 #include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
@@ -334,7 +326,6 @@ nsresult NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** result);
 nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 
 #define FTP_TO_INDEX                 "?from=text/ftp-dir&to=application/http-index-format"
-#define GOPHER_TO_INDEX              "?from=text/gopher-dir&to=application/http-index-format"
 #define INDEX_TO_HTML                "?from=application/http-index-format&to=text/html"
 #define MULTI_MIXED_X                "?from=multipart/x-mixed-replace&to=*/*"
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
@@ -353,7 +344,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 
 static const char *const sStreamConverterArray[] = {
     FTP_TO_INDEX,
-    GOPHER_TO_INDEX,
     INDEX_TO_HTML,
     MULTI_MIXED_X,
     MULTI_MIXED,
@@ -846,14 +836,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 #endif
 
-#ifdef NECKO_PROTOCOL_gopher
-    { "GopherDirListingConverter",
-      NS_GOPHERDIRLISTINGCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY GOPHER_TO_INDEX,
-      nsGopherDirListingConvConstructor
-    },
-#endif
-
     { "Indexed to HTML Converter", 
       NS_NSINDEXEDTOHTMLCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY INDEX_TO_HTML, 
@@ -1001,6 +983,11 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_HTTPAUTHMANAGER_CONTRACTID,
       nsHttpAuthManagerConstructor },
 
+   { NS_HTTPCHANNELAUTHPROVIDER_CLASSNAME,
+     NS_HTTPCHANNELAUTHPROVIDER_CID,
+     NS_HTTPCHANNELAUTHPROVIDER_CONTRACTID,
+     nsHttpChannelAuthProviderConstructor },
+
    { NS_HTTPACTIVITYDISTRIBUTOR_CLASSNAME,
      NS_HTTPACTIVITYDISTRIBUTOR_CID,
      NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID,
@@ -1127,15 +1114,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_WIFI_MONITOR_COMPONENT_CID,
       NS_WIFI_MONITOR_CONTRACTID,
       nsWifiMonitorConstructor
-    },
-#endif
-
-#ifdef NECKO_PROTOCOL_gopher
-    //gopher:
-    { "The Gopher Protocol Handler", 
-      NS_GOPHERHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "gopher",
-      nsGopherHandlerConstructor
     },
 #endif
 

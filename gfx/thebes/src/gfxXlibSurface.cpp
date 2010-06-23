@@ -158,6 +158,28 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
         case ImageFormatRGB24:
             return XRenderFindStandardFormat (dpy, PictStandardRGB24);
             break;
+        case ImageFormatRGB16_565: {
+            // PictStandardRGB16_565 is not standard Xrender format
+            // we should try to find related visual
+            // and find xrender format by visual
+            Visual *visual = NULL;
+            Screen *screen = DefaultScreenOfDisplay(dpy);
+            int j;
+            for (j = 0; j < screen->ndepths; j++) {
+                Depth *d = &screen->depths[j];
+                if (d->depth == 16 && d->nvisuals && &d->visuals[0]) {
+                    if (d->visuals[0].red_mask   == 0xf800 &&
+                        d->visuals[0].green_mask == 0x7e0 &&
+                        d->visuals[0].blue_mask  == 0x1f)
+                        visual = &d->visuals[0];
+                    break;
+                }
+            }
+            if (!visual)
+                return NULL;
+            return XRenderFindVisualFormat(dpy, visual);
+            break;
+        }
         case ImageFormatA8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
             break;

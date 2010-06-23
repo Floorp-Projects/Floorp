@@ -41,14 +41,10 @@
 #include "nsIObjectOutputStream.h"
 #include "nsNetUtil.h"
 
-// nsSimpleURI uses aggregation, so use the non-logging addref/release macros.
-NS_IMPL_QUERY_INTERFACE_INHERITED1(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
-NS_IMPL_NONLOGGING_ADDREF_INHERITED(nsSimpleNestedURI, nsSimpleURI)
-NS_IMPL_NONLOGGING_RELEASE_INHERITED(nsSimpleNestedURI, nsSimpleURI)
+NS_IMPL_ISUPPORTS_INHERITED1(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
 
 nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI)
-    : nsSimpleURI(nsnull),
-      mInnerURI(innerURI)
+    : mInnerURI(innerURI)
 {
     NS_ASSERTION(innerURI, "Must have inner URI");
     NS_TryToSetImmutable(innerURI);

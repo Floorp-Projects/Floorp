@@ -242,7 +242,7 @@ ProxiedAuthCallback(gconstpointer in,
     return;
 
   nsCOMPtr<nsIStringBundle> bundle;
-  bundleSvc->CreateBundle("chrome://global/locale/prompts.properties",
+  bundleSvc->CreateBundle("chrome://global/locale/commonDialogs.properties",
                           getter_AddRefs(bundle));
   if (!bundle)
     return;

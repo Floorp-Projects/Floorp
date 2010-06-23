@@ -147,7 +147,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   // Get the start y position.
   nsListBoxBodyFrame* body = static_cast<nsListBoxBodyFrame*>(aBox);
   if (!body) {
-    NS_ERROR("Frame encountered that isn't a listboxbody!\n");
+    NS_ERROR("Frame encountered that isn't a listboxbody!");
     return NS_ERROR_FAILURE;
   }
 

@@ -43,8 +43,6 @@
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsIContent.h"
 
-class nsIDOMNode;
-
 /**
   * This file contains a number of classes that are used as base
   *  classes for the different accessibility implementations of
@@ -57,7 +55,7 @@ class nsIDOMNode;
 class nsLeafAccessible : public nsAccessibleWrap
 {
 public:
-  nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsLeafAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -84,7 +82,7 @@ class nsLinkableAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Jump = 0 };
 
-  nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  nsLinkableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -100,8 +98,8 @@ public:
   NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
 
   // nsAccessNode
-  virtual nsresult Init();
-  virtual nsresult Shutdown();
+  virtual PRBool Init();
+  virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
@@ -128,7 +126,8 @@ protected:
 class nsEnumRoleAccessible : public nsAccessibleWrap
 {
 public:
-  nsEnumRoleAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRUint32 aRole);
+  nsEnumRoleAccessible(nsIContent *aContent, nsIWeakReference *aShell,
+                       PRUint32 aRole);
   virtual ~nsEnumRoleAccessible() { }
 
   NS_DECL_ISUPPORTS_INHERITED

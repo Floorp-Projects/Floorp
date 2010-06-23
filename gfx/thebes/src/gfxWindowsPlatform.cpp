@@ -42,6 +42,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
+#include "gfxTextRunWordCache.h"
 
 #include "nsUnicharUtils.h"
 
@@ -492,7 +493,7 @@ gfxWindowsPlatform::InitDisplayCaps()
 void
 gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
 {
-    PRBool clearFontCache = PR_TRUE;
+    PRBool clearTextFontCaches = PR_TRUE;
 
     gfxPlatform::FontsPrefsChanged(aPrefBranch, aPref);
 
@@ -504,12 +505,14 @@ gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aP
     } else if (!strcmp(GFX_USE_CLEARTYPE_ALWAYS, aPref)) {
         mUseClearTypeAlways = UNINITIALIZED_VALUE;
     } else {
-        clearFontCache = PR_FALSE;
+        clearTextFontCaches = PR_FALSE;
     }
 
-    if (clearFontCache) {    
+    if (clearTextFontCaches) {    
         gfxFontCache *fc = gfxFontCache::GetCache();
-        if (fc)
-            fc->AgeAllGenerations();
+        if (fc) {
+            fc->Flush();
+        }
+        gfxTextRunWordCache::Flush();
     }
 }

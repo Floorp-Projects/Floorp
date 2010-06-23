@@ -39,13 +39,16 @@
 #ifndef GFX_SHARED_IMAGESURFACE_H
 #define GFX_SHARED_IMAGESURFACE_H
 
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/ipc/SharedMemory.h"
+
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
-#include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/ipc/Shmem.h"
-
 class THEBES_API gfxSharedImageSurface : public gfxImageSurface {
+    typedef mozilla::ipc::SharedMemory SharedMemory;
+    typedef mozilla::ipc::Shmem Shmem;
+
 public:
     /**
      * Init must be called after ctor
@@ -56,7 +59,7 @@ public:
      * Create shared image from external Shmem
      * Shmem must be initialized by this class
      */
-    gfxSharedImageSurface(const mozilla::ipc::Shmem &aShmem);
+    gfxSharedImageSurface(const Shmem &aShmem);
 
     ~gfxSharedImageSurface();
 
@@ -71,7 +74,7 @@ public:
     bool Init(ShmemAllocator *aAllocator,
               const gfxIntSize& aSize,
               gfxImageFormat aFormat,
-              mozilla::ipc::SharedMemory::SharedMemoryType aShmType = mozilla::ipc::SharedMemory::TYPE_BASIC)
+              SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC)
     {
         mSize = aSize;
         mFormat = aFormat;
@@ -84,7 +87,7 @@ public:
     }
 
     /* Gives Shmem data, which can be passed to IPDL interfaces */
-    mozilla::ipc::Shmem& GetShmem() { return mShmem; }
+    Shmem& GetShmem() { return mShmem; }
 
     // This can be used for recognizing normal gfxImageSurface as SharedImage
     static PRBool IsSharedImage(gfxASurface *aSurface);
@@ -93,7 +96,7 @@ private:
     size_t GetAlignedSize();
     bool InitSurface(PRBool aUpdateShmemInfo);
 
-    mozilla::ipc::Shmem mShmem;
+    Shmem mShmem;
 };
 
 #endif /* GFX_SHARED_IMAGESURFACE_H */

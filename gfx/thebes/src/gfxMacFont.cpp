@@ -40,6 +40,7 @@
 
 #include "gfxMacFont.h"
 #include "gfxCoreTextShaper.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxPlatformMac.h"
 #include "gfxContext.h"
 
@@ -49,22 +50,27 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
                        PRBool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle),
       mATSFont(aFontEntry->GetFontRef()),
+      mCGFont(nsnull),
       mFontFace(nsnull),
-      mScaledFont(nsnull),
-      mAdjustedSize(0.0)
+      mScaledFont(nsnull)
 {
     if (aNeedsBold) {
         mSyntheticBoldOffset = 1;  // devunit offset when double-striking text to fake boldness
     }
 
+    mCGFont = ::CGFontCreateWithPlatformFont(&mATSFont);
+    if (!mCGFont) {
+        mIsValid = PR_FALSE;
+        return;
+    }
+
     // InitMetrics will handle the sizeAdjust factor and set mAdjustedSize
     InitMetrics();
-    if (!mIsValid)
+    if (!mIsValid) {
         return;
+    }
 
-    CGFontRef cgFont = ::CGFontCreateWithPlatformFont(&mATSFont);
-    mFontFace = cairo_quartz_font_face_create_for_cgfont(cgFont);
-    ::CGFontRelease(cgFont);
+    mFontFace = cairo_quartz_font_face_create_for_cgfont(mCGFont);
 
     cairo_status_t cairoerr = cairo_font_face_status(mFontFace);
     if (cairoerr != CAIRO_STATUS_SUCCESS) {
@@ -122,7 +128,9 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
 #endif
     }
 
-    mShaper = new gfxCoreTextShaper(this);
+    if (FontCanSupportHarfBuzz()) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+    }
 }
 
 gfxMacFont::~gfxMacFont()
@@ -133,6 +141,15 @@ gfxMacFont::~gfxMacFont()
     if (mFontFace) {
         cairo_font_face_destroy(mFontFace);
     }
+
+    // this is documented to be safe if mCGFont is null
+    ::CGFontRelease(mCGFont);
+}
+
+void
+gfxMacFont::CreatePlatformShaper()
+{
+    mPlatformShaper = new gfxCoreTextShaper(this);
 }
 
 PRBool
@@ -158,6 +175,17 @@ gfxMacFont::InitMetrics()
 {
     gfxFloat size =
         PR_MAX(((mAdjustedSize != 0.0f) ? mAdjustedSize : mStyle.size), 1.0f);
+    PRUint32 upem = ::CGFontGetUnitsPerEm(mCGFont);
+    if (!upem) {
+        mIsValid = PR_FALSE;
+#ifdef DEBUG
+        char warnBuf[1024];
+        sprintf(warnBuf, "Bad font metrics for: %s (no unitsPerEm value)",
+                NS_ConvertUTF16toUTF8(mFontEntry->Name()).get());
+        NS_WARNING(warnBuf);
+#endif
+        return;
+    }
 
     ATSFontMetrics atsMetrics;
     OSStatus err;
@@ -176,16 +204,10 @@ gfxMacFont::InitMetrics()
         return;
     }
 
-    // create a temporary local CTFont for glyph measurement
-    CTFontRef aCTFont =
-        ::CTFontCreateWithPlatformFont(mATSFont, size, NULL, NULL);
-
-    // prefer to get xHeight from ATS metrics (unhinted) rather than Core Text (hinted),
-    // see bug 429605.
     if (atsMetrics.xHeight > 0)
         mMetrics.xHeight = atsMetrics.xHeight * size;
     else
-        mMetrics.xHeight = GetCharHeight(aCTFont, 'x');
+        mMetrics.xHeight = ::CGFontGetXHeight(mCGFont) * size / upem;
 
     if (mAdjustedSize == 0.0f) {
         if (mMetrics.xHeight != 0.0f && mStyle.sizeAdjust != 0.0f) {
@@ -195,9 +217,6 @@ gfxMacFont::InitMetrics()
             // the recursive call to InitMetrics will see the adjusted size,
             // and set up the rest of the metrics fields accordingly
             InitMetrics();
-
-            // release our temporary CTFont
-            ::CFRelease(aCTFont);
             return;
         }
         mAdjustedSize = size;
@@ -228,8 +247,11 @@ gfxMacFont::InitMetrics()
     mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / mMetrics.maxHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
+    CFDataRef cmap =
+        ::CGFontCopyTableForTag(mCGFont, TRUETYPE_TAG('c','m','a','p'));
+
     PRUint32 glyphID;
-    float xWidth = GetCharWidth(aCTFont, 'x', &glyphID);
+    gfxFloat xWidth = GetCharWidth(cmap, upem, size, 'x', &glyphID);
     if (atsMetrics.avgAdvanceWidth != 0.0)
         mMetrics.aveCharWidth = PR_MIN(atsMetrics.avgAdvanceWidth * size, xWidth);
     else if (glyphID != 0)
@@ -245,14 +267,18 @@ gfxMacFont::InitMetrics()
         mMetrics.maxAdvance = mMetrics.aveCharWidth;
     }
 
-    mMetrics.spaceWidth = GetCharWidth(aCTFont, ' ', &glyphID);
+    mMetrics.spaceWidth = GetCharWidth(cmap, upem, size, ' ', &glyphID);
     mSpaceGlyph = glyphID;
 
-    mMetrics.zeroOrAveCharWidth = GetCharWidth(aCTFont, '0', &glyphID);
+    mMetrics.zeroOrAveCharWidth = GetCharWidth(cmap, upem, size, '0', &glyphID);
     if (glyphID == 0)
         mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
 
-    ::CFRelease(aCTFont);
+    if (cmap) {
+        ::CFRelease(cmap);
+    }
+
+    mFUnitsConvFactor = mAdjustedSize / upem;
 
     SanitizeMetrics(&mMetrics, mFontEntry->mIsBadUnderlineFont);
 
@@ -266,48 +292,52 @@ gfxMacFont::InitMetrics()
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
-    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f supOff: %f subOff: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
 }
 
-float
-gfxMacFont::GetCharWidth(CTFontRef aCTFont, PRUnichar aUniChar,
-                         PRUint32 *aGlyphID)
+gfxFloat
+gfxMacFont::GetCharWidth(CFDataRef aCmap, PRUint32 aUpem, gfxFloat aSize,
+                         PRUnichar aUniChar, PRUint32 *aGlyphID)
 {
-    UniChar c = aUniChar;
-    CGGlyph glyph;
-    if (::CTFontGetGlyphsForCharacters(aCTFont, &c, &glyph, 1)) {
-        CGSize advance;
-        ::CTFontGetAdvancesForGlyphs(aCTFont,
-                                     kCTFontHorizontalOrientation,
-                                     &glyph,
-                                     &advance,
-                                     1);
-        if (aGlyphID != nsnull)
-            *aGlyphID = glyph;
-        return advance.width;
+    CGGlyph glyph = 0;
+    
+    if (aCmap) {
+        glyph = gfxFontUtils::MapCharToGlyph(::CFDataGetBytePtr(aCmap),
+                                             ::CFDataGetLength(aCmap),
+                                             aUniChar);
     }
 
-    // couldn't get glyph for the char
-    if (aGlyphID != nsnull)
-        *aGlyphID = 0;
+    if (aGlyphID) {
+        *aGlyphID = glyph;
+    }
+
+    if (glyph) {
+        int advance;
+        if (::CGFontGetGlyphAdvances(mCGFont, &glyph, 1, &advance)) {
+            return advance * aSize / aUpem;
+        }
+    }
+
     return 0;
 }
 
-float
-gfxMacFont::GetCharHeight(CTFontRef aCTFont, PRUnichar aUniChar)
+/*static*/ void
+gfxMacFont::DestroyBlobFunc(void* aUserData)
 {
-    UniChar c = aUniChar;
-    CGGlyph glyph;
-    if (::CTFontGetGlyphsForCharacters(aCTFont, &c, &glyph, 1)) {
-        CGRect boundingRect;
-        ::CTFontGetBoundingRectsForGlyphs(aCTFont,
-                                          kCTFontHorizontalOrientation,
-                                          &glyph,
-                                          &boundingRect,
-                                          1);
-        return boundingRect.size.height;
+    ::CFRelease((CFDataRef)aUserData);
+}
+
+hb_blob_t *
+gfxMacFont::GetFontTable(PRUint32 aTag)
+{
+    CFDataRef dataRef = ::CGFontCopyTableForTag(mCGFont, aTag);
+    if (dataRef) {
+        return hb_blob_create((const char*)::CFDataGetBytePtr(dataRef),
+                              ::CFDataGetLength(dataRef),
+                              HB_MEMORY_MODE_READONLY,
+                              DestroyBlobFunc, (void*)dataRef);
     }
 
-    return 0;
+    return nsnull;
 }

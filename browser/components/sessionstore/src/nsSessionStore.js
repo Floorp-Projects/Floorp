@@ -110,6 +110,10 @@ const CAPABILITIES = [
   "DNSPrefetch", "Auth"
 ];
 
+// These keys are for internal use only - they shouldn't be part of the JSON
+// that gets saved to disk nor part of the strings returned by the API.
+const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved"];
+
 #ifndef XP_WIN
 #define BROKEN_WM_Z_ORDER
 #endif
@@ -261,7 +265,7 @@ SessionStoreService.prototype = {
     if (iniString) {
       try {
         // parse the session state into JS objects
-        this._initialState = this._safeEval("(" + iniString + ")");
+        this._initialState = JSON.parse(iniString);
         
         let lastSessionCrashed =
           this._initialState.session && this._initialState.session.state &&
@@ -519,7 +523,10 @@ SessionStoreService.prototype = {
     case "private-browsing-change-granted":
       if (aData == "enter") {
         this.saveState(true);
-        this._stateBackup = this._safeEval(this._getCurrentState(true).toSource());
+        // We stringify & parse the current state so that we have have an object
+        // that won't change. _getCurrentState returns an object with references
+        // to objects that can change (specifically this._windows[x]).
+        this._stateBackup = JSON.parse(this._toJSONString(this._getCurrentState(true)));
       }
       break;
     }
@@ -888,7 +895,7 @@ SessionStoreService.prototype = {
     this._handleClosedWindows();
 
     try {
-      var state = this._safeEval("(" + aState + ")");
+      var state = JSON.parse(aState);
     }
     catch (ex) { /* invalid state object - don't restore anything */ }
     if (!state || !state.windows)
@@ -934,7 +941,7 @@ SessionStoreService.prototype = {
     if (!aWindow.__SSi)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     
-    this.restoreWindow(aWindow, "(" + aState + ")", aOverwrite);
+    this.restoreWindow(aWindow, aState, aOverwrite);
   },
 
   getTabState: function sss_getTabState(aTab) {
@@ -950,7 +957,7 @@ SessionStoreService.prototype = {
   },
 
   setTabState: function sss_setTabState(aTab, aState) {
-    var tabState = this._safeEval("(" + aState + ")");
+    var tabState = JSON.parse(aState);
     if (!tabState.entries || !aTab.ownerDocument || !aTab.ownerDocument.defaultView.__SSi)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     
@@ -1870,7 +1877,7 @@ SessionStoreService.prototype = {
       this.onLoad(aWindow);
 
     try {
-      var root = typeof aState == "string" ? this._safeEval(aState) : aState;
+      var root = typeof aState == "string" ? JSON.parse(aState) : aState;
       if (!root.windows[0]) {
         this._sendRestoreCompletedNotifications();
         return; // nothing to restore
@@ -1927,7 +1934,9 @@ SessionStoreService.prototype = {
       tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
     
     for (var t = 0; t < newTabCount; t++) {
-      tabs.push(t < openTabCount ? tabbrowser.tabs[t] : tabbrowser.addTab());
+      tabs.push(t < openTabCount ?
+                tabbrowser.tabs[t] :
+                tabbrowser.addTab("about:blank", {skipAnimation: true}));
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {
         tabbrowser.moveTabTo(tabs[t], t);
@@ -2585,8 +2594,7 @@ SessionStoreService.prototype = {
   _saveStateObject: function sss_saveStateObject(aStateObj) {
     var stateString = Cc["@mozilla.org/supports-string;1"].
                         createInstance(Ci.nsISupportsString);
-    // parentheses are for backwards compatibility with Firefox 2.0 and 3.0
-    stateString.data = "(" + this._toJSONString(aStateObj) + ")";
+    stateString.data = this._toJSONString(aStateObj);
 
     Services.obs.notifyObservers(stateString, "sessionstore-state-write", "");
 
@@ -2864,13 +2872,6 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * safe eval'ing
-   */
-  _safeEval: function sss_safeEval(aStr) {
-    return Cu.evalInSandbox(aStr, new Cu.Sandbox("about:blank"));
-  },
-
-  /**
    * Converts a JavaScript object into a JSON string
    * (see http://www.json.org/ for more information).
    *
@@ -2880,18 +2881,11 @@ SessionStoreService.prototype = {
    * @returns the object's JSON representation
    */
   _toJSONString: function sss_toJSONString(aJSObject) {
-    // XXXzeniko drop the following keys used only for internal bookkeeping:
-    //           _tabStillLoading, _hosts, _formDataSaved
-    let jsonString = JSON.stringify(aJSObject);
-    
-    if (/[\u2028\u2029]/.test(jsonString)) {
-      // work-around for bug 485563 until we can use JSON.parse
-      // instead of evalInSandbox everywhere
-      jsonString = jsonString.replace(/[\u2028\u2029]/g,
-                                      function($0) "\\u" + $0.charCodeAt(0).toString(16));
+    function exclude(key, value) {
+      // returning undefined results in the exclusion of that key
+      return INTERNAL_KEYS.indexOf(key) == -1 ? value : undefined;
     }
-    
-    return jsonString;
+    return JSON.stringify(aJSObject, exclude);
   },
 
   _sendRestoreCompletedNotifications: function sss_sendRestoreCompletedNotifications() {

@@ -16,6 +16,7 @@
  * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
  * 
  * Contributor(s): László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -31,15 +32,9 @@
  *
  ******* END LICENSE BLOCK *******/
 
-#ifndef MOZILLA_CLIENT
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
-#else
 #include <stdlib.h> 
 #include <string.h>
 #include <stdio.h> 
-#endif
 
 #include "hunzip.hxx"
 
@@ -62,6 +57,7 @@ Hunzip::Hunzip(const char * file, const char * key) {
     inc = 0;
     outc = 0;
     dec = NULL;
+    fin = NULL;
     filename = (char *) malloc(strlen(file) + 1);
     if (filename) strcpy(filename, file);
     if (getcode(key) == -1) bufsiz = -1;
@@ -73,6 +69,8 @@ int Hunzip::getcode(const char * key) {
     int i, j, n, p;
     int allocatedbit = BASEBITREC;
     const char * enc = key;
+
+    if (!filename) return -1;
 
     fin = fopen(filename, "rb");
     if (!fin) return -1;

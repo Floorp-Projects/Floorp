@@ -50,13 +50,14 @@
 #include "nsIRenderingContext.h"
 #include "nsIComponentManager.h"
 
-// --------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 // nsTextAccessibleWrap Accessible
-// --------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
-nsTextAccessibleWrap::nsTextAccessibleWrap(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsTextAccessible(aDOMNode, aShell)
-{ 
+nsTextAccessibleWrap::
+  nsTextAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsTextAccessible(aContent, aShell)
+{
 }
 
 STDMETHODIMP_(ULONG) nsTextAccessibleWrap::AddRef()
@@ -89,12 +90,13 @@ STDMETHODIMP nsTextAccessibleWrap::get_domText(
 __try {
   *aDomText = NULL;
 
-  if (!mDOMNode) {
-    return E_FAIL; // Node already shut down
-  }
+  if (IsDefunct())
+    return E_FAIL;
+
   nsAutoString nodeValue;
 
-  mDOMNode->GetNodeValue(nodeValue);
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
+  DOMNode->GetNodeValue(nodeValue);
   if (nodeValue.IsEmpty())
     return S_FALSE;
 
@@ -155,9 +157,8 @@ STDMETHODIMP nsTextAccessibleWrap::get_unclippedSubstringBounds(
 __try {
   *aX = *aY = *aWidth = *aHeight = 0;
 
-  if (!mDOMNode) {
-    return E_FAIL; // Node already shut down
-  }
+  if (IsDefunct())
+    return E_FAIL;
 
   if (NS_FAILED(GetCharacterExtents(aStartIndex, aEndIndex, 
                                     aX, aY, aWidth, aHeight))) {
@@ -174,9 +175,13 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
     /* [in] */ unsigned int aEndIndex)
 {
 __try {
+  if (IsDefunct())
+    return E_FAIL;
+
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv =
-    nsCoreUtils::ScrollSubstringTo(GetFrame(), mDOMNode, aStartIndex,
-                                   mDOMNode, aEndIndex,
+    nsCoreUtils::ScrollSubstringTo(GetFrame(), DOMNode, aStartIndex,
+                                   DOMNode, aEndIndex,
                                    nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   if (NS_FAILED(rv))
     return E_FAIL;

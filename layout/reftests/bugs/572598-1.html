@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html contenteditable="true" class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("i").select();
+  document.execCommand("forecolor", false, "green");
+  try { document.execCommand("insertunorderedlist", false, null); } catch(e){ }
+  document.execCommand("selectAll", false, null);
+  document.execCommand("contentReadOnly", false, null);
+  document.getElementById("d").contentEditable = "true";
+  document.getElementById("d").style.position = "absolute";
+  document.documentElement.focus();
+  document.execCommand("superscript", false, null);
+  window.getSelection().removeAllRanges();
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();" contenteditable="false"><div id="d"><input id="i"></div></body>
+
+</html>

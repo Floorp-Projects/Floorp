@@ -39,12 +39,12 @@
 # the two OBJDIRs.
 
 ifndef OBJDIR
-OBJDIR_PPC = $(MOZ_OBJDIR)/ppc
-OBJDIR_X86 = $(MOZ_OBJDIR)/i386
-DIST_PPC = $(OBJDIR_PPC)/dist
-DIST_X86 = $(OBJDIR_X86)/dist
-DIST_UNI = $(DIST_PPC)/universal
-OBJDIR = $(OBJDIR_PPC)
+OBJDIR_ARCH_1 = $(MOZ_OBJDIR)/$(firstword $(MOZ_BUILD_PROJECTS))
+OBJDIR_ARCH_2 = $(MOZ_OBJDIR)/$(word 2,$(MOZ_BUILD_PROJECTS))
+DIST_ARCH_1 = $(OBJDIR_ARCH_1)/dist
+DIST_ARCH_2 = $(OBJDIR_ARCH_2)/dist
+DIST_UNI = $(DIST_ARCH_1)/universal
+OBJDIR = $(OBJDIR_ARCH_1)
 endif
 
 include $(OBJDIR)/config/autoconf.mk
@@ -85,47 +85,47 @@ postflight_all:
 # Call the packager to set this up.  Set UNIVERSAL_BINARY= to avoid producing
 # a universal binary too early, before the unified bits have been staged.
 # Set SIGN_NSS= to skip shlibsign.
-	$(MAKE) -C $(OBJDIR_PPC)/$(INSTALLER_DIR) \
+	$(MAKE) -C $(OBJDIR_ARCH_1)/$(INSTALLER_DIR) \
           UNIVERSAL_BINARY= SIGN_NSS= PKG_SKIP_STRIP=1 stage-package
-	$(MAKE) -C $(OBJDIR_X86)/$(INSTALLER_DIR) \
+	$(MAKE) -C $(OBJDIR_ARCH_2)/$(INSTALLER_DIR) \
           UNIVERSAL_BINARY= SIGN_NSS= PKG_SKIP_STRIP=1 stage-package
 # Remove .chk files that may have been copied from the NSS build.  These will
 # cause unify to warn or fail if present.  New .chk files that are
 # appropriate for the merged libraries will be generated when the universal
 # dmg is built.
-	rm -f $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk \
-	      $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk
+	rm -f $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk \
+	      $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk
 # The only difference betewen the two trees now should be the
 # about:buildconfig page.  Fix it up.
 	$(TOPSRCDIR)/build/macosx/universal/fix-buildconfig \
-	  $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR) \
-	  $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR)
+	  $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR) \
+	  $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR)
 	mkdir -p $(DIST_UNI)/$(MOZ_PKG_APPNAME)
-	rm -f $(DIST_X86)/universal
-	ln -s $(DIST_UNI) $(DIST_X86)/universal
+	rm -f $(DIST_ARCH_2)/universal
+	ln -s $(DIST_UNI) $(DIST_ARCH_2)/universal
 	rm -rf $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
 	$(TOPSRCDIR)/build/macosx/universal/unify \
           --unify-with-sort "\.manifest$$" \
           --unify-with-sort "components\.list$$" \
-	  $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
-	  $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
+	  $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
+	  $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
 	  $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
 # A universal .dmg can now be produced by making in either architecture's
 # INSTALLER_DIR.
 # Now, repeat the process for the test package.
-	$(MAKE) -C $(OBJDIR_PPC) UNIVERSAL_BINARY= package-tests
-	$(MAKE) -C $(OBJDIR_X86) UNIVERSAL_BINARY= package-tests
+	$(MAKE) -C $(OBJDIR_ARCH_1) UNIVERSAL_BINARY= package-tests
+	$(MAKE) -C $(OBJDIR_ARCH_2) UNIVERSAL_BINARY= package-tests
 	rm -rf $(DIST_UNI)/test-package-stage
 # automation.py differs because it hardcodes a path to
 # dist/bin. It doesn't matter which one we use.
-	if test -d $(DIST_PPC)/test-package-stage -a                 \
-                -d $(DIST_X86)/test-package-stage; then              \
-           cp $(DIST_PPC)/test-package-stage/mochitest/automation.py \
-             $(DIST_X86)/test-package-stage/mochitest/;              \
-           cp $(DIST_PPC)/test-package-stage/reftest/automation.py   \
-             $(DIST_X86)/test-package-stage/reftest/;                \
+	if test -d $(DIST_ARCH_1)/test-package-stage -a                 \
+                -d $(DIST_ARCH_2)/test-package-stage; then              \
+           cp $(DIST_ARCH_1)/test-package-stage/mochitest/automation.py \
+             $(DIST_ARCH_2)/test-package-stage/mochitest/;              \
+           cp $(DIST_ARCH_1)/test-package-stage/reftest/automation.py   \
+             $(DIST_ARCH_2)/test-package-stage/reftest/;                \
            $(TOPSRCDIR)/build/macosx/universal/unify                 \
              --unify-with-sort "all-test-dirs\.list$$"               \
-             $(DIST_PPC)/test-package-stage                          \
-             $(DIST_X86)/test-package-stage                          \
+             $(DIST_ARCH_1)/test-package-stage                          \
+             $(DIST_ARCH_2)/test-package-stage                          \
              $(DIST_UNI)/test-package-stage; fi

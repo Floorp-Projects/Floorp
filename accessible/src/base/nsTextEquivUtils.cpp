@@ -54,7 +54,7 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x24)
 // nsTextEquivUtils. Public.
 
 nsresult
-nsTextEquivUtils::GetNameFromSubtree(nsIAccessible *aAccessible,
+nsTextEquivUtils::GetNameFromSubtree(nsAccessible *aAccessible,
                                      nsAString& aName)
 {
   aName.Truncate();
@@ -68,12 +68,8 @@ nsTextEquivUtils::GetNameFromSubtree(nsIAccessible *aAccessible,
   PRUint32 nameRule = gRoleToNameRulesMap[role];
 
   if (nameRule == eFromSubtree) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-
-    nsCOMPtr<nsIDOMNode> DOMNode;
-    accessNode->GetDOMNode(getter_AddRefs(DOMNode));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(DOMNode));
-    if (content) {
+    //XXX: is it necessary to care the accessible is not a document?
+    if (aAccessible->IsContent()) {
       nsAutoString name;
       AppendFromAccessibleChildren(aAccessible, &name);
       name.CompressWhitespace();
@@ -88,18 +84,13 @@ nsTextEquivUtils::GetNameFromSubtree(nsIAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::GetTextEquivFromIDRefs(nsIAccessible *aAccessible,
+nsTextEquivUtils::GetTextEquivFromIDRefs(nsAccessible *aAccessible,
                                          nsIAtom *aIDRefsAttr,
                                          nsAString& aTextEquiv)
 {
   aTextEquiv.Truncate();
 
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-
-  nsCOMPtr<nsIDOMNode> DOMNode;
-  accessNode->GetDOMNode(getter_AddRefs(DOMNode));
-
-  nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(DOMNode);
+  nsIContent* content = aAccessible->GetContent();
   if (!content)
     return NS_OK;
 
@@ -130,7 +121,7 @@ nsTextEquivUtils::GetTextEquivFromIDRefs(nsIAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
+nsTextEquivUtils::AppendTextEquivFromContent(nsAccessible *aInitiatorAcc,
                                              nsIContent *aContent,
                                              nsAString *aString)
 {
@@ -140,8 +131,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
 
   gInitiatorAcc = aInitiatorAcc;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(aContent));
-  nsIPresShell *shell = nsCoreUtils::GetPresShellFor(DOMNode);
+  nsCOMPtr<nsIWeakReference> shell = nsCoreUtils::GetWeakShellFor(aContent);
   if (!shell) {
     NS_ASSERTION(PR_TRUE, "There is no presshell!");
     gInitiatorAcc = nsnull;
@@ -159,7 +149,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
 
   if (isVisible) {
     nsAccessible *accessible =
-      GetAccService()->GetAccessibleInShell(DOMNode, shell);
+      GetAccService()->GetAccessibleInWeakShell(aContent, shell);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
       goThroughDOMSubtree = PR_FALSE;
@@ -178,11 +168,8 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
                                                  nsAString *aString)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    
-    nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(aContent));
-    
     PRBool isHTMLBlock = PR_FALSE;
-    
+
     nsIContent *parentContent = aContent->GetParent();
     if (parentContent) {
       nsIFrame *frame = parentContent->GetPrimaryFrame();
@@ -230,18 +217,17 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Private.
 
-nsCOMPtr<nsIAccessible> nsTextEquivUtils::gInitiatorAcc;
+nsRefPtr<nsAccessible> nsTextEquivUtils::gInitiatorAcc;
 
 nsresult
-nsTextEquivUtils::AppendFromAccessibleChildren(nsIAccessible *aAccessible,
+nsTextEquivUtils::AppendFromAccessibleChildren(nsAccessible *aAccessible,
                                                nsAString *aString)
 {
   nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;
 
-  nsRefPtr<nsAccessible> accessible(do_QueryObject(aAccessible));
-  PRInt32 childCount = accessible->GetChildCount();
+  PRInt32 childCount = aAccessible->GetChildCount();
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *child = accessible->GetChildAt(childIdx);
+    nsAccessible *child = aAccessible->GetChildAt(childIdx);
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -250,18 +236,13 @@ nsTextEquivUtils::AppendFromAccessibleChildren(nsIAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendFromAccessible(nsIAccessible *aAccessible,
+nsTextEquivUtils::AppendFromAccessible(nsAccessible *aAccessible,
                                        nsAString *aString)
 {
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-
-  nsCOMPtr<nsIDOMNode> DOMNode;
-  accessNode->GetDOMNode(getter_AddRefs(DOMNode));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(DOMNode));
-  NS_ASSERTION(content, "There is no content!");
-
-  if (content) {
-    nsresult rv = AppendTextEquivFromTextContent(content, aString);
+  //XXX: is it necessary to care the accessible is not a document?
+  if (aAccessible->IsContent()) {
+    nsresult rv = AppendTextEquivFromTextContent(aAccessible->GetContent(),
+                                                 aString);
     if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED)
       return rv;
   }
@@ -310,7 +291,7 @@ nsTextEquivUtils::AppendFromAccessible(nsIAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendFromValue(nsIAccessible *aAccessible,
+nsTextEquivUtils::AppendFromValue(nsAccessible *aAccessible,
                                   nsAString *aString)
 {
   PRUint32 role = nsAccUtils::Role(aAccessible);
@@ -333,13 +314,11 @@ nsTextEquivUtils::AppendFromValue(nsIAccessible *aAccessible,
       NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
   }
 
-  nsRefPtr<nsAccessible> acc = do_QueryObject(aAccessible);
-  nsCOMPtr<nsIDOMNode> node;
-  acc->GetDOMNode(getter_AddRefs(node));
-  NS_ENSURE_STATE(node);
+  //XXX: is it necessary to care the accessible is not a document?
+  if (aAccessible->IsDocument())
+    return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  NS_ENSURE_STATE(content);
+  nsIContent *content = aAccessible->GetContent();
 
   nsCOMPtr<nsIContent> parent = content->GetParent();
   PRInt32 indexOf = parent->IndexOf(content);

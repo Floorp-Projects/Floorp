@@ -153,6 +153,12 @@ button[type="menu-button"] {
   border: none;
 }
 
+.button-menubutton-button {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+}
+
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
   -moz-appearance: toolbarbutton-dropdown !important;

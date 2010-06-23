@@ -64,6 +64,8 @@ XPIDLSRCS = \
   nsIHttpChannelInternal.idl \
   nsIHttpEventSink.idl \
   nsIHttpProtocolHandler.idl \
+  nsIHttpChannelAuthProvider.idl \
+  nsIHttpAuthenticableChannel.idl \
   $(NULL)
 
 EXPORTS_mozilla/net = \
@@ -105,6 +107,7 @@ CPPSRCS = \
   nsHttpChannel.cpp \
   nsHttpPipeline.cpp \
   nsHttpActivityDistributor.cpp \
+  nsHttpChannelAuthProvider.cpp \
   $(NULL)
 
 ifdef MOZ_IPC

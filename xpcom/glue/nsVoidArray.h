@@ -195,6 +195,12 @@ public:
     SetArray(reinterpret_cast<Impl*>(mAutoBuf), kAutoBufSize, 0, PR_FALSE,
              PR_TRUE);
   }
+
+  nsAutoVoidArray& operator=(const nsVoidArray& other)
+  {
+    nsVoidArray::operator=(other);
+    return *this;
+  }
   
 protected:
   // The internal storage

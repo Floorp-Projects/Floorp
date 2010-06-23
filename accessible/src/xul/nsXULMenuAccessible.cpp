@@ -61,25 +61,25 @@
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-/** ------------------------------------------------------ */
-/**  Impl. of nsXULSelectableAccessible                    */
-/** ------------------------------------------------------ */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULSelectableAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 // Helper methos
-nsXULSelectableAccessible::nsXULSelectableAccessible(nsIDOMNode* aDOMNode,
-                                                     nsIWeakReference* aShell):
-nsAccessibleWrap(aDOMNode, aShell)
+nsXULSelectableAccessible::
+  nsXULSelectableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
-  mSelectControl = do_QueryInterface(aDOMNode);
+  mSelectControl = do_QueryInterface(aContent);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULSelectableAccessible, nsAccessible, nsIAccessibleSelectable)
 
-nsresult
+void
 nsXULSelectableAccessible::Shutdown()
 {
   mSelectControl = nsnull;
-  return nsAccessibleWrap::Shutdown();
+  nsAccessibleWrap::Shutdown();
 }
 
 nsresult nsXULSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
@@ -137,9 +137,9 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **aChildre
     for (PRInt32 index = 0; index < length; index++) {
       nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
       xulMultiSelect->GetSelectedItem(index, getter_AddRefs(selectedItem));
-      nsCOMPtr<nsIDOMNode> selectedNode(do_QueryInterface(selectedItem));
+      nsCOMPtr<nsIContent> selectedContent(do_QueryInterface(selectedItem));
       nsAccessible *selectedAcc =
-        GetAccService()->GetAccessibleInWeakShell(selectedNode, mWeakShell);
+        GetAccService()->GetAccessibleInWeakShell(selectedContent, mWeakShell);
       if (selectedAcc)
         selectedAccessibles->AppendElement(static_cast<nsIAccessible*>(selectedAcc),
                                            PR_FALSE);
@@ -148,10 +148,10 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **aChildre
   else {  // Single select?
     nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
     mSelectControl->GetSelectedItem(getter_AddRefs(selectedItem));
-    nsCOMPtr<nsIDOMNode> selectedNode(do_QueryInterface(selectedItem));
-    if(selectedNode) {
+    nsCOMPtr<nsIContent> selectedContent(do_QueryInterface(selectedItem));
+    if(selectedContent) {
       nsAccessible *selectedAcc =
-        GetAccService()->GetAccessibleInWeakShell(selectedNode, mWeakShell);
+        GetAccService()->GetAccessibleInWeakShell(selectedContent, mWeakShell);
       if (selectedAcc)
         selectedAccessibles->AppendElement(static_cast<nsIAccessible*>(selectedAcc),
                                            PR_FALSE);
@@ -187,8 +187,9 @@ NS_IMETHODIMP nsXULSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccessi
   if (!selectedItem)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIContent> selectedContent(do_QueryInterface(selectedItem));
   nsAccessible *selectedAcc =
-    GetAccService()->GetAccessibleInWeakShell(selectedItem, mWeakShell);
+    GetAccService()->GetAccessibleInWeakShell(selectedContent, mWeakShell);
   if (!selectedAcc)
     return NS_ERROR_FAILURE;
 
@@ -260,19 +261,24 @@ NS_IMETHODIMP nsXULSelectableAccessible::SelectAllSelection(PRBool *aSucceeded)
 }
 
 
-// ------------------------ Menu Item -----------------------------
+////////////////////////////////////////////////////////////////////////////////
+// nsXULMenuitemAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-nsXULMenuitemAccessible::nsXULMenuitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
-nsAccessibleWrap(aDOMNode, aShell)
-{ 
+nsXULMenuitemAccessible::
+  nsXULMenuitemAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
+{
 }
 
-nsresult
+PRBool
 nsXULMenuitemAccessible::Init()
 {
-  nsresult rv = nsAccessibleWrap::Init();
-  nsCoreUtils::GeneratePopupTree(mDOMNode);
-  return rv;
+  if (!nsAccessibleWrap::Init())
+    return PR_FALSE;
+
+  nsCoreUtils::GeneratePopupTree(mContent);
+  return PR_TRUE;
 }
 
 nsresult
@@ -283,44 +289,35 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Focused?
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (!element)
-    return NS_ERROR_FAILURE;
-  PRBool isFocused = PR_FALSE;
-  element->HasAttribute(NS_LITERAL_STRING("_moz-menuactive"), &isFocused); 
-  if (isFocused)
+  if (mContent->HasAttr(kNameSpaceID_None,
+                        nsAccessibilityAtoms::_moz_menuactive))
     *aState |= nsIAccessibleStates::STATE_FOCUSED;
 
   // Has Popup?
-  nsAutoString tagName;
-  element->GetLocalName(tagName);
-  if (tagName.EqualsLiteral("menu")) {
+  if (mContent->NodeInfo()->Equals(nsAccessibilityAtoms::menu,
+                                   kNameSpaceID_XUL)) {
     *aState |= nsIAccessibleStates::STATE_HASPOPUP;
-    PRBool isOpen;
-    element->HasAttribute(NS_LITERAL_STRING("open"), &isOpen);
-    if (isOpen) {
+    if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::open))
       *aState |= nsIAccessibleStates::STATE_EXPANDED;
-    }
-    else {
+    else
       *aState |= nsIAccessibleStates::STATE_COLLAPSED;
-    }
   }
 
-  nsAutoString menuItemType;
-  element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType); 
+  // Checkable/checked?
+  static nsIContent::AttrValuesArray strings[] =
+    { &nsAccessibilityAtoms::radio, &nsAccessibilityAtoms::checkbox, nsnull };
 
-  if (!menuItemType.IsEmpty()) {
+  if (mContent->FindAttrValueIn(kNameSpaceID_None,
+                                nsAccessibilityAtoms::type,
+                                strings, eCaseMatters) >= 0) {
+
     // Checkable?
-    if (menuItemType.EqualsIgnoreCase("radio") ||
-        menuItemType.EqualsIgnoreCase("checkbox"))
-      *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+    *aState |= nsIAccessibleStates::STATE_CHECKABLE;
 
     // Checked?
-    nsAutoString checkValue;
-    element->GetAttribute(NS_LITERAL_STRING("checked"), checkValue);
-    if (checkValue.EqualsLiteral("true")) {
+    if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::checked,
+                              nsAccessibilityAtoms::_true, eCaseMatters))
       *aState |= nsIAccessibleStates::STATE_CHECKED;
-    }
   }
 
   // Combo box listitem
@@ -330,7 +327,7 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
     // Is selected?
     PRBool isSelected = PR_FALSE;
     nsCOMPtr<nsIDOMXULSelectControlItemElement>
-      item(do_QueryInterface(mDOMNode));
+      item(do_QueryInterface(mContent));
     NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
     item->GetSelected(&isSelected);
 
@@ -387,18 +384,18 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
 nsresult
 nsXULMenuitemAccessible::GetNameInternal(nsAString& aName)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::label, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::label, aName);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetDescription(nsAString& aDescription)
+NS_IMETHODIMP
+nsXULMenuitemAccessible::GetDescription(nsAString& aDescription)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (!element) {
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
-  element->GetAttribute(NS_LITERAL_STRING("description"), aDescription);
+
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::description,
+                    aDescription);
 
   return NS_OK;
 }
@@ -408,46 +405,54 @@ NS_IMETHODIMP
 nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 {
   aAccessKey.Truncate();
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   static PRInt32 gMenuAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
 
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) {
-    nsAutoString accesskey;
-    // We do not use nsCoreUtils::GetAccesskeyFor() because accesskeys for
-    // menu are't registered by nsIEventStateManager.
-    elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
-    if (accesskey.IsEmpty())
-      return NS_OK;
-
-    nsAccessible* parentAcc = GetParent();
-    if (parentAcc) {
-      if (nsAccUtils::RoleInternal(parentAcc) ==
-          nsIAccessibleRole::ROLE_MENUBAR) {
-        // If top level menu item, add Alt+ or whatever modifier text to string
-        // No need to cache pref service, this happens rarely
-        if (gMenuAccesskeyModifier == -1) {
-          // Need to initialize cached global accesskey pref
-          gMenuAccesskeyModifier = 0;
-          nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-          if (prefBranch)
-            prefBranch->GetIntPref("ui.key.menuAccessKey", &gMenuAccesskeyModifier);
-        }
-        nsAutoString propertyKey;
-        switch (gMenuAccesskeyModifier) {
-          case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey.AssignLiteral("VK_CONTROL"); break;
-          case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey.AssignLiteral("VK_ALT"); break;
-          case nsIDOMKeyEvent::DOM_VK_META: propertyKey.AssignLiteral("VK_META"); break;
-        }
-        if (!propertyKey.IsEmpty())
-          nsAccessible::GetFullKeyName(propertyKey, accesskey, aAccessKey);
-      }
-    }
-    if (aAccessKey.IsEmpty())
-      aAccessKey = accesskey;
+  // We do not use nsCoreUtils::GetAccesskeyFor() because accesskeys for
+  // menu are't registered by nsIEventStateManager.
+  nsAutoString accesskey;
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey,
+                    accesskey);
+  if (accesskey.IsEmpty())
     return NS_OK;
+
+  nsAccessible* parentAcc = GetParent();
+  if (parentAcc) {
+    if (nsAccUtils::RoleInternal(parentAcc) == nsIAccessibleRole::ROLE_MENUBAR) {
+      // If top level menu item, add Alt+ or whatever modifier text to string
+      // No need to cache pref service, this happens rarely
+      if (gMenuAccesskeyModifier == -1) {
+        // Need to initialize cached global accesskey pref
+        gMenuAccesskeyModifier = 0;
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (prefBranch)
+          prefBranch->GetIntPref("ui.key.menuAccessKey", &gMenuAccesskeyModifier);
+      }
+
+      nsAutoString propertyKey;
+      switch (gMenuAccesskeyModifier) {
+        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+          propertyKey.AssignLiteral("VK_CONTROL");
+          break;
+        case nsIDOMKeyEvent::DOM_VK_ALT:
+          propertyKey.AssignLiteral("VK_ALT");
+          break;
+        case nsIDOMKeyEvent::DOM_VK_META:
+          propertyKey.AssignLiteral("VK_META");
+          break;
+      }
+
+      if (!propertyKey.IsEmpty())
+        nsAccessible::GetFullKeyName(propertyKey, accesskey, aAccessKey);
+    }
   }
-  return NS_ERROR_FAILURE;
+
+  if (aAccessKey.IsEmpty())
+    aAccessKey = accesskey;
+
+  return NS_OK;
 }
 
 //return menu shortcut: Ctrl+F or Ctrl+Shift+L
@@ -456,15 +461,12 @@ nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 {
   aKeyBinding.Truncate();
 
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(elt, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsAutoString accelText;
-  elt->GetAttribute(NS_LITERAL_STRING("acceltext"), accelText);
-  if (accelText.IsEmpty())
-    return NS_OK;
-
-  aKeyBinding = accelText;
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::acceltext,
+                    aKeyBinding);
 
   return NS_OK;
 }
@@ -472,29 +474,29 @@ nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 nsresult
 nsXULMenuitemAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mContent));
   if (xulContainer) {
     *aRole = nsIAccessibleRole::ROLE_PARENT_MENUITEM;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAccessible> parent;
-  GetParent(getter_AddRefs(parent));
-  if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+  if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
     return NS_OK;
   }
 
-  *aRole = nsIAccessibleRole::ROLE_MENUITEM;
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (!element)
-    return NS_ERROR_FAILURE;
-  nsAutoString menuItemType;
-  element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType);
-  if (menuItemType.EqualsIgnoreCase("radio"))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                            nsAccessibilityAtoms::radio, eCaseMatters)) {
     *aRole = nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
-  else if (menuItemType.EqualsIgnoreCase("checkbox"))
+
+  } else if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                   nsAccessibilityAtoms::checkbox,
+                                   eCaseMatters)) {
     *aRole = nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
+
+  } else {
+    *aRole = nsIAccessibleRole::ROLE_MENUITEM;
+  }
 
   return NS_OK;
 }
@@ -502,14 +504,14 @@ nsXULMenuitemAccessible::GetRoleInternal(PRUint32 *aRole)
 PRInt32
 nsXULMenuitemAccessible::GetLevelInternal()
 {
-  return nsAccUtils::GetLevelForXULContainerItem(mDOMNode);
+  return nsAccUtils::GetLevelForXULContainerItem(mContent);
 }
 
 void
 nsXULMenuitemAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                                     PRInt32 *aSetSize)
 {
-  nsAccUtils::GetPositionAndSizeForXULContainerItem(mDOMNode, aPosInSet,
+  nsAccUtils::GetPositionAndSizeForXULContainerItem(mContent, aPosInSet,
                                                     aSetSize);
 }
 
@@ -547,11 +549,14 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetNumActions(PRUint8 *_retval)
 }
 
 
-// ------------------------ Menu Separator ----------------------------
+////////////////////////////////////////////////////////////////////////////////
+// nsXULMenuSeparatorAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-nsXULMenuSeparatorAccessible::nsXULMenuSeparatorAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
-nsXULMenuitemAccessible(aDOMNode, aShell)
-{ 
+nsXULMenuSeparatorAccessible::
+  nsXULMenuSeparatorAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULMenuitemAccessible(aContent, aShell)
+{
 }
 
 nsresult
@@ -595,15 +600,18 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetNumActions(PRUint8 *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-// ------------------------ Menu Popup -----------------------------
 
-nsXULMenupopupAccessible::nsXULMenupopupAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
-  nsXULSelectableAccessible(aDOMNode, aShell)
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULMenupopupAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsXULMenupopupAccessible::
+  nsXULMenupopupAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULSelectableAccessible(aContent, aShell)
 { 
   // May be the anonymous <menupopup> inside <menulist> (a combobox)
-  nsCOMPtr<nsIDOMNode> parentNode;
-  aDOMNode->GetParentNode(getter_AddRefs(parentNode));
-  mSelectControl = do_QueryInterface(parentNode);
+  mSelectControl = do_QueryInterface(mContent->GetParent());
 }
 
 nsresult
@@ -615,20 +623,19 @@ nsXULMenupopupAccessible::GetStateInternal(PRUint32 *aState,
 
 #ifdef DEBUG_A11Y
   // We are onscreen if our parent is active
-  PRBool isActive = PR_FALSE;
-
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  element->HasAttribute(NS_LITERAL_STRING("menuactive"), &isActive);
+  PRBool isActive = mContent->HasAttr(kNameSpaceID_None,
+                                      nsAccessibilityAtoms::menuactive);
   if (!isActive) {
-    nsCOMPtr<nsIAccessible> parent(GetParent());
-    nsCOMPtr<nsIDOMNode> parentNode;
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(parent));
-    if (accessNode) 
-      accessNode->GetDOMNode(getter_AddRefs(parentNode));
-    element = do_QueryInterface(parentNode);
-    if (element)
-      element->HasAttribute(NS_LITERAL_STRING("open"), &isActive);
+    nsAccessible* parent(GetParent());
+    NS_ENSURE_STATE(parent);
+
+    nsIContent *parentContent = parnet->GetContent();
+    NS_ENSURE_STATE(parentContent);
+
+    isActive = parentContent->HasAttr(kNameSpaceID_None,
+                                      nsAccessibilityAtoms::open);
   }
+
   NS_ASSERTION(isActive || *aState & nsIAccessibleStates::STATE_INVISIBLE,
                "XULMenupopup doesn't have STATE_INVISIBLE when it's inactive");
 #endif
@@ -643,7 +650,7 @@ nsXULMenupopupAccessible::GetStateInternal(PRUint32 *aState,
 nsresult
 nsXULMenupopupAccessible::GetNameInternal(nsAString& aName)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsIContent *content = mContent;
   while (content && aName.IsEmpty()) {
     content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::label, aName);
     content = content->GetParent();
@@ -655,12 +662,7 @@ nsXULMenupopupAccessible::GetNameInternal(nsAString& aName)
 nsresult
 nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIAccessible> parent;
-  GetParent(getter_AddRefs(parent));
+  nsAccessible *parent = GetParent();
   if (parent) {
     PRUint32 role = nsAccUtils::Role(parent);
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
@@ -670,9 +672,8 @@ nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
 
     } else if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
-      nsCOMPtr<nsIAccessible> grandParent;
-      parent->GetParent(getter_AddRefs(grandParent));
-      if (role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
+      nsAccessible *grandParent = parent->GetParent();
+      if (nsAccUtils::Role(grandParent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
         *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
         return NS_OK;
       }
@@ -683,11 +684,15 @@ nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
-// ------------------------ Menu Bar -----------------------------
 
-nsXULMenubarAccessible::nsXULMenubarAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
-  nsAccessibleWrap(aDOMNode, aShell)
-{ 
+////////////////////////////////////////////////////////////////////////////////
+// nsXULMenubarAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsXULMenubarAccessible::
+  nsXULMenubarAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
+{
 }
 
 nsresult

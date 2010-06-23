@@ -111,6 +111,13 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/caps/src/$(LIB_PREFIX)caps_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifdef MOZ_VORBIS
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef MOZ_MEDIA
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/$(LIB_PREFIX)gkconmedia_s.$(LIB_SUFFIX) \
@@ -119,10 +126,16 @@ endif
 
 ifdef MOZ_OGG
 SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
-	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/ogg/$(LIB_PREFIX)gkconogg_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_WEBM
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/webm/$(LIB_PREFIX)gkconwebm_s.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libnestegg/src/$(LIB_PREFIX)nestegg.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libvpx/$(LIB_PREFIX)vpx.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 

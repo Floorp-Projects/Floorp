@@ -47,7 +47,8 @@
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
 
-#define COL_GROUP_TYPE_BITS          0xC0000000 // uses bits 31-32 from mState
+#define COL_GROUP_TYPE_BITS          (NS_FRAME_STATE_BIT(30) | \
+                                      NS_FRAME_STATE_BIT(31))
 #define COL_GROUP_TYPE_OFFSET        30
 
 nsTableColGroupType 

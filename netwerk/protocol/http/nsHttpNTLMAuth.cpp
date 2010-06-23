@@ -50,7 +50,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
-#include "nsIHttpChannel.h"
+#include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
 
 static const char kAllowProxies[] = "network.automatic-ntlm-auth.allow-proxies";
@@ -189,7 +189,8 @@ ForceGenericNTLM()
 
 // Check to see if we should use default credentials for this host or proxy.
 static PRBool
-CanUseDefaultCredentials(nsIHttpChannel *channel, PRBool isProxyAuth)
+CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
+                         PRBool isProxyAuth)
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
@@ -224,7 +225,7 @@ NS_IMPL_ISUPPORTS0(nsNTLMSessionState)
 NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
+nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                                   const char     *challenge,
                                   PRBool          isProxyAuth,
                                   nsISupports   **sessionState,
@@ -316,7 +317,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
 }
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
+nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                     const char      *challenge,
                                     PRBool           isProxyAuth,
                                     const PRUnichar *domain,
@@ -351,7 +352,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
         // NTLM service name format is 'HTTP@host' for both http and https
         nsCOMPtr<nsIURI> uri;
-        rv = httpChannel->GetURI(getter_AddRefs(uri));
+        rv = authChannel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv))
             return rv;
         nsCAutoString serviceName, host;

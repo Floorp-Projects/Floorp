@@ -1,8 +1,6 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
 function do_check_throws(f, result, stack)
 {

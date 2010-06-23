@@ -71,6 +71,11 @@ public:
   inline gfx3DMatrix operator*(const gfx3DMatrix &aMatrix);
 
   /**
+   * Return true if this matrix and |aMatrix| are the same matrix.
+   */
+  inline bool operator==(const gfx3DMatrix& aMatrix) const;
+
+  /**
    * Create a 3D matrix from a gfxMatrix 2D affine transformation.
    *
    * \param aMatrix gfxMatrix 2D affine transformation.
@@ -151,6 +156,16 @@ gfx3DMatrix::operator*(const gfx3DMatrix &aMatrix)
   matrix._44 = _41 * aMatrix._14 + _42 * aMatrix._24 + _43 * aMatrix._34 + _44 * aMatrix._44;
 
   return matrix;
+}
+
+inline bool
+gfx3DMatrix::operator==(const gfx3DMatrix& o) const
+{
+  // XXX would be nice to memcmp here, but that breaks IEEE 754 semantics
+  return _11 == o._11 && _12 == o._12 && _13 == o._13 && _14 == o._14 &&
+         _21 == o._21 && _22 == o._22 && _23 == o._23 && _24 == o._24 &&
+         _31 == o._31 && _32 == o._32 && _33 == o._33 && _34 == o._34 &&
+         _41 == o._41 && _42 == o._42 && _43 == o._43 && _44 == o._44;
 }
 
 inline gfx3DMatrix

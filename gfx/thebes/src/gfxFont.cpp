@@ -54,6 +54,8 @@
 #include "gfxFontMissingGlyphs.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
+#include "gfxScriptItemizer.h"
+#include "gfxUnicodeProperties.h"
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
@@ -61,6 +63,8 @@
 
 #include "cairo.h"
 #include "gfxFontTest.h"
+
+#include "harfbuzz/hb-blob.h"
 
 #include "nsCRT.h"
 
@@ -86,10 +90,10 @@ static PRUint32 gGlyphExtentsSetupFallBackToTight = 0;
 
 gfxFontEntry::~gfxFontEntry() 
 {
-    if (mUserFontData)
+    if (mUserFontData) {
         delete mUserFontData;
+    }
 }
-
 
 PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
 {
@@ -98,7 +102,6 @@ PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
     }
     return mCharacterMap.test(aCh);
 }
-
 
 nsresult gfxFontEntry::InitializeUVSMap()
 {
@@ -136,7 +139,6 @@ nsresult gfxFontEntry::InitializeUVSMap()
     return NS_OK;
 }
 
-
 PRUint16 gfxFontEntry::GetUVSGlyph(PRUint32 aCh, PRUint32 aVS)
 {
     InitializeUVSMap();
@@ -148,13 +150,11 @@ PRUint16 gfxFontEntry::GetUVSGlyph(PRUint32 aCh, PRUint32 aVS)
     return 0;
 }
 
-
 nsresult gfxFontEntry::ReadCMAP()
 {
     mCmapInitialized = PR_TRUE;
     return NS_OK;
 }
-
 
 const nsString& gfxFontEntry::FamilyName()
 {
@@ -167,6 +167,7 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(Name(), aStyle);
+
     if (!font) {
         gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
         if (!newFont)
@@ -182,6 +183,66 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
     font.swap(f);
     return f;
 }
+
+gfxFontEntry::FontTableCacheEntry::FontTableCacheEntry
+        (nsTArray<PRUint8>& aBuffer,
+         PRUint32 aTag,
+         nsClassHashtable<nsUint32HashKey,FontTableCacheEntry>& aCache)
+    : mTag(aTag), mCache(aCache)
+{
+    MOZ_COUNT_CTOR(FontTableCacheEntry);
+    mData.SwapElements(aBuffer);
+    mBlob = hb_blob_create((const char*)mData.Elements(), mData.Length(),
+                           HB_MEMORY_MODE_READONLY,
+                           gfxFontEntry::FontTableCacheEntry::Destroy,
+                           this);
+}
+
+/* static */ void
+gfxFontEntry::FontTableCacheEntry::Destroy(void *aUserData)
+{
+    gfxFontEntry::FontTableCacheEntry *ftce =
+        static_cast<gfxFontEntry::FontTableCacheEntry*>(aUserData);
+    ftce->mCache.Remove(ftce->mTag);
+}
+
+hb_blob_t *
+gfxFontEntry::GetFontTable(PRUint32 aTag)
+{
+    if (!mFontTableCache.IsInitialized()) {
+        // we do this here rather than on fontEntry construction
+        // because not all shapers will access the table cache at all
+        mFontTableCache.Init(10);
+    }
+
+    FontTableCacheEntry *entry = nsnull;
+    if (!mFontTableCache.Get(aTag, &entry)) {
+        nsTArray<PRUint8> buffer;
+        if (NS_SUCCEEDED(GetFontTable(aTag, buffer))) {
+            entry = new FontTableCacheEntry(buffer, // adopts buffer elements
+                                            aTag, mFontTableCache);
+            if (mFontTableCache.Put(aTag, entry)) {
+                return entry->GetBlob();
+            }
+            hb_blob_destroy(entry->GetBlob());
+            delete entry; // we failed to cache it!
+            return nsnull;
+        }
+    }
+
+    if (entry) {
+        return hb_blob_reference(entry->GetBlob());
+    }
+
+    return nsnull;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// class gfxFontFamily
+//
+//////////////////////////////////////////////////////////////////////////////
 
 // we consider faces with mStandardFace == PR_TRUE to be "greater than" those with PR_FALSE,
 // because during style matching, later entries will replace earlier ones
@@ -860,9 +921,13 @@ gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, PRBool aOtherIsOnLeft
 gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                  AntialiasOption anAAOption) :
     mFontEntry(aFontEntry), mIsValid(PR_TRUE),
-    mStyle(*aFontStyle), mSyntheticBoldOffset(0),
+    mStyle(*aFontStyle),
+    mAdjustedSize(0.0),
+    mFUnitsConvFactor(0.0f),
+    mSyntheticBoldOffset(0),
     mAntialiasOption(anAAOption),
-    mShaper(nsnull)
+    mPlatformShaper(nsnull),
+    mHarfBuzzShaper(nsnull)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
@@ -1244,21 +1309,37 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     return metrics;
 }
 
-void
+PRBool
 gfxFont::InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aRunStart,
-                     PRUint32 aRunLength)
+                     PRUint32 aRunLength,
+                     PRInt32 aRunScript)
 {
-    NS_ASSERTION(mShaper != nsnull, "no shaper?!");
-    if (!mShaper) {
-        return;
+    PRBool ok = PR_FALSE;
+
+    if (mHarfBuzzShaper) {
+        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+            ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, aRunScript);
+        }
     }
 
-    PRBool ok = mShaper->InitTextRun(aContext, aTextRun, aString,
-                                     aRunStart, aRunLength);
+    if (!ok) {
+        if (!mPlatformShaper) {
+            CreatePlatformShaper();
+            NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
+        }
+        if (mPlatformShaper) {
+            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, aRunScript);
+        }
+    }
+
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
+    return ok;
 }
 
 gfxGlyphExtents *
@@ -1401,8 +1482,6 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
         aMetrics->underlineSize = aMetrics->maxAscent;
     }
 }
-
-
 
 gfxGlyphExtents::~gfxGlyphExtents()
 {
@@ -1965,15 +2044,33 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                           const PRUnichar *aString,
                           PRUint32 aLength)
 {
+    // split into script runs so that script can potentially influence
+    // the font matching process below
+    gfxScriptItemizer scriptRuns(aString, aLength);
+
+    PRUint32 runStart = 0, runLimit = aLength;
+    PRInt32 runScript = HB_SCRIPT_LATIN;
+    while (scriptRuns.Next(runStart, runLimit, runScript)) {
+        InitTextRun(aContext, aTextRun, aString, aLength,
+                    runStart, runLimit, runScript);
+    }
+}
+
+void
+gfxFontGroup::InitTextRun(gfxContext *aContext,
+                          gfxTextRun *aTextRun,
+                          const PRUnichar *aString,
+                          PRUint32 aTotalLength,
+                          PRUint32 aScriptRunStart,
+                          PRUint32 aScriptRunEnd,
+                          PRInt32 aRunScript)
+{
     gfxFont *mainFont = mFonts[0].get();
 
-    PRUint32 runStart = 0;
+    PRUint32 runStart = aScriptRunStart;
     nsAutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString, 0, aLength);
+    ComputeRanges(fontRanges, aString, aScriptRunStart, aScriptRunEnd);
     PRUint32 numRanges = fontRanges.Length();
-
-    nsAutoTArray<PRPackedBool,SMALL_GLYPH_RUN> unmatchedArray;
-    PRPackedBool *unmatched = NULL;
 
     for (PRUint32 r = 0; r < numRanges; r++) {
         const gfxTextRange& range = fontRanges[r];
@@ -1986,23 +2083,15 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
             // do glyph layout and record the resulting positioned glyphs
             matchedFont->InitTextRun(aContext, aTextRun, aString,
-                                     runStart, matchedLength);
+                                     runStart, matchedLength, aRunScript);
         } else {
-            // no font available, so record missing glyph info instead
-            if (unmatched == NULL) {
-                if (unmatchedArray.SetLength(aLength)) {
-                    unmatched = unmatchedArray.Elements();
-                    ::memset(unmatched, PR_FALSE, aLength*sizeof(PRPackedBool));
-                }
-            }
-
             // create the glyph run before calling SetMissing Glyph
             aTextRun->AddGlyphRun(mainFont, runStart, matchedLength);
 
             for (PRUint32 index = runStart; index < runStart + matchedLength; index++) {
                 // Record the char code so we can draw a box with the Unicode value
                 if (NS_IS_HIGH_SURROGATE(aString[index]) &&
-                    index + 1 < aLength &&
+                    index + 1 < aScriptRunEnd &&
                     NS_IS_LOW_SURROGATE(aString[index+1])) {
                     aTextRun->SetMissingGlyph(index,
                                               SURROGATE_TO_UCS4(aString[index],
@@ -2012,12 +2101,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                     aTextRun->SetMissingGlyph(index, aString[index]);
                 }
             }
-
-            // We have to remember the indices of unmatched chars to avoid overwriting
-            // their glyph (actually char code) data with the space glyph later,
-            // while we're retrieving actual glyph data from CoreText runs.
-            if (unmatched)
-                ::memset(unmatched + runStart, PR_TRUE, matchedLength);
         }
 
         runStart += matchedLength;
@@ -3478,6 +3561,24 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
     details->mXOffset = 0;
     details->mYOffset = 0;
     mCharacterGlyphs[aIndex].SetMissing(1);
+}
+
+PRBool
+gfxTextRun::FilterIfIgnorable(PRUint32 aIndex)
+{
+    PRUint32 ch = GetChar(aIndex);
+    if (IsDefaultIgnorable(ch)) {
+        DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
+        if (details) {
+            details->mGlyphID = ch;
+            details->mAdvance = 0;
+            details->mXOffset = 0;
+            details->mYOffset = 0;
+            mCharacterGlyphs[aIndex].SetMissing(1);
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
 }
 
 static void

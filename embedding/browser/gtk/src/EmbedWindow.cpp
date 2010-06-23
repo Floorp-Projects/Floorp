@@ -416,7 +416,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   GtkWidget *toplevel_window;
   toplevel_window = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
   if (!GTK_WINDOW(toplevel_window)) {
-    NS_ERROR("no gtk window in hierarchy!\n");
+    NS_ERROR("no gtk window in hierarchy!");
     return NS_ERROR_FAILURE;
   }
   gtk_window_set_transient_for(GTK_WINDOW(sTipWindow),

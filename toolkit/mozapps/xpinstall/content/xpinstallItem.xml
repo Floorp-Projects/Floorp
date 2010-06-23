@@ -38,6 +38,8 @@
                               onget="return this.getAttribute('url');"/>
       <property name="icon"   onset="this.setAttribute('icon', val); return val;"
                               onget="return this.getAttribute('icon');"/>
+      <property name="type"   onset="this.setAttribute('type', val); return val;"
+                              onget="return this.getAttribute('type');"/>
     </implementation>
   </binding>
          

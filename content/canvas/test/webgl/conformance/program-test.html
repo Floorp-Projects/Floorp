@@ -36,19 +36,29 @@ function go() {
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+
+/////// Check compileShader() /////////////////////////////
+
     var vs = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vs, "attribute vec4 aVertex; attribute vec4 aColor; varying vec4 vColor; void main() { vColor = aColor; gl_Position = aVertex; }");
     gl.compileShader(vs);
 
     assertMsg(gl.getShaderParameter(vs, gl.COMPILE_STATUS) == true,
-              "good vertex shader should compiled");
+              "good vertex shader should compile");
+
+    var vs2 = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs2, "attribute vec4 aVertex; attribute vec4 aColor; varying vec4 vColor; void main() { vColor = aColor; gl_Position = aVertex * 0.5; }");
+    gl.compileShader(vs2);
+
+    assertMsg(gl.getShaderParameter(vs2, gl.COMPILE_STATUS) == true,
+              "good vertex shader #2 should compile");
 
     var vsBad = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vsBad, "WILL NOT COMPILE;");
     gl.compileShader(vsBad);
 
     assertMsg(gl.getShaderParameter(vsBad, gl.COMPILE_STATUS) == false,
-              "bad vertex shader should failed to compile");
+              "bad vertex shader should fail to compile");
 
     var fs = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fs, "#ifdef GL_ES\nprecision mediump float;\n#endif\n varying vec4 vColor; void main() { gl_FragColor = vColor; }");
@@ -74,54 +84,122 @@ function go() {
     assertMsg(gl.getError() == gl.NO_ERROR,
               "should be no errors at this point");
 
-    // Now create some programs.
+/////// Check attachShader() /////////////////////////////
 
-    function createAndCheckLinkStatus(shaders, expected_status, errmsg) {
+    function checkAttachShader(already_attached_shaders, shader, expected_error_code, errmsg) {
+        var prog = gl.createProgram();
+        for (var i = 0; i < already_attached_shaders.length; ++i)
+            gl.attachShader(prog, already_attached_shaders[i]);
+        if(gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in attachShader()");
+        gl.attachShader(prog, shader);
+        assertMsg(gl.getError() == expected_error_code, errmsg);
+    }
+
+    checkAttachShader([], vs, gl.NO_ERROR, "attaching a vertex shader should succeed");
+    checkAttachShader([vs], vs, gl.INVALID_OPERATION,
+                      "attaching an already attached vertex shader should generate INVALID_OPERATION");
+    checkAttachShader([], fs, gl.NO_ERROR, "attaching a fragment shader should succeed");
+    checkAttachShader([fs], fs, gl.INVALID_OPERATION,
+                      "attaching an already attached fragment shader should generate INVALID_OPERATION");
+
+/////// Check detachShader() /////////////////////////////
+
+    function checkDetachShader(already_attached_shaders, shader, expected_error_code, errmsg) {
+        var prog = gl.createProgram();
+        for (var i = 0; i < already_attached_shaders.length; ++i)
+            gl.attachShader(prog, already_attached_shaders[i]);
+        if(gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in attachShader()");
+        gl.detachShader(prog, shader);
+        assertMsg(gl.getError() == expected_error_code, errmsg);
+    }
+
+    checkDetachShader([vs], vs, gl.NO_ERROR, "detaching a vertex shader should succeed");
+    checkDetachShader([fs], vs, gl.INVALID_OPERATION,
+                      "detaching a not already attached vertex shader should generate INVALID_OPERATION");
+    checkDetachShader([fs], fs, gl.NO_ERROR, "detaching a fragment shader should succeed");
+    checkDetachShader([vs], fs, gl.INVALID_OPERATION,
+                      "detaching a not already attached fragment shader should generate INVALID_OPERATION");
+
+/////// Check getAttachedShaders() /////////////////////////////
+
+    function checkGetAttachedShaders(shaders_to_attach, shaders_to_detach, expected_shaders, errmsg) {
+        var prog = gl.createProgram();
+        for (var i = 0; i < shaders_to_attach.length; ++i)
+            gl.attachShader(prog, shaders_to_attach[i]);
+        if(gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in attachShader()");
+        for (var i = 0; i < shaders_to_detach.length; ++i)
+            gl.detachShader(prog, shaders_to_detach[i]);
+        if(gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in detachShader()");
+        assertMsg(areArraysEqual(gl.getAttachedShaders(prog), expected_shaders), errmsg);
+    }
+    checkGetAttachedShaders([], [], [], "getAttachedShaders should return an empty list by default");
+    checkGetAttachedShaders([fs], [], [fs], "attaching a single shader should give the expected list");
+    checkGetAttachedShaders([fs, vs, fs2, vs2], [], [fs, vs, fs2, vs2],
+        "attaching some shaders should give the expected list");
+    checkGetAttachedShaders([fs], [fs], [], "attaching a shader and detaching it shoud leave an empty list");
+    checkGetAttachedShaders([fs, vs, fs2, vs2], [fs, vs, fs2, vs2], [],
+        "attaching some shaders and detaching them in same order shoud leave an empty list");
+    checkGetAttachedShaders([fs, vs, fs2, vs2], [fs, vs2, vs, fs2], [],
+        "attaching some shaders and detaching them in random order shoud leave an empty list");
+    checkGetAttachedShaders([fs, vs, fs2, vs2], [vs], [fs, fs2, vs2],
+        "attaching and detaching some shaders should leave the difference list");
+    checkGetAttachedShaders([fs, vs, fs2, vs2], [fs, vs2], [vs, fs2],
+        "attaching and detaching some shaders should leave the difference list");
+    checkGetAttachedShaders([fsBad], [], [fsBad],
+        "attaching a shader that failed to compile should still show it in the list");
+    checkGetAttachedShaders([fs, vsBad, fs2], [], [fs, vsBad, fs2],
+        "attaching shaders, including one that failed to compile, should still show the it in the list");
+
+/////// Check linkProgram() and useProgram /////////////////////////////
+
+    function checkLinkAndUse(shaders, expected_status, errmsg) {
         var prog = gl.createProgram();
         for (var i = 0; i < shaders.length; ++i)
             gl.attachShader(prog, shaders[i]);
         gl.bindAttribLocation(prog, 0, "aVertex");
         gl.bindAttribLocation(prog, 1, "aColor");
         gl.linkProgram(prog);
+        if(gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in linkProgram()");
         assertMsg(gl.getProgramParameter(prog, gl.LINK_STATUS) == expected_status,
                   errmsg);
-	if (expected_status == true && gl.getProgramParameter(prog, gl.LINK_STATUS) == false)
-	    debug(gl.getProgramInfoLog(prog));
+        if (expected_status == true && gl.getProgramParameter(prog, gl.LINK_STATUS) == false)
+            debug(gl.getProgramInfoLog(prog));
+        if(gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in getProgramParameter()");
+        gl.useProgram(prog);
+        if(expected_status == true)
+            assertMsg(gl.getError() == gl.NO_ERROR, "using a valid program should succeed");
+        if(expected_status == false)
+            assertMsg(gl.getError() == gl.INVALID_OPERATION,
+                "using an invalid program should generate INVALID_OPERATION");
         return prog;
     }
 
-    var progGood1 = createAndCheckLinkStatus([vs, fs], true,
+    var progGood1 = checkLinkAndUse([vs, fs], true,
                                              "valid program should link");
 
-    var progGood2 = createAndCheckLinkStatus([vs, fs2], true,
+    var progGood2 = checkLinkAndUse([vs, fs2], true,
                                              "valid program #2 should link");
 
-    var progBad1 = createAndCheckLinkStatus([vs], false,
+    var progBad1 = checkLinkAndUse([vs], false,
                                             "program with no fragment shader should fail to link");
 
-    var progBad2 = createAndCheckLinkStatus([fs], false,
+    var progBad2 = checkLinkAndUse([fs], false,
                                             "program with no vertex shader should fail to link");
 
-    var progBad3 = createAndCheckLinkStatus([vsBad, fs], false,
+    var progBad3 = checkLinkAndUse([vsBad, fs], false,
                                             "program with bad vertex shader should fail to link");
 
-    var progBad4 = createAndCheckLinkStatus([vs, fsBad], false,
+    var progBad4 = checkLinkAndUse([vs, fsBad], false,
                                             "program with bad fragment shader should fail to link");
 
-    var progBad5 = createAndCheckLinkStatus([vsBad, fsBad], false,
+    var progBad5 = checkLinkAndUse([vsBad, fsBad], false,
                                             "program with bad shaders should fail to link");
-
-    gl.detachShader(progBad3, vs);
-    assertMsg(gl.getError() == gl.INVALID_OPERATION,
-              "detaching a shader not attached to a program should generate INVALID_OPERATION");
-
-    gl.useProgram(progBad1);
-    assertMsg(gl.getError() == gl.INVALID_OPERATION,
-              "using a program which failed to link should generate INVALID_OPERATION");
-
-    gl.useProgram(progBad5);
-    assertMsg(gl.getError() == gl.INVALID_OPERATION,
-              "using a program which failed to link should generate INVALID_OPERATION (#2)");
 
     gl.useProgram(progGood1);
     assertMsg(gl.getError() == gl.NO_ERROR,
