@@ -100,7 +100,7 @@ JS_END_EXTERN_C
 #pragma intrinsic(_InterlockedCompareExchange64)
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     return _InterlockedCompareExchange64(w, nv, ov) == ov;
 }
@@ -110,7 +110,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 #include <libkern/OSAtomic.h>
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     /* Details on these functions available in the manpage for atomic */
     return OSAtomicCompareAndSwapPtrBarrier(reinterpret_cast<void *>(ov),
@@ -122,7 +122,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     unsigned int res;
 
@@ -144,7 +144,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 #elif defined(__x86_64) && (defined(__GNUC__) || defined(__SUNPRO_CC))
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     unsigned int res;
 
@@ -163,7 +163,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 #if defined(__GNUC__)
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     unsigned int res;
 
@@ -189,7 +189,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 /* Implementation in lock_sparc*.il */
 extern "C" int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv);
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv);
 
 #endif
 
@@ -198,7 +198,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv);
 #include <sys/atomic_op.h>
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     int res;
     JS_STATIC_ASSERT(sizeof(jsword) == sizeof(long));
@@ -221,7 +221,7 @@ typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
 JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     volatile int *vp = (volatile int *) w;
     PRInt32 failed = 1;
@@ -254,7 +254,7 @@ js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 # endif
 
 JSBool
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     int result;
     static PRLock *CompareAndSwapLock = JS_NEW_LOCK();
