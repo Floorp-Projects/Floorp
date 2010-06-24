@@ -93,12 +93,10 @@ class RefTest(object):
     prefsFile.close()
 
     # install the reftest extension bits into the profile
-    profileExtensionsPath = os.path.join(profileDir, "extensions")
-    os.mkdir(profileExtensionsPath)
-    reftestExtensionPath = os.path.join(SCRIPT_DIRECTORY, "reftest")
-    extFile = open(os.path.join(profileExtensionsPath, "reftest@mozilla.org"), "w")
-    extFile.write(reftestExtensionPath)
-    extFile.close()
+    self.automation.installExtension(os.path.join(SCRIPT_DIRECTORY, "reftest"),
+                                                  profileDir,
+                                                  "reftest@mozilla.org")
+
 
   def registerExtension(self, browserEnv, options, profileDir, extraArgs = ['-silent']):
     # run once with -silent to let the extension manager do its thing
@@ -149,7 +147,6 @@ class RefTest(object):
       # then again to actually run reftest
       self.automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
       reftestlist = self.getManifestPath(manifest)
-
       status = self.automation.runApp(None, browserEnv, options.app, profileDir,
                                  ["-reftest", reftestlist],
                                  utilityPath = options.utilityPath,
@@ -179,14 +176,15 @@ class RefTest(object):
 class ReftestOptions(OptionParser):
 
   def __init__(self, automation):
+    self._automation = automation
     OptionParser.__init__(self)
     defaults = {}
 
     # we want to pass down everything from automation.__all__
     addCommonOptions(self, 
-                     defaults=dict(zip(automation.__all__, 
-                            [getattr(automation, x) for x in automation.__all__])))
-    automation.addCommonOptions(self)
+                     defaults=dict(zip(self._automation.__all__, 
+                            [getattr(self._automation, x) for x in self._automation.__all__])))
+    self._automation.addCommonOptions(self)
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
                     default = os.path.join(SCRIPT_DIRECTORY, automation.DEFAULT_APP),
@@ -208,10 +206,10 @@ class ReftestOptions(OptionParser):
                            "than the given number")
     self.add_option("--utility-path",
                     action = "store", type = "string", dest = "utilityPath",
-                    default = automation.DIST_BIN,
+                    default = self._automation.DIST_BIN,
                     help = "absolute path to directory containing utility "
                            "programs (xpcshell, ssltunnel, certutil)")
-    defaults["utilityPath"] = automation.DIST_BIN
+    defaults["utilityPath"] = self._automation.DIST_BIN
 
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks",
