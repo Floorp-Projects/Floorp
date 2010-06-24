@@ -443,7 +443,7 @@ END_CASE(JSOP_ANDX)
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
         int32_t i_;                                                           \
-        if (ValueFitsInInt32(idval_, &i_)) {                                  \
+        if (ValueFitsInInt32(idval_, &i_) && INT_FITS_IN_JSID(i_)) {          \
             id = INT_TO_JSID(i_);                                             \
         } else {                                                              \
             if (!js_InternNonIntElementId(cx, obj, idval_, &id, &regs.sp[n])) \
@@ -830,7 +830,7 @@ END_CASE(JSOP_BITAND)
 #define EXTENDED_EQUALITY_OP(OP)                                              \
     if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&             \
         ((ExtendedClass *)clasp)->equality) {                                 \
-        if (!((ExtendedClass *)clasp)->equality(cx, l, rval, &cond))          \
+        if (!((ExtendedClass *)clasp)->equality(cx, l, &rval, &cond))         \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
@@ -870,7 +870,7 @@ END_CASE(JSOP_BITAND)
                     DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);                 \
                 if (rval.isObject())                                          \
                     DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
-                if (BothString(lval, rval)) {                                 \
+                if (lval.isString() && rval.isString()) {                     \
                     JSString *l = lval.asString(), *r = rval.asString();      \
                     cond = js_EqualStrings(l, r) OP JS_TRUE;                  \
                 } else {                                                      \
@@ -956,14 +956,14 @@ END_CASE(JSOP_CASEX)
         Value lval = regs.sp[-2];                                             \
         bool cond;                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \
-        if (BothInt32(lval, rval)) {                                          \
+        if (lval.isInt32() && rval.isInt32()) {                               \
             cond = lval.asInt32() OP rval.asInt32();                          \
         } else {                                                              \
             if (lval.isObject())                                              \
                 DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
             if (rval.isObject())                                              \
                 DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
-            if (BothString(lval, rval)) {                                     \
+            if (lval.isString() && rval.isString()) {                         \
                 JSString *l = lval.asString(), *r = rval.asString();          \
                 cond = js_CompareStrings(l, r) OP 0;                          \
             } else {                                                          \
@@ -1041,7 +1041,7 @@ BEGIN_CASE(JSOP_ADD)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
 
-    if (BothInt32(lval, rval)) {
+    if (lval.isInt32() && rval.isInt32()) {
         int32_t l = lval.asInt32(), r = rval.asInt32();
         int32_t sum = l + r;
         regs.sp--;
@@ -1338,7 +1338,7 @@ BEGIN_CASE(JSOP_ELEMDEC)
      * Delay fetching of id until we have the object to ensure the proper
      * evaluation order. See bug 372331.
      */
-    id = 0;
+    id = JSID_VOID;
     i = -2;
     goto fetch_incop_obj;
 
@@ -1352,7 +1352,7 @@ BEGIN_CASE(JSOP_PROPDEC)
 
   fetch_incop_obj:
     FETCH_OBJECT(cx, i, obj);
-    if (id == 0)
+    if (JSID_IS_VOID(id))
         FETCH_ELEMENT_ID(obj, -1, id);
     goto do_incop;
 
@@ -1653,7 +1653,7 @@ BEGIN_CASE(JSOP_LENGTH)
         JSObject *obj = &vp->asObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
-            regs.sp[-1].setDouble(length);
+            regs.sp[-1].setNumber(length);
         } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
             uint32 length = obj->getArgsLength();
             JS_ASSERT(length < INT32_MAX);
@@ -1755,8 +1755,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         if (!rval.isFunObj() ||
-            !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()),
-                                  lval)) {
+            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 goto error;
         }
@@ -2014,8 +2013,9 @@ BEGIN_CASE(JSOP_GETELEM)
     Value rval;
     jsid id;
     if (rref.isInt32()) {
+        int32_t i = rref.asInt32();
         if (obj->isDenseArray()) {
-            jsuint idx = jsuint(rref.asInt32());
+            jsuint idx = jsuint(i);
 
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
@@ -2031,7 +2031,7 @@ BEGIN_CASE(JSOP_GETELEM)
                    && !GetArgsPrivateNative(obj)
 #endif
                   ) {
-            uint32 arg = uint32(rref.asInt32());
+            uint32 arg = uint32(i);
 
             if (arg < obj->getArgsLength()) {
                 JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
@@ -2046,8 +2046,12 @@ BEGIN_CASE(JSOP_GETELEM)
                 copyFrom = &regs.sp[-1];
             }
         }
-        id = INT_TO_JSID(rref.asInt32());
+        if (JS_LIKELY(INT_FITS_IN_JSID(i)))
+            id = INT_TO_JSID(i);
+        else
+            goto intern_big_int;
     } else {
+      intern_big_int:
         if (!js_InternNonIntElementId(cx, obj, rref, &id))
             goto error;
     }
@@ -2347,7 +2351,7 @@ BEGIN_CASE(JSOP_APPLY)
             DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, vp);
 
             JS_ASSERT(fun->u.n.extra == 0);
-            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveValue::test(fun, vp[1]));
+            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(fun, vp[1]));
             JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
             DTrace::exitJSFun(cx, NULL, fun, *vp, vp);
             regs.sp = vp + 1;
@@ -3392,7 +3396,7 @@ BEGIN_CASE(JSOP_SETTER)
       }
       case JSOP_SETELEM:
         rval = regs.sp[-1];
-        id = 0;
+        id = JSID_VOID;
         i = -2;
       gs_pop_lval:
         FETCH_OBJECT(cx, i - 1, obj);
@@ -3413,7 +3417,7 @@ BEGIN_CASE(JSOP_SETTER)
 
         JS_ASSERT(regs.sp - fp->base() >= 3);
         rval = regs.sp[-1];
-        id = 0;
+        id = JSID_VOID;
         i = -2;
       gs_get_lval:
       {
@@ -3425,7 +3429,7 @@ BEGIN_CASE(JSOP_SETTER)
     }
 
     /* Ensure that id has a type suitable for use with obj. */
-    if (id == 0)
+    if (JSID_IS_VOID(id))
         FETCH_ELEMENT_ID(obj, i, id);
 
     if (!js_IsCallable(rval)) {
@@ -3882,7 +3886,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     }
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!obj->map->ops->hasInstance(cx, obj, lref, &cond))
+    if (!obj->map->ops->hasInstance(cx, obj, &lref, &cond))
         goto error;
     regs.sp--;
     regs.sp[-1].setBoolean(cond);
@@ -3931,7 +3935,7 @@ BEGIN_CASE(JSOP_ANYNAME)
     jsid id;
     if (!js_GetAnyName(cx, &id))
         goto error;
-    PUSH_COPY(ID_TO_VALUE(id));
+    PUSH_COPY(IdToValue(id));
 }
 END_CASE(JSOP_ANYNAME)
 
@@ -4014,7 +4018,7 @@ BEGIN_CASE(JSOP_BINDXMLNAME)
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
         goto error;
     regs.sp[-1].setObjectOrNull(obj);
-    PUSH_COPY(ID_TO_VALUE(id));
+    PUSH_COPY(IdToValue(id));
 }
 END_CASE(JSOP_BINDXMLNAME)
 

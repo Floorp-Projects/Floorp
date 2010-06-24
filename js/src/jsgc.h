@@ -541,19 +541,23 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 static inline void
 MarkId(JSTracer *trc, jsid id, const char *name)
 {
-    MarkValue(trc, Valueify(id), name);
+    if (JSID_IS_STRING(id))
+        Mark(trc, JSID_TO_STRING(id), JSTRACE_STRING, name);
+    else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
+        Mark(trc, JSID_TO_OBJECT(id), JSTRACE_OBJECT, name);
 }
 
 static inline void
 MarkIdRange(JSTracer *trc, jsid *beg, jsid *end, const char *name)
 {
-    MarkValueRange(trc, Valueify(beg), Valueify(end), name);
+    for (jsid *idp = beg; idp != end; ++idp)
+        MarkId(trc, *idp, name);
 }
 
 static inline void
 MarkIdRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
 {
-    MarkValueRange(trc, len, Valueify(vec), name);
+    MarkIdRange(trc, vec, vec + len, name);
 }
 
 /* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */

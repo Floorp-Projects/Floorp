@@ -5097,7 +5097,7 @@ SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 
 #define DEFINE_GETTER(name, code)                                              \
     static JSBool                                                              \
-    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
     {                                                                          \
         while (obj->getClass() != &js_RegExpClass) {                           \
             obj = obj->getProto();                                             \
@@ -5120,7 +5120,7 @@ DEFINE_GETTER(multiline_getter,  *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTI
 DEFINE_GETTER(sticky_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_STICKY) != 0))
 
 static JSBool
-lastIndex_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
@@ -5213,7 +5213,7 @@ js_FreeRegExpStatics(JSContext *cx)
 
 #define DEFINE_STATIC_GETTER(name, code)                                       \
     static JSBool                                                              \
-    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
     {                                                                          \
         JSRegExpStatics *res = &cx->regExpStatics;                             \
         code;                                                                  \
@@ -5258,7 +5258,7 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return Paren(cx, res, 8, vp))
 
 #define DEFINE_STATIC_SETTER(name, code)                                       \
     static JSBool                                                              \
-    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
     {                                                                          \
         JSRegExpStatics *res = &cx->regExpStatics;                             \
         code;                                                                  \

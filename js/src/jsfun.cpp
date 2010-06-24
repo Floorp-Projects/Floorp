@@ -155,7 +155,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
             if (argsobj)
                 return argsobj->getProperty(cx, id, vp);
         }
-    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JSObject *argsobj = fp->argsObj();
         if (argsobj && argsobj->isArgsLengthOverridden())
             return argsobj->getProperty(cx, id, vp);
@@ -297,9 +297,9 @@ args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         uintN arg = uintN(JSID_TO_INT(id));
         if (arg < obj->getArgsLength())
             obj->setArgsElement(arg, Value(JS_ARGS_HOLE));
-    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         obj->setArgsLengthOverridden();
-    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
         obj->setArgsCallee(Value(JS_ARGS_HOLE));
     }
     return true;
@@ -502,10 +502,8 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 #ifdef JS_TRACER
             ArgsPrivateNative *argp = GetArgsPrivateNative(obj);
             if (argp) {
-                if (NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
-                    return true;
-                LeaveTrace(cx);
-                return false;
+                ExternNativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]);
+                return true;
             }
 #endif
 
@@ -518,11 +516,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                     *vp = v;
             }
         }
-    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
             vp->setInt32(obj->getArgsLength());
     } else {
-        JS_ASSERT(id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom));
         const Value &v = obj->getArgsCallee();
         if (!v.isMagic(JS_ARGS_HOLE)) {
             /*
@@ -571,8 +569,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             }
         }
     } else {
-        JS_ASSERT(id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom) ||
-                  id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
+                  JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom));
     }
 
     /*
@@ -598,10 +596,10 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         uint32 arg = uint32(JSID_TO_INT(id));
         if (arg < obj->getArgsLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
             valid = true;
-    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
             valid = true;
-    } else if (id == ATOM_TO_JSID(cx->runtime->atomState.calleeAtom)) {
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
         if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE))
             valid = true;
     }
@@ -1097,37 +1095,37 @@ SetCallArguments(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
-js_GetCallArg(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_ARG);
 }
 
 JSBool
-SetCallArg(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+SetCallArg(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_ARG, true);
 }
 
 JSBool
-GetFlatUpvar(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+GetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_UPVAR);
 }
 
 JSBool
-SetFlatUpvar(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+SetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_UPVAR, true);
 }
 
 JSBool
-js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+js_GetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_VAR);
 }
 
 JSBool
-js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     if (!CallPropertyOp(cx, obj, id, vp, JSCPK_VAR))
         return false;
@@ -1136,26 +1134,26 @@ js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsval id, Value *vp)
 }
 
 JSBool
-SetCallVar(JSContext *cx, JSObject *obj, jsval id, Value *vp)
+SetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_VAR, true);
 }
 
 #if JS_TRACER
 JSBool JS_FASTCALL
-js_SetCallArg(JSContext *cx, JSObject *obj, uint32 slotid, Value *vp)
+js_SetCallArg(JSContext *cx, JSObject *obj, size_t slotid, Value *vp)
 {
-    return CallPropertyOp(cx, obj, INT_TO_JSID(slotid), vp, JSCPK_ARG, true);
+    return CallPropertyOp(cx, obj, JSID_FROM_BITS(slotid), vp, JSCPK_ARG, true);
 }
 
 JSBool JS_FASTCALL
-js_SetCallVar(JSContext *cx, JSObject *obj, uint32 slotid, Value *vp)
+js_SetCallVar(JSContext *cx, JSObject *obj, size_t slotid, Value *vp)
 {
-    return CallPropertyOp(cx, obj, INT_TO_JSID(slotid), vp, JSCPK_VAR, true);
+    return CallPropertyOp(cx, obj, JSID_FROM_BITS(slotid), vp, JSCPK_VAR, true);
 }
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, UINT32, VALUEPTR, 0,
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, SIZET, VALUEPTR, 0,
                      nanojit::ACC_STORE_ANY)
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, UINT32, VALUEPTR, 0,
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, SIZET, VALUEPTR, 0,
                      nanojit::ACC_STORE_ANY)
 #endif
 
@@ -1247,7 +1245,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * Resolve arguments so that we never store a particular Call object's
      * arguments object reference in a Call prototype's |arguments| slot.
      */
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
         if (!js_DefineNativeProperty(cx, obj, id, Value(UndefinedTag()),
                                      GetCallArguments, SetCallArguments,
                                      JSPROP_PERMANENT | JSPROP_SHARED,
@@ -1438,7 +1436,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
      * fun is not a compiler-created function object, which must never leak to
      * script or embedding code and then be mutated.
      */
-    if ((flags & JSRESOLVE_ASSIGNING) && id != ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    if ((flags & JSRESOLVE_ASSIGNING) && !JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
         return JS_TRUE;
     }
@@ -1712,7 +1710,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
  * if v is an object) returning true if .prototype is found.
  */
 static JSBool
-fun_hasInstance(JSContext *cx, JSObject *obj, Value v, JSBool *bp)
+fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     Value pval;
@@ -1728,7 +1726,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, Value v, JSBool *bp)
         return JS_FALSE;
     }
 
-    *bp = js_IsDelegate(cx, &pval.asObject(), v);
+    *bp = js_IsDelegate(cx, &pval.asObject(), *v);
     return JS_TRUE;
 }
 

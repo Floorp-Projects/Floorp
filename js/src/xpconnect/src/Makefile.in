@@ -159,10 +159,7 @@ DEFINES += \
   $(addprefix -D,$(filter AVMPLUS%,$(CONFIG))) \
   $(NULL)
 
-# Disable traceable natives because (a) many of them return jsvals, which is
-# hard to support now, and (b) we can call the basic versions from trace now
-# anyway.
-ENABLE_TRACEABLE_FLAGS =
+ENABLE_TRACEABLE_FLAGS = --enable-traceables
 
 endif # ENABLE_JIT
 

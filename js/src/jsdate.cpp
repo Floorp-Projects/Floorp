@@ -617,7 +617,7 @@ date_UTC(JSContext *cx, uintN argc, Value *vp)
 
     msec_time = TIMECLIP(msec_time);
 
-    vp->setDouble(msec_time);
+    vp->setNumber(msec_time);
     return JS_TRUE;
 }
 
@@ -1164,7 +1164,7 @@ date_parse(JSContext *cx, uintN argc, Value *vp)
     }
 
     result = TIMECLIP(result);
-    vp->setDouble(result);
+    vp->setNumber(result);
     return true;
 }
 
@@ -1198,7 +1198,7 @@ GetUTCTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
 {
     if (!InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return JS_FALSE;
-    *dp = obj->getDateUTCTime().asDouble();
+    *dp = obj->getDateUTCTime().asNumber();
     return JS_TRUE;
 }
 
@@ -1238,7 +1238,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
     if (!obj || !InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return false;
 
-    jsdouble result = obj->getDateLocalTime().asDouble();
+    jsdouble result = obj->getDateLocalTime().asNumber();
     if (JSDOUBLE_IS_NaN(result)) {
         result = obj->getDateUTCTime().asDouble();
 
@@ -1263,7 +1263,7 @@ date_getTime(JSContext *cx, uintN argc, Value *vp)
 
     if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
         return JS_FALSE;
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1283,7 +1283,7 @@ GetYear(JSContext *cx, JSBool fullyear, Value *vp)
             result -= 1900;
     }
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1310,7 +1310,7 @@ date_getUTCFullYear(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = YearFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1325,7 +1325,7 @@ date_getMonth(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = MonthFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1340,7 +1340,7 @@ date_getUTCMonth(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = MonthFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1355,7 +1355,7 @@ date_getDate(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = DateFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1370,7 +1370,7 @@ date_getUTCDate(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = DateFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1385,7 +1385,7 @@ date_getDay(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = WeekDay(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1400,7 +1400,7 @@ date_getUTCDay(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = WeekDay(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1415,7 +1415,7 @@ date_getHours(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = HourFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1430,7 +1430,7 @@ date_getUTCHours(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = HourFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1445,7 +1445,7 @@ date_getMinutes(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = MinFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1460,7 +1460,7 @@ date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = MinFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1477,7 +1477,7 @@ date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = SecFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1494,7 +1494,7 @@ date_getUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(result))
         result = msFromTime(result);
 
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1516,7 +1516,7 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
      * daylight savings time.
      */
     result = (utctime - localtime) / msPerMinute;
-    vp->setDouble(result);
+    vp->setNumber(result);
     return JS_TRUE;
 }
 
@@ -1558,7 +1558,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 
     /* just return NaN if the date is already NaN */
     if (!JSDOUBLE_IS_FINITE(result)) {
-        vp->setDouble(result);
+        vp->setNumber(result);
         return true;
     }
 

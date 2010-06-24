@@ -292,28 +292,14 @@ ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
-class PrimitiveValue
+JS_ALWAYS_INLINE bool
+PrimitiveThisTest(JSFunction *fun, const Value &v)
 {
-    static const unsigned THISP_MASK       = 0x7;
-    static const unsigned THISP_ARRAY_SIZE = 8;
-    static const unsigned THISP_SHIFT      = 8;
-
-    void staticAssert() {
-        JS_STATIC_ASSERT(JSFUN_THISP_PRIMITIVE >> THISP_SHIFT == THISP_MASK);
-        JS_STATIC_ASSERT(THISP_MASK == THISP_ARRAY_SIZE - 1);
-    }
-
-    static const uint32 Masks[THISP_ARRAY_SIZE];
-
-  public:
-    static const uint32 DOUBLE_MASK = 0xFFFF8000;
-
-    static bool test(JSFunction *fun, const Value &v) {
-        uint32 mask = Masks[(fun->flags >> THISP_SHIFT) & THISP_MASK];
-        return (((mask & DOUBLE_MASK) != 0) & v.isDouble()) |
-               ((mask & v.data.s.u.mask32) > JSVAL_MASK32_CLEAR);
-    }
-};
+    uint16 flags = fun->flags;
+    return (v.isString() && !!(flags & JSFUN_THISP_STRING)) ||
+           (v.isNumber() && !!(flags & JSFUN_THISP_NUMBER)) ||
+           (v.isBoolean() && !!(flags & JSFUN_THISP_BOOLEAN));
+}
 
 /*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an

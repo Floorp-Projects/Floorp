@@ -241,16 +241,15 @@ JSScopeProperty::hash() const
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ slot;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSDHashNumber(id);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSDHashNumber(id >> 32);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(id);
     return hash;
 }
 
 inline bool
 JSScopeProperty::matches(const JSScopeProperty *p) const
 {
-    JS_ASSERT(!JSVAL_IS_NULL(id));
-    JS_ASSERT(!JSVAL_IS_NULL(p->id));
+    JS_ASSERT(!JSID_IS_VOID(id));
+    JS_ASSERT(!JSID_IS_VOID(p->id));
     return id == p->id &&
            matchesParamsAfterId(p->rawGetter, p->rawSetter, p->slot, p->attrs, p->flags,
                                 p->shortid);
@@ -260,7 +259,7 @@ inline bool
 JSScopeProperty::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint32 aslot,
                                       uintN aattrs, uintN aflags, intN ashortid) const
 {
-    JS_ASSERT(!JSVAL_IS_NULL(id));
+    JS_ASSERT(!JSID_IS_VOID(id));
     return rawGetter == agetter &&
            rawSetter == asetter &&
            slot == aslot &&

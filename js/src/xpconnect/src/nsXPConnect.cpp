@@ -1121,7 +1121,7 @@ NS_IMETHODIMP nsXPConnect::InitClassesForOuterObject(JSContext * aJSContext, JSO
 }
 
 static JSBool
-TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsval id)
+TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsid id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(aJSContext, obj, id, &resolved);

@@ -72,6 +72,7 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
@@ -189,7 +190,7 @@ AppendString(JSCharBuffer &cb, JSString *str)
 
 #define DEFINE_GETTER(name,code)                                               \
     static JSBool                                                              \
-    name(JSContext *cx, JSObject *obj, jsval id, jsval *vp)                    \
+    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
     {                                                                          \
         code;                                                                  \
         return true;                                                           \
@@ -211,12 +212,12 @@ namespace_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-namespace_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     JSObject *obj2;
 
-    JS_ASSERT(JSVAL_IS_OBJECT(v));
-    obj2 = JSVAL_TO_OBJECT(v);
+    JS_ASSERT(v->isObjectOrNull());
+    obj2 = v->asObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &js_NamespaceClass.base)
           ? JS_FALSE
           : js_EqualStrings(GetURI(obj), GetURI(obj2));
@@ -232,7 +233,7 @@ JS_FRIEND_DATA(ExtendedClass) js_NamespaceClass = {
     EnumerateStub,     ResolveStub,       ConvertStub,       namespace_finalize,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL },
-    Valueify(namespace_equality),NULL,    NULL,              NULL,
+    namespace_equality,NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL
 };
 
@@ -315,11 +316,11 @@ qname_identity(JSObject *qna, JSObject *qnb)
 }
 
 static JSBool
-qname_equality(JSContext *cx, JSObject *qn, Value v, JSBool *bp)
+qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 {
     JSObject *obj2;
 
-    obj2 = v.asObjectOrNull();
+    obj2 = v->asObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &js_QNameClass.base)
           ? JS_FALSE
           : qname_identity(qn, obj2);
@@ -2751,7 +2752,7 @@ IsFunctionQName(JSContext *cx, JSObject *qn, jsid *funidp)
          js_EqualStrings(uri, ATOM_TO_STRING(atom)))) {
         return JS_ValueToId(cx, STRING_TO_JSVAL(GetLocalName(qn)), funidp);
     }
-    *funidp = 0;
+    *funidp = JSID_VOID;
     return JS_TRUE;
 }
 
@@ -2760,13 +2761,14 @@ js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp)
 {
     if (obj->getClass() == &js_QNameClass.base)
         return IsFunctionQName(cx, obj, funidp);
-    *funidp = 0;
+    *funidp = JSID_VOID;
     return JS_TRUE;
 }
 
 static JSObject *
 ToXMLName(JSContext *cx, jsval v, jsid *funidp)
 {
+    JSAtom *atomizedName;
     JSString *name;
     JSObject *obj;
     Class *clasp;
@@ -2793,6 +2795,10 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
             return NULL;
     }
 
+    atomizedName = js_AtomizeString(cx, name, 0);
+    if (!atomizedName)
+        return NULL;
+
     /*
      * ECMA-357 10.6.1 step 1 seems to be incorrect.  The spec says:
      *
@@ -2806,14 +2812,14 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
      * If the idea is to reject uint32 property names, then the check needs to
      * be stricter, to exclude hexadecimal and floating point literals.
      */
-    if (js_IdIsIndex(STRING_TO_JSVAL(name), &index))
+    if (js_IdIsIndex(ATOM_TO_JSID(atomizedName), &index))
         goto bad;
 
     if (*name->chars() == '@') {
         name = js_NewDependentString(cx, name, 1, name->length() - 1);
         if (!name)
             return NULL;
-        *funidp = 0;
+        *funidp = JSID_VOID;
         return ToAttributeName(cx, STRING_TO_JSVAL(name));
     }
 
@@ -3180,7 +3186,7 @@ Descendants(JSContext *cx, JSXML *xml, jsval id)
     if (!listobj)
         return NULL;
     list = (JSXML *) listobj->getPrivate();
-    if (funid)
+    if (!JSID_IS_VOID(funid))
         return list;
 
     /*
@@ -3420,17 +3426,21 @@ Insert(JSContext *cx, JSXML *xml, uint32 i, jsval v)
 }
 
 static JSBool
-IndexToIdVal(JSContext *cx, uint32 index, jsval *idvp)
+IndexToId(JSContext *cx, uint32 index, jsid *idp)
 {
+    JSAtom *atom;
     JSString *str;
 
-    if (index <= JSVAL_INT_MAX) {
-        *idvp = INT_TO_JSVAL(index);
+    if (index <= JSID_INT_MAX) {
+        *idp = INT_TO_JSID(index);
     } else {
         str = js_NumberToString(cx, (jsdouble) index);
         if (!str)
             return JS_FALSE;
-        *idvp = STRING_TO_JSVAL(str);
+        atom = js_AtomizeString(cx, str, 0);
+        if (!atom)
+            return JS_FALSE;
+        *idp = ATOM_TO_JSID(atom);
     }
     return JS_TRUE;
 }
@@ -3686,10 +3696,10 @@ GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     /*
      * ECMA-357 9.2.1.1/9.1.1.1 qname case.
      */
-    nameqn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
+    nameqn = ToXMLName(cx, IdToJsval(id), &funid);
     if (!nameqn)
         return false;
-    if (funid)
+    if (!JSID_IS_VOID(funid))
         return GetXMLFunction(cx, obj, funid, vp);
 
     jsval roots[2] = { OBJECT_TO_JSVAL(nameqn), JSVAL_NULL };
@@ -3791,14 +3801,14 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     MUST_FLOW_THROUGH("out");
     jsval roots[3];
     roots[OBJ_ROOT] = OBJECT_TO_JSVAL(obj);
-    roots[ID_ROOT] = ID_TO_JSVAL(id);
+    roots[ID_ROOT] = IdToJsval(id);
     roots[VAL_ROOT] = *vp;
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), Valueify(roots));
 
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
             /* See NOTE in spec: this variation is reserved for future use. */
-            ReportBadXMLName(cx, ID_TO_VALUE(id));
+            ReportBadXMLName(cx, IdToValue(id));
             goto bad;
         }
 
@@ -4092,10 +4102,10 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         /*
          * ECMA-357 9.2.1.2/9.1.1.2 qname case.
          */
-        nameqn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
+        nameqn = ToXMLName(cx, IdToJsval(id), &funid);
         if (!nameqn)
             goto bad;
-        if (funid) {
+        if (!JSID_IS_VOID(funid)) {
             ok = js_SetProperty(cx, obj, funid, Valueify(vp));
             goto out;
         }
@@ -4272,7 +4282,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         /* 10-11. */
-        id = JSVAL_VOID;
+        id = JSID_VOID;
         primitiveAssign = !vxml && !IS_STAR(GetLocalName(nameqn));
 
         /* 12. */
@@ -4386,7 +4396,7 @@ out:
 type_error:
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_BAD_XMLLIST_PUT,
-                         js_ValueToPrintableString(cx, ID_TO_VALUE(id)));
+                         js_ValueToPrintableString(cx, IdToValue(id)));
 bad:
     ok = JS_FALSE;
     goto out;
@@ -4544,7 +4554,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
 
 /* ECMA-357 9.1.1.6 XML [[HasProperty]] and 9.2.1.5 XMLList [[HasProperty]]. */
 static JSBool
-HasProperty(JSContext *cx, JSObject *obj, jsid id, JSBool *found)
+HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *found)
 {
     JSXML *xml;
     uint32 i;
@@ -4552,13 +4562,13 @@ HasProperty(JSContext *cx, JSObject *obj, jsid id, JSBool *found)
     jsid funid;
 
     xml = (JSXML *) obj->getPrivate();
-    if (js_IdIsIndex(id, &i)) {
+    if (js_IdValIsIndex(id, &i)) {
         *found = HasIndexedProperty(xml, i);
     } else {
-        qn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
+        qn = ToXMLName(cx, id, &funid);
         if (!qn)
             return JS_FALSE;
-        if (funid) {
+        if (!JSID_IS_VOID(funid)) {
             if (!HasFunctionProperty(cx, obj, funid, found))
                 return JS_FALSE;
         } else {
@@ -4632,10 +4642,10 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     if (js_IdIsIndex(id, &i)) {
         found = HasIndexedProperty(xml, i);
     } else {
-        qn = ToXMLName(cx, ID_TO_JSVAL(id), &funid);
+        qn = ToXMLName(cx, IdToJsval(id), &funid);
         if (!qn)
             return JS_FALSE;
-        if (funid)
+        if (!JSID_IS_VOID(funid))
             return js_LookupProperty(cx, obj, funid, objp, propp);
         found = HasNamedProperty(xml, qn);
     }
@@ -4674,7 +4684,7 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
 static JSBool
 xml_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    if (id == JS_DEFAULT_XML_NAMESPACE_ID) {
+    if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
         vp->setUndefined();
         return JS_TRUE;
     }
@@ -4692,7 +4702,7 @@ static JSBool
 xml_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
-    if (!HasProperty(cx, obj, id, &found))
+    if (!HasProperty(cx, obj, IdToJsval(id), &found))
         return false;
 
     *attrsp = found ? JSPROP_ENUMERATE : 0;
@@ -4703,7 +4713,7 @@ static JSBool
 xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
-    if (!HasProperty(cx, obj, id, &found))
+    if (!HasProperty(cx, obj, IdToJsval(id), &found))
         return false;
 
     if (found) {
@@ -4723,12 +4733,12 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     JSObject *nameqn;
     jsid funid;
 
-    idval = ID_TO_JSVAL(id);
+    idval = IdToJsval(id);
     xml = (JSXML *) obj->getPrivate();
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
             /* See NOTE in spec: this variation is reserved for future use. */
-            ReportBadXMLName(cx, ID_TO_VALUE(id));
+            ReportBadXMLName(cx, IdToValue(id));
             return JS_FALSE;
         }
 
@@ -4738,7 +4748,7 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
         nameqn = ToXMLName(cx, idval, &funid);
         if (!nameqn)
             return JS_FALSE;
-        if (funid)
+        if (!JSID_IS_VOID(funid))
             return js_DeleteProperty(cx, obj, funid, rval);
 
         DeleteNamedProperty(cx, xml, nameqn,
@@ -4836,7 +4846,7 @@ xml_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-xml_hasInstance(JSContext *cx, JSObject *obj, Value, JSBool *bp)
+xml_hasInstance(JSContext *cx, JSObject *obj, const Value *, JSBool *bp)
 {
     return JS_TRUE;
 }
@@ -4903,7 +4913,7 @@ js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
         if (!js_IsFunctionQName(cx, JSID_TO_OBJECT(id), &funid))
             return JS_FALSE;
-        if (funid != 0)
+        if (!JSID_IS_VOID(funid))
             id = funid;
     }
 
@@ -5173,7 +5183,7 @@ xml_appendChild(JSContext *cx, uintN argc, jsval *vp)
     vxml = (JSXML *) vobj->getPrivate();
     JS_ASSERT(vxml->xml_class == JSXML_CLASS_LIST);
 
-    if (!IndexToIdVal(cx, vxml->xml_kids.length, &name))
+    if (!IndexToId(cx, vxml->xml_kids.length, &name))
         return JS_FALSE;
     *vp = (argc != 0) ? vp[2] : JSVAL_VOID;
 
@@ -5235,6 +5245,29 @@ xml_list_helper(JSContext *cx, JSXML *xml, jsval *rval)
 }
 
 static JSBool
+ValueToId(JSContext *cx, jsval v, AutoIdRooter *idr)
+{
+    if (JSVAL_IS_INT(v)) {
+        jsint i = JSVAL_TO_INT(v);
+        if (INT_FITS_IN_JSID(i))
+            *idr->addr() = INT_TO_JSID(i);
+        else if (!js_ValueToStringId(cx, Valueify(v), idr->addr()))
+            return JS_FALSE;
+    } else if (JSVAL_IS_STRING(v)) {
+        JSAtom *atom = js_AtomizeString(cx, JSVAL_TO_STRING(v), 0);
+        if (!atom)
+            return JS_FALSE;
+        *idr->addr() = ATOM_TO_JSID(atom);
+    } else if (!JSVAL_IS_PRIMITIVE(v)) {
+        *idr->addr() = OBJECT_TO_JSID(JSVAL_TO_OBJECT(v));
+    } else {
+        ReportBadXMLName(cx, Valueify(v));
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static JSBool
 xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
                  jsval *rval)
 {
@@ -5245,7 +5278,7 @@ xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
     /* ECMA-357 13.4.4.6 */
     JS_ASSERT(xml->xml_class != JSXML_CLASS_LIST);
 
-    if (js_IdIsIndex(name, &index)) {
+    if (js_IdValIsIndex(name, &index)) {
         if (index >= JSXML_LENGTH(xml)) {
             *rval = JSVAL_VOID;
         } else {
@@ -5262,11 +5295,11 @@ xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
         return JS_TRUE;
     }
 
-    /*
-     * N.B. name is not actually a jsid: name may contain an non-interned
-     * string.  Apparently, PutProperty is cool with this.
-     */
-    return GetProperty(cx, obj, name, rval);
+    AutoIdRooter idr(cx);
+    if (!ValueToId(cx, name, &idr))
+        return JS_FALSE;
+
+    return GetProperty(cx, obj, idr.id(), rval);
 }
 
 /* XML and XMLList */
@@ -5461,13 +5494,7 @@ xml_descendants(JSContext *cx, uintN argc, jsval *vp)
     JSXML *list;
 
     XML_METHOD_PROLOG;
-
     name = argc == 0 ? ATOM_TO_JSVAL(cx->runtime->atomState.starAtom) : vp[2];
-
-    /*
-     * N.B. name is not actually a jsid: name may contain an non-interned
-     * string.  Apparently, PutProperty is cool with this.
-     */
     list = Descendants(cx, xml, name);
     if (!list)
         return JS_FALSE;
@@ -5549,7 +5576,7 @@ xml_elements(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     vp[2] = OBJECT_TO_JSVAL(nameqn);
 
-    if (funid)
+    if (!JSID_IS_VOID(funid))
         return xml_list_helper(cx, xml, vp) != NULL;
 
     return xml_elements_helper(cx, obj, xml, nameqn, vp);
@@ -6105,7 +6132,7 @@ xml_processingInstructions(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     vp[2] = OBJECT_TO_JSVAL(nameqn);
 
-    if (funid)
+    if (!JSID_IS_VOID(funid))
         return xml_list_helper(cx, xml, vp) != NULL;
 
     return xml_processingInstructions_helper(cx, obj, xml, nameqn, vp);
@@ -6130,7 +6157,7 @@ xml_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 
     XML_METHOD_PROLOG;
     *vp = JSVAL_FALSE;
-    if (argc != 0 && js_IdIsIndex(vp[2], &index)) {
+    if (argc != 0 && js_IdValIsIndex(vp[2], &index)) {
         if (xml->xml_class == JSXML_CLASS_LIST) {
             /* 13.5.4.18. */
             *vp = BOOLEAN_TO_JSVAL(index < xml->xml_kids.length);
@@ -6254,7 +6281,7 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
     if (!xml)
         return JS_FALSE;
 
-    if (argc == 0 || !js_IdIsIndex(vp[2], &index)) {
+    if (argc == 0 || !js_IdValIsIndex(vp[2], &index)) {
         /*
          * Call function QName per spec, not ToXMLName, to avoid attribute
          * names.
@@ -6299,7 +6326,7 @@ xml_setChildren(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     *vp = argc != 0 ? vp[2] : JSVAL_VOID;     /* local root */
-    if (!PutProperty(cx, obj, ATOM_TO_JSVAL(cx->runtime->atomState.starAtom), vp))
+    if (!PutProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.starAtom), vp))
         return JS_FALSE;
 
     *vp = OBJECT_TO_JSVAL(obj);
@@ -7194,7 +7221,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         Class *clasp = tmp->getClass();
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
-        if (!tmp->getProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, Valueify(&v)))
+        if (!tmp->getProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), Valueify(&v)))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             *vp = v;
@@ -7207,7 +7234,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     if (!ns)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
-    if (!obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, Valueify(v),
+    if (!obj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), Valueify(v),
                              PropertyStub, PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
@@ -7230,7 +7257,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj(cx);
-    if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, NonFunObjTag(*ns),
+    if (!varobj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), NonFunObjTag(*ns),
                                 PropertyStub, PropertyStub,
                                 JSPROP_PERMANENT)) {
         return JS_FALSE;
@@ -7430,7 +7457,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
         }
 
         if (target->isXML()) {
-            if (funid == 0) {
+            if (JSID_IS_VOID(funid)) {
                 xml = (JSXML *) target->getPrivate();
                 found = HasNamedProperty(xml, qn);
             } else {
@@ -7442,7 +7469,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
                 *objp = target;
                 return JS_TRUE;
             }
-        } else if (funid != 0) {
+        } else if (!JSID_IS_VOID(funid)) {
             if (!target->lookupProperty(cx, funid, &pobj, &prop))
                 return JS_FALSE;
             if (prop) {

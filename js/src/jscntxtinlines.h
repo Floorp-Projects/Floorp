@@ -276,7 +276,7 @@ AutoGCRooter::trace(JSTracer *trc)
         MarkId(trc, static_cast<AutoIdRooter *>(this)->idval, "js::AutoIdRooter.val");
         return;
 
-      case VECTOR: {
+      case VALVECTOR: {
         Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
         MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
         return;
@@ -286,6 +286,12 @@ AutoGCRooter::trace(JSTracer *trc)
         if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
             Mark(trc, str, JSTRACE_STRING, "js::AutoStringRooter.str");
         return;
+
+      case IDVECTOR: {
+        Vector<jsid, 8> &vector = static_cast<AutoIdVector *>(this)->vector;
+        MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
