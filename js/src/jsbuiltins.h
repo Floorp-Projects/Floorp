@@ -48,7 +48,7 @@
 #undef THIS
 #endif
 
-enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID };
+enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_NEITHER };
 enum { 
     JSTN_ERRTYPE_MASK        = 0x07,
     JSTN_UNBOX_AFTER         = 0x08,
@@ -154,7 +154,7 @@ struct ClosureVarInfo;
  *     _RETRY builtins indicate failure with a special return value that
  *     depends on the return type:
  *
- *         BOOL_RETRY: JSVAL_TO_BOOLEAN(JSVAL_VOID)
+ *         BOOL_RETRY: JS_NEITHER
  *         INT32_RETRY: any negative value
  *         STRING_RETRY: NULL
  *         OBJECT_RETRY_NULL: NULL
@@ -193,7 +193,7 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CVALUEPTR         _JS_CTYPE(const js::Value *,      _JS_PTR, "","p", INFALLIBLE)
 #define _JS_CTYPE_SIZET             _JS_CTYPE(size_t,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
+#define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_NEITHER)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
 #define _JS_CTYPE_BOOLPTR           _JS_CTYPE(JSBool *,               _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)

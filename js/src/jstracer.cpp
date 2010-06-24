@@ -10683,7 +10683,7 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
         res_ins = lir->ins1(LIR_i2d, res_ins);
         guard(false, lir->ins2(LIR_ltd, res_ins, lir->insImmD(0)), OOM_EXIT);
         break;
-      case FAIL_VOID:
+      case FAIL_NEITHER:
           guard(false, lir->ins2ImmI(LIR_eqi, res_ins, JS_NEITHER), OOM_EXIT);
         break;
       default:;
