@@ -255,7 +255,7 @@ var PreferencesView = {
         break;
       case "currentpage":
         url = Browser.selectedBrowser.currentURI.spec;
-        display = Browser.selectedBrowser.contentDocument.title || url;
+        display = Browser.selectedBrowser.contentTitle || url;
         break;
     }
 

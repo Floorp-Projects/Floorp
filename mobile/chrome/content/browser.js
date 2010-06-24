@@ -427,11 +427,6 @@ var Browser = {
       Browser.styles["window-height"].height = h + "px";
       Browser.styles["toolbar-height"].height = toolbarHeight + "px";
 
-      // Cause a resize of the viewport if the current browser holds a XUL document
-      let browser = Browser.selectedBrowser;
-      if (browser.contentDocument instanceof XULDocument)
-        BrowserView.Util.ensureMozScrolledAreaEvent(browser, w, h);
-
       // Tell the UI to resize the browser controls
       BrowserUI.sizeControls(w, h);
 
@@ -450,8 +445,8 @@ var Browser = {
         Browser.hideSidebars();
       bv.onAfterVisibleMove();
 
-      for (let i = Browser._tabs.length - 1; i >= 0; i--)
-        Browser._tabs[i].updateViewportSize();
+      for (let i = Browser.tabs.length - 1; i >= 0; i--)
+        Browser.tabs[i].updateViewportSize();
 
       bv.commitBatchOperation();
       
@@ -721,15 +716,6 @@ var Browser = {
 
   get tabs() {
     return this._tabs;
-  },
-
-  getTabForDocument: function(aDocument) {
-    let tabs = this._tabs;
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser.contentDocument == aDocument)
-        return tabs[i];
-    }
-    return null;
   },
 
   getTabForBrowser: function getTabForBrowser(aBrowser) {
@@ -2332,7 +2318,7 @@ ProgressController.prototype = {
 
   _documentStop: function _documentStop() {
     if (this._tab == Browser.selectedTab) {
-      // XXX Sometimes MozScrollSizeChange has not occurred, so the scroll pane will not
+      // XXX Sometimes MozScrolledAreaChanged has not occurred, so the scroll pane will not
       // be resized yet. We are assuming this event is on the queue, so scroll the pane
       // "soon."
       Util.executeSoon(function() {
@@ -2342,13 +2328,13 @@ ProgressController.prototype = {
       });
     }
     else {
-      let scroll = BrowserView.Util.getContentScrollOffset(this._tab.browser);
-      this._tab.contentScrollOffset = new Point(scroll.x, scroll.y);
+      // XXX: We don't know the current scroll position of the content, so assume
+      // it's at the top. This will be fixed by Layers
+      this._tab.contentScrollOffset = new Point(0, 0);
 
-      // If the document content is scrolled to the top, make sure the URLbar is in view.
-      // If this were the selected tab, onLocationChange would scroll to top.
-      if (scroll.isZero())
-        this._tab.pageScrollOffset = new Point(0, 0);
+      // Make sure the URLbar is in view. If this were the selected tab,
+      // onLocationChange would scroll to top.
+      this._tab.pageScrollOffset = new Point(0, 0);
     }
   }
 };
@@ -2532,14 +2518,6 @@ Tab.prototype = {
 
       browser.style.width = viewportW + "px";
       browser.style.height = viewportH + "px";
-    }
-
-    // Some documents are not firing MozScrolledAreaChanged and/or fired it for
-    // sub-documents only
-    let doc = browser.contentDocument;
-    if (doc instanceof XULDocument || doc.body instanceof HTMLFrameSetElement) {
-       let [width, height] = BrowserView.Util.getBrowserDimensions(browser);
-       BrowserView.Util.ensureMozScrolledAreaEvent(browser, width, height);
     }
   },
 

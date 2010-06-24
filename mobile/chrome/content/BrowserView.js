@@ -161,41 +161,6 @@ BrowserView.Util = {
     return browser.__BrowserView__vps;
   },
 
-  /**
-   * Calling this is likely to cause a reflow of the browser's document.  Use
-   * wisely.
-   */
-  getBrowserDimensions: function getBrowserDimensions(browser) {
-    let cdoc = browser.contentDocument;
-    if (cdoc instanceof SVGDocument) {
-      let rect = cdoc.rootElement.getBoundingClientRect();
-      return [Math.ceil(rect.width), Math.ceil(rect.height)];
-    }
-
-    // These might not exist yet depending on page load state
-    let body = cdoc.body || {};
-    let html = cdoc.documentElement || {};
-    let w = Math.max(body.scrollWidth || 1, html.scrollWidth);
-    let h = Math.max(body.scrollHeight || 1, html.scrollHeight);
-
-    return [w, h];
-  },
-
-  getContentScrollOffset: function getContentScrollOffset(browser) {
-    let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-    let scrollX = {};
-    let scrollY = {};
-    cwu.getScrollXY(false, scrollX, scrollY);
-
-    return new Point(scrollX.value, scrollY.value);
-  },
-
-  getBrowserDOMWindowUtils: function getBrowserDOMWindowUtils(browser) {
-    return browser.contentWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
-  },
-
   getNewBatchOperationState: function getNewBatchOperationState() {
     return {
       viewportSizeChanged: false,
@@ -212,15 +177,6 @@ BrowserView.Util = {
   resizeContainerToViewport: function resizeContainerToViewport(container, viewportRect) {
     container.style.width = viewportRect.width  + 'px';
     container.style.height = viewportRect.height + 'px';
-  },
-
-  ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
-    let message = {};
-    message.target = aBrowser;
-    message.name = "Browser:MozScrolledAreaChanged";
-    message.json = { width: aWidth, height: aHeight };
-
-    Browser._browserView.updateScrolledArea(message);
   }
 };
 
