@@ -947,9 +947,8 @@ class ConservativeGCStackMarker {
 #ifdef JS_GCMETER
         JSConservativeGCStats *total = &trc->context->runtime->gcStats.conservative;
         total->words        += stats.words;
-        total->unique       += stats.unique;
         total->oddaddress   += stats.oddaddress;
-        total->outside      += stats.outside;
+        total->special      += stats.special;
         total->notarena     += stats.notarena;
         total->notchunk     += stats.notchunk;
         total->freearena    += stats.freearena;
@@ -968,10 +967,7 @@ class ConservativeGCStackMarker {
     void markWord(jsuword w);
 
     JSTracer *trc;
-    jsuword gcthingAddressStart;
-    jsuword gcthingAddressSpan;
     HashSet<jsuword, GCChunkHasher, SystemAllocPolicy> chunkSet;
-    HashSet<jsuword, DefaultHasher<jsuword>, SystemAllocPolicy> history;
 
 #if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
     JSConservativeGCStats stats;
@@ -1006,30 +1002,14 @@ ConservativeGCStackMarker::ConservativeGCStackMarker(JSTracer *trc)
      * If initializing fails because we are out of memory, stack scanning
      * slows down but is otherwise unaffected.
      */
-    history.init(3000);
-
     JSRuntime *rt = trc->context->runtime;
-    jsuword minchunk = 0, maxchunk = 0;
-    bool chunkSetOk = chunkSet.init(rt->gcChunks.length());
-    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i) {
-        jsuword chunk =(*i)->getChunk();
-        if (chunkSetOk) {
+    if (chunkSet.init(rt->gcChunks.length())) {
+        for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i) {
+            jsuword chunk = (*i)->getChunk();
             JS_ASSERT(!chunkSet.has(chunk));
             JS_ALWAYS_TRUE(chunkSet.put(chunk));
         }
-
-        if (minchunk == 0)
-            minchunk = maxchunk = chunk;
-        else if (chunk < minchunk)
-            minchunk = chunk;
-        else if (chunk > maxchunk)
-            maxchunk = chunk;
     }
-
-    gcthingAddressStart = minchunk;
-    gcthingAddressSpan = (minchunk != 0)
-                         ? maxchunk + GC_MARK_BITMAP_ARRAY_OFFSET
-                         : 0;
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     dumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
@@ -1045,11 +1025,10 @@ ConservativeGCStackMarker::dumpStats(FILE *fp, JSConservativeGCStats *stats)
 #define ULSTAT(x)       ((unsigned long)(stats->x))
     fprintf(fp, "CONSERVATIVE STACK SCANNING:\n");
     fprintf(fp, "      number of stack words: %lu\n", ULSTAT(words));
-    fprintf(fp, "     number of unique words: %lu\n", ULSTAT(unique));
     fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(oddaddress));
-    fprintf(fp, "    not withing chunk range: %lu\n", ULSTAT(outside));
-    fprintf(fp, "     not within arena range: %lu\n", ULSTAT(notarena));
+    fprintf(fp, "          excluded, special: %lu\n", ULSTAT(special));
     fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(notchunk));
+    fprintf(fp, "     not within arena range: %lu\n", ULSTAT(notarena));
     fprintf(fp, "       points to free arena: %lu\n", ULSTAT(freearena));
     fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(wrongtag));
     fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(notlive));
@@ -1128,11 +1107,6 @@ void
 ConservativeGCStackMarker::markWord(jsuword w)
 {
 #define RETURN(x) do { CONSERVATIVE_METER(stats.x++); return; } while (0)
-
-    JSRuntime *rt = trc->context->runtime;
-
-    CONSERVATIVE_METER(stats.unique++);
-
     /*
      * We assume that the compiler never uses sub-word alignment to store
      * pointers and does not tag pointers on its own. Thus we exclude words
@@ -1153,19 +1127,11 @@ ConservativeGCStackMarker::markWord(jsuword w)
 
     /* Strip off the tag bits. */
     jsuword tag = w & JSVAL_TAGMASK;
-    jsuword p = w & ~(JSVAL_TAGMASK);
 
     if (tag == JSVAL_SPECIAL)
-        RETURN(wrongtag);
+        RETURN(special);
 
-    /* The remaining pointer must be within the heap boundaries. */
-    if ((p - gcthingAddressStart) >= gcthingAddressSpan)
-        RETURN(outside);
-
-    if ((p & GC_CHUNK_MASK) >= GC_MARK_BITMAP_ARRAY_OFFSET)
-        RETURN(notarena);
-
-    jsuword chunk = p & ~GC_CHUNK_MASK;
+    jsuword chunk = w & ~GC_CHUNK_MASK;
     JSGCChunkInfo *ci;
     if (JS_LIKELY(chunkSet.initialized())) {
         if (!chunkSet.has(chunk))
@@ -1173,15 +1139,18 @@ ConservativeGCStackMarker::markWord(jsuword w)
         ci = JSGCChunkInfo::fromChunk(chunk);
     } else {
         ci = JSGCChunkInfo::fromChunk(chunk);
-        for (JSGCChunkInfo **i = rt->gcChunks.begin(); ; ++i) {
-            if (i == rt->gcChunks.end())
+        for (JSGCChunkInfo **i = trc->context->runtime->gcChunks.begin(); ; ++i) {
+            if (i == trc->context->runtime->gcChunks.end())
                 RETURN(notchunk);
             if (*i == ci)
                 break;
         }
     }
 
-    size_t arenaIndex = (p & GC_CHUNK_MASK) >> GC_ARENA_SHIFT;
+    if ((w & GC_CHUNK_MASK) >= GC_MARK_BITMAP_ARRAY_OFFSET)
+        RETURN(notarena);
+
+    size_t arenaIndex = (w & GC_CHUNK_MASK) >> GC_ARENA_SHIFT;
     if (JS_TEST_BIT(ci->getFreeArenaBitmap(), arenaIndex))
         RETURN(freearena);
 
@@ -1194,7 +1163,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
         if (tag && tag != JSVAL_DOUBLE)
             RETURN(wrongtag);
         JS_STATIC_ASSERT(JSVAL_TAGMASK == 7 && (sizeof(double) - 1) == 7);
-        thing = (JSGCThing *) p;
+        thing = (JSGCThing *) (w & ~JSVAL_TAGMASK);
         traceKind = JSTRACE_DOUBLE;
     } else {
         if (tag == JSVAL_DOUBLE)
@@ -1206,7 +1175,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
 #endif
 
         jsuword start = a->toPageStart();
-        jsuword offset = p - start;
+        jsuword offset = w - start;
         size_t thingSize = ainfo->list->thingSize;
         offset -= offset % thingSize;
 
@@ -1270,24 +1239,9 @@ void
 ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
 {
     JS_ASSERT(begin <= end);
-    if (history.initialized()) {
-        for (jsuword *i = begin; i != end; ++i) {
-            CONSERVATIVE_METER(stats.words++);
-            jsuword p = *i;
-            if (history.has(p))
-                continue;
-            markWord(p);
-
-            /*
-             * If adding the address to the hash table fails because we are
-             * out of memory, stack scanning slows down but is otherwise
-             * unaffected.
-             */
-            history.put(p);
-        }
-    } else {
-        for (jsuword *i = begin; i != end; ++i)
-            markWord(*i);
+    for (jsuword *i = begin; i != end; ++i) {
+        CONSERVATIVE_METER(stats.words++);
+        markWord(*i);
     }
 }
 
