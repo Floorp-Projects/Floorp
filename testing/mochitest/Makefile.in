@@ -74,6 +74,8 @@ _SERV_FILES = 	\
 		harness.xul \
 		browser-test-overlay.xul \
 		browser-test.js \
+		ipc-overlay.xul \
+		ipc.js \
 		browser-harness.xul \
 		redirect-a11y.html \
 		redirect.html \
