@@ -1166,6 +1166,7 @@ class AutoValueVector;
 
 struct JSCompartment {
     JSRuntime *rt;
+    JSPrincipals *principals;
     bool marked;
     js::WrapperMap crossCompartmentWrappers;
 
@@ -1537,6 +1538,8 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
+
+    JSWrapObjectCallback wrapObjectCallback;
 
     JSRuntime();
     ~JSRuntime();

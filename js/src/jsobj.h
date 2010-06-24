@@ -721,8 +721,10 @@ struct JSObject {
     inline bool isObjectProxy() const;
     inline bool isFunctionProxy() const;
 
-    bool isCrossCompartmentWrapper() const;
+    bool isWrapper() const;
     JSObject *unwrap();
+
+    bool isCrossCompartmentWrapper() const;
 
     inline bool unbrand(JSContext *cx);
 };

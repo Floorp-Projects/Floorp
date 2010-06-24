@@ -3184,6 +3184,8 @@ SweepCompartments(JSContext *cx)
             /* Remove dead wrappers from the compartment map. */
             compartment->sweep(cx);
         } else {
+            if (compartment->principals)
+                JSPRINCIPALS_DROP(cx, compartment->principals);
             delete compartment;
         }
     }
@@ -3775,13 +3777,18 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
 }
 
 JSCompartment *
-NewCompartment(JSContext *cx)
+NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = new JSCompartment(rt);
     if (!compartment || !compartment->init()) {
         JS_ReportOutOfMemory(cx);
         return false;
+    }
+
+    if (principals) {
+        compartment->principals = principals;
+        JSPRINCIPALS_HOLD(cx, principals);
     }
 
     AutoLockGC lock(rt);
