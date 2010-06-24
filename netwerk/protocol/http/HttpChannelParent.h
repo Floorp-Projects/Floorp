@@ -52,6 +52,8 @@
 
 using namespace mozilla::dom;
 
+class nsICacheEntryDescriptor;
+
 namespace mozilla {
 namespace net {
 
@@ -87,11 +89,15 @@ protected:
                              const PRBool&              forceAllowThirdPartyCookie);
 
   virtual bool RecvSetPriority(const PRUint16& priority);
+  virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
+  virtual bool RecvOnStopRequestCompleted();
 
   virtual void ActorDestroy(ActorDestroyReason why);
 
+private:
   nsCOMPtr<nsITabParent> mTabParent;
   nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsICacheEntryDescriptor> mCacheDescriptor;
   bool mIPCClosed;                // PHttpChannel actor has been Closed()
 };
 
