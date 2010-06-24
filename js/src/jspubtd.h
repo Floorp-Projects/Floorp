@@ -261,7 +261,7 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_BOXED             ((uint8)0x99)
 #define JSVAL_TYPE_UNINITIALIZED     ((uint8)0xcd)
 
-#ifdef JS_BITS_PER_WORD == 32
+#if JS_BITS_PER_WORD == 32
 
 typedef uint32 JSValueTag;
 #define JSVAL_TAG_CLEAR              ((uint32)(0xFFFF0000))
@@ -600,17 +600,16 @@ JSVAL_SAME_PRIMITIVE_TYPE_OR_BOTH_OBJECTS_IMPL(jsval_layout lhs, jsval_layout rh
 static JS_ALWAYS_INLINE JSValueType
 JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 {
-    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JSValueType t = (JSValueType)(l.s.tag & 0xF);
-    JS_ASSERT(t >= JSVAL_TYPE_INT32 && t <= JSVAL_UPPER_INCL_TYPE_OF_OBJ_SET);
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     return t;
 }
 
 static JS_ALWAYS_INLINE JSValueTag
 JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
 {
-    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JSValueTag t = l.s.tag;
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
     JS_ASSERT(t >= JSVAL_TAG_INT32 && t <= JSVAL_UPPER_INCL_TAG_OF_OBJ_SET);
     return t;
 }
