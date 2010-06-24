@@ -1173,6 +1173,10 @@ statusbarpanel#statusbar-display {
   min-height: 28px;
 }
 
+.tabbrowser-tab[pinned] + .tabbrowser-tab:not([pinned]) {
+  -moz-margin-start: 0;
+}
+
 .tab-icon-image {
   width: 16px;
   height: 16px;
@@ -1180,6 +1184,10 @@ statusbarpanel#statusbar-display {
   -moz-margin-end: 4px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.tabbrowser-tab[pinned] > .tab-icon-image {
+  margin: 2px 0 0;
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {
