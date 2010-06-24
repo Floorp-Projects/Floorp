@@ -399,7 +399,7 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
     return NS_OK;
   }
 
-  if (!mJSRuntime) {
+  if (!mJSContext) {
     nsString jsonValue = mValue;
     mValue.Truncate();
 
@@ -409,13 +409,10 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
 
     JSAutoRequest ar(cx);
 
-    JSRuntime* rt = JS_GetRuntime(cx);
-
-    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                  "GetSuccessEvent::mCachedValue");
+    JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    mJSRuntime = rt;
+    mJSContext = cx;
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
     rv = json->DecodeToJSVal(jsonValue, cx, &mCachedValue);
@@ -451,20 +448,17 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
   rv = cc->GetRetValPtr(&retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mJSRuntime) {
+  if (!mJSContext) {
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoRequest ar(cx);
 
-    JSRuntime* rt = JS_GetRuntime(cx);
-
-    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                  "GetSuccessEvent::mCachedValue");
+    JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    mJSRuntime = rt;
+    mJSContext = cx;
 
     // Swap into a stack array so that we don't hang on to the strings if
     // something fails.
@@ -538,20 +532,15 @@ GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
   rv = cc->GetRetValPtr(&retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mJSRuntime) {
+  if (!mJSContext) {
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoRequest ar(cx);
 
-    JSRuntime* rt = JS_GetRuntime(cx);
-
-    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                  "GetSuccessEvent::mCachedValue");
+    JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-    mJSRuntime = rt;
 
     // Swap into a stack array so that we don't hang on to the strings if
     // something fails.

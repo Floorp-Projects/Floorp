@@ -145,13 +145,14 @@ public:
   GetSuccessEvent(const nsAString& aValue)
   : mValue(aValue),
     mCachedValue(JSVAL_VOID),
-    mJSRuntime(nsnull)
+    mJSContext(nsnull)
   { }
 
   ~GetSuccessEvent()
   {
-    if (mJSRuntime) {
-      JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+    if (mJSContext) {
+      JSAutoRequest ar(mJSContext);
+      JS_RemoveValueRoot(mJSContext, &mCachedValue);
     }
   }
 
@@ -165,7 +166,7 @@ private:
 
 protected:
   jsval mCachedValue;
-  JSRuntime* mJSRuntime;
+  JSContext* mJSContext;
 };
 
 class GetAllSuccessEvent : public GetSuccessEvent
