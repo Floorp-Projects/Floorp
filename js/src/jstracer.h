@@ -1295,7 +1295,8 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* unbox_int_id(nanojit::LIns *id_ins);
 
     JS_REQUIRES_STACK void box_value(const Value &v, nanojit::LIns* v_ins, 
-                                     nanojit::LIns *dstaddr_ins, ptrdiff_t offset);
+                                     nanojit::LIns *dstaddr_ins, ptrdiff_t offset,
+                                     nanojit::AccSet accSet);
     JS_REQUIRES_STACK nanojit::LIns* box_value(const Value &v, nanojit::LIns* v_ins);
 
     JS_REQUIRES_STACK void guardClassHelper(bool cond, nanojit::LIns* obj_ins, Class* clasp,
