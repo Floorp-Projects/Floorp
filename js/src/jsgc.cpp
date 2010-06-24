@@ -1170,7 +1170,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
             RETURN(wrongtag);
         traceKind = GetFinalizableArenaTraceKind(ainfo);
 #if JS_BYTES_PER_WORD == 8
-        if (tag == JSVAL_STRING && traceKind != JSVAL_STRING)
+        if (tag == JSVAL_STRING && traceKind != JSTRACE_STRING)
             RETURN(wrongtag);
 #endif
 
