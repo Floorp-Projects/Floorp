@@ -3107,6 +3107,18 @@ pref("image.cache.timeweight", 500);
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 
+//
+// Image memory management prefs
+//
+
+// Discards inactive image frames and re-decodes them on demand from
+// compressed data.
+pref("image.mem.discardable", false);
+
+// Prevents images from automatically being decoded on load, instead allowing
+// them to be decoded on demand when they are drawn.
+pref("image.mem.decodeondraw", false);
+
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
 pref("webgl.software_render", false);
