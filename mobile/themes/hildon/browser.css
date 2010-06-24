@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
 /* browser area -------------------------------------------------- */
 #tile-container {
   background-image: url("chrome://browser/content/checkerboard.png");
@@ -195,24 +198,27 @@ toolbarbutton.urlbar-cap-button {
   list-style-image: url("chrome://browser/skin/images/favicon-default-30.png");
 }
 
-#urlbar-editarea {
-  min-height: 64px;
-  -moz-box-align: center;
-  padding: 0;
-  border-top: 1px solid #262629;
-  border-bottom: 3px solid #262629;
-  background: #fff;
-}
-
-#urlbar-editarea:hover:active {
-  background-color: #8db8d8;
-}
-
 #urlbar-edit {
   -moz-appearance: none !important;
-  background: transparent;
-  padding: 0px !important;
+  min-height: 64px;
+  background: #fff;
+  margin: 0 !important;
+  padding: 0 !important;
   border: none !important;
+  border-top: 1px solid #262629 !important;
+  border-bottom: 3px solid #262629 !important;
+  -moz-border-radius: 0;
+}
+#urlbar-edit > hbox > .textbox-input-box {
+  margin: 0;
+}
+#urlbar-edit > hbox > hbox > html|*.textbox-input {
+  min-height: 60px;
+  text-indent: 3px;
+}
+
+#urlbar-edit:hover:active {
+  background-color: #8db8d8;
 }
 
 /* make sure this endcap matches the other endcap */

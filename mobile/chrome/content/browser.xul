@@ -224,21 +224,19 @@
                       <image id="urlbar-favicon" hidden="true"/>
                     </box>
                   </box>
-                  <hbox id="urlbar-editarea" flex="1">
-                    <textbox id="urlbar-edit"
-                             type="autocomplete"
-                             autocompletesearch="history"
-                             autocompletepopup="popup_autocomplete"
-                             enablehistory="false"
-                             maxrows="6"
-                             completeselectedindex="true"
-                             minresultsforpopup="0"
-                             oncontextmenu="event.preventDefault();"
-                             emptytext="&urlbar.emptytext;"
-                             flex="1"
-                             ontextentered="BrowserUI.goToURI();"
-                             clickSelectsAll="true"/>
-                  </hbox>
+                  <textbox id="urlbar-edit"
+                           type="autocomplete"
+                           autocompletesearch="history"
+                           autocompletepopup="popup_autocomplete"
+                           enablehistory="false"
+                           maxrows="6"
+                           completeselectedindex="true"
+                           minresultsforpopup="0"
+                           oncontextmenu="event.preventDefault();"
+                           emptytext="&urlbar.emptytext;"
+                           flex="1"
+                           ontextentered="BrowserUI.goToURI();"
+                           clickSelectsAll="true"/>
                   <hbox id="urlbar-icons" mode="view">
                     <toolbarbutton id="tool-reload" class="urlbar-cap-button"
                                    oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
