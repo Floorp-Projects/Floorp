@@ -70,6 +70,7 @@
 #include "nsCOMArray.h"
 
 #include "nsGUIEvent.h"
+#include "nsPLDOMEvent.h"
 
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"
@@ -7318,7 +7319,12 @@ void
 nsDocument::SetReadyStateInternal(ReadyState rs)
 {
   mReadyState = rs;
-  // TODO fire "readystatechange"
+
+  nsRefPtr<nsPLDOMEvent> plevent =
+    new nsPLDOMEvent(this, NS_LITERAL_STRING("readystatechange"), PR_FALSE, PR_FALSE); 
+  if (plevent) {
+    plevent->RunDOMEventWhenSafe();
+  }
 }
 
 nsIDocument::ReadyState
