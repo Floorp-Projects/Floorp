@@ -1137,8 +1137,9 @@ JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+
     cx->globalObject = obj;
+    cx->compartment = obj->getCompartment(cx);
 }
 
 JS_BEGIN_EXTERN_C
@@ -1251,13 +1252,15 @@ JS_END_EXTERN_C
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
-    JSAtom *atom;
-
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+
+    if (cx->globalObject)
+        assertSameCompartment(cx, obj);
+    else
+        JS_SetGlobalObject(cx, obj);
 
     /* Define a top-level property 'undefined' with the undefined value. */
-    atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+    JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
                              JS_PropertyStub, JS_PropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
