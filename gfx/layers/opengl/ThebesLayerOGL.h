@@ -41,6 +41,7 @@
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "gfxImageSurface.h"
+#include "GLContext.h"
 
 
 namespace mozilla {
@@ -50,6 +51,7 @@ class ThebesLayerOGL : public ThebesLayer,
                          public LayerOGL
 {
 public:
+  typedef mozilla::gl::GLContext GLContext;
   ThebesLayerOGL(LayerManagerOGL *aManager);
   virtual ~ThebesLayerOGL();
 
@@ -71,6 +73,7 @@ public:
   const nsIntRect &GetInvalidatedRect();
 
 private:
+  PRBool EnsureSurface();
   /**
    * Currently invalidated rectangular area.
    */
@@ -80,6 +83,10 @@ private:
    * OpenGL Texture
    */
   GLuint mTexture;
+  nsRefPtr<GLContext> mOffscreenSurfaceAsGLContext;
+  nsRefPtr<gfxASurface> mOffScreenSurface;
+  gfxASurface::gfxImageFormat mOffscreenFormat;
+  gfxIntSize mOffscreenSize;
 };
 
 } /* layers */

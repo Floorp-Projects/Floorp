@@ -675,8 +675,8 @@ var PlacesUIUtils = {
     // The view for a <menu> of which its associated menupopup is a places
     // view, is the menupopup.
     if (node.localName == "menu" && !node._placesNode &&
-        node.firstChild._placesView)
-      return node.firstChild._placesView;
+        node.lastChild._placesView)
+      return node.lastChild._placesView;
 
     while (node instanceof Ci.nsIDOMElement) {
       if (node._placesView)

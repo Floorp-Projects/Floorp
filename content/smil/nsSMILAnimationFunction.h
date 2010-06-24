@@ -321,7 +321,8 @@ protected:
                                      nsAString& aResult) const;
 
   PRBool   ParseAttr(nsIAtom* aAttName, const nsISMILAttr& aSMILAttr,
-                     nsSMILValue& aResult, PRBool& aCanCacheSoFar) const;
+                     nsSMILValue& aResult,
+                     PRBool& aPreventCachingOfSandwich) const;
 
   virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
                              nsSMILValueArray& aResult);
