@@ -1338,10 +1338,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-#nav-bar {
-  padding-top: 0 !important;
-}
-
 #nav-bar[collapsed="true"] + toolbar[customindex] {
  border-top: 2px solid;
  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.45);

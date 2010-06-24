@@ -87,6 +87,11 @@ struct SetAttrs {
 };
 union Op { null_t; SetAttrs; };
 
+struct ShmemStruct {
+    int i;
+    Shmem mem;
+};
+
 } // namespace _foo
 } // namespace mozilla
 

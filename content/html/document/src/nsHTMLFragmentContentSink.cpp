@@ -801,6 +801,7 @@ public:
 
   // nsIParanoidFragmentContentSink
   virtual void AllowStyles();
+  virtual void AllowComments();
 
 protected:
   nsresult NameFromType(const nsHTMLTag aTag,
@@ -814,6 +815,7 @@ protected:
   PRPackedBool mSkip; // used when we descend into <style> or <script>
   PRPackedBool mProcessStyle; // used when style is explicitly white-listed
   PRPackedBool mInStyle; // whether we're inside a style element
+  PRPackedBool mProcessComments; // used when comments are allowed
 
   // Use nsTHashTable as a hash set for our whitelists
   static nsTHashtable<nsISupportsHashKey>* sAllowedTags;
@@ -825,7 +827,7 @@ nsTHashtable<nsISupportsHashKey>* nsHTMLParanoidFragmentSink::sAllowedAttributes
 
 nsHTMLParanoidFragmentSink::nsHTMLParanoidFragmentSink(PRBool aAllContent):
   nsHTMLFragmentContentSink(aAllContent), mSkip(PR_FALSE),
-  mProcessStyle(PR_FALSE), mInStyle(PR_FALSE)
+  mProcessStyle(PR_FALSE), mInStyle(PR_FALSE), mProcessComments(PR_FALSE)
 {
 }
 
@@ -957,6 +959,12 @@ void
 nsHTMLParanoidFragmentSink::AllowStyles()
 {
   mProcessStyle = PR_TRUE;
+}
+
+void
+nsHTMLParanoidFragmentSink::AllowComments()
+{
+  mProcessComments = PR_TRUE;
 }
 
 // nsHTMLFragmentContentSink
@@ -1251,6 +1259,8 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLParanoidFragmentSink::AddComment(const nsIParserNode& aNode)
 {
+  if (mProcessComments)
+    return nsHTMLFragmentContentSink::AddComment(aNode);
   // no comments
   return NS_OK;
 }
