@@ -597,9 +597,14 @@ window.Item.prototype = {
           self.dragOptions.drag.apply(self, [e, {position: box.position()}]);
           
         // drop events
-        var newDropTarget = null;
+        var best = {
+          dropTarget: null,
+          score: 0
+        };
+        
         iQ.each(droppables, function(index, droppable) {
-          if(box.intersects(droppable.bounds)) {
+          var intersection = box.intersection(droppable.bounds);
+          if(intersection && intersection.area() > best.score) {
             var possibleDropTarget = droppable.item;
             var accept = true;
             if(possibleDropTarget != dropTarget) {
@@ -609,13 +614,13 @@ window.Item.prototype = {
             }
             
             if(accept) {
-              newDropTarget = possibleDropTarget;
-              return false;
+              best.dropTarget = possibleDropTarget;
+              best.score = intersection.area();
             }
           }
         });
 
-        if(newDropTarget != dropTarget) {
+        if(best.dropTarget != dropTarget) {
           var dropOptions;
           if(dropTarget) {
             dropOptions = dropTarget.dropOptions;
@@ -623,7 +628,7 @@ window.Item.prototype = {
               dropOptions.out.apply(dropTarget, [e]);
           }
           
-          dropTarget = newDropTarget; 
+          dropTarget = best.dropTarget; 
 
           if(dropTarget) {
             dropOptions = dropTarget.dropOptions;
