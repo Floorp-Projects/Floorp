@@ -152,10 +152,10 @@ MakeSOW(JSContext *cx, JSObject *obj);
 
 // Used by UnwrapSOW below.
 JSBool
-AllowedToAct(JSContext *cx, jsval idval);
+AllowedToAct(JSContext *cx, jsid id);
 
 JSBool
-CheckFilename(JSContext *cx, jsval idval, JSStackFrame *fp);
+CheckFilename(JSContext *cx, jsid id, JSStackFrame *fp);
 
 }
 
@@ -341,7 +341,7 @@ UnwrapSOW(JSContext *cx, JSObject *wrapper)
     return nsnull;
   }
 
-  if (!SystemOnlyWrapper::AllowedToAct(cx, JSVAL_VOID)) {
+  if (!SystemOnlyWrapper::AllowedToAct(cx, JSID_VOID)) {
     JS_ClearPendingException(cx);
     wrapper = nsnull;
   }
@@ -456,13 +456,13 @@ CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
 JSBool
 AddProperty(JSContext *cx, JSObject *wrapperObj,
             JSBool wantGetterSetter, JSObject *innerObj,
-            jsval id, jsval *vp);
+            jsid id, jsval *vp);
 
 /**
  * Called for the common part of deleting a property from obj.
  */
 JSBool
-DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /**
  * Called to enumerate the properties of |innerObj| onto |wrapperObj|.
@@ -481,7 +481,7 @@ Enumerate(JSContext *cx, JSObject *wrapperObj, JSObject *innerObj);
  */
 JSBool
 NewResolve(JSContext *cx, JSObject *wrapperObj, JSBool preserveVal,
-           JSObject *innerObj, jsval id, uintN flags, JSObject **objp);
+           JSObject *innerObj, jsid id, uintN flags, JSObject **objp);
 
 /**
  * Resolve a native property named id from innerObj onto wrapperObj. The
@@ -491,7 +491,7 @@ NewResolve(JSContext *cx, JSObject *wrapperObj, JSBool preserveVal,
 JSBool
 ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
                       JSObject *innerObj, XPCWrappedNative *wn,
-                      jsval id, uintN flags, JSObject **objp,
+                      jsid id, uintN flags, JSObject **objp,
                       JSBool isNativeWrapper);
 
 /**
@@ -502,7 +502,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
 JSBool
 GetOrSetNativeProperty(JSContext *cx, JSObject *obj,
                        XPCWrappedNative *wrappedNative,
-                       jsval id, jsval *vp, JSBool aIsSet,
+                       jsid id, jsval *vp, JSBool aIsSet,
                        JSBool isNativeWrapper);
 
 /**

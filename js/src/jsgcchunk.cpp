@@ -35,10 +35,6 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsgcchunk.h"
-#ifdef JS_64BIT
-# include "jsstr.h"
-#endif
-
 
 #ifdef XP_WIN
 # include "jswin.h"
@@ -144,47 +140,6 @@ UnmapPages(void *p, size_t size)
 
 # else /* WINCE */
 
-#  ifdef _M_X64
-
-typedef long (*ntavm_fun)(HANDLE handle, void **addr, ULONG zbits,
-                          size_t *size, ULONG alloctype, ULONG prot);
-typedef long (*ntfvm_fun)(HANDLE handle, void **addr, size_t *size, 
-                          ULONG freetype);
-
-static ntavm_fun NtAllocateVirtualMemory;
-static ntfvm_fun NtFreeVirtualMemory;
-
-bool 
-js::InitNtAllocAPIs()
-{
-    HMODULE h = GetModuleHandle("ntdll.dll");
-    if (!h)
-        return false;
-    NtAllocateVirtualMemory = ntavm_fun(GetProcAddress(h, "NtAllocateVirtualMemory"));
-    if (!NtAllocateVirtualMemory)
-        return false;
-    NtFreeVirtualMemory = ntfvm_fun(GetProcAddress(h, "NtFreeVirtualMemory"));
-    if (!NtFreeVirtualMemory)
-        return false;
-}
-
-// Allocate pages with 32-bit addresses (i.e., top 16 bits are all 0).
-static void *
-MapPages(void *addr, size_t size)
-{
-    long rc = NtAllocateVirtualMemory(INVALID_HANDLE_VALUE, &addr, 1, &size,
-                                      MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-    return rc ? NULL : addr;
-}
-
-static void
-UnmapPages(void *addr, size_t size)
-{
-    NtFreeVirtualMemory(INVALID_HANDLE_VALUE, &addr, &size, MEM_RELEASE);
-}
-
-#  else /* _M_X64 */
-
 static void *
 MapPages(void *addr, size_t size)
 {
@@ -198,8 +153,6 @@ UnmapPages(void *addr, size_t size)
 {
     JS_ALWAYS_TRUE(VirtualFree(addr, 0, MEM_RELEASE));
 }
-
-#  endif /* _M_X64 */
 
 # endif /* !WINCE */
 
@@ -249,7 +202,6 @@ MapAlignedPages(size_t size, size_t alignment)
      * We don't use MAP_FIXED here, because it can cause the *replacement*
      * of existing mappings, and we only want to create new mappings.
      */
-	// TODO: this is totally a hack for now; need to replace
     void *p = mmap((caddr_t) alignment, size, PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
     if (p == MAP_FAILED)
@@ -259,53 +211,6 @@ MapAlignedPages(size_t size, size_t alignment)
 
 # else /* JS_GC_HAS_MAP_ALIGN */
 
-# if defined(__MACH__) && defined(__APPLE__) && defined(__x86_64__)
-
-// Make sure the result is in the 32-bit address region.
-static void *
-MapPages(void *addr, size_t size)
-{
-    void * const start = (void *) 0x10000;
-    void * const end = (void *) 0x100000000;
-
-    // If an addr is given, try once there.
-    if (addr) {
-        JS_ASSERT(addr < end);
-        void *p = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-        if (p == MAP_FAILED)
-            return NULL;
-        if (p != addr) {
-            JS_ALWAYS_TRUE(munmap(p, size) == 0);
-            return NULL;
-        }
-        return p;
-    }
-
-    // FIXME: this depends on implementation details of OSX mmap, namely
-    //        that it searches for free memory starting from the hint,
-    //        so that it will find free memory addresses in 32-bit space
-    //        if it exists.
-    static void *base = start;
-    while (true) {
-        void *p = mmap(base, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-        if (p == MAP_FAILED)
-            return NULL;
-        // Got a region in range, so return it.
-        if (start <= p && p < end) {
-            base = (void *) (uintptr_t(p) + size);
-            return p;
-        }
-        // Out of range. If we started past 'start', then we can try
-        // again from there.
-        munmap(p, size);
-        if (base != start)
-            return NULL;
-        base = start;
-    }
-}
-
-# else /* DARWIN && __x86_64__ */
-
 static void *
 MapPages(void *addr, size_t size)
 {
@@ -313,7 +218,6 @@ MapPages(void *addr, size_t size)
      * We don't use MAP_FIXED here, because it can cause the *replacement*
      * of existing mappings, and we only want to create new mappings.
      */
-	// TODO: this is totally a hack for now; need to replace
     void *p = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON,
                    -1, 0);
     if (p == MAP_FAILED)
@@ -326,8 +230,6 @@ MapPages(void *addr, size_t size)
     return p;
 }
 
-# endif /* DARWIN && __x86_64__ */
-
 # endif /* !JS_GC_HAS_MAP_ALIGN */
 
 static void
@@ -336,29 +238,6 @@ UnmapPages(void *addr, size_t size)
     JS_ALWAYS_TRUE(munmap((caddr_t) addr, size) == 0);
 }
 
-#endif
-
-#ifdef JS_64BIT
-bool
-JSString::initStringTables()
-{
-    char *p = (char *) MapPages(NULL, unitStringTableSize + intStringTableSize);
-    if (!p)
-        return false;
-    unitStringTable = (JSString*) memcpy(p, staticUnitStringTable, unitStringTableSize);
-    intStringTable = (JSString*) memcpy(p + unitStringTableSize, 
-                                        staticIntStringTable, intStringTableSize);
-
-    return true;
-}
-
-void
-JSString::freeStringTables()
-{
-    UnmapPages(unitStringTable, unitStringTableSize + intStringTableSize);
-    unitStringTable = NULL;
-    intStringTable = NULL;
-}
 #endif
 
 namespace js {

@@ -140,8 +140,11 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    jsid id;
+    if (!JS_ValueToId(cx, argval, &id))
+        return JS_FALSE;
     JS_SET_RVAL(cx, vp, argval);
-    return (*popp)(cx, obj, v, vp);
+    return (*popp)(cx, obj, id, vp);
 }
 
 static void
@@ -490,7 +493,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv)
  */
 static void
 GetMemberInfo(JSObject *obj,
-              jsval memberId,
+              jsid memberId,
               const char **ifaceName,
               const char **memberName)
 {
@@ -527,8 +530,8 @@ GetMemberInfo(JSObject *obj,
         }
     }
 
-    *memberName = (JSVAL_IS_STRING(memberId)
-                   ? JS_GetStringBytes(JSVAL_TO_STRING(memberId))
+    *memberName = (JSID_IS_STRING(memberId)
+                   ? JS_GetStringBytes(JSID_TO_STRING(memberId))
                    : "unknown");
 }
 
@@ -542,7 +545,7 @@ GetMethodInfo(JSContext *cx,
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
                  "JSFastNative callee should be Function object");
     JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
-    jsval methodId = str ? STRING_TO_JSVAL(str) : JSVAL_NULL;
+    jsid methodId = str ? INTERNED_STRING_TO_JSID(str) : JSID_VOID;
 
     GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceName, memberName);
 }
@@ -596,7 +599,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
-                              jsval memberId)
+                              jsid memberId)
 {
     const char *ifaceName, *memberName;
     GetMemberInfo(obj, memberId, &ifaceName, &memberName);
@@ -669,7 +672,7 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *obj, jsval propId)
+                          JSObject *obj, jsid propId)
 {
     const char *ifaceName, *memberName;
     GetMemberInfo(obj, propId, &ifaceName, &memberName);
@@ -1062,6 +1065,23 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
     if(!jsstr)
         return JS_FALSE;
     *rval = jsstr;
+    return JS_TRUE;
+}
+
+JSBool
+xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
+{
+    // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
+    if(str.IsVoid())
+    {
+        *rval = nsnull;
+        return JS_TRUE;
+    }
+
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
+    if(!jsstr)
+        return JS_FALSE;
+    *rval = JSVAL_TO_STRING(jsstr);
     return JS_TRUE;
 }
 

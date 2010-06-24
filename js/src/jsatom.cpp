@@ -1147,7 +1147,7 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
 
     if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
         return JS_FALSE;
-    if (*idp != 0)
+    if (!JSID_IS_VOID(*idp))
         return true;
 
     return js_ValueToStringId(cx, idval, idp);
@@ -1167,8 +1167,8 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
 
     if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
         return JS_FALSE;
-    if (*idp != 0) {
-        *vp = ID_TO_VALUE(*idp);
+    if (!JSID_IS_VOID(*idp)) {
+        *vp = IdToValue(*idp);
         return true;
     }
 

@@ -2268,9 +2268,10 @@ class AutoGCRooter {
         XML =         -10, /* js::AutoXMLRooter */
         OBJECT =      -11, /* js::AutoObjectRooter */
         ID =          -12, /* js::AutoIdRooter */
-        VECTOR =      -13, /* js::AutoValueVector */
+        VALVECTOR =   -13, /* js::AutoValueVector */
         DESCRIPTOR =  -14, /* js::AutoPropertyDescriptorRooter */
-        STRING =      -15  /* js::AutoStringRooter */
+        STRING =      -15, /* js::AutoStringRooter */
+        IDVECTOR =    -16  /* js::AutoIdVector */
     };
 
     private:
@@ -3109,7 +3110,7 @@ class AutoValueVector : private AutoGCRooter
   public:
     explicit AutoValueVector(JSContext *cx
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, VECTOR), vector(cx)
+        : AutoGCRooter(cx, VALVECTOR), vector(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -3119,6 +3120,10 @@ class AutoValueVector : private AutoGCRooter
     bool append(const Value &v) { return vector.append(v); }
 
     void popBack() { vector.popBack(); }
+
+    bool growBy(size_t inc) {
+        return vector.growBy(inc);
+    }
 
     bool resize(size_t newLength) {
         return vector.resize(newLength);
@@ -3143,6 +3148,52 @@ class AutoValueVector : private AutoGCRooter
     
   private:
     Vector<Value, 8> vector;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdVector : private AutoGCRooter
+{
+  public:
+    explicit AutoIdVector(JSContext *cx
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, IDVECTOR), vector(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    size_t length() const { return vector.length(); }
+
+    bool append(jsid id) { return vector.append(id); }
+
+    void popBack() { vector.popBack(); }
+
+    bool growBy(size_t inc) {
+        return vector.growBy(inc);
+    }
+
+    bool resize(size_t newLength) {
+        return vector.resize(newLength);
+    }
+
+    bool reserve(size_t newLength) {
+        return vector.reserve(newLength);
+    }
+
+    const jsid &operator[](size_t i) { return vector[i]; }
+    const jsid &operator[](size_t i) const { return vector[i]; }
+
+    const jsid *begin() const { return vector.begin(); }
+    jsid *begin() { return vector.begin(); }
+
+    const jsid *end() const { return vector.end(); }
+    jsid *end() { return vector.end(); }
+
+    const jsid &back() const { return vector.back(); }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    
+  private:
+    Vector<jsid, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

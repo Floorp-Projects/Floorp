@@ -48,9 +48,15 @@
 #undef THIS
 #endif
 
-enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID };
-enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
-       JSTN_CONSTRUCTOR = 0x20 };
+enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_NEITHER };
+enum { 
+    JSTN_ERRTYPE_MASK        = 0x07,
+    JSTN_UNBOX_AFTER         = 0x08,
+    JSTN_MORE                = 0x10,
+    JSTN_CONSTRUCTOR         = 0x20,
+    JSTN_RETURN_NULLABLE_STR = 0x40,
+    JSTN_RETURN_NULLABLE_OBJ = 0x80
+};
 
 #define JSTN_ERRTYPE(jstn)  ((jstn)->flags & JSTN_ERRTYPE_MASK)
 
@@ -80,6 +86,7 @@ enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
  * 'o': a JSObject* argument
  * 'r': a JSObject* argument that is of class js_RegExpClass
  * 'f': a JSObject* argument that is of class js_FunctionClass
+ * 'p': a js::Value* argument
  */
 struct JSSpecializedNative {
     const nanojit::CallInfo *builtin;
@@ -147,7 +154,7 @@ struct ClosureVarInfo;
  *     _RETRY builtins indicate failure with a special return value that
  *     depends on the return type:
  *
- *         BOOL_RETRY: JSVAL_TO_BOOLEAN(JSVAL_VOID)
+ *         BOOL_RETRY: JS_NEITHER
  *         INT32_RETRY: any negative value
  *         STRING_RETRY: NULL
  *         OBJECT_RETRY_NULL: NULL
@@ -182,10 +189,11 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CALLEE_PROTOTYPE  _JS_CTYPE(JSObject *,             _JS_PTR,"p","",  INFALLIBLE)
 #define _JS_CTYPE_FUNCTION          _JS_CTYPE(JSFunction *,           _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
-#define _JS_CTYPE_VALUEPTR          _JS_CTYPE(Value *,                _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_CVALUEPTR         _JS_CTYPE(const Value *,          _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_VALUEPTR          _JS_CTYPE(js::Value *,            _JS_PTR, "","p", INFALLIBLE)
+#define _JS_CTYPE_CVALUEPTR         _JS_CTYPE(const js::Value *,      _JS_PTR, "","p", INFALLIBLE)
+#define _JS_CTYPE_SIZET             _JS_CTYPE(size_t,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
+#define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_NEITHER)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
 #define _JS_CTYPE_BOOLPTR           _JS_CTYPE(JSBool *,               _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
@@ -200,10 +208,14 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_STRING            _JS_CTYPE(JSString *,             _JS_PTR, "","s", INFALLIBLE)
 #define _JS_CTYPE_STRING_RETRY      _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_NULL)
 #define _JS_CTYPE_STRING_FAIL       _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_STRING_OR_NULL_FAIL _JS_CTYPE(JSString *,           _JS_PTR, --, --, FAIL_STATUS | \
+                                                                              JSTN_RETURN_NULLABLE_STR)
 #define _JS_CTYPE_STRINGPTR         _JS_CTYPE(JSString **,            _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_OBJECT            _JS_CTYPE(JSObject *,             _JS_PTR, "","o", INFALLIBLE)
 #define _JS_CTYPE_OBJECT_RETRY      _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL)
 #define _JS_CTYPE_OBJECT_FAIL       _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_OBJECT_OR_NULL_FAIL _JS_CTYPE(JSObject *,           _JS_PTR, --, --, FAIL_STATUS | \
+                                                                              JSTN_RETURN_NULLABLE_OBJ)
 #define _JS_CTYPE_OBJECTPTR         _JS_CTYPE(JSObject **,            _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CONSTRUCTOR_RETRY _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL | \
                                                                                   JSTN_CONSTRUCTOR)

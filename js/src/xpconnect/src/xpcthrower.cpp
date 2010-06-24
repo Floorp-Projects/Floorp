@@ -189,9 +189,9 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
         {
             XPCDispInterface::Member * member = 
                 reinterpret_cast<XPCDispInterface::Member*>(ccx.GetIDispatchMember());
-            if(member && JSVAL_IS_STRING(member->GetName()))
+            if(member && JSID_IS_STRING(member->GetName()))
             {
-                name = JS_GetStringBytes(JSVAL_TO_STRING(member->GetName()));
+                name = JS_GetStringBytes(JSID_TO_STRING(member->GetName()));
             }
             else
                 name = "Unknown";

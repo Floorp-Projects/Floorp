@@ -625,7 +625,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * Convert id to a value and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
-        idstr = js_ValueToString(cx, ID_TO_VALUE(id));
+        idstr = js_ValueToString(cx, IdToValue(id));
         if (!idstr) {
             ok = JS_FALSE;
             obj2->dropProperty(cx, prop);
@@ -1407,7 +1407,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
         return JS_TRUE;
     generation = cx->resolvingTable->generation;
 
-    argv[0] = ID_TO_VALUE(id);
+    argv[0] = IdToValue(id);
     argv[1] = Valueify(old);
     argv[2] = Valueify(*nvp);
     ok = InternalCall(cx, obj, ObjectOrNullTag(callable), 3, argv, Valueify(nvp));
@@ -1913,7 +1913,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
              * to by a QName, actually appears as a string jsid -- but in the
              * interests of fidelity we pass object jsids through unchanged.
              */
-            aobj->setDenseArrayElement(i, ID_TO_VALUE(id));
+            aobj->setDenseArrayElement(i, IdToValue(id));
         }
     }
 
@@ -2053,7 +2053,7 @@ Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
 {
     if (throwError) {
         jsid idstr;
-        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &idstr))
+        if (!js_ValueToStringId(cx, IdToValue(id), &idstr))
            return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
                              JS_GetStringBytes(JSID_TO_STRING(idstr)));
@@ -2369,7 +2369,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
     jsuint oldLen = obj->getArrayLength();
 
-    if (desc.id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(desc.id, cx->runtime->atomState.lengthAtom)) {
         /*
          * Our optimization of storage of the length property of arrays makes
          * it very difficult to properly implement defining the property.  For
@@ -4012,8 +4012,8 @@ js_CheckForStringIndex(jsid id)
     if (cp != end || (negative && index == 0))
         return id;
 
-    if (oldIndex < JSVAL_INT_MAX / 10 ||
-        (oldIndex == JSVAL_INT_MAX / 10 && c <= (JSVAL_INT_MAX % 10))) {
+    if (oldIndex < JSID_INT_MAX / 10 ||
+        (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10))) {
         if (negative)
             index = 0 - index;
         id = INT_TO_JSID((jsint)index);
@@ -4859,7 +4859,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
                  * XXX do not warn about missing __iterator__ as the function
                  * may be called from JS_GetMethodById. See bug 355145.
                  */
-                if (id == ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom))
+                if (JSID_IS_ATOM(id, cx->runtime->atomState.iteratorAtom))
                     return JS_TRUE;
 
                 /* Do not warn about tests like (obj[prop] == undefined). */
@@ -4877,7 +4877,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
 
             /* Ok, bad undefined property reference: whine about it. */
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
-                                          JSDVG_IGNORE_STACK, ID_TO_VALUE(id),
+                                          JSDVG_IGNORE_STACK, IdToValue(id),
                                           NULL, NULL, NULL)) {
                 return JS_FALSE;
             }
@@ -4953,7 +4953,7 @@ JSBool
 ReportReadOnly(JSContext* cx, jsid id, uintN flags)
 {
     return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
+                                    JSDVG_IGNORE_STACK, IdToValue(id), NULL,
                                     NULL, NULL);
 }
 
@@ -5652,7 +5652,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 }
 
 JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, Value v, JSBool *bp)
+js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
@@ -6401,8 +6401,8 @@ DumpValue(const Value &val)
 JS_FRIEND_API(void)
 DumpId(jsid id)
 {
-    fprintf(stderr, "jsid %p = ", (void *) id);
-    dumpValue(ID_TO_VALUE(id));
+    fprintf(stderr, "jsid %p = ", (void *) JSID_BITS(id));
+    dumpValue(IdToValue(id));
     fputc('\n', stderr);
 }
 
@@ -6425,7 +6425,7 @@ dumpScopeProp(JSScopeProperty *sprop)
     else if (JSID_IS_INT(id))
         fprintf(stderr, "%d", (int) JSID_TO_INT(id));
     else
-        fprintf(stderr, "unknown jsid %p", (void *) id);
+        fprintf(stderr, "unknown jsid %p", (void *) JSID_BITS(id));
     fprintf(stderr, ": slot %d", sprop->slot);
     fprintf(stderr, "\n");
 }

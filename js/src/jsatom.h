@@ -62,6 +62,62 @@
 #define ATOM_TO_STRING(atom)      ((JSString *)atom)
 #define ATOM_TO_JSVAL(atom)       STRING_TO_JSVAL(ATOM_TO_STRING(atom))
 
+/* Engine-internal extensions of jsid */
+
+static JS_ALWAYS_INLINE jsid
+JSID_FROM_BITS(size_t bits)
+{
+    jsid id;
+    JSID_BITS(id) = bits;
+    return id;
+}
+
+static JS_ALWAYS_INLINE jsid
+ATOM_TO_JSID(JSAtom *atom)
+{
+    JS_ASSERT(((size_t)atom & 0x7) == 0);
+    return JSID_FROM_BITS((size_t)atom);
+}
+
+/* All strings stored in jsids are atomized. */
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_ATOM(jsid id)
+{
+    return JSID_IS_STRING(id);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_ATOM(jsid id, JSAtom *atom)
+{
+    return JSID_BITS(id) == JSID_BITS(ATOM_TO_JSID(atom));
+}
+
+static JS_ALWAYS_INLINE JSAtom *
+JSID_TO_ATOM(jsid id)
+{
+    return (JSAtom *)JSID_TO_STRING(id);
+}
+
+namespace js {
+
+static JS_ALWAYS_INLINE Value
+IdToValue(jsid id)
+{
+    if (JSID_IS_STRING(id))
+        return StringTag(JSID_TO_STRING(id));
+    if (JS_LIKELY(JSID_IS_INT(id)))
+        return Int32Tag(JSID_TO_INT(id));
+    return ObjectTag(*JSID_TO_OBJECT(id));
+}
+
+static JS_ALWAYS_INLINE jsval
+IdToJsval(jsid id)
+{
+    return Jsvalify(IdToValue(id));
+}
+
+}
+
 #if JS_BYTES_PER_WORD == 4
 # define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
 #elif JS_BYTES_PER_WORD == 8

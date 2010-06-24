@@ -233,6 +233,17 @@ public:
         }
         JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
+    ToString(JSContext *aCx, jsid id, JSBool aThrow = JS_FALSE)
+    : cx(aCx)
+    , mThrow(aThrow)
+    {
+        mStr = JS_ValueToString(cx, IdToJsval(id));
+        if (!aThrow && !mStr && JS_IsExceptionPending(cx)) {
+            if (!JS_ReportPendingException(cx))
+                JS_ClearPendingException(cx);
+        }
+        JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
+    }
     ~ToString() {
         JS_RemoveStringRoot(cx, &mStr);
     }
@@ -2652,7 +2663,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (!JSVAL_IS_VOID(*idp))
+        if (!JSID_IS_VOID(*idp))
             break;
         /* Fall through. */
 
@@ -2764,7 +2775,7 @@ split_getObjectOps(JSContext *cx, JSClass *clasp)
 }
 
 static JSBool
-split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 static JSObject *
 split_innerObject(JSContext *cx, JSObject *obj)
@@ -2795,13 +2806,13 @@ static JSExtendedClass split_global_class = {
 };
 
 static JSBool
-split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
 {
     *bp = JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(v))
+    if (JSVAL_IS_PRIMITIVE(*v))
         return JS_TRUE;
 
-    JSObject *obj2 = JSVAL_TO_OBJECT(v);
+    JSObject *obj2 = JSVAL_TO_OBJECT(*v);
     if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
         return JS_TRUE;
 
@@ -4397,7 +4408,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (!JSVAL_IS_VOID(*idp))
+        if (!JSID_IS_VOID(*idp))
             break;
         /* Fall through. */
 

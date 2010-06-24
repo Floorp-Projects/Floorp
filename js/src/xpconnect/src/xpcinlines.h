@@ -257,7 +257,7 @@ XPCCallContext::HasInterfaceAndMember() const
         );
 }
 
-inline jsval
+inline jsid
 XPCCallContext::GetName() const
 {
     CHECK_STATE(HAVE_NAME);
@@ -307,15 +307,15 @@ XPCCallContext::SetRetVal(jsval val)
         *mRetVal = val;
 }
 
-inline jsval
+inline jsid
 XPCCallContext::GetResolveName() const
 {
     CHECK_STATE(HAVE_CONTEXT);
     return mThreadData->GetResolveName();
 }
 
-inline jsval
-XPCCallContext::SetResolveName(jsval name)
+inline jsid
+XPCCallContext::SetResolveName(jsid name)
 {
     CHECK_STATE(HAVE_CONTEXT);
     return mThreadData->SetResolveName(name);
@@ -396,7 +396,7 @@ XPCNativeInterface::GetNameString() const
 }
 
 inline XPCNativeMember*
-XPCNativeInterface::FindMember(jsval name) const
+XPCNativeInterface::FindMember(jsid name) const
 {
     const XPCNativeMember* member = mMembers;
     for(int i = (int) mMemberCount; i > 0; i--, member++)
@@ -424,7 +424,7 @@ XPCNativeInterface::DealWithDyingGCThings(JSContext* cx, XPCJSRuntime* rt)
 /***************************************************************************/
 
 inline JSBool
-XPCNativeSet::FindMember(jsval name, XPCNativeMember** pMember,
+XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
                          PRUint16* pInterfaceIndex) const
 {
     XPCNativeInterface* const * iface;
@@ -462,7 +462,7 @@ XPCNativeSet::FindMember(jsval name, XPCNativeMember** pMember,
 }
 
 inline JSBool
-XPCNativeSet::FindMember(jsval name, XPCNativeMember** pMember,
+XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
                          XPCNativeInterface** pInterface) const
 {
     PRUint16 index;
@@ -473,7 +473,7 @@ XPCNativeSet::FindMember(jsval name, XPCNativeMember** pMember,
 }
 
 inline JSBool
-XPCNativeSet::FindMember(jsval name,
+XPCNativeSet::FindMember(jsid name,
                          XPCNativeMember** pMember,
                          XPCNativeInterface** pInterface,
                          XPCNativeSet* protoSet,
@@ -501,7 +501,7 @@ XPCNativeSet::FindMember(jsval name,
 }
 
 inline XPCNativeInterface*
-XPCNativeSet::FindNamedInterface(jsval name) const
+XPCNativeSet::FindNamedInterface(jsid name) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
@@ -717,13 +717,11 @@ XPCWrappedNative::SweepTearOffs()
 /***************************************************************************/
 
 inline JSBool
-xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval)
+xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id)
 {
     jsval prop;
-    jsid id;
 
-    if(!JS_ValueToId(cx, idval, &id) ||
-       !JS_LookupPropertyById(cx, obj, id, &prop))
+    if(!JS_LookupPropertyById(cx, obj, id, &prop))
         return JS_FALSE;
     return JS_TRUE;
 }
@@ -776,7 +774,7 @@ GetRTIdByIndex(JSContext *cx, uintN index)
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index)
 {
-  return ID_TO_JSVAL(GetRTIdByIndex(cx, index));
+  return STRING_TO_JSVAL(JSID_TO_STRING(GetRTIdByIndex(cx, index)));
 }
 
 inline

@@ -145,23 +145,23 @@ NPClass nsJSObjWrapper::sJSObjWrapperNPClass =
   };
 
 static JSBool
-NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
 NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                           jsval *statep, jsid *idp);
 
 static JSBool
-NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         JSObject **objp);
 
 static JSBool
@@ -180,7 +180,7 @@ NPObjWrapper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
-                     jsval id, NPVariant* getPropertyResult, jsval *vp);
+                     jsid id, NPVariant* getPropertyResult, jsval *vp);
 
 static JSClass sNPObjectJSWrapperClass =
   {
@@ -1185,7 +1185,7 @@ GetNPObject(JSContext *cx, JSObject *obj)
 // Does not actually add a property because this is always followed by a
 // SetProperty call.
 static JSBool
-NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1202,7 +1202,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
-  NPIdentifier identifier = JSValToNPIdentifier(id);
+  NPIdentifier identifier = JSIdToNPIdentifier(id);
   JSBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
   if (!ReportExceptionIfPending(cx))
     return JS_FALSE;
@@ -1226,7 +1226,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1239,7 +1239,7 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
-  NPIdentifier identifier = JSValToNPIdentifier(id);
+  NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   if (!NPObjectIsOutOfProcessProxy(npobj)) {
     JSBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
@@ -1257,7 +1257,7 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1280,7 +1280,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(npp);
 
-  NPIdentifier identifier = JSValToNPIdentifier(id);
+  NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   if (!NPObjectIsOutOfProcessProxy(npobj)) {
     JSBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
@@ -1316,7 +1316,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1343,7 +1343,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   NPVariant npv;
   VOID_TO_NPVARIANT(npv);
 
-  NPIdentifier identifier = JSValToNPIdentifier(id);
+  NPIdentifier identifier = JSIdToNPIdentifier(id);
 
 #ifdef MOZ_IPC
   if (NPObjectIsOutOfProcessProxy(npobj)) {
@@ -1604,7 +1604,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     state->index = 0;
     *statep = PRIVATE_TO_JSVAL(state);
     if (idp) {
-      *idp = INT_TO_JSVAL(length);
+      *idp = INT_TO_JSID(length);
     }
 
     break;
@@ -1614,8 +1614,8 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     enum_value = state->value;
     length = state->length;
     if (state->index != length) {
-      jsval val = NPIdentifierToJSVal(enum_value[state->index++]);
-      return ::JS_ValueToId(cx, val, idp);
+      *idp = NPIdentifierToJSId(enum_value[state->index++]);
+      return JS_TRUE;
     }
 
     // FALL THROUGH
@@ -1634,7 +1634,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         JSObject **objp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
@@ -1648,7 +1648,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
-  NPIdentifier identifier = JSValToNPIdentifier(id);
+  NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   PRBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
   if (!ReportExceptionIfPending(cx))
@@ -1657,14 +1657,14 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   if (hasProperty) {
     JSBool ok;
 
-    if (JSVAL_IS_STRING(id)) {
-      JSString *str = JSVAL_TO_STRING(id);
+    if (JSID_IS_STRING(id)) {
+      JSString *str = JSID_TO_STRING(id);
 
       ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                  ::JS_GetStringLength(str), JSVAL_VOID, nsnull,
                                  nsnull, JSPROP_ENUMERATE);
     } else {
-      ok = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID, nsnull,
+      ok = ::JS_DefineElement(cx, obj, JSID_TO_INT(id), JSVAL_VOID, nsnull,
                               nsnull, JSPROP_ENUMERATE);
     }
 
@@ -1684,13 +1684,16 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   if (hasMethod) {
     JSString *str = nsnull;
 
-    if (JSVAL_IS_STRING(id)) {
-      str = JSVAL_TO_STRING(id);
+    if (JSID_IS_STRING(id)) {
+      str = JSID_TO_STRING(id);
     } else {
-      NS_ASSERTION(JSVAL_IS_INT(id), "id must be either string or int!\n");
+      NS_ASSERTION(JSID_IS_INT(id), "id must be either string or int!\n");
 
-      str = ::JS_ValueToString(cx, id);
+      jsval idval;
+      if (!JS_IdToValue(cx, id, &idval))
+          return JS_FALSE;
 
+      str = ::JS_ValueToString(cx, idval);
       if (!str) {
         // OOM. The JS engine throws exceptions for us in this case.
 
@@ -2117,7 +2120,7 @@ LookupNPP(NPObject *npobj)
 
 JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
-                     jsval id,  NPVariant* getPropertyResult, jsval *vp)
+                     jsid id,  NPVariant* getPropertyResult, jsval *vp)
 {
   NS_ENSURE_TRUE(vp, JS_FALSE);
 
@@ -2148,7 +2151,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
 
   ::JS_SetPrivate(cx, memobj, (void *)memberPrivate);
 
-  NPIdentifier identifier = JSValToNPIdentifier(id);
+  NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   jsval fieldValue;
   NPVariant npv;

@@ -48,36 +48,36 @@
 // be safely injected into untrusted code.
 
 static JSBool
-XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_SOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SOW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_SOW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SOW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_SOW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
 XPC_SOW_Enumerate(JSContext *cx, JSObject *obj);
 
 static JSBool
-XPC_SOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XPC_SOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp);
 
 static JSBool
 XPC_SOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
 static JSBool
-XPC_SOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+XPC_SOW_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                     jsval *vp);
 
 static JSBool
-XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp);
 
 static JSBool
-XPC_SOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+XPC_SOW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp);
 
 static JSObject *
 XPC_SOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
@@ -171,7 +171,7 @@ MakeSOW(JSContext *cx, JSObject *obj)
 
 // If you change this code, change also nsContentUtils::CanAccessNativeAnon()!
 JSBool
-AllowedToAct(JSContext *cx, jsval idval)
+AllowedToAct(JSContext *cx, jsid id)
 {
   // TODO bug 508928: Refactor this with the XOW security checking code.
   nsIScriptSecurityManager *ssm = GetSecurityManager();
@@ -221,12 +221,13 @@ AllowedToAct(JSContext *cx, jsval idval)
     return JS_TRUE;
   }
 
-  if (JSVAL_IS_VOID(idval)) {
+  if (JSID_IS_VOID(id)) {
     ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
   } else {
     // TODO Localize me?
-    JSString *str = JS_ValueToString(cx, idval);
-    if (str) {
+    jsval idval;
+    JSString *str;
+    if (JS_IdToValue(cx, id, &idval) && (str = JS_ValueToString(cx, idval))) {
       JS_ReportError(cx, "Permission denied to access property '%hs' from a non-chrome context",
                      JS_GetStringChars(str));
     }
@@ -236,7 +237,7 @@ AllowedToAct(JSContext *cx, jsval idval)
 }
 
 JSBool
-CheckFilename(JSContext *cx, jsval idval, JSStackFrame *fp)
+CheckFilename(JSContext *cx, jsid id, JSStackFrame *fp)
 {
   const char *filename;
   if (fp &&
@@ -245,12 +246,12 @@ CheckFilename(JSContext *cx, jsval idval, JSStackFrame *fp)
     return JS_TRUE;
   }
 
-  if (JSVAL_IS_VOID(idval)) {
+  if (JSID_IS_VOID(id)) {
     ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
   } else {
-    // TODO Localize me?
-    JSString *str = JS_ValueToString(cx, idval);
-    if (str) {
+    jsval idval;
+    JSString *str;
+    if (JS_IdToValue(cx, id, &idval) && (str = JS_ValueToString(cx, idval))) {
       JS_ReportError(cx, "Permission denied to access property '%hs' from a non-chrome context",
                      JS_GetStringChars(str));
     }
@@ -307,7 +308,7 @@ static JSBool
 XPC_SOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                         jsval *rval)
 {
-  if (!AllowedToAct(cx, JSVAL_VOID)) {
+  if (!AllowedToAct(cx, JSID_VOID)) {
     return JS_FALSE;
   }
 
@@ -428,7 +429,7 @@ XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
 }
 
 static JSBool
-XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NS_ASSERTION(obj->getJSClass() == &SOWClass.base, "Wrong object");
 
@@ -455,7 +456,7 @@ XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-XPC_SOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SOW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
@@ -470,7 +471,7 @@ XPC_SOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-XPC_SOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
+XPC_SOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                          JSBool isSet)
 {
   obj = GetWrapper(obj);
@@ -489,19 +490,14 @@ XPC_SOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
 
-  if (isSet && id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_PROTO)) {
+  if (isSet && id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTO)) {
     // No setting __proto__ on my object.
     return ThrowException(NS_ERROR_INVALID_ARG, cx); // XXX better error message
   }
 
-  jsid interned_id;
-  if (!JS_ValueToId(cx, id, &interned_id)) {
-    return JS_FALSE;
-  }
-
   JSBool ok = isSet
-              ? JS_SetPropertyById(cx, wrappedObj, interned_id, vp)
-              : JS_GetPropertyById(cx, wrappedObj, interned_id, vp);
+              ? JS_SetPropertyById(cx, wrappedObj, id, vp)
+              : JS_GetPropertyById(cx, wrappedObj, id, vp);
   if (!ok) {
     return JS_FALSE;
   }
@@ -510,13 +506,13 @@ XPC_SOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 }
 
 static JSBool
-XPC_SOW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SOW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return XPC_SOW_GetOrSetProperty(cx, obj, id, vp, JS_FALSE);
 }
 
 static JSBool
-XPC_SOW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return XPC_SOW_GetOrSetProperty(cx, obj, id, vp, JS_TRUE);
 }
@@ -531,7 +527,7 @@ XPC_SOW_Enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
   }
 
-  if (!AllowedToAct(cx, JSVAL_VOID)) {
+  if (!AllowedToAct(cx, JSID_VOID)) {
     return JS_FALSE;
   }
 
@@ -539,7 +535,7 @@ XPC_SOW_Enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_SOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XPC_SOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp)
 {
   obj = GetWrapper(obj);
@@ -561,7 +557,7 @@ XPC_SOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 static JSBool
 XPC_SOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
-  if (!AllowedToAct(cx, JSVAL_VOID)) {
+  if (!AllowedToAct(cx, JSID_VOID)) {
     return JS_FALSE;
   }
 
@@ -582,7 +578,7 @@ XPC_SOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 }
 
 static JSBool
-XPC_SOW_CheckAccess(JSContext *cx, JSObject *obj, jsval prop, JSAccessMode mode,
+XPC_SOW_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                     jsval *vp)
 {
   // Simply forward checkAccess to our wrapped object. It's already expecting
@@ -595,15 +591,13 @@ XPC_SOW_CheckAccess(JSContext *cx, JSObject *obj, jsval prop, JSAccessMode mode,
   }
 
   uintN junk;
-  jsid id;
-  return JS_ValueToId(cx, prop, &id) &&
-         JS_CheckAccess(cx, wrappedObj, id, mode, vp, &junk);
+  return JS_CheckAccess(cx, wrappedObj, id, mode, vp, &junk);
 }
 
 static JSBool
-XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
-  if (!AllowedToAct(cx, JSVAL_VOID)) {
+  if (!AllowedToAct(cx, JSID_VOID)) {
     return JS_FALSE;
   }
 
@@ -623,6 +617,7 @@ XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   // Prematurely unwrap the left hand side. This isn't necessary, but could be
   // faster than waiting until XPCWrappedNative::GetWrappedNativeOfJSObject to
   // do it.
+  jsval v = *valp;
   if (!JSVAL_IS_PRIMITIVE(v)) {
     JSObject *test = JSVAL_TO_OBJECT(v);
 
@@ -633,13 +628,14 @@ XPC_SOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     }
   }
 
-  return clasp->hasInstance(cx, iface, v, bp);
+  return clasp->hasInstance(cx, iface, &v, bp);
 }
 
 static JSBool
-XPC_SOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+XPC_SOW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
   // Delegate to our wrapped object.
+  jsval v = *valp;
   if (JSVAL_IS_PRIMITIVE(v)) {
     *bp = JS_FALSE;
     return JS_TRUE;
@@ -663,7 +659,8 @@ XPC_SOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
       JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
       // NB: JSExtendedClass.equality is a required field.
-      return xclasp->equality(cx, lhs, OBJECT_TO_JSVAL(rhs), bp);
+      jsval rhsVal = OBJECT_TO_JSVAL(rhs);
+      return xclasp->equality(cx, lhs, &rhsVal, bp);
     }
   }
 
@@ -672,7 +669,8 @@ XPC_SOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   if (clasp->flags & JSCLASS_IS_EXTENDED) {
     JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
     // NB: JSExtendedClass.equality is a required field.
-    return xclasp->equality(cx, rhs, OBJECT_TO_JSVAL(lhs), bp);
+    jsval lhsVal = OBJECT_TO_JSVAL(lhs);
+    return xclasp->equality(cx, rhs, &lhsVal, bp);
   }
 
   *bp = JS_FALSE;

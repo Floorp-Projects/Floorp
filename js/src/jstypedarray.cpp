@@ -326,7 +326,7 @@ TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 JSBool
 TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    *attrsp = (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+    *attrsp = (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
               ? JSPROP_PERMANENT | JSPROP_READONLY
               : JSPROP_PERMANENT | JSPROP_ENUMERATE;
     return true;
@@ -517,7 +517,7 @@ class TypedArrayTemplate
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
 
-        if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
             vp->setNumber(tarray->length);
             return true;
         }
@@ -560,7 +560,7 @@ class TypedArrayTemplate
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
 
-        if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
             vp->setNumber(tarray->length);
             return true;
         }
@@ -636,7 +636,7 @@ class TypedArrayTemplate
     obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                        PropertyOp getter, PropertyOp setter, uintN attrs)
     {
-        if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
             return true;
 
         Value tmp = *v;
@@ -646,7 +646,7 @@ class TypedArrayTemplate
     static JSBool
     obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     {
-        if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
             rval->setBoolean(false);
             return true;
         }
@@ -1196,10 +1196,7 @@ void
 TypedArrayTemplate<int32>::copyIndexToValue(JSContext *cx, uint32 index, Value *vp)
 {
     int32 val = getIndex(index);
-    if (val <= JSVAL_INT_MAX)
-        vp->setInt32(val);
-    else
-        vp->setDouble(val);
+    vp->setInt32(val);
 }
 
 template<>
@@ -1207,10 +1204,7 @@ void
 TypedArrayTemplate<uint32>::copyIndexToValue(JSContext *cx, uint32 index, Value *vp)
 {
     uint32 val = getIndex(index);
-    if (val <= JSVAL_INT_MAX)
-        vp->setInt32(val);
-    else
-        vp->setDouble(val);
+    vp->setNumber(val);
 }
 
 template<>

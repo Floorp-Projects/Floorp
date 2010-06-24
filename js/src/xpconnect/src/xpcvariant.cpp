@@ -86,7 +86,8 @@ XPCTraceableVariant::~XPCTraceableVariant()
     if(!JSVAL_IS_STRING(mJSVal))
         nsVariant::Cleanup(&mData);
 
-    RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+    if (!JSVAL_IS_NULL(mJSVal))
+        RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
 }
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)

@@ -189,7 +189,7 @@ XPCJSContextStack::DEBUG_StackHasJSContext(JSContext*  aJSContext)
 #endif
 
 static JSBool
-SafeGlobalResolve(JSContext *cx, JSObject *obj, jsval id)
+SafeGlobalResolve(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
@@ -331,7 +331,7 @@ XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),
         mNextThread(nsnull),
         mCallContext(nsnull),
-        mResolveName(0),
+        mResolveName(JSID_VOID),
         mResolvingWrapper(nsnull),
         mExceptionManager(nsnull),
         mException(nsnull),

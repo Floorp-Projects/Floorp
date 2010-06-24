@@ -311,7 +311,7 @@ nsEventListenerManager::RemoveAllListeners()
 void
 nsEventListenerManager::Shutdown()
 {
-  sAddListenerID = JSVAL_VOID;
+  sAddListenerID = JSID_VOID;
   nsDOMEvent::Shutdown();
 }
 
@@ -832,8 +832,8 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
   return NS_OK;
 }
 
-jsval
-nsEventListenerManager::sAddListenerID = JSVAL_VOID;
+jsid
+nsEventListenerManager::sAddListenerID = JSID_VOID;
 
 NS_IMETHODIMP
 nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
@@ -857,10 +857,10 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
     return rv;
 
   if (cx) {
-    if (sAddListenerID == JSVAL_VOID) {
+    if (sAddListenerID == JSID_VOID) {
       JSAutoRequest ar(cx);
       sAddListenerID =
-        STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
+        INTERNED_STRING_TO_JSID(::JS_InternString(cx, "addEventListener"));
     }
 
     if (aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {

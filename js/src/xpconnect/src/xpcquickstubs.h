@@ -100,7 +100,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv);
  */
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              JSObject *obj, jsval memberId);
+                              JSObject *obj, jsid memberId);
 
 /**
  * Fail after an XPCOM method returned rv.
@@ -140,7 +140,7 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
  */
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          jsval propId);
+                          jsid propId);
 
 
 /* Functions for converting values between COM and JS. */
@@ -342,6 +342,10 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr);
 /** Convert an nsAString to jsval, returning JS_TRUE on success. */
 JSBool
 xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval);
+
+/** Convert an nsAString to JSString, returning JS_TRUE on success. */
+JSBool
+xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval);
 
 nsresult
 getWrapper(JSContext *cx,

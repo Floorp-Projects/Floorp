@@ -52,15 +52,12 @@
 JS_BEGIN_EXTERN_C
 
 /* Well-known JS values, initialized on startup. */
-#define JSVAL_NULL   BUILD_JSVAL(JSVAL_MASK32_NULL,      0)
-#define JSVAL_ZERO   BUILD_JSVAL(JSVAL_MASK32_INT32,     0)
-#define JSVAL_ONE    BUILD_JSVAL(JSVAL_MASK32_INT32,     1)
-#define JSVAL_FALSE  BUILD_JSVAL(JSVAL_MASK32_BOOLEAN,   JS_FALSE)
-#define JSVAL_TRUE   BUILD_JSVAL(JSVAL_MASK32_BOOLEAN,   JS_TRUE)
-#define JSVAL_VOID   BUILD_JSVAL(JSVAL_MASK32_UNDEFINED, 0)
-#define JSVAL_HOLE   BUILD_JSVAL(JSVAL_MASK32_MAGIC,     0)
-
-/* Predicates for type testing. */
+#define JSVAL_NULL   BUILD_JSVAL(JSVAL_TAG_NULL,      0)
+#define JSVAL_ZERO   BUILD_JSVAL(JSVAL_TAG_INT32,     0)
+#define JSVAL_ONE    BUILD_JSVAL(JSVAL_TAG_INT32,     1)
+#define JSVAL_FALSE  BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE)
+#define JSVAL_TRUE   BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE)
+#define JSVAL_VOID   BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0)
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
@@ -83,7 +80,7 @@ JSVAL_IS_INT(jsval v)
 {
     jsval_layout l;
     l.asBits = v;
-    return l.s.u.mask32 == JSVAL_MASK32_INT32;
+    return JSVAL_IS_INT32_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsint
@@ -92,7 +89,7 @@ JSVAL_TO_INT(jsval v)
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_INT(v));
     l.asBits = v;
-    return l.s.payload.i32;
+    return JSVAL_TO_INT32_IMPL(l);
 }
 
 #define JSVAL_INT_BITS          32
@@ -149,7 +146,7 @@ JSVAL_IS_STRING(jsval v)
 {
     jsval_layout l;
     l.asBits = v;
-    return l.s.u.mask32 == JSVAL_MASK32_STRING;
+    return JSVAL_IS_STRING_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSString *
@@ -187,12 +184,11 @@ JSVAL_TO_OBJECT(jsval v)
 static JS_ALWAYS_INLINE jsval
 OBJECT_TO_JSVAL(JSObject *obj)
 {
-    JSValueMask32 mask;
+    JSValueType type;
     if (!obj)
         return JSVAL_NULL;
-    mask = JS_OBJ_IS_FUN_IMPL(obj) ? JSVAL_MASK32_FUNOBJ
-                                   : JSVAL_MASK32_NONFUNOBJ;
-    return OBJECT_TO_JSVAL_IMPL(mask, obj).asBits;
+    type = JS_OBJ_IS_FUN_IMPL(obj) ? JSVAL_TYPE_FUNOBJ : JSVAL_TYPE_NONFUNOBJ;
+    return OBJECT_TO_JSVAL_IMPL(type, obj).asBits;
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -200,7 +196,7 @@ JSVAL_IS_BOOLEAN(jsval v)
 {
     jsval_layout l;
     l.asBits = v;
-    return l.s.u.mask32 == JSVAL_MASK32_BOOLEAN;
+    return JSVAL_IS_BOOLEAN_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -209,7 +205,7 @@ JSVAL_TO_BOOLEAN(jsval v)
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     l.asBits = v;
-    return l.s.payload.boo;
+    return JSVAL_TO_BOOLEAN_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsval
@@ -268,11 +264,186 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
     return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(l);
 }
 
+/************************************************************************/
+
+/*
+ * A jsid is an identifier for a property or method of an object which is
+ * either a 31-bit signed integer, interned string or object. If XML is
+ * enabled, there is an additional singleton jsid value; see
+ * JS_DEFAULT_XML_NAMESPACE_ID below. Finally, there is an additional jsid
+ * value, JSID_VOID, which does not occur in JS scripts but may be used to
+ * indicate the absence of a valid jsid.
+ *
+ * A jsid is not implicitly convertible to or from a jsval; JS_ValueToId or
+ * JS_IdToValue must be used instead.
+ */
+
+#define JSID_STRING_TYPE                 0x0
+#define JSID_INT_TYPE                    0x1
+#define JSID_OBJECT_TYPE                 0x2
+#define JSID_VOID_TYPE                   0x4
+#define JSID_DEFAULT_XML_NAMESPACE_TYPE  0x6
+#define JSID_TYPE_MASK                   0x7
+
+/*
+ * Do not use canonical 'id' for jsid parameters since this is a magic word in
+ * Objective-C++ which, apparently, wants to be able to #include jsapi.h.
+ */
+
 static JS_ALWAYS_INLINE JSBool
-JSVAL_MAY_BE_PRIVATE(jsval v)
+JSID_IS_STRING(jsid iden)
 {
-    return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(v);
+    return (JSID_BITS(iden) & JSID_TYPE_MASK) == 0;
 }
+
+static JS_ALWAYS_INLINE JSString *
+JSID_TO_STRING(jsid iden)
+{
+    JS_ASSERT(JSID_IS_STRING(iden));
+    return (JSString *)(JSID_BITS(iden));
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StringHasBeenInterned(JSString *str);
+
+static JS_ALWAYS_INLINE jsid
+INTERNED_STRING_TO_JSID(JSString *str)
+{
+    jsid iden;
+    JS_ASSERT(JS_StringHasBeenInterned(str));
+    JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+    JSID_BITS(iden) = (size_t)str;
+    return iden;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_INT(jsid iden)
+{
+    return !!(JSID_BITS(iden) & JSID_INT_TYPE);
+}
+
+static JS_ALWAYS_INLINE int32
+JSID_TO_INT(jsid iden)
+{
+    JS_ASSERT(JSID_IS_INT(iden));
+    return ((int32)JSID_BITS(iden)) >> 1;
+}
+
+#define JSID_INT_MIN  (-(1 << 30))
+#define JSID_INT_MAX  ((1 << 30) - 1)
+
+static JS_ALWAYS_INLINE JSBool
+INT_FITS_IN_JSID(int32 i)
+{
+    return ((jsuint)(i) - (jsuint)JSID_INT_MIN <=
+            (jsuint)(JSID_INT_MAX - JSID_INT_MIN));
+}
+
+static JS_ALWAYS_INLINE jsid
+INT_TO_JSID(int32 i)
+{
+    jsid iden;
+    JS_ASSERT(INT_FITS_IN_JSID(i));
+    JSID_BITS(iden) = ((i << 1) | JSID_INT_TYPE);
+    return iden;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_OBJECT(jsid iden)
+{
+    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_OBJECT_TYPE;
+}
+
+static JS_ALWAYS_INLINE JSObject *
+JSID_TO_OBJECT(jsid iden)
+{
+    JS_ASSERT(JSID_IS_OBJECT(iden));
+    return (JSObject *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
+}
+
+static JS_ALWAYS_INLINE jsid
+OBJECT_TO_JSID(JSObject *obj)
+{
+    jsid iden;
+    JS_ASSERT(obj != NULL);
+    JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
+    JSID_BITS(iden) = ((size_t)obj | JSID_OBJECT_TYPE);
+    return iden;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_GCTHING(jsid iden)
+{
+    return JSID_IS_STRING(iden) || JSID_IS_OBJECT(iden);
+}
+
+static JS_ALWAYS_INLINE void *
+JSID_TO_GCTHING(jsid iden)
+{
+    return (void *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
+}
+
+/*
+ * The magic XML namespace id is not a valid jsid. Global object classes in
+ * embeddings that enable JS_HAS_XML_SUPPORT (E4X) should handle this id.
+ */
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
+{
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_DEFAULT_XML_NAMESPACE_TYPE,
+                 JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+    return ((size_t)JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+}
+
+static JS_ALWAYS_INLINE jsid
+JSID_DEFAULT_XML_NAMESPACE()
+{
+    jsid iden;
+    JSID_BITS(iden) = JSID_DEFAULT_XML_NAMESPACE_TYPE;
+    return iden;
+}
+
+/*
+ * A void jsid is not a valid id and only arises as an exceptional API return
+ * value, such as in JS_NextProperty.
+ */
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_VOID(jsid iden)
+{
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_VOID_TYPE,
+                 JSID_BITS(iden) == JSID_VOID_TYPE);
+    return ((size_t)JSID_BITS(iden) == JSID_VOID_TYPE);
+}
+
+#ifdef DEBUG
+extern JS_PUBLIC_DATA(jsid) JSID_VOID;
+#else
+# define JSID_VOID  ((jsid)JSID_VOID_TYPE)
+#endif
+
+#if defined(DEBUG) && defined(__cplusplus)
+extern "C++" {
+/*
+ * Internally we can use C++ to allow jsids, which are structs in debug builds,
+ * to be compared with ==.
+ */
+static JS_ALWAYS_INLINE bool
+operator==(jsid lhs, jsid rhs)
+{
+    return JSID_BITS(lhs) == JSID_BITS(rhs);
+}
+
+static JS_ALWAYS_INLINE bool
+operator!=(jsid lhs, jsid rhs)
+{
+    return JSID_BITS(lhs) != JSID_BITS(rhs);
+}
+}
+#endif
+
+/************************************************************************/
 
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
@@ -1625,13 +1796,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 
 /*
- * The magic XML namespace id is int-tagged, but not a valid integer jsval.
- * Global object classes in embeddings that enable JS_HAS_XML_SUPPORT (E4X)
- * should handle this id specially before converting id via JSVAL_TO_INT.
- */
-#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSVAL_VOID)
-
-/*
  * JSNewResolveOp flag bits.
  */
 #define JSRESOLVE_QUALIFIED     0x01    /* resolve a qualified property id */
@@ -2088,7 +2252,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
 
 /*
  * Return true on success with *idp containing the id of the next enumerable
- * property to visit using iterobj, or JSVAL_VOID if there is no such property
+ * property to visit using iterobj, or JSID_IS_VOID if there is no such property
  * left to visit.  Return false on error.
  */
 extern JS_PUBLIC_API(JSBool)
@@ -3036,8 +3200,11 @@ class Value
      * break this encapsulation should be listed as friends below. Also see
      * uses of public jsval members in jsapi.h/jspubtd.h.
      */
-    friend class PrimitiveValue;
+#ifdef JS_TRACER
     friend jsdouble UnboxDoubleHelper(uint32 mask, uint32 payload);
+    friend void NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp);
+    friend void NonNumberValueToSlot(const Value &v, JSValueType type, double *slot);
+#endif
 
   protected:
     /* Type masks */
@@ -3045,13 +3212,10 @@ class Value
         template <int I> class T {};
 
     void staticAssertions() {
-        JS_STATIC_ASSERT(sizeof(JSValueMask16) == 2);
-        JS_STATIC_ASSERT(JSVAL_NANBOX_PATTERN == 0xFFFF);
-        JS_STATIC_ASSERT(sizeof(JSValueMask32) == 4);
-        JS_STATIC_ASSERT(JSVAL_MASK32_CLEAR == 0xFFFF0000);
+        JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
+        JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
         JS_STATIC_ASSERT(sizeof(JSBool) == 4);
         JS_STATIC_ASSERT(sizeof(JSWhyMagic) <= 4);
-        JS_STATIC_ASSERT(sizeof(((jsval_layout *)0)->s.payload) == 4);
         JS_STATIC_ASSERT(sizeof(jsval) == 8);
     }
 
@@ -3118,12 +3282,12 @@ class Value
 
     void setFunObj(JSObject &arg) {
         JS_ASSERT(JS_OBJ_IS_FUN_IMPL(&arg));
-        data = OBJECT_TO_JSVAL_IMPL(JSVAL_MASK32_FUNOBJ, &arg);
+        data = OBJECT_TO_JSVAL_IMPL(JSVAL_TYPE_FUNOBJ, &arg);
     }
 
     void setNonFunObj(JSObject &arg) {
         JS_ASSERT(!JS_OBJ_IS_FUN_IMPL(&arg));
-        data = OBJECT_TO_JSVAL_IMPL(JSVAL_MASK32_NONFUNOBJ, &arg);
+        data = OBJECT_TO_JSVAL_IMPL(JSVAL_TYPE_NONFUNOBJ, &arg);
     }
 
     void setBoolean(bool b) {
@@ -3147,27 +3311,27 @@ class Value
 
     void setFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, JS_OBJ_IS_FUN_IMPL(arg));
-        JSValueMask32 mask = arg ? JSVAL_MASK32_FUNOBJ : JSVAL_MASK32_NULL;
-        data = OBJECT_TO_JSVAL_IMPL(mask, arg);
+        JSValueType type = arg ? JSVAL_TYPE_FUNOBJ : JSVAL_TYPE_NULL;
+        data = OBJECT_TO_JSVAL_IMPL(type, arg);
     }
 
     void setNonFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, !JS_OBJ_IS_FUN_IMPL(arg));
-        JSValueMask32 mask = arg ? JSVAL_MASK32_NONFUNOBJ : JSVAL_MASK32_NULL;
-        data = OBJECT_TO_JSVAL_IMPL(mask, arg);
+        JSValueType type = arg ? JSVAL_TYPE_NONFUNOBJ : JSVAL_TYPE_NULL;
+        data = OBJECT_TO_JSVAL_IMPL(type, arg);
     }
 
     inline void setObject(JSObject &arg) {
-        JSValueMask32 mask = JS_OBJ_IS_FUN_IMPL(&arg) ? JSVAL_MASK32_FUNOBJ
-                                                      : JSVAL_MASK32_NONFUNOBJ;
-        data = OBJECT_TO_JSVAL_IMPL(mask, &arg);
+        JSValueType type = JS_OBJ_IS_FUN_IMPL(&arg) ? JSVAL_TYPE_FUNOBJ
+                                                    : JSVAL_TYPE_NONFUNOBJ;
+        data = OBJECT_TO_JSVAL_IMPL(type, &arg);
     }
 
     inline void setObjectOrNull(JSObject *arg) {
-        JSValueMask32 mask = arg ? JS_OBJ_IS_FUN_IMPL(arg) ? JSVAL_MASK32_FUNOBJ
-                                                           : JSVAL_MASK32_NONFUNOBJ
-                                 : JSVAL_MASK32_NULL;
-	    data = OBJECT_TO_JSVAL_IMPL(mask, arg);
+        JSValueType type = arg ? JS_OBJ_IS_FUN_IMPL(arg) ? JSVAL_TYPE_FUNOBJ
+                                                         : JSVAL_TYPE_NONFUNOBJ
+                               : JSVAL_TYPE_NULL;
+        data = OBJECT_TO_JSVAL_IMPL(type, arg);
     }
 
     inline void setObjectOrUndefined(JSObject *arg) {
@@ -3188,11 +3352,11 @@ class Value
     }
 
     bool isNullOrUndefined() const {
-        return JSVAL_IS_SINGLETON_IMPL(data);
+        return isNull() || isUndefined();
     }
 
     bool isInt32() const {
-        return data.s.u.mask32 == JSVAL_MASK32_INT32;
+        return JSVAL_IS_INT32_IMPL(data);
     }
 
     bool isInt32(int32 i32) const {
@@ -3208,15 +3372,15 @@ class Value
     }
 
     bool isString() const {
-        return data.s.u.mask32 == JSVAL_MASK32_STRING;
+        return JSVAL_IS_STRING_IMPL(data);
     }
 
     bool isNonFunObj() const {
-        return data.s.u.mask32 == JSVAL_MASK32_NONFUNOBJ;
+        return JSVAL_IS_NONFUNOBJ_IMPL(data);
     }
 
     bool isFunObj() const {
-        return data.s.u.mask32 == JSVAL_MASK32_FUNOBJ;
+        return JSVAL_IS_FUNOBJ_IMPL(data);
     }
 
     bool isObject() const {
@@ -3236,7 +3400,7 @@ class Value
     }
 
     bool isBoolean() const {
-        return data.s.u.mask32 == JSVAL_MASK32_BOOLEAN;
+        return JSVAL_IS_BOOLEAN_IMPL(data);
     }
 
     bool isTrue() const {
@@ -3248,15 +3412,13 @@ class Value
     }
 
     bool isMagic() const {
-        return data.s.u.mask32 == JSVAL_MASK32_MAGIC;
+        return JSVAL_IS_MAGIC_IMPL(data);
     }
 
     bool isMagic(JSWhyMagic why) const {
         JS_ASSERT_IF(isMagic(), data.s.payload.why == why);
-        return isMagic();
+        return JSVAL_IS_MAGIC_IMPL(data);
     }
-
-    bool isIntDouble() const;
 
     int32 traceKind() const {
         JS_ASSERT(isGCThing());
@@ -3284,19 +3446,11 @@ class Value
         return JSVAL_SAME_PRIMITIVE_TYPE_OR_BOTH_OBJECTS_IMPL(lhs.data, rhs.data);
     }
 
-    friend bool BothInt32(const Value &lhs, const Value &rhs) {
-        return JSVAL_BOTH_INT32_IMPL(lhs.data, rhs.data);
-    }
-
-    friend bool BothString(const Value &lhs, const Value &rhs) {
-        return JSVAL_BOTH_STRING_IMPL(lhs.data, rhs.data);
-    }
-
     /* Extract a Value's payload */
 
     int32 asInt32() const {
         JS_ASSERT(isInt32());
-        return data.s.payload.i32;
+        return JSVAL_TO_INT32_IMPL(data);
     }
 
     double asDouble() const {
@@ -3342,7 +3496,7 @@ class Value
 
     bool asBoolean() const {
         JS_ASSERT(isBoolean());
-        return data.s.payload.boo;
+        return JSVAL_TO_BOOLEAN_IMPL(data);
     }
 
     uint32 asRawUint32() const {
@@ -3354,18 +3508,13 @@ class Value
         return data.asBits;
     }
 
-#ifdef DEBUG
-    char typeTag() const {
-        if (isInt32()) return 'I';
-        if (isDouble()) return 'D';
-        if (isString()) return 'S';
-        if (isFunObj()) return 'F';
-        if (isNonFunObj()) return 'O';
-        if (isBoolean()) return 'B';
-        if (isNull()) return 'N';
-        if (isUndefined()) return 'U';
-        if (isMagic()) return 'H';
-        return '?';
+    JSValueType extractNonDoubleType() const {
+        return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
+    }
+
+#if JS_BITS_PER_WORD == 32
+    JSValueTag extractNonDoubleTag() const {
+        return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
     }
 #endif
 
@@ -3395,12 +3544,12 @@ class Value
     }
 
     void setPrivate(void *ptr) {
-		data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
+        data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
     }
 
     void *asPrivate() const {
-		JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
-		return JSVAL_TO_PRIVATE_PTR_IMPL(data);
+        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+        return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
 
     void setPrivateUint32(uint32 ui) {
@@ -3408,13 +3557,13 @@ class Value
     }
 
     uint32 asPrivateUint32() const {
-		JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
-		return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
+        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+        return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
     }
 
     uint32 &asPrivateUint32Ref() {
-		JS_ASSERT(isDouble());
-		return data.s.payload.u32;
+        JS_ASSERT(isDouble());
+        return data.s.payload.u32;
     }
 
     /* Tracing support API. 

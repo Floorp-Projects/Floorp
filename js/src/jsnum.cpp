@@ -1305,12 +1305,3 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
     }
     return JS_TRUE;
 }
-
-bool 
-Value::isIntDouble() const {
-    if (!isDouble())
-        return false;
-    double d = asDouble();
-    return !JSDOUBLE_IS_NEGZERO(d) && (d == jsint(d));
-}
-
