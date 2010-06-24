@@ -44,7 +44,8 @@ namespace mozilla {
 
 /**
  * A generic factory which uses a constructor function to create instances.
- * This class is intended solely for internal use by the component manager.
+ * This class is intended for use by the component manager and the generic
+ * module.
  */
 class GenericFactory : public nsIFactory
 {

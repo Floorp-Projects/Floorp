@@ -127,4 +127,41 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
     return rv;                                                                \
 }
 
+#ifndef MOZILLA_INTERNAL_API
+
+#include "nsIModule.h"
+#include "nsISupportsUtils.h"
+
+namespace mozilla {
+
+class GenericModule : public nsIModule
+{
+public:
+    GenericModule(const mozilla::Module* aData)
+        : mData(aData)
+    {
+    }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMODULE
+
+private:
+    const mozilla::Module* mData;
+};
+
+} // namespace mozilla
+
+#define NS_IMPL_MOZILLA192_NSGETMODULE(module)     \
+extern "C" NS_EXPORT nsresult                      \
+NSGetModule(nsIComponentManager* aCompMgr,         \
+            nsIFile* aLocation,                    \
+            nsIModule** aResult)                   \
+{                                                  \
+    *aResult = new mozilla::GenericModule(module); \
+    NS_ADDREF(*aResult);                           \
+    return NS_OK;                                  \
+}
+
+#endif
+
 #endif // mozilla_GenericModule_h
