@@ -1,3 +1,38 @@
+/**
+ * These return* functions are used by the
+ * replacer tests taken from bug 512447
+ */
+function returnObjectFor1(k, v) {
+    if (k == "1")
+        return {};
+    return v;
+}
+function returnArrayFor1(k, v) {
+    if (k == "1")
+        return [];
+    return v;
+}
+function returnNullFor1(k, v) {
+    if (k == "1")
+        return null;
+    return v;
+}
+function returnStringForUndefined(k, v) {
+    if (v === undefined)
+        return "undefined value";
+    return v;
+}
+function returnCycleObjectFor1(k, v) {
+    if (k == "1")
+        return object;
+    return v;
+}
+function returnCycleArrayFor1(k, v) {
+    if (k == "1")
+        return array;
+    return v;
+}
+
 function run_test() {
   var x = JSON.stringify({key:2},function(k,v){return k?undefined:v;})
   do_check_eq("{}", x);
@@ -52,5 +87,43 @@ function run_test() {
   foo = ['e'];
   var x = JSON.stringify(foo, null, '\t');
   do_check_eq(x, '[\n\t"e"\n]');
+
+  foo = {0:0, 1:1, 2:2, 3:undefined};
+  var x = JSON.stringify(foo, returnObjectFor1);
+  do_check_eq(x, '{"0":0,"1":{},"2":2}');
+
+  var x = JSON.stringify(foo, returnArrayFor1);
+  do_check_eq(x, '{"0":0,"1":[],"2":2}');
+
+  var x = JSON.stringify(foo, returnNullFor1);
+  do_check_eq(x, '{"0":0,"1":null,"2":2}');
+
+  var x = JSON.stringify(foo, returnStringForUndefined);
+  do_check_eq(x, '{"0":0,"1":1,"2":2,"3":"undefined value"}');
+
+  var thrown = false;
+  try {
+    var x = JSON.stringify(foo, returnCycleObjectFor1);
+  } catch (e) {
+    thrown = true;
+  }
+  do_check_eq(thrown, true);
+
+  var thrown = false;
+  try {
+    var x = JSON.stringify(foo, returnCycleArrayFor1);
+  } catch (e) {
+    thrown = true;
+  }
+  do_check_eq(thrown, true);
+
+  var thrown = false;
+  foo = [0, 1, 2, undefined];
+  try {
+    var x = JSON.stringify(foo, returnCycleObjectFor1);
+  } catch (e) {
+    thrown = true;
+  }
+  do_check_eq(thrown, true);
 }
 
