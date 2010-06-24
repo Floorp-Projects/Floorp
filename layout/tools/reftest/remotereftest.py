@@ -38,10 +38,10 @@
 import sys
 import os
 import time
+import tempfile
 
+# We need to know our current directory so that we can serve our test files from it.
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
-sys.path.append(SCRIPT_DIRECTORY)
-#os.chdir(SCRIPT_DIRECTORY)         
 
 from runreftest import RefTest
 from runreftest import ReftestOptions
@@ -130,6 +130,73 @@ class RemoteOptions(ReftestOptions):
         #options.utilityPath = options.testRoot + self._automation._product + '/bin'
         return options
 
+class ReftestServer:
+    """ Web server used to serve Reftests, for closer fidelity to the real web.
+        It is virtually identical to the server used in mochitest and will only
+        be used for running reftests remotely.
+        Bug xxx has been filed to refactor this wrapper around httpd.js into
+        it's own class and use it in both remote and non-remote testing. """
+
+    def __init__(self, automation, options):
+        self._automation = automation
+        self._utilityPath = options.utilityPath
+        self._xrePath = options.xrePath
+        self._profileDir = options.serverProfilePath
+        self.webServer = options.remoteWebServer
+        self.httpPort = options.httpPort
+        self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
+
+    def start(self):
+        "Run the Refest server, returning the process ID of the server."
+          
+        env = self._automation.environment(xrePath = self._xrePath)
+        env["XPCOM_DEBUG_BREAK"] = "warn"
+        if self._automation.IS_WIN32:
+            env["PATH"] = env["PATH"] + ";" + self._xrePath
+
+        args = ["-g", self._xrePath,
+                "-v", "170",
+                "-f", "./" + "httpd.js",
+                "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" % 
+                       {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer },
+                "-f", "./" + "server.js"]
+
+        xpcshell = os.path.join(self._utilityPath,
+                                "xpcshell" + self._automation.BIN_SUFFIX)
+        self._process = self._automation.Process([xpcshell] + args, env = env)
+        pid = self._process.pid
+        if pid < 0:
+            print "Error starting server."
+            sys.exit(2)
+        self._automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
+
+    def ensureReady(self, timeout):
+        assert timeout >= 0
+
+        aliveFile = os.path.join(self._profileDir, "server_alive.txt")
+        i = 0
+        while i < timeout:
+            if os.path.exists(aliveFile):
+                break
+            time.sleep(1)
+            i += 1
+        else:
+            print "Timed out while waiting for server startup."
+            self.stop()
+            sys.exit(1)
+
+    def stop(self):
+        try:
+            c = urllib2.urlopen(self.shutdownURL)
+            c.read()
+            c.close()
+
+            rtncode = self._process.poll()
+            if (rtncode == None):
+                self._process.terminate()
+        except:
+            self._process.kill()
+
 class RemoteReftest(RefTest):
     remoteApp = ''
 
@@ -138,7 +205,57 @@ class RemoteReftest(RefTest):
         self._devicemanager = devicemanager
         self.scriptDir = scriptDir
         self.remoteApp = options.app
+        self.remoteProfile = options.remoteProfile
         self.remoteTestRoot = options.remoteTestRoot
+        if self.automation.IS_DEBUG_BUILD:
+            self.SERVER_STARTUP_TIMEOUT = 180
+        else:
+            self.SERVER_STARTUP_TIMEOUT = 90
+
+    def findPath(self, paths, filename = None):
+        for path in paths:
+            p = path
+            if filename:
+                p = os.path.join(p, filename)
+            if os.path.exists(self.getFullPath(p)):
+                return path
+        return None
+
+    def startWebServer(self, options):
+        """ Create the webserver on the host and start it up """
+        remoteXrePath = options.xrePath
+        remoteUtilityPath = options.utilityPath
+        localAutomation = Automation()
+
+        paths = [options.xrePath, localAutomation.DIST_BIN, self.automation._product, os.path.join('..', self.automation._product)]
+        options.xrePath = self.findPath(paths)
+        if options.xrePath == None:
+            print "ERROR: unable to find xulrunner path for %s, please specify with --xre-path" % (os.name)
+            sys.exit(1)
+        paths.append("bin")
+        paths.append(os.path.join("..", "bin"))
+
+        xpcshell = "xpcshell"
+        if (os.name == "nt"):
+            xpcshell += ".exe"
+      
+        if (options.utilityPath):
+            paths.insert(0, options.utilityPath)
+        options.utilityPath = self.findPath(paths, xpcshell)
+        if options.utilityPath == None:
+            print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
+            sys.exit(1)
+
+        options.serverProfilePath = tempfile.mkdtemp()
+        self.server = ReftestServer(localAutomation, options)
+        self.server.start()
+
+        self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
+        options.xrePath = remoteXrePath
+        options.utilityPath = remoteUtilityPath
+         
+    def stopWebServer(self, options):
+        self.server.stop()
 
     def createReftestProfile(self, options, profileDir):
         RefTest.createReftestProfile(self, options, profileDir)
@@ -169,7 +286,7 @@ class RemoteReftest(RefTest):
         return path
 
     def cleanup(self, profileDir):
-        self._devicemanager.removeDir(self.remoteProfileDir)
+        self._devicemanager.removeDir(self.remoteProfile)
         self._devicemanager.removeDir(self.remoteTestRoot)
         RefTest.cleanup(self, profileDir)
 
@@ -202,10 +319,13 @@ def main():
     if (options.remoteWebServer == "127.0.0.1"):
         print "Error: remoteWebServer must be non localhost"
         sys.exit(1)
-
+    
+    # Start the webserver
+    reftest.startWebServer(options)
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
     reftest.runTests(args[0], options)
+    reftest.stopWebServer(options)
 
 if __name__ == "__main__":
     main()
