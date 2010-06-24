@@ -154,22 +154,6 @@ var BrowserUI = {
     return { };
   },
 
-  _metaAdded : function(aEvent) {
-    let meta = aEvent.originalTarget;
-    if (!meta)
-      return;
-
-    if (meta.name == "viewport" || meta.name == "HandheldFriendly") {
-      // Must have an owner document and not be in a frame
-      var ownerDoc = meta.ownerDocument;
-      if (!ownerDoc || ownerDoc.defaultView.frameElement)
-        return;
-
-      let tab = Browser.getTabForDocument(ownerDoc);
-      tab.updateViewportMetadata();
-    }
-  },
-
   _updateButtons : function(aBrowser) {
     let back = document.getElementById("cmd_back");
     let forward = document.getElementById("cmd_forward");
@@ -725,9 +709,6 @@ var BrowserUI = {
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       // Browser events
-      case "DOMMetaAdded":
-        this._metaAdded(aEvent);
-        break;
       case "TabSelect":
         this._tabSelect(aEvent);
         break;
@@ -1194,8 +1175,9 @@ var PageActions = {
 
   updatePageSaveAs: function updatePageSaveAs() {
     this.removeItems("saveas");
-    if (Browser.selectedBrowser.contentDocument instanceof XULDocument)
-      return;
+    // XXX Not sure if we care about this
+    //if (Browser.selectedBrowser.contentDocument instanceof XULDocument)
+    //  return;
 
     let strings = Elements.browserBundle;
     let node = this.appendItem("saveas", strings.getString("pageactions.saveas.pdf"), "");

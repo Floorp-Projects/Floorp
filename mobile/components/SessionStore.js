@@ -336,7 +336,7 @@ SessionStore.prototype = {
   },
   
   _collectTabData: function ss__collectTabData(aBrowser) {
-    let tabData = { url: aBrowser.currentURI.spec, title: aBrowser.contentDocument.title };
+    let tabData = { url: aBrowser.currentURI.spec, title: aBrowser.contentTitle };
     aBrowser.__SS_data = tabData;
   },
   
