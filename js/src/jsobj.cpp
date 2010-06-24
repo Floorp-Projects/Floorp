@@ -2727,8 +2727,10 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
         }
     }
 
-    if (proto->isNative())
-        return NewNativeClassInstance(cx, clasp, proto, parent);
+    /*
+     * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
+     * from easily or unconditionally calling NewNativeClassInstance here.
+     */
     return NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
