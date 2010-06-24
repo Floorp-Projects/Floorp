@@ -86,6 +86,13 @@ public:
                     char** _retval,
                     PLArenaPool* aArena);
 
+  void DeleteLeaf(const char* aEntryName);
+
+  void Clear() {
+    mozilla::MutexAutoLock lock(mLock);
+    mTable.Clear();
+  }
+
   PRUint32 Count() {
     mozilla::MutexAutoLock lock(mLock);
     PRUint32 tCount = mTable.Count();
@@ -132,7 +139,9 @@ public:
 
   void AddCategoryEntry(const char* aCategory,
                         const char* aKey,
-                        const char* aValue);
+                        const char* aValue,
+                        bool aReplace = true,
+                        char** aOldValue = NULL);
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 

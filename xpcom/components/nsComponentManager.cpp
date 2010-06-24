@@ -1545,6 +1545,44 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
 }
 
 NS_IMETHODIMP
+nsComponentManagerImpl::AutoRegister(nsIFile* aLocation)
+{
+    nsCOMPtr<nsILocalFile> lf = do_QueryInterface(aLocation);
+    if (!lf)
+        return NS_ERROR_INVALID_ARG;
+
+    XRE_AddComponentLocation(NS_COMPONENT_LOCATION, lf);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::AutoUnregister(nsIFile* aLocation)
+{
+    NS_ERROR("AutoUnregister not implemented.");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::RegisterFactoryLocation(const nsCID& aCID,
+                                                const char* aClassName,
+                                                const char* aContractID,
+                                                nsIFile* aFile,
+                                                const char* aLoaderStr,
+                                                const char* aType)
+{
+    NS_ERROR("RegisterFactoryLocation not implemented.");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::UnregisterFactoryLocation(const nsCID& aCID,
+                                                  nsIFile* aFile)
+{
+    NS_ERROR("UnregisterFactoryLocation not implemented.");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsComponentManagerImpl::IsCIDRegistered(const nsCID & aClass,
                                         PRBool *_retval)
 {
@@ -1611,7 +1649,6 @@ nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator **aEnumerator)
     return CallQueryInterface(e, aEnumerator);
 }
 
-#if 0
 NS_IMETHODIMP
 nsComponentManagerImpl::CIDToContractID(const nsCID & aClass,
                                         char **_retval)
@@ -1619,7 +1656,6 @@ nsComponentManagerImpl::CIDToContractID(const nsCID & aClass,
     NS_ERROR("CIDTOContractID not implemented");
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
-#endif
 
 NS_IMETHODIMP
 nsComponentManagerImpl::ContractIDToCID(const char *aContractID,
