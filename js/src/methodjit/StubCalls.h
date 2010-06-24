@@ -65,7 +65,6 @@ JSObject * JS_FASTCALL NewObject(VMFrame &f);
 void JS_FASTCALL Throw(VMFrame &f);
 void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
-void JS_FASTCALL DebugHook(VMFrame &f);
 void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutArgsObject(VMFrame &f);
 void JS_FASTCALL CopyThisv(VMFrame &f);

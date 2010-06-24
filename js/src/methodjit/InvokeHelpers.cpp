@@ -479,19 +479,11 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->thisv = vp[1];
     newfp->imacpc = NULL;
+    newfp->hookData = NULL;
 
 #if 0
     /* :TODO: Switch version if currentVersion wasn't overridden. */
     newfp->callerVersion = (JSVersion)cx->version;
-
-    // Marker for debug support.
-    if (JSInterpreterHook hook = cx->debugHooks->callHook) {
-        newfp->hookData = hook(cx, fp, JS_TRUE, 0,
-                               cx->debugHooks->callHookData);
-        // CHECK_INTERRUPT_HANDLER();
-    } else {
-        newfp->hookData = NULL;
-    }
 #endif
 
 #ifdef DEBUG
