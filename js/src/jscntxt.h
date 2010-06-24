@@ -651,9 +651,6 @@ class StackSpace
     inline Value *firstUnused() const;
 
     inline void assertIsCurrent(JSContext *cx) const;
-#ifdef DEBUG
-    CallStack *getCurrentCallStack() const { return currentCallStack; }
-#endif
 
     /*
      * Allocate nvals on the top of the stack, report error on failure.
@@ -780,6 +777,8 @@ class StackSpace
     /* Our privates leak into xpconnect, which needs a public symbol. */
     JS_REQUIRES_STACK
     JS_FRIEND_API(bool) pushInvokeArgsFriendAPI(JSContext *, uintN, InvokeArgsGuard &);
+
+    CallStack *getCurrentCallStack() const { return currentCallStack; }
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
@@ -810,6 +809,20 @@ class FrameRegsIter
     JSStackFrame *fp() const { return curfp; }
     Value *sp() const { return cursp; }
     jsbytecode *pc() const { return curpc; }
+};
+
+class AllFramesIter
+{
+    CallStack         *curcs;
+    JSStackFrame      *curfp;
+
+  public:
+    JS_REQUIRES_STACK AllFramesIter(JSContext *cx);
+
+    bool done() const { return curfp == NULL; }
+    AllFramesIter &operator++();
+
+    JSStackFrame *fp() const { return curfp; }
 };
 
 /* Holds the number of recording attemps for an address. */
