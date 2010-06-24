@@ -332,8 +332,7 @@ function doSearch(searchTerm, cmdLine) {
                            sa);
 }
 
-function nsBrowserContentHandler()
-{
+function nsBrowserContentHandler() {
 }
 nsBrowserContentHandler.prototype = {
   classID: Components.ID("{5d0ce354-df01-421a-83fb-7ead0990c24e}"),
@@ -363,16 +362,10 @@ nsBrowserContentHandler.prototype = {
   },
 
   /* nsISupports */
-  QueryInterface : function bch_QI(iid) {
-    if (!iid.equals(nsISupports) &&
-        !iid.equals(nsICommandLineHandler) &&
-        !iid.equals(nsIBrowserHandler) &&
-        !iid.equals(nsIContentHandler) &&
-        !iid.equals(nsICommandLineValidator))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    return this;
-  },
+  QueryInterface : XPCOMUtils.generateQI([nsICommandLineHandler,
+                                          nsIBrowserHandler,
+                                          nsIContentHandler,
+                                          nsICommandLineValidator]),
 
   /* nsICommandLineHandler */
   handle : function bch_handle(cmdLine) {
@@ -735,8 +728,7 @@ function handURIToExistingBrowser(uri, location, cmdLine)
                nsIBrowserDOMWindow.OPEN_EXTERNAL);
 }
 
-function nsDefaultCommandLineHandler()
-{
+function nsDefaultCommandLineHandler() {
 }
 
 nsDefaultCommandLineHandler.prototype = {

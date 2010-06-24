@@ -39,7 +39,7 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const EXSLT_REGEXP_DESC = "EXSLT RegExp extension functions"
+const EXSLT_REGEXP_CID = Components.ID("{18a03189-067b-4978-b4f1-bafe35292ed6}");
 
 const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
 const NODESET_CONTRACTID = "@mozilla.org/transformiix-nodeset;1";
@@ -49,6 +49,8 @@ const Ci = Components.interfaces;
 function txEXSLTRegExFunctions()
 {
 }
+
+var SingletonInstance = null;
 
 txEXSLTRegExFunctions.prototype = {
     classID: Components.ID("{18a03189-067b-4978-b4f1-bafe35292ed6}"),
@@ -99,56 +101,39 @@ txEXSLTRegExFunctions.prototype = {
         var re = new RegExp(regex, flags);
 
         return re.test(str);
+    },
+
+    _xpcom_factory: {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
+                                               Ci.nsIClassInfo]),
+
+        createInstance: function(outer, iid) {
+            if (outer != null)
+                throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+            if (SingletonInstance == null)
+                SingletonInstance = new txEXSLTRegExFunctions();
+
+            return SingletonInstance.QueryInterface(iid);
+        },
+
+        getInterfaces: function(countRef) {
+            var interfaces = [
+                Ci.txIEXSLTRegExFunctions
+            ];
+            countRef.value = interfaces.length;
+
+            return interfaces;
+        },
+
+        getHelperForLanguage: function(language) {
+            return null;
+        },
+
+        classID: EXSLT_REGEXP_CID,
+        implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
+        flags: Ci.nsIClassInfo.SINGLETON
     }
 }
 
-var SingletonInstance = null;
-
-function NSGetFactory(cid)
-{
-    if (!cid.equals(EXSLT_REGEXP_CID))
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-
-    return kFactory;
-}
-
-const kFactory = {
-    QueryInterface: function(iid) {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.nsIFactory) ||
-            iid.equals(Ci.nsIClassInfo))
-            return this;
-
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-
-    createInstance: function(outer, iid) {
-        if (outer != null)
-            throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-        if (SingletonInstance == null)
-            SingletonInstance = new txEXSLTRegExFunctions();
-
-        return SingletonInstance.QueryInterface(iid);
-    },
-
-    getInterfaces: function(countRef) {
-        var interfaces = [
-            Ci.txIEXSLTRegExFunctions
-        ];
-        countRef.value = interfaces.length;
-
-        return interfaces;
-    },
-
-    getHelperForLanguage: function(language) {
-        return null;
-    },
-
-    contractID: EXSLT_REGEXP_CONTRACTID,
-    classDescription: EXSLT_REGEXP_DESC,
-    classID: EXSLT_REGEXP_CID,
-    implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-    flags: Ci.nsIClassInfo.SINGLETON
-};
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([txEXSLTRegExFunctions]);
