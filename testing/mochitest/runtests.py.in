@@ -341,7 +341,10 @@ class MochitestServer:
       c = urllib2.urlopen(self.shutdownURL)
       c.read()
       c.close()
-      self._process.wait()
+
+      rtncode = self._process.poll()
+      if (rtncode == None):
+        self._process.terminate()
     except:
       self._process.kill()
 
