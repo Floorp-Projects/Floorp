@@ -206,7 +206,7 @@ gfxDWriteFont::ComputeMetrics()
                        fontMetrics.designUnitsPerEm) * mAdjustedSize;
     }
     ucs = L'0';
-    if (FAILED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
+    if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
         SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {
         mMetrics.zeroOrAveCharWidth = 
             ((gfxFloat)metrics.advanceWidth /

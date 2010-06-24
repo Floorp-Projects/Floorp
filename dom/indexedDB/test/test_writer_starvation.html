@@ -1,0 +1,106 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const READ_ONLY = Components.interfaces.nsIIDBTransaction.READ_ONLY;
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+
+      request = db.createObjectStore("foo", "", true);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(event.transaction.mode, READ_WRITE, "Correct mode");
+
+      request = event.result.add({});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let key = event.result;
+      ok(key, "Got a key");
+
+      SimpleTest.executeSoon(function() { testGenerator.next(); });
+      yield;
+
+      let objectStore = db.objectStore("foo");
+
+      let continueReading = true;
+      let readerCount = 0;
+      let callbackCount = 0;
+      let finalCallbackCount = 0;
+
+      // Generate a bunch of reads right away without returning to the event
+      // loop.
+      for (let i = 0; i < 20; i++) {
+        readerCount++;
+        request = objectStore.get(key);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          callbackCount++;
+        };
+      }
+
+      while (continueReading) {
+        readerCount++;
+        request = db.objectStore("foo").get(key);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          is(event.transaction.mode, READ_ONLY, "Correct mode");
+          callbackCount++;
+          if (callbackCount == 100) {
+            request = db.objectStore("foo", READ_WRITE).add({}, readerCount);
+            request.onerror = errorHandler;
+            request.onsuccess = function(event) {
+              continueReading = false;
+              finalCallbackCount = callbackCount;
+              ok(event.result == callbackCount,
+                 "write callback came before later reads");
+            }
+          }
+        };
+
+        SimpleTest.executeSoon(function() { testGenerator.next(); });
+        yield;
+      }
+
+      while (callbackCount < readerCount) {
+        SimpleTest.executeSoon(function() { testGenerator.next(); });
+        yield;
+      }
+
+      is(callbackCount, readerCount, "All requests accounted for");
+      ok(callbackCount > finalCallbackCount, "More readers after writer");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

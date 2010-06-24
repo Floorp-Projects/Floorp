@@ -1,0 +1,104 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+
+      const LOADING = Components.interfaces.nsIIDBRequest.LOADING;
+      const DONE = Components.interfaces.nsIIDBRequest.DONE;
+
+      let request = moz_indexedDB.open(name, description);
+      is(request.readyState, LOADING, "Correct readyState");
+
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(request.readyState, DONE, "Correct readyState");
+
+      let db = event.result;
+
+      request = db.createObjectStore("foo", "");
+      is(request.readyState, LOADING, "Correct readyState");
+
+      try {
+        request.abort();
+        ok(false, "Can't abort a writing request");
+      }
+      catch (e) {
+        ok(true, "Can't abort a writing request");
+      }
+
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(request.readyState, DONE, "Correct readyState");
+
+      let objectStore = event.result;
+      let key = 10;
+
+      request = objectStore.add({}, key);
+      is(request.readyState, LOADING, "Correct readyState");
+
+      try {
+        request.abort();
+        ok(false, "Can't abort a writing request");
+      }
+      catch (e) {
+        ok(true, "Can't abort a writing request");
+      }
+
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(request.readyState, DONE, "Correct readyState");
+      is(event.result, key, "Correct key");
+
+      request = objectStore.get(key);
+      request.onerror = function(event) {
+        ok(true, "reading request was aborted");
+        is(request.readyState, DONE, "Correct readyState");
+        testGenerator.next();
+      };
+      request.onsuccess = unexpectedSuccessHandler;
+
+      is(request.readyState, LOADING, "Correct readyState");
+      request.abort();
+      is(request.readyState, DONE, "Correct readyState");
+
+      yield;
+
+      request = objectStore.get(key);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      is(request.readyState, LOADING, "Correct readyState");
+      event = yield;
+
+      ok(event.result, "Got something");
+      is(request.readyState, DONE, "Correct readyState");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
