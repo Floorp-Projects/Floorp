@@ -541,14 +541,15 @@ var gViewController = {
     }
   },
 
-  doCommand: function(aCommand) {
+  doCommand: function(aCommand, aAddon) {
     if (!this.supportsCommand(aCommand))
       return;
-    var addon = this.currentViewObj.getSelectedAddon();
     var cmd = this.commands[aCommand];
-    if (!cmd.isEnabled(addon))
+    if (!aAddon)
+      aAddon = this.currentViewObj.getSelectedAddon();
+    if (!cmd.isEnabled(aAddon))
       return;
-    cmd.doCommand(addon);
+    cmd.doCommand(aAddon);
   },
 
   onEvent: function() {}

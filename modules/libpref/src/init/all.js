@@ -177,7 +177,11 @@ pref("gfx.color_management.rendering_intent", 0);
 
 pref("gfx.downloadable_fonts.enabled", true);
 
+#ifdef XP_MACOSX
+pref("gfx.font_rendering.harfbuzz.level", 1);
+#else
 pref("gfx.font_rendering.harfbuzz.level", 0);
+#endif
 
 #ifdef XP_WIN
 #ifndef WINCE
@@ -781,6 +785,8 @@ pref("network.IDN.whitelist.tw", true);
 pref("network.IDN.whitelist.vn", true);
 
 // IDN ccTLDs
+// ae, UAE, .<Emarat>
+pref("network.IDN.whitelist.xn--mgbaam7a8h", true); 
 // sa, Saudi Arabia, .<al-Saudiah>
 pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
 // ru, Russian Federation, .<RF>
