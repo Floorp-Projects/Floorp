@@ -2753,25 +2753,67 @@ mjit::Compiler::jsop_instanceof()
         return;
     }
 
-    Jump typeCheck;
-    if (!rhs->isTypeKnown()) {
+    Jump firstSlow;
+    bool typeKnown = rhs->isTypeKnown();
+    if (!typeKnown) {
         Jump j = frame.testFunObj(Assembler::NotEqual, rhs);
         stubcc.linkExit(j);
+        stubcc.leave();
+        stubcc.call(stubs::InstanceOf);
+        firstSlow = stubcc.masm.jump();
     }
 
-    stubcc.leave();
-    stubcc.call(stubs::InstanceOf);
-
+    /* This is sadly necessary because the error case needs the object. */
     frame.dup();
 
     jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false);
 
-    prepareStubCall();
-    stubCall(stubs::FastInstanceOf, Uses(3), Defs(1));
-    frame.takeReg(Registers::ReturnReg);
-    frame.popn(3);
-    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+    /* Primitive prototypes are invalid. */
+    rhs = frame.peek(-1);
+    Jump j = frame.testPrimitive(Assembler::Equal, rhs);
+    stubcc.linkExit(j);
 
+    /* Allocate registers up front, because of branchiness. */
+    FrameEntry *lhs = frame.peek(-3);
+    RegisterID obj = frame.copyDataIntoReg(lhs);
+    RegisterID proto = frame.copyDataIntoReg(rhs);
+    RegisterID temp = frame.allocReg();
+
+    Jump isFalse = frame.testPrimitive(Assembler::Equal, lhs);
+
+    /* Quick test to avoid wrapped objects. */
+    masm.loadPtr(Address(obj, offsetof(JSObject, clasp)), temp);
+    masm.load32(Address(temp, offsetof(JSClass, flags)), temp);
+    masm.and32(Imm32(JSCLASS_IS_EXTENDED), temp);
+    j = masm.branchTest32(Assembler::NonZero, temp, temp);
+    stubcc.linkExit(j);
+
+    Address protoAddr(obj, offsetof(JSObject, fslots) + JSSLOT_PROTO * sizeof(Value));
+    Label loop = masm.label();
+
+    /* Walk prototype chain, break out on NULL or hit. */
+    masm.loadData32(protoAddr, obj);
+    Jump isFalse2 = masm.branchTestPtr(Assembler::Zero, obj, obj);
+    Jump isTrue = masm.branchPtr(Assembler::NotEqual, obj, proto);
+    isTrue.linkTo(loop, &masm);
+    masm.move(Imm32(1), temp);
+    isTrue = masm.jump();
+
+    isFalse.linkTo(masm.label(), &masm);
+    isFalse2.linkTo(masm.label(), &masm);
+    masm.move(Imm32(0), temp);
+    isTrue.linkTo(masm.label(), &masm);
+
+    frame.freeReg(proto);
+    frame.freeReg(obj);
+
+    stubcc.leave();
+    stubcc.call(stubs::FastInstanceOf);
+
+    frame.popn(3);
+    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, temp);
+
+    firstSlow.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(1);
 }
 

@@ -2228,7 +2228,7 @@ stubs::InstanceOf(VMFrame &f)
     return cond;
 }
 
-JSBool JS_FASTCALL
+void JS_FASTCALL
 stubs::FastInstanceOf(VMFrame &f)
 {
     const Value &lref = f.regs.sp[-1];
@@ -2239,10 +2239,10 @@ stubs::FastInstanceOf(VMFrame &f)
          * has a non-object as its .prototype value.
          */
         js_ReportValueError(f.cx, JSMSG_BAD_PROTOTYPE, -1, f.regs.sp[-2], NULL);
-        THROWV(JS_FALSE);
+        THROW();
     }
 
-    return js_IsDelegate(f.cx, &lref.asObject(), f.regs.sp[-3]);
+    f.regs.sp[-3].setBoolean(js_IsDelegate(f.cx, &lref.asObject(), f.regs.sp[-3]));
 }
 
 void JS_FASTCALL
