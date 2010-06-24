@@ -199,6 +199,13 @@ toolbarbutton.bookmark-item {
   max-width: 13em;
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+#toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
+#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button {
+  display: none;
+}
+%endif
+
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;

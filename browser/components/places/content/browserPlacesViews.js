@@ -1420,7 +1420,7 @@ PlacesToolbar.prototype = {
 
       // If the menu is open, close it.
       if (draggedElt.open) {
-        draggedElt.firstChild.hidePopup();
+        draggedElt.lastChild.hidePopup();
         draggedElt.open = false;
       }
     }
