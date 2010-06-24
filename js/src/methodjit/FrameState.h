@@ -439,6 +439,11 @@ class FrameState
     inline void dup2();
 
     /*
+     * Dups an item n-deep in the stack. n must be < 0
+     */
+    inline void dupAt(int32 n);
+
+    /*
      * Returns the current stack depth of the frame.
      */
     uint32 stackDepth() const { return sp - spBase; }
