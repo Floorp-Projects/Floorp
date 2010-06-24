@@ -497,6 +497,100 @@ class GetPropCompiler : public PICStubCompiler
         return true;
     }
 
+    bool generateStringCallStub()
+    {
+        JS_ASSERT(pic.hasTypeCheck());
+        JS_ASSERT(pic.kind == ic::PICInfo::CALL);
+
+        if (!f.fp->script->compileAndGo)
+            return disable("String.prototype without compile-and-go");
+
+        mjit::ThreadData &jm = JS_METHODJIT_DATA(f.cx);
+        if (!jm.addScript(script)) {
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        JSObject *holder;
+        JSProperty *prop;
+        if (!obj->lookupProperty(f.cx, ATOM_TO_JSID(atom), &holder, &prop))
+            return false;
+        if (!prop)
+            return disable("property not found");
+
+        AutoPropertyDropper dropper(f.cx, holder, prop);
+        JSScopeProperty *sprop = (JSScopeProperty *)prop;
+        if (holder != obj)
+            return disable("proto walk on String.prototype");
+        if (!sprop->hasDefaultGetterOrIsMethod())
+            return disable("getter");
+        if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
+            return disable("invalid slot");
+
+        JS_ASSERT(holder->isNative());
+
+        Assembler masm;
+
+        /* Only strings are allowed. */
+        Jump notString = masm.branch32(Assembler::NotEqual, pic.typeReg(),
+                                       Imm32(JSVAL_MASK32_STRING));
+
+        /*
+         * Sink pic.objReg, since we're about to lose it. This is optimistic,
+         * we could reload it from objRemat if we wanted.
+         *
+         * Note: This is really hacky, and relies on f.regs.sp being set
+         * correctly in ic::CallProp. Should we just move the store higher
+         * up in the fast path, or put this offset in PICInfo?
+         */
+        uint32 thisvOffset = uint32(f.regs.sp - f.fp->slots()) - 1;
+        Address thisv(JSFrameReg, sizeof(JSStackFrame) + thisvOffset * sizeof(Value));
+        masm.storeTypeTag(ImmTag(JSVAL_MASK32_STRING), thisv);
+        masm.storeData32(pic.objReg, thisv);
+
+        /*
+         * Clobber objReg with String.prototype and do some PIC stuff. Well,
+         * really this is now a MIC, except it won't ever be patched, so we
+         * just disable the PIC at the end. :FIXME:? String.prototype probably
+         * does not get random shape changes.
+         */
+        masm.move(ImmPtr(obj), pic.objReg);
+        masm.loadShape(pic.objReg, pic.shapeReg);
+        Jump shapeMismatch = masm.branch32(Assembler::NotEqual, pic.shapeReg,
+                                           Imm32(obj->shape()));
+        masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
+
+        Jump done = masm.jump();
+
+        JSC::ExecutablePool *ep = getExecPool(masm.size());
+        if (!ep || !pic.execPools.append(ep)) {
+            if (ep)
+                ep->release();
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        JSC::LinkBuffer patchBuffer(&masm, ep);
+
+        int32 typeCheckOffset = -int32(pic.u.get.typeCheckOffset);
+        patchBuffer.link(notString, pic.slowPathStart.labelAtOffset(typeCheckOffset));
+        patchBuffer.link(shapeMismatch, pic.slowPathStart);
+        patchBuffer.link(done, pic.storeBack);
+
+        CodeLocationLabel cs = patchBuffer.finalizeCodeAddendum();
+        JaegerSpew(JSpew_PICs, "generate string call stub at %p\n",
+                   cs.executableAddress());
+
+        /* Patch the type check to jump here. */
+        RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
+        repatcher.relink(pic.fastPathStart.jumpAtOffset(INLINE_TYPE_GUARD), cs);
+
+        /* Disable the PIC so we don't keep generating stubs on the above shape mismatch. */
+        disable("generated string call stub");
+
+        return true;
+    }
+
     bool generateStringLengthStub()
     {
         JS_ASSERT(pic.hasTypeCheck());
@@ -947,16 +1041,20 @@ ic::CallProp(VMFrame &f, uint32 index)
         }
     }
 
-    JSObject *obj = lval.isObject() ? &objv.asObject() : NULL;
-    GetPropCompiler cc(f, script, obj, pic, origAtom, CallPropSlow);
+    GetPropCompiler cc(f, script, &objv.asObject(), pic, origAtom, CallPropSlow);
     if (usePIC) {
-        if (obj) {
+        if (lval.isObject()) {
             if (!cc.update()) {
                 cc.disable("error");
                 THROW();
             }
+        } else if (lval.isString()) {
+            if (!cc.generateStringCallStub()) {
+                cc.disable("error");
+                THROW();
+            }
         } else {
-            cc.disable("primitive");
+            cc.disable("non-string primitive");
         }
     } else {
         cc.disable("wrapped primitive");
