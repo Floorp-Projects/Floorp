@@ -62,7 +62,11 @@ struct PICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
     // Operation this is a PIC for.
-    enum Kind {
+    enum Kind
+#ifdef _MSC_VER
+    : uint8_t
+#endif
+    {
         GET,
         CALL,
         SET
