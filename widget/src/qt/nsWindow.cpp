@@ -100,6 +100,7 @@
 #include "nsIDOMSimpleGestureEvent.h" //Gesture support
 
 #include <QtOpenGL/QGLWidget>
+#define GLdouble_defined 1
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 
