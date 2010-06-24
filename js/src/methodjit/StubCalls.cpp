@@ -103,23 +103,6 @@ mjit::stubs::BindGlobalName(VMFrame &f)
 }
 
 void JS_FASTCALL
-mjit::stubs::DebugHook(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp;
-
-    void *hookData = fp->hookData;
-    JS_ASSERT(hookData);
-
-    JSBool interpReturnOK = JS_TRUE;
-    if (JSInterpreterHook hook = cx->debugHooks->callHook)
-        hook(cx, fp, JS_FALSE, &interpReturnOK, hookData);
-
-    if (!interpReturnOK)
-        THROW();
-}
-
-void JS_FASTCALL
 mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
