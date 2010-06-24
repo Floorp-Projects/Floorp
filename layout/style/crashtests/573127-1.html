@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var mspace = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mspace");
+  var emptyset = document.createElementNS("http://www.w3.org/1998/Math/MathML", "emptyset");
+  emptyset.setAttributeNS(null, "mathvariant", "3");
+  mspace.appendChild(emptyset);
+  document.body.appendChild(mspace);
+  emptyset.removeAttribute('mathvariant');
+}
+
+</script>
+</head>
+
+<body onload="boom()"></body>
+</html>

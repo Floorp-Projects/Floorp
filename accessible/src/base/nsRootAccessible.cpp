@@ -76,6 +76,7 @@
 #include "nsRootAccessible.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/Element.h"
 
@@ -483,6 +484,9 @@ nsRootAccessible::FireCurrentFocusEvent()
         }
 
         // Otherwise simulate the focus event for currently focused node.
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+        nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(focusedNode));
+        privateEvent->SetTarget(target);
         HandleEventWithTarget(event, targetNode);
       }
     }

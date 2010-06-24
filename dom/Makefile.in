@@ -80,6 +80,7 @@ DIRS += \
   src \
   locales \
   plugins \
+  indexedDB \
   $(NULL)
 
 ifdef MOZ_IPC

@@ -423,9 +423,8 @@ ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSR
     i++;
   }
   // Get current caret position.
-  // Caret is indicator of insertion point, so mEndOffset = 0.
   aRanges[i].mStartOffset = selRange.location + selRange.length;                         
-  aRanges[i].mEndOffset = 0;                         
+  aRanges[i].mEndOffset = aRanges[i].mStartOffset;                         
   aRanges[i].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

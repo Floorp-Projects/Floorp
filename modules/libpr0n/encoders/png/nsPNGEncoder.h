@@ -37,6 +37,10 @@
 
 #include "imgIEncoder.h"
 
+#include "mozilla/Monitor.h"
+
+#include "nsCOMPtr.h"
+
 #include <png.h>
 
 #define NS_PNGENCODER_CID \
@@ -52,10 +56,12 @@
 
 class nsPNGEncoder : public imgIEncoder
 {
+  typedef mozilla::Monitor Monitor;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIENCODER
   NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSIASYNCINPUTSTREAM
 
   nsPNGEncoder();
 
@@ -79,11 +85,13 @@ protected:
                   PRUint32 aPixelWidth);
   static void ErrorCallback(png_structp png_ptr, png_const_charp warning_msg);
   static void WriteCallback(png_structp png, png_bytep data, png_size_t size);
+  void NotifyListener();
 
   png_struct* mPNG;
   png_info* mPNGinfo;
 
-  PRBool mIsAnimation;
+  PRPackedBool mIsAnimation;
+  PRPackedBool mFinished;
 
   // image buffer
   PRUint8* mImageBuffer;
@@ -91,4 +99,16 @@ protected:
   PRUint32 mImageBufferUsed;
 
   PRUint32 mImageBufferReadPoint;
+
+  nsCOMPtr<nsIInputStreamCallback> mCallback;
+  nsCOMPtr<nsIEventTarget> mCallbackTarget;
+  PRUint32 mNotifyThreshold;
+
+  /*
+    nsPNGEncoder is designed to allow one thread to pump data into it while another
+    reads from it.  We lock to ensure that the buffer remains append-only while
+    we read from it (that it is not realloced) and to ensure that only one thread
+    dispatches a callback for each call to AsyncWait.
+   */
+  Monitor mMonitor;
 };

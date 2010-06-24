@@ -2305,6 +2305,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
 
   PRBool nonTimeBasedItems = PR_FALSE;
   PRBool domainBasedItems = PR_FALSE;
+  PRBool queryContainsTransitions = PR_FALSE;
 
   for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
@@ -2314,6 +2315,10 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
         query->Tags().Length() > 0) {
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
     }
+
+    if (query->Transitions().Length() > 0)
+      queryContainsTransitions = PR_TRUE;
+
     // Note: we don't currently have any complex non-bookmarked items, but these
     // are expected to be added. Put detection of these items here.
     if (! query->SearchTerms().IsEmpty() ||
@@ -2328,6 +2333,9 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   if (aOptions->ResultType() ==
       nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
     return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+
+  if (queryContainsTransitions)
+    return QUERYUPDATE_COMPLEX;
 
   // Whenever there is a maximum number of results, 
   // and we are not a bookmark query we must requery. This
@@ -2859,9 +2867,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
   PRUint32 added = 0;
-  if (!hidden && aTransitionType != TRANSITION_EMBED &&
-                 aTransitionType != TRANSITION_FRAMED_LINK &&
-                 aTransitionType != TRANSITION_DOWNLOAD) {
+  if (!hidden) {
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                      nsINavHistoryObserver,
                      OnVisit(aURI, *aVisitID, aTime, aSessionID,
@@ -3062,6 +3068,9 @@ PRBool IsOptimizableHistoryQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     return PR_FALSE;
 
   if (aQuery->Tags().Length() > 0)
+    return PR_FALSE;
+
+  if (aQuery->Transitions().Length() > 0)
     return PR_FALSE;
 
   return PR_TRUE;
@@ -6340,6 +6349,26 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     clause.Str(")");
   }
 
+  // transitions
+  const nsTArray<PRUint32>& transitions = aQuery->Transitions();
+  // Optimize single transition query, since this is the most common use case.
+  if (transitions.Length() == 1) {
+    clause.Condition("v.visit_type =").Param(":transition0_");
+  }
+  else if (transitions.Length() > 1) {
+    for (PRUint32 i = 0; i < transitions.Length(); ++i) {
+      nsPrintfCString param(":transition%d_", i);
+      clause.Str("EXISTS (SELECT 1 FROM moz_historyvisits "
+                         "WHERE place_id = h.id AND visit_type = "
+                ).Param(param.get()).Str(" UNION ALL "
+                         "SELECT 1 FROM moz_historyvisits_temp "
+                         "WHERE place_id = h.id AND visit_type = "
+                ).Param(param.get()).Str(" LIMIT 1)");
+      if (i < transitions.Length() - 1)
+        clause.Str("AND");
+    }
+  }
+
   // parent parameter is used in tag contents queries.
   // Only one folder should be defined for them.
   if (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
@@ -6481,6 +6510,16 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
       rv = statement->BindInt32ByName(
         NS_LITERAL_CSTRING("tag_count") + qIndex, tags.Length()
       );
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // transitions
+  const nsTArray<PRUint32>& transitions = aQuery->Transitions();
+  if (transitions.Length() > 0) {
+    for (PRUint32 i = 0; i < transitions.Length(); ++i) {
+      nsPrintfCString paramName("transition%d_", i);
+      rv = statement->BindInt64ByName(paramName + qIndex, transitions[i]);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

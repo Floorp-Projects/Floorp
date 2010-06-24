@@ -118,6 +118,7 @@
   #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
@@ -735,6 +736,37 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
   }
 }
 
+static inline Element*
+ElementForStyleContext(nsIContent* aParentContent,
+                       nsIFrame* aFrame,
+                       nsCSSPseudoElements::Type aPseudoType)
+{
+  // We don't expect XUL tree stuff here.
+  NS_PRECONDITION(aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+                  aPseudoType == nsCSSPseudoElements::ePseudo_AnonBox ||
+                  aPseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount,
+                  "Unexpected pseudo");
+  // XXX see the comments about the various element confusion in
+  // ReResolveStyleContext.
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    return aFrame->GetContent()->AsElement();
+  }
+
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
+    return nsnull;
+  }
+
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_firstLetter) {
+    NS_ASSERTION(aFrame->GetType() == nsGkAtoms::letterFrame,
+                 "firstLetter pseudoTag without a nsFirstLetterFrame");
+    nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
+    return block->GetContent()->AsElement();
+  }
+
+  nsIContent* content = aParentContent ? aParentContent : aFrame->GetContent();
+  return content->AsElement();
+}
+
 nsresult
 nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
 {
@@ -813,8 +845,14 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
       // continuation).
       newContext = prevContinuationContext;
     } else {
+      nsIFrame* parentFrame = aFrame->GetParent();
+      Element* element =
+        ElementForStyleContext(parentFrame ? parentFrame->GetContent() : nsnull,
+                               aFrame,
+                               oldContext->GetPseudoType());
       newContext = mStyleSet->ReparentStyleContext(oldContext,
-                                                   newParentContext);
+                                                   newParentContext,
+                                                   element);
     }
 
     if (newContext) {
@@ -897,7 +935,8 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
           if (oldExtraContext) {
             nsRefPtr<nsStyleContext> newExtraContext;
             newExtraContext = mStyleSet->ReparentStyleContext(oldExtraContext,
-                                                              newContext);
+                                                              newContext,
+                                                              nsnull);
             if (newExtraContext) {
               if (newExtraContext != oldExtraContext) {
                 // Make sure to call CalcStyleDifference so that the new
@@ -1119,59 +1158,56 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // continuation).
       newContext = prevContinuationContext;
     }
-    else if (!aRestyleHint) {
-      newContext = styleSet->ReparentStyleContext(oldContext, parentContext);
-    }
     else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
       newContext = styleSet->ResolveStyleForNonElement(parentContext);
     }
-    else if (pseudoTag) {
-      // XXXldb This choice of pseudoContent seems incorrect for anon
-      // boxes and perhaps other cases.
-      // See also the comment above the assertion at the start of this
-      // function.
-      nsIContent* pseudoContent =
-          aParentContent ? aParentContent : localContent;
-      if (pseudoTag == nsCSSPseudoElements::before ||
-          pseudoTag == nsCSSPseudoElements::after) {
-        // XXX what other pseudos do we need to treat like this?
-        newContext = styleSet->ProbePseudoElementStyle(pseudoContent->AsElement(),
-                                                       pseudoType,
-                                                       parentContext);
-        if (!newContext) {
-          // This pseudo should no longer exist; gotta reframe
-          NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
-          aChangeList->AppendChange(aFrame, pseudoContent,
-                                    nsChangeHint_ReconstructFrame);
-          // We're reframing anyway; just keep the same context
-          newContext = oldContext;
-        }
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
-        newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
-                                                        parentContext);
-      } else {
-        // Don't expect XUL tree stuff here, since it needs a comparator and
-        // all.
-        NS_ASSERTION(pseudoType <
-                       nsCSSPseudoElements::ePseudo_PseudoElementCount,
-                     "Unexpected pseudo type");
-        if (pseudoTag == nsCSSPseudoElements::firstLetter) {
-          NS_ASSERTION(aFrame->GetType() == nsGkAtoms::letterFrame,
-                       "firstLetter pseudoTag without a nsFirstLetterFrame");
-          nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
-          pseudoContent = block->GetContent();
-        }
-        newContext = styleSet->ResolvePseudoElementStyle(pseudoContent->AsElement(),
-                                                         pseudoType,
-                                                         parentContext);
-      }
+    else if (!aRestyleHint) {
+      newContext =
+        styleSet->ReparentStyleContext(oldContext, parentContext,
+                                       ElementForStyleContext(aParentContent,
+                                                              aFrame,
+                                                              pseudoType));
+    } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
+      newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
+                                                      parentContext);
     }
     else {
-      NS_ASSERTION(localContent,
-                   "non pseudo-element frame without content node");
-      newContext = styleSet->ResolveStyleFor(content->AsElement(), parentContext);
+      Element* element = ElementForStyleContext(aParentContent,
+                                                aFrame,
+                                                pseudoType);
+      if (pseudoTag) {
+        if (pseudoTag == nsCSSPseudoElements::before ||
+            pseudoTag == nsCSSPseudoElements::after) {
+          // XXX what other pseudos do we need to treat like this?
+          newContext = styleSet->ProbePseudoElementStyle(element,
+                                                         pseudoType,
+                                                         parentContext);
+          if (!newContext) {
+            // This pseudo should no longer exist; gotta reframe
+            NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
+            aChangeList->AppendChange(aFrame, element,
+                                      nsChangeHint_ReconstructFrame);
+            // We're reframing anyway; just keep the same context
+            newContext = oldContext;
+          }
+        } else {
+          // Don't expect XUL tree stuff here, since it needs a comparator and
+          // all.
+          NS_ASSERTION(pseudoType <
+                         nsCSSPseudoElements::ePseudo_PseudoElementCount,
+                       "Unexpected pseudo type");
+          newContext = styleSet->ResolvePseudoElementStyle(element,
+                                                           pseudoType,
+                                                           parentContext);
+        }
+      }
+      else {
+        NS_ASSERTION(localContent,
+                     "non pseudo-element frame without content node");
+        newContext = styleSet->ResolveStyleFor(element, parentContext);
+      }
     }
 
     NS_ASSERTION(newContext, "failed to get new style context");
@@ -1293,7 +1329,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       newContext);
         } else {
           undisplayedContext =
-            styleSet->ReparentStyleContext(undisplayed->mStyle, newContext);
+            styleSet->ReparentStyleContext(undisplayed->mStyle, newContext,
+                                           undisplayed->mContent->AsElement());
         }
         if (undisplayedContext) {
           const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();

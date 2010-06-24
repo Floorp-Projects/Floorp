@@ -112,8 +112,8 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
-  void SetRoot(Layer* aLayer);
-  
+  virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
+
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
 
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
@@ -284,9 +284,6 @@ private:
 
   static ProgramType sLayerProgramTypes[];
 
-  /** Current root layer. */
-  LayerOGL *mRootLayer;
-
   /** Backbuffer */
   GLuint mBackBufferFBO;
   GLuint mBackBufferTexture;
@@ -308,6 +305,9 @@ private:
 
   /** Misc */
   PRPackedBool mHasBGRA;
+
+  /** Current root layer. */
+  LayerOGL *RootLayer() const;
 
   /**
    * Render the current layer tree to the active target.

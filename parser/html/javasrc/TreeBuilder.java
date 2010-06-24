@@ -266,8 +266,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     // end pseudo enums
 
-    private final static char[] ISINDEX_PROMPT = Portability.isIndexPrompt();
-
     // [NOCPP[
 
     private final static String[] HTML4_PUBLIC_IDS = {
@@ -2055,10 +2053,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                             prompt, 0, prompt.length);
                                     Portability.releaseArray(prompt);
                                 } else {
-                                    // XXX localization
-                                    appendCharacters(stack[currentPtr].node,
-                                            TreeBuilder.ISINDEX_PROMPT, 0,
-                                            TreeBuilder.ISINDEX_PROMPT.length);
+                                    appendIsindexPrompt(stack[currentPtr].node);
                                 }
                                 HtmlAttributes inputAttributes = new HtmlAttributes(
                                         0);
@@ -2089,7 +2084,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 appendVoidElementToCurrentMayFoster(
                                         "http://www.w3.org/1999/xhtml",
                                         "input", inputAttributes, formPointer);
-                                // XXX localization
                                 pop(); // label
                                 appendVoidElementToCurrentMayFoster(
                                         "http://www.w3.org/1999/xhtml",
@@ -5149,6 +5143,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     protected abstract void appendCharacters(T parent, @NoLength char[] buf,
             int start, int length) throws SAXException;
 
+    protected abstract void appendIsindexPrompt(T parent) throws SAXException;
+    
     protected abstract void appendComment(T parent, @NoLength char[] buf,
             int start, int length) throws SAXException;
 

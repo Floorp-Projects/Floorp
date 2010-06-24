@@ -4906,11 +4906,18 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #endif
 #ifdef MOZ_IPC
       if (msg == sOOPPPluginFocusEvent) {
-        // With OOPP, the plugin window exists in another process and is a child of
-        // this window. This window is a placeholder plugin window for the dom. We
-        // receive this event when the child window receives focus. (sent from
-        // PluginInstanceParent.cpp)
-        ::SendMessage(mWnd, WM_MOUSEACTIVATE, 0, 0); // See nsPluginNativeWindowWin.cpp
+        if (wParam == 1) {
+          // With OOPP, the plugin window exists in another process and is a child of
+          // this window. This window is a placeholder plugin window for the dom. We
+          // receive this event when the child window receives focus. (sent from
+          // PluginInstanceParent.cpp)
+          ::SendMessage(mWnd, WM_MOUSEACTIVATE, 0, 0); // See nsPluginNativeWindowWin.cpp
+        } else {
+          // WM_KILLFOCUS was received by the child process.
+          if (sJustGotDeactivate) {
+            DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
+          }
+        }
       }
 #endif
     }

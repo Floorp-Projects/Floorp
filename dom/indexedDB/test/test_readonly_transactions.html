@@ -1,0 +1,189 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const READ_ONLY = Components.interfaces.nsIIDBTransaction.READ_ONLY;
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const osName = "foo";
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
+
+      request = db.createObjectStore(osName, "", true);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      };
+      yield;
+
+      let key1, key2;
+
+      request = db.transaction([osName], READ_WRITE)
+                  .objectStore(osName)
+                  .add({});
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        key1 = event.result;
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.objectStore(osName, READ_WRITE).add({});
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        key2 = event.result;
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.transaction([osName], READ_WRITE)
+                  .objectStore(osName)
+                  .addOrModify({}, key1);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.objectStore(osName, READ_WRITE).addOrModify({}, key2);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.transaction([osName], READ_WRITE)
+                  .objectStore(osName)
+                  .modify({}, key1);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.objectStore(osName, READ_WRITE).modify({}, key1);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.transaction([osName], READ_WRITE)
+                  .objectStore(osName)
+                  .remove(key1);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      }
+      yield;
+
+      request = db.objectStore(osName, READ_WRITE).remove(key2);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        testGenerator.next();
+      }
+      yield;
+
+      try {
+        request = db.transaction([osName]).objectStore(osName).add({});
+        ok(false, "Adding to a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Adding to a readonly transaction failed");
+      }
+
+      try {
+        request = db.objectStore(osName).add({});
+        ok(false, "Adding to a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Adding to a readonly transaction failed");
+      }
+
+      try {
+        request = db.transaction([osName]).objectStore(osName).addOrModify({});
+        ok(false, "Adding or modifying a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Adding or modifying a readonly transaction failed");
+      }
+
+      try {
+        request = db.objectStore(osName).addOrModify({});
+        ok(false, "Adding or modifying a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Adding or modifying a readonly transaction failed");
+      }
+
+      try {
+        request = db.transaction([osName]).objectStore(osName).modify({}, key1);
+        ok(false, "Modifying a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Modifying a readonly transaction failed");
+      }
+
+      try {
+        request = db.objectStore(osName).modify({}, key1);
+        ok(false, "Modifying a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Modifying a readonly transaction failed");
+      }
+
+      try {
+        request = db.transaction([osName]).objectStore(osName).remove(key1);
+        ok(false, "Removing from a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Removing from a readonly transaction failed");
+      }
+
+      try {
+        request = db.objectStore(osName).remove(key2);
+        ok(false, "Removing from a readonly transaction should fail!");
+      }
+      catch (e) {
+        ok(true, "Removing from a readonly transaction failed");
+      }
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
