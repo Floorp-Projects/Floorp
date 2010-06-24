@@ -51,6 +51,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIDialogParamBlock.h"
+#include "nsIAuthPromptProvider.h"
 
 class nsIURI;
 class nsIDOMElement;
@@ -86,7 +87,10 @@ bool operator==(const TabParentListenerInfo& lhs, const TabParentListenerInfo& r
 
 class ContentDialogParent : public PContentDialogParent {};
 
-class TabParent : public PIFrameEmbeddingParent, public nsITabParent, public nsIWebProgress
+class TabParent : public PIFrameEmbeddingParent 
+                , public nsITabParent 
+                , public nsIWebProgress
+                , public nsIAuthPromptProvider
 {
 public:
     TabParent();
@@ -182,6 +186,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESS
+    NS_DECL_NSIAUTHPROMPTPROVIDER
 
     void HandleDelayedDialogs();
 protected:
