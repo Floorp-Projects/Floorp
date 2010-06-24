@@ -426,6 +426,7 @@ function Content() {
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:MouseCancel", this);
   addMessageListener("Browser:SaveAs", this);
+  addMessageListener("Browser:ZoomToPoint", this);
 
   this._coalescer = new Coalescer();
   addEventListener("MozAfterPaint", this._coalescer, false);
@@ -460,7 +461,7 @@ Content.prototype = {
         if (this._overlayTimeout)
           return;
 
-        this._overlayTimeout = content.document.defaultView.setTimeout(function() {
+        this._overlayTimeout = content.setTimeout(function() {
           let element = elementFromPoint(x, y);
           if (!element || !element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label"))
             return;
@@ -470,16 +471,17 @@ Content.prototype = {
         }, kTapOverlayTimeout);
         break;
 
-      case "Browser:MouseUp":
+      case "Browser:MouseUp": {
         let element = elementFromPoint(x, y);
         if (!this._formAssistant.open(element)) {
           this._sendMouseEvent("mousedown", element, x, y);
           this._sendMouseEvent("mouseup", element, x, y);
         }
+      }
 
       case "Browser:MouseCancel":
         if (this._overlayTimeout) {
-          content.document.defaultView.clearTimeout(this._overlayTimeout);
+          content.clearTimeout(this._overlayTimeout);
           this._overlayTimeout = 0;
         }
         break;
@@ -525,6 +527,15 @@ Content.prototype = {
         let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
         webBrowserPrint.print(printSettings, listener);
         break;
+
+      case "Browser:ZoomToPoint": {
+        let rect = null;
+        let element = elementFromPoint(x, y);
+        if (element)
+          rect = getBoundingContentRect(element);
+        sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
+        break;
+      }
     }
   },
 

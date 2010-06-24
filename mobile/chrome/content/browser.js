@@ -568,6 +568,7 @@ var Browser = {
     ImagePreloader.cache();
 
     messageManager.addMessageListener("Browser:ViewportMetadata", this);
+    messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     // broadcast a UIReady message so add-ons know we are finished with startup
@@ -1074,13 +1075,34 @@ var Browser = {
     this.setVisibleRect(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
   },
 
-  /** Rect should be in viewport coordinates. */
-  _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
+  /**
+   * Find an appropriate zoom rect for an element bounding rect, if it exists.
+   * @return Rect in viewport coordinates
+   * */
+  _getZoomRectForRect: function _getZoomRectForRect(rect, y) {
     const margin = 15;
-    
+
+    if (!rect)
+      return null;
+
     let bv = this._browserView;
+    let oldZoomLevel = bv.getZoomLevel();
+
+    let elRect = bv.browserToViewportRect(rect);
     let vis = bv.getVisibleRect();
-    return bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (rect.width + margin * 2));
+    let zoomLevel = bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
+
+    let zoomRatio = oldZoomLevel / zoomLevel;
+
+    // Don't zoom in a marginal amount, but be more lenient for the first zoom.
+    // > 2/3 means operation increases the zoom level by less than 1.5
+    // > 9/10 means operation increases the zoom level by less than 1.1
+    let zoomTolerance = (bv.isDefaultZoom()) ? .9 : .6666;
+    if (zoomRatio >= zoomTolerance) {
+      return null;
+    } else {
+      return this._getZoomRectForPoint(rect.center().x, y, zoomLevel);
+    }
   },
 
   /**
@@ -1140,27 +1162,23 @@ var Browser = {
     bv.commitOffscreenOperation();
   },
 
-  zoomToPoint: function zoomToPoint(cX, cY) {
-    let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
-    let zoomRect = null;
+  zoomToPoint: function zoomToPoint(cX, cY, rect) {
+    let [x, y] = this.transformClientToBrowser(cX, cY);
     let bv = this._browserView;
-    if (bv.isDefaultZoom())
-      zoomRect = this._getZoomRectForPoint(elementX, elementY, bv.getZoomLevel() * 2);
+
+    let zoomRect = null;
+    if (bv.isDefaultZoom()) {
+      zoomRect = this._getZoomRectForRect(rect, y);
+      if (!zoomRect)
+        zoomRect = this._getZoomRectForPoint(x, y, bv.getZoomLevel() * 2);
+    } else {
+      zoomRect = this._getZoomRectForPoint(x, y, bv.getDefaultZoomLevel());
+    }
 
     if (zoomRect)
       this.setVisibleRect(zoomRect);
 
     return zoomRect;
-  },
-
-  zoomFromPoint: function zoomFromPoint(cX, cY) {
-    let bv = this._browserView;
-    if (!bv.isDefaultZoom()) {
-      let zoomLevel = bv.getDefaultZoomLevel();
-      let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
-      let zoomRect = this._getZoomRectForPoint(elementX, elementY, zoomLevel);
-      this.setVisibleRect(zoomRect);
-    }
   },
 
   /**
@@ -1240,10 +1258,16 @@ var Browser = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
+    let json = aMessage.json;
     switch (aMessage.name) {
       case "Browser:ViewportMetadata":
         let tab = Browser.getTabForBrowser(aMessage.target);
-        tab.updateViewportMetadata(aMessage.json);
+        tab.updateViewportMetadata(json);
+        break;
+
+      case "Browser:ZoomToPoint:Return":
+        // JSON-ified rect needs to be recreated so the methods exist
+        Browser.zoomToPoint(json.x, json.y, Rect.fromRect(json.rect));
         break;
     }
   }
@@ -1555,8 +1579,8 @@ ContentCustomClicker.prototype = {
 
     let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
     let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
-    if (isClickInRadius && !Browser.zoomToPoint(aX1, aY1))
-      Browser.zoomFromPoint(aX1, aY1);
+    if (isClickInRadius)
+      browser.messageManager.sendAsyncMessage("Browser:ZoomToPoint", { x: aX1, y: aY1 });
   },
 
   toString: function toString() {
