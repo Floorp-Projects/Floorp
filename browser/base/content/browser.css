@@ -22,6 +22,7 @@ tabbrowser {
 
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+  -moz-box-flex: 100;
 }
 
 .tabbrowser-tab:not([fadein]) {
@@ -29,7 +30,7 @@ tabbrowser {
   min-width: 1px !important;
 }
 
-.tabbrowser-tab[fadein] {
+.tabbrowser-tab[fadein]:not([pinned]) {
   -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
 }
 
@@ -43,6 +44,17 @@ tabbrowser {
 .tabbrowser-tab[fadein] > .tab-icon-image,
 .tabbrowser-tab[fadein] > .tab-close-button {
   -moz-transition: opacity .25s;
+}
+
+.tabbrowser-tab[pinned] {
+  position: fixed;
+  -moz-box-flex: 0;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.tabbrowser-tab[pinned] > .tab-text {
+  display: none;
 }
 
 #alltabs-popup {
@@ -186,6 +198,13 @@ richlistitem[type="action"]:-moz-locale-dir(rtl) > .ac-url-box {
 toolbarbutton.bookmark-item {
   max-width: 13em;
 }
+
+%ifdef MENUBAR_CAN_AUTOHIDE
+#toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
+#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button {
+  display: none;
+}
+%endif
 
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */

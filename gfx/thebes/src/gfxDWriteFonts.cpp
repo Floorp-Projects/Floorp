@@ -206,7 +206,7 @@ gfxDWriteFont::ComputeMetrics()
                        fontMetrics.designUnitsPerEm) * mAdjustedSize;
     }
     ucs = L'0';
-    if (FAILED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
+    if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
         SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {
         mMetrics.zeroOrAveCharWidth = 
             ((gfxFloat)metrics.advanceWidth /
@@ -231,7 +231,7 @@ gfxDWriteFont::ComputeMetrics()
 
     mFUnitsConvFactor = GetAdjustedSize() / fontMetrics.designUnitsPerEm;
 
-    SanitizeMetrics(&mMetrics, PR_FALSE);
+    SanitizeMetrics(&mMetrics, GetFontEntry()->mIsBadUnderlineFont);
 
 #if 0
     printf("Font: %p (%s) size: %f\n", this,
