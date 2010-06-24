@@ -47,6 +47,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIBadCertListener2.h"
+#include "nsICacheEntryDescriptor.h"
 
 namespace mozilla {
 namespace net {
@@ -181,6 +182,22 @@ HttpChannelParent::RecvSetPriority(const PRUint16& priority)
   return true;
 }
 
+bool
+HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
+{
+  if (mCacheDescriptor)
+    mCacheDescriptor->SetMetaDataElement("charset",
+                                         PromiseFlatCString(charset).get());
+  return true;
+}
+
+bool
+HttpChannelParent::RecvOnStopRequestCompleted()
+{
+  mCacheDescriptor = nsnull;
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------
@@ -193,11 +210,24 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsHttpChannel *chan = static_cast<nsHttpChannel *>(aRequest);
   nsHttpResponseHead *responseHead = chan->GetResponseHead();
 
-  if (mIPCClosed || !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
-                                        !!responseHead)) {
+  PRBool isFromCache = false;
+  chan->IsFromCache(&isFromCache);
+  PRUint32 expirationTime;
+  chan->GetCacheTokenExpirationTime(&expirationTime);
+  nsCString cachedCharset;
+  chan->GetCacheTokenCachedCharset(cachedCharset);
+
+  // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
+  // It could be already released by nsHttpChannel at that time.
+  chan->GetCacheToken(getter_AddRefs(mCacheDescriptor));
+
+  if (mIPCClosed || 
+      !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
+                          !!responseHead, isFromCache,
+                          mCacheDescriptor ? PR_TRUE : PR_FALSE,
+                          expirationTime, cachedCharset)) {
     return NS_ERROR_UNEXPECTED; 
   }
-
   return NS_OK;
 }
 
