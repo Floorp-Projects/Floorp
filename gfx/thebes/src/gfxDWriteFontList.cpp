@@ -136,6 +136,9 @@ gfxDWriteFontFamily::FindStyleVariations()
         NS_WARNING("Family with no font faces in it.");
     }
 
+    if (mIsBadUnderlineFamily) {
+        SetBadUnderlineFonts();
+    }
 }
 
 void
@@ -531,9 +534,11 @@ gfxDWriteFontList::InitFontList()
 
         if (!mFontFamilies.GetWeak(name)) {
             nsRefPtr<gfxFontFamily> fam = 
-                new gfxDWriteFontFamily(
-                    nsDependentString(famName.Elements()),
-                    family);
+                new gfxDWriteFontFamily(nsDependentString(famName.Elements()),
+                                        family);
+            if (mBadUnderlineFamilyNames.Contains(name)) {
+                fam->SetBadUnderlineFamily();
+            }
             mFontFamilies.Put(name, fam);
         }
     }
