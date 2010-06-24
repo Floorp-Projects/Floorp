@@ -186,48 +186,48 @@ class MochiRemote(Mochitest):
         self._dm.removeDir(self.remoteProfile)
 
     def findPath(self, paths, filename = None):
-      for path in paths:
-        p = path
-        if filename:
-          p = os.path.join(p, filename)
-        if os.path.exists(self.getFullPath(p)):
-          return path
-      return None
+        for path in paths:
+            p = path
+            if filename:
+                p = os.path.join(p, filename)
+            if os.path.exists(self.getFullPath(p)):
+                return path
+        return None
 
     def startWebServer(self, options):
-      """ Create the webserver on the host and start it up """
-      remoteXrePath = options.xrePath
-      remoteProfilePath = options.profilePath
-      remoteUtilityPath = options.utilityPath
-      localAutomation = Automation()
+        """ Create the webserver on the host and start it up """
+        remoteXrePath = options.xrePath
+        remoteProfilePath = options.profilePath
+        remoteUtilityPath = options.utilityPath
+        localAutomation = Automation()
 
-      paths = [options.xrePath, localAutomation.DIST_BIN, self._automation._product, os.path.join('..', self._automation._product)]
-      options.xrePath = self.findPath(paths)
-      if options.xrePath == None:
-        print "ERROR: unable to find xulrunner path for %s, please specify with --xre-path" % (os.name)
-        sys.exit(1)
-      paths.append("bin")
-      paths.append(os.path.join("..", "bin"))
+        paths = [options.xrePath, localAutomation.DIST_BIN, self._automation._product, os.path.join('..', self._automation._product)]
+        options.xrePath = self.findPath(paths)
+        if options.xrePath == None:
+            print "ERROR: unable to find xulrunner path for %s, please specify with --xre-path" % (os.name)
+            sys.exit(1)
+        paths.append("bin")
+        paths.append(os.path.join("..", "bin"))
 
-      xpcshell = "xpcshell"
-      if (os.name == "nt"):
-        xpcshell += ".exe"
+        xpcshell = "xpcshell"
+        if (os.name == "nt"):
+            xpcshell += ".exe"
       
-      if (options.utilityPath):
-        paths.insert(0, options.utilityPath)
-      options.utilityPath = self.findPath(paths, xpcshell)
-      if options.utilityPath == None:
-        print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
-        sys.exit(1)
+        if (options.utilityPath):
+            paths.insert(0, options.utilityPath)
+        options.utilityPath = self.findPath(paths, xpcshell)
+        if options.utilityPath == None:
+            print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
+            sys.exit(1)
 
-      options.profilePath = tempfile.mkdtemp()
-      self.server = MochitestServer(localAutomation, options)
-      self.server.start()
+        options.profilePath = tempfile.mkdtemp()
+        self.server = MochitestServer(localAutomation, options)
+        self.server.start()
 
-      self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
-      options.xrePath = remoteXrePath
-      options.utilityPath = remoteUtilityPath
-      options.profilePath = remoteProfilePath
+        self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
+        options.xrePath = remoteXrePath
+        options.utilityPath = remoteUtilityPath
+        options.profilePath = remoteProfilePath
          
     def stopWebServer(self, options):
         self.server.stop()
@@ -282,27 +282,27 @@ class MochiRemote(Mochitest):
 # utilities to get the local ip address
 #
 if os.name != "nt":
-  import fcntl
-  import struct
-  def get_interface_ip(ifname):
-      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-      return socket.inet_ntoa(fcntl.ioctl(
-                      s.fileno(),
-                      0x8915,  # SIOCGIFADDR
-                      struct.pack('256s', ifname[:15])
-                      )[20:24])
+    import fcntl
+    import struct
+    def get_interface_ip(ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+                                s.fileno(),
+                                0x8915,  # SIOCGIFADDR
+                                struct.pack('256s', ifname[:15])
+                                )[20:24])
 
 def get_lan_ip():
-  ip = socket.gethostbyname(socket.gethostname())
-  if ip.startswith("127.") and os.name != "nt":
-    interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
-    for ifname in interfaces:
-      try:
-        ip = get_interface_ip(ifname)
-        break;
-      except IOError:
-        pass
-  return ip
+    ip = socket.gethostbyname(socket.gethostname())
+    if ip.startswith("127.") and os.name != "nt":
+        interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                break;
+            except IOError:
+                pass
+    return ip
 
 
 def main():
@@ -316,24 +316,24 @@ def main():
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):
-      print "ERROR: Invalid options specified, use --help for a list of valid options"
-      sys.exit(1)
+        print "ERROR: Invalid options specified, use --help for a list of valid options"
+        sys.exit(1)
 
     productPieces = options.remoteProductName.split('.')
     if (productPieces != None):
-      auto.setProduct(productPieces[0])
+        auto.setProduct(productPieces[0])
     else:
-      auto.setProduct(options.remoteProductName)
+        auto.setProduct(options.remoteProductName)
 
     mochitest = MochiRemote(auto, dm, options)
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
-      sys.exit(1)
+        sys.exit(1)
     
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
     sys.exit(mochitest.runTests(options))
     
 if __name__ == "__main__":
-  main()
+    main()
 
