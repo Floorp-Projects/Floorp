@@ -779,6 +779,30 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 extern JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
 
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+class JSAutoCrossCompartmentCall
+{
+    JSCrossCompartmentCall *call;
+  public:
+    JSAutoCrossCompartmentCall() : call(NULL) {}
+
+    bool enter(JSContext *cx, JSObject *target) {
+        JS_ASSERT(!call);
+        call = JS_EnterCrossCompartmentCall(cx, target);
+        return call != NULL;
+    }
+
+    ~JSAutoCrossCompartmentCall() {
+        if (call)
+            JS_LeaveCrossCompartmentCall(call);
+    }
+};
+
+JS_BEGIN_EXTERN_C
+#endif
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx);
 
