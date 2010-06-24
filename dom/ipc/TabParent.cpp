@@ -1,5 +1,5 @@
 /* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8; -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -65,6 +65,8 @@
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIDialogCreator.h"
 #include "nsThreadUtils.h"
+#include "nsIPromptFactory.h"
+#include "nsIContent.h"
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
@@ -78,7 +80,7 @@ using mozilla::dom::ContentProcessParent;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS2(TabParent, nsITabParent, nsIWebProgress)
+NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIWebProgress, nsIAuthPromptProvider)
 
 TabParent::TabParent()
 {
@@ -614,6 +616,33 @@ NS_IMETHODIMP
 TabParent::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIAuthPromptProvider
+
+// This method is largely copied from nsDocShell::GetAuthPrompt
+NS_IMETHODIMP
+TabParent::GetAuthPrompt(PRUint32 aPromptReason, const nsIID& iid,
+                          void** aResult)
+{
+  // a priority prompt request will override a false mAllowAuth setting
+  PRBool priorityPrompt = (aPromptReason == PROMPT_PROXY);
+
+  // we're either allowing auth, or it's a proxy request
+  nsresult rv;
+  nsCOMPtr<nsIPromptFactory> wwatch =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMWindow> window;
+  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
+  if (frame)
+    window = do_QueryInterface(frame->GetOwnerDoc()->GetWindow());
+
+  // Get an auth prompter for our window so that the parenting
+  // of the dialogs works as it should when using tabs.
+  return wwatch->GetPrompt(window, iid,
+                           reinterpret_cast<void**>(aResult));
 }
 
 PContentDialogParent*
