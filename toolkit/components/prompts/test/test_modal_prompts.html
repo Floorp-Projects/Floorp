@@ -637,6 +637,24 @@ function handleDialog(doc, testNum) {
         clickOK = false;
         break;
 
+      case 29:
+        // Alert, null window
+        state = {
+            msg   : "This is the alert text.",
+            title : "TestTitle",
+            iconClass   : "alert-icon",
+            textHidden  : true,
+            passHidden  : true,
+            checkHidden : true,
+            textValue   : "",
+            passValue   : "",
+            checkMsg    : "",
+            checked     : false,
+        };
+        checkExpectedState(doc, state);
+        break;
+
+
       case 100:
         // PromptAuth (no realm, ok, with checkbox)
         state = {
@@ -1021,6 +1039,13 @@ clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx t
                                    "butt0", "butt1", "butt2", "Check me out!", checkVal);
 is(clickedButton, 2, "checked expected button num click");
 is(checkVal.value, true, "expected checkbox setting");
+ok(didDialog, "handleDialog was invoked");
+
+// ===== test 29  =====
+// Alert, no window
+testNum++;
+startCallbackTimer();
+prompter.alert(null, "TestTitle", "This is the alert text.");
 ok(didDialog, "handleDialog was invoked");
 
 
