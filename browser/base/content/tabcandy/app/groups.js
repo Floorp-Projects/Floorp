@@ -1035,9 +1035,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       Groups.setActiveGroup(self);
       return { shouldZoom: true };      
     }*/
-    
-    Utils.log("SHOULD EXPAND?", child)    
-    
+        
     Groups.setActiveGroup(self);
     return { shouldZoom: true };    
     

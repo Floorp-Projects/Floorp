@@ -144,10 +144,12 @@ window.Rect.prototype = {
 		this.height = value - this.top;
   },
 
+  // ----------
   get xRange() {
 		return new Range(this.left,this.right);
   },
   
+  // ----------
   get yRange() {
 		return new Range(this.top,this.bottom);
   },
@@ -158,6 +160,17 @@ window.Rect.prototype = {
         && rect.left < this.right
         && rect.bottom > this.top
         && rect.top < this.bottom);      
+  },
+  
+  // ----------
+  intersection: function(rect) {
+    var box = new Rect(Math.max(rect.left, this.left), Math.max(rect.top, this.top), 0, 0);
+    box.right = Math.min(rect.right, this.right);
+    box.bottom = Math.min(rect.bottom, this.bottom);
+    if(box.width > 0 && box.height > 0)
+      return box;
+      
+    return null;
   },
   
   // ----------
@@ -193,6 +206,7 @@ window.Rect.prototype = {
     return new Point(this.left + (this.width / 2), this.top + (this.height / 2));
   },
   
+  // ----------
   size: function() {
     return new Point(this.width, this.height);
   },
@@ -200,6 +214,11 @@ window.Rect.prototype = {
   // ----------
   position: function() {
     return new Point(this.left, this.top);
+  },
+  
+  // ----------
+  area: function() {
+    return this.width * this.height;
   },
   
   // ----------
