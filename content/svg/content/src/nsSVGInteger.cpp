@@ -140,7 +140,7 @@ nsresult
 nsSVGInteger::SMILInteger::ValueFromString(const nsAString& aStr,
                                            const nsISMILAnimationElement* /*aSrcElement*/,
                                            nsSMILValue& aValue,
-                                           PRBool& aCanCache) const
+                                           PRBool& aPreventCachingOfSandwich) const
 {
   NS_ConvertUTF16toUTF8 value(aStr);
   const char *str = value.get();
@@ -157,7 +157,7 @@ nsSVGInteger::SMILInteger::ValueFromString(const nsAString& aStr,
   nsSMILValue smilVal(&SMILIntegerType::sSingleton);
   smilVal.mU.mInt = val;
   aValue = smilVal;
-  aCanCache = PR_TRUE;
+  aPreventCachingOfSandwich = PR_FALSE;
   return NS_OK;
 }
 
