@@ -46,6 +46,8 @@
  * httpd.js.
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -400,6 +402,8 @@ function nsHttpServer()
 }
 nsHttpServer.prototype =
 {
+  classID: Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}"),
+
   // NSISERVERSOCKETLISTENER
 
   /**
@@ -5111,42 +5115,7 @@ Request.prototype =
 
 // XPCOM trappings
 
-/**
- * Creates a factory for instances of an object created using the passed-in
- * constructor.
- */
-function makeFactory(ctor)
-{
-  function ci(outer, iid)
-  {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new ctor()).QueryInterface(iid);
-  } 
-
-  return {
-           createInstance: ci,
-           lockFactory: function(lock) { },
-           QueryInterface: function(aIID)
-           {
-             if (Ci.nsIFactory.equals(aIID) ||
-                 Ci.nsISupports.equals(aIID))
-               return this;
-             throw Cr.NS_ERROR_NO_INTERFACE;
-           }
-         };
-}
-
-const kServerCID = Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}");
-const kServerFactory = makeFactory(nsHttpServer);
-
-function NSGetFactory(cid)
-{
-  if (cid.equals(kServerCID))
-    return kServerFactory;
-    
-  throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsHttpServer]);
 
 /**
  * Creates a new HTTP server listening for loopback traffic on the given port,
