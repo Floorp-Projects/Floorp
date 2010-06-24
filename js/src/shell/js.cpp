@@ -2927,18 +2927,6 @@ static JSClass sandbox_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-class AutoCrossCompartmentCall
-{
-  public:
-    AutoCrossCompartmentCall() : call(NULL) {}
-    ~AutoCrossCompartmentCall() {
-        if (call)
-            JS_LeaveCrossCompartmentCall(call);
-    }
-
-    JSCrossCompartmentCall *call;
-};
-
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy, bool split)
 {
@@ -2947,9 +2935,8 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         return NULL;
 
     {
-        AutoCrossCompartmentCall ac;
-        ac.call = JS_EnterCrossCompartmentCall(cx, obj);
-        if (!ac.call)
+        JSAutoCrossCompartmentCall ac;
+        if (!ac.enter(cx, obj))
             return NULL;
 
         if (split) {
@@ -2978,7 +2965,6 @@ static JSBool
 EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
-    bool ok;
     JSString *str;
     JSObject *sobj = NULL;
     if (!JS_ConvertArguments(cx, argc, argv, "S / o", &str, &sobj))
@@ -3010,31 +2996,27 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return true;
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    JSCrossCompartmentCall *call = NULL;
+    JSAutoCrossCompartmentCall ac;
     if (sobj->isCrossCompartmentWrapper()) {
         sobj = sobj->unwrap();
-        call = JS_EnterCrossCompartmentCall(cx, sobj);
-        if (!call)
+        if (!ac.enter(cx, sobj))
             return false;
     }
 
     OBJ_TO_INNER_OBJECT(cx, sobj);
-    ok = !!sobj;
-    if (ok && !(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+    if (!sobj)
+        return false;
+    if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
         JS_ReportError(cx, "Invalid scope argument to evalcx");
-        ok = false;
+        return false;
     }
-    ok = ok && JS_EvaluateUCScript(cx, sobj, src, srclen,
-                                   fp->script->filename,
-                                   JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
-                                   rval);
-
-    if (call) {
-        JS_LeaveCrossCompartmentCall(call);
-        ok = ok && cx->compartment->wrap(cx, rval);
+    if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
+                             fp->script->filename,
+                             JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
+                             rval)) {
+        return false;
     }
-
-    return ok;
+    return cx->compartment->wrap(cx, rval);
 }
 
 static JSBool
@@ -4156,7 +4138,9 @@ split_setup(JSContext *cx, JSBool evalcx)
     outer = split_create_outer(cx);
     if (!outer)
         return NULL;
-    JS_SetGlobalObject(cx, outer);
+    AutoObjectRooter root(cx, outer);
+    if (!evalcx)
+        JS_SetGlobalObject(cx, outer);
 
     inner = split_create_inner(cx, outer);
     if (!inner)
@@ -4929,91 +4913,69 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx, JSCrossCompartmentCall **callp)
+NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
 {
-    JSCrossCompartmentCall *call = NULL;
-    JSObject *glob;
-
-    if (callp) {
-        glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
-        if (!glob)
-            return NULL;
-        call = JS_EnterCrossCompartmentCall(cx, glob);
-        if (!call)
-            return NULL;
-    } else {
-        glob = JS_NewGlobalObject(cx, &global_class);
-        if (!glob)
-            return NULL;
-    }
+    JSObject *glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
+    if (!glob)
+        return NULL;
+    if (!call.enter(cx, glob))
+        return NULL;
 
 #ifdef LAZY_STANDARD_CLASSES
     JS_SetGlobalObject(cx, glob);
 #else
     if (!JS_InitStandardClasses(cx, glob))
-        goto bad;
+        return NULL;
 #endif
 #ifdef JS_HAS_CTYPES
     if (!JS_InitCTypesClass(cx, glob))
-        goto bad;
+        return NULL;
 #endif
     if (!JS_DefineFunctions(cx, glob, shell_functions))
-        goto bad;
+        return NULL;
 
-    {
-        JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
-        if (!it)
-            goto bad;
-        if (!JS_DefineProperties(cx, it, its_props))
-            goto bad;
-        if (!JS_DefineFunctions(cx, it, its_methods))
-            goto bad;
+    JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
+    if (!it)
+        return NULL;
+    if (!JS_DefineProperties(cx, it, its_props))
+        return NULL;
+    if (!JS_DefineFunctions(cx, it, its_methods))
+        return NULL;
 
-        if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
-                               its_setter, 0))
-            goto bad;
-        if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
-                               its_setter, JSPROP_READONLY))
-            goto bad;
-    }
+    if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
+                           its_setter, 0))
+        return NULL;
+    if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
+                           its_setter, JSPROP_READONLY))
+        return NULL;
 
 #ifdef NARCISSUS
-    {
-        jsval v;
-        static const char Object_prototype[] = "Object.prototype";
+    jsval v;
+    static const char Object_prototype[] = "Object.prototype";
 
-        if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
-            goto bad;
+    if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
+        return NULL;
 
-        if (!JS_EvaluateScript(cx, glob,
-                               Object_prototype, sizeof Object_prototype - 1,
-                               NULL, 0, &v)) {
-            goto bad;
-        }
-        if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
-                               defineProperty, 5, 0)) {
-            goto bad;
-        }
+    if (!JS_EvaluateScript(cx, glob,
+                           Object_prototype, sizeof Object_prototype - 1,
+                           NULL, 0, &v)) {
+        return NULL;
+    }
+    if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
+                           defineProperty, 5, 0)) {
+        return NULL;
     }
 #endif
-
-    if (callp)
-        *callp = call;
     return glob;
-
-bad:
-    if (call)
-        JS_LeaveCrossCompartmentCall(call);
-    return NULL;
 }
 
 int
 shell(JSContext *cx, int argc, char **argv, char **envp)
 {
     JSAutoRequest ar(cx);
-    AutoCrossCompartmentCall ac;
+    JSAutoCrossCompartmentCall ac;
 
-    JSObject *glob = NewGlobalObject(cx, &ac.call);
+    JSObject *glob = NewGlobalObject(cx, ac);
     if (!glob)
         return 1;
 
@@ -5052,7 +5014,10 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 #ifdef JS_THREADSAFE
     class ShellWorkerHooks : public js::workers::WorkerHooks {
     public:
-        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx, NULL); }
+        JSObject *newGlobalObject(JSContext *cx) {
+            JSAutoCrossCompartmentCall ac;
+            return NewGlobalObject(cx, ac);
+        }
     };
     ShellWorkerHooks hooks;
     if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
