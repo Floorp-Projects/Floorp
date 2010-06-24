@@ -43,7 +43,7 @@
   It is designed to be used as inline input to nsHTMLTags.cpp and
   nsHTMLContentSink *only* through the magic of C preprocessing.
 
-  All entires must be enclosed in the macro HTML_TAG which will have cruel
+  All entries must be enclosed in the macro HTML_TAG which will have cruel
   and unusual things done to it
 
   It is recommended (but not strictly necessary) to keep all entries
@@ -60,7 +60,9 @@
 
   Entries *must* use only lowercase characters.
 
-  ** Break these invarient and bad things will happen. **    
+  Don't forget to update /editor/libeditor/html/nsHTMLEditUtils.cpp as well.
+
+  ** Break these invariants and bad things will happen. **
 
  ******/
 HTML_TAG(a, Anchor)
@@ -102,6 +104,8 @@ HTML_TAG(dt, Span)
 HTML_TAG(em, Span)
 HTML_TAG(embed, SharedObject)
 HTML_TAG(fieldset, FieldSet)
+HTML_TAG(figcaption, ) // HTMLElement instance
+HTML_TAG(figure, ) // HTMLElement instance
 HTML_TAG(font, Font)
 HTML_TAG(footer, ) // HTMLElement instance
 HTML_TAG(form, Form)
@@ -133,6 +137,7 @@ HTML_TAG(li, LI)
 HTML_TAG(link, Link)
 HTML_TAG(listing, Span)
 HTML_TAG(map, Map)
+HTML_TAG(mark, ) // HTMLElement instance
 HTML_TAG(marquee, Div)
 HTML_TAG(menu, Shared)
 HTML_TAG(meta, Meta)

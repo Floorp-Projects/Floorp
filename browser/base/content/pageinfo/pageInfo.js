@@ -25,6 +25,7 @@
 #   Daniel Brooks <db48x@yahoo.com>
 #   Florian QUEZE <f.qu@queze.net>
 #   Erik Fabert <jerfa@yahoo.com>
+#   Tanner M. Young <mozilla@alyoung.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -175,8 +176,11 @@ gImageView._ltrAtom = atomSvc.getAtom("ltr");
 gImageView._brokenAtom = atomSvc.getAtom("broken");
 
 gImageView.getCellProperties = function(row, col, props) {
-  if (gImageView.data[row][COL_IMAGE_SIZE] == gStrings.unknown &&
-      !/^https:/.test(gImageView.data[row][COL_IMAGE_ADDRESS]))
+  var data = gImageView.data[row];
+  var item = gImageView.data[row][COL_IMAGE_NODE];
+  if (!checkProtocol(data) ||
+      item instanceof HTMLEmbedElement ||
+      (item instanceof HTMLObjectElement && !/^image\//.test(item.type)))
     props.AppendElement(this._brokenAtom);
 
   if (col.element.id == "image-address")
@@ -928,10 +932,7 @@ function makePreview(row)
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
-  const regex = /^(https?|ftp|file|about|chrome|resource):/;
-  var isProtocolAllowed = regex.test(url);
-  if (/^data:/.test(url) && /^image\//.test(mimeType))
-    isProtocolAllowed = true;
+  var isProtocolAllowed = checkProtocol(gImageView.data[row]);
 
   var newImage = new Image;
   newImage.id = "thepreviewimage";
@@ -1215,7 +1216,8 @@ function doSelectAll()
     elem.view.selection.selectAll();
 }
 
-function selectImage() {
+function selectImage()
+{
   if (!gImageElement)
     return;
 
@@ -1229,4 +1231,13 @@ function selectImage() {
       return;
     }
   }
+}
+
+function checkProtocol(img)
+{
+  var url = img[COL_IMAGE_ADDRESS];
+  if (/^data:/.test(url) && /^image\//.test(img[COL_IMAGE_NODE].type))
+    return true;
+  const regex = /^(https?|ftp|file|about|chrome|resource):/;
+  return regex.test(url);
 }

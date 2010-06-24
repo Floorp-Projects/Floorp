@@ -165,10 +165,20 @@
 
       <field name="_scrollTarget">null</field>
 
+      <method name="_canScrollToElement">
+        <parameter name="element"/>
+        <body>
+          return true;
+        </body>
+      </method>
+
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
         <parameter name="aSmoothScroll"/>
         <body><![CDATA[
+          if (!this._canScrollToElement(element))
+            return;
+
           var vertical = this.orient == "vertical";
           var rect = this.scrollClientRect;
           var containerStart = vertical ? rect.top : rect.left;
@@ -381,6 +391,7 @@
           -1: scrolling left -->
       <field name="_isScrolling">0</field>
       <field name="_smoothScrollTimer">0</field>
+      <field name="_prevMouseScrolls">[null, null]</field>
 
       <method name="_stopSmoothScroll">
         <body><![CDATA[
@@ -422,15 +433,30 @@
 
     <handlers>
       <handler event="DOMMouseScroll"><![CDATA[
-        // prevent horizontal scrolling from scrolling a vertical scrollbox
-        if (event.axis == event.HORIZONTAL_AXIS &&
-            this.orient == "vertical")
-          return;
+        if (this.orient == "vertical") {
+          // prevent horizontal scrolling from scrolling a vertical scrollbox
+          if (event.axis == event.HORIZONTAL_AXIS)
+            return;
+          this.scrollByIndex(event.detail);
+        }
         // We allow vertical scrolling to scroll a horizontal scrollbox
         // because many users have a vertical scroll wheel but no
         // horizontal support.
+        // Because of this, we need to avoid scrolling chaos on trackpads
+        // and mouse wheels that support simultaneous scrolling in both axes.
+        // We do this by scrolling only when the last two scroll events were
+        // on the same axis as the current scroll event.
+        else {
+          let isVertical = event.axis == event.VERTICAL_AXIS;
 
-        this.scrollByIndex(event.detail);
+          if (this._prevMouseScrolls.every(function(prev) prev == isVertical))
+            this.scrollByIndex(event.detail);
+
+          if (this._prevMouseScrolls.length > 1)
+            this._prevMouseScrolls.shift();
+          this._prevMouseScrolls.push(isVertical);
+        }
+
         event.stopPropagation();
       ]]></handler>
 

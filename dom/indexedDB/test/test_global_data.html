@@ -1,0 +1,75 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStore =  { name: "Objects", keyPath: "id", autoIncr: true };
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db1 = event.result;
+
+      request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let db2 = event.result;
+
+      ok(db1 !== db2, "Databases are not the same object");
+      is(db1.objectStoreNames.length, 0, "No objectStores in db1");
+      is(db2.objectStoreNames.length, 0, "No objectStores in db2");
+
+      request = db1.createObjectStore(objectStore.name,
+                                      objectStore.keyPath,
+                                      objectStore.autoIncr);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(db1 !== db2, "Databases are not the same object");
+      is(db1.objectStoreNames.length, 1, "1 objectStore in db1");
+      is(db1.objectStoreNames.item(0), objectStore.name, "Correct name");
+
+      is(db2.objectStoreNames.length, 1, "1 objectStore in db2");
+      is(db2.objectStoreNames.item(0), objectStore.name, "Correct name");
+
+      let objectStore1 = event.result;
+      is(objectStore1.name, objectStore.name, "Same name");
+      is(objectStore1.keyPath, objectStore.keyPath, "Same keyPath");
+      is(objectStore1.autoIncrement, objectStore.autoIncrement,
+         "Same value for autoIncrement");
+
+      let objectStore2 = db1.objectStore(objectStore.name);
+
+      ok(objectStore1 !== objectStore2, "Different objectStores");
+      is(objectStore1.name, objectStore2.name, "Same name");
+      is(objectStore1.keyPath, objectStore2.keyPath, "Same keyPath");
+      is(objectStore1.autoIncrement, objectStore2.autoIncrement,
+         "Same value for autoIncrement");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

@@ -179,7 +179,7 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_show: invalid message";
     if (mainAction && isInvalidAction(mainAction))
       throw "PopupNotifications_show: invalid mainAction";
-    if (secondaryActions.some(isInvalidAction))
+    if (secondaryActions && secondaryActions.some(isInvalidAction))
       throw "PopupNotifications_show: invalid secondaryActions";
 
     let notification = new Notification(id, message, anchorID, mainAction,

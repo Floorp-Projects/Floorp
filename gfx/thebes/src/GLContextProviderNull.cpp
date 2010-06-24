@@ -47,6 +47,12 @@ GLContextProvider::CreateForWindow(nsIWidget*)
 }
 
 already_AddRefed<GLContext>
+GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+{
+    return 0;
+}
+
+already_AddRefed<GLContext>
 GLContextProvider::CreatePBuffer(const gfxIntSize &, const ContextFormat &)
 {
     return nsnull;

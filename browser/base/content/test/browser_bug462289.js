@@ -22,8 +22,13 @@ function step3()
 {
   isnot(document.activeElement, tab1, "mouse on tab again activeElement");
 
-  document.getElementById("searchbar").focus();
-  EventUtils.synthesizeKey("VK_TAB", { });
+  if (gNavToolbox.getAttribute("tabsontop") == "true") {
+    gURLBar.focus();
+    EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
+  } else {
+    document.getElementById("searchbar").focus();
+    EventUtils.synthesizeKey("VK_TAB", {});
+  }
   is(document.activeElement, tab1, "tab key to tab activeElement");
 
   EventUtils.synthesizeMouse(tab1, 2, 2, {});
