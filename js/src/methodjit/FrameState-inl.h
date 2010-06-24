@@ -153,6 +153,8 @@ FrameState::forgetEverything(uint32 newStackDepth)
 inline FrameEntry *
 FrameState::rawPush()
 {
+    JS_ASSERT(unsigned(sp - base) < nargs + script->nslots);
+
     sp++;
 
     if (FrameEntry *fe = sp[-1])
