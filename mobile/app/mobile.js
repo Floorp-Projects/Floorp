@@ -41,7 +41,11 @@ pref("general.useragent.extra.mobile", "@APP_UA_NAME_EXTRA@/@APP_VERSION_EXTRA@ 
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);
+#ifdef MOZ_IPC
+pref("browser.tabs.remote", true);
+#else
 pref("browser.tabs.remote", false);
+#endif
 
 pref("toolkit.screen.lock", false);
 
