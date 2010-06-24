@@ -64,8 +64,8 @@ gTests.push({
     is(forward.disabled, !gCurrentTest._tab.browser.canGoForward, "Forward button check");
 
     // Focus the url edit
-    let urlbarEditArea = document.getElementById("urlbar-editarea");
-    EventUtils.synthesizeMouse(urlbarEditArea, urlbarEditArea.clientWidth / 2, urlbarEditArea.clientHeight / 2, {});
+    let urlbarEdit = document.getElementById("urlbar-edit");
+    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.clientWidth / 2, urlbarEdit.clientHeight / 2, {});
 
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);
@@ -167,8 +167,8 @@ gTests.push({
     is(urlIcons.getAttribute("mode"), "view", "URL Mode is set to 'view'");
 
     // Focus the url edit
-    let urlbarEditArea = document.getElementById("urlbar-editarea");
-    EventUtils.synthesizeMouse(urlbarEditArea, urlbarEditArea.clientWidth / 2, urlbarEditArea.clientHeight / 2, {});
+    let urlbarEdit = document.getElementById("urlbar-edit");
+    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.clientWidth / 2, urlbarEdit.clientHeight / 2, {});
 
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);

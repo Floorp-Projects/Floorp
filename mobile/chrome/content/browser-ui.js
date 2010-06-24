@@ -373,9 +373,8 @@ var BrowserUI = {
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
 
-    let urlbarEditArea = document.getElementById("urlbar-editarea");
-    urlbarEditArea.addEventListener("click", this, false);
-    urlbarEditArea.addEventListener("mousedown", this, false);
+    this._edit.addEventListener("click", this, false);
+    this._edit.addEventListener("mousedown", this, false);
 
     document.getElementById("toolbar-main").ignoreDrag = true;
 
