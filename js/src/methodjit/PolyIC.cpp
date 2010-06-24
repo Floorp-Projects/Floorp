@@ -310,14 +310,14 @@ class SetPropCompiler : public PICStubCompiler
         JSScope *scope = obj->scope();
         if (scope->brandedOrHasMethodBarrier()) {
             masm.loadTypeTag(address, pic.shapeReg);
-            rebrand = masm.branch32(Assembler::Equal, pic.shapeReg, Imm32(JSVAL_MASK32_FUNOBJ));
+            rebrand = masm.branch32(Assembler::Equal, pic.shapeReg, ImmTag(JSVAL_TAG_FUNOBJ));
         }
 
         if (pic.u.vr.isConstant) {
             masm.storeValue(Valueify(pic.u.vr.u.v), address);
         } else {
             if (pic.u.vr.u.s.isTypeKnown)
-                masm.storeTypeTag(ImmTag(pic.u.vr.u.s.type.mask), address);
+                masm.storeTypeTag(ImmTag(pic.u.vr.u.s.type.tag), address);
             else
                 masm.storeTypeTag(pic.u.vr.u.s.type.reg, address);
             masm.storeData32(pic.u.vr.u.s.data, address);
@@ -469,7 +469,7 @@ class GetPropCompiler : public PICStubCompiler
                                             JSObject::JSSLOT_ARRAY_LENGTH * sizeof(Value)),
                         pic.objReg);
         Jump oob = masm.branch32(Assembler::Above, pic.objReg, Imm32(JSVAL_INT_MAX));
-        masm.move(ImmTag(JSVAL_MASK32_INT32), pic.shapeReg);
+        masm.move(ImmTag(JSVAL_TAG_INT32), pic.shapeReg);
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -533,7 +533,7 @@ class GetPropCompiler : public PICStubCompiler
 
         /* Only strings are allowed. */
         Jump notString = masm.branch32(Assembler::NotEqual, pic.typeReg(),
-                                       Imm32(JSVAL_MASK32_STRING));
+                                       ImmTag(JSVAL_TAG_STRING));
 
         /*
          * Sink pic.objReg, since we're about to lose it. This is optimistic,
@@ -545,7 +545,7 @@ class GetPropCompiler : public PICStubCompiler
          */
         uint32 thisvOffset = uint32(f.regs.sp - f.fp->slots()) - 1;
         Address thisv(JSFrameReg, sizeof(JSStackFrame) + thisvOffset * sizeof(Value));
-        masm.storeTypeTag(ImmTag(JSVAL_MASK32_STRING), thisv);
+        masm.storeTypeTag(ImmTag(JSVAL_TAG_STRING), thisv);
         masm.storeData32(pic.objReg, thisv);
 
         /*
@@ -597,9 +597,9 @@ class GetPropCompiler : public PICStubCompiler
 
         Assembler masm;
         Jump notString = masm.branch32(Assembler::NotEqual, pic.typeReg(),
-                                       Imm32(JSVAL_MASK32_STRING));
+                                       ImmTag(JSVAL_TAG_STRING));
         masm.loadPtr(Address(pic.objReg, offsetof(JSString, mLength)), pic.objReg);
-        masm.move(ImmTag(JSVAL_MASK32_INT32), pic.shapeReg);
+        masm.move(ImmTag(JSVAL_TAG_INT32), pic.shapeReg);
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1068,8 +1068,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         if (!rval.isFunObj() ||
-            !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()),
-                                  lval)) {
+            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 THROW();
             usePIC = false;

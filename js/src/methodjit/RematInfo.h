@@ -50,7 +50,7 @@ struct ValueRemat {
         struct {
             union {
                 RegisterID reg;
-                uint32 mask;
+                JSValueTag tag;
             } type;
             RegisterID data : 5;
             bool isTypeKnown : 1;

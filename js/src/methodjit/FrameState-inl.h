@@ -180,7 +180,7 @@ FrameState::pushSynced()
 }
 
 inline void
-FrameState::pushSyncedType(JSValueMask32 tag)
+FrameState::pushSyncedType(JSValueTag tag)
 {
     FrameEntry *fe = rawPush();
 
@@ -189,7 +189,7 @@ FrameState::pushSyncedType(JSValueMask32 tag)
 }
 
 inline void
-FrameState::pushSynced(JSValueMask32 tag, RegisterID reg)
+FrameState::pushSynced(JSValueTag tag, RegisterID reg)
 {
     FrameEntry *fe = rawPush();
 
@@ -242,7 +242,7 @@ FrameState::pushRegs(RegisterID type, RegisterID data)
 }
 
 inline void
-FrameState::pushTypedPayload(JSValueMask32 tag, RegisterID payload)
+FrameState::pushTypedPayload(JSValueTag tag, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
@@ -255,7 +255,7 @@ FrameState::pushTypedPayload(JSValueMask32 tag, RegisterID payload)
 }
 
 inline void
-FrameState::pushUntypedPayload(JSValueMask32 tag, RegisterID payload)
+FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
@@ -415,7 +415,7 @@ FrameState::forgetType(FrameEntry *fe)
 }
 
 inline void
-FrameState::learnType(FrameEntry *fe, JSValueMask32 tag)
+FrameState::learnType(FrameEntry *fe, JSValueTag tag)
 {
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());

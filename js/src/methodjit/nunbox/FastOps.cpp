@@ -65,7 +65,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     stubcc.leave();
     stubcc.call(stubs::BindName);
 
-    frame.pushTypedPayload(JSVAL_MASK32_NONFUNOBJ, reg);
+    frame.pushTypedPayload(JSVAL_TAG_NONFUNOBJ, reg);
 
     stubcc.rejoin(1);
 }
@@ -76,11 +76,11 @@ mjit::Compiler::jsop_bitnot()
     FrameEntry *top = frame.peek(-1);
 
     /* We only want to handle integers here. */
-    if (top->isTypeKnown() && top->getTypeTag() != JSVAL_MASK32_INT32) {
+    if (top->isTypeKnown() && top->getTypeTag() != JSVAL_TAG_INT32) {
         prepareStubCall();
         stubCall(stubs::BitNot, Uses(1), Defs(1));
         frame.pop();
-        frame.pushSyncedType(JSVAL_MASK32_INT32);
+        frame.pushSyncedType(JSVAL_TAG_INT32);
         return;
     }
            
@@ -89,7 +89,7 @@ mjit::Compiler::jsop_bitnot()
     if (!top->isTypeKnown()) {
         Jump intFail = frame.testInt32(Assembler::NotEqual, top);
         stubcc.linkExit(intFail);
-        frame.learnType(top, JSVAL_MASK32_INT32);
+        frame.learnType(top, JSVAL_TAG_INT32);
         stubNeeded = true;
     }
 
@@ -101,7 +101,7 @@ mjit::Compiler::jsop_bitnot()
     RegisterID reg = frame.ownRegForData(top);
     masm.not32(reg);
     frame.pop();
-    frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+    frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
 
     if (stubNeeded)
         stubcc.rejoin(1);
@@ -136,12 +136,12 @@ mjit::Compiler::jsop_bitop(JSOp op)
     }
 
     /* We only want to handle integers here. */
-    if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_MASK32_INT32) ||
-        (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_MASK32_INT32)) {
+    if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_TAG_INT32) ||
+        (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_TAG_INT32)) {
         prepareStubCall();
         stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
-        frame.pushSyncedType(JSVAL_MASK32_INT32);
+        frame.pushSyncedType(JSVAL_TAG_INT32);
         return;
     }
            
@@ -150,7 +150,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
         stubcc.linkExit(rhsFail);
-        frame.learnType(rhs, JSVAL_MASK32_INT32);
+        frame.learnType(rhs, JSVAL_TAG_INT32);
         stubNeeded = true;
     }
     if (!lhs->isTypeKnown()) {
@@ -248,7 +248,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
                  * Type of LHS should be learned already.
                  */
                 frame.popn(2);
-                frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+                frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
                 if (stubNeeded)
                     stubcc.rejoin(1);
                 return;
@@ -302,7 +302,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
     frame.pop();
     frame.pop();
-    frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+    frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
 
     if (stubNeeded)
         stubcc.rejoin(2);
@@ -355,7 +355,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     masm.storeData32(data, addr);
 
     if (!post && !popped)
-        frame.pushUntypedPayload(JSVAL_MASK32_INT32, data);
+        frame.pushUntypedPayload(JSVAL_TAG_INT32, data);
     else
         frame.freeReg(data);
 
@@ -450,13 +450,13 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 #endif /* JS_CPU_ARM */
     ) {
         bool isStringResult = (op == JSOP_ADD) &&
-                              ((lhs->isTypeKnown() && lhs->getTypeTag() == JSVAL_MASK32_STRING) ||
-                               (rhs->isTypeKnown() && rhs->getTypeTag() == JSVAL_MASK32_STRING));
+                              ((lhs->isTypeKnown() && lhs->getTypeTag() == JSVAL_TAG_STRING) ||
+                               (rhs->isTypeKnown() && rhs->getTypeTag() == JSVAL_TAG_STRING));
         prepareStubCall();
         stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
         if (isStringResult)
-            frame.pushSyncedType(JSVAL_MASK32_STRING);
+            frame.pushSyncedType(JSVAL_TAG_STRING);
         else
             frame.pushSynced();
         return;
@@ -464,8 +464,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 
     /* Try an integer fastpath. */
     RegisterID reg = Registers::ReturnReg;
-    if ((!lhs->isTypeKnown() || lhs->getTypeTag() == JSVAL_MASK32_INT32) &&
-        (!rhs->isTypeKnown() || rhs->getTypeTag() == JSVAL_MASK32_INT32)) {
+    if ((!lhs->isTypeKnown() || lhs->getTypeTag() == JSVAL_TAG_INT32) &&
+        (!rhs->isTypeKnown() || rhs->getTypeTag() == JSVAL_TAG_INT32)) {
         if (!rhs->isTypeKnown()) {
             Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
             stubcc.linkExit(rhsFail);
@@ -560,20 +560,20 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     stubcc.call(stub);
 
     frame.popn(2);
-    frame.pushUntypedPayload(JSVAL_MASK32_INT32, reg);
+    frame.pushUntypedPayload(JSVAL_TAG_INT32, reg);
 
     stubcc.rejoin(1);
 }
 
 static inline bool
-CheckNullOrUndefined(FrameEntry *fe, JSValueMask32 &mask)
+CheckNullOrUndefined(FrameEntry *fe, JSValueTag &mask)
 {
     if (!fe->isTypeKnown())
         return false;
     mask = fe->getTypeTag();
-    if (mask == JSVAL_MASK32_NULL)
+    if (mask == JSVAL_TAG_NULL)
         return true;
-    else if (mask == JSVAL_MASK32_UNDEFINED)
+    else if (mask == JSVAL_TAG_UNDEFINED)
         return true;
     return false;
 }
@@ -588,7 +588,7 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
 
     bool lhsTest;
-    JSValueMask32 mask;
+    JSValueTag mask;
     if ((lhsTest = CheckNullOrUndefined(lhs, mask)) || CheckNullOrUndefined(rhs, mask)) {
         /* What's the other mask? */
         FrameEntry *test = lhsTest ? rhs : lhs;
@@ -600,44 +600,39 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
 
         /* The other side must be null or undefined. */
         RegisterID reg = frame.ownRegForType(test);
-        masm.and32(Imm32(JSVAL_MASK32_SINGLETON), reg);
-        
-        Assembler::Condition cond;
-        if (op == JSOP_EQ)
-            cond = Assembler::Above;
-        else
-            cond = Assembler::BelowOrEqual;
+        frame.pop();
+        frame.pop();
 
-        frame.pop();
-        frame.pop();
+        /*
+         * :FIXME: Easier test for undefined || null?
+         * Maybe put them next to each other, subtract, do a single compare?
+         */
 
         if (target) {
             frame.forgetEverything();
 
-            if (fused == JSOP_IFEQ) {
-                if (op == JSOP_EQ)
-                    cond = Assembler::BelowOrEqual;
-                else
-                    cond = Assembler::Above;
+            if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
+                (op == JSOP_NE && fused == JSOP_IFEQ)) {
+                Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
+                jumpInScript(j, target);
+                j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_NULL));
+                jumpInScript(j, target);
             } else {
-                if (op == JSOP_EQ)
-                    cond = Assembler::Above;
-                else
-                    cond = Assembler::BelowOrEqual;
+                Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
+                Jump j2 = masm.branch32(Assembler::NotEqual, reg, ImmTag(JSVAL_TAG_NULL));
+                jumpInScript(j2, target);
+                j.linkTo(masm.label(), &masm);
             }
-
-            Jump j = masm.branch32(cond, reg, Imm32(JSVAL_MASK32_CLEAR));
-            jumpInScript(j, target);
         } else {
-            RegisterID resultReg = reg;
-            if (!(Registers::maskReg(reg) & Registers::SingleByteRegs))
-                resultReg = frame.allocReg(Registers::SingleByteRegs);
-
-            masm.set32(cond, reg, Imm32(JSVAL_MASK32_CLEAR), resultReg);
-
-            if (reg != resultReg)
-                frame.freeReg(reg);
-            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, resultReg);
+            Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
+            Jump j2 = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_NULL));
+            masm.move(Imm32(op == JSOP_NE), reg);
+            Jump j3 = masm.jump();
+            j2.linkTo(masm.label(), &masm);
+            j.linkTo(masm.label(), &masm);
+            masm.move(Imm32(op == JSOP_EQ), reg);
+            j3.linkTo(masm.label(), &masm);
+            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
         }
         return;
     }
@@ -655,8 +650,8 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
 
     /* Always slow path... */
-    if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_MASK32_INT32) ||
-        (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_MASK32_INT32)) {
+    if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_TAG_INT32) ||
+        (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_TAG_INT32)) {
         if (op == JSOP_EQ || op == JSOP_NE)
             jsop_equality(op, stub, target, fused);
         else
@@ -668,7 +663,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
         stubcc.linkExit(rhsFail);
-        frame.learnType(rhs, JSVAL_MASK32_INT32);
+        frame.learnType(rhs, JSVAL_TAG_INT32);
     }
     if (!lhs->isTypeKnown()) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
@@ -832,7 +827,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         frame.pop();
         if (reg != resultReg)
             frame.freeReg(reg);
-        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, resultReg);
+        frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, resultReg);
         stubcc.rejoin(1);
     }
 }
@@ -870,8 +865,8 @@ mjit::Compiler::jsop_not()
     if (top->isTypeKnown()) {
         uint32 mask = top->getTypeTag();
         switch (mask) {
-          case JSVAL_MASK32_INT32:
-          case JSVAL_MASK32_BOOLEAN:
+          case JSVAL_TAG_INT32:
+          case JSVAL_TAG_BOOLEAN:
           {
             /* :FIXME: X64 */
             /* :FIXME: Faster to xor 1, zero-extend */
@@ -883,12 +878,12 @@ mjit::Compiler::jsop_not()
             masm.move(Imm32(0), reg);
             d.linkTo(masm.label(), &masm);
             frame.pop();
-            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, reg);
+            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
             break;
           }
 
-          case JSVAL_MASK32_NONFUNOBJ:
-          case JSVAL_MASK32_FUNOBJ:
+          case JSVAL_TAG_NONFUNOBJ:
+          case JSVAL_TAG_FUNOBJ:
           {
             frame.pop();
             frame.push(BooleanTag(false));
@@ -909,7 +904,7 @@ mjit::Compiler::jsop_not()
             masm.move(Imm32(0), reg);
             d.linkTo(masm.label(), &masm);
             frame.pop();
-            frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, reg);
+            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
             break;
           }
         }
@@ -920,7 +915,7 @@ mjit::Compiler::jsop_not()
     /* Fast-path here is boolean. */
     Jump boolFail = frame.testBoolean(Assembler::NotEqual, top);
     stubcc.linkExit(boolFail);
-    frame.learnType(top, JSVAL_MASK32_BOOLEAN);
+    frame.learnType(top, JSVAL_TAG_BOOLEAN);
 
     stubcc.leave();
     stubcc.call(stubs::Not);
@@ -928,7 +923,7 @@ mjit::Compiler::jsop_not()
     RegisterID reg = frame.ownRegForData(top);
     masm.xor32(Imm32(1), reg);
     frame.pop();
-    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, reg);
+    frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
 
     stubcc.rejoin(1);
 }
@@ -943,20 +938,20 @@ mjit::Compiler::jsop_typeof()
 
         JSAtom *atom = NULL;
         switch (fe->getTypeTag()) {
-          case JSVAL_MASK32_STRING:
+          case JSVAL_TAG_STRING:
             atom = rt->atomState.typeAtoms[JSTYPE_STRING];
             break;
-          case JSVAL_MASK32_UNDEFINED:
+          case JSVAL_TAG_UNDEFINED:
             atom = rt->atomState.typeAtoms[JSTYPE_VOID];
             break;
-          case JSVAL_MASK32_NULL:
+          case JSVAL_TAG_NULL:
             atom = rt->atomState.typeAtoms[JSTYPE_OBJECT];
             break;
-          case JSVAL_MASK32_FUNOBJ:
-          case JSVAL_MASK32_NONFUNOBJ:
+          case JSVAL_TAG_FUNOBJ:
+          case JSVAL_TAG_NONFUNOBJ:
             atom = NULL;
             break;
-          case JSVAL_MASK32_BOOLEAN:
+          case JSVAL_TAG_BOOLEAN:
             atom = rt->atomState.typeAtoms[JSTYPE_BOOLEAN];
             break;
           default:
@@ -975,7 +970,7 @@ mjit::Compiler::jsop_typeof()
     stubCall(stubs::TypeOf, Uses(1), Defs(1));
     frame.pop();
     frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_MASK32_STRING, Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_TAG_STRING, Registers::ReturnReg);
 }
 
 void
@@ -1006,7 +1001,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         fe = frame.peek(-1);
     }
 
-    if (!fe->isTypeKnown() || fe->getTypeTag() != JSVAL_MASK32_INT32) {
+    if (!fe->isTypeKnown() || fe->getTypeTag() != JSVAL_TAG_INT32) {
         /* :TODO: do something smarter for the known-type-is-bad case. */
         if (fe->isTypeKnown()) {
             Jump j = masm.jump();
@@ -1035,7 +1030,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
     stubcc.vpInc(op, depth);
 
     /* :TODO: We can do slightly better here. */
-    frame.pushUntypedPayload(JSVAL_MASK32_INT32, reg);
+    frame.pushUntypedPayload(JSVAL_TAG_INT32, reg);
     frame.storeLocal(slot);
 
     if (post || popped)
@@ -1076,7 +1071,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
     stubcc.masm.addPtr(Imm32(sizeof(Value) * slot), Registers::ArgReg1, Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
-    frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+    frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
     fe = frame.peek(-1);
 
     reg = frame.allocReg();
@@ -1100,8 +1095,8 @@ mjit::Compiler::jsop_setelem()
     FrameEntry *id = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_MASK32_NONFUNOBJ) ||
-        (id->isTypeKnown() && id->getTypeTag() != JSVAL_MASK32_INT32) ||
+    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_NONFUNOBJ) ||
+        (id->isTypeKnown() && id->getTypeTag() != JSVAL_TAG_INT32) ||
         (id->isConstant() && id->getValue().asInt32() < 0)) {
         jsop_setelem_slow();
         return;
@@ -1140,7 +1135,7 @@ mjit::Compiler::jsop_setelem()
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().asInt32() * sizeof(Value));
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), Imm32(JSVAL_MASK32_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
         stubcc.linkExit(notHole);
 
         stubcc.leave();
@@ -1169,7 +1164,7 @@ mjit::Compiler::jsop_setelem()
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), Imm32(JSVAL_MASK32_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
         stubcc.linkExit(notHole);
 
         stubcc.leave();
@@ -1204,8 +1199,8 @@ mjit::Compiler::jsop_getelem()
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *id = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_MASK32_NONFUNOBJ) ||
-        (id->isTypeKnown() && id->getTypeTag() != JSVAL_MASK32_INT32) ||
+    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_NONFUNOBJ) ||
+        (id->isTypeKnown() && id->getTypeTag() != JSVAL_TAG_INT32) ||
         (id->isConstant() && id->getValue().asInt32() < 0)) {
         jsop_getelem_slow();
         return;
@@ -1244,7 +1239,7 @@ mjit::Compiler::jsop_getelem()
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().asInt32() * sizeof(Value));
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), Imm32(JSVAL_MASK32_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
         stubcc.linkExit(notHole);
 
         stubcc.leave();
@@ -1262,7 +1257,7 @@ mjit::Compiler::jsop_getelem()
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), Imm32(JSVAL_MASK32_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
         stubcc.linkExit(notHole);
 
         stubcc.leave();
@@ -1281,18 +1276,18 @@ mjit::Compiler::jsop_getelem()
 }
 
 static inline bool
-ReallySimpleStrictTest(FrameEntry *fe, JSValueMask32 &mask)
+ReallySimpleStrictTest(FrameEntry *fe, JSValueTag &mask)
 {
     if (!fe->isTypeKnown())
         return false;
     mask = fe->getTypeTag();
-    return mask == JSVAL_MASK32_NULL || mask == JSVAL_MASK32_UNDEFINED;
+    return mask == JSVAL_TAG_NULL || mask == JSVAL_TAG_UNDEFINED;
 }
 
 static inline bool
 BooleanStrictTest(FrameEntry *fe)
 {
-    return fe->isConstant() && fe->getTypeTag() == JSVAL_MASK32_BOOLEAN;
+    return fe->isConstant() && fe->getTypeTag() == JSVAL_TAG_BOOLEAN;
 }
 
 void
@@ -1305,7 +1300,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     /* Comparison against undefined or null is super easy. */
     bool lhsTest;
-    JSValueMask32 mask;
+    JSValueTag mask;
     if ((lhsTest = ReallySimpleStrictTest(lhs, mask)) || ReallySimpleStrictTest(rhs, mask)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
 
@@ -1322,7 +1317,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         else
             masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
         frame.popn(2);
-        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, result);
+        frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, result);
         return;
     }
 
@@ -1330,7 +1325,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if ((lhsTest = BooleanStrictTest(lhs)) || BooleanStrictTest(rhs)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
 
-        if (test->isTypeKnown() && test->getTypeTag() != JSVAL_MASK32_BOOLEAN) {
+        if (test->isTypeKnown() && test->getTypeTag() != JSVAL_TAG_BOOLEAN) {
             frame.popn(2);
             frame.push(BooleanTag(op == JSOP_STRICTNE));
             return;
@@ -1366,7 +1361,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         }
 
         frame.popn(2);
-        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, result);
+        frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, result);
         return;
     }
 
@@ -1377,7 +1372,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         stubCall(stubs::StrictNe, Uses(2), Defs(1));
     frame.popn(2);
     frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, Registers::ReturnReg);
 }
 
 void
@@ -1386,7 +1381,7 @@ mjit::Compiler::jsop_pos()
     FrameEntry *top = frame.peek(-1);
 
     if (top->isTypeKnown()) {
-        if (top->getTypeTag() <= JSVAL_MASK32_INT32)
+        if (top->getTypeTag() <= JSVAL_TAG_INT32)
             return;
         prepareStubCall();
         stubCall(stubs::Pos, Uses(1), Defs(1));
@@ -1397,9 +1392,9 @@ mjit::Compiler::jsop_pos()
 
     Jump j;
     if (frame.shouldAvoidTypeRemat(top))
-        j = masm.branch32(Assembler::GreaterThan, frame.addressOf(top), Imm32(JSVAL_MASK32_INT32));
+        j = masm.branch32(Assembler::GreaterThan, frame.addressOf(top), ImmTag(JSVAL_TAG_INT32));
     else
-        j = masm.branch32(Assembler::GreaterThan, frame.tempRegForType(top), Imm32(JSVAL_MASK32_INT32));
+        j = masm.branch32(Assembler::GreaterThan, frame.tempRegForType(top), ImmTag(JSVAL_TAG_INT32));
     stubcc.linkExit(j);
 
     stubcc.leave();
