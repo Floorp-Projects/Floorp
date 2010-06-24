@@ -663,6 +663,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_INCPROP)
             jsop_propinc(op, stubs::IncProp, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_INCPROP)
 
           BEGIN_CASE(JSOP_INCELEM)
@@ -679,6 +680,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DECPROP)
             jsop_propinc(op, stubs::DecProp, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_DECPROP)
 
           BEGIN_CASE(JSOP_DECELEM)
@@ -691,6 +693,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_PROPINC)
             jsop_propinc(op, stubs::PropInc, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_PROPINC)
 
           BEGIN_CASE(JSOP_ELEMINC)
@@ -707,6 +710,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_PROPDEC)
             jsop_propinc(op, stubs::PropDec, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_PROPDEC)
 
           BEGIN_CASE(JSOP_ELEMDEC)
@@ -2386,11 +2390,79 @@ void
 mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
+    jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
+    int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
+
+#if ENABLE_PIC
+    if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
+        /* These cases are easy, the original value is not observed. */
+
+        frame.dup();
+        // OBJ OBJ
+
+        jsop_getprop(atom);
+        // OBJ V
+
+        frame.push(Int32Tag(amt));
+        // OBJ V 1
+
+        /* Use sub since it calls ValueToNumber instead of string concat. */
+        jsop_binary(JSOP_SUB, stubs::Sub);
+        // OBJ V+1
+
+        jsop_setprop(atom);
+        // V+1
+
+        if (pop)
+            frame.pop();
+    } else {
+        /* The pre-value is observed, making this more tricky. */
+
+        frame.dup();
+        // OBJ OBJ 
+
+        jsop_getprop(atom);
+        // OBJ V
+
+        jsop_pos();
+        // OBJ N
+
+        frame.dup();
+        // OBJ N N
+
+        frame.push(Int32Tag(-amt));
+        // OBJ N N 1
+
+        jsop_binary(JSOP_ADD, stubs::Add);
+        // OBJ N N+1
+
+        frame.dupAt(-3);
+        // OBJ N N+1 OBJ
+
+        frame.dupAt(-2);
+        // OBJ N N+1 OBJ N+1
+
+        jsop_setprop(atom);
+        // OBJ N N+1 N+1
+
+        frame.popn(2);
+        // OBJ N
+
+        frame.shimmy(1);
+        // N
+    }
+#else
     prepareStubCall();
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     stubCall(stub, Uses(1), Defs(1));
     frame.pop();
     frame.pushSynced();
+#endif
+
+    PC += JSOP_PROPINC_LENGTH;
+    if (pop)
+        PC += JSOP_POP_LENGTH;
 }
 
 /*

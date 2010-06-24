@@ -548,8 +548,7 @@ FrameState::localIndex(uint32 n)
 inline void
 FrameState::dup()
 {
-    FrameEntry *fe = peek(-1);
-    pushCopyOf(indexOfFe(fe));
+    dupAt(-1);
 }
 
 inline void
@@ -559,6 +558,14 @@ FrameState::dup2()
     FrameEntry *rhs = peek(-1);
     pushCopyOf(indexOfFe(lhs));
     pushCopyOf(indexOfFe(rhs));
+}
+
+inline void
+FrameState::dupAt(int32 n)
+{
+    JS_ASSERT(n < 0);
+    FrameEntry *fe = peek(n);
+    pushCopyOf(indexOfFe(fe));
 }
 
 inline void

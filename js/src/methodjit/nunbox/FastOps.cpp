@@ -1380,3 +1380,31 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
 }
 
+void
+mjit::Compiler::jsop_pos()
+{
+    FrameEntry *top = frame.peek(-1);
+
+    if (top->isTypeKnown()) {
+        if (top->getTypeTag() <= JSVAL_MASK32_INT32)
+            return;
+        prepareStubCall();
+        stubCall(stubs::Pos, Uses(1), Defs(1));
+        frame.pop();
+        frame.pushSynced();
+        return;
+    }
+
+    Jump j;
+    if (frame.shouldAvoidTypeRemat(top))
+        j = masm.branch32(Assembler::GreaterThan, frame.addressOf(top), Imm32(JSVAL_MASK32_INT32));
+    else
+        j = masm.branch32(Assembler::GreaterThan, frame.tempRegForType(top), Imm32(JSVAL_MASK32_INT32));
+    stubcc.linkExit(j);
+
+    stubcc.leave();
+    stubcc.call(stubs::Pos);
+
+    stubcc.rejoin(1);
+}
+

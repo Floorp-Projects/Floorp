@@ -889,6 +889,23 @@ ic::GetProp(VMFrame &f, uint32 index)
 }
 
 static void JS_FASTCALL
+SetPropDumb(VMFrame &f, uint32 index)
+{
+    JSScript *script = f.fp->script;
+    ic::PICInfo &pic = script->pics[index];
+    JS_ASSERT(pic.kind == ic::PICInfo::SET);
+    JSAtom *atom = pic.atom;
+
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    Value rval = f.regs.sp[-1];
+    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1]))
+        THROW();
+    f.regs.sp[-2] = rval;
+}
+
+static void JS_FASTCALL
 SetPropSlow(VMFrame &f, uint32 index)
 {
     JSScript *script = f.fp->script;
@@ -911,11 +928,29 @@ ic::SetProp(VMFrame &f, uint32 index)
     JSAtom *atom = pic.atom;
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
 
-
+    //
     // Important: We update the PIC before looking up the property so that the
     // PIC is updated only if the property already exists. The PIC doesn't try
     // to optimize adding new properties; that is for the slow case.
-    SetPropCompiler cc(f, script, obj, pic, atom, &SetPropSlow);
+    //
+    // Also note, we can't use SetName for PROPINC PICs because the property
+    // cache can't handle a GET and SET from the same scripted PC.
+    //
+
+    VoidStubUInt32 stub;
+    switch (JSOp(*f.regs.pc)) {
+      case JSOP_PROPINC:
+      case JSOP_PROPDEC:
+      case JSOP_INCPROP:
+      case JSOP_DECPROP:
+        stub = SetPropDumb;
+        break;
+      default:
+        stub = SetPropSlow;
+        break;
+    }
+
+    SetPropCompiler cc(f, script, obj, pic, atom, stub);
     if (!cc.update()) {
         cc.disable("error");
         THROW();
