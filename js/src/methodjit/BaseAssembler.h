@@ -52,7 +52,7 @@
 namespace js {
 namespace mjit {
 
-#define JS_METHODJIT_PROFILE_STUBS
+//#define JS_METHODJIT_PROFILE_STUBS
 
 struct FrameAddress : JSC::MacroAssembler::Address
 {
