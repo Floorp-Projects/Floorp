@@ -510,6 +510,9 @@
 #ifdef XP_WIN
            tabsontop="true"
 #endif
+#ifdef XP_WIN
+           tabsontop="true"
+#endif
            persist="tabsontop">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
