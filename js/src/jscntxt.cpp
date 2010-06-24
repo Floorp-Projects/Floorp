@@ -508,39 +508,6 @@ FrameRegsIter::operator++()
     return *this;
 }
 
-JS_REQUIRES_STACK
-AllFramesIter::AllFramesIter(JSContext *cx)
-{
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-
-    curcs = cx->stack()->getCurrentCallStack();
-    if (!curcs) {
-        curfp = NULL;
-        return;
-    }
-
-    curfp = curcs->getCurrentFrame();
-}
-
-AllFramesIter &
-AllFramesIter::operator++()
-{
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    JS_ASSERT(!done());
-
-    if (curfp == curcs->getInitialFrame()) {
-        curcs = curcs->getPreviousInThread();
-        if (curcs)
-            curfp = curcs->getCurrentFrame();
-        else
-            curfp = NULL;
-    } else {
-        curfp = curfp->down;
-    }
-
-    return *this;
-}
-
 bool
 JSThreadData::init()
 {
