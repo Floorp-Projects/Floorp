@@ -367,8 +367,8 @@ FeedConverter.prototype = {
  * Keeps parsed FeedResults around for use elsewhere in the UI after the stream
  * converter completes. 
  */
-function FeedResultService()
-{ }
+function FeedResultService() {
+}
 
 FeedResultService.prototype = {
   classID: Components.ID("{2376201c-bbc6-472f-9b62-7548040a61c6}"),
@@ -520,12 +520,13 @@ FeedResultService.prototype = {
  */
 function GenericProtocolHandler() {
 }
-FeedProtocolHandler.prototype = {
-  _init: function FPH_init() {
+GenericProtocolHandler.prototype = {
+  _init: function GPH_init(scheme) {
     var ios = 
       Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService);
     this._http = ios.getProtocolHandler("http");
+    this._scheme = scheme;
   },
 
   get scheme() {
@@ -540,11 +541,11 @@ FeedProtocolHandler.prototype = {
     return this._http.defaultPort;
   },
   
-  allowPort: function FPH_allowPort(port, scheme) {
+  allowPort: function GPH_allowPort(port, scheme) {
     return this._http.allowPort(port, scheme);
   },
   
-  newURI: function FPH_newURI(spec, originalCharset, baseURI) {
+  newURI: function GPH_newURI(spec, originalCharset, baseURI) {
     // See bug 408599 - feed URIs can be either standard URLs of the form
     // feed://example.com, in which case the real protocol is http, or nested
     // URIs of the form feed:realscheme:. When realscheme is either http or
@@ -570,7 +571,7 @@ FeedProtocolHandler.prototype = {
     return uri;
   },
   
-  newChannel: function FPH_newChannel(aUri) {
+  newChannel: function GPH_newChannel(aUri) {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
@@ -595,7 +596,7 @@ FeedProtocolHandler.prototype = {
     return channel;
   },
   
-  QueryInterface: function FPH_QueryInterface(iid) {
+  QueryInterface: function GPH_QueryInterface(iid) {
     if (iid.equals(Ci.nsIProtocolHandler) ||
         iid.equals(Ci.nsISupports))
       return this;
@@ -603,21 +604,20 @@ FeedProtocolHandler.prototype = {
   }  
 };
 
-function FeedProtocolHandler()
-{
-  this._init();
+function FeedProtocolHandler() {
+  this._init('feed');
 }
 FeedProtocolHandler.prototype = new GenericProtocolHandler();
-FeedProtocolHandler.prototype._scheme = "feed";
 FeedProtocolHandler.classID = Components.ID("{4f91ef2e-57ba-472e-ab7a-b4999e42d6c0}");
 
-function PCastProtocolHandler()
-{
-  this._init();
+function PodCastProtocolHandler() {
+  this._init('pcast');
 }
-PCastProtocolHandler.prototype = new GenericProtocolHandler();
-PCastProtocolHandler.prototype._scheme = "pcast";
-PCastProtocolHandler.prototype.classID = Components.ID("{1c31ed79-accd-4b94-b517-06e0c81999d5}");
+PodCastProtocolHandler.prototype = new GenericProtocolHandler();
+PodCastProtocolHandler.prototype.classID = Components.ID("{1c31ed79-accd-4b94-b517-06e0c81999d5}");
 
-var components = [FeedConverter, FeedResultService, FeedProtocolHandler, PCastProtocolHandler];
+var components = [FeedConverter,
+                  FeedResultService,
+                  FeedProtocolHandler,
+                  PodCastProtocolHandler];
 var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

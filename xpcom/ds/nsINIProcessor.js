@@ -46,8 +46,6 @@ function INIProcessorFactory() {
 }
 
 INIProcessorFactory.prototype = {
-    classDescription: "INIProcessorFactory",
-    contractID: "@mozilla.org/xpcom/ini-processor-factory;1",
     classID: Components.ID("{6ec5f479-8e13-4403-b6ca-fe4c2dca14fd}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIINIParserFactory]),
 
@@ -204,6 +202,4 @@ stringEnumerator.prototype = {
 };
 
 let component = [INIProcessorFactory];
-function NSGetModule (compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
