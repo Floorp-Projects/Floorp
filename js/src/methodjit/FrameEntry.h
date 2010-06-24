@@ -161,6 +161,7 @@ class FrameEntry
      * Set copy index.
      */
     void setCopyOf(FrameEntry *fe) {
+        JS_ASSERT_IF(fe, !fe->isConstant());
         JS_ASSERT(!isCopied());
         copy = fe;
     }

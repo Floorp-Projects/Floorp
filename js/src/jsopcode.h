@@ -118,6 +118,8 @@ typedef enum JSOp {
                                      the slots opcode uses */
 #define JOF_TMPSLOT2     (2U<<22) /* interpreter uses extra 2 temporary slot
                                      besides the slots opcode uses */
+#define JOF_TMPSLOT3     (3U<<22) /* interpreter uses extra 3 temporary slot
+                                     besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
