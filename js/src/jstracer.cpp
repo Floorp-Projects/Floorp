@@ -2559,6 +2559,7 @@ static inline void
 ValueToNative(const Value &v, JSValueType type, double* slot)
 {
     if (type > JSVAL_TYPE_INT32) {
+        JS_ASSERT(type < JSVAL_TYPE_STRORNULL);
         NonNumberValueToSlot(v, type, slot);
     } else if (type == JSVAL_TYPE_INT32) {
 #ifdef DEBUG
@@ -2731,9 +2732,28 @@ NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp)
         return;
     }
 
-    JS_ASSERT(type == JSVAL_TYPE_BOXED);
-    JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
-    *vp = *(Value *)slot;
+    switch (type) {
+    case JSVAL_TYPE_STRORNULL: {
+        JSString *str = *(JSString**) slot;
+        if (str)
+            vp->setString(str);
+        else
+            vp->setNull();
+        break;
+    }
+    case JSVAL_TYPE_OBJORNULL: {
+        JSObject *obj = *(JSObject**) slot;
+        if (obj)
+            vp->setNonFunObj(*obj);
+        else
+            vp->setNull();
+        break;
+    }
+    default:
+        JS_ASSERT(type == JSVAL_TYPE_BOXED);
+        JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
+        *vp = *(Value *)slot;
+    }
 }
 
 /*
@@ -2761,9 +2781,6 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
       case JSVAL_TYPE_DOUBLE:
         debug_only_printf(LC_TMTracer, "double<%g> ", v.asNumber());
         break;
-      case JSVAL_TYPE_BOXED:
-        debug_only_printf(LC_TMTracer, "box<%llx> ", v.asRawBits());
-        break;
       case JSVAL_TYPE_STRING:
         debug_only_printf(LC_TMTracer, "string<%p> ", (void*)v.asString());
         break;
@@ -2788,6 +2805,15 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
                           : "unnamed");
         break;
       }
+      case JSVAL_TYPE_STRORNULL:
+        debug_only_printf(LC_TMTracer, "nullablestr<%p> ", v.isNull() ? NULL : (void*)v.asString());
+        break;
+      case JSVAL_TYPE_OBJORNULL:
+        debug_only_printf(LC_TMTracer, "nullableobj<%p> ", v.isNull() ? NULL : (void*)&v.asObject());
+        break;
+      case JSVAL_TYPE_BOXED:
+        debug_only_printf(LC_TMTracer, "box<%llx> ", v.asRawBits());
+        break;
       default:
         JS_NOT_REACHED("unexpected type");
         break;
@@ -3945,6 +3971,12 @@ TraceRecorder::snapshot(ExitType exitType)
         if (pendingUnboxSlot == cx->regs->sp - 2)
             pos = stackSlots - 2;
         typemap[pos] = JSVAL_TYPE_BOXED;
+    } else if (pendingSpecializedNative && 
+               (pendingSpecializedNative->flags & JSTN_RETURN_NULLABLE_STR)) {
+        typemap[stackSlots - 1] = JSVAL_TYPE_STRORNULL;
+    } else if (pendingSpecializedNative && 
+               (pendingSpecializedNative->flags & JSTN_RETURN_NULLABLE_OBJ)) {
+        typemap[stackSlots - 1] = JSVAL_TYPE_OBJORNULL;
     }
 
     /* Now restore the the original pc (after which early returns are ok). */
@@ -10764,6 +10796,8 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
             } else if (argtype == 'f') {
                 if (!arg.isFunObj())
                     goto next_specialization;
+            } else if (argtype == 'p') {
+                *argp = box_value(arg, *argp);
             } else {
                 goto next_specialization;
             }
@@ -12897,6 +12931,11 @@ TraceRecorder::record_NativeCallComplete()
          */
         JS_ASSERT(&v == &cx->regs->sp[-1] && get(&v) == v_ins);
         set(&v, unbox_value(v, native_rval_ins, 0, snapshot(BRANCH_EXIT)));
+    } else if (pendingSpecializedNative->flags &
+               (JSTN_RETURN_NULLABLE_STR | JSTN_RETURN_NULLABLE_OBJ)) {
+            guard(v.isNull(),
+                  addName(lir->insEqP_0(v_ins), "guard(nullness)"),
+                  BRANCH_EXIT);
     } else if (JSTN_ERRTYPE(pendingSpecializedNative) == FAIL_NEG) {
         /* Already added i2d in functionCall. */
         JS_ASSERT(v.isNumber());
