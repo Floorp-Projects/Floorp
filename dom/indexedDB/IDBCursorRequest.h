@@ -129,7 +129,7 @@ protected:
   nsCOMPtr<nsIVariant> mCachedKey;
   jsval mCachedValue;
   bool mHaveCachedValue;
-  JSRuntime* mJSRuntime;
+  JSContext* mJSContext;
 
   bool mContinueCalled;
   PRUint32 mDataIndex;

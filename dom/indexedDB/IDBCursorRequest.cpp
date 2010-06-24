@@ -244,7 +244,7 @@ IDBCursorRequest::IDBCursorRequest()
 : mDirection(nsIIDBCursor::NEXT),
   mCachedValue(JSVAL_VOID),
   mHaveCachedValue(false),
-  mJSRuntime(nsnull),
+  mJSContext(nsnull),
   mContinueCalled(false),
   mDataIndex(0),
   mType(OBJECTSTORE)
@@ -256,8 +256,9 @@ IDBCursorRequest::~IDBCursorRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mJSRuntime) {
-    JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+  if (mJSContext) {
+    JSAutoRequest ar(mJSContext);
+    JS_RemoveValueRoot(mJSContext, &mCachedValue);
   }
 }
 
@@ -382,14 +383,11 @@ IDBCursorRequest::GetValue(nsIVariant** aValue)
 
     JSAutoRequest ar(cx);
 
-    if (!mJSRuntime) {
-      JSRuntime* rt = JS_GetRuntime(cx);
-
-      JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                   "IDBCursorRequest::mCachedValue");
+    if (!mJSContext) {
+      JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-      mJSRuntime = rt;
+      mJSContext = cx;
     }
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
