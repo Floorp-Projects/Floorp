@@ -9383,9 +9383,7 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
     LIns *mask_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + sTagOffset, 
                                   accSet);
     if (v.isNumber() && force_double) {
-        guard(false,
-              lir->insEqI_0(lir->ins2(LIR_leui, mask_ins, INS_CONSTU(JSVAL_TAG_INT32))),
-              exit);
+        guard(true, lir->ins2(LIR_leui, mask_ins, INS_CONSTU(JSVAL_TAG_INT32)), exit);
         LIns *val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + sPayloadOffset,
                                      accSet);
         LIns* args[] = { val_ins, mask_ins };
