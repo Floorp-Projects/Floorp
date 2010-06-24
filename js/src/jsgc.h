@@ -448,9 +448,8 @@ const bool JS_WANT_GC_METER_PRINT = false;
 
 struct JSConservativeGCStats {
     uint32  words;      /* number of words on native stacks */
-    uint32  unique;     /* number of unique words */
     uint32  oddaddress; /* excluded because low bit was set */
-    uint32  outside;    /* not within chunk min/max address range */
+    uint32  special;    /* excluded because a special value */
     uint32  notarena;   /* not within arena range in a chunk */
     uint32  notchunk;   /* not within a valid chunk */
     uint32  freearena;  /* not within non-free arena */
