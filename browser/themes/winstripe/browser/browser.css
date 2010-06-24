@@ -112,6 +112,10 @@ statusbarpanel#statusbar-display {
 }
 %endif
 
+#appmenu-button-container {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+}
+
 #appmenu-button {
   -moz-appearance: none;
   background-color: rgb(228,120,14);
@@ -568,10 +572,19 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
 
-/* bookmark sidebar button */
+/* bookmark sidebar & menu buttons */
 
-#bookmarks-button {
+#bookmarks-button,
+#bookmarks-menu-button {
   -moz-image-region: rect(0, 144px, 18px, 126px);
+}
+
+#bookmarks-menu-button.bookmark-item {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+toolbar[mode="icons"] #bookmarks-menu-button.toolbarbutton-1 {
+  -moz-box-orient: horizontal;
 }
 
 /* print button */
@@ -1163,11 +1176,14 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 .tab-icon-image {
-  -moz-margin-end: 3px;
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.tabbrowser-tab:not([pinned]) > .tab-icon-image {
+  -moz-margin-end: 3px;
 }
 
 /* tabbrowser-tab focus ring */
@@ -1583,9 +1599,15 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-image-region: rect(0, 108px, 18px, 90px);
 }
 
-/* Bookmarks Toolbar menu-item */
-#bookmarksToolbarFolderMenu {
+/* Bookmarks roots menu-items */
+#bookmarksToolbarFolderMenu,
+#BMB_bookmarksToolbarFolderMenu {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
+  -moz-image-region: auto;
+}
+
+#BMB_unsortedBookmarksFolderMenu {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
   -moz-image-region: auto;
 }
 
