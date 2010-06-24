@@ -231,7 +231,7 @@ gfxDWriteFont::ComputeMetrics()
 
     mFUnitsConvFactor = GetAdjustedSize() / fontMetrics.designUnitsPerEm;
 
-    SanitizeMetrics(&mMetrics, PR_FALSE);
+    SanitizeMetrics(&mMetrics, GetFontEntry()->mIsBadUnderlineFont);
 
 #if 0
     printf("Font: %p (%s) size: %f\n", this,
