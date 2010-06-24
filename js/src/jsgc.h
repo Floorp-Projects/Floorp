@@ -561,7 +561,7 @@ TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
 }
 
 JSCompartment *
-NewCompartment(JSContext *cx);
+NewCompartment(JSContext *cx, JSPrincipals *principals);
 
 } /* namespace js */
 

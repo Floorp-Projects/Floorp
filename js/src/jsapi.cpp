@@ -579,6 +579,8 @@ JSRuntime::init(uint32 maxbytes)
     if (!deflatedStringCache || !deflatedStringCache->init())
         return false;
 
+    wrapObjectCallback = js::TransparentObjectWrapper;
+
 #ifdef JS_THREADSAFE
     gcLock = JS_NEW_LOCK();
     if (!gcLock)
@@ -1090,6 +1092,15 @@ JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
     return "JavaScript-C 1.8.0 pre-release 1 2007-10-03";
+}
+
+JS_PUBLIC_API(JSWrapObjectCallback)
+JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback)
+{
+    JSRuntime *rt = cx->runtime;
+    JSWrapObjectCallback old = rt->wrapObjectCallback;
+    rt->wrapObjectCallback = callback;
+    return old;
 }
 
 JS_PUBLIC_API(JSCrossCompartmentCall *)
@@ -2914,10 +2925,10 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp)
+JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
 {
     CHECK_REQUEST(cx);
-    JSCompartment *compartment = NewCompartment(cx);
+    JSCompartment *compartment = NewCompartment(cx, principals);
     if (!compartment)
         return NULL;
 

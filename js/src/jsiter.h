@@ -75,6 +75,14 @@ struct NativeIterator {
                                     uint32 *sarray, uint32 slength, uint32 key,
                                     js::AutoValueVector &props);
 
+    inline size_t length() const {
+        return props_end - props_array;
+    }
+
+    inline jsval *begin() const {
+        return props_array;
+    }
+
     void mark(JSTracer *trc);
 };
 

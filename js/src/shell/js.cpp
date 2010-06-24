@@ -2942,7 +2942,7 @@ class AutoCrossCompartmentCall
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy, bool split)
 {
-    JSObject *obj = JS_NewCompartmentAndGlobalObject(cx, &sandbox_class);
+    JSObject *obj = JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL);
     if (!obj)
         return NULL;
 
@@ -4935,7 +4935,7 @@ NewGlobalObject(JSContext *cx, JSCrossCompartmentCall **callp)
     JSObject *glob;
 
     if (callp) {
-        glob = JS_NewCompartmentAndGlobalObject(cx, &global_class);
+        glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
         if (!glob)
             return NULL;
         call = JS_EnterCrossCompartmentCall(cx, glob);

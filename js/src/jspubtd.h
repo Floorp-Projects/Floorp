@@ -156,6 +156,10 @@ typedef struct JSSecurityCallbacks JSSecurityCallbacks;
 typedef struct JSONParser        JSONParser;
 typedef struct JSCompartment     JSCompartment;
 typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
+#ifdef __cplusplus
+typedef class JSWrapper          JSWrapper;
+typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
+#endif
 
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
@@ -571,6 +575,14 @@ typedef JSPrincipals *
  */
 typedef JSBool
 (* JSCSPEvalChecker)(JSContext *cx);
+
+/*
+ * Callback used to ask the embedding for the cross compartment wrapper handler
+ * that implements the desired prolicy for this kind of object in the
+ * destination compartment.
+ */
+typedef JSObject *
+(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto);
 
 JS_END_EXTERN_C
 
