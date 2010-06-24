@@ -79,7 +79,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
     const_cast<jsbytecode*>(emptyScriptCode),
     1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, 0, true, false, false, false, false,
     false, const_cast<jsbytecode*>(emptyScriptCode),
-    {0, NULL}, NULL, 0, 0, 0, NULL, {NULL}, reinterpret_cast<void*>(1)
+    {0, NULL}, NULL, 0, 0, 0, NULL, {NULL}, reinterpret_cast<JSThread*>(1)
 };
 
 #if JS_HAS_XDR
