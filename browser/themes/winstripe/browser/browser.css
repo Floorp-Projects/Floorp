@@ -112,6 +112,10 @@ statusbarpanel#statusbar-display {
 }
 %endif
 
+#appmenu-button-container {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+}
+
 #appmenu-button {
   -moz-appearance: none;
   background-color: rgb(228,120,14);
