@@ -608,12 +608,12 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     return NS_ERROR_NULL_POINTER;
 
   // before we go on, make sure that target node still has a window
-  nsCOMPtr<nsIDocument> document = aTarget->GetDocument();
+  nsIDocument *document = aTarget->GetDocument();
   if (!document) {
     NS_WARNING("Unable to retrieve the tooltip node document.");
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
+  nsPIDOMWindow *window = document->GetWindow();
   if (!window) {
     return NS_OK;
   }
@@ -650,20 +650,13 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 
   if (!tooltipId.IsEmpty()) {
     // tooltip must be an id, use getElementById to find it
-    nsCOMPtr<nsIDOMDocument> domDocument =
-      do_QueryInterface(document);
-    if (!domDocument) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIDOMElement> tooltipEl;
-    domDocument->GetElementById(tooltipId, getter_AddRefs(tooltipEl));
+    nsCOMPtr<nsIContent> tooltipEl = document->GetElementById(tooltipId);
 
     if (tooltipEl) {
 #ifdef MOZ_XUL
       mNeedTitletip = PR_FALSE;
 #endif
-      CallQueryInterface(tooltipEl, aTooltip);
+      *aTooltip = tooltipEl.forget().get();
       return NS_OK;
     }
   }
