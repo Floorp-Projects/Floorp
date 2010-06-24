@@ -40,6 +40,7 @@
 #include "OpenGL/OpenGL.h"
 #include <OpenGL/gl.h>
 #include <AppKit/NSOpenGL.h>
+#include "gfxASurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -248,6 +249,12 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize,
     }
 
     return glContext.forget().get();
+}
+
+already_AddRefed<GLContext>
+GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+{
+    return nsnull;
 }
 
 } /* namespace gl */

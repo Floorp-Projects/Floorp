@@ -49,8 +49,6 @@
 .hud-console-wrapper {
     width: 100%; 
     overflow: auto; 
-    max-height: 400px; 
-    height: 400px; 
 }
 
 .hud-main-label {
@@ -100,8 +98,6 @@
 }
 
 .hud-output-node {
-    height:380px; 
-    max-height: 380px;
     border-bottom: 1px solid #ddd; 
     border-top: 1px solid #ddd; 
     overflow-x: auto; overflow: auto;

@@ -64,8 +64,12 @@ function runOverflowTests(aEvent) {
   EventUtils.synthesizeMouse(upButton, 0, 0, {clickCount: 3});
   isLeft(tabContainer.firstChild, "Scrolled to the start with a triple click");
 
+  for (var i = 2; i; i--)
+    EventUtils.synthesizeMouseScroll(scrollbox, 0, 0, {axis: "horizontal", delta: -1});
+  isLeft(tabContainer.firstChild, "Remained at the start with the mouse wheel");
+
   element = nextRightElement();
-  EventUtils.synthesizeMouseScroll(scrollbox, 0, 0, {delta: 1});
+  EventUtils.synthesizeMouseScroll(scrollbox, 0, 0, {axis: "horizontal", delta: 1});
   isRight(element, "Scrolled one tab to the right with the mouse wheel");
 
   while (tabContainer.childNodes.length > 1)

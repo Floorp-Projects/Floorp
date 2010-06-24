@@ -252,6 +252,12 @@ GLContextProviderOSMesa::CreateForWindow(nsIWidget *aWidget)
 }
 
 already_AddRefed<GLContext>
+GLContextProviderOSMesa::CreateForNativePixmapSurface(gfxASurface *aSurface)
+{
+    return 0;
+}
+
+already_AddRefed<GLContext>
 GLContextProviderOSMesa::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat& aFormat)
 {
     if (!sOSMesaLibrary.EnsureInitialized()) {

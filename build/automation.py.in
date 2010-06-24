@@ -50,6 +50,7 @@ import subprocess
 import sys
 import threading
 import tempfile
+import zipfile
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -825,3 +826,48 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       ssltunnelProcess.kill()
 
     return status
+
+  """ 
+   Copies an "installed" extension into the extensions directory of the given profile
+   extensionSource - the source location of the extension files.  This can be either 
+                     a directory or a path to an xpi file.
+   profileDir      - the profile directory we are copying into.  We will create the
+                     "extensions" directory there if it doesn't exist
+   extensionID     - the id of the extension to be used as the containing directory for the
+                     extension, i.e.
+                 this is the name of the folder in the <profileDir>/extensions/<extensionID>
+  """
+  def installExtension(self, extensionSource, profileDir, extensionID):
+    if (not os.path.exists(extensionSource)):
+      self.log.info("INFO | automation.py | Cannot install extension no source at: %s", extensionSource) 
+      
+    if (not os.path.exists(profileDir)):
+      self.log.info("INFO | automation.py | Cannot install extension invalid profileDir at: %s", profileDir)
+
+    # See if we have an XPI or a directory
+    if (os.path.isfile(extensionSource)):
+      tmpd = tempfile.mkdtemp()
+      extrootdir = self.extractZip(extensionSource, tmpd)
+    else:
+      extrootdir = extensionSource 
+    extnsdir = os.path.join(profileDir, "extensions")
+    extnshome = os.path.join(extnsdir, extensionID)
+
+    # Now we copy the extension source into the extnshome
+    shutil.copytree(extrootdir, extnshome)
+
+  def extractZip(self, filename, dest):
+    z = zipfile.ZipFile(filename, 'r')
+    for n in z.namelist():
+      fullpath = os.path.join(dest, n)
+      parentdir = os.path.dirname(fullpath)
+      if not os.path.isdir(parentdir):
+        os.makedirs(parentdir)
+      if (not n.endswith(os.sep)):
+        data = z.read(n)
+        f = open(fullpath, 'w')
+        f.write(data)
+        f.close()
+    z.close()
+    return dest
+

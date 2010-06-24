@@ -292,7 +292,7 @@ var tests = [
   // Test two notifications with different anchors
   { // Test #9
     run: function () {
-      this.notifyObj = new basicNotification(),
+      this.notifyObj = new basicNotification();
       this.firstNotification = showNotification(this.notifyObj);
       this.notifyObj2 = new basicNotification();
       this.notifyObj2.id += "-2";
@@ -308,6 +308,21 @@ var tests = [
     onHidden: function (popup) {
       // Remove the first notification
       this.firstNotification.remove();
+    }
+  },
+  // Test optional params
+  { // Test #10
+    run: function () {
+      this.notifyObj = new basicNotification();
+      this.notifyObj.secondaryActions = undefined;
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      dismissNotification(popup);
+    },
+    onHidden: function (popup) {
+      this.notification.remove();
     }
   },
 ];

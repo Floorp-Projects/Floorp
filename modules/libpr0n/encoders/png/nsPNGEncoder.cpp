@@ -46,15 +46,15 @@
 #include "nsString.h"
 #include "nsStreamUtils.h"
 
-// Input streams that do not implement nsIAsyncInputStream should be threadsafe
-// so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
-// which read such a stream on a background thread.
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsPNGEncoder, imgIEncoder, nsIInputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 nsPNGEncoder::nsPNGEncoder() : mPNG(nsnull), mPNGinfo(nsnull),
                                mIsAnimation(PR_FALSE),
                                mImageBuffer(nsnull), mImageBufferSize(0),
-                               mImageBufferUsed(0), mImageBufferReadPoint(0)
+                               mImageBufferUsed(0), mImageBufferReadPoint(0),
+                               mFinished(PR_FALSE), mCallback(nsnull),
+                               mCallbackTarget(nsnull), mNotifyThreshold(0),
+                               mMonitor("PNG Encoder Monitor")
 {
 }
 
@@ -334,6 +334,9 @@ NS_IMETHODIMP nsPNGEncoder::EndImageEncode()
   png_write_end(mPNG, mPNGinfo);
   png_destroy_write_struct(&mPNG, &mPNGinfo);
 
+  mFinished = PR_TRUE;
+  NotifyListener();
+
   // if output callback can't get enough memory, it will free our buffer
   if (!mImageBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -526,10 +529,13 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
                                          void *aClosure, PRUint32 aCount,
                                          PRUint32 *_retval)
 {
+  // Avoid another thread reallocing the buffer underneath us
+  mozilla::MonitorAutoEnter autoEnter(mMonitor);
+
   PRUint32 maxCount = mImageBufferUsed - mImageBufferReadPoint;
   if (maxCount == 0) {
     *_retval = 0;
-    return NS_OK;
+    return mFinished ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
   }
 
   if (aCount > maxCount)
@@ -550,10 +556,42 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 /* boolean isNonBlocking (); */
 NS_IMETHODIMP nsPNGEncoder::IsNonBlocking(PRBool *_retval)
 {
-  *_retval = PR_FALSE;  // We don't implement nsIAsyncInputStream
+  *_retval = PR_TRUE;
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPNGEncoder::AsyncWait(nsIInputStreamCallback *aCallback,
+                                      PRUint32 aFlags,
+                                      PRUint32 aRequestedCount,
+                                      nsIEventTarget *aTarget)
+{
+  if (aFlags != 0)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  if (mCallback || mCallbackTarget)
+    return NS_ERROR_UNEXPECTED;
+
+  mCallbackTarget = aTarget;
+  // 0 means "any number of bytes except 0"
+  mNotifyThreshold = aRequestedCount;
+  if (!aRequestedCount)
+    mNotifyThreshold = 1024; // We don't want to notify incessantly
+
+  // We set the callback absolutely last, because NotifyListener uses it to
+  // determine if someone needs to be notified.  If we don't set it last,
+  // NotifyListener might try to fire off a notification to a null target
+  // which will generally cause non-threadsafe objects to be used off the main thread
+  mCallback = aCallback;
+
+  // What we are being asked for may be present already
+  NotifyListener();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPNGEncoder::CloseWithStatus(nsresult aStatus)
+{
+  return Close();
+}
 
 // nsPNGEncoder::ConvertHostARGBRow
 //
@@ -629,6 +667,10 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data,
     return;
 
   if (that->mImageBufferUsed + size > that->mImageBufferSize) {
+    // When we're reallocing the buffer we need to take the lock to ensure
+    // that nobody is trying to read from the buffer we are destroying
+    mozilla::MonitorAutoEnter autoEnter(that->mMonitor);
+
     // expand buffer, just double each time
     that->mImageBufferSize *= 2;
     PRUint8* newBuf = (PRUint8*)PR_Realloc(that->mImageBuffer,
@@ -644,4 +686,37 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data,
   }
   memcpy(&that->mImageBuffer[that->mImageBufferUsed], data, size);
   that->mImageBufferUsed += size;
+  that->NotifyListener();
+}
+
+void
+nsPNGEncoder::NotifyListener()
+{
+  // We might call this function on multiple threads (any threads that call
+  // AsyncWait and any that do encoding) so we lock to avoid notifying the
+  // listener twice about the same data (which generally leads to a truncated
+  // image).
+  mozilla::MonitorAutoEnter autoEnter(mMonitor);
+
+  if (mCallback &&
+      (mImageBufferUsed - mImageBufferReadPoint >= mNotifyThreshold ||
+       mFinished)) {
+    nsCOMPtr<nsIInputStreamCallback> callback;
+    if (mCallbackTarget) {
+      NS_NewInputStreamReadyEvent(getter_AddRefs(callback),
+                                  mCallback,
+                                  mCallbackTarget);
+    } else {
+      callback = mCallback;
+    }
+
+    NS_ASSERTION(callback, "Shouldn't fail to make the callback");
+    // Null the callback first because OnInputStreamReady could reenter
+    // AsyncWait
+    mCallback = nsnull;
+    mCallbackTarget = nsnull;
+    mNotifyThreshold = 0;
+
+    callback->OnInputStreamReady(this);
+  }
 }

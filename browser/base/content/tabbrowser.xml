@@ -158,6 +158,41 @@
         false
       </field>
 
+      <property name="_numPinnedTabs" readonly="true">
+        <getter><![CDATA[
+          for (var i = 0; i < this.tabs.length; i++) {
+            if (!this.tabs[i].pinned)
+              break;
+          }
+          return i;
+        ]]></getter>
+      </property>
+
+      <method name="pinTab">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          if (aTab.pinned)
+            return;
+
+          this.moveTabTo(aTab, this._numPinnedTabs);
+          aTab.setAttribute("pinned", "true");
+          this.tabContainer._positionPinnedTabs();
+        ]]></body>
+      </method>
+
+      <method name="unpinTab">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          if (!aTab.pinned)
+            return;
+
+          this.moveTabTo(aTab, this._numPinnedTabs - 1);
+          aTab.removeAttribute("pinned");
+          aTab.style.MozMarginStart = "";
+          this.tabContainer._positionPinnedTabs();
+        ]]></body>
+      </method>
+
       <method name="previewTab">
         <parameter name="aTab"/>
         <parameter name="aCallback"/>
@@ -1178,7 +1213,6 @@
             t.style.maxWidth = this.tabContainer.mTabMaxWidth + "px";
             t.style.minWidth = this.tabContainer.mTabMinWidth + "px";
             t.width = 0;
-            t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
@@ -1204,7 +1238,7 @@
                * order to make sure the same set of tabs is visible before and
                * after the new tab is added.  See bug 508816. */
 
-              this.tabContainer.mTabstrip.scrollByPixels(this.tabs[0].clientWidth);
+              this.tabContainer.mTabstrip.scrollByPixels(t.clientWidth);
             }
 
             // invalidate cache, because tabContainer is about to change
@@ -1525,6 +1559,8 @@
             if (browser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
+            var wasPinned = aTab.pinned;
+
             // Invalidate browsers cache, as the tab is removed from the
             // tab container.
             this._browsers = null;
@@ -1536,9 +1572,13 @@
             for (let i = aTab._tPos; i < this.tabs.length; i++)
               this.tabs[i]._tPos = i;
 
-            // update tab close buttons state
-            if (!this._windowIsClosing)
+            if (!this._windowIsClosing) {
+              if (wasPinned)
+                this.tabContainer._positionPinnedTabs();
+
+              // update tab close buttons state
               this.tabContainer.adjustTabstrip();
+            }
 
             // update first-tab/last-tab/beforeselected/afterselected attributes
             this.selectedTab._selected = true;
@@ -1844,8 +1884,16 @@
           if (oldPosition == aIndex)
             return;
 
+          // Don't allow mixing pinned and unpinned tabs.
+          if (aTab.pinned)
+            aIndex = Math.min(aIndex, this._numPinnedTabs - 1);
+          else
+            aIndex = Math.max(aIndex, this._numPinnedTabs);
+          if (oldPosition == aIndex)
+            return;
+
           this._lastRelatedTab = null;
-          this._browsers = null; // invalidate cache
+
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
@@ -1863,6 +1911,9 @@
           }
           this.mCurrentTab._selected = true;
           this.tabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
+
+          if (aTab.pinned)
+            this.tabContainer._positionPinnedTabs();
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -2394,6 +2445,12 @@
           return document.getBindingParent(this).childNodes;
         ]]></body>
       </method>
+      <method name="_canScrollToElement">
+        <parameter name="tab"/>
+        <body>
+          return !tab.pinned;
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -2403,6 +2460,7 @@
 
          var tabs = document.getBindingParent(this);
          tabs.removeAttribute("overflow");
+         tabs._positionPinnedTabs();
       ]]></handler>
       <handler event="overflow"><![CDATA[
          if (event.detail == 0)
@@ -2410,7 +2468,7 @@
 
          var tabs = document.getBindingParent(this);
          tabs.setAttribute("overflow", "true");
-         this.ensureElementIsVisible(tabs.selectedItem, false);
+         tabs._positionPinnedTabs();
       ]]></handler>
     </handlers>
   </binding>
@@ -2459,7 +2517,6 @@
           tab.style.minWidth = this.mTabMinWidth + "px";
           tab.style.maxWidth = this.mTabMaxWidth + "px";
           tab.width = 0;
-          tab.setAttribute("flex", "100");
           tab.setAttribute("crop", "end");
           tab.setAttribute("validate", "never");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
@@ -2574,10 +2631,13 @@
           case 1:
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "noclose");
-            else if (this.firstChild.getBoundingClientRect().width > this.mTabClipWidth)
-              this.setAttribute("closebuttons", "alltabs");
-            else
-              this.setAttribute("closebuttons", "activetab");
+            else {
+              let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
+              if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
+                this.setAttribute("closebuttons", "alltabs");
+              else
+                this.setAttribute("closebuttons", "activetab");
+            }
             break;
           case 2:
           case 3:
@@ -2611,6 +2671,21 @@
         ]]></body>
       </method>
 
+      <method name="_positionPinnedTabs">
+        <body><![CDATA[
+          var width = 0;
+          var scrollButtonWidth = this.getAttribute("overflow") != "true" ? 0 :
+                                  this.mTabstrip._scrollButtonDown.scrollWidth;
+          for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
+            let tab = this.childNodes[i];
+            width += tab.scrollWidth;
+            tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
+          }
+          this.style.MozMarginStart = width + "px";
+          this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
+        ]]></body>
+      </method>
+
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -2635,6 +2710,9 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
+          if (aTab.pinned)
+            return;
+
           var scrollRect = this.mTabstrip.scrollClientRect;
           var tab = aTab.getBoundingClientRect();
 
@@ -3170,6 +3248,12 @@
     </content>
 
     <implementation>
+      <property name="pinned" readonly="true">
+        <getter>
+          return this.getAttribute("pinned") == "true";
+        </getter>
+      </property>
+
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
     </implementation>

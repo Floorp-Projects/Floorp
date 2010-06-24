@@ -133,7 +133,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
 }
 
 nsresult
-nsHtml5TreeOperation::AppendTextToTextNode(PRUnichar* aBuffer,
+nsHtml5TreeOperation::AppendTextToTextNode(const PRUnichar* aBuffer,
                                            PRInt32 aLength,
                                            nsIContent* aTextNode,
                                            nsHtml5TreeOpExecutor* aBuilder)
@@ -165,7 +165,7 @@ nsHtml5TreeOperation::AppendTextToTextNode(PRUnichar* aBuffer,
 
 
 nsresult
-nsHtml5TreeOperation::AppendText(PRUnichar* aBuffer,
+nsHtml5TreeOperation::AppendText(const PRUnichar* aBuffer,
                                  PRInt32 aLength,
                                  nsIContent* aParent,
                                  nsHtml5TreeOpExecutor* aBuilder)
@@ -478,6 +478,22 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       PRUnichar* buffer = mTwo.unicharPtr;
       PRInt32 length = mInt;
       return AppendText(buffer, length, parent, aBuilder);
+    }
+    case eTreeOpAppendIsindexPrompt: {
+      nsIContent* parent = *mOne.node;
+      nsXPIDLString prompt;
+      nsresult rv =
+          nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                             "IsIndexPromptWithSpace", prompt);
+      PRUint32 len = prompt.Length();
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (!len) {
+        // Don't bother appending a zero-length text node.
+        return NS_OK;
+      }
+      return AppendText(prompt.BeginReading(), len, parent, aBuilder);
     }
     case eTreeOpFosterParentText: {
       nsIContent* stackParent = *mOne.node;

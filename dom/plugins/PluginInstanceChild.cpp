@@ -615,6 +615,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
+    PaintTracker pt;
+
     NPCocoaEvent evcopy = event.event;
 
     if (evcopy.type == NPCocoaEventDrawRect) {
@@ -685,6 +687,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
+
+    PaintTracker pt;
 
     NPCocoaEvent evcopy = event.event;
     nsIOSurface* surf = nsIOSurface::LookupSurface(surfaceid);
@@ -1066,7 +1070,7 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 
     // The plugin received keyboard focus, let the parent know so the dom is up to date.
     if (message == WM_MOUSEACTIVATE)
-        self->CallPluginGotFocus();
+      self->CallPluginFocusChange(PR_TRUE);
 
     // Prevent lockups due to plugins making rpc calls when the parent
     // is making a synchronous SendMessage call to the child window. Add
@@ -1082,6 +1086,9 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
             break;
         }
     }
+
+    if (message == WM_KILLFOCUS)
+      self->CallPluginFocusChange(PR_FALSE);
 
     if (message == WM_USER+1 &&
         (self->mQuirks & PluginInstanceChild::QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)) {

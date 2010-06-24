@@ -28,10 +28,10 @@ function test() {
 }
 
 function end_test() {
-  gManagerWindow.close();
-  LightweightThemeManager.forgetUsedTheme("test");
-
-  finish();
+  close_manager(gManagerWindow, function() {
+    LightweightThemeManager.forgetUsedTheme("test");
+    finish();
+  });
 }
 
 // Tests that loading a second view before the first has not finished loading

@@ -43,6 +43,7 @@
 #include "nsAutoPtr.h"
 
 class nsIWidget;
+class gfxASurface;
 
 namespace mozilla {
 namespace gl {
@@ -119,6 +120,15 @@ public:
      * @return Context to use for this window
      */
     already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
+
+    /**
+     * Try to create a GL context from native surface for arbitrary gfxASurface
+     * If surface not compatible this will return NULL
+     *
+     * @param aSurface surface to create a context for
+     * @return Context to use for this surface
+     */
+    already_AddRefed<GLContext> CreateForNativePixmapSurface(gfxASurface *aSurface);
 };
 
 /** Same as GLContextProvider but for off-screen Mesa rendering */
@@ -146,6 +156,15 @@ public:
      * @return Context to use for this window
      */
     static already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
+
+    /**
+     * Try to create a GL context from native surface for arbitrary gfxASurface
+     * If surface not compatible this will return NULL
+     *
+     * @param aSurface surface to create a context for
+     * @return Context to use for this surface
+     */
+    static already_AddRefed<GLContext> CreateForNativePixmapSurface(gfxASurface *aSurface);
 };
 
 extern GLContextProvider THEBES_API sGLContextProvider;

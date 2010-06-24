@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
     <richlistitem id="richlistbox_item7"><label value="Item 7"/></richlistitem>
     <richlistitem id="richlistbox_item8"><label value="Item 8"/></richlistitem>
   </richlistbox>
-  
+
   <listbox id="listbox" rows="2">
     <listitem id="listbox_item1" label="Item 1"/>
     <listitem id="listbox_item2" label="Item 2"/>
@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
     <listitem id="listbox_item7" label="Item 7"/>
     <listitem id="listbox_item8" label="Item 8"/>
   </listbox>
-  
+
   <box orient="horizontal">
     <arrowscrollbox id="hscrollbox" clicktoscroll="true" orient="horizontal"
      smoothscroll="false" style="max-width:80px;" flex="1">
@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
       <hbox style="width:40px; height:20px; background:black;"/>
     </arrowscrollbox>
   </box>
-  
+
   <arrowscrollbox id="vscrollbox" clicktoscroll="true" orient="vertical"
    smoothscroll="false" style="max-height:80px;" flex="1">
       <vbox style="width:100px; height:40px; background:white;"/>
@@ -68,7 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
       <vbox style="width:100px; height:40px; background:white;"/>
       <vbox style="width:100px; height:40px; background:black;"/>
   </arrowscrollbox>
-  
+
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
@@ -94,7 +94,7 @@ const kinds = [
 function testListbox(id)
 {
   var listbox = document.getElementById(id);
-  
+
   function helper(aStart, aDelta, aKind)
   {
     listbox.scrollToIndex(aStart);
@@ -159,7 +159,7 @@ function testRichListbox(id, andThen)
       }, 0);
     }, 0);
   }
-  
+
   // richlistbox currently uses native XUL scrolling, so the "line"
   // amounts don't necessarily correspond 1-to-1 with listbox items. So
   // we just check that scrolling up/down scrolls in the right direction.
@@ -175,7 +175,7 @@ function testArrowScrollbox(id)
   var scrollbox = document.getElementById(id);
   var scrollBoxObject = scrollbox.scrollBoxObject;
   var orient = scrollbox.getAttribute("orient");
-  
+
   function helper(aStart, aDelta, aExpected, aKind)
   {
     var xpos = {};
@@ -183,28 +183,33 @@ function testArrowScrollbox(id)
     var pos = orient == "horizontal" ? xpos : ypos;
 
     scrollBoxObject.scrollTo(aStart, aStart);
-    synthesizeMouseScroll(scrollbox, 5, 5,
-                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
-                           hasPixels:aKind.hasPixels});
-    scrollBoxObject.getPosition(xpos, ypos);
-    // Note, vertical mouse scrolling is allowed to scroll horizontal
-    // arrowscrollboxes, because many users have no horizontal mouse scroll
-    // capability
-    is(pos.value, aKind.shouldScrollDOM ? aExpected : aStart,
-       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
-       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+    for (var i = (orient == "horizontal") ? 2 : 0; i >= 0; i--) {
+      synthesizeMouseScroll(scrollbox, 5, 5,
+                            {axis:"vertical", delta:aDelta, type:aKind.eventType,
+                             hasPixels:aKind.hasPixels});
+      scrollBoxObject.getPosition(xpos, ypos);
+      // Note, vertical mouse scrolling is allowed to scroll horizontal
+      // arrowscrollboxes, because many users have no horizontal mouse scroll
+      // capability
+      var expected = (aKind.shouldScrollDOM && !i) ? aExpected : aStart;
+      is(pos.value, expected,
+         "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
+         + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+    }
 
-    scrollBoxObject.scrollTo(aStart, aStart);
-    synthesizeMouseScroll(scrollbox, 5, 5,
-                          {axis:"horizontal", delta:aDelta, type:aKind.eventType,
-                           hasPixels:aKind.hasPixels});
-    // horizontal mouse scrolling is never allowed to scroll vertical
-    // arrowscrollboxes
-    scrollBoxObject.getPosition(xpos, ypos);
-    var expected = (aKind.shouldScrollDOM && (orient == "horizontal")) ? aExpected : aStart;
-    is(pos.value, expected,
-       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
-       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+    for (var i = (orient == "horizontal") ? 2 : 0; i >= 0; i--) {
+      scrollBoxObject.scrollTo(aStart, aStart);
+      synthesizeMouseScroll(scrollbox, 5, 5,
+                            {axis:"horizontal", delta:aDelta, type:aKind.eventType,
+                             hasPixels:aKind.hasPixels});
+      // horizontal mouse scrolling is never allowed to scroll vertical
+      // arrowscrollboxes
+      scrollBoxObject.getPosition(xpos, ypos);
+      var expected = (aKind.shouldScrollDOM && !i && (orient == "horizontal")) ? aExpected : aStart;
+      is(pos.value, expected,
+         "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
+         + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+    }
   }
 
   var scrolledWidth = {};

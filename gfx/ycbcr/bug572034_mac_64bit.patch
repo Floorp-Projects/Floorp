@@ -12,8 +12,8 @@ diff --git a/gfx/ycbcr/yuv_row_linux.cpp b/gfx/ycbcr/yuv_row_linux.cpp
    asm(
 -  "jmp    convertend\n"
 -"convertloop:"
-+  "jmp    Lconvertend\n"
-+"Lconvertloop:"
++  "jmp    1f\n"
++"0:"
    "movzb  (%1),%%r10\n"
    "add    $0x1,%1\n"
    "movzb  (%2),%%r11\n"
@@ -32,16 +32,16 @@ diff --git a/gfx/ycbcr/yuv_row_linux.cpp b/gfx/ycbcr/yuv_row_linux.cpp
    "movq   %%xmm2,0x0(%3)\n"
    "add    $0x8,%3\n"
 -"convertend:"
-+"Lconvertend:"
++"1:"
    "sub    $0x2,%4\n"
 -  "jns    convertloop\n"
-+  "jns    Lconvertloop\n"
++  "jns    0b\n"
  
 -"convertnext:"
-+"Lconvertnext:"
++"2:"
    "add    $0x1,%4\n"
 -  "js     convertdone\n"
-+  "js     Lconvertdone\n"
++  "js     3f\n"
  
    "movzb  (%1),%%r10\n"
    "movq   2048(%5,%%r10,8),%%xmm0\n"
@@ -55,7 +55,7 @@ diff --git a/gfx/ycbcr/yuv_row_linux.cpp b/gfx/ycbcr/yuv_row_linux.cpp
    "packuswb %%xmm1,%%xmm1\n"
    "movd   %%xmm1,0x0(%3)\n"
 -"convertdone:"
-+"Lconvertdone:"
++"3:"
    :
    : "r"(y_buf),  // %0
      "r"(u_buf),  // %1
@@ -64,3 +64,81 @@ diff --git a/gfx/ycbcr/yuv_row_linux.cpp b/gfx/ycbcr/yuv_row_linux.cpp
      "r"(width),  // %4
      "r" (kCoefficientsRgbY)  // %5
    : "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
+@@ -309,28 +309,35 @@ void FastConvertYUVToRGB32Row(const uint
+ 
+ #else
+ 
+ void FastConvertYUVToRGB32Row(const uint8* y_buf,
+                               const uint8* u_buf,
+                               const uint8* v_buf,
+                               uint8* rgb_buf,
+                               int width);
++
++// It's necessary to specify the correct section for the following code,
++// otherwise it will be placed in whatever the current section is as this unit
++// is compiled.  Because GCC remembers the last section it emitted, we must
++// also revert to the previous section state at the end of the asm block.
+   asm(
++  ".section .text\n"
+   ".global FastConvertYUVToRGB32Row\n"
++  ".type FastConvertYUVToRGB32Row, @function\n"
+ "FastConvertYUVToRGB32Row:\n"
+   "pusha\n"
+   "mov    0x24(%esp),%edx\n"
+   "mov    0x28(%esp),%edi\n"
+   "mov    0x2c(%esp),%esi\n"
+   "mov    0x30(%esp),%ebp\n"
+   "mov    0x34(%esp),%ecx\n"
+-  "jmp    convertend\n"
++  "jmp    1f\n"
+ 
+-"convertloop:"
++"0:"
+   "movzbl (%edi),%eax\n"
+   "add    $0x1,%edi\n"
+   "movzbl (%esi),%ebx\n"
+   "add    $0x1,%esi\n"
+   "movq   kCoefficientsRgbY+2048(,%eax,8),%mm0\n"
+   "movzbl (%edx),%eax\n"
+   "paddsw kCoefficientsRgbY+4096(,%ebx,8),%mm0\n"
+   "movzbl 0x1(%edx),%ebx\n"
+@@ -339,34 +346,35 @@ void FastConvertYUVToRGB32Row(const uint
+   "movq   kCoefficientsRgbY(,%ebx,8),%mm2\n"
+   "paddsw %mm0,%mm1\n"
+   "paddsw %mm0,%mm2\n"
+   "psraw  $0x6,%mm1\n"
+   "psraw  $0x6,%mm2\n"
+   "packuswb %mm2,%mm1\n"
+   "movntq %mm1,0x0(%ebp)\n"
+   "add    $0x8,%ebp\n"
+-"convertend:"
++"1:"
+   "sub    $0x2,%ecx\n"
+-  "jns    convertloop\n"
++  "jns    0b\n"
+ 
+   "and    $0x1,%ecx\n"
+-  "je     convertdone\n"
++  "je     2f\n"
+ 
+   "movzbl (%edi),%eax\n"
+   "movq   kCoefficientsRgbY+2048(,%eax,8),%mm0\n"
+   "movzbl (%esi),%eax\n"
+   "paddsw kCoefficientsRgbY+4096(,%eax,8),%mm0\n"
+   "movzbl (%edx),%eax\n"
+   "movq   kCoefficientsRgbY(,%eax,8),%mm1\n"
+   "paddsw %mm0,%mm1\n"
+   "psraw  $0x6,%mm1\n"
+   "packuswb %mm1,%mm1\n"
+   "movd   %mm1,0x0(%ebp)\n"
+-"convertdone:"
++"2:"
+   "popa\n"
+   "ret\n"
++  ".previous\n"
+ );
+ 
+ #endif
+ #endif // ARCH_CPU_ARM_FAMILY
+ }  // extern "C"
+ 
