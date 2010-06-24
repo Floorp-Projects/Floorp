@@ -2452,3 +2452,10 @@ stubs::Unbrand(VMFrame &f)
         THROW();
 }
 
+void JS_FASTCALL
+stubs::Pos(VMFrame &f)
+{
+    if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
+        THROW();
+}
+
