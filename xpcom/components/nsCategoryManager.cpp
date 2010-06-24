@@ -326,6 +326,17 @@ CategoryNode::AddLeaf(const char* aEntryName,
   return rv;
 }
 
+void
+CategoryNode::DeleteLeaf(const char* aEntryName)
+{
+  // we don't throw any errors, because it normally doesn't matter
+  // and it makes JS a lot cleaner
+  MutexAutoLock lock(mLock);
+
+  // we can just remove the entire hash entry without introspection
+  mTable.RemoveEntry(aEntryName);
+}
+
 NS_METHOD 
 CategoryNode::Enumerate(nsISimpleEnumerator **_retval)
 {
@@ -554,11 +565,33 @@ nsCategoryManager::GetCategoryEntry( const char *aCategoryName,
   return status;
 }
 
+NS_IMETHODIMP
+nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
+                                     const char *aEntryName,
+                                     const char *aValue,
+                                     PRBool aPersist,
+                                     PRBool aReplace,
+                                     char **_retval )
+{
+  if (aPersist) {
+    NS_ERROR("Category manager doesn't support persistence.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AddCategoryEntry(aCategoryName, aEntryName, aValue, aReplace, _retval);
+  return NS_OK;
+}
+
 void
 nsCategoryManager::AddCategoryEntry(const char *aCategoryName,
                                     const char *aEntryName,
-                                    const char *aValue)
+                                    const char *aValue,
+                                    bool aReplace,
+                                    char** aOldValue)
 {
+  if (aOldValue)
+    *aOldValue = NULL;
+
   // Before we can insert a new entry, we'll need to
   //  find the |CategoryNode| to put it in...
   CategoryNode* category;
@@ -594,8 +627,70 @@ nsCategoryManager::AddCategoryEntry(const char *aCategoryName,
     NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID,
                     aCategoryName, aEntryName);
 
-    NS_Free(oldEntry);
+    if (aOldValue)
+      *aOldValue = oldEntry;
+    else
+      NS_Free(oldEntry);
   }
+}
+
+NS_IMETHODIMP
+nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
+                                        const char *aEntryName,
+                                        PRBool aDontPersist)
+{
+  if (!aDontPersist) {
+    NS_ERROR("Persistence not supported in the category manager.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_ENSURE_ARG_POINTER(aCategoryName);
+  NS_ENSURE_ARG_POINTER(aEntryName);
+
+  /*
+    Note: no errors are reported since failure to delete
+    probably won't hurt you, and returning errors seriously
+    inconveniences JS clients
+  */
+
+  CategoryNode* category;
+  {
+    MutexAutoLock lock(mLock);
+    category = get_category(aCategoryName);
+  }
+
+  if (category) {
+    category->DeleteLeaf(aEntryName);
+
+    NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID,
+                    aCategoryName, aEntryName);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCategoryManager::DeleteCategory( const char *aCategoryName )
+{
+  NS_ENSURE_ARG_POINTER(aCategoryName);
+
+  // the categories are arena-allocated, so we don't
+  // actually delete them. We just remove all of the
+  // leaf nodes.
+
+  CategoryNode* category;
+  {
+    MutexAutoLock lock(mLock);
+    category = get_category(aCategoryName);
+  }
+
+  if (category) {
+    category->Clear();
+    NotifyObservers(NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID,
+                    aCategoryName, nsnull);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

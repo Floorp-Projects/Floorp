@@ -73,7 +73,8 @@ CPPSRCS		= \
 SDK_XPIDLSRCS	= \
 		nsIClassInfo.idl	      \
 		nsIComponentRegistrar.idl     \
-		nsIFactory.idl                \
+		nsIFactory.idl		      \
+		nsIModule.idl		      \
 		nsIServiceManager.idl	      \
 		nsIComponentManager.idl       \
 		nsICategoryManager.idl        \
@@ -96,7 +97,7 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC	= 1
 include $(topsrcdir)/config/rules.mk
 
-DEFINES	+= -D_IMPL_NS_COM -DNAKED_DLL_SUFFIX=\"$(patsubst .%,%,$(DLL_SUFFIX))\"
+DEFINES	+= -D_IMPL_NS_COM
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS += $(MOZ_GTK2_CFLAGS)
