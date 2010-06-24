@@ -2727,7 +2727,7 @@ NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp)
     JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
     if (JS_LIKELY(type <= JSVAL_UPPER_INCL_TYPE_OF_OBJ_SET)) {
         vp->data.s.payload.u32 = *(uint32_t *)slot;
-        vp->data.s.tag = (JSValueTag)(JSVAL_TAG_CLEAR | type);
+        vp->data.s.tag = (JSValueTag) (JSVAL_TAG_CLEAR | type);
         return;
     }
 
