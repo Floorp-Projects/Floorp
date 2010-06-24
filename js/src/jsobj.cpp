@@ -1863,42 +1863,21 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.keys", &obj))
         return JS_FALSE;
 
-    AutoIdArray ida(cx, JS_Enumerate(cx, obj));
-    if (!ida)
+    AutoValueVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props))
         return JS_FALSE;
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto))
-        return JS_FALSE;
-    vp[1] = OBJECT_TO_JSVAL(proto);
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = jsid(props[i]);
+        if (JSID_IS_INT(id) && !js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), &props[i]))
+            return JS_FALSE;
+    }
 
-    JS_ASSERT(ida.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayWithSlots(cx, proto, uint32(ida.length()));
+    JS_ASSERT(props.length() <= UINT32_MAX);
+    JSObject *aobj = js_NewArrayObject(cx, jsuint(props.length()), props.begin(), false);
     if (!aobj)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(aobj);
-
-    size_t len = ida.length();
-    JS_ASSERT(aobj->getDenseArrayCapacity() >= len);
-    for (size_t i = 0; i < len; i++) {
-        jsid id = ida[i];
-        if (JSID_IS_INT(id)) {
-            if (!js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), aobj->addressOfDenseArrayElement(i)))
-                return JS_FALSE;
-        } else {
-            /*
-             * Object-valued ids are a possibility admitted by SpiderMonkey for
-             * the purposes of E4X.  It's unclear whether they could ever be
-             * detected here -- the "obvious" possibility, a property referred
-             * to by a QName, actually appears as a string jsid -- but in the
-             * interests of fidelity we pass object jsids through unchanged.
-             */
-            aobj->setDenseArrayElement(i, ID_TO_VALUE(id));
-        }
-    }
-
-    JS_ASSERT(len <= UINT32_MAX);
-    aobj->setDenseArrayCount(len);
 
     return JS_TRUE;
 }
