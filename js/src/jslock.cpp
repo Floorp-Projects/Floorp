@@ -78,7 +78,7 @@ JS_END_EXTERN_C
 JS_STATIC_ASSERT(sizeof(jsword) == sizeof(long));
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwapHelper(volatile jsword *w, jsword ov, jsword nv)
 {
     _InterlockedCompareExchange((long*) w, nv, ov);
     __asm {
@@ -87,7 +87,7 @@ NativeCompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
 }
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     return (NativeCompareAndSwapHelper(w, ov, nv) & 1);
 }
@@ -242,7 +242,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 #if JS_HAS_NATIVE_COMPARE_AND_SWAP
 
 JSBool
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
     return !!NativeCompareAndSwap(w, ov, nv);
 }
@@ -285,7 +285,7 @@ js_AtomicSetMask(jsword *w, jsword mask)
 }
 
 void
-js_AtomicClearMask(jsword *w, jsword mask)
+js_AtomicClearMask(volatile jsword *w, jsword mask)
 {
     jsword ov, nv;
 
