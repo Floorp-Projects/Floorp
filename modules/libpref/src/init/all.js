@@ -785,6 +785,8 @@ pref("network.IDN.whitelist.tw", true);
 pref("network.IDN.whitelist.vn", true);
 
 // IDN ccTLDs
+// ae, UAE, .<Emarat>
+pref("network.IDN.whitelist.xn--mgbaam7a8h", true); 
 // sa, Saudi Arabia, .<al-Saudiah>
 pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
 // ru, Russian Federation, .<RF>
