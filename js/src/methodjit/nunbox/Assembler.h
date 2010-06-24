@@ -48,7 +48,7 @@ namespace mjit {
 class ImmTag : public JSC::MacroAssembler::Imm32
 {
   public:
-    ImmTag(JSValueMask32 mask)
+    ImmTag(JSValueTag mask)
       : Imm32(int32(mask))
     { }
 };
@@ -141,7 +141,7 @@ class Assembler : public BaseAssembler
         jsval_layout jv;
         jv.asBits = Jsvalify(v);
 
-        store32(ImmTag(jv.s.u.mask32), tagOf(address));
+        store32(ImmTag(jv.s.tag), tagOf(address));
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
@@ -150,43 +150,43 @@ class Assembler : public BaseAssembler
         jsval_layout jv;
         jv.asBits = Jsvalify(v);
 
-        store32(ImmTag(jv.s.u.mask32), tagOf(address));
+        store32(ImmTag(jv.s.tag), tagOf(address));
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, ImmTag(JSVAL_MASK32_INT32));
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_INT32));
     }
 
     Jump testInt32(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_INT32));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_INT32));
     }
 
     Jump testPrimitive(Assembler::Condition cond, RegisterID reg) {
         cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
-        return branch32(cond, reg, ImmTag(JSVAL_MASK32_NONFUNOBJ));
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_NONFUNOBJ));
     }
 
     Jump testPrimitive(Assembler::Condition cond, Address address) {
         cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_NONFUNOBJ));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_NONFUNOBJ));
     }
 
     Jump testNonFunObj(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, ImmTag(JSVAL_MASK32_NONFUNOBJ));
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_NONFUNOBJ));
     }
 
     Jump testNonFunObj(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_NONFUNOBJ));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_NONFUNOBJ));
     }
 
     Jump testFunObj(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, ImmTag(JSVAL_MASK32_FUNOBJ));
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_FUNOBJ));
     }
 
     Jump testFunObj(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_FUNOBJ));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_FUNOBJ));
     }
 
     Jump testDouble(Assembler::Condition cond, RegisterID reg) {
@@ -195,7 +195,7 @@ class Assembler : public BaseAssembler
             opcond = Assembler::Below;
         else
             opcond = Assembler::AboveOrEqual;
-        return branch32(opcond, reg, ImmTag(JSVAL_MASK32_CLEAR));
+        return branch32(opcond, reg, ImmTag(JSVAL_TAG_CLEAR));
     }
 
     Jump testDouble(Assembler::Condition cond, Address address) {
@@ -204,15 +204,15 @@ class Assembler : public BaseAssembler
             opcond = Assembler::Below;
         else
             opcond = Assembler::AboveOrEqual;
-        return branch32(opcond, tagOf(address), ImmTag(JSVAL_MASK32_CLEAR));
+        return branch32(opcond, tagOf(address), ImmTag(JSVAL_TAG_CLEAR));
     }
 
     Jump testBoolean(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, ImmTag(JSVAL_MASK32_BOOLEAN));
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_BOOLEAN));
     }
 
     Jump testBoolean(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_BOOLEAN));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_BOOLEAN));
     }
 };
 

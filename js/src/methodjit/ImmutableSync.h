@@ -79,7 +79,7 @@ class ImmutableSync
         bool hasDataReg;
         bool hasTypeReg;
         bool learnedType;
-        JSValueMask32 typeTag;
+        JSValueTag typeTag;
     };
 
   public:

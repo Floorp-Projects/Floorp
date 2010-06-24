@@ -427,12 +427,19 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        *rval = ID_TO_VALUE(*ni->props_cursor);
-        if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
-            ni->props_cursor++;
+        if ((ni->flags & JSITER_FOREACH) == 0) {
+            jsid id = ni->currentId();
+            if (JSID_IS_ATOM(id)) {
+                rval->setString(JSID_TO_STRING(id));
+                ni->incIdCursor();
+                return true;
+            }
+            /* Take the slow path if we have to stringify a numeric property name. */
+        } else {
+            *rval = ni->currentValue();
+            ni->incValueCursor();
             return true;
         }
-        /* Take the slow path if we have to stringify a numeric property name. */
     }
     return js_IteratorNext(cx, iterobj, rval);
 }
@@ -971,7 +978,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
             DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                       \
         if (rval.isObject())                                                  \
             DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                       \
-        if (BothString(lval, rval)) {                                         \
+        if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.asString(), *r = rval.asString();              \
             cond = js_CompareStrings(l, r) OP 0;                              \
         } else {                                                              \
@@ -1023,13 +1030,9 @@ stubs::Not(VMFrame &f)
     f.regs.sp[-1].setBoolean(b);
 }
 
-/*
- * Inline copy of jsops.cpp:EQUALITY_OP().
- * @param op true if for JSOP_EQ; false for JSOP_NE.
- * @param ifnan return value upon NaN comparison.
- */
+template <JSBool EQ, bool IFNAN>
 static inline bool
-InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
+StubEqualityOp(VMFrame &f)
 {
     Class *clasp;
     JSContext *cx = f.cx;
@@ -1038,76 +1041,72 @@ InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
 
-    JSBool jscond;
-    bool cond;
+    JSBool cond;
 
-    #if JS_HAS_XML_SUPPORT
-    /* Inline copy of jsops.cpp:XML_EQUALITY_OP() */
+#if JS_HAS_XML_SUPPORT
     if ((lval.isNonFunObj() && lval.asObject().isXML()) ||
         (rval.isNonFunObj() && rval.asObject().isXML())) {
-        if (!js_TestXMLEquality(cx, lval, rval, &jscond))
-            THROWV(false);
-        cond = (jscond == JS_TRUE) == op;
+        if (!js_TestXMLEquality(cx, lval, rval, &cond))
+            return false;
+        cond = cond == EQ;
     } else
-    #endif /* JS_HAS_XML_SUPPORT */
+#endif
 
     if (SamePrimitiveTypeOrBothObjects(lval, rval)) {
         if (lval.isString()) {
             JSString *l = lval.asString();
             JSString *r = rval.asString();
-            cond = js_EqualStrings(l, r) == op;
+            cond = js_EqualStrings(l, r) == EQ;
         } else if (lval.isDouble()) {
             double l = lval.asDouble();
             double r = rval.asDouble();
-            if (op) {
-                cond = JSDOUBLE_COMPARE(l, ==, r, ifnan);
+            if (EQ)
+                cond = JSDOUBLE_COMPARE(l, ==, r, IFNAN);
+            else
+                cond = JSDOUBLE_COMPARE(l, !=, r, IFNAN);
+        } else if (lval.isObject()) {
+            JSObject *l = &lval.asObject(), *r = &rval.asObject();
+            if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&
+                ((ExtendedClass  *)clasp)->equality) {
+                if (!((ExtendedClass *)clasp)->equality(cx, l, &rval, &cond))
+                    return false;
+                cond = cond == EQ;
             } else {
-                cond = JSDOUBLE_COMPARE(l, !=, r, ifnan);
+                cond = (l == r) == EQ;
             }
         } else {
-            /* jsops.cpp:EXTENDED_EQUALITY_OP() */
-            JSObject *lobj;
-            if (lval.isObject() &&
-                (lobj = &lval.asObject()) &&
-                ((clasp = lobj->getClass())->flags & JSCLASS_IS_EXTENDED) &&
-                ((ExtendedClass *)clasp)->equality) {
-                if (!((ExtendedClass *)clasp)->equality(cx, lobj, lval, &jscond))
-                    THROWV(false);
-                cond = (jscond == JS_TRUE) == op;
-            } else {
-                cond = (lval.asRawUint32() == rval.asRawUint32()) == op;
-            }
+            cond = (lval.asRawUint32() == rval.asRawUint32()) == EQ;
         }
     } else {
         if (lval.isNullOrUndefined()) {
-            cond = rval.isNullOrUndefined() == op;
+            cond = rval.isNullOrUndefined() == EQ;
         } else if (rval.isNullOrUndefined()) {
-            cond = !op;
+            cond = !EQ;
         } else {
             if (lval.isObject()) {
                 if (!lval.asObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-2]))
-                    THROWV(false);
+                    return false;
                 lval = regs.sp[-2];
             }
 
             if (rval.isObject()) {
                 if (!rval.asObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-1]))
-                    THROWV(false);
+                    return false;
                 rval = regs.sp[-1];
             }
 
-            if (BothString(lval, rval)) {
+            if (lval.isString() && rval.isString()) {
                 JSString *l = lval.asString();
                 JSString *r = rval.asString();
-                cond = js_EqualStrings(l, r) == op;
+                cond = js_EqualStrings(l, r) == EQ;
             } else {
                 double l, r;
                 if (!ValueToNumber(cx, lval, &l) ||
                     !ValueToNumber(cx, rval, &r)) {
-                    THROWV(false);
+                    return false;
                 }
                 
-                if (op)
+                if (EQ)
                     cond = JSDOUBLE_COMPARE(l, ==, r, ifnan);
                 else
                     cond = JSDOUBLE_COMPARE(l, !=, r, ifnan);
@@ -1116,19 +1115,23 @@ InlineEqualityOp(VMFrame &f, bool op, bool ifnan)
     }
 
     regs.sp[-2].setBoolean(cond);
-    return cond;
+    return true;
 }
 
 JSBool JS_FASTCALL
 stubs::Equal(VMFrame &f)
 {
-    return InlineEqualityOp(f, true, false);
+    if (!StubEqualityOp<JS_TRUE, false>(f))
+        THROWV(JS_FALSE);
+    return f.regs.sp[-2].asBoolean();
 }
 
 JSBool JS_FASTCALL
 stubs::NotEqual(VMFrame &f)
 {
-    return InlineEqualityOp(f, false, true);
+    if (!StubEqualityOp<JS_FALSE, true>(f))
+        THROWV(JS_FALSE);
+    return f.regs.sp[-2].asBoolean();
 }
 
 static inline bool
@@ -1149,7 +1152,7 @@ stubs::Add(VMFrame &f)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
 
-    if (BothInt32(lval, rval)) {
+    if (lval.isInt32() && rval.isInt32()) {
         int32_t l = lval.asInt32(), r = rval.asInt32();
         int32_t sum = l + r;
         regs.sp--;
@@ -1930,8 +1933,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         if (!rval.isFunObj() ||
-            !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()),
-                                  lval)) {
+            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 THROW();
         }
@@ -1956,8 +1958,7 @@ stubs::WrapPrimitiveThis(VMFrame &f)
 
     /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
     if (!funv.isFunObj() ||
-        !PrimitiveValue::test(GET_FUNCTION_PRIVATE(cx, &funv.asFunObj()),
-                              thisv)) {
+        !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &funv.asFunObj()), thisv)) {
         if (!js_PrimitiveToObject(cx, &f.regs.sp[-1]))
             THROW();
     }
@@ -2222,7 +2223,7 @@ stubs::InstanceOf(VMFrame &f)
     }
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!obj->map->ops->hasInstance(cx, obj, lref, &cond))
+    if (!obj->map->ops->hasInstance(cx, obj, &lref, &cond))
         THROWV(JS_FALSE);
     f.regs.sp[-2].setBoolean(cond);
     return cond;
