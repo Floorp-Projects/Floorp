@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:name>Instrument Test</em:name>
+    <em:id>instrument.test@agadak.net</em:id>
+    <em:version>1</em:version>
+    <em:creator>Edward Lee (Mardak)</em:creator>
+    <em:description>Instrument various browser stuff</em:description>
+    <em:homepageURL>http://ed.agadak.net/</em:homepageURL>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>3.0</em:minVersion>
+        <em:maxVersion>3.6a1pre</em:maxVersion>
+      </Description>
+    </em:targetApplication> 
+  </Description>
+</RDF>
