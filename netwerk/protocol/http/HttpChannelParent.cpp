@@ -289,7 +289,6 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
       // See nsHttpChannel::GetAuthPrompt().  So if we can return any one of these,
       // HTTP auth should be all set.  The other two if checks can be eventually
       // deleted.
-      aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) || 
       aIID.Equals(NS_GET_IID(nsIAuthPrompt2)) ||
       aIID.Equals(NS_GET_IID(nsIAuthPrompt))  ||
       // FIXME: redirects (bug 536294):
@@ -309,6 +308,12 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
   {
     return QueryInterface(aIID, result);
   } 
+
+  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
+    if (!mTabParent)
+      return NS_NOINTERFACE;
+    return mTabParent->QueryInterface(aIID, result);
+  }
 
   // Interface we haven't dealt with yet. Make sure we know by dying.
   // - use "grep -ri [uuid] ROOT_SRC_DIR" with the uuid from the printf to
