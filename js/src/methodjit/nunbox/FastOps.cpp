@@ -913,17 +913,33 @@ mjit::Compiler::jsop_not()
     }
 
     /* Fast-path here is boolean. */
-    Jump boolFail = frame.testBoolean(Assembler::NotEqual, top);
-    stubcc.linkExit(boolFail);
-    frame.learnType(top, JSVAL_TAG_BOOLEAN);
+    RegisterID data = frame.allocReg(Registers::SingleByteRegs);
+    if (frame.shouldAvoidDataRemat(top))
+        masm.loadData32(frame.addressOf(top), data);
+    else
+        masm.move(frame.tempRegForData(top), data);
+    RegisterID type = frame.tempRegForType(top);
 
+    Jump isBool = masm.testBoolean(Assembler::Equal, type);
+    Jump isInt32 = masm.testInt32(Assembler::Equal, type);
+    Jump isObject = masm.testPrimitive(Assembler::NotEqual, type);
+    stubcc.linkExit(masm.jump());
     stubcc.leave();
     stubcc.call(stubs::Not);
 
-    RegisterID reg = frame.ownRegForData(top);
-    masm.xor32(Imm32(1), reg);
+    isObject.linkTo(masm.label(), &masm);
+    masm.move(Imm32(0), data);
+    Jump j1 = masm.jump();
+    isInt32.linkTo(masm.label(), &masm);
+    masm.set32(Assembler::Equal, data, Imm32(0), data);
+    Jump j2 = masm.jump();
+    isBool.linkTo(masm.label(), &masm);
+    masm.xor32(Imm32(1), data);
+    j1.linkTo(masm.label(), &masm);
+    j2.linkTo(masm.label(), &masm);
+
     frame.pop();
-    frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
+    frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, data);
 
     stubcc.rejoin(1);
 }
