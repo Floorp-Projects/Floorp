@@ -65,6 +65,7 @@ CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS) \
 		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
 		nsStringAPI.cpp \
+		GenericModule.cpp \
 		$(NULL)
 
 # TODO nsAutoLock.h should die soon
@@ -126,6 +127,7 @@ EXPORTS_mozilla = \
   BlockingResourceBase.h \
   CondVar.h \
   DeadlockDetector.h \
+  GenericFactory.h \
   Monitor.h \
   Mutex.h \
   SSE.h \
