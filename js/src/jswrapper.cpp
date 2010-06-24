@@ -49,7 +49,24 @@
 
 using namespace js;
 
-JSWrapper::JSWrapper()
+static int sWrapperFamily = 0;
+
+bool
+JSObject::isWrapper() const
+{
+    return isProxy() && getProxyHandler()->family() == &sWrapperFamily;
+}
+
+JSObject *
+JSObject::unwrap()
+{
+    JSObject *wrapped = this;
+    while (wrapped->isWrapper())
+        wrapped = JSVAL_TO_OBJECT(wrapped->getProxyPrivate());
+    return wrapped;
+}
+
+JSWrapper::JSWrapper(void *kind) : JSProxyHandler(&sWrapperFamily), mKind(kind)
 {
 }
 
@@ -160,7 +177,9 @@ JSWrapper::trace(JSTracer *trc, JSObject *proxy)
     JS_CALL_OBJECT_TRACER(trc, wrappedObject(proxy), "wrappedObject");
 }
 
-JSWrapper JSWrapper::singleton;
+static int sTransparentWrapperKind;
+
+JSWrapper JSWrapper::singleton(&sTransparentWrapperKind);
 
 JSObject *
 JSWrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
@@ -170,61 +189,20 @@ JSWrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                           obj->isCallable() ? obj : NULL, NULL);
 }
 
-/* Base class for all C++ proxy handlers. */
-class JSCrossCompartmentWrapper : public JSWrapper {
-  protected:
-    JSCrossCompartmentWrapper();
-
-  public:
-    virtual ~JSCrossCompartmentWrapper();
-
-    /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
-                                       JSPropertyDescriptor *desc);
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
-                                          JSPropertyDescriptor *desc);
-    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
-                                JSPropertyDescriptor *desc);
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoValueVector &props);
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props);
-
-    /* ES5 Harmony derived proxy traps. */
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
-
-    /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
-    virtual bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                           uintN argc, jsval *argv, jsval *rval);
-    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
-
-    static JSCrossCompartmentWrapper singleton;
-};
-
-bool
-JSObject::isCrossCompartmentWrapper() const
-{
-    return isProxy() && getProxyHandler() == &JSCrossCompartmentWrapper::singleton;
-}
-
-JSObject *
-JSObject::unwrap()
-{
-    JSObject *wrapped = this;
-    while (wrapped->isCrossCompartmentWrapper())
-        wrapped = JSVAL_TO_OBJECT(wrapped->getProxyPrivate());
-    return wrapped;
-}
-
 /* Compartments. */
 
-JSCompartment::JSCompartment(JSRuntime *rt) : rt(rt), marked(false)
+namespace js {
+
+extern JSObject *
+TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto)
+{
+    return JSWrapper::New(cx, obj, wrappedProto, NULL, &JSCrossCompartmentWrapper::singleton);
+}
+
+}
+
+JSCompartment::JSCompartment(JSRuntime *rt)
+  : rt(rt), principals(NULL), marked(false)
 {
 }
 
@@ -295,10 +273,11 @@ JSCompartment::wrap(JSContext *cx, jsval *vp)
     AutoObjectRooter proto(cx, obj->getProto());
     if (!wrap(cx, proto.addr()))
         return false;
-    JSObject *wrapper = JSWrapper::New(cx, obj, proto.object(), NULL,
-                                       &JSCrossCompartmentWrapper::singleton);
+
+    JSObject *wrapper = cx->runtime->wrapObjectCallback(cx, obj, proto.object());
     if (!wrapper)
         return false;
+    wrapper->setProto(proto.object());
     *vp = OBJECT_TO_JSVAL(wrapper);
     if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
         return false;
@@ -455,20 +434,18 @@ AutoCompartment::leave()
     origin->wrapException(context);
 }
 
-#define PIERCE(cx, pre, op, post)                                        \
-    JS_BEGIN_MACRO                                                       \
-        AutoCompartment call(cx, wrappedObject(proxy));                  \
-        if (!call.enter() || !(pre) || !(op))                            \
-            return false;                                                \
-        call.leave();                                                    \
-        return (post);                                                   \
-    JS_END_MACRO
-
-#define NOTHING (true)
-
 /* Cross compartment wrappers. */
 
-JSCrossCompartmentWrapper::JSCrossCompartmentWrapper()
+static int sCrossCompartmentWrapperKind = 0;
+
+bool
+JSObject::isCrossCompartmentWrapper() const
+{
+    return isWrapper() &&
+           static_cast<JSWrapper *>(getProxyHandler())->kind() == &sCrossCompartmentWrapperKind;
+}
+
+JSCrossCompartmentWrapper::JSCrossCompartmentWrapper() : JSWrapper(&sCrossCompartmentWrapperKind)
 {
 }
 
@@ -476,10 +453,22 @@ JSCrossCompartmentWrapper::~JSCrossCompartmentWrapper()
 {
 }
 
+#define PIERCE(cx, proxy, pre, op, post)                                   \
+    JS_BEGIN_MACRO                                                         \
+        AutoCompartment call(cx, wrappedObject(proxy));                    \
+        if (!call.enter() || !(pre) || !enter(cx, proxy, id) || !(op))     \
+            return false;                                                  \
+        leave(cx, proxy);                                                  \
+        call.leave();                                                      \
+        return (post);                                                     \
+    JS_END_MACRO
+
+#define NOTHING (true)
+
 bool
 JSCrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrapId(cx, &id),
            JSWrapper::getPropertyDescriptor(cx, proxy, id, desc),
            call.origin->wrap(cx, desc));
@@ -488,7 +477,7 @@ JSCrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
 bool
 JSCrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrapId(cx, &id),
            JSWrapper::getOwnPropertyDescriptor(cx, proxy, id, desc),
            call.origin->wrap(cx, desc));
@@ -498,7 +487,7 @@ bool
 JSCrossCompartmentWrapper::defineProperty(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc)
 {
     AutoDescriptor desc2(cx, desc);
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrapId(cx, &id) && call.destination->wrap(cx, &desc2),
            JSWrapper::getOwnPropertyDescriptor(cx, proxy, id, &desc2),
            NOTHING);
@@ -507,16 +496,16 @@ JSCrossCompartmentWrapper::defineProperty(JSContext *cx, JSObject *proxy, jsid i
 bool
 JSCrossCompartmentWrapper::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            NOTHING,
            JSWrapper::getOwnPropertyNames(cx, proxy, props),
-           call.origin->wrap(cx, props));
+           filter(cx, proxy, props) && call.origin->wrap(cx, props));
 }
 
 bool
 JSCrossCompartmentWrapper::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrapId(cx, &id),
            JSWrapper::delete_(cx, proxy, id, bp),
            NOTHING);
@@ -525,16 +514,16 @@ JSCrossCompartmentWrapper::delete_(JSContext *cx, JSObject *proxy, jsid id, bool
 bool
 JSCrossCompartmentWrapper::enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            NOTHING,
            JSWrapper::enumerate(cx, proxy, props),
-           call.origin->wrap(cx, props));
+           filter(cx, proxy, props) && call.origin->wrap(cx, props));
 }
 
 bool
 JSCrossCompartmentWrapper::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrapId(cx, &id),
            JSWrapper::has(cx, proxy, id, bp),
            NOTHING);
@@ -543,7 +532,7 @@ JSCrossCompartmentWrapper::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp
 bool
 JSCrossCompartmentWrapper::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrapId(cx, &id),
            JSWrapper::hasOwn(cx, proxy, id, bp),
            NOTHING);
@@ -552,7 +541,7 @@ JSCrossCompartmentWrapper::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool 
 bool
 JSCrossCompartmentWrapper::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrap(cx, &receiver) && call.destination->wrapId(cx, &id),
            JSWrapper::get(cx, proxy, receiver, id, vp),
            call.origin->wrap(cx, vp));
@@ -562,7 +551,7 @@ bool
 JSCrossCompartmentWrapper::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp)
 {
     AutoValueRooter tvr(cx, *vp);
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            call.destination->wrap(cx, &receiver) && call.destination->wrapId(cx, &id) && call.destination->wrap(cx, tvr.addr()),
            JSWrapper::set(cx, proxy, receiver, id, tvr.addr()),
            NOTHING);
@@ -571,19 +560,19 @@ JSCrossCompartmentWrapper::set(JSContext *cx, JSObject *proxy, JSObject *receive
 bool
 JSCrossCompartmentWrapper::enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            NOTHING,
            JSWrapper::enumerateOwn(cx, proxy, props),
-           call.origin->wrap(cx, props));
+           filter(cx, proxy, props) && call.origin->wrap(cx, props));
 }
 
 bool
 JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp)
 {
-    PIERCE(cx,
+    PIERCE(cx, proxy,
            NOTHING,
            JSWrapper::iterate(cx, proxy, flags, vp),
-           call.origin->wrap(cx, vp));
+           filter(cx, proxy, vp) && call.origin->wrap(cx, vp));
 }
 
 bool
@@ -604,9 +593,10 @@ JSCrossCompartmentWrapper::call(JSContext *cx, JSObject *proxy, uintN argc, jsva
     jsval *fakevp = call.getvp();
     fakevp[0] = vp[0];
     fakevp[1] = vp[1];
-    if (!JSWrapper::call(cx, proxy, argc, vp))
+    if (!enter(cx, proxy, JSVAL_VOID) || !JSWrapper::call(cx, proxy, argc, vp))
         return false;
 
+    leave(cx, proxy);
     call.leave();
     return call.origin->wrap(cx, vp);
 }
@@ -626,10 +616,12 @@ JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *proxy, JSObject *r
     jsval *vp = call.getvp();
     vp[0] = OBJECT_TO_JSVAL(call.target);
     if (!call.destination->wrap(cx, &receiver) ||
+        !enter(cx, proxy, JSVAL_VOID) ||
         !JSWrapper::construct(cx, proxy, receiver, argc, argv, rval)) {
         return false;
     }
 
+    leave(cx, proxy);
     call.leave();
     return call.origin->wrap(cx, rval) &&
            call.origin->wrapException(cx);
@@ -642,11 +634,14 @@ JSCrossCompartmentWrapper::obj_toString(JSContext *cx, JSObject *proxy)
     if (!call.enter())
         return NULL;
 
+    if (!enter(cx, proxy, JSVAL_VOID))
+        return NULL;
     JSString *str = JSWrapper::obj_toString(cx, proxy);
     if (!str)
         return NULL;
     AutoValueRooter tvr(cx, str);
 
+    leave(cx, proxy);
     call.leave();
     if (!call.origin->wrap(cx, &str))
         return NULL;
@@ -660,15 +655,41 @@ JSCrossCompartmentWrapper::fun_toString(JSContext *cx, JSObject *proxy, uintN in
     if (!call.enter())
         return NULL;
 
+    if (!enter(cx, proxy, JSVAL_VOID))
+        return NULL;
     JSString *str = JSWrapper::fun_toString(cx, proxy, indent);
     if (!str)
         return NULL;
     AutoValueRooter tvr(cx, str);
 
+    leave(cx, proxy);
     call.leave();
     if (!call.origin->wrap(cx, &str))
         return NULL;
     return str;
+}
+
+bool
+JSCrossCompartmentWrapper::enter(JSContext *cx, JSObject *proxy, jsval id)
+{
+    return true;
+}
+
+void
+JSCrossCompartmentWrapper::leave(JSContext *cx, JSObject *proxy)
+{
+}
+
+bool
+JSCrossCompartmentWrapper::filter(JSContext *cx, JSObject *proxy, AutoValueVector &props)
+{
+    return true;
+}
+
+bool
+JSCrossCompartmentWrapper::filter(JSContext *cx, JSObject *proxy, jsval *vp)
+{
+    return true;
 }
 
 JSCrossCompartmentWrapper JSCrossCompartmentWrapper::singleton;

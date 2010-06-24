@@ -79,6 +79,10 @@ OperationInProgress(JSContext *cx, JSObject *proxy)
     return false;
 }
 
+JSProxyHandler::JSProxyHandler(void *family) : mFamily(family)
+{
+}
+
 JSProxyHandler::~JSProxyHandler()
 {
 }
@@ -464,7 +468,9 @@ class JSScriptedProxyHandler : public JSProxyHandler {
     static JSScriptedProxyHandler singleton;
 };
 
-JSScriptedProxyHandler::JSScriptedProxyHandler()
+static int sScriptedProxyHandlerFamily = 0;
+
+JSScriptedProxyHandler::JSScriptedProxyHandler() : JSProxyHandler(&sScriptedProxyHandlerFamily)
 {
 }
 

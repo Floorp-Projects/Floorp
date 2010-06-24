@@ -45,12 +45,11 @@
 #include "jsapi.h"
 #include "jsproxy.h"
 
-namespace js {
-
 /* No-op wrapper handler base class. */
-class JSWrapper : public JSProxyHandler {
+class JSWrapper : public js::JSProxyHandler {
+    void *mKind;
   protected:
-    JS_FRIEND_API(JSWrapper());
+    explicit JS_FRIEND_API(JSWrapper(void *kind));
 
   public:
     JS_FRIEND_API(virtual ~JSWrapper());
@@ -63,9 +62,9 @@ class JSWrapper : public JSProxyHandler {
     virtual JS_FRIEND_API(bool) defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                                JSPropertyDescriptor *desc);
     virtual JS_FRIEND_API(bool) getOwnPropertyNames(JSContext *cx, JSObject *proxy,
-                                                    AutoValueVector &props);
+                                                    js::AutoValueVector &props);
     virtual JS_FRIEND_API(bool) delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual JS_FRIEND_API(bool) enumerate(JSContext *cx, JSObject *proxy, AutoValueVector &props);
+    virtual JS_FRIEND_API(bool) enumerate(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     virtual JS_FRIEND_API(bool) fix(JSContext *cx, JSObject *proxy, jsval *vp);
 
     /* ES5 Harmony derived proxy traps. */
@@ -75,7 +74,7 @@ class JSWrapper : public JSProxyHandler {
                                     jsval *vp);
     virtual JS_FRIEND_API(bool) set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
                                     jsval *vp);
-    virtual JS_FRIEND_API(bool) enumerateOwn(JSContext *cx, JSObject *proxy, AutoValueVector &props);
+    virtual JS_FRIEND_API(bool) enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     virtual JS_FRIEND_API(bool) iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
     /* Spidermonkey extensions. */
@@ -87,10 +86,62 @@ class JSWrapper : public JSProxyHandler {
                                          JSObject *proto, JSObject *parent,
                                          JSProxyHandler *handler);
 
+    inline void *kind() {
+        return mKind;
+    }
+
     static inline JSObject *wrappedObject(JSObject *proxy) {
         return JSVAL_TO_OBJECT(proxy->getProxyPrivate());
     }
 };
+
+/* Base class for all cross compartment wrapper handlers. */
+class JSCrossCompartmentWrapper : public JSWrapper {
+  protected:
+    JSCrossCompartmentWrapper();
+
+  public:
+    virtual ~JSCrossCompartmentWrapper();
+
+    /* ES5 Harmony fundamental proxy traps. */
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                       JSPropertyDescriptor *desc);
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                          JSPropertyDescriptor *desc);
+    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+                                JSPropertyDescriptor *desc);
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual bool enumerate(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+
+    /* ES5 Harmony derived proxy traps. */
+    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
+    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
+    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+    virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
+
+    /* Spidermonkey extensions. */
+    virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
+    virtual bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                           uintN argc, jsval *argv, jsval *rval);
+    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
+    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
+
+    /* Policy enforcement traps. */
+    virtual bool enter(JSContext *cx, JSObject *proxy, jsid id);
+    virtual void leave(JSContext *cx, JSObject *proxy);
+    virtual bool filter(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+    virtual bool filter(JSContext *cx, JSObject *proxy, jsval *vp);
+
+    static JSCrossCompartmentWrapper singleton;
+
+    /* Default id used for filter when the trap signature does not contain an id. */
+    static const jsid id = JSVAL_VOID;
+};
+
+namespace js {
 
 class AutoCompartment
 {
@@ -121,6 +172,9 @@ class AutoCompartment
     AutoCompartment(const AutoCompartment &);
     AutoCompartment & operator=(const AutoCompartment &);
 };
+
+extern JSObject *
+TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto);
 
 }
 

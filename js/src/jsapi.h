@@ -770,6 +770,9 @@ JS_ToggleOptions(JSContext *cx, uint32 options);
 extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);
 
+extern JS_PUBLIC_API(JSWrapObjectCallback)
+JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
+
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 
@@ -1671,7 +1674,7 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp);
+JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
