@@ -78,9 +78,17 @@ parent:
 
   SetPriority(PRUint16 priority);
 
+  SetCacheTokenCachedCharset(nsCString charset);
+
+  OnStopRequestCompleted();
+
 child:
   OnStartRequest(nsHttpResponseHead responseHead,
-                 PRBool useResponseHead);
+                 PRBool             useResponseHead,
+                 PRBool             isFromCache,
+                 PRBool             cacheEntryAvailable,
+                 PRUint32           cacheExpirationTime,
+                 nsCString          cachedCharset);
 
   OnDataAvailable(nsCString data, 
                   PRUint32  offset, 

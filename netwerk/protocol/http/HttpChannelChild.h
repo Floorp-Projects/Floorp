@@ -50,7 +50,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
-#include "nsICachingChannel.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
@@ -74,7 +74,7 @@ enum HttpChannelChildState {
 // Header file contents
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
-                       , public nsICachingChannel
+                       , public nsICacheInfoChannel
                        , public nsIEncodedChannel
                        , public nsIResumableChannel
                        , public nsIProxiedChannel
@@ -83,7 +83,7 @@ class HttpChannelChild : public PHttpChannelChild
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSICACHINGCHANNEL
+  NS_DECL_NSICACHEINFOCHANNEL
   NS_DECL_NSIENCODEDCHANNEL
   NS_DECL_NSIRESUMABLECHANNEL
   NS_DECL_NSIPROXIEDCHANNEL
@@ -115,7 +115,11 @@ public:
 protected:
   void RefcountHitZero();
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead,
-                          const PRBool& useResponseHead);
+                          const PRBool& useResponseHead,
+                          const PRBool& isFromCache,
+                          const PRBool& cacheEntryAvailable,
+                          const PRUint32& cacheExpirationTime,
+                          const nsCString& cachedCharset);
   bool RecvOnDataAvailable(const nsCString& data, 
                            const PRUint32& offset,
                            const PRUint32& count);
@@ -125,6 +129,11 @@ protected:
 
 private:
   RequestHeaderTuples mRequestHeaders;
+
+  PRPackedBool mIsFromCache;
+  PRPackedBool mCacheEntryAvailable;
+  PRUint32     mCacheExpirationTime;
+  nsCString    mCachedCharset;
 
   // FIXME: replace with IPDL states (bug 536319) 
   enum HttpChannelChildState mState;

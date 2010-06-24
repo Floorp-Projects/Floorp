@@ -54,7 +54,10 @@ namespace net {
 
 // C++ file contents
 HttpChannelChild::HttpChannelChild()
-  : mState(HCC_NEW)
+  : mIsFromCache(PR_FALSE)
+  , mCacheEntryAvailable(PR_FALSE)
+  , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
+  , mState(HCC_NEW)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 }
@@ -88,7 +91,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
-  NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
+  NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
   NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
@@ -104,7 +107,11 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
-                                     const PRBool& useResponseHead)
+                                     const PRBool& useResponseHead,
+                                     const PRBool& isFromCache,
+                                     const PRBool& cacheEntryAvailable,
+                                     const PRUint32& cacheExpirationTime,
+                                     const nsCString& cachedCharset)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
@@ -115,6 +122,10 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
   else
     mResponseHead = nsnull;
  
+  mIsFromCache = isFromCache;
+  mCacheEntryAvailable = cacheEntryAvailable;
+  mCacheExpirationTime = cacheExpirationTime;
+  mCachedCharset = cachedCharset;
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv)) {
@@ -178,9 +189,12 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
   nsresult rv = mListener->OnStopRequest(this, mListenerContext, statusCode);
   mListener = 0;
   mListenerContext = 0;
+  mCacheEntryAvailable = PR_FALSE;
 
   if (mLoadGroup)
     mLoadGroup->RemoveRequest(this, nsnull, statusCode);
+
+  SendOnStopRequestCompleted();
 
   // Corresponding AddRef in AsyncOpen().
   this->Release();
@@ -413,83 +427,40 @@ HttpChannelChild::SetupFallbackChannel(const char *aFallbackKey)
 }
 
 //-----------------------------------------------------------------------------
-// HttpChannelChild::nsICachingChannel
+// HttpChannelChild::nsICacheInfoChannel
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::GetCacheToken(nsISupports **aCacheToken)
+HttpChannelChild::GetCacheTokenExpirationTime(PRUint32 *_retval)
 {
-  // FIXME: stub for bug 537164
-  return NS_ERROR_NOT_AVAILABLE;
-}
-NS_IMETHODIMP
-HttpChannelChild::SetCacheToken(nsISupports *aCacheToken)
-{
-  DROP_DEAD();
+  NS_ENSURE_ARG_POINTER(_retval);
+  if (!mCacheEntryAvailable)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  *_retval = mCacheExpirationTime;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetOfflineCacheToken(nsISupports **aOfflineCacheToken)
+HttpChannelChild::GetCacheTokenCachedCharset(nsACString &_retval)
 {
-  DROP_DEAD();
-}
-NS_IMETHODIMP
-HttpChannelChild::SetOfflineCacheToken(nsISupports *aOfflineCacheToken)
-{
-  DROP_DEAD();
-}
+  if (!mCacheEntryAvailable)
+    return NS_ERROR_NOT_AVAILABLE;
 
-NS_IMETHODIMP
-HttpChannelChild::GetCacheKey(nsISupports **aCacheKey)
-{
-  // FIXME: stub for bug 537164
-  NS_ENSURE_ARG_POINTER(aCacheKey);
-  *aCacheKey = 0;
+  _retval = mCachedCharset;
   return NS_OK;
 }
 NS_IMETHODIMP
-HttpChannelChild::SetCacheKey(nsISupports *aCacheKey)
+HttpChannelChild::SetCacheTokenCachedCharset(const nsACString &aCharset)
 {
-  DROP_DEAD();
-}
+  if (!mCacheEntryAvailable)
+    return NS_ERROR_NOT_AVAILABLE;
 
-NS_IMETHODIMP
-HttpChannelChild::GetCacheAsFile(PRBool *aCacheAsFile)
-{
-  DROP_DEAD();
-}
-NS_IMETHODIMP
-HttpChannelChild::SetCacheAsFile(PRBool aCacheAsFile)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetCacheForOfflineUse(PRBool *aCacheForOfflineUse)
-{
-  DROP_DEAD();
-}
-NS_IMETHODIMP
-HttpChannelChild::SetCacheForOfflineUse(PRBool aCacheForOfflineUse)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetOfflineCacheClientID(nsACString& id)
-{
-  DROP_DEAD();
-}
-NS_IMETHODIMP
-HttpChannelChild::SetOfflineCacheClientID(const nsACString& id)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetCacheFile(nsIFile **aCacheFile)
-{
-  DROP_DEAD();
+  mCachedCharset = aCharset;
+  if (!SendSetCacheTokenCachedCharset(PromiseFlatCString(aCharset))) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -498,8 +469,7 @@ HttpChannelChild::IsFromCache(PRBool *value)
   if (!mIsPending)
     return NS_ERROR_NOT_AVAILABLE;
 
-  // FIXME: stub for bug 537164
-  *value = false;
+  *value = mIsFromCache;
   return NS_OK;
 }
 
