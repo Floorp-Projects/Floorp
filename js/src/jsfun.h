@@ -256,12 +256,7 @@ JSObject::isFunction() const
     return getClass() == &js_FunctionClass;
 }
 
-/*
- * TODO: remove once all internal jsval use goes away.
- * NB: jsapi.h and jsobj.h must be included before any call to this macro.
- */
-#define VALUE_IS_FUNCTION(cx, v)                                              \
-    (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isFunction())
+#define VALUE_IS_FUNCTION(cx, v) (Valueify(v).isFunObj())
 
 /*
  * Macro to access the private slot of the function object after the slot is
@@ -375,16 +370,16 @@ extern JSFunction *
 js_GetCallObjectFunction(JSObject *obj);
 
 extern JSBool
-js_GetCallArg(JSContext *cx, JSObject *obj, jsval id, js::Value *vp);
+js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, js::Value *vp);
+js_GetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetCallArg(JSContext *cx, JSObject *obj, jsval id, js::Value *vp);
+SetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetCallVar(JSContext *cx, JSObject *obj, jsval id, js::Value *vp);
+SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 /*
  * js_SetCallArg and js_SetCallVar are extern fastcall copies of the setter
@@ -393,17 +388,17 @@ SetCallVar(JSContext *cx, JSObject *obj, jsval id, js::Value *vp);
  * property ops map.
  */
 extern JSBool JS_FASTCALL
-js_SetCallArg(JSContext *cx, JSObject *obj, uint32 slotid, js::Value *vp);
+js_SetCallArg(JSContext *cx, JSObject *obj, size_t slotid, js::Value *vp);
 
 extern JSBool JS_FASTCALL
-js_SetCallVar(JSContext *cx, JSObject *obj, uint32 slotid, js::Value *vp);
+js_SetCallVar(JSContext *cx, JSObject *obj, size_t slotid, js::Value *vp);
 
 /*
  * Slower version of js_GetCallVar used when call_resolve detects an attempt to
  * leak an optimized closure via indirect or debugger eval.
  */
 extern JSBool
-js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsval id, js::Value *vp);
+js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, js::Value *vp);

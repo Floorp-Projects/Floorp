@@ -92,7 +92,7 @@ inline bool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
                          jsid *idp)
 {
-    JS_ASSERT(!idval.isInt32());
+    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.asInt32()));
 
 #if JS_HAS_XML_SUPPORT
     extern bool js_InternNonIntElementIdSlow(JSContext *, JSObject *,
@@ -108,7 +108,7 @@ inline bool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
                          jsid *idp, js::Value *vp)
 {
-    JS_ASSERT(!idval.isInt32());
+    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.asInt32()));
 
 #if JS_HAS_XML_SUPPORT
     extern bool js_InternNonIntElementIdSlow(JSContext *, JSObject *,
@@ -125,6 +125,21 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
         return true;
     }
     return false;
+}
+
+inline bool
+js_Int32ToId(JSContext* cx, int32 index, jsid* id)
+{
+    if (INT_FITS_IN_JSID(index)) {
+        *id = INT_TO_JSID(index);
+        return true;
+    }
+
+    JSString* str = js_NumberToString(cx, index);
+    if (!str)
+        return false;
+
+    return js_ValueToStringId(cx, js::StringTag(str), id);
 }
 
 #endif /* jsatominlines_h___ */

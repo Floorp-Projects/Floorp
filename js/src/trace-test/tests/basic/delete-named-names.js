@@ -12,6 +12,6 @@ for each (var i in a)
 
 checkStats({
     recorderAborted:0,
-    traceCompleted:1,
-    sideExitIntoInterpreter:1
+    traceCompleted:2,
+    sideExitIntoInterpreter:2
 });

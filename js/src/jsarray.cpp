@@ -161,22 +161,8 @@ INDEX_TOO_BIG(jsuint index)
  * an atomized string.
  */
 JSBool
-js_IdIsIndex(jsid id, jsuint *indexp)
+js_StringIsIndex(JSString *str, jsuint *indexp)
 {
-    if (JSID_IS_INT(id)) {
-        jsint i;
-        i = JSID_TO_INT(id);
-        if (i < 0)
-            return JS_FALSE;
-        *indexp = (jsuint)i;
-        return JS_TRUE;
-    }
-
-    /* NB: id should be a string, but jsxml.c may call us with an object id. */
-    if (!JSID_IS_ATOM(id))
-        return JS_FALSE;
-
-    JSString *str = JSID_TO_STRING(id);
     jschar *cp = str->chars();
     if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
         jsuint index = JS7_UNDEC(*cp++);
@@ -258,22 +244,12 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
 }
 
-static inline void
-IndexToValue(JSContext *cx, jsdouble index, Value *vp)
-{
-    int32_t i;
-    if (JSDOUBLE_IS_INT32(index, i))
-        vp->setInt32(i);
-    else
-        vp->setDouble(index);
-}
-
 JSBool JS_FASTCALL
 js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
     JSString *str;
 
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return JS_TRUE;
     }
@@ -292,7 +268,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
     JSAtom *atom;
     JS_STATIC_ASSERT((jsuint)-1 == 4294967295U);
 
-    JS_ASSERT(index > JSVAL_INT_MAX);
+    JS_ASSERT(index > JSID_INT_MAX);
 
     start = JS_ARRAY_END(buf);
     do {
@@ -315,7 +291,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
          clasp == &js_ObjectClass)) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom) {
-            *idp = JSVAL_VOID;
+            *idp = JSID_VOID;
             return JS_TRUE;
         }
     } else {
@@ -339,7 +315,9 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
         return JS_TRUE;
     }
 
-    if (newcap > MAX_DSLOTS_LENGTH) {
+    /* Silence warning */
+    size_t newcapBig = newcap;
+    if (newcapBig > MAX_DSLOTS_LENGTH) {
         js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
@@ -427,7 +405,7 @@ static bool
 IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
           JSBool createAtom = JS_FALSE)
 {
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(int(index));
         return JS_TRUE;
     }
@@ -435,7 +413,7 @@ IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
     if (index <= jsuint(-1)) {
         if (!BigIndexToId(cx, obj, jsuint(index), createAtom, idp))
             return JS_FALSE;
-        if (hole && JSVAL_IS_VOID(*idp))
+        if (hole && JSID_IS_VOID(*idp))
             *hole = JS_TRUE;
         return JS_TRUE;
     }
@@ -519,7 +497,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr(), JS_TRUE))
         return JS_FALSE;
-    JS_ASSERT(!JSVAL_IS_VOID(idr.id()));
+    JS_ASSERT(!JSID_IS_VOID(idr.id()));
 
     Value tmp = v;
     return obj->setProperty(cx, idr.id(), &tmp);
@@ -546,7 +524,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr()))
         return JS_FALSE;
-    if (JSVAL_IS_VOID(idr.id()))
+    if (JSID_IS_VOID(idr.id()))
         return JS_TRUE;
 
     Value junk;
@@ -574,7 +552,7 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
     Value v;
     jsid id;
 
-    IndexToValue(cx, length, &v);
+    v.setNumber(length);
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     return obj->setProperty(cx, id, &v);
 }
@@ -619,7 +597,7 @@ array_length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     do {
         if (obj->isArray()) {
-            IndexToValue(cx, obj->getArrayLength(), vp);
+            vp->setNumber(obj->getArrayLength());
             return JS_TRUE;
         }
     } while ((obj = obj->getProto()) != NULL);
@@ -646,7 +624,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (oldlen == newlen)
         return true;
 
-    IndexToValue(cx, newlen, vp);
+    vp->setNumber(newlen);
     if (oldlen < newlen) {
         if (obj->isDenseArray())
             obj->setDenseArrayLength(newlen);
@@ -687,7 +665,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         for (;;) {
             if (!JS_CHECK_OPERATION_LIMIT(cx) || !JS_NextProperty(cx, iter, &id))
                 return false;
-            if (JSVAL_IS_VOID(id))
+            if (JSID_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
                 !obj->deleteProperty(cx, id, &junk)) {
@@ -710,7 +688,7 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, jsid id)
     JS_ASSERT(obj->isDenseArray());
 
     uint32 i;
-    return id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom) ||
+    return JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
            (js_IdIsIndex(id, &i) &&
             obj->getArrayLength() != 0 &&
             i < obj->getDenseArrayCapacity() &&
@@ -746,8 +724,8 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     uint32 i;
     if (!js_IdIsIndex(id, &i)) {
-        JS_ASSERT(id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom));
-        IndexToValue(cx, obj->getArrayLength(), vp);
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
+        vp->setNumber(obj->getArrayLength());
         return JS_TRUE;
     }
     *vp = obj->getDenseArrayElement(i);
@@ -759,12 +737,12 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     uint32 i;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
-        IndexToValue(cx, obj->getArrayLength(), vp);
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+        vp->setNumber(obj->getArrayLength());
         return JS_TRUE;
     }
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
         *vp = obj->getProtoValue();
         return JS_TRUE;
     }
@@ -854,7 +832,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     uint32 i;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return array_length_setter(cx, obj, id, vp);
 
     if (!obj->isDenseArray())
@@ -974,7 +952,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     uint32 i = 0;       // init to shut GCC up
     JSBool isIndex;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
 
     isIndex = js_IdIsIndex(id, &i);
@@ -991,7 +969,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 static JSBool
 array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    *attrsp = id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)
+    *attrsp = JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)
         ? JSPROP_PERMANENT : JSPROP_ENUMERATE;
     return JS_TRUE;
 }
@@ -1012,7 +990,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     if (!obj->isDenseArray())
         return js_DeleteProperty(cx, obj, id, rval);
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         rval->setBoolean(false);
         return JS_TRUE;
     }
@@ -1470,7 +1448,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
         if (newlen > obj->getArrayLength())
             obj->setDenseArrayLength(newlen);
 
-        JS_ASSERT(count < size_t(-1) / sizeof(Value));
+        JS_ASSERT(count < uint32(-1) / sizeof(Value));
         if (targetType == TargetElementsMayContainValues) {
             jsuint valueCount = 0;
             for (jsuint i = 0; i < count; i++) {
@@ -1513,7 +1491,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     JS_ASSERT(start == MAXINDEX);
     AutoValueRooter tvr(cx);
     AutoIdRooter idr(cx);
-    Value idval(DoubleTag(MAXINDEX));
+    Value idval = DoubleTag(MAXINDEX);
     do {
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
@@ -2123,7 +2101,7 @@ array_push_slowly(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *
 
     /* Per ECMA-262, return the new array length. */
     jsdouble newlength = length + jsdouble(argc);
-    IndexToValue(cx, newlength, rval);
+    rval->setNumber(newlength);
     return js_SetLengthProperty(cx, obj, newlength);
 }
 
@@ -2145,7 +2123,7 @@ array_push1_dense(JSContext* cx, JSObject* obj, const Value &v, Value *rval)
     JS_ASSERT(obj->getDenseArrayElement(length).isMagic(JS_ARRAY_HOLE));
     obj->incDenseArrayCountBy(1);
     obj->setDenseArrayElement(length, v);
-    IndexToValue(cx, obj->getArrayLength(), rval);
+    rval->setNumber(obj->getArrayLength());
     return JS_TRUE;
 }
 
@@ -2341,7 +2319,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Follow Perl by returning the new array length. */
-    IndexToValue(cx, newlen, vp);
+    vp->setNumber(newlen);
     return JS_TRUE;
 }
 

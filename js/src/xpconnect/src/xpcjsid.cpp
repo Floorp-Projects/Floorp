@@ -474,7 +474,7 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 NS_IMETHODIMP
 nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     JSContext * cx, JSObject * obj,
-                    jsval id, PRUint32 flags,
+                    jsid id, PRUint32 flags,
                     JSObject * *objp, PRBool *_retval)
 {
     XPCCallContext ccx(JS_CALLER, cx);
@@ -496,12 +496,8 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
         if(!member->GetConstantValue(ccx, iface, &val))
             return NS_ERROR_OUT_OF_MEMORY;
 
-        jsid idid;
-        if(!JS_ValueToId(cx, id, &idid))
-            return NS_ERROR_OUT_OF_MEMORY;
-
         *objp = obj;
-        *_retval = JS_DefinePropertyById(cx, obj, idid, val, nsnull, nsnull,
+        *_retval = JS_DefinePropertyById(cx, obj, id, val, nsnull, nsnull,
                                          JSPROP_ENUMERATE | JSPROP_READONLY |
                                          JSPROP_PERMANENT);
     }
@@ -920,7 +916,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
 
     // 'push' a call context and call on it
     XPCCallContext ccx(JS_CALLER, cx, obj, nsnull,
-                       rt->GetStringJSVal(XPCJSRuntime::IDX_CREATE_INSTANCE),
+                       rt->GetStringID(XPCJSRuntime::IDX_CREATE_INSTANCE),
                        argc, argv, vp);
 
     *_retval = XPCWrappedNative::CallMethod(ccx);

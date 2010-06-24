@@ -132,7 +132,7 @@ nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 
 
 JSBool
-nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
+nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool did_resolve = JS_FALSE;
 

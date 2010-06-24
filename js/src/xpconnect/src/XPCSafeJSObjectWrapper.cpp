@@ -45,22 +45,22 @@
 #include "nsJSPrincipals.h"
 
 static JSBool
-XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_SJOW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SJOW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_SJOW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_SJOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
 XPC_SJOW_Enumerate(JSContext *cx, JSObject *obj);
 
 static JSBool
-XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                     JSObject **objp);
 
 static JSBool
@@ -70,7 +70,7 @@ static void
 XPC_SJOW_Finalize(JSContext *cx, JSObject *obj);
 
 static JSBool
-XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                      jsval *vp);
 
 static JSBool
@@ -86,7 +86,7 @@ XPC_SJOW_Create(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval);
 
 static JSBool
-XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+XPC_SJOW_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 static JSObject *
 XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
@@ -179,7 +179,7 @@ CanCallerAccess(JSContext *cx, JSObject *wrapperObj, JSObject *unsafeObj)
     jsval flags;
     JS_GetReservedSlot(cx, wrapperObj, sFlagsSlot, &flags);
     if (HAS_FLAGS(flags, FLAG_SOW) &&
-        !SystemOnlyWrapper::CheckFilename(cx, JSVAL_VOID, fp)) {
+        !SystemOnlyWrapper::CheckFilename(cx, JSID_VOID, fp)) {
       return JS_FALSE;
     }
   }
@@ -470,12 +470,12 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
 }
 
 static JSBool
-XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   // The constructor and toString properties needs to live on the safe
   // wrapper.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_CONSTRUCTOR) ||
-      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_CONSTRUCTOR) ||
+      id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
   }
 
@@ -515,7 +515,7 @@ XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   JSObject *unsafeObj = GetUnsafeObject(cx, obj);
   if (!unsafeObj) {
@@ -579,11 +579,11 @@ private:
 };
 
 static JSBool
-XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
+XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                           JSBool aIsSet)
 {
   // We resolve toString to a function in our resolve hook.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
   }
 
@@ -607,11 +607,6 @@ XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       return JS_FALSE;
     }
 
-    jsid interned_id;
-    if (!JS_ValueToId(cx, id, &interned_id)) {
-      return JS_FALSE;
-    }
-
     if (aIsSet &&
         !JSVAL_IS_PRIMITIVE(*vp) &&
         !RewrapObject(cx, JS_GetGlobalForObject(cx, unsafeObj),
@@ -620,8 +615,8 @@ XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     }
 
     JSBool ok = aIsSet
-                ? JS_SetPropertyById(cx, unsafeObj, interned_id, vp)
-                : JS_GetPropertyById(cx, unsafeObj, interned_id, vp);
+                ? JS_SetPropertyById(cx, unsafeObj, id, vp)
+                : JS_GetPropertyById(cx, unsafeObj, id, vp);
     if (!ok) {
       return JS_FALSE;
     }
@@ -631,13 +626,13 @@ XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 }
 
 static JSBool
-XPC_SJOW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SJOW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return XPC_SJOW_GetOrSetProperty(cx, obj, id, vp, PR_FALSE);
 }
 
 static JSBool
-XPC_SJOW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_SJOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return XPC_SJOW_GetOrSetProperty(cx, obj, id, vp, PR_TRUE);
 }
@@ -675,7 +670,7 @@ XPC_SJOW_Enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                     JSObject **objp)
 {
   obj = FindSafeObject(obj);
@@ -695,7 +690,7 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   }
 
   // Resolve toString specially.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     *objp = obj;
     return JS_DefineFunction(cx, obj, "toString",
                              XPC_SJOW_toString, 0, 0) != nsnull;
@@ -725,7 +720,7 @@ XPC_SJOW_Finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
+XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                      JSAccessMode mode, jsval *vp)
 {
   // Prevent setting __proto__ on an XPCSafeJSObjectWrapper
@@ -927,14 +922,14 @@ XPC_SJOW_Create(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
-XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+XPC_SJOW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
-  if (JSVAL_IS_PRIMITIVE(v)) {
+  if (JSVAL_IS_PRIMITIVE(*valp)) {
     *bp = JS_FALSE;
   } else {
     JSObject *unsafeObj = GetUnsafeObject(cx, obj);
 
-    JSObject *other = JSVAL_TO_OBJECT(v);
+    JSObject *other = JSVAL_TO_OBJECT(*valp);
     JSObject *otherUnsafe = GetUnsafeObject(cx, other);
 
     // An object is equal to a SJOW if:

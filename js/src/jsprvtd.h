@@ -57,29 +57,6 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
-/* Internal identifier (jsid) macros. */
-
-#define JSID_IS_ATOM(id)            JSVAL_IS_STRING((jsval)(id))
-#define JSID_TO_ATOM(id)            ((JSAtom *)JSVAL_TO_STRING((jsval)(id)))
-#define JSID_TO_STRING(id)          ATOM_TO_STRING(JSID_TO_ATOM(id))
-#define ATOM_TO_JSID(atom)          ((jsid)STRING_TO_JSVAL((JSString *)atom))
-
-#define JSID_IS_INT(id)             JSVAL_IS_INT((jsval)(id))
-#define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
-#define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
-#define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
-#define INT_JSID_TO_VALUE(id)       (js::Valueify((jsval)(id)))
-#define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
-#define INT_FITS_IN_JSID(i)         INT_FITS_IN_JSVAL(i)
-
-#define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
-#define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
-#define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
-#define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
-
-#define ID_TO_VALUE(id)             (js::Valueify(id))
-#define ID_TO_JSVAL(id)             ((jsval)(id))
-
 /*
  * Convenience constants.
  */

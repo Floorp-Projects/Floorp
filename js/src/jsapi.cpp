@@ -107,6 +107,10 @@ using namespace js;
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
+#ifdef DEBUG
+JS_PUBLIC_DATA(jsid) JSID_VOID = { (size_t)JSID_VOID_TYPE };
+#endif
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
@@ -2566,7 +2570,7 @@ JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    *vp = ID_TO_JSVAL(id);
+    *vp = IdToJsval(id);
     return JS_TRUE;
 }
 
@@ -2635,7 +2639,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-    return js_HasInstance(cx, obj, Valueify(v), bp);
+    return js_HasInstance(cx, obj, Valueify(&v), bp);
 }
 
 JS_PUBLIC_API(void *)
@@ -3157,7 +3161,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
-        Value value(DoubleTag(cds->dval));
+        Value value = DoubleTag(cds->dval);
         attrs = cds->flags;
         if (!attrs)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
@@ -3695,7 +3699,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             sprop = sprop->parent;
 
         if (!sprop) {
-            *idp = JSVAL_VOID;
+            *idp = JSID_VOID;
         } else {
             iterobj->setPrivate(sprop->parent);
             *idp = sprop->id;
@@ -3705,7 +3709,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
-            *idp = JSVAL_VOID;
+            *idp = JSID_VOID;
         } else {
             *idp = ida->vector[--i];
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Tag(i));
@@ -4753,6 +4757,12 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
     if (!str)
         cx->free(js);
     return str;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StringHasBeenInterned(JSString *str)
+{
+    return str->isAtomized();
 }
 
 JS_PUBLIC_API(JSString *)

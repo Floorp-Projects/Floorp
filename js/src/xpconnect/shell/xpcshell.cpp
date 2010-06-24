@@ -157,7 +157,7 @@ JSPrincipals *gJSPrincipals = nsnull;
 nsAutoString *gWorkingDirectory = nsnull;
 
 static JSBool
-GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
 #if (!defined(XP_WIN) && !defined(XP_UNIX)) || defined(WINCE)
     //XXX: your platform should really implement this
@@ -817,7 +817,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
@@ -825,7 +825,11 @@ env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     const char *name, *value;
     int rv;
 
-    idstr = JS_ValueToString(cx, id);
+    jsval idval;
+    if (!JS_IdToValue(cx, id, &idval))
+        return JS_FALSE;
+    
+    idstr = JS_ValueToString(cx, idval);
     valstr = JS_ValueToString(cx, *vp);
     if (!idstr || !valstr)
         return JS_FALSE;
@@ -896,7 +900,7 @@ env_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     JSString *idstr, *valstr;
@@ -905,7 +909,11 @@ env_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
-    idstr = JS_ValueToString(cx, id);
+    jsval idval;
+    if (!JS_IdToValue(cx, id, &idval))
+        return JS_FALSE;
+
+    idstr = JS_ValueToString(cx, idval);
     if (!idstr)
         return JS_FALSE;
     name = JS_GetStringBytes(idstr);
@@ -1328,17 +1336,17 @@ FullTrustSecMan::CanAccess(PRUint32 aAction,
                            nsAXPCNativeCallContext *aCallContext,
                            JSContext * aJSContext, JSObject * aJSObject,
                            nsISupports *aObj, nsIClassInfo *aClassInfo,
-                           jsval aName, void * *aPolicy)
+                           jsid aName, void * *aPolicy)
 {
     return NS_OK;
 }
 
-/* [noscript] void checkPropertyAccess (in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in string aClassName, in jsval aProperty, in PRUint32 aAction); */
+/* [noscript] void checkPropertyAccess (in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in string aClassName, in jsid aProperty, in PRUint32 aAction); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
                                      JSObject * aJSObject,
                                      const char *aClassName,
-                                     jsval aProperty, PRUint32 aAction)
+                                     jsid aProperty, PRUint32 aAction)
 {
     return NS_OK;
 }

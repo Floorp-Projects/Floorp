@@ -547,7 +547,7 @@ str_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     JSString *str;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (obj->getClass() == &js_StringClass) {
             /* Follow ECMA-262 by fetching intrinsic length of our string. */
             str = obj->getPrimitiveThis().asString();
@@ -601,7 +601,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         JSString *str1 = JSString::getUnitString(cx, str, size_t(slot));
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(slot), StringTag(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, id, StringTag(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
@@ -1562,7 +1562,7 @@ typedef JSObject **MatchArgType;
 static bool
 MatchCallback(JSContext *cx, size_t count, void *p)
 {
-    JS_ASSERT(count <= JSVAL_INT_MAX);  /* by max string length */
+    JS_ASSERT(count <= JSID_INT_MAX);  /* by max string length */
 
     JSObject *&arrayobj = *static_cast<MatchArgType>(p);
     if (!arrayobj) {
