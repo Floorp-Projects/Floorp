@@ -206,6 +206,8 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_FUNOBJ              = 0xF,
 
     /* Cannot not appear in any jsval ever; trace-jit only. */
+    JSVAL_TYPE_STRORNULL      = 0x97,
+    JSVAL_TYPE_OBJORNULL      = 0x98,
     JSVAL_TYPE_BOXED               = 0x99,
     JSVAL_TYPE_UNINITIALIZED       = 0xcd
 } JS_ENUM_FOOTER(JSValueType);
@@ -258,6 +260,8 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_NULL              ((uint8)0x6)
 #define JSVAL_TYPE_NONFUNOBJ         ((uint8)0x7)
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0xF)
+#define JSVAL_TYPE_STRORNULL      ((uint8)0x97)
+#define JSVAL_TYPE_OBJORNULL      ((uint8)0x98)
 #define JSVAL_TYPE_BOXED             ((uint8)0x99)
 #define JSVAL_TYPE_UNINITIALIZED     ((uint8)0xcd)
 

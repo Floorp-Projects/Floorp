@@ -1069,6 +1069,23 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
 }
 
 JSBool
+xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
+{
+    // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
+    if(str.IsVoid())
+    {
+        *rval = nsnull;
+        return JS_TRUE;
+    }
+
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
+    if(!jsstr)
+        return JS_FALSE;
+    *rval = JSVAL_TO_STRING(jsstr);
+    return JS_TRUE;
+}
+
+JSBool
 xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
                          nsWrapperCache *cache, const nsIID *iid,
                          XPCNativeInterface **iface, jsval *rval)
