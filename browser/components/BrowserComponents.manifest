@@ -26,8 +26,8 @@ category command-line-handler x-default @mozilla.org/browser/final-clh;1 applica
 category command-line-validator b-browser @mozilla.org/browser/clh;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 
 # nsBrowserGlue.js
-component {eab9012e-5f74-4cbc-b2b5-a590235513cc} nsBrowserGlue.js application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-contract @mozilla.org/browser/browserglue;1 {eab9012e-5f74-4cbc-b2b5-a590235513cc} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} nsBrowserGlue.js application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-contract @mozilla.org/geolocation/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+component {eab9012e-5f74-4cbc-b2b5-a590235513cc} nsBrowserGlue.js
+contract @mozilla.org/browser/browserglue;1 {eab9012e-5f74-4cbc-b2b5-a590235513cc}
+category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1
+component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} nsBrowserGlue.js
+contract @mozilla.org/geolocation/prompt;1
