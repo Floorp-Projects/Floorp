@@ -375,13 +375,15 @@ const uint32 TT_INVALID = uint32(-1);
 typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<TraceType> {
+    Oracle *oracle;
 public:
     TypeMap(nanojit::Allocator* alloc) : Queue<TraceType>(alloc) {}
     void set(unsigned stackSlots, unsigned ngslots,
              const TraceType* stackTypeMap, const TraceType* globalTypeMap);
-    JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
+    JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth,
+                                        bool speculate);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
-                                                     unsigned stackSlots);
+                                                     unsigned stackSlots, bool speculate);
     bool matches(TypeMap& other) const;
     void fromRaw(TraceType* other, unsigned numSlots);
 };
@@ -740,7 +742,7 @@ struct TreeFragment : public LinkableFragment
         return typeMap.data();
     }
 
-    JS_REQUIRES_STACK void initialize(JSContext* cx, SlotList *globalSlots);
+    JS_REQUIRES_STACK void initialize(JSContext* cx, SlotList *globalSlots, bool speculate);
     UnstableExit* removeUnstableExit(VMSideExit* exit);
 };
 
@@ -1432,7 +1434,7 @@ class TraceRecorder
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, TraceType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
-                  uint32 outerArgc, RecordReason reason);
+                  uint32 outerArgc, RecordReason reason, bool speculate);
 
     /* The destructor should only be called through finish*, not directly. */
     ~TraceRecorder();
@@ -1459,12 +1461,14 @@ public:
     startRecorder(JSContext*, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, TraceType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
-                  uint32 outerArgc, RecordReason reason);
+                  uint32 outerArgc, RecordReason reason,
+                  bool speculate);
 
     /* Accessors. */
     VMFragment*         getFragment() const { return fragment; }
     TreeFragment*       getTree() const { return tree; }
     bool                outOfMemory() const { return traceMonitor->outOfMemory(); }
+    Oracle*             getOracle() const { return oracle; }
 
     /* Entry points / callbacks from the interpreter. */
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);

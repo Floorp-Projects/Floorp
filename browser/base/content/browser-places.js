@@ -1062,7 +1062,7 @@ var PlacesStarButton = {
 };
 
 
-// This object handles the initlization and uninitlization of the bookmarks
+// This object handles the initialization and uninitialization of the bookmarks
 // toolbar.  updateState is called when the browser window is opened and
 // after closing the toolbar customization dialog.
 let PlacesToolbarHelper = {
@@ -1163,15 +1163,29 @@ let BookmarksMenuButton = {
 
     let bookmarksToolbarItem = this.bookmarksToolbarItem;
     if (isElementVisible(bookmarksToolbarItem)) {
-      bookmarksToolbarItem.appendChild(this.button);
+      if (this.button.parentNode != bookmarksToolbarItem) {
+        this.resetView();
+        bookmarksToolbarItem.appendChild(this.button);
+      }
       this.button.classList.add("bookmark-item");
       this.button.classList.remove("toolbarbutton-1");
     }
     else {
-      this.navbarButtonContainer.appendChild(this.button);
+      if (this.button.parentNode != this.navbarButtonContainer) {
+        this.resetView();
+        this.navbarButtonContainer.appendChild(this.button);
+      }
       this.button.classList.remove("bookmark-item");
       this.button.classList.add("toolbarbutton-1");
     }
+  },
+
+  resetView: function BMB_resetView() {
+    // When an element with a placesView attached is removed and re-inserted,
+    // XBL reapplies the binding causing any kind of issues and possible leaks,
+    // so kill current view and let popupshowing generate a new one.
+    if (this.button._placesView)
+      this.button._placesView.uninit();
   },
 
   customizeStart: function BMB_customizeStart() {
@@ -1181,6 +1195,7 @@ let BookmarksMenuButton = {
   },
 
   customizeDone: function BMB_customizeDone() {
+    this.resetView();
     this.updatePosition();
   }
 };
