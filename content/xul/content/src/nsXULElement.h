@@ -671,8 +671,10 @@ protected:
 
     nsIWidget* GetWindowWidget();
 
+    // attribute setters for widget
     nsresult HideWindowChrome(PRBool aShouldHide);
-
+    void SetChromeMargins(const nsAString* aValue);
+    void ResetChromeMargins();
     void SetTitlebarColor(nscolor aColor, PRBool aActive);
 
     void SetDrawsInTitlebar(PRBool aState);
