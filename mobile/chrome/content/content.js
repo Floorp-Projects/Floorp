@@ -10,16 +10,14 @@ let gFocusManager = Cc["@mozilla.org/focus-manager;1"]
   .getService(Ci.nsIFocusManager);
 let gPrefService = Cc["@mozilla.org/preferences-service;1"]
   .getService(Ci.nsIPrefBranch2);
+let gObserverService = Cc["@mozilla.org/observer-service;1"]
+  .getService(Ci.nsIObserverService);
 
 let XULDocument = Ci.nsIDOMXULDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
 let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
 
-/** Send message to UI thread with browser guid as the first parameter. */
-function sendMessage(name) {
-  sendAsyncMessage(name, Array.prototype.slice.call(arguments, 1));
-}
 
 /** Watches for mouse click in content and redirect them to the best found target **/
 const ElementTouchHelper = {
@@ -690,3 +688,25 @@ let ViewportHandler = {
 };
 
 ViewportHandler.init();
+
+
+var FormSubmitObserver = {
+  init: function init() {
+    gObserverService.addObserver(this, "formsubmit", false);
+  },
+
+  notify: function notify(aFormElement, aWindow, aActionURI, aCancelSubmit) {
+    // We don't need to send any data along
+    sendAsyncMessage("Browser:FormSubmit", {});
+  },
+
+  QueryInterface : function(aIID) {
+    if (!aIID.equals(Ci.nsIFormSubmitObserver) &&
+        !aIID.equals(Ci.nsISupportsWeakReference) &&
+        !aIID.equals(Ci.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+FormSubmitObserver.init();
