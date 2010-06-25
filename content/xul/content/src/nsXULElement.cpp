@@ -1076,6 +1076,17 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
           RemoveBroadcaster(oldValue);
         }
     }
+    else if (aNamespaceID == kNameSpaceID_None &&
+             aValue &&
+             mNodeInfo->Equals(nsGkAtoms::window) &&
+             aName == nsGkAtoms::chromemargin) {
+      nsAttrValue attrValue;
+      nsIntMargin margins;
+      // Make sure the margin format is valid first
+      if (!attrValue.ParseIntMarginValue(*aValue)) {
+          return NS_ERROR_INVALID_ARG;
+      }
+    }
 
     return nsStyledElement::BeforeSetAttr(aNamespaceID, aName,
                                           aValue, aNotify);
@@ -1103,10 +1114,13 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         }
 
         // Hide chrome if needed
-        if (aName == nsGkAtoms::hidechrome &&
-            mNodeInfo->Equals(nsGkAtoms::window) &&
-            aValue) {
-            HideWindowChrome(aValue->EqualsLiteral("true"));
+        if (mNodeInfo->Equals(nsGkAtoms::window) && aValue) {
+          if (aName == nsGkAtoms::hidechrome) {
+              HideWindowChrome(aValue->EqualsLiteral("true"));
+          }
+          else if (aName == nsGkAtoms::chromemargin) {
+              SetChromeMargins(aValue);
+          }
         }
 
         // title, (in)activetitlebarcolor and drawintitlebar are settable on
@@ -1368,9 +1382,13 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     }
 
     if (aNameSpaceID == kNameSpaceID_None) {
-        if (aName == nsGkAtoms::hidechrome &&
-            mNodeInfo->Equals(nsGkAtoms::window)) {
-            HideWindowChrome(PR_FALSE);
+        if (mNodeInfo->Equals(nsGkAtoms::window)) {
+            if (aName == nsGkAtoms::hidechrome) {
+                HideWindowChrome(PR_FALSE);
+            }
+            else if (aName == nsGkAtoms::chromemargin) {
+                ResetChromeMargins();
+            }
         }
 
         if (doc && doc->GetRootElement() == this) {
@@ -2393,6 +2411,39 @@ nsXULElement::SetDrawsInTitlebar(PRBool aState)
     if (mainWidget) {
         mainWidget->SetDrawsInTitlebar(aState);
     }
+}
+
+void
+nsXULElement::SetChromeMargins(const nsAString* aValue)
+{
+    if (!aValue)
+        return;
+
+    nsIWidget* mainWidget = GetWindowWidget();
+    if (!mainWidget)
+        return;
+
+    // top, right, bottom, left - see nsAttrValue
+    nsAttrValue attrValue;
+    nsIntMargin margins;
+
+    nsAutoString data;
+    data.Assign(*aValue);
+    if (attrValue.ParseIntMarginValue(data) &&
+        attrValue.GetIntMarginValue(margins)) {
+        mainWidget->SetNonClientMargins(margins);
+    }
+}
+
+void
+nsXULElement::ResetChromeMargins()
+{
+    nsIWidget* mainWidget = GetWindowWidget();
+    if (!mainWidget)
+        return;
+    // See nsIWidget
+    nsIntMargin margins(-1,-1,-1,-1);
+    mainWidget->SetNonClientMargins(margins);
 }
 
 PRBool
