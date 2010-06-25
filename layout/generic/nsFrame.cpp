@@ -4178,6 +4178,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
+  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
   fputs("\n", out);
   return NS_OK;
 }
