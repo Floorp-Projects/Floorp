@@ -98,10 +98,10 @@ class JSWrapper : public js::JSProxyHandler {
 /* Base class for all cross compartment wrapper handlers. */
 class JSCrossCompartmentWrapper : public JSWrapper {
   protected:
-    JSCrossCompartmentWrapper();
+    JS_FRIEND_API(JSCrossCompartmentWrapper());
 
   public:
-    virtual ~JSCrossCompartmentWrapper();
+    virtual JS_FRIEND_API(~JSCrossCompartmentWrapper());
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
@@ -153,6 +153,8 @@ class AutoCompartment
   private:
     LazilyConstructed<ExecuteFrameGuard> frame;
     JSFrameRegs regs;
+    JSRegExpStatics statics;
+    AutoValueRooter input;
 
   public:
     AutoCompartment(JSContext *cx, JSObject *target);
