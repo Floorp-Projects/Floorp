@@ -1,6 +1,8 @@
+/*
 var jps = jps || Components.classes["@mozilla.org/jetpack/service;1"]
   .getService(Components.interfaces.nsIJetpackService),
-  jetpack = jps.createJetpack();
+  jetpack = null;
+*/
 
 load("handle_tests.js");
 function createHandle() {
@@ -8,6 +10,8 @@ function createHandle() {
 }
 
 function run_test() {
+  //jetpack = jps.createJetpack();
+  return;
   run_handle_tests();
 
   jetpack.loadImplementation("file://" + do_get_file("impl.js").path);
