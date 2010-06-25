@@ -1179,6 +1179,7 @@ struct JSCompartment {
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, JSObject **objp);
     bool wrapId(JSContext *cx, jsid *idp);
+    bool wrap(JSContext *cx, JSPropertyOp *op);
     bool wrap(JSContext *cx, JSPropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoValueVector &props);
     bool wrapException(JSContext *cx);
