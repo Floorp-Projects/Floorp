@@ -148,18 +148,12 @@ iQ.fn = iQ.prototype = {
 					if ( ret ) {
 						if ( iQ.isPlainObject( context ) ) {
 							Utils.assert('does not support HTML creation with context', false);
-							selector = [ document.createElement( ret[1] ) ];
-/* 							iQ.fn.attr.call( selector, context, true ); */
-
 						} else {
 							selector = [ doc.createElement( ret[1] ) ];
 						}
 
 					} else {
 							Utils.assert('does not support complex HTML creation', false);
-/* 					  ret = doc.createDocumentFragment([match */
-						ret = buildFragment( [ match[1] ], [ doc ] );
-						selector = (ret.cacheable ? ret.fragment.cloneNode(true) : ret.fragment).childNodes;
 					}
 					
 					return iQ.merge( this, selector );
@@ -453,14 +447,15 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: data
   data: function(key, value) {
+    var data = null;
     if(value === undefined) {
       Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-      var data = this[0].iQData;
+      data = this[0].iQData;
       return (data ? data[key] : null);
     }
     
   	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      var data = elem.iQData;
+      data = elem.iQData;
 
       if(!data)
         data = elem.iQData = {};
@@ -625,7 +620,7 @@ iQ.fn = iQ.prototype = {
       // The latest versions of Firefox do not animate from a non-explicitly set
       // css properties. So for each element to be animated, go through and
       // explicitly define 'em.
-      rupper = /([A-Z])/g;    
+      var rupper = /([A-Z])/g;    
       this.each(function(){
         var cStyle = window.getComputedStyle(this, null);      
         for(var prop in css){
@@ -731,9 +726,9 @@ iQ.fn = iQ.prototype = {
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
 
-    var handler = function(e) {
+    var handler = function(event) {
       try {
-        return func.apply(this, [e]);
+        return func.apply(this, [event]);
       } catch(e) {
         Utils.log(e);
       }
