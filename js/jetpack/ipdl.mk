@@ -1,0 +1,3 @@
+IPDLSRCS = \
+  PJetpack.ipdl \
+  $(NULL)

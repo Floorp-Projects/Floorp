@@ -14,8 +14,8 @@
 # The Original Code is Mozilla Firefox.
 #
 # The Initial Developer of the Original Code is
-# The Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2009
+# the Mozilla Foundation <http://www.mozilla.org>.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -41,69 +41,36 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-GARBAGE_DIRS += _ipdlheaders
-GARBAGE += ipdl_lextab.py ipdl_yacctab.py $(wildcard *.pyc $(srcdir)/ipdl/*.pyc $(srcdir)/ipdl/cxx/*.pyc)
-
-MODULE = ipdlgen
-LIBRARY_NAME = mozipdlgen_s
-FORCE_STATIC_LIB = 1
+MODULE = jetpack
+LIBRARY_NAME = jetpack_s
 LIBXUL_LIBRARY = 1
+FORCE_STATIC_LIB = 1
+IS_COMPONENT = 1
 EXPORT_LIBRARY = 1
+MODULE_NAME = jetpack
 
-##-----------------------------------------------------------------------------
-## When you add IPDL files to a source directory, list the directory here.
-##
-IPDLDIRS =  \
-  dom/plugins  \
-  js/jetpack \
-  ipc/ipdl/test/cxx  \
-  $(NULL)
-##-----------------------------------------------------------------------------
-
-ifdef MOZ_IPDL_TESTS
-DIRS += test
-endif
-
-vpath %.ipdl $(topsrcdir)
-
-define ADD_IPDLDIR
-include $(topsrcdir)/$(IPDLDIR)/ipdl.mk
-ALL_IPDLSRCS += $$(IPDLSRCS:%=$(IPDLDIR)/%)
-PROTOCOLS += $$(IPDLSRCS)
-endef
-
-ALL_IPDLSRCS :=
-PROTOCOLS :=
-
-$(foreach IPDLDIR,$(IPDLDIRS),$(eval $(ADD_IPDLDIR)))
-
-
-CPPSRCS =					\
-  $(PROTOCOLS:%.ipdl=%Parent.cpp)		\
-  $(PROTOCOLS:%.ipdl=%Child.cpp)		\
+XPIDLSRCS = \
+  nsIJetpackService.idl \
+  nsIJetpack.idl \
   $(NULL)
 
-GARBAGE += $(CPPSRCS)
+EXPORTS_NAMESPACES = mozilla/jetpack
+EXPORTS_mozilla/jetpack = \
+  JetpackProcessChild.h \
+  JetpackProcessParent.h \
+  JetpackParent.h \
+  JetpackChild.h \
+  JetpackService.h \
+  $(NULL)
 
-LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders
-
+CPPSRCS = \
+  JetpackParent.cpp \
+  JetpackChild.cpp \
+  JetpackProcessChild.cpp \
+  JetpackProcessParent.cpp \
+  JetpackService.cpp \
+  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
-
-
-# NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
-# which is why we don't have explicit .h/.cpp targets here
-export:: $(ALL_IPDLSRCS)
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py	\
-	  -I$(topsrcdir)/other-licenses/ply		\
-	  $(srcdir)/ipdl.py				\
-	  --outheaders-dir=_ipdlheaders			\
-	  --outcpp-dir=.				\
-	  $(IPDLDIRS:%=-I$(topsrcdir)/%)		\
-	  $^
-
-# We #include some things in the dom/plugins/ directory that rely on
-# toolkit libraries.
-CXXFLAGS    += $(TK_CFLAGS)
