@@ -762,6 +762,8 @@ struct ParamTraits<NPCoordinateSpace>
 #  error Sorry, OS/2 is not supported
 #elif defined(XP_UNIX) && defined(MOZ_X11)
 #  include "mozilla/plugins/NPEventX11.h"
+#elif defined(ANDROID)
+#  include "mozilla/plugins/NPEventAndroid.h"
 #else
 #  error Unsupported platform
 #endif
