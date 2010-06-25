@@ -1621,7 +1621,7 @@ var FormHelper = {
         }
       }
 
-      Browser.setVisibleRect(zoomRect);
+      Browser.animatedZoomTo(zoomRect);
     }
   },
 

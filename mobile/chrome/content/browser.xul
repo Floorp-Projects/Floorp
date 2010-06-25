@@ -85,6 +85,7 @@
   <script type="application/javascript" src="chrome://browser/content/InputHandler.js"/>
   <script type="application/javascript" src="chrome://browser/content/TileManager.js"/>
   <script type="application/javascript" src="chrome://browser/content/BrowserView.js"/>
+  <script type="application/javascript" src="chrome://browser/content/AnimatedZoom.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>

@@ -591,4 +591,33 @@ Rect.prototype = {
 
     return result;
   },
+
+  /**
+   * Blends two rectangles together.
+   * @param rect Rectangle to blend this one with
+   * @param scalar Ratio from 0 (returns a clone of this rect) to 1 (clone of rect).
+   * @return New blended rectangle.
+   */
+  blend: function blend(rect, scalar) {
+    return new Rect(
+      this.left   + (rect.left   - this.left  ) * scalar,
+      this.top    + (rect.top    - this.top   ) * scalar,
+      this.width  + (rect.width  - this.width ) * scalar,
+      this.height + (rect.height - this.height) * scalar);
+  },
+
+  /**
+   * Grows or shrinks the rectangle while keeping the center point.
+   * Accepts single multipler, or separate for both axes.
+   */
+  inflate: function inflate(xscl, yscl) {
+    let xAdj = (this.width * xscl - this.width) / 2;
+    let s = (arguments.length > 1) ? yscl : xscl;
+    let yAdj = (this.height * s - this.height) / 2;
+    this.left -= xAdj;
+    this.right += xAdj;
+    this.top -= yAdj;
+    this.bottom += yAdj;
+    return this;
+  }
 };
