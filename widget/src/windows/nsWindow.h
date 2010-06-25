@@ -197,6 +197,9 @@ public:
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
   NS_IMETHOD              OnIMESelectionChange(void);
 #endif // NS_ENABLE_TSF
+  NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
+  NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
+  void                    SetDrawsInTitlebar(PRBool aState);
 
   /**
    * Statics used in other classes
@@ -284,6 +287,7 @@ protected:
   nsWindow*               GetParentWindow(PRBool aIncludeOwner);
   virtual void            SubclassWindow(BOOL bState);
   PRBool                  CanTakeFocus();
+  PRBool                  UpdateNonClientMargins();
 #if !defined(WINCE)
   static void             InitTrackPointHack();
 #endif
@@ -319,6 +323,7 @@ protected:
                                                  PRBool& aResult,
                                                  LRESULT* aRetValue,
                                                  PRBool& aQuitProcessing);
+  PRInt32                 ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my);
 
   /**
    * Event handlers
@@ -449,6 +454,7 @@ protected:
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
   PRPackedBool          mDisplayPanFeedback;
+  PRPackedBool          mHideChrome;
   WindowHook            mWindowHook;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
@@ -466,6 +472,20 @@ protected:
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif
+
+  // Non-client margin settings
+  // Pre-calculated outward offset applied to default frames
+  nsIntMargin           mNonClientOffset;
+  // Margins set by the owner
+  nsIntMargin           mNonClientMargins;
+  // Indicates custom frames are enabled
+  PRPackedBool          mCustomNonClient;
+  // Disable non client margins on non-comsitor desktops
+  PRPackedBool          mCompositorFlag;
+  // Cached copy of L&F's resize border  
+  PRInt32               mResizeMargin;
+  // Height of the caption plus border
+  PRInt32               mCaptionHeight;
 
   nsCOMPtr<nsIdleService> mIdleService;
 
