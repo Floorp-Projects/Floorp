@@ -4640,8 +4640,15 @@ var TabsOnTop = {
 
 #ifdef MENUBAR_CAN_AUTOHIDE
 function updateAppButtonDisplay() {
-  document.getElementById("appmenu-button-container").hidden =
-    document.getElementById("toolbar-menubar").getAttribute("autohide") != "true";
+  var menubarHidden =
+    document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
+
+  document.getElementById("appmenu-button-container").hidden = !menubarHidden;
+
+  if (menubarHidden)
+    document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
+  else
+    document.documentElement.removeAttribute("chromemargin");
 }
 #endif
 
