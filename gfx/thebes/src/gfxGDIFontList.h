@@ -271,6 +271,10 @@ public:
         return mUnicodeRanges.test(range);
     }
 
+    virtual PRBool SkipDuringSystemFallback() { 
+        return !HasCmapTable(); // explicitly skip non-SFNT fonts
+    }
+
     virtual PRBool TestCharacterMap(PRUint32 aCh);
 
     // create a font entry for a font with a given name
