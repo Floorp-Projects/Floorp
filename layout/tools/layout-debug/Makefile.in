@@ -46,14 +46,4 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout_debug
 DIRS		= src ui
 
-# If we have a XULRunner-enabled tree, then build as a standalone XUL app.
-ifdef MOZ_XULRUNNER
-
-export XPI_NAME		= layoutdebug
-PREF_JS_EXPORTS		= $(srcdir)/layoutdebug-prefs.js
-DIST_FILES		= application.ini
-DIST_CHROME_FILES	= chrome.manifest
-
-endif # MOZ_XULRUNNER
-
 include $(topsrcdir)/config/rules.mk
