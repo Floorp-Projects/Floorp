@@ -78,6 +78,7 @@ ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
   , LayerOGL(aManager)
   , mTexture(0)
   , mOffscreenFormat(gfxASurface::ImageFormatUnknown)
+  , mOffscreenSize(-1,-1)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }

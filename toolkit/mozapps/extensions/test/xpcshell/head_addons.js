@@ -373,6 +373,19 @@ function writeInstallRDFToDir(aData, aDir) {
     });
   }
 
+  if ("localized" in aData) {
+    aData.localized.forEach(function(aLocalized) {
+      rdf += "<em:localized><Description>\n";
+      if ("locale" in aLocalized) {
+        aLocalized.locale.forEach(function(aLocaleName) {
+          rdf += "<em:locale>" + escapeXML(aLocaleName) + "</em:locale>\n";
+        });
+      }
+      rdf += writeLocaleStrings(aLocalized);
+      rdf += "</Description></em:localized>\n";
+    });
+  }
+
   rdf += "</Description>\n</RDF>\n";
 
   if (!aDir.exists())

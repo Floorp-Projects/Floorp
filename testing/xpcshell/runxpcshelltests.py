@@ -42,7 +42,7 @@ import re, sys, os, os.path, logging, shutil, signal, math
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
-from tempfile import mkdtemp
+from tempfile import mkdtemp, gettempdir
 
 from automationutils import *
 
@@ -274,11 +274,24 @@ class XPCShellTests(object):
   def setupProfileDir(self):
     """
       Create a temporary folder for the profile and set appropriate environment variables.
+      When running check-interactive and check-one, the directory is well-defined and
+      retained for inspection once the tests complete.
 
       On a remote system, we overload this to use a remote path structure.
     """
-    profileDir = mkdtemp()
+    if self.interactive or self.singleFile:
+      profileDir = os.path.join(gettempdir(), self.profileName, "xpcshellprofile")
+      try:
+        # This could be left over from previous runs
+        self.removeDir(profileDir)
+      except:
+        pass
+      os.makedirs(profileDir)
+    else:
+      profileDir = mkdtemp()
     self.env["XPCSHELL_TEST_PROFILE_DIR"] = profileDir
+    if self.interactive or self.singleFile:
+      print "TEST-INFO | profile dir is %s" % profileDir
     return profileDir
 
   def setupLeakLogging(self):
@@ -368,7 +381,8 @@ class XPCShellTests(object):
                manifest=None, testdirs=[], testPath=None,
                interactive=False, logfiles=True,
                thisChunk=1, totalChunks=1, debugger=None,
-               debuggerArgs=None, debuggerInteractive=False):
+               debuggerArgs=None, debuggerInteractive=False,
+               profileName=None):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -386,6 +400,8 @@ class XPCShellTests(object):
       Non-interactive only option.
     |debuggerInfo|, if set, specifies the debugger and debugger arguments
       that will be used to launch xpcshell.
+    |profileName|, if set, specifies the name of the application for the profile
+      directory if running only a subset of tests
     """
 
     self.xpcshell = xpcshell
@@ -399,6 +415,7 @@ class XPCShellTests(object):
     self.totalChunks = totalChunks
     self.thisChunk = thisChunk
     self.debuggerInfo = getDebuggerInfo(self.oldcwd, debugger, debuggerArgs, debuggerInteractive)
+    self.profileName = profileName or "xpcshell"
 
     if not testdirs and not manifest:
       # nothing to test!
@@ -474,7 +491,9 @@ class XPCShellTests(object):
           if self.logfiles and stdout:
             self.createLogFile(test, stdout, leakLogs)
         finally:
-          if self.profileDir:
+          # We don't want to delete the profile when running check-interactive
+          # or check-one.
+          if self.profileDir and not self.interactive and not self.singleFile:
             self.removeDir(self.profileDir)
 
     if passCount == 0 and failCount == 0:
@@ -514,6 +533,9 @@ class XPCShellOptions(OptionParser):
     self.add_option("--this-chunk",
                     type = "int", dest = "thisChunk", default=1,
                     help = "which chunk to run between 1 and --total-chunks")
+    self.add_option("--profile-name",
+                    type = "string", dest="profileName", default=None,
+                    help="name of application profile being tested")
 
 def main():
   parser = XPCShellOptions()
