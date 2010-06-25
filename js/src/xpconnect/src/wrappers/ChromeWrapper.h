@@ -37,31 +37,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentWrapper.h"
-#include "AccessCheck.h"
+#include "jsapi.h"
+#include "jswrapper.h"
 
 namespace xpc {
 
-ContentWrapper ContentWrapper::singleton;
+class ChromeWrapper : public JSCrossCompartmentWrapper {
+  public:
+    ChromeWrapper();
+    virtual ~ChromeWrapper();
 
-ContentWrapper::ContentWrapper() : JSCrossCompartmentWrapper()
-{
-}
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoValueVector &props);
+    virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoValueVector &props);
+    virtual bool enumerateOwn(JSContext *cx, JSObject *wrapper, js::AutoValueVector &props);
+    virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
-ContentWrapper::~ContentWrapper()
-{
-}
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode);
 
-bool
-ContentWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode)
-{
-    return AccessCheck::enter(cx, wrapper, wrappedObject(wrapper), id, mode);
-}
+    virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
 
-void
-ContentWrapper::leave(JSContext *cx, JSObject *wrapper)
-{
-    return AccessCheck::leave(cx, wrapper, wrappedObject(wrapper));
-}
+    static ChromeWrapper singleton;
+};
 
 }

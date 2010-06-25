@@ -37,31 +37,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentWrapper.h"
-#include "AccessCheck.h"
+#include "jsapi.h"
+#include "jswrapper.h"
+
+// Content wrappers allow unmitigated access and are only used if the
+// origin (subject) compartment's principals subsume the target (object)
+// compartment's principals.
+//
+// The main responsibility of the content wrapper is to push and pop the
+// target (object) compartment's principals when entering and leaving
+// that compartment.
 
 namespace xpc {
 
-ContentWrapper ContentWrapper::singleton;
+class ContentWrapper : public JSCrossCompartmentWrapper {
+  public:
+    ContentWrapper();
+    virtual ~ContentWrapper();
 
-ContentWrapper::ContentWrapper() : JSCrossCompartmentWrapper()
-{
-}
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode);
+    virtual void leave(JSContext *cx, JSObject *wrapper);
 
-ContentWrapper::~ContentWrapper()
-{
-}
-
-bool
-ContentWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode)
-{
-    return AccessCheck::enter(cx, wrapper, wrappedObject(wrapper), id, mode);
-}
-
-void
-ContentWrapper::leave(JSContext *cx, JSObject *wrapper)
-{
-    return AccessCheck::leave(cx, wrapper, wrappedObject(wrapper));
-}
+    static ContentWrapper singleton;
+};
 
 }

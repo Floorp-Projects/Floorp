@@ -37,31 +37,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentWrapper.h"
-#include "AccessCheck.h"
+#include "jsapi.h"
+#include "jswrapper.h"
 
 namespace xpc {
 
-ContentWrapper ContentWrapper::singleton;
+class AccessCheck {
+  public:
+    static bool subsumes(JSCompartment *subject, JSCompartment *object, bool *yesno);
+    static bool isPrivileged(JSCompartment *compartment);
 
-ContentWrapper::ContentWrapper() : JSCrossCompartmentWrapper()
-{
-}
+    static void deny(JSContext *cx, jsid id);
 
-ContentWrapper::~ContentWrapper()
-{
-}
-
-bool
-ContentWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode)
-{
-    return AccessCheck::enter(cx, wrapper, wrappedObject(wrapper), id, mode);
-}
-
-void
-ContentWrapper::leave(JSContext *cx, JSObject *wrapper)
-{
-    return AccessCheck::leave(cx, wrapper, wrappedObject(wrapper));
-}
+    static bool enter(JSContext *cx, JSObject *wrapper, JSObject *wrappedObject, jsid id,
+                      JSCrossCompartmentWrapper::Mode mode);
+    static void leave(JSContext *cx, JSObject *wrapper, JSObject *wrappedObject);
+};
 
 }

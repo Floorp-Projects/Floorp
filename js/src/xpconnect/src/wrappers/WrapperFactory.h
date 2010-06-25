@@ -37,31 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentWrapper.h"
-#include "AccessCheck.h"
+#include "jsapi.h"
+#include "jswrapper.h"
 
 namespace xpc {
 
-ContentWrapper ContentWrapper::singleton;
-
-ContentWrapper::ContentWrapper() : JSCrossCompartmentWrapper()
-{
-}
-
-ContentWrapper::~ContentWrapper()
-{
-}
-
-bool
-ContentWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode)
-{
-    return AccessCheck::enter(cx, wrapper, wrappedObject(wrapper), id, mode);
-}
-
-void
-ContentWrapper::leave(JSContext *cx, JSObject *wrapper)
-{
-    return AccessCheck::leave(cx, wrapper, wrappedObject(wrapper));
-}
+class WrapperFactory {
+    // Return the wrapper handler to use, or NULL in case of error.
+    static JSCrossCompartmentWrapper *select(JSContext *cx,
+                                             JSCompartment *subject,
+                                             JSCompartment *object);
+};
 
 }
