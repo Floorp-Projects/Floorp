@@ -99,7 +99,6 @@ const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^9 = 512
 const kTileCrawlTimeCap = 100;    // millis
 const kTileCrawlComeAgain = 0;    // millis
 
-
 /**
  * The Tile Manager!
  *
@@ -110,7 +109,7 @@ const kTileCrawlComeAgain = 0;    // millis
  * "undisplay" a tile (e.g. remove it from the DOM).  The argument to this
  * function is a TileManager.Tile object.
  */
-function TileManager(appendTile, removeTile, browserView, cacheSize) {
+function TileManager(appendTile, removeTile, browserView, cacheSize, parentNode) {
   /* backref to the BrowserView object that owns us */
   this._browserView = browserView;
 
@@ -120,8 +119,19 @@ function TileManager(appendTile, removeTile, browserView, cacheSize) {
 
   /* tile cache holds tile objects and pools them under a given capacity */
   let self = this;
-  this._tileCache = new TileManager.TileCache(function(tile) { self._removeTileSafe(tile); },
-                                              -1, -1, cacheSize);
+
+  function onBeforeDetach(tile) {
+    // Tile is being reassigned or discarded.
+    self._hideTile(tile);
+  }
+
+  function onCreate(tile) {
+    // New tile was just made
+    tile.getContentImage().setAttribute("style", "display: none");
+    self._appendTileSafe(tile);
+  }
+
+  this._tileCache = new TileManager.TileCache(onBeforeDetach, onCreate, -1, -1, cacheSize);
 
   /* Rectangle within the viewport that is visible to the user.  It is "critical"
    * in the sense that it must be rendered as soon as it becomes dirty, and tiles
@@ -143,6 +153,8 @@ function TileManager(appendTile, removeTile, browserView, cacheSize) {
   /* create one Image of the checkerboard to be reused */
   this._checkerboard = new Image();
   this._checkerboard.src = "chrome://browser/content/checkerboard.png";
+
+  parentNode.addEventListener("MozAsyncCanvasRender", this, false);
 }
 
 TileManager.prototype = {
@@ -252,7 +264,7 @@ TileManager.prototype = {
    * still visible.
    */
   clearRects: function clearRects(rects) {
-    let criticalIsDirty = false;
+/*    let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
     let tc = this._tileCache;
 
@@ -266,7 +278,7 @@ TileManager.prototype = {
     }
 
     if (criticalIsDirty && doCriticalRender)
-      this.criticalRectPaint();
+      this.criticalRectPaint(); */
   },
 
   dirtyRects: function dirtyRects(rects, doCriticalRender, keepTileInDom) {
@@ -284,7 +296,7 @@ TileManager.prototype = {
       if (!tile.boundRect.intersects(criticalRect)) {
         // Dirty tile outside of viewport. Just remove and redraw later.
         if (!keepTileInDom)
-          this._removeTileSafe(tile);
+          this._hideTile(tile);
         crawler.enqueue(tile.i, tile.j);
         outsideIsDirty = true;
       } else {
@@ -383,26 +395,53 @@ TileManager.prototype = {
     let tc = this._tileCache;
 
     let renderer = rendererFactory(bv._browser, destCanvas);
-    let ctx = renderer.ctx;
-
     bv.viewportToBrowserRect(srcRect);
 
-    ctx.save();
-    bv.browserToViewportCanvasContext(ctx);
-    ctx.scale(scalex, scaley);
+    renderer.drawContent(function(ctx, draw) {
+      ctx.save();
+      bv.browserToViewportCanvasContext(ctx);
+      ctx.scale(scalex, scaley);
 
-    renderer.drawContent(srcRect.left, srcRect.top, srcRect.width, srcRect.height,
-                   "white",
-                   (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
+      draw(bv._browser,
+           srcRect.left, srcRect.top, srcRect.width, srcRect.height,
+           "white",
+           (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
 
-    ctx.restore();
+      ctx.restore();
+    });
+  },
+
+  /** MozAsyncCanvasRender event */
+  handleEvent: function(e) {
+    let tc = this._tileCache;
+    let canvas = e.originalTarget;
+    let tile = tc.tileFromCanvas(canvas);
+    if (tile) {
+      tile.renderFinish(this._browserView);
+      if (!tile.isDirty() && !tile.isPending()) {
+        // Only show if there are no more pending paints on this
+        // tile and if it hasn't been dirtied while we waited for this paint.
+
+        // XXX Using the style property causes a trace abort, and this function is called back
+        // in the tight loop, so even though what we do below isn't so proper and takes longer
+        // on the Platform/C++ emd, it's better than causing a trace abort in our tight loop.
+        //
+        // But this also overwrites some style already set on the canvas in Tile constructor.
+        // Hack fail...
+        canvas.setAttribute("style", ["position: absolute; left: ", tile.boundRect.left, "px; ",
+                                      "top: ", tile.boundRect.top, "px; display: block"].join(''));
+      }
+    }
+  },
+
+  _hideTile: function _hideTile(tile) {
+    let canvas = tile.getContentImage();
+    canvas.setAttribute("style", "display: none");
   },
 
   _showTile: function _showTile(tile) {
     if (tile.isDirty())
       tile.render(this._browserView);
-
-    this._appendTileSafe(tile);
   },
 
   _appendTileSafe: function _appendTileSafe(tile) {
@@ -468,9 +507,13 @@ TileManager.prototype = {
  * @param capacity the initial capacity of the tile cache, i.e. the max number
  * of tiles the cache can have allocated
  */
-TileManager.TileCache = function TileCache(onBeforeTileDetach, iBound, jBound, capacity) {
+TileManager.TileCache = function TileCache(onBeforeTileDetach, onTileCreate, iBound, jBound, capacity) {
   if (arguments.length <= 3 || capacity < 0)
     capacity = Infinity;
+
+  // A way to map guids to tiles, needed for canvas draw event
+  this._tileGuidMap = {};
+  this._guidCounter = 0;
 
   // We track all pooled tiles in a 2D array (row, column) ordered as
   // they "appear on screen".  The array is a grid that functions for
@@ -489,6 +532,7 @@ TileManager.TileCache = function TileCache(onBeforeTileDetach, iBound, jBound, c
   this._capacity = capacity;
 
   this._onBeforeTileDetach = onBeforeTileDetach;
+  this._onTileCreate = onTileCreate;
 
   this.iBound = iBound;
   this.jBound = jBound;
@@ -575,6 +619,11 @@ TileManager.TileCache.prototype = {
     return this.getTile(i, j, create);
   },
 
+  /** Get tile object from canvas element. */
+  tileFromCanvas: function(canvas) {
+    return this._tileGuidMap[canvas.guid];
+  },
+
   /**
    * Hold a tile (i.e. mark it non-free).
    */
@@ -637,10 +686,15 @@ TileManager.TileCache.prototype = {
       this._tileMap[i] = [];
 
     let tile = null;
+    let guid = 0;
     if (this._tilePool.length < this._capacity) { // either capacity is
       tile = new TileManager.Tile(i, j);          // infinite, or we have
       this._tileMap[i][j] = tile;                 // room to allocate more
+      guid = ++this._guidCounter;
+      tile.getContentImage().guid = guid;
+      this._tileGuidMap[guid] = tile;
       this._tilePool.push(tile);
+      this._onTileCreate(tile);
     } else {
       tile = this._evictTile(evictionGuard);
       if (tile)
@@ -666,10 +720,15 @@ TileManager.Tile = function Tile(i, j) {
   this._canvas.setAttribute("height", String(kTileHeight));
   this._canvas.setAttribute("moz-opaque", "true");
 
+  this._pendingState = this.NO_PENDING;
   this.init(i, j);  // defines more properties, cf below
 };
 
 TileManager.Tile.prototype = {
+  NO_PENDING: 0,
+  PENDING: 1,
+  PENDING_RERENDER: 2,
+
   init: function init(i, j) {
     if (!this.boundRect)
       this.boundRect = new Rect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
@@ -688,11 +747,15 @@ TileManager.Tile.prototype = {
      * usually because they are fixed in some critical position */
     this.free = true;
 
-    /* flags true if we need to repaint our own local canvas */
-    this._dirtyTileCanvas = false;
+    /* flag is true if we need to repaint our own local canvas */
+    this._dirtyTileCanvas = true;
 
     /* keep a dirty rectangle (i.e. only part of the tile is dirty) */
-    this._dirtyTileCanvasRect = new Rect(0, 0, 0, 0);
+    this._dirtyTileCanvasRect = this.boundRect.clone();
+
+    if (this.isPending()) {
+      this._recreateCanvas();
+    }
   },
 
   get x() { return this.boundRect.left; },
@@ -705,13 +768,15 @@ TileManager.Tile.prototype = {
 
   isDirty: function isDirty() { return this._dirtyTileCanvas; },
 
+  isPending: function isPending() { return this._pendingState != this.NO_PENDING; },
+
   /** Clear region in rect. */
   clear: function clear(rect) {
-    let boundRect = this.boundRect;
+/*    let boundRect = this.boundRect;
     let region = rect.intersect(boundRect).expandToIntegers().translate(-boundRect.left, -boundRect.top);
     let ctx = this._canvas.getContext("2d");
     ctx.fillStyle = "white";
-    ctx.fillRect(region.left, region.top, region.right - region.left, region.bottom - region.top);
+    ctx.fillRect(region.left, region.top, region.right - region.left, region.bottom - region.top); */
   },
 
   /**
@@ -739,6 +804,20 @@ TileManager.Tile.prototype = {
     this._dirtyTileCanvas = false;
   },
 
+  _recreateCanvas: function() {
+    let oldCanvas = this._canvas;
+    this._canvas = document.createElementNS(kXHTMLNamespaceURI, "canvas");
+    this._canvas.setAttribute("width", String(kTileWidth));
+    this._canvas.setAttribute("height", String(kTileHeight));
+    this._canvas.setAttribute("moz-opaque", "true");
+    this._canvas.setAttribute("style", "display: none");
+    this._canvas.guid = oldCanvas.guid;
+    oldCanvas.parentNode.replaceChild(this._canvas, oldCanvas);
+    this._pendingState = this.NO_PENDING;
+    this.markDirty();
+    this._renderer = null;
+  },
+
   /**
    * Actually draw the browser content into the dirty region of this tile.  This
    * requires us to actually draw with nsIDOMCanvasRenderingContext2D::
@@ -749,30 +828,61 @@ TileManager.Tile.prototype = {
    * case that it is not dirty.
    */
   render: function render(browserView) {
-    if (!this.isDirty())
-      this.markDirty();
+    if (!this._renderer) {
+      this._renderer = rendererFactory(browserView._browser, this._canvas);
+    }
+    else if (!this._renderer.checkBrowser(browserView._browser)) {
+      this._recreateCanvas();
+      this._renderer = rendererFactory(browserView._browser, this._canvas);
+    }
+      
+    if (this.isPending()) {
+      this._pendingState = this.PENDING_RERENDER;
+      return;
+    }
 
-    let rect = this._dirtyTileCanvasRect;
-    let x = rect.left - this.boundRect.left;
-    let y = rect.top - this.boundRect.top;
+    let dirtyRect = this._dirtyTileCanvasRect.clone();
 
-    browserView.viewportToBrowserRect(rect);
-
-    let renderer = rendererFactory(browserView._browser, this._canvas);
-    let ctx = renderer.ctx;
-
-    ctx.save();
-    ctx.translate(x, y);
-    browserView.browserToViewportCanvasContext(ctx);
-
-    // We expand the rect to working around a gfx issue (bug 534054)
-    renderer.drawContent(rect.left , rect.top, rect.right - rect.left + 1, rect.bottom - rect.top + 1,
-                   "white",
-                   (ctx.DRAWWINDOW_DRAW_CARET));
-
-    ctx.restore();
-
+    this._pendingState = this.PENDING;
     this.unmarkDirty();
+
+    let self = this;
+    this._renderer.drawContent(function(ctx, draw) {
+      let rect = dirtyRect.clone();
+      let boundRect = self.boundRect.clone();
+
+      let x = rect.left - boundRect.left;
+      let y = rect.top - boundRect.top;
+
+      browserView.viewportToBrowserRect(rect);
+
+      ctx.save();
+      ctx.translate(x, y);
+      browserView.browserToViewportCanvasContext(ctx);
+
+      // We expand the rect to working around a gfx issue (bug 534054)
+      try {
+        draw(browserView._browser,
+             rect.left , rect.top, rect.right - rect.left + 1, rect.bottom - rect.top + 1,
+             "white",
+             (ctx.DRAWWINDOW_DRAW_CARET));
+        ctx.restore();
+      } catch(e) {
+        // Failed drawing.
+        self._recreateCanvas(browserView._browser);
+        self.render(browserView);
+      }
+    });
+  },
+
+  renderFinish: function renderFinish(browserView) {
+    if (this._pendingState == this.PENDING) {
+      this._pendingState = this.NO_PENDING;
+    } else if (this._pendingState == this.PENDING_RERENDER) {
+      // a render occured while we were pending another render.
+      this._pendingState = this.NO_PENDING;
+      this.render(browserView);
+    }
   },
 
   /**
@@ -789,7 +899,6 @@ TileManager.Tile.prototype = {
 
     return 'Tile(' + this.i + ', ' + this.j + ')';
   }
-
 };
 
 
