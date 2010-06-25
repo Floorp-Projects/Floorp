@@ -401,8 +401,9 @@
         <menuitem id="appmenu_sendLink"
                   label="&sendPageCmd.label;"
                   command="Browser:SendLink"/>
-        <hbox flex="1">
+        <hbox flex="1" class="split-menuitem">
           <menuitem id="appmenu_print"
+                    class="split-menuitem-item"
                     flex="1"
                     label="&appMenuPrintCmd.label;"
                     key="printKb"
