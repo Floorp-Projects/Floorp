@@ -57,46 +57,13 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShell.h"
+#include "WidgetUtils.h"
+
+using namespace mozilla::widget;
 
 static const char header_footer_tags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
 
 #define CUSTOM_VALUE_INDEX NS_ARRAY_LENGTH(header_footer_tags)
-
-// XXXdholbert Duplicated from widget/src/xpwidgets/nsBaseFilePicker.cpp
-// Needs to be unified in some generic utility class.
-static nsIWidget *
-DOMWindowToWidget(nsIDOMWindow *dw)
-{
-  nsCOMPtr<nsIWidget> widget;
-
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(dw);
-  if (window) {
-    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(window->GetDocShell()));
-
-    while (!widget && baseWin) {
-      baseWin->GetParentWidget(getter_AddRefs(widget));
-      if (!widget) {
-        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(baseWin));
-        if (!docShellAsItem)
-          return nsnull;
-
-        nsCOMPtr<nsIDocShellTreeItem> parent;
-        docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
-
-        window = do_GetInterface(parent);
-        if (!window)
-          return nsnull;
-
-        baseWin = do_QueryInterface(window->GetDocShell());
-      }
-    }
-  }
-
-  // This will return a pointer that we're about to release, but
-  // that's ok since the docshell (nsIBaseWindow) holds the widget
-  // alive.
-  return widget.get();
-}
 
 // XXXdholbert Duplicated from widget/src/gtk2/nsFilePicker.cpp
 // Needs to be unified in some generic utility class.
@@ -230,7 +197,9 @@ class nsPrintDialogWidgetGTK {
 
 nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSettings *aSettings)
 {
-  GtkWindow* gtkParent = get_gtk_window_for_nsiwidget(DOMWindowToWidget(aParent));
+  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
+  NS_ASSERTION(widget, "Need a widget for dialog to be modal.");
+  GtkWindow* gtkParent = get_gtk_window_for_nsiwidget(widget);
   NS_ASSERTION(gtkParent, "Need a GTK window for dialog to be modal.");
 
   nsCOMPtr<nsIStringBundleService> bundleSvc = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
@@ -635,7 +604,9 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsIDOMWindow *aParent,
   NS_PRECONDITION(aNSSettings, "aSettings must not be null");
   NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
 
-  GtkWindow* gtkParent = get_gtk_window_for_nsiwidget(DOMWindowToWidget(aParent));
+  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
+  NS_ASSERTION(widget, "Need a widget for dialog to be modal.");
+  GtkWindow* gtkParent = get_gtk_window_for_nsiwidget(widget);
   NS_ASSERTION(gtkParent, "Need a GTK window for dialog to be modal.");
 
   nsCOMPtr<nsPrintSettingsGTK> aNSSettingsGTK(do_QueryInterface(aNSSettings));

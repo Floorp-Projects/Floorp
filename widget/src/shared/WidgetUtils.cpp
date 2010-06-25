@@ -38,46 +38,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsBaseFilePicker_h__
-#define nsBaseFilePicker_h__
+#include "WidgetUtils.h"
 
-#include "nsISupports.h"
-#include "nsIFilePicker.h"
-#include "nsISimpleEnumerator.h"
-#include "nsArrayEnumerator.h"
-#include "nsCOMPtr.h"
+#include "nsIBaseWindow.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestorUtils.h"
 
-class nsIWidget;
+namespace mozilla {
+namespace widget {
 
-#define BASEFILEPICKER_HAS_DISPLAYDIRECTORY 1
-
-class nsBaseFilePicker : public nsIFilePicker
+//static
+already_AddRefed<nsIWidget>
+WidgetUtils::DOMWindowToWidget(nsIDOMWindow *aDOMWindow)
 {
-public:
-  nsBaseFilePicker(); 
-  virtual ~nsBaseFilePicker();
+  nsCOMPtr<nsIWidget> widget;
 
-  NS_IMETHOD Init(nsIDOMWindow *aParent,
-                  const nsAString& aTitle,
-                  PRInt16 aMode);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aDOMWindow);
+  if (window) {
+    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(window->GetDocShell()));
 
-  NS_IMETHOD AppendFilters(PRInt32 filterMask);
-  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
-  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
-  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-#ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
-  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
-  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
-#endif
+    while (!widget && baseWin) {
+      baseWin->GetParentWidget(getter_AddRefs(widget));
+      if (!widget) {
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(baseWin));
+        if (!docShellAsItem)
+          return nsnull;
 
-protected:
+        nsCOMPtr<nsIDocShellTreeItem> parent;
+        docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          PRInt16 aMode) = 0;
+        window = do_GetInterface(parent);
+        if (!window)
+          return nsnull;
 
-#ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
-  nsCOMPtr<nsILocalFile> mDisplayDirectory;
-#endif
-};
+        baseWin = do_QueryInterface(window->GetDocShell());
+      }
+    }
+  }
 
-#endif // nsBaseFilePicker_h__
+  return widget.forget();
+}
+
+} // namespace widget
+} // namespace mozilla
