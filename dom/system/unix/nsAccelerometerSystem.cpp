@@ -36,13 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <unistd.h>
-#include "nsAccelerometerUnix.h"
+#include "nsAccelerometerSystem.h"
 #include "nsIServiceManager.h"
 
 typedef struct {
   const char* mPosition;
   const char* mCalibrate;
-  nsAccelerometerUnixDriver mToken;
+  nsAccelerometerSystemDriver mToken;
 } Accelerometer;
 
 static const Accelerometer gAccelerometers[] = {
@@ -64,21 +64,21 @@ static const Accelerometer gAccelerometers[] = {
    eHPdv7Sensor},
 };
 
-nsAccelerometerUnix::nsAccelerometerUnix() :
+nsAccelerometerSystem::nsAccelerometerSystem() :
   mPositionFile(NULL),
   mCalibrateFile(NULL),
   mType(eNoSensor)
 {
 }
 
-nsAccelerometerUnix::~nsAccelerometerUnix()
+nsAccelerometerSystem::~nsAccelerometerSystem()
 {
 }
 
 void
-nsAccelerometerUnix::UpdateHandler(nsITimer *aTimer, void *aClosure)
+nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
 {
-  nsAccelerometerUnix *self = reinterpret_cast<nsAccelerometerUnix *>(aClosure);
+  nsAccelerometerSystem *self = reinterpret_cast<nsAccelerometerSystem *>(aClosure);
   if (!self) {
     NS_ERROR("no self");
     return;
@@ -190,7 +190,7 @@ nsAccelerometerUnix::UpdateHandler(nsITimer *aTimer, void *aClosure)
   self->AccelerationChanged( xf, yf, zf );
 }
 
-void nsAccelerometerUnix::Startup()
+void nsAccelerometerSystem::Startup()
 {
   // Accelerometers in Linux are used by reading a file (yay UNIX!), which is
   // in a slightly different location depending on the driver.
@@ -213,7 +213,7 @@ void nsAccelerometerUnix::Startup()
 
   if (mType == eNoSensor)
     return;
-  
+
   mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mUpdateTimer)
     mUpdateTimer->InitWithFuncCallback(UpdateHandler,
@@ -222,7 +222,7 @@ void nsAccelerometerUnix::Startup()
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 
-void nsAccelerometerUnix::Shutdown()
+void nsAccelerometerSystem::Shutdown()
 {
   if (mPositionFile) {
     fclose(mPositionFile);

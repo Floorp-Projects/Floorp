@@ -13,12 +13,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,21 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerAndroid_h
-#define nsAccelerometerAndroid_h
+#ifndef nsAccelerometerSystem_h
+#define nsAccelerometerSystem_h
 
+#include <unistd.h>
 #include "nsAccelerometer.h"
 
-class nsAccelerometerAndroid : public nsAccelerometer
+enum nsAccelerometerSystemDriver
 {
-public:
-  nsAccelerometerAndroid();
-  virtual ~nsAccelerometerAndroid();
-
-private:
-  virtual void Startup();
-  virtual void Shutdown();
+  eNoSensor,
+  eAppleSensor,
+  eIBMSensor,
+  eMaemoSensor,
+  eHPdv7Sensor
 };
 
-#endif /* nsAccelerometerAndroid_h */
+class nsAccelerometerSystem : public nsAccelerometer
+{
+ public:
+  nsAccelerometerSystem();
+  ~nsAccelerometerSystem();
 
+  void Startup();
+  void Shutdown();
+
+  FILE* mPositionFile;
+  FILE* mCalibrateFile;
+  nsAccelerometerSystemDriver mType;
+
+  nsCOMPtr<nsITimer> mUpdateTimer;
+  static void UpdateHandler(nsITimer *aTimer, void *aClosure);
+};
+
+#endif

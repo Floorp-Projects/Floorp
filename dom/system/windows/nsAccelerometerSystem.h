@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerWin_h
-#define nsAccelerometerWin_h
+#ifndef nsAccelerometerSystem_h
+#define nsAccelerometerSystem_h
 
 #include "nsAccelerometer.h"
 #include "nsAutoPtr.h"
@@ -48,11 +48,11 @@ class Sensor
   virtual void GetValues(double *x, double *y, double *z) = 0;
 };
 
-class nsAccelerometerWin : public nsAccelerometer
+class nsAccelerometerSystem : public nsAccelerometer
 {
  public:
-  nsAccelerometerWin();
-  ~nsAccelerometerWin();
+  nsAccelerometerSystem();
+  ~nsAccelerometerSystem();
 
   void Startup();
   void Shutdown();
