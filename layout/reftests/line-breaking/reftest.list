@@ -12,6 +12,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == ja-3.html ja-3-ref.html
 == leaders-1.html leaders-1-ref.html
 == markup-src-1.html markup-src-1-ref.html
 == non-breakable-1.html non-breakable-1-ref.html
+== non-breakable-2.html non-breakable-2-ref.html
 == numerics-1.html numerics-1-ref.html
 == parentheses-1.html parentheses-1-ref.html
 == quotationmarks-1.html quotationmarks-1-ref.html

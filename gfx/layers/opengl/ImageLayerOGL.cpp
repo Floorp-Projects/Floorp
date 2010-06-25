@@ -38,6 +38,7 @@
 
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
+#include "GLContextProvider.h"
 
 using namespace mozilla::gl;
 
@@ -59,8 +60,7 @@ public:
   }
   NS_IMETHOD Run() {
     if (mTexture) {
-      mContext->MakeCurrent();
-      mContext->fDeleteTextures(1, &mTexture);
+      mContext->DestroyTexture(mTexture);
     }
     // Ensure context is released on the main thread
     mContext = nsnull;
@@ -79,8 +79,7 @@ GLTexture::Allocate(GLContext *aContext)
   Release();
 
   mContext = aContext;
-  mContext->MakeCurrent();
-  mContext->fGenTextures(1, &mTexture);
+  mTexture = mContext->CreateTexture();
 }
 
 void
@@ -103,8 +102,7 @@ GLTexture::Release()
 
   if (NS_IsMainThread()) {
     if (mTexture) {
-      mContext->MakeCurrent();
-      mContext->fDeleteTextures(1, &mTexture);
+      mContext->DestroyTexture(mTexture);
       mTexture = 0;
     }
     mContext = nsnull;
@@ -322,7 +320,11 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture.GetTextureID());
   
-    ColorTextureLayerProgram *program = mOGLManager->GetBGRALayerProgram();
+    ColorTextureLayerProgram *program;
+    if (cairoImage->mASurfaceAsGLContext)
+      program = mOGLManager->GetRGBALayerProgram();
+    else
+      program = mOGLManager->GetBGRALayerProgram();
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
@@ -539,6 +541,21 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
 
   mSize = aData.mSize;
 
+  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture.GetTextureID());
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+  if (!mASurfaceAsGLContext) {
+    mASurfaceAsGLContext = sGLContextProvider.CreateForNativePixmapSurface(aData.mSurface);
+    if (mASurfaceAsGLContext)
+      mASurfaceAsGLContext->BindTexImage();
+  }
+  if (mASurfaceAsGLContext)
+    return;
+
   // XXX This could be a lot more efficient if we already have an image-compatible
   // surface
   // XXX if we ever create an ImageFormatRGB24 surface, make sure that we use
@@ -549,14 +566,6 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
 
   context->SetSource(aData.mSurface);
   context->Paint();
-
-  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture.GetTextureID());
-
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
   gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                   0,

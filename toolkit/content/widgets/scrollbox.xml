@@ -165,10 +165,20 @@
 
       <field name="_scrollTarget">null</field>
 
+      <method name="_canScrollToElement">
+        <parameter name="element"/>
+        <body>
+          return true;
+        </body>
+      </method>
+
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
         <parameter name="aSmoothScroll"/>
         <body><![CDATA[
+          if (!this._canScrollToElement(element))
+            return;
+
           var vertical = this.orient == "vertical";
           var rect = this.scrollClientRect;
           var containerStart = vertical ? rect.top : rect.left;

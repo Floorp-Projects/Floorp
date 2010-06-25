@@ -88,6 +88,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "ScopedXREEmbed.h"
 
+#include "mozilla/jetpack/JetpackProcessChild.h"
 #include "mozilla/plugins/PluginProcessChild.h"
 
 #ifdef MOZ_IPDL_TESTS
@@ -103,6 +104,7 @@ using mozilla::ipc::IOThreadChild;
 using mozilla::ipc::ProcessChild;
 using mozilla::ipc::ScopedXREEmbed;
 
+using mozilla::jetpack::JetpackProcessChild;
 using mozilla::plugins::PluginProcessChild;
 
 using mozilla::startup::sChildProcessType;
@@ -365,6 +367,10 @@ XRE_InitChildProcess(int aArgc,
 
     case GeckoProcessType_Plugin:
       process = new PluginProcessChild(parentHandle);
+      break;
+
+    case GeckoProcessType_Jetpack:
+      process = new JetpackProcessChild(parentHandle);
       break;
 
     case GeckoProcessType_IPDLUnitTest:

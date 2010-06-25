@@ -114,9 +114,8 @@ public:
   virtual nsresult CreateHTMLCaptionAccessible(nsIFrame *aFrame,
                                                nsIAccessible **aAccessible);
 
-  virtual nsresult AddNativeRootAccessible(void *aAtkAccessible,
-                                           nsIAccessible **aAccessible);
-  virtual nsresult RemoveNativeRootAccessible(nsIAccessible *aRootAccessible);
+  virtual nsAccessible* AddNativeRootAccessible(void* aAtkAccessible);
+  virtual void RemoveNativeRootAccessible(nsAccessible* aRootAccessible);
 
   virtual nsresult InvalidateSubtreeFor(nsIPresShell *aPresShell,
                                         nsIContent *aContent,

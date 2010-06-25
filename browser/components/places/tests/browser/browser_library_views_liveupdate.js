@@ -96,12 +96,14 @@ function startTest() {
                          PlacesUtils._uri("place:"),
                          bs.DEFAULT_INDEX,
                          "bm2");
+  bs.setItemTitle(id, "bm2_edited");
   addedBookmarks.push(id);
   id = bs.insertSeparator(bs.bookmarksMenuFolder, bs.DEFAULT_INDEX);
   addedBookmarks.push(id);
   id = bs.createFolder(bs.bookmarksMenuFolder,
                        "bmf",
                        bs.DEFAULT_INDEX);
+  bs.setItemTitle(id, "bmf_edited");
   addedBookmarks.push(id);
   id = bs.insertBookmark(id,
                          PlacesUtils._uri("http://bmf1.mozilla.org/"),
@@ -116,17 +118,20 @@ function startTest() {
                     PlacesUtils._uri("http://tb1.mozilla.org/"),
                     bs.DEFAULT_INDEX,
                     "tb1");
+  bs.setItemTitle(id, "tb1_edited");
   addedBookmarks.push(id);
   id = bs.insertBookmark(bs.toolbarFolder,
                          PlacesUtils._uri("place:"),
                          bs.DEFAULT_INDEX,
                          "tb2");
+  bs.setItemTitle(id, "tb2_edited");
   addedBookmarks.push(id);
   id = bs.insertSeparator(bs.toolbarFolder, bs.DEFAULT_INDEX);
   addedBookmarks.push(id);
   id = bs.createFolder(bs.toolbarFolder,
                        "tbf",
                        bs.DEFAULT_INDEX);
+  bs.setItemTitle(id, "tbf_edited");
   addedBookmarks.push(id);
   id = bs.insertBookmark(id,
                          PlacesUtils._uri("http://tbf1.mozilla.org/"),
@@ -141,17 +146,20 @@ function startTest() {
                          PlacesUtils._uri("http://ub1.mozilla.org/"),
                          bs.DEFAULT_INDEX,
                          "ub1");
+  bs.setItemTitle(id, "ub1_edited");
   addedBookmarks.push(id);
   id = bs.insertBookmark(bs.unfiledBookmarksFolder,
                          PlacesUtils._uri("place:"),
                          bs.DEFAULT_INDEX,
                          "ub2");
+  bs.setItemTitle(id, "ub2_edited");
   addedBookmarks.push(id);
   id = bs.insertSeparator(bs.unfiledBookmarksFolder, bs.DEFAULT_INDEX);
   addedBookmarks.push(id);
   id = bs.createFolder(bs.unfiledBookmarksFolder,
                        "ubf",
                        bs.DEFAULT_INDEX);
+  bs.setItemTitle(id, "ubf_edited");
   addedBookmarks.push(id);
   id = bs.insertBookmark(id,
                          PlacesUtils._uri("http://ubf1.mozilla.org/"),
@@ -260,7 +268,19 @@ var bookmarksObserver = {
   onBeforeItemRemoved: function PSB_onBeforeItemRemoved(aItemId) {},
   onItemVisited: function() {},
   onItemChanged: function PSB_onItemChanged(aItemId, aProperty,
-                                            aIsAnnotationProperty, aValue) {}
+                                            aIsAnnotationProperty, aNewValue) {
+    if (aProperty == "title") {
+      let validator = function(aTreeRowIndex) {
+        let tree = gLibrary.PlacesOrganizer._places;
+        let cellText = tree.view.getCellText(aTreeRowIndex,
+                                             tree.columns.getColumnAt(0));
+        return cellText == aNewValue;
+      }
+      let [node, index, valid] = getNodeForTreeItem(aItemId, gLibrary.PlacesOrganizer._places, validator);
+      if (node) // Only visible nodes.
+        ok(valid, "Title cell value has been correctly updated");
+    }
+  }
 };
 
 
@@ -269,13 +289,17 @@ var bookmarksObserver = {
  *
  * @param aItemId
  *        item id of the item to search.
- * @returns [node, index] or [null, null] if not found.
+ * @param aTree
+ *        Tree to search in.
+ * @param aValidator [optional]
+ *        function to check row validity if found.  Defaults to {return true;}.
+ * @returns [node, index, valid] or [null, null, false] if not found.
  */
-function getNodeForTreeItem(aItemId, aTree) {
+function getNodeForTreeItem(aItemId, aTree, aValidator) {
 
   function findNode(aContainerIndex) {
     if (aTree.view.isContainerEmpty(aContainerIndex))
-      return [null, null];
+      return [null, null, false];
 
     // The rowCount limit is just for sanity, but we will end looping when
     // we have checked the last child of this container or we have found node.
@@ -284,7 +308,8 @@ function getNodeForTreeItem(aItemId, aTree) {
 
       if (node.itemId == aItemId) {
         // Minus one because we want relative index inside the container.
-        return [node, i - aTree.view.getParentIndex(i) - 1];
+        let valid = aValidator ? aValidator(i) : true;
+        return [node, i - aTree.view.getParentIndex(i) - 1, valid];
       }
 
       if (PlacesUtils.nodeIsFolder(node)) {
@@ -303,7 +328,7 @@ function getNodeForTreeItem(aItemId, aTree) {
       if (!aTree.view.hasNextSibling(aContainerIndex + 1, i))
         break;
     }
-    return [null, null]
+    return [null, null, false]
   }
 
   // Root node is hidden, so we need to manually walk the first level.
@@ -318,5 +343,5 @@ function getNodeForTreeItem(aItemId, aTree) {
     if (foundNode[0] != null)
       return foundNode;
   }
-  return [null, null];
+  return [null, null, false];
 }

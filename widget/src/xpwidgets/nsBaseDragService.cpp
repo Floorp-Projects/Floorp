@@ -246,7 +246,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // are in the wrong coord system, so turn off mouse capture.
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
   if (doc) {
-    nsCOMPtr<nsIViewObserver> viewObserver = do_QueryInterface(doc->GetPrimaryShell());
+    nsCOMPtr<nsIViewObserver> viewObserver = do_QueryInterface(doc->GetShell());
     if (viewObserver) {
       viewObserver->ClearMouseCapture(nsnull);
     }
@@ -386,7 +386,7 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
   if (mSourceNode && !mSuppressLevel) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
     if (doc) {
-      nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
+      nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsDragEvent event(PR_TRUE, aMsg, nsnull);
@@ -417,7 +417,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
   if (document) {
     document->FlushPendingNotifications(Flush_Display);
 
-    return document->GetPrimaryShell();
+    return document->GetShell();
   }
 
   return nsnull;

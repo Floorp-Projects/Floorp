@@ -78,9 +78,6 @@
 #include "nsPrintSession.h"
 #endif
 
-#include "nsAccelerometerWin.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerWin)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -142,7 +139,6 @@ NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTSHORTCUT_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
@@ -178,7 +174,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor },
   { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor },
 #endif
-  { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerWinConstructor },
 #ifdef NS_PRINTING
   { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsWinConstructor },
   { &kNS_PRINTER_ENUMERATOR_CID, false, NULL, nsPrinterEnumeratorWinConstructor },
@@ -215,7 +210,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID },
   { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
 #endif
-  { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
 #ifdef NS_PRINTING
   { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
   { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },

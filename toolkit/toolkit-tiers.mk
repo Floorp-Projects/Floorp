@@ -104,7 +104,7 @@ endif
 #
 
 ifdef MOZ_IPC
-tier_platform_dirs += ipc
+tier_platform_dirs += ipc js/jetpack
 endif
 
 tier_platform_dirs += \
@@ -269,6 +269,11 @@ endif
 
 ifdef MOZ_MAPINFO
 tier_platform_dirs	+= tools/codesighs
+endif
+
+ifdef MOZ_SERVICES_SYNC
+tier_platform_dirs += services/crypto
+tier_platform_dirs += services/sync
 endif
 
 ifdef ENABLE_TESTS

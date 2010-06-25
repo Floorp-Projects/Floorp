@@ -41,6 +41,7 @@
 /* nsIVariant implementation for xpconnect. */
 
 #include "xpcprivate.h"
+#include "XPCWrapper.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
 
@@ -432,14 +433,16 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
         NS_ASSERTION(type == nsIDataType::VTYPE_INTERFACE ||
                      type == nsIDataType::VTYPE_INTERFACE_IS,
                      "Weird variant");
-        *pJSVal = realVal;
-        return JS_TRUE;
 
-        // else, it's an object and we really need to double wrap it if we've 
-        // already decided that its 'natural' type is as some sort of interface.
-
-        // We just fall through to the code below and let it do what it does.
+        return XPCWrapper::RewrapObject(lccx.GetJSContext(), scope,
+                                        JSVAL_TO_OBJECT(realVal),
+                                        XPCWrapper::UNKNOWN, pJSVal);
     }
+
+    // else, it's an object and we really need to double wrap it if we've 
+    // already decided that its 'natural' type is as some sort of interface.
+
+    // We just fall through to the code below and let it do what it does.
 
     // The nsIVariant is not a XPCVariant (or we act like it isn't).
     // So we extract the data and do the Right Thing.

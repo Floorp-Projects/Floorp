@@ -804,8 +804,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   NS_ASSERTION(ourDoc == ourParentDocument, "Unexpected parent document");
   NS_ASSERTION(otherDoc == otherParentDocument, "Unexpected parent document");
 
-  nsIPresShell* ourShell = ourDoc->GetPrimaryShell();
-  nsIPresShell* otherShell = otherDoc->GetPrimaryShell();
+  nsIPresShell* ourShell = ourDoc->GetShell();
+  nsIPresShell* otherShell = otherDoc->GetShell();
   if (!ourShell || !otherShell) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

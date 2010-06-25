@@ -72,7 +72,7 @@ let log = LogFactory("*** HUDService:");
 
 const ELEMENT_NS_URI = "http://www.w3.org/1999/xhtml";
 const ELEMENT_NS = "html:";
-const HUD_STYLESHEET_URI = "chrome://global/content/headsUpDisplay.css";
+const HUD_STYLESHEET_URI = "chrome://global/skin/headsUpDisplay.css";
 const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
 
 XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
@@ -1908,7 +1908,6 @@ HeadsUpDisplay.prototype = {
     this.filterPrefs = HUDService.getDefaultFilterPrefs(this.hudId);
 
     let consoleFilterToolbar = this.makeFilterToolbar();
-    consoleFilterToolbar.setAttribute("mode", "text");
     consoleFilterToolbar.setAttribute("id", "viewGroup");
     this.consoleFilterToolbar = consoleFilterToolbar;
     consoleWrap.appendChild(consoleFilterToolbar);
@@ -1955,6 +1954,7 @@ HeadsUpDisplay.prototype = {
 
     let toolbar = this.makeXULNode("toolbar");
     toolbar.setAttribute("class", "hud-console-filter-toolbar");
+    toolbar.setAttribute("mode", "text");
 
     toolbar.appendChild(this.consoleClearButton);
     let btn;
@@ -1983,7 +1983,7 @@ HeadsUpDisplay.prototype = {
     }
     btn.setAttribute("hudId", this.hudId);
     btn.setAttribute("buttonType", prefKey);
-    btn.setAttribute("class", "toolbarbutton-text toolbarbutton-1 bookmark-item hud-filter-btn");
+    btn.setAttribute("class", "hud-filter-btn");
     let key = "btn" + aName;
     btn.setAttribute("label", this.getStr(key));
     key = "tip" + aName;

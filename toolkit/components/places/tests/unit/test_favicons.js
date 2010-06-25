@@ -392,6 +392,28 @@ iconsvc.removeFailedFavicon(faviconURI);
 do_check_false(iconsvc.isFailedFavicon(faviconURI));
 
 
+/* ========== 13 ========== */
+testnum++;
+testdesc = "test getFaviconData on the default favicon ";
+
+outMimeType = {};
+outData = iconsvc.getFaviconData(iconsvc.defaultFavicon, outMimeType);
+do_check_eq(outMimeType.value, "image/png");
+
+// Read in the icon and compare it to what the API returned above.
+var istream = NetUtil.newChannel(iconsvc.defaultFavicon).open();
+var bistream = Cc["@mozilla.org/binaryinputstream;1"].
+               createInstance(Ci.nsIBinaryInputStream);
+bistream.setInputStream(istream);
+expectedData = [];
+var avail;
+while (avail = bistream.available()) {
+  expectedData = expectedData.concat(bistream.readByteArray(avail));
+}
+bistream.close();
+checkArrays(outData, expectedData);
+
+
 /* ========== end ========== */
 
 } catch (e) {

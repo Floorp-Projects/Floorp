@@ -72,6 +72,11 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
     if (ret == GDI_ERROR) {
         return PR_FALSE;
     }
+
+    for (int k = 0; k < aRunLength; k++) {
+        if (glyphs[k] == 0xFFFF)
+            return PR_FALSE;
+    }
  
     SIZE size;
     nsAutoTArray<int,500> partialWidthArray;

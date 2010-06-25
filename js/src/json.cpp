@@ -337,7 +337,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
         s->getCharsAndLength(chars, length);
         if (!write_string(cx, scx->cb, chars, length) ||
             !scx->cb.append(':') ||
-            !Str(cx, id, obj, scx, &outputValue, false)) {
+            !Str(cx, id, obj, scx, &outputValue, true)) {
             return JS_FALSE;
         }
     }

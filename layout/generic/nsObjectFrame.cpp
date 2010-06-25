@@ -2054,6 +2054,9 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   // This must be done before instantiating the plugin
   FixupWindow(GetContentRect().Size());
 
+  // Ensure we redraw when a plugin is instantiated
+  Invalidate(GetContentRect() - GetPosition());
+
   nsWeakFrame weakFrame(this);
 
   NS_ASSERTION(!mPreventInstantiation, "Say what?");
@@ -2093,6 +2096,9 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   // This must be done before instantiating the plugin
   FixupWindow(GetContentRect().Size());
+
+  // Ensure we redraw when a plugin is instantiated
+  Invalidate(GetContentRect() - GetPosition());
 
   // get the nsIPluginHost service
   nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));

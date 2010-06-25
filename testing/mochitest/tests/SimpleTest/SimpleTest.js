@@ -26,6 +26,12 @@ if (typeof(parent) != "undefined" && parent.TestRunner) {
     parentRunner = parent.wrappedJSObject.TestRunner;
 }
 
+//Simple test to see if we are running in e10s IPC
+var ipcMode = false;
+if (parentRunner) {
+  ipcMode = parentRunner.ipcMode;
+}
+
 // Check to see if the TestRunner is present and has logging
 if (parentRunner) {
     SimpleTest._logEnabled = parentRunner.logEnabled;
@@ -258,6 +264,17 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     if (!targetWindow)
       targetWindow = window;
 
+    if (ipcMode) {
+      var domutils = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+      //TODO: make this support scenarios where we run test standalone and not inside of TestRunner only
+      if (parent && parent.ipcWaitForFocus != undefined) {
+        parent.contentAsyncEvent("waitForFocus", {"callback":callback, "targetWindow":domutils.outerWindowID});
+      }
+      return;
+    }
+
     SimpleTest.waitForFocus_started = false;
     expectBlankPage = !!expectBlankPage;
 
@@ -372,6 +389,12 @@ SimpleTest.waitForClipboard_polls = 0;
  *        within 5s. It can also be called if the known value can't be found.
  */
 SimpleTest.waitForClipboard = function(aExpectedVal, aSetupFn, aSuccessFn, aFailureFn) {
+    if (ipcMode) {
+      //TODO: support waitForClipboard via events to chrome
+      dump("E10S_TODO: bug 573735 addresses adding support for this");
+      return;
+    }
+
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
     var cbSvc = Components.classes["@mozilla.org/widget/clipboard;1"].

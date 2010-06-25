@@ -43,9 +43,12 @@
 #ifdef XP_WIN
 #include "gfxWindowsSurface.h"
 #endif
+#include "GLContextProvider.h"
 
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gl;
 
 // Returns true if it's OK to save the contents of aLayer in an
 // opaque surface (a surface without an alpha channel).
@@ -74,6 +77,8 @@ ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
   : ThebesLayer(aManager, NULL)
   , LayerOGL(aManager)
   , mTexture(0)
+  , mOffscreenFormat(gfxASurface::ImageFormatUnknown)
+  , mOffscreenSize(-1,-1)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -81,20 +86,41 @@ ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
 ThebesLayerOGL::~ThebesLayerOGL()
 {
   mOGLManager->MakeCurrent();
+  if (mOffscreenSurfaceAsGLContext)
+    mOffscreenSurfaceAsGLContext->ReleaseTexImage();
   if (mTexture) {
     gl()->fDeleteTextures(1, &mTexture);
   }
 }
 
-void
-ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
+PRBool
+ThebesLayerOGL::EnsureSurface()
 {
-  if (aRegion.IsEqual(mVisibleRegion))
-    return;
+  gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatARGB32;
+  if (UseOpaqueSurface(this))
+    imageFormat = gfxASurface::ImageFormatRGB24;
 
-  ThebesLayer::SetVisibleRegion(aRegion);
+  if (mInvalidatedRect.IsEmpty())
+    return mOffScreenSurface ? PR_TRUE : PR_FALSE;
 
-  mInvalidatedRect = mVisibleRegion.GetBounds();
+  if ((mOffscreenSize == gfxIntSize(mInvalidatedRect.width, mInvalidatedRect.height)
+      && imageFormat == mOffscreenFormat)
+      || mInvalidatedRect.IsEmpty())
+    return mOffScreenSurface ? PR_TRUE : PR_FALSE;
+
+  mOffScreenSurface =
+    gfxPlatform::GetPlatform()->
+      CreateOffscreenSurface(gfxIntSize(mInvalidatedRect.width, mInvalidatedRect.height),
+                             imageFormat);
+  if (!mOffScreenSurface)
+    return PR_FALSE;
+
+  if (mOffScreenSurface) {
+    mOffscreenSize.width = mInvalidatedRect.width;
+    mOffscreenSize.height = mInvalidatedRect.height;
+    mOffscreenFormat = imageFormat;
+  }
+
 
   mOGLManager->MakeCurrent();
 
@@ -108,6 +134,13 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
   gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
   gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
+  // Try bind our offscreen surface directly to texture
+  mOffscreenSurfaceAsGLContext = sGLContextProvider.CreateForNativePixmapSurface(mOffScreenSurface);
+  // Bind GL surface to the texture, and return
+  if (mOffscreenSurfaceAsGLContext)
+    return mOffscreenSurfaceAsGLContext->BindTexImage();
+
+  // Otherwise allocate new texture
   gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                     0,
                     LOCAL_GL_RGBA,
@@ -119,6 +152,18 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
                     NULL);
 
   DEBUG_GL_ERROR_CHECK(gl());
+  return PR_TRUE;
+}
+
+void
+ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
+{
+  if (aRegion.IsEqual(mVisibleRegion))
+    return;
+
+  ThebesLayer::SetVisibleRegion(aRegion);
+
+  mInvalidatedRect = mVisibleRegion.GetBounds();
 }
 
 void
@@ -140,6 +185,9 @@ void
 ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                             const nsIntPoint& aOffset)
 {
+  if (!EnsureSurface())
+    return;
+
   if (!mTexture)
     return;
 
@@ -149,27 +197,19 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   bool needsTextureBind = true;
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
+  nsRefPtr<gfxASurface> surface = mOffScreenSurface;
+  gfxASurface::gfxImageFormat imageFormat = mOffscreenFormat;
+
   if (!mInvalidatedRect.IsEmpty()) {
-    gfxASurface::gfxImageFormat imageFormat;
-
-    if (UseOpaqueSurface(this)) {
-      imageFormat = gfxASurface::ImageFormatRGB24;
-    } else {
-      imageFormat = gfxASurface::ImageFormatARGB32;
-    }
-
-    nsRefPtr<gfxASurface> surface =
-      gfxPlatform::GetPlatform()->
-        CreateOffscreenSurface(gfxIntSize(mInvalidatedRect.width,
-                                          mInvalidatedRect.height),
-                               imageFormat);
-
     nsRefPtr<gfxContext> ctx = new gfxContext(surface);
     ctx->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
 
     /* Call the thebes layer callback */
     mOGLManager->CallThebesLayerDrawCallback(this, ctx, mInvalidatedRect);
+  }
 
+  // If draw callback happend and we don't have native surface
+  if (!mInvalidatedRect.IsEmpty() && !mOffscreenSurfaceAsGLContext) {
     /* Then take its results and put it in an image surface,
      * in preparation for a texture upload */
     nsRefPtr<gfxImageSurface> imageSurface;
@@ -202,6 +242,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
         break;
     }
 
+    // Upload image to texture (slow)
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
     gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                          0,

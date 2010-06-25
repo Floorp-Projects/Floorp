@@ -480,6 +480,24 @@ PlacesViewBase.prototype = {
     }
   },
 
+  nodeTitleChanged:
+  function PM_nodeTitleChanged(aPlacesNode, aNewTitle) {
+    let elt = aPlacesNode._DOMElement;
+    if (!elt)
+      throw "aPlacesNode must have _DOMElement set";
+
+    // There's no UI representation for the root node, thus there's
+    // nothing to be done when the title changes.
+    if (elt == this._rootElt)
+      return;
+
+    // Here we need the <menu>.
+    if (elt.localName == "menupopup")
+      elt = elt.parentNode;
+
+    elt.label = aNewTitle || PlacesUIUtils.getBestTitle(aPlacesNode);
+  },
+
   nodeRemoved:
   function PVB_nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
     let parentElt = aParentPlacesNode._DOMElement;
@@ -1128,18 +1146,15 @@ PlacesToolbar.prototype = {
     if (elt == this._rootElt)
       return;
 
+    PlacesViewBase.prototype.nodeTitleChanged.apply(this, arguments);
+
     // Here we need the <menu>.
     if (elt.localName == "menupopup")
       elt = elt.parentNode;
 
     if (elt.parentNode == this._rootElt) {
       // Node is on the toolbar
-      elt.label = aNewTitle;
       this.updateChevron();
-    }
-    else {
-      // Node is within a built menu.
-      elt.label = aNewTitle || PlacesUIUtils.getBestTitle(aPlacesNode);
     }
   },
 
@@ -1405,7 +1420,7 @@ PlacesToolbar.prototype = {
 
       // If the menu is open, close it.
       if (draggedElt.open) {
-        draggedElt.firstChild.hidePopup();
+        draggedElt.lastChild.hidePopup();
         draggedElt.open = false;
       }
     }
@@ -1658,19 +1673,6 @@ PlacesMenu.prototype = {
     PlacesViewBase.prototype._removeChild.apply(this, arguments);
     if (this._endMarker != -1)
       this._endMarker--;
-  },
-
-  nodeTitleChanged: function PM_nodeTitleChanged(aPlacesNode, aNewTitle) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
-
-    // There's no UI representation for the root node, thus there's
-    // nothing to be done when the title changes.
-    if (elt == this._rootElt)
-      return;
-
-    elt.label = aNewTitle || PlacesUIUtils.getBestTitle(aPlacesNode);
   },
 
   uninit: function PM_uninit() {
