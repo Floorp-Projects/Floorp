@@ -251,6 +251,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       var $title = iQ('.tab-title', $container);
       var $thumb = iQ('.thumb', $container);
       var $close = iQ('.close', $container);
+      var $fav   = iQ('.favicon', $container);
       var css = {};
       
       const minFontSize = 8;
@@ -305,15 +306,46 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           $title.fadeIn();//.dequeue();
       }
   
-      if(css.width) {
-        if(css.width < 30) {
-          $thumb.fadeOut();
-          $close.fadeOut();
-        } else {
-          $thumb.fadeIn();
-          $close.fadeIn();
+  
+      // TODO: This code is functional, but should probably be rewritten to
+      // break DRY less. I'm not really sure the best way to do that in
+      // this case, though. I've leave it for a man with four hands. -- Aza
+      if(css.width && !this.inStack()) {
+        $fav.css({top:4,left:4});
+        if(css.width < 70) {
+          $fav.addClass("lessVisible");
+          
+          var opacity = (css.width-60)/10;
+          if( opacity > 0 ){
+           $close.show().css({opacity:opacity});
+           $fav.css({backgroundColor:"rgba(245,245,245," + opacity + ")"}) 
+          }
+        else $close.hide();
+          
         }
-      }    
+        else {
+          $fav.removeClass("lessVisible").css({backgroundColor:"rgba(245,245,245,1)"});
+          $close.show();
+        }
+      } 
+      
+      if(css.width && this.inStack()){
+        if(css.width < 90) {
+          $fav.addClass("lessVisible");
+          
+          var opacity = (css.width-80)/10;
+          if( opacity > 0 ){
+           $fav.css({backgroundColor:"rgba(245,245,245," + opacity + ")"}) 
+          }
+
+        } else {
+          $fav.removeClass("lessVisible").css({
+            backgroundColor:"rgba(245,245,245,1)",
+            top: 0,
+            left: 0
+          });          
+        }    
+      }   
 
       this._hasBeenDrawn = true;
     }
