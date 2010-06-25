@@ -161,10 +161,13 @@
            extends="chrome://global/content/bindings/general.xml#statusbar">
     <implementation>
       <constructor>
-        try {
-          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
-          new WindowDraggingElement(this, window);
-        } catch (e) {}
+        if (!this._draggableStarted) {
+          this._draggableStarted = true;
+          try {
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+            new WindowDraggingElement(this, window);
+          } catch (e) {}
+        }
       </constructor>
     </implementation>
   </binding>
@@ -262,10 +265,13 @@
   <binding id="windowdragbox">
     <implementation>
       <constructor>
-        try {
-          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
-          new WindowDraggingElement(this, window);
-        } catch (e) {}
+        if (!this._draggableStarted) {
+          this._draggableStarted = true;
+          try {
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+            new WindowDraggingElement(this, window);
+          } catch (e) {}
+        }
       </constructor>
     </implementation>
   </binding>
