@@ -66,6 +66,7 @@ class   nsGUIEvent;
 class   imgIContainer;
 class   gfxASurface;
 class   nsIContent;
+class   ViewWrapper;
 
 namespace mozilla {
 namespace layers {
@@ -110,8 +111,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xf286438a, 0x6ec6, 0x4766, \
-  { 0xa4, 0x76, 0x4a, 0x44, 0x80, 0x95, 0xd3, 0x1f } }
+{ 0x271ac413, 0xa202, 0x46dc, \
+{ 0xbc, 0xd5, 0x67, 0xa1, 0xfb, 0x58, 0x89, 0x7f } }
+
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -234,6 +236,28 @@ class nsIWidget : public nsISupports {
                       nsIAppShell      *aAppShell = nsnull,
                       nsIToolkit       *aToolkit = nsnull,
                       nsWidgetInitData *aInitData = nsnull) = 0;
+
+    /**
+     * Attach to a top level widget. 
+     *
+     * In cases where a top level chrome widget is being used as a content
+     * container, attach a secondary event callback and update the device
+     * context. The primary event callback will continue to be called, so the
+     * owning base window will continue to function.
+     *
+     * aViewEventFunction Event callback that will receive mirrored
+     *                    events.
+     * aContext The new device context for the view
+     */
+    NS_IMETHOD AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
+                                    nsIDeviceContext *aContext) = 0;
+
+    /**
+     * Accessor functions to get and set secondary client data. Used by
+     * nsIView in connection with AttachViewToTopLevel above.
+     */
+    NS_IMETHOD SetAttachedViewPtr(ViewWrapper* aViewWrapper) = 0;
+    virtual ViewWrapper* GetAttachedViewPtr() = 0;
 
     /**
      * Accessor functions to get and set the client data associated with the
@@ -409,6 +433,22 @@ class nsIWidget : public nsISupports {
                       PRBool   aRepaint) = 0;
 
     /**
+     * Resize and reposition the inner client area of the widget.
+     *
+     * @param aX       the new x offset expressed in the parent's coordinate system
+     * @param aY       the new y offset expressed in the parent's coordinate system
+     * @param aWidth   the new width of the client area.
+     * @param aHeight  the new height of the client area.
+     * @param aRepaint whether the widget should be repainted
+     *
+     */
+    NS_IMETHOD ResizeClient(PRInt32 aX,
+                            PRInt32 aY,
+                            PRInt32 aWidth,
+                            PRInt32 aHeight,
+                            PRBool  aRepaint) = 0;
+
+    /**
      * Sets the widget's z-index.
      */
     NS_IMETHOD SetZIndex(PRInt32 aZIndex) = 0;
@@ -501,6 +541,14 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD GetClientBounds(nsIntRect &aRect) = 0;
+
+    /**
+     * Get the client offset from the window origin.
+     *
+     * @param aPt on return it holds the width and height of the offset.
+     *
+     */
+    NS_IMETHOD GetClientOffset(nsIntPoint &aPt) = 0;
 
     /**
      * Get the foreground color for this widget
