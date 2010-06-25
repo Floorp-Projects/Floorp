@@ -270,6 +270,7 @@ abstract public class GeckoApp
     }
 
     abstract public String getAppName();
+    abstract public String getContentProcessName();
 
     protected void unpackComponents()
     {
@@ -323,6 +324,7 @@ abstract public class GeckoApp
         } while (status != StreamTokenizer.TT_EOF);
 
         unpackFile(zip, buf, null, "application.ini");
+        unpackFile(zip, buf, null, getContentProcessName());
     }
 
     private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry, String name)
