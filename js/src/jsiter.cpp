@@ -149,6 +149,22 @@ NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
     return true;
 }
 
+static bool
+IdToIteratorValue(JSContext *cx, JSObject *obj, jsid id, uintN flags, jsval *vp)
+{
+    if (!(flags & JSITER_FOREACH)) {
+        *vp = ID_TO_VALUE(id);
+        return true;
+    }
+
+    /* Do the lookup on the original object instead of the prototype. */
+    if (!obj->getProperty(cx, id, vp))
+        return false;
+    if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
+        return false;
+    return true;
+}
+
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
           bool enumerable, uintN flags, HashSet<jsid>& ht,
@@ -166,17 +182,10 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
             return false;
     }
     if (enumerable || (flags & JSITER_HIDDEN)) {
-        if (!vec.append(ID_TO_VALUE(id)))
+        if (!vec.append(JSVAL_VOID))
             return false;
-        if (flags & JSITER_FOREACH) {
-            jsval *vp = vec.end() - 1;
-
-            /* Do the lookup on the original object instead of the prototype. */
-            if (!obj->getProperty(cx, id, vp))
-                return false;
-            if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
-                return false;
-        }
+        if (!IdToIteratorValue(cx, obj, id, flags, vec.end() - 1))
+            return false;
     }
     return true;
 }
@@ -433,6 +442,16 @@ IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &p
     NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0, props);
     if (!ni)
         return false;
+
+    /* If this is a for-each iteration, fetch the values or key/value pairs. */
+    if (flags & JSITER_FOREACH) {
+        size_t length = props.length();
+        for (size_t n = 0; n < length; ++n) {
+            jsval *vp = &ni->begin()[n];
+            if (!IdToIteratorValue(cx, obj, *vp, flags, vp))
+                return false;
+        }
+    }
 
     iterobj->setNativeIterator(ni);
 

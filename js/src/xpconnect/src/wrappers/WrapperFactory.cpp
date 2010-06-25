@@ -37,31 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "WrapperFactory.h"
 #include "ContentWrapper.h"
+#include "ChromeWrapper.h"
 #include "AccessCheck.h"
 
 namespace xpc {
 
-ContentWrapper ContentWrapper::singleton;
-
-ContentWrapper::ContentWrapper() : JSCrossCompartmentWrapper()
+JSCrossCompartmentWrapper *
+WrapperFactory::select(JSContext *cx, JSCompartment *subject, JSCompartment *object)
 {
-}
-
-ContentWrapper::~ContentWrapper()
-{
-}
-
-bool
-ContentWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode)
-{
-    return AccessCheck::enter(cx, wrapper, wrappedObject(wrapper), id, mode);
-}
-
-void
-ContentWrapper::leave(JSContext *cx, JSObject *wrapper)
-{
-    return AccessCheck::leave(cx, wrapper, wrappedObject(wrapper));
+    if(AccessCheck::isPrivileged(object)) {
+        return &ChromeWrapper::singleton;
+    }
+    return &ContentWrapper::singleton;
 }
 
 }
