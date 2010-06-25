@@ -70,7 +70,8 @@ _DEST_DIR = $(DEPTH)/_tests/reftest
 # so this seems to be the simplest way to make that happen.
 ifndef XPI_NAME
 make-xpi:
-	+$(MAKE) -C $(CURDIR) libs XPI_NAME=reftest
+	+$(MAKE) -C $(DEPTH)/netwerk/test/httpserver libs XPI_NAME=reftest
+	+$(MAKE) libs XPI_NAME=reftest
 copy-harness: make-xpi
 libs:: copy-harness
 endif
@@ -93,8 +94,6 @@ $(_HARNESS_FILES): $(_DEST_DIR)
 copy-harness: $(_HARNESS_FILES)
 	$(INSTALL) $(_HARNESS_FILES) $(_DEST_DIR)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - reftest) | (cd $(_DEST_DIR) && tar -xf -)
-	$(INSTALL) $(DIST)/bin/components/httpd.js $(DIST)/bin/components/httpd.manifest $(_DEST_DIR)/reftest/components
-	$(INSTALL) $(DIST)/bin/components/test_necko.xpt $(_DEST_DIR)/reftest/components
 
 PKG_STAGE = $(DIST)/test-package-stage
 
