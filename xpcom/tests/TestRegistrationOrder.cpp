@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -44,6 +44,7 @@
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsXULAppAPI.h"
+#include "nsIComponentRegistrar.h"
 
 #define SERVICE_A_CONTRACT_ID  "@mozilla.org/RegTestServiceA;1"
 #define SERVICE_B_CONTRACT_ID  "@mozilla.org/RegTestServiceB;1"
@@ -132,6 +133,30 @@ nsresult TestRegular()
                           kCoreServiceA_CID, kExtServiceA_CID);
 }
 
+bool TestContractFirst()
+{
+  nsCOMPtr<nsIComponentRegistrar> r;
+  NS_GetComponentRegistrar(getter_AddRefs(r));
+
+  nsCID* cid = NULL;
+  nsresult rv = r->ContractIDToCID("@mozilla.org/RegTestOrderC;1", &cid);
+  if (NS_FAILED(rv)) {
+    fail("RegTestOrderC: contract not registered");
+    return false;
+  }
+
+  nsCID goodcid;
+  goodcid.Parse("{ada15884-bb89-473c-8b50-dcfbb8447ff4}");
+
+  if (!goodcid.Equals(*cid)) {
+    fail("RegTestOrderC: CID doesn't match");
+    return false;
+  }
+
+  passed("RegTestOrderC");
+  return true;
+}
+
 static already_AddRefed<nsILocalFile>
 GetRegDirectory(const char* basename, const char* dirname)
 {
@@ -145,6 +170,8 @@ GetRegDirectory(const char* basename, const char* dirname)
     return f.forget();
 }
 
+
+
 int main(int argc, char** argv)
 {
   if (argc < 2)
@@ -153,6 +180,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  ScopedLogging logging;
   
   const char *regPath = argv[1];
   XRE_AddComponentLocation(NS_COMPONENT_LOCATION,
@@ -165,6 +193,9 @@ int main(int argc, char** argv)
 
   int rv = 0;
   if (NS_FAILED(TestRegular()))
+    rv = 1;
+
+  if (!TestContractFirst())
     rv = 1;
 
   return rv;
