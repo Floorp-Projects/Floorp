@@ -1,0 +1,2 @@
+component {f367b65d-6b7f-4a7f-9a4b-8bde0ff4ef10} xtfComponent.js
+contract @mozilla.org/xtf/element-factory;1?namespace=xtf-tests;foo {f367b65d-6b7f-4a7f-9a4b-8bde0ff4ef10}
