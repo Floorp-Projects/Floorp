@@ -5911,7 +5911,7 @@ if test -n "$MOZ_WEBM"; then
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl For Win32 (MSVC) we must use MASM.
-    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a "$GNU_CC" != "yes"; then
+    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a -z "$GNU_CC"; then
         AC_MSG_CHECKING([for MASM assembler])
         AC_CHECK_PROGS(VPX_AS, ml, "")
         if test -n "$VPX_AS"; then
@@ -5946,8 +5946,10 @@ if test -n "$MOZ_WEBM"; then
           VPX_X86_ASM=1
         ;;
         WINNT:x86_64)
-          VPX_ASFLAGS="-f x64 -rnasm -pnasm"
-          VPX_X86_ASM=1
+          if test -z "$GNU_CC"; then
+            VPX_ASFLAGS="-f x64 -rnasm -pnasm"
+            VPX_X86_ASM=1
+          fi
         ;;
         esac
       fi # end have YASM
