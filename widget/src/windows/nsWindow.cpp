@@ -2129,9 +2129,13 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
   nsIntRegion childWindowRegion;
 
   ::EnumChildWindows(mWnd, AddClientAreaToRegion, reinterpret_cast<LPARAM>(&childWindowRegion));
+
+  nsIntPoint clientOffset;
+  GetClientOffset(clientOffset);
+  childWindowRegion.MoveBy(-clientOffset);
+
   RECT r;
   ::GetWindowRect(mWnd, &r);
-
   childWindowRegion.MoveBy(-r.left, -r.top);
 
   nsIntRect clientBounds;
@@ -3298,7 +3302,34 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   if (event->message == NS_DEACTIVATE && BlurEventsSuppressed())
     return NS_OK;
 
-  if (nsnull != mEventCallback) {
+  // Top level windows can have a view attached which requires events be sent
+  // to the underlying base window and the view. Added when we combined the
+  // base chrome window with the main content child for nc client area (title
+  // bar) rendering.
+  if (mViewCallback) {
+    // A subset of events are sent to the base xul window first
+    switch(event->message) {
+      // send to the base window (view mgr ignores these for the view)
+      case NS_UISTATECHANGED:
+      case NS_DESTROY:
+      case NS_SETZLEVEL:
+      case NS_XUL_CLOSE:
+      case NS_MOVE:
+        (*mEventCallback)(event); // web shell / xul window
+        return NS_OK;
+
+      // sent to the base window, then to the view
+      case NS_SIZE:
+      case NS_DEACTIVATE:
+      case NS_ACTIVATE:
+      case NS_SIZEMODE:
+        (*mEventCallback)(event); // web shell / xul window
+        break;
+    };
+    // attached view events
+    aStatus = (*mViewCallback)(event);
+  }
+  else if (mEventCallback) {
     aStatus = (*mEventCallback)(event);
   }
 
