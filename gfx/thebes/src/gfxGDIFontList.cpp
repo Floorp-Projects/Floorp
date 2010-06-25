@@ -205,6 +205,14 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontT
 nsresult
 GDIFontEntry::ReadCMAP()
 {
+    // skip non-SFNT fonts completely
+    if (mFontType != GFX_FONT_TYPE_PS_OPENTYPE && 
+        mFontType != GFX_FONT_TYPE_TT_OPENTYPE &&
+        mFontType != GFX_FONT_TYPE_TRUETYPE) 
+    {
+        return NS_ERROR_FAILURE;
+    }
+
     // attempt this once, if errors occur leave a blank cmap
     if (mCmapInitialized)
         return NS_OK;
@@ -290,6 +298,8 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
     aLogFont->lfQuality        = (aUseCleartype ? CLEARTYPE_QUALITY : DEFAULT_QUALITY);
 }
 
+#define MISSING_GLYPH 0x1F
+
 PRBool 
 GDIFontEntry::TestCharacterMap(PRUint32 aCh)
 {
@@ -327,13 +337,24 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
         WORD glyph[1];
 
         PRBool hasGlyph = PR_FALSE;
+
+        // Bug 573038 - in some cases GetGlyphIndicesW returns 0xFFFF for a 
+        // missing glyph or 0x1F in other cases to indicate the "invalid" 
+        // glyph.  Map both cases to "not found"
         if (IsType1() || mForceGDI) {
-            // Type1 fonts and uniscribe APIs don't get along.  ScriptGetCMap will return E_HANDLE
-            DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
-            if (ret != GDI_ERROR && glyph[0] != 0xFFFF)
+            // Type1 fonts and uniscribe APIs don't get along.  
+            // ScriptGetCMap will return E_HANDLE
+            DWORD ret = GetGlyphIndicesW(dc, str, 1, 
+                                         glyph, GGI_MARK_NONEXISTING_GLYPHS);
+            if (ret != GDI_ERROR
+                && glyph[0] != 0xFFFF 
+                && glyph[0] != MISSING_GLYPH)
+            {
                 hasGlyph = PR_TRUE;
+            }
         } else {
-            // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
+            // ScriptGetCMap works better than GetGlyphIndicesW 
+            // for things like bitmap/vector fonts
             SCRIPT_CACHE sc = NULL;
             HRESULT rv = ScriptGetCMap(dc, &sc, str, 1, 0, glyph);
             if (rv == S_OK)
