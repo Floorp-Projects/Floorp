@@ -831,10 +831,8 @@ PRBool
 nsRootAccessible::Init()
 {
   nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
-  if (!applicationAcc)
+  if (!applicationAcc || !applicationAcc->AppendChild(this))
     return PR_FALSE;
-
-  applicationAcc->AddRootAccessible(this);
 
   return nsDocAccessibleWrap::Init();
 }
@@ -850,7 +848,7 @@ nsRootAccessible::Shutdown()
   if (!applicationAcc)
     return;
 
-  applicationAcc->RemoveRootAccessible(this);
+  applicationAcc->RemoveChild(this);
 
   mCurrentARIAMenubar = nsnull;
 
@@ -940,8 +938,8 @@ nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
 nsAccessible*
 nsRootAccessible::GetParent()
 {
-  // Parent has been setted in nsApplicationAccesible::AddRootAccessible()
-  // when root accessible was intialized.
+  // Parent has been set in nsApplicationAccesible::AppendChild() when root
+  // accessible was initialized.
   return mParent;
 }
 

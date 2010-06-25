@@ -653,16 +653,13 @@ gboolean fireRootAccessibleAddedCB(gpointer data)
     return FALSE;
 }
 
-nsresult
-nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
+PRBool
+nsApplicationAccessibleWrap::AppendChild(nsAccessible *aChild)
 {
-    NS_ENSURE_ARG_POINTER(aRootAccWrap);
+    if (!nsApplicationAccessible::AppendChild(aChild))
+      return PR_FALSE;
 
-    // add by weak reference
-    nsresult rv = nsApplicationAccessible::AddRootAccessible(aRootAccWrap);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
+    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aChild);
     atk_object_set_parent(atkAccessible, mAtkObject);
 
     PRUint32 count = mChildren.Length();
@@ -680,22 +677,20 @@ nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
       g_timeout_add(0, fireRootAccessibleAddedCB, eventData);
     }
 
-    return NS_OK;
+    return PR_TRUE;
 }
 
-nsresult
-nsApplicationAccessibleWrap::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
+PRBool
+nsApplicationAccessibleWrap::RemoveChild(nsAccessible* aChild)
 {
-    NS_ENSURE_ARG_POINTER(aRootAccWrap);
+    PRInt32 index = aChild->GetIndexInParent();
 
-    PRInt32 index = mChildren.IndexOf(aRootAccWrap);
-
-    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
+    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aChild);
     atk_object_set_parent(atkAccessible, NULL);
     g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
                           atkAccessible, NULL);
 
-    return nsApplicationAccessible::RemoveRootAccessible(aRootAccWrap);
+    return nsApplicationAccessible::RemoveChild(aChild);
 }
 
 void
