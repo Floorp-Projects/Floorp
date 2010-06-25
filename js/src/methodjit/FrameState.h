@@ -194,6 +194,10 @@ class FrameState
      * Pushes a known type and allocated payload onto the operation stack.
      * This must be used when the type is known, but cannot be propagated
      * because it is not known to be correct at a slow-path merge point.
+     *
+     * The caller guarantees that the tag was a fast-path check; that is,
+     * the value it replaces on the stack had the same tag if the fast-path
+     * was taken.
      */
     inline void pushUntypedPayload(JSValueTag tag, RegisterID payload);
 

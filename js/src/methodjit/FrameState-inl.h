@@ -261,13 +261,22 @@ FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload)
 
     FrameEntry *fe = rawPush();
 
+    fe->clear();
+
+    /*
+     * This is a hack, but it's safe. Callers of pushUntypedPayload use this
+     * because they type checked the fast-path for the given type. It's even
+     * valid to re-use the old |fe| to detect synced-ness, because the |fe|
+     * is not mutated in between pop() and now. And this is always used when
+     * consuming values, so the value has been properly initialized.
+     */
+    if (!fe->type.synced())
+        masm.storeTypeTag(ImmTag(tag), addressOf(fe));
+
     /* The forceful type sync will assert otherwise. */
 #ifdef DEBUG
     fe->type.unsync();
 #endif
-    fe->clear();
-
-    masm.storeTypeTag(ImmTag(tag), addressOf(fe));
     fe->type.setMemory();
     fe->data.unsync();
     fe->setNotCopied();
