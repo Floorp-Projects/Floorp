@@ -71,7 +71,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(74c63935-b54f-43a4-9449-2e9c815e3bef)]
+[scriptable, uuid(e80ec20d-8e9c-405f-a673-cea00aa95b4d)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -359,4 +359,16 @@ interface imgIContainer : nsISupports
   /* Called for multipart images when there's a new source image to add. */
   [noscript] void newSourceData();
 
+  /**
+   * A hint of the number of bytes of source data that the image contains. If
+   * called early on, this can help reduce copying and reallocations by
+   * appropriately preallocating the source data buffer.
+   *
+   * We take this approach rather than having the source data management code do
+   * something more complicated (like chunklisting) because HTTP is by far the
+   * dominant source of images, and the Content-Length header is quite reliable.
+   * Thus, pre-allocation simplifies code and reduces the total number of
+   * allocations.
+   */
+  void setSourceSizeHint(in unsigned long sizeHint);
 };
