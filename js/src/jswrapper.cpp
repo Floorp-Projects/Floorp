@@ -43,6 +43,7 @@
 #include "jscntxt.h"
 #include "jsiter.h"
 #include "jsnum.h"
+#include "jsregexp.h"
 #include "jswrapper.h"
 
 #include "jsobjinlines.h"
@@ -400,7 +401,9 @@ AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
     : context(cx),
       origin(cx->compartment),
       target(target),
-      destination(target->getCompartment(cx))
+      destination(target->getCompartment(cx)),
+      statics(cx),
+      input(cx)
 {
     JS_ASSERT(origin != destination);  // necessary for entered() implementation
 }
@@ -422,6 +425,7 @@ AutoCompartment::enter()
         frame.destroy();
         context->compartment = origin;
     }
+    js_SaveAndClearRegExpStatics(context, &statics, &input);
     return ok;
 }
 
@@ -429,6 +433,7 @@ void
 AutoCompartment::leave()
 {
     JS_ASSERT(entered());
+    js_RestoreRegExpStatics(context, &statics, &input);
     frame.destroy();
     context->compartment = origin;
     origin->wrapException(context);
