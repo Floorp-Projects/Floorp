@@ -80,6 +80,12 @@ body {
 	height: 16px;
 }
 
+.lessVisible {
+  background-color: rgba(245,245,245, .2);
+  -moz-box-shadow: none;
+  border: none;
+}
+
 
 .close {
 	position: absolute;
