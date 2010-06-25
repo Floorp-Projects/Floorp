@@ -787,6 +787,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     mFactories.Clear(); // XXX release the objects, don't just clear
     mLoaderMap.Clear();
     mKnownFileModules.Clear();
+    mKnownStaticModules.Clear();
 
     mLoaderData.Clear();
 
