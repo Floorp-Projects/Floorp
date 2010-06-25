@@ -157,7 +157,7 @@
 
     function testDrop()
     {
-      synthesizeDrop(gFindBar._findField, [[ {type: "text/plain", data: "Rabbits" } ]], "copy", window);
+      synthesizeDrop(gFindBar._findField, gFindBar._findField, [[ {type: "text/plain", data: "Rabbits" } ]], "copy", window);
       window.opener.wrappedJSObject.SimpleTest.is(gFindBar._findField.inputField.value, "Rabbits", "drop on findbar");
     }
 
