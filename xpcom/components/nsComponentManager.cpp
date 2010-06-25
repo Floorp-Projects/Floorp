@@ -617,10 +617,26 @@ nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
     ParseManifest(aType, aFile, data, aChromeOnly);
 }
 
+#if defined(XP_WIN) || defined(XP_OS2)
+#define TRANSLATE_SLASHES
+static void
+TranslateSlashes(char* path)
+{
+    for (; *path; ++path) {
+        if ('/' == *path)
+            *path = '\\';
+    }
+}
+#endif
+
 void
 nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
     char* file = argv[0];
+
+#ifdef TRANSLATE_SLASHES
+    TranslateSlashes(file);
+#endif
 
     nsCOMPtr<nsIFile> cfile;
     cx.mFile->GetParent(getter_AddRefs(cfile));
@@ -641,10 +657,37 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
 }
 
 void
+nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv)
+{
+    char* file = argv[0];
+
+#ifdef TRANSLATE_SLASHES
+    TranslateSlashes(file);
+#endif
+
+    nsCOMPtr<nsIFile> cfile;
+    cx.mFile->GetParent(getter_AddRefs(cfile));
+    nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
+
+    nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Couldn't append relative path?");
+        return;
+    }
+
+    xptiInterfaceInfoManager::GetSingleton()
+        ->RegisterFile(clfile, xptiInterfaceInfoManager::XPT);
+}
+
+void
 nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
     char* id = argv[0];
     char* file = argv[1];
+
+#ifdef TRANSLATE_SLASHES
+    TranslateSlashes(file);
+#endif
 
     nsID cid;
     if (!cid.Parse(id)) {
