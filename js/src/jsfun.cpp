@@ -1846,8 +1846,6 @@ static JSBool
 fun_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(vp[0]));
-    JS_ASSERT(!FUN_INTERPRETED(fun));
     uint32_t indent = 0;
 
     if (argc != 0 && !ValueToECMAUint32(cx, vp[2], &indent))
@@ -1870,8 +1868,6 @@ static JSBool
 fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
     JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(vp[0]));
-    JS_ASSERT(!FUN_INTERPRETED(fun));
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)

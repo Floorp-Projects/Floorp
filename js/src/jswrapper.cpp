@@ -328,10 +328,24 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp) {
 }
 
 bool
+JSCompartment::wrap(JSContext *cx, JSPropertyOp *propp)
+{
+    union {
+        JSPropertyOp op;
+        jsval v;
+    } u;
+    u.op = *propp;
+    if (!wrap(cx, &u.v))
+        return false;
+    *propp = u.op;
+    return true;
+}
+
+bool
 JSCompartment::wrap(JSContext *cx, JSPropertyDescriptor *desc) {
     return wrap(cx, &desc->obj) &&
-           (!(desc->attrs & JSPROP_GETTER) || wrap(cx, (jsval *) &desc->getter)) &&
-           (!(desc->attrs & JSPROP_SETTER) || wrap(cx, (jsval *) &desc->setter)) &&
+           (!(desc->attrs & JSPROP_GETTER) || wrap(cx, &desc->getter)) &&
+           (!(desc->attrs & JSPROP_SETTER) || wrap(cx, &desc->setter)) &&
            wrap(cx, &desc->value);
 }
 
