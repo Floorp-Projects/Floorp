@@ -817,6 +817,10 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
     // Don't create any parent/child XEmbed, because we are painting with shared memory
     mChildProcess->SendcreateWidget(0);
   }
+#elif defined(ANDROID)
+  // Painting with shared memory
+
+  mChildProcess->SendcreateWidget(0);
 #elif defined(XP_MACOSX)
 #  warning IMPLEMENT ME
 

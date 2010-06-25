@@ -107,7 +107,9 @@ STATIC_LIBS += ipdlunittest_s
 endif
 
 ifeq (Linux,$(OS_ARCH))
+ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
+endif
 endif
 ifeq (WINNT,$(OS_ARCH))
 OS_LIBS += dbghelp.lib

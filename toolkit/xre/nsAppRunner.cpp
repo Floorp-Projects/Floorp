@@ -1135,7 +1135,11 @@ ScopedXPCOMStartup::Initialize()
   nsresult rv;
 #ifdef MOZ_OMNIJAR
   nsCOMPtr<nsILocalFile> lf;
-  rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+  char *omnijarPath = getenv("OMNIJAR_PATH");
+  if (omnijarPath)
+    rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE, getter_AddRefs(lf));
+  else
+    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
   if (NS_SUCCEEDED(rv))
     mozilla::SetOmnijar(lf);
 #endif
@@ -3756,6 +3760,17 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 #if defined(OS_WIN)
   CommandLine::Init(aArgc, aArgv);
 #else
+#ifdef MOZ_OMNIJAR
+  nsCOMPtr<nsILocalFile> lf;
+  char *omnijarPath = getenv("OMNIJAR_PATH");
+  if (omnijarPath)
+    rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE, getter_AddRefs(lf));
+  else
+    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+  if (NS_SUCCEEDED(rv))
+    mozilla::SetOmnijar(lf);
+#endif
+
   // these leak on error, but that's OK: we'll just exit()
   char** canonArgs = new char*[aArgc];
 
