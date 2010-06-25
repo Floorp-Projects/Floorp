@@ -299,7 +299,9 @@ struct nsFactoryEntry
                    nsComponentManagerImpl::KnownModule* module);
 
     // nsIComponentRegistrar.registerFactory support
-    nsFactoryEntry(nsIFactory* factory);
+    nsFactoryEntry(const nsCID& aClass, nsIFactory* factory);
+
+    ~nsFactoryEntry();
 
     already_AddRefed<nsIFactory> GetFactory();
 
