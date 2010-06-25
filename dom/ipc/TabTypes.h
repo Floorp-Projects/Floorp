@@ -23,6 +23,10 @@ typedef unsigned long MagicWindowHandle;
 #  warning This is a placeholder
 typedef long MagicWindowHandle;
 
+#elif defined(ANDROID)
+/* we don't really use this */
+typedef unsigned long MagicWindowHandle;
+
 #else
 #error Not implemented, stooge
 #endif
