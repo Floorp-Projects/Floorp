@@ -258,6 +258,12 @@ BrowserView.prototype = {
     return this._visibleRectFactory();
   },
 
+  getCriticalRect: function getCriticalRect() {
+    let bvs = this._browserViewportState;
+    let vr = this.getVisibleRect();
+    return BrowserView.Util.visibleRectToCriticalRect(vr, bvs);
+  },
+
   /**
    * @return [width, height]
    */

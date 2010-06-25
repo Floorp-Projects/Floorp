@@ -364,6 +364,13 @@ pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
 pref("browser.ui.zoom.pageFitGranularity", 10); // don't zoom to fit by less than 1/10.
+pref("browser.ui.zoom.animationFps", 60);
+pref("browser.ui.zoom.animationDuration", 350); // ms duration of double-tap zoom animation
+
+// pinch gesture
+pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
+pref("browser.ui.pinch.maxShrink", 200);     // max pinch distance shrinkage
+pref("browser.ui.pinch.scalingFactor", 500); // scaling factor for above pinch limits
 
 // Touch radius (area around the touch location to look for target elements):
 pref("browser.ui.touch.left", 8);

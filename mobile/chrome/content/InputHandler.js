@@ -128,6 +128,9 @@ function InputHandler(browserViewContainer) {
   window.addEventListener("mouseup", this, true);
   window.addEventListener("mousemove", this, true);
   window.addEventListener("click", this, true);
+  window.addEventListener("MozMagnifyGestureStart", this, true);
+  window.addEventListener("MozMagnifyGestureUpdate", this, true);
+  window.addEventListener("MozMagnifyGesture", this, true);
 
   /* these handle key strokes in the browser view (where page content appears) */
   browserViewContainer.addEventListener("keypress", this, false);
@@ -135,10 +138,11 @@ function InputHandler(browserViewContainer) {
   browserViewContainer.addEventListener("keydown", this, false);
   browserViewContainer.addEventListener("DOMMouseScroll", this, true);
   browserViewContainer.addEventListener("MozMousePixelScroll", this, true);
-  browserViewContainer.addEventListener("contextmenu", this, false);
+  browserViewContainer.addEventListener("contextmenu", this, true);
 
   this.addModule(new MouseModule(this, browserViewContainer));
   this.addModule(new KeyModule(this, browserViewContainer));
+  this.addModule(new GestureModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
 }
 
@@ -380,6 +384,12 @@ MouseModule.prototype = {
             this._dragger.dragStop(0, 0, this._targetScrollInterface);
           this.cancelPending();
         }
+        break;
+      case "MozMagnifyGestureStart":
+      case "MozMagnifyGesture":
+        // disallow kinetic panning after gesture
+        if (this._dragData.dragging)
+          this._doDragStop(0, 0, true);
         break;
     }
   },
@@ -660,7 +670,8 @@ MouseModule.prototype = {
    */
   _doDoubleClick: function _doDoubleClick() {
     let mouseUp1 = this._downUpEvents[1].event;
-    let mouseUp2 = this._downUpEvents[3].event;
+    // sometimes the second press event is not dispatched at all
+    let mouseUp2 = this._downUpEvents[Math.min(3, this._downUpEvents.length - 1)].event;
     this._cleanClickBuffer(4);
     this._clicker.doubleClick(mouseUp1.clientX, mouseUp1.clientY,
                               mouseUp2.clientX, mouseUp2.clientY);
@@ -1196,4 +1207,145 @@ ScrollwheelModule.prototype = {
 
   /* We don't have much state to reset if we lose event focus */
   cancelPending: function cancelPending() {}
+};
+
+
+// Simple gestures support
+//
+// As per bug #412486, web content must not be allowed to receive any
+// simple gesture events.  Multi-touch gesture APIs are in their
+// infancy and we do NOT want to be forced into supporting an API that
+// will probably have to change in the future.  (The current Mac OS X
+// API is undocumented and was reverse-engineered.)  Until support is
+// implemented in the event dispatcher to keep these events as
+// chrome-only, we must listen for the simple gesture events during
+// the capturing phase and call stopPropagation on every event.
+
+function GestureModule(owner, browserViewContainer) {
+  this._owner = owner;
+  this._browserViewContainer = browserViewContainer;
+}
+
+GestureModule.prototype = {
+
+  /**
+   * Dispatch events based on the type of mouse gesture event. For now, make
+   * sure to stop propagation of every gesture event so that web content cannot
+   * receive gesture events.
+   *
+   * @param evInfo Event information structure
+   */
+  handleEvent: function handleEvent(evInfo) {
+    try {
+      let consume = false;
+      switch (evInfo.event.type) {
+        case "MozMagnifyGestureStart":
+          consume = true;
+          this._pinchStart(evInfo.event);
+          break;
+
+        case "MozMagnifyGestureUpdate":
+          consume = true;
+          if (this._ignoreNextUpdate)
+            this._ignoreNextUpdate = false;
+          else
+            this._pinchUpdate(evInfo.event);
+          break;
+
+        case "MozMagnifyGesture":
+          consume = true;
+          this._pinchEnd(evInfo.event);
+          break;
+
+        case "contextmenu":
+          // prevent context menu while pinching
+          if (this._pinchZoom)
+            consume = true;
+          break;
+      }
+      if (consume) {
+        // prevent sending of event to content
+        evInfo.event.stopPropagation();
+        evInfo.event.preventDefault();
+      }
+    }
+    catch (e) {
+      Util.dumpLn("Error while handling gesture event", evInfo.event.type,
+                  "\nPlease report error at:", e.getSource());
+    }
+  },
+
+  cancelPending: function cancelPending() {
+    // terminate pinch zoom if ongoing
+    if (this._pinchZoom) {
+      this._pinchZoom.finish();
+      this._pinchZoom = null;
+    }
+  },
+
+  _pinchStart: function _pinchStart(aEvent) {
+    let bv = Browser._browserView;
+    // start gesture if it's not taking place already, or over a XUL element
+    if (this._pinchZoom || (aEvent.target instanceof XULElement) || !bv.allowZoom)
+      return;
+
+    // grab events during pinch
+    this._owner.grab(this);
+
+    // hide element highlight
+    document.getElementById("tile-container").customClicker.panBegin();
+
+    // create the AnimatedZoom object for fast arbitrary zooming
+    this._pinchZoom = new AnimatedZoom(bv);
+
+    // start from current zoom level
+    this._pinchZoomLevel = bv.getZoomLevel();
+    this._pinchDelta = 0;
+    this._ignoreNextUpdate = true; // first update gives useless, huge delta
+
+    // cache gesture limit values
+    this._maxGrowth = gPrefService.getIntPref("browser.ui.pinch.maxGrowth");
+    this._maxShrink = gPrefService.getIntPref("browser.ui.pinch.maxShrink");
+    this._scalingFactor = gPrefService.getIntPref("browser.ui.pinch.scalingFactor");
+
+    // save the initial gesture start point as reference
+    [this._pinchStartX, this._pinchStartY] =
+        Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
+  },
+
+  _pinchUpdate: function _pinchUpdate(aEvent) {
+    if (!this._pinchZoom || !aEvent.delta)
+      return;
+
+    // Accumulate pinch delta. Changes smaller than 1 are just jitter.
+    this._pinchDelta += aEvent.delta;
+
+    // decrease the pinchDelta min/max values to limit zooming out/in speed
+    let delta = Math.max(-this._maxShrink, Math.min(this._maxGrowth, this._pinchDelta));
+    this._pinchZoomLevel *= (1 + delta / this._scalingFactor);
+    this._pinchZoomLevel = Browser._browserView.clampZoomLevel(this._pinchZoomLevel);
+    this._pinchDelta = 0;
+
+    // get current pinch position to calculate opposite vector for zoom point
+    let [pX, pY] =
+        Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
+
+    // redraw zoom canvas according to new zoom rect
+    let rect = Browser._getZoomRectForPoint(2 * this._pinchStartX - pX,
+                                            2 * this._pinchStartY - pY,
+                                            this._pinchZoomLevel);
+    this._pinchZoom.updateTo(rect);
+  },
+
+  _pinchEnd: function _pinchEnd(aEvent) {
+    // release grab
+    this._owner.ungrab(this);
+
+    // stop ongoing animated zoom
+    if (this._pinchZoom) {
+      // zoom to current level for real
+      this._pinchZoom.finish();
+      this._pinchZoom = null;
+    }
+  }
 };

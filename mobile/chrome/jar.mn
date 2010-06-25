@@ -57,5 +57,6 @@ chrome.jar:
   content/prompt/promptPassword.xul    (content/prompt/promptPassword.xul)
   content/prompt/select.xul            (content/prompt/select.xul)
   content/prompt/prompt.js             (content/prompt/prompt.js)
+  content/AnimatedZoom.js              (content/AnimatedZoom.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
