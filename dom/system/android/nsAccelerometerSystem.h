@@ -13,13 +13,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Ventnor <m.ventnor@gmail.com>
+ *   Michael Wu <mwu@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +34,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerUnix_h
-#define nsAccelerometerUnix_h
+#ifndef nsAccelerometerSystem_h
+#define nsAccelerometerSystem_h
 
-#include <unistd.h>
 #include "nsAccelerometer.h"
 
-enum nsAccelerometerUnixDriver
+class nsAccelerometerSystem : public nsAccelerometer
 {
-  eNoSensor,
-  eAppleSensor,
-  eIBMSensor,
-  eMaemoSensor,
-  eHPdv7Sensor
+public:
+  nsAccelerometerSystem();
+  virtual ~nsAccelerometerSystem();
+
+private:
+  virtual void Startup();
+  virtual void Shutdown();
 };
 
-class nsAccelerometerUnix : public nsAccelerometer
-{
- public:
-  nsAccelerometerUnix();
-  ~nsAccelerometerUnix();
+#endif /* nsAccelerometerSystem_h */
 
-  void Startup();
-  void Shutdown();
-
-  FILE* mPositionFile;
-  FILE* mCalibrateFile;
-  nsAccelerometerUnixDriver mType;
-
-  nsCOMPtr<nsITimer> mUpdateTimer;
-  static void UpdateHandler(nsITimer *aTimer, void *aClosure);
-};
-
-#endif

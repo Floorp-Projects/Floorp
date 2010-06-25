@@ -34,26 +34,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerX_h
-#define nsAccelerometerX_h
+#ifndef nsAccelerometer_h
+#define nsAccelerometer_h
 
-#include <IOKit/IOKitLib.h>
-#include <mach/mach_port.h>
+#include "nsIAccelerometer.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsITimer.h"
 
-#include "nsAccelerometer.h"
+#define NS_ACCELEROMETER_CID \
+{ 0xecba5203, 0x77da, 0x465a, \
+{ 0x86, 0x5e, 0x78, 0xb7, 0xaf, 0x10, 0xd8, 0xf7 } }
 
-class nsAccelerometerX : public nsAccelerometer
+#define NS_ACCELEROMETER_CONTRACTID "@mozilla.org/accelerometer;1"
+
+class nsIDOMWindow;
+
+class nsAccelerometer : public nsIAccelerometer
 {
- public:
-  nsAccelerometerX();
-  ~nsAccelerometerX();
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCELEROMETER
 
-  void Startup();
-  void Shutdown();
+  nsAccelerometer();
 
-  io_connect_t mSmsConnection;
-  nsCOMPtr<nsITimer> mUpdateTimer;
-  static void UpdateHandler(nsITimer *aTimer, void *aClosure);
+  virtual ~nsAccelerometer();
+
+  /* must be called on the main thread or else */
+  void AccelerationChanged(double x, double y, double z);
+
+  double mLastX;
+  double mLastY;
+  double mLastZ;
+
+private:
+  nsCOMArray<nsIAccelerationListener> mListeners;
+  nsCOMArray<nsIDOMWindow> mWindowListeners;
+
+  void StartDisconnectTimer();
+
+  PRBool mStarted;
+  PRBool mNewListener;
+
+  nsCOMPtr<nsITimer> mTimeoutTimer;
+  static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
+
+ protected:
+
+  PRUint32 mUpdateInterval;
+  PRBool   mEnabled;
+
+  virtual void Startup()  = 0;
+  virtual void Shutdown() = 0;
 };
 
 #endif

@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccelerometerX.h"
+#include "nsAccelerometerSystem.h"
 #include "nsIServiceManager.h"
 #include "stdlib.h"
 
@@ -45,11 +45,11 @@
 #define MODEL_NAME_LENGTH 64
 static char gModelName[MODEL_NAME_LENGTH];
 
-nsAccelerometerX::nsAccelerometerX()
+nsAccelerometerSystem::nsAccelerometerSystem()
 {
 }
 
-nsAccelerometerX::~nsAccelerometerX()
+nsAccelerometerSystem::~nsAccelerometerSystem()
 {
 }
 
@@ -72,9 +72,9 @@ typedef struct
 #define SMSDATA_USED_SIZE (sizeof(SmsData) - SMSDATA_PADDING_SIZE)
 
 void
-nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
+nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
 {
-  nsAccelerometerX *self = reinterpret_cast<nsAccelerometerX *>(aClosure);
+  nsAccelerometerSystem *self = reinterpret_cast<nsAccelerometerSystem *>(aClosure);
   if (!self) {
     NS_ERROR("no self");
     return;
@@ -87,7 +87,7 @@ nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
 
   if (!input || !output)
     return;
-    
+
   memset(input, 0, bufferLen);
   memset(output, 0, bufferLen);
 
@@ -115,14 +115,14 @@ nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
   }
 
   SmsData *data = (SmsData*) output;
-  
+
   float xf, yf, zf;
 
   // we want to normalize the return result from the chip to
   // something between -1 and 1 where 0 is the balance point.
 
   const int normalizeFactor = 250.5;
-  
+
   if (!strcmp(gModelName, "MacBookPro5,1")) {
     xf = ((float)data->x) / normalizeFactor;
     yf = (((float)data->y) / normalizeFactor) * -1;
@@ -146,7 +146,7 @@ nsAccelerometerX::UpdateHandler(nsITimer *aTimer, void *aClosure)
   self->AccelerationChanged( xf, yf, zf );
 }
 
-void nsAccelerometerX::Startup()
+void nsAccelerometerSystem::Startup()
 {
   // we can fail, and that just means the caller will not see any changes.
 
@@ -154,31 +154,31 @@ void nsAccelerometerX::Startup()
   kern_return_t result = ::IOMasterPort(MACH_PORT_NULL, &port);
   if (result != kIOReturnSuccess)
     return;
-  
+
   CFMutableDictionaryRef  dict = ::IOServiceMatching("SMCMotionSensor");
   if (!dict)
     return;
-  
+
   io_iterator_t iter;
   result = ::IOServiceGetMatchingServices(port, dict, &iter);
   if (result != kIOReturnSuccess)
     return;
-  
+
   io_object_t device = ::IOIteratorNext(iter);
 
   ::IOObjectRelease(iter);
-  
+
   if (!device)
     return;
-  
+
   result = ::IOServiceOpen(device, mach_task_self(), 0, &mSmsConnection);
   ::IOObjectRelease(device);
-  
+
   if (result != kIOReturnSuccess)
     return;
-  
+
   mach_port_deallocate(mach_task_self(), port);
-  
+
   /* get the version of the hardware we are running on. */
   int mib[2];
   size_t len = MODEL_NAME_LENGTH;
@@ -194,11 +194,11 @@ void nsAccelerometerX::Startup()
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 
-void nsAccelerometerX::Shutdown()
+void nsAccelerometerSystem::Shutdown()
 {
   if (mSmsConnection)
     ::IOServiceClose(mSmsConnection);
-  
+
   if (mUpdateTimer) {
     mUpdateTimer->Cancel();
     mUpdateTimer = nsnull;

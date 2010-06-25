@@ -34,29 +34,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccelerometerAndroid.h"
+#include "nsAccelerometerSystem.h"
 
 #include "AndroidBridge.h"
 
 using namespace mozilla;
 
-extern nsAccelerometerAndroid *gAccel;
+extern nsAccelerometerSystem *gAccel;
 
-nsAccelerometerAndroid::nsAccelerometerAndroid()
+nsAccelerometerSystem::nsAccelerometerSystem()
 {
     gAccel = this;
 }
 
-nsAccelerometerAndroid::~nsAccelerometerAndroid()
+nsAccelerometerSystem::~nsAccelerometerSystem()
 {
 }
 
-void nsAccelerometerAndroid::Startup()
+void nsAccelerometerSystem::Startup()
 {
     AndroidBridge::Bridge()->EnableAccelerometer(true);
 }
 
-void nsAccelerometerAndroid::Shutdown()
+void nsAccelerometerSystem::Shutdown()
 {
     AndroidBridge::Bridge()->EnableAccelerometer(false);
 }

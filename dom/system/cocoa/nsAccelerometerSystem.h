@@ -34,52 +34,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometer_h
-#define nsAccelerometer_h
+#ifndef nsAccelerometerSystem_h
+#define nsAccelerometerSystem_h
 
-#include "nsIAccelerometer.h"
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
-#include "nsITimer.h"
+#include <IOKit/IOKitLib.h>
+#include <mach/mach_port.h>
 
-class nsIDOMWindow;
+#include "nsAccelerometer.h"
 
-class nsAccelerometer : public nsIAccelerometer
+class nsAccelerometerSystem : public nsAccelerometer
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCELEROMETER
+ public:
+  nsAccelerometerSystem();
+  ~nsAccelerometerSystem();
 
-  nsAccelerometer();
+  void Startup();
+  void Shutdown();
 
-  virtual ~nsAccelerometer();
-
-  /* must be called on the main thread or else */
-  void AccelerationChanged(double x, double y, double z);
-
-  double mLastX;
-  double mLastY;
-  double mLastZ;
-
-private:
-  nsCOMArray<nsIAccelerationListener> mListeners;
-  nsCOMArray<nsIDOMWindow> mWindowListeners;
-
-  void StartDisconnectTimer();
-
-  PRBool mStarted;
-  PRBool mNewListener;
-
-  nsCOMPtr<nsITimer> mTimeoutTimer;
-  static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
-
- protected:
-
-  PRUint32 mUpdateInterval;
-  PRBool   mEnabled;
-
-  virtual void Startup()  = 0;
-  virtual void Shutdown() = 0;
+  io_connect_t mSmsConnection;
+  nsCOMPtr<nsITimer> mUpdateTimer;
+  static void UpdateHandler(nsITimer *aTimer, void *aClosure);
 };
 
 #endif
