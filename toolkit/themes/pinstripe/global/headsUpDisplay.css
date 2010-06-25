@@ -44,8 +44,6 @@
     height: 100%;
 }
 
-.hud-filter-btn > .toolbarbutton-icon { display: none; }
-
 .hud-console-wrapper {
     width: 100%; 
     overflow: auto; 
@@ -149,53 +147,30 @@
     font-size: 1.2em;
 }
 
-%include ../../../themes/pinstripe/global/shared.inc
+/* these need to be revised ... */
+.hud-filter-btn {
+    font-weight: bold;
+    color: #222;
+    border: 0 !important;
+    -moz-border-radius: 100%;
+}
 
-toolbar[mode="text"] .toolbarbutton-text {
+.hud-filter-btn:hover {
+    background-color: rgba(0, 0, 0, .205) !important;
+    color: #FFF !important;
+    text-shadow: 0 1px rgba(0, 0, 0, .4) !important;
+}
+
+.hud-filter-btn:active:hover {
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255, 255, 0.4);
+    background-color: rgba(0, 0, 0, .5) !important;
+}
+
+.hud-filter-btn > .toolbarbutton-text {
     margin: 1px 2px !important;
 }
 
-toolbarbutton:hover:active,
-toolbarbutton[open="true"] {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    -moz-padding-start: 2px;
-    -moz-padding-end: 1px;
-}
-
-toolbarbutton[disabled="true"],
-toolbarbutton[disabled="true"]:hover,
-toolbarbutton[disabled="true"]:hover:active,
-toolbarbutton[disabled="true"][open="true"] {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    -moz-padding-start: 2px;
-    -moz-padding-end: 1px;
-}
-
-/* ..... checked state ..... */
-
-toolbarbutton[checked="true"] {
-    border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    -moz-padding-start: 2px !important;
-    -moz-padding-end: 1px !important;
-}
-
-/* ..... unchecked state ..... */
-
-toolbarbutton[checked="false"] {
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    -moz-padding-start: 2px !important;
-    -moz-padding-end: 1px !important;
-}
-
-toolbar {
+.hud-console-filter-toolbar {
     padding: 1px 0px;
     -moz-box-align: center;
 }
-
-
-
