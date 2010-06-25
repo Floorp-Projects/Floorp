@@ -269,16 +269,35 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
 JS_STATIC_INTERPRET JSObject *
 js_ComputeGlobalThis(JSContext *cx, jsval *argv)
 {
-    JSObject *thisp;
-
-    if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-        !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
-        thisp = cx->globalObject;
+    /* Find the inner global. */
+    JSObject *inner;
+    if (JSVAL_IS_PRIMITIVE(argv[-2]) || !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
+        inner = cx->globalObject;
+        OBJ_TO_INNER_OBJECT(cx, inner);
+        if (!inner)
+            return NULL;
     } else {
-        thisp = JSVAL_TO_OBJECT(argv[-2])->getGlobal();
+        inner = JSVAL_TO_OBJECT(argv[-2])->getGlobal();
+    }
+    JS_ASSERT(inner->getClass()->flags & JSCLASS_IS_GLOBAL);
+
+    JSObject *scope = JS_GetGlobalForScopeChain(cx);
+    if (scope == inner) {
+        /*
+         * The outer object has not moved along to a new inner object.
+         * This means we qualify for the cache slot in the global.
+         */
+        jsval thisv = inner->getReservedSlot(JSRESERVED_GLOBAL_THIS);
+        if (!JSVAL_IS_VOID(thisv))
+            return JSVAL_TO_OBJECT(thisv);
+
+        JSObject *stuntThis = CallThisObjectHook(cx, inner, argv);
+        JS_ALWAYS_TRUE(js_SetReservedSlot(cx, inner, JSRESERVED_GLOBAL_THIS,
+                                          OBJECT_TO_JSVAL(stuntThis)));
+        return stuntThis;
     }
 
-    return CallThisObjectHook(cx, thisp, argv);
+    return CallThisObjectHook(cx, inner, argv);
 }
 
 JSObject *
