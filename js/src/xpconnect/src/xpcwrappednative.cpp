@@ -3306,8 +3306,8 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
             const char* badName = JS_GetStringBytes(oldJSStr);
             char* locationStr = nsnull;
 
-            nsIException* e = nsnull;
-            nsXPCException::NewException("", NS_OK, nsnull, nsnull, &e);
+            nsCOMPtr<nsIException> e = nsnull;
+            nsXPCException::NewException("", NS_OK, nsnull, nsnull, getter_AddRefs(e));
 
             if(e)
             {
