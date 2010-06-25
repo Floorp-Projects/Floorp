@@ -291,7 +291,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 
   // We can only do this if we have a presshell
   nsIDocument* doc = GetOurDocument();
-  nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;
+  nsIPresShell* shell = doc ? doc->GetShell() : nsnull;
   if (shell) {
 
     // We need to figure out whether to kick off decoding

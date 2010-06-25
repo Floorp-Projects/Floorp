@@ -467,7 +467,7 @@
   </binding>
 
   <binding id="popup-notification">
-    <content>
+    <content align="start">
       <xul:image class="popup-notification-icon"
                  xbl:inherits="popupid=id"/>
       <xul:vbox>

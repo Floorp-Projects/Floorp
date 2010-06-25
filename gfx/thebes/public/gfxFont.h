@@ -210,6 +210,7 @@ public:
         return TestCharacterMap(ch);
     }
 
+    virtual PRBool SkipDuringSystemFallback() { return PR_FALSE; }
     virtual PRBool TestCharacterMap(PRUint32 aCh);
     nsresult InitializeUVSMap();
     PRUint16 GetUVSGlyph(PRUint32 aCh, PRUint32 aVS);

@@ -270,17 +270,15 @@ public:
 
     PRBool BindTexImage()
     {
-        if (mBound)
-            if (!ReleaseTexImage())
-                return PR_FALSE;
+        if (!mSurface)
+            return PR_FALSE;
 
-        if (mSurface) {
-            EGLBoolean success;
-            success = sEGLLibrary.fBindTexImage(mDisplay, (EGLSurface)mSurface,
-                                                LOCAL_EGL_BACK_BUFFER);
-            if (success == LOCAL_EGL_FALSE)
-                return PR_FALSE;
-        } else
+        if (mBound && !ReleaseTexImage())
+            return PR_FALSE;
+
+        EGLBoolean success = sEGLLibrary.fBindTexImage(mDisplay,
+            (EGLSurface)mSurface, LOCAL_EGL_BACK_BUFFER);
+        if (success == LOCAL_EGL_FALSE)
             return PR_FALSE;
 
         mBound = PR_TRUE;
@@ -292,15 +290,12 @@ public:
         if (!mBound)
             return PR_TRUE;
 
-        if (!mDisplay)
+        if (!mDisplay || !mSurface)
             return PR_FALSE;
 
-        if (mSurface) {
-            EGLBoolean success;
-            success = sEGLLibrary.fReleaseTexImage(mDisplay, (EGLSurface)mSurface, LOCAL_EGL_BACK_BUFFER);
-            if (success == LOCAL_EGL_FALSE)
-                return PR_FALSE;
-        } else
+        EGLBoolean success;
+        success = sEGLLibrary.fReleaseTexImage(mDisplay, (EGLSurface)mSurface, LOCAL_EGL_BACK_BUFFER);
+        if (success == LOCAL_EGL_FALSE)
             return PR_FALSE;
 
         mBound = PR_FALSE;

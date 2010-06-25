@@ -1755,9 +1755,9 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   unit = val.GetUnit();
   if (unit == eCSSUnit_Array) {
     nsCSSValue::Array *srcArr = val.GetArrayValue();
-    PRUint32 i, numSrc = srcArr->Count();
+    size_t numSrc = srcArr->Count();
     
-    for (i = 0; i < numSrc; i++) {
+    for (size_t i = 0; i < numSrc; i++) {
       val = srcArr->Item(i);
       unit = val.GetUnit();
       gfxFontFaceSrc *face = srcArray.AppendElements(1);

@@ -401,6 +401,16 @@ public:
    */
   static PRBool IsHTMLWhitespace(PRUnichar aChar);
 
+  /**
+   * Parse a margin string of format 'top, right, bottom, left' into
+   * an nsIntMargin.
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting integer
+   * @return whether the value could be parsed
+   */
+  static PRBool ParseIntMarginValue(const nsAString& aString, nsIntMargin& aResult);
+
   static void Shutdown();
 
   /**

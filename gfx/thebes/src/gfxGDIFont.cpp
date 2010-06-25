@@ -45,6 +45,7 @@
 #include "gfxHarfBuzzShaper.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxContext.h"
+#include "gfxUnicodeProperties.h"
 
 #include "cairo-win32.h"
 
@@ -100,11 +101,7 @@ gfxGDIFont::~gfxGDIFont()
 void
 gfxGDIFont::CreatePlatformShaper()
 {
-    if (static_cast<GDIFontEntry*>(mFontEntry.get())->mForceGDI) {
-        mPlatformShaper = new gfxGDIShaper(this);
-    } else {
-        mPlatformShaper = new gfxUniscribeShaper(this);
-    }
+    mPlatformShaper = new gfxGDIShaper(this);
 }
 
 gfxFont*
@@ -112,6 +109,31 @@ gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     return new gfxGDIFont(static_cast<GDIFontEntry*>(mFontEntry.get()),
                           &mStyle, mNeedsBold, anAAOption);
+}
+
+static PRBool
+UseUniscribe(gfxTextRun *aTextRun,
+             const PRUnichar *aString,
+             PRUint32 aRunStart,
+             PRUint32 aRunLength)
+{
+    PRUint32 flags = aTextRun->GetFlags();
+    PRBool useGDI;
+
+    PRBool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
+                       < gfxWindowsPlatform::kWindowsVista);
+
+    // bug 561304 - Uniscribe bug produces bad positioning at certain
+    // font sizes on XP, so default to GDI on XP using logic of 3.6
+
+    useGDI = isXP &&
+             (flags &
+               (gfxTextRunFactory::TEXT_OPTIMIZE_SPEED | 
+                gfxTextRunFactory::TEXT_IS_RTL)
+             ) == gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+
+    return !useGDI ||
+        ScriptIsComplex(aString + aRunStart, aRunLength, SIC_COMPLEX) == S_OK;
 }
 
 PRBool
@@ -129,20 +151,82 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
         NS_WARNING("invalid font! expect incorrect text rendering");
         return PR_FALSE;
     }
-    PRBool ok = gfxFont::InitTextRun(aContext, aTextRun, aString,
-                                     aRunStart, aRunLength, aRunScript);
-    if (!ok && mPlatformShaper) {
-        // shaping failed; if we were using uniscribe, fall back to GDI
-        GDIFontEntry *fe = static_cast<GDIFontEntry*>(GetFontEntry());
-        if (!fe->mForceGDI) {
-            NS_WARNING("uniscribe failed, switching to GDI shaper");
-            fe->mForceGDI = PR_TRUE;
-            mPlatformShaper = new gfxGDIShaper(this);
-            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
-                                              aRunStart, aRunLength,
+
+    PRBool ok = PR_FALSE;
+
+    if (mHarfBuzzShaper) {
+        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+            ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, 
                                               aRunScript);
-            NS_WARN_IF_FALSE(ok, "GDI shaper failed!");
         }
+    }
+
+    if (!ok) {
+        GDIFontEntry *fe = static_cast<GDIFontEntry*>(GetFontEntry());
+
+        if (UseUniscribe(aTextRun, aString, aRunStart, aRunLength)
+            && !fe->mForceGDI)
+        {
+            // first try Uniscribe
+            if (!mUniscribeShaper) {
+                mUniscribeShaper = new gfxUniscribeShaper(this);
+            }
+
+            ok = mUniscribeShaper->InitTextRun(aContext, aTextRun, aString,
+                                               aRunStart, aRunLength, 
+                                               aRunScript);
+            if (ok) {
+                return PR_TRUE;
+            }
+
+            // fallback to GDI shaping
+            if (!mPlatformShaper) {
+                CreatePlatformShaper();
+            }
+
+            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, 
+                                              aRunScript);
+
+        } else {
+            // first use GDI
+            if (!mPlatformShaper) {
+                CreatePlatformShaper();
+            }
+
+            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, 
+                                              aRunScript);
+
+            if (ok) {
+                return PR_TRUE;
+            }
+
+            // first try Uniscribe
+            if (!mUniscribeShaper) {
+                mUniscribeShaper = new gfxUniscribeShaper(this);
+            }
+
+            // use Uniscribe shaping
+            ok = mUniscribeShaper->InitTextRun(aContext, aTextRun, aString,
+                                               aRunStart, aRunLength, 
+                                               aRunScript);
+        }
+
+#if DEBUG
+        if (!ok) {
+            NS_ConvertUTF16toUTF8 name(GetName());
+            char msg[256];
+
+            sprintf(msg, 
+                    "text shaping with both uniscribe and GDI failed for"
+                    " font: %s",
+                    name.get());
+            NS_WARNING(msg);
+        }
+#endif
     }
 
     return ok;

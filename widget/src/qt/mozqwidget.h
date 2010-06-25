@@ -4,7 +4,6 @@
 #include <QtGui/QApplication>
 #include <QtGui/QGraphicsView>
 #include <QtGui/QGraphicsWidget>
-#include <QtOpenGL/QGLWidget>
 
 #include "nsIWidget.h"
 #include "prenv.h"
@@ -148,10 +147,14 @@ public:
     MozQGraphicsView(MozQWidget* aTopLevel, QWidget * aParent = nsnull)
      : QGraphicsView (new QGraphicsScene(), aParent)
      , mEventHandler(this, aTopLevel)
+     , mTopLevelWidget(aTopLevel)
     {
-        if (PR_GetEnv("MOZ_QT_GL"))
-            setViewport(new QGLWidget());
         scene()->addItem(aTopLevel);
+    }
+
+    MozQWidget* GetTopLevelWidget()
+    {
+        return mTopLevelWidget;
     }
 
 protected:
@@ -176,6 +179,7 @@ protected:
 
 private:
     MozQGraphicsViewEvents mEventHandler;
+    MozQWidget* mTopLevelWidget;
 };
 
 #endif

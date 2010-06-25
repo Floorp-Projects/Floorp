@@ -86,8 +86,7 @@
 #include "nsCanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
-#include "nsIAccelerometer.h"
-#include "nsWidgetsCID.h"
+#include "nsAccelerometer.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -5520,7 +5519,7 @@ PostMessageEvent::Run()
   // happen because then untrusted content can call postMessage on a chrome
   // window if it can get a reference to it.
 
-  nsIPresShell *shell = targetWindow->mDoc->GetPrimaryShell();
+  nsIPresShell *shell = targetWindow->mDoc->GetShell();
   nsRefPtr<nsPresContext> presContext;
   if (shell)
     presContext = shell->GetPresContext();
@@ -6704,7 +6703,7 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = mDoc->GetPrimaryShell();
+  nsIPresShell *shell = mDoc->GetShell();
   nsRefPtr<nsPresContext> presContext;
   if (shell) {
     // Retrieve the context
@@ -7300,7 +7299,7 @@ nsGlobalWindow::DispatchSyncPopState()
   }
 
   // Obtain a presentation shell for use in creating a popstate event.
-  nsIPresShell *shell = mDoc->GetPrimaryShell();
+  nsIPresShell *shell = mDoc->GetShell();
   nsRefPtr<nsPresContext> presContext;
   if (shell) {
     presContext = shell->GetPresContext();

@@ -55,7 +55,7 @@ function runTest()
 
 function otherWindowFocused()
 {
-  otherWindow.addEventListener("focus", otherWindowFocused, false);
+  otherWindow.removeEventListener("focus", otherWindowFocused, false);
 
   // enable caret browsing temporarily to test caret movement
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].

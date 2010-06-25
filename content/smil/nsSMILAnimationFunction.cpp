@@ -694,10 +694,12 @@ nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName, nsAString& aResult) const
  * @param aAttName    The attribute name (in the global namespace).
  * @param aSMILAttr   The SMIL attribute to perform the parsing.
  * @param[out] aResult        The resulting nsSMILValue.
- * @param[out] aCanCacheSoFar If |aResult| cannot be cached (as reported by
- *                            nsISMILAttr::ValueFromString), then this outparam
- *                            will be set to PR_FALSE. Otherwise, this outparam
- *                            won't be modified.
+ * @param[out] aPreventCachingOfSandwich
+ *                    If |aResult| contains dependencies on its context that
+ *                    should prevent the result of the animation sandwich from
+ *                    being cached and reused in future samples (as reported
+ *                    by nsISMILAttr::ValueFromString), then this outparam
+ *                    will be set to PR_TRUE. Otherwise it is left unmodified.
  *
  * Returns PR_FALSE if a parse error occurred, otherwise returns PR_TRUE.
  */
@@ -705,18 +707,18 @@ PRBool
 nsSMILAnimationFunction::ParseAttr(nsIAtom* aAttName,
                                    const nsISMILAttr& aSMILAttr,
                                    nsSMILValue& aResult,
-                                   PRBool& aCanCacheSoFar) const
+                                   PRBool& aPreventCachingOfSandwich) const
 {
   nsAutoString attValue;
   if (GetAttr(aAttName, attValue)) {
-    PRBool canCache;
+    PRBool preventCachingOfSandwich;
     nsresult rv = aSMILAttr.ValueFromString(attValue, mAnimationElement,
-                                            aResult, canCache);
+                                            aResult, preventCachingOfSandwich);
     if (NS_FAILED(rv))
       return PR_FALSE;
 
-    if (!canCache) {
-      aCanCacheSoFar = PR_FALSE;
+    if (preventCachingOfSandwich) {
+      aPreventCachingOfSandwich = PR_TRUE;
     }
   }
   return PR_TRUE;
@@ -750,25 +752,29 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   if (HasAttr(nsGkAtoms::values)) {
     nsAutoString attValue;
     GetAttr(nsGkAtoms::values, attValue);
-    PRBool canCache;
+    PRBool preventCachingOfSandwich;
     nsresult rv = nsSMILParserUtils::ParseValues(attValue, mAnimationElement,
-                                                 aSMILAttr, result, canCache);
+                                                 aSMILAttr, result,
+                                                 preventCachingOfSandwich);
     if (NS_FAILED(rv))
       return rv;
 
-    if (!canCache) {
+    if (preventCachingOfSandwich) {
       mValueNeedsReparsingEverySample = PR_TRUE;
     }
   // Else try to/from/by
   } else {
-    PRBool canCacheSoFar = PR_TRUE;
+    PRBool preventCachingOfSandwich = PR_FALSE;
     PRBool parseOk = PR_TRUE;
     nsSMILValue to, from, by;
-    parseOk &= ParseAttr(nsGkAtoms::to,   aSMILAttr, to,   canCacheSoFar);
-    parseOk &= ParseAttr(nsGkAtoms::from, aSMILAttr, from, canCacheSoFar);
-    parseOk &= ParseAttr(nsGkAtoms::by,   aSMILAttr, by,   canCacheSoFar);
+    parseOk &= ParseAttr(nsGkAtoms::to,   aSMILAttr, to,
+                         preventCachingOfSandwich);
+    parseOk &= ParseAttr(nsGkAtoms::from, aSMILAttr, from,
+                         preventCachingOfSandwich);
+    parseOk &= ParseAttr(nsGkAtoms::by,   aSMILAttr, by,
+                         preventCachingOfSandwich);
     
-    if (!canCacheSoFar) {
+    if (preventCachingOfSandwich) {
       mValueNeedsReparsingEverySample = PR_TRUE;
     }
 

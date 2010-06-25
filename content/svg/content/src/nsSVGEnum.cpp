@@ -177,7 +177,7 @@ nsresult
 nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* /*aSrcElement*/,
                                      nsSMILValue& aValue,
-                                     PRBool& aCanCache) const
+                                     PRBool& aPreventCachingOfSandwich) const
 {
   nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aStr);
   nsSVGEnumMapping *mapping = mVal->GetMapping(mSVGElement);
@@ -187,7 +187,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
       nsSMILValue val(&SMILEnumType::sSingleton);
       val.mU.mUint = mapping->mVal;
       aValue = val;
-      aCanCache = PR_TRUE;
+      aPreventCachingOfSandwich = PR_FALSE;
       return NS_OK;
     }
     mapping++;

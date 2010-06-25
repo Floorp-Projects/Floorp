@@ -2898,17 +2898,19 @@ fi
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
-AC_LANG_C
 AC_HEADER_STDC
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for __stdcall)
 AC_CACHE_VAL(ac_cv___stdcall,
- [AC_TRY_COMPILE([],
-                 [void foo(); void __stdcall foo();],
+ [AC_TRY_COMPILE([template <typename Method> struct foo;
+                  template <> struct foo<void (*)()> {};
+                  template <> struct foo<void (__stdcall*)()> {};],
+                 [],
                  [ac_cv___stdcall=true],
                  [ac_cv___stdcall=false])])
 if test "$ac_cv___stdcall" = true ; then
@@ -2917,6 +2919,7 @@ if test "$ac_cv___stdcall" = true ; then
 else
   AC_MSG_RESULT(no)
 fi
+AC_LANG_C
 AC_MSG_CHECKING(for ssize_t)
 AC_CACHE_VAL(ac_cv_type_ssize_t,
  [AC_TRY_COMPILE([#include <stdio.h>
@@ -5908,7 +5911,7 @@ if test -n "$MOZ_WEBM"; then
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl For Win32 (MSVC) we must use MASM.
-    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a "$GNU_CC" != "yes"; then
+    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a -z "$GNU_CC"; then
         AC_MSG_CHECKING([for MASM assembler])
         AC_CHECK_PROGS(VPX_AS, ml, "")
         if test -n "$VPX_AS"; then
@@ -5943,8 +5946,10 @@ if test -n "$MOZ_WEBM"; then
           VPX_X86_ASM=1
         ;;
         WINNT:x86_64)
-          VPX_ASFLAGS="-f x64 -rnasm -pnasm"
-          VPX_X86_ASM=1
+          if test -z "$GNU_CC"; then
+            VPX_ASFLAGS="-f x64 -rnasm -pnasm"
+            VPX_X86_ASM=1
+          fi
         ;;
         esac
       fi # end have YASM
@@ -6504,6 +6509,7 @@ if test -z "$MOZ_UPDATE_CHANNEL"; then
     MOZ_UPDATE_CHANNEL=default
 fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
+AC_SUBST(MOZ_UPDATE_CHANNEL)
 
 # tools/update-packaging is not checked out by default.
 MOZ_ARG_ENABLE_BOOL(update-packaging,
@@ -8616,6 +8622,12 @@ fi
 dnl Build Places if required
 if test "$MOZ_PLACES"; then
   AC_DEFINE(MOZ_PLACES)
+fi
+
+dnl Build Sync Services if required
+AC_SUBST(MOZ_SERVICES_SYNC)
+if test -n "$MOZ_SERVICES_SYNC"; then
+  AC_DEFINE(MOZ_SERVICES_SYNC)
 fi
 
 dnl ========================================================

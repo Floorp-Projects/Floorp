@@ -107,7 +107,6 @@ bool SendAsyncMessageToParent(void* aCallbackData,
   return true;
 }
 
-static int tabChildC = 0;
 nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
                                                      nsIContent* aOwner,
                                                      nsFrameMessageManager* aChrome)

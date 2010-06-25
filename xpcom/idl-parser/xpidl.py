@@ -405,7 +405,8 @@ class Native(object):
         'domstring': 'nsAString',
         'utf8string': 'nsACString',
         'cstring': 'nsACString',
-        'astring': 'nsAString'
+        'astring': 'nsAString',
+        'jsval': 'jsval'
         }
 
     def __init__(self, name, nativename, attlist, location):

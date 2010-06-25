@@ -45,6 +45,7 @@ MOZ_STATIC_BUILD_UNSUPPORTED=1
 # always enabled for form history
 MOZ_MORKREADER=1
 MOZ_SAFE_BROWSING=1
+MOZ_SERVICES_SYNC=
 MOZ_APP_VERSION=$FIREFOX_VERSION
 MOZ_EXTENSIONS_DEFAULT=" gnomevfs reporter"
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
