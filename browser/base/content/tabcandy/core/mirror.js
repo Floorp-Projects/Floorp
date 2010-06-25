@@ -53,7 +53,10 @@ function _isIframe(doc){
 // ##########
 // Class: TabCanvas
 // Takes care of the actual canvas for the tab thumbnail
-var TabCanvas = function(tab, canvas){ this.init(tab, canvas) }
+var TabCanvas = function(tab, canvas){ 
+  this.init(tab, canvas);
+};
+
 TabCanvas.prototype = {
   // ----------
   // Function: init
@@ -130,7 +133,7 @@ TabCanvas.prototype = {
   animate: function(options, duration){
     Utils.assert('this routine no longer exists', false);
   }
-}
+};
 
 // ##########
 // Class: Mirror
@@ -213,7 +216,7 @@ var TabMirror = function() {
       self.init();
     });
   }
-}
+};
 
 TabMirror.prototype = {
   // ----------
@@ -273,12 +276,12 @@ TabMirror.prototype = {
 /*           Utils.log('hasMirror'); */
           var iconUrl = tab.raw.linkedBrowser.mIconURL;
           if( iconUrl == null ){
-            iconUrl = "chrome://tabcandy/content/img/core/default.png";
+            iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
           }
 
           var label = tab.raw.label;
-          $name = iQ(mirror.nameEl);
-          $canvas = iQ(mirror.canvasEl);
+          var $name = iQ(mirror.nameEl);
+          var $canvas = iQ(mirror.canvasEl);
           
           if(iconUrl != mirror.favEl.src) { 
             mirror.favEl.src = iconUrl;

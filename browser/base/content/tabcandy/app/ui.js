@@ -93,7 +93,7 @@ Navbar = {
       }, 300); 
     }
   },
-}
+};
 
 // ##########
 // Class: Tabbar
@@ -785,6 +785,11 @@ UIClass.prototype = {
       code: function() {
         Trenches.toggleShown();
         iQ(this).html((Trenches.showDebug ? 'hide' : 'show') + ' trenches');
+      }
+    }, {
+      name: 'refresh', 
+      code: function() {
+        location.href = 'index.html';
       }
     }, {
       name: 'code docs', 
