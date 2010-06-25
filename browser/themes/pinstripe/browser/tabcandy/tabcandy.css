@@ -93,7 +93,7 @@ body {
 	right: 6px;
 	width: 16px;
 	height: 16px;
-	background: url(../img/app/closetab.png) no-repeat;
+	background: url(chrome://global/skin/icons/closetab.png) no-repeat;
 	opacity: 0.2;
 	cursor: pointer;
 }
@@ -106,7 +106,7 @@ body {
 	right: 6px;
 	width: 16px;
 	height: 16px;
-	background: url(../img/app/expand.png) no-repeat;
+	background: url(chrome://global/skin/icons/resizer.png) no-repeat;
 	opacity: 0.2;
 }
 
@@ -212,7 +212,7 @@ body {
   position: absolute !important;
   cursor: pointer;
   opacity: .3;
-  background-image: url(../img/app/new-tab.png);
+  background-image: url(../img/new-tab.png);
   z-index:99999;
 }
 
@@ -295,7 +295,7 @@ input.name{
   color: #999;
   margin: 3px 0px 0px 3px;
   padding: 1px;
-  background-image: url(../img/app/edit-light.png);  
+  background-image: url(../img/edit-light.png);  
   padding-left: 20px;
 }
 
@@ -351,7 +351,7 @@ input.defaultName:hover{
 /* Resizable
 ----------------------------------*/
 .resizer{
-  background-image: url(../img/app/expand.png);
+  background-image: url(chrome://global/skin/icons/resizer.png);
 	position: absolute;
 	bottom: 6px;
 	right: 6px;

@@ -69,9 +69,9 @@ window.TabItem = function(container, tab) {
   // override dropOptions with custom tabitem methods
   // This is mostly to support the phantom groups.
   this.dropOptions.drop = function(e){
-    $target = iQ(this.container);  
+    var $target = iQ(this.container);  
     $target.removeClass("acceptsDrop");
-    var phantom = $target.data("phantomGroup")
+    var phantom = $target.data("phantomGroup");
     
     var group = drag.info.item.parent;
     if( group == null ){
@@ -167,7 +167,6 @@ window.TabItem = function(container, tab) {
   this.setResizable(true);
 
   TabItems.register(this);
-  var self = this;
   this.tab.mirror.addOnClose(this, function(who, info) {
     TabItems.unregister(self);
     self.removeTrenches();
@@ -443,7 +442,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         width: $tabEl.width(),
         height:  $tabEl.height(),
         pos: $tabEl.position()
-      }
+      };
 
       var scale = window.innerWidth/orig.width;
       
@@ -550,9 +549,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     var $div = iQ(this.container);
     var data;
     
+    var box = this.getBounds();
     if(value) { 
       this._zoomPrep = true;
-      var box = this.getBounds();
 
       // The divide by two part here is a clever way to speed up the zoom-out code.
       // Because image scaling is slowest on big images, we cheat and start the image
@@ -573,9 +572,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         });
     } else {
       this._zoomPrep = false;
-      $div.removeClass('front')
+      $div.removeClass('front');
         
-      var box = this.getBounds();
       this.reloadBounds();
       this.setBounds(box, true);
     }                
