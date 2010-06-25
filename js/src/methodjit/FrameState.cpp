@@ -692,7 +692,7 @@ FrameState::uncopy(FrameEntry *original)
 }
 
 void
-FrameState::storeLocal(uint32 n, bool popGuaranteed)
+FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 {
     if (!popGuaranteed && (eval || escaping[n])) {
         JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),
@@ -705,6 +705,8 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed)
     }
 
     FrameEntry *localFe = getLocal(n);
+
+    bool wasSynced = localFe->type.synced();
 
     /* Detect something like (x = x) which is a no-op. */
     FrameEntry *top = peek(-1);
@@ -810,12 +812,18 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed)
     localFe->data.setRegister(reg);
     moveOwnership(reg, localFe);
 
-    if (backing->isTypeKnown()) {
-        localFe->setTypeTag(backing->getTypeTag());
+    if (typeChange) {
+        if (backing->isTypeKnown()) {
+            localFe->setTypeTag(backing->getTypeTag());
+        } else {
+            RegisterID reg = tempRegForType(backing);
+            localFe->type.setRegister(reg);
+            moveOwnership(reg, localFe);
+        }
     } else {
-        RegisterID reg = tempRegForType(backing);
-        localFe->type.setRegister(reg);
-        moveOwnership(reg, localFe);
+        if (!wasSynced)
+            masm.storeTypeTag(ImmTag(backing->getTypeTag()), addressOf(localFe));
+        localFe->type.setMemory();
     }
 
     if (!backing->isTypeKnown())
