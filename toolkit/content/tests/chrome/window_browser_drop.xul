@@ -22,7 +22,7 @@ function runTest()
   {
     link = "";
     name = "";
-    synthesizeDrop(element, data, "", element.ownerDocument.defaultView);
+    synthesizeDrop(element, element, data, "", element.ownerDocument.defaultView);
 
     is(link, expectedLink, testid + " link");
     is(name, expectedName, testid + " name");
