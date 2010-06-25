@@ -177,6 +177,15 @@ BrowserView.Util = {
   resizeContainerToViewport: function resizeContainerToViewport(container, viewportRect) {
     container.style.width = viewportRect.width  + 'px';
     container.style.height = viewportRect.height + 'px';
+  },
+
+  ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
+    let message = {};
+    message.target = aBrowser;
+    message.name = "Browser:MozScrolledAreaChanged";
+    message.json = { width: aWidth, height: aHeight };
+
+    Browser._browserView.updateScrolledArea(message);
   }
 };
 

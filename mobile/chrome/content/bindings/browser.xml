@@ -418,7 +418,7 @@
           },
           reload: function(aReloadFlags) { this._sendMessage("WebNavigation:Reload", {flags: aReloadFlags}); },
           stop: function(aStopFlags) { this._sendMessage("WebNavigation:Stop", {flags: aStopFlags}); },
-          get document() { debugger; Components.utils.reportError("contentDocument is not available"); return null; },
+          get document() { Components.utils.reportError("contentDocument is not available"); return null; },
           get currentURI() {
             if (!this._currentURI)
                this._currentURI = this._browser._ios.newURI("about:blank", null, null);

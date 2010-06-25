@@ -1174,9 +1174,11 @@ var PageActions = {
 
   updatePageSaveAs: function updatePageSaveAs() {
     this.removeItems("saveas");
-    // XXX Not sure if we care about this
-    //if (Browser.selectedBrowser.contentDocument instanceof XULDocument)
-    //  return;
+
+    // Check for local XUL content
+    let contentDocument = Browser.selectedBrowser.contentDocument;
+    if (contentDocument && contentDocument instanceof XULDocument)
+      return;
 
     let strings = Elements.browserBundle;
     let node = this.appendItem("saveas", strings.getString("pageactions.saveas.pdf"), "");

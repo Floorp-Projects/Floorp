@@ -2553,6 +2553,14 @@ Tab.prototype = {
       browser.style.width = viewportW + "px";
       browser.style.height = viewportH + "px";
     }
+
+    // Local XUL documents are not firing MozScrolledAreaChanged
+    let contentDocument = browser.contentDocument;
+    if (contentDocument && contentDocument instanceof XULDocument) {
+      let width = contentDocument.documentElement.scrollWidth;
+      let height = contentDocument.documentElement.scrollHeight;
+      BrowserView.Util.ensureMozScrolledAreaEvent(browser, width, height);
+    }
   },
 
   startLoading: function startLoading() {
