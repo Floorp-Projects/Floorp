@@ -945,7 +945,7 @@ TextRunWordCache::CacheHashEntry::HashKey(const KeyTypePointer aKey)
     PRUint32 fontSetGen;
     LL_L2UI(fontSetGen, aKey->mUserFontSetGeneration);
 
-    return aKey->mStringHash + fontSetGen + (long)aKey->mFontOrGroup + aKey->mAppUnitsPerDevUnit +
+    return aKey->mStringHash + fontSetGen + (PRUint32)(intptr_t)aKey->mFontOrGroup + aKey->mAppUnitsPerDevUnit +
         aKey->mIsDoubleByteText + aKey->mIsRTL*2 + aKey->mEnabledOptionalLigatures*4 +
         aKey->mOptimizeSpeed*8;
 }
