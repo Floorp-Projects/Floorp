@@ -254,6 +254,7 @@ public:
     };
 
     void ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
+    void ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv);
     void ManifestComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
     void ManifestContract(ManifestProcessingContext& cx, int lineno, char* const * argv);
     void ManifestCategory(ManifestProcessingContext& cx, int lineno, char* const * argv);
