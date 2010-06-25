@@ -514,33 +514,49 @@ class nsIWidget : public nsISupports {
     /**
      * Get this widget's outside dimensions relative to its parent widget
      *
-     * @param aRect on return it holds the  x, y, width and height of this widget
-     *
+     * @param aRect   On return it holds the  x, y, width and height of
+     *                this widget.
      */
     NS_IMETHOD GetBounds(nsIntRect &aRect) = 0;
 
-
     /**
-     * Get this widget's outside dimensions in global coordinates. (One might think this
-     * could be accomplished by stringing together other methods in this interface, but
-     * then one would bloody one's nose on different coordinate system handling by different
-     * platforms.) This includes any title bar on the window.
+     * Get this widget's outside dimensions in global coordinates. This
+     * includes any title bar on the window.
      *
-     *
-     * @param aRect on return it holds the  x, y, width and height of this widget
-     *
+     * @param aRect   On return it holds the  x, y, width and height of
+     *                this widget.
      */
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect) = 0;
 
-
     /**
-     * Get this widget's client area dimensions, if the window has a 3D border appearance
-     * this returns the area inside the border, The x and y are always zero
+     * Get this widget's client area dimensions, if the window has a 3D
+     * border appearance this returns the area inside the border. Origin
+     * is always zero.
      *
-     * @param aRect on return it holds the  x. y, width and height of the client area of this widget
-     *
+     * @param aRect   On return it holds the  x. y, width and height of
+     *                the client area of this widget.
      */
     NS_IMETHOD GetClientBounds(nsIntRect &aRect) = 0;
+
+    /**
+     * Get the non-client area dimensions of the window.
+     * 
+     */
+    NS_IMETHOD GetNonClientMargins(nsIntMargin &margins) = 0;
+
+    /**
+     * Sets the non-client area dimensions of the window. Pass -1 to restore
+     * the system default frame size for that border. Pass zero to remove
+     * a border, or pass a specific value adjust a border. Units are in
+     * pixels. (DPI dependent)
+     *
+     * Platform notes:
+     *  Windows: shrinking top non-client height will remove application
+     *  icon and window title text. Glass desktops will refuse to set
+     *  dimensions between zero and size < system default.
+     *
+     */
+    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins) = 0;
 
     /**
      * Get the client offset from the window origin.
