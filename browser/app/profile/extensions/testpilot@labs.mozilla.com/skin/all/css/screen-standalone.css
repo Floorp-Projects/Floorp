@@ -7,7 +7,6 @@ html {
 
 body { 
 	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Lucida, Arial, Helvetica, sans-serif;
-	font-family: 'DroidSans';
 	background: #fff url('chrome://testpilot/skin/images/bg-status.jpg') repeat-x top center;	padding: 0px; 
 	color:#787878;
 	font-size:12px;
@@ -16,16 +15,16 @@ body {
 	
 }
 
-	h1 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
-	h2 {font-family: 'DroidSans'; color: #54717b; font-size: 24px; line-height: 24px;font-weight: normal; letter-spacing: -1px}
-	h3 {font-family: 'DroidSans'; color: #54717b; font-size: 18px; line-height: 18px;font-weight: normal; letter-spacing: -1px}
+	h1 {color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
+	h2 {color: #54717b; font-size: 24px; line-height: 24px;font-weight: normal; letter-spacing: -1px}
+	h3 {color: #54717b; font-size: 18px; line-height: 18px;font-weight: normal; letter-spacing: -1px}
 	
 	p, ul {font-size: 12px;}
 	
 	a:link, a:hover, a:active, a:focus, a:visited {color: #9f423b; text-decoration: none;}
 	a:hover {color: #9f423b; text-decoration: none;}
 	
-	.bold {font-family: 'DroidSans-Bold'; color:#3a3a3a;}
+	.bold {color:#3a3a3a;}
 	.address {margin-left: 20px;}
 	.inactive {color:#ccc;}
 	
@@ -51,7 +50,6 @@ body {
 	}
 	
 	.dataBox {
-		font-family: 'DroidSans';
 		font-size: 16px;
 		padding: 6px 20px 20px 20px;
 		-moz-border-radius: 0.5em;
@@ -59,16 +57,6 @@ body {
 		background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 		//display: inline;
 	}
-
-@font-face{
-font-family: 'DroidSans'; 
-src: url('chrome://testpilot/skin/fonts/DroidSans.ttf') format('truetype');
-}
-
-@font-face{
-font-family: 'DroidSans-Bold'; 
-src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
-}
 
 #container {
 	margin: 0px auto;
@@ -83,14 +71,12 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 #contentWelcome {
 	margin-top: 380px;
 	padding: 8px 24px 24px 24px;
-	font-family: 'DroidSans';
 	text-align: left;
 }
 
 #content-standalone {
 	margin-top: 120px;
 	padding: 8px 24px 24px 24px;
-	font-family: 'DroidSans';
 	text-align: left;
 }
 
@@ -106,9 +92,9 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 	margin-right: 12px;
 }
 
-.downloadH1 {font-family: 'DroidSans-bold'; color: #3a3a3a; font-size: 24px; font-weight: normal; letter-spacing: -1px; margin-right: 8px;}
+.downloadH1 {color: #3a3a3a; font-size: 24px; font-weight: normal; letter-spacing: -1px; margin-right: 8px;}
 
-.downloadH2 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 22px; font-weight: normal; letter-spacing: -1px; line-height: 28px; margin-left: 46px;}
+.downloadH2 {color: #3a3a3a; font-size: 22px; font-weight: normal; letter-spacing: -1px; line-height: 28px; margin-left: 46px;}
 
 #intro {
 	float: left;
@@ -124,7 +110,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 }
 
 .button {
-	font-family: 'DroidSans';
 	font-size: 16px;
 	padding: 8px 12px;
 	color: rgba(0, 0, 0, 0.8);
@@ -143,7 +128,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 }
 
 .home_button {
-	font-family: 'DroidSans';
 	font-size: 16px;
 	padding: 8px 12px;
 	width: 240px;
@@ -163,7 +147,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 }
 
 .callout {
-	font-family: 'DroidSans';
 	font-size: 16px;
 	padding: 8px 24px;
 	margin: 24px auto;
@@ -184,7 +167,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 }
 
 .home_callout {
-	font-family: 'DroidSans';
 	font-size: 16px;
 	vertical-align: middle;
 	width: 280px;
@@ -202,7 +184,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 }
 
 .home_callout_continue {
-	font-family: 'DroidSans';
 	font-size: 16px;
 	vertical-align: middle;
 	width: 280px;
