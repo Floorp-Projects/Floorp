@@ -639,11 +639,6 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         const char *aEntryName,
                                         PRBool aDontPersist)
 {
-  if (!aDontPersist) {
-    NS_ERROR("Persistence not supported in the category manager.");
-    return NS_ERROR_INVALID_ARG;
-  }
-
   NS_ENSURE_ARG_POINTER(aCategoryName);
   NS_ENSURE_ARG_POINTER(aEntryName);
 
