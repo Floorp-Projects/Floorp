@@ -5703,7 +5703,7 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
-*-wince*|*-android*)
+*-wince*)
     MOZ_IPC=
     ;;
 esac

@@ -53,8 +53,10 @@
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
+#include "nsILocalFile.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/Omnijar.h"
 #include <sys/stat.h>
 
 #ifdef XP_WIN
@@ -202,6 +204,14 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     path += "/lib";
 #endif
     newEnvVars["LD_LIBRARY_PATH"] = path.get();
+#endif
+#ifdef MOZ_OMNIJAR
+    // Make sure the child process can find the omnijar
+    // See ScopedXPCOMStartup::Initialize in nsAppRunner.cpp
+    nsCAutoString omnijarPath;
+    if (mozilla::OmnijarPath())
+      mozilla::OmnijarPath()->GetNativePath(omnijarPath);
+    newEnvVars["OMNIJAR_PATH"] = omnijarPath.get();
 #endif
   }
   else {
