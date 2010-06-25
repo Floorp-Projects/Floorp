@@ -1344,7 +1344,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
 
   // Avoid unnecessary resizing calls
-  if (mBounds.width == aWidth && mBounds.height == aHeight)
+  if (mBounds.width == aWidth && mBounds.height == aHeight && !aRepaint)
     return NS_OK;
 
 #ifdef MOZ_XUL
@@ -1384,7 +1384,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
 
   // Avoid unnecessary resizing calls
   if (mBounds.x == aX && mBounds.y == aY &&
-      mBounds.width == aWidth && mBounds.height == aHeight)
+      mBounds.width == aWidth && mBounds.height == aHeight && !aRepaint)
     return NS_OK;
 
 #ifdef MOZ_XUL
@@ -2382,8 +2382,7 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     DWORD_PTR tempStyle = ::GetWindowLongPtrW(hwnd, GWL_STYLE);
     DWORD_PTR tempExStyle = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
 
-    style = tempStyle & ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU |
-                          WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+    style = tempStyle & ~(WS_CAPTION | WS_THICKFRAME);
     exStyle = tempExStyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE |
                               WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
 
@@ -2391,17 +2390,10 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     mOldExStyle = tempExStyle;
   }
   else {
-    if (!mOldStyle)
+    if (!mOldStyle || !mOldExStyle) {
       mOldStyle = ::GetWindowLongPtrW(hwnd, GWL_STYLE);
-    if (!mOldExStyle)
       mOldExStyle = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-
-    if (mIsVisible)
-      mOldStyle |= WS_VISIBLE;
-    if (mSizeMode == nsSizeMode_Maximized)
-      mOldStyle |= WS_MAXIMIZE;
-    else if (mSizeMode == nsSizeMode_Minimized)
-      mOldStyle |= WS_MINIMIZE;
+    }
 
     style = mOldStyle;
     exStyle = mOldExStyle;
@@ -7369,21 +7361,38 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
     return;
   }
 
+  LONG_PTR style = 0, exStyle = 0;
   switch(aMode) {
     case eTransparencyTransparent:
-    {
-      LONG_PTR exStyle = topWindow->WindowStyle();
       exStyle |= WS_EX_LAYERED;
-      ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
-    }
     case eTransparencyOpaque:
     case eTransparencyGlass:
       topWindow->mTransparencyMode = aMode;
       break;
   }
 
-  // Hide chrome supports caching old styles, so this can be flipped back and forth
-  topWindow->HideWindowChrome(aMode == eTransparencyTransparent);
+  // Hide chrome supports caching old styles, so this can be
+  // flipped back and forth
+  //topWindow->HideWindowChrome(aMode == eTransparencyTransparent);
+
+  style |= topWindow->WindowStyle();
+  exStyle |= topWindow->WindowExStyle();
+
+  if (aMode == eTransparencyTransparent) {
+    style &= ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+    exStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+  }
+
+  if (topWindow->mIsVisible)
+    style |= WS_VISIBLE;
+  if (topWindow->mSizeMode == nsSizeMode_Maximized)
+    style |= WS_MAXIMIZE;
+  else if (topWindow->mSizeMode == nsSizeMode_Minimized)
+    style |= WS_MINIMIZE;
+
+  VERIFY_WINDOW_STYLE(style);
+  ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
+  ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (mTransparencyMode == eTransparencyGlass)
