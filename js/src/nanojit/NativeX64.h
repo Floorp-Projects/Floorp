@@ -328,7 +328,7 @@ namespace nanojit
 
     static const RegisterMask GpRegs = 0xffff;
     static const RegisterMask FpRegs = 0xffff0000;
-#ifdef _MSC_VER
+#ifdef _WIN64
     static const RegisterMask SavedRegs = 1<<RBX | 1<<RSI | 1<<RDI | 1<<R12 | 1<<R13 | 1<<R14 | 1<<R15;
     static const int NumSavedRegs = 7; // rbx, rsi, rdi, r12-15
     static const int NumArgRegs = 4;
