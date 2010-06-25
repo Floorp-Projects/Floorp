@@ -116,10 +116,8 @@ public:
   virtual nsAccessible* GetParent();
 
   virtual void InvalidateChildren();
-
-  // nsApplicationAccessible
-  virtual nsresult AddRootAccessible(nsIAccessible *aRootAccWrap);
-  virtual nsresult RemoveRootAccessible(nsIAccessible *aRootAccWrap);
+  virtual PRBool AppendChild(nsAccessible* aChild);
+  virtual PRBool RemoveChild(nsAccessible* aChild);
 
 protected:
 
