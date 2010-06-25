@@ -4931,7 +4931,11 @@ function AddonWrapper(aAddon) {
     }
 
     if (bundle.isDirectory()) {
-      bundle.append(aPath);
+      if (aPath) {
+        aPath.split("/").forEach(function(aPart) {
+          bundle.append(aPart);
+        });
+      }
       return bundle.exists();
     }
 
@@ -4954,10 +4958,16 @@ function AddonWrapper(aAddon) {
     }
 
     if (bundle.isDirectory()) {
-      bundle.append(aPath);
+      if (aPath) {
+        aPath.split("/").forEach(function(aPart) {
+          bundle.append(aPart);
+        });
+      }
       return Services.io.newFileURI(bundle);
     }
 
+    if (!aPath)
+      return Services.io.newFileURI(bundle);
     return buildJarURI(bundle, aPath);
   }
 }
