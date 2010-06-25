@@ -1434,12 +1434,7 @@ enum nsDragDropEventStatus {
        (((evnt)->message == NS_SELECTION_SET))
 
 #define NS_IS_CONTENT_COMMAND_EVENT(evnt) \
-       (((evnt)->message == NS_CONTENT_COMMAND_CUT) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_COPY) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_PASTE) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_DELETE) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_UNDO) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_REDO))
+       ((evnt)->eventStructType == NS_CONTENT_COMMAND_EVENT)
 
 #define NS_IS_PLUGIN_EVENT(evnt) \
        (((evnt)->message == NS_PLUGIN_EVENT))
