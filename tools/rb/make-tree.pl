@@ -112,6 +112,8 @@ $imbalance{'.root'} = 'n/a';
 
 # The main read loop.
 
+$/ = '\r\n';
+
 sub read_data($$$) {
      my ($INFILE, $plus, $minus) = @_;
 
@@ -189,7 +191,6 @@ sub read_data($$$) {
           }
      }
 }
-
 read_data(*STDIN, "AddRef", "Release");
 
 if ($::opt_comptrs) {

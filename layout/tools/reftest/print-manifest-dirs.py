@@ -93,6 +93,7 @@ def parseManifest(manifest, dirs):
 def printTestDirs(topsrcdir, topmanifests):
   """Parse |topmanifests| and print a list of directories containing the tests
   within (and the manifests including those tests), relative to |topsrcdir|."""
+  topsrcdir = os.path.abspath(topsrcdir)
   dirs = set()
   for manifest in topmanifests:
     parseManifest(manifest, dirs)
