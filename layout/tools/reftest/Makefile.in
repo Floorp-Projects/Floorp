@@ -46,14 +46,16 @@ MODULE		= reftest
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
-		reftest-cmdline.manifest \
 		$(NULL)
 
 ifdef XPI_NAME
+NO_JS_MANIFEST = 1
 DIST_FILES = install.rdf
 
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
+else
+EXTRA_COMPONENTS += reftest-cmdline.manifest
 endif
 
 include $(topsrcdir)/config/rules.mk
