@@ -55,7 +55,7 @@ nsresult
 nsSVGTransformSMILAttr::ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     PRBool& aCanCache) const
+                                     PRBool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(aSrcElement, NS_ERROR_FAILURE);
   NS_ASSERTION(aValue.IsNull(),
@@ -67,7 +67,7 @@ nsSVGTransformSMILAttr::ValueFromString(const nsAString& aStr,
                                : nsGkAtoms::translate;
 
   ParseValue(aStr, transformType, aValue);
-  aCanCache = PR_TRUE;
+  aPreventCachingOfSandwich = PR_FALSE;
   return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
 }
 

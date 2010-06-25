@@ -39,6 +39,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#include "GLContextProvider.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsSurface.h"
@@ -72,6 +73,8 @@ CanvasLayerOGL::Initialize(const Data& aData)
     NS_ASSERTION(aData.mGLContext == nsnull,
                  "CanvasLayerOGL can't have both surface and GLContext");
     mNeedsYFlip = PR_FALSE;
+    if (mCanvasSurface->GetType() == gfxASurface::SurfaceTypeXlib)
+      mCanvasSurfaceAsGLContext = sGLContextProvider.CreateForNativePixmapSurface(mCanvasSurface);
   } else if (aData.mGLContext) {
     // this must be a pbuffer context
     void *pbuffer = aData.mGLContext->GetNativeData(GLContext::NativePBuffer);
@@ -101,7 +104,26 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
 
   mUpdatedRect.UnionRect(mUpdatedRect, aRect);
 
-  if (mCanvasSurface) {
+  if (mCanvasSurfaceAsGLContext) {
+    PRBool newTexture = mTexture == 0;
+    if (newTexture) {
+      gl()->fGenTextures(1, &mTexture);
+
+      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+      gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+
+      gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+      gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+      gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+      gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+      mUpdatedRect = mBounds;
+    } else {
+      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+      gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+    }
+    mCanvasSurfaceAsGLContext->BindTexImage();
+  } else if (mCanvasSurface) {
     PRBool newTexture = mTexture == 0;
     if (newTexture) {
       gl()->fGenTextures(1, &mTexture);
@@ -236,7 +258,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
-  if (mCanvasGLContext) {
+  if (mCanvasGLContext || mCanvasSurfaceAsGLContext) {
     program = mOGLManager->GetRGBALayerProgram();
   } else {
     program = mOGLManager->GetBGRALayerProgram();

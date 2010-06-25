@@ -97,6 +97,7 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 #endif /* MOZ_LOGGING */
 
 class QEvent;
+class QGraphicsView;
 
 class MozQWidget;
 
@@ -191,6 +192,7 @@ public:
 
     NS_IMETHODIMP      SetIMEEnabled(PRUint32 aState);
     NS_IMETHODIMP      GetIMEEnabled(PRUint32* aState);
+    NS_IMETHOD         SetAcceleratedRendering(PRBool aEnabled);
 
     //
     // utility methods
@@ -303,10 +305,12 @@ protected:
 
     void               ThemeChanged(void);
 
+    virtual LayerManager* GetLayerManager();
     gfxASurface*       GetThebesSurface();
 
 private:
     void               GetToplevelWidget(MozQWidget **aWidget);
+    nsWindow*          GetTopLevelNsWindow();
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
@@ -315,6 +319,7 @@ private:
     MozQWidget*        createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData);
 
     QWidget*           GetViewWidget();
+    PRBool             IsAcceleratedQView(QGraphicsView* aView);
 
     MozQWidget*        mWidget;
 

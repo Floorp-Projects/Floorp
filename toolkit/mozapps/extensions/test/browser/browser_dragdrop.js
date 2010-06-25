@@ -79,9 +79,9 @@ function test() {
 }
 
 function end_test() {
-  gManagerWindow.close();
-
-  finish();
+  close_manager(gManagerWindow, function() {
+    finish();
+  });
 }
 
 function test_confirmation(aWindow, aExpectedURLs) {

@@ -202,18 +202,6 @@ let PromptUtils = {
         return [buttonLabels[0], buttonLabels[1], buttonLabels[2], defaultButtonNum, isDelayEnabled];
     },
 
-    // Returns true if some listener requested that the default action be prevented.
-    fireEvent : function (domWin, eventType) {
-        // XXX main use of DOMWillOpenModalDialog is so tabbrowser can focus
-        //     the tab opening the modal prompt. DOMModalDialogClosed is
-        //     unused (until bug 429287).
-        // XXX Maybe make these observer notifications instead?
-        //     oh, content can see these? That seems unfortunate. Esp. for auth.
-        let event = domWin.document.createEvent("Events");
-        event.initEvent(eventType, true, true);
-        return !domWin.dispatchEvent(event);
-    },
-
     getAuthInfo : function (authInfo) {
         let username, password;
 
@@ -382,12 +370,11 @@ ModalPrompter.prototype = {
         if (!domWin)
             domWin = Services.ww.activeWindow;
 
+        // XXX domWin may still be null here if there are _no_ windows open.
+
         // Note that we don't need to fire DOMWillOpenModalDialog and
         // DOMModalDialogClosed events here, wwatcher's OpenWindowJSInternal
         // will do that. Similarly for enterModalState / leaveModalState.
-
-        let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
 
         Services.ww.openWindow(domWin, uri, "_blank", "centerscreen,chrome,modal,titlebar", args);
     },

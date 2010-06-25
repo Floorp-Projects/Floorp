@@ -180,6 +180,7 @@ check-interactive:
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
           --test-path=$(SOLO_FILE) \
+          --profile-name=$(MOZ_APP_NAME) \
           --interactive \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
@@ -191,6 +192,7 @@ check-one:
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
           --test-path=$(SOLO_FILE) \
+          --profile-name=$(MOZ_APP_NAME) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 

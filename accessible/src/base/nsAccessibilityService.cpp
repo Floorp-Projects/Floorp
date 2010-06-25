@@ -203,11 +203,12 @@ nsAccessibilityService::GetInfo(nsIFrame *aFrame, nsIWeakReference **aShell,
   if (!document)
     return NS_ERROR_FAILURE;
 
-  NS_ASSERTION(document->GetPrimaryShell(),"Error no shells!");
+  NS_ASSERTION(document->GetShell(),
+               "Error: aFrame's document doesn't have a PresShell!");
 
   // do_GetWR only works into a |nsCOMPtr| :-(
   nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(document->GetPrimaryShell());
+    do_GetWeakReference(document->GetShell());
 
   weakShell.forget(aShell);
   NS_IF_ADDREF(*aContent = content);
@@ -1098,7 +1099,7 @@ nsAccessibilityService::GetContainerAccessible(nsINode *aNode,
   if (!document)
     return nsnull;
 
-  nsIPresShell *presShell = document->GetPrimaryShell();
+  nsIPresShell *presShell = document->GetShell();
   if (!presShell)
     return nsnull;
 
@@ -1901,45 +1902,36 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent *aContent,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibilityService (DON'T put methods here)
 
-nsresult
-nsAccessibilityService::AddNativeRootAccessible(void *aAtkAccessible,
-                                                nsIAccessible **aRootAccessible)
-{
+nsAccessible*
+nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
+ {
 #ifdef MOZ_ACCESSIBILITY_ATK
-  nsNativeRootAccessibleWrap* rootAccWrap =
-    new nsNativeRootAccessibleWrap((AtkObject*)aAtkAccessible);
-
-  *aRootAccessible = static_cast<nsIAccessible*>(rootAccWrap);
-  NS_ADDREF(*aRootAccessible);
-
-  nsApplicationAccessible *applicationAcc =
+  nsApplicationAccessible* applicationAcc =
     nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(applicationAcc);
+  if (!applicationAcc)
+    return nsnull;
 
-  applicationAcc->AddRootAccessible(*aRootAccessible);
+  nsNativeRootAccessibleWrap* nativeRootAcc =
+     new nsNativeRootAccessibleWrap((AtkObject*)aAtkAccessible);
+  if (!nativeRootAcc)
+    return nsnull;
 
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (applicationAcc->AppendChild(nativeRootAcc))
+    return nativeRootAcc;
 #endif
-}
 
-nsresult
-nsAccessibilityService::RemoveNativeRootAccessible(nsIAccessible *aRootAccessible)
+  return nsnull;
+ }
+
+void
+nsAccessibilityService::RemoveNativeRootAccessible(nsAccessible* aAccessible)
 {
 #ifdef MOZ_ACCESSIBILITY_ATK
-  void* atkAccessible;
-  aRootAccessible->GetNativeInterface(&atkAccessible);
-
-  nsApplicationAccessible *applicationAcc =
+  nsApplicationAccessible* applicationAcc =
     nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(applicationAcc);
 
-  applicationAcc->RemoveRootAccessible(aRootAccessible);
-
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (applicationAcc)
+    applicationAcc->RemoveChild(aAccessible);
 #endif
 }
 

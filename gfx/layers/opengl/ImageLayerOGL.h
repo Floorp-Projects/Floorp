@@ -222,6 +222,7 @@ public:
 
   GLTexture mTexture;
   gfxIntSize mSize;
+  nsRefPtr<GLContext> mASurfaceAsGLContext;
 };
 
 } /* layers */

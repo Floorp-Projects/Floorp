@@ -482,7 +482,10 @@ argumentUnboxingTemplates = {
     '[cstring]':
         "    xpc_qsACString ${name}(cx, ${argVal}, ${argPtr});\n"
         "    if (!${name}.IsValid())\n"
-        "        return JS_FALSE;\n"
+        "        return JS_FALSE;\n",
+
+    '[jsval]':
+        "    jsval ${name} = ${argVal};\n"
     }
 
 # From JSData2Native.
@@ -576,7 +579,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
 def writeResultDecl(f, type, varname):
     if isVoidType(type):
         return  # nothing to declare
-    
+
     t = unaliasType(type)
     if t.kind == 'builtin':
         if not t.nativename.endswith('*'):
@@ -591,6 +594,8 @@ def writeResultDecl(f, type, varname):
         if name in ('[domstring]', '[astring]'):
             f.write("    nsString %s;\n" % varname)
             return
+        elif name == '[jsval]':
+            return  # nothing to declare; see special case in outParamForm
     elif t.kind in ('interface', 'forward'):
         f.write("    nsCOMPtr<%s> %s;\n" % (type.name, varname))
         return
@@ -603,7 +608,9 @@ def outParamForm(name, type):
     if type.kind == 'builtin':
         return '&' + name
     elif type.kind == 'native':
-        if type.modifier == 'ref':
+        if getBuiltinOrNativeTypeName(type) == '[jsval]':
+            return 'vp'
+        elif type.modifier == 'ref':
             return name
         else:
             return '&' + name
@@ -654,7 +661,12 @@ resultConvTemplates = {
         "    return xpc_qsStringToJsval(cx, result, ${jsvalPtr});\n",
 
     '[domstring]':
-        "    return xpc_qsStringToJsval(cx, result, ${jsvalPtr});\n"
+        "    return xpc_qsStringToJsval(cx, result, ${jsvalPtr});\n",
+
+    '[jsval]':
+        # Here there's nothing to convert, because the result has already been
+        # written directly to *rv. See the special case in outParamForm.
+        "    return JS_TRUE;\n"
     }
 
 def isVariantType(t):
@@ -987,76 +999,52 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         f.write(callTemplate)
 
 # Only these types can be returned (note: no strings);
-# if the type isn't one of these, then traceTypeMap['_default'] is used
+# if the type isn't one of these, then defaultTraceType is used
 traceReturnTypeMap = {
-    'void':
-        ["jsval ", "JSVAL", "JSVAL_VOID"],
-    'boolean':
-        ["JSBool ", "BOOL", "JS_FALSE"],
-    'short':
-        ["int32 ", "INT32", "0"],
-    'unsigned short':
-        ["uint32 ", "UINT32", "0"],
-    'long':
-        ["int32 ", "INT32", "0"],
-    'unsigned long':
-        ["uint32 ", "UINT32", "0"],
-    'float':
-        ["jsdouble ", "DOUBLE", "0"],
-    'double':
-        ["jsdouble ", "DOUBLE", "0"],
-    'octet':
-        ["uint32 ", "UINT32", "0"]
+    'void':             ("jsval ", "JSVAL", "JSVAL_VOID"),
+    'boolean':          ("JSBool ", "BOOL", "JS_FALSE"),
+    'short':            ("int32 ", "INT32", "0"),
+    'unsigned short':   ("uint32 ", "UINT32", "0"),
+    'long':             ("int32 ", "INT32", "0"),
+    'unsigned long':    ("uint32 ", "UINT32", "0"),
+    'float':            ("jsdouble ", "DOUBLE", "0"),
+    'double':           ("jsdouble ", "DOUBLE", "0"),
+    'octet':            ("uint32 ", "UINT32", "0"),
+    'jsval':            ("jsval ", "JSVAL", "JSVAL_VOID")
     }
 
 # This list extends the above list, but includes types that
-# are valid for arguments only, namely strings.  It also
-# includes the default jsval type.
-traceTypeMap = {
-    '[astring]':
-        ["JSString *", "STRING", "nsnull"],
-    '[domstring]':
-        ["JSString *", "STRING", "nsnull"],
-    '[cstring]':
-        ["JSString *", "STRING", "nsnull"],
-    'string':
-        ["JSString *", "STRING", "nsnull"],
-    'wstring':
-        ["JSString *", "STRING", "nsnull"],
+# are valid for arguments only, namely strings.
+traceTypeMap = traceReturnTypeMap.copy()
+traceTypeMap.update({
+    '[astring]':        ("JSString *", "STRING", "nsnull"),
+    '[domstring]':      ("JSString *", "STRING", "nsnull"),
+    '[cstring]':        ("JSString *", "STRING", "nsnull"),
+    'string':           ("JSString *", "STRING", "nsnull"),
+    'wstring':          ("JSString *", "STRING", "nsnull"),
+    })
 
-    '_default':
-        ["jsval ", "JSVAL", "JSVAL_VOID"]
-    }
+defaultTraceType = ("jsval ", "JSVAL", "JSVAL_VOID")
 
 def getTraceType(type):
     type = getBuiltinOrNativeTypeName(type)
-    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get(type) or traceTypeMap.get("_default")
-    assert traceType
-    return traceType[0]
+    return traceTypeMap.get(type, defaultTraceType)[0]
 
 def getTraceReturnType(type):
     type = getBuiltinOrNativeTypeName(type)
-    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get("_default")
-    assert traceType
-    return traceType[0]
+    return traceReturnTypeMap.get(type, defaultTraceType)[0]
 
 def getTraceInfoType(type):
     type = getBuiltinOrNativeTypeName(type)
-    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get(type) or traceTypeMap.get("_default")
-    assert traceType
-    return traceType[1]
+    return traceTypeMap.get(type, defaultTraceType)[1]
 
 def getTraceInfoReturnType(type):
     type = getBuiltinOrNativeTypeName(type)
-    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get("_default")
-    assert traceType
-    return traceType[1]
+    return traceReturnTypeMap.get(type, defaultTraceType)[1]
 
 def getTraceInfoDefaultReturn(type):
     type = getBuiltinOrNativeTypeName(type)
-    traceType = traceTypeMap.get(type) or traceTypeMap.get("_default")
-    assert traceType
-    return traceType[2]
+    return traceTypeMap.get(type, defaultTraceType)[2]
 
 def getFailureString(retval, indent):
     assert indent > 0
@@ -1142,7 +1130,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
             f.write("    xpc_qsSelfRef %sref;\n" % name)
             f.write("    rv = xpc_qsUnwrapArg<%s>("
                     "cx, %s, &%s, &%sref.ptr, &vp.array[%d]);\n"
-                    % (type.name, argVal, name, name, 1 + i))
+                    % (type.name, argVal, name, name, 2 + i))
             f.write("    if (NS_FAILED(rv)) {\n")
             if haveCcx:
                 f.write("        xpc_qsThrowBadArgWithCcx(ccx, rv, %d);\n" % i)
@@ -1188,6 +1176,8 @@ traceableResultConvTemplates = {
         "    if (!xpc_qsStringToJsval(cx, result, &rval)) {\n"
         "        JS_ReportOutOfMemory(cx);\n${errorStr}"
         "    return rval;\n",
+    '[jsval]':
+        "    return vp.array[0];\n"
     }
 
 def writeTraceableResultConv(f, type):
@@ -1264,17 +1254,17 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     else:
         f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
-    f.write("    xpc_qsArgValArray<%d> vp(cx);\n" % (1 + len(member.params)))
+    f.write("    xpc_qsArgValArray<%d> vp(cx);\n" % (2 + len(member.params)))
     if haveCcx:
         f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self, &selfref.ptr, "
-                "&vp.array[0])) {\n")
+                "&vp.array[1])) {\n")
     elif (member.kind == 'method') and isInterfaceType(member.realtype):
         f.write("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n")
         f.write("    if (!xpc_qsUnwrapThis(cx, obj, callee, &self, &selfref.ptr, "
-                "&vp.array[0], &lccx)) {\n")
+                "&vp.array[1], &lccx)) {\n")
     else:
         f.write("    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, "
-                "&vp.array[0], nsnull)) {\n")
+                "&vp.array[1], nsnull)) {\n")
     writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
 
     argNames = []
@@ -1314,7 +1304,9 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
 
         # Call the method.
         comName = header.methodNativeName(member)
-        if not isVoidType(member.realtype):
+        if getBuiltinOrNativeTypeName(member.realtype) == '[jsval]':
+            argNames.append("&vp.array[0]")
+        elif not isVoidType(member.realtype):
             argNames.append(outParamForm(resultname, member.realtype))
         args = ', '.join(argNames)
 

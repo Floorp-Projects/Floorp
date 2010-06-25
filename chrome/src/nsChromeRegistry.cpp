@@ -941,7 +941,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
-  nsCOMPtr<nsIPresShell> shell = document->GetPrimaryShell();
+  nsCOMPtr<nsIPresShell> shell = document->GetShell();
   if (shell) {
     // Reload only the chrome URL agent style sheets.
     nsCOMArray<nsIStyleSheet> agentSheets;

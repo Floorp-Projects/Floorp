@@ -277,7 +277,7 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
   for (PRUint32 i = 0; i < c; i++) {
     nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
     if (doc) {
-      nsIPresShell *shell = doc->GetPrimaryShell();
+      nsIPresShell *shell = doc->GetShell();
 
       // if this document has a presentation shell, then it has frames and can be reframed
       if (shell) {

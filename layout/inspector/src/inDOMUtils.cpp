@@ -280,7 +280,7 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   nsIDocument* doc = aContent->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  nsIPresShell *presShell = doc->GetPrimaryShell();
+  nsIPresShell *presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
 
   nsPresContext *presContext = presShell->GetPresContext();

@@ -925,6 +925,53 @@ nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
          aChar == PRUnichar(0x0020);
 }
 
+/* static */
+PRBool
+nsContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& result)
+{
+  nsAutoString marginStr(aString);
+  marginStr.CompressWhitespace(PR_TRUE, PR_TRUE);
+  if (marginStr.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  PRInt32 start = 0, end = 0;
+  for (int count = 0; count < 4; count++) {
+    if (end >= marginStr.Length())
+      return PR_FALSE;
+
+    // top, right, bottom, left
+    if (count < 3)
+      end = Substring(marginStr, start).FindChar(',');
+    else
+      end = Substring(marginStr, start).Length();
+
+    if (end <= 0)
+      return PR_FALSE;
+
+    PRInt32 ec, val = 
+      nsString(Substring(marginStr, start, end)).ToInteger(&ec);
+    if (NS_FAILED(ec))
+      return PR_FALSE;
+
+    switch(count) {
+      case 0:
+        result.top = val;
+      break;
+      case 1:
+        result.right = val;
+      break;
+      case 2:
+        result.bottom = val;
+      break;
+      case 3:
+        result.left = val;
+      break;
+    }
+    start += end + 1;
+  }
+  return PR_TRUE;
+}
 
 /* static */
 void
@@ -2254,7 +2301,7 @@ nsContentUtils::GetContextForContent(nsIContent* aContent)
 {
   nsIDocument* doc = aContent->GetCurrentDoc();
   if (doc) {
-    nsIPresShell *presShell = doc->GetPrimaryShell();
+    nsIPresShell *presShell = doc->GetShell();
     if (presShell) {
       return presShell->GetPresContext();
     }
@@ -6070,7 +6117,7 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
     doc = displayDoc;
   }
 
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
   while (!shell && docShellTreeItem) {
@@ -6114,6 +6161,12 @@ PRBool
 nsIContentUtils::IsSafeToRunScript()
 {
   return nsContentUtils::IsSafeToRunScript();
+}
+
+PRBool
+nsIContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& result)
+{
+  return nsContentUtils::ParseIntMarginValue(aString, result);
 }
 
 already_AddRefed<nsIDocumentLoaderFactory>

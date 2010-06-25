@@ -48,7 +48,7 @@ function get_addon_file_url(aFilename) {
 }
 
 function wait_for_view_load(aManagerWindow, aCallback) {
-  if (!aManagerWindow.gViewController.currentViewObj.node.hasAttribute("loading")) {
+  if (!aManagerWindow.gViewController.isLoading) {
     aCallback(aManagerWindow);
     return;
   }
@@ -67,7 +67,15 @@ function open_manager(aView, aCallback) {
     ok(aManagerWindow != null, "Should have an add-ons manager window");
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
-    wait_for_view_load(aManagerWindow, aCallback);
+    if (!aManagerWindow.gIsInitializing) {
+      wait_for_view_load(aManagerWindow, aCallback);
+      return;
+    }
+
+    aManagerWindow.document.addEventListener("Initialized", function() {
+      aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
+      wait_for_view_load(aManagerWindow, aCallback);
+    }, false);
   }
 
   if ("switchToTabHavingURI" in window) {
@@ -77,10 +85,26 @@ function open_manager(aView, aCallback) {
     return;
   }
 
-  openDialog("about:addons").addEventListener("load", function() {
+  openDialog(MANAGER_URI).addEventListener("load", function() {
     this.removeEventListener("load", arguments.callee, false);
     setup_manager(this);
   }, false);
+}
+
+function close_manager(aManagerWindow, aCallback) {
+  ok(aManagerWindow != null, "Should have an add-ons manager window to close");
+  is(aManagerWindow.location, MANAGER_URI, "Should be closing window with correct URI");
+
+  aManagerWindow.addEventListener("unload", function() {
+    this.removeEventListener("unload", arguments.callee, false);
+    aCallback();
+  }, false);
+
+  aManagerWindow.close();
+}
+
+function restart_manager(aManagerWindow, aView, aCallback) {
+  close_manager(aManagerWindow, function() { open_manager(aView, aCallback); });
 }
 
 function CertOverrideListener(host, bits) {
@@ -187,13 +211,31 @@ MockProvider.prototype = {
   },
 
   /**
+   * Adds an add-on install to the list of installs that this provider exposes
+   * to the AddonManager, dispatching appropriate events in the process.
+   *
+   * @param  aInstall
+   *         The add-on install to add
+   */
+  addInstall: function MP_addInstall(aInstall) {
+    this.installs.push(aInstall);
+
+    if (!this.started)
+      return;
+
+    aInstall.callListeners("onNewInstall");
+  },
+
+  /**
    * Creates a set of mock add-on objects and adds them to the list of add-ons
    * managed by this provider.
    *
    * @param  aAddonProperties
    *         An array of objects containing properties describing the add-ons
+   * @return Array of the new MockAddons
    */
   createAddons: function MP_createAddons(aAddonProperties) {
+    var newAddons = [];
     aAddonProperties.forEach(function(aAddonProp) {
       var addon = new MockAddon(aAddonProp.id);
       for (var prop in aAddonProp) {
@@ -202,7 +244,32 @@ MockProvider.prototype = {
         addon[prop] = aAddonProp[prop];
       }
       this.addAddon(addon);
+      newAddons.push(addon);
     }, this);
+
+    return newAddons;
+  },
+
+  /**
+   * Creates a set of mock add-on install objects and adds them to the list
+   * of installs managed by this provider.
+   *
+   * @param  aInstallProperties
+   *         An array of objects containing properties describing the installs
+   * @return Array of the new MockInstalls
+   */
+  createInstalls: function MP_createInstalls(aInstallProperties) {
+    var newInstalls = [];
+    aInstallProperties.forEach(function(aInstallProp) {
+      var install = new MockInstall();
+      for (var prop in aInstallProp) {
+        install[prop] = aInstallProp[prop];
+      }
+      this.addInstall(install);
+      newInstalls.push(install);
+    }, this);
+
+    return newInstalls;
   },
 
   /***** AddonProvider implementation *****/
@@ -287,8 +354,13 @@ MockProvider.prototype = {
    */
   getInstallsByTypes: function MP_getInstallsByTypes(aTypes, aCallback) {
     var installs = this.installs.filter(function(aInstall) {
+      // Appear to have actually removed cancelled installs from the provider
+      if (aInstall.state == AddonManager.STATE_CANCELLED)
+        return false;
+
       if (aTypes && aTypes.length > 0 && aTypes.indexOf(aInstall.type) == -1)
         return false;
+
       return true;
     });
     this._delayCallback(aCallback, installs);
@@ -454,3 +526,109 @@ MockAddon.prototype = {
     // To be implemented when needed
   }
 };
+
+/***** Mock AddonInstall object for the Mock Provider *****/
+
+function MockInstall(aName, aType) {
+  this.name = aName || "";
+  this.type = aType || "extension";
+  this.version = "1.0";
+  this.iconURL = "";
+  this.infoURL = "";
+  this.state = AddonManager.STATE_AVAILABLE;
+  this.error = 0;
+  this.sourceURL = "";
+  this.file = null;
+  this.progress = 0;
+  this.maxProgress = -1;
+  this.certificate = null;
+  this.certName = "";
+  this.existingAddon = null;
+  this.addon = null;
+  this.listeners = [];
+
+  // Another type of install listener for tests that want to check the results
+  // of code run from standard install listeners
+  this.testListeners = [];
+}
+
+MockInstall.prototype = {
+  install: function() {
+    switch (this.state) {
+      case AddonManager.STATE_AVAILABLE:
+      case AddonManager.STATE_DOWNLOADED:
+        // Downloading to be implemented when needed
+
+        this.state = AddonManager.STATE_INSTALLING;
+        if (!this.callListeners("onInstallStarted")) {
+          // Reverting to STATE_DOWNLOADED instead to be implemented when needed
+          this.state = AddonManager.STATE_CANCELLED;
+          this.callListeners("onInstallCancelled");
+          return;
+        }
+
+        // Adding addon to MockProvider to be implemented when needed
+        this.addon = new MockAddon("", this.name, this.type);
+        this.state = AddonManager.STATE_INSTALLED;
+        this.callListeners("onInstallEnded");
+        break;
+      case AddonManager.STATE_DOWNLOADING:
+      case AddonManager.STATE_CHECKING:
+      case AddonManger.STATE_INSTALLING:
+        // Installation is already running
+        return;
+      default:
+        ok(false, "Cannot start installing when state = " + this.state);
+    }
+  },
+
+  cancel: function() {
+    switch (this.state) {
+      case AddonManager.STATE_AVAILABLE:
+        this.state = AddonManager.STATE_CANCELLED;
+        break;
+      case AddonManager.STATE_INSTALLED:
+        this.state = AddonManager.STATE_CANCELLED;
+        this.callListeners("onInstallCancelled");
+        break;
+      default:
+        // Handling cancelling when downloading to be implemented when needed
+        ok(false, "Cannot cancel when state = " + this.state);
+    }
+  },
+
+
+  addListener: function(aListener) {
+    if (!this.listeners.some(function(i) i == aListener))
+      this.listeners.push(aListener);
+  },
+
+  removeListener: function(aListener) {
+    this.listeners = this.listeners.filter(function(i) i != aListener);
+  },
+
+  addTestListener: function(aListener) {
+    if (!this.testListeners.some(function(i) i == aListener))
+      this.testListeners.push(aListener);
+  },
+
+  removeTestListener: function(aListener) {
+    this.testListeners = this.testListeners.filter(function(i) i != aListener);
+  },
+
+  callListeners: function(aMethod) {
+    var result = AddonManagerPrivate.callInstallListeners(aMethod, this.listeners,
+                                                          this, this.addon);
+
+    // Call test listeners after standard listeners to remove race condition
+    // between standard and test listeners
+    this.testListeners.forEach(function(aListener) {
+      if (aMethod in aListener)
+        if (aListener[aMethod].call(aListener, this, this.addon) === false)
+          result = false;
+    });
+
+    return result;
+  }
+};
+

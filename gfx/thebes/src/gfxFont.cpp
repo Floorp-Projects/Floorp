@@ -566,7 +566,9 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
     PRUint32 numFonts = mAvailableFonts.Length();
     for (PRUint32 i = 0; i < numFonts; i++) {
         gfxFontEntry *fe = mAvailableFonts[i];
-        if (!fe)
+
+        // skip certain fonts during system fallback
+        if (!fe || fe->SkipDuringSystemFallback())
             continue;
 
         PRInt32 rank = 0;

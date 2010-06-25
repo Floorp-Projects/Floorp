@@ -533,7 +533,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     // XXXbz don't we want to support this as an HTTP header too?
     nsAutoString value(aValue);
     if (value.LowerCaseEqualsLiteral("no")) {
-      nsIPresShell* shell = mDocument->GetPrimaryShell();
+      nsIPresShell* shell = mDocument->GetShell();
       if (shell) {
         shell->DisableThemeSupport();
       }
@@ -1267,7 +1267,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
   mLastNotificationTime = PR_Now();
 
   mDocument->SetMayStartLayout(PR_TRUE);
-  nsCOMPtr<nsIPresShell> shell = mDocument->GetPrimaryShell();
+  nsCOMPtr<nsIPresShell> shell = mDocument->GetShell();
   // Make sure we don't call InitialReflow() for a shell that has
   // already called it. This can happen when the layout frame for
   // an iframe is constructed *between* the Embed() call for the
@@ -1463,7 +1463,7 @@ nsContentSink::DidProcessATokenImpl()
   }
 
   // Get the current user event time
-  nsIPresShell *shell = mDocument->GetPrimaryShell();
+  nsIPresShell *shell = mDocument->GetShell();
   if (!shell) {
     // If there's no pres shell in the document, return early since
     // we're not laying anything out here.
@@ -1631,7 +1631,7 @@ nsContentSink::WillParseImpl(void)
     return NS_OK;
   }
 
-  nsIPresShell *shell = mDocument->GetPrimaryShell();
+  nsIPresShell *shell = mDocument->GetShell();
   if (!shell) {
     return NS_OK;
   }

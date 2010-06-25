@@ -179,7 +179,7 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_show: invalid message";
     if (mainAction && isInvalidAction(mainAction))
       throw "PopupNotifications_show: invalid mainAction";
-    if (secondaryActions.some(isInvalidAction))
+    if (secondaryActions && secondaryActions.some(isInvalidAction))
       throw "PopupNotifications_show: invalid secondaryActions";
 
     let notification = new Notification(id, message, anchorID, mainAction,
@@ -344,13 +344,16 @@ PopupNotifications.prototype = {
   _update: function PopupNotifications_update(anchor) {
     let anchorElement, notificationsToShow = [];
     if (this._currentNotifications.length > 0) {
-      if (this.iconBox)
-        this.iconBox.hidden = false;
-
       // Only show the notifications that have the passed-in anchor (or the
       // first notification's anchor, if none was passed in). Other
       // notifications will be shown once these are dismissed.
       anchorElement = anchor || this._currentNotifications[0].anchorElement;
+
+      if (this.iconBox) {
+        this.iconBox.hidden = false;
+        this.iconBox.setAttribute("anchorid", anchorElement.id);
+      }
+
       notificationsToShow = this._currentNotifications.filter(function (n) {
         return n.anchorElement == anchorElement;
       });

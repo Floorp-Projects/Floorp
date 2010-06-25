@@ -1247,7 +1247,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {
@@ -2158,7 +2158,7 @@ nsHTMLDocument::Close()
     // it be for now, though.  In any case, there's no reason to do
     // this if we have no presshell, since in that case none of the
     // above about reusing frames applies.
-    if (GetPrimaryShell()) {
+    if (GetShell()) {
       FlushPendingNotifications(Flush_Layout);
     }
 

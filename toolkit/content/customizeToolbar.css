@@ -57,3 +57,8 @@
 #main-box > box {
   overflow: hidden; 
 }
+
+/* Hide the toolbarbutton label because we replicate it on the wrapper */
+toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-text {
+  display: none;
+}

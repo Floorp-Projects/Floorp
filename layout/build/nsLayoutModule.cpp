@@ -278,6 +278,12 @@ static void Shutdown();
 #endif
 
 #include "nsGeolocation.h"
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+#include "nsAccelerometerSystem.h"
+#endif
 #include "nsCSPService.h"
 
 // Transformiix
@@ -310,6 +316,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -861,6 +873,13 @@ NS_DEFINE_NAMED_CID(NS_SYSTEMPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
+#endif
+
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
 #ifdef DEBUG
@@ -1003,6 +1022,12 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SYSTEMPRINCIPAL_CID, false, NULL, nsSystemPrincipalConstructor },
   { &kNS_NULLPRINCIPAL_CID, false, NULL, nsNullPrincipalConstructor },
   { &kNS_SECURITYNAMESET_CID, false, NULL, nsSecurityNameSetConstructor },
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+  { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
+#endif
   { NULL }
 };
 
@@ -1142,6 +1167,12 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_SYSTEMPRINCIPAL_CONTRACTID, &kNS_SYSTEMPRINCIPAL_CID },
   { NS_NULLPRINCIPAL_CONTRACTID, &kNS_NULLPRINCIPAL_CID },
   { NS_SECURITYNAMESET_CONTRACTID, &kNS_SECURITYNAMESET_CID },
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+  { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
+#endif
   { NULL }
 };
 

@@ -180,6 +180,7 @@
 @BINPATH@/components/inspector.xpt
 @BINPATH@/components/intl.xpt
 @BINPATH@/components/jar.xpt
+@BINPATH@/components/jetpack.xpt
 @BINPATH@/components/jsdservice.xpt
 @BINPATH@/components/layout_base.xpt
 #ifdef NS_PRINTING
@@ -219,6 +220,9 @@
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/sessionstore.xpt
+#ifdef MOZ_SERVICES_SYNC
+@BINPATH@/components/services-crypto.xpt
+#endif
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
@@ -370,6 +374,11 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
+#ifdef MOZ_SERVICES_SYNC
+@BINPATH@/components/FormNotifier.js
+@BINPATH@/components/Weave.js
+@BINPATH@/components/WeaveCrypto.js
+#endif
 
 ; Modules
 @BINPATH@/modules/*
@@ -393,6 +402,9 @@
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
+#if MOZ_UPDATE_CHANNEL == beta
+@BINPATH@/extensions/testpilot@labs.mozilla.com/*
+#endif
 @BINPATH@/chrome/toolkit.jar
 @BINPATH@/chrome/toolkit.manifest
 @BINPATH@/@PREF_DIR@/reporter.js
@@ -418,6 +430,9 @@
 @BINPATH@/@PREF_DIR@/firefox.js
 @BINPATH@/@PREF_DIR@/firefox-branding.js
 @BINPATH@/@PREF_DIR@/channel-prefs.js
+#ifdef MOZ_SERVICES_SYNC
+@BINPATH@/@PREF_DIR@/services-sync.js
+#endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js

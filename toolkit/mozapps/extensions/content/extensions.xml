@@ -723,6 +723,10 @@
         </xul:vbox>
         <xul:spacer flex="1"/>
         <xul:hbox anonid="control-container" class="control-container">
+          <xul:button anonid="preferences-btn" class="addon-control"
+                      label="&cmd.showPreferences.label;"
+                      tooltiptext="&cmd.showPreferences.tooltip;"
+                      oncommand="document.getBindingParent(this).showPreferences();"/>
           <xul:button anonid="remove-btn" class="addon-control remove"
                       label="&cmd.uninstallAddon.label;"
                       tooltiptext="&cmd.uninstallAddon.tooltip;"
@@ -835,6 +839,10 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "description");
       </field>
+      <field name="_preferencesBtn">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "preferences-btn");
+      </field>
       <field name="_enableBtn">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "enable-btn");
@@ -946,6 +954,8 @@
         <body><![CDATA[
           this.setAttribute("incompatible", !this.mAddon.isCompatible);
 
+          this._preferencesBtn.hidden = !this.mAddon.optionsURL;
+
           this._enableBtn.hidden = !this.hasPermission("enable");
           this._disableBtn.hidden = !this.hasPermission("disable");
           this._removeBtn.hidden = !this.hasPermission("uninstall");
@@ -966,6 +976,12 @@
       <method name="uninstall">
         <body><![CDATA[
           this.mAddon.uninstall();
+        ]]></body>
+      </method>
+
+      <method name="showPreferences">
+        <body><![CDATA[
+          gViewController.doCommand("cmd_showItemPreferences", this.mAddon);
         ]]></body>
       </method>
 

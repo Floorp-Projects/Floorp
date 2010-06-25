@@ -58,7 +58,7 @@ using namespace mozilla::dom;
 static nsRefreshDriver*
 GetRefreshDriverForDoc(nsIDocument* aDoc)
 {
-  nsIPresShell* shell = aDoc->GetPrimaryShell();
+  nsIPresShell* shell = aDoc->GetShell();
   if (!shell) {
     return nsnull;
   }

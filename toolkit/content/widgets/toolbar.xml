@@ -441,14 +441,17 @@
            extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <implementation>
       <constructor><![CDATA[
-        try {
-          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
-          let draggableThis = new WindowDraggingElement(this, window);
-          draggableThis.mouseDownCheck = function(e) {
-            // Don't move while customizing or while in full screen mode.
-            return !this.parentNode.customizing && !window.fullScreen;
-          }
-        } catch (e) {}
+        if (!this._draggableStarted) {
+          this._draggableStarted = true;
+          try {
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+            let draggableThis = new WindowDraggingElement(this, window);
+            draggableThis.mouseDownCheck = function(e) {
+              // Don't move while customizing or while in full screen mode.
+              return !this.parentNode.customizing && !window.fullScreen;
+            }
+          } catch (e) {}
+        }
       ]]></constructor>
     </implementation>
   </binding>

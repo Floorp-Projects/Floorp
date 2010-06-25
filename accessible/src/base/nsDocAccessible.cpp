@@ -673,7 +673,7 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
   nsIDocument *parentDoc = nsnull;
 
   while (document) {
-    nsIPresShell *presShell = document->GetPrimaryShell();
+    nsIPresShell *presShell = document->GetShell();
     if (!presShell) {
       return;
     }

@@ -1153,10 +1153,6 @@ Oracle::Oracle()
 JS_REQUIRES_STACK void
 Oracle::markGlobalSlotUndemotable(JSContext* cx, unsigned slot)
 {
-    #ifdef DEBUG_dvander
-    printf("MGSU: %d [%08x]: %d\n", slot, GlobalSlotHash(cx, slot),
-           _globalDontDemote.get(GlobalSlotHash(cx, slot)));
-    #endif
     _globalDontDemote.set(GlobalSlotHash(cx, slot));
 }
 
@@ -1164,10 +1160,6 @@ Oracle::markGlobalSlotUndemotable(JSContext* cx, unsigned slot)
 JS_REQUIRES_STACK bool
 Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
 {
-    #ifdef DEBUG_dvander
-    printf("IGSU: %d [%08x]: %d\n", slot, GlobalSlotHash(cx, slot),
-           _globalDontDemote.get(GlobalSlotHash(cx, slot)));
-    #endif
     return _globalDontDemote.get(GlobalSlotHash(cx, slot));
 }
 
@@ -1175,10 +1167,6 @@ Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
 JS_REQUIRES_STACK void
 Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot, const void* pc)
 {
-    #ifdef DEBUG_dvander
-    printf("MSSU: %p:%d [%08x]: %d\n", pc, slot, StackSlotHash(cx, slot, pc),
-           _stackDontDemote.get(StackSlotHash(cx, slot, pc)));
-    #endif
     _stackDontDemote.set(StackSlotHash(cx, slot, pc));
 }
 
@@ -1192,10 +1180,6 @@ Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 JS_REQUIRES_STACK bool
 Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot, const void* pc) const
 {
-    #ifdef DEBUG_dvander
-    printf("ISSU: %p:%d [%08x]: %d\n", pc, slot, StackSlotHash(cx, slot, pc),
-           _stackDontDemote.get(StackSlotHash(cx, slot, pc)));
-    #endif
     return _stackDontDemote.get(StackSlotHash(cx, slot, pc));
 }
 
@@ -1231,34 +1215,34 @@ JS_REQUIRES_STACK void
 TraceRecorder::markSlotUndemotable(LinkableFragment* f, unsigned slot)
 {
     if (slot < f->nStackTypes) {
-        oracle->markStackSlotUndemotable(cx, slot);
+        traceMonitor->oracle->markStackSlotUndemotable(cx, slot);
         return;
     }
 
     uint16* gslots = f->globalSlots->data();
-    oracle->markGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
+    traceMonitor->oracle->markGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
 }
 
 JS_REQUIRES_STACK void
 TraceRecorder::markSlotUndemotable(LinkableFragment* f, unsigned slot, const void* pc)
 {
     if (slot < f->nStackTypes) {
-        oracle->markStackSlotUndemotable(cx, slot, pc);
+        traceMonitor->oracle->markStackSlotUndemotable(cx, slot, pc);
         return;
     }
 
     uint16* gslots = f->globalSlots->data();
-    oracle->markGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
+    traceMonitor->oracle->markGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
 }
 
 static JS_REQUIRES_STACK bool
 IsSlotUndemotable(Oracle* oracle, JSContext* cx, LinkableFragment* f, unsigned slot, const void* ip)
 {
     if (slot < f->nStackTypes)
-        return oracle->isStackSlotUndemotable(cx, slot, ip);
+        return !oracle || oracle->isStackSlotUndemotable(cx, slot, ip);
 
     uint16* gslots = f->globalSlots->data();
-    return oracle->isGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
+    return !oracle || oracle->isGlobalSlotUndemotable(cx, gslots[slot - f->nStackTypes]);
 }
 
 class FrameInfoCache
@@ -1465,14 +1449,14 @@ AddNewPeerToPeerList(TraceMonitor* tm, TreeFragment* peer)
 }
 
 JS_REQUIRES_STACK void
-TreeFragment::initialize(JSContext* cx, SlotList *globalSlots)
+TreeFragment::initialize(JSContext* cx, SlotList *globalSlots, bool speculate)
 {
     this->dependentTrees.clear();
     this->linkedTrees.clear();
     this->globalSlots = globalSlots;
 
     /* Capture the coerced type of each active slot in the type map. */
-    this->typeMap.captureTypes(cx, globalObj, *globalSlots, 0 /* callDepth */);
+    this->typeMap.captureTypes(cx, globalObj, *globalSlots, 0 /* callDepth */, speculate);
     this->nStackTypes = this->typeMap.length() - globalSlots->length();
     this->spOffsetAtEntry = cx->regs->sp - StackBase(cx->fp);
 
@@ -1961,19 +1945,19 @@ class CaptureTypesVisitor : public SlotVisitorBase
     JSContext* mCx;
     TraceType* mTypeMap;
     TraceType* mPtr;
+    Oracle   * mOracle;
 
 public:
-    JS_ALWAYS_INLINE CaptureTypesVisitor(JSContext* cx, TraceType* typeMap) :
+    JS_ALWAYS_INLINE CaptureTypesVisitor(JSContext* cx, TraceType* typeMap, bool speculate) :
         mCx(cx),
         mTypeMap(typeMap),
-        mPtr(typeMap)
-    {}
+        mPtr(typeMap),
+        mOracle(speculate ? JS_TRACE_MONITOR(cx).oracle : NULL) {}
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     visitGlobalSlot(jsval *vp, unsigned n, unsigned slot) {
             TraceType type = getCoercedType(*vp);
-            if (type == TT_INT32 &&
-                JS_TRACE_MONITOR(mCx).oracle->isGlobalSlotUndemotable(mCx, slot))
+            if (type == TT_INT32 && (!mOracle || mOracle->isGlobalSlotUndemotable(mCx, slot)))
                 type = TT_DOUBLE;
             JS_ASSERT(type != TT_JSVAL);
             debug_only_printf(LC_TMTracer,
@@ -1986,8 +1970,7 @@ public:
     visitStackSlots(jsval *vp, int count, JSStackFrame* fp) {
         for (int i = 0; i < count; ++i) {
             TraceType type = getCoercedType(vp[i]);
-            if (type == TT_INT32 &&
-                JS_TRACE_MONITOR(mCx).oracle->isStackSlotUndemotable(mCx, length()))
+            if (type == TT_INT32 && (!mOracle || mOracle->isStackSlotUndemotable(mCx, length())))
                 type = TT_DOUBLE;
             JS_ASSERT(type != TT_JSVAL);
             debug_only_printf(LC_TMTracer,
@@ -2017,22 +2000,24 @@ TypeMap::set(unsigned stackSlots, unsigned ngslots,
  * stack frames.
  */
 JS_REQUIRES_STACK void
-TypeMap::captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth)
+TypeMap::captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth,
+                      bool speculate)
 {
     setLength(NativeStackSlots(cx, callDepth) + slots.length());
-    CaptureTypesVisitor visitor(cx, data());
+    CaptureTypesVisitor visitor(cx, data(), speculate);
     VisitSlots(visitor, cx, globalObj, callDepth, slots);
     JS_ASSERT(visitor.length() == length());
 }
 
 JS_REQUIRES_STACK void
-TypeMap::captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned stackSlots)
+TypeMap::captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned stackSlots,
+                                   bool speculate)
 {
     unsigned oldSlots = length() - stackSlots;
     int diff = slots.length() - oldSlots;
     JS_ASSERT(diff >= 0);
     setLength(length() + diff);
-    CaptureTypesVisitor visitor(cx, data() + stackSlots + oldSlots);
+    CaptureTypesVisitor visitor(cx, data() + stackSlots + oldSlots, speculate);
     VisitGlobalSlots(visitor, cx, globalObj, diff, slots.data() + oldSlots);
 }
 
@@ -2099,9 +2084,14 @@ SpecializeTreesToLateGlobals(JSContext* cx, TreeFragment* root, TraceType* globa
 static JS_REQUIRES_STACK void
 SpecializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeFragment* root)
 {
-    root->typeMap.captureMissingGlobalTypes(cx, globalObj, *root->globalSlots, root->nStackTypes);
-    JS_ASSERT(root->globalSlots->length() == root->typeMap.length() - root->nStackTypes);
+    /* If we already have a bunch of peer trees, try to be as generic as possible. */
+    size_t count = 0;
+    for (TreeFragment *f = root->first; f; f = f->peer, ++count);
+    bool speculate = count < MAXPEERS-1;
 
+    root->typeMap.captureMissingGlobalTypes(cx, globalObj, *root->globalSlots, root->nStackTypes,
+                                            speculate);
+    JS_ASSERT(root->globalSlots->length() == root->typeMap.length() - root->nStackTypes);
 
     SpecializeTreesToLateGlobals(cx, root, root->globalTypeMap(), root->nGlobalTypes());
 }
@@ -2140,10 +2130,10 @@ JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* fragment,
                              unsigned stackSlots, unsigned ngslots, TraceType* typeMap,
                              VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
-                             RecordReason recordReason)
+                             RecordReason recordReason, bool speculate)
   : cx(cx),
     traceMonitor(&JS_TRACE_MONITOR(cx)),
-    oracle(JS_TRACE_MONITOR(cx).oracle),   
+    oracle(speculate ? JS_TRACE_MONITOR(cx).oracle : NULL),
     fragment(fragment),
     tree(fragment->root),
     recordReason(recordReason),
@@ -3552,7 +3542,7 @@ TraceRecorder::importGlobalSlot(unsigned slot)
     int index = tree->globalSlots->offsetOf(uint16(slot));
     if (index == -1) {
         type = getCoercedType(*vp);
-        if (type == TT_INT32 && oracle->isGlobalSlotUndemotable(cx, slot))
+        if (type == TT_INT32 && (!oracle || oracle->isGlobalSlotUndemotable(cx, slot)))
             type = TT_DOUBLE;
         index = (int)tree->globalSlots->length();
         tree->globalSlots->add(uint16(slot));
@@ -3783,7 +3773,7 @@ public:
              * Aggressively undo speculation so the inner tree will compile
              * if this fails.
              */
-            mRecorder.oracle->markGlobalSlotUndemotable(mCx, slot);
+            JS_TRACE_MONITOR(mCx).oracle->markGlobalSlotUndemotable(mCx, slot);
         }
         JS_ASSERT(!(!isPromote && *mTypeMap == TT_INT32));
         ++mTypeMap;
@@ -3827,7 +3817,7 @@ public:
                  * Aggressively undo speculation so the inner tree will compile
                  * if this fails.
                  */
-                mRecorder.oracle->markStackSlotUndemotable(mCx, mSlotnum);
+                JS_TRACE_MONITOR(mCx).oracle->markStackSlotUndemotable(mCx, mSlotnum);
             }
             JS_ASSERT(!(!isPromote && *mTypeMap == TT_INT32));
             ++vp;
@@ -5354,14 +5344,16 @@ bool JS_REQUIRES_STACK
 TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
                              unsigned stackSlots, unsigned ngslots,
                              TraceType* typeMap, VMSideExit* expectedInnerExit,
-                             jsbytecode* outer, uint32 outerArgc, RecordReason recordReason)
+                             jsbytecode* outer, uint32 outerArgc, RecordReason recordReason,
+                             bool speculate)
 {
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(!tm->needFlush);
     JS_ASSERT_IF(cx->fp->imacpc, f->root != f);
 
     tm->recorder = new TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
-                                     expectedInnerExit, outer, outerArgc, recordReason);
+                                     expectedInnerExit, outer, outerArgc, recordReason,
+                                     speculate);
 
     if (!tm->recorder || tm->outOfMemory() || OverfullJITCache(tm)) {
         ResetJIT(cx, FR_OOM);
@@ -5564,18 +5556,25 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
 }
 
 static JS_REQUIRES_STACK bool
-RecordTree(JSContext* cx, TreeFragment* peer, jsbytecode* outer,
+RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
            uint32 outerArgc, SlotList* globalSlots, RecordReason reason)
 {
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Try to find an unused peer fragment, or allocate a new one. */
-    TreeFragment* f = peer;
-    while (f->code() && f->peer)
-        f = f->peer;
-    if (f->code())
-        f = AddNewPeerToPeerList(tm, f);
+    JS_ASSERT(first->first == first);
+    TreeFragment* f = NULL;
+    size_t count = 0;
+    for (TreeFragment* peer = first; peer; peer = peer->peer, ++count) {
+        if (!peer->code())
+            f = peer;
+    }
+    if (!f)
+        f = AddNewPeerToPeerList(tm, first);
     JS_ASSERT(f->root == f);
+
+    /* Disable speculation if we are starting to accumulate a lot of trees. */
+    bool speculate = count < MAXPEERS-1;
 
     /* save a local copy for use after JIT flush */
     const void* localRootIP = f->root->ip;
@@ -5598,7 +5597,7 @@ RecordTree(JSContext* cx, TreeFragment* peer, jsbytecode* outer,
 
     JS_ASSERT(!f->code());
 
-    f->initialize(cx, globalSlots);
+    f->initialize(cx, globalSlots, speculate);
 
 #ifdef DEBUG
     AssertTreeIsUnique(tm, f);
@@ -5620,7 +5619,8 @@ RecordTree(JSContext* cx, TreeFragment* peer, jsbytecode* outer,
     return TraceRecorder::startRecorder(cx, NULL, f, f->nStackTypes,
                                         f->globalSlots->length(),
                                         f->typeMap.data(), NULL,
-                                        outer, outerArgc, reason);
+                                        outer, outerArgc, reason,
+                                        speculate);
 }
 
 static JS_REQUIRES_STACK TypeConsensus
@@ -5856,7 +5856,8 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
-                                               exitedFrom, outer, cx->fp->argc, Record_Branch);
+                                               exitedFrom, outer, cx->fp->argc, Record_Branch,
+                                               hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
             tvso->r = R_FAIL_EXTEND_START;
@@ -6042,7 +6043,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       }
 
       case OVERFLOW_EXIT:
-        oracle->markInstructionUndemotable(cx->regs->pc);
+        traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case RECURSIVE_SLURP_FAIL_EXIT:
       case RECURSIVE_SLURP_MISMATCH_EXIT:
@@ -6050,9 +6051,9 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       case RECURSIVE_EMPTY_RP_EXIT:
       case BRANCH_EXIT:
       case CASE_EXIT: {
-          /* Abort recording the outer tree, extend the inner tree. */
-          AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
-          return AttemptToExtendTree(localCx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
+        /* Abort recording the outer tree, extend the inner tree. */
+        AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
+        return AttemptToExtendTree(localCx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
       }
 
       case NESTED_EXIT:
@@ -6136,6 +6137,7 @@ class TypeCompatibilityVisitor : public SlotVisitorBase
 {
     TraceRecorder &mRecorder;
     JSContext *mCx;
+    Oracle *mOracle;
     TraceType *mTypeMap;
     unsigned mStackSlotNum;
     bool mOk;
@@ -6144,6 +6146,7 @@ public:
                               TraceType *typeMap) :
         mRecorder(recorder),
         mCx(mRecorder.cx),
+        mOracle(JS_TRACE_MONITOR(mCx).oracle),
         mTypeMap(typeMap),
         mStackSlotNum(0),
         mOk(true)
@@ -6155,10 +6158,10 @@ public:
         if (!IsEntryTypeCompatible(vp, mTypeMap)) {
             mOk = false;
         } else if (!isPromoteInt(mRecorder.get(vp)) && *mTypeMap == TT_INT32) {
-            mRecorder.oracle->markGlobalSlotUndemotable(mCx, slot);
+            mOracle->markGlobalSlotUndemotable(mCx, slot);
             mOk = false;
         } else if (JSVAL_IS_INT(*vp) && *mTypeMap == TT_DOUBLE) {
-            mRecorder.oracle->markGlobalSlotUndemotable(mCx, slot);
+            mOracle->markGlobalSlotUndemotable(mCx, slot);
         }
         mTypeMap++;
     }
@@ -6170,10 +6173,10 @@ public:
             if (!IsEntryTypeCompatible(vp, mTypeMap)) {
                 mOk = false;
             } else if (!isPromoteInt(mRecorder.get(vp)) && *mTypeMap == TT_INT32) {
-                mRecorder.oracle->markStackSlotUndemotable(mCx, mStackSlotNum);
+                mOracle->markStackSlotUndemotable(mCx, mStackSlotNum);
                 mOk = false;
             } else if (JSVAL_IS_INT(*vp) && *mTypeMap == TT_DOUBLE) {
-                mRecorder.oracle->markStackSlotUndemotable(mCx, mStackSlotNum);
+                mOracle->markStackSlotUndemotable(mCx, mStackSlotNum);
             }
             vp++;
             mTypeMap++;
@@ -8102,7 +8105,8 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
      * integers and the oracle must not give us a negative hint for the
      * instruction.
      */
-    if (oracle->isInstructionUndemotable(cx->regs->pc) || !isPromoteInt(s0) || !isPromoteInt(s1)) {
+    if (!oracle || oracle->isInstructionUndemotable(cx->regs->pc) ||
+        !isPromoteInt(s0) || !isPromoteInt(s1)) {
     out:
         if (v == LIR_modd) {
             LIns* args[] = { s1, s0 };
@@ -10344,7 +10348,8 @@ TraceRecorder::record_JSOP_NEG()
          * a double. Only follow this path if we're not an integer that's 0 and
          * we're not a double that's zero.
          */
-        if (!oracle->isInstructionUndemotable(cx->regs->pc) &&
+        if (oracle &&
+            !oracle->isInstructionUndemotable(cx->regs->pc) &&
             isPromoteInt(a) &&
             (!JSVAL_IS_INT(v) || JSVAL_TO_INT(v) != 0) &&
             (!JSVAL_IS_DOUBLE(v) || !JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))) &&
@@ -15594,7 +15599,7 @@ StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 JS_REQUIRES_STACK void
 TraceRecorder::captureStackTypes(unsigned callDepth, TraceType* typeMap)
 {
-    CaptureTypesVisitor capVisitor(cx, typeMap);
+    CaptureTypesVisitor capVisitor(cx, typeMap, !!oracle);
     VisitStackSlots(capVisitor, cx, callDepth);
 }
 
