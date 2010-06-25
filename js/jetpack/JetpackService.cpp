@@ -43,6 +43,8 @@
 
 #include "nsIGenericFactory.h"
 
+#include "nsIXPConnect.h"
+
 namespace mozilla {
 namespace jetpack {
 
@@ -52,8 +54,21 @@ NS_IMPL_ISUPPORTS1(JetpackService,
 NS_IMETHODIMP
 JetpackService::CreateJetpack(nsIJetpack** aResult)
 {
-  nsRefPtr<JetpackParent> j = new JetpackParent();
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAXPCNativeCallContext* ncc = NULL;
+  rv = xpc->GetCurrentNativeCallContext(&ncc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = ncc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<JetpackParent> j = new JetpackParent(cx);
   *aResult = j.forget().get();
+
   return NS_OK;
 }
 

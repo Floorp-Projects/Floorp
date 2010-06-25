@@ -37,8 +37,24 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(be12cc9f-75d4-4f2d-b062-f549ea13446a)]
+interface nsIVariant;
+
+[scriptable, uuid(563afdf8-5d2f-4bb2-9ac0-fb82461d2922)]
 interface nsIJetpack : nsISupports
 {
+  void sendMessage(in AString aMessageName
+                   /* [optional] in jsval v1,
+                      [optional] in jsval v2,
+                      ... */);
+
+  void registerReceiver(in AString aMessageName,
+                        in jsval aReceiver);
+  void unregisterReceiver(in AString aMessageName,
+                          in jsval aReceiver);
+  void unregisterReceivers(in AString aMessageName);
+
   void loadImplementation(in AString aURI);
+  void loadUserScript(in AString aURI);
+
+  nsIVariant createHandle();
 };
