@@ -55,6 +55,7 @@
 #include "nsIFile.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include <sys/stat.h>
 
 #ifdef XP_WIN
 #include "nsIWinTaskbar.h"
@@ -197,6 +198,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     greDir->GetNativePath(path);
     exePath = FilePath(path.get());
 #ifdef OS_LINUX
+#ifdef ANDROID
+    path += "/lib";
+#endif
     newEnvVars["LD_LIBRARY_PATH"] = path.get();
 #endif
   }
@@ -205,6 +209,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     exePath = exePath.DirName();
   }
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+
+#ifdef ANDROID
+  // The java wrapper unpacks this for us but can't make it executable
+  chmod(exePath.value().c_str(), 0700);
+#endif
 
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
