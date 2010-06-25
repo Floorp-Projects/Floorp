@@ -1139,7 +1139,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    cx->compartment = obj->getCompartment(cx);
+    cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
 }
 
 JS_BEGIN_EXTERN_C
