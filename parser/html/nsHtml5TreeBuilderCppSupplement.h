@@ -504,7 +504,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
       // For that matter, do we really want to try getting the prescontext?  Does
       // this event ever want one?
       nsRefPtr<nsPresContext> ctx;
-      nsCOMPtr<nsIPresShell> shell = parser->GetDocument()->GetPrimaryShell();
+      nsCOMPtr<nsIPresShell> shell = parser->GetDocument()->GetShell();
       if (shell) {
         ctx = shell->GetPresContext();
       }

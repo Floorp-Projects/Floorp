@@ -259,7 +259,7 @@ private:
   printf(", %sactive", aDocument->IsActive() ? "" : "not ");
 
 #define NS_LOG_ACCDOC_DOCPRESSHELL(aDocument)                                  \
-  nsIPresShell *ps = aDocument->GetPrimaryShell();                             \
+  nsIPresShell *ps = aDocument->GetShell();                                    \
   printf("presshell: %p", ps);                                                 \
   nsIScrollableFrame *sf = ps ?                                                \
     ps->GetRootScrollFrameAsScrollableExternal() : nsnull;                     \
