@@ -27,6 +27,9 @@
 #include "base/message_pump_qt.h"
 #endif
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+#include "base/message_pump_android.h"
+#endif
 
 #ifdef CHROMIUM_MOZILLA_BUILD
 #include "MessagePump.h"
