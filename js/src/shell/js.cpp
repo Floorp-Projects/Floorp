@@ -2996,25 +2996,27 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return true;
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    JSAutoCrossCompartmentCall ac;
-    if (sobj->isCrossCompartmentWrapper()) {
-        sobj = sobj->unwrap();
-        if (!ac.enter(cx, sobj))
-            return false;
-    }
+    {
+        JSAutoCrossCompartmentCall ac;
+        if (sobj->isCrossCompartmentWrapper()) {
+            sobj = sobj->unwrap();
+            if (!ac.enter(cx, sobj))
+                return false;
+        }
 
-    OBJ_TO_INNER_OBJECT(cx, sobj);
-    if (!sobj)
-        return false;
-    if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
-        JS_ReportError(cx, "Invalid scope argument to evalcx");
-        return false;
-    }
-    if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
-                             fp->script->filename,
-                             JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
-                             rval)) {
-        return false;
+        OBJ_TO_INNER_OBJECT(cx, sobj);
+        if (!sobj)
+            return false;
+        if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+            JS_ReportError(cx, "Invalid scope argument to evalcx");
+            return false;
+        }
+        if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
+                                 fp->script->filename,
+                                 JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
+                                 rval)) {
+            return false;
+        }
     }
     return cx->compartment->wrap(cx, rval);
 }
