@@ -116,6 +116,7 @@ public:
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetClientOffset(nsIntPoint &aPt);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual PRBool          HasPendingInputEvent();
@@ -143,6 +144,10 @@ public:
   NS_IMETHOD              OnIMESelectionChange(void) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
+  NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsIDeviceContext *aContext);
+  virtual ViewWrapper*    GetAttachedViewPtr();
+  NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
+  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
 
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
@@ -195,7 +200,9 @@ protected:
 
 protected: 
   void*             mClientData;
+  ViewWrapper*      mViewWrapperPtr;
   EVENT_CALLBACK    mEventCallback;
+  EVENT_CALLBACK    mViewCallback;
   nsIDeviceContext* mContext;
   nsIToolkit*       mToolkit;
   nsRefPtr<LayerManager> mLayerManager;
