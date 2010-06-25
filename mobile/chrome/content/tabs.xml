@@ -49,12 +49,13 @@
 
             let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
             let renderer = rendererFactory(browser, canvas)
-            let ctx = renderer.ctx;
-            ctx.clearRect(0, 0, tabWidth, tabHeight);
-            ctx.save();
-            ctx.scale(tabWidth / width, tabHeight / height);
-            renderer.drawContent(0, 0, width, height, "white");
-            ctx.restore();
+            renderer.drawContent(function(ctx, callback) {
+              ctx.clearRect(0, 0, tabWidth, tabHeight);
+              ctx.save();
+              ctx.scale(tabWidth / width, tabHeight / height);
+              callback(browser, 0, 0, width, height, "white");
+              ctx.restore();
+            });
           ]]>
         </body>
       </method>

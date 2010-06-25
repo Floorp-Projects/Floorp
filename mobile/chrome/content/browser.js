@@ -2704,21 +2704,40 @@ var ImagePreloader = {
 }
 
 
-// Helper used to hide IPC / non-IPC differences for renering to a canvas
+// Helper used to hide IPC / non-IPC differences for rendering to a canvas
 function rendererFactory(aBrowser, aCanvas) {
+  let wrapper = {};
+
+  if (!aCanvas.parentNode)
+    throw "Canvas Must have a parent node";
+
   if (aBrowser.contentWindow) {
-    let wrapper = {};
-    wrapper.ctx = aCanvas.getContext("2d");
-    wrapper.drawContent = function(aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
-      this.ctx.drawWindow(aBrowser.contentWindow, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+    let ctx = aCanvas.getContext("2d");
+    let draw = function(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
+      ctx.drawWindow(browser.contentWindow, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+      let e = document.createEvent("HTMLEvents");
+      e.initEvent("MozAsyncCanvasRender", true, true);
+      aCanvas.dispatchEvent(e);
     };
-    return wrapper;
+    wrapper.checkBrowser = function(browser) {
+      return browser.contentWindow;
+    };
+    wrapper.drawContent = function(callback) {
+      callback(ctx, draw);
+    };
+  }
+  else {
+    let ctx = aCanvas.MozGetIPCContext("2d");
+    let draw = function(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
+      ctx.asyncDrawXULElement(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+    };
+    wrapper.checkBrowser = function(browser) {
+      return !browser.contentWindow;
+    }
+    wrapper.drawContent = function(callback) {
+      callback(ctx, draw);
+    };
   }
 
-  let wrapper = {};
-  wrapper.ctx = aCanvas.MozGetIPCContext("2d");
-  wrapper.drawContent = function(aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
-    this.ctx.asyncDrawXULElement(aBrowser, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
-  };
   return wrapper;
 }
