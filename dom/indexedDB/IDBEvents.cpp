@@ -399,7 +399,7 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
     return NS_OK;
   }
 
-  if (!mJSContext) {
+  if (!mJSRuntime) {
     nsString jsonValue = mValue;
     mValue.Truncate();
 
@@ -409,10 +409,13 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
 
     JSAutoRequest ar(cx);
 
-    JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                             "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    mJSContext = cx;
+    mJSRuntime = rt;
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
     rv = json->DecodeToJSVal(jsonValue, cx, &mCachedValue);
@@ -448,17 +451,20 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
   rv = cc->GetRetValPtr(&retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mJSContext) {
+  if (!mJSRuntime) {
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoRequest ar(cx);
 
-    JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                             "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    mJSContext = cx;
+    mJSRuntime = rt;
 
     // Swap into a stack array so that we don't hang on to the strings if
     // something fails.
@@ -532,15 +538,20 @@ GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
   rv = cc->GetRetValPtr(&retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mJSContext) {
+  if (!mJSRuntime) {
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoRequest ar(cx);
 
-    JSBool ok = JS_AddValueRoot(cx, &mCachedValue);
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                             "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    mJSRuntime = rt;
 
     // Swap into a stack array so that we don't hang on to the strings if
     // something fails.
