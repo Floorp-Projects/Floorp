@@ -162,5 +162,6 @@ endif
 DEFINES		+=
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../shared \
 		-I$(topsrcdir)/other-licenses/atk-1.0 \
 		$(NULL)
