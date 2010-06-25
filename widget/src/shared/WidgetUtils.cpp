@@ -66,7 +66,7 @@ WidgetUtils::DOMWindowToWidget(nsIDOMWindow *aDOMWindow)
           return nsnull;
 
         nsCOMPtr<nsIDocShellTreeItem> parent;
-        docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
+        docShellAsItem->GetParent(getter_AddRefs(parent));
 
         window = do_GetInterface(parent);
         if (!window)
