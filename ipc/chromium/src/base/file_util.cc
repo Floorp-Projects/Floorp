@@ -8,6 +8,7 @@
 #include <io.h>
 #endif
 #include <stdio.h>
+#include <unistd.h>
 
 #include <fstream>
 

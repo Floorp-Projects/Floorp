@@ -8,7 +8,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#ifndef ANDROID
 #include <fts.h>
+#endif
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
@@ -116,6 +118,10 @@ bool Delete(const FilePath& path, bool recursive) {
   if (!recursive)
     return (rmdir(path_str) == 0);
 
+#ifdef ANDROID
+  // XXX Need ftsless impl for bionic
+  return false;
+#else
   bool success = true;
   int ftsflags = FTS_PHYSICAL | FTS_NOSTAT;
   char top_dir[PATH_MAX];
@@ -155,6 +161,7 @@ bool Delete(const FilePath& path, bool recursive) {
     fts_close(fts);
   }
   return success;
+#endif
 }
 
 bool Move(const FilePath& from_path, const FilePath& to_path) {
@@ -184,6 +191,10 @@ bool CopyDirectory(const FilePath& from_path,
     return false;
   }
 
+#ifdef ANDROID
+  // XXX Need ftsless impl for bionic
+  return false;
+#else
   char* dir_list[] = { top_dir, NULL };
   FTS* fts = fts_open(dir_list, FTS_PHYSICAL | FTS_NOSTAT, NULL);
   if (!fts) {
@@ -271,6 +282,7 @@ bool CopyDirectory(const FilePath& from_path,
     return false;
   }
   return true;
+#endif
 }
 
 bool PathExists(const FilePath& path) {
@@ -402,7 +414,11 @@ bool CreateNewTempDirectory(const FilePath::StringType& prefix,
   std::string tmpdir_string = tmpdir.value();
   // this should be OK since mkdtemp just replaces characters in place
   char* buffer = const_cast<char*>(tmpdir_string.c_str());
+#ifdef ANDROID
+  char* dtemp = NULL;
+#else
   char* dtemp = mkdtemp(buffer);
+#endif
   if (!dtemp)
     return false;
   *new_temp_path = FilePath(dtemp);
@@ -528,8 +544,10 @@ FileEnumerator::FileEnumerator(const FilePath& root_path,
 }
 
 FileEnumerator::~FileEnumerator() {
+#ifndef ANDROID
   if (fts_)
     fts_close(fts_);
+#endif
 }
 
 void FileEnumerator::GetFindInfo(FindInfo* info) {
@@ -538,8 +556,10 @@ void FileEnumerator::GetFindInfo(FindInfo* info) {
   if (!is_in_find_op_)
     return;
 
+#ifndef ANDROID
   memcpy(&(info->stat), fts_ent_->fts_statp, sizeof(info->stat));
   info->filename.assign(fts_ent_->fts_name);
+#endif
 }
 
 // As it stands, this method calls itself recursively when the next item of
@@ -547,6 +567,9 @@ void FileEnumerator::GetFindInfo(FindInfo* info) {
 // large directories with many files this can be quite deep.
 // TODO(erikkay) - get rid of this recursive pattern
 FilePath FileEnumerator::Next() {
+#ifdef ANDROID
+  return FilePath();
+#else
   if (!is_in_find_op_) {
     if (pending_paths_.empty())
       return FilePath();
@@ -600,6 +623,7 @@ FilePath FileEnumerator::Next() {
   }
   // TODO(erikkay) - verify that the other fts_info types aren't interesting
   return Next();
+#endif
 }
 
 ///////////////////////////////////////////////
