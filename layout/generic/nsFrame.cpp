@@ -131,7 +131,6 @@
 using namespace mozilla;
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
