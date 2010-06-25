@@ -1045,9 +1045,8 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
                        Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
-    /* :TODO: We can do slightly better here. */
-    frame.pushUntypedPayload(JSVAL_TAG_INT32, reg);
-    frame.storeLocal(slot);
+    frame.pushUntypedPayload(JSVAL_TAG_INT32, reg, true);
+    frame.storeLocal(slot, post || popped, false);
 
     if (post || popped)
         frame.pop();

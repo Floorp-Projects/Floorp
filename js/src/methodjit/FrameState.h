@@ -199,7 +199,8 @@ class FrameState
      * the value it replaces on the stack had the same tag if the fast-path
      * was taken.
      */
-    inline void pushUntypedPayload(JSValueTag tag, RegisterID payload);
+    inline void pushUntypedPayload(JSValueTag tag, RegisterID payload,
+                                   bool popGuaranteed = false);
 
     /*
      * Pops a value off the operation stack, freeing any of its resources.
@@ -333,7 +334,7 @@ class FrameState
     /*
      * Stores the top stack slot back to a local variable.
      */
-    void storeLocal(uint32 n, bool popGuaranteed = false);
+    void storeLocal(uint32 n, bool popGuaranteed = false, bool typeChange = true);
 
     /*
      * Restores state from a slow path.
