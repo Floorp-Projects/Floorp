@@ -71,19 +71,15 @@ body {
 	top: 4px;
 	left: 4px;
 	border-right: 1px solid rgba(0,0,0,0.2);
-	border-bottom: 1px solid rgba(0,0,0,0.2);	
+	border-bottom: 1px solid rgba(0,0,0,0.2);
+  height: 17;
+  width: 17;
 }
 
 .favicon img {
 	border: none;
 	width: 16px;
 	height: 16px;
-}
-
-.lessVisible {
-  background-color: rgba(245,245,245, .2);
-  -moz-box-shadow: none;
-  border: none;
 }
 
 
