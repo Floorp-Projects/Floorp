@@ -1738,32 +1738,6 @@ NS_METHOD nsWindow::GetClientBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
-// Get the bounds, but don't take into account the client size
-void nsWindow::GetNonClientBounds(nsIntRect &aRect)
-{
-  if (mWnd) {
-    RECT r;
-    VERIFY(::GetWindowRect(mWnd, &r));
-
-    // assign size
-    aRect.width = r.right - r.left;
-    aRect.height = r.bottom - r.top;
-
-    // convert coordinates if parent exists
-    HWND parent = ::GetParent(mWnd);
-    if (parent) {
-      RECT pr;
-      VERIFY(::GetWindowRect(parent, &pr));
-      r.left -= pr.left;
-      r.top -= pr.top;
-    }
-    aRect.x = r.left;
-    aRect.y = r.top;
-  } else {
-    aRect.SetRect(0,0,0,0);
-  }
-}
-
 // Like GetBounds, but don't offset by the parent
 NS_METHOD nsWindow::GetScreenBounds(nsIntRect &aRect)
 {

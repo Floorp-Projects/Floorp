@@ -280,7 +280,6 @@ protected:
   LPARAM                  lParamToClient(LPARAM lParam);
   nsWindow*               GetParentWindow(PRBool aIncludeOwner);
   virtual void            SubclassWindow(BOOL bState);
-  void                    GetNonClientBounds(nsIntRect &aRect);
   PRBool                  CanTakeFocus();
 #if !defined(WINCE)
   static void             InitTrackPointHack();
