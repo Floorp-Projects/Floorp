@@ -1173,6 +1173,25 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       return NS_BINDING_ABORTED;
     }
 
+    /* Use content-length as a size hint for http channels. */
+    if (httpChannel) {
+      nsCAutoString contentLength;
+      rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
+                                          contentLength);
+      if (NS_SUCCEEDED(rv)) {
+        PRInt32 len = contentLength.ToInteger(&rv);
+
+        // Pass anything usable on so that the imgContainer can preallocate its
+        // source buffer
+        if (len > 0) {
+          PRUint32 sizeHint = (PRUint32) len;
+          sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
+          mImage->SetSourceSizeHint(sizeHint);
+        }
+      }
+    }
+
+
     // If we were waiting on the image to do something, now's our chance.
     if (mDecodeRequested) {
       mImage->RequestDecode();
