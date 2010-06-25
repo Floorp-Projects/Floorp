@@ -361,7 +361,7 @@ nsCaretAccessible::GetSelectionControllerForNode(nsIContent *aContent)
   if (!document)
     return nsnull;
 
-  nsIPresShell *presShell = document->GetPrimaryShell();
+  nsIPresShell *presShell = document->GetShell();
   if (!presShell)
     return nsnull;
 

@@ -67,7 +67,7 @@ GetCSSComputedValue(nsIContent* aElem,
     return PR_FALSE;
   }
 
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   if (!shell) {
     NS_WARNING("Unable to look up computed style -- no pres shell");
     return PR_FALSE;

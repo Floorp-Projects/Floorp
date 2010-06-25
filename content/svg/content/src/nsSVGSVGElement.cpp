@@ -873,7 +873,7 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   // now dispatch the appropriate event if we are the root element
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
-    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (presShell && IsRoot()) {
       PRBool scaling = (mPreviousScale != mCurrentScale);
       nsEventStatus status = nsEventStatus_eIgnore;

@@ -2241,8 +2241,8 @@ static nsresult CloneRangeToSelection(nsIDOMRange* aRange,
 
 static nsresult CloneSelection(nsIDocument* aOrigDoc, nsIDocument* aDoc)
 {
-  nsIPresShell* origShell = aOrigDoc->GetPrimaryShell();
-  nsIPresShell* shell = aDoc->GetPrimaryShell();
+  nsIPresShell* origShell = aOrigDoc->GetShell();
+  nsIPresShell* shell = aDoc->GetShell();
   NS_ENSURE_STATE(origShell && shell);
 
   nsCOMPtr<nsISelection> origSelection =
