@@ -59,8 +59,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsDisplayList.h"
 
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-
 //
 // NS_NewLeafBoxFrame
 //

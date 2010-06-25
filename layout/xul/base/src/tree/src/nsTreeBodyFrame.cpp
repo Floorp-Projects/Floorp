@@ -111,8 +111,6 @@
 #include "nsBidiPresUtils.h"
 #endif
 
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-
 // Enumeration function that cancels all the image requests in our cache
 static PLDHashOperator
 CancelImageRequest(const nsAString& aKey,
