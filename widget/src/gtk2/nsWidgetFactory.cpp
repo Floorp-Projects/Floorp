@@ -55,7 +55,6 @@
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
-#include "nsAccelerometerUnix.h"
 
 #ifdef NS_PRINTING
 #include "nsPrintOptionsGTK.h"
@@ -102,7 +101,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerUnix)
 
 
 #ifdef NATIVE_THEME_SUPPORT
@@ -254,10 +252,6 @@ static const nsModuleComponentInfo components[] =
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
       nsSoundConstructor },
-    { "Accelerometer",
-       NS_ACCELEROMETER_CID,
-       NS_ACCELEROMETER_CONTRACTID,
-       nsAccelerometerUnixConstructor },
     { "Transferable",
       NS_TRANSFERABLE_CID,
       "@mozilla.org/widget/transferable;1",
