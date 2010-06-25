@@ -305,45 +305,60 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           $title.fadeIn();//.dequeue();
       }
   
-  
-      // TODO: This code is functional, but should probably be rewritten to
-      // break DRY less. I'm not really sure the best way to do that in
-      // this case, though. I've leave it for a man with four hands. -- Aza
+              
+      // Usage      
+      // slide({60:0, 70:1}, 66);
+      // @60- return 0; at @70+ return 1; @65 return 0.5
+      function slider(bounds, val){
+        var keys = [];
+        for(var key in bounds){ keys.push(key); bounds[key] = parseFloat(bounds[key]); };
+        keys.sort(function(a,b){return a-b});
+        var min = keys[0], max = keys[1];
+        
+        function slide(value){
+          if( value >= max ) return bounds[max];
+          if( value <= min ) return bounds[min];
+          var rise = bounds[max] - bounds[min];
+          var run = max-min;
+          var value = rise * (value-min)/run;
+          if( value >= bounds[max] ) return bounds[max];
+          if( value <= bounds[min] ) return bounds[min];
+          return value;
+        }
+        
+        if( val == undefined ) return slide;
+        else return slide(val);
+      };
+
       if(css.width && !this.inStack()) {
         $fav.css({top:4,left:4});
-        if(css.width < 70) {
-          $fav.addClass("lessVisible");
-          
-          var opacity = (css.width-60)/10;
-          if( opacity > 0 ){
-           $close.show().css({opacity:opacity});
-           $fav.css({backgroundColor:"rgba(245,245,245," + opacity + ")"}) 
-          }
-        else $close.hide();
-          
-        }
-        else {
-          $fav.removeClass("lessVisible").css({backgroundColor:"rgba(245,245,245,1)"});
-          $close.show();
-        }
+        
+        var opacity = slider({70:1, 60:0}, css.width);
+        $close.show().css({opacity:opacity});
+        if( opacity <= .1 ) $close.hide()
+
+        var pad = slider({70:6, 60:1}, css.width);
+        $fav.css({
+         "padding-left": pad + "px",
+         "padding-right": pad + 2 + "px",
+         "padding-top": pad + "px",
+         "padding-bottom": pad + "px",
+         "border-color": "rgba(0,0,0,"+ slider({70:.2, 60:.1}, css.width) +")",
+        });
       } 
       
       if(css.width && this.inStack()){
-        if(css.width < 90) {
-          $fav.addClass("lessVisible");
-          
-          var opacity = (css.width-80)/10;
-          if( opacity > 0 ){
-           $fav.css({backgroundColor:"rgba(245,245,245," + opacity + ")"}) 
-          }
-
-        } else {
-          $fav.removeClass("lessVisible").css({
-            backgroundColor:"rgba(245,245,245,1)",
-            top: 0,
-            left: 0
-          });          
-        }    
+        $fav.css({top:0, left:0});
+        var opacity = slider({90:1, 70:0}, css.width);
+        
+        var pad = slider({90:6, 70:1}, css.width);
+        $fav.css({
+         "padding-left": pad + "px",
+         "padding-right": pad + 2 + "px",
+         "padding-top": pad + "px",
+         "padding-bottom": pad + "px",
+         "border-color": "rgba(0,0,0,"+ slider({90:.2, 70:.1}, css.width) +")",
+        });
       }   
 
       this._hasBeenDrawn = true;
