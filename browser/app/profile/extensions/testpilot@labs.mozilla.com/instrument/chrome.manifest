@@ -1,0 +1,3 @@
+resource instrument .
+content instrument .
+overlay chrome://browser/content chrome://instrument/content

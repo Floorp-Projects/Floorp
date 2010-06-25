@@ -129,6 +129,7 @@ public:
   NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD              Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
   NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
 #if !defined(WINCE)
   NS_IMETHOD              BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 #endif
@@ -140,6 +141,7 @@ public:
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetClientOffset(nsIntPoint &aPt);
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
@@ -195,6 +197,9 @@ public:
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
   NS_IMETHOD              OnIMESelectionChange(void);
 #endif // NS_ENABLE_TSF
+  NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
+  NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
+  void                    SetDrawsInTitlebar(PRBool aState);
 
   /**
    * Statics used in other classes
@@ -243,6 +248,7 @@ public:
   PRBool                  GetIMEEnabled() { return mIMEEnabled; }
   // needed in nsIMM32Handler.cpp
   PRBool                  PluginHasFocus() { return mIMEEnabled == nsIWidget::IME_STATUS_PLUGIN; }
+  PRBool                  IsTopLevelWidget() { return mIsTopWidgetWindow; }
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   PRBool HasTaskbarIconBeenCreated() { return mHasTaskbarIconBeenCreated; }
@@ -280,8 +286,8 @@ protected:
   LPARAM                  lParamToClient(LPARAM lParam);
   nsWindow*               GetParentWindow(PRBool aIncludeOwner);
   virtual void            SubclassWindow(BOOL bState);
-  void                    GetNonClientBounds(nsIntRect &aRect);
   PRBool                  CanTakeFocus();
+  PRBool                  UpdateNonClientMargins();
 #if !defined(WINCE)
   static void             InitTrackPointHack();
 #endif
@@ -317,6 +323,7 @@ protected:
                                                  PRBool& aResult,
                                                  LRESULT* aRetValue,
                                                  PRBool& aQuitProcessing);
+  PRInt32                 ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my);
 
   /**
    * Event handlers
@@ -447,6 +454,7 @@ protected:
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
   PRPackedBool          mDisplayPanFeedback;
+  PRPackedBool          mHideChrome;
   WindowHook            mWindowHook;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
@@ -464,6 +472,20 @@ protected:
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif
+
+  // Non-client margin settings
+  // Pre-calculated outward offset applied to default frames
+  nsIntMargin           mNonClientOffset;
+  // Margins set by the owner
+  nsIntMargin           mNonClientMargins;
+  // Indicates custom frames are enabled
+  PRPackedBool          mCustomNonClient;
+  // Disable non client margins on non-comsitor desktops
+  PRPackedBool          mCompositorFlag;
+  // Cached copy of L&F's resize border  
+  PRInt32               mResizeMargin;
+  // Height of the caption plus border
+  PRInt32               mCaptionHeight;
 
   nsCOMPtr<nsIdleService> mIdleService;
 
@@ -542,10 +564,6 @@ class ChildWindow : public nsWindow {
 
 public:
   ChildWindow() {}
-  PRBool DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam,
-                            PRBool aIsContextMenuKey = PR_FALSE,
-                            PRInt16 aButton = nsMouseEvent::eLeftButton,
-                            PRUint16 aInputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE);
 
 protected:
   virtual DWORD WindowStyle();
