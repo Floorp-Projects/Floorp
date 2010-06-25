@@ -12151,17 +12151,16 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, Value* idvalp, Value* rval
 {
     CHECK_STATUS(primitiveToStringInPlace(idvalp));
 
-    LIns* rval_ins = box_value(*rvalp, get(rvalp));
+    LIns* vp_ins = box_value(*rvalp, get(rvalp));
     enterDeepBailCall();
 
     LIns* ok_ins;
     LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
     if (init) {
-        LIns* args[] = {rval_ins, idvalp_ins, obj_ins, cx_ins};
+        LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
         ok_ins = lir->insCall(&InitPropertyByName_ci, args);
     } else {
         // See note in getPropertyByName about vp.
-        LIns* vp_ins = addName(lir->insAlloc(sizeof(Value)), "vp");
         LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
         ok_ins = lir->insCall(&SetPropertyByName_ci, args);
     }
