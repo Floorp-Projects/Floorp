@@ -288,8 +288,10 @@ js_ComputeGlobalThis(JSContext *cx, jsval *argv)
          * This means we qualify for the cache slot in the global.
          */
         jsval thisv = inner->getReservedSlot(JSRESERVED_GLOBAL_THIS);
-        if (!JSVAL_IS_VOID(thisv))
+        if (!JSVAL_IS_VOID(thisv)) {
+            argv[-1] = thisv;
             return JSVAL_TO_OBJECT(thisv);
+        }
 
         JSObject *stuntThis = CallThisObjectHook(cx, inner, argv);
         JS_ALWAYS_TRUE(js_SetReservedSlot(cx, inner, JSRESERVED_GLOBAL_THIS,
