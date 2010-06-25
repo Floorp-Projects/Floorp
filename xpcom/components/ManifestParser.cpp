@@ -84,6 +84,8 @@ struct ManifestDirective
     (nsChromeRegistry::ManifestProcessingContext& cx,
      int lineno, char *const *argv,
      bool platform, bool contentaccessible);
+
+  bool isContract;
 };
 static const ManifestDirective kParsingTable[] = {
   { "binary-component", 1, true, false, false,
@@ -91,7 +93,7 @@ static const ManifestDirective kParsingTable[] = {
   { "component",        2, true, false, false,
     &nsComponentManagerImpl::ManifestComponent, NULL },
   { "contract",         2, true, false, false,
-    &nsComponentManagerImpl::ManifestContract, NULL },
+    &nsComponentManagerImpl::ManifestContract, NULL, true},
   { "category",         3, true, false, false,
     &nsComponentManagerImpl::ManifestCategory, NULL },
   { "content",          2, true, true,  true,
@@ -331,6 +333,16 @@ CheckVersionFlag(const nsString& aFlag, const nsString& aData,
   return true;
 }
 
+namespace {
+
+struct CachedDirective
+{
+  int lineno;
+  char* argv[4];
+};
+
+} // anonymous namespace
+
 void
 ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
               bool aChromeOnly)
@@ -392,6 +404,10 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
                                        gtk_major_version,
                                        gtk_minor_version);
 #endif
+
+  // Because contracts must be registered after CIDs, we save and process them
+  // at the end.
+  nsTArray<CachedDirective> contracts;
 
   char *token;
   char *newline = buf;
@@ -479,8 +495,22 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))
 	(chromecx, line, argv, platform, contentAccessible);
     }
-    else if (!aChromeOnly)
-      (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))
-	(mgrcx, line, argv);
+    else if (!aChromeOnly) {
+      if (directive->isContract) {
+        CachedDirective* cd = contracts.AppendElement();
+        cd->lineno = line;
+        cd->argv[0] = argv[0];
+        cd->argv[1] = argv[1];
+      }
+      else
+        (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))
+          (mgrcx, line, argv);
+    }
+  }
+
+  for (PRInt32 i = 0; i < contracts.Length(); ++i) {
+    CachedDirective& d = contracts[i];
+    nsComponentManagerImpl::gComponentManager->ManifestContract
+      (mgrcx, d.lineno, d.argv);
   }
 }
