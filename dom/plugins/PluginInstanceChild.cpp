@@ -892,6 +892,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
 
+#elif defined(ANDROID)
+#  warning Need Android impl
 #else
 #  error Implement me for your OS
 #endif

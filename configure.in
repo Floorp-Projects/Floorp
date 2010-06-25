@@ -4989,7 +4989,6 @@ case "${target}" in
         MOZ_CRASHREPORTER=
         NS_PRINTING=
         NECKO_WIFI=
-        MOZ_PLUGINS=
         MOZ_THUMB2=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
