@@ -1502,7 +1502,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
         return NS_OK;
     }
 
-    nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aFactory));
+    nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
 
     nsAutoMonitor mon(mMon);
     nsFactoryEntry* oldf = mFactories.Get(aClass);
@@ -1685,12 +1685,26 @@ nsFactoryEntry::nsFactoryEntry(const mozilla::Module::CIDEntry* entry,
 {
 }
 
-nsFactoryEntry::nsFactoryEntry(nsIFactory* factory)
+nsFactoryEntry::nsFactoryEntry(const nsCID& aCID, nsIFactory* factory)
     : mCIDEntry(NULL)
     , mModule(NULL)
     , mFactory(factory)
 {
+    mozilla::Module::CIDEntry* e = new mozilla::Module::CIDEntry();
+    nsCID* cid = new nsCID;
+    *cid = aCID;
+    e->cid = cid;
+    mCIDEntry = e;
 }        
+
+nsFactoryEntry::~nsFactoryEntry()
+{
+    // If this was a RegisterFactory entry, we own the CIDEntry/CID
+    if (!mModule) {
+        delete mCIDEntry->cid;
+        delete mCIDEntry;
+    }
+}
 
 already_AddRefed<nsIFactory>
 nsFactoryEntry::GetFactory()
