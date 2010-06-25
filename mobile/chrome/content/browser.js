@@ -1075,34 +1075,34 @@ var Browser = {
     this.setVisibleRect(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
   },
 
+  /** Rect should be in viewport coordinates. */
+  _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
+    const margin = 15;
+
+    let bv = this._browserView;
+    let vis = bv.getVisibleRect();
+   
+    return bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (rect.width + margin * 2));
+  }, 
+
   /**
    * Find an appropriate zoom rect for an element bounding rect, if it exists.
    * @return Rect in viewport coordinates
    * */
   _getZoomRectForRect: function _getZoomRectForRect(rect, y) {
-    const margin = 15;
-
-    if (!rect)
-      return null;
-
     let bv = this._browserView;
     let oldZoomLevel = bv.getZoomLevel();
-
-    let elRect = bv.browserToViewportRect(rect);
-    let vis = bv.getVisibleRect();
-    let zoomLevel = bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
-
+    let zoomLevel = this._getZoomLevelForRect(rect);
     let zoomRatio = oldZoomLevel / zoomLevel;
 
     // Don't zoom in a marginal amount, but be more lenient for the first zoom.
     // > 2/3 means operation increases the zoom level by less than 1.5
     // > 9/10 means operation increases the zoom level by less than 1.1
     let zoomTolerance = (bv.isDefaultZoom()) ? .9 : .6666;
-    if (zoomRatio >= zoomTolerance) {
+    if (zoomRatio >= zoomTolerance)
       return null;
-    } else {
+    else
       return this._getZoomRectForPoint(rect.center().x, y, zoomLevel);
-    }
   },
 
   /**
@@ -1167,19 +1167,27 @@ var Browser = {
     let bv = this._browserView;
 
     let zoomRect = null;
-    if (bv.isDefaultZoom()) {
+    if (rect)
       zoomRect = this._getZoomRectForRect(rect, y);
-      if (!zoomRect)
-        zoomRect = this._getZoomRectForPoint(x, y, bv.getZoomLevel() * 2);
-    } else {
-      zoomRect = this._getZoomRectForPoint(x, y, bv.getDefaultZoomLevel());
-    }
+
+    if (!zoomRect && bv.isDefaultZoom())
+      zoomRect = this._getZoomRectForPoint(x, y, bv.getZoomLevel() * 2);
 
     if (zoomRect)
       this.setVisibleRect(zoomRect);
 
     return zoomRect;
   },
+
+  zoomFromPoint: function zoomFromPoint(cX, cY) {
+    let bv = this._browserView;
+    if (!bv.isDefaultZoom()) {
+      let zoomLevel = bv.getDefaultZoomLevel();
+      let [x, y] = this.transformClientToBrowser(cX, cY);
+      let zoomRect = this._getZoomRectForPoint(x, y, zoomLevel);
+      this.setVisibleRect(zoomRect);
+    }
+  }, 
 
   /**
    * Transform x and y from client coordinates to BrowserView coordinates.
@@ -1267,7 +1275,9 @@ var Browser = {
 
       case "Browser:ZoomToPoint:Return":
         // JSON-ified rect needs to be recreated so the methods exist
-        Browser.zoomToPoint(json.x, json.y, Rect.fromRect(json.rect));
+        let rect = Rect.fromRect(json.rect);
+        if (!Browser.zoomToPoint(json.x, json.y, rect))
+          Browser.zoomFromPoint(json.x, json.y);
         break;
     }
   }
