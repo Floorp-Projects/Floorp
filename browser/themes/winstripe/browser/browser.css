@@ -124,12 +124,15 @@ statusbarpanel#statusbar-display {
                                          rgba(255,255,255,0) 50%);
   background-clip: padding-box;
   border: 1px solid rgba(0,0,0,.5);
-  -moz-border-radius: 4px;
+  border-top-style: none;
+  -moz-border-radius-bottomleft: 4px;
+  -moz-border-radius-bottomright: 4px;
   -moz-box-shadow: 0 0 5px rgba(255,255,255,.5) inset;
   color: white;
   text-shadow: 0 0 2px #333;
   font-weight: bold;
-  padding: .2em 2em;
+  padding: .1em 1.5em;
+  margin: 0;
 }
 
 #appmenu-button:hover:not(:active):not([open]) {
@@ -159,6 +162,25 @@ statusbarpanel#statusbar-display {
 #appmenu-button > menupopup > menuitem {
   -moz-padding-end: 16px;
 }
+
+/* XXX: stop-gap until the button can be drawn in the title bar */
+%ifdef WINSTRIPE_AERO
+@media not all and (-moz-windows-compositor) {
+%endif
+  #main-window[tabsontop="true"] > #appmenu-button-container > #appmenu-button {
+    position: relative !important;
+    margin-bottom: -1.6em !important;
+  }
+  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] {
+    position: relative !important;
+    background-color: -moz-dialog !important;
+  }
+  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar {
+    -moz-padding-start: 10em !important;
+  }
+%ifdef WINSTRIPE_AERO
+}
+%endif
 
 /* ::::: bookmark buttons ::::: */
 
