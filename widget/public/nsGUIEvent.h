@@ -514,7 +514,8 @@ public:
   PRUint8     eventStructType;
   // See GUI MESSAGES,
   PRUint32    message;
-  // In widget relative coordinates, not modified by layout code.
+  // Relative to the widget of the event, or if there is no widget then it is
+  // in screen coordinates. Not modified by layout code.
   nsIntPoint  refPoint;
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
