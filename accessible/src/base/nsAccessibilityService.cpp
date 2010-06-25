@@ -203,11 +203,12 @@ nsAccessibilityService::GetInfo(nsIFrame *aFrame, nsIWeakReference **aShell,
   if (!document)
     return NS_ERROR_FAILURE;
 
-  NS_ASSERTION(document->GetPrimaryShell(),"Error no shells!");
+  NS_ASSERTION(document->GetShell(),
+               "Error: aFrame's document doesn't have a PresShell!");
 
   // do_GetWR only works into a |nsCOMPtr| :-(
   nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(document->GetPrimaryShell());
+    do_GetWeakReference(document->GetShell());
 
   weakShell.forget(aShell);
   NS_IF_ADDREF(*aContent = content);
@@ -1098,7 +1099,7 @@ nsAccessibilityService::GetContainerAccessible(nsINode *aNode,
   if (!document)
     return nsnull;
 
-  nsIPresShell *presShell = document->GetPrimaryShell();
+  nsIPresShell *presShell = document->GetShell();
   if (!presShell)
     return nsnull;
 

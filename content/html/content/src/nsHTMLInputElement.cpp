@@ -1710,7 +1710,7 @@ nsHTMLInputElement::Click()
       return rv;
     }
 
-    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
     nsRefPtr<nsPresContext> context = nsnull;
     if (shell) {
       context = shell->GetPresContext();
@@ -1718,7 +1718,7 @@ nsHTMLInputElement::Click()
 
     if (!context) {
       doc->FlushPendingNotifications(Flush_Frames);
-      shell = doc->GetPrimaryShell();
+      shell = doc->GetShell();
       if (shell) {
         context = shell->GetPresContext();
       }

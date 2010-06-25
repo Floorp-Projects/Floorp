@@ -1912,7 +1912,7 @@ PresShell::Destroy()
   // hierarchy is torn down to avoid finding deleted frames through
   // this presshell while the frames are being torn down
   if (mDocument) {
-    NS_ASSERTION(mDocument->GetPrimaryShell() == this, "Wrong shell?");
+    NS_ASSERTION(mDocument->GetShell() == this, "Wrong shell?");
     mDocument->DeleteShell();
   }
 
@@ -6137,7 +6137,7 @@ PresShell::HandleEvent(nsIView         *aView,
     }
 
     if (retargetEventDoc) {
-      nsIPresShell* presShell = retargetEventDoc->GetPrimaryShell();
+      nsIPresShell* presShell = retargetEventDoc->GetShell();
       if (!presShell)
         return NS_OK;
 
@@ -7134,7 +7134,7 @@ FreezeElement(nsIContent *aContent, void * /* unused */)
 static PRBool
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetPrimaryShell();
+  nsIPresShell *shell = aDocument->GetShell();
   if (shell)
     shell->Freeze();
 
@@ -7199,7 +7199,7 @@ ThawElement(nsIContent *aContent, void *aShell)
 static PRBool
 ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetPrimaryShell();
+  nsIPresShell *shell = aDocument->GetShell();
   if (shell)
     shell->Thaw();
 
