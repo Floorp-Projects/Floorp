@@ -32,10 +32,8 @@ const Cu = Components.utils;
 
 const FILE_PICKER_CID = "@mozilla.org/filepicker;1";
 const FILE_PICKER_ID = Components.ID(Cc[FILE_PICKER_CID].number);
+const CUSTOM_FILE_PICKER_ID = Components.ID("d63dee33-fb6d-4547-a8d1-c12197655cce");
 const FILE_PICKER_DESCRIPTION = "File Picker Test Service";
-
-const kDefaultFilePicker = Cm.getClassObject(Cc[FILE_PICKER_CID],
-                                             Ci.nsIFactory);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -113,7 +111,7 @@ function runTests()
 
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  Cm.registerFactory(FILE_PICKER_ID,
+  Cm.registerFactory(CUSTOM_FILE_PICKER_ID,
                      FILE_PICKER_DESCRIPTION,
                      FILE_PICKER_CID,
                      factory);
@@ -149,12 +147,12 @@ function runTests()
             obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTER", false);
             obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTERS", false);
             obs.removeObserver(observer, "TEST_FILEPICKER_SHOW", false);
-            Cm.unregisterFactory(FILE_PICKER_ID, factory);
+            Cm.unregisterFactory(CUSTOM_FILE_PICKER_ID, factory);
 
             Cm.registerFactory(FILE_PICKER_ID,
                                "File Picker Service",
                                FILE_PICKER_CID,
-                               kDefaultFilePicker);
+                               null);
 
             SimpleTest.finish();
           } );
