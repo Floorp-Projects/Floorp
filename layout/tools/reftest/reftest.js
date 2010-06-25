@@ -360,7 +360,7 @@ function BuildConditionSandbox(aURL) {
       },
       _prefs:      prefs,
       getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
-      getIntPref:  function(p) { return this._prefs.getIntPref(p) }
+      getIntPref:  function(p) { return this._prefs.getIntPref(p); }
     }
 
     return sandbox;
