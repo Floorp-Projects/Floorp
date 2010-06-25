@@ -730,8 +730,10 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit)
 {
     LIns *mask_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
-    guard(true, lir->ins2(LIR_ltui, mask_ins, INS_CONSTU(JSVAL_TAG_CLEAR)), exit);
-    return lir->insLoad(LIR_ldd, addr_ins, offset + sPayloadOffset, ACC_OTHER);
+    guard(true, lir->ins2(LIR_leui, mask_ins, INS_CONSTU(JSVAL_TAG_INT32)), exit);
+    LIns *val_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sPayloadOffset, ACC_OTHER);
+    LIns* args[] = { val_ins, mask_ins };
+    return lir->insCall(&js_UnboxDouble_ci, args);
 }
 
 JS_REQUIRES_STACK LIns*
