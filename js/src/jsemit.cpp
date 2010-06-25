@@ -190,6 +190,9 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         depth = (uintN) cg->stackDepth +
                 ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT) +
                 extra;
+        /* :TODO: hack - remove later. */
+        if (op == JSOP_PROPINC || op == JSOP_PROPDEC)
+            depth++;
         if (depth > cg->maxStackDepth)
             cg->maxStackDepth = depth;
     }
