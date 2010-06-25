@@ -407,8 +407,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     hb_buffer_set_script(buffer, hb_script_t(aRunScript));
 //    hb_buffer_set_language(buffer, HB_OT_TAG_DEFAULT_LANGUAGE);
 
-    hb_buffer_add_utf16(buffer, aString + aRunStart, aRunLength,
-                        0, aRunLength);
+    hb_buffer_add_utf16(buffer, reinterpret_cast<const uint16_t*>(aString + aRunStart),
+                        aRunLength, 0, aRunLength);
 
     hb_shape(font, mHBFace, buffer, features.Elements(), features.Length());
 
