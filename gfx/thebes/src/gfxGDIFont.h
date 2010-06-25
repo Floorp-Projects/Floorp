@@ -59,7 +59,7 @@ public:
 
     virtual ~gfxGDIFont();
 
-    HFONT GetHFONT() const { return mFont; }
+    HFONT GetHFONT() { if (!mMetrics) Initialize(); return mFont; }
 
     gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
 
@@ -95,6 +95,10 @@ protected:
     void Initialize(); // creates metrics and Cairo fonts
 
     void FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize);
+
+    // mPlatformShaper is used for the GDI shaper, mUniscribeShaper
+    // for the Uniscribe version if needed
+    nsAutoPtr<gfxFontShaper>   mUniscribeShaper;
 
     HFONT                 mFont;
     cairo_font_face_t    *mFontFace;
