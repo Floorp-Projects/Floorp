@@ -1589,12 +1589,12 @@ nsImageFrame::List(FILE* out, PRInt32 aIndent) const
   if (HasView()) {
     fprintf(out, " [view=%p]", (void*)GetView());
   }
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, 
-mRect.height);
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%016llx]", mState);
   }
   fprintf(out, " [content=%p]", (void*)mContent);
+  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
 
   // output the img src url
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);

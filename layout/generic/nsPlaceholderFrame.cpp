@@ -277,6 +277,9 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mContent) {
     fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   }
+  if (nsnull != mStyleContext) {
+    fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
+  }
   if (mOutOfFlowFrame) {
     fprintf(out, " outOfFlowFrame=");
     nsFrame::ListTag(out, mOutOfFlowFrame);
