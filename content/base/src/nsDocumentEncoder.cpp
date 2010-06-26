@@ -81,6 +81,7 @@
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsIFrame.h"
+#include "nsStringBuffer.h"
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
@@ -95,8 +96,8 @@ public:
   nsDocumentEncoder();
   virtual ~nsDocumentEncoder();
 
-  NS_DECL_ISUPPORTS
-
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDocumentEncoder)
   NS_DECL_NSIDOCUMENTENCODER
 
 protected:
@@ -175,17 +176,36 @@ protected:
   PRPackedBool      mHaltRangeHint;  
   PRPackedBool      mIsCopying;  // Set to PR_TRUE only while copying
   PRPackedBool      mNodeIsContainer;
+  nsStringBuffer*   mCachedBuffer;
 };
 
-NS_IMPL_ADDREF(nsDocumentEncoder)
-NS_IMPL_RELEASE(nsDocumentEncoder)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocumentEncoder)
 
-NS_INTERFACE_MAP_BEGIN(nsDocumentEncoder)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocumentEncoder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDocumentEncoder)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocumentEncoder)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentEncoder)
    NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-nsDocumentEncoder::nsDocumentEncoder()
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocumentEncoder)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSelection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRange)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCommonParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocumentEncoder)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSelection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCommonParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nsnull)
 {
   Initialize();
   mMimeType.AssignLiteral("text/plain");
@@ -202,10 +222,14 @@ void nsDocumentEncoder::Initialize()
   mEndRootIndex = 0;
   mHaltRangeHint = PR_FALSE;
   mNodeIsContainer = PR_FALSE;
+  mSerializer = nsnull;
 }
 
 nsDocumentEncoder::~nsDocumentEncoder()
 {
+  if (mCachedBuffer) {
+    mCachedBuffer->Release();
+  }
 }
 
 NS_IMETHODIMP
@@ -216,10 +240,23 @@ nsDocumentEncoder::Init(nsIDOMDocument* aDocument,
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
 
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  return NativeInit(doc, aMimeType, aFlags);
+}
+
+NS_IMETHODIMP
+nsDocumentEncoder::NativeInit(nsIDocument* aDocument,
+                              const nsAString& aMimeType,
+                              PRUint32 aFlags)
+{
+  if (!aDocument)
+    return NS_ERROR_INVALID_ARG;
+
   Initialize();
 
-  mDocument = do_QueryInterface(aDocument);
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  mDocument = aDocument;
 
   mMimeType = aMimeType;
 
@@ -263,6 +300,14 @@ nsDocumentEncoder::SetContainerNode(nsIDOMNode *aContainer)
 {
   mNodeIsContainer = PR_TRUE;
   mNode = do_QueryInterface(aContainer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentEncoder::SetNativeContainerNode(nsINode* aContainer)
+{
+  mNodeIsContainer = PR_TRUE;
+  mNode = aContainer;
   return NS_OK;
 }
 
@@ -928,11 +973,26 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
 
   aOutputString.Truncate();
 
-  nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
-  AppendUTF16toUTF8(mMimeType, progId);
+  nsString output;
+  static const size_t bufferSize = 2048;
+  if (!mCachedBuffer) {
+    mCachedBuffer = nsStringBuffer::Alloc(bufferSize);
+  }
+  NS_ASSERTION(!mCachedBuffer->IsReadonly(),
+               "DocumentEncoder shouldn't keep reference to non-readonly buffer!");
+  static_cast<PRUnichar*>(mCachedBuffer->Data())[0] = PRUnichar(0);
+  mCachedBuffer->ToString(0, output, PR_TRUE);
+  // output owns the buffer now!
+  mCachedBuffer = nsnull;
+  
 
-  mSerializer = do_CreateInstance(progId.get());
-  NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);
+  if (!mSerializer) {
+    nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
+    AppendUTF16toUTF8(mMimeType, progId);
+
+    mSerializer = do_CreateInstance(progId.get());
+    NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);
+  }
 
   nsresult rv = NS_OK;
 
@@ -966,47 +1026,59 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       if (node != prevNode) {
         if (prevNode) {
           nsCOMPtr<nsINode> p = do_QueryInterface(prevNode);
-          rv = SerializeNodeEnd(p, aOutputString);
+          rv = SerializeNodeEnd(p, output);
           NS_ENSURE_SUCCESS(rv, rv);
           prevNode = nsnull;
         }
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
         if (content && content->Tag() == nsGkAtoms::tr) {
           nsCOMPtr<nsINode> n = do_QueryInterface(node);
-          rv = SerializeNodeStart(n, 0, -1, aOutputString);
+          rv = SerializeNodeStart(n, 0, -1, output);
           NS_ENSURE_SUCCESS(rv, rv);
           prevNode = node;
         }
       }
 
       nsCOMPtr<nsIRange> r = do_QueryInterface(range);
-      rv = SerializeRangeToString(r, aOutputString);
+      rv = SerializeRangeToString(r, output);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     if (prevNode) {
       nsCOMPtr<nsINode> p = do_QueryInterface(prevNode);
-      rv = SerializeNodeEnd(p, aOutputString);
+      rv = SerializeNodeEnd(p, output);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     mSelection = nsnull;
   } else if (mRange) {
-      rv = SerializeRangeToString(mRange, aOutputString);
+      rv = SerializeRangeToString(mRange, output);
 
       mRange = nsnull;
   } else if (mNode) {
-    rv = SerializeToStringRecursive(mNode, aOutputString, mNodeIsContainer);
+    rv = SerializeToStringRecursive(mNode, output, mNodeIsContainer);
     mNode = nsnull;
   } else {
-    rv = mSerializer->AppendDocumentStart(mDocument, aOutputString);
+    rv = mSerializer->AppendDocumentStart(mDocument, output);
 
     if (NS_SUCCEEDED(rv)) {
-      rv = SerializeToStringRecursive(mDocument, aOutputString, PR_FALSE);
+      rv = SerializeToStringRecursive(mDocument, output, PR_FALSE);
     }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mSerializer->Flush(aOutputString);
+  rv = mSerializer->Flush(output);
+ 
+  if (NS_SUCCEEDED(rv)) {
+    aOutputString.Append(output.get(), output.Length());
+  }
+  mCachedBuffer = nsStringBuffer::FromString(output);
+  // Try to cache the buffer.
+  if (mCachedBuffer && mCachedBuffer->StorageSize() == bufferSize &&
+      !mCachedBuffer->IsReadonly()) {
+    mCachedBuffer->AddRef();
+  } else {
+    mCachedBuffer = nsnull;
+  }
 
   return rv;
 }
