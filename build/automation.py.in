@@ -583,7 +583,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       if not pHandle:
         return False
       pExitCode = ctypes.wintypes.DWORD()
-      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
+      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
       ctypes.windll.kernel32.CloseHandle(pHandle)
       if (pExitCode.value == STILL_ACTIVE):
         return True
