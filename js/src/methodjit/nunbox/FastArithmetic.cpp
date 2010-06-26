@@ -544,3 +544,124 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     stubcc.rejoin(1);
 }
 
+static const uint64 DoubleNegMask = 0x8000000000000000LLU;
+void
+mjit::Compiler::jsop_neg()
+{
+    FrameEntry *fe = frame.peek(-1);
+
+    if (fe->isTypeKnown() && fe->getTypeTag() > JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET) {
+        prepareStubCall();
+        stubCall(stubs::Neg, Uses(1), Defs(1));
+        frame.pop();
+        frame.pushSynced();
+        return;
+    }
+
+    JS_ASSERT(!fe->isConstant());
+
+    /* Load type information into register. */
+    MaybeRegisterID feTypeReg;
+    //TODO: Optimize code emission if types are known.
+    if (!frame.shouldAvoidTypeRemat(fe)) {
+        /* Safe because only one type is loaded. */
+        feTypeReg.setReg(frame.tempRegForType(fe));
+        /* Don't get clobbered by copyDataIntoReg(). */
+        frame.pinReg(feTypeReg.getReg());
+    }
+
+    /*
+     * If copyDataIntoReg() is called here, syncAllRegs() is not required.
+     * If called from the int path, the double and int states would
+     * need to be explicitly synced in a currently unsupported manner.
+     *
+     * This function call can call allocReg() and clobber any register.
+     * (It is also useful to think about the interplay between this
+     *  code being in the int path, versus stub call syncing..)
+     */
+    RegisterID reg = frame.copyDataIntoReg(masm, fe);
+    Label feSyncTarget = stubcc.syncExitAndJump();
+
+    /* Try a double path (inline). */
+    MaybeJump jmpNotDbl;
+    {
+        maybeJumpIfNotDouble(masm, jmpNotDbl, fe, feTypeReg);
+
+        FPRegisterID fpreg = frame.copyEntryIntoFPReg(fe, FPRegisters::First);
+        masm.loadDouble(&DoubleNegMask, FPRegisters::Second);
+        masm.xorDouble(FPRegisters::Second, fpreg);
+
+        /* Overwrite pushed frame's memory (before push). */
+        masm.storeDouble(fpreg, frame.addressOf(fe));
+    }
+
+    /* Try an integer path (out-of-line). */
+    MaybeJump jmpNotInt;
+    MaybeJump jmpIntZero;
+    MaybeJump jmpIntRejoin;
+    Label lblIntPath = stubcc.masm.label();
+    {
+        maybeJumpIfNotInt32(stubcc.masm, jmpNotInt, fe, feTypeReg);
+
+        /* 0 (int) -> -0 (double). */
+        jmpIntZero.setJump(stubcc.masm.branch32(Assembler::Equal, reg, Imm32(0)));
+
+        stubcc.masm.neg32(reg);
+
+        /* Sync back with double path. */
+        stubcc.masm.storeData32(reg, frame.addressOf(fe));
+        stubcc.masm.storeTypeTag(ImmTag(JSVAL_TAG_INT32), frame.addressOf(fe));
+
+        jmpIntRejoin.setJump(stubcc.masm.jump());
+    }
+
+    if (feTypeReg.isSet())
+        frame.unpinReg(feTypeReg.getReg());
+    
+    /*
+     * :FIXME:
+     * copyDataIntoReg() acquires a register, but does not mark
+     * regstate[reg].fe, since the register does not reflect
+     * the state of the FrameEntry. But the freeRegs variable
+     * is updated to reflect that the register is allocated.
+     *
+     * assertValidRegisterState() walks over each FrameEntry in
+     * the tracker and collects the registers that are bound
+     * to a FrameEntry. Since the register acquired by
+     * copyDataIntoReg() is not bound to a FrameEntry, it is
+     * not counted in checkedFreeRegs.
+     *
+     * assertValidRegisterState() then asserts that
+     * checkedFreeRegs == freeRegs and fails. In summary,
+     * copyDataIntoReg() is only useful to mean "get a return type",
+     * which only works if pushUntypedPayload() is used on
+     * the inline path, which is not the case here.
+     *
+     * forgetReg() is thus exported for use here as a quick hack.
+     *
+     * Since this function is being integrated to serve as
+     * example code during FrameState redesign, this comment is left
+     * to point out more path merging issues.
+     */
+    frame.forgetReg(reg);
+
+    stubcc.leave();
+    stubcc.call(stubs::Neg);
+
+    frame.pop();
+    frame.pushSynced();
+
+    /* Link jumps. */
+    if (jmpNotDbl.isSet())
+        stubcc.linkExitDirect(jmpNotDbl.getJump(), lblIntPath);
+
+    if (jmpNotInt.isSet())
+        jmpNotInt.getJump().linkTo(feSyncTarget, &stubcc.masm);
+    if (jmpIntZero.isSet())
+        jmpIntZero.getJump().linkTo(feSyncTarget, &stubcc.masm);
+    if (jmpIntRejoin.isSet())
+        stubcc.crossJump(jmpIntRejoin.getJump(), masm.label());
+
+    stubcc.rejoin(1);
+}
+
