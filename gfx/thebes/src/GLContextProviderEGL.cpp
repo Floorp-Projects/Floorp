@@ -65,7 +65,11 @@ typedef Window   EGLNativeWindowType;
 
 #elif defined(ANDROID)
 
-#define GET_NATIVE_WINDOW(aWidget)  (nsnull)
+#include <android/log.h>
+#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko" , ## args)
+
+/* from widget */
+#include "AndroidBridge.h"
 
 typedef void *EGLNativeDisplayType;
 typedef void *EGLNativePixmapType;
@@ -148,6 +152,11 @@ public:
     pfnWaitNative fWaitNative;
     typedef EGLCastToRelevantPtr (*pfnGetProcAddress)(const char *procname);
     pfnGetProcAddress fGetProcAddress;
+    typedef EGLBoolean (*pfnSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
+    pfnSwapBuffers fSwapBuffers;
+    typedef EGLBoolean (*pfnCopyBuffers)(EGLDisplay dpy, EGLSurface surface,
+                                         EGLNativePixmapType target);
+    pfnCopyBuffers fCopyBuffers;
     typedef const GLubyte* (*pfnQueryString)(EGLDisplay, EGLint name);
     pfnQueryString fQueryString;
     typedef EGLBoolean (*pfnBindTexImage)(EGLDisplay, EGLSurface surface, EGLint buffer);
@@ -197,6 +206,8 @@ public:
             SYMBOL(GetConfigAttrib),
             SYMBOL(WaitNative),
             SYMBOL(GetProcAddress),
+            SYMBOL(SwapBuffers),
+            SYMBOL(CopyBuffers),
             SYMBOL(QueryString),
             SYMBOL(BindTexImage),
             SYMBOL(ReleaseTexImage),
@@ -316,9 +327,9 @@ public:
 #else
                 succeeded = PR_FALSE;
 #endif
-            }
-            else
+            } else {
                 succeeded = sEGLLibrary.fMakeCurrent(mDisplay, mSurface, mSurface, mContext);
+            }
             NS_ASSERTION(succeeded, "Failed to make GL context current!");
         }
 
@@ -343,6 +354,11 @@ public:
         default:
             return nsnull;
         }
+    }
+
+    PRBool SwapBuffers()
+    {
+        return sEGLLibrary.fSwapBuffers(mDisplay, mSurface);
     }
 
 private:
@@ -401,13 +417,17 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
         return nsnull;
     }
 
-    if (!sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API)) {
-        return nsnull;
-    }
-
     EGLint attribs[] = {
         LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_WINDOW_BIT,
         LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
+
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+        LOCAL_EGL_RED_SIZE,        5,
+        LOCAL_EGL_GREEN_SIZE,      6,
+        LOCAL_EGL_BLUE_SIZE,       5,
+        LOCAL_EGL_ALPHA_SIZE,      0,
+#endif
+
         LOCAL_EGL_NONE
     };
 
@@ -418,8 +438,25 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
         return nsnull;
     }
 
+#ifdef ANDROID
+    // On Android, we have to ask Java to make the eglCreateWindowSurface
+    // call for us.  See GLHelpers.java for a description of why.
+    //
+    // We also only have one true "window", so we just use it directly and ignore
+    // what was passed in.
+    surface = mozilla::AndroidBridge::Bridge()->
+        CallEglCreateWindowSurface(display, config,
+                                   mozilla::AndroidBridge::Bridge()->SurfaceView());
+#else
     surface = sEGLLibrary.fCreateWindowSurface(display, config, GET_NATIVE_WINDOW(aWidget), 0);
+#endif
+
     if (!surface) {
+        return nsnull;
+    }
+
+    if (!sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API)) {
+        sEGLLibrary.fDestroySurface(display, surface);
         return nsnull;
     }
 
