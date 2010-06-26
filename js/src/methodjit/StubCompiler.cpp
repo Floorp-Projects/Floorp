@@ -65,6 +65,36 @@ StubCompiler::linkExitDirect(Jump j, Label L)
     exits.append(CrossPatch(j, L));
 }
 
+JSC::MacroAssembler::Label
+StubCompiler::syncExit()
+{
+    JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW MERGE CODE ---- \n");
+
+    if (lastGeneration == generation) {
+        Jump j2 = masm.jump();
+        jumpList.append(j2);
+    }
+
+    Label l = masm.label();
+    frame.sync(masm);
+    lastGeneration = generation;
+
+    JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");
+    
+    return l;
+}
+
+JSC::MacroAssembler::Label
+StubCompiler::syncExitAndJump()
+{
+    Label l = syncExit();
+    Jump j2 = masm.jump();
+    jumpList.append(j2);
+    /* Suppress jumping on next sync/link. */
+    generation++;
+    return l;
+}
+
 /*
  * The "slow path" generation is interleaved with the main compilation phase,
  * though it is generated into a separate buffer. The fast path can "exit"
@@ -75,15 +105,8 @@ StubCompiler::linkExitDirect(Jump j, Label L)
 void
 StubCompiler::linkExit(Jump j)
 {
-    JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW MERGE CODE ---- \n");
-    if (lastGeneration == generation) {
-        Jump j2 = masm.jump();
-        jumpList.append(j2);
-    }
-    linkExitDirect(j, masm.label());
-    frame.sync(masm);
-    lastGeneration = generation;
-    JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");
+    Label l = syncExit();
+    linkExitDirect(j, l);
 }
 
 void
@@ -106,6 +129,12 @@ StubCompiler::rejoin(uint32 invalidationDepth)
     crossJump(j, cc.getLabel());
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
+}
+
+void
+StubCompiler::linkRejoin(Jump j)
+{
+    crossJump(j, cc.getLabel());
 }
 
 typedef JSC::MacroAssembler::RegisterID RegisterID;

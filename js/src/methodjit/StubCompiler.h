@@ -124,6 +124,17 @@ class StubCompiler
 
 #undef STUB_CALL_TYPE
 
+    /*
+     * Force a frame sync and return a label before the syncing code.
+     * A Jump may bind to the label with leaveExitDirect().
+     */
+    JSC::MacroAssembler::Label syncExit();
+    /*
+     * Sync the exit, and state that code will be immediately outputted
+     * to the out-of-line buffer.
+     */
+    JSC::MacroAssembler::Label syncExitAndJump();
+
     /* Exits from the fast path into the slow path. */
     void linkExit(Jump j);
     void linkExitDirect(Jump j, Label L);
@@ -137,6 +148,7 @@ class StubCompiler
      * registers.
      */
     void rejoin(uint32 invalidationDepth);
+    void linkRejoin(Jump j);
 
     /* Finish all native code patching. */
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
