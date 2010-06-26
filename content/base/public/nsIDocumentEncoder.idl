@@ -44,6 +44,13 @@ interface nsISelection;
 interface nsIDOMNode;
 interface nsIOutputStream;
 
+%{ C++
+class nsINode;
+class nsIDocument;
+%}
+[ptr] native nsINodePtr(nsINode);
+[ptr] native nsIDocumentPtr(nsIDocument);
+
 [scriptable, uuid(c0da5b87-0ba7-4d7c-8cb3-fcb02af4253d)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
@@ -61,7 +68,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
   nsIDOMNode fixupNode(in nsIDOMNode aNode, out boolean aSerializeCloneKids);
 };
 
-[scriptable, uuid(794a81f6-bde6-4f76-9f5e-0ea0911a2d9f)]
+[scriptable, uuid(7222bdf1-c2b9-41f1-a40a-a3d65283a95b)]
 interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
@@ -238,6 +245,9 @@ interface nsIDocumentEncoder : nsISupports
   void init(in nsIDOMDocument aDocument,
             in AString aMimeType,
             in unsigned long aFlags);
+  [noscript] void nativeInit(in nsIDocumentPtr aDocument,
+                             in AString aMimeType,
+                             in unsigned long aFlags);
 
   /**
    *  If the selection is set to a non-null value, then the
@@ -270,6 +280,7 @@ interface nsIDocumentEncoder : nsISupports
    *  @param aContainer The node which child nodes will be encoded.
    */
   void setContainerNode(in nsIDOMNode aContainer);
+  [noscript] void setNativeContainerNode(in nsINodePtr aContainer);
 
   /**
    *  Documents typically have an intrinsic character set,
