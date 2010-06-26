@@ -441,10 +441,10 @@ nsXPConnect::Collect()
     // request prior to the Collect call to avoid false positives during the
     // cycle collection. So to compensate for JS_BeginRequest in
     // XPCCallContext::Init we disable the conservative scanner if that call
-    // has started the only request on this thread.
+    // has started the request on this thread.
     JS_ASSERT(cx->requestDepth >= 1);
-    JS_ASSERT(cx->thread->contextsInRequests >= 1);
-    if(cx->requestDepth >= 2 || cx->thread->contextsInRequests >= 2)
+    JS_ASSERT(cx->thread->requestContext == cx);
+    if(cx->requestDepth >= 2)
     {
         JS_GC(cx);
     }

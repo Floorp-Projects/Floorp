@@ -6598,7 +6598,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JSBool ok;
   jsval exn;
   {
-    JSAutoTransferRequest transfer(cx, my_cx);
+    JSAutoRequest transfer(my_cx);
 
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
