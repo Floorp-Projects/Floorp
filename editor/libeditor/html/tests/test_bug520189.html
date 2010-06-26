@@ -46,6 +46,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=520182
   <div id="dd" contenteditable="true"></div>
   <iframe id="ee" src="about:blank"></iframe>
   <div id="ff" contenteditable="true"></div>
+  <iframe id="gg" src="about:blank"></iframe>
+  <div id="hh" contenteditable="true"></div>
+  <iframe id="ii" src="about:blank"></iframe>
+  <div id="jj" contenteditable="true"></div>
+  <iframe id="kk" src="about:blank"></iframe>
+  <div id="ll" contenteditable="true"></div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -68,6 +74,9 @@ const invalidStyle4Payload = "foo<span style=\"@import 'xxx.css';\">bar</span>ba
 const invalidStyle5Payload = "foo<span style=\"@font-face{font-family:xxx;src:'xxx.ttf';}\">bar</span>baz";
 const invalidStyle6Payload = "foo<span style=\"@namespace xxx url(http://example.com/);\">bar</span>baz";
 const nestedStylePayload = "foo<style>#bar1{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-1&quot;/>');<style></style>#bar2{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-2&quot;/>');</style>baz";
+const validImgSrc1Payload = "foo<img src=\"data:image/png,bar\">baz";
+const validImgSrc2Payload = "foo<img src=\"javascript:void('bar');\">baz";
+const validImgSrc3Payload = "foo<img src=\"file:///bar.png\">baz";
 
 var tests = [
   {
@@ -285,6 +294,45 @@ var tests = [
     payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("ff"),
     checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+  },
+  {
+    id: "gg",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("gg").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+  },
+  {
+    id: "hh",
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("hh"),
+    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+  },
+  {
+    id: "ii",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("ii").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+  },
+  {
+    id: "jj",
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("jj"),
+    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+  },
+  {
+    id: "kk",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("kk").contentDocument.documentElement,
+    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+  },
+  {
+    id: "ll",
+    payload: invalidStyle6Payload,
+    rootElement: function() document.getElementById("ll"),
+    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   }
 ];
 
