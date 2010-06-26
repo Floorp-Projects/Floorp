@@ -310,6 +310,7 @@ CPPSRCS += 	Assertions.cpp \
 		StubCalls.cpp \
 		Compiler.cpp \
 		FrameState.cpp \
+		FastArithmetic.cpp \
 		FastOps.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
