@@ -1860,6 +1860,15 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
+    void movsd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movsd      %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
 #if !WTF_CPU_X86_64
     void movsd_mr(const void* address, XMMRegisterID dst)
     {
