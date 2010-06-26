@@ -753,7 +753,27 @@ JS_BeginRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    if (!cx->requestDepth) {
+    JS_ASSERT(cx->requestDepth <= cx->outstandingRequests);
+    if (cx->requestDepth) {
+        JS_ASSERT(cx->thread->requestContext == cx);
+        cx->requestDepth++;
+        cx->outstandingRequests++;
+    } else if (JSContext *old = cx->thread->requestContext) {
+        JS_ASSERT(!cx->prevRequestContext);
+        JS_ASSERT(cx->prevRequestDepth == 0);
+        JS_ASSERT(old != cx);
+        JS_ASSERT(old->requestDepth != 0);
+        JS_ASSERT(old->requestDepth <= old->outstandingRequests);
+
+        /* Serialize access to JSContext::requestDepth from other threads. */
+        AutoLockGC lock(cx->runtime);
+        cx->prevRequestContext = old;
+        cx->prevRequestDepth = old->requestDepth;
+        cx->requestDepth = 1;
+        cx->outstandingRequests++;
+        old->requestDepth = 0;
+        cx->thread->requestContext = cx;
+    } else {
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
 
@@ -764,14 +784,11 @@ JS_BeginRequest(JSContext *cx)
         }
 
         /* Indicate that a request is running. */
-        rt->requestCount++;
-        cx->thread->contextsInRequests++;
         cx->requestDepth = 1;
         cx->outstandingRequests++;
-        return;
+        cx->thread->requestContext = cx;
+        rt->requestCount++;
     }
-    cx->requestDepth++;
-    cx->outstandingRequests++;
 #endif
 }
 
@@ -783,9 +800,27 @@ StopRequest(JSContext *cx)
 
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     JS_ASSERT(cx->requestDepth > 0);
-    JS_ASSERT(cx->outstandingRequests > 0);
-    JS_ASSERT(cx->thread->contextsInRequests > 0);
-    if (cx->requestDepth == 1) {
+    JS_ASSERT(cx->outstandingRequests >= cx->requestDepth);
+    JS_ASSERT(cx->thread->requestContext == cx);
+    if (cx->requestDepth >= 2) {
+        cx->requestDepth--;
+        cx->outstandingRequests--;
+    } else if (JSContext *old = cx->prevRequestContext) {
+        JS_ASSERT(cx != old);
+        JS_ASSERT(old->requestDepth == 0);
+        JS_ASSERT(old->outstandingRequests >= cx->prevRequestDepth);
+        
+        /* Serialize access to JSContext::requestDepth from other threads. */
+        AutoLockGC lock(cx->runtime);
+        
+        cx->outstandingRequests--;
+        cx->requestDepth = 0;
+        old->requestDepth = cx->prevRequestDepth;
+        cx->prevRequestContext = NULL;
+        cx->prevRequestDepth = 0;
+        cx->thread->requestContext = old;
+    } else {
+        JS_ASSERT(cx->prevRequestDepth == 0);
         LeaveTrace(cx);  /* for GC safety */
 
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
@@ -794,19 +829,16 @@ StopRequest(JSContext *cx)
 
         cx->requestDepth = 0;
         cx->outstandingRequests--;
+        cx->thread->requestContext = NULL;
 
         js_ShareWaitingTitles(cx);
 
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);
         rt->requestCount--;
-        cx->thread->contextsInRequests--;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);
-        return;
     }
-    cx->requestDepth--;
-    cx->outstandingRequests--;
 }
 #endif
 
@@ -832,6 +864,9 @@ JS_YieldRequest(JSContext *cx)
 #ifdef JS_THREADSAFE
     JS_ASSERT(cx->thread);
     CHECK_REQUEST(cx);
+    cx = cx->thread->requestContext;
+    if (!cx)
+        return;
     JS_ResumeRequest(cx, JS_SuspendRequest(cx));
 #endif
 }
@@ -871,25 +906,6 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
         JS_BeginRequest(cx);
         cx->outstandingRequests--;  /* compensate for JS_BeginRequest */
     } while (--saveDepth != 0);
-#endif
-}
-
-JS_PUBLIC_API(void)
-JS_TransferRequest(JSContext *cx, JSContext *another)
-{
-    JS_ASSERT(cx != another);
-    JS_ASSERT(cx->runtime == another->runtime);
-#ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread);
-    JS_ASSERT(another->thread);
-    JS_ASSERT(cx->thread == another->thread);
-    JS_ASSERT(cx->requestDepth != 0);
-    JS_ASSERT(another->requestDepth == 0);
-
-    /* Serialize access to JSContext::requestDepth from other threads. */
-    AutoLockGC lock(cx->runtime);
-    another->requestDepth = cx->requestDepth;
-    cx->requestDepth = 0;
 #endif
 }
 
