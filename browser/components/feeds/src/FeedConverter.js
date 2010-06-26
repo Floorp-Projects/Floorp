@@ -622,8 +622,4 @@ var components = [FeedConverter,
                   PodCastProtocolHandler];
 
 
-var NSGetFactory2 = XPCOMUtils.generateNSGetFactory(components);
-function NSGetFactory(cid) {
-  dump("FeedConverter.NSGetFactory(" + cid + ")\n");
-  return NSGetFactory2(cid);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
