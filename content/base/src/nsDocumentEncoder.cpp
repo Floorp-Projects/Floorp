@@ -101,7 +101,7 @@ public:
   NS_DECL_NSIDOCUMENTENCODER
 
 protected:
-  void Initialize();
+  void Initialize(PRBool aClearCachedSerializer = PR_TRUE);
   nsresult SerializeNodeStart(nsINode* aNode, PRInt32 aStartOffset,
                               PRInt32 aEndOffset, nsAString& aStr,
                               nsINode* aOriginalNode = nsnull);
@@ -212,7 +212,7 @@ nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nsnull)
 
 }
 
-void nsDocumentEncoder::Initialize()
+void nsDocumentEncoder::Initialize(PRBool aClearCachedSerializer)
 {
   mFlags = 0;
   mWrapColumn = 72;
@@ -222,7 +222,9 @@ void nsDocumentEncoder::Initialize()
   mEndRootIndex = 0;
   mHaltRangeHint = PR_FALSE;
   mNodeIsContainer = PR_FALSE;
-  mSerializer = nsnull;
+  if (aClearCachedSerializer) {
+    mSerializer = nsnull;
+  }
 }
 
 nsDocumentEncoder::~nsDocumentEncoder()
@@ -254,7 +256,7 @@ nsDocumentEncoder::NativeInit(nsIDocument* aDocument,
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
 
-  Initialize();
+  Initialize(!mMimeType.Equals(aMimeType));
 
   mDocument = aDocument;
 
