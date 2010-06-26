@@ -225,6 +225,13 @@ class FrameState
     void pushLocal(uint32 n);
 
     /*
+     * Allocates a temporary register for a FrameEntry's type, but does not
+     * output the bytecode to load the value into the register. The semantics
+     * are the same as with tempRegForType().
+     */
+    inline RegisterID predictRegForType(FrameEntry *fe);
+
+    /*
      * Allocates a temporary register for a FrameEntry's type. The register
      * can be spilled or clobbered by the frame. The compiler may only operate
      * on it temporarily, and must take care not to clobber it.
@@ -248,6 +255,25 @@ class FrameState
      * frame entry's data payload.
      */
     inline RegisterID tempRegForConstant(FrameEntry *fe);
+
+    /*
+     * Forcibly loads the type tag for the specified FrameEntry
+     * into a register already marked as owning the type.
+     */
+    inline void emitLoadTypeTag(FrameEntry *fe, RegisterID reg) const;
+    inline void emitLoadTypeTag(Assembler &masm, FrameEntry *fe, RegisterID reg) const;
+
+    /*
+     * Convert an integer to a double without applying
+     * additional Register pressure.
+     */
+    inline void convertInt32ToDouble(Assembler &masm, FrameEntry *fe,
+                                     FPRegisterID fpreg) const;
+
+    /*
+     * Dive into a FrameEntry and check whether it's in a register.
+     */
+    inline bool peekTypeInRegister(FrameEntry *fe) const;
 
     /*
      * Allocates a register for a FrameEntry's data, such that the compiler
@@ -276,6 +302,15 @@ class FrameState
      * can modify it in-place. The actual FE is not modified.
      */
     RegisterID copyDataIntoReg(FrameEntry *fe);
+    RegisterID copyDataIntoReg(Assembler &masm, FrameEntry *fe);
+
+    /*
+     * Allocates a FPRegister for a FrameEntry, such that the compiler
+     * can modify it in-place. The FrameState is not modified.
+     */
+    FPRegisterID copyEntryIntoFPReg(FrameEntry *fe, FPRegisterID fpreg);
+    FPRegisterID copyEntryIntoFPReg(Assembler &masm, FrameEntry *fe,
+                                    FPRegisterID fpreg);
 
     /*
      * Allocates a register for a FrameEntry's type, such that the compiler
@@ -351,6 +386,11 @@ class FrameState
      * process.
      */
     void syncAndKill(uint32 mask); 
+
+    /*
+     * Syncs all outstanding stores to memory.
+     */
+    void syncAllRegs(uint32 mask);
 
     /*
      * Syncs the entire frame for a call.

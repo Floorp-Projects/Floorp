@@ -119,6 +119,36 @@ class Compiler
         uint32 ndefs;
     };
 
+    class MaybeRegisterID {
+      public:
+        MaybeRegisterID()
+          : set(false)
+        { }
+
+        inline RegisterID getReg() const { JS_ASSERT(set); return reg; }
+        inline void setReg(const RegisterID r) { reg = r; set = true; }
+        inline bool isSet() const { return set; }
+
+      private:
+        RegisterID reg;
+        bool set;
+    };
+
+    class MaybeJump {
+      public:
+        MaybeJump()
+          : set(false)
+        { }
+
+        inline Jump getJump() const { JS_ASSERT(set); return jump; }
+        inline void setJump(const Jump &j) { jump = j; set = true; }
+        inline bool isSet() const { return set; }
+
+      private:
+        Jump jump;
+        bool set;
+    };
+
     JSContext *cx;
     JSScript *script;
     JSObject *scopeChain;

@@ -178,6 +178,7 @@ FrameState::evictSomeReg(uint32 mask)
     return fallback;
 }
 
+
 void
 FrameState::forgetEverything()
 {
@@ -410,6 +411,43 @@ FrameState::syncAndKill(uint32 mask)
 }
 
 void
+FrameState::syncAllRegs(uint32 mask)
+{
+    Registers regs(mask);
+
+    /* Same as syncAndKill(), minus the killing. */
+    FrameEntry *tos = tosFe();
+    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
+        FrameEntry *fe = tracker[i];
+        if (fe >= tos)
+            continue;
+
+        Address address = addressOf(fe);
+        FrameEntry *backing = fe;
+        if (fe->isCopy())
+            backing = fe->copyOf();
+
+        JS_ASSERT_IF(i == 0, !fe->isCopy());
+
+        if (!fe->data.synced()) {
+            if (backing != fe && backing->data.inMemory())
+                tempRegForData(backing);
+            syncData(backing, address, masm);
+            fe->data.sync();
+            if (fe->isConstant() && !fe->type.synced())
+                fe->type.sync();
+        }
+        if (!fe->type.synced()) {
+            if (backing != fe && backing->type.inMemory())
+                tempRegForType(backing);
+            syncType(backing, address, masm);
+            fe->type.sync();
+        }
+    }
+
+}
+
+void
 FrameState::merge(Assembler &masm, uint32 iVD) const
 {
     FrameEntry *tos = tosFe();
@@ -434,6 +472,12 @@ FrameState::merge(Assembler &masm, uint32 iVD) const
 
 JSC::MacroAssembler::RegisterID
 FrameState::copyDataIntoReg(FrameEntry *fe)
+{
+    return copyDataIntoReg(this->masm, fe);
+}
+
+JSC::MacroAssembler::RegisterID
+FrameState::copyDataIntoReg(Assembler &masm, FrameEntry *fe)
 {
     JS_ASSERT(!fe->data.isConstant());
 
@@ -496,6 +540,35 @@ FrameState::copyTypeIntoReg(FrameEntry *fe)
         masm.loadTypeTag(addressOf(fe), reg);
 
     return reg;
+}
+
+JSC::MacroAssembler::FPRegisterID
+FrameState::copyEntryIntoFPReg(FrameEntry *fe, FPRegisterID fpreg)
+{
+    return copyEntryIntoFPReg(this->masm, fe, fpreg);
+}
+
+JSC::MacroAssembler::FPRegisterID
+FrameState::copyEntryIntoFPReg(Assembler &masm, FrameEntry *fe, FPRegisterID fpreg)
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    /* The entry must be synced to memory. */
+    if (fe->data.isConstant()) {
+        if (!fe->data.synced())
+            syncData(fe, addressOf(fe), masm);
+        if (!fe->type.synced())
+            syncType(fe, addressOf(fe), masm);
+    } else {
+        if (fe->data.inRegister() && !fe->data.synced())
+            syncData(fe, addressOf(fe), masm);
+        if (fe->type.inRegister() && !fe->type.synced())
+            syncType(fe, addressOf(fe), masm);
+    }
+
+    masm.loadDouble(addressOf(fe), fpreg);
+    return fpreg;
 }
 
 JSC::MacroAssembler::RegisterID
