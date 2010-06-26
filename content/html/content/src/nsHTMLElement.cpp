@@ -61,7 +61,15 @@ public:
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 };
 
+// Disable MSVC warning that spams when we pass empty string as only macro arg.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4003)
+#endif
 NS_IMPL_NS_NEW_HTML_ELEMENT() // HTMLElement
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 nsHTMLElement::nsHTMLElement(nsINodeInfo* aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
