@@ -1615,7 +1615,9 @@ IdToString(JSContext *cx, jsid id)
   if (JSID_IS_STRING(id))
     return JSID_TO_STRING(id);
   jsval idval;
-  if (!::JS_IdToValue(cx, id, &idval))
+  if (JSID_IS_DEFAULT_XML_NAMESPACE(id) || JSID_IS_VOID(id))
+      idval = JSVAL_VOID;
+  else if (!::JS_IdToValue(cx, id, &idval))
     return nsnull;
   return JS_ValueToString(cx, idval);
 }
