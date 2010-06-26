@@ -3231,7 +3231,7 @@ LetOtherGCFinish(JSContext *cx)
     JS_ASSERT(rt->gcThread);
     JS_ASSERT(cx->thread != rt->gcThread);
 
-    size_t requestDebit = cx->thread->contextsInRequests;
+    size_t requestDebit = cx->thread->requestContext ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
 #ifdef JS_TRACER
     JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
@@ -3310,13 +3310,13 @@ BeginGCSession(JSContext *cx)
     js_NudgeOtherContexts(cx);
 
     /*
-     * Discount all the requests on the current thread from contributing to
+     * Discount the request on the current thread from contributing to
      * rt->requestCount before we wait for all other requests to finish.
      * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
      * rt->requestCount transitions to 0.
      */
-    size_t requestDebit = cx->thread->contextsInRequests;
-    JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
+    JS_ASSERT_IF(cx->requestDepth != 0, cx->thread->requestContext);
+    size_t requestDebit = cx->thread->requestContext ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
     if (requestDebit != rt->requestCount) {
         rt->requestCount -= requestDebit;
@@ -3405,11 +3405,10 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
      * Do not scan the current thread on the shutdown or when the GC is called
      * outside a request.
      */
-    bool scanGCThreadStack =
+    bool scanGCThreadStack = (rt->state != JSRTS_LANDING);
 #ifdef JS_THREADSAFE
-                             (cx->thread->contextsInRequests != 0) &&
+    scanGCThreadStack &= !!cx->thread->requestContext;
 #endif
-                             (rt->state != JSRTS_LANDING);
     if (scanGCThreadStack)
         JS_THREAD_DATA(cx)->conservativeGC.enable(true);
     bool firstRun = true;

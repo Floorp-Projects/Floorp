@@ -3307,7 +3307,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
             goto fail;
 
         {
-            JSAutoTransferRequest transfer(cx, newcx);
+            JSAutoRequest req(newcx);
             JS_SetGlobalObject(newcx, global);
         }
         JS_ClearContextThread(newcx);

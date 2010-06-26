@@ -3666,7 +3666,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                     // exception into a string.
                     str = JS_ValueToString(sandcx->GetJSContext(), exn);
 
-                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
+                    JSAutoRequest req(cx);
                     if (str) {
                         // We converted the exception to a string. Use that
                         // as the value exception.
@@ -3676,7 +3676,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                         rv = NS_ERROR_FAILURE;
                     }
                 } else {
-                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
+                    JSAutoRequest req(cx);
 
                     if (!JSVAL_IS_PRIMITIVE(exn) &&
                         XPCWrapper::RewrapObject(cx, callingScope,

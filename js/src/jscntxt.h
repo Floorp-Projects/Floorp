@@ -1069,10 +1069,9 @@ struct JSThread {
     bool                gcWaiting;
 
     /*
-     * Number of JSContext instances that are in requests on this thread. For
-     * such instances JSContext::requestDepth > 0 holds.
+     * The context running the requests.
      */
-    uint32              contextsInRequests;
+    JSContext           *requestContext;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -1855,6 +1854,8 @@ struct JSContext
     jsrefcount          requestDepth;
     /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
     jsrefcount          outstandingRequests;
+    JSContext           *prevRequestContext;
+    jsrefcount          prevRequestDepth;
 # ifdef DEBUG
     unsigned            checkRequestDepth;
 # endif    
