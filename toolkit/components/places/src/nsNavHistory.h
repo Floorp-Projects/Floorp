@@ -121,6 +121,8 @@ namespace places {
   , DB_GET_PAGE_VISIT_STATS = 5
   , DB_UPDATE_PAGE_VISIT_STATS = 6
   , DB_ADD_NEW_PAGE = 7
+  , DB_GET_URL_PAGE_INFO = 8
+  , DB_SET_PLACE_TITLE = 9
   };
 
 } // namespace places
@@ -438,6 +440,10 @@ public:
         return mDBUpdatePageVisitStats;
       case DB_ADD_NEW_PAGE:
         return mDBAddNewPage;
+      case DB_GET_URL_PAGE_INFO:
+        return mDBGetURLPageInfo;
+      case DB_SET_PLACE_TITLE:
+        return mDBSetPlaceTitle;
     }
     return nsnull;
   }
@@ -447,12 +453,17 @@ public:
   /**
    * Fires onVisit event to nsINavHistoryService observers
    */
-  void FireOnVisit(nsIURI* aURI,
+  void NotifyOnVisit(nsIURI* aURI,
                    PRInt64 aVisitID,
                    PRTime aTime,
                    PRInt64 aSessionID,
                    PRInt64 referringVisitID,
                    PRInt32 aTransitionType);
+
+  /**
+   * Fires onTitleChanged event to nsINavHistoryService observers
+   */
+  void NotifyTitleChange(nsIURI* aURI, const nsString& title);
 
 private:
   ~nsNavHistory();
