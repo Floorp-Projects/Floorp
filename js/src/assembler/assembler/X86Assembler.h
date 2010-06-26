@@ -94,7 +94,7 @@ namespace X86Registers {
           = { "%xmm0", "%xmm1", "%xmm2", "%xmm3",
               "%xmm4", "%xmm5", "%xmm6", "%xmm7" };
         int off = (XMMRegisterID)fpreg - (XMMRegisterID)xmm0;
-        return (off < 0 || off > 8) ? "%xmm?" : xmmnames[off];
+        return (off < 0 || off > 7) ? "%xmm?" : xmmnames[off];
     }
 
     static const char* nameIReg(int szB, RegisterID reg)
