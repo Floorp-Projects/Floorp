@@ -500,8 +500,9 @@ var Browser = {
     browsers.addEventListener("command", this._handleContentCommand, true);
     browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
-    // Login Manager
+    // Login Manager and Form History initialization
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     // Make sure we're online before attempting to load
     Util.forceOnline();
