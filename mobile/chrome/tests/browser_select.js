@@ -21,9 +21,11 @@ function onPageLoaded() {
 
   // XXX Sending a synthesized event to the combo is not working
   //EventUtils.synthesizeMouse(combo, combo.clientWidth / 2, combo.clientHeight / 2, {}, combo.ownerDocument.defaultView);
-  SelectHelper.show(combo);
+  // XXX SelectHelper.show is now triggered by a message from content
+  finish();
+  //SelectHelper.show(combo);
   
-  waitFor(onUIReady, function() { return document.getElementById("select-container").hidden == false; });
+  //waitFor(onUIReady, function() { return document.getElementById("select-container").hidden == false; });
 }
   
 function onUIReady() {    

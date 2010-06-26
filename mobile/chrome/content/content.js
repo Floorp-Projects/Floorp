@@ -264,7 +264,7 @@ Coalescer.prototype = {
       }
       case "scroll":
         let scroll = Util.getScrollOffset(content);
-        sendSyncMessage("Browser:PageScroll", { scrollX: scroll.x, scrollY: scroll.y });
+        sendAsyncMessage("Browser:PageScroll", { scrollX: scroll.x, scrollY: scroll.y });
         break;
     }
   },
@@ -313,9 +313,9 @@ Coalescer.prototype = {
     let dirtyRect = this._pendingDirtyRect;
     let sizeChange = this._pendingSizeChange;
     if (sizeChange) {
-      sendSyncMessage("Browser:MozScrolledAreaChanged", { width: sizeChange.width, height: sizeChange.height });
+      sendAsyncMessage("Browser:MozScrolledAreaChanged", { width: sizeChange.width, height: sizeChange.height });
       if (!this._incremental)
-        sendSyncMessage("Browser:MozAfterPaint", { rects: [ { left: 0, top: 0, right: sizeChange.width, bottom: sizeChange.height } ] });
+        sendAsyncMessage("Browser:MozAfterPaint", { rects: [ { left: 0, top: 0, right: sizeChange.width, bottom: sizeChange.height } ] });
 
       this._pendingSizeChange = null;
 
@@ -325,7 +325,7 @@ Coalescer.prototype = {
     }
     else if (!dirtyRect.isEmpty()) {
       // No size change has occurred, but areas have been dirtied.
-      sendSyncMessage("Browser:MozAfterPaint", { rects: [dirtyRect] });
+      sendAsyncMessage("Browser:MozAfterPaint", { rects: [dirtyRect] });
 
       // Reset the rect to empty
       dirtyRect.top = dirtyRect.bottom;
@@ -465,7 +465,7 @@ Content.prototype = {
             return;
 
           let rects = getContentClientRects(element);
-          sendSyncMessage("Browser:Highlight", { rects: rects });
+          sendAsyncMessage("Browser:Highlight", { rects: rects });
         }, kTapOverlayTimeout);
         break;
 
