@@ -556,8 +556,8 @@ struct nsCSSValue::Array {
     return PR_TRUE;
   }
 
-  // XXXdholbert This uses a size_t ref count to save space. Should we use
-  // a variant of NS_INLINE_DECL_REFCOUNTING that takes a type as an argument?
+  // XXXdholbert This uses a size_t ref count. Should we use a variant
+  // of NS_INLINE_DECL_REFCOUNTING that takes a type as an argument?
   void AddRef() {
     if (mRefCnt == size_t(-1)) { // really want SIZE_MAX
       NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
