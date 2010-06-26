@@ -632,15 +632,6 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
 }
 
 void
-mjit::Compiler::jsop_neg()
-{
-    prepareStubCall();
-    stubCall(stubs::Neg, Uses(1), Defs(1));
-    frame.pop();
-    frame.pushSynced();
-}
-
-void
 mjit::Compiler::jsop_objtostr()
 {
     prepareStubCall();
