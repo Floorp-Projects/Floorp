@@ -87,6 +87,15 @@ namespace X86Registers {
         xmm7
     } XMMRegisterID;
 
+    static const char* nameFPReg(XMMRegisterID fpreg)
+    {
+        static const char* xmmnames[8]
+          = { "%xmm0", "%xmm1", "%xmm2", "%xmm3",
+              "%xmm4", "%xmm5", "%xmm6", "%xmm7" };
+        int off = (XMMRegisterID)fpreg - (XMMRegisterID)xmm0;
+        return (off < 0 || off > 8) ? "%xmm?" : xmmnames[off];
+    }
+
     static const char* nameIReg(int szB, RegisterID reg)
     {
         static const char* r64names[16]
@@ -1617,7 +1626,7 @@ public:
     {
         js::JaegerSpew(js::JSpew_Insns,
                        IPFX "jmp        ((%s))\n",
-		       nameIReg(dst));
+           nameIReg(dst));
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, dst);
         return JmpSrc(m_formatter.size());
     }
@@ -1745,28 +1754,36 @@ public:
 
     void addsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "addsd      %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_ADDSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
     void addsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "addsd      %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_ADDSD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
     void cvtsi2sd_rr(RegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvtsi2sd   %s, %s\n",
+                       nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
     }
 
     void cvtsi2sd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvtsi2sd   %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, base, offset);
     }
@@ -1774,7 +1791,9 @@ public:
 #if !WTF_CPU_X86_64
     void cvtsi2sd_mr(void* address, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvtsi2sd   %p, %s\n",
+                       address, nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, address);
     }
@@ -1782,14 +1801,18 @@ public:
 
     void cvttsd2si_rr(XMMRegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvttsd2si  %s, %s\n",
+                       nameFPReg(src), nameIReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
     }
 
     void movd_rr(XMMRegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movd       %s, %s\n",
+                       nameFPReg(src), nameIReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVD_EdVd, (RegisterID)src, dst);
     }
@@ -1797,14 +1820,18 @@ public:
 #if WTF_CPU_X86_64
     void movq_rr(XMMRegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movq       %s, %s\n",
+                       nameFPReg(src), nameIReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp64(OP2_MOVD_EdVd, (RegisterID)src, dst);
     }
 
     void movq_rr(RegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movq       %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp64(OP2_MOVD_VdEd, (RegisterID)dst, src);
     }
@@ -1812,14 +1839,18 @@ public:
 
     void movsd_rm(XMMRegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movsd      %s, %d(%s)\n",
+                       nameFPReg(src), offset, nameIReg(base));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, offset);
     }
 
     void movsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movsd      %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, offset);
     }
@@ -1827,7 +1858,9 @@ public:
 #if !WTF_CPU_X86_64
     void movsd_mr(const void* address, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movsd      %p, %s\n",
+                       address, nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, address);
     }
@@ -1835,14 +1868,18 @@ public:
 
     void mulsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "mulsd      %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MULSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
     void mulsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "mulsd      %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MULSD_VsdWsd, (RegisterID)dst, base, offset);
     }
@@ -1857,55 +1894,72 @@ public:
 
     void subsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "subsd      %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_SUBSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
     void subsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "subsd      %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_SUBSD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
     void ucomisd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "ucomisd    %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_UCOMISD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
     void ucomisd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "ucomisd    %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_UCOMISD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
     void divsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "divsd      %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_DIVSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
     void divsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "divsd      %d(%s), %s\n",
+                       offset, nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_DIVSD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
     void xorpd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "xorpd      %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_XORPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
     }
 
     void sqrtsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "sqrtsd     %s, %s\n",
+                       nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_SQRTSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
