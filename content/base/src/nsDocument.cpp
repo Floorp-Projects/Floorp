@@ -1393,7 +1393,7 @@ nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
 {
-  mContentType = aContentType;
+  SetContentTypeInternal(nsDependentCString(aContentType));
   
 #ifdef PR_LOGGING
   if (!gDocumentLeakPRLog)
@@ -1688,6 +1688,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginalDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedEncoder)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
@@ -1731,6 +1732,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
@@ -1947,7 +1949,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   mLastModified.Truncate();
   // XXXbz I guess we're assuming that the caller will either pass in
   // a channel with a useful type or call SetContentType?
-  mContentType.Truncate();
+  SetContentTypeInternal(EmptyCString());
   mContentLanguage.Truncate();
   mBaseTarget.Truncate();
   mReferrer.Truncate();
@@ -2155,7 +2157,7 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     contentType.EndReading(end);
     semicolon = start;
     FindCharInReadable(';', semicolon, end);
-    mContentType = Substring(start, semicolon);
+    SetContentTypeInternal(Substring(start, semicolon));
   }
 
   RetrieveRelevantHeaders(aChannel);
@@ -2436,7 +2438,7 @@ nsDocument::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 NS_IMETHODIMP
 nsDocument::GetContentType(nsAString& aContentType)
 {
-  CopyUTF8toUTF16(mContentType, aContentType);
+  CopyUTF8toUTF16(GetContentTypeInternal(), aContentType);
 
   return NS_OK;
 }
@@ -2444,11 +2446,11 @@ nsDocument::GetContentType(nsAString& aContentType)
 void
 nsDocument::SetContentType(const nsAString& aContentType)
 {
-  NS_ASSERTION(mContentType.IsEmpty() ||
-               mContentType.Equals(NS_ConvertUTF16toUTF8(aContentType)),
+  NS_ASSERTION(GetContentTypeInternal().IsEmpty() ||
+               GetContentTypeInternal().Equals(NS_ConvertUTF16toUTF8(aContentType)),
                "Do you really want to change the content-type?");
 
-  CopyUTF16toUTF8(aContentType, mContentType);
+  SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
 }
 
 /* Return true if the document is in the focused top-level window, and is an
@@ -7305,7 +7307,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->mCompatMode = mCompatMode;
   clone->mBidiOptions = mBidiOptions;
   clone->mContentLanguage = mContentLanguage;
-  clone->mContentType = mContentType;
+  clone->SetContentTypeInternal(GetContentTypeInternal());
   clone->mSecurityInfo = mSecurityInfo;
 
   // State from nsDocument
