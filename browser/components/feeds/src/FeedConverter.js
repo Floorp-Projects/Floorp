@@ -608,7 +608,7 @@ function FeedProtocolHandler() {
   this._init('feed');
 }
 FeedProtocolHandler.prototype = new GenericProtocolHandler();
-FeedProtocolHandler.classID = Components.ID("{4f91ef2e-57ba-472e-ab7a-b4999e42d6c0}");
+FeedProtocolHandler.prototype.classID = Components.ID("{4f91ef2e-57ba-472e-ab7a-b4999e42d6c0}");
 
 function PodCastProtocolHandler() {
   this._init('pcast');
@@ -620,4 +620,10 @@ var components = [FeedConverter,
                   FeedResultService,
                   FeedProtocolHandler,
                   PodCastProtocolHandler];
-var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+
+
+var NSGetFactory2 = XPCOMUtils.generateNSGetFactory(components);
+function NSGetFactory(cid) {
+  dump("FeedConverter.NSGetFactory(" + cid + ")\n");
+  return NSGetFactory2(cid);
+}
