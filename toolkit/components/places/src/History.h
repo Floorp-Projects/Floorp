@@ -46,7 +46,6 @@
 #include "nsString.h"
 #include "nsURIHashKey.h"
 #include "nsTArray.h"
-#include "nsDeque.h"
 
 namespace mozilla {
 namespace places {
@@ -71,26 +70,6 @@ public:
   void NotifyVisited(nsIURI *aURI);
 
   /**
-   * Append a task to the queue for SQL queries that need to happen
-   * atomically.
-   *
-   * @pre aTask is not null
-   *
-   * @param aTask
-   *        Task that needs to be completed atomically
-   */
-  void AppendTask(class Step* aTask);
-
-  /**
-   * Call when all steps of the current running task are finished.  Each task
-   * should be responsible for calling this when it is finished (even if there
-   * are errors).
-   *
-   * Do not call this twice for the same visit.
-   */
-  void CurrentTaskFinished();
-
-  /**
    * Obtains a pointer to this service.
    */
   static History *GetService();
@@ -103,26 +82,6 @@ public:
 
 private:
   ~History();
-
-  /**
-   * Since visits rapidly fire at once, it's very likely to have race
-   * conditions for SQL queries.  We often need to see if a row exists
-   * or peek at values, and by the time we have retrieved them they could
-   * be different.
-   *
-   * We guarantee an ordering of our SQL statements so that a set of
-   * callbacks for one visit are guaranteed to be atomic.  Each visit consists
-   * of a data structure that sits in this queue.
-   *
-   * The front of the queue always has the current visit we are processing.
-   */
-  nsDeque mPendingVisits;
-
-  /**
-   * Begins next task at the front of the queue.  The task remains in the queue
-   * until it is done and calls CurrentTaskFinished.
-   */
-  void StartNextTask();
 
   static History *gService;
 
