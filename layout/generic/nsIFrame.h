@@ -146,21 +146,20 @@ typedef PRUint64 nsFrameState;
 
 #define NS_FRAME_STATE_BIT(n_) (nsFrameState(1) << (n_))
 
-enum {
-  NS_FRAME_IN_REFLOW =                          NS_FRAME_STATE_BIT(0),
+#define NS_FRAME_IN_REFLOW                          NS_FRAME_STATE_BIT(0)
 
-  // This is only set during painting
-  NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO =    NS_FRAME_STATE_BIT(0),
+// This is only set during painting
+#define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO    NS_FRAME_STATE_BIT(0)
 
-  // This bit is set when a frame is created. After it has been reflowed
-  // once (during the DidReflow with a finished state) the bit is
-  // cleared.
-  NS_FRAME_FIRST_REFLOW =                       NS_FRAME_STATE_BIT(1),
+// This bit is set when a frame is created. After it has been reflowed
+// once (during the DidReflow with a finished state) the bit is
+// cleared.
+#define NS_FRAME_FIRST_REFLOW                       NS_FRAME_STATE_BIT(1)
 
-  // For a continuation frame, if this bit is set, then this a "fluid" 
-  // continuation, i.e., across a line boundary. Otherwise it's a "hard"
-  // continuation, e.g. a bidi continuation.
-  NS_FRAME_IS_FLUID_CONTINUATION =              NS_FRAME_STATE_BIT(2),
+// For a continuation frame, if this bit is set, then this a "fluid" 
+// continuation, i.e., across a line boundary. Otherwise it's a "hard"
+// continuation, e.g. a bidi continuation.
+#define NS_FRAME_IS_FLUID_CONTINUATION              NS_FRAME_STATE_BIT(2)
 
 /*
  * This bit is obsolete, replaced by HasOverflowRect().
@@ -168,108 +167,107 @@ enum {
  * that this bit is now free to allocate for other purposes.
  * // This bit is set when the frame's overflow rect is
  * // different from its border rect (i.e. GetOverflowRect() != GetRect())
- * NS_FRAME_OUTSIDE_CHILDREN =                   NS_FRAME_STATE_BIT(3),
+ * NS_FRAME_OUTSIDE_CHILDREN                        NS_FRAME_STATE_BIT(3)
  */
 
-  // If this bit is set, then a reference to the frame is being held
-  // elsewhere.  The frame may want to send a notification when it is
-  // destroyed to allow these references to be cleared.
-  NS_FRAME_EXTERNAL_REFERENCE =                 NS_FRAME_STATE_BIT(4),
+// If this bit is set, then a reference to the frame is being held
+// elsewhere.  The frame may want to send a notification when it is
+// destroyed to allow these references to be cleared.
+#define NS_FRAME_EXTERNAL_REFERENCE                 NS_FRAME_STATE_BIT(4)
 
-  // If this bit is set, this frame or one of its descendants has a
-  // percentage height that depends on an ancestor of this frame.
-  // (Or it did at one point in the past, since we don't necessarily clear
-  // the bit when it's no longer needed; it's an optimization.)
-  NS_FRAME_CONTAINS_RELATIVE_HEIGHT =           NS_FRAME_STATE_BIT(5),
+// If this bit is set, this frame or one of its descendants has a
+// percentage height that depends on an ancestor of this frame.
+// (Or it did at one point in the past, since we don't necessarily clear
+// the bit when it's no longer needed; it's an optimization.)
+#define  NS_FRAME_CONTAINS_RELATIVE_HEIGHT          NS_FRAME_STATE_BIT(5)
 
-  // If this bit is set, then the frame corresponds to generated content
-  NS_FRAME_GENERATED_CONTENT =                  NS_FRAME_STATE_BIT(6),
+// If this bit is set, then the frame corresponds to generated content
+#define NS_FRAME_GENERATED_CONTENT                  NS_FRAME_STATE_BIT(6)
 
-  // If this bit is set the frame is a continuation that is holding overflow,
-  // i.e. it is a next-in-flow created to hold overflow after the box's
-  // height has ended. This means the frame should be a) at the top of the
-  // page and b) invisible: no borders, zero height, ignored in margin
-  // collapsing, etc. See nsContainerFrame.h
-  NS_FRAME_IS_OVERFLOW_CONTAINER =              NS_FRAME_STATE_BIT(7),
+// If this bit is set the frame is a continuation that is holding overflow,
+// i.e. it is a next-in-flow created to hold overflow after the box's
+// height has ended. This means the frame should be a) at the top of the
+// page and b) invisible: no borders, zero height, ignored in margin
+// collapsing, etc. See nsContainerFrame.h
+#define NS_FRAME_IS_OVERFLOW_CONTAINER              NS_FRAME_STATE_BIT(7)
 
-  // If this bit is set, then the frame has been moved out of the flow,
-  // e.g., it is absolutely positioned or floated
-  NS_FRAME_OUT_OF_FLOW =                        NS_FRAME_STATE_BIT(8),
+// If this bit is set, then the frame has been moved out of the flow,
+// e.g., it is absolutely positioned or floated
+#define NS_FRAME_OUT_OF_FLOW                        NS_FRAME_STATE_BIT(8)
 
-  // If this bit is set, then the frame reflects content that may be selected
-  NS_FRAME_SELECTED_CONTENT =                   NS_FRAME_STATE_BIT(9),
+// If this bit is set, then the frame reflects content that may be selected
+#define NS_FRAME_SELECTED_CONTENT                   NS_FRAME_STATE_BIT(9)
 
-  // If this bit is set, then the frame is dirty and needs to be reflowed.
-  // This bit is set when the frame is first created.
-  // This bit is cleared by DidReflow after the required call to Reflow has
-  // finished.
-  // Do not set this bit yourself if you plan to pass the frame to
-  // nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
-  NS_FRAME_IS_DIRTY =                           NS_FRAME_STATE_BIT(10),
+// If this bit is set, then the frame is dirty and needs to be reflowed.
+// This bit is set when the frame is first created.
+// This bit is cleared by DidReflow after the required call to Reflow has
+// finished.
+// Do not set this bit yourself if you plan to pass the frame to
+// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
+#define NS_FRAME_IS_DIRTY                           NS_FRAME_STATE_BIT(10)
 
-  // If this bit is set then the frame is too deep in the frame tree, and
-  // we'll stop updating it and its children, to prevent stack overflow
-  // and the like.
-  NS_FRAME_TOO_DEEP_IN_FRAME_TREE =             NS_FRAME_STATE_BIT(11),
+// If this bit is set then the frame is too deep in the frame tree, and
+// we'll stop updating it and its children, to prevent stack overflow
+// and the like.
+#define NS_FRAME_TOO_DEEP_IN_FRAME_TREE             NS_FRAME_STATE_BIT(11)
 
-  // If this bit is set, either:
-  //  1. the frame has children that have either NS_FRAME_IS_DIRTY or
-  //     NS_FRAME_HAS_DIRTY_CHILDREN, or
-  //  2. the frame has had descendants removed.
-  // It means that Reflow needs to be called, but that Reflow will not
-  // do as much work as it would if NS_FRAME_IS_DIRTY were set.
-  // This bit is cleared by DidReflow after the required call to Reflow has
-  // finished.
-  // Do not set this bit yourself if you plan to pass the frame to
-  // nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
-  NS_FRAME_HAS_DIRTY_CHILDREN =                 NS_FRAME_STATE_BIT(12),
+// If this bit is set, either:
+//  1. the frame has children that have either NS_FRAME_IS_DIRTY or
+//     NS_FRAME_HAS_DIRTY_CHILDREN, or
+//  2. the frame has had descendants removed.
+// It means that Reflow needs to be called, but that Reflow will not
+// do as much work as it would if NS_FRAME_IS_DIRTY were set.
+// This bit is cleared by DidReflow after the required call to Reflow has
+// finished.
+// Do not set this bit yourself if you plan to pass the frame to
+// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
+#define NS_FRAME_HAS_DIRTY_CHILDREN                 NS_FRAME_STATE_BIT(12)
 
-  // If this bit is set, the frame has an associated view
-  NS_FRAME_HAS_VIEW =                           NS_FRAME_STATE_BIT(13),
+// If this bit is set, the frame has an associated view
+#define NS_FRAME_HAS_VIEW                           NS_FRAME_STATE_BIT(13)
 
-  // If this bit is set, the frame was created from anonymous content.
-  NS_FRAME_INDEPENDENT_SELECTION =              NS_FRAME_STATE_BIT(14),
+// If this bit is set, the frame was created from anonymous content.
+#define NS_FRAME_INDEPENDENT_SELECTION              NS_FRAME_STATE_BIT(14)
 
-  // If this bit is set, the frame is "special" (lame term, I know),
-  // which means that it is part of the mangled frame hierarchy that
-  // results when an inline has been split because of a nested block.
-  // See the comments in nsCSSFrameConstructor::ConstructInline for
-  // more details.
-  NS_FRAME_IS_SPECIAL =                         NS_FRAME_STATE_BIT(15),
+// If this bit is set, the frame is "special" (lame term, I know),
+// which means that it is part of the mangled frame hierarchy that
+// results when an inline has been split because of a nested block.
+// See the comments in nsCSSFrameConstructor::ConstructInline for
+// more details.
+#define NS_FRAME_IS_SPECIAL                         NS_FRAME_STATE_BIT(15)
 
-  // If this bit is set, the frame may have a transform that it applies
-  // to its coordinate system (e.g. CSS transform, SVG foreignObject).
-  // This is used primarily in GetTransformMatrix to optimize for the
-  // common case.
-  // ALSO, if this bit is set, the frame's first-continuation may
-  // have an associated nsSVGRenderingObserverList.
-  NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS =
-                                                NS_FRAME_STATE_BIT(16),
+// If this bit is set, the frame may have a transform that it applies
+// to its coordinate system (e.g. CSS transform, SVG foreignObject).
+// This is used primarily in GetTransformMatrix to optimize for the
+// common case.
+// ALSO, if this bit is set, the frame's first-continuation may
+// have an associated nsSVGRenderingObserverList.
+#define  NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS \
+                                                    NS_FRAME_STATE_BIT(16)
 
 #ifdef IBMBIDI
-  // If this bit is set, the frame itself is a bidi continuation,
-  // or is incomplete (its next sibling is a bidi continuation)
-  NS_FRAME_IS_BIDI =                            NS_FRAME_STATE_BIT(17),
+// If this bit is set, the frame itself is a bidi continuation,
+// or is incomplete (its next sibling is a bidi continuation)
+#define NS_FRAME_IS_BIDI                            NS_FRAME_STATE_BIT(17)
 #endif
 
-  // If this bit is set the frame has descendant with a view
-  NS_FRAME_HAS_CHILD_WITH_VIEW =                NS_FRAME_STATE_BIT(18),
+// If this bit is set the frame has descendant with a view
+#define NS_FRAME_HAS_CHILD_WITH_VIEW                NS_FRAME_STATE_BIT(18)
 
-  // If this bit is set, then reflow may be dispatched from the current
-  // frame instead of the root frame.
-  NS_FRAME_REFLOW_ROOT =                        NS_FRAME_STATE_BIT(19),
+// If this bit is set, then reflow may be dispatched from the current
+// frame instead of the root frame.
+#define NS_FRAME_REFLOW_ROOT                        NS_FRAME_STATE_BIT(19)
 
-  // Bits 20-31 of the frame state are reserved for implementations.
-  NS_FRAME_IMPL_RESERVED =                      nsFrameState(0xFFF00000),
+// Bits 20-31 of the frame state are reserved for implementations.
+#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xFFF00000)
 
-  // The lower 20 bits and upper 32 bits of the frame state are reserved
-  // by this API.
-  NS_FRAME_RESERVED =                           ~NS_FRAME_IMPL_RESERVED,
+// The lower 20 bits and upper 32 bits of the frame state are reserved
+// by this API.
+#define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
 
-  // Box layout bits
-  NS_STATE_IS_HORIZONTAL =                      NS_FRAME_STATE_BIT(22),
-  NS_STATE_IS_DIRECTION_NORMAL =                NS_FRAME_STATE_BIT(31)
-};
+// Box layout bits
+#define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
+#define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
 
 // Helper macros
 #define NS_SUBTREE_DIRTY(_frame)  \
