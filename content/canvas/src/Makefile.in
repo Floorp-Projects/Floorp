@@ -45,7 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 LIBRARY_NAME	= gkconcvs_s
 LIBXUL_LIBRARY  = 1
-FAIL_ON_WARNINGS = 1
+#XXXdholbert commenting out next line while investigating Bug 573895 on GCC 4.4
+# FAIL_ON_WARNINGS = 1
 
 EXPORTS = \
 	CustomQS_Canvas2D.h \
