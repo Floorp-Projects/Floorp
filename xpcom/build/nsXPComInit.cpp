@@ -313,6 +313,7 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #include "XPCOMModule.inc"
     { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", &kNS_CHROMEPROTOCOLHANDLER_CID },
+    { NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID },
     { NULL }
 };
 #undef COMPONENT
