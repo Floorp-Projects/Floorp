@@ -134,7 +134,7 @@ GetNativeStackBaseImpl()
     }
     return static_cast<void*>(pTib->StackBase);
 
-# elif defined(_M_X64) && defined(_MSC_VER)
+# elif defined(_M_X64)
     PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
     return reinterpret_cast<void*>(pTib->StackBase);
 
