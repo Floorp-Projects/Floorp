@@ -110,6 +110,42 @@ FrameState::allocReg(FrameEntry *fe, RematInfo::RematType type, bool weak)
 }
 
 inline void
+FrameState::emitLoadTypeTag(FrameEntry *fe, RegisterID reg) const
+{
+    emitLoadTypeTag(this->masm, fe, reg);
+}
+
+inline void
+FrameState::emitLoadTypeTag(Assembler &masm, FrameEntry *fe, RegisterID reg) const
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+    masm.loadTypeTag(addressOf(fe), reg);
+}
+
+inline void
+FrameState::convertInt32ToDouble(Assembler &masm, FrameEntry *fe, FPRegisterID fpreg) const
+{
+    JS_ASSERT(!fe->isConstant());
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+    
+    if (fe->data.inRegister())
+        masm.convertInt32ToDouble(fe->data.reg(), fpreg);
+    else
+        masm.convertInt32ToDouble(addressOf(fe), fpreg);
+}
+
+inline bool
+FrameState::peekTypeInRegister(FrameEntry *fe) const
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+    return fe->type.inRegister();
+}
+
+inline void
 FrameState::pop()
 {
     JS_ASSERT(sp > spBase);
@@ -291,7 +327,7 @@ FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload,
 }
 
 inline JSC::MacroAssembler::RegisterID
-FrameState::tempRegForType(FrameEntry *fe)
+FrameState::predictRegForType(FrameEntry *fe)
 {
     JS_ASSERT(!fe->type.isConstant());
     if (fe->isCopy())
@@ -301,6 +337,22 @@ FrameState::tempRegForType(FrameEntry *fe)
         return fe->type.reg();
 
     /* :XXX: X64 */
+
+    RegisterID reg = allocReg(fe, RematInfo::TYPE, true);
+    fe->type.setRegister(reg);
+    return reg;
+}
+
+inline JSC::MacroAssembler::RegisterID
+FrameState::tempRegForType(FrameEntry *fe)
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    if (fe->type.inRegister())
+        return fe->type.reg();
+
+    /* :XXX: X86 */
 
     RegisterID reg = allocReg(fe, RematInfo::TYPE, true);
     masm.loadTypeTag(addressOf(fe), reg);
