@@ -217,8 +217,10 @@ class CompartmentChecker
      * compartment mismatches.
      */
     static void fail(JSCompartment *c1, JSCompartment *c2) {
+#ifdef DEBUG_jorendorff
         printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
-        JS_NOT_REACHED("compartment mismatch");
+        // JS_NOT_REACHED("compartment mismatch");
+#endif
     }
 
     void check(JSCompartment *c) {
