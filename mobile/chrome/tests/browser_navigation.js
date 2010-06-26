@@ -5,6 +5,14 @@ var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_
 var gTests = [];
 var gCurrentTest = null;
 
+function pageLoaded(url) {
+  return function() {
+    let tab = gCurrentTest._tab;
+    return !tab.isLoading() && tab.browser.currentURI.spec == url;
+  }
+}
+  
+
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
 function test() {
@@ -47,9 +55,9 @@ gTests.push({
     this._tab = Browser.addTab(testURL_01, true);
 
     // Wait for the tab to load, then do the test
-    waitFor(gCurrentTest.onPageReady, function() { return gCurrentTest._tab._loading == false; });
+    waitFor(gCurrentTest.onPageReady, pageLoaded(testURL_01));
   },
-  
+
   onPageReady: function() {
     // Test the mode
     let urlIcons = document.getElementById("urlbar-icons");
@@ -73,7 +81,6 @@ gTests.push({
   
   onFocusReady: function() {
     window.removeEventListener("popupshown", gCurrentTest.onFocusReady, false);
-
     // Test mode
     let urlIcons = document.getElementById("urlbar-icons");
     is(urlIcons.getAttribute("mode"), "edit", "URL Mode is set to 'edit'");
@@ -104,7 +111,7 @@ gTests.push({
     EventUtils.synthesizeKey("VK_RETURN", {}, window)
 
     // Wait for the tab to load, then do the test
-    waitFor(gCurrentTest.onPageFinish, function() { return urlIcons.getAttribute("mode") == "view"; });
+    waitFor(gCurrentTest.onPageFinish, pageLoaded(testURL_02));
   },
 
   onPageFinish: function() {
@@ -131,7 +138,7 @@ gTests.push({
     gCurrentTest._tab.browser.goBack();
 
     // Wait for the tab to load, then do the test
-    waitFor(gCurrentTest.onPageBack, function() { return urlIcons.getAttribute("mode") == "view"; });
+    waitFor(gCurrentTest.onPageBack, pageLoaded(testURL_01));
   },
 
   onPageBack: function() {
@@ -159,7 +166,7 @@ gTests.push({
     this._tab = Browser.addTab(testURL_01, true);
 
     // Wait for the tab to load, then do the test
-    waitFor(gCurrentTest.onPageReady, function() { return gCurrentTest._tab._loading == false; });
+    waitFor(gCurrentTest.onPageReady, pageLoaded(testURL_01));
   },
   
   onPageReady: function() {
@@ -176,7 +183,6 @@ gTests.push({
   
   onFocusReady: function() {
     window.removeEventListener("popupshown", gCurrentTest.onFocusReady, false);
-
     let urlIcons = document.getElementById("urlbar-icons");
     is(urlIcons.getAttribute("mode"), "edit", "URL Mode is set to 'edit'");
 
@@ -197,7 +203,7 @@ gTests.push({
     EventUtils.synthesizeMouse(go, go.clientWidth / 2, go.clientHeight / 2, {});
 
     // Wait for the tab to load, then do the test
-    waitFor(gCurrentTest.onPageFinish, function() { return urlIcons.getAttribute("mode") == "view"; });
+    waitFor(gCurrentTest.onPageFinish, pageLoaded(testURL_02));
   },
 
   onPageFinish: function() {
@@ -221,7 +227,7 @@ gTests.push({
     is(uri, testURL_02, "URL Matches newly created Tab");
 
     Browser.closeTab(gCurrentTest._tab);
-    
+
     runNextTest();
-  }  
+  }
 });

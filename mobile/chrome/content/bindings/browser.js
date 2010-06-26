@@ -22,7 +22,7 @@ let WebProgressListener = {
       status: aStatus,
       notifyFlags: notifyFlags
     };
-    sendSyncMessage("WebProgress:StateChange", json);
+    sendAsyncMessage("WebProgress:StateChange", json);
   },
 
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
@@ -33,7 +33,7 @@ let WebProgressListener = {
       curTotal: aCurTotal,
       maxTotal: aMaxTotal
     };
-    sendSyncMessage("WebProgress:ProgressChange", json);
+    sendAsyncMessage("WebProgress:ProgressChange", json);
   },
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
@@ -45,7 +45,7 @@ let WebProgressListener = {
       canGoBack: docShell.canGoBack,
       canGoForward: docShell.canGoForward
     };
-    sendSyncMessage("WebProgress:LocationChange", json);
+    sendAsyncMessage("WebProgress:LocationChange", json);
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
@@ -54,7 +54,7 @@ let WebProgressListener = {
       status: aStatus,
       message: aMessage
     };
-    sendSyncMessage("WebProgress:StatusChange", json);
+    sendAsyncMessage("WebProgress:StatusChange", json);
   },
 
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
@@ -68,7 +68,7 @@ let WebProgressListener = {
       SSLStatus: status,
       state: aState
     };
-    sendSyncMessage("WebProgress:SecurityChange", json);
+    sendAsyncMessage("WebProgress:SecurityChange", json);
   },
 
   QueryInterface: function QueryInterface(aIID) {
@@ -232,7 +232,7 @@ let DOMEvents =  {
         if (document.documentURIObject.spec == "about:blank")
           return;
 
-        sendSyncMessage("DOMContentLoaded", { });
+        sendAsyncMessage("DOMContentLoaded", { });
         break;
 
       case "pageshow":
@@ -245,7 +245,7 @@ let DOMEvents =  {
           persisted: aEvent.persisted
         };
 
-        sendSyncMessage(aEvent.type, json);
+        sendAsyncMessage(aEvent.type, json);
         break;
       }
 
@@ -262,12 +262,12 @@ let DOMEvents =  {
           popupWindowName: aEvent.popupWindowName
         };
 
-        sendSyncMessage("DOMPopupBlocked", json);
+        sendAsyncMessage("DOMPopupBlocked", json);
         break;
       }
 
       case "DOMTitleChanged":
-        sendSyncMessage("DOMTitleChanged", { title: document.title });
+        sendAsyncMessage("DOMTitleChanged", { title: document.title });
         break;
 
       case "DOMLinkAdded":
@@ -284,12 +284,12 @@ let DOMEvents =  {
           type: target.type
         };
 
-        sendSyncMessage("DOMLinkAdded", json);
+        sendAsyncMessage("DOMLinkAdded", json);
         break;
 
       case "DOMWillOpenModalDialog":
       case "DOMWindowClose":
-        let retvals = sendSyncMessage(aEvent.type, { });
+        let retvals = sendAsyncMessage(aEvent.type, { });
         for (rv in retvals) {
           if (rv.preventDefault) {
             aEvent.preventDefault();

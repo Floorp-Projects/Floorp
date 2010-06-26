@@ -46,7 +46,11 @@ let testURL = function testURL(n) {
 }
 
 let working_tab;
-let isLoading = function() { return !working_tab.isLoading(); };
+function pageLoaded(url) {
+  return function() {
+    return !working_tab.isLoading() && working_tab.browser.currentURI.spec == url;
+  }
+}
 
 let numberTests = 10;
 
@@ -63,7 +67,7 @@ function test() {
 
 function startTest(n) {
   BrowserUI.goToURI(testURL_blank);
-  waitFor(verifyBlank(n), isLoading);
+  waitFor(verifyBlank(n), pageLoaded(testURL_blank));
 }
 
 function verifyBlank(n) {
@@ -81,7 +85,8 @@ function verifyBlank(n) {
 }
 
 function loadTest(n) {
-  BrowserUI.goToURI(testURL(n));
+  let url = testURL(n);
+  BrowserUI.goToURI(url);
   waitFor(function() {
     // 1) endLoading is called
     // 2) updateDefaultZoom sees meta tag for the first time
@@ -94,7 +99,7 @@ function loadTest(n) {
     //
     // setTimeout ensures that screen size event happens first
     setTimeout(verifyTest(n), 0);
-  }, isLoading);
+  }, pageLoaded(url));
 }
 
 function is_approx(actual, expected, fuzz, description) {
