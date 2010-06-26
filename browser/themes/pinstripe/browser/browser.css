@@ -578,7 +578,7 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-toolbar[mode="icons"] #bookmarks-menu-button.toolbarbutton-1 {
+#bookmarks-menu-button.toolbarbutton-1 {
   -moz-box-orient: horizontal;
 }
 
