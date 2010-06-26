@@ -130,10 +130,6 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     nsCOMArray<nsIConsoleListener> listenersSnapshot;
     nsIConsoleMessage *retiredMessage;
 
-    nsXPIDLString msgstring;
-    message->GetMessageMoz(getter_Copies(msgstring));
-    printf(">>> Console message: %s\n", NS_ConvertUTF16toUTF8(msgstring).get());
-
     NS_ADDREF(message); // early, in case it's same as replaced below.
 
     /*
