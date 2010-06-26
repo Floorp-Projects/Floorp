@@ -2900,8 +2900,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
   if (!hidden) {
-     FireOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
-                 aTransitionType);
+    NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
+                  aTransitionType);
   }
 
   // Normally docshell sends the link visited observer notification for us (this
