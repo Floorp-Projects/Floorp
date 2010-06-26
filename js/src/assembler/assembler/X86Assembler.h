@@ -47,6 +47,7 @@
     } while (0)
 #else
 #define FIXME_INSN_PRINTING ((void) 0)
+#define PRETTY_PRINT_OFFSET(os) "", 0
 #endif
 
 
