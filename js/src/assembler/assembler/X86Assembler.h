@@ -38,7 +38,7 @@
 #include "methodjit/Logging.h"
 #define IPFX  "        "
 #ifdef JS_METHODJIT_SPEW
-#define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-os:os)
+#define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-(os):(os))
 #define FIXME_INSN_PRINTING                                \
     do {                                                   \
         js::JaegerSpew(js::JSpew_Insns,                    \
