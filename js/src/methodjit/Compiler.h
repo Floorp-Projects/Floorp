@@ -205,7 +205,6 @@ class Compiler
     void jsop_getprop_slow();
     void jsop_getarg(uint32 index);
     void jsop_this();
-    void jsop_binary(JSOp op, VoidStub stub);
     void emitReturn();
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void inlineCallHelper(uint32 argc, bool callingNew);
@@ -230,6 +229,18 @@ class Compiler
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
     void jsop_instanceof();
+
+    /* Fast arithmetic. */
+    void jsop_binary(JSOp op, VoidStub stub);
+    void jsop_binary_intmath(JSOp op, RegisterID *returnReg,
+                             MaybeJump &jmpOverflow);
+    void jsop_binary_dblmath(JSOp op, FPRegisterID rfp, FPRegisterID lfp);
+    void slowLoadConstantDouble(Assembler &masm, FrameEntry *fe,
+                                FPRegisterID fpreg);
+    void maybeJumpIfNotInt32(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
+                             MaybeRegisterID &mreg);
+    void maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
+                              MaybeRegisterID &mreg);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
