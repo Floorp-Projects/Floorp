@@ -817,7 +817,8 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_dialog:
-      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME;
+      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK |
+              DS_MODALFRAME | WS_CLIPCHILDREN;
       if (mBorderStyle != eBorderStyle_default)
         style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
       break;
@@ -836,7 +837,7 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_toplevel:
     case eWindowType_invisible:
       style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
-              WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+              WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CLIPCHILDREN;
       break;
   }
 
