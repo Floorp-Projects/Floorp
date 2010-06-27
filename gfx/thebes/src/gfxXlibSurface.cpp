@@ -51,7 +51,10 @@ typedef struct {
 
 static void pixmap_free_func (void *);
 
-#define XLIB_IMAGE_SIDE_SIZE_LIMIT 0xffff
+// Although the dimension parameters in the xCreatePixmapReq wire protocol are
+// 16-bit unsigned integers, the server's CreatePixmap returns BadAlloc if
+// either dimension cannot be represented by a 16-bit *signed* integer.
+#define XLIB_IMAGE_SIDE_SIZE_LIMIT 0x7fff
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
