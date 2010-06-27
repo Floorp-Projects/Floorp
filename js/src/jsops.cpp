@@ -2574,7 +2574,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
 
     /* Scope for tempPool mark and local names allocation in it. */
     {
-        void *mark = cx->tempPool.getMark();
+        void *mark = JS_ARENA_MARK(&cx->tempPool);
         jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
         if (!names)
             goto error;
@@ -2584,7 +2584,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
         id = ATOM_TO_JSID(atom);
 
         ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
-        cx->tempPool.release(mark);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (!ok)
             goto error;
     }
