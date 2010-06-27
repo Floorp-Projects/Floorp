@@ -88,13 +88,10 @@ _BROWSER_FILES = \
 
 libs::  $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
-	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-	$(INSTALL) $(SHARED_LIBRARY) \
-          $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-else
+endif
 
 libs::
 	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
 	$(INSTALL) $(SHARED_LIBRARY) \
           $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-endif
+	printf "binary-component %s\n" $(SHARED_LIBRARY) >$(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components/testcrasher.manifest
