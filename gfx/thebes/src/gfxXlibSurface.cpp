@@ -42,15 +42,6 @@
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
 
-static cairo_user_data_key_t pixmap_free_key;
-
-typedef struct {
-    Display* dpy;
-    Pixmap pixmap;
-} pixmap_free_struct;
-
-static void pixmap_free_func (void *);
-
 // Although the dimension parameters in the xCreatePixmapReq wire protocol are
 // 16-bit unsigned integers, the server's CreatePixmap returns BadAlloc if
 // either dimension cannot be represented by a 16-bit *signed* integer.
@@ -133,6 +124,9 @@ gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
 
 gfxXlibSurface::~gfxXlibSurface()
 {
+    if (mPixmapTaken) {
+        XFreePixmap (mDisplay, mDrawable);
+    }
 }
 
 void
@@ -196,32 +190,4 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
     }
 
     return (XRenderPictFormat*)NULL;
-}
-
-void
-gfxXlibSurface::TakePixmap()
-{
-    if (mPixmapTaken)
-        return;
-
-    pixmap_free_struct *pfs = new pixmap_free_struct;
-    pfs->dpy = mDisplay;
-    pfs->pixmap = mDrawable;
-
-    cairo_surface_set_user_data (CairoSurface(),
-                                 &pixmap_free_key,
-                                 pfs,
-                                 pixmap_free_func);
-
-    mPixmapTaken = PR_TRUE;
-}
-
-void
-pixmap_free_func (void *data)
-{
-    pixmap_free_struct *pfs = (pixmap_free_struct*) data;
-
-    XFreePixmap (pfs->dpy, pfs->pixmap);
-
-    delete pfs;
 }
