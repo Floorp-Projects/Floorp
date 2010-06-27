@@ -99,6 +99,9 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, XRenderPictForma
 gfxXlibSurface::gfxXlibSurface(Display *dpy, XRenderPictFormat *format, const gfxIntSize& size)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
 {
+    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
+        return;
+
     mDrawable = (Drawable)XCreatePixmap(dpy,
                                         RootWindow(dpy, DefaultScreen(dpy)),
                                         mSize.width, mSize.height,
