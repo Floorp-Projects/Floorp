@@ -80,8 +80,6 @@ parent:
 
   SetCacheTokenCachedCharset(nsCString charset);
 
-  OnStopRequestCompleted();
-
 child:
   OnStartRequest(nsHttpResponseHead responseHead,
                  PRBool             useResponseHead,
