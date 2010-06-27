@@ -132,8 +132,7 @@ PropertyTree::init()
         hash.ops = NULL;
         return false;
     }
-    JS_InitArenaPool(&arenaPool, "properties",
-                     256 * sizeof(JSScopeProperty), sizeof(void *), NULL);
+    arenaPool.init("properties", 256 * sizeof(JSScopeProperty), sizeof(void *), NULL);
     emptyShapeChanges = 0;
     return true;
 }
@@ -145,7 +144,7 @@ PropertyTree::finish()
         JS_DHashTableFinish(&hash);
         hash.ops = NULL;
     }
-    JS_FinishArenaPool(&arenaPool);
+    arenaPool.finish();
 }
 
 /*
@@ -163,8 +162,7 @@ PropertyTree::newScopeProperty(JSContext *cx, bool gcLocked)
     if (sprop) {
         sprop->removeFree();
     } else {
-        JS_ARENA_ALLOCATE_CAST(sprop, JSScopeProperty *, &arenaPool,
-                               sizeof(JSScopeProperty));
+        arenaPool.allocateCast<JSScopeProperty *>(sprop, sizeof *sprop);
         if (!sprop) {
             JS_UNLOCK_GC(cx->runtime);
             JS_ReportOutOfMemory(cx);
@@ -852,12 +850,13 @@ js::SweepScopeProperties(JSContext *cx)
      * nodes already GC'ed from the root ply, but we will avoid re-orphaning
      * their kids, because the kids member will already be null.
      */
-    JSArena **ap = &JS_PROPERTY_TREE(cx).arenaPool.first.next;
-    while (JSArena *a = *ap) {
-        JSScopeProperty *limit = (JSScopeProperty *) a->avail;
+    JSArenaPool &arenaPool = JS_PROPERTY_TREE(cx).arenaPool;
+    JSArena * const first = arenaPool.getFirst();
+    for (JSArena *a = arenaPool.getSecond(); a;) {
+        JSScopeProperty *limit = (JSScopeProperty *) a->getAvail();
         uintN liveCount = 0;
 
-        for (JSScopeProperty *sprop = (JSScopeProperty *) a->base; sprop < limit; sprop++) {
+        for (JSScopeProperty *sprop = (JSScopeProperty *) a->getBase(); sprop < limit; sprop++) {
             /* If the id is null, sprop is already on the freelist. */
             if (JSVAL_IS_NULL(sprop->id))
                 continue;
@@ -912,15 +911,17 @@ js::SweepScopeProperties(JSContext *cx)
 
         /* If a contains no live properties, return it to the malloc heap. */
         if (liveCount == 0) {
-            for (JSScopeProperty *sprop = (JSScopeProperty *) a->base; sprop < limit; sprop++)
+            for (JSScopeProperty *sprop = (JSScopeProperty *) a->getBase(); sprop < limit; sprop++)
                 sprop->removeFree();
-            JS_ARENA_DESTROY(&JS_PROPERTY_TREE(cx).arenaPool, a, ap);
+            a = arenaPool.destroy(a);
+            first->munge(a);
         } else {
 #ifdef DEBUG
-            livePropCapacity += limit - (JSScopeProperty *) a->base;
+            livePropCapacity += limit - (JSScopeProperty *) a->getBase();
             totalLiveCount += liveCount;
 #endif
-            ap = &a->next;
+            first->munge(a->getNext());
+            a = a->getNext();
         }
     }
 
