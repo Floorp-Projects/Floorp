@@ -90,7 +90,6 @@ protected:
 
   virtual bool RecvSetPriority(const PRUint16& priority);
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
-  virtual bool RecvOnStopRequestCompleted();
 
   virtual void ActorDestroy(ActorDestroyReason why);
 
