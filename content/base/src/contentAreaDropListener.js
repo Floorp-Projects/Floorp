@@ -143,6 +143,4 @@ ContentAreaDropListener.prototype =
 };
 
 var components = [ContentAreaDropListener];
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
