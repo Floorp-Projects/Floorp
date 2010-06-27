@@ -391,12 +391,10 @@
       <menupopup>
         <menuitem id="appmenu_newNavigator"
                   label="&newNavigatorCmd.label;"
-                  key="key_newNavigator"
                   command="cmd_newNavigator"/>
         <menuseparator/>
         <menuitem id="appmenu_savePage"
                   label="&savePageCmd.label;"
-                  key="key_savePage"
                   command="Browser:SavePage"/>
         <menuitem id="appmenu_sendLink"
                   label="&sendPageCmd.label;"
@@ -406,7 +404,6 @@
                     class="split-menuitem-item"
                     flex="1"
                     label="&appMenuPrintCmd.label;"
-                    key="printKb"
                     command="cmd_print"/>
           <menu class="split-menuitem-menu">
             <menupopup>
@@ -421,7 +418,6 @@
         </hbox>
         <menuitem id="appmenu_find"
                   label="&findOnCmd.label;"
-                  key="key_find"
                   command="cmd_find"/>
         <menuseparator/>
         <menu id="appmenu_history"
@@ -493,9 +489,6 @@
                   label="&quitApplicationCmdWin.label;"
 #else
                   label="&quitApplicationCmd.label;"
-#ifdef XP_UNIX
-                  key="key_quitApplication"
-#endif
 #endif
                   command="cmd_quitApplication"/>
       </menupopup>
