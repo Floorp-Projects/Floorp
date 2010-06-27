@@ -1,0 +1,3 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="var p=document.getElementById('p'); for(var i=0;i!=3;++i)p.parentNode.appendChild(p);">
+<menuitem style="counter-reset: chicken;">P<popup id="p" style="counter-reset: chicken;"/></menuitem>
+</window>
