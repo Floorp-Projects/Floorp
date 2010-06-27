@@ -1,0 +1,18 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script>
+
+function boom()
+{
+  var a = document.getElementById("a");
+  while (a.firstChild)
+    a.removeChild(a.firstChild);
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+<menulist id="a" sizetopopup="pref"><menupopup/><menupopup/></menulist>
+
+</window>
