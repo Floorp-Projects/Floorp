@@ -248,9 +248,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
                              : nsnull;
       NS_ASSERTION(!firstPopup || !firstPopup->GetNextSibling(),
                    "We assume popupList only has one child, but it has more.");
-      listName = (!firstPopup || firstPopup == aChildFrame)
-                 ? nsGkAtoms::popupList
-                 : nsnull;
+      listName = firstPopup == aChildFrame ? nsGkAtoms::popupList : nsnull;
     } else if (nsGkAtoms::tableColGroupFrame == childType) {
       listName = nsGkAtoms::colGroupList;
     } else if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
