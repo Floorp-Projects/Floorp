@@ -5,8 +5,8 @@ contract @mozilla.org/browser/livemark-service;2 {dca61eb5-c7cd-4df1-b0fb-d0722b
 # nsTaggingService.js
 component {bbc23860-2553-479d-8b78-94d9038334f7} nsTaggingService.js
 contract @mozilla.org/browser/tagging-service;1 {bbc23860-2553-479d-8b78-94d9038334f7}
-component {1dcc23b0-d4cb-11dc-9ad6-479d56d89593 nsTaggingService.js
-contract @mozilla.org/autocomplete/search;1?name=places-tag-autocomplete {1dcc23b0-d4cb-11dc-9ad6-479d56d89593
+component {1dcc23b0-d4cb-11dc-9ad6-479d56d89593} nsTaggingService.js
+contract @mozilla.org/autocomplete/search;1?name=places-tag-autocomplete {1dcc23b0-d4cb-11dc-9ad6-479d56d89593}
 
 # nsPlacesDBFlush.js
 component {c1751cfc-e8f1-4ade-b0bb-f74edfb8ef6a} nsPlacesDBFlush.js
