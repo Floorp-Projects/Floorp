@@ -80,10 +80,13 @@ public:
 
     // take ownership of a passed-in Pixmap, calling XFreePixmap on it
     // when the gfxXlibSurface is destroyed.
-    void TakePixmap();
+    void TakePixmap() {
+        NS_ASSERTION(!mPixmapTaken, "I already own the Pixmap!");
+        mPixmapTaken = PR_TRUE;
+    }
 
 protected:
-    // if TakePixmap() was already called on this
+    // if TakePixmap() has been called on this
     PRBool mPixmapTaken;
     
     Display *mDisplay;
