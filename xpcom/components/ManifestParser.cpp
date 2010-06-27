@@ -360,10 +360,13 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
   NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
   NS_NAMED_LITERAL_STRING(kOs, "os");
   NS_NAMED_LITERAL_STRING(kOsVersion, "osversion");
+  NS_NAMED_LITERAL_STRING(kABI, "abi");
 
   nsAutoString appID;
   nsAutoString appVersion;
   nsAutoString osTarget;
+  nsAutoString abi;
+
   nsCOMPtr<nsIXULAppInfo> xapp (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
   if (xapp) {
     nsCAutoString s;
@@ -381,6 +384,14 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       if (NS_SUCCEEDED(rv)) {
         CopyUTF8toUTF16(s, osTarget);
         ToLowerCase(osTarget);
+      }
+
+      rv = xruntime->GetXPCOMABI(s);
+      if (NS_SUCCEEDED(rv) && osTarget.Length()) {
+        CopyUTF8toUTF16(s, abi);
+        ToLowerCase(abi);
+        abi.Insert(PRUnichar('_'), 0);
+        abi.Insert(osTarget, 0);
       }
     }
   }
@@ -459,6 +470,7 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
     TriState stApp = eUnspecified;
     TriState stOsVersion = eUnspecified;
     TriState stOs = eUnspecified;
+    TriState stABI = eUnspecified;
     bool platform = false;
     bool contentAccessible = false;
 
@@ -468,6 +480,7 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
 
       if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
 	  CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+          CheckStringFlag(kABI, wtoken, abi, stABI) ||
 	  CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
 	  CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion))
 	continue;
@@ -481,7 +494,12 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       ok = false;
     }
 
-    if (!ok || stApp == eBad || stAppVersion == eBad || stOs == eBad || stOsVersion == eBad)
+    if (!ok ||
+        stApp == eBad ||
+        stAppVersion == eBad ||
+        stOs == eBad ||
+        stOsVersion == eBad ||
+        stABI == eBad)
       continue;
 
     if (directive->ischrome) {
@@ -510,7 +528,7 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
     }
   }
 
-  for (PRInt32 i = 0; i < contracts.Length(); ++i) {
+  for (PRUint32 i = 0; i < contracts.Length(); ++i) {
     CachedDirective& d = contracts[i];
     nsComponentManagerImpl::gComponentManager->ManifestContract
       (mgrcx, d.lineno, d.argv);
