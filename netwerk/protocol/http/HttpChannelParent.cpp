@@ -191,13 +191,6 @@ HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
   return true;
 }
 
-bool
-HttpChannelParent::RecvOnStopRequestCompleted()
-{
-  mCacheDescriptor = nsnull;
-  return true;
-}
-
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------
