@@ -5824,9 +5824,7 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
   PaintParams* params = static_cast<PaintParams*>(aCallbackData);
   nsIFrame* frame = params->mFrame;
   if (frame) {
-    // We're drawing into a child window. Don't pass
-    // nsLayoutUtils::PAINT_WIDGET_LAYERS, since that will draw into
-    // the widget for the display root.
+    // We're drawing into a child window.
     nsIDeviceContext* devCtx = frame->PresContext()->DeviceContext();
     nsCOMPtr<nsIRenderingContext> rc;
     nsresult rv = devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
@@ -5837,7 +5835,8 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
       nsIRenderingContext::AutoPushTranslation
         push(rc, -params->mOffsetToWidget.x, -params->mOffsetToWidget.y);
       nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion,
-                                params->mBackgroundColor);
+                                params->mBackgroundColor,
+                                nsLayoutUtils::PAINT_WIDGET_LAYERS);
     }
   } else {
     aContext->NewPath();
