@@ -102,6 +102,9 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
+<deck flex="1" id="tab-candy-deck">
+<vbox flex="1">
+
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
@@ -973,4 +976,9 @@
     </svg:mask>
   </svg:svg>
 #endif
+
+</vbox>
+<iframe id="tab-candy" transparent="true" flex="1" src="chrome://tabcandy/content/index.html" />
+</deck>
+
 </window>
