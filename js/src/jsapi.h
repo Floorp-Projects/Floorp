@@ -1031,7 +1031,7 @@ extern JS_PUBLIC_API(void)
 JS_ClearNewbornRoots(JSContext *cx);
 
 /* Obsolete rooting APIs. */
-#define JS_EnterLocalRootScope(cx) (true)
+#define JS_EnterLocalRootScope(cx) (JS_TRUE)
 #define JS_LeaveLocalRootScope(cx) ((void) 0)
 #define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
 #define JS_ForgetLocalRoot(cx, thing) ((void) 0)
