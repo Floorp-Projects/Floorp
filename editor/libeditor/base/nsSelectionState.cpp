@@ -249,7 +249,9 @@ nsRangeUpdater::SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition)
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   NS_ENSURE_TRUE(aParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsRangeStore *item;
   
