@@ -62,6 +62,16 @@ window.TabItem = function(container, tab) {
   $div.data('tabItem', this);
   this.isDragging = false;
   
+  this.sizeExtra.x = parseInt($div.css('padding-left')) 
+      + parseInt($div.css('padding-right'));
+
+  this.sizeExtra.y = parseInt($div.css('padding-top')) 
+      + parseInt($div.css('padding-bottom'));
+
+  this.bounds = $div.bounds();
+  this.bounds.width += this.sizeExtra.x;
+  this.bounds.height += this.sizeExtra.y;
+
   // ___ superclass setup
   this._init(container);
   
@@ -154,18 +164,14 @@ window.TabItem = function(container, tab) {
     .addClass('expander')
     .appendTo($div);
 
-  this.sizeExtra.x = parseInt($div.css('padding-left')) 
-      + parseInt($div.css('padding-right'));
-
-  this.sizeExtra.y = parseInt($div.css('padding-top')) 
-      + parseInt($div.css('padding-bottom'));
-
   // ___ additional setup
   this.reconnected = false;
   this._hasBeenDrawn = false;
   this.tab = tab;
   this.setResizable(true);
 
+  this._updateDebugBounds();
+  
   TabItems.register(this);
   this.tab.mirror.addOnClose(this, function(who, info) {
     TabItems.unregister(self);
@@ -209,30 +215,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   getURL: function() {
     return this.tab.url;
   },
-  
-  // ----------  
-  reloadBounds: function() {
-    var newBounds = iQ(this.container).bounds();
-    newBounds.width += this.sizeExtra.x;
-    newBounds.height += this.sizeExtra.y;
-
-
-/*    if(!this.bounds || newBounds.width != this.bounds.width || newBounds.height != this.bounds.height) {
-      // if resizing, or first time, do the whole deal
-      if(!this.bounds)
-        this.bounds = new Rect(0, 0, 0, 0);
-  
-      this.setBounds(newBounds, true);      
-    } else { */
-
-      // if we're just moving, this is more efficient
-      this.bounds = newBounds;
-      this._updateDebugBounds();
-/*     } */
-
-    this.save();
-  },
-  
+    
   // ----------  
   setBounds: function(rect, immediately, options) {
     if(!isRect(rect)) {
@@ -256,13 +239,13 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       const minFontSize = 8;
       const maxFontSize = 15;
   
-      if(rect.left != this.bounds.left)
+      if(rect.left != this.bounds.left || options.force)
         css.left = rect.left;
         
-      if(rect.top != this.bounds.top)
+      if(rect.top != this.bounds.top || options.force)
         css.top = rect.top;
         
-      if(rect.width != this.bounds.width) {
+      if(rect.width != this.bounds.width || options.force) {
         css.width = rect.width - this.sizeExtra.x;
         var scale = css.width / TabItems.tabWidth;
         
@@ -272,10 +255,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
       }
   
-      if(rect.height != this.bounds.height) 
+      if(rect.height != this.bounds.height || options.force) 
         css.height = rect.height - this.sizeExtra.y; 
         
-      if(iQ.isEmptyObject(css) && !options.force)
+      if(iQ.isEmptyObject(css))
         return;
         
       this.bounds.copy(rect);
@@ -589,8 +572,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       this._zoomPrep = false;
       $div.removeClass('front');
         
-      this.reloadBounds();
-      this.setBounds(box, true);
+      this.setBounds(box, true, {force: true});
     }                
   }
 });
