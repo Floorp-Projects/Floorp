@@ -52,7 +52,7 @@
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
 #include "IDBTransactionRequest.h"
-#include "IndexedDatabaseRequest.h"
+#include "IDBFactory.h"
 #include "LazyIdleThread.h"
 
 USING_INDEXEDDB_NAMESPACE
@@ -268,7 +268,7 @@ IDBDatabaseRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   if (!mConnection) {
-    mConnection = IndexedDatabaseRequest::GetConnection(mFilePath);
+    mConnection = IDBFactory::GetConnection(mFilePath);
     NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
   }
 

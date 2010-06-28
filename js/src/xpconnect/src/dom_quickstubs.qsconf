@@ -478,7 +478,7 @@ members = [
     'nsIIDBTransaction.*',
     'nsIIDBTransactionEvent.*',
     'nsIIDBTransactionRequest.*',
-    'nsIIndexedDatabaseRequest.*',
+    'nsIIDBFactory.*',
 # Remove once XPIDL can handle jsvals
     '-nsIIDBObjectStoreRequest.add',
     '-nsIIDBObjectStoreRequest.modify',
