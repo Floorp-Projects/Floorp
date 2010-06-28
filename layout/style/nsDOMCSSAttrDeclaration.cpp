@@ -38,11 +38,11 @@
 /* DOM object for element.style */
 
 #include "nsDOMCSSAttrDeclaration.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsICSSStyleRule.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
 #include "nsStyleConsts.h"

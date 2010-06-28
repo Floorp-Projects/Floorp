@@ -70,7 +70,7 @@
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 #include "nsStyleUtil.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 
 namespace css = mozilla::css;

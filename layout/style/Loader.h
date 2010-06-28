@@ -37,8 +37,8 @@
 
 /* loading of CSS style sheets using the network APIs */
 
-#ifndef nsICSSLoader_h___
-#define nsICSSLoader_h___
+#ifndef mozilla_css_Loader_h
+#define mozilla_css_Loader_h
 
 #include "nsIPrincipal.h"
 #include "nsAString.h"
@@ -496,4 +496,4 @@ private:
 } // namespace css
 } // namespace mozilla
 
-#endif /* nsICSSLoader_h___ */
+#endif /* mozilla_css_Loader_h */

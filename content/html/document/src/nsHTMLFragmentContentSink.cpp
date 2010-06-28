@@ -68,13 +68,11 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCSSParser.h"
 #include "nsCSSProperty.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsICSSStyleRule.h"
 #include "nsUnicharInputStream.h"
 #include "nsCSSStyleSheet.h"
 #include "nsICSSRuleList.h"
-#include "nsCSSDeclaration.h"
-#include "nsCSSProperty.h"
 #include "nsIDOMCSSRule.h"
 
 namespace css = mozilla::css;

@@ -51,13 +51,13 @@ MODULE		= layout
 LIBRARY_NAME	= gkstyle_s
 LIBXUL_LIBRARY	= 1
 
+EXPORTS_NAMESPACES = mozilla/css
 
 EXPORTS		= \
 		nsCSSAnonBoxList.h \
 		nsCSSAnonBoxes.h \
 		nsCSSKeywordList.h \
 		nsCSSKeywords.h \
-		nsCSSLoader.h \
 		nsCSSParser.h \
 		nsCSSPropList.h \
 		nsCSSProperty.h \
@@ -101,12 +101,17 @@ EXPORTS		= \
 		nsStyleUtil.h \
 		$(NULL)
 
+EXPORTS_mozilla/css = \
+		Declaration.h \
+		Loader.h \
+		$(NULL)
+
 CPPSRCS		= \
 		nsCSSAnonBoxes.cpp \
 		nsCSSDataBlock.cpp \
-		nsCSSDeclaration.cpp \
+		Declaration.cpp \
 		nsCSSKeywords.cpp \
-		nsCSSLoader.cpp \
+		Loader.cpp \
 		nsCSSParser.cpp \
 		nsCSSProps.cpp \
 		nsCSSPseudoClasses.cpp \

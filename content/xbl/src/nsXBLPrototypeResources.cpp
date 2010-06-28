@@ -45,7 +45,7 @@
 #include "nsXBLPrototypeResources.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIDocumentObserver.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsLayoutCID.h"
 #include "nsCSSRuleProcessor.h"
