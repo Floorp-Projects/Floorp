@@ -214,7 +214,7 @@ Trench.prototype = {
 
     if (this.active && this.showGuide) {
       if (!this.dom.guideTrench)
-        this.dom.guideTrench = iQ("<div/>").css({position: 'absolute', zIndex: -101, opacity: 0.9, borderTop: '1px dashed black', borderLeft: '1px dashed black', id: 'guideTrench'+this.id});
+        this.dom.guideTrench = iQ("<div/>").addClass('guideTrench').css({id: 'guideTrench'+this.id});
       var guideTrench = this.dom.guideTrench;
       guideTrench.css(this.guideRect);
       iQ("body").append(guideTrench);
@@ -229,27 +229,24 @@ Trench.prototype = {
     }
 
     if (!this.dom.visibleTrench)
-      this.dom.visibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-103, opacity: 0.05, id: 'visibleTrench'+this.id});
+      this.dom.visibleTrench = iQ("<div/>")
+        .addClass('visibleTrench')
+        .addClass(this.type) // border or guide
+        .css({id: 'visibleTrench'+this.id});
     var visibleTrench = this.dom.visibleTrench;
 
-    if (!this.dom.activeVisibleTrench) {
-      this.dom.activeVisibleTrench = iQ("<div/>").css({position: 'absolute', zIndex:-102, id: 'activeVisibleTrench'+this.id});
-    }
+    if (!this.dom.activeVisibleTrench)
+      this.dom.activeVisibleTrench = iQ("<div/>")
+        .addClass('activeVisibleTrench')
+        .addClass(this.type) // border or guide
+        .css({id: 'activeVisibleTrench'+this.id});
     var activeVisibleTrench = this.dom.activeVisibleTrench;
 
     if (this.active)
-      activeVisibleTrench.css({opacity: 0.45});
+      activeVisibleTrench.addClass('activeTrench');
     else
-      activeVisibleTrench.css({opacity: 0});
+      activeVisibleTrench.removeClass('activeTrench');
       
-    if (this.type == "border") {
-      visibleTrench.css({backgroundColor:'red'});
-      activeVisibleTrench.css({backgroundColor:'red'});      
-    } else {
-      visibleTrench.css({backgroundColor:'blue'});
-      activeVisibleTrench.css({backgroundColor:'blue'});
-    }
-
     visibleTrench.css(this.rect);
     activeVisibleTrench.css(this.activeRect || this.rect);
     iQ("body").append(visibleTrench);
@@ -523,7 +520,7 @@ var Trenches = {
     this.trenches.forEach(function(t) {
       t.active = false;
       t.showGuide = false;
-      t.hide();
+      t.show();
     });
   },
 
