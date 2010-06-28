@@ -206,6 +206,12 @@ public:
             return mModule;
         }
 
+        /**
+         * For error logging, get a description of this module, either the
+         * file path, or <static module>.
+         */
+        nsCString Description() const;
+
     private:
         const mozilla::Module* mModule;
         nsCOMPtr<nsILocalFile> mFile;
