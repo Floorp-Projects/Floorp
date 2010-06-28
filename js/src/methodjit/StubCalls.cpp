@@ -1090,9 +1090,9 @@ StubEqualityOp(VMFrame &f)
                 }
                 
                 if (EQ)
-                    cond = JSDOUBLE_COMPARE(l, ==, r, ifnan);
+                    cond = JSDOUBLE_COMPARE(l, ==, r, false);
                 else
-                    cond = JSDOUBLE_COMPARE(l, !=, r, ifnan);
+                    cond = JSDOUBLE_COMPARE(l, !=, r, true);
             }
         }
     }
