@@ -700,8 +700,8 @@
             <xul:label anonid="incompatible-warning"/>
           </xul:hbox>
           <xul:hbox>
-            <xul:label value="&rating.yourRating.label;"/>
-            <xul:label class="meta-rating" userrating="-1" showrating="user"/>
+            <xul:label value="&rating.label;"/>
+            <xul:label class="meta-rating" userrating="-1" showrating="average"/>
           </xul:hbox>
           <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
           <xul:vbox anonid="extra-details" class="extra-details">
