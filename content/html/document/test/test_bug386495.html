@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386495
+-->
+<head>
+  <title>Test for Bug 386495</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=386495">Mozilla Bug 386495</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="testIframe"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 386495 **/
+
+function finishTest() {
+  is(document.getElementById("testIframe").contentWindow.timeoutFired, false, "Timeout shouldn't fire.");
+  SimpleTest.finish();
+}
+
+function testContentEditable() {
+  document.getElementById('testIframe').style.display = 'block';
+  document.getElementById('testIframe').contentWindow.timeoutFired = false;
+  document.getElementById('testIframe').contentWindow.setTimeout("window.timeoutFired = true", 50);
+  document.getElementById('testIframe').contentDocument.designMode = 'on';
+  setTimeout(finishTest, 100);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(testContentEditable);
+
+</script>
+</pre>
+</body>
+</html>
