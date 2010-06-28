@@ -306,5 +306,5 @@ void XXXNeverCalled()
     NS_WildCardMatch((const char *)nsnull, (const char *)nsnull, PR_FALSE);
     NS_WildCardMatch((const PRUnichar *)nsnull, (const PRUnichar *)nsnull, PR_FALSE);
     XRE_AddStaticComponent(NULL);
-    XRE_AddComponentLocation(NS_COMPONENT_LOCATION, NULL);
+    XRE_AddManifestLocation(NS_COMPONENT_LOCATION, NULL);
 }
