@@ -43,7 +43,7 @@
 
 interface nsIEditor;
 
-[scriptable, uuid(24f3f4da-18a4-448d-876d-7360fefac029)]
+[scriptable, uuid(274cd32e-3675-47e1-9d8a-fc6504ded9ce)]
 
 interface nsIEditingSession : nsISupports
 {
@@ -128,10 +128,5 @@ interface nsIEditingSession : nsISupports
    * to the window.
    */
   void reattachToWindow(in nsIDOMWindow aWindow);
-
-  /**
-   * Whether this session has disabled JS and plugins.
-   */
-  readonly attribute boolean jsAndPluginsDisabled;
 };
 
