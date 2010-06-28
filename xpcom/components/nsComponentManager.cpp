@@ -459,7 +459,20 @@ nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (f) {
         NS_ERROR("Re-registering a CID?");
-        // XXX REPORT ERROR, we don't override CIDs
+
+        char idstr[NSID_LENGTH];
+        aEntry->cid->ToProvidedString(idstr);
+
+        nsCString existing;
+        if (f->mModule)
+            existing = f->mModule->Description();
+        else
+            existing = "<unknown module>";
+
+        LogMessage("While registering XPCOM module, trying to re-register CID '%s' already registered by %s.",
+                   aModule->Description().get(),
+                   idstr,
+                   existing.get());
         return;
     }
 
@@ -475,7 +488,14 @@ nsComponentManagerImpl::RegisterContractID(const mozilla::Module::ContractIDEntr
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (!f) {
         NS_ERROR("No CID found when attempting to map contract ID");
-        // XXX REPORT ERROR, CID isn't registered
+
+        char idstr[NSID_LENGTH];
+        aEntry->cid->ToProvidedString(idstr);
+
+        LogMessage("Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
+                   aEntry->contractid,
+                   idstr);
+                   
         return;
     }
 
@@ -649,10 +669,9 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
     }
 
     const mozilla::Module* m = mNativeModuleLoader.LoadModule(clfile);
-    if (!m) {
-        // XXX report load error
+    if (!m)
         return;
-    }
+
     RegisterModule(m, clfile);
 }
 
@@ -691,14 +710,25 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
 
     nsID cid;
     if (!cid.Parse(id)) {
-        // XXX report parse error
+        LogMessageWithContext(cx.mFile, lineno, "Malformed CID: '%s'.", id);
         return;
     }
 
     nsAutoMonitor mon(mMon);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (f) {
-        // XXX report double-register error
+        char idstr[NSID_LENGTH];
+        cid.ToProvidedString(idstr);
+
+        nsCString existing;
+        if (f->mModule)
+            existing = f->mModule->Description();
+        else
+            existing = "<unknown module>";
+
+        LogMessageWithContext(cx.mFile, lineno, "Trying to re-register CID '%s' already registered by %s.",
+                              idstr,
+                              existing.get());
         return;
     }
 
@@ -741,14 +771,15 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int line
 
     nsID cid;
     if (!cid.Parse(id)) {
-        // XXX report parse error
+        LogMessageWithContext(cx.mFile, lineno, "Malformed CID: '%s'.", id);
         return;
     }
 
     nsAutoMonitor mon(mMon);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (!f) {
-        // XXX report unregistered CID
+        LogMessageWithContext(cx.mFile, lineno, "Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
+                              contract, id);
         return;
     }
 
@@ -812,6 +843,17 @@ nsComponentManagerImpl::KnownModule::Load()
         mLoaded = true;
     }
     return true;
+}
+
+nsCString
+nsComponentManagerImpl::KnownModule::Description() const
+{
+    nsCString s;
+    if (mFile)
+        mFile->GetNativePath(s);
+    else
+        s = "<static module>";
+    return s;
 }
 
 nsresult nsComponentManagerImpl::Shutdown(void)
