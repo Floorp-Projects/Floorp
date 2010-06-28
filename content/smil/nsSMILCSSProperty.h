@@ -46,7 +46,6 @@
 #include "nsCSSValue.h"
 
 class nsIContent;
-class nsCSSDeclaration;
 
 namespace mozilla {
 namespace dom {

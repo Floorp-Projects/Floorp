@@ -69,7 +69,7 @@ public:
 
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
-  virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
+  virtual nsresult GetCSSDeclaration(mozilla::css::Declaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,

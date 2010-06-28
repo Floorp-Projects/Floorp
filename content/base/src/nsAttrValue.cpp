@@ -56,6 +56,8 @@
 #include "nsISVGValue.h"
 #endif
 
+namespace css = mozilla::css;
+
 #define MISC_STR_PTR(_cont) \
   reinterpret_cast<void*>((_cont)->mStringBits & NS_ATTRVALUE_POINTERVALUE_MASK)
 
@@ -425,7 +427,7 @@ nsAttrValue::ToString(nsAString& aResult) const
     {
       aResult.Truncate();
       MiscContainer *container = GetMiscContainer();
-      nsCSSDeclaration* decl = container->mCSSStyleRule->GetDeclaration();
+      css::Declaration *decl = container->mCSSStyleRule->GetDeclaration();
       if (decl) {
         decl->ToString(aResult);
       }

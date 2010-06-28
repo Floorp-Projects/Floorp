@@ -51,6 +51,8 @@
 #include "nsIPrincipal.h"
 #include "nsNodeUtils.h"
 
+namespace css = mozilla::css;
+
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent
 #ifdef MOZ_SMIL
                                                            , PRBool aIsSMILOverride
@@ -127,7 +129,7 @@ nsDOMCSSAttributeDeclaration::DocToUpdate()
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
+nsDOMCSSAttributeDeclaration::GetCSSDeclaration(css::Declaration **aDecl,
                                                 PRBool aAllocate)
 {
   nsresult result = NS_OK;
@@ -143,21 +145,21 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
       *aDecl = cssRule->GetDeclaration();
     }
     else if (aAllocate) {
-      nsCSSDeclaration *decl = new nsCSSDeclaration();
+      css::Declaration *decl = new css::Declaration();
       if (!decl)
         return NS_ERROR_OUT_OF_MEMORY;
       if (!decl->InitializeEmpty()) {
         decl->RuleAbort();
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      
+
       nsCOMPtr<nsICSSStyleRule> newRule;
       result = NS_NewCSSStyleRule(getter_AddRefs(newRule), nsnull, decl);
       if (NS_FAILED(result)) {
         decl->RuleAbort();
         return result;
       }
-        
+
       result =
 #ifdef MOZ_SMIL
         mIsSMILOverride ?
