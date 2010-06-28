@@ -699,7 +699,15 @@ NewBuiltinClassInstance(JSContext *cx, JSClass *clasp)
     JS_ASSERT(protoKey != JSProto_Null);
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
-    JSObject *global = cx->fp ? cx->fp->scopeChain->getGlobal() : cx->globalObject;
+    JSObject *global;
+    if (!cx->fp) {
+        global = cx->globalObject;
+        OBJ_TO_INNER_OBJECT(cx, global);
+        if (!global)
+            return NULL;
+    } else {
+        global = cx->fp->scopeChain->getGlobal();
+    }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 
     jsval v = global->getReservedSlot(JSProto_LIMIT + protoKey);
