@@ -787,7 +787,7 @@
                                                    ._placesView._onChevronPopupShowing(event);">
               <menupopup id="PlacesChevronPopup"
                          placespopup="true"
-                         popupsinherittooltip="true"
+                         tooltip="bhTooltip" popupsinherittooltip="true"
                          context="placesContext"/>
             </toolbarbutton>
           </hbox>
