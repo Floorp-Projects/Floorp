@@ -209,6 +209,9 @@ mjit::Compiler::jsop_binary_dblmath(JSOp op, FPRegisterID rfp, FPRegisterID lfp)
       case JSOP_MUL:
         stubcc.masm.mulDouble(rfp, lfp);
         break;
+      case JSOP_DIV:
+        stubcc.masm.divDouble(rfp, lfp);
+        break;
       default:
         JS_NOT_REACHED("unhandled double op.");
         break;
@@ -280,7 +283,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
      * Bail out if there are unhandled types or ops.
      * This is temporary while ops are still being implemented.
      */
-    if ((op == JSOP_DIV || op == JSOP_MOD) ||
+    if ((op == JSOP_MOD) ||
         (lhs->isTypeKnown() && (lhs->getTypeTag() > JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET)) ||
         (rhs->isTypeKnown() && (rhs->getTypeTag() > JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET)) 
 #if defined(JS_CPU_ARM)
@@ -301,8 +304,9 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
         return;
     }
 
-    /* Can do int math iff there is no double constant. */
-    bool canDoIntMath = !((rhs->isTypeKnown() && rhs->getTypeTag() < JSVAL_TAG_CLEAR) ||
+    /* Can do int math iff there is no double constant and the op is not division. */
+    bool canDoIntMath = op != JSOP_DIV &&
+                        !((rhs->isTypeKnown() && rhs->getTypeTag() < JSVAL_TAG_CLEAR) ||
                           (lhs->isTypeKnown() && lhs->getTypeTag() < JSVAL_TAG_CLEAR));
 
     frame.syncAllRegs(Registers::AvailRegs);
@@ -438,6 +442,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     MaybeJump jmpRhsNotInt;
     MaybeJump jmpLhsNotInt;
     MaybeJump jmpOverflow;
+    MaybeJump jmpIntDiv;
     {
         /* Try an integer fastpath. */
         if (rhsTypeRegNeedsLoad)
@@ -454,6 +459,9 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
          */
         if (canDoIntMath)
             jsop_binary_intmath(op, &returnReg, jmpOverflow);
+
+        if (op == JSOP_DIV)
+           jmpIntDiv.setJump(masm.jump()); 
     }
     
 
@@ -472,7 +480,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 
     /*
      * Conversion Path 1: rhs known int; lhs known int.
-     * Jumped to on overflow.
+     * Jumped to on overflow, or for division conversion.
      *
      * TODO: We can reuse instructions from Conversion Path 2
      * to handle conversion for the lhs. However, this involves
@@ -481,7 +489,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     MaybeJump jmpCvtPath1;
     Label lblCvtPath1 = stubcc.masm.label();
     {
-        if (canDoIntMath) {
+        if (canDoIntMath || op == JSOP_DIV) {
             /*
              * TODO: Constants should be handled by rip/PC-relative
              * addressing on x86_64/ARM, and absolute addressing
@@ -512,6 +520,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
         stubcc.linkExitDirect(jmpLhsNotInt.getJump(), lblCvtPath3);
     if (jmpOverflow.isSet())
         stubcc.linkExitDirect(jmpOverflow.getJump(), lblCvtPath1);
+    if (jmpIntDiv.isSet())
+        stubcc.linkExitDirect(jmpIntDiv.getJump(), lblCvtPath1);
 
     if (jmpRhsNotDbl.isSet())
         jmpRhsNotDbl.getJump().linkTo(rhsSyncTarget, &stubcc.masm);
