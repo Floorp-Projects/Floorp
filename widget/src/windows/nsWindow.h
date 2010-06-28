@@ -287,7 +287,7 @@ protected:
   nsWindow*               GetParentWindow(PRBool aIncludeOwner);
   virtual void            SubclassWindow(BOOL bState);
   PRBool                  CanTakeFocus();
-  PRBool                  UpdateNonClientMargins();
+  PRBool                  UpdateNonClientMargins(PRInt32 aSizeMode = -1, PRBool aRefreshWindow = PR_TRUE);
 #if !defined(WINCE)
   static void             InitTrackPointHack();
 #endif
@@ -483,7 +483,8 @@ protected:
   // Disable non client margins on non-comsitor desktops
   PRPackedBool          mCompositorFlag;
   // Cached copy of L&F's resize border  
-  PRInt32               mResizeMargin;
+  PRInt32               mHorResizeMargin;
+  PRInt32               mVertResizeMargin;
   // Height of the caption plus border
   PRInt32               mCaptionHeight;
 

@@ -1880,27 +1880,16 @@ nsWindow::GetNonClientMargins(nsIntMargin &margins)
     return NS_OK;
   }
 
-  nsCOMPtr<nsILookAndFeel> lookAndFeel =
-    do_GetService("@mozilla.org/widget/lookandfeel;1");
-  if (!lookAndFeel) {
-    NS_WARNING("We need nsILookAndFeel for GetNonClientMargins!");
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowTitleHeight, val);
-  margins.top = val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderHeight, val);
-  margins.top += val;
-  margins.bottom = val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderWidth, val); 
-  margins.left = margins.right = val;
+  margins.top = GetSystemMetrics(SM_CYCAPTION);
+  margins.bottom = GetSystemMetrics(SM_CYFRAME);
+  margins.top += margins.bottom;
+  margins.left = margins.right = GetSystemMetrics(SM_CYFRAME);
 
   return NS_OK;
 }
 
 PRBool
-nsWindow::UpdateNonClientMargins()
+nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, PRBool aRefreshWindow)
 {
   if (!mCustomNonClient)
     return PR_FALSE;
@@ -1915,17 +1904,23 @@ nsWindow::UpdateNonClientMargins()
   mNonClientOffset.top = mNonClientOffset.bottom =
     mNonClientOffset.left = mNonClientOffset.right = 0;
 
-  nsCOMPtr<nsILookAndFeel> lookAndFeel =
-    do_GetService("@mozilla.org/widget/lookandfeel;1");
-  if (!lookAndFeel) {
-    NS_WARNING("We need nsILookAndFeel for UpdateNonClientMargins!");
-    return PR_FALSE;
+  if (aSizeMode == -1)
+    aSizeMode = mSizeMode;
+
+  if (aSizeMode == nsSizeMode_Minimized ||
+      aSizeMode == nsSizeMode_Fullscreen) {
+    mCaptionHeight = mVertResizeMargin = mHorResizeMargin = 0;
+    return PR_TRUE;
   }
 
-  // Used in hit testing, provides the resize cursor margin
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderWidth, mResizeMargin);
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowTitleHeight, mCaptionHeight);
-  mCaptionHeight += mResizeMargin;
+  // Note, for maximized windows, we need to continue to offset the client by
+  // thick frame margins of a normal window, since windows expects this
+  // in it's DwmDefWndProc hit testing.
+  mCaptionHeight = GetSystemMetrics(SM_CYCAPTION);
+  mHorResizeMargin = GetSystemMetrics(SM_CXFRAME);
+  mVertResizeMargin = GetSystemMetrics(SM_CYFRAME);
+
+  mCaptionHeight += mVertResizeMargin;
 
   // If a margin value is 0, set the offset to the default size of the frame.
   // If a margin is -1, leave as default, and if a margin > 0, set the offset
@@ -1935,22 +1930,20 @@ nsWindow::UpdateNonClientMargins()
   else if (mNonClientMargins.top > 0)
     mNonClientOffset.top = mCaptionHeight - mNonClientMargins.top;
 
-  if (!mNonClientMargins.left)
-    mNonClientOffset.left = mResizeMargin;
-  else if (mNonClientMargins.left > 0)
-    mNonClientOffset.left = mResizeMargin - mNonClientMargins.left;
+   if (!mNonClientMargins.left)
+    mNonClientOffset.left = mHorResizeMargin;
+   else if (mNonClientMargins.left > 0)
+    mNonClientOffset.left = mHorResizeMargin - mNonClientMargins.left;
+ 
+   if (!mNonClientMargins.right)
+    mNonClientOffset.right = mHorResizeMargin;
+   else if (mNonClientMargins.right > 0)
+    mNonClientOffset.right = mHorResizeMargin - mNonClientMargins.right;
 
-  if (!mNonClientMargins.right)
-    mNonClientOffset.right = mResizeMargin;
-  else if (mNonClientMargins.right > 0)
-    mNonClientOffset.right = mResizeMargin - mNonClientMargins.right;
-
-  PRInt32 val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderHeight, val);
-  if (!mNonClientMargins.bottom)
-    mNonClientOffset.bottom = val;
-  else if (mNonClientMargins.bottom > 0)
-    mNonClientOffset.bottom = val - mNonClientMargins.bottom;
+   if (!mNonClientMargins.bottom)
+    mNonClientOffset.bottom = mVertResizeMargin;
+   else if (mNonClientMargins.bottom > 0)
+    mNonClientOffset.bottom = mVertResizeMargin - mNonClientMargins.bottom;
 
   NS_ASSERTION(mNonClientOffset.top >= 0, "non-client top margin is negative!");
   NS_ASSERTION(mNonClientOffset.left >= 0, "non-client left margin is negative!");
@@ -1966,10 +1959,12 @@ nsWindow::UpdateNonClientMargins()
   if (mNonClientOffset.bottom < 0)
     mNonClientOffset.bottom = 0;
 
-  SetWindowPos(mWnd, 0, 0, 0, 0, 0,
-               SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOMOVE|
-               SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-  UpdateWindow(mWnd);
+  if (aRefreshWindow) {
+    SetWindowPos(mWnd, 0, 0, 0, 0, 0,
+                 SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOMOVE|
+                 SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+    UpdateWindow(mWnd);
+  }
 
   return PR_TRUE;
 }
@@ -5390,14 +5385,14 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
   PRBool right  = PR_FALSE;
 
   if (my >= winRect.top && my <=
-      (winRect.top + (mCaptionHeight - mNonClientOffset.top)))
+      (winRect.top + mVertResizeMargin + (mCaptionHeight - mNonClientOffset.top)))
     top = PR_TRUE;
-  else if (my <= winRect.bottom && my >= (winRect.bottom - mResizeMargin))
+  else if (my <= winRect.bottom && my >= (winRect.bottom - mVertResizeMargin))
     bottom = PR_TRUE;
 
-  if (mx >= winRect.left && mx <= (winRect.left + mResizeMargin))
+  if (mx >= winRect.left && mx <= (winRect.left + mHorResizeMargin))
     left = PR_TRUE;
-  else if (mx <= winRect.right && mx >= (winRect.right - mResizeMargin))
+  else if (mx <= winRect.right && mx >= (winRect.right - mHorResizeMargin))
     right = PR_TRUE;
 
   if (top) {
@@ -5418,12 +5413,6 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
     if (right)
       testResult = HTRIGHT;
   }
-
-  if (testResult == HTCLIENT && 
-      my > (winRect.top + mResizeMargin) &&
-      my <= (winRect.top + mCaptionHeight) &&
-      my <= (winRect.top + (mCaptionHeight - mNonClientOffset.top)))
-    testResult = HTCAPTION;
 
   return testResult;
 }
@@ -5844,6 +5833,29 @@ void nsWindow::ActivateOtherWindowHelper(HWND aWnd)
 #if !defined(WINCE)
 void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
 {
+  // Update non-client margins if the frame size is changing, and let the
+  // browser know we are changing size modes, so alternative css can kick in.
+  if (info->flags & SWP_FRAMECHANGED) {
+    WINDOWPLACEMENT pl;
+    pl.length = sizeof(pl);
+    ::GetWindowPlacement(mWnd, &pl);
+    PRInt32 sizeMode;
+    if (pl.showCmd == SW_SHOWMAXIMIZED)
+      sizeMode = nsSizeMode_Maximized;
+    else if (pl.showCmd == SW_SHOWMINIMIZED)
+      sizeMode = nsSizeMode_Minimized;
+    else
+      sizeMode = nsSizeMode_Normal;
+
+    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+
+    InitEvent(event);
+    event.mSizeMode = static_cast<nsSizeMode>(sizeMode);
+    DispatchWindowEvent(&event);
+
+    UpdateNonClientMargins(sizeMode, PR_FALSE);
+  }
+
   // enforce local z-order rules
   if (!(info->flags & SWP_NOZORDER)) {
     HWND hwndAfter = info->hwndInsertAfter;
