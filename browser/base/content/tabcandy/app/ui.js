@@ -812,7 +812,13 @@ UIClass.prototype = {
     // don't perform a resize. This resize really slows things down.
     var isAnimating = iQ.isAnimating();
     if( force == false){
-      if( isAnimating || !Page.isTabCandyFocused() ) return;   }   
+      if( isAnimating || !Page.isTabCandyFocused() ) {
+        // TODO: should try again once the animation is done
+        // Actually, looks like iQ.isAnimating is non-functional;
+        // perhaps we should clean it out, or maybe we should fix it. 
+        return;   
+      }
+    }   
         
     var items = Items.getTopLevelItems();
     var itemBounds = new Rect(this.pageBounds);
