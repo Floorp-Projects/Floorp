@@ -46,7 +46,7 @@
 
 #include "IDBEvents.h"
 #include "IDBCursorRequest.h"
-#include "IDBObjectStoreRequest.h"
+#include "IDBObjectStore.h"
 #include "IDBFactory.h"
 #include "DatabaseInfo.h"
 #include "TransactionThreadPool.h"
@@ -621,7 +621,7 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 
 NS_IMETHODIMP
 IDBTransaction::ObjectStore(const nsAString& aName,
-                            nsIIDBObjectStoreRequest** _retval)
+                            nsIIDBObjectStore** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -646,8 +646,8 @@ IDBTransaction::ObjectStore(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<IDBObjectStoreRequest> objectStore =
-    IDBObjectStoreRequest::Create(mDatabase, this, info, mMode);
+  nsRefPtr<IDBObjectStore> objectStore =
+    IDBObjectStore::Create(mDatabase, this, info, mMode);
   NS_ENSURE_TRUE(objectStore, NS_ERROR_FAILURE);
 
   objectStore.forget(_retval);

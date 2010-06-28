@@ -59,7 +59,7 @@ CPPSRCS = \
   IDBEvents.cpp \
   IDBIndexRequest.cpp \
   IDBKeyRange.cpp \
-  IDBObjectStoreRequest.cpp \
+  IDBObjectStore.cpp \
   IDBRequest.cpp \
   IDBTransaction.cpp \
   IDBFactory.cpp \
@@ -73,7 +73,7 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBEvents.h \
   IDBIndexRequest.h \
   IDBKeyRange.h \
-  IDBObjectStoreRequest.h \
+  IDBObjectStore.h \
   IDBRequest.h \
   IDBTransaction.h \
   IndexedDatabase.h \
@@ -102,7 +102,6 @@ XPIDLSRCS = \
   nsIIDBIndexRequest.idl \
   nsIIDBKeyRange.idl \
   nsIIDBObjectStore.idl \
-  nsIIDBObjectStoreRequest.idl \
   nsIIDBRequest.idl \
   nsIIDBSuccessEvent.idl \
   nsIIDBTransaction.idl \

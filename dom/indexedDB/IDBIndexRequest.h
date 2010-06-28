@@ -46,7 +46,7 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBObjectStoreRequest;
+class IDBObjectStore;
 struct IndexInfo;
 
 class IDBIndexRequest : public IDBRequest::Generator,
@@ -58,10 +58,10 @@ public:
   NS_DECL_NSIIDBINDEXREQUEST
 
   static already_AddRefed<IDBIndexRequest>
-  Create(IDBObjectStoreRequest* aObjectStore,
+  Create(IDBObjectStore* aObjectStore,
          const IndexInfo* aIndexInfo);
 
-  IDBObjectStoreRequest* ObjectStore()
+  IDBObjectStore* ObjectStore()
   {
     return mObjectStore;
   }
@@ -71,7 +71,7 @@ protected:
   ~IDBIndexRequest();
 
 private:
-  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBObjectStore> mObjectStore;
 
   PRInt64 mId;
   nsString mName;

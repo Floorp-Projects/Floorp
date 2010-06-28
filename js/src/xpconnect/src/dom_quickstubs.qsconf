@@ -470,7 +470,6 @@ members = [
     'nsIIDBIndexRequest.*',
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',
-    'nsIIDBObjectStoreRequest.*',
     'nsIIDBRequest.*',
 # Remove once XPIDL can handle jsvals
 #    'nsIIDBSuccessEvent.*',
@@ -478,9 +477,9 @@ members = [
     'nsIIDBTransactionEvent.*',
     'nsIIDBFactory.*',
 # Remove once XPIDL can handle jsvals
-    '-nsIIDBObjectStoreRequest.add',
-    '-nsIIDBObjectStoreRequest.modify',
-    '-nsIIDBObjectStoreRequest.addOrModify',
+    '-nsIIDBObjectStore.add',
+    '-nsIIDBObjectStore.modify',
+    '-nsIIDBObjectStore.addOrModify',
     '-nsIIDBCursorRequest.continue',
     '-nsIIDBCursorRequest.value',
     '-nsIIDBCursorRequest.update',
