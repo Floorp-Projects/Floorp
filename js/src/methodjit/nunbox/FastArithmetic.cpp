@@ -555,6 +555,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 }
 
 static const uint64 DoubleNegMask = 0x8000000000000000LLU;
+
 void
 mjit::Compiler::jsop_neg()
 {
@@ -570,12 +571,15 @@ mjit::Compiler::jsop_neg()
 
     JS_ASSERT(!fe->isConstant());
 
-    /* Load type information into register. */
+    /* 
+     * Load type information into register.
+     * TODO: Optimize code emission if types are known.
+     */
     MaybeRegisterID feTypeReg;
-    //TODO: Optimize code emission if types are known.
     if (!frame.shouldAvoidTypeRemat(fe)) {
         /* Safe because only one type is loaded. */
         feTypeReg.setReg(frame.tempRegForType(fe));
+
         /* Don't get clobbered by copyDataIntoReg(). */
         frame.pinReg(feTypeReg.getReg());
     }
@@ -625,35 +629,9 @@ mjit::Compiler::jsop_neg()
         jmpIntRejoin.setJump(stubcc.masm.jump());
     }
 
+    frame.freeReg(reg);
     if (feTypeReg.isSet())
         frame.unpinReg(feTypeReg.getReg());
-    
-    /*
-     * :FIXME:
-     * copyDataIntoReg() acquires a register, but does not mark
-     * regstate[reg].fe, since the register does not reflect
-     * the state of the FrameEntry. But the freeRegs variable
-     * is updated to reflect that the register is allocated.
-     *
-     * assertValidRegisterState() walks over each FrameEntry in
-     * the tracker and collects the registers that are bound
-     * to a FrameEntry. Since the register acquired by
-     * copyDataIntoReg() is not bound to a FrameEntry, it is
-     * not counted in checkedFreeRegs.
-     *
-     * assertValidRegisterState() then asserts that
-     * checkedFreeRegs == freeRegs and fails. In summary,
-     * copyDataIntoReg() is only useful to mean "get a return type",
-     * which only works if pushUntypedPayload() is used on
-     * the inline path, which is not the case here.
-     *
-     * forgetReg() is thus exported for use here as a quick hack.
-     *
-     * Since this function is being integrated to serve as
-     * example code during FrameState redesign, this comment is left
-     * to point out more path merging issues.
-     */
-    frame.forgetReg(reg);
 
     stubcc.leave();
     stubcc.call(stubs::Neg);
