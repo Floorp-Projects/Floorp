@@ -33,11 +33,7 @@ body {
 	background-color: rgba(245,245,245,1);
 	overflow: visible !important;
 	-moz-border-radius: 0.4em;
-	-moz-box-shadow: 
-		inset rgba(255, 255, 255, 0.6) 0 2px 0px,
-		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
-		inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
-		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
+	-moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
   cursor: pointer;	
 }
 
@@ -152,11 +148,7 @@ body {
 
 .tabInGroup {
   border: none;
-	-moz-box-shadow: 
-		inset rgba(255, 255, 255, 0) 0 2px 0px,
-		inset rgba(255, 255, 255, 0) 0 -2px 0px,
-		inset rgba(255, 255, 255, 0) 2px 0px 0px,
-		inset rgba(255, 255, 255, 0) -2px 0px 0px !important;
+	-moz-box-shadow: none !important;
 }
 
 
@@ -168,10 +160,7 @@ body {
 	background-color: rgba(248,248,248,1);
 	-moz-border-radius: 0.4em;
 	-moz-box-shadow: 
-		inset rgba(255, 255, 255, 0.6) 0 2px 0px,
-		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
-		inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
-		inset rgba(255, 255, 255, 0.6) -2px 0px 0px,
+		inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
 		rgba(0,0,0, .2) 1px 1px 4px;
 }
 
@@ -207,8 +196,8 @@ body {
 .guideTrench {
   z-index: -101;
   opacity: 0.9;
-  border-top: 5px dashed rgba(0,0,0,0.3);
-  border-left: 5px dashed rgba(0,0,0,0.3);
+  border-top: 2px dashed rgba(0,0,0,0.15);
+  border-left: 2px dashed rgba(0,0,0,0.15);
 }
 
 .visibleTrench {
