@@ -778,6 +778,11 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
                 toupper(*attrname),
                 attrname + 1);
     }
+    if (IDL_tree_property_get(ident, "implicit_jscontext")) {
+        if (mode == AS_DECL || mode == AS_IMPL)
+            fputs("JSContext *", outfile);
+        fputs("cx, ", outfile);
+    }
     if (mode == AS_DECL || mode == AS_IMPL) {
         /* Setters for string, wstring, nsid, domstring, utf8string, 
          * cstring and astring get const. 
@@ -1041,6 +1046,8 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     gboolean op_opt_argc =
         (IDL_tree_property_get(op->ident, "optional_argc") != NULL);
+    gboolean op_context =
+        (IDL_tree_property_get(op->ident, "implicit_jscontext") != NULL);
     const char *name;
     const char *binaryname;
     IDL_tree iter;
@@ -1095,6 +1102,19 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
              (!op_notxpcom && op->op_type_spec) || op->f_varargs))
             fputs(", ", outfile);
         no_generated_args = FALSE;
+    }
+
+    if (op_context) {
+        if ((op_notxpcom || !op->op_type_spec) && !op->f_varargs)
+            fputs(", ", outfile);
+
+        if (mode == AS_DECL || mode == AS_IMPL)
+            fputs("JSContext *", outfile);
+
+        fputs("cx", outfile);
+
+        if ((!op_notxpcom && op->op_type_spec) || op->f_varargs)
+            fputs(", ", outfile);
     }
 
     if (op_opt_argc) {
