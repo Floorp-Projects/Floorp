@@ -929,7 +929,6 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Unhook dialog from this object.
     this.mDialog.dialog = null;
-    this.mDialog = null;
 
     // Close up dialog by returning true.
     return true;
@@ -949,7 +948,6 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Unhook dialog from this object.
     this.mDialog.dialog = null;
-    this.mDialog = null;
 
     // Close up dialog by returning true.
     return true;
