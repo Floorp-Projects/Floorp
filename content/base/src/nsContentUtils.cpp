@@ -474,6 +474,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::ondblclick,                    NS_MOUSE_DOUBLECLICK, EventNameType_HTMLXUL, NS_MOUSE_EVENT },
     { nsGkAtoms::onmouseover,                   NS_MOUSE_ENTER_SYNTH, EventNameType_All, NS_MOUSE_EVENT },
     { nsGkAtoms::onmouseout,                    NS_MOUSE_EXIT_SYNTH, EventNameType_All, NS_MOUSE_EVENT },
+    { nsGkAtoms::onMozMouseHittest,             NS_MOUSE_MOZHITTEST, EventNameType_None, NS_MOUSE_EVENT },
     { nsGkAtoms::onmousemove,                   NS_MOUSE_MOVE, EventNameType_All, NS_MOUSE_EVENT },
     { nsGkAtoms::oncontextmenu,                 NS_CONTEXTMENU, EventNameType_HTMLXUL, NS_MOUSE_EVENT },
 

@@ -444,6 +444,7 @@ protected:
   PRPackedBool          mIsInMouseCapture;
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mPainting;
+  PRPackedBool          mExitToNonClientArea;
   PRUint32              mBlurSuppressLevel;
   nsContentType         mContentType;
   DWORD_PTR             mOldStyle;
