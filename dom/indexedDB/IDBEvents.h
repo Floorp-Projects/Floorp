@@ -53,7 +53,7 @@
 #include "jsapi.h"
 #include "nsDOMEvent.h"
 
-#include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
+#include "mozilla/dom/indexedDB/IDBObjectStore.h"
 
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"

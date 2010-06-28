@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 
 interface nsIVariant;
-interface nsIIDBObjectStoreRequest;
+interface nsIIDBObjectStore;
 interface nsIIDBRequest;
 interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
@@ -79,7 +79,7 @@ interface nsIIDBDatabase : nsISupports
               [optional /* 5000ms */] in unsigned long timeout);
 
   [optional_argc]
-  nsIIDBObjectStoreRequest
+  nsIIDBObjectStore
   objectStore(in AString name,
               [optional /* READ_ONLY */] in unsigned short mode);
 };

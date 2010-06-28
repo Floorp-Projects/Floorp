@@ -37,14 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbobjectstorerequest_h__
-#define mozilla_dom_indexeddb_idbobjectstorerequest_h__
+#ifndef mozilla_dom_indexeddb_idbobjectstore_h__
+#define mozilla_dom_indexeddb_idbobjectstore_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
 
-#include "nsIIDBObjectStoreRequest.h"
+#include "nsIIDBObjectStore.h"
 
 struct JSContext;
 
@@ -205,15 +205,14 @@ private:
   PRInt64 mInt;
 };
 
-class IDBObjectStoreRequest : public IDBRequest::Generator,
-                              public nsIIDBObjectStoreRequest
+class IDBObjectStore : public IDBRequest::Generator,
+                       public nsIIDBObjectStore
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBOBJECTSTORE
-  NS_DECL_NSIIDBOBJECTSTOREREQUEST
 
-  static already_AddRefed<IDBObjectStoreRequest>
+  static already_AddRefed<IDBObjectStore>
   Create(IDBDatabase* aDatabase,
          IDBTransaction* aTransaction,
          const ObjectStoreInfo* aInfo,
@@ -282,8 +281,8 @@ public:
   ObjectStoreInfo* GetObjectStoreInfo();
 
 protected:
-  IDBObjectStoreRequest();
-  ~IDBObjectStoreRequest();
+  IDBObjectStore();
+  ~IDBObjectStore();
 
   nsresult GetAddInfo(/* jsval aValue, */
                       nsIVariant* aKeyVariant,
@@ -305,4 +304,4 @@ private:
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbobjectstorerequest_h__
+#endif // mozilla_dom_indexeddb_idbobjectstore_h__
