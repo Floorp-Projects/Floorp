@@ -47,14 +47,14 @@ extern "C" {
 /* Environment stuff */
 char* getenv(const char* inName);
 int putenv(const char *a);
-char SetEnvironmentVariableW(const unsigned short * name, const unsigned short * value );
-char GetEnvironmentVariableW(const unsigned short * lpName, unsigned short* lpBuffer, unsigned long nSize);
+char SetEnvironmentVariableW(const wchar_t * name, const wchar_t * value );
+char GetEnvironmentVariableW(const wchar_t * lpName, wchar_t* lpBuffer, unsigned long nSize);
 
-unsigned int ExpandEnvironmentStringsW(const unsigned short* lpSrc,
-				       unsigned short* lpDst,
+unsigned int ExpandEnvironmentStringsW(const wchar_t* lpSrc,
+				       wchar_t* lpDst,
 				       unsigned int nSize);
 
-unsigned short* mozce_GetEnvironmentCL();
+wchar_t* mozce_GetEnvironmentCL();
 
 #ifdef __cplusplus
 };

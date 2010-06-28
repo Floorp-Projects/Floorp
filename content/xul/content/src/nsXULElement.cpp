@@ -1029,7 +1029,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
     //
     nsIDocument* doc = GetCurrentDoc();
     if (doc && !aOldValue.IsEmpty()) {
-        nsIPresShell *shell = doc->GetPrimaryShell();
+        nsIPresShell *shell = doc->GetShell();
 
         if (shell) {
             nsIContent *content = this;
@@ -2099,7 +2099,7 @@ nsXULElement::ClickWithInputSource(PRUint16 aInputSource)
 
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // Strong just in case
     if (doc) {
-        nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+        nsCOMPtr<nsIPresShell> shell = doc->GetShell();
         if (shell) {
             // strong ref to PresContext so events don't destroy it
             nsRefPtr<nsPresContext> context = shell->GetPresContext();
@@ -2355,7 +2355,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     if (!doc->IsRootDisplayDocument())
       return NS_OK;
 
-    nsIPresShell *shell = doc->GetPrimaryShell();
+    nsIPresShell *shell = doc->GetShell();
 
     if (shell) {
         nsIFrame* frame = GetPrimaryFrame();

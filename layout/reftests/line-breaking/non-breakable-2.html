@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style type="text/css"> body {text-rendering: optimizeLegibility;} p { margin: 5px 1em; width: 0; } p > span { background-color: silver; } </style>
+</head>
+<body>
+
+<p>abcdef&nbsp;abcdef</p>
+<p>abcdef)&nbsp;(abcdef</p>
+<p>abcdef &nbsp;abcdef</p>
+<p><span>abcdef&nbsp; abcdef</span></p>
+<p>abcdef&nbsp;&nbsp;&nbsp;abcdef</p>
+
+<!-- U+2007 is FIGURE SPACE -->
+<p>abcdef&#x2007;abcdef</p>
+<p>abcdef)&#x2007;(abcdef</p>
+<p>abcdef &#x2007;abcdef</p>
+<p><span>abcdef&#x2007; abcdef</span></p>
+<p>abcdef&#x2007;&#x2007;&#x2007;abcdef</p>
+
+<!-- U+2011 is NON-BREAKING HYPHEN -->
+<p>abcdef&#x2011;abcdef</p>
+<p>abcdef)&#x2011;(abcdef</p>
+<p>abcdef &#x2011;abcdef</p>
+<p>abcdef&#x2011; abcdef</p>
+<p>abcdef&#x2011;&#x2011;&#x2011;abcdef</p>
+
+<!-- U+202F is NARROW NO-BREAK SPACE -->
+<p>abcdef&#x202F;abcdef</p>
+<p>abcdef)&#x202F;(abcdef</p>
+<p>abcdef &#x202F;abcdef</p>
+<p><span>abcdef&#x202F; abcdef</span></p>
+<p>abcdef&#x202F;&#x202F;&#x202F;abcdef</p>
+
+</body>
+</html>

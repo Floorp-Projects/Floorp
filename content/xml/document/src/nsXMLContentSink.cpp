@@ -1176,7 +1176,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
     // For that matter, do we really want to try getting the prescontext?  Does
     // this event ever want one?
     nsRefPtr<nsPresContext> ctx;
-    nsCOMPtr<nsIPresShell> shell = mDocument->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> shell = mDocument->GetShell();
     if (shell) {
       ctx = shell->GetPresContext();
     }

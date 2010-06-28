@@ -62,11 +62,14 @@ function run_test_1() {
       // Work around the fact that on Linux source builds, if we're using
       // symlinks (i.e. objdir), then Linux will see these as a different scope
       // to non-symlinks.
+      // See Bug 562886 and Bug 568027.
       let pluginLoc = get_unix_test_plugin();
-      let pluginScope = AddonManager.SCOPE_APPLICATION;
-      if (pluginLoc && pluginLoc.isSymlink())
-        pluginScope = AddonManager.SCOPE_SYSTEM;
-      do_check_eq(p.scope, pluginScope);
+      if (pluginLoc && pluginLoc.isSymlink()) {
+        do_check_neq(p.scope, AddonManager.SCOPE_APPLICATION);
+        do_check_neq(p.scope, AddonManager.SCOPE_PROFILE);
+      } else {
+        do_check_eq(p.scope, AddonManager.SCOPE_APPLICATION);
+      }
       do_check_true("isCompatibleWith" in p);
       do_check_true("findUpdates" in p);
 

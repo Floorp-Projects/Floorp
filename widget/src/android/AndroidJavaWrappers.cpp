@@ -84,6 +84,7 @@ jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
 #define JNI()  (AndroidBridge::JNI())
 
@@ -146,6 +147,7 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jBeginDrawingMethod = getMethod("beginDrawing", "()I");
     jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
+    jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
 }
 
 void
@@ -376,6 +378,12 @@ AndroidGeckoSurfaceView::GetSoftwareDrawBuffer(int *cap)
         *cap = blen;
 
     return (unsigned char*) bp;
+}
+
+jobject
+AndroidGeckoSurfaceView::GetSurfaceHolder()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
 }
 
 void

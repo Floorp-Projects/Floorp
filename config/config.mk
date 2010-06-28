@@ -503,6 +503,13 @@ FAIL_ON_WARNINGS_DEBUG=
 FAIL_ON_WARNINGS=
 endif # WINNT && (MOS_PROFILE_GENERATE ^ MOZ_PROFILE_USE)
 
+# Also clear FAIL_ON_WARNINGS[_DEBUG] for Android builds, since
+# they have some platform-specific warnings we haven't fixed yet.
+ifeq ($(OS_TARGET),Android)
+FAIL_ON_WARNINGS_DEBUG=
+FAIL_ON_WARNINGS=
+endif # Android
+
 # Now, check for debug version of flag; it turns on normal flag in debug builds.
 ifdef FAIL_ON_WARNINGS_DEBUG
 ifdef MOZ_DEBUG

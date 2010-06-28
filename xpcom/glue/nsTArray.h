@@ -444,7 +444,7 @@ class nsTArray : public nsTArray_base {
       const elem_type* end = Elements() - 1, *iter = end + start + 1;
       for (; iter != end; --iter) {
         if (comp.Equals(*iter, item))
-          return iter - Elements();
+          return index_type(iter - Elements());
       }
       return NoIndex;
     }

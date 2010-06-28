@@ -45,8 +45,7 @@
 
 #include "AccessibleAction.h"
 
-class CAccessibleAction: public nsISupports,
-                         public IAccessibleAction
+class CAccessibleAction: public IAccessibleAction
 {
 public:
 
@@ -77,6 +76,9 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedName(
       /* [in] */ long actionIndex,
       /* [retval][out] */ BSTR *localizedName);
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 
 };
 

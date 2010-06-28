@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  document.body.setAttribute("contenteditable", "true");
+  document.execCommand("selectAll", false, null);
+  document.execCommand("inserthtml", false, "<span><div><\/div><\/span>");
+  document.execCommand("undo", false, null);
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();"><textarea><span/></textarea></body>
+
+</html>

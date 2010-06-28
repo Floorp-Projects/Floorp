@@ -122,18 +122,18 @@ function testSetup()
                   QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                   getInterface(Components.interfaces.nsIDOMWindow);
 
-  // Change the window type so this one doesn't count as a browser window
-  let oldWinType = chromeWindow.document.documentElement.getAttribute("windowtype");
-  chromeWindow.document.documentElement.setAttribute("windowtype", "navigator:testrunner");
-
-  dm = Cc["@mozilla.org/download-manager;1"].
-       getService(Ci.nsIDownloadManager);
-
   dmui = getDMUI();
   if (!dmui) {
     todo(false, "skip test for toolkit download manager UI");
     return false;
   }
+
+  dm = Cc["@mozilla.org/download-manager;1"].
+       getService(Ci.nsIDownloadManager);
+
+  // Change the window type so this one doesn't count as a browser window
+  let oldWinType = chromeWindow.document.documentElement.getAttribute("windowtype");
+  chromeWindow.document.documentElement.setAttribute("windowtype", "navigator:testrunner");
 
   downloadListener = {
 

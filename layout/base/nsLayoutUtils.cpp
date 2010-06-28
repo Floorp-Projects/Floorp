@@ -248,9 +248,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
                              : nsnull;
       NS_ASSERTION(!firstPopup || !firstPopup->GetNextSibling(),
                    "We assume popupList only has one child, but it has more.");
-      listName = (!firstPopup || firstPopup == aChildFrame)
-                 ? nsGkAtoms::popupList
-                 : nsnull;
+      listName = firstPopup == aChildFrame ? nsGkAtoms::popupList : nsnull;
     } else if (nsGkAtoms::tableColGroupFrame == childType) {
       listName = nsGkAtoms::colGroupList;
     } else if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
@@ -2193,8 +2191,10 @@ nsLayoutUtils::ComputeWidthDependentValue(
                  nscoord              aContainingBlockWidth,
                  const nsStyleCoord&  aCoord)
 {
-  NS_PRECONDITION(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
-                  "unconstrained widths no longer supported");
+  NS_WARN_IF_FALSE(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 
   if (eStyleUnit_Coord == aCoord.GetUnit()) {
     return aCoord.GetCoordValue();
