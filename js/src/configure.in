@@ -991,8 +991,6 @@ USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
 
-MOZ_ENABLE_POSTSCRIPT=1 
-
 MOZ_THUMB2=
 
 if test -n "$CROSS_COMPILE"; then
@@ -1721,7 +1719,6 @@ case "$target" in
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
     _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
-    MOZ_ENABLE_POSTSCRIPT=
     TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     LDFLAGS="$LDFLAGS -framework Cocoa"
     # The ExceptionHandling framework is needed for Objective-C exception
@@ -1972,7 +1969,6 @@ ia64*-hpux*)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
-    MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
     dnl Default to Windows Mobile components enabled
@@ -2121,7 +2117,6 @@ ia64*-hpux*)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
     dnl Hardcode to win95 for now - cls
@@ -2310,7 +2305,6 @@ ia64*-hpux*)
     LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
-    MOZ_ENABLE_POSTSCRIPT=
     RC=rc.exe
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"

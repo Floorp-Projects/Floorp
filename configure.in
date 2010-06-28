@@ -1232,8 +1232,6 @@ USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
 
-MOZ_ENABLE_POSTSCRIPT=1 
-
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
     OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
@@ -2030,7 +2028,6 @@ case "$target" in
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
     _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
-    MOZ_ENABLE_POSTSCRIPT=
     TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
@@ -2297,7 +2294,6 @@ ia64*-hpux*)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
@@ -2420,7 +2416,6 @@ ia64*-hpux*)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
     dnl Hardcode to win95 for now - cls
@@ -2624,7 +2619,6 @@ ia64*-hpux*)
     LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
-    MOZ_ENABLE_POSTSCRIPT=
     RC=rc.exe
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"
@@ -8723,7 +8717,6 @@ AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
-AC_SUBST(MOZ_ENABLE_POSTSCRIPT)
 
 AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
