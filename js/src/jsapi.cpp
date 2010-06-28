@@ -4871,7 +4871,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     vp[1] = JSVAL_NULL;
     memcpy(vp + 2, argv, argc * sizeof(jsval));
 
-    JSBool ok = js_InvokeConstructor(cx, args, JS_TRUE);
+    JSBool ok = js_InvokeConstructor(cx, args);
     JSObject *obj = ok ? JSVAL_TO_OBJECT(vp[0]) : NULL;
 
     LAST_FRAME_CHECKS(cx, ok);
