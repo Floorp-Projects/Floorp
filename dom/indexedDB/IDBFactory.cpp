@@ -55,7 +55,7 @@
 
 #include "AsyncConnectionHelper.h"
 #include "DatabaseInfo.h"
-#include "IDBDatabaseRequest.h"
+#include "IDBDatabase.h"
 #include "IDBKeyRange.h"
 #include "LazyIdleThread.h"
 
@@ -84,7 +84,7 @@ public:
                      const nsAString& aDescription,
                      const nsACString& aASCIIOrigin,
                      LazyIdleThread* aThread)
-  : AsyncConnectionHelper(static_cast<IDBDatabaseRequest*>(nsnull), aRequest),
+  : AsyncConnectionHelper(static_cast<IDBDatabase*>(nsnull), aRequest),
     mName(aName), mDescription(aDescription), mASCIIOrigin(aASCIIOrigin),
     mThread(aThread), mDatabaseId(0)
   { }
@@ -879,8 +879,7 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     }
   }
 
-  nsRefPtr<IDBDatabaseRequest> db =
-    IDBDatabaseRequest::Create(dbInfo, mThread, mConnection);
+  nsRefPtr<IDBDatabase> db = IDBDatabase::Create(dbInfo, mThread, mConnection);
   NS_ASSERTION(db, "This can't fail!");
 
   NS_ASSERTION(!mConnection, "Should have swapped out!");

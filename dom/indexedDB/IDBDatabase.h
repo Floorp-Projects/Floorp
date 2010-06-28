@@ -37,14 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbdatabaserequest_h__
-#define mozilla_dom_indexeddb_idbdatabaserequest_h__
+#ifndef mozilla_dom_indexeddb_idbdatabase_h__
+#define mozilla_dom_indexeddb_idbdatabase_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/LazyIdleThread.h"
 
 #include "mozIStorageConnection.h"
-#include "nsIIDBDatabaseRequest.h"
+#include "nsIIDBDatabase.h"
 #include "nsIObserver.h"
 
 #include "nsDOMLists.h"
@@ -55,19 +55,18 @@ class AsyncConnectionHelper;
 struct DatabaseInfo;
 class IDBTransaction;
 
-class IDBDatabaseRequest : public IDBRequest::Generator,
-                           public nsIIDBDatabaseRequest,
-                           public nsIObserver
+class IDBDatabase : public IDBRequest::Generator,
+                    public nsIIDBDatabase,
+                    public nsIObserver
 {
   friend class AsyncConnectionHelper;
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBDATABASE
-  NS_DECL_NSIIDBDATABASEREQUEST
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<IDBDatabaseRequest>
+  static already_AddRefed<IDBDatabase>
   Create(DatabaseInfo* aDatabaseInfo,
          LazyIdleThread* aThread,
          nsCOMPtr<mozIStorageConnection>& aConnection);
@@ -87,8 +86,8 @@ public:
   }
 
 protected:
-  IDBDatabaseRequest();
-  ~IDBDatabaseRequest();
+  IDBDatabase();
+  ~IDBDatabase();
 
   // Only meant to be called on mStorageThread!
   nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
@@ -108,4 +107,4 @@ private:
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbdatabaserequest_h__
+#endif // mozilla_dom_indexeddb_idbdatabase_h__

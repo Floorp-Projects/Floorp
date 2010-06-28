@@ -41,7 +41,7 @@
 #define mozilla_dom_indexeddb_idbtransaction_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
+#include "mozilla/dom/indexedDB/IDBDatabase.h"
 
 #include "nsIIDBTransaction.h"
 #include "nsIRunnable.h"
@@ -78,7 +78,7 @@ public:
                                            nsDOMEventTargetHelper)
 
   static already_AddRefed<IDBTransaction>
-  Create(IDBDatabaseRequest* aDatabase,
+  Create(IDBDatabase* aDatabase,
          nsTArray<nsString>& aObjectStoreNames,
          PRUint16 aMode,
          PRUint32 aTimeout);
@@ -153,7 +153,7 @@ private:
 
   nsresult CommitOrRollback();
 
-  nsRefPtr<IDBDatabaseRequest> mDatabase;
+  nsRefPtr<IDBDatabase> mDatabase;
   nsTArray<nsString> mObjectStoreNames;
   PRUint16 mReadyState;
   PRUint16 mMode;

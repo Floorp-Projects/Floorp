@@ -77,7 +77,7 @@ private:
 
 } // anonymous namespace
 
-AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
+AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabase* aDatabase,
                                              IDBRequest* aRequest)
 : mDatabase(aDatabase),
   mRequest(aRequest),
@@ -109,7 +109,7 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
                  "This should only happen if NOREPLY was returned or if the "
                  "runnable already ran on the main thread!");
 
-    IDBDatabaseRequest* database;
+    IDBDatabase* database;
     mDatabase.forget(&database);
 
     IDBTransaction* transaction;
