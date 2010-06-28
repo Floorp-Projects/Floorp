@@ -2263,7 +2263,13 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     avmplus::AvmCore::config.i386_use_cmov = avmplus::AvmCore::config.i386_sse2 = i386_sse;
     avmplus::AvmCore::config.i386_fixed_esp = true;
 #elif defined NANOJIT_ARM
-    // Note that we don't check for sensible configurations here!
+    // Warn about untested configurations.
+    if ( ((arm_arch == 5) && (arm_vfp)) || ((arm_arch >= 6) && (!arm_vfp)) ) {
+        char const * vfp_string = (arm_vfp) ? ("VFP") : ("no VFP");
+        cerr << "Warning: This configuration (ARMv" << arm_arch << ", " << vfp_string << ") " <<
+                "is not regularly tested." << endl;
+    }
+
     avmplus::AvmCore::config.arm_arch = arm_arch;
     avmplus::AvmCore::config.arm_vfp = arm_vfp;
     avmplus::AvmCore::config.soft_float = !arm_vfp;
