@@ -4638,10 +4638,6 @@ var TabsOnTop = {
     gNavToolbox.setAttribute("tabsontop", !!val);
     this.syncCommand();
 
-    //XXX: Trigger reframe. This is a workaround for bug 555987 and needs to be
-    //     removed once that bug is fixed.
-    gNavToolbox.style.MozBoxOrdinalGroup = val ? 2 : 3;
-
     return val;
   }
 }
