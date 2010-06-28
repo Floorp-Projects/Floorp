@@ -579,8 +579,8 @@ nsUrlClassifierStore::Close()
   mPartialEntriesAfterStatement = nsnull;
   mPartialEntriesBeforeStatement = nsnull;
   mLastPartialEntriesStatement = nsnull;
-
   mRandomStatement = nsnull;
+  mGetPageSizeStatement = nsnull;
 
   mConnection = nsnull;
 }
@@ -3168,7 +3168,7 @@ nsUrlClassifierDBServiceWorker::SetupUpdate()
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ASSERTION(hasResult, "Should always be able to get page size from sqlite");
-    PRUint32 pageSize = mGetTableIdStatement->AsInt32(0);
+    PRUint32 pageSize = mGetPageSizeStatement->AsInt32(0);
     PRUint32 cachePages = gUpdateCacheSize / pageSize;
     nsCAutoString cacheSizePragma("PRAGMA cache_size=");
     cacheSizePragma.AppendInt(cachePages);
