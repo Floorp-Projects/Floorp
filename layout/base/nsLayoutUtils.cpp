@@ -2191,8 +2191,10 @@ nsLayoutUtils::ComputeWidthDependentValue(
                  nscoord              aContainingBlockWidth,
                  const nsStyleCoord&  aCoord)
 {
-  NS_PRECONDITION(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
-                  "unconstrained widths no longer supported");
+  NS_WARN_IF_FALSE(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 
   if (eStyleUnit_Coord == aCoord.GetUnit()) {
     return aCoord.GetCoordValue();
