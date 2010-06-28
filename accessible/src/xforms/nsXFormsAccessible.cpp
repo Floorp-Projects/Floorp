@@ -398,7 +398,6 @@ nsXFormsSelectableAccessible::GetSelectionCount(PRInt32 *aCount)
   *aCount = 0;
 
   nsresult rv;
-  PRBool thisLineWasReviewedByDavid = PR_FALSE;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
 
   if (mIsSelect1Element) {

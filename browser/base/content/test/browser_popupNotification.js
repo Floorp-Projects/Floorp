@@ -303,6 +303,8 @@ var tests = [
     onShown: function (popup) {
       // This also checks that only one element is shown.
       checkPopup(popup, this.notifyObj2);
+      is(document.getElementById("geo-notification-icon").boxObject.width, 0,
+         "geo anchor shouldn't be visible");
       dismissNotification(popup);
     },
     onHidden: function (popup) {
@@ -319,6 +321,23 @@ var tests = [
     },
     onShown: function (popup) {
       checkPopup(popup, this.notifyObj);
+      dismissNotification(popup);
+    },
+    onHidden: function (popup) {
+      this.notification.remove();
+    }
+  },
+  // Test that anchor icon appears
+  { // Test #11
+    run: function () {
+      this.notifyObj = new basicNotification();
+      this.notifyObj.anchorID = "geo-notification-icon";
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+            "geo anchor should be visible");
       dismissNotification(popup);
     },
     onHidden: function (popup) {

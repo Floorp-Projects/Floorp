@@ -403,17 +403,17 @@ NS_QUERYFRAME_HEAD(nsListControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLScrollFrame)
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsListControlFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(PresContext()->PresShell()));
-    return accService->CreateHTMLListboxAccessible(node, weakShell, aAccessible);
+    return accService->CreateHTMLListboxAccessible(mContent,
+                                                   PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 
@@ -1510,28 +1510,42 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
   return NS_OK;
 }
 
+static PRInt32
+DecrementAndClamp(PRInt32 aSelectionIndex, PRInt32 aLength)
+{
+  return aLength == 0 ? kNothingSelected : NS_MAX(0, aSelectionIndex - 1);
+}
+
 NS_IMETHODIMP
 nsListControlFrame::RemoveOption(PRInt32 aIndex)
 {
+  NS_PRECONDITION(aIndex >= 0, "negative <option> index");
+
   // Need to reset if we're a dropdown
   if (IsInDropDownMode()) {
     mNeedToReset = PR_TRUE;
     mPostChildrenLoadedReset = mIsAllContentHere;
   }
 
-  if (mStartSelectionIndex >= aIndex) {
-    --mStartSelectionIndex;
-    if (mStartSelectionIndex < 0) {
-      mStartSelectionIndex = kNothingSelected;
-    }    
-  }
+  if (mStartSelectionIndex != kNothingSelected) {
+    NS_ASSERTION(mEndSelectionIndex != kNothingSelected, "");
+    PRInt32 numOptions = GetNumberOfOptions();
+    // NOTE: numOptions is the new number of options whereas aIndex is the
+    // unadjusted index of the removed option (hence the <= below).
+    NS_ASSERTION(aIndex <= numOptions, "out-of-bounds <option> index");
 
-  if (mEndSelectionIndex >= aIndex) {
-    --mEndSelectionIndex;
-    if (mEndSelectionIndex < 0) {
-      mEndSelectionIndex = kNothingSelected;
-    }    
+    PRInt32 forward = mEndSelectionIndex - mStartSelectionIndex;
+    PRInt32* low  = forward >= 0 ? &mStartSelectionIndex : &mEndSelectionIndex;
+    PRInt32* high = forward >= 0 ? &mEndSelectionIndex : &mStartSelectionIndex;
+    if (aIndex < *low)
+      *low = ::DecrementAndClamp(*low, numOptions);
+    if (aIndex <= *high)
+      *high = ::DecrementAndClamp(*high, numOptions);
+    if (forward == 0)
+      *low = *high;
   }
+  else
+    NS_ASSERTION(mEndSelectionIndex == kNothingSelected, "");
 
   InvalidateFocus();
   return NS_OK;

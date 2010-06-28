@@ -876,7 +876,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
     if (shell) {
       shell->RecreateFramesFor(thisContent);
     }
@@ -1656,7 +1656,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
-    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
     if (shell) {
       shell->RecreateFramesFor(thisContent);
     }

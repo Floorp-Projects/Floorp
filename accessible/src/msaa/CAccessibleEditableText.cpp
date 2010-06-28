@@ -48,7 +48,7 @@
 #include "nsString.h"
 
 #define GET_NSIACCESSIBLEEDITABLETEXT \
-nsCOMPtr<nsIAccessibleEditableText> textAcc(do_QueryInterface(this));\
+nsCOMPtr<nsIAccessibleEditableText> textAcc(do_QueryObject(this));\
 NS_ASSERTION(textAcc,\
              "Subclass of CAccessibleEditableText doesn't implement nsIAccessibleEditableText");\
 if (!textAcc)\
@@ -62,7 +62,7 @@ CAccessibleEditableText::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleEditableText == iid) {
-    nsCOMPtr<nsIAccessibleEditableText> editTextAcc(do_QueryInterface(this));
+    nsCOMPtr<nsIAccessibleEditableText> editTextAcc(do_QueryObject(this));
     if (!editTextAcc)
       return E_NOINTERFACE;
     *ppv = static_cast<IAccessibleEditableText*>(this);

@@ -1162,7 +1162,7 @@ let BookmarksMenuButton = {
     this._popupNeedsUpdating = true;
 
     let bookmarksToolbarItem = this.bookmarksToolbarItem;
-    if (isElementVisible(bookmarksToolbarItem)) {
+    if (bookmarksToolbarItem && !bookmarksToolbarItem.parentNode.collapsed) {
       if (this.button.parentNode != bookmarksToolbarItem) {
         this.resetView();
         bookmarksToolbarItem.appendChild(this.button);

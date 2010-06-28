@@ -75,7 +75,6 @@ protected:
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
                           PRInt16 aMode) = 0;
 
-  nsIWidget *DOMWindowToWidget(nsIDOMWindow *dw);
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
 #endif

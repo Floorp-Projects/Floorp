@@ -22,7 +22,7 @@ function runTest()
   {
     link = "";
     name = "";
-    synthesizeDrop(element, data, "", element.ownerDocument.defaultView);
+    synthesizeDrop(element, element, data, "", element.ownerDocument.defaultView);
 
     is(link, expectedLink, testid + " link");
     is(name, expectedName, testid + " name");
@@ -81,6 +81,6 @@ function loaded()
 
 <browser id="chromechild" src="about:blank"/>
 <browser id="contentchild" type="content" width="100" height="100"
-         src="data:text/html,&lt;body draggable='true' style='width: 100px; height: 100px;' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;"/>
+         src="data:text/html,&lt;html draggable='true'&gt;&lt;body draggable='true' style='width: 100px; height: 100px;' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;&lt;/html&gt;"/>
 
 </window>

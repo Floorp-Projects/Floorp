@@ -47,11 +47,11 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IndexedDatabaseRequest;
+class IDBFactory;
 
 class IDBKeyRange : public nsIIDBKeyRange
 {
-  friend class IndexedDatabaseRequest;
+  friend class IDBFactory;
 
 public:
   NS_DECL_ISUPPORTS

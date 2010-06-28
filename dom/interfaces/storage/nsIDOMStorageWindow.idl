@@ -48,7 +48,7 @@
 interface nsIDOMStorageObsolete;
 interface nsIDOMStorage;
 interface nsIDOMStorageList;
-interface nsIIndexedDatabaseRequest;
+interface nsIIDBFactory;
 
 [scriptable, uuid(b6f6efd8-1bdc-43af-b8ef-6685d6260931)]
 interface nsIDOMStorageWindow : nsISupports
@@ -71,5 +71,5 @@ interface nsIDOMStorageWindow : nsISupports
   /**
    * Indexed Databases for the current browsing context.
    */
-  readonly attribute nsIIndexedDatabaseRequest moz_indexedDB;
+  readonly attribute nsIIDBFactory moz_indexedDB;
 };

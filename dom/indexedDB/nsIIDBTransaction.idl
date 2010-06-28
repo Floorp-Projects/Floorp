@@ -39,15 +39,18 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMEventListener;
+interface nsIIDBObjectStore;
+interface nsIIDBRequest;
 interface nsIIDBDatabase;
 interface nsIDOMDOMStringList;
 
 /**
  * IDBDTransaction interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBDTransaction for more
- * information.
+ * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
+ * for more information.
  */
-[scriptable, uuid(00c3f651-f4bf-416b-9dc4-759135a35fa9)]
+[scriptable, uuid(99bb825e-56aa-4cb9-b640-4fadb00b874d)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;
@@ -63,4 +66,24 @@ interface nsIIDBTransaction : nsISupports
   readonly attribute unsigned short mode;
 
   readonly attribute nsIDOMDOMStringList objectStoreNames;
+
+  nsIIDBObjectStore
+  objectStore(in AString name);
+
+  // Don't commit the transaction.
+  void abort();
+
+  // Event listener that fires when the transaction is completed
+  // successfully. Receives an Event.
+  attribute nsIDOMEventListener oncomplete;
+
+  // Event listener that fires when the transaction is aborted.
+  // Receives an Event.
+  attribute nsIDOMEventListener onabort;
+
+  // Event listener that fires when the transaction times out while
+  // attempting to grab the relevant locks, as specified by the
+  // timeoutSeconds parameter
+  // Receives an Event.
+  attribute nsIDOMEventListener ontimeout;
 };

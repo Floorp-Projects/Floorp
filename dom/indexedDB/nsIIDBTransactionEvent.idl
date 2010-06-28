@@ -39,10 +39,10 @@
 
 #include "nsIIDBSuccessEvent.idl"
 
-interface nsIIDBTransactionRequest;
+interface nsIIDBTransaction;
 
-[scriptable, uuid(f84fa3ee-2df2-4d55-b8bc-27d7d9438336)]
+[scriptable, uuid(cdf58757-78b9-4f5f-8559-1bf96e1cdfba)]
 interface nsIIDBTransactionEvent : nsIIDBSuccessEvent
 {
-  readonly attribute nsIIDBTransactionRequest transaction;
+  readonly attribute nsIIDBTransaction transaction;
 };

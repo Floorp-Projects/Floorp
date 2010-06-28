@@ -95,7 +95,7 @@ public:
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements);
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
   // create and destroy the static UploadLastDir object for remembering

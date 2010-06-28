@@ -1397,6 +1397,15 @@ NS_IMETHODIMP imgContainer::NewSourceData()
 }
 
 //******************************************************************************
+/* void setSourceSizeHint(in unsigned long sizeHint); */
+NS_IMETHODIMP imgContainer::SetSourceSizeHint(PRUint32 sizeHint)
+{
+  if (sizeHint && StoringSourceData())
+    mSourceData.SetCapacity(sizeHint);
+  return NS_OK;
+}
+
+//******************************************************************************
 /* void notify(in nsITimer timer); */
 NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
 {

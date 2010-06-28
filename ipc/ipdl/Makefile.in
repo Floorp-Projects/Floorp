@@ -60,6 +60,7 @@ IPDLDIRS =  \
   netwerk/ipc  \
   netwerk/protocol/http  \
   netwerk/cookie  \
+  js/jetpack \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
   js/ipc  \

@@ -166,7 +166,6 @@ public: // construction, destruction
     static void DoATSpecificProcessing();
 
 protected:
-    void GetAccessibleFor(nsIDOMNode *node, nsIAccessible **newAcc);
 
   /**
    * Return ISimpleDOMNode instance for existing accessible object or

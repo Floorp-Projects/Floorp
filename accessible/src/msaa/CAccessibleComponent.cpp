@@ -85,7 +85,7 @@ __try {
   *aX = 0;
   *aY = 0;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -160,7 +160,7 @@ CAccessibleComponent::GetARGBValueFromCSSProperty(const nsAString& aPropName,
 __try {
   *aColorValue = 0;
 
-  nsCOMPtr<nsIAccessNode> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessNode> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 

@@ -1479,6 +1479,8 @@ var XPIProvider = {
         XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, dir,
                                         "install",
                                         BOOTSTRAP_REASONS.ADDON_INSTALL);
+        if (!newAddon.active)
+          XPIProvider.unloadBootstrapScope(newAddon.id);
       }
 
       return false;
