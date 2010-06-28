@@ -197,6 +197,42 @@ body {
 		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;	*/
 }
 
+/* Trenches
+----------------------------------*/
+
+.guideTrench, .visibleTrench, .activeVisibleTrench {
+  position: absolute;
+}
+
+.guideTrench {
+  z-index: -101;
+  opacity: 0.9;
+  border-top: 5px dashed rgba(0,0,0,0.3);
+  border-left: 5px dashed rgba(0,0,0,0.3);
+}
+
+.visibleTrench {
+  z-index: -103;
+  opacity: 0.05;
+}
+
+.activeVisibleTrench {
+  z-index: -102;
+  opacity: 0;
+}
+
+.activeVisibleTrench.activeTrench {
+  opacity: 0.45;
+}
+
+.visibleTrench.border, .activeVisibleTrench.border {
+  background-color: red;
+}
+
+.visibleTrench.guide, .activeVisibleTrench.guide {
+  background-color: blue;
+}
+
 /* Other
 ----------------------------------*/
 
