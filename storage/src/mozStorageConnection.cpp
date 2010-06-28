@@ -393,14 +393,6 @@ Connection::initialize(nsIFile *aDatabaseFile)
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
                                       leafName.get(), this));
 #endif
-  // Switch db to preferred page size in case the user vacuums.
-  sqlite3_stmt *stmt;
-  srv = prepareStmt(mDBConn, NS_LITERAL_CSTRING("PRAGMA page_size = 32768"),
-                    &stmt);
-  if (srv == SQLITE_OK) {
-    (void)stepStmt(stmt);
-    (void)::sqlite3_finalize(stmt);
-  }
 
   // Register our built-in SQL functions.
   srv = registerFunctions(mDBConn);
@@ -420,6 +412,7 @@ Connection::initialize(nsIFile *aDatabaseFile)
 
   // Execute a dummy statement to force the db open, and to verify if it is
   // valid or not.
+  sqlite3_stmt *stmt;
   srv = prepareStmt(mDBConn, NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
                     &stmt);
   if (srv == SQLITE_OK) {
