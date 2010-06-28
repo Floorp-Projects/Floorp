@@ -83,6 +83,7 @@ public:
 
   NS_METHOD AddLeaf(const char* aEntryName,
                     const char* aValue,
+                    bool aReplace,
                     char** _retval,
                     PLArenaPool* aArena);
 

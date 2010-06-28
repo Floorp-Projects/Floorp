@@ -271,7 +271,6 @@ CategoryNode::GetLeaf(const char* aEntryName,
   CategoryLeaf* ent =
     mTable.GetEntry(aEntryName);
 
-  // we only want the non-persistent value
   if (ent && ent->value) {
     *_retval = NS_strdup(ent->value);
     if (*_retval)
@@ -284,46 +283,42 @@ CategoryNode::GetLeaf(const char* aEntryName,
 NS_METHOD
 CategoryNode::AddLeaf(const char* aEntryName,
                       const char* aValue,
+                      bool aReplace,
                       char** _retval,
                       PLArenaPool* aArena)
 {
+  if (_retval)
+    *_retval = NULL;
+
   MutexAutoLock lock(mLock);
   CategoryLeaf* leaf = 
     mTable.GetEntry(aEntryName);
 
-  nsresult rv = NS_OK;
   if (!leaf) {
     const char* arenaEntryName = ArenaStrdup(aEntryName, aArena);
-    if (!arenaEntryName) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-      leaf = mTable.PutEntry(arenaEntryName);
-      if (!leaf)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+    if (!arenaEntryName)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    leaf = mTable.PutEntry(arenaEntryName);
+    if (!leaf)
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    const char* arenaValue = ArenaStrdup(aValue, aArena);
-    if (!arenaValue) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-      if (_retval) {
-        if (leaf->value) {
-          *_retval = ToNewCString(nsDependentCString(leaf->value));
-          if (!*_retval)
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        else {
-          *_retval = nsnull;
-        }
-      }
+  if (leaf->value && !aReplace)
+    return NS_ERROR_INVALID_ARG;
 
-      leaf->value = arenaValue;
-    }
+  const char* arenaValue = ArenaStrdup(aValue, aArena);
+  if (!arenaValue)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (_retval && leaf->value) {
+    *_retval = ToNewCString(nsDependentCString(leaf->value));
+    if (!*_retval)
+      return NS_ERROR_OUT_OF_MEMORY;
   }
-    
-  return rv;
+
+  leaf->value = arenaValue;
+  return NS_OK;
 }
 
 void
@@ -616,6 +611,7 @@ nsCategoryManager::AddCategoryEntry(const char *aCategoryName,
 
   nsresult rv = category->AddLeaf(aEntryName,
                                   aValue,
+                                  aReplace,
                                   &oldEntry,
                                   &mArena);
 
