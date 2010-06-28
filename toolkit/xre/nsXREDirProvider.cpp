@@ -528,7 +528,7 @@ LoadExtensionDirectories(nsINIParser &parser,
 
     nsCOMPtr<nsILocalFile> manifest =
       CloneAndAppend(dir, "chrome.manifest");
-    XRE_AddComponentLocation(aType, manifest);
+    XRE_AddManifestLocation(aType, manifest);
   }
   while (PR_TRUE);
 }
@@ -587,7 +587,7 @@ nsXREDirProvider::LoadAppBundleDirs()
 
     nsCOMPtr<nsILocalFile> manifest =
       CloneAndAppend(subdir, "chrome.manifest");
-    XRE_AddComponentLocation(NS_COMPONENT_LOCATION, manifest);
+    XRE_AddManifestLocation(NS_COMPONENT_LOCATION, manifest);
   }
 }
 

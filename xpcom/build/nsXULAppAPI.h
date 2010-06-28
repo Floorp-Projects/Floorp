@@ -376,8 +376,8 @@ enum NSLocationType
 };
 
 XRE_API(nsresult,
-        XRE_AddComponentLocation, (NSLocationType aType,
-                                   nsILocalFile* aLocation))
+        XRE_AddManifestLocation, (NSLocationType aType,
+                                  nsILocalFile* aLocation))
 
 /**
  * Fire notifications to inform the toolkit about a new profile. This

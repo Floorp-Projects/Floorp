@@ -183,10 +183,10 @@ int main(int argc, char** argv)
   ScopedLogging logging;
   
   const char *regPath = argv[1];
-  XRE_AddComponentLocation(NS_COMPONENT_LOCATION,
-                           nsCOMPtr<nsILocalFile>(GetRegDirectory(regPath, "core")));
-  XRE_AddComponentLocation(NS_COMPONENT_LOCATION,
-                           nsCOMPtr<nsILocalFile>(GetRegDirectory(regPath, "extension")));
+  XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
+                          nsCOMPtr<nsILocalFile>(GetRegDirectory(regPath, "core")));
+  XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
+                          nsCOMPtr<nsILocalFile>(GetRegDirectory(regPath, "extension")));
   ScopedXPCOM xpcom("RegistrationOrder");
   if (xpcom.failed())
     return 1;
