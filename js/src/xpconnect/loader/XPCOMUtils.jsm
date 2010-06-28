@@ -131,6 +131,9 @@ var XPCOMUtils = {
   generateNSGetFactory: function XPCU_generateNSGetFactory(componentsArray) {
     let classes = {};
     for each (let component in componentsArray) {
+        if (!(component.prototype.classID instanceof Components.ID))
+          throw Error("In generateNSGetFactory, classID missing or incorrect for component " + component);
+
         classes[component.prototype.classID] = this._getFactory(component);
     }
     return function NSGetFactory(cid) {
