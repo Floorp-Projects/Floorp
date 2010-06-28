@@ -461,7 +461,6 @@ members = [
 
     # dom/indexedDB
     'nsIIDBCursor.*',
-    'nsIIDBCursorRequest.*',
     'nsIIDBDatabase.*',
     'nsIIDBDatabaseException.*',
     'nsIIDBEvent.*',
@@ -479,9 +478,9 @@ members = [
     '-nsIIDBObjectStore.add',
     '-nsIIDBObjectStore.modify',
     '-nsIIDBObjectStore.addOrModify',
-    '-nsIIDBCursorRequest.continue',
-    '-nsIIDBCursorRequest.value',
-    '-nsIIDBCursorRequest.update',
+    '-nsIIDBCursor.continue',
+    '-nsIIDBCursor.value',
+    '-nsIIDBCursor.update',
     '-nsIIDBIndex.openCursor',
     '-nsIIDBIndex.openObjectCursor'
     ]

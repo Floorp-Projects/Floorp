@@ -485,7 +485,7 @@ using namespace mozilla::dom;
 #include "mozilla/dom/indexedDB/IDBEvents.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
-#include "mozilla/dom/indexedDB/IDBCursorRequest.h"
+#include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 
@@ -1434,7 +1434,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBTransaction, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBCursorRequest, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBKeyRange, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3966,8 +3966,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(IDBCursorRequest, nsIIDBCursorRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursorRequest)
+  DOM_CLASSINFO_MAP_BEGIN(IDBCursor, nsIIDBCursor)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
   DOM_CLASSINFO_MAP_END
 
