@@ -456,6 +456,7 @@ protected:
   nsPopupType           mPopupType;
   PRPackedBool          mDisplayPanFeedback;
   PRPackedBool          mHideChrome;
+  nsSizeMode            mOldSizeMode;
   WindowHook            mWindowHook;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
