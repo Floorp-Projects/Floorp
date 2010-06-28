@@ -41,8 +41,14 @@
  * stylesheet
  */
 
-#ifndef nsCSSDeclaration_h___
-#define nsCSSDeclaration_h___
+#ifndef mozilla_css_Declaration_h
+#define mozilla_css_Declaration_h
+
+// This header is in EXPORTS because it's used in several places in content/,
+// but it's not really a public interface.
+#ifndef _IMPL_NS_LAYOUT
+#error "This file should only be included within the layout library"
+#endif
 
 #include "nsISupports.h"
 #include "nsColor.h"
@@ -256,7 +262,7 @@ private:
     nsRefPtr<nsCSSCompressedDataBlock> mImportantData;
 };
 
-} // namespace mozilla::css
+} // namespace css
 } // namespace mozilla
 
-#endif /* nsCSSDeclaration_h___ */
+#endif /* mozilla_css_Declaration_h */

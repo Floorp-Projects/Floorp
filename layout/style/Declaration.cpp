@@ -46,7 +46,7 @@
 
 #include "nscore.h"
 #include "prlog.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"

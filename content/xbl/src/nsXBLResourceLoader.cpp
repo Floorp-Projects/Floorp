@@ -48,7 +48,7 @@
 #include "nsIDocumentObserver.h"
 #include "imgILoader.h"
 #include "imgIRequest.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsGkAtoms.h"

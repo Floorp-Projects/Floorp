@@ -62,7 +62,7 @@
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
 #include "nsCSSParser.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsINameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
@@ -70,7 +70,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozAutoDocUpdate.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsRuleNode.h"
 #include "nsMediaFeatures.h"
 

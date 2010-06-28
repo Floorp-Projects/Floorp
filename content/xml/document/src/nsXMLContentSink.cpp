@@ -58,7 +58,7 @@
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsCSSStyleSheet.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIScriptContext.h"
