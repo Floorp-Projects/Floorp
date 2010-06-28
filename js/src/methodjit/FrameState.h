@@ -200,7 +200,8 @@ class FrameState
      * was taken.
      */
     inline void pushUntypedPayload(JSValueTag tag, RegisterID payload,
-                                   bool popGuaranteed = false);
+                                   bool popGuaranteed = false,
+                                   bool fastTyped = false);
 
     /*
      * Pops a value off the operation stack, freeing any of its resources.
