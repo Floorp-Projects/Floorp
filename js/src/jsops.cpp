@@ -1988,7 +1988,7 @@ BEGIN_CASE(JSOP_NEW)
         }
     }
 
-    if (!js_InvokeConstructor(cx, InvokeArgsGuard(vp, argc), JS_FALSE))
+    if (!js_InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))
         goto error;
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
