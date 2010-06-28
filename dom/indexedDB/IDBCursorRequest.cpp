@@ -59,7 +59,7 @@
 #include "IDBEvents.h"
 #include "IDBIndexRequest.h"
 #include "IDBObjectStoreRequest.h"
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 #include "Savepoint.h"
 #include "TransactionThreadPool.h"
 
@@ -70,7 +70,7 @@ namespace {
 class UpdateHelper : public AsyncConnectionHelper
 {
 public:
-  UpdateHelper(IDBTransactionRequest* aTransaction,
+  UpdateHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
                const nsAString& aValue,
@@ -98,7 +98,7 @@ private:
 class RemoveHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveHelper(IDBTransactionRequest* aTransaction,
+  RemoveHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
                const Key& aKey,
@@ -142,7 +142,7 @@ END_INDEXEDDB_NAMESPACE
 // static
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::Create(IDBRequest* aRequest,
-                         IDBTransactionRequest* aTransaction,
+                         IDBTransaction* aTransaction,
                          IDBObjectStoreRequest* aObjectStore,
                          PRUint16 aDirection,
                          nsTArray<KeyValuePair>& aData)
@@ -169,7 +169,7 @@ IDBCursorRequest::Create(IDBRequest* aRequest,
 // static
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::Create(IDBRequest* aRequest,
-                         IDBTransactionRequest* aTransaction,
+                         IDBTransaction* aTransaction,
                          IDBIndexRequest* aIndex,
                          PRUint16 aDirection,
                          nsTArray<KeyKeyPair>& aData)
@@ -197,7 +197,7 @@ IDBCursorRequest::Create(IDBRequest* aRequest,
 // static
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::Create(IDBRequest* aRequest,
-                         IDBTransactionRequest* aTransaction,
+                         IDBTransaction* aTransaction,
                          IDBIndexRequest* aIndex,
                          PRUint16 aDirection,
                          nsTArray<KeyValuePair>& aData)
@@ -225,7 +225,7 @@ IDBCursorRequest::Create(IDBRequest* aRequest,
 // static
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::CreateCommon(IDBRequest* aRequest,
-                               IDBTransactionRequest* aTransaction,
+                               IDBTransaction* aTransaction,
                                PRUint16 aDirection)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

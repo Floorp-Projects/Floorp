@@ -42,7 +42,7 @@
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
-#include "mozilla/dom/indexedDB/IDBTransactionRequest.h"
+#include "mozilla/dom/indexedDB/IDBTransaction.h"
 
 #include "nsIIDBObjectStoreRequest.h"
 
@@ -215,7 +215,7 @@ public:
 
   static already_AddRefed<IDBObjectStoreRequest>
   Create(IDBDatabaseRequest* aDatabase,
-         IDBTransactionRequest* aTransaction,
+         IDBTransaction* aTransaction,
          const ObjectStoreInfo* aInfo,
          PRUint16 aMode);
 
@@ -240,7 +240,7 @@ public:
                      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
   static nsresult
-  UpdateIndexes(IDBTransactionRequest* aTransaction,
+  UpdateIndexes(IDBTransaction* aTransaction,
                 PRInt64 aObjectStoreId,
                 const Key& aObjectStoreKey,
                 bool aAutoIncrement,
@@ -274,7 +274,7 @@ public:
     return mKeyPath;
   }
 
-  IDBTransactionRequest* Transaction()
+  IDBTransaction* Transaction()
   {
     return mTransaction;
   }
@@ -293,7 +293,7 @@ protected:
 
 private:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
-  nsRefPtr<IDBTransactionRequest> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
 
   PRInt64 mId;
   nsString mName;

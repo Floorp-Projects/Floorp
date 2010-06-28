@@ -42,7 +42,7 @@
 interface nsIVariant;
 interface nsIIDBObjectStoreRequest;
 interface nsIIDBRequest;
-interface nsIIDBTransactionRequest;
+interface nsIIDBTransaction;
 
 /**
  * IDBDatabaseRequest interface.  See
@@ -64,7 +64,7 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
   setVersion(in AString version);
 
   [optional_argc]
-  nsIIDBTransactionRequest
+  nsIIDBTransaction
   transaction(in nsIVariant storeNames, // js array of strings
               [optional /* READ_ONLY */] in unsigned short mode,
               [optional /* 5000ms */] in unsigned long timeout);

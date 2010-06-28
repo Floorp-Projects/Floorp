@@ -37,13 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbtransactionrequest_h__
-#define mozilla_dom_indexeddb_idbtransactionrequest_h__
+#ifndef mozilla_dom_indexeddb_idbtransaction_h__
+#define mozilla_dom_indexeddb_idbtransaction_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 
-#include "nsIIDBTransactionRequest.h"
+#include "nsIIDBTransaction.h"
 #include "nsIRunnable.h"
 
 #include "nsDOMEventTargetHelper.h"
@@ -62,9 +62,9 @@ class CommitHelper;
 struct ObjectStoreInfo;
 class TransactionThreadPool;
 
-class IDBTransactionRequest : public nsDOMEventTargetHelper,
-                              public IDBRequest::Generator,
-                              public nsIIDBTransactionRequest
+class IDBTransaction : public nsDOMEventTargetHelper,
+                       public IDBRequest::Generator,
+                       public nsIIDBTransaction
 {
   friend class AsyncConnectionHelper;
   friend class CommitHelper;
@@ -73,12 +73,11 @@ class IDBTransactionRequest : public nsDOMEventTargetHelper,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBTRANSACTION
-  NS_DECL_NSIIDBTRANSACTIONREQUEST
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransactionRequest,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction,
                                            nsDOMEventTargetHelper)
 
-  static already_AddRefed<IDBTransactionRequest>
+  static already_AddRefed<IDBTransaction>
   Create(IDBDatabaseRequest* aDatabase,
          nsTArray<nsString>& aObjectStoreNames,
          PRUint16 aMode,
@@ -146,8 +145,8 @@ public:
   enum { FULL_LOCK = nsIIDBTransaction::SNAPSHOT_READ + 1 };
 
 private:
-  IDBTransactionRequest();
-  ~IDBTransactionRequest();
+  IDBTransaction();
+  ~IDBTransaction();
 
   // Only meant to be called on mStorageThread!
   nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
@@ -183,7 +182,7 @@ NS_STACK_CLASS
 class AutoTransactionRequestNotifier
 {
 public:
-  AutoTransactionRequestNotifier(IDBTransactionRequest* aTransaction)
+  AutoTransactionRequestNotifier(IDBTransaction* aTransaction)
   : mTransaction(aTransaction)
   {
     NS_ASSERTION(mTransaction, "Null pointer!");
@@ -196,7 +195,7 @@ public:
   }
 
 private:
-  nsRefPtr<IDBTransactionRequest> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
 };
 
 class CommitHelper : public nsIRunnable
@@ -205,7 +204,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  CommitHelper(IDBTransactionRequest* aTransaction)
+  CommitHelper(IDBTransaction* aTransaction)
   : mTransaction(aTransaction),
     mAborted(!!aTransaction->mAborted),
     mHasInitialSavepoint(!!aTransaction->mHasInitialSavepoint)
@@ -227,7 +226,7 @@ public:
   }
 
 private:
-  nsRefPtr<IDBTransactionRequest> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
   nsCOMPtr<mozIStorageConnection> mConnection;
   nsAutoTArray<nsCOMPtr<nsISupports>, 10> mDoomedObjects;
   bool mAborted;
@@ -236,4 +235,4 @@ private:
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbtransactionrequest_h__
+#endif // mozilla_dom_indexeddb_idbtransaction_h__
