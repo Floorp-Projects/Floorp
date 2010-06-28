@@ -77,6 +77,8 @@
 #include "nsCSSProperty.h"
 #include "nsIDOMCSSRule.h"
 
+namespace css = mozilla::css;
+
 //
 // XXX THIS IS TEMPORARY CODE
 // There's a considerable amount of copied code from the
@@ -1215,7 +1217,7 @@ void
 nsHTMLParanoidFragmentSink::SanitizeStyleRule(nsICSSStyleRule *aRule, nsAutoString &aRuleText)
 {
   aRuleText.Truncate();
-  nsCSSDeclaration *style = aRule->GetDeclaration();
+  css::Declaration *style = aRule->GetDeclaration();
   if (style) {
     nsresult rv = style->RemoveProperty(eCSSProperty_binding);
     if (NS_SUCCEEDED(rv)) {

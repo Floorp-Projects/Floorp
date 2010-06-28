@@ -74,7 +74,7 @@
   struct.
 
   7. 'type' gives the |nsCSSType| of the data in the nsRuleData struct
-  and in the nsCSSDeclaration backend.
+  and in the css::Declaration backend.
 
   8. 'kwtable', which is either nsnull or the name of the appropriate
   keyword table member of class nsCSSProps, for use in

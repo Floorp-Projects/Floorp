@@ -78,8 +78,8 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSProperty aPropID,
 {
   NS_PRECONDITION(aPropID != eCSSProperty_UNKNOWN,
                   "Should never pass eCSSProperty_UNKNOWN around");
-  
-  nsCSSDeclaration *decl;
+
+  css::Declaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
 
   aValue.Truncate();
@@ -107,7 +107,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 {
-  nsCSSDeclaration* decl;
+  css::Declaration* decl;
   aCssText.Truncate();
   GetCSSDeclaration(&decl, PR_FALSE);
 
@@ -127,9 +127,9 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetLength(PRUint32* aLength)
 {
-  nsCSSDeclaration *decl;
+  css::Declaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
- 
+
   if (decl) {
     *aLength = decl->Count();
   } else {
@@ -154,7 +154,7 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsAString& aReturn)
 {
-  nsCSSDeclaration *decl;
+  css::Declaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
 
   aReturn.SetLength(0);
@@ -182,7 +182,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName, 
                                          nsAString& aReturn)
 {
-  nsCSSDeclaration *decl;
+  css::Declaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
 
   aReturn.Truncate();
@@ -245,7 +245,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                         const nsAString& aPropValue,
                                         PRBool aIsImportant)
 {
-  nsCSSDeclaration* decl;
+  css::Declaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
   if (!decl) {
     return result;
@@ -287,7 +287,7 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
                                       PRBool aParseOnlyOneDecl,
                                       PRBool aClearOldDecl)
 {
-  nsCSSDeclaration* decl;
+  css::Declaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
   if (!decl) {
     return result;
@@ -331,7 +331,7 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
 nsresult
 nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 {
-  nsCSSDeclaration* decl;
+  css::Declaration* decl;
   nsresult rv = GetCSSDeclaration(&decl, PR_FALSE);
   if (!decl) {
     return rv;

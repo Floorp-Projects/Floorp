@@ -60,18 +60,19 @@
 #include "nsCOMPtr.h"
 #include "CSSCalc.h"
 
-namespace css = mozilla::css;
+namespace mozilla {
+namespace css {
 
-nsCSSDeclaration::nsCSSDeclaration() 
+Declaration::Declaration()
 {
   // check that we can fit all the CSS properties into a PRUint8
   // for the mOrder array - if not, might need to use PRUint16!
   PR_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX);
 
-  MOZ_COUNT_CTOR(nsCSSDeclaration);
+  MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
 
-nsCSSDeclaration::nsCSSDeclaration(const nsCSSDeclaration& aCopy)
+Declaration::Declaration(const Declaration& aCopy)
   : mOrder(aCopy.mOrder),
     mData(aCopy.mData ? aCopy.mData->Clone()
                       : already_AddRefed<nsCSSCompressedDataBlock>(nsnull)),
@@ -79,16 +80,16 @@ nsCSSDeclaration::nsCSSDeclaration(const nsCSSDeclaration& aCopy)
                       ? aCopy.mImportantData->Clone()
                       : already_AddRefed<nsCSSCompressedDataBlock>(nsnull))
 {
-  MOZ_COUNT_CTOR(nsCSSDeclaration);
+  MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
 
-nsCSSDeclaration::~nsCSSDeclaration(void)
+Declaration::~Declaration()
 {
-  MOZ_COUNT_DTOR(nsCSSDeclaration);
+  MOZ_COUNT_DTOR(mozilla::css::Declaration);
 }
 
 nsresult
-nsCSSDeclaration::ValueAppended(nsCSSProperty aProperty)
+Declaration::ValueAppended(nsCSSProperty aProperty)
 {
   NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
                     "shorthands forbidden");
@@ -99,7 +100,7 @@ nsCSSDeclaration::ValueAppended(nsCSSProperty aProperty)
 }
 
 nsresult
-nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
+Declaration::RemoveProperty(nsCSSProperty aProperty)
 {
   nsCSSExpandedDataBlock data;
   ExpandTo(&data);
@@ -119,18 +120,19 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
   return NS_OK;
 }
 
-PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const
+PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
+                                        nsAString& aResult) const
 {
   nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
                                       ? mImportantData : mData;
   const void *storage = data->StorageFor(aProperty);
-  return nsCSSDeclaration::AppendStorageToString(aProperty, storage, aResult);
+  return Declaration::AppendStorageToString(aProperty, storage, aResult);
 }
 
 /* static */ PRBool
-nsCSSDeclaration::AppendStorageToString(nsCSSProperty aProperty,
-                                        const void* aStorage,
-                                        nsAString& aResult)
+Declaration::AppendStorageToString(nsCSSProperty aProperty,
+                                   const void* aStorage,
+                                   nsAString& aResult)
 {
   if (aStorage) {
     switch (nsCSSProps::kTypeTable[aProperty]) {
@@ -250,13 +252,13 @@ struct CSSValueSerializeCalcOps {
   {
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Percent ||
                       aValue.IsLengthUnit(), "unexpected unit");
-    nsCSSDeclaration::AppendCSSValueToString(mProperty, aValue, mResult);
+    Declaration::AppendCSSValueToString(mProperty, aValue, mResult);
   }
 
   void AppendNumber(const input_type& aValue)
   {
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
-    nsCSSDeclaration::AppendCSSValueToString(mProperty, aValue, mResult);
+    Declaration::AppendCSSValueToString(mProperty, aValue, mResult);
   }
 
 private:
@@ -265,9 +267,9 @@ private:
 };
 
 /* static */ PRBool
-nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
-                                         const nsCSSValue& aValue,
-                                         nsAString& aResult)
+Declaration::AppendCSSValueToString(nsCSSProperty aProperty,
+                                    const nsCSSValue& aValue,
+                                    nsAString& aResult)
 {
   nsCSSUnit unit = aValue.GetUnit();
 
@@ -621,8 +623,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
 }
 
 nsresult
-nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
-                           nsAString& aValue) const
+Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 {
   aValue.Truncate(0);
 
@@ -1177,14 +1178,14 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
 }
 
 PRBool
-nsCSSDeclaration::GetValueIsImportant(const nsAString& aProperty) const
+Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty);
   return GetValueIsImportant(propID);
 }
 
 PRBool
-nsCSSDeclaration::GetValueIsImportant(nsCSSProperty aProperty) const
+Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
 {
   if (!mImportantData)
     return PR_FALSE;
@@ -1209,8 +1210,8 @@ nsCSSDeclaration::GetValueIsImportant(nsCSSProperty aProperty) const
 }
 
 /* static */ void
-nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant,
-                                           nsAString& aString)
+Declaration::AppendImportanceToString(PRBool aIsImportant,
+                                      nsAString& aString)
 {
   if (aIsImportant) {
    aString.AppendLiteral(" ! important");
@@ -1218,9 +1219,9 @@ nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant,
 }
 
 void
-nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                                 nsAutoString& aValue,
-                                                 nsAString& aResult) const
+Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
+                                            nsAutoString& aValue,
+                                            nsAString& aResult) const
 {
   NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "property enum out of range");
@@ -1239,7 +1240,7 @@ nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
 }
 
 nsresult
-nsCSSDeclaration::ToString(nsAString& aString) const
+Declaration::ToString(nsAString& aString) const
 {
   nsCSSCompressedDataBlock *systemFontData =
     GetValueIsImportant(eCSSProperty__x_system_font) ? mImportantData : mData;
@@ -1336,7 +1337,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 }
 
 #ifdef DEBUG
-void nsCSSDeclaration::List(FILE* out, PRInt32 aIndent) const
+void Declaration::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
@@ -1349,7 +1350,7 @@ void nsCSSDeclaration::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 nsresult
-nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
+Declaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
   if (aIndex < mOrder.Length()) {
@@ -1358,18 +1359,18 @@ nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
       AppendASCIItoUTF16(nsCSSProps::GetStringValue(property), aReturn);
     }
   }
-  
+
   return NS_OK;
 }
 
-nsCSSDeclaration*
-nsCSSDeclaration::Clone() const
+Declaration*
+Declaration::Clone() const
 {
-  return new nsCSSDeclaration(*this);
+  return new Declaration(*this);
 }
 
 PRBool
-nsCSSDeclaration::InitializeEmpty()
+Declaration::InitializeEmpty()
 {
   NS_ASSERTION(!mData && !mImportantData, "already initialized");
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
@@ -1377,7 +1378,7 @@ nsCSSDeclaration::InitializeEmpty()
 }
 
 PRBool
-nsCSSDeclaration::EnsureMutable()
+Declaration::EnsureMutable()
 {
   if (!mData->IsMutable()) {
     nsRefPtr<nsCSSCompressedDataBlock> newBlock = mData->Clone();
@@ -1395,3 +1396,6 @@ nsCSSDeclaration::EnsureMutable()
   }
   return PR_TRUE;
 }
+
+} // namespace mozilla::css
+} // namespace mozilla

@@ -73,6 +73,8 @@
 #include "nsCSSDeclaration.h"
 #include "nsPrintfCString.h"
 
+namespace css = mozilla::css;
+
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 /* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
 /* virtual */ void _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { super::SetStyleSheet(aSheet); }  \
@@ -1622,17 +1624,17 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     }
 
   case eCSSFontDesc_Style:
-    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_style, val,
+    css::Declaration::AppendCSSValueToString(eCSSProperty_font_style, val,
                                              aResult);
     return NS_OK;
 
   case eCSSFontDesc_Weight:
-    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
+    css::Declaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
                                              aResult);
     return NS_OK;
     
   case eCSSFontDesc_Stretch:
-    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
+    css::Declaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
                                              aResult);
     return NS_OK;
 

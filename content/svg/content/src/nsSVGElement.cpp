@@ -1094,9 +1094,12 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
 
 //------------------------------------------------------------------------
 // Helper class: MappedAttrParser, for parsing values of mapped attributes
+
+namespace {
+
 class MappedAttrParser {
 public:
-  MappedAttrParser(mozilla::css::Loader* aLoader,
+  MappedAttrParser(css::Loader* aLoader,
                    nsIURI* aDocURI,
                    already_AddRefed<nsIURI> aBaseURI,
                    nsIPrincipal* aNodePrincipal);
@@ -1108,7 +1111,7 @@ public:
 
   // If we've parsed any values for mapped attributes, this method returns
   // a new already_AddRefed nsICSSStyleRule that incorporates the parsed
-  // values. Otherwise, this method returns null. 
+  // values. Otherwise, this method returns null.
   already_AddRefed<nsICSSStyleRule> CreateStyleRule();
 
 private:
@@ -1122,10 +1125,10 @@ private:
   nsIPrincipal*     mNodePrincipal;
 
   // Declaration for storing parsed values (lazily initialized)
-  nsCSSDeclaration* mDecl;
+  css::Declaration* mDecl;
 };
 
-MappedAttrParser::MappedAttrParser(mozilla::css::Loader* aLoader,
+MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
                                    nsIURI* aDocURI,
                                    already_AddRefed<nsIURI> aBaseURI,
                                    nsIPrincipal* aNodePrincipal)
@@ -1158,8 +1161,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
                                        nsAString& aMappedAttrValue)
 {
   if (!mDecl) {
-    // Need to do lazy initializion of declaration.
-    mDecl = new nsCSSDeclaration();
+    mDecl = new css::Declaration();
     mDecl->InitializeEmpty();
   }
 
@@ -1186,6 +1188,8 @@ MappedAttrParser::CreateStyleRule()
   mDecl = nsnull; // We no longer own the declaration -- drop our pointer to it
   return rule.forget();
 }
+
+} // anonymous namespace
 
 //----------------------------------------------------------------------
 // Implementation Helpers:

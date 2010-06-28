@@ -48,11 +48,12 @@
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
-#include "nsCSSDataBlock.h"
 #include "nsCSSDeclaration.h"
 #include "nsCSSStruct.h"
 #include "prlog.h"
 #include <math.h>
+
+namespace css = mozilla::css;
 
 // HELPER METHODS
 // --------------
@@ -1608,11 +1609,7 @@ BuildStyleRule(nsCSSProperty aProperty,
                PRBool aUseSVGMode)
 {
   // Set up an empty CSS Declaration
-  nsCSSDeclaration* declaration = new nsCSSDeclaration();
-  if (!declaration) {
-    NS_WARNING("Failed to allocate nsCSSDeclaration");
-    return nsnull;
-  }
+  css::Declaration* declaration = new css::Declaration();
 
   PRBool changed; // ignored, but needed as outparam for ParseProperty
   nsIDocument* doc = aTargetElement->GetOwnerDoc();
@@ -1902,7 +1899,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                                         aComputedValue, storage)) {
     return PR_FALSE;
   }
-  return nsCSSDeclaration::AppendStorageToString(aProperty, storage,
+  return css::Declaration::AppendStorageToString(aProperty, storage,
                                                  aSpecifiedValue);
 }
 

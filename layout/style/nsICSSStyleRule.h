@@ -54,9 +54,14 @@
 #include "nsCSSPseudoClasses.h"
 
 class nsIAtom;
-class nsCSSDeclaration;
 class nsCSSStyleSheet;
 struct nsCSSSelectorList;
+
+namespace mozilla {
+namespace css {
+class Declaration;
+}
+}
 
 struct nsAtomList {
 public:
@@ -303,13 +308,13 @@ public:
   virtual PRUint32 GetLineNumber(void) const = 0;
   virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
 
-  virtual nsCSSDeclaration* GetDeclaration(void) const = 0;
+  virtual mozilla::css::Declaration* GetDeclaration(void) const = 0;
 
   /**
    * Return a new |nsIStyleRule| instance that replaces the current one,
-   * due to a change in the |nsCSSDeclaration|.  Due to the
-   * |nsIStyleRule| contract of immutability, this must be called if the
-   * declaration is modified.
+   * due to a change in the declaration.  Due to the |nsIStyleRule|
+   * contract of immutability, this must be called if the declaration
+   * is modified.
    *
    * |DeclarationChanged| handles replacing the object in the container
    * sheet or group rule if |aHandleContainer| is true.
@@ -337,6 +342,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleRule, NS_ICSS_STYLE_RULE_IID)
 nsresult
 NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
                    nsCSSSelectorList* aSelector,
-                   nsCSSDeclaration* aDeclaration);
+                   mozilla::css::Declaration* aDeclaration);
 
 #endif /* nsICSSStyleRule_h___ */

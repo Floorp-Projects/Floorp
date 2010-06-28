@@ -90,6 +90,8 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 
+namespace css = mozilla::css;
+
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
 #define VARIANT_LENGTH          0x000002  // L
@@ -204,7 +206,7 @@ public:
                                      nsIURI*           aSheetURL,
                                      nsIURI*           aBaseURL,
                                      nsIPrincipal*     aSheetPrincipal,
-                                     nsCSSDeclaration* aDeclaration,
+                                     css::Declaration* aDeclaration,
                                      PRBool            aParseOnlyOneDecl,
                                      PRBool*           aChanged,
                                      PRBool            aClearOldDecl);
@@ -220,7 +222,7 @@ public:
                          nsIURI* aSheetURL,
                          nsIURI* aBaseURL,
                          nsIPrincipal* aSheetPrincipal,
-                         nsCSSDeclaration* aDeclaration,
+                         css::Declaration* aDeclaration,
                          PRBool* aChanged,
                          PRBool aIsImportant);
 
@@ -400,8 +402,8 @@ protected:
   PRBool ParseSelectorGroup(nsCSSSelectorList*& aListHead);
   PRBool ParseSelector(nsCSSSelectorList* aList, PRUnichar aPrevCombinator);
 
-  nsCSSDeclaration* ParseDeclarationBlock(PRBool aCheckForBraces);
-  PRBool ParseDeclaration(nsCSSDeclaration* aDeclaration,
+  css::Declaration* ParseDeclarationBlock(PRBool aCheckForBraces);
+  PRBool ParseDeclaration(css::Declaration* aDeclaration,
                           PRBool aCheckForBraces,
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
@@ -415,13 +417,13 @@ protected:
   // is already set in it.  If aOverrideImportant is true, new data will
   // replace old settings of the same properties, even if the old settings
   // are !important and the new data aren't.
-  void TransferTempData(nsCSSDeclaration* aDeclaration,
+  void TransferTempData(css::Declaration* aDeclaration,
                         nsCSSProperty aPropID,
                         PRBool aIsImportant,
                         PRBool aOverrideImportant,
                         PRBool aMustCallValueAppended,
                         PRBool* aChanged);
-  void DoTransferTempData(nsCSSDeclaration* aDeclaration,
+  void DoTransferTempData(css::Declaration* aDeclaration,
                           nsCSSProperty aPropID,
                           PRBool aIsImportant,
                           PRBool aOverrideImportant,
@@ -1003,7 +1005,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     haveBraces = PR_FALSE;
   }
 
-  nsCSSDeclaration* declaration = ParseDeclarationBlock(haveBraces);
+  css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
     nsICSSStyleRule* rule = nsnull;
@@ -1030,7 +1032,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          nsIURI*           aSheetURI,
                                          nsIURI*           aBaseURI,
                                          nsIPrincipal*     aSheetPrincipal,
-                                         nsCSSDeclaration* aDeclaration,
+                                         css::Declaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
                                          PRBool*           aChanged,
                                          PRBool            aClearOldDecl)
@@ -1114,7 +1116,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              nsIURI* aSheetURI,
                              nsIURI* aBaseURI,
                              nsIPrincipal* aSheetPrincipal,
-                             nsCSSDeclaration* aDeclaration,
+                             css::Declaration* aDeclaration,
                              PRBool* aChanged,
                              PRBool aIsImportant)
 {
@@ -2426,7 +2428,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   CLEAR_ERROR();
 
   // Next parse the declaration block
-  nsCSSDeclaration* declaration = ParseDeclarationBlock(PR_TRUE);
+  css::Declaration* declaration = ParseDeclarationBlock(PR_TRUE);
   if (nsnull == declaration) {
     // XXX skip something here
     delete slist;
@@ -3547,7 +3549,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   return PR_TRUE;
 }
 
-nsCSSDeclaration*
+css::Declaration*
 CSSParserImpl::ParseDeclarationBlock(PRBool aCheckForBraces)
 {
   if (aCheckForBraces) {
@@ -3557,7 +3559,7 @@ CSSParserImpl::ParseDeclarationBlock(PRBool aCheckForBraces)
       return nsnull;
     }
   }
-  nsCSSDeclaration* declaration = new nsCSSDeclaration();
+  css::Declaration* declaration = new css::Declaration();
   mData.AssertInitialState();
   if (declaration) {
     for (;;) {
@@ -3949,7 +3951,7 @@ CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
 //----------------------------------------------------------------------
 
 PRBool
-CSSParserImpl::ParseDeclaration(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
                                 PRBool aCheckForBraces,
                                 PRBool aMustCallValueAppended,
                                 PRBool* aChanged)
@@ -4099,7 +4101,7 @@ CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
 }
 
 void
-CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::TransferTempData(css::Declaration* aDeclaration,
                                 nsCSSProperty aPropID,
                                 PRBool aIsImportant,
                                 PRBool aOverrideImportant,
@@ -4122,7 +4124,7 @@ CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
 // case some other caller wants to use it in the future (although I
 // can't think of why).
 void
-CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::DoTransferTempData(css::Declaration* aDeclaration,
                                   nsCSSProperty aPropID,
                                   PRBool aIsImportant,
                                   PRBool aOverrideImportant,
@@ -9657,7 +9659,7 @@ nsCSSParser::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                        nsIURI*           aSheetURI,
                                        nsIURI*           aBaseURI,
                                        nsIPrincipal*     aSheetPrincipal,
-                                       nsCSSDeclaration* aDeclaration,
+                                       css::Declaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
                                        PRBool*           aChanged,
                                        PRBool            aClearOldDecl)
@@ -9685,7 +9687,7 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            nsIURI*             aSheetURI,
                            nsIURI*             aBaseURI,
                            nsIPrincipal*       aSheetPrincipal,
-                           nsCSSDeclaration*   aDeclaration,
+                           css::Declaration*   aDeclaration,
                            PRBool*             aChanged,
                            PRBool              aIsImportant)
 {

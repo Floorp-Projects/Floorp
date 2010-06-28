@@ -82,6 +82,8 @@
 
 #include "prlog.h"
 
+namespace css = mozilla::css;
+
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \
     if (member_) {                                                            \
@@ -957,7 +959,7 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
   void DropReference(void);
-  virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
+  virtual nsresult GetCSSDeclaration(css::Declaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
@@ -1047,7 +1049,7 @@ DOMCSSDeclarationImpl::DropReference(void)
 }
 
 nsresult
-DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
+DOMCSSDeclarationImpl::GetCSSDeclaration(css::Declaration **aDecl,
                                          PRBool aAllocate)
 {
   if (mRule) {
@@ -1275,13 +1277,13 @@ class CSSStyleRuleImpl : public nsCSSRule,
 {
 public:
   CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
-                   nsCSSDeclaration *aDeclaration);
+                   css::Declaration *aDeclaration);
 private:
   // for |Clone|
   CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy); 
   // for |DeclarationChanged|
   CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
-                   nsCSSDeclaration *aDeclaration); 
+                   css::Declaration *aDeclaration); 
 public:
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -1291,7 +1293,7 @@ public:
   virtual PRUint32 GetLineNumber(void) const;
   virtual void SetLineNumber(PRUint32 aLineNumber);
 
-  virtual nsCSSDeclaration* GetDeclaration(void) const;
+  virtual css::Declaration* GetDeclaration(void) const;
 
   virtual nsIStyleRule* GetImportantRule(void);
   virtual void RuleMatched();
@@ -1332,18 +1334,18 @@ protected:
 
 protected:
   nsCSSSelectorList*      mSelector; // null for style attribute
-  nsCSSDeclaration*       mDeclaration;
+  css::Declaration*       mDeclaration;
   nsRefPtr<nsCSSCompressedDataBlock> mNormalBlock;
   CSSImportantRule*       mImportantRule;
-  DOMCSSStyleRuleImpl*    mDOMRule;                          
+  DOMCSSStyleRuleImpl*    mDOMRule;
   PRUint32                mLineNumber;
 };
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
-                                   nsCSSDeclaration* aDeclaration)
+                                   css::Declaration* aDeclaration)
   : nsCSSRule(),
     mSelector(aSelector),
-    mDeclaration(aDeclaration), 
+    mDeclaration(aDeclaration),
     mImportantRule(nsnull),
     mDOMRule(nsnull),
     mLineNumber(0)
@@ -1367,7 +1369,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
 
 // for |DeclarationChanged|
 CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
-                                   nsCSSDeclaration* aDeclaration)
+                                   css::Declaration* aDeclaration)
   : nsCSSRule(aCopy),
     mSelector(aCopy.mSelector),
     mDeclaration(aDeclaration),
@@ -1441,7 +1443,7 @@ void CSSStyleRuleImpl::SetLineNumber(PRUint32 aLineNumber)
   mLineNumber = aLineNumber;
 }
 
-nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
+css::Declaration* CSSStyleRuleImpl::GetDeclaration(void) const
 {
   return mDeclaration;
 }
@@ -1644,7 +1646,7 @@ CSSStyleRuleImpl::SetSelectorText(const nsAString& aSelectorText)
 nsresult
 NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
                    nsCSSSelectorList* aSelector,
-                   nsCSSDeclaration* aDeclaration)
+                   css::Declaration* aDeclaration)
 {
   NS_PRECONDITION(aDeclaration, "must have a declaration");
   CSSStyleRuleImpl *it = new CSSStyleRuleImpl(aSelector, aDeclaration);
