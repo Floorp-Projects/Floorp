@@ -5632,7 +5632,30 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
                aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
                "Computed overflow area must contain frame bounds");
 
+  // If we clip our children, clear accumulated overflow area. The
+  // children are actually clipped to the padding-box, but since the
+  // overflow area should include the entire border-box, just set it to
+  // the border-box here.
   const nsStyleDisplay *disp = GetStyleDisplay();
+  NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
+               (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
+               "If one overflow is clip, the other should be too");
+  if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
+    // The contents are actually clipped to the padding area 
+    *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
+  }
+
+  // Overflow area must always include the frame's top-left and bottom-right,
+  // even if the frame rect is empty.
+  // Pending a real fix for bug 426879, don't do this for inline frames
+  // with zero width.
+  if (aNewSize.width != 0 || !IsInlineFrame(this)) {
+    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
+                                         nsRect(nsPoint(0, 0), aNewSize));
+  }
+
+  // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
+  // so we add theme background overflow here so it's not clipped.
   if (!IsBoxWrapped() && IsThemed(disp)) {
     nsRect r(nsPoint(0, 0), aNewSize);
     nsPresContext *presContext = PresContext();
@@ -5643,27 +5666,6 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     }
   }
   
-  // Overflow area must always include the frame's top-left and bottom-right,
-  // even if the frame rect is empty.
-  // Pending a real fix for bug 426879, don't do this for inline frames
-  // with zero width.
-  if (aNewSize.width != 0 || !IsInlineFrame(this))
-    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
-                                         nsRect(nsPoint(0, 0), aNewSize));
-
-  PRBool geometricOverflow =
-    aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
-    aOverflowArea->XMost() > aNewSize.width || aOverflowArea->YMost() > aNewSize.height;
-  // Clear geometric overflow area if we clip our children
-  NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
-               (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
-               "If one overflow is clip, the other should be too");
-  if (geometricOverflow &&
-      disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
-    *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
-    geometricOverflow = PR_FALSE;
-  }
-
   PRBool hasOutlineOrEffects;
   *aOverflowArea = GetAdditionalOverflow(*aOverflowArea, aNewSize,
       &hasOutlineOrEffects);
