@@ -49,7 +49,7 @@ class nsIRunnable;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBIndexRequest;
+class IDBIndex;
 class IDBRequest;
 class IDBObjectStore;
 class IDBTransaction;
@@ -90,7 +90,7 @@ public:
   already_AddRefed<IDBCursorRequest>
   Create(IDBRequest* aRequest,
          IDBTransaction* aTransaction,
-         IDBIndexRequest* aIndex,
+         IDBIndex* aIndex,
          PRUint16 aDirection,
          nsTArray<KeyKeyPair>& aData);
 
@@ -98,7 +98,7 @@ public:
   already_AddRefed<IDBCursorRequest>
   Create(IDBRequest* aRequest,
          IDBTransaction* aTransaction,
-         IDBIndexRequest* aIndex,
+         IDBIndex* aIndex,
          PRUint16 aDirection,
          nsTArray<KeyValuePair>& aData);
 
@@ -122,7 +122,7 @@ protected:
   nsRefPtr<IDBRequest> mRequest;
   nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBObjectStore> mObjectStore;
-  nsRefPtr<IDBIndexRequest> mIndex;
+  nsRefPtr<IDBIndex> mIndex;
 
   PRUint16 mDirection;
 
