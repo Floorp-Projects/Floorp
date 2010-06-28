@@ -46,8 +46,7 @@
 #include "AccessibleTable.h"
 #include "AccessibleTable2.h"
 
-class CAccessibleTable: public nsISupports,
-                        public IAccessibleTable,
+class CAccessibleTable: public IAccessibleTable,
                         public IAccessibleTable2
 {
 public:
@@ -194,6 +193,9 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_selectedRows(
       /* [out, size_is(,*nRows)] */ long **selectedRows, 
       /* [out, retval] */ long *nRows);
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 
 private:
   enum eItemsType {

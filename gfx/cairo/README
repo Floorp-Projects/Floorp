@@ -120,6 +120,8 @@ fix-ps-output.patch: PS: Add missing 'q' when resetting clip path (42b5cac766862
 
 ensure-text-flushed.patch: PDF-operators: ensure text operations flushed before emitting clip (42b5cac7668625c9761113ff72b47af5cfd10377)
 
+fix-xcopyarea-with-clips.patch: 5d07307b691afccccbb15f773d5231669ba44f5a
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

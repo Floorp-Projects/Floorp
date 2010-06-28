@@ -111,6 +111,15 @@ nsXMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                              const char* aCharSet, PRBool aIsCopying,
                              PRBool aRewriteEncodingDeclaration)
 {
+  mPrefixIndex = 0;
+  mColPos = 0;
+  mIndentOverflow = 0;
+  mIsIndentationAddedOnCurrentLine = PR_FALSE;
+  mInAttribute = PR_FALSE;
+  mAddNewlineForRootNode = PR_FALSE;
+  mAddSpace = PR_FALSE;
+  mMayIgnoreLineBreakSequence = PR_FALSE;
+
   mCharset = aCharSet;
   mFlags = aFlags;
 

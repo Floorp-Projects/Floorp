@@ -41,6 +41,7 @@ import Queue
 import threading
 
 from mod_pywebsocket import util
+from time import time,sleep
 
 
 class MsgUtilException(Exception):
@@ -71,7 +72,7 @@ def _write(request, bytes):
         raise
 
 
-def close_connection(request):
+def close_connection(request, abort=False):
     """Close connection.
 
     Args:
@@ -83,10 +84,25 @@ def close_connection(request):
     # running through the following steps:
     # 1. send a 0xFF byte and a 0x00 byte to the client to indicate the start
     # of the closing handshake.
-    _write(request, '\xff\x00')
+    got_exception = False
+    if not abort:
+        _write(request, '\xff\x00')
+        # timeout of 20 seconds to get the client's close frame ack
+        initial_time = time()
+        end_time = initial_time + 20
+        while time() < end_time:
+            try:
+                receive_message(request)
+            except ConnectionTerminatedException, e:
+                got_exception = True
+                sleep(1)
     request.server_terminated = True
-    # TODO(ukai): 2. wait until the /client terminated/ flag has been set, or
-    # until a server-defined timeout expires.
+    if got_exception:
+        util.prepend_message_to_exception(
+            'client initiated closing handshake for %s: ' % (
+            request.ws_resource),
+            e)
+        raise ConnectionTerminatedException
     # TODO: 3. close the WebSocket connection.
     # note: mod_python Connection (mp_conn) doesn't have close method.
 

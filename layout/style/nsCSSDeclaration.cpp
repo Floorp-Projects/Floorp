@@ -277,7 +277,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
 
     nsCSSValue::Array *array = aValue.GetArrayValue();
     PRBool mark = PR_FALSE;
-    for (PRUint16 i = 0, i_end = array->Count(); i < i_end; ++i) {
+    for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
       if (aProperty == eCSSProperty_border_image && i >= 5) {
         if (array->Item(i).GetUnit() == eCSSUnit_Null) {
           continue;
@@ -327,7 +327,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     aResult.AppendLiteral("(");
 
     /* Now, step through the function contents, writing each of them as we go. */
-    for (PRUint16 index = 1; index < array->Count(); ++index) {
+    for (size_t index = 1; index < array->Count(); ++index) {
       AppendCSSValueToString(aProperty, array->Item(index), aResult);
 
       /* If we're not at the final element, append a comma. */
@@ -367,7 +367,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
         }
       }
 
-      for (PRUint32 i = 0, i_end = array->Count(); i < i_end; ++i) {
+      for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
         if (i != 0) {
           aResult.AppendLiteral(", ");
         }

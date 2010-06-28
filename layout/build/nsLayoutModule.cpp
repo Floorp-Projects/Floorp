@@ -283,6 +283,12 @@ static void Shutdown();
 #endif
 
 #include "nsGeolocation.h"
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+#include "nsAccelerometerSystem.h"
+#endif
 #include "nsCSPService.h"
 
 // Transformiix
@@ -315,6 +321,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -1642,6 +1654,17 @@ static const nsModuleComponentInfo gLayoutComponents[] = {
       NS_EVENTLISTENERSERVICE_CID,
       NS_EVENTLISTENERSERVICE_CONTRACTID,
       CreateEventListenerService },
+
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+    { "Accelerometer",
+       NS_ACCELEROMETER_CID,
+       NS_ACCELEROMETER_CONTRACTID,
+       nsAccelerometerSystemConstructor
+     },
+#endif
 
     { "Global Message Manager",
       NS_GLOBALMESSAGEMANAGER_CID,

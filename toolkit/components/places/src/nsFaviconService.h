@@ -222,6 +222,14 @@ private:
   friend class FaviconLoadListener;
 
   bool mShuttingDown;
+
+  // Caches the content of the default favicon if it's not already cached and
+  // copies it into byteStr.
+  nsresult GetDefaultFaviconData(nsCString& byteStr);
+
+  // A string of bytes caching the default favicon's content.  Empty if not yet
+  // cached.  Rather than accessing this directly, use GetDefaultFaviconData.
+  nsCString mDefaultFaviconData;
 };
 
 #define FAVICON_ANNOTATION_NAME "favicon"

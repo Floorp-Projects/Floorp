@@ -1912,7 +1912,7 @@ PresShell::Destroy()
   // hierarchy is torn down to avoid finding deleted frames through
   // this presshell while the frames are being torn down
   if (mDocument) {
-    NS_ASSERTION(mDocument->GetPrimaryShell() == this, "Wrong shell?");
+    NS_ASSERTION(mDocument->GetShell() == this, "Wrong shell?");
     mDocument->DeleteShell();
   }
 
@@ -5824,9 +5824,7 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
   PaintParams* params = static_cast<PaintParams*>(aCallbackData);
   nsIFrame* frame = params->mFrame;
   if (frame) {
-    // We're drawing into a child window. Don't pass
-    // nsLayoutUtils::PAINT_WIDGET_LAYERS, since that will draw into
-    // the widget for the display root.
+    // We're drawing into a child window.
     nsIDeviceContext* devCtx = frame->PresContext()->DeviceContext();
     nsCOMPtr<nsIRenderingContext> rc;
     nsresult rv = devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
@@ -5837,7 +5835,8 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
       nsIRenderingContext::AutoPushTranslation
         push(rc, -params->mOffsetToWidget.x, -params->mOffsetToWidget.y);
       nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion,
-                                params->mBackgroundColor);
+                                params->mBackgroundColor,
+                                nsLayoutUtils::PAINT_WIDGET_LAYERS);
     }
   } else {
     aContext->NewPath();
@@ -6137,7 +6136,7 @@ PresShell::HandleEvent(nsIView         *aView,
     }
 
     if (retargetEventDoc) {
-      nsIPresShell* presShell = retargetEventDoc->GetPrimaryShell();
+      nsIPresShell* presShell = retargetEventDoc->GetShell();
       if (!presShell)
         return NS_OK;
 
@@ -6567,10 +6566,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mDocument));
-      NS_ASSERTION(domNode, "No dom node for doc");
-
-      accEvent->mAccessible = accService->GetAccessibleInShell(domNode, this);
+      accEvent->mAccessible = accService->GetAccessibleInShell(mDocument, this);
 
       // Ensure this is set in case a11y was activated before any
       // nsPresShells existed to observe "a11y-init-or-shutdown" topic
@@ -6998,11 +6994,12 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     // don't check menulists as the selected item will be inside a popup.
     nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aCurrentEl);
     if (!menulist) {
-      checkLineHeight = PR_FALSE;
       nsCOMPtr<nsIDOMXULSelectControlElement> select =
         do_QueryInterface(aCurrentEl);
-      if (select)
+      if (select) {
+        checkLineHeight = PR_FALSE;
         select->GetSelectedItem(getter_AddRefs(item));
+      }
     }
   }
 
@@ -7134,7 +7131,7 @@ FreezeElement(nsIContent *aContent, void * /* unused */)
 static PRBool
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetPrimaryShell();
+  nsIPresShell *shell = aDocument->GetShell();
   if (shell)
     shell->Freeze();
 
@@ -7199,7 +7196,7 @@ ThawElement(nsIContent *aContent, void *aShell)
 static PRBool
 ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetPrimaryShell();
+  nsIPresShell *shell = aDocument->GetShell();
   if (shell)
     shell->Thaw();
 

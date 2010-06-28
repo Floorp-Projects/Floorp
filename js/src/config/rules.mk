@@ -355,7 +355,6 @@ endif # ENABLE_CXX_EXCEPTIONS
 endif # WINNT
 
 ifeq ($(SOLARIS_SUNPRO_CXX),1)
-CXXFLAGS += -features=extensions -D__FUNCTION__=__func__
 ifeq (86,$(findstring 86,$(OS_TEST)))
 OS_LDFLAGS += -M $(topsrcdir)/config/solaris_ia32.map
 endif # x86

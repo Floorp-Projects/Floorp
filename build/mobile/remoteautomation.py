@@ -66,7 +66,7 @@ class RemoteAutomation(Automation):
     def setProduct(self, product):
         self._product = product
 
-    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo):
+    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsDir):
         # maxTime is used to override the default timeout, we should honor that
         status = proc.wait(timeout = maxTime)
 

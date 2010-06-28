@@ -158,6 +158,10 @@ COMPONENT_LIBS += \
 	appcomps \
 	$(NULL)
 
+ifdef MOZ_IPC
+COMPONENT_LIBS +=  jetpack_s
+endif
+
 ifdef BUILD_CTYPES
 COMPONENT_LIBS += \
 	jsctypes \
@@ -288,11 +292,6 @@ ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11
 STATIC_LIBS += gtkxtbin
 endif
-endif
-
-ifdef MOZ_ENABLE_POSTSCRIPT
-DEFINES += -DMOZ_ENABLE_POSTSCRIPT
-STATIC_LIBS += gfxpsshar
 endif
 
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))

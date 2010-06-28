@@ -51,7 +51,7 @@ CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
   if (IID_IAccessibleHypertext == iid) {
-    nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
+    nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryObject(this));
     if (!hyperAcc)
       return E_NOINTERFACE;
 
@@ -117,7 +117,7 @@ CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
 __try {
   *aHyperlinkIndex = 0;
 
-  nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryObject(this));
   if (!hyperAcc)
     return E_FAIL;
 

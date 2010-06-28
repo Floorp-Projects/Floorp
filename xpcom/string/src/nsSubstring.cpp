@@ -264,7 +264,8 @@ nsStringBuffer::FromString(const nsACString& str)
   }
 
 void
-nsStringBuffer::ToString(PRUint32 len, nsAString &str)
+nsStringBuffer::ToString(PRUint32 len, nsAString &str,
+                         PRBool aMoveOwnership)
   {
     PRUnichar* data = static_cast<PRUnichar*>(Data());
 
@@ -275,12 +276,15 @@ nsStringBuffer::ToString(PRUint32 len, nsAString &str)
     PRUint32 flags = accessor->flags();
     flags = (flags & 0xFFFF0000) | nsSubstring::F_SHARED | nsSubstring::F_TERMINATED;
 
-    AddRef();
+    if (!aMoveOwnership) {
+      AddRef();
+    }
     accessor->set(data, len, flags);
   }
 
 void
-nsStringBuffer::ToString(PRUint32 len, nsACString &str)
+nsStringBuffer::ToString(PRUint32 len, nsACString &str,
+                         PRBool aMoveOwnership)
   {
     char* data = static_cast<char*>(Data());
 
@@ -291,7 +295,9 @@ nsStringBuffer::ToString(PRUint32 len, nsACString &str)
     PRUint32 flags = accessor->flags();
     flags = (flags & 0xFFFF0000) | nsCSubstring::F_SHARED | nsCSubstring::F_TERMINATED;
 
-    AddRef();
+    if (!aMoveOwnership) {
+      AddRef();
+    }
     accessor->set(data, len, flags);
   }
 

@@ -743,6 +743,7 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
 SYNC_ENUMS(DEFAULT, Default)
 SYNC_ENUMS(PLUGIN, Plugin)
 SYNC_ENUMS(CONTENT, Content)
+SYNC_ENUMS(JETPACK, Jetpack)
 SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
 
 // .. and ensure that that is all of them:

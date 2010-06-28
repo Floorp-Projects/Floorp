@@ -3008,7 +3008,7 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
     if (parentDoc != nsnull) {
       nsIContent* content = parentDoc->FindContentForSubDocument(document);
       if (content != nsnull) {
-        nsIPresShell* shell = parentDoc->GetPrimaryShell();
+        nsIPresShell* shell = parentDoc->GetShell();
         if (!shell) {
           return PR_FALSE;
         }

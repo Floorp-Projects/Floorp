@@ -45,9 +45,6 @@ extern "C" {
 
 // Remember that these 'words' are 32bit DWORDS
 
-#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
-static
-#endif
 PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 {
@@ -72,9 +69,6 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
     return result;
 }
 
-#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
-static
-#endif
 void
 invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
@@ -104,66 +98,3 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 }
 
 }
-
-#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
-EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant* params)
-{
-#ifdef __GNUC__            /* Gnu compiler. */
-  PRUint32 result;
-  PRUint32 n = invoke_count_words (paramCount, params) * 4;
-  void (*fn_copy) (unsigned int, nsXPTCVariant *, PRUint32 *) = invoke_copy_to_stack;
-  int temp1, temp2, temp3;
- 
- __asm__ __volatile__(
-    "subl  %8, %%esp\n\t" /* make room for params */
-    "pushl %%esp\n\t"
-    "pushl %7\n\t"
-    "pushl %6\n\t"
-    "call  *%0\n\t"       /* copy params */
-    "addl  $0xc, %%esp\n\t"
-    "movl  %4, %%ecx\n\t"
-#ifdef CFRONT_STYLE_THIS_ADJUST
-    "movl  (%%ecx), %%edx\n\t"
-    "movl  %5, %%eax\n\t"   /* function index */
-    "shl   $3, %%eax\n\t"   /* *= 8 */
-    "addl  $8, %%eax\n\t"   /* += 8 skip first entry */
-    "addl  %%eax, %%edx\n\t"
-    "movswl (%%edx), %%eax\n\t" /* 'this' offset */
-    "addl  %%eax, %%ecx\n\t"
-    "pushl %%ecx\n\t"
-    "addl  $4, %%edx\n\t"   /* += 4, method pointer */
-#else /* THUNK_BASED_THIS_ADJUST */
-    "pushl %%ecx\n\t"
-    "movl  (%%ecx), %%edx\n\t"
-    "movl  %5, %%eax\n\t"   /* function index */
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
-    "leal  (%%edx,%%eax,4), %%edx\n\t"
-#else /* not G++ V3 ABI  */
-    "leal  8(%%edx,%%eax,4), %%edx\n\t"
-#endif /* G++ V3 ABI */
-#endif
-    "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
-    "addl  $4, %%esp\n\t"
-    "addl  %8, %%esp"
-    : "=a" (result),        /* %0 */
-      "=c" (temp1),         /* %1 */
-      "=d" (temp2),         /* %2 */
-      "=g" (temp3)          /* %3 */
-    : "g" (that),           /* %4 */
-      "g" (methodIndex),    /* %5 */
-      "1" (paramCount),     /* %6 */
-      "2" (params),         /* %7 */
-      "g" (n),              /* %8 */
-      "0" (fn_copy)         /* %3 */
-    : "memory"
-    );
-    
-  return result;
-#else
-#error "can't find a compiler to use"
-#endif /* __GNUC__ */
-
-}
-#endif

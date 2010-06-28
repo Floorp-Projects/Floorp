@@ -405,7 +405,8 @@ class Native(object):
         'domstring': 'nsAString',
         'utf8string': 'nsACString',
         'cstring': 'nsACString',
-        'astring': 'nsAString'
+        'astring': 'nsAString',
+        'jsval': 'jsval'
         }
 
     def __init__(self, name, nativename, attlist, location):
@@ -639,6 +640,7 @@ class Attribute(object):
     noscript = False
     notxpcom = False
     readonly = False
+    implicit_jscontext = False
     binaryname = None
     null = None
     undefined = None
@@ -688,6 +690,8 @@ class Attribute(object):
                     self.noscript = True
                 elif name == 'notxpcom':
                     self.notxpcom = True
+                elif name == 'implicit_jscontext':
+                    self.implicit_jscontext = True
                 else:
                     raise IDLError("Unexpected attribute '%s'", aloc)
 
@@ -721,6 +725,7 @@ class Method(object):
     noscript = False
     notxpcom = False
     binaryname = None
+    implicit_jscontext = False
     optional_argc = False
 
     def __init__(self, type, name, attlist, paramlist, location, doccomments, raises):
@@ -748,6 +753,8 @@ class Method(object):
                 self.noscript = True
             elif name == 'notxpcom':
                 self.notxpcom = True
+            elif name == 'implicit_jscontext':
+                self.implicit_jscontext = True
             elif name == 'optional_argc':
                 self.optional_argc = True
             else:

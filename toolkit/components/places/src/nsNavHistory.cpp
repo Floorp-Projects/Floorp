@@ -140,13 +140,6 @@ using namespace mozilla::places;
 // corresponding migrateVxx method below.
 #define DATABASE_SCHEMA_VERSION 10
 
-// We set the default database page size to be larger. sqlite's default is 1K.
-// This gives good performance when many small parts of the file have to be
-// loaded for each statement. Because we try to keep large chunks of the file
-// in memory, a larger page size should give better I/O performance. 32K is
-// sqlite's default max page size.
-#define DATABASE_PAGE_SIZE 4096
-
 // Filename of the database.
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
 
@@ -634,37 +627,23 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 nsresult
 nsNavHistory::InitDB()
 {
-  PRInt32 pageSize = DATABASE_PAGE_SIZE;
-
   // Get the database schema version.
   PRInt32 currentSchemaVersion = 0;
   nsresult rv = mDBConn->GetSchemaVersion(&currentSchemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
-  bool databaseInitialized = (currentSchemaVersion > 0);
 
-  if (!databaseInitialized) {
-    // First of all we must set page_size since it will only have effect on
-    // empty files.  For existing databases we could get a different page size,
-    // trying to change it would be uneffective.
-    // See bug 401985 for details.
-    nsCAutoString pageSizePragma("PRAGMA page_size = ");
-    pageSizePragma.AppendInt(pageSize);
-    rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    // Get the page size.  This may be different than the default if the
-    // database file already existed with a different page size.
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
-                                  getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Get the page size.  This may be different than the default if the
+  // database file already existed with a different page size.
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
+                                getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasResult;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
-    pageSize = statement->AsInt32(0);
-  }
+  PRBool hasResult;
+  mozStorageStatementScoper scoper(statement);
+  rv = statement->ExecuteStep(&hasResult);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
+  PRInt32 pageSize = statement->AsInt32(0);
 
   // Ensure that temp tables are held in memory, not on disk.  We use temp
   // tables mainly for fsync and I/O reduction.
@@ -726,6 +705,7 @@ nsNavHistory::InitDB()
   rv = nsAnnotationService::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool databaseInitialized = (currentSchemaVersion > 0);
   if (!databaseInitialized) {
     // This is the first run, so we set schema version to the latest one, since
     // we don't need to migrate anything.  We will create tables from scratch.

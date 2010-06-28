@@ -4,6 +4,10 @@
 
 // This verifies that add-ons can be installed from XPI files
 
+// The maximum allowable time since install. If an add-on claims to have been
+// installed longer ago than this the the test will fail.
+const MAX_INSTALL_TIME = 10000;
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
@@ -118,7 +122,7 @@ function check_test_1() {
 
           // Should have been installed sometime in the last two second.
           let difference = Date.now() - a1.installDate.getTime();
-          if (difference > 2000)
+          if (difference > MAX_INSTALL_TIME)
             do_throw("Add-on was installed " + difference + "ms ago");
           if (difference < 0)
             do_throw("Add-on was installed " + difference + "ms in the future");
@@ -223,7 +227,7 @@ function check_test_3() {
 
         // Should have been installed sometime in the last two second.
         let difference = Date.now() - a2.installDate.getTime();
-        if (difference > 2000)
+        if (difference > MAX_INSTALL_TIME)
           do_throw("Add-on was installed " + difference + "ms ago");
         if (difference < 0)
           do_throw("Add-on was installed " + difference + "ms in the future");
