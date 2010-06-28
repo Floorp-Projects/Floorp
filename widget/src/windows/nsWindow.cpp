@@ -378,6 +378,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
+  mOldSizeMode          = nsSizeMode_Normal;
   mLastPoint.x          = 0;
   mLastPoint.y          = 0;
   mLastSize.width       = 0;
@@ -1139,10 +1140,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
             break;
           // use default for nsSizeMode_Minimized on Windows CE
 #else
-          case nsSizeMode_Fullscreen:
-            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
-            break;
-
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
@@ -1560,7 +1557,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
 
     switch (aMode) {
       case nsSizeMode_Fullscreen :
-        mode = SW_MAXIMIZE;
+        mode = SW_RESTORE;
         break;
 
       case nsSizeMode_Maximized :
@@ -2373,6 +2370,9 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     return NS_ERROR_FAILURE;
   }
 
+  if (mHideChrome == aShouldHide)
+    return NS_OK;
+
   DWORD_PTR style, exStyle;
   mHideChrome = aShouldHide;
   if (aShouldHide) {
@@ -2508,6 +2508,19 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
 #else
 
+  if (aFullScreen) {
+    if (mSizeMode != nsSizeMode_Fullscreen)
+      mOldSizeMode = mSizeMode;
+    SetSizeMode(nsSizeMode_Fullscreen);
+  } else {
+    SetSizeMode(mOldSizeMode);
+  }
+
+  UpdateNonClientMargins();
+
+  // Will call hide chrome, reposition window. Note this will
+  // also cache dimensions for restoration, so it should only
+  // be called once per fullscreen request.
   return nsBaseWidget::MakeFullScreen(aFullScreen);
 #endif
 }
@@ -4915,8 +4928,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #else
           *aRetValue = 0;
 #endif
-          if (mSizeMode == nsSizeMode_Fullscreen)
-            MakeFullScreen(TRUE);
         }
       }
 #ifdef WINCE_WINDOWS_MOBILE
@@ -5727,7 +5738,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 #endif
 
   // Handle window size mode changes
-  if (wp->flags & SWP_FRAMECHANGED) {
+  if (wp->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
     nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
 
     WINDOWPLACEMENT pl;
@@ -5883,7 +5894,9 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
 {
   // Update non-client margins if the frame size is changing, and let the
   // browser know we are changing size modes, so alternative css can kick in.
-  if (info->flags & SWP_FRAMECHANGED) {
+  // If we're going into fullscreen mode, ignore this, since it'll reset
+  // margins to normal mode. 
+  if (info->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
     WINDOWPLACEMENT pl;
     pl.length = sizeof(pl);
     ::GetWindowPlacement(mWnd, &pl);
@@ -7413,43 +7426,43 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   if (aMode == mTransparencyMode)
     return;
 
+  // stop on dialogs and popups!
   HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
-  nsWindow* topWindow = GetNSWindowPtr(hWnd);
+  nsWindow* parent = GetNSWindowPtr(hWnd);
 
-  if (!topWindow)
+  if (!parent)
   {
     NS_WARNING("Trying to use transparent chrome in an embedded context");
     return;
   }
 
-  LONG_PTR style = 0, exStyle = 0;
-  switch(aMode) {
-    case eTransparencyTransparent:
-      exStyle |= WS_EX_LAYERED;
-    case eTransparencyOpaque:
-    case eTransparencyGlass:
-      topWindow->mTransparencyMode = aMode;
-      break;
+  if (parent != this) {
+    NS_WARNING("Setting SetWindowTranslucencyInner on a parent this is not us!");
   }
-
-  // Hide chrome supports caching old styles, so this can be
-  // flipped back and forth
-  //topWindow->HideWindowChrome(aMode == eTransparencyTransparent);
-
-  style |= topWindow->WindowStyle();
-  exStyle |= topWindow->WindowExStyle();
 
   if (aMode == eTransparencyTransparent) {
-    style &= ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-    exStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+    // If we're switching to the use of a transparent window, hide the chrome
+    // on our parent.
+    HideWindowChrome(PR_TRUE);
+  } else if (mHideChrome && mTransparencyMode == eTransparencyTransparent) {
+    // if we're switching out of transparent, re-enable our parent's chrome.
+    HideWindowChrome(PR_FALSE);
   }
 
-  if (topWindow->mIsVisible)
-    style |= WS_VISIBLE;
-  if (topWindow->mSizeMode == nsSizeMode_Maximized)
-    style |= WS_MAXIMIZE;
-  else if (topWindow->mSizeMode == nsSizeMode_Minimized)
-    style |= WS_MINIMIZE;
+  LONG_PTR style = ::GetWindowLongPtrW(hWnd, GWL_STYLE),
+    exStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+ 
+   if (parent->mIsVisible)
+     style |= WS_VISIBLE;
+   if (parent->mSizeMode == nsSizeMode_Maximized)
+     style |= WS_MAXIMIZE;
+   else if (parent->mSizeMode == nsSizeMode_Minimized)
+     style |= WS_MINIMIZE;
+
+   if (aMode == eTransparencyTransparent)
+     exStyle |= WS_EX_LAYERED;
+   else
+     exStyle &= ~WS_EX_LAYERED;
 
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
