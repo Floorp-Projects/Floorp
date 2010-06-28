@@ -55,16 +55,22 @@
 #include "nsCSSDataBlock.h"
 #include "nsCSSStruct.h"
 
-class nsCSSDeclaration {
+// must be forward-declared in root namespace
+class CSSStyleRuleImpl;
+
+namespace mozilla {
+namespace css {
+
+class Declaration {
 public:
   /**
-   * Construct an |nsCSSDeclaration| that is in an invalid state (null
+   * Construct an |Declaration| that is in an invalid state (null
    * |mData|) and cannot be used until its |CompressFrom| method or
    * |InitializeEmpty| method is called.
    */
-  nsCSSDeclaration();
+  Declaration();
 
-  nsCSSDeclaration(const nsCSSDeclaration& aCopy);
+  Declaration(const Declaration& aCopy);
 
   /**
    * |ValueAppended| must be called to maintain this declaration's
@@ -82,13 +88,13 @@ public:
   PRBool GetValueIsImportant(const nsAString& aProperty) const;
 
   PRUint32 Count() const {
-    return mOrder.Length(); 
+    return mOrder.Length();
   }
   nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
 
   nsresult ToString(nsAString& aString) const;
 
-  nsCSSDeclaration* Clone() const;
+  Declaration* Clone() const;
 
   nsCSSCompressedDataBlock* GetNormalBlock() const { return mData; }
   nsCSSCompressedDataBlock* GetImportantBlock() const { return mImportantData; }
@@ -174,7 +180,7 @@ public:
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
-  
+
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   static PRBool AppendCSSValueToString(nsCSSProperty aProperty,
                                        const nsCSSValue& aValue,
@@ -187,8 +193,8 @@ public:
 
 private:
   // Not implemented, and not supported.
-  nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
-  PRBool operator==(const nsCSSDeclaration& aCopy) const;
+  Declaration& operator=(const Declaration& aCopy);
+  PRBool operator==(const Declaration& aCopy) const;
 
   static void AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
@@ -204,11 +210,11 @@ private:
     // We do not want everyone to ref count us, only the rules which hold
     //  onto us (our well defined lifetime is when the last rule releases
     //  us).
-    // It's worth a comment here that the main nsCSSDeclaration is refcounted,
-    //  but it's |mImportant| is not refcounted, but just owned by the
-    //  non-important declaration.
+    // It's worth a comment here that the main css::Declaration is
+    //  refcounted, but its |mImportant| is not refcounted, just owned
+    //  by the non-important declaration.
     //
-    friend class CSSStyleRuleImpl;
+    friend class ::CSSStyleRuleImpl;
     void AddRef(void) {
       if (mRefCnt == PR_UINT32_MAX) {
         NS_WARNING("refcount overflow, leaking object");
@@ -233,8 +239,8 @@ public:
     }
 private:
   // Block everyone, except us or a derivative, from deleting us.
-  ~nsCSSDeclaration(void);
-    
+  ~Declaration();
+
   nsCSSProperty OrderValueAt(PRUint32 aValue) const {
     return nsCSSProperty(mOrder.ElementAt(aValue));
   }
@@ -249,5 +255,8 @@ private:
     // may be null
     nsRefPtr<nsCSSCompressedDataBlock> mImportantData;
 };
+
+} // namespace mozilla::css
+} // namespace mozilla
 
 #endif /* nsCSSDeclaration_h___ */

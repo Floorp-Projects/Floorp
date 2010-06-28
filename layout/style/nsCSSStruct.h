@@ -260,7 +260,7 @@ struct nsCSSStruct {
   // EMPTY on purpose.  ABSTRACT with no virtuals (typedef void nsCSSStruct?)
 };
 
-// We use the nsCSS* structures for storing nsCSSDeclaration's
+// We use the nsCSS* structures for storing css::Declaration's
 // *temporary* data during parsing and modification.  (They are too big
 // for permanent storage.)  We also use them for nsRuleData, with some
 // additions of things that the style system must cascade, but that
