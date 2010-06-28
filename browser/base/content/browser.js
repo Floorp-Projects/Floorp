@@ -4108,7 +4108,11 @@ var XULBrowserWindow = {
         let nBox = gBrowser.getNotificationBox(selectedBrowser);
         nBox.removeTransientNotifications();
 
-        PopupNotifications.locationChange();
+        // Only need to call locationChange if the PopupNotifications object
+        // for this window has already been initialized (i.e. its getter no
+        // longer exists)
+        if (!__lookupGetter__("PopupNotifications"))
+          PopupNotifications.locationChange();
       }
     }
 
