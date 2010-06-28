@@ -173,8 +173,6 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define UPDATE_DELAY_TIME           "urlclassifier.updatetime"
 #define UPDATE_DELAY_TIME_DEFAULT   60
 
-#define PAGE_SIZE 4096
-
 class nsUrlClassifierDBServiceWorker;
 
 // Singleton instance.
@@ -1223,6 +1221,7 @@ private:
   nsCOMPtr<mozIStorageStatement> mGetTableIdStatement;
   nsCOMPtr<mozIStorageStatement> mGetTableNameStatement;
   nsCOMPtr<mozIStorageStatement> mInsertTableIdStatement;
+  nsCOMPtr<mozIStorageStatement> mGetPageSizeStatement;
 
   // Stores the last time a given table was updated.
   nsDataHashtable<nsCStringHashKey, PRInt64> mTableFreshness;
@@ -3164,7 +3163,13 @@ nsUrlClassifierDBServiceWorker::SetupUpdate()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (gUpdateCacheSize > 0) {
-    PRUint32 cachePages = gUpdateCacheSize / PAGE_SIZE;
+    PRBool hasResult;
+    rv = mGetPageSizeStatement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(hasResult, "Should always be able to get page size from sqlite");
+    PRUint32 pageSize = mGetTableIdStatement->AsInt32(0);
+    PRUint32 cachePages = gUpdateCacheSize / pageSize;
     nsCAutoString cacheSizePragma("PRAGMA cache_size=");
     cacheSizePragma.AppendInt(cachePages);
     rv = mConnection->ExecuteSimpleSQL(cacheSizePragma);
@@ -3413,11 +3418,6 @@ nsUrlClassifierDBServiceWorker::OpenDb()
     }
   }
 
-  nsCAutoString cacheSizePragma("PRAGMA page_size=");
-  cacheSizePragma.AppendInt(PAGE_SIZE);
-  rv = connection->ExecuteSimpleSQL(cacheSizePragma);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous=OFF"));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3473,6 +3473,11 @@ nsUrlClassifierDBServiceWorker::OpenDb()
     (NS_LITERAL_CSTRING("INSERT INTO moz_tables(id, name, add_chunks, sub_chunks)"
                         " VALUES (null, ?1, null, null)"),
      getter_AddRefs(mInsertTableIdStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = connection->CreateStatement
+    (NS_LITERAL_CSTRING("PRAGMA page_size"),
+     getter_AddRefs(mGetPageSizeStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mConnection = connection;
