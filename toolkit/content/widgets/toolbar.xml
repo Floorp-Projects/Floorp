@@ -440,6 +440,7 @@
   <binding id="toolbar-drag"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <implementation>
+      <field name="_alive">true</field>
       <constructor><![CDATA[
         if (!this._draggableStarted) {
           this._draggableStarted = true;

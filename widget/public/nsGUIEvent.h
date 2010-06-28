@@ -226,6 +226,7 @@ class nsHashKey;
 #define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
 #define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
 #define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
+#define NS_MOUSE_MOZHITTEST             (NS_MOUSE_MESSAGE_START + 33)
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
@@ -1378,6 +1379,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_ACTIVATE) || \
         ((evnt)->message == NS_MOUSE_ENTER_SYNTH) || \
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
+        ((evnt)->message == NS_MOUSE_MOZHITTEST) || \
         ((evnt)->message == NS_MOUSE_MOVE))
 
 #define NS_IS_MOUSE_EVENT_STRUCT(evnt) \

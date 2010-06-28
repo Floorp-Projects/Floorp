@@ -385,6 +385,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldStyle             = 0;
   mOldExStyle           = 0;
   mPainting             = 0;
+  mExitToNonClientArea  = 0;
   mLastKeyboardLayout   = 0;
   mBlurSuppressLevel    = 0;
   mIMEEnabled           = nsIWidget::IME_STATUS_ENABLED;
@@ -3831,6 +3832,10 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   else if (aEventType == NS_MOUSE_EXIT) {
     event.exit = IsTopLevelMouseExit(mWnd) ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
   }
+  else if (aEventType == NS_MOUSE_MOZHITTEST)
+  {
+    event.flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+  }
   event.clickCount = sLastClickCount;
 
 #ifdef NS_DEBUG_XX
@@ -4681,6 +4686,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       if ((sLastMouseMovePoint.x != mp.x) || (sLastMouseMovePoint.y != mp.y)) {
         userMovedMouse = PR_TRUE;
       }
+      mExitToNonClientArea = PR_FALSE;
 
       result = DispatchMouseEvent(NS_MOUSE_MOVE, wParam, lParam,
                                   PR_FALSE, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
@@ -4804,6 +4810,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
       break;
+
+    case WM_NCRBUTTONDOWN:
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0, lParamToClient(lParam), 
+                                  PR_FALSE, nsMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
+    case WM_NCRBUTTONUP:
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
+                                  PR_FALSE, nsMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
+    case WM_NCRBUTTONDBLCLK:
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
+                                  PR_FALSE, nsMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
 
     case WM_APPCOMMAND:
     {
@@ -5412,6 +5437,29 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
       testResult = HTLEFT;
     if (right)
       testResult = HTRIGHT;
+  }
+
+  if (!mIsInMouseCapture && 
+      (testResult == HTCLIENT || testResult == HTTOP || testResult == HTTOPLEFT)) {
+    LPARAM lParam = MAKELPARAM(mx, my);
+    LPARAM lParamClient = lParamToClient(lParam);
+    PRBool result = DispatchMouseEvent(NS_MOUSE_MOZHITTEST, 0, lParamClient,
+                                       PR_FALSE, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+    if (result) {
+      // The mouse is over a blank area
+      testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
+
+      if (!mExitToNonClientArea) {
+        // The first time the mouse pointer goes from client area to non-client area,
+        // we don't want to miss that movement so we can interpret mouseout input.
+        ::SendMessage(mWnd, WM_MOUSEMOVE, 0, lParamClient);
+        mExitToNonClientArea = PR_TRUE;
+      }
+    } else {
+      // There's content over the mouse pointer. Set HTCLIENT
+      // to possibly override a resizer border.
+      testResult = HTCLIENT;
+    }
   }
 
   return testResult;

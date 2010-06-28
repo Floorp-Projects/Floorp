@@ -58,7 +58,7 @@
 
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
-  "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
+  "mouseout", "MozMouseHittest", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "popstate", "beforeunload", "unload",
   "hashchange", "readystatechange", "abort", "error",
   "submit", "reset", "change", "select", "input", "text",
@@ -1073,6 +1073,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_mouseover];
   case NS_MOUSE_EXIT_SYNTH:
     return sEventNames[eDOMEvents_mouseout];
+  case NS_MOUSE_MOZHITTEST:
+    return sEventNames[eDOMEvents_MozMouseHittest];
   case NS_MOUSE_MOVE:
     return sEventNames[eDOMEvents_mousemove];
   case NS_KEY_UP:
