@@ -72,7 +72,7 @@ DoomCachedStatements(const nsACString& aQuery,
 
 // static
 already_AddRefed<IDBTransaction>
-IDBTransaction::Create(IDBDatabaseRequest* aDatabase,
+IDBTransaction::Create(IDBDatabase* aDatabase,
                        nsTArray<nsString>& aObjectStoreNames,
                        PRUint16 aMode,
                        PRUint32 aTimeout)

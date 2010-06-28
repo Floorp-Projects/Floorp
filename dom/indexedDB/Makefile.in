@@ -55,7 +55,7 @@ CPPSRCS = \
   AsyncConnectionHelper.cpp \
   DatabaseInfo.cpp \
   IDBCursorRequest.cpp \
-  IDBDatabaseRequest.cpp \
+  IDBDatabase.cpp \
   IDBEvents.cpp \
   IDBIndexRequest.cpp \
   IDBKeyRange.cpp \
@@ -69,7 +69,7 @@ CPPSRCS = \
 
 EXPORTS_mozilla/dom/indexedDB = \
   IDBCursorRequest.h \
-  IDBDatabaseRequest.h \
+  IDBDatabase.h \
   IDBEvents.h \
   IDBIndexRequest.h \
   IDBKeyRange.h \
@@ -96,7 +96,6 @@ XPIDLSRCS = \
   nsIIDBCursorRequest.idl \
   nsIIDBDatabase.idl \
   nsIIDBDatabaseException.idl \
-  nsIIDBDatabaseRequest.idl \
   nsIIDBEvent.idl \
   nsIIDBErrorEvent.idl \
   nsIIDBIndex.idl \

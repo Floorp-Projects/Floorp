@@ -42,7 +42,7 @@
 
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
-#include "IDBDatabaseRequest.h"
+#include "IDBDatabase.h"
 #include "IDBRequest.h"
 
 #include "mozIStorageProgressHandler.h"
@@ -97,7 +97,7 @@ public:
   nsresult DispatchToTransactionPool();
 
 protected:
-  AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
+  AsyncConnectionHelper(IDBDatabase* aDatabase,
                         IDBRequest* aRequest);
 
   AsyncConnectionHelper(IDBTransaction* aTransaction,
@@ -154,7 +154,7 @@ protected:
   virtual PRUint16 GetSuccessResult(nsIWritableVariant* aVariant);
 
 protected:
-  nsRefPtr<IDBDatabaseRequest> mDatabase;
+  nsRefPtr<IDBDatabase> mDatabase;
   nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBRequest> mRequest;
 

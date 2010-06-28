@@ -464,7 +464,6 @@ members = [
     'nsIIDBCursorRequest.*',
     'nsIIDBDatabase.*',
     'nsIIDBDatabaseException.*',
-    'nsIIDBDatabaseRequest.*',
     'nsIIDBEvent.*',
     'nsIIDBErrorEvent.*',
     'nsIIDBIndex.*',
