@@ -11168,7 +11168,7 @@ unsigned long nsDocShell::gNumberOfDocShells = 0;
 #endif
 
 NS_IMETHODIMP
-nsDocShell::GetCanExecuteScripts(PRBool *aResult)
+nsDocShell::GetCanExecuteScripts(PRBool *aResult, PRBool *aContinueLooking)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_FALSE; // disallow by default
