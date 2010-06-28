@@ -57,7 +57,7 @@
 #include "AsyncConnectionHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
-#include "IDBIndexRequest.h"
+#include "IDBIndex.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "Savepoint.h"
@@ -170,7 +170,7 @@ IDBCursorRequest::Create(IDBRequest* aRequest,
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::Create(IDBRequest* aRequest,
                          IDBTransaction* aTransaction,
-                         IDBIndexRequest* aIndex,
+                         IDBIndex* aIndex,
                          PRUint16 aDirection,
                          nsTArray<KeyKeyPair>& aData)
 {
@@ -198,7 +198,7 @@ IDBCursorRequest::Create(IDBRequest* aRequest,
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::Create(IDBRequest* aRequest,
                          IDBTransaction* aTransaction,
-                         IDBIndexRequest* aIndex,
+                         IDBIndex* aIndex,
                          PRUint16 aDirection,
                          nsTArray<KeyValuePair>& aData)
 {
