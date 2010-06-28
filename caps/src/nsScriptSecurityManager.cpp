@@ -1778,9 +1778,31 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
         docshell = window->GetDocShell();
     }
 
-    rv = docshell->GetCanExecuteScripts(result);
-    if (NS_FAILED(rv)) return rv;
-    if (!*result) return NS_OK;
+    nsCOMPtr<nsIDocShellTreeItem> globalObjTreeItem =
+        do_QueryInterface(docshell);
+
+    if (globalObjTreeItem) 
+    {
+        nsCOMPtr<nsIDocShellTreeItem> treeItem(globalObjTreeItem);
+        nsCOMPtr<nsIDocShellTreeItem> parentItem;
+
+        // Walk up the docshell tree to see if any containing docshell disallows scripts
+        do
+        {
+            rv = docshell->GetAllowJavascript(result);
+            if (NS_FAILED(rv)) return rv;
+            if (!*result)
+                return NS_OK; // Do not run scripts
+            treeItem->GetParent(getter_AddRefs(parentItem));
+            treeItem.swap(parentItem);
+            docshell = do_QueryInterface(treeItem);
+#ifdef DEBUG
+            if (treeItem && !docshell) {
+              NS_ERROR("cannot get a docshell from a treeItem!");
+            }
+#endif // DEBUG
+        } while (treeItem && docshell);
+    }
 
     // OK, the docshell doesn't have script execution explicitly disabled.
     // Check whether our URI is an "about:" URI that allows scripts.  If it is,
