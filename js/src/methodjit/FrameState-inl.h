@@ -292,7 +292,7 @@ FrameState::pushTypedPayload(JSValueTag tag, RegisterID payload)
 
 inline void
 FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload,
-                               bool popGuaranteed)
+                               bool popGuaranteed, bool fastType)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
@@ -310,7 +310,7 @@ FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload,
     if (popGuaranteed) {
         fe->setTypeTag(tag);
     } else {
-        if (!fe->type.synced())
+        if (!fastType || !fe->type.synced())
             masm.storeTypeTag(ImmTag(tag), addressOf(fe));
 
         /* The forceful type sync will assert otherwise. */
@@ -640,9 +640,13 @@ FrameState::pushLocal(uint32 n)
     if (!eval && !escaping[n]) {
         pushCopyOf(indexOfFe(getLocal(n)));
     } else {
-        JS_ASSERT_IF(base[localIndex(n)],
-                     entries[localIndex(n)].type.inMemory() &&
-                     entries[localIndex(n)].data.inMemory());
+        if (FrameEntry *fe = base[localIndex(n)]) {
+            /* :TODO: we could do better here. */
+            if (!fe->type.synced())
+                syncType(fe, addressOf(fe), masm);
+            if (!fe->data.synced())
+                syncData(fe, addressOf(fe), masm);
+        }
         push(Address(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value)));
     }
 }
