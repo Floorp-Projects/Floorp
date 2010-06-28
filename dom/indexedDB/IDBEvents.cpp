@@ -49,7 +49,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBRequest.h"
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 
 #define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(_class, _condition)  \
   if ((_condition) && (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||               \
@@ -294,7 +294,7 @@ IDBErrorEvent::SetMessage(const nsAString& aMessage)
 already_AddRefed<nsIDOMEvent>
 IDBSuccessEvent::Create(IDBRequest* aRequest,
                         nsIVariant* aResult,
-                        nsIIDBTransactionRequest* aTransaction)
+                        nsIIDBTransaction* aTransaction)
 {
   nsRefPtr<IDBSuccessEvent> event(new IDBSuccessEvent());
 
@@ -318,7 +318,7 @@ IDBSuccessEvent::Create(IDBRequest* aRequest,
 already_AddRefed<nsIRunnable>
 IDBSuccessEvent::CreateRunnable(IDBRequest* aRequest,
                                 nsIVariant* aResult,
-                                nsIIDBTransactionRequest* aTransaction)
+                                nsIIDBTransaction* aTransaction)
 {
   nsCOMPtr<nsIDOMEvent> event =
     IDBSuccessEvent::Create(aRequest, aResult, aTransaction);
@@ -351,16 +351,16 @@ IDBSuccessEvent::GetResult(nsIVariant** aResult)
 }
 
 NS_IMETHODIMP
-IDBSuccessEvent::GetTransaction(nsIIDBTransactionRequest** aTransaction)
+IDBSuccessEvent::GetTransaction(nsIIDBTransaction** aTransaction)
 {
-  nsCOMPtr<nsIIDBTransactionRequest> transaction(mTransaction);
+  nsCOMPtr<nsIIDBTransaction> transaction(mTransaction);
   transaction.forget(aTransaction);
   return NS_OK;
 }
 
 nsresult
 GetSuccessEvent::Init(IDBRequest* aRequest,
-                      IDBTransactionRequest* aTransaction)
+                      IDBTransaction* aTransaction)
 {
   mSource = aRequest->GetGenerator();
   mTransaction = aTransaction;

@@ -56,7 +56,7 @@ class mozIStorageConnection;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBTransactionRequest;
+class IDBTransaction;
 
 /**
  * Must be subclassed. The subclass must implement DoDatabaseWork. It may then
@@ -100,7 +100,7 @@ protected:
   AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                         IDBRequest* aRequest);
 
-  AsyncConnectionHelper(IDBTransactionRequest* aTransaction,
+  AsyncConnectionHelper(IDBTransaction* aTransaction,
                         IDBRequest* aRequest);
 
   virtual ~AsyncConnectionHelper();
@@ -155,7 +155,7 @@ protected:
 
 protected:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
-  nsRefPtr<IDBTransactionRequest> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBRequest> mRequest;
 
 private:

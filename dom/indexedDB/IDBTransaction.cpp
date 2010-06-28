@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
@@ -71,15 +71,15 @@ DoomCachedStatements(const nsACString& aQuery,
 } // anonymous namespace
 
 // static
-already_AddRefed<IDBTransactionRequest>
-IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
-                              nsTArray<nsString>& aObjectStoreNames,
-                              PRUint16 aMode,
-                              PRUint32 aTimeout)
+already_AddRefed<IDBTransaction>
+IDBTransaction::Create(IDBDatabaseRequest* aDatabase,
+                       nsTArray<nsString>& aObjectStoreNames,
+                       PRUint16 aMode,
+                       PRUint32 aTimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<IDBTransactionRequest> transaction = new IDBTransactionRequest();
+  nsRefPtr<IDBTransaction> transaction = new IDBTransaction();
 
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
@@ -98,7 +98,7 @@ IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
   return transaction.forget();
 }
 
-IDBTransactionRequest::IDBTransactionRequest()
+IDBTransaction::IDBTransaction()
 : mReadyState(nsIIDBTransaction::INITIAL),
   mMode(nsIIDBTransaction::READ_ONLY),
   mTimeout(0),
@@ -110,7 +110,7 @@ IDBTransactionRequest::IDBTransactionRequest()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
-IDBTransactionRequest::~IDBTransactionRequest()
+IDBTransaction::~IDBTransaction()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
@@ -123,7 +123,7 @@ IDBTransactionRequest::~IDBTransactionRequest()
 }
 
 void
-IDBTransactionRequest::OnNewRequest()
+IDBTransaction::OnNewRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (!mPendingRequests) {
@@ -135,7 +135,7 @@ IDBTransactionRequest::OnNewRequest()
 }
 
 void
-IDBTransactionRequest::OnRequestFinished()
+IDBTransaction::OnRequestFinished()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
@@ -151,7 +151,7 @@ IDBTransactionRequest::OnRequestFinished()
 }
 
 nsresult
-IDBTransactionRequest::CommitOrRollback()
+IDBTransaction::CommitOrRollback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mReadyState == nsIIDBTransaction::DONE, "Bad readyState!");
@@ -171,7 +171,7 @@ IDBTransactionRequest::CommitOrRollback()
 }
 
 bool
-IDBTransactionRequest::StartSavepoint()
+IDBTransaction::StartSavepoint()
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
   NS_PRECONDITION(mConnection, "No connection!");
@@ -199,7 +199,7 @@ IDBTransactionRequest::StartSavepoint()
 }
 
 nsresult
-IDBTransactionRequest::ReleaseSavepoint()
+IDBTransaction::ReleaseSavepoint()
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
   NS_PRECONDITION(mConnection, "No connection!");
@@ -216,7 +216,7 @@ IDBTransactionRequest::ReleaseSavepoint()
 }
 
 void
-IDBTransactionRequest::RollbackSavepoint()
+IDBTransaction::RollbackSavepoint()
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
   NS_PRECONDITION(mConnection, "No connection!");
@@ -232,7 +232,7 @@ IDBTransactionRequest::RollbackSavepoint()
 }
 
 nsresult
-IDBTransactionRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
+IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -250,9 +250,9 @@ IDBTransactionRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::AddStatement(bool aCreate,
-                                    bool aOverwrite,
-                                    bool aAutoIncrement)
+IDBTransaction::AddStatement(bool aCreate,
+                             bool aOverwrite,
+                             bool aAutoIncrement)
 {
 #ifdef DEBUG
   if (!aCreate) {
@@ -301,7 +301,7 @@ IDBTransactionRequest::AddStatement(bool aCreate,
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::RemoveStatement(bool aAutoIncrement)
+IDBTransaction::RemoveStatement(bool aAutoIncrement)
 {
   if (aAutoIncrement) {
     return GetCachedStatement(
@@ -318,7 +318,7 @@ IDBTransactionRequest::RemoveStatement(bool aAutoIncrement)
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::GetStatement(bool aAutoIncrement)
+IDBTransaction::GetStatement(bool aAutoIncrement)
 {
   if (aAutoIncrement) {
     return GetCachedStatement(
@@ -337,8 +337,8 @@ IDBTransactionRequest::GetStatement(bool aAutoIncrement)
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::IndexGetStatement(bool aUnique,
-                                         bool aAutoIncrement)
+IDBTransaction::IndexGetStatement(bool aUnique,
+                                  bool aAutoIncrement)
 {
   if (aAutoIncrement) {
     if (aUnique) {
@@ -373,8 +373,8 @@ IDBTransactionRequest::IndexGetStatement(bool aUnique,
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
-                                               bool aAutoIncrement)
+IDBTransaction::IndexGetObjectStatement(bool aUnique,
+                                        bool aAutoIncrement)
 {
   if (aAutoIncrement) {
     if (aUnique) {
@@ -417,9 +417,9 @@ IDBTransactionRequest::IndexGetObjectStatement(bool aUnique,
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
-                                            bool aUnique,
-                                            bool aOverwrite)
+IDBTransaction::IndexUpdateStatement(bool aAutoIncrement,
+                                     bool aUnique,
+                                     bool aOverwrite)
 {
   if (aAutoIncrement) {
     if (aUnique) {
@@ -478,7 +478,7 @@ IDBTransactionRequest::IndexUpdateStatement(bool aAutoIncrement,
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransactionRequest::GetCachedStatement(const nsACString& aQuery)
+IDBTransaction::GetCachedStatement(const nsACString& aQuery)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!aQuery.IsEmpty(), "Empty sql statement!");
@@ -513,7 +513,7 @@ IDBTransactionRequest::GetCachedStatement(const nsACString& aQuery)
 
 #ifdef DEBUG
 bool
-IDBTransactionRequest::TransactionIsOpen() const
+IDBTransaction::TransactionIsOpen() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return mReadyState == nsIIDBTransaction::INITIAL ||
@@ -521,42 +521,41 @@ IDBTransactionRequest::TransactionIsOpen() const
 }
 
 bool
-IDBTransactionRequest::IsWriteAllowed() const
+IDBTransaction::IsWriteAllowed() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return mMode == nsIIDBTransaction::READ_WRITE;
 }
 #endif
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransactionRequest,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransactionRequest,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
                                                 nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBTransactionRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBTransactionRequest)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBTransaction)
   NS_INTERFACE_MAP_ENTRY(nsIIDBTransaction)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBTransactionRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBTransaction)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(IDBTransactionRequest, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(IDBTransactionRequest, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(IDBTransaction, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBTransaction, nsDOMEventTargetHelper)
 
-DOMCI_DATA(IDBTransactionRequest, IDBTransactionRequest)
+DOMCI_DATA(IDBTransaction, IDBTransaction)
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetDb(nsIIDBDatabase** aDB)
+IDBTransaction::GetDb(nsIIDBDatabase** aDB)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -565,7 +564,7 @@ IDBTransactionRequest::GetDb(nsIIDBDatabase** aDB)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetReadyState(PRUint16* aReadyState)
+IDBTransaction::GetReadyState(PRUint16* aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -574,17 +573,17 @@ IDBTransactionRequest::GetReadyState(PRUint16* aReadyState)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetMode(PRUint16* aMode)
+IDBTransaction::GetMode(PRUint16* aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aMode = mMode == IDBTransactionRequest::FULL_LOCK ?
+  *aMode = mMode == IDBTransaction::FULL_LOCK ?
            nsIIDBTransaction::READ_WRITE : mMode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
+IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -593,7 +592,7 @@ IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   nsTArray<nsString> stackArray;
   nsTArray<nsString>* arrayOfNames;
 
-  if (mMode == IDBTransactionRequest::FULL_LOCK) {
+  if (mMode == IDBTransaction::FULL_LOCK) {
     DatabaseInfo* info;
     if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
       NS_ERROR("This should never fail!");
@@ -621,8 +620,8 @@ IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::ObjectStore(const nsAString& aName,
-                                   nsIIDBObjectStoreRequest** _retval)
+IDBTransaction::ObjectStore(const nsAString& aName,
+                            nsIIDBObjectStoreRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -656,7 +655,7 @@ IDBTransactionRequest::ObjectStore(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::Abort()
+IDBTransaction::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -671,7 +670,7 @@ IDBTransactionRequest::Abort()
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetOncomplete(nsIDOMEventListener** aOncomplete)
+IDBTransaction::GetOncomplete(nsIDOMEventListener** aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -679,7 +678,7 @@ IDBTransactionRequest::GetOncomplete(nsIDOMEventListener** aOncomplete)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::SetOncomplete(nsIDOMEventListener* aOncomplete)
+IDBTransaction::SetOncomplete(nsIDOMEventListener* aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -688,7 +687,7 @@ IDBTransactionRequest::SetOncomplete(nsIDOMEventListener* aOncomplete)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetOnabort(nsIDOMEventListener** aOnabort)
+IDBTransaction::GetOnabort(nsIDOMEventListener** aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -696,7 +695,7 @@ IDBTransactionRequest::GetOnabort(nsIDOMEventListener** aOnabort)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::SetOnabort(nsIDOMEventListener* aOnabort)
+IDBTransaction::SetOnabort(nsIDOMEventListener* aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -705,7 +704,7 @@ IDBTransactionRequest::SetOnabort(nsIDOMEventListener* aOnabort)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetOntimeout(nsIDOMEventListener** aOntimeout)
+IDBTransaction::GetOntimeout(nsIDOMEventListener** aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -713,7 +712,7 @@ IDBTransactionRequest::GetOntimeout(nsIDOMEventListener** aOntimeout)
 }
 
 NS_IMETHODIMP
-IDBTransactionRequest::SetOntimeout(nsIDOMEventListener* aOntimeout)
+IDBTransaction::SetOntimeout(nsIDOMEventListener* aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

@@ -61,7 +61,7 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBCursorRequest.h"
 #include "IDBKeyRange.h"
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 #include "DatabaseInfo.h"
 #include "Savepoint.h"
 
@@ -76,7 +76,7 @@ namespace {
 class AddHelper : public AsyncConnectionHelper
 {
 public:
-  AddHelper(IDBTransactionRequest* aTransaction,
+  AddHelper(IDBTransaction* aTransaction,
             IDBRequest* aRequest,
             PRInt64 aObjectStoreID,
             const nsAString& aKeyPath,
@@ -116,7 +116,7 @@ private:
 class GetHelper : public AsyncConnectionHelper
 {
 public:
-  GetHelper(IDBTransactionRequest* aTransaction,
+  GetHelper(IDBTransaction* aTransaction,
             IDBRequest* aRequest,
             PRInt64 aObjectStoreID,
             const Key& aKey,
@@ -142,7 +142,7 @@ private:
 class RemoveHelper : public GetHelper
 {
 public:
-  RemoveHelper(IDBTransactionRequest* aTransaction,
+  RemoveHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
                const Key& aKey,
@@ -158,7 +158,7 @@ public:
 class OpenCursorHelper : public AsyncConnectionHelper
 {
 public:
-  OpenCursorHelper(IDBTransactionRequest* aTransaction,
+  OpenCursorHelper(IDBTransaction* aTransaction,
                    IDBRequest* aRequest,
                    IDBObjectStoreRequest* aObjectStore,
                    const Key& aLeftKey,
@@ -190,7 +190,7 @@ private:
 class CreateIndexHelper : public AsyncConnectionHelper
 {
 public:
-  CreateIndexHelper(IDBTransactionRequest* aTransaction,
+  CreateIndexHelper(IDBTransaction* aTransaction,
                     IDBRequest* aRequest,
                     const nsAString& aName,
                     const nsAString& aKeyPath,
@@ -222,7 +222,7 @@ private:
 class RemoveIndexHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveIndexHelper(IDBTransactionRequest* aDatabase,
+  RemoveIndexHelper(IDBTransaction* aDatabase,
                     IDBRequest* aRequest,
                     const nsAString& aName,
                     IDBObjectStoreRequest* aObjectStore)
@@ -242,7 +242,7 @@ private:
 class GetAllHelper : public AsyncConnectionHelper
 {
 public:
-  GetAllHelper(IDBTransactionRequest* aTransaction,
+  GetAllHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
                const Key& aLeftKey,
@@ -323,7 +323,7 @@ GetKeyFromObject(JSContext* aCx,
 // static
 already_AddRefed<IDBObjectStoreRequest>
 IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
-                              IDBTransactionRequest* aTransaction,
+                              IDBTransaction* aTransaction,
                               const ObjectStoreInfo* aStoreInfo,
                               PRUint16 aMode)
 {
@@ -559,7 +559,7 @@ IDBObjectStoreRequest::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
 
 /* static */
 nsresult
-IDBObjectStoreRequest::UpdateIndexes(IDBTransactionRequest* aTransaction,
+IDBObjectStoreRequest::UpdateIndexes(IDBTransaction* aTransaction,
                                      PRInt64 aObjectStoreId,
                                      const Key& aObjectStoreKey,
                                      bool aAutoIncrement,

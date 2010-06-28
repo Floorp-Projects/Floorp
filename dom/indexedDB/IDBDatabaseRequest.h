@@ -53,7 +53,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
 struct DatabaseInfo;
-class IDBTransactionRequest;
+class IDBTransaction;
 
 class IDBDatabaseRequest : public IDBRequest::Generator,
                            public nsIIDBDatabaseRequest,

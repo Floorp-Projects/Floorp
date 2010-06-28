@@ -46,7 +46,7 @@
 #include "nsIIDBErrorEvent.h"
 #include "nsIIDBSuccessEvent.h"
 #include "nsIIDBTransactionEvent.h"
-#include "nsIIDBTransactionRequest.h"
+#include "nsIIDBTransaction.h"
 #include "nsIRunnable.h"
 #include "nsIVariant.h"
 
@@ -64,7 +64,7 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBRequest;
-class IDBTransactionRequest;
+class IDBTransaction;
 
 class IDBEvent : public nsDOMEvent,
                  public nsIIDBEvent
@@ -125,18 +125,18 @@ public:
   static already_AddRefed<nsIDOMEvent>
   Create(IDBRequest* aRequest,
          nsIVariant* aResult,
-         nsIIDBTransactionRequest* aTransaction);
+         nsIIDBTransaction* aTransaction);
 
   static already_AddRefed<nsIRunnable>
   CreateRunnable(IDBRequest* aRequest,
                  nsIVariant* aResult,
-                 nsIIDBTransactionRequest* aTransaction);
+                 nsIIDBTransaction* aTransaction);
 
 protected:
   IDBSuccessEvent() { }
 
   nsCOMPtr<nsIVariant> mResult;
-  nsCOMPtr<nsIIDBTransactionRequest> mTransaction;
+  nsCOMPtr<nsIIDBTransaction> mTransaction;
 };
 
 class GetSuccessEvent : public IDBSuccessEvent
@@ -158,7 +158,7 @@ public:
   NS_IMETHOD GetResult(nsIVariant** aResult);
 
   nsresult Init(IDBRequest* aRequest,
-                IDBTransactionRequest* aTransaction);
+                IDBTransaction* aTransaction);
 
 private:
   nsString mValue;
