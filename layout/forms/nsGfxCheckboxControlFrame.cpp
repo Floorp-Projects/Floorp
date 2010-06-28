@@ -120,18 +120,18 @@ nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsGfxCheckboxControlFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService
     = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLCheckboxAccessible(
-      static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLCheckboxAccessible(mContent,
+                                                    PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 
