@@ -41,7 +41,7 @@
 #define mozilla_dom_indexeddb_idbobjectstorerequest_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
+#include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
 
 #include "nsIIDBObjectStoreRequest.h"
@@ -214,7 +214,7 @@ public:
   NS_DECL_NSIIDBOBJECTSTOREREQUEST
 
   static already_AddRefed<IDBObjectStoreRequest>
-  Create(IDBDatabaseRequest* aDatabase,
+  Create(IDBDatabase* aDatabase,
          IDBTransaction* aTransaction,
          const ObjectStoreInfo* aInfo,
          PRUint16 aMode);
@@ -292,7 +292,7 @@ protected:
                       nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
 private:
-  nsRefPtr<IDBDatabaseRequest> mDatabase;
+  nsRefPtr<IDBDatabase> mDatabase;
   nsRefPtr<IDBTransaction> mTransaction;
 
   PRInt64 mId;

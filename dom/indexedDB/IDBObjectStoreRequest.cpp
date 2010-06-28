@@ -322,7 +322,7 @@ GetKeyFromObject(JSContext* aCx,
 
 // static
 already_AddRefed<IDBObjectStoreRequest>
-IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
+IDBObjectStoreRequest::Create(IDBDatabase* aDatabase,
                               IDBTransaction* aTransaction,
                               const ObjectStoreInfo* aStoreInfo,
                               PRUint16 aMode)

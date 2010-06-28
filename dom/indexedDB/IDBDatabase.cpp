@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "IDBDatabaseRequest.h"
+#include "IDBDatabase.h"
 
 #include "nsIIDBDatabaseException.h"
 
@@ -62,7 +62,7 @@ const PRUint32 kDefaultDatabaseTimeoutSeconds = 30;
 
 inline
 nsISupports*
-isupports_cast(IDBDatabaseRequest* aClassPtr)
+isupports_cast(IDBDatabase* aClassPtr)
 {
   return static_cast<nsISupports*>(
     static_cast<IDBRequest::Generator*>(aClassPtr));
@@ -209,17 +209,17 @@ ConvertVariantToStringArray(nsIVariant* aVariant,
 } // anonymous namespace
 
 // static
-already_AddRefed<IDBDatabaseRequest>
-IDBDatabaseRequest::Create(DatabaseInfo* aDatabaseInfo,
-                           LazyIdleThread* aThread,
-                           nsCOMPtr<mozIStorageConnection>& aConnection)
+already_AddRefed<IDBDatabase>
+IDBDatabase::Create(DatabaseInfo* aDatabaseInfo,
+                    LazyIdleThread* aThread,
+                    nsCOMPtr<mozIStorageConnection>& aConnection)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabaseInfo, "Null pointer!");
   NS_ASSERTION(aThread, "Null pointer!");
   NS_ASSERTION(aConnection, "Null pointer!");
 
-  nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
+  nsRefPtr<IDBDatabase> db(new IDBDatabase());
 
   db->mDatabaseId = aDatabaseInfo->id;
   db->mName = aDatabaseInfo->name;
@@ -234,13 +234,13 @@ IDBDatabaseRequest::Create(DatabaseInfo* aDatabaseInfo,
   return db.forget();
 }
 
-IDBDatabaseRequest::IDBDatabaseRequest()
+IDBDatabase::IDBDatabase()
 : mDatabaseId(0)
 {
 
 }
 
-IDBDatabaseRequest::~IDBDatabaseRequest()
+IDBDatabase::~IDBDatabase()
 {
   if (mConnectionThread) {
     mConnectionThread->SetWeakIdleObserver(nsnull);
@@ -262,7 +262,7 @@ IDBDatabaseRequest::~IDBDatabaseRequest()
 }
 
 nsresult
-IDBDatabaseRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
+IDBDatabase::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -277,7 +277,7 @@ IDBDatabaseRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
 }
 
 void
-IDBDatabaseRequest::CloseConnection()
+IDBDatabase::CloseConnection()
 {
   if (mConnection) {
     if (mConnectionThread) {
@@ -291,21 +291,20 @@ IDBDatabaseRequest::CloseConnection()
   }
 }
 
-NS_IMPL_ADDREF(IDBDatabaseRequest)
-NS_IMPL_RELEASE(IDBDatabaseRequest)
+NS_IMPL_ADDREF(IDBDatabase)
+NS_IMPL_RELEASE(IDBDatabase)
 
-NS_INTERFACE_MAP_BEGIN(IDBDatabaseRequest)
+NS_INTERFACE_MAP_BEGIN(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBDatabaseRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabaseRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
 NS_INTERFACE_MAP_END
 
-DOMCI_DATA(IDBDatabaseRequest, IDBDatabaseRequest)
+DOMCI_DATA(IDBDatabase, IDBDatabase)
 
 NS_IMETHODIMP
-IDBDatabaseRequest::GetName(nsAString& aName)
+IDBDatabase::GetName(nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   aName.Assign(mName);
@@ -313,7 +312,7 @@ IDBDatabaseRequest::GetName(nsAString& aName)
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::GetDescription(nsAString& aDescription)
+IDBDatabase::GetDescription(nsAString& aDescription)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -322,7 +321,7 @@ IDBDatabaseRequest::GetDescription(nsAString& aDescription)
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::GetVersion(nsAString& aVersion)
+IDBDatabase::GetVersion(nsAString& aVersion)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   DatabaseInfo* info;
@@ -335,7 +334,7 @@ IDBDatabaseRequest::GetVersion(nsAString& aVersion)
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
+IDBDatabase::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -362,10 +361,10 @@ IDBDatabaseRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
-                                      const nsAString& aKeyPath,
-                                      PRBool aAutoIncrement,
-                                      nsIIDBRequest** _retval)
+IDBDatabase::CreateObjectStore(const nsAString& aName,
+                               const nsAString& aKeyPath,
+                               PRBool aAutoIncrement,
+                               nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -414,8 +413,8 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
-                                      nsIIDBRequest** _retval)
+IDBDatabase::RemoveObjectStore(const nsAString& aName,
+                               nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -457,8 +456,8 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
-                               nsIIDBRequest** _retval)
+IDBDatabase::SetVersion(const nsAString& aVersion,
+                        nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -487,11 +486,11 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
-                                PRUint16 aMode,
-                                PRUint32 aTimeout,
-                                PRUint8 aOptionalArgCount,
-                                nsIIDBTransaction** _retval)
+IDBDatabase::Transaction(nsIVariant* aStoreNames,
+                         PRUint16 aMode,
+                         PRUint32 aTimeout,
+                         PRUint8 aOptionalArgCount,
+                         nsIIDBTransaction** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -623,10 +622,10 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::ObjectStore(const nsAString& aName,
-                                PRUint16 aMode,
-                                PRUint8 aOptionalArgCount,
-                                nsIIDBObjectStoreRequest** _retval)
+IDBDatabase::ObjectStore(const nsAString& aName,
+                         PRUint16 aMode,
+                         PRUint8 aOptionalArgCount,
+                         nsIIDBObjectStoreRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -673,9 +672,9 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::Observe(nsISupports* aSubject,
-                            const char* aTopic,
-                            const PRUnichar* aData)
+IDBDatabase::Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const PRUnichar* aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ENSURE_FALSE(strcmp(aTopic, IDLE_THREAD_TOPIC), NS_ERROR_UNEXPECTED);

@@ -482,7 +482,7 @@ DOMCI_CLASS(CloseEvent)
 
 DOMCI_CLASS(IDBFactory)
 DOMCI_CLASS(IDBRequest)
-DOMCI_CLASS(IDBDatabaseRequest)
+DOMCI_CLASS(IDBDatabase)
 DOMCI_CLASS(IDBErrorEvent)
 DOMCI_CLASS(IDBSuccessEvent)
 DOMCI_CLASS(IDBTransactionEvent)
