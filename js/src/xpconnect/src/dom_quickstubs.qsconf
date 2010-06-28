@@ -469,20 +469,10 @@ members = [
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',
     'nsIIDBRequest.*',
-# Remove once XPIDL can handle jsvals
-#    'nsIIDBSuccessEvent.*',
+    'nsIIDBSuccessEvent.*',
     'nsIIDBTransaction.*',
     'nsIIDBTransactionEvent.*',
     'nsIIDBFactory.*',
-# Remove once XPIDL can handle jsvals
-    '-nsIIDBObjectStore.add',
-    '-nsIIDBObjectStore.modify',
-    '-nsIIDBObjectStore.addOrModify',
-    '-nsIIDBCursor.continue',
-    '-nsIIDBCursor.value',
-    '-nsIIDBCursor.update',
-    '-nsIIDBIndex.openCursor',
-    '-nsIIDBIndex.openObjectCursor'
     ]
 
 # Most interfaces can be found by searching the includePath; to find

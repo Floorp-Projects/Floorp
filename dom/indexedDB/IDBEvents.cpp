@@ -343,10 +343,24 @@ DOMCI_DATA(IDBSuccessEvent, IDBSuccessEvent)
 DOMCI_DATA(IDBTransactionEvent, IDBSuccessEvent)
 
 NS_IMETHODIMP
-IDBSuccessEvent::GetResult(nsIVariant** aResult)
+IDBSuccessEvent::GetResult(JSContext* aCx,
+                           jsval* aResult)
 {
-  nsCOMPtr<nsIVariant> result(mResult);
-  result.forget(aResult);
+  if (!mResult) {
+    *aResult = JSVAL_VOID;
+    return NS_OK;
+  }
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_STATE(xpc);
+
+  JSAutoRequest ar(aCx);
+  JSObject* scope = JS_GetGlobalObject(aCx);
+  NS_ENSURE_STATE(scope);
+
+  nsresult rv = xpc->VariantToJS(aCx, scope, mResult, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -376,26 +390,11 @@ GetSuccessEvent::Init(IDBRequest* aRequest,
 }
 
 NS_IMETHODIMP
-GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
+GetSuccessEvent::GetResult(JSContext* aCx,
+                           jsval* aResult)
 {
-  // This is the slow path, need to do this better once XPIDL can pass raw
-  // jsvals.
-  NS_WARNING("Using a slow path for GetResult! Fix this now!");
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  jsval* retval;
-  rv = cc->GetRetValPtr(&retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mValue.IsVoid()) {
-    *retval = JSVAL_VOID;
+    *aResult = JSVAL_VOID;
     return NS_OK;
   }
 
@@ -403,13 +402,9 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
     nsString jsonValue = mValue;
     mValue.Truncate();
 
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
+    JSAutoRequest ar(aCx);
 
-    JSAutoRequest ar(cx);
-
-    JSRuntime* rt = JS_GetRuntime(cx);
+    JSRuntime* rt = JS_GetRuntime(aCx);
 
     JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
                                   "GetSuccessEvent::mCachedValue");
@@ -418,7 +413,7 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
     mJSRuntime = rt;
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
-    rv = json->DecodeToJSVal(jsonValue, cx, &mCachedValue);
+    nsresult rv = json->DecodeToJSVal(jsonValue, aCx, &mCachedValue);
     if (NS_FAILED(rv)) {
       mCachedValue = JSVAL_VOID;
 
@@ -427,38 +422,18 @@ GetSuccessEvent::GetResult(nsIVariant** /* aResult */)
     }
   }
 
-  *retval = mCachedValue;
-  cc->SetReturnValueWasSet(PR_TRUE);
+  *aResult = mCachedValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
+GetAllSuccessEvent::GetResult(JSContext* aCx,
+                              jsval* aResult)
 {
-  // This is the slow path, need to do this better once XPIDL can pass raw
-  // jsvals.
-  NS_WARNING("Using a slow path for GetResult! Fix this now!");
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  jsval* retval;
-  rv = cc->GetRetValPtr(&retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (!mJSRuntime) {
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
+    JSAutoRequest ar(aCx);
 
-    JSAutoRequest ar(cx);
-
-    JSRuntime* rt = JS_GetRuntime(cx);
+    JSRuntime* rt = JS_GetRuntime(aCx);
 
     JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
                                   "GetSuccessEvent::mCachedValue");
@@ -474,7 +449,7 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* array = JS_NewArrayObject(cx, 0, NULL);
+    JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
     if (!array) {
       NS_ERROR("Failed to make array!");
       return NS_ERROR_FAILURE;
@@ -483,14 +458,14 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
     mCachedValue = OBJECT_TO_JSVAL(array);
 
     if (!values.IsEmpty()) {
-      if (!JS_SetArrayLength(cx, array, jsuint(values.Length()))) {
+      if (!JS_SetArrayLength(aCx, array, jsuint(values.Length()))) {
         mCachedValue = JSVAL_VOID;
         NS_ERROR("Failed to set array length!");
         return NS_ERROR_FAILURE;
       }
 
       nsCOMPtr<nsIJSON> json(new nsJSON());
-      js::AutoValueRooter value(cx);
+      js::AutoValueRooter value(aCx);
 
       jsint count = jsint(values.Length());
 
@@ -498,14 +473,14 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
         nsString jsonValue = values[index];
         values[index].Truncate();
 
-        rv = json->DecodeToJSVal(jsonValue, cx, value.addr());
+        nsresult rv = json->DecodeToJSVal(jsonValue, aCx, value.addr());
         if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to decode!");
           return rv;
         }
 
-        if (!JS_SetElement(cx, array, index, value.addr())) {
+        if (!JS_SetElement(aCx, array, index, value.addr())) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to set array element!");
           return NS_ERROR_FAILURE;
@@ -514,38 +489,18 @@ GetAllSuccessEvent::GetResult(nsIVariant** /* aResult */)
     }
   }
 
-  *retval = mCachedValue;
-  cc->SetReturnValueWasSet(PR_TRUE);
+  *aResult = mCachedValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
+GetAllKeySuccessEvent::GetResult(JSContext* aCx,
+                                 jsval* aResult)
 {
-  // This is the slow path, need to do this better once XPIDL can pass raw
-  // jsvals.
-  NS_WARNING("Using a slow path for GetResult! Fix this now!");
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  jsval* retval;
-  rv = cc->GetRetValPtr(&retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (!mJSRuntime) {
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
+    JSAutoRequest ar(aCx);
 
-    JSAutoRequest ar(cx);
-
-    JSRuntime* rt = JS_GetRuntime(cx);
+    JSRuntime* rt = JS_GetRuntime(aCx);
 
     JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
                                   "GetSuccessEvent::mCachedValue");
@@ -561,7 +516,7 @@ GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* array = JS_NewArrayObject(cx, 0, NULL);
+    JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
     if (!array) {
       NS_ERROR("Failed to make array!");
       return NS_ERROR_FAILURE;
@@ -570,13 +525,13 @@ GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
     mCachedValue = OBJECT_TO_JSVAL(array);
 
     if (!keys.IsEmpty()) {
-      if (!JS_SetArrayLength(cx, array, jsuint(keys.Length()))) {
+      if (!JS_SetArrayLength(aCx, array, jsuint(keys.Length()))) {
         mCachedValue = JSVAL_VOID;
         NS_ERROR("Failed to set array length!");
         return NS_ERROR_FAILURE;
       }
 
-      js::AutoValueRooter value(cx);
+      js::AutoValueRooter value(aCx);
 
       jsint count = jsint(keys.Length());
 
@@ -584,40 +539,22 @@ GetAllKeySuccessEvent::GetResult(nsIVariant** /* aResult */)
         const Key& key = keys[index];
         NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
-        if (key.IsInt()) {
-          if (!JS_NewNumberValue(cx, key.IntValue(), value.addr())) {
-            mCachedValue = JSVAL_VOID;
-            NS_ERROR("Failed to make number value!");
-            return NS_ERROR_FAILURE;
-          }
-        }
-        else if (key.IsString()) {
-          const nsString& keyString = key.StringValue();
-          JSString* str = JS_NewUCStringCopyN(cx,
-                            reinterpret_cast<const jschar*>(keyString.get()),
-                            keyString.Length());
-          if (!str) {
-            mCachedValue = JSVAL_VOID;
-            NS_ERROR("Failed to make new string value!");
-            return NS_ERROR_FAILURE;
-          }
-
-          value.set(STRING_TO_JSVAL(str));
-        }
-        else {
-          NS_NOTREACHED("Bad key!");
-        }
-
-        if (!JS_SetElement(cx, array, index, value.addr())) {
+        nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx, value.addr());
+        if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
-          NS_ERROR("Failed to set array element!");
+          NS_WARNING("Failed to get jsval for key!");
+          return rv;
+        }
+
+        if (!JS_SetElement(aCx, array, index, value.addr())) {
+          mCachedValue = JSVAL_VOID;
+          NS_WARNING("Failed to set array element!");
           return NS_ERROR_FAILURE;
         }
       }
     }
   }
 
-  *retval = mCachedValue;
-  cc->SetReturnValueWasSet(PR_TRUE);
+  *aResult = mCachedValue;
   return NS_OK;
 }
