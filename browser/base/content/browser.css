@@ -201,7 +201,8 @@ toolbarbutton.bookmark-item {
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
-#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button {
+#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button,
+#toolbar-menubar:not([autohide="true"]) > #personal-bookmarks > #bookmarks-menu-button {
   display: none;
 }
 %endif
