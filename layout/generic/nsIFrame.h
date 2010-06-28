@@ -90,7 +90,7 @@ class nsBoxLayoutState;
 class nsIBoxLayout;
 class nsILineIterator;
 #ifdef ACCESSIBILITY
-class nsIAccessible;
+class nsAccessible;
 #endif
 class nsDisplayListBuilder;
 class nsDisplayListSet;
@@ -2061,7 +2061,7 @@ public:
    * Use a mediatior of some kind.
    */
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible) = 0;
+  virtual already_AddRefed<nsAccessible> CreateAccessible() = 0;
 #endif
 
   /**
