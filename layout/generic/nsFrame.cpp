@@ -5514,10 +5514,10 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP
-nsFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsFrame::CreateAccessible()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
 }
 #endif
 
