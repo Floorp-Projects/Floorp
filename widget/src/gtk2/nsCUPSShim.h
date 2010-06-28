@@ -40,8 +40,6 @@
 #define nsCUPSShim_h___
 
 #include "prtypes.h"
-#include "psSharedCore.h"
-
 
 /* Various CUPS data types. We don't #include cups headers to avoid
  * requiring CUPS to be installed on the build host (and to avoid having
@@ -83,7 +81,7 @@ typedef int (PR_CALLBACK *CupsAddOptionType)(const char    *name,
 
 struct PRLibrary;
 
-class NS_PSSHARED nsCUPSShim {
+class nsCUPSShim {
     public:
         nsCUPSShim() : mCupsLib(nsnull) { }
         ~nsCUPSShim();

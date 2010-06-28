@@ -62,10 +62,8 @@
 #include "nsStringEnumerator.h"
 #include "nsIServiceManager.h" 
 
-#ifdef USE_POSTSCRIPT
 #include "nsPSPrinters.h"
 #include "nsPaperPS.h"  /* Paper size list */
-#endif /* USE_POSTSCRIPT */
 
 #include "nsPrintSettingsGTK.h"
 
@@ -569,12 +567,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
 /* static !! */
 nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
 {
-#if defined(USE_POSTSCRIPT)
   aMethod = pmPostScript;
   return NS_OK;
-#else
-  return NS_ERROR_UNEXPECTED;
-#endif
 }
 
 static void
@@ -778,7 +772,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   if (NS_FAILED(rv))
     return rv;
 
-#ifdef USE_POSTSCRIPT
   /* "Demangle" postscript printer name */
   if (type == pmPostScript) {
     /* Strip the printing method name from the printer,
@@ -787,7 +780,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     if (kNotFound != slash)
       printerName.Cut(0, slash + 1);
   }
-#endif /* USE_POSTSCRIPT */
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
   /* Defaults to FALSE */
@@ -813,7 +805,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
   aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
 
-#ifdef USE_POSTSCRIPT
   if (type == pmPostScript) {
     DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for PostScript printer\n"));
 
@@ -950,7 +941,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
     return NS_OK;    
   }
-#endif /* USE_POSTSCRIPT */
 
   return NS_ERROR_UNEXPECTED;
 }
@@ -976,7 +966,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (NS_FAILED(rv))
     return rv;
       
-#ifdef USE_POSTSCRIPT
   nsPSPrinterList psMgr;
   if (NS_SUCCEEDED(psMgr.Init()) && psMgr.Enabled()) {
     /* Get the list of PostScript-module printers */
@@ -990,8 +979,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
       mGlobalPrinterList->AppendElement(NS_ConvertUTF8toUTF16(printerList[i]));
     }
   }
-#endif /* USE_POSTSCRIPT */  
-      
+
   /* If there are no printers available after all checks, return an error */
   if (!mGlobalPrinterList->Length())
   {
