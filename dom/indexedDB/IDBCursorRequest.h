@@ -40,7 +40,7 @@
 #ifndef mozilla_dom_indexeddb_idbcursorrequest_h__
 #define mozilla_dom_indexeddb_idbcursorrequest_h__
 
-#include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
+#include "mozilla/dom/indexedDB/IDBObjectStore.h"
 #include "nsIIDBCursorRequest.h"
 
 #include "jsapi.h"
@@ -51,7 +51,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBIndexRequest;
 class IDBRequest;
-class IDBObjectStoreRequest;
+class IDBObjectStore;
 class IDBTransaction;
 
 struct KeyValuePair
@@ -82,7 +82,7 @@ public:
   already_AddRefed<IDBCursorRequest>
   Create(IDBRequest* aRequest,
          IDBTransaction* aTransaction,
-         IDBObjectStoreRequest* aObjectStore,
+         IDBObjectStore* aObjectStore,
          PRUint16 aDirection,
          nsTArray<KeyValuePair>& aData);
 
@@ -121,7 +121,7 @@ protected:
 
   nsRefPtr<IDBRequest> mRequest;
   nsRefPtr<IDBTransaction> mTransaction;
-  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBObjectStore> mObjectStore;
   nsRefPtr<IDBIndexRequest> mIndex;
 
   PRUint16 mDirection;

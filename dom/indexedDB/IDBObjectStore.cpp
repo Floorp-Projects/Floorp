@@ -44,7 +44,7 @@
 #include "nsJSON.h"
 #include "IDBEvents.h"
 
-#include "IDBObjectStoreRequest.h"
+#include "IDBObjectStore.h"
 #include "IDBIndexRequest.h"
 
 #include "nsIIDBDatabaseException.h"
@@ -160,7 +160,7 @@ class OpenCursorHelper : public AsyncConnectionHelper
 public:
   OpenCursorHelper(IDBTransaction* aTransaction,
                    IDBRequest* aRequest,
-                   IDBObjectStoreRequest* aObjectStore,
+                   IDBObjectStore* aObjectStore,
                    const Key& aLeftKey,
                    const Key& aRightKey,
                    PRUint16 aKeyRangeFlags,
@@ -176,7 +176,7 @@ public:
 
 private:
   // In-params.
-  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBObjectStore> mObjectStore;
   const Key mLeftKey;
   const Key mRightKey;
   const PRUint16 mKeyRangeFlags;
@@ -196,7 +196,7 @@ public:
                     const nsAString& aKeyPath,
                     bool aUnique,
                     bool aAutoIncrement,
-                    IDBObjectStoreRequest* aObjectStore)
+                    IDBObjectStore* aObjectStore)
   : AsyncConnectionHelper(aTransaction, aRequest), mName(aName),
     mKeyPath(aKeyPath), mUnique(aUnique), mAutoIncrement(aAutoIncrement),
     mObjectStore(aObjectStore), mId(LL_MININT)
@@ -213,7 +213,7 @@ private:
   nsString mKeyPath;
   const bool mUnique;
   const bool mAutoIncrement;
-  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBObjectStore> mObjectStore;
 
   // Out-params.
   PRInt64 mId;
@@ -225,7 +225,7 @@ public:
   RemoveIndexHelper(IDBTransaction* aDatabase,
                     IDBRequest* aRequest,
                     const nsAString& aName,
-                    IDBObjectStoreRequest* aObjectStore)
+                    IDBObjectStore* aObjectStore)
   : AsyncConnectionHelper(aDatabase, aRequest), mName(aName),
     mObjectStore(aObjectStore)
   { }
@@ -236,7 +236,7 @@ public:
 private:
   // In-params
   nsString mName;
-  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+  nsRefPtr<IDBObjectStore> mObjectStore;
 };
 
 class GetAllHelper : public AsyncConnectionHelper
@@ -321,15 +321,15 @@ GetKeyFromObject(JSContext* aCx,
 } // anonymous namespace
 
 // static
-already_AddRefed<IDBObjectStoreRequest>
-IDBObjectStoreRequest::Create(IDBDatabase* aDatabase,
-                              IDBTransaction* aTransaction,
-                              const ObjectStoreInfo* aStoreInfo,
-                              PRUint16 aMode)
+already_AddRefed<IDBObjectStore>
+IDBObjectStore::Create(IDBDatabase* aDatabase,
+                       IDBTransaction* aTransaction,
+                       const ObjectStoreInfo* aStoreInfo,
+                       PRUint16 aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<IDBObjectStoreRequest> objectStore = new IDBObjectStoreRequest();
+  nsRefPtr<IDBObjectStore> objectStore = new IDBObjectStore();
 
   objectStore->mDatabase = aDatabase;
   objectStore->mTransaction = aTransaction;
@@ -345,8 +345,8 @@ IDBObjectStoreRequest::Create(IDBDatabase* aDatabase,
 
 // static
 nsresult
-IDBObjectStoreRequest::GetKeyFromVariant(nsIVariant* aKeyVariant,
-                                         Key& aKey)
+IDBObjectStore::GetKeyFromVariant(nsIVariant* aKeyVariant,
+                                  Key& aKey)
 {
   if (!aKeyVariant) {
     aKey = Key::UNSETKEY;
@@ -387,8 +387,8 @@ IDBObjectStoreRequest::GetKeyFromVariant(nsIVariant* aKeyVariant,
 
 // static
 nsresult
-IDBObjectStoreRequest::GetJSONFromArg0(/* jsval arg0, */
-                                       nsAString& aJSON)
+IDBObjectStore::GetJSONFromArg0(/* jsval arg0, */
+                                nsAString& aJSON)
 {
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
@@ -432,10 +432,10 @@ IDBObjectStoreRequest::GetJSONFromArg0(/* jsval arg0, */
 
 // static
 nsresult
-IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
-                                               const nsAString& aKeyPath,
-                                               JSContext** aCx,
-                                               Key& aValue)
+IDBObjectStore::GetKeyPathValueFromJSON(const nsAString& aJSON,
+                                        const nsAString& aKeyPath,
+                                        JSContext** aCx,
+                                        Key& aValue)
 {
   NS_ASSERTION(!aJSON.IsEmpty(), "Empty JSON!");
   NS_ASSERTION(!aKeyPath.IsEmpty(), "Empty keyPath!");
@@ -492,10 +492,10 @@ IDBObjectStoreRequest::GetKeyPathValueFromJSON(const nsAString& aJSON,
 
 /* static */
 nsresult
-IDBObjectStoreRequest::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
-                                          JSContext* aCx,
-                                          jsval aObject,
-                                          nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
+                                   JSContext* aCx,
+                                   jsval aObject,
+                                   nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
   JSObject* cloneObj = nsnull;
 
@@ -559,13 +559,13 @@ IDBObjectStoreRequest::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
 
 /* static */
 nsresult
-IDBObjectStoreRequest::UpdateIndexes(IDBTransaction* aTransaction,
-                                     PRInt64 aObjectStoreId,
-                                     const Key& aObjectStoreKey,
-                                     bool aAutoIncrement,
-                                     bool aOverwrite,
-                                     PRInt64 aObjectDataId,
-                                     const nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
+                              PRInt64 aObjectStoreId,
+                              const Key& aObjectStoreKey,
+                              bool aAutoIncrement,
+                              bool aOverwrite,
+                              PRInt64 aObjectDataId,
+                              const nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
 #ifdef DEBUG
   if (aAutoIncrement) {
@@ -682,7 +682,7 @@ IDBObjectStoreRequest::UpdateIndexes(IDBTransaction* aTransaction,
 }
 
 ObjectStoreInfo*
-IDBObjectStoreRequest::GetObjectStoreInfo()
+IDBObjectStore::GetObjectStoreInfo()
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -694,7 +694,7 @@ IDBObjectStoreRequest::GetObjectStoreInfo()
   return info;
 }
 
-IDBObjectStoreRequest::IDBObjectStoreRequest()
+IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
   mAutoIncrement(PR_FALSE),
   mMode(nsIIDBTransaction::READ_WRITE)
@@ -702,17 +702,17 @@ IDBObjectStoreRequest::IDBObjectStoreRequest()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
-IDBObjectStoreRequest::~IDBObjectStoreRequest()
+IDBObjectStore::~IDBObjectStore()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
 nsresult
-IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
-                                  nsIVariant* aKeyVariant,
-                                  nsString& aJSON,
-                                  Key& aKey,
-                                  nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+IDBObjectStore::GetAddInfo(/* jsval aValue, */
+                           nsIVariant* aKeyVariant,
+                           nsString& aJSON,
+                           Key& aKey,
+                           nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
   // This is the slow path, need to do this better once XPIDL can have raw
   // jsvals as arguments.
@@ -795,20 +795,19 @@ IDBObjectStoreRequest::GetAddInfo(/* jsval aValue, */
   return NS_OK;
 }
 
-NS_IMPL_ADDREF(IDBObjectStoreRequest)
-NS_IMPL_RELEASE(IDBObjectStoreRequest)
+NS_IMPL_ADDREF(IDBObjectStore)
+NS_IMPL_RELEASE(IDBObjectStore)
 
-NS_INTERFACE_MAP_BEGIN(IDBObjectStoreRequest)
+NS_INTERFACE_MAP_BEGIN(IDBObjectStore)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBObjectStoreRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBObjectStore)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBObjectStoreRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBObjectStore)
 NS_INTERFACE_MAP_END
 
-DOMCI_DATA(IDBObjectStoreRequest, IDBObjectStoreRequest)
+DOMCI_DATA(IDBObjectStore, IDBObjectStore)
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::GetName(nsAString& aName)
+IDBObjectStore::GetName(nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -817,7 +816,7 @@ IDBObjectStoreRequest::GetName(nsAString& aName)
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::GetKeyPath(nsAString& aKeyPath)
+IDBObjectStore::GetKeyPath(nsAString& aKeyPath)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -826,7 +825,7 @@ IDBObjectStoreRequest::GetKeyPath(nsAString& aKeyPath)
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
+IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -846,8 +845,8 @@ IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Get(nsIVariant* aKey,
-                           nsIIDBRequest** _retval)
+IDBObjectStore::Get(nsIVariant* aKey,
+                    nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -876,10 +875,10 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::GetAll(nsIIDBKeyRange* aKeyRange,
-                              PRUint32 aLimit,
-                              PRUint8 aOptionalArgCount,
-                              nsIIDBRequest** _retval)
+IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
+                       PRUint32 aLimit,
+                       PRUint8 aOptionalArgCount,
+                       nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -928,9 +927,9 @@ IDBObjectStoreRequest::GetAll(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
-                           nsIVariant* aKey,
-                           nsIIDBRequest** _retval)
+IDBObjectStore::Add(nsIVariant* /* aValue */,
+                    nsIVariant* aKey,
+                    nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -969,9 +968,9 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
-                              nsIVariant* aKey,
-                              nsIIDBRequest** _retval)
+IDBObjectStore::Modify(nsIVariant* /* aValue */,
+                       nsIVariant* aKey,
+                       nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1010,9 +1009,9 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
-                                   nsIVariant* aKey,
-                                   nsIIDBRequest** _retval)
+IDBObjectStore::AddOrModify(nsIVariant* /* aValue */,
+                            nsIVariant* aKey,
+                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1051,8 +1050,8 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Remove(nsIVariant* aKey,
-                              nsIIDBRequest** _retval)
+IDBObjectStore::Remove(nsIVariant* aKey,
+                       nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1087,11 +1086,11 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
-                                  PRUint16 aDirection,
-                                  PRBool aPreload,
-                                  PRUint8 aOptionalArgCount,
-                                  nsIIDBRequest** _retval)
+IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
+                           PRUint16 aDirection,
+                           PRBool aPreload,
+                           PRUint8 aOptionalArgCount,
+                           nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1154,10 +1153,10 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
-                                   const nsAString& aKeyPath,
-                                   PRBool aUnique,
-                                   nsIIDBRequest** _retval)
+IDBObjectStore::CreateIndex(const nsAString& aName,
+                            const nsAString& aKeyPath,
+                            PRBool aUnique,
+                            nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1204,8 +1203,8 @@ IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Index(const nsAString& aName,
-                             nsIIDBIndexRequest** _retval)
+IDBObjectStore::Index(const nsAString& aName,
+                      nsIIDBIndexRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1241,8 +1240,8 @@ IDBObjectStoreRequest::Index(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::RemoveIndex(const nsAString& aName,
-                                   nsIIDBRequest** _retval)
+IDBObjectStore::RemoveIndex(const nsAString& aName,
+                            nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1435,9 +1434,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // Update our indexes if needed.
   if (!mIndexUpdateInfo.IsEmpty()) {
     PRInt64 objectDataId = mAutoIncrement ? mKey.IntValue() : LL_MININT;
-    rv = IDBObjectStoreRequest::UpdateIndexes(mTransaction, mOSID, mKey,
-                                              mAutoIncrement, mOverwrite,
-                                              objectDataId, mIndexUpdateInfo);
+    rv = IDBObjectStore::UpdateIndexes(mTransaction, mOSID, mKey,
+                                       mAutoIncrement, mOverwrite,
+                                       objectDataId, mIndexUpdateInfo);
     if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
       return nsIIDBDatabaseException::CONSTRAINT_ERR;
     }
@@ -1906,8 +1905,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 
     Key key;
     JSContext* cx = nsnull;
-    rv = IDBObjectStoreRequest::GetKeyPathValueFromJSON(json, mKeyPath, &cx,
-                                                        key);
+    rv = IDBObjectStore::GetKeyPathValueFromJSON(json, mKeyPath, &cx, key);
     // XXX this should be a constraint error maybe?
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 

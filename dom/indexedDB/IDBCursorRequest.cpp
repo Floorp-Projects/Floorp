@@ -58,7 +58,7 @@
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
 #include "IDBIndexRequest.h"
-#include "IDBObjectStoreRequest.h"
+#include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "Savepoint.h"
 #include "TransactionThreadPool.h"
@@ -143,7 +143,7 @@ END_INDEXEDDB_NAMESPACE
 already_AddRefed<IDBCursorRequest>
 IDBCursorRequest::Create(IDBRequest* aRequest,
                          IDBTransaction* aTransaction,
-                         IDBObjectStoreRequest* aObjectStore,
+                         IDBObjectStore* aObjectStore,
                          PRUint16 aDirection,
                          nsTArray<KeyValuePair>& aData)
 {
@@ -420,7 +420,7 @@ IDBCursorRequest::Continue(nsIVariant* aKey,
   }
 
   Key key;
-  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (key.IsNull()) {
@@ -571,9 +571,9 @@ IDBCursorRequest::Update(nsIVariant* aValue,
   }
 
   nsTArray<IndexUpdateInfo> indexUpdateInfo;
-  rv = IDBObjectStoreRequest::GetIndexUpdateInfo(mObjectStore->GetObjectStoreInfo(),
-                                                 cx, clone.value(),
-                                                 indexUpdateInfo);
+  rv = IDBObjectStore::GetIndexUpdateInfo(mObjectStore->GetObjectStoreInfo(),
+                                          cx, clone.value(),
+                                          indexUpdateInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
@@ -671,9 +671,9 @@ UpdateHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   // Update our indexes if needed.
   if (!mIndexUpdateInfo.IsEmpty()) {
     PRInt64 objectDataId = mAutoIncrement ? mKey.IntValue() : LL_MININT;
-    rv = IDBObjectStoreRequest::UpdateIndexes(mTransaction, mOSID, mKey,
-                                              mAutoIncrement, true,
-                                              objectDataId, mIndexUpdateInfo);
+    rv = IDBObjectStore::UpdateIndexes(mTransaction, mOSID, mKey,
+                                       mAutoIncrement, true,
+                                       objectDataId, mIndexUpdateInfo);
     if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
       return nsIIDBDatabaseException::CONSTRAINT_ERR;
     }

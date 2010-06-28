@@ -50,7 +50,7 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBCursorRequest.h"
 #include "IDBEvents.h"
-#include "IDBObjectStoreRequest.h"
+#include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "DatabaseInfo.h"
 
@@ -227,7 +227,7 @@ private:
 
 // static
 already_AddRefed<IDBIndexRequest>
-IDBIndexRequest::Create(IDBObjectStoreRequest* aObjectStore,
+IDBIndexRequest::Create(IDBObjectStore* aObjectStore,
                         const IndexInfo* aIndexInfo)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
@@ -315,7 +315,7 @@ IDBIndexRequest::Get(nsIVariant* aKey,
   NS_WARNING("Using a slow path for Get! Fix this now!");
 
   Key key;
-  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (key.IsUnset() || key.IsNull()) {
@@ -344,7 +344,7 @@ IDBIndexRequest::GetObject(nsIVariant* aKey,
   NS_WARNING("Using a slow path for Get! Fix this now!");
 
   Key key;
-  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (key.IsUnset() || key.IsNull()) {
@@ -373,7 +373,7 @@ IDBIndexRequest::GetAll(nsIVariant* aKey,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   Key key;
-  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (key.IsNull()) {
@@ -406,7 +406,7 @@ IDBIndexRequest::GetAllObjects(nsIVariant* aKey,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   Key key;
-  nsresult rv = IDBObjectStoreRequest::GetKeyFromVariant(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (key.IsNull()) {
@@ -455,13 +455,13 @@ IDBIndexRequest::OpenCursor(nsIIDBKeyRange* aKeyRange,
     rv = aKeyRange->GetLeft(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, leftKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, leftKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aKeyRange->GetRight(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, rightKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, rightKey);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -522,13 +522,13 @@ IDBIndexRequest::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
     rv = aKeyRange->GetLeft(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, leftKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, leftKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aKeyRange->GetRight(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = IDBObjectStoreRequest::GetKeyFromVariant(variant, rightKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, rightKey);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
