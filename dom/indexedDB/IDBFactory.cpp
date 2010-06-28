@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "IndexedDatabaseRequest.h"
+#include "IDBFactory.h"
 
 #include "nsIIDBDatabaseException.h"
 #include "nsILocalFile.h"
@@ -451,17 +451,17 @@ ValidateVariantForKey(nsIVariant* aVariant)
 } // anonyomous namespace
 
 // static
-already_AddRefed<nsIIndexedDatabaseRequest>
-IndexedDatabaseRequest::Create()
+already_AddRefed<nsIIDBFactory>
+IDBFactory::Create()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  nsCOMPtr<nsIIndexedDatabaseRequest> request(new IndexedDatabaseRequest());
+  nsCOMPtr<nsIIDBFactory> request(new IDBFactory());
   return request.forget();
 }
 
 // static
 already_AddRefed<mozIStorageConnection>
-IndexedDatabaseRequest::GetConnection(const nsAString& aDatabaseFilePath)
+IDBFactory::GetConnection(const nsAString& aDatabaseFilePath)
 {
   NS_ASSERTION(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")),
                "Bad file path!");
@@ -504,21 +504,21 @@ IndexedDatabaseRequest::GetConnection(const nsAString& aDatabaseFilePath)
   return connection.forget();
 }
 
-NS_IMPL_ADDREF(IndexedDatabaseRequest)
-NS_IMPL_RELEASE(IndexedDatabaseRequest)
+NS_IMPL_ADDREF(IDBFactory)
+NS_IMPL_RELEASE(IDBFactory)
 
-NS_INTERFACE_MAP_BEGIN(IndexedDatabaseRequest)
+NS_INTERFACE_MAP_BEGIN(IDBFactory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
-  NS_INTERFACE_MAP_ENTRY(nsIIndexedDatabaseRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IndexedDatabaseRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIIDBFactory)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBFactory)
 NS_INTERFACE_MAP_END
 
-DOMCI_DATA(IndexedDatabaseRequest, IndexedDatabaseRequest)
+DOMCI_DATA(IDBFactory, IDBFactory)
 
 NS_IMETHODIMP
-IndexedDatabaseRequest::Open(const nsAString& aName,
-                             const nsAString& aDescription,
-                             nsIIDBRequest** _retval)
+IDBFactory::Open(const nsAString& aName,
+                 const nsAString& aDescription,
+                 nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -555,8 +555,8 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IndexedDatabaseRequest::MakeSingleKeyRange(nsIVariant* aValue,
-                                           nsIIDBKeyRange** _retval)
+IDBFactory::MakeSingleKeyRange(nsIVariant* aValue,
+                               nsIIDBKeyRange** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -575,9 +575,9 @@ IndexedDatabaseRequest::MakeSingleKeyRange(nsIVariant* aValue,
 }
 
 NS_IMETHODIMP
-IndexedDatabaseRequest::MakeLeftBoundKeyRange(nsIVariant* aBound,
-                                              PRBool aOpen,
-                                              nsIIDBKeyRange** _retval)
+IDBFactory::MakeLeftBoundKeyRange(nsIVariant* aBound,
+                                  PRBool aOpen,
+                                  nsIIDBKeyRange** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -598,9 +598,9 @@ IndexedDatabaseRequest::MakeLeftBoundKeyRange(nsIVariant* aBound,
 }
 
 NS_IMETHODIMP
-IndexedDatabaseRequest::MakeRightBoundKeyRange(nsIVariant* aBound,
-                                               PRBool aOpen,
-                                               nsIIDBKeyRange** _retval)
+IDBFactory::MakeRightBoundKeyRange(nsIVariant* aBound,
+                                   PRBool aOpen,
+                                   nsIIDBKeyRange** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -621,11 +621,11 @@ IndexedDatabaseRequest::MakeRightBoundKeyRange(nsIVariant* aBound,
 }
 
 NS_IMETHODIMP
-IndexedDatabaseRequest::MakeBoundKeyRange(nsIVariant* aLeft,
-                                          nsIVariant* aRight,
-                                          PRBool aOpenLeft,
-                                          PRBool aOpenRight,
-                                          nsIIDBKeyRange **_retval)
+IDBFactory::MakeBoundKeyRange(nsIVariant* aLeft,
+                              nsIVariant* aRight,
+                              PRBool aOpenLeft,
+                              PRBool aOpenRight,
+                              nsIIDBKeyRange **_retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

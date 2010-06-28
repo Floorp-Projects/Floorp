@@ -37,25 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_indexeddatabaserequest_h__
-#define mozilla_dom_indexeddb_indexeddatabaserequest_h__
+#ifndef mozilla_dom_indexeddb_idbfactory_h__
+#define mozilla_dom_indexeddb_idbfactory_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 
 #include "mozIStorageConnection.h"
-#include "nsIIndexedDatabaseRequest.h"
+#include "nsIIDBFactory.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IndexedDatabaseRequest : public IDBRequest::Generator,
-                               public nsIIndexedDatabaseRequest
+class IDBFactory : public IDBRequest::Generator,
+                   public nsIIDBFactory
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIINDEXEDDATABASEREQUEST
+  NS_DECL_NSIIDBFACTORY
 
   static
-  already_AddRefed<nsIIndexedDatabaseRequest>
+  already_AddRefed<nsIIDBFactory>
   Create();
 
   static
@@ -64,9 +64,9 @@ public:
 
 protected:
   // Only called by Create().
-  IndexedDatabaseRequest() { }
+  IDBFactory() { }
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_indexeddatabaserequest_h__
+#endif // mozilla_dom_indexeddb_idbfactory_h__

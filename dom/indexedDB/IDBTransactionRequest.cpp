@@ -47,7 +47,7 @@
 #include "IDBEvents.h"
 #include "IDBCursorRequest.h"
 #include "IDBObjectStoreRequest.h"
-#include "IndexedDatabaseRequest.h"
+#include "IDBFactory.h"
 #include "DatabaseInfo.h"
 #include "TransactionThreadPool.h"
 
@@ -238,7 +238,7 @@ IDBTransactionRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
 
   if (!mConnection) {
     nsCOMPtr<mozIStorageConnection> connection =
-      IndexedDatabaseRequest::GetConnection(mDatabase->FilePath());
+      IDBFactory::GetConnection(mDatabase->FilePath());
     NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
 
     connection.swap(mConnection);
