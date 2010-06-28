@@ -208,14 +208,14 @@ nsAccEventQueue::WillRefresh(mozilla::TimeStamp aTime)
 
   for (PRUint32 index = 0; index < length; index ++) {
 
-    // No presshell means the document was shut down during event handling
-    // by AT.
-    if (!mDocument || !mDocument->HasWeakShell())
-      break;
-
     nsAccEvent *accEvent = events[index];
     if (accEvent->mEventRule != nsAccEvent::eDoNotEmit)
       mDocument->ProcessPendingEvent(accEvent);
+
+    // No presshell means the document was shut down during event handling
+    // by AT.
+    if (!mDocument || !mDocument->HasWeakShell())
+      return;
   }
 
   if (mEvents.Length() == 0) {
