@@ -110,6 +110,7 @@
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #ifdef MOZ_XUL
+#include "nsIXULWindow.h"
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
@@ -1943,7 +1944,24 @@ DocumentViewerImpl::Show(void)
     }
   }
 
-  if (mWindow) {
+  // XXX - If this DocumentViewer belongs to an nsIXULWindow that will at some
+  // point in the future call 'Show' on its window, we shouldn't call it.
+  // See bug 574690.
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryReferent(mContainer);
+  nsCOMPtr<nsIXULWindow> xulWin;
+  PRBool willShowWindow = PR_FALSE;
+  if (treeItem) {
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    treeItem->GetTreeOwner(getter_AddRefs(owner));
+    if (owner) {
+      xulWin = do_GetInterface(owner);
+      if (xulWin) {
+        xulWin->WillShowWindow(&willShowWindow);
+      }
+    }
+  }
+
+  if (mWindow && !willShowWindow) {
     mWindow->Show(PR_TRUE);
   }
 
