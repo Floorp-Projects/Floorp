@@ -637,6 +637,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
 
+  // XXX Wrong helper!
+  NS_DEFINE_CLASSINFO_DATA(InnerWindow, nsWindowSH,
+                           DEFAULT_SCRIPTABLE_FLAGS |
+                           WINDOW_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
                            (DOM_DEFAULT_SCRIPTABLE_FLAGS &
                             ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE))
@@ -928,6 +933,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // DOM Chrome Window class.
   NS_DEFINE_CLASSINFO_DATA(ChromeWindow, nsWindowSH,
+                           DEFAULT_SCRIPTABLE_FLAGS |
+                           WINDOW_SCRIPTABLE_FLAGS)
+
+  // XXX Wrong helper!
+  NS_DEFINE_CLASSINFO_DATA(InnerChromeWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
 
@@ -1309,6 +1319,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
+                           DEFAULT_SCRIPTABLE_FLAGS |
+                           WINDOW_SCRIPTABLE_FLAGS)
+
+  // XXX Wrong helper!
+  NS_DEFINE_CLASSINFO_DATA(InnerModalContentWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
 
@@ -2146,6 +2161,17 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(InnerWindow, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowUtils)
   DOM_CLASSINFO_MAP_END
@@ -2848,6 +2874,18 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(InnerChromeWindow, nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
@@ -3734,6 +3772,18 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(InnerModalContentWindow, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(DataContainerEvent, nsIDOMDataContainerEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataContainerEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
@@ -4543,7 +4593,15 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
       if (if_info) {
         nsXPIDLCString name;
         if_info->GetName(getter_Copies(name));
-        NS_ASSERTION(nsCRT::strcmp(CutPrefix(name), mData->mName) == 0,
+
+        // Allow for inner/non-inner mismatch.
+        static const char inner[] = "Inner";
+        const char *dataname = mData->mName;
+        if (!strncmp(dataname, "Inner", sizeof(inner) - 1)) {
+          dataname += sizeof(inner) - 1;
+        }
+
+        NS_ASSERTION(nsCRT::strcmp(CutPrefix(name), dataname) == 0,
                      "Class name and proto chain interface name mismatch!");
       }
     }
@@ -5136,6 +5194,10 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     if ((*name == 'W' && strcmp(name, "Window") == 0) ||
         (*name == 'C' && strcmp(name, "ChromeWindow") == 0) ||
         (*name == 'M' && strcmp(name, "ModalContentWindow") == 0) ||
+        (*name == 'I' &&
+         (strcmp(name, "InnerWindow") == 0 ||
+          strcmp(name, "InnerChromeWindow") == 0 ||
+          strcmp(name, "InnerModalContentWindow") == 0)) ||
         (*name == 'X' && strcmp(name, "XPCCrossOriginWrapper") == 0)) {
       nsCOMPtr<nsIDOMWindow> window = do_QueryWrapper(cx, JSVAL_TO_OBJECT(*vp));
 
