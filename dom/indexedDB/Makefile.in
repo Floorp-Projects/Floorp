@@ -54,7 +54,7 @@ EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
   DatabaseInfo.cpp \
-  IDBCursorRequest.cpp \
+  IDBCursor.cpp \
   IDBDatabase.cpp \
   IDBEvents.cpp \
   IDBIndex.cpp \
@@ -68,7 +68,7 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
-  IDBCursorRequest.h \
+  IDBCursor.h \
   IDBDatabase.h \
   IDBEvents.h \
   IDBIndex.h \
@@ -93,7 +93,6 @@ DEFINES += -D_IMPL_NS_LAYOUT
 # js/src/xpconnect/src/dom_quickstubs.qsconf.
 XPIDLSRCS = \
   nsIIDBCursor.idl \
-  nsIIDBCursorRequest.idl \
   nsIIDBDatabase.idl \
   nsIIDBDatabaseException.idl \
   nsIIDBEvent.idl \

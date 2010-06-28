@@ -45,7 +45,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
-#include "IDBCursorRequest.h"
+#include "IDBCursor.h"
 #include "IDBObjectStore.h"
 #include "IDBFactory.h"
 #include "DatabaseInfo.h"
