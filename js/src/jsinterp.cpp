@@ -415,7 +415,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
         return JS_FALSE;
     invokevp[3] = OBJECT_TO_JSVAL(argsobj);
     JSBool ok = (flags & JSINVOKE_CONSTRUCT)
-                ? js_InvokeConstructor(cx, args, JS_TRUE)
+                ? js_InvokeConstructor(cx, args)
                 : js_Invoke(cx, args, flags);
     *vp = *invokevp;
     return ok;
@@ -1085,7 +1085,7 @@ js_SameValue(jsval v1, jsval v2, JSContext *cx)
 }
 
 JS_REQUIRES_STACK JSBool
-js_InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn)
+js_InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
 {
     JSFunction *fun = NULL;
     JSObject *obj2 = NULL;
@@ -1132,6 +1132,9 @@ js_InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampRet
     if (!obj)
         return JS_FALSE;
 
+    /* Keep |obj| rooted in case vp[1] is overwritten with a primitive. */
+    AutoObjectRooter tvr(cx, obj);
+
     /* Now we have an object with a constructor method; call it. */
     vp[1] = OBJECT_TO_JSVAL(obj);
     if (!js_Invoke(cx, args, JSINVOKE_CONSTRUCT))
@@ -1139,7 +1142,7 @@ js_InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampRet
 
     /* Check the return value and if it's primitive, force it to be obj. */
     jsval rval = *vp;
-    if (clampReturn && JSVAL_IS_PRIMITIVE(rval)) {
+    if (JSVAL_IS_PRIMITIVE(rval)) {
         if (!fun) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

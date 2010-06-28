@@ -328,7 +328,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
 extern JS_REQUIRES_STACK JSBool
-js_InvokeConstructor(JSContext *cx, const js::InvokeArgsGuard &args, JSBool clampReturn);
+js_InvokeConstructor(JSContext *cx, const js::InvokeArgsGuard &args);
 
 extern JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx);

@@ -2088,7 +2088,7 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
         sp++;
     }
 
-    JSBool ok = js_InvokeConstructor(cx, args, JS_TRUE);
+    JSBool ok = js_InvokeConstructor(cx, args);
     *vp = *args.getvp();
     return ok;
 }
