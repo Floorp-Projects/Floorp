@@ -1216,7 +1216,8 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   nsISelectionController* selCon = txtCtrl->GetSelectionController();
   const PRBool needEditor = nsGkAtoms::maxlength == aAttribute ||
                             nsGkAtoms::readonly == aAttribute ||
-                            nsGkAtoms::disabled == aAttribute;
+                            nsGkAtoms::disabled == aAttribute ||
+                            nsGkAtoms::spellcheck == aAttribute;
   nsCOMPtr<nsIEditor> editor;
   if (needEditor) {
     GetEditor(getter_AddRefs(editor));
