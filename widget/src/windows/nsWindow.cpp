@@ -4399,6 +4399,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
   static PRBool getWheelInfo = PR_TRUE;
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Glass hit testing w/custom transparent margins
   LRESULT dwmHitResult;
   if (mCustomNonClient &&
@@ -4408,6 +4409,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     *aRetValue = dwmHitResult;
     return PR_TRUE;
   }
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 
   switch (msg) {
 #ifndef WINCE
