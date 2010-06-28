@@ -593,6 +593,8 @@ UIClass.prototype = {
       
       var self = this;
       
+      this.setBrowserKeyHandler();
+      
       // ___ Dev Menu
       this.addDevMenu();
 
@@ -674,6 +676,134 @@ UIClass.prototype = {
     }
   }, 
   
+  // ----------
+  setBrowserKeyHandler : function() {
+    var self = this;
+    var browser = Utils.getCurrentWindow().gBrowser;
+    var tabbox = browser.mTabBox;
+
+    browser.addEventListener("keypress", function(event) {
+      var handled = false;
+      // based on http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#145
+      switch (event.keyCode) {
+        case event.DOM_VK_TAB:
+          if (event.ctrlKey && !event.altKey && !event.metaKey)
+            if (tabbox.tabs && tabbox.handleCtrlTab) {
+              self.advanceSelectedTab(event.shiftKey);
+              event.stopPropagation();
+              event.preventDefault();
+              handled = true;
+            }
+          break;
+        case event.DOM_VK_PAGE_UP:
+          if (event.ctrlKey && !event.shiftKey && !event.altKey &&
+              !event.metaKey)
+            if (tabbox.tabs && tabbox.handleCtrlPageUpDown) {
+              self.advanceSelectedTab(true);
+              event.stopPropagation();
+              event.preventDefault();
+              handled = true;
+            }
+            break;
+        case event.DOM_VK_PAGE_DOWN:
+          if (event.ctrlKey && !event.shiftKey && !event.altKey &&
+              !event.metaKey)
+            if (tabbox.tabs && tabbox.handleCtrlPageUpDown) {
+              self.advanceSelectedTab(false);
+              event.stopPropagation();
+              event.preventDefault();
+              handled = true;
+            }
+            break;
+        case event.DOM_VK_LEFT:
+          if (event.metaKey && event.altKey && !event.shiftKey &&
+              !event.ctrlKey)
+            if (tabbox.tabs && tabbox._handleMetaAltArrows) {
+              var reverse =
+                window.getComputedStyle(tabbox, "").direction == "ltr" ? -1 : 1;
+              self.advanceSelectedTab(reverse);
+              event.stopPropagation();
+              event.preventDefault();
+              handled = true;
+            }
+            break;
+        case event.DOM_VK_RIGHT:
+          if (event.metaKey && event.altKey && !event.shiftKey &&
+              !event.ctrlKey)
+            if (tabbox.tabs && tabbox._handleMetaAltArrows) {
+              var forward =
+                window.getComputedStyle(tabbox, "").direction == "ltr" ? 1 : -1;
+              self.advanceSelectedTab(!forward);
+              event.stopPropagation();
+              event.preventDefault();
+              handled = true;
+            }
+            break;
+      }
+      
+      if (!handled) {
+        // ToDo: the "tabs" binding implements the nsIDOMXULSelectControlElement,
+        // we might need to rewrite the tabs without using the
+        // nsIDOMXULSelectControlElement.
+        // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
+        // The below handles the ctrl/meta + number key and prevent the default
+        // actions.
+        var isMac = (navigator.platform.search(/mac/i) > -1);
+        
+        if ((isMac && event.metaKey) || (!isMac && event.ctrlKey)) {
+          var charCode = event.charCode;
+          // 1 to 9
+          if (48 < charCode && charCode < 58) {
+            self.advanceSelectedTab(false, (charCode - 48));
+            event.stopPropagation();
+            event.preventDefault();
+          }
+        }
+      }
+    }, false);
+  },
+  
+  // ----------
+  advanceSelectedTab : function(reverse, index) {
+    var tabbox = Utils.getCurrentWindow().gBrowser.mTabBox;
+    var tabs = tabbox.tabs;
+    var visibleTabs = [];
+    var selectedIndex;
+    
+    for (var i = 0; i < tabs.childNodes.length ; i++) {
+      var tab = tabs.childNodes[i];
+      if (!tab.collapsed) {
+        visibleTabs.push(tab);
+        if (tabs.selectedItem == tab) {
+          selectedIndex = (visibleTabs.length - 1);
+        }
+      }
+    }
+    
+    // reverse should be false when index exists.
+    if (index && index > 0) {
+      if (visibleTabs.length > 1) {
+        if (visibleTabs.length >= index && index < 9) {
+          tabs.selectedItem = visibleTabs[index - 1];
+        } else {
+          tabs.selectedItem = visibleTabs[visibleTabs.length - 1];
+        }
+      } 
+    } else {
+      if (visibleTabs.length > 1) {
+        if (reverse) {
+          tabs.selectedItem =
+            (selectedIndex == 0) ? visibleTabs[visibleTabs.length - 1] :
+              visibleTabs[selectedIndex - 1]
+        } else {
+          tabs.selectedItem =
+            (selectedIndex == (visibleTabs.length - 1)) ? visibleTabs[0] :
+              visibleTabs[selectedIndex + 1];
+        }
+      } 
+    }
+  },
+
   // ----------
   resize: function(force) {
     if( typeof(force) == "undefined" ) force = false;
