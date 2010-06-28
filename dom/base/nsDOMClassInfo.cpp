@@ -479,7 +479,7 @@
 
 using namespace mozilla::dom;
 
-#include "mozilla/dom/indexedDB/IndexedDatabaseRequest.h"
+#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 #include "mozilla/dom/indexedDB/IDBEvents.h"
@@ -1418,7 +1418,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CloseEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(IndexedDatabaseRequest, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(IDBFactory, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3923,8 +3923,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(IndexedDatabaseRequest, nsIIndexedDatabaseRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIndexedDatabaseRequest)
+  DOM_CLASSINFO_MAP_BEGIN(IDBFactory, nsIIDBFactory)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBFactory)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBRequest, nsIIDBRequest)

@@ -480,7 +480,7 @@ DOMCI_CLASS(FormData)
 DOMCI_CLASS(WebSocket)
 DOMCI_CLASS(CloseEvent)
 
-DOMCI_CLASS(IndexedDatabaseRequest)
+DOMCI_CLASS(IDBFactory)
 DOMCI_CLASS(IDBRequest)
 DOMCI_CLASS(IDBDatabaseRequest)
 DOMCI_CLASS(IDBErrorEvent)
