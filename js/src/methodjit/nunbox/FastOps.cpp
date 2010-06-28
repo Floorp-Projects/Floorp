@@ -656,17 +656,26 @@ mjit::Compiler::jsop_not()
         uint32 mask = top->getTypeTag();
         switch (mask) {
           case JSVAL_TAG_INT32:
+          {
+            RegisterID data = frame.allocReg(Registers::SingleByteRegs);
+            if (frame.shouldAvoidDataRemat(top))
+                masm.loadData32(frame.addressOf(top), data);
+            else
+                masm.move(frame.tempRegForData(top), data);
+
+            masm.set32(Assembler::Equal, data, Imm32(0), data);
+
+            frame.pop();
+            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, data);
+            break;
+          }
+
           case JSVAL_TAG_BOOLEAN:
           {
-            /* :FIXME: X64 */
-            /* :FIXME: Faster to xor 1, zero-extend */
             RegisterID reg = frame.ownRegForData(top);
-            Jump t = masm.branchTest32(Assembler::NotEqual, reg, reg);
-            masm.move(Imm32(1), reg);
-            Jump d = masm.jump();
-            t.linkTo(masm.label(), &masm);
-            masm.move(Imm32(0), reg);
-            d.linkTo(masm.label(), &masm);
+
+            masm.xor32(Imm32(1), reg);
+
             frame.pop();
             frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
             break;
@@ -682,17 +691,13 @@ mjit::Compiler::jsop_not()
 
           default:
           {
-            /* :FIXME: overkill to spill everything - can use same xor trick too */
-            RegisterID reg = Registers::ReturnReg;
             prepareStubCall();
             stubCall(stubs::ValueToBoolean, Uses(0), Defs(0));
+
+            RegisterID reg = Registers::ReturnReg;
             frame.takeReg(reg);
-            Jump t = masm.branchTest32(Assembler::NotEqual, reg, reg);
-            masm.move(Imm32(1), reg);
-            Jump d = masm.jump();
-            t.linkTo(masm.label(), &masm);
-            masm.move(Imm32(0), reg);
-            d.linkTo(masm.label(), &masm);
+            masm.xor32(Imm32(1), reg);
+
             frame.pop();
             frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
             break;
@@ -702,31 +707,49 @@ mjit::Compiler::jsop_not()
         return;
     }
 
-    /* Fast-path here is boolean. */
     RegisterID data = frame.allocReg(Registers::SingleByteRegs);
     if (frame.shouldAvoidDataRemat(top))
         masm.loadData32(frame.addressOf(top), data);
     else
         masm.move(frame.tempRegForData(top), data);
     RegisterID type = frame.tempRegForType(top);
+    Label syncTarget = stubcc.syncExitAndJump();
 
-    Jump isBool = masm.testBoolean(Assembler::Equal, type);
-    Jump isInt32 = masm.testInt32(Assembler::Equal, type);
-    Jump isObject = masm.testPrimitive(Assembler::NotEqual, type);
-    stubcc.linkExit(masm.jump());
+
+    /* Inline path is for booleans. */
+    Jump jmpNotBool = masm.testBoolean(Assembler::NotEqual, type);
+    masm.xor32(Imm32(1), data);
+
+
+    /* OOL path is for int + object. */
+    Label lblMaybeInt32 = stubcc.masm.label();
+
+    Jump jmpNotInt32 = stubcc.masm.testInt32(Assembler::NotEqual, type);
+    stubcc.masm.set32(Assembler::Equal, data, Imm32(0), data);
+    Jump jmpInt32Exit = stubcc.masm.jump();
+
+    Label lblMaybeObject = stubcc.masm.label();
+    Jump jmpNotObject = stubcc.masm.testPrimitive(Assembler::Equal, type);
+    stubcc.masm.move(Imm32(0), data);
+    Jump jmpObjectExit = stubcc.masm.jump();
+
+
+    /* Rejoin location. */
+    Label lblRejoin = masm.label();
+
+    /* Patch up jumps. */
+    stubcc.linkExitDirect(jmpNotBool, lblMaybeInt32);
+
+    jmpNotInt32.linkTo(lblMaybeObject, &stubcc.masm);
+    stubcc.crossJump(jmpInt32Exit, lblRejoin);
+
+    jmpNotObject.linkTo(syncTarget, &stubcc.masm);
+    stubcc.crossJump(jmpObjectExit, lblRejoin);
+    
+
+    /* Leave. */
     stubcc.leave();
     stubcc.call(stubs::Not);
-
-    isObject.linkTo(masm.label(), &masm);
-    masm.move(Imm32(0), data);
-    Jump j1 = masm.jump();
-    isInt32.linkTo(masm.label(), &masm);
-    masm.set32(Assembler::Equal, data, Imm32(0), data);
-    Jump j2 = masm.jump();
-    isBool.linkTo(masm.label(), &masm);
-    masm.xor32(Imm32(1), data);
-    j1.linkTo(masm.label(), &masm);
-    j2.linkTo(masm.label(), &masm);
 
     frame.pop();
     frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, data);
