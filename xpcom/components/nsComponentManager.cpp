@@ -1598,7 +1598,7 @@ nsComponentManagerImpl::AutoRegister(nsIFile* aLocation)
     if (!lf)
         return NS_ERROR_INVALID_ARG;
 
-    XRE_AddComponentLocation(NS_COMPONENT_LOCATION, lf);
+    XRE_AddManifestLocation(NS_COMPONENT_LOCATION, lf);
     return NS_OK;
 }
 
@@ -1832,7 +1832,7 @@ XRE_AddStaticComponent(const mozilla::Module* aComponent)
 }
 
 EXPORT_XPCOM_API(nsresult)
-XRE_AddComponentLocation(NSLocationType aType, nsILocalFile* aLocation)
+XRE_AddManifestLocation(NSLocationType aType, nsILocalFile* aLocation)
 {
     nsComponentManagerImpl::InitializeModuleLocations();
     nsComponentManagerImpl::ComponentLocation* c = 
