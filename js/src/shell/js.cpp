@@ -232,17 +232,6 @@ public:
         }
         JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
-    ToString(JSContext *aCx, jsid id, JSBool aThrow = JS_FALSE)
-    : cx(aCx)
-    , mThrow(aThrow)
-    {
-        mStr = JS_ValueToString(cx, IdToJsval(id));
-        if (!aThrow && !mStr && JS_IsExceptionPending(cx)) {
-            if (!JS_ReportPendingException(cx))
-                JS_ClearPendingException(cx);
-        }
-        JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
-    }
     ~ToString() {
         JS_RemoveStringRoot(cx, &mStr);
     }
@@ -255,6 +244,13 @@ private:
     JSContext *cx;
     JSString *mStr;
     JSBool mThrow;
+};
+
+class IdToString : public ToString {
+public:
+    IdToString(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
+    : ToString(cx, IdToJsval(id), aThrow)
+    { }
 };
 
 static char *
@@ -4313,7 +4309,7 @@ its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4326,7 +4322,7 @@ its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4339,7 +4335,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4349,7 +4345,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 its_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
         ToString valueString(cx, *vp);
@@ -4419,7 +4415,7 @@ its_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     if (its_noisy) {
-        ToString idString(cx, id);
+        IdToString idString(cx, id);
         fprintf(gOutFile, "resolving its property %s, flags {%s,%s,%s}\n",
                idString.getBytes(),
                (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
@@ -4698,7 +4694,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 #if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
     int rv;
 
-    ToString idstr(cx, id, JS_TRUE);
+    IdToString idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
     ToString valstr(cx, *vp, JS_TRUE);
@@ -4777,7 +4773,7 @@ env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
-    ToString idstr(cx, id, JS_TRUE);
+    IdToString idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
 
