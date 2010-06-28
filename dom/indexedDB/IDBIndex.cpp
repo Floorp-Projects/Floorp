@@ -48,7 +48,7 @@
 #include "mozilla/storage.h"
 
 #include "AsyncConnectionHelper.h"
-#include "IDBCursorRequest.h"
+#include "IDBCursor.h"
 #include "IDBEvents.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
@@ -1139,9 +1139,8 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     return OK;
   }
 
-  nsRefPtr<IDBCursorRequest> cursor =
-    IDBCursorRequest::Create(mRequest, mTransaction, mIndex, mDirection,
-                             mData);
+  nsRefPtr<IDBCursor> cursor =
+    IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mData);
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
@@ -1341,9 +1340,8 @@ OpenObjectCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     return OK;
   }
 
-  nsRefPtr<IDBCursorRequest> cursor =
-    IDBCursorRequest::Create(mRequest, mTransaction, mIndex, mDirection,
-                             mData);
+  nsRefPtr<IDBCursor> cursor =
+    IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mData);
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
