@@ -1017,13 +1017,14 @@ fill_pd_as_nsresult(XPTParamDescriptor *pd)
 
 static gboolean
 typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
-                      gboolean getter, gboolean hidden)
+                      gboolean getter, gboolean hidden, gboolean wantsJSContext)
 {
     uint8 methflags = 0;
     uint8 pdflags = 0;
 
     methflags |= getter ? XPT_MD_GETTER : XPT_MD_SETTER;
     methflags |= hidden ? XPT_MD_HIDDEN : 0;
+    methflags |= wantsJSContext ? XPT_MD_CONTEXT : 0;
     if (!XPT_FillMethodDescriptor(ARENA(state), meth, methflags,
                                   ATTR_IDENT(state->tree).str, 1))
         return FALSE;
@@ -1061,6 +1062,9 @@ typelib_attr_dcl(TreeState *state)
     /* If it's marked [noscript], mark it as hidden in the typelib. */
     gboolean hidden = (IDL_tree_property_get(ident, "noscript") != NULL);
 
+    gboolean wantsJSContext =
+        (IDL_tree_property_get(ident, "implicit_jscontext") != NULL);
+
     if (!verify_attribute_declaration(state->tree))
         return FALSE;
 
@@ -1070,8 +1074,9 @@ typelib_attr_dcl(TreeState *state)
 
     meth = &id->method_descriptors[NEXT_METH(state)];
 
-    return typelib_attr_accessor(state, meth, TRUE, hidden) &&
-        (read_only || typelib_attr_accessor(state, meth + 1, FALSE, hidden));
+    return typelib_attr_accessor(state, meth, TRUE, hidden, wantsJSContext) &&
+        (read_only ||
+         typelib_attr_accessor(state, meth + 1, FALSE, hidden, wantsJSContext));
 }
 
 static gboolean
@@ -1087,6 +1092,8 @@ typelib_op_dcl(TreeState *state)
                             != NULL);
     gboolean op_noscript = (IDL_tree_property_get(op->ident, "noscript")
                             != NULL);
+    gboolean op_context = (IDL_tree_property_get(op->ident,
+                                                 "implicit_jscontext") != NULL);
     gboolean op_opt_argc = (IDL_tree_property_get(op->ident, "optional_argc")
                             != NULL);
 
@@ -1109,6 +1116,8 @@ typelib_op_dcl(TreeState *state)
         op_flags |= XPT_MD_NOTXPCOM;
     if (op_opt_argc)
         op_flags |= XPT_MD_OPT_ARGC;
+    if (op_context)
+        op_flags |= XPT_MD_CONTEXT;
 
     /* XXXshaver constructor? */
 
