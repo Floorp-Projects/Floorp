@@ -51,7 +51,7 @@
 #include "IDBCursorRequest.h"
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 #include "DatabaseInfo.h"
 
 USING_INDEXEDDB_NAMESPACE
@@ -61,7 +61,7 @@ namespace {
 class GetHelper : public AsyncConnectionHelper
 {
 public:
-  GetHelper(IDBTransactionRequest* aTransaction,
+  GetHelper(IDBTransaction* aTransaction,
             IDBRequest* aRequest,
             const Key& aKey,
             PRInt64 aId,
@@ -85,7 +85,7 @@ protected:
 class GetObjectHelper : public GetHelper
 {
 public:
-  GetObjectHelper(IDBTransactionRequest* aTransaction,
+  GetObjectHelper(IDBTransaction* aTransaction,
                   IDBRequest* aRequest,
                   const Key& aKey,
                   PRInt64 aId,
@@ -104,7 +104,7 @@ protected:
 class GetAllHelper : public GetHelper
 {
 public:
-  GetAllHelper(IDBTransactionRequest* aTransaction,
+  GetAllHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                const Key& aKey,
                PRInt64 aId,
@@ -126,7 +126,7 @@ protected:
 class GetAllObjectsHelper : public GetHelper
 {
 public:
-  GetAllObjectsHelper(IDBTransactionRequest* aTransaction,
+  GetAllObjectsHelper(IDBTransaction* aTransaction,
                       IDBRequest* aRequest,
                       const Key& aKey,
                       PRInt64 aId,
@@ -148,7 +148,7 @@ protected:
 class OpenCursorHelper : public AsyncConnectionHelper
 {
 public:
-  OpenCursorHelper(IDBTransactionRequest* aTransaction,
+  OpenCursorHelper(IDBTransaction* aTransaction,
                    IDBRequest* aRequest,
                    IDBIndexRequest* aIndex,
                    PRInt64 aId,
@@ -187,7 +187,7 @@ private:
 class OpenObjectCursorHelper : public AsyncConnectionHelper
 {
 public:
-  OpenObjectCursorHelper(IDBTransactionRequest* aTransaction,
+  OpenObjectCursorHelper(IDBTransaction* aTransaction,
                          IDBRequest* aRequest,
                          IDBIndexRequest* aIndex,
                          PRInt64 aId,

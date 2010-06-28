@@ -52,7 +52,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 class IDBIndexRequest;
 class IDBRequest;
 class IDBObjectStoreRequest;
-class IDBTransactionRequest;
+class IDBTransaction;
 
 struct KeyValuePair
 {
@@ -81,7 +81,7 @@ public:
   static
   already_AddRefed<IDBCursorRequest>
   Create(IDBRequest* aRequest,
-         IDBTransactionRequest* aTransaction,
+         IDBTransaction* aTransaction,
          IDBObjectStoreRequest* aObjectStore,
          PRUint16 aDirection,
          nsTArray<KeyValuePair>& aData);
@@ -89,7 +89,7 @@ public:
   static
   already_AddRefed<IDBCursorRequest>
   Create(IDBRequest* aRequest,
-         IDBTransactionRequest* aTransaction,
+         IDBTransaction* aTransaction,
          IDBIndexRequest* aIndex,
          PRUint16 aDirection,
          nsTArray<KeyKeyPair>& aData);
@@ -97,7 +97,7 @@ public:
   static
   already_AddRefed<IDBCursorRequest>
   Create(IDBRequest* aRequest,
-         IDBTransactionRequest* aTransaction,
+         IDBTransaction* aTransaction,
          IDBIndexRequest* aIndex,
          PRUint16 aDirection,
          nsTArray<KeyValuePair>& aData);
@@ -116,11 +116,11 @@ protected:
   static
   already_AddRefed<IDBCursorRequest>
   CreateCommon(IDBRequest* aRequest,
-               IDBTransactionRequest* aTransaction,
+               IDBTransaction* aTransaction,
                PRUint16 aDirection);
 
   nsRefPtr<IDBRequest> mRequest;
-  nsRefPtr<IDBTransactionRequest> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBObjectStoreRequest> mObjectStore;
   nsRefPtr<IDBIndexRequest> mIndex;
 

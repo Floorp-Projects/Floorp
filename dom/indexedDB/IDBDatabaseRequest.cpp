@@ -40,7 +40,6 @@
 #include "IDBDatabaseRequest.h"
 
 #include "nsIIDBDatabaseException.h"
-#include "nsIIDBTransactionRequest.h"
 
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
@@ -51,7 +50,7 @@
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 #include "IDBFactory.h"
 #include "LazyIdleThread.h"
 
@@ -72,7 +71,7 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
 class SetVersionHelper : public AsyncConnectionHelper
 {
 public:
-  SetVersionHelper(IDBTransactionRequest* aTransaction,
+  SetVersionHelper(IDBTransaction* aTransaction,
                    IDBRequest* aRequest,
                    const nsAString& aVersion)
   : AsyncConnectionHelper(aTransaction, aRequest), mVersion(aVersion)
@@ -89,7 +88,7 @@ private:
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
-  CreateObjectStoreHelper(IDBTransactionRequest* aTransaction,
+  CreateObjectStoreHelper(IDBTransaction* aTransaction,
                           IDBRequest* aRequest,
                           const nsAString& aName,
                           const nsAString& aKeyPath,
@@ -115,7 +114,7 @@ protected:
 class RemoveObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveObjectStoreHelper(IDBTransactionRequest* aTransaction,
+  RemoveObjectStoreHelper(IDBTransaction* aTransaction,
                           IDBRequest* aRequest,
                           const nsAString& aName)
   : AsyncConnectionHelper(aTransaction, aRequest), mName(aName)
@@ -400,10 +399,9 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, objectStores,
-                                  nsIIDBTransaction::READ_WRITE,
-                                  kDefaultDatabaseTimeoutSeconds);
+  nsRefPtr<IDBTransaction> transaction =
+    IDBTransaction::Create(this, objectStores, nsIIDBTransaction::READ_WRITE,
+                           kDefaultDatabaseTimeoutSeconds);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
     new CreateObjectStoreHelper(transaction, request, aName, keyPath,
@@ -441,10 +439,9 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, storesToOpen,
-                                  nsIIDBTransaction::READ_WRITE,
-                                  kDefaultDatabaseTimeoutSeconds);
+  nsRefPtr<IDBTransaction> transaction =
+    IDBTransaction::Create(this, storesToOpen, nsIIDBTransaction::READ_WRITE,
+                           kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
 
@@ -475,10 +472,9 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 
   // Lock the whole database
   nsTArray<nsString> storesToOpen;
-  nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, storesToOpen,
-                                  IDBTransactionRequest::FULL_LOCK,
-                                  kDefaultDatabaseTimeoutSeconds);
+  nsRefPtr<IDBTransaction> transaction =
+    IDBTransaction::Create(this, storesToOpen, IDBTransaction::FULL_LOCK,
+                           kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
   nsRefPtr<SetVersionHelper> helper =
@@ -495,7 +491,7 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
                                 PRUint16 aMode,
                                 PRUint32 aTimeout,
                                 PRUint8 aOptionalArgCount,
-                                nsIIDBTransactionRequest** _retval)
+                                nsIIDBTransaction** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -617,9 +613,9 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, storesToOpen, aMode,
-                                  kDefaultDatabaseTimeoutSeconds);
+  nsRefPtr<IDBTransaction> transaction =
+    IDBTransaction::Create(this, storesToOpen, aMode,
+                           kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
   transaction.forget(_retval);
@@ -665,9 +661,9 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, storesToOpen, aMode,
-                                  kDefaultDatabaseTimeoutSeconds);
+  nsRefPtr<IDBTransaction> transaction =
+    IDBTransaction::Create(this, storesToOpen, aMode,
+                           kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
   nsresult rv = transaction->ObjectStore(aName, _retval);
