@@ -72,6 +72,8 @@ random == rotate-1e.html rotate-1-ref.html
 == origin-name-2c.html origin-name-2-ref.html
 == origin-name-3a.html origin-name-3-ref.html
 == origin-name-3b.html origin-name-3-ref.html
+# Snapping still applies after 90 degree rotations.
+== snapping-1.html snapping-1-ref.html
 # SVG effects should work on transforms.
 == transform-svg-1a.xhtml transform-svg-1-ref.xhtml
 == transform-svg-2a.xhtml transform-svg-2-ref.xhtml
