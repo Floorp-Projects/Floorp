@@ -37,27 +37,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbindexrequest_h__
-#define mozilla_dom_indexeddb_idbindexrequest_h__
+#ifndef mozilla_dom_indexeddb_idbindex_h__
+#define mozilla_dom_indexeddb_idbindex_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 
-#include "nsIIDBIndexRequest.h"
+#include "nsIIDBIndex.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBObjectStore;
 struct IndexInfo;
 
-class IDBIndexRequest : public IDBRequest::Generator,
-                        public nsIIDBIndexRequest
+class IDBIndex : public IDBRequest::Generator,
+                 public nsIIDBIndex
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBINDEX
-  NS_DECL_NSIIDBINDEXREQUEST
 
-  static already_AddRefed<IDBIndexRequest>
+  static already_AddRefed<IDBIndex>
   Create(IDBObjectStore* aObjectStore,
          const IndexInfo* aIndexInfo);
 
@@ -67,8 +66,8 @@ public:
   }
 
 protected:
-  IDBIndexRequest();
-  ~IDBIndexRequest();
+  IDBIndex();
+  ~IDBIndex();
 
 private:
   nsRefPtr<IDBObjectStore> mObjectStore;
@@ -82,4 +81,4 @@ private:
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbindexrequest_h__
+#endif // mozilla_dom_indexeddb_idbindex_h__

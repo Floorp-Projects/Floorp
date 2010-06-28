@@ -57,7 +57,7 @@ CPPSRCS = \
   IDBCursorRequest.cpp \
   IDBDatabase.cpp \
   IDBEvents.cpp \
-  IDBIndexRequest.cpp \
+  IDBIndex.cpp \
   IDBKeyRange.cpp \
   IDBObjectStore.cpp \
   IDBRequest.cpp \
@@ -71,7 +71,7 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBCursorRequest.h \
   IDBDatabase.h \
   IDBEvents.h \
-  IDBIndexRequest.h \
+  IDBIndex.h \
   IDBKeyRange.h \
   IDBObjectStore.h \
   IDBRequest.h \
@@ -99,7 +99,6 @@ XPIDLSRCS = \
   nsIIDBEvent.idl \
   nsIIDBErrorEvent.idl \
   nsIIDBIndex.idl \
-  nsIIDBIndexRequest.idl \
   nsIIDBKeyRange.idl \
   nsIIDBObjectStore.idl \
   nsIIDBRequest.idl \

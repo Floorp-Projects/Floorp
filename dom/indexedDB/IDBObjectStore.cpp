@@ -45,7 +45,7 @@
 #include "IDBEvents.h"
 
 #include "IDBObjectStore.h"
-#include "IDBIndexRequest.h"
+#include "IDBIndex.h"
 
 #include "nsIIDBDatabaseException.h"
 #include "nsIJSContextStack.h"
@@ -1204,7 +1204,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 
 NS_IMETHODIMP
 IDBObjectStore::Index(const nsAString& aName,
-                      nsIIDBIndexRequest** _retval)
+                      nsIIDBIndex** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1232,8 +1232,7 @@ IDBObjectStore::Index(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<IDBIndexRequest> request =
-    IDBIndexRequest::Create(this, indexInfo);
+  nsRefPtr<IDBIndex> request = IDBIndex::Create(this, indexInfo);
 
   request.forget(_retval);
   return NS_OK;
@@ -1970,7 +1969,7 @@ CreateIndexHelper::GetSuccessResult(nsIWritableVariant* aResult)
   newInfo->unique = mUnique;
   newInfo->autoIncrement = mAutoIncrement;
 
-  nsCOMPtr<nsIIDBIndexRequest> result;
+  nsCOMPtr<nsIIDBIndex> result;
   nsresult rv = mObjectStore->Index(mName, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 

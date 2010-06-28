@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIIDBIndexRequest;
+interface nsIIDBIndex;
 interface nsIIDBKeyRange;
 interface nsIIDBRequest;
 interface nsIVariant;
@@ -50,7 +50,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(1168fc42-ac08-4720-822c-da820f00e15e)]
+[scriptable, uuid(9cb63602-a52f-4d21-b802-e7165143f83d)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -96,14 +96,14 @@ interface nsIIDBObjectStore : nsISupports
              [optional /* NEXT */] in unsigned short direction,
              [optional /* false */] in boolean preload);
 
-  // Success fires IDBTransactionEvent, result == IDBIndexRequest
+  // Success fires IDBTransactionEvent, result == IDBIndex
   nsIIDBRequest
   createIndex(in AString name,
               in AString keyPath,
               [optional /* false */] in boolean unique);
 
   // Returns object immediately
-  nsIIDBIndexRequest
+  nsIIDBIndex
   index(in AString name);
 
   // Success fires IDBTransactionEvent, result == null
