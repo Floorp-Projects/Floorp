@@ -3866,6 +3866,10 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   jsid id;
   if (!JS_NextProperty(cx, iter, &id))
     return NULL;
+  if (JSID_IS_VOID(id)) {
+    JS_ReportError(cx, "struct field descriptors require a valid name and type");
+    return NULL;
+  }
 
   js::AutoValueRooter nameVal(cx);
   JS_IdToValue(cx, id, Jsvalify(nameVal.addr()));
