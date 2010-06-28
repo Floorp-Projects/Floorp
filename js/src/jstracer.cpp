@@ -8247,8 +8247,10 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
         const CallInfo* ci = f->callInfo();
         if (ci == &js_UnboxDouble_ci) {
             LIns *boxed = lir->insAlloc(sizeof(Value));
-            lir->insStore(fcallarg(f, 1), boxed, 0, ACC_OTHER);
-            lir->insStore(fcallarg(f, 0), boxed, sizeof(uint32), ACC_OTHER);
+            LIns *tag_ins = fcallarg(f, 0);
+            LIns *payload_ins = fcallarg(f, 1);
+            lir->insStore(tag_ins, boxed, sTagOffset, ACC_OTHER);
+            lir->insStore(payload_ins, boxed, sPayloadOffset, ACC_OTHER);
             LIns* args[] = { boxed };
             return lir->insCall(&js_UnboxInt32_ci, args);
         }
@@ -9383,9 +9385,7 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
     LIns *mask_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + sTagOffset, 
                                   accSet);
     if (v.isNumber() && force_double) {
-        guard(false,
-              lir->insEqI_0(lir->ins2(LIR_leui, mask_ins, INS_CONSTU(JSVAL_TAG_INT32))),
-              exit);
+        guard(true, lir->ins2(LIR_leui, mask_ins, INS_CONSTU(JSVAL_TAG_INT32)), exit);
         LIns *val_ins = lir->insLoad(LIR_ldi, vaddr_ins, offset + sPayloadOffset,
                                      accSet);
         LIns* args[] = { val_ins, mask_ins };
@@ -9484,7 +9484,13 @@ TraceRecorder::box_value(const Value &v, nanojit::LIns* v_ins,
                          LIns *dstaddr_ins, ptrdiff_t offset, AccSet accSet)
 {
     if (v.isNumber()) {
-        if (isPromoteInt(v_ins)) {
+        JS_ASSERT(v_ins->isD());
+        if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
+            LIns *tag_ins = fcallarg(v_ins, 0);
+            LIns *payload_ins = fcallarg(v_ins, 1);
+            lir->insStore(tag_ins, dstaddr_ins, offset + sTagOffset, accSet);
+            lir->insStore(payload_ins, dstaddr_ins, offset + sPayloadOffset, accSet);
+        } else if (isPromoteInt(v_ins)) {
             LIns *int_ins = demote(lir, v_ins);
             lir->insStore(INS_CONSTU(JSVAL_TAG_INT32), dstaddr_ins, 
                           offset + sTagOffset, accSet);
@@ -12146,17 +12152,16 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, Value* idvalp, Value* rval
 {
     CHECK_STATUS(primitiveToStringInPlace(idvalp));
 
-    LIns* rval_ins = box_value(*rvalp, get(rvalp));
+    LIns* vp_ins = box_value(*rvalp, get(rvalp));
     enterDeepBailCall();
 
     LIns* ok_ins;
     LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
     if (init) {
-        LIns* args[] = {rval_ins, idvalp_ins, obj_ins, cx_ins};
+        LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
         ok_ins = lir->insCall(&InitPropertyByName_ci, args);
     } else {
         // See note in getPropertyByName about vp.
-        LIns* vp_ins = addName(lir->insAlloc(sizeof(Value)), "vp");
         LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
         ok_ins = lir->insCall(&SetPropertyByName_ci, args);
     }
@@ -12383,8 +12388,10 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         if (v.isNumber()) {
             if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
                 LIns *boxed = lir->insAlloc(sizeof(Value));
-                lir->insStore(fcallarg(v_ins, 1), boxed, 0, ACC_OTHER);
-                lir->insStore(fcallarg(v_ins, 0), boxed, sizeof(uint32), ACC_OTHER);
+                LIns *tag_ins = fcallarg(v_ins, 0);
+                LIns *payload_ins = fcallarg(v_ins, 1);
+                lir->insStore(tag_ins, boxed, sTagOffset, ACC_OTHER);
+                lir->insStore(payload_ins, boxed, sPayloadOffset, ACC_OTHER);
                 args[0] = boxed;
                 res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
             } else if (isPromoteInt(v_ins)) {
