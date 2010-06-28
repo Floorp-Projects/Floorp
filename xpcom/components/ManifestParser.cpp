@@ -51,6 +51,7 @@
 
 #include "mozilla/Services.h"
 
+#include "nsConsoleMessage.h"
 #include "nsTextFormatter.h"
 #include "nsUnicharUtils.h"
 #include "nsVersionComparator.h"
@@ -117,18 +118,51 @@ static const ManifestDirective kParsingTable[] = {
 static const char kWhitespace[] = "\t ";
 static const char kNewlines[]   = "\r\n";
 
-static void LogMessageWithContext(nsILocalFile* aFile, PRUint32 aLineNumber, const char* aMsg, ...)
+namespace {
+struct AutoPR_smprintf_free
+{
+  AutoPR_smprintf_free(char* buf)
+    : mBuf(buf)
+  {
+  }
+
+  ~AutoPR_smprintf_free()
+  {
+    if (mBuf)
+      PR_smprintf_free(mBuf);
+  }
+
+  operator char*() const {
+    return mBuf;
+  }
+
+  char* mBuf;
+};
+
+} // anonymous namespace
+
+void LogMessage(const char* aMsg, ...)
 {
   nsCOMPtr<nsIConsoleService> console =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  nsCOMPtr<nsIScriptError> error =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-  if (!console || !error)
+  if (!console)
     return;
 
   va_list args;
   va_start(args, aMsg);
-  char* formatted = PR_vsmprintf(aMsg, args);
+  AutoPR_smprintf_free formatted(PR_vsmprintf(aMsg, args));
+  va_end(args);
+
+  nsCOMPtr<nsIConsoleMessage> error =
+    new nsConsoleMessage(NS_ConvertUTF8toUTF16(formatted).get());
+  console->LogMessage(error);
+}
+
+void LogMessageWithContext(nsILocalFile* aFile, PRUint32 aLineNumber, const char* aMsg, ...)
+{
+  va_list args;
+  va_start(args, aMsg);
+  AutoPR_smprintf_free formatted(PR_vsmprintf(aMsg, args));
   va_end(args);
   if (!formatted)
     return;
@@ -136,11 +170,26 @@ static void LogMessageWithContext(nsILocalFile* aFile, PRUint32 aLineNumber, con
   nsString file;
   aFile->GetPath(file);
 
+  nsCOMPtr<nsIScriptError> error =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+  if (!error) {
+    // This can happen early in component registration. Fall back to a
+    // generic console message.
+    LogMessage("Warning: in file '%s', line %i: %s",
+               NS_ConvertUTF16toUTF8(file).get(),
+               aLineNumber, (char*) formatted);
+    return;
+  }
+
+  nsCOMPtr<nsIConsoleService> console =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (!console)
+    return;
+
   nsresult rv = error->Init(NS_ConvertUTF8toUTF16(formatted).get(),
 			    file.get(), NULL,
 			    aLineNumber, 0, nsIScriptError::warningFlag,
 			    "chrome registration");
-  PR_smprintf_free(formatted);
   if (NS_FAILED(rv))
     return;
 
@@ -427,7 +476,22 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
   PRUint32 line = 0;
 
   // outer loop tokenizes by newline
-  while (nsnull != (token = nsCRT::strtok(newline, kNewlines, &newline))) {
+  while (*newline) {
+    while (*newline && '\n' == *newline) {
+      ++newline;
+      ++line;
+    }
+    if (!*newline)
+      break;
+
+    token = newline;
+    while (*newline && '\n' != *newline)
+      ++newline;
+
+    if (*newline) {
+      *newline = '\0';
+      ++newline;
+    }
     ++line;
 
     if (*token == '#') // ignore lines that begin with # as comments
