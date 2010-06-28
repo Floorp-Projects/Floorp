@@ -46,7 +46,7 @@
 #include "nsScriptLoader.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
 #include "nsINodeInfo.h"

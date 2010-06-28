@@ -72,7 +72,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsILinkHandler.h"
 
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDocumentObserver.h"

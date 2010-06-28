@@ -99,7 +99,7 @@
 #include "nsIDOMHTMLHeadElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
 #include "nsIEventListenerManager.h"

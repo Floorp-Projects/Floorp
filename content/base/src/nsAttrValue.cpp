@@ -45,7 +45,7 @@
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
 #include "nsICSSStyleRule.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsTPtrArray.h"

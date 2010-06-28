@@ -51,7 +51,7 @@
 #include "nsNetUtil.h"
 
 #include "nsContentCID.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
 
 static already_AddRefed<nsIURI>

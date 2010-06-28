@@ -58,7 +58,7 @@
 #include "nsGkAtoms.h"
 #include "nsICSSStyleRule.h"
 #include "nsRuleWalker.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "nsGenericHTMLElement.h"
