@@ -74,8 +74,7 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
     return rv;
   }
 
-  nsCOMPtr <nsIRegion> rgn;
-  NS_NEWXPCOM(rgn, nsThebesRegion);
+  nsCOMPtr <nsIRegion> rgn = new nsThebesRegion();
   nsCOMPtr<nsIScriptableRegion> scriptableRgn;
   if (rgn != nsnull)
   {
