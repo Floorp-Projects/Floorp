@@ -1037,7 +1037,10 @@ nsGlobalWindow::ReallyClearScope(nsRunnable *aRunnable)
   }
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
-  GetContextInternal()->ClearScope(mJSObject, PR_TRUE);
+  nsIScriptContext *scx = GetContextInternal();
+  if (scx) {
+    scx->ClearScope(mJSObject, PR_TRUE);
+  }
 }
 
 void
