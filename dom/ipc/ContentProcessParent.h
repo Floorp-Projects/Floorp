@@ -143,6 +143,8 @@ private:
                               const IPC::URI& referrer,
                               const PRUint32& flags);
 
+    virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;

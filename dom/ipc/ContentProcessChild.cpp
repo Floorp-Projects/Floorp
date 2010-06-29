@@ -45,8 +45,11 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
 
+#include "History.h"
 #include "nsXULAppAPI.h"
 
+#include "nsDocShellCID.h"
+#include "nsNetUtil.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 
@@ -55,6 +58,7 @@
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
+using namespace mozilla::places;
 
 namespace mozilla {
 namespace dom {
@@ -216,6 +220,14 @@ ContentProcessChild::RecvNotifyRemotePrefObserver(const nsCString& aDomain)
         }
         ++i;
     }
+    return true;
+}
+
+bool
+ContentProcessChild::RecvNotifyVisited(const IPC::URI& aURI)
+{
+    nsCOMPtr<nsIURI> newURI = aURI;
+    History::GetSingleton()->NotifyVisited(newURI);
     return true;
 }
 
