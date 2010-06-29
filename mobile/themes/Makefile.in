@@ -1,5 +1,4 @@
 # ***** BEGIN LICENSE BLOCK *****
-# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -46,15 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 #
 # Theme Selection
 #
-# Maemo                 hildon
-# Windows Mobile        wince
-#
 
-ifdef WINCE
-DIRS = wince
-else
-# default to hildon for desktop builds too
-DIRS = hildon
-endif
+# Add the core theme files
+DIRS = core
 
 include $(topsrcdir)/config/rules.mk
