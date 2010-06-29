@@ -1,0 +1,50 @@
+body {
+    color: black;
+    font-family: "Nokia Sans", Tahoma, Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    font-size: 24px;
+    text-align: center;
+}
+h2 {
+    background-color: lightgray;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    padding: 8px;
+}
+
+.tab {
+    border-bottom: solid 1px rgb(207, 207, 207);
+    min-height: 70px;
+    padding-right: 32px;
+    position: relative;
+}
+.tab[selected] {
+    background-color: #8db8d8;
+}
+.icon {
+    height: 32px;
+    left: 16px;
+    position: absolute;
+    top: 4px;
+    width: 32px;
+}
+.info {
+    margin-left: 32px;
+    overflow: hidden;
+    padding-left: 32px;
+    white-space: nowrap;
+}
+.title {
+    font-size: 24px;
+    margin-top: 4px;
+}
+.url {
+    color: blue;
+    font-size: 18px;
+    margin-top: 4px;
+}

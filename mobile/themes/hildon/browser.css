@@ -799,6 +799,18 @@ box[type="documenttab"]:only-child .documenttab-close {
   list-style-image: url("images/newtab-active-64.png");
 }
 
+#remotetabs-button {
+  list-style-image: url("images/remotetabs-default-64.png");
+}
+
+#remotetabs-button:not([disabled]):hover:active {
+  list-style-image: url("images/remotetabs-active-64.png");
+}
+
+#remotetabs-button[disabled] {
+  list-style-image: url("images/remotetabs-disabled-64.png");
+}
+
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
   padding: 8px; /* core spacing */
