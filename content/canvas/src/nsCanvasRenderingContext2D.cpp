@@ -422,7 +422,7 @@ public:
     NS_IMETHOD Redraw(const gfxRect &r);
     // Swap this back buffer with the front, and copy its contents to the new back.
     // x, y, w, and h specify the area of |back| that is dirty.
-    NS_IMETHOD Swap(Shmem& back, PRInt32 x, PRInt32 y, 
+    NS_IMETHOD Swap(mozilla::ipc::Shmem& back, PRInt32 x, PRInt32 y,
                     PRInt32 w, PRInt32 h);
     NS_IMETHOD Swap(PRUint32 nativeID, PRInt32 x, PRInt32 y,
                     PRInt32 w, PRInt32 h);
@@ -494,10 +494,12 @@ protected:
      */
     gfxASurface::gfxImageFormat GetImageFormat() const;
 
+#ifdef MOZ_IPC
     /**
      * Sync data from mBackSurface to mSurface.
      */
     nsresult Swap(const gfxRect& aRect);
+#endif
 
     // Member vars
     PRInt32 mWidth, mHeight;
@@ -835,12 +837,14 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 {
     Destroy();
 
+#ifdef MOZ_IPC
     ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
     if (allocator && gfxSharedImageSurface::IsSharedImage(mBackSurface)) {
         Shmem mem = static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem();
         allocator->DeallocShmem(mem);
     }
     mBackSurface = nsnull;
+#endif
 
     sNumLivingContexts--;
     if (!sNumLivingContexts) {
@@ -854,11 +858,13 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 void
 nsCanvasRenderingContext2D::Destroy()
 {
+#ifdef MOZ_IPC
     ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
     if (allocator && gfxSharedImageSurface::IsSharedImage(mSurface)) {
         Shmem &mem = static_cast<gfxSharedImageSurface*>(mSurface.get())->GetShmem();
         allocator->DeallocShmem(mem);
     }
+#endif
 
     // only do this for non-docshell created contexts,
     // since those are the ones that we created a surface for
@@ -1216,6 +1222,7 @@ nsCanvasRenderingContext2D::SetIsIPC(PRBool isIPC)
 #endif
 }
 
+#ifdef MOZ_IPC
 nsresult
 nsCanvasRenderingContext2D::Swap(const gfxRect& aRect)
 {
@@ -1247,9 +1254,10 @@ nsCanvasRenderingContext2D::Swap(const gfxRect& aRect)
     }
     return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Swap(Shmem& aBack,
+nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem& aBack,
                                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
 #ifdef MOZ_IPC
@@ -1273,6 +1281,8 @@ nsCanvasRenderingContext2D::Swap(Shmem& aBack,
     // Take mBackSurface shared memory ownership
     mem = aBack;
     return Swap(gfxRect(x, y, w, h));
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
@@ -1280,10 +1290,14 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Swap(PRUint32 nativeID,
                                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
+#ifdef MOZ_IPC
     if (mIsBackSurfaceReadable)
         NS_ERROR("Back surface readable before swap, this must not happen");
     mIsBackSurfaceReadable = PR_TRUE;
     return Swap(gfxRect(x, y, w, h));
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP
