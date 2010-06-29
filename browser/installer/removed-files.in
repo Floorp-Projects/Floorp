@@ -47,6 +47,7 @@ components/history.xpt
 components/microsummaries.xpt
 components/myspell/en-US.aff
 components/myspell/en-US.dic
+components/nsAddonRepository.js
 components/nsBackgroundUpdateService.js
 components/nsBookmarkTransactionManager.js
 components/nsCloseAllWindows.js
