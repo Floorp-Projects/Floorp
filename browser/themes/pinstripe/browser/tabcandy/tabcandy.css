@@ -33,7 +33,7 @@ body {
 	background-color: rgba(245,245,245,1);
 	overflow: visible !important;
 	-moz-border-radius: 0.4em;
-	-moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+	-moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px;
   cursor: pointer;	
 }
 
