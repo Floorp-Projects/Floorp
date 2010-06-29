@@ -1540,8 +1540,6 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
                                  nsIProxyInfo* givenProxyInfo,
                                  nsIChannel **result)
 {
-    nsHttpChannel *httpChannel = nsnull;
-
     LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n",
         givenProxyInfo));
     
@@ -1556,7 +1554,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     if (NS_FAILED(rv))
         return rv;
 
-    NS_NEWXPCOM(httpChannel, nsHttpChannel);
+    nsHttpChannel *httpChannel = new nsHttpChannel();
     if (!httpChannel)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(httpChannel);

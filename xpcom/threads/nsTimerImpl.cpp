@@ -91,7 +91,7 @@ NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
 
     /* enable this to find non-threadsafe destructors: */
     /* NS_ASSERT_OWNINGTHREAD(nsTimerImpl); */
-    NS_DELETEXPCOM(this);
+    delete this;
     return 0;
   }
 
