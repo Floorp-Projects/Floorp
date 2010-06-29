@@ -107,7 +107,10 @@ IdToValue(jsid id)
         return StringTag(JSID_TO_STRING(id));
     if (JS_LIKELY(JSID_IS_INT(id)))
         return Int32Tag(JSID_TO_INT(id));
-    return ObjectTag(*JSID_TO_OBJECT(id));
+    if (JS_LIKELY(JSID_IS_OBJECT(id)))
+        return ObjectTag(*JSID_TO_OBJECT(id));
+    JS_ASSERT(JSID_IS_DEFAULT_XML_NAMESPACE(id) || JSID_IS_VOID(id));
+    return UndefinedTag();
 }
 
 static JS_ALWAYS_INLINE jsval

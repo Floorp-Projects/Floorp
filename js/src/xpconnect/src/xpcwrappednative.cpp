@@ -3306,13 +3306,13 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
             const char* badName = JS_GetStringBytes(oldJSStr);
             char* locationStr = nsnull;
 
-            nsIException* e = nsnull;
-            nsXPCException::NewException("", NS_OK, nsnull, nsnull, &e);
+            nsCOMPtr<nsIException> e;
+            nsXPCException::NewException("", NS_OK, nsnull, nsnull, getter_AddRefs(e));
 
             if(e)
             {
                 nsresult rv;
-                nsCOMPtr<nsIStackFrame> loc = nsnull;
+                nsCOMPtr<nsIStackFrame> loc;
                 rv = e->GetLocation(getter_AddRefs(loc));
                 if(NS_SUCCEEDED(rv) && loc) {
                     loc->ToString(&locationStr); // failure here leaves it nsnull.
