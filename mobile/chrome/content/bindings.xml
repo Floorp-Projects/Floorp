@@ -255,7 +255,7 @@
             let title = controller.getCommentAt(i);
             let tags = '';
 
-            if (type == "tag")
+            if (title && type == "tag")
               [, title, tags] = title.match(/^(.+) \u2013 (.+)$/);
             item.setAttribute("tags", tags);
 
