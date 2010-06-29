@@ -63,9 +63,13 @@ function test()
 
   var recursionDepth = 0;
   function err() {
-    if (++recursionDepth == 64)
-      return new Error();
-    return err.apply(this, arguments);
+    try {
+        return err.apply(this, arguments);
+    } catch (e) {
+        if (!(e instanceof InternalError))
+            throw e;
+    }
+    return new Error();
   }
 
   // The full stack trace in error would include 64*4 copies of s exceeding
