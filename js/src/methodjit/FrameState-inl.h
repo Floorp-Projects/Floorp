@@ -349,6 +349,8 @@ FrameState::tempRegForType(FrameEntry *fe)
     if (fe->isCopy())
         fe = fe->copyOf();
 
+    JS_ASSERT(!fe->type.isConstant());
+
     if (fe->type.inRegister())
         return fe->type.reg();
 
