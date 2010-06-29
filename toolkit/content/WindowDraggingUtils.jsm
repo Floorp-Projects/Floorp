@@ -53,10 +53,10 @@ WindowDraggingElement.prototype = {
              "radiogroup", "deck", "scrollbox", "arrowscrollbox", "tabs"],
   shouldDrag: function(aEvent) {
     if (aEvent.button != 0 ||
-      this._window.fullScreen ||
-      !this.mouseDownCheck.call(this._elem, aEvent) ||
-      aEvent.getPreventDefault())
-    return false;
+        this._window.fullScreen ||
+        !this.mouseDownCheck.call(this._elem, aEvent) ||
+        aEvent.getPreventDefault())
+      return false;
 
     // Maybe we have been removed from the document
     if (!this._elem._alive)
@@ -80,9 +80,8 @@ WindowDraggingElement.prototype = {
   },
   handleEvent: function(aEvent) {
 #ifdef XP_WIN
-   if (this.shouldDrag(aEvent)) {
-     aEvent.preventDefault();
-   }
+    if (this.shouldDrag(aEvent))
+      aEvent.preventDefault();
 #else
     switch (aEvent.type) {
       case "mousedown":
