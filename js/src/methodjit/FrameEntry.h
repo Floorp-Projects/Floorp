@@ -65,7 +65,7 @@ class FrameEntry
 
     const Value &getValue() const {
         JS_ASSERT(isConstant());
-        return Valueify(v_.asBits);
+        return Valueify(JSVAL_FROM_LAYOUT(v_));
     }
 
     bool isTypeKnown() const {
@@ -132,7 +132,7 @@ class FrameEntry
         data.unsync();
         type.setConstant();
         data.setConstant();
-        v_.asBits = v;
+        v_.asBits = JSVAL_BITS(v);
     }
 
     bool isCopied() const {
