@@ -79,7 +79,11 @@ enum JSFrameFlags {
  */
 struct JSStackFrame
 {
-    /* N.B. alignment (TODO: remove these members) */
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
+    JSObject            *callobj;       /* lazily created Call object */
+    js::Value           argsval;       /* lazily created arguments object */
+    JSScript            *script;        /* script being interpreted */
+    JSFunction          *fun;           /* function being called or null */
 
     /*
      * The value of |this| in this stack frame, or JSVAL_NULL if |this|
@@ -94,16 +98,11 @@ struct JSStackFrame
      * where two stack frames have the same argv. If one of the frames fills
      * in both argv[-1] and thisv, the other frame's thisv is left null.
      */
-    js::Value           thisv;
-    js::Value           rval;           /* function return value */
+    js::Value           thisv;          /* "this" pointer if in method */
 
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
-    JSObject            *callobj;       /* lazily created Call object */
-    js::Value           argsval;       /* lazily created arguments object */
-    JSScript            *script;        /* script being interpreted */
-    JSFunction          *fun;           /* function being called or null */
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
+    js::Value           rval;           /* function return value */
     void                *annotation;    /* used by Java security */
 
     /* Maintained by StackSpace operations */
@@ -248,6 +247,10 @@ struct JSStackFrame
 namespace js {
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
+
+JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(Value) == 0);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(Value) == 0);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, scopeChain) % sizeof(Value) == 0);
 
 } /* namespace js */
 
@@ -395,7 +398,7 @@ StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval);
 
 /* === except that NaN is the same as NaN and -0 is not the same as +0. */
 extern bool
-SameValue(JSContext *cx, const Value &v1, const Value &v2);
+SameValue(const Value &v1, const Value &v2, JSContext *cx);
 
 extern JSType
 TypeOfValue(JSContext *cx, const js::Value &v);
