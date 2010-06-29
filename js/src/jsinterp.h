@@ -81,17 +81,15 @@ enum JSFrameFlags {
  */
 struct JSStackFrame
 {
-    /* N.B. alignment (TODO: remove these members) */
-    js::Value           thisv;          /* "this" pointer if in method */
-    js::Value           rval;           /* function return value */
-
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSObject            *callobj;       /* lazily created Call object */
     js::Value           argsval;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
+    js::Value           thisv;          /* "this" pointer if in method */
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
+    js::Value           rval;           /* function return value */
     void                *annotation;    /* used by Java security */
 
     /* Maintained by StackSpace operations */
@@ -227,6 +225,10 @@ struct JSStackFrame
 namespace js {
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
+
+JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(Value) == 0);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(Value) == 0);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, scopeChain) % sizeof(Value) == 0);
 
 } /* namespace js */
 
