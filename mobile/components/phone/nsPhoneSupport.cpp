@@ -55,7 +55,7 @@
 
 #include "nsStringAPI.h"
 #include "nsIPhoneSupport.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 
 class nsPhoneSupport : public nsIPhoneSupport
 {
@@ -441,16 +441,22 @@ nsPhoneSupport::RestoreDefaultBrowser()
 #define nsPhoneSupport_ContractID "@mozilla.org/phone/support;1"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoneSupport)
+NS_DEFINE_NAMED_CID(nsPhoneSupport_CID);
 
-static const nsModuleComponentInfo components[] =
-{
-  { "Phone Support",
-    nsPhoneSupport_CID,
-    nsPhoneSupport_ContractID,
-    nsPhoneSupportConstructor,
-    nsnull,
-    nsnull
-  }
+static const mozilla::Module::CIDEntry kPhoneCIDs[] = {
+  { &knsPhoneSupport_CID, false, NULL, nsPhoneSupportConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsPhoneSupportModule, components)
+static const mozilla::Module::ContractIDEntry kPhoneContracts[] = {
+  { nsPhoneSupport_ContractID, &knsPhoneSupport_CID },
+  { NULL }
+};
+
+static const mozilla::Module kPhoneModule = {
+  mozilla::Module::kVersion,
+  kPhoneCIDs,
+  kPhoneContracts
+};
+
+NSMODULE_DEFN(nsPhoneSupportModule) = &kPhoneModule;

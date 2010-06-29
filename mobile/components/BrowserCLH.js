@@ -93,14 +93,8 @@ BrowserCLH.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 
   // XPCOMUtils factory
-  classDescription: "Command Line Handler",
-  contractID: "@mozilla.org/mobile/browser-clh;1",
   classID: Components.ID("{be623d20-d305-11de-8a39-0800200c9a66}"),
-  _xpcom_categories: [{ category: "command-line-handler", entry: "m-browser" }],
 };
 
 var components = [ BrowserCLH ];
-
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

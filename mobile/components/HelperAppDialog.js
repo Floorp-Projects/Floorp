@@ -48,8 +48,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function HelperAppLauncherDialog() { }
 
 HelperAppLauncherDialog.prototype = {
-  classDescription: "HelperApp Launcher Dialog",
-  contractID: "@mozilla.org/helperapplauncherdialog;1",
   classID: Components.ID("{e9d277a0-268a-4ec2-bb8c-10fdf3e44611}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
@@ -261,6 +259,4 @@ HelperAppLauncherDialog.prototype = {
   }
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([HelperAppLauncherDialog]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([HelperAppLauncherDialog]);

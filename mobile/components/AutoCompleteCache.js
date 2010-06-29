@@ -237,8 +237,6 @@ function AutoCompleteCache() {
 }
 
 AutoCompleteCache.prototype = {
-  classDescription: "AutoComplete Cache",
-  contractID: "@mozilla.org/autocomplete/search;1?name=history",
   classID: Components.ID("{a65f9dca-62ab-4b36-a870-972927c78b56}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
@@ -310,17 +308,10 @@ BookmarkObserver.prototype = {
   onItemVisited: function() {},
   onItemMoved: function() {},
 
-  classDescription: "Bookmark observer used to update autocomplete cache",
   classID: Components.ID("f570982e-4f15-48ab-b6a0-ed851ac551b2"),
-  contractID: "@mozilla.org/browser/autocomplete-observer;1",
-
-  // Registering in this category makes us get initialized only when
-  // the listener would be notified.
-  _xpcom_categories: [{ category: "bookmark-observers" }],
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([AutoCompleteCache, BookmarkObserver]);
-}
+const components = [AutoCompleteCache, BookmarkObserver];
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

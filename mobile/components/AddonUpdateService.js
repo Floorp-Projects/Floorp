@@ -69,7 +69,6 @@ function getPref(func, preference, defaultValue) {
 // -----------------------------------------------------------------------
 
 const PREF_ADDON_UPDATE_ENABLED  = "extensions.autoupdate.enabled";
-const PREF_ADDON_UPDATE_INTERVAL = "extensions.autoupdate.interval";
 
 var gNeedsRestart = false;
 
@@ -77,15 +76,9 @@ function AddonUpdateService() {}
 
 AddonUpdateService.prototype = {
   classDescription: "Add-on auto-update management",
-  contractID: "@mozilla.org/browser/addon-update-service;1",
   classID: Components.ID("{93c8824c-9b87-45ae-bc90-5b82a1e4d877}"),
   
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback]),
-
-  _xpcom_categories: [{ category: "update-timer",
-                        value: "@mozilla.org/browser/addon-update-service;1," +
-                               "getService,auto-addon-background-update-timer," +
-                                PREF_ADDON_UPDATE_INTERVAL + ",86400" }],
 
   notify: function aus_notify(aTimer) {
     if (aTimer && !getPref("getBoolPref", PREF_ADDON_UPDATE_ENABLED, true))
@@ -152,7 +145,5 @@ UpdateCheckListener.prototype = {
   }
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([AddonUpdateService]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonUpdateService]);
 

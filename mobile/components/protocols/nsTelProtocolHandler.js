@@ -1,11 +1,6 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-
-
 const kSCHEME = "tel";
-const kPROTOCOL_NAME = "Tel Protocol";
-const kPROTOCOL_CONTRACTID = "@mozilla.org/network/protocol;1?name=" + kSCHEME;
-const kPROTOCOL_CID = Components.ID("d4bc06cc-fa9f-48ce-98e4-5326ca96ba28");
 
 // Mozilla defined
 const kSIMPLEURI_CONTRACTID = "@mozilla.org/network/simple-uri;1";
@@ -22,11 +17,9 @@ function TelProtocol()
 TelProtocol.prototype =
 {
     
-  classDescription: "Handler for tel URIs",
-  classID:          Components.ID(kPROTOCOL_CID),
+  classID:          Components.ID("d4bc06cc-fa9f-48ce-98e4-5326ca96ba28"),
   contractID:       kPROTOCOL_CONTRACTID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler]),
-  
   
   scheme: kSCHEME,
   defaultPort: -1,
@@ -89,9 +82,7 @@ TelProtocol.prototype =
 };
 
 var components = [TelProtocol];
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
 #ifdef WINCE
 function nsWinceTelChannel(URI, phoneNumber)

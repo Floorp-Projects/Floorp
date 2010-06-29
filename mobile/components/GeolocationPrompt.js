@@ -10,9 +10,7 @@ const kCountBeforeWeRemember = 5;
 function GeolocationPrompt() {}
 
 GeolocationPrompt.prototype = {
-  classDescription: "Geolocation Prompting Component",
   classID:          Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
-  contractID:       "@mozilla.org/geolocation/prompt;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
  
@@ -105,6 +103,4 @@ GeolocationPrompt.prototype = {
 
 
 //module initialization
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([GeolocationPrompt]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([GeolocationPrompt]);
