@@ -232,6 +232,16 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     return size;
   });
 
+  this.__defineGetter__("installDate", function() {
+    let date = 0;
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    aTags.forEach(function(aTag) {
+      file.initWithPath(aTag.fullpath);
+      date = Math.max(date, file.lastModifiedTime);
+    });
+    return new Date(date);
+  });
+
   this.__defineGetter__("scope", function() {
     let path = aTags[0].fullpath;
     // Plugins inside the application directory are in the application scope
@@ -270,6 +280,10 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 }
 
 PluginWrapper.prototype = {
+  get updateDate() {
+    return this.installDate;
+  },
+
   get isCompatible() {
     return true;
   },
