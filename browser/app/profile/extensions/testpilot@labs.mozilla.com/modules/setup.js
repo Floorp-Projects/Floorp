@@ -213,35 +213,6 @@ let TestPilotSetup = {
     }
   },
 
-  _setUpToolbarFeedbackButton: function TPS_toolbarFeedbackButton() {
-    /* If this is first run, and it's ffx4 beta version, and the feedback
-     * button is not in the expected place, put it there!
-     * (copied from MozReporterButtons extension) */
-    let logger = this._logger;
-    try {
-      let win = this._getFrontBrowserWindow();
-      let firefoxnav = win.document.getElementById("nav-bar");
-      let curSet = firefoxnav.currentSet;
-
-      if (-1 == curSet.indexOf("feedback-menu-button")) {
-        logger.info("Feedback toolbar button not present: Adding it.");
-        // place the buttons after the search box.
-        let newSet = curSet + ",feedback-menu-button";
-
-        firefoxnav.setAttribute("currentset", newSet);
-        firefoxnav.currentSet = newSet;
-        win.document.persist("nav-bar", "currentset");
-        // if you don't do the following call, funny things happen.
-        try {
-          BrowserToolboxCustomizeDone(true);
-        } catch (e) {
-        }
-      }
-    } catch (e) {
-      logger.warn("Error in setUpToolbarFeedbackButton: " + e);
-    }
-  },
-
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
@@ -296,11 +267,8 @@ let TestPilotSetup = {
             let url = self._prefs.getValue(FIRST_RUN_PREF, "");
             let tab = browser.addTab(url);
             browser.selectedTab = tab;
-          } else {
-            // Don't show first run page in ffx4 beta version... but do
-            // set up the Feedback button in the toolbar.
-            self._setUpToolbarFeedbackButton();
           }
+          // Don't show first run page in ffx4 beta version.
         }
 
         // Install tasks. (This requires knowing the version, so it is
