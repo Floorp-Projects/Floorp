@@ -983,7 +983,7 @@
 #endif
 
 </vbox>
-<iframe id="tab-candy" transparent="true" flex="1" src="chrome://tabcandy/content/index.html" />
+<iframe id="tab-candy" transparent="true" flex="1" src="chrome://browser/content/tabcandy.html" />
 </deck>
 
 </window>
