@@ -103,56 +103,51 @@ js_imod(int32 a, int32 b)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
-namespace js {
-
-jsdouble JS_ALWAYS_INLINE
-UnboxDoubleHelper(uint32 tag, uint32 payload)
-{
-    if (tag == JSVAL_TAG_INT32) {
-        return int32(payload);
-    } else {
-        Value v;
-        v.data.s.tag = (JSValueTag)tag;
-        v.data.s.payload.u32 = payload;
-        return v.asDouble();
-    }
-}
-
-}
+#if JS_BITS_PER_WORD == 32
 
 jsdouble FASTCALL
 js_UnboxDouble(uint32 tag, uint32 payload)
 {
-    return UnboxDoubleHelper(tag, payload);
+    if (tag == JSVAL_TAG_INT32)
+        return (double)(int32)payload;
+
+    jsval_layout l;
+    l.s.tag = (JSValueTag)tag;
+    l.s.payload.u32 = payload;
+    return l.asDouble;
 }
 JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_UnboxDouble, UINT32, UINT32, 1, ACC_NONE)
 
 int32 FASTCALL
-js_UnboxInt32(Value *v)
+js_UnboxInt32(const Value *v)
 {
     if (v->isInt32())
         return v->asInt32();
     return js_DoubleToECMAInt32(v->asDouble());
 }
-JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, VALUEPTR, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, VALUE, 1, ACC_NONE)
 
-JSBool FASTCALL
-js_TryUnboxInt32(Value *v, int32* i32p)
+#elif JS_BITS_PER_WORD == 64
+
+jsdouble FASTCALL
+js_UnboxDouble(Value v)
 {
-    if (v->isInt32()) {
-        *i32p = v->asInt32();
-        return JS_TRUE;
-    }
-    if (!v->isDouble())
-        return JS_FALSE;
-    int32_t i;
-    jsdouble d = v->asDouble();
-    if (!JSDOUBLE_IS_INT32(d, i))
-        return JS_FALSE;
-    *i32p = i;
-    return JS_TRUE;
+    if (v.isInt32())
+        return (jsdouble)v.asInt32();
+    return v.asDouble();
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_TryUnboxInt32, VALUEPTR, INT32PTR, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, JSVAL, 1, ACC_NONE)
+
+int32 FASTCALL
+js_UnboxInt32(Value v)
+{
+    if (v.isInt32())
+        return v.asInt32();
+    return js_DoubleToECMAInt32(v.asDouble());
+}
+JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, VALUE, 1, ACC_NONE)
+
+#endif
 
 int32 FASTCALL
 js_DoubleToInt32(jsdouble d)
