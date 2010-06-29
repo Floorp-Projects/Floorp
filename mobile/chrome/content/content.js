@@ -12,6 +12,8 @@ let gPrefService = Cc["@mozilla.org/preferences-service;1"]
   .getService(Ci.nsIPrefBranch2);
 let gObserverService = Cc["@mozilla.org/observer-service;1"]
   .getService(Ci.nsIObserverService);
+let gIOService = Cc["@mozilla.org/network/io-service;1"]
+  .getService(Ci.nsIIOService);
 
 let XULDocument = Ci.nsIDOMXULDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
@@ -443,6 +445,7 @@ Content.prototype = {
     let json = aMessage.json;
     let x = json.x;
     let y = json.y;
+    let modifiers = json.modifiers;
 
     switch (aMessage.name) {
       case "Browser:Blur":
@@ -459,20 +462,31 @@ Content.prototype = {
         if (this._overlayTimeout)
           return;
 
-        this._overlayTimeout = content.setTimeout(function() {
-          let element = elementFromPoint(x, y);
-          if (!element || !element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label"))
-            return;
+        let element = elementFromPoint(x, y);
+        if (!element)
+          return;
 
-          let rects = getContentClientRects(element);
-          sendAsyncMessage("Browser:Highlight", { rects: rects });
-        }, kTapOverlayTimeout);
+        this._sendMouseEvent("mousedown", element, x, y);
+
+	// If we don't release the implicit capture, we'll get dragging problems
+	// when a contextmenu is displayed
+        element.ownerDocument.releaseCapture();
+
+        if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
+          this._overlayTimeout = content.setTimeout(function() {
+            let rects = getContentClientRects(element);
+            sendSyncMessage("Browser:Highlight", { rects: rects });
+          }, kTapOverlayTimeout);
+        }
         break;
 
       case "Browser:MouseUp": {
         let element = elementFromPoint(x, y);
-        if (!this._formAssistant.open(element)) {
-          this._sendMouseEvent("mousedown", element, x, y);
+        if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
+          let uri = Util.getHrefForElement(element);
+          if (uri)
+            sendAsyncMessage("Browser:OpenURI", { uri: uri });
+        } else if (!this._formAssistant.open(element)) {
           this._sendMouseEvent("mouseup", element, x, y);
         }
       }
@@ -688,6 +702,108 @@ let ViewportHandler = {
 };
 
 ViewportHandler.init();
+
+
+const kXLinkNamespace = "http://www.w3.org/1999/xlink";
+
+var ContextHandler = {
+  _getLinkURL: function ch_getLinkURL(aLink) {
+    let href = aLink.href;  
+    if (href)
+      return href;
+
+    href = aLink.getAttributeNS(kXLinkNamespace, "href");
+    if (!href || !href.match(/\S/)) {
+      // Without this we try to save as the current doc,
+      // for example, HTML case also throws if empty
+      throw "Empty href";
+    }
+
+    return Util.makeURLAbsolute(aLink.baseURI, href);
+  },
+
+  _getURI: function ch_getURI(aURL) {
+    try {
+      return Util.makeURI(aURL);
+    } catch (ex) { }
+
+    return null;
+  },
+  
+  _getProtocol: function ch_getProtocol(aURI) {
+    if (aURI)
+      return aURI.scheme;
+    return null;
+  },
+  
+  _isSaveable: function ch_isSaveable(aProtocol) {
+    // We don't do the Right Thing for news/snews yet, so turn them off until we do
+    return aProtocol && !(aProtocol == "mailto" || aProtocol == "javascript" || aProtocol == "news" || aProtocol == "snews");
+  },
+
+  _isVoice: function ch_isVoice(aProtocol) {
+    // Collection of protocols related to voice or data links
+    return aProtocol && (aProtocol == "tel" || aProtocol == "callto" || aProtocol == "sip" || aProtocol == "voipto");
+  },
+
+  init: function ch_init() {
+    addEventListener("contextmenu", this, false);
+  },
+
+  handleEvent: function ch_handleEvent(aEvent) {
+    let state = {
+      onLink: false,
+      onSaveableLink: false,
+      onVoiceLink: false,
+      onImage: false,
+      onLoadedImage: false,
+      linkURL: "",
+      linkProtocol: null,
+      mediaURL: ""
+    };
+
+    let popupNode = elementFromPoint(aEvent.clientX, aEvent.clientY);
+
+    // Do checks for nodes that never have children.
+    if (popupNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
+      // See if the user clicked on an image.
+      if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
+        state.onImage = true;
+        state.mediaURL = popupNode.currentURI.spec;
+
+        let request = popupNode.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+        if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+          state.onLoadedImage = true;
+      }
+    }
+
+    let elem = popupNode;
+    while (elem) {
+      if (elem.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
+        // Link?
+        if (!this.onLink &&
+             ((elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) ||
+              (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href) ||
+              elem instanceof Ci.nsIDOMHTMLLinkElement ||
+              elem.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+
+          // Target is a link or a descendant of a link.
+          state.linkURL = this._getLinkURL(elem);
+          state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
+          state.onLink = true;
+          state.onSaveableLink = this._isSaveable(state.linkProtocol);
+          state.onVoiceLink = this._isVoice(state.linkProtocol);
+        }
+      }
+
+      elem = elem.parentNode;
+    }
+    
+    sendAsyncMessage("Browser:ContextMenu", state);
+  }
+};
+
+ContextHandler.init();
 
 
 var FormSubmitObserver = {
