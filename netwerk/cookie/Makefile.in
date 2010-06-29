@@ -69,6 +69,7 @@ CPPSRCS = \
   nsCookieService.cpp \
   $(NULL)
 
+XPCSHELL_TESTS += test/unit
 
 ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla/net
