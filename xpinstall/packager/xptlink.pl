@@ -133,13 +133,15 @@ foreach my $component (@xptdirs) {
 
 		# merge .xpt files into one if we found any in the dir
 		if ( scalar(@xptfiles) ) {
-      my ($merged, $fmerged);
+      my ($merged, $fmerged, $manifest);
       if ($finaldir ne "") {
         $merged = "$finaldir/$component.xpt";
+        $manifest = "$finaldir/$component.manifest";
       }
       else {
         $fmerged = "$destdir/$component/$bindir"."components/$component.xpt";
         $merged = $fmerged.".new";
+        $manifest = "$destdir/$component/$bindir"."components/$component.manifest";
       }
 
       my @realxptfiles;
@@ -159,6 +161,11 @@ foreach my $component (@xptdirs) {
       my $cmdline = "$xptlink $realmerged @realxptfiles";
 			($debug >= 4) && print "$cmdline\n";
 			system($cmdline) == 0 || die ("'$cmdline' failed");
+
+      print "Manifest file: $manifest";
+      open MANIFEST, '>>', $manifest;
+      print MANIFEST "interfaces $component.xpt\n";
+      close MANIFEST;
 
       if ($finaldir eq "") {
         # remove old .xpt files in the component directory.
