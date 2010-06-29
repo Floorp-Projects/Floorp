@@ -165,8 +165,9 @@
         if (!this._draggableStarted) {
           this._draggableStarted = true;
           try {
-            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
-            new WindowDraggingElement(this, window);
+            let tmp = {};
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            new tmp.WindowDraggingElement(this, window);
           } catch (e) {}
         }
       </constructor>
@@ -270,8 +271,9 @@
         if (!this._draggableStarted) {
           this._draggableStarted = true;
           try {
-            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
-            new WindowDraggingElement(this, window);
+            let tmp = {};
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            new tmp.WindowDraggingElement(this, window);
           } catch (e) {}
         }
       </constructor>
