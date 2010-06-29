@@ -324,7 +324,7 @@ TraceRecorder::upRecursion()
         rval_ins = get(&stackval(-1));
         JS_ASSERT(rval_ins);
     } else {
-        rval_ins = INS_VOID();
+        rval_ins = INS_UNDEFINED();
     }
 
     JSValueType returnType = exit->stackTypeMap()[downPostSlots];
@@ -545,7 +545,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                 rval_ins = demote(lir, rval_ins);
             }
         } else {
-            rval_ins = INS_VOID();
+            rval_ins = INS_UNDEFINED();
         }
 
         /*
@@ -726,50 +726,43 @@ TraceRecorder::downRecursion()
     return closeLoop(exit);
 }
 
-JS_REQUIRES_STACK LIns*
-TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit)
+#if JS_BITS_PER_WORD == 32
+JS_REQUIRES_STACK inline LIns*
+TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, VMSideExit* exit)
 {
-    LIns *mask_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
-    guard(true, lir->ins2(LIR_leui, mask_ins, INS_CONSTU(JSVAL_TAG_INT32)), exit);
-    LIns *val_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sPayloadOffset, ACC_OTHER);
-    LIns* args[] = { val_ins, mask_ins };
-    return lir->insCall(&js_UnboxDouble_ci, args);
+    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
+    return unbox_number_as_double(addr_ins, offset, tag_ins, exit, ACC_OTHER);
 }
 
-JS_REQUIRES_STACK LIns*
-TraceRecorder::slurpTypedSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, JSValueTag mask, VMSideExit* exit)
+JS_REQUIRES_STACK inline LIns*
+TraceRecorder::slurpNonDoubleSlot(LIns* addr_ins, ptrdiff_t offset, JSValueTag tag, VMSideExit* exit)
 {
-    LIns *mask_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
-    guard(true, lir->ins2(LIR_eqi, mask_ins, INS_CONSTU(mask)), exit);
-    if (mask == JSVAL_TAG_UNDEFINED)
-        return INS_VOID();
-    return lir->insLoad(LIR_ldi, addr_ins, offset + sPayloadOffset, ACC_OTHER);
+    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
+    return unbox_non_double(addr_ins, offset, tag_ins, tag, exit, ACC_OTHER);
 }
-JS_REQUIRES_STACK LIns*
+#elif JS_BITS_PER_WORD == 64
+JS_REQUIRES_STACK inline LIns*
+TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, VMSideExit* exit)
+{
+    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
+    return unbox_number_as_double(v_ins, exit);
+}
+
+JS_REQUIRES_STACK inline LIns*
+TraceRecorder::slurpNonDoubleSlot(LIns* addr_ins, ptrdiff_t offset, JSValueTag tag, VMSideExit* exit)
+{
+    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
+    return unbox_non_double(v_ins, tag, exit);
+}
+#endif
+
+JS_REQUIRES_STACK inline LIns*
 TraceRecorder::slurpSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit)
 {
-    switch (exit->slurpType)
-    {
-      case JSVAL_TYPE_BOOLEAN:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_BOOLEAN, exit);
-      case JSVAL_TYPE_UNDEFINED:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_UNDEFINED, exit);
-      case JSVAL_TYPE_INT32:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_INT32, exit);
-      case JSVAL_TYPE_DOUBLE:
-        return slurpDoubleSlot(addr_ins, offset, vp, exit);
-      case JSVAL_TYPE_STRING:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_STRING, exit);
-      case JSVAL_TYPE_NULL:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_NULL, exit);
-      case JSVAL_TYPE_NONFUNOBJ:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_NONFUNOBJ, exit);
-      case JSVAL_TYPE_FUNOBJ:
-        return slurpTypedSlot(addr_ins, offset, vp, JSVAL_TAG_FUNOBJ, exit);
-      default:
-        JS_NOT_REACHED("invalid type in typemap");
-        return NULL;
-    }
+    if (exit->slurpType == JSVAL_TYPE_DOUBLE)
+        return slurpDoubleSlot(addr_ins, offset, exit);
+    JSValueTag tag = JSVAL_TYPE_TO_TAG(exit->slurpType);
+    return slurpNonDoubleSlot(addr_ins, offset, tag, exit);
 }
 
 JS_REQUIRES_STACK void

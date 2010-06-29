@@ -111,6 +111,15 @@ using namespace js;
 JS_PUBLIC_DATA(jsid) JSID_VOID = { (size_t)JSID_VOID_TYPE };
 #endif
 
+#ifdef DEBUG
+JS_PUBLIC_DATA(jsval) JSVAL_NULL  = { BUILD_JSVAL(JSVAL_TAG_NULL,      0) };
+JS_PUBLIC_DATA(jsval) JSVAL_ZERO  = { BUILD_JSVAL(JSVAL_TAG_INT32,     0) };
+JS_PUBLIC_DATA(jsval) JSVAL_ONE   = { BUILD_JSVAL(JSVAL_TAG_INT32,     1) };
+JS_PUBLIC_DATA(jsval) JSVAL_FALSE = { BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE) };
+JS_PUBLIC_DATA(jsval) JSVAL_TRUE  = { BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE) };
+JS_PUBLIC_DATA(jsval) JSVAL_VOID  = { BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0) };
+#endif
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
@@ -535,11 +544,6 @@ JSRuntime::init(uint32 maxbytes)
 
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
-
-#ifdef JS_64BIT
-    if (!JSString::initStringTables())
-        return false;
-#endif
 
     deflatedStringCache = new js::DeflatedStringCache();
     if (!deflatedStringCache || !deflatedStringCache->init())
