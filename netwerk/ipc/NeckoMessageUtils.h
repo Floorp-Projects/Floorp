@@ -45,6 +45,7 @@
 #include "nsIIPCSerializable.h"
 #include "nsIClassInfo.h"
 #include "nsComponentManagerUtils.h"
+#include "nsNetUtil.h"
 
 namespace IPC {
 
@@ -80,7 +81,24 @@ struct ParamTraits<URI>
       return;
     
     nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(aParam.mURI);
-    NS_ABORT_IF_FALSE(serializable, "All IPDL URIs must be serializable");
+    if (!serializable) {
+      nsCString scheme;
+      aParam.mURI->GetScheme(scheme);
+      NS_ABORT_IF_FALSE(scheme.EqualsASCII("about:"),
+                        "All IPDL URIs must be serializable or an allowed scheme");
+    }
+    
+    bool isSerialized = !!serializable;
+    WriteParam(aMsg, isSerialized);
+    if (!isSerialized) {
+      nsCString spec, charset;
+      aParam.mURI->GetSpec(spec);
+      aParam.mURI->GetOriginCharset(charset);
+      WriteParam(aMsg, spec);
+      WriteParam(aMsg, charset);
+      return;
+    }
+    
     nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aParam.mURI);
     char cidStr[NSID_LENGTH];
     nsCID cid;
@@ -99,6 +117,24 @@ struct ParamTraits<URI>
       return false;
     if (isNull) {
       aResult->mURI = nsnull;
+      return true;
+    }
+
+    bool isSerialized;
+    if (!ReadParam(aMsg, aIter, &isSerialized))
+      return false;
+    if (!isSerialized) {
+      nsCString spec, charset;
+      if (!ReadParam(aMsg, aIter, &spec) ||
+          !ReadParam(aMsg, aIter, &charset))
+        return false;
+      
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = NS_NewURI(getter_AddRefs(uri), spec, charset.get());
+      if (NS_FAILED(rv))
+        return false;
+      
+      uri.forget(&aResult->mURI);
       return true;
     }
     
