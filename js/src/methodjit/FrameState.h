@@ -133,8 +133,8 @@ class FrameState
         RegisterState()
         { }
 
-        RegisterState(FrameEntry *fe, RematInfo::RematType type, bool weak)
-          : fe(fe), type(type), weak(weak)
+        RegisterState(FrameEntry *fe, RematInfo::RematType type)
+          : fe(fe), type(type)
         { }
 
         /* FrameEntry owning this register, or NULL if not owned by a frame. */
@@ -145,9 +145,6 @@ class FrameState
         
         /* Part of the FrameEntry that owns the FE. */
         RematInfo::RematType type;
-
-        /* Weak means it is easily spillable. */
-        bool weak;
     };
 
   public:
@@ -528,7 +525,7 @@ class FrameState
     inline void addEscaping(uint32 local);
 
   private:
-    inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type, bool weak);
+    inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type);
     inline void forgetReg(RegisterID reg);
     RegisterID evictSomeReg(uint32 mask);
     void evictReg(RegisterID reg);

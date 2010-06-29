@@ -216,7 +216,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         masm.storeData32(fe->data.reg(), address);
     } else {
         JS_ASSERT(fe->data.inMemory());
-        RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::DATA, true);
+        RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::DATA);
         masm.loadData32(addressOf(fe), reg);
         masm.storeData32(reg, address);
         if (popped)
@@ -231,7 +231,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         masm.storeTypeTag(fe->type.reg(), address);
     } else {
         JS_ASSERT(fe->type.inMemory());
-        RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE, true);
+        RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE);
         masm.loadTypeTag(addressOf(fe), reg);
         masm.storeTypeTag(reg, address);
         if (popped)
