@@ -869,6 +869,14 @@ History::~History()
                  "Not all Links were removed before we disappear!");
   }
 #endif
+
+  NS_WARN_IF_FALSE(!mPendingVisits.PeekFront(), "Tasks were not completed :(");
+
+  // History is going away, so abandon tasks.
+  while (mPendingVisits.PeekFront()) {
+    nsCOMPtr<Step> deadTaskWalking =
+      dont_AddRef(static_cast<Step*>(mPendingVisits.PopFront()));
+  }
 }
 
 void
