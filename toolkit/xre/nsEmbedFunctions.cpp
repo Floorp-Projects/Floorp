@@ -426,6 +426,7 @@ XRE_InitChildProcess(int aArgc,
 
     case GeckoProcessType_Content:
       process = new ContentProcessProcess(parentHandle);
+      break;
 
     case GeckoProcessType_Jetpack:
       process = new JetpackProcessChild(parentHandle);
