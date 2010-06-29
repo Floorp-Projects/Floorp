@@ -86,6 +86,7 @@
   <script type="application/javascript" src="chrome://browser/content/TileManager.js"/>
   <script type="application/javascript" src="chrome://browser/content/BrowserView.js"/>
   <script type="application/javascript" src="chrome://browser/content/AnimatedZoom.js"/>
+  <script type="application/javascript" src="chrome://browser/content/sync.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
@@ -113,6 +114,7 @@
     <!-- tabs -->
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_remoteTabs" oncommand="WeaveGlue.openRemoteTabs();"/>
 
     <!-- bookmarking -->
     <command id="cmd_star" label="&star.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -202,6 +204,7 @@
           <vbox id="tabs" onselect="BrowserUI.selectTab(this);" onclosetab="BrowserUI.closeTab(this)" flex="1"/>
           <hbox id="tabs-controls">
             <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
+            <toolbarbutton id="remotetabs-button" class="button-image" disabled="true" command="cmd_remoteTabs"/>
           </hbox>
         </vbox>
       </vbox>
@@ -429,6 +432,21 @@
                 <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
                 <setting title="&clearPrivateData2.title;" type="control">
                   <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
+                </setting>
+              </settings>
+              <settings id="prefs-sync" label="&sync.title;">
+                <setting id="sync-user" type="string" title="&sync.username;" />
+                <setting id="sync-pass" type="string" inputtype="password" title="&sync.password;" />
+                <setting id="sync-secret" type="string" inputtype="password" title="&sync.secretPhrase;" />
+                <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this)"/>
+                <setting id="sync-connect" type="control">
+                  <button label="&sync.connect;" oncommand="WeaveGlue.connect();" />
+                </setting>
+                <setting id="sync-disconnect" type="control">
+                  <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
+                </setting>
+                <setting id="sync-sync" type="control">
+                  <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();" />
                 </setting>
               </settings>
             </richlistbox>

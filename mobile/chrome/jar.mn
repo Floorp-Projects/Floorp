@@ -16,6 +16,7 @@ chrome.jar:
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutCertError.css           (content/aboutCertError.css)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
+  content/aboutTabs.xhtml              (content/aboutTabs.xhtml)
   content/languages.properties         (content/languages.properties)
 * content/browser.xul                  (content/browser.xul)
 * content/browser.js                   (content/browser.js)
@@ -58,5 +59,6 @@ chrome.jar:
   content/prompt/select.xul            (content/prompt/select.xul)
   content/prompt/prompt.js             (content/prompt/prompt.js)
   content/AnimatedZoom.js              (content/AnimatedZoom.js)
+  content/sync.js                      (content/sync.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
