@@ -8077,7 +8077,10 @@ void
 nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
 {
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-  sgo->GetContext()->ClearScope(sgo->GetGlobalJSObject(), PR_TRUE);
+  nsIScriptContext *scx = sgo->GetContext();
+  if (scx) {
+    scx->ClearScope(sgo->GetGlobalJSObject(), PR_TRUE);
+  }
 }
 
 //*****************************************************************************
