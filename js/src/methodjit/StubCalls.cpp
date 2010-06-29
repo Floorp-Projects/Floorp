@@ -324,7 +324,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 }
 
 static JSObject *
-NameOp(VMFrame &f, JSObject *obj)
+NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 {
     JSContext *cx = f.cx;
 
@@ -339,20 +339,37 @@ NameOp(VMFrame &f, JSObject *obj)
         if (entry->vword.isFunObj()) {
             f.regs.sp++;
             f.regs.sp[-1].setFunObj(entry->vword.toFunObj());
-            return obj;
-        }
-
-        if (entry->vword.isSlot()) {
+        } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
             f.regs.sp++;
             f.regs.sp[-1] = obj2->lockedGetSlot(slot);
-            return obj;
+        } else {
+            JS_ASSERT(entry->vword.isSprop());
+            sprop = entry->vword.toSprop();
+            NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval, return NULL);
+            obj2->dropProperty(cx, (JSProperty *) sprop);
+            f.regs.sp++;
+            f.regs.sp[-1] = rval;
         }
 
-        JS_ASSERT(entry->vword.isSprop());
-        sprop = entry->vword.toSprop();
-        goto do_native_get;
+        /*
+         * Push results, same as below, but with a prop$ hit there is
+         * no need to test for the unusual and uncacheable case where the caller
+         * determines |this|.
+         */
+#if DEBUG
+        Class *clasp;
+        JS_ASSERT(!obj->getParent() ||
+                  (clasp = obj->getClass()) == &js_CallClass ||
+                  clasp == &js_BlockClass ||
+                  clasp == &js_DeclEnvClass);
+#endif
+        if (callname) {
+            f.regs.sp++;
+            f.regs.sp[-1].setNull();
+        }
+        return obj;
     }
 
     jsid id;
@@ -379,13 +396,28 @@ NameOp(VMFrame &f, JSObject *obj)
             return NULL;
     } else {
         sprop = (JSScopeProperty *)prop;
-  do_native_get:
         NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval, return NULL);
         obj2->dropProperty(cx, (JSProperty *) sprop);
     }
 
     f.regs.sp++;
     f.regs.sp[-1] = rval;
+    if (callname) {
+        Class *clasp;
+        JSObject *thisp = obj;
+        if (!thisp->getParent() ||
+            (clasp = thisp->getClass()) == &js_CallClass ||
+            clasp == &js_BlockClass ||
+            clasp == &js_DeclEnvClass) {
+            thisp = NULL;
+        } else {
+            thisp = thisp->thisObject(cx);
+            if (!thisp)
+                return NULL;
+        }
+        f.regs.sp++;
+        f.regs.sp[-1].setNonFunObjOrNull(thisp);
+    }
     return obj;
 }
 
@@ -626,11 +658,9 @@ stubs::SetElem(VMFrame &f)
 void JS_FASTCALL
 stubs::CallName(VMFrame &f)
 {
-    JSObject *obj = NameOp(f, f.fp->scopeChainObj());
+    JSObject *obj = NameOp(f, f.fp->scopeChainObj(), true);
     if (!obj)
         THROW();
-    f.regs.sp++;
-    f.regs.sp[-1].setNonFunObj(*obj);
 }
 
 void JS_FASTCALL
@@ -1305,7 +1335,7 @@ stubs::This(VMFrame &f)
 {
     if (!f.fp->getThisObject(f.cx))
         THROW();
-    f.regs.sp[0] = f.fp->thisv;
+    f.regs.sp[-1] = f.fp->thisv;
 }
 
 void JS_FASTCALL

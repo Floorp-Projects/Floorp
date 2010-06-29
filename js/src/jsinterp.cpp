@@ -260,27 +260,24 @@ js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, const Value **vpp)
 JS_STATIC_INTERPRET bool
 ComputeGlobalThis(JSContext *cx, Value *argv)
 {
-    JSObject *thisp;
-    if (argv[-2].isPrimitive() || !argv[-2].asObject().getParent())
-        thisp = cx->globalObject;
-    else
-        thisp = argv[-2].asObject().getGlobal();
-    return JSObject::thisObject(cx, NonFunObjTag(*thisp), &argv[-1]);
+    JSObject *thisp = argv[-2].asObject().getGlobal()->thisObject(cx);
+    if (!thisp)
+        return false;
+    argv[-1].setObject(*thisp);
+    return true;
 }
 
-static bool
-ComputeThis(JSContext *cx, Value *argv)
+JSObject *
+JSStackFrame::computeThisObject(JSContext *cx)
 {
-    JS_ASSERT(!argv[-1].isNull());
-    if (!argv[-1].isObject())
-        return !!js_PrimitiveToObject(cx, &argv[-1]);
+    JS_ASSERT(thisv.isPrimitive());
+    JS_ASSERT(fun);
 
-    Value thisv = argv[-1];
-    JSObject *thisp = &thisv.asObject();
-    if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
-        return ComputeGlobalThis(cx, argv);
-
-    return JSObject::thisObject(cx, thisv, &argv[-1]);
+    if (!ComputeThisFromArgv(cx, argv))
+        return NULL;
+    thisv = argv[-1];
+    JS_ASSERT(IsSaneThisObject(thisv.asObject()));
+    return &thisv.asObject();
 }
 
 namespace js {
@@ -291,7 +288,12 @@ ComputeThisFromArgv(JSContext *cx, Value *argv)
     JS_ASSERT(!argv[-1].isMagic());  // check for SynthesizeFrame poisoning
     if (argv[-1].isNull())
         return ComputeGlobalThis(cx, argv);
-    return ComputeThis(cx, argv);
+
+    if (!argv[-1].isObject())
+        return !!js_PrimitiveToObject(cx, &argv[-1]);
+
+    JS_ASSERT(IsSaneThisObject(argv[-1].asObject()));
+    return true;
 }
 
 }
@@ -533,26 +535,6 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         }
     }
 
-    if (flags & JSINVOKE_CONSTRUCT) {
-        JS_ASSERT(vp[1].isObject());
-    } else {
-        /*
-         * We must call js_ComputeThis in case we are not called from the
-         * interpreter, where a prior bytecode has computed an appropriate
-         * |this| already.
-         *
-         * But we need to compute |this| eagerly only for so-called "slow"
-         * (i.e., not fast) native functions. Fast natives must use either
-         * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
-         * the appropriate this-computing bytecode, e.g., JSOP_THIS.
-         */
-        if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-            if (!ComputeThisFromArgv(cx, vp + 2))
-                return false;
-            flags |= JSFRAME_COMPUTED_THIS;
-        }
-    }
-
   start_call:
     if (native && fun && fun->isFastNative()) {
 #ifdef DEBUG_NOT_THROWING
@@ -652,6 +634,29 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
             return false;
     }
 
+    /*
+     * Compute |this|. Currently, this must happen after the frame is pushed
+     * and fp->scopeChain is correct because the thisObject hook may call
+     * JS_GetScopeChain.
+     */
+    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !vp[1].isPrimitive());
+    if (vp[1].isObject() && !(flags & JSINVOKE_CONSTRUCT)) {
+        /*
+         * We must call the thisObject hook in case we are not called from the
+         * interpreter, where a prior bytecode has computed an appropriate
+         * |this| already.
+         */
+        JSObject *thisp = vp[1].asObjectOrNull();
+        if (!thisp)
+            thisp = funobj->getGlobal();
+        thisp = thisp->thisObject(cx);
+        if (!thisp)
+             return false;
+         vp[1].setObject(*thisp);
+         fp->thisv.setObject(*thisp);
+    }
+    JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].asObject()));
+
     /* Call the hook if present after we fully initialized the frame. */
     JSInterpreterHook hook = cx->debugHooks->callHook;
     void *hookData = NULL;
@@ -667,7 +672,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         JSBool alreadyThrowing = cx->throwing;
 #endif
         /* Primitive |this| should not be passed to slow natives. */
-        JSObject *thisp = &fp->thisv.asObject();
+        JSObject *thisp = fun ? fp->getThisObject(cx) : NULL;
         ok = native(cx, thisp, fp->argc, fp->argv, &fp->rval);
         JS_ASSERT(cx->fp == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
@@ -811,7 +816,7 @@ Execute(JSContext *cx, JSObject *const chain, JSScript *script,
         fp->setArgsObj(down->argsObj());
         fp->fun = (script->staticLevel > 0) ? down->fun : NULL;
         fp->thisv = down->thisv;
-        fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
+        fp->flags = flags;
         fp->argc = down->argc;
         fp->argv = down->argv;
         fp->annotation = down->annotation;
@@ -832,7 +837,7 @@ Execute(JSContext *cx, JSObject *const chain, JSScript *script,
         fp->setArgsObj(NULL);
         fp->fun = NULL;
         /* Ininitialize fp->thisv after pushExecuteFrame. */
-        fp->flags = flags | JSFRAME_COMPUTED_THIS;
+        fp->flags = flags;
         fp->argc = 0;
         fp->argv = NULL;
         fp->annotation = NULL;
@@ -1755,7 +1760,7 @@ namespace reprmeter {
 #define PUSH_NONFUNOBJ(obj)      regs.sp++->setNonFunObj(obj)
 #define PUSH_FUNOBJ(obj)         regs.sp++->setFunObj(obj)
 #define PUSH_OBJECT(obj)         regs.sp++->setObject(obj)
-#define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObject(obj)
+#define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObjectOrNull(obj)
 #define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
 #define POP_COPY_TO(v)           v = *--regs.sp
 
@@ -2174,6 +2179,8 @@ Interpret(JSContext *cx)
     JSScript *script = fp->script;
     JS_ASSERT(!script->isEmpty());
     JS_ASSERT(script->length > 1);
+    JS_ASSERT(fp->thisv.isObjectOrNull());
+    JS_ASSERT_IF(!fp->fun, !fp->thisv.isNull());
 
     /* Count of JS function calls that nest in this C Interpret frame. */
     uintN inlineCallCount = 0;
