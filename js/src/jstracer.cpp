@@ -8223,12 +8223,9 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
         const CallInfo* ci = f->callInfo();
         if (ci == &js_UnboxDouble_ci) {
 #if JS_BITS_PER_WORD == 32
-            LIns *boxed = lir->insAlloc(sizeof(Value));
             LIns *tag_ins = fcallarg(f, 0);
             LIns *payload_ins = fcallarg(f, 1);
-            lir->insStore(tag_ins, boxed, sTagOffset, ACC_OTHER);
-            lir->insStore(payload_ins, boxed, sPayloadOffset, ACC_OTHER);
-            LIns* args[] = { boxed };
+            LIns* args[] = { payload_ins, tag_ins };
             return lir->insCall(&js_UnboxInt32_ci, args);
 #else
             LIns* val_ins = fcallarg(f, 0);
