@@ -1274,7 +1274,10 @@ var Browser = {
     switch (aMessage.name) {
       case "Browser:ViewportMetadata":
         let tab = Browser.getTabForBrowser(aMessage.target);
-        tab.updateViewportMetadata(json);
+        // Some browser such as iframes loaded dynamically into the chrome UI
+        // does not have any assigned tab
+        if (tab)
+          tab.updateViewportMetadata(json);
         break;
 
       case "Browser:FormSubmit":
