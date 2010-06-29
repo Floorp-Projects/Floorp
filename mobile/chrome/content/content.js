@@ -552,10 +552,6 @@ Content.prototype = {
   },
 
   _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {
-    let scrollOffset = Util.getScrollOffset(content);
-    aX -= scrollOffset.x;
-    aY -= scrollOffset.y;
-
     // the element can be out of the aX/aY point because of the touch radius
     if (!(aElement instanceof HTMLHtmlElement)) {
       let isTouchClick = true;
@@ -577,8 +573,9 @@ Content.prototype = {
       }
     }
 
+    let scrollOffset = Util.getScrollOffset(content);
     let windowUtils = Util.getWindowUtils(content);
-    windowUtils.sendMouseEvent(aName, aX, aY, 0, 1, 0, true);
+    windowUtils.sendMouseEvent(aName, aX - scrollOffset.x, aY - scrollOffset.y, 0, 1, 0, true);
   },
 
   startLoading: function startLoading() {
