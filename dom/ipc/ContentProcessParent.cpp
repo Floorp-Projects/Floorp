@@ -40,6 +40,7 @@
 #include "ContentProcessParent.h"
 
 #include "TabParent.h"
+#include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "nsIPrefBranch.h"
@@ -55,6 +56,7 @@
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
+using namespace mozilla::places;
 using mozilla::MonitorAutoEnter;
 
 namespace mozilla {
@@ -397,6 +399,15 @@ ContentProcessParent::RequestRunToCompletion()
     return !!mRunToCompletionDepth;
 }
 
+
+bool
+ContentProcessParent::RecvStartVisitedQuery(const IPC::URI& aURI)
+{
+    nsCOMPtr<nsIURI> newURI = aURI;
+    IHistory *history = nsContentUtils::GetHistory(); 
+    history->RegisterVisitedCallback(newURI, nsnull);
+    return true;
+}
 
 bool
 ContentProcessParent::RecvVisitURI(const IPC::URI& uri,
