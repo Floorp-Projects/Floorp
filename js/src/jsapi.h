@@ -52,18 +52,27 @@
 JS_BEGIN_EXTERN_C
 
 /* Well-known JS values, initialized on startup. */
-#define JSVAL_NULL   BUILD_JSVAL(JSVAL_TAG_NULL,      0)
-#define JSVAL_ZERO   BUILD_JSVAL(JSVAL_TAG_INT32,     0)
-#define JSVAL_ONE    BUILD_JSVAL(JSVAL_TAG_INT32,     1)
-#define JSVAL_FALSE  BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE)
-#define JSVAL_TRUE   BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE)
-#define JSVAL_VOID   BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0)
+#ifdef DEBUG
+extern JS_PUBLIC_DATA(jsval) JSVAL_NULL;
+extern JS_PUBLIC_DATA(jsval) JSVAL_ZERO;
+extern JS_PUBLIC_DATA(jsval) JSVAL_ONE;
+extern JS_PUBLIC_DATA(jsval) JSVAL_FALSE;
+extern JS_PUBLIC_DATA(jsval) JSVAL_TRUE;
+extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
+#else
+# define JSVAL_NULL   BUILD_JSVAL(JSVAL_TAG_NULL,      0)
+# define JSVAL_ZERO   BUILD_JSVAL(JSVAL_TAG_INT32,     0)
+# define JSVAL_ONE    BUILD_JSVAL(JSVAL_TAG_INT32,     1)
+# define JSVAL_FALSE  BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE)
+# define JSVAL_TRUE   BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE)
+# define JSVAL_VOID   BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0)
+#endif
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_NULL_IMPL(l);
 }
 
@@ -71,7 +80,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_VOID(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_UNDEFINED_IMPL(l);
 }
 
@@ -79,7 +88,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_INT(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_INT32_IMPL(l);
 }
 
@@ -88,7 +97,7 @@ JSVAL_TO_INT(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_INT(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TO_INT32_IMPL(l);
 }
 
@@ -99,14 +108,14 @@ JSVAL_TO_INT(jsval v)
 static JS_ALWAYS_INLINE jsval
 INT_TO_JSVAL(int32 i)
 {
-    return INT32_TO_JSVAL_IMPL(i).asBits;
+    return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i));
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_DOUBLE_IMPL(l);
 }
 
@@ -115,14 +124,14 @@ JSVAL_TO_DOUBLE(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return l.asDouble;
 }
 
 static JS_ALWAYS_INLINE jsval
 DOUBLE_TO_JSVAL(jsdouble d)
 {
-    return DOUBLE_TO_JSVAL_IMPL(d).asBits;
+    return IMPL_TO_JSVAL(DOUBLE_TO_JSVAL_IMPL(d));
 }
 
 static JS_ALWAYS_INLINE jsval
@@ -137,7 +146,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NUMBER(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_NUMBER_IMPL(l);
 }
 
@@ -145,7 +154,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_STRING(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_STRING_IMPL(l);
 }
 
@@ -154,21 +163,21 @@ JSVAL_TO_STRING(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_STRING(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TO_STRING_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsval
 STRING_TO_JSVAL(JSString *str)
 {
-    return STRING_TO_JSVAL_IMPL(str).asBits;
+    return IMPL_TO_JSVAL(STRING_TO_JSVAL_IMPL(str));
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_OBJECT_OR_NULL_IMPL(l);
 }
 
@@ -177,7 +186,7 @@ JSVAL_TO_OBJECT(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_OBJECT(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TO_OBJECT_IMPL(l);
 }
 
@@ -188,14 +197,14 @@ OBJECT_TO_JSVAL(JSObject *obj)
     if (!obj)
         return JSVAL_NULL;
     type = JS_OBJ_IS_FUN_IMPL(obj) ? JSVAL_TYPE_FUNOBJ : JSVAL_TYPE_NONFUNOBJ;
-    return OBJECT_TO_JSVAL_IMPL(type, obj).asBits;
+    return IMPL_TO_JSVAL(OBJECT_TO_JSVAL_IMPL(type, obj));
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_BOOLEAN(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_BOOLEAN_IMPL(l);
 }
 
@@ -204,21 +213,21 @@ JSVAL_TO_BOOLEAN(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TO_BOOLEAN_IMPL(l);
 }
 
 static JS_ALWAYS_INLINE jsval
 BOOLEAN_TO_JSVAL(JSBool b)
 {
-    return BOOLEAN_TO_JSVAL_IMPL(b).asBits;
+    return IMPL_TO_JSVAL(BOOLEAN_TO_JSVAL_IMPL(b));
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_PRIMITIVE(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_PRIMITIVE_IMPL(l);
 }
 
@@ -226,7 +235,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_GCTHING(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_GCTHING_IMPL(l);
 }
 
@@ -235,7 +244,7 @@ JSVAL_TO_GCTHING(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_GCTHING(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TO_GCTHING_IMPL(l);
 }
 
@@ -244,7 +253,7 @@ JSVAL_TO_GCTHING(jsval v)
 static JS_ALWAYS_INLINE jsval
 PRIVATE_TO_JSVAL(void *ptr)
 {
-    return PRIVATE_PTR_TO_JSVAL_IMPL(ptr).asBits;
+    return IMPL_TO_JSVAL(PRIVATE_PTR_TO_JSVAL_IMPL(ptr));
 }
 
 static JS_ALWAYS_INLINE void *
@@ -252,7 +261,7 @@ JSVAL_TO_PRIVATE(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TO_PRIVATE_PTR_IMPL(l);
 }
 
@@ -260,7 +269,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
 {
     jsval_layout l;
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(l);
 }
 
@@ -421,26 +430,6 @@ JSID_IS_VOID(jsid iden)
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #else
 # define JSID_VOID  ((jsid)JSID_VOID_TYPE)
-#endif
-
-#if defined(DEBUG) && defined(__cplusplus)
-extern "C++" {
-/*
- * Internally we can use C++ to allow jsids, which are structs in debug builds,
- * to be compared with ==.
- */
-static JS_ALWAYS_INLINE bool
-operator==(jsid lhs, jsid rhs)
-{
-    return JSID_BITS(lhs) == JSID_BITS(rhs);
-}
-
-static JS_ALWAYS_INLINE bool
-operator!=(jsid lhs, jsid rhs)
-{
-    return JSID_BITS(lhs) != JSID_BITS(rhs);
-}
-}
 #endif
 
 /************************************************************************/
@@ -1373,7 +1362,7 @@ JSVAL_TRACE_KIND(jsval v)
 {
     jsval_layout l;
     JS_ASSERT(JSVAL_IS_GCTHING(v));
-    l.asBits = v;
+    l.asBits = JSVAL_BITS(v);
     return JSVAL_TRACE_KIND_IMPL(l);
 }
 
@@ -3192,23 +3181,6 @@ struct PrivateTag {
  */
 class Value
 {
-    /*
-     * Generally, we'd like to keep the exact representation encapsulated so
-     * that it may be tweaked in the future. Engine internals that need to
-     * break this encapsulation should be listed as friends below. Also see
-     * uses of public jsval members in jsapi.h/jspubtd.h.
-     */
-#ifdef JS_TRACER
-    friend jsdouble UnboxDoubleHelper(uint32 mask, uint32 payload);
-    friend void NonDoubleNativeToValue(JSValueType type, double *slot, Value *vp);
-    friend void NonNumberValueToSlot(const Value &v, JSValueType type, double *slot);
-#endif
-
-  protected:
-    /* Type masks */
-
-        template <int I> class T {};
-
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
         JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
@@ -3249,11 +3221,11 @@ class Value
     /* Change to a Value of a single type */
 
     void setNull() {
-        data.asBits = JSVAL_NULL;
+        data.asBits = JSVAL_BITS(JSVAL_NULL);
     }
 
     void setUndefined() {
-        data.asBits = JSVAL_VOID;
+        data.asBits = JSVAL_BITS(JSVAL_VOID);
     }
 
     void setInt32(int32 i) {
@@ -3509,11 +3481,17 @@ class Value
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
     }
 
-#if JS_BITS_PER_WORD == 32
     JSValueTag extractNonDoubleTag() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
     }
-#endif
+
+    void unboxNonDoubleTo(uint64 *out) const {
+        UNBOX_NON_DOUBLE_JSVAL(data, out);
+    }
+
+    void boxNonDoubleFrom(JSValueType type, uint64 *out) {
+        data = BOX_NON_DOUBLE_JSVAL(type, out);
+    }
 
     /* Swap two Values */
 
@@ -3563,21 +3541,10 @@ class Value
         return data.s.payload.u32;
     }
 
-    /* Tracing support API. 
-     * Use these functions to check if a Value needs to be passed
-     * to JS_CallTracer. */
-    bool isTraceable() const {
-        return isGCThing();
-    }
-
-    void *toTraceable() {
-        return asGCThing();
-    }
-
 } VALUE_ALIGNMENT;
 
 /*
- * As asserted above, js::Value and jsval are layout equivalent. To provide
+ * As asserted above, js::Value and jsval are layout equivalent. To prevent
  * widespread casting, the following safe casts are provided.
  */
 static inline jsval *        Jsvalify(Value *v)        { return (jsval *)v; }
@@ -3595,7 +3562,8 @@ static inline Value undefinedValue() { return UndefinedTag(); }
 static inline Value nullValue()      { return NullTag(); }
 
 /*
- * js::Class is layout compatible and thus 
+ * js::Class is layout compatible with JSCalss and thus may be safely converted back
+ * and forth at no cost using Jsvalify and Valueify.
  */
 struct Class {
     const char          *name;
@@ -3624,6 +3592,10 @@ struct Class {
 
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
 
+/*
+ * js::ExtendedClass is layout compatible with JSExtendedClass and thus may be
+ * safely converted back and forth at no cost using Jsvalify and Valueify.
+ */
 struct ExtendedClass {
     Class               base;
     EqualityOp          equality;
@@ -3640,6 +3612,11 @@ struct ExtendedClass {
 
 JS_STATIC_ASSERT(sizeof(JSExtendedClass) == sizeof(ExtendedClass));
 
+/*
+ * js::PropertyDescriptor is layout compatible with JSPropertyDescriptor and
+ * thus may be safely converted back and forth at no cost using Jsvalify and
+ * Valueify.
+ */
 struct PropertyDescriptor {
     JSObject     *obj;
     uintN        attrs;
@@ -3657,6 +3634,31 @@ static JS_ALWAYS_INLINE JSExtendedClass *      Jsvalify(ExtendedClass *c)       
 static JS_ALWAYS_INLINE ExtendedClass *        Valueify(JSExtendedClass *c)      { return (ExtendedClass *)c; }
 static JS_ALWAYS_INLINE JSPropertyDescriptor * Jsvalify(PropertyDescriptor *p) { return (JSPropertyDescriptor *) p; }
 static JS_ALWAYS_INLINE PropertyDescriptor *   Valueify(JSPropertyDescriptor *p) { return (PropertyDescriptor *) p; }
+
+/*
+ * In some cases (quickstubs) we want to take a value in whatever manner is
+ * appropriate for the architecture and normalize to a const js::Value &. On
+ * x64, passing a js::Value may cause the to unnecessarily be passed through
+ * memory instead of registers, so jsval, which is a builtin uint64 is used.
+ */
+#if JS_BITS_PER_WORD == 32
+typedef const js::Value *ValueArgType;
+
+static JS_ALWAYS_INLINE const js::Value &
+ValueArgToConstRef(const js::Value *arg)
+{
+    return *arg;
+}
+
+#elif JS_BITS_PER_WORD == 64
+typedef js::Value        ValueArgType;
+
+static JS_ALWAYS_INLINE const Value &
+ValueArgToConstRef(const Value &v)
+{
+    return v;
+}
+#endif
 
 } /* namespace js */
 #endif  /* __cplusplus */

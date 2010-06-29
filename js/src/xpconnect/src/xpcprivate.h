@@ -262,6 +262,8 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 #define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1))
 
+#define INVALID_OBJECT ((JSObject *)1)
+
 /***************************************************************************/
 // Auto locking support class...
 
@@ -2600,8 +2602,8 @@ public:
         // needs us alive and whole.  Do not let our mFlatJSObject go away.
         // This is the only time we should be tracing our mFlatJSObject,
         // normally somebody else is doing that. Be careful not to trace the
-        // bogus JSVAL_ONE value we can have during init, though.
-        if(mFlatJSObject && mFlatJSObject != (JSObject*)JSVAL_ONE)
+        // bogus INVALID_OBJECT value we can have during init, though.
+        if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
         {
             JS_CALL_OBJECT_TRACER(trc, mFlatJSObject,
                                   "XPCWrappedNative::mFlatJSObject");
@@ -4035,7 +4037,7 @@ class XPCMarkableJSVal
 {
 public:
     XPCMarkableJSVal(jsval val) : mVal(val), mValPtr(&mVal) {}
-    XPCMarkableJSVal(jsval *pval) : mVal(0), mValPtr(pval) {}
+    XPCMarkableJSVal(jsval *pval) : mVal(JSVAL_VOID), mValPtr(pval) {}
     ~XPCMarkableJSVal() {}
     void Mark() {}
     void TraceJS(JSTracer* trc)
