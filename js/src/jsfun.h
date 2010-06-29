@@ -382,18 +382,6 @@ extern JSBool
 SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 /*
- * js_SetCallArg and js_SetCallVar are extern fastcall copies of the setter
- * functions. These versions are required in order to set call vars from traces.
- * The normal versions must not be fastcall because they are stored in the
- * property ops map.
- */
-extern JSBool JS_FASTCALL
-js_SetCallArg(JSContext *cx, JSObject *obj, size_t slotid, js::Value *vp);
-
-extern JSBool JS_FASTCALL
-js_SetCallVar(JSContext *cx, JSObject *obj, size_t slotid, js::Value *vp);
-
-/*
  * Slower version of js_GetCallVar used when call_resolve detects an attempt to
  * leak an optimized closure via indirect or debugger eval.
  */

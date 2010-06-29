@@ -1064,12 +1064,11 @@ class TraceRecorder
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
                                                nanojit::LIns* d1, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpTypedSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
-                                                    JSValueTag mask, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
+    JS_REQUIRES_STACK nanojit::LIns* slurpNonDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
+                                                        JSValueTag mask, VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
                                                      VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp,
-                                               VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit);
     JS_REQUIRES_STACK void slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, SlurpInfo* info);
     JS_REQUIRES_STACK AbortableRecordingStatus slurpDownFrames(jsbytecode* return_pc);
     JS_REQUIRES_STACK AbortableRecordingStatus upRecursion();
@@ -1186,36 +1185,26 @@ class TraceRecorder
                                                             PropertyCacheEntry* entry,
                                                             PCVal& pcval);
 
-    void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot, const Value &v, 
+    void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot, const Value &v,
                          nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot,
                          nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
                         nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
-    void stobj_set_fslot_unboxed(nanojit::LIns *obj_ins, unsigned slot,
-                                 nanojit::LIns* v_ins);
-    void stobj_set_dslot_unboxed(nanojit::LIns *obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
-                                 nanojit::LIns* v_ins);
-    void stobj_set_slot_unboxed(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
-                                nanojit::LIns* v_ins);
+    void set_array_fslot(nanojit::LIns *obj_ins, unsigned slot, uint32 val);
 
-    nanojit::LIns* stobj_get_const_fslot(nanojit::LIns* obj_ins, unsigned slot);
-    nanojit::LIns* stobj_get_fslot(nanojit::LIns* obj_ins, unsigned slot);
-    nanojit::LIns* stobj_get_dslot(nanojit::LIns* obj_ins, unsigned index,
-                                   nanojit::LIns*& dslots_ins);
-    nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
-                                  nanojit::LIns*& dslots_ins);
-
-    nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins) {
-        return stobj_get_fslot(obj_ins, JSSLOT_PRIVATE);
-    }
+    nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns* obj_ins);
+    nanojit::LIns* stobj_get_fslot_uint32(nanojit::LIns* obj_ins, unsigned slot);
+    nanojit::LIns* stobj_get_fslot_ptr(nanojit::LIns* obj_ins, unsigned slot);
+    nanojit::LIns* unbox_slot(JSObject *obj, nanojit::LIns *obj_ins, uint32 slot,
+                              VMSideExit *exit);
 
     nanojit::LIns* stobj_get_proto(nanojit::LIns* obj_ins) {
-        return stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+        return stobj_get_fslot_ptr(obj_ins, JSSLOT_PROTO);
     }
 
     nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins) {
-        return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
+        return stobj_get_fslot_ptr(obj_ins, JSSLOT_PARENT);
     }
 
     JS_REQUIRES_STACK AbortableRecordingStatus name(Value*& vp, nanojit::LIns*& ins, NameResult& nr);
@@ -1236,8 +1225,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus getProp(Value& v);
     JS_REQUIRES_STACK RecordingStatus getThis(nanojit::LIns*& this_ins);
 
-    JS_REQUIRES_STACK void storeHole(JSWhyMagic why, nanojit::LIns *addr_ins, ptrdiff_t offset,
-                                     nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void storeMagic(JSWhyMagic why, nanojit::LIns *addr_ins, ptrdiff_t offset,
+                                      nanojit::AccSet accSet);
     JS_REQUIRES_STACK AbortableRecordingStatus unboxNextValue(nanojit::LIns* &v_ins);
 
     JS_REQUIRES_STACK VMSideExit* enterDeepBailCall();
@@ -1277,27 +1266,48 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus setElem(int lval_spindex, int idx_spindex,
                                                        int v_spindex);
 
-    JS_REQUIRES_STACK nanojit::LIns* unbox_value(const Value &v, nanojit::LIns *vaddr_ins, 
-                                                 ptrdiff_t offset, VMSideExit *exit,
-                                                 bool force_double=false);
-    JS_REQUIRES_STACK nanojit::LIns* unbox_value_load(const Value &v, nanojit::LIns *vload_ins,
-                                                      VMSideExit *exit);
-    JS_REQUIRES_STACK nanojit::LIns* unbox_int(const Value &v, nanojit::LIns *vaddr_ins, 
-                                                  ptrdiff_t offset);
-    JS_REQUIRES_STACK nanojit::LIns* unbox_string(const Value &v, nanojit::LIns *vaddr_ins, 
-                                                  ptrdiff_t offset);
-    JS_REQUIRES_STACK nanojit::LIns* unbox_object(nanojit::LIns *vaddr_ins, ptrdiff_t offset);
-    JS_REQUIRES_STACK nanojit::LIns* is_boxed_object(nanojit::LIns *vaddr_ins);
-    JS_REQUIRES_STACK nanojit::LIns* is_boxed_true(nanojit::LIns *vaddr_ins);
+    void box_undefined_into(nanojit::LIns *dstaddr_ins, ptrdiff_t offset, nanojit::AccSet);
+#if JS_BITS_PER_WORD == 32
+    void box_null_into(nanojit::LIns *dstaddr_ins, ptrdiff_t offset, nanojit::AccSet);
+    nanojit::LIns* unbox_number_as_double(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
+                                          nanojit::LIns* tag_ins, VMSideExit* exit,
+                                          nanojit::AccSet);
+    nanojit::LIns* unbox_non_double(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
+                                    nanojit::LIns* tag_ins, JSValueTag tag, VMSideExit* exit,
+                                    nanojit::AccSet);
+#elif JS_BITS_PER_WORD == 64
+    nanojit::LIns* non_double_value_has_tag(nanojit::LIns* v_ins, JSValueTag tag);
+    nanojit::LIns* unpack_ptr(nanojit::LIns* v_ins);
+    nanojit::LIns* unbox_number_as_double(nanojit::LIns* v_ins, VMSideExit* exit);
+    nanojit::LIns* unbox_non_double(nanojit::LIns* v_ins, JSValueTag tag, VMSideExit* exit);
+#endif
 
-    JS_REQUIRES_STACK nanojit::LIns* is_string_id(nanojit::LIns *id_ins);
-    JS_REQUIRES_STACK nanojit::LIns* unbox_string_id(nanojit::LIns *id_ins);
-    JS_REQUIRES_STACK nanojit::LIns* unbox_int_id(nanojit::LIns *id_ins);
+    nanojit::LIns* unbox_value(const Value& v, nanojit::LIns* vaddr_ins,
+                               ptrdiff_t offset, VMSideExit* exit,
+                               bool force_double=false);
+    void unbox_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
+                      nanojit::LIns** is_obj_ins, nanojit::AccSet);
+    nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet);
 
-    JS_REQUIRES_STACK void box_value(const Value &v, nanojit::LIns* v_ins, 
-                                     nanojit::LIns *dstaddr_ins, ptrdiff_t offset,
-                                     nanojit::AccSet accSet);
-    JS_REQUIRES_STACK nanojit::LIns* box_value(const Value &v, nanojit::LIns* v_ins);
+    nanojit::LIns* is_string_id(nanojit::LIns* id_ins);
+    nanojit::LIns* unbox_string_id(nanojit::LIns* id_ins);
+    nanojit::LIns* unbox_int_id(nanojit::LIns* id_ins);
+
+    /* Box a slot on trace into the given address at the given offset. */
+    void box_value_into(const Value& v, nanojit::LIns* v_ins,
+                        nanojit::LIns* dstaddr_ins, ptrdiff_t offset,
+                        nanojit::AccSet);
+
+    /*
+     * Box a slot so that it may be passed with value semantics to a native. On
+     * 32-bit, this currently means boxing the value into insAlloc'd memory and
+     * returning the address which is passed as a Value*. On 64-bit, this
+     * currently means returning the boxed value which is passed as a jsval.
+     */
+    nanojit::LIns* box_value_for_native_call(const Value& v, nanojit::LIns* v_ins);
+
+    /* Box a slot into insAlloc'd memory. */
+    nanojit::LIns* box_value_into_alloc(const Value& v, nanojit::LIns* v_ins);
 
     JS_REQUIRES_STACK void guardClassHelper(bool cond, nanojit::LIns* obj_ins, Class* clasp,
                                             VMSideExit* exit, nanojit::AccSet accSet);
@@ -1341,7 +1351,7 @@ class TraceRecorder
                                                 JSScopeProperty* sprop,
                                                 nanojit::LIns* obj_ins,
                                                 bool setflag,
-                                                nanojit::LIns* boxed_ins);
+                                                nanojit::LIns* addr_boxed_val_ins);
     JS_REQUIRES_STACK RecordingStatus callSpecializedNative(JSNativeTraceInfo* trcinfo, uintN argc,
                                                               bool constructing);
     JS_REQUIRES_STACK RecordingStatus callNative(uintN argc, JSOp mode);

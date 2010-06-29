@@ -1025,7 +1025,7 @@ def getTraceType(type):
         traceType = traceTypeMap.get(typeName)[0]
     else:
         assert isInterfaceType(type)
-        traceType = "js::Value *"
+        traceType = "js::ValueArgType "
     return traceType
 
 def getTraceReturnType(type):
@@ -1043,7 +1043,7 @@ def getTraceInfoType(type):
         traceType = traceTypeMap.get(typeName)[1]
     else:
         assert isInterfaceType(type)
-        traceType = "VALUEPTR"
+        traceType = "VALUE"
     return traceType
 
 def getTraceInfoReturnType(type):
@@ -1133,7 +1133,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
             assert haveCcx
             template = (
                 "    nsCOMPtr<nsIVariant> ${name}(already_AddRefed<nsIVariant>("
-                "XPCVariant::newVariant(ccx, *js::Jsvalify(${argVal}))));\n"
+                "XPCVariant::newVariant(ccx, js::Jsvalify(js::ValueArgToConstRef(${argVal})))));\n"
                 "    if (!${name}) {\n")
             f.write(substitute(template, params))
             writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
@@ -1147,7 +1147,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
             f.write("    %s *%s;\n" % (type.name, name))
             f.write("    xpc_qsSelfRef %sref;\n" % name)
             f.write("    rv = xpc_qsUnwrapArg<%s>("
-                    "cx, *js::Jsvalify(%s), &%s, &%sref.ptr, &vp.array[%d]);\n"
+                    "cx, js::Jsvalify(js::ValueArgToConstRef(%s)), &%s, &%sref.ptr, &vp.array[%d]);\n"
                     % (type.name, argVal, name, name, 1 + i))
             f.write("    if (NS_FAILED(rv)) {\n")
             if haveCcx:
