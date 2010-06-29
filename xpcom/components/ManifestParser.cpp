@@ -116,7 +116,11 @@ static const ManifestDirective kParsingTable[] = {
 };
 
 static const char kWhitespace[] = "\t ";
-static const char kNewlines[]   = "\r\n";
+
+static bool IsNewline(char c)
+{
+  return c == '\n' || c == '\r';
+}
 
 namespace {
 struct AutoPR_smprintf_free
@@ -477,7 +481,7 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
 
   // outer loop tokenizes by newline
   while (*newline) {
-    while (*newline && '\n' == *newline) {
+    while (*newline && IsNewline(*newline)) {
       ++newline;
       ++line;
     }
@@ -485,7 +489,7 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       break;
 
     token = newline;
-    while (*newline && '\n' != *newline)
+    while (*newline && !IsNewline(*newline))
       ++newline;
 
     if (*newline) {
