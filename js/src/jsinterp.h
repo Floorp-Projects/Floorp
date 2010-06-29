@@ -57,8 +57,7 @@ typedef struct JSFrameRegs {
 /* JS stack frame flags. */
 enum JSFrameFlags {
     JSFRAME_CONSTRUCTING       =  0x01, /* frame is for a constructor invocation */
-    JSFRAME_COMPUTED_THIS      =  0x02, /* frame.thisv was computed already and
-                                           JSVAL_IS_OBJECT(thisv) */
+    JSFRAME_OVERRIDE_ARGS      =  0x02, /* overridden arguments local variable */
     JSFRAME_ASSIGNING          =  0x04, /* a complex (not simplex JOF_ASSIGNING) op
                                            is currently assigning to a property */
     JSFRAME_DEBUGGER           =  0x08, /* frame for JS_EvaluateInStackFrame */
@@ -66,7 +65,6 @@ enum JSFrameFlags {
     JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
     JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
-    JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -82,7 +80,21 @@ enum JSFrameFlags {
 struct JSStackFrame
 {
     /* N.B. alignment (TODO: remove these members) */
-    js::Value           thisv;          /* "this" pointer if in method */
+
+    /*
+     * The value of |this| in this stack frame, or JSVAL_NULL if |this|
+     * is to be computed lazily on demand.
+     *
+     * thisv is eagerly initialized for non-function-call frames and
+     * qualified method calls, but lazily initialized in most unqualified
+     * function calls. See getThisObject().
+     *
+     * Usually if argv != NULL then thisv == argv[-1], but natives may
+     * assign to argv[-1]. Also, obj_eval can trigger a special case
+     * where two stack frames have the same argv. If one of the frames fills
+     * in both argv[-1] and thisv, the other frame's thisv is left null.
+     */
+    js::Value           thisv;
     js::Value           rval;           /* function return value */
 
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
@@ -228,6 +240,9 @@ struct JSStackFrame
         JS_ASSERT_IF(flags & JSFRAME_FLOATING_GENERATOR, isGenerator());
         return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
+
+  private:
+    JSObject *computeThisObject(JSContext *cx);
 };
 
 namespace js {
@@ -270,10 +285,9 @@ namespace js {
 
 /*
  * For a call with arguments argv including argv[-1] (nominal |this|) and
- * argv[-2] (callee) replace null |this| with callee's parent, replace
- * primitive values with the equivalent wrapper objects and censor activation
- * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
- * must not be a JSVAL_VOID.
+ * argv[-2] (callee) replace null |this| with callee's parent and replace
+ * primitive values with the equivalent wrapper objects. argv[-1] must
+ * not be JSVAL_VOID or an activation object.
  */
 extern bool
 ComputeThisFromArgv(JSContext *cx, js::Value *argv);
@@ -490,13 +504,7 @@ js_OnUnknownMethod(JSContext *cx, js::Value *vp);
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
-    if (flags & JSFRAME_COMPUTED_THIS)
-        return &thisv.asObject();
-    if (!js::ComputeThisFromArgv(cx, argv))
-        return NULL;
-    thisv = argv[-1];
-    flags |= JSFRAME_COMPUTED_THIS;
-    return &thisv.asObject();
+    return thisv.isPrimitive() ? computeThisObject(cx) : &thisv.asObject();
 }
 
 #endif /* jsinterp_h___ */
