@@ -533,6 +533,12 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   -moz-margin-end: 3px;
 }
 
+/* tabcandy button */
+
+#tabcandy-button {
+  list-style-image: url(chrome://browser/skin/tabcandy/tabcandy.png);
+}
+
 /* download manager button */
 
 #downloads-button {
