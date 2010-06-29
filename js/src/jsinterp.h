@@ -374,7 +374,7 @@ StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval);
 
 /* === except that NaN is the same as NaN and -0 is not the same as +0. */
 extern bool
-SameValue(JSContext *cx, const Value &v1, const Value &v2);
+SameValue(const Value &v1, const Value &v2, JSContext *cx);
 
 extern JSType
 TypeOfValue(JSContext *cx, const js::Value &v);
