@@ -2148,12 +2148,12 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 break;
 
             if (desc.hasGet &&
-                !SameValue(cx, desc.getterValue(), sprop->getterOrUndefined())) {
+                !SameValue(desc.getterValue(), sprop->getterOrUndefined(), cx)) {
                 break;
             }
 
             if (desc.hasSet &&
-                !SameValue(cx, desc.setterValue(), sprop->setterOrUndefined())) {
+                !SameValue(desc.setterValue(), sprop->setterOrUndefined(), cx)) {
                 break;
             }
         } else {
@@ -2204,7 +2204,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 if (!sprop->isDataDescriptor())
                     break;
 
-                if (desc.hasValue && !SameValue(cx, desc.value, v))
+                if (desc.hasValue && !SameValue(desc.value, v, cx))
                     break;
                 if (desc.hasWritable && desc.writable() != sprop->writable())
                     break;
@@ -2255,7 +2255,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         JS_ASSERT(sprop->isDataDescriptor());
         if (!sprop->configurable() && !sprop->writable()) {
             if ((desc.hasWritable && desc.writable()) ||
-                (desc.hasValue && !SameValue(cx, desc.value, v))) {
+                (desc.hasValue && !SameValue(desc.value, v, cx))) {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
             }
@@ -2265,9 +2265,9 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         JS_ASSERT(desc.isAccessorDescriptor() && sprop->isAccessorDescriptor());
         if (!sprop->configurable()) {
             if ((desc.hasSet &&
-                 !SameValue(cx, desc.setterValue(), sprop->setterOrUndefined())) ||
+                 !SameValue(desc.setterValue(), sprop->setterOrUndefined(), cx)) ||
                 (desc.hasGet &&
-                 !SameValue(cx, desc.getterValue(), sprop->getterOrUndefined()))) {
+                 !SameValue(desc.getterValue(), sprop->getterOrUndefined(), cx))) {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
             }

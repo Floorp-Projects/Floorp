@@ -1003,7 +1003,7 @@ IsNaN(const Value &v)
 }
 
 bool
-SameValue(JSContext *cx, const Value &v1, const Value &v2)
+SameValue(const Value &v1, const Value &v2, JSContext *cx)
 {
     if (IsNegativeZero(v1))
         return IsNegativeZero(v2);
