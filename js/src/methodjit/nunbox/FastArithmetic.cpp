@@ -572,10 +572,9 @@ mjit::Compiler::jsop_neg()
 
     /* 
      * Load type information into register.
-     * TODO: Optimize code emission if types are known.
      */
     MaybeRegisterID feTypeReg;
-    if (!frame.shouldAvoidTypeRemat(fe)) {
+    if (!fe->isTypeKnown() && !frame.shouldAvoidTypeRemat(fe)) {
         /* Safe because only one type is loaded. */
         feTypeReg.setReg(frame.tempRegForType(fe));
 
