@@ -406,6 +406,27 @@
 
       <field name="_webNavigation"><![CDATA[
         ({
+          LOAD_FLAGS_MASK: 65535,
+          LOAD_FLAGS_NONE: 0,
+          LOAD_FLAGS_IS_REFRESH: 16,
+          LOAD_FLAGS_IS_LINK: 32,
+          LOAD_FLAGS_BYPASS_HISTORY: 64,
+          LOAD_FLAGS_REPLACE_HISTORY: 128,
+          LOAD_FLAGS_BYPASS_CACHE: 256,
+          LOAD_FLAGS_BYPASS_PROXY: 512,
+          LOAD_FLAGS_CHARSET_CHANGE: 1024,
+          LOAD_FLAGS_STOP_CONTENT: 2048,
+          LOAD_FLAGS_FROM_EXTERNAL: 4096,
+          LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP: 8192,
+          LOAD_FLAGS_FIRST_LOAD: 16384,
+          LOAD_FLAGS_ALLOW_POPUPS: 32768,
+          LOAD_FLAGS_BYPASS_CLASSIFIER: 65536,
+          LOAD_FLAGS_FORCE_ALLOW_COOKIES: 131072,
+          
+          STOP_NETWORK: 1,
+          STOP_CONTENT: 2,
+          STOP_ALL: 3,
+
           canGoBack: false,
           canGoForward: false,
           goBack: function() { this._sendMessage("WebNavigation:GoBack", {}); },
@@ -438,6 +459,12 @@
             catch (e) {
               Components.utils.reportError(e);
             }
+         },
+
+         QueryInterface: function(aIID) {
+           if (aIID.equals(Components.interfaces.nsIWebNavigation) || aIID.equals(Components.interfaces.nsISupports))
+             return this;
+           throw Components.results.NS_NOINTERFACE;
          }
         })
       ]]></field>
