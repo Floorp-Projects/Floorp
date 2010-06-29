@@ -1803,6 +1803,12 @@ function focusAndSelectUrlBar() {
   return false;
 }
 
+function BrowserShowTabCandy() {
+  let event = document.createEvent("Events");
+  event.initEvent("tabcandyshow", false, false);
+  dispatchEvent(event);
+}
+
 function openLocation() {
   if (focusAndSelectUrlBar())
     return;
