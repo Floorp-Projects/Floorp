@@ -672,7 +672,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         JSBool alreadyThrowing = cx->throwing;
 #endif
         /* Primitive |this| should not be passed to slow natives. */
-        JSObject *thisp = fun ? fp->getThisObject(cx) : NULL;
+        JSObject *thisp = fun ? fp->getThisObject(cx) : fp->thisv.asObjectOrNull();
         ok = native(cx, thisp, fp->argc, fp->argv, &fp->rval);
         JS_ASSERT(cx->fp == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
