@@ -1187,6 +1187,15 @@ NS_IMETHODIMP
 History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
 {
   NS_PRECONDITION(aURI, "Must pass a non-null URI!");
+#ifdef MOZ_IPC
+   if (XRE_GetProcessType() == GeckoProcessType_Content) {
+     mozilla::dom::ContentProcessChild* cpc = 
+       mozilla::dom::ContentProcessChild::GetSingleton();
+     NS_ASSERTION(cpc, "Content Protocol is NULL!");
+     (void)cpc->SendSetURITitle(IPC::URI(aURI), aTitle);
+     return NS_OK;
+   } 
+#endif /* MOZ_IPC */
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   PRBool canAdd;
