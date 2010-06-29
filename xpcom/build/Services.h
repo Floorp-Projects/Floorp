@@ -42,9 +42,12 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 
+#define MOZ_USE_NAMESPACE
 #define MOZ_SERVICE(NAME, TYPE, SERVICE_CID) class TYPE;
+
 #include "ServiceList.h"
 #undef MOZ_SERVICE
+#undef MOZ_USE_NAMESPACE
 
 namespace mozilla {
 namespace services {

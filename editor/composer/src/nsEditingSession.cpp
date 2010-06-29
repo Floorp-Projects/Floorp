@@ -261,6 +261,14 @@ nsEditingSession::RestoreJSAndPlugins(nsIDOMWindow *aWindow)
   return docShell->SetAllowPlugins(mPluginsEnabled);
 }
 
+NS_IMETHODIMP
+nsEditingSession::GetJsAndPluginsDisabled(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mDisabledJSAndPlugins;
+  return NS_OK;
+}
+
 /*---------------------------------------------------------------------------
 
   WindowIsEditable
