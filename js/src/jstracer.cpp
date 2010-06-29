@@ -809,7 +809,7 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
             break;
         case 'o':
             GET_ARG();
-            DumpObject(u.o);
+            js_DumpObject(u.o);
             break;
         case 's':
             GET_ARG();
@@ -837,7 +837,7 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
         case 'v': {
             GET_ARG();
             Value *v = (Value *) u.i.lo;
-            DumpValue(*v);
+            js_DumpValue(*v);
             break;
         }
         default:
