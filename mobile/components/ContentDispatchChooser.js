@@ -44,9 +44,7 @@ function ContentDispatchChooser() {}
 
 ContentDispatchChooser.prototype =
 {
-  classDescription: "Used to handle different types of content",
   classID: Components.ID("5a072a22-1e66-4100-afc1-07aed8b62fc5"),
-  contractID: "@mozilla.org/content-dispatch-chooser;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentDispatchChooser]),
 
@@ -70,8 +68,5 @@ ContentDispatchChooser.prototype =
   }
 };
 
-function NSGetModule(aCompMgr, aFileSpec)
-{
-  return XPCOMUtils.generateModule([ContentDispatchChooser]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentDispatchChooser]);
 

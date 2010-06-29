@@ -48,15 +48,9 @@ const NS_APP_CACHE_PARENT_DIR = "cachePDir";
 function DirectoryProvider() {}
 
 DirectoryProvider.prototype = {
-  classDescription: "Directory Provider for special browser folders and files",
-  contractID: "@mozilla.org/browser/directory-provider;1",
   classID: Components.ID("{ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}"),
   
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
-
-  _xpcom_categories: [
-    { category: "xpcom-directory-providers", entry: "browser-directory-provider" }
-  ],
 
   getFile: function(prop, persistent) {
     if (prop == NS_APP_CACHE_PARENT_DIR) {
@@ -87,7 +81,5 @@ DirectoryProvider.prototype = {
   }
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([DirectoryProvider]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DirectoryProvider]);
 

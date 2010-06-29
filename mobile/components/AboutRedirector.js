@@ -108,52 +108,39 @@ AboutGeneric.prototype = {
 function AboutFirstrun() {}
 AboutFirstrun.prototype = {
   __proto__: AboutGeneric.prototype,
-  classDescription: "About Firstrun",
-  contractID: "@mozilla.org/network/protocol/about;1?what=firstrun",
   classID: Components.ID("{077ea23e-0f22-4168-a744-8e444b560197}")
 }
 
 function AboutFennec() {}
 AboutFennec.prototype = {
   __proto__: AboutGeneric.prototype,
-  classDescription: "About Fennec",
-  contractID: "@mozilla.org/network/protocol/about;1?what=fennec",
   classID: Components.ID("{842a6d11-b369-4610-ba66-c3b5217e82be}")
 }
 
 function AboutFirefox() {}
 AboutFirefox.prototype = {
   __proto__: AboutGeneric.prototype,
-  classDescription: "About Firefox",
-  contractID: "@mozilla.org/network/protocol/about;1?what=firefox",
   classID: Components.ID("{dd40c467-d206-4f22-9215-8fcc74c74e38}")  
 }
 
 function AboutRights() {}
 AboutRights.prototype = {
   __proto__: AboutGeneric.prototype,
-  classDescription: "About Rights",
-  contractID: "@mozilla.org/network/protocol/about;1?what=rights",
   classID: Components.ID("{3b988fbf-ec97-4e1c-a5e4-573d999edc9c}")
 }
 
 function AboutCertError() {}
 AboutCertError.prototype = {
   __proto__: AboutGeneric.prototype,
-  classDescription: "About Certificate Error",
-  contractID: "@mozilla.org/network/protocol/about;1?what=certerror",
   classID: Components.ID("{972efe64-8ac0-4e91-bdb0-22835d987815}")
 }
 
 function AboutHome() {}
 AboutHome.prototype = {
   __proto__: AboutGeneric.prototype,
-  classDescription: "About Home",
-  contractID: "@mozilla.org/network/protocol/about;1?what=home",
   classID: Components.ID("{b071364f-ab68-4669-a9db-33fca168271a}")
 }
 
-
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([AboutFirstrun, AboutFennec, AboutRights,
-                             AboutCertError, AboutFirefox, AboutHome]);
+const components = [AboutFirstrun, AboutFennec, AboutRights,
+                    AboutCertError, AboutFirefox, AboutHome];
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

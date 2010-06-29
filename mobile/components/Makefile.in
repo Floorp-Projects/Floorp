@@ -54,6 +54,7 @@ EXTRA_PP_COMPONENTS = \
         $(NULL)
 
 EXTRA_COMPONENTS = \
+        MobileComponents.manifest \
         BrowserStartup.js \
         GeolocationPrompt.js \
         AlertsService.js \

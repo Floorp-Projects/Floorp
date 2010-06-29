@@ -46,8 +46,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function DownloadManagerUI() { }
 
 DownloadManagerUI.prototype = {
-  classDescription: "Download Manager UI",
-  contractID: "@mozilla.org/download-manager-ui;1",
   classID: Components.ID("{93db15b1-b408-453e-9a2b-6619e168324a}"),
 
   show: function show(aWindowContext, aID, aReason) {
@@ -79,6 +77,4 @@ DownloadManagerUI.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI])
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([DownloadManagerUI]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadManagerUI]);

@@ -41,8 +41,6 @@ function PromptService() {
 }
 
 PromptService.prototype = {
-  classDescription: "Mobile Prompt Service",
-  contractID: "@mozilla.org/prompter;1",
   classID: Components.ID("{9a61149b-2276-4a0a-b79c-be994ad106cf}"),
   
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
@@ -571,15 +569,4 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "bundle", function () {
   return bundleService.createBundle("chrome://global/locale/commonDialogs.properties");
 });
 
-// Wrapper using the old embedding contractID, since it's already common in
-// the addon ecosystem.
-function EmbedPrompter() {}
-EmbedPrompter.prototype = new PromptService();
-EmbedPrompter.prototype.classDescription = "EmbedPrompter";
-EmbedPrompter.prototype.contractID       = "@mozilla.org/embedcomp/prompt-service;1"; // NS_PROMPTSERVICE_CONTRACTID
-EmbedPrompter.prototype.classID          = Components.ID("{ea13ce5b-9164-4df9-8713-9c1a0774f25e}");
-
-//module initialization
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([PromptService, EmbedPrompter]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([PromptService]);

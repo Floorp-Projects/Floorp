@@ -70,11 +70,7 @@ const STATE_QUITTING = -1;
 function SessionStore() { }
 
 SessionStore.prototype = {
-  classDescription: "Browser Session Store",
-  contractID: "@mozilla.org/mobile/sessionstore;1",
   classID: Components.ID("{90c3dfaf-4245-46d3-9bc1-1d8251ff8c01}"),
-
-  _xpcom_categories: [{ category: "app-startup", service: true }],
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
@@ -411,6 +407,4 @@ SessionStore.prototype = {
   }
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([SessionStore]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStore]);

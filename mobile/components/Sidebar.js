@@ -49,8 +49,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY = "JavaScript global property";
-
 var gStrBundleService = null;
 function srGetStrBundle(path) {
   if (!gStrBundleService) {
@@ -175,14 +173,6 @@ Sidebar.prototype = {
 
   // XPCOMUtils stuff
   classID: Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}"),
-  className: "Sidebar JS Component",
-  contractID: "@mozilla.org/sidebar;1",
-  _xpcom_categories: [{ category: JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
-                        entry: "sidebar"},
-                      { category: JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
-                        entry: "external"}]
-}
+};
 
-function NSGetModule(compMgr, fileSpec) {
-    return XPCOMUtils.generateModule([Sidebar]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([Sidebar]);

@@ -55,17 +55,9 @@ function BrowserStartup() {
 
 BrowserStartup.prototype = {
   // for XPCOM
-  classDescription: "Mobile Browser Glue Service",
   classID:          Components.ID("{1d542abc-c88b-4636-a4ef-075b49806317}"),
-  contractID:       "@mozilla.org/mobile/browser-startup;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-  // get this contractID registered for certain categories via XPCOMUtils
-  _xpcom_categories: [
-    // make BrowserStartup a startup observer
-    { category: "app-startup", service: true }
-  ],
 
   _xpcom_factory: BrowserStartupServiceFactory,
 
@@ -147,24 +139,4 @@ BrowserStartup.prototype = {
   }
 };
 
-
-function BrowserStyleSheets() { }
-
-BrowserStyleSheets.prototype = {
-  // This isn't a real component, we're just using categories to
-  // automatically add our stylesheets during module registration.
-  classDescription: "Mobile Browser Content Stylesheets",
-  classID:          Components.ID("9e899d1c-dd83-44e9-ab01-3180b2c5b2b1"),
-  contractID:       "@mozilla.org/mobile/browser-stylesheets;1",
-  QueryInterface: XPCOMUtils.generateQI([]),
-
-  _xpcom_categories: [{ category: "agent-style-sheets",
-                        entry:    "browser content stylesheet",
-                        value:    "chrome://browser/content/content.css"},
-                      { category: "agent-style-sheets",
-                        entry:    "browser cursor stylesheet",
-                        value:    "chrome://browser/content/cursor.css"}]
-};
-
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([BrowserStartup, BrowserStyleSheets]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([BrowserStartup]);
