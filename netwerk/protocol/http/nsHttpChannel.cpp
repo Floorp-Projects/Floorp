@@ -114,6 +114,8 @@ nsHttpChannel::~nsHttpChannel()
 {
     LOG(("Destroying nsHttpChannel [this=%p]\n", this));
 
+    if (mAuthProvider) 
+        mAuthProvider->Disconnect(NS_ERROR_ABORT);
 }
 
 nsresult
