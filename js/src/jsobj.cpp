@@ -2148,12 +2148,12 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 break;
 
             if (desc.hasGet &&
-                !SameValue(cx, desc.getterValue(), sprop->getterOrUndefined())) {
+                !SameValue(desc.getterValue(), sprop->getterOrUndefined(), cx)) {
                 break;
             }
 
             if (desc.hasSet &&
-                !SameValue(cx, desc.setterValue(), sprop->setterOrUndefined())) {
+                !SameValue(desc.setterValue(), sprop->setterOrUndefined(), cx)) {
                 break;
             }
         } else {
@@ -2204,7 +2204,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 if (!sprop->isDataDescriptor())
                     break;
 
-                if (desc.hasValue && !SameValue(cx, desc.value, v))
+                if (desc.hasValue && !SameValue(desc.value, v, cx))
                     break;
                 if (desc.hasWritable && desc.writable() != sprop->writable())
                     break;
@@ -2255,7 +2255,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         JS_ASSERT(sprop->isDataDescriptor());
         if (!sprop->configurable() && !sprop->writable()) {
             if ((desc.hasWritable && desc.writable()) ||
-                (desc.hasValue && !SameValue(cx, desc.value, v))) {
+                (desc.hasValue && !SameValue(desc.value, v, cx))) {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
             }
@@ -2265,9 +2265,9 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         JS_ASSERT(desc.isAccessorDescriptor() && sprop->isAccessorDescriptor());
         if (!sprop->configurable()) {
             if ((desc.hasSet &&
-                 !SameValue(cx, desc.setterValue(), sprop->setterOrUndefined())) ||
+                 !SameValue(desc.setterValue(), sprop->setterOrUndefined(), cx)) ||
                 (desc.hasGet &&
-                 !SameValue(cx, desc.getterValue(), sprop->getterOrUndefined()))) {
+                 !SameValue(desc.getterValue(), sprop->getterOrUndefined(), cx))) {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
             }
@@ -6277,8 +6277,6 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 #ifdef DEBUG
 
-namespace js {
-
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
  * the debugger find them and to support temporarily hacking js_Dump* calls
@@ -6311,7 +6309,7 @@ dumpChars(const jschar *s, size_t n)
 }
 
 JS_FRIEND_API(void)
-DumpChars(const jschar *s, size_t n)
+js_DumpChars(const jschar *s, size_t n)
 {
     fprintf(stderr, "jschar * (%p) = ", (void *) s);
     dumpChars(s, n);
@@ -6325,7 +6323,7 @@ dumpString(JSString *str)
 }
 
 JS_FRIEND_API(void)
-DumpString(JSString *str)
+js_DumpString(JSString *str)
 {
     fprintf(stderr, "JSString* (%p) = jschar * (%p) = ",
             (void *) str, (void *) str->chars());
@@ -6334,10 +6332,10 @@ DumpString(JSString *str)
 }
 
 JS_FRIEND_API(void)
-DumpAtom(JSAtom *atom)
+js_DumpAtom(JSAtom *atom)
 {
     fprintf(stderr, "JSAtom* (%p) = ", (void *) atom);
-    DumpString(ATOM_TO_STRING(atom));
+    js_DumpString(ATOM_TO_STRING(atom));
 }
 
 void
@@ -6392,14 +6390,14 @@ dumpValue(const Value &v)
 }
 
 JS_FRIEND_API(void)
-DumpValue(const Value &val)
+js_DumpValue(const Value &val)
 {
     dumpValue(val);
     fputc('\n', stderr);
 }
 
 JS_FRIEND_API(void)
-DumpId(jsid id)
+js_DumpId(jsid id)
 {
     fprintf(stderr, "jsid %p = ", (void *) JSID_BITS(id));
     dumpValue(IdToValue(id));
@@ -6431,7 +6429,7 @@ dumpScopeProp(JSScopeProperty *sprop)
 }
 
 JS_FRIEND_API(void)
-DumpObject(JSObject *obj)
+js_DumpObject(JSObject *obj)
 {
     uint32 i, slots;
     Class *clasp;
@@ -6519,7 +6517,7 @@ MaybeDumpValue(const char *name, const Value &v)
 }
 
 JS_FRIEND_API(void)
-DumpStackFrame(JSContext *cx, JSStackFrame *start)
+js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
 {
     /* This should only called during live debugging. */
     VOUCH_DOES_NOT_REQUIRE_STACK();

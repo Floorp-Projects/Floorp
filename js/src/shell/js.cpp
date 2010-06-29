@@ -5115,7 +5115,7 @@ main(int argc, char **argv, char **envp)
     CALIBRATION_DELAY_COUNT = 0;
 #endif
 
-    rt = JS_NewRuntime(64L * 1024L * 1024L);
+    rt = JS_NewRuntime(128L * 1024L * 1024L);
     if (!rt)
         return 1;
 
