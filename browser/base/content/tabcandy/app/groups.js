@@ -278,7 +278,7 @@ window.Group = function(listOfEls, options) {
     
   // ___ Stack Expander
   this.$expander = iQ("<img/>")
-    .attr('src', 'chrome://tabcandy/content/img/stack-expander.png')
+    .attr('src', 'chrome://browser/skin/tabcandy/stack-expander.png')
     .addClass("stackExpander")
     .appendTo($container)
     .hide(); 
