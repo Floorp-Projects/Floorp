@@ -107,7 +107,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
             return NS_ERROR_FAILURE;                                          \
     }                                                                         \
                                                                               \
-    inst = new _InstanceClass();                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
     if (NULL == inst) {                                                       \
         if (triggeredByNSSComponent)                                          \
             EnsureNSSInitialized(nssInitFailed);                              \
@@ -156,7 +156,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
             return NS_ERROR_FAILURE;                                          \
     }                                                                         \
                                                                               \
-    inst = new _InstanceClass();                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
     if (NULL == inst) {                                                       \
         if (triggeredByNSSComponent)                                          \
             EnsureNSSInitialized(nssInitFailed);                              \
