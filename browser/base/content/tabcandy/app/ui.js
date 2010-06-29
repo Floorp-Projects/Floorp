@@ -885,7 +885,7 @@ UIClass.prototype = {
     }, {
       name: 'refresh', 
       code: function() {
-        location.href = 'index.html';
+        location.href = 'tabcandy.html';
       }
     }, {
       name: 'code docs', 
