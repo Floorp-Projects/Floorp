@@ -123,7 +123,7 @@ nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
         return rv;
     }
 
-    inst = new nsNativeThemeGTK();
+    NS_NEWXPCOM(inst, nsNativeThemeGTK);
     if (NULL == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         return rv;
@@ -197,7 +197,7 @@ nsNativeKeyBindingsConstructor(nsISupports *aOuter, REFNSIID aIID,
         return rv;
     }
 
-    inst = new nsNativeKeyBindings();
+    NS_NEWXPCOM(inst, nsNativeKeyBindings);
     if (NULL == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         return rv;

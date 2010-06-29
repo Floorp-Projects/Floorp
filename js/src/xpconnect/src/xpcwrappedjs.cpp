@@ -237,7 +237,7 @@ do_decrement:
 
     if(0 == cnt)
     {
-        delete this;   // also unlinks us from chain
+        NS_DELETEXPCOM(this);   // also unlinks us from chain
         return 0;
     }
     if(1 == cnt)

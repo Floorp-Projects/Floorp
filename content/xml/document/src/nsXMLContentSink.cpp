@@ -124,7 +124,8 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXMLContentSink* it = new nsXMLContentSink();
+  nsXMLContentSink* it;
+  NS_NEWXPCOM(it, nsXMLContentSink);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -1651,7 +1651,8 @@ nsStandardURL::SchemeIs(const char *scheme, PRBool *result)
 /* virtual */ nsStandardURL*
 nsStandardURL::StartClone()
 {
-    nsStandardURL *clone = new nsStandardURL();
+    nsStandardURL *clone;
+    NS_NEWXPCOM(clone, nsStandardURL);
     return clone;
 }
 

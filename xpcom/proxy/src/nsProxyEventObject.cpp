@@ -113,7 +113,7 @@ nsProxyEventObject::Release(void)
 
     // call the destructor outside of the lock so that we aren't holding the
     // lock when we release the object
-    delete this;
+    NS_DELETEXPCOM(this);
     return 0;
 }
 

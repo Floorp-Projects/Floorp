@@ -129,7 +129,8 @@ nsResURL::EnsureFile()
 /* virtual */ nsStandardURL*
 nsResURL::StartClone()
 {
-    nsResURL *clone = new nsResURL();
+    nsResURL *clone;
+    NS_NEWXPCOM(clone, nsResURL);
     return clone;
 }
 
@@ -303,7 +304,8 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
 {
     nsresult rv;
 
-    nsResURL *resURL = new nsResURL();
+    nsResURL *resURL;
+    NS_NEWXPCOM(resURL, nsResURL);
     if (!resURL)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(resURL);
