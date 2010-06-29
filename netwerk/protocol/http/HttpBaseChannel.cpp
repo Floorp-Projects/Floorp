@@ -667,8 +667,6 @@ HttpBaseChannel::SetRequestHeader(const nsACString& aHeader,
                                   const nsACString& aValue,
                                   PRBool aMerge)
 {
-  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
-
   const nsCString &flatHeader = PromiseFlatCString(aHeader);
   const nsCString &flatValue  = PromiseFlatCString(aValue);
 
