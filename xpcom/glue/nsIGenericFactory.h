@@ -379,7 +379,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
         return rv;                                                            \
     }                                                                         \
                                                                               \
-    inst = new _InstanceClass();                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
     if (NULL == inst) {                                                       \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \
@@ -407,7 +407,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
         return rv;                                                            \
     }                                                                         \
                                                                               \
-    inst = new _InstanceClass();                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
     if (NULL == inst) {                                                       \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \

@@ -71,7 +71,8 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  nsXBLContentSink* it = new nsXBLContentSink();
+  nsXBLContentSink* it;
+  NS_NEWXPCOM(it, nsXBLContentSink);
   NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
