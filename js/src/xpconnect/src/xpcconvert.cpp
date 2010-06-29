@@ -325,7 +325,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
 
                 if(!p->IsVoid()) {
                     jsval str = XPCStringConvert::ReadableToJSVal(cx, *p);
-                    if(!str)
+                    if(JSVAL_IS_NULL(str))
                         return JS_FALSE;
 
                     *d = str;
@@ -2246,7 +2246,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                                     JSBool useAllocator,
                                     uintN* pErr)
 {
-    NS_PRECONDITION(s, "bad param");
+    NS_PRECONDITION(!JSVAL_IS_NULL(s), "bad param");
     NS_PRECONDITION(d, "bad param");
 
     JSContext* cx = ccx.GetJSContext();

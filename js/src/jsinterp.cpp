@@ -1309,9 +1309,9 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
         double d;
         if (!ValueToNumber(cx, *vp, &d))
             return JS_FALSE;
-        vp->setDouble(d);
+        vp->setNumber(d);
         (cs->format & JOF_INC) ? ++d : --d;
-        vp2->setDouble(d);
+        vp2->setNumber(d);
         return JS_TRUE;
     }
 
@@ -1319,8 +1319,8 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
     if (!ValueToNumber(cx, *vp, &d))
         return JS_FALSE;
     (cs->format & JOF_INC) ? ++d : --d;
-    vp->setDouble(d);
-    vp2->setDouble(d);
+    vp->setNumber(d);
+    *vp2 = *vp;
     return JS_TRUE;
 }
 
