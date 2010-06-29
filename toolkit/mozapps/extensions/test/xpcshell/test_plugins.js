@@ -88,6 +88,9 @@ function run_test_1() {
       do_check_eq(p.pendingOperations, 0);
       do_check_true(p.size > 0);
       do_check_eq(p.size, getFileSize(testPlugin));
+      do_check_true(p.updateDate > 0);
+      do_check_eq(p.updateDate.getTime(), testPlugin.lastModifiedTime);
+      do_check_eq(p.installDate.getTime(), testPlugin.lastModifiedTime);
 
       // Work around the fact that on Linux source builds, if we're using
       // symlinks (i.e. objdir), then Linux will see these as a different scope
