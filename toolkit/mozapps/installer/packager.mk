@@ -380,6 +380,7 @@ ifdef MOZ_PKG_MANIFEST
 		 "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
 		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)"
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py $(DIST)/manifests $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef STAGE_SDK
