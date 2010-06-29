@@ -50,7 +50,7 @@ interface nsIComponentRegistrar : nsISupports
     /**
      * autoRegister
      *
-     * Register a .manifest or .xpt file, or an entire directory containing
+     * Register a .manifest file, or an entire directory containing
      * these files. Registration lasts for this run only, and is not cached.
      *
      * @note Formerly this method would register component files directly. This

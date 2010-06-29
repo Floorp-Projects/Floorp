@@ -502,6 +502,21 @@ nsComponentManagerImpl::RegisterContractID(const mozilla::Module::ContractIDEntr
     mContractIDs.Put(nsDependentCString(aEntry->contractid), f);
 }
 
+static nsCString
+GetExtension(nsILocalFile* file)
+{
+    nsCString extension;
+    file->GetNativePath(extension);
+
+    PRInt32 dotPos = extension.RFindChar('.');
+    if (kNotFound == dotPos)
+        extension.Truncate();
+    else
+        extension.Cut(0, dotPos + 1);
+
+    return extension;
+}
+
 void
 nsComponentManagerImpl::RegisterLocation(NSLocationType aType,
                                          nsILocalFile* aLocation,
@@ -512,19 +527,17 @@ nsComponentManagerImpl::RegisterLocation(NSLocationType aType,
     PRBool directory = PR_FALSE;
     aLocation->IsDirectory(&directory);
     if (directory)
-        RegisterDirectory(aType, aLocation, manifests, aChromeOnly);
-    else
-        RegisterFile(aType, aLocation, manifests, aChromeOnly);
+        GetManifestsInDirectory(aLocation, manifests);
+    else if (GetExtension(aLocation).LowerCaseEqualsLiteral("manifest"))
+        manifests.AppendObject(aLocation);
 
     for (PRInt32 i = 0; i < manifests.Count(); ++i)
         RegisterManifestFile(aType, manifests[i], aChromeOnly);
 }
 
 void
-nsComponentManagerImpl::RegisterDirectory(NSLocationType aType,
-                                          nsILocalFile* aDirectory,
-                                          nsCOMArray<nsILocalFile>& aManifests,
-                                          bool aChromeOnly)
+nsComponentManagerImpl::GetManifestsInDirectory(nsILocalFile* aDirectory,
+                                                nsCOMArray<nsILocalFile>& aManifests)
 {
     nsCOMPtr<nsISimpleEnumerator> entries;
     aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
@@ -539,46 +552,9 @@ nsComponentManagerImpl::RegisterDirectory(NSLocationType aType,
         if (!f)
             continue;
 
-        RegisterFile(aType, f, aManifests, aChromeOnly);
+        if (GetExtension(f).LowerCaseEqualsLiteral("manifest"))
+            aManifests.AppendObject(f);
     }
-}
-
-static void
-GetExtension(nsILocalFile* file, nsCString& extension)
-{
-    file->GetNativePath(extension);
-
-    PRInt32 dotPos = extension.RFindChar('.');
-    if (kNotFound == dotPos)
-        extension.Truncate();
-    else
-        extension.Cut(0, dotPos + 1);
-}
-
-void
-nsComponentManagerImpl::RegisterFile(NSLocationType aType,
-                                     nsILocalFile* aFile,
-                                     nsCOMArray<nsILocalFile>& aManifests,
-                                     bool aChromeOnly)
-{
-    nsCString extension;
-    GetExtension(aFile, extension);
-
-    if (NS_COMPONENT_LOCATION == aType && !aChromeOnly) {
-        if (extension.EqualsLiteral("xpt")) {
-            xptiInterfaceInfoManager::GetSingleton()
-                ->RegisterFile(aFile,
-                               xptiInterfaceInfoManager::XPT);
-        }
-        else if (extension.EqualsLiteral("jar")) {
-            xptiInterfaceInfoManager::GetSingleton()
-                ->RegisterFile(aFile,
-                               xptiInterfaceInfoManager::ZIP);
-        }
-    }
-
-    if (extension.LowerCaseEqualsLiteral("manifest"))
-        aManifests.AppendObject(aFile);
 }
 
 namespace {
@@ -810,8 +786,7 @@ bool
 nsComponentManagerImpl::KnownModule::EnsureLoader()
 {
     if (!mLoader) {
-        nsCString extension;
-        GetExtension(mFile, extension);
+        nsCString extension = GetExtension(mFile);
 
         mLoader = nsComponentManagerImpl::gComponentManager->LoaderForExtension(extension);
     }
