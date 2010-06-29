@@ -586,6 +586,11 @@
                      ondragleave="homeButtonObserver.onDragLeave(event)"
                      onclick="BrowserGoHome(event);"/>
 
+      <toolbarbutton id="tabcandy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabCandyButton.label;" removable="true"
+                     command="Browser:ShowTabCandy"
+                     tooltiptext="&tabCandyButton.tooltip;"/>
+
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
