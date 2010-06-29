@@ -234,15 +234,8 @@ public:
     void RegisterLocation(NSLocationType aType, nsILocalFile* aLocation,
                           bool aChromeOnly);
 
-    // Register XPT/XPTJAR files, and fills aManifests with .manifest
-    // files, which must be registered after all DLLs so that networking is
-    // registered.
-    void RegisterDirectory(NSLocationType aType, nsILocalFile* aDirectory,
-                           nsCOMArray<nsILocalFile>& aManifests,
-                           bool aChromeOnly);
-    void RegisterFile(NSLocationType aType, nsILocalFile* aFile,
-                      nsCOMArray<nsILocalFile>& aManifests,
-                      bool aChromeOnly);
+    void GetManifestsInDirectory(nsILocalFile* aDirectory,
+                                 nsCOMArray<nsILocalFile>& aManifests);
 
     void RegisterManifestFile(NSLocationType aType, nsILocalFile* aFile,
                               bool aChromeOnly);

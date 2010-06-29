@@ -1723,6 +1723,7 @@ endif # XPIDL_MODULE.xpt != XPIDLSRCS
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components
+	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPIDL_MODULE).xpt"
 endif
 
 endif # NO_GEN_XPT
