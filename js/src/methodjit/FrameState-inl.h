@@ -98,14 +98,14 @@ FrameState::allocReg(uint32 mask)
 }
 
 inline JSC::MacroAssembler::RegisterID
-FrameState::allocReg(FrameEntry *fe, RematInfo::RematType type, bool weak)
+FrameState::allocReg(FrameEntry *fe, RematInfo::RematType type)
 {
     RegisterID reg;
     if (!freeRegs.empty())
         reg = freeRegs.takeAnyReg();
     else
         reg = evictSomeReg();
-    regstate[reg] = RegisterState(fe, type, weak);
+    regstate[reg] = RegisterState(fe, type);
     return reg;
 }
 
@@ -234,7 +234,7 @@ FrameState::pushSynced(JSValueTag tag, RegisterID reg)
     fe->data.sync();
     fe->setTypeTag(tag);
     fe->data.setRegister(reg);
-    regstate[reg] = RegisterState(fe, RematInfo::DATA, true);
+    regstate[reg] = RegisterState(fe, RematInfo::DATA);
 }
 
 inline void
@@ -250,7 +250,7 @@ FrameState::push(Address address)
     if (free)
         freeRegs.takeReg(address.base);
 
-    RegisterID reg = allocReg(fe, RematInfo::DATA, true);
+    RegisterID reg = allocReg(fe, RematInfo::DATA);
     masm.loadData32(address, reg);
     fe->data.setRegister(reg);
 
@@ -258,7 +258,7 @@ FrameState::push(Address address)
     if (free)
         freeRegs.putReg(address.base);
 
-    reg = allocReg(fe, RematInfo::TYPE, true);
+    reg = allocReg(fe, RematInfo::TYPE);
     masm.loadTypeTag(address, reg);
     fe->type.setRegister(reg);
 }
@@ -273,8 +273,8 @@ FrameState::pushRegs(RegisterID type, RegisterID data)
     fe->resetUnsynced();
     fe->type.setRegister(type);
     fe->data.setRegister(data);
-    regstate[type] = RegisterState(fe, RematInfo::TYPE, true);
-    regstate[data] = RegisterState(fe, RematInfo::DATA, true);
+    regstate[type] = RegisterState(fe, RematInfo::TYPE);
+    regstate[data] = RegisterState(fe, RematInfo::DATA);
 }
 
 inline void
@@ -287,7 +287,7 @@ FrameState::pushTypedPayload(JSValueTag tag, RegisterID payload)
     fe->resetUnsynced();
     fe->setTypeTag(tag);
     fe->data.setRegister(payload);
-    regstate[payload] = RegisterState(fe, RematInfo::DATA, true);
+    regstate[payload] = RegisterState(fe, RematInfo::DATA);
 }
 
 inline void
@@ -323,7 +323,7 @@ FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload,
     fe->setNotCopied();
     fe->setCopyOf(NULL);
     fe->data.setRegister(payload);
-    regstate[payload] = RegisterState(fe, RematInfo::DATA, true);
+    regstate[payload] = RegisterState(fe, RematInfo::DATA);
 }
 
 inline JSC::MacroAssembler::RegisterID
@@ -338,7 +338,7 @@ FrameState::predictRegForType(FrameEntry *fe)
 
     /* :XXX: X64 */
 
-    RegisterID reg = allocReg(fe, RematInfo::TYPE, true);
+    RegisterID reg = allocReg(fe, RematInfo::TYPE);
     fe->type.setRegister(reg);
     return reg;
 }
@@ -354,7 +354,7 @@ FrameState::tempRegForType(FrameEntry *fe)
 
     /* :XXX: X86 */
 
-    RegisterID reg = allocReg(fe, RematInfo::TYPE, true);
+    RegisterID reg = allocReg(fe, RematInfo::TYPE);
     masm.loadTypeTag(addressOf(fe), reg);
     fe->type.setRegister(reg);
     return reg;
@@ -371,7 +371,7 @@ FrameState::tempRegForData(FrameEntry *fe)
     if (fe->data.inRegister())
         return fe->data.reg();
 
-    RegisterID reg = allocReg(fe, RematInfo::DATA, true);
+    RegisterID reg = allocReg(fe, RematInfo::DATA);
     masm.loadData32(addressOf(fe), reg);
     fe->data.setRegister(reg);
     return reg;
@@ -388,7 +388,7 @@ FrameState::tempRegForConstant(FrameEntry *fe)
     if (fe->data.inRegister())
         return fe->data.reg();
 
-    RegisterID reg = allocReg(fe, RematInfo::DATA, true);
+    RegisterID reg = allocReg(fe, RematInfo::DATA);
     masm.move(Imm32(fe->getValue().asInt32()), reg);
     fe->data.setRegister(reg);
     return reg;
@@ -422,7 +422,7 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
             freeRegs.takeReg(reg);
         masm.loadData32(addressOf(fe), reg);
     }
-    regstate[reg] = RegisterState(fe, RematInfo::DATA, true);
+    regstate[reg] = RegisterState(fe, RematInfo::DATA);
     fe->data.setRegister(reg);
     return reg;
 }
