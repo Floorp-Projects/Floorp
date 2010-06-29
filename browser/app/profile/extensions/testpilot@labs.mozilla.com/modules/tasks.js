@@ -209,6 +209,9 @@ var TestPilotTask = {
   },
 
   changeStatus: function TPS_changeStatus(newStatus, suppressNotification) {
+    // TODO we always suppress notifications except when new status is
+    // "finished"; maybe remove that argument and only fire notification
+    // when status is "finished".
     let logger = Log4Moz.repository.getLogger("TestPilot.Task");
     logger.info("Changing task " + this._id + " status to " + newStatus);
     this._status = newStatus;
@@ -584,7 +587,7 @@ TestPilotExperiment.prototype = {
         this._reschedule();
       } else {
         // Normal case is reset to new.
-        this.changeStatus(TaskConstants.STATUS_NEW);
+        this.changeStatus(TaskConstants.STATUS_NEW, true);
 
         // increment count of how many times this recurring test has run
         let numTimesRun = this._numTimesRun;
@@ -610,7 +613,7 @@ TestPilotExperiment.prototype = {
       }
       // clear the data before starting.
       this._dataStore.wipeAllData();
-      this.changeStatus(TaskConstants.STATUS_STARTING);
+      this.changeStatus(TaskConstants.STATUS_STARTING, true);
       Application.prefs.setValue(GUID_PREF_PREFIX + this._id, uuid);
       this.onExperimentStartup();
     }
