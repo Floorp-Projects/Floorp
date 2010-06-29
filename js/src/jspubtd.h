@@ -956,6 +956,7 @@ typedef VALUE_ALIGNMENT jsval_layout jsval;
 typedef struct jsid { size_t bits; } jsid;
 
 #define JSVAL_BITS(v)    (v.asBits)
+#define JSVAL_FROM_LAYOUT(l) (l)
 #define IMPL_TO_JSVAL(v) (v)
 #define JSID_BITS(id)    (id.bits)
 
@@ -993,6 +994,7 @@ typedef VALUE_ALIGNMENT uint64 jsval;
 typedef size_t  jsid;
 
 #define JSVAL_BITS(v)    (v)
+#define JSVAL_FROM_LAYOUT(l) ((l).asBits)
 #define IMPL_TO_JSVAL(v) ((v).asBits)
 #define JSID_BITS(id)    (id)
 

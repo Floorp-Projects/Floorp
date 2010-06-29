@@ -139,7 +139,7 @@ class Assembler : public BaseAssembler
 
     void storeValue(const Value &v, Address address) {
         jsval_layout jv;
-        jv.asBits = Jsvalify(v);
+        jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         store32(ImmTag(jv.s.tag), tagOf(address));
         if (!v.isUndefined())
@@ -148,7 +148,7 @@ class Assembler : public BaseAssembler
 
     void storeValue(const Value &v, BaseIndex address) {
         jsval_layout jv;
-        jv.asBits = Jsvalify(v);
+        jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         store32(ImmTag(jv.s.tag), tagOf(address));
         if (!v.isUndefined())
