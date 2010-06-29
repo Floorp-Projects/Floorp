@@ -1348,6 +1348,8 @@ JS_FRIEND_API(void) DumpValue(const js::Value &val);
 JS_FRIEND_API(void) DumpId(jsid id);
 JS_FRIEND_API(void) DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
 JS_FRIEND_API(void) DumpStackFrameChain(JSContext *cx, JSStackFrame *start = NULL);
+bool IsSaneThisObject(JSObject &obj);
+
 }
 #endif
 

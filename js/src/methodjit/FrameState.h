@@ -424,6 +424,12 @@ class FrameState
     inline void forgetType(FrameEntry *fe);
 
     /*
+     * Helper function. Tests if a slot's type is null. Condition should
+     * be Equal or NotEqual.
+     */
+    inline Jump testNull(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
      * Helper function. Tests if a slot's type is an integer. Condition should
      * be Equal or NotEqual.
      */

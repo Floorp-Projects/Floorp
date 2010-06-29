@@ -155,6 +155,14 @@ class Assembler : public BaseAssembler
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 
+    Jump testNull(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_NULL));
+    }
+
+    Jump testNull(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_NULL));
+    }
+
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {
         return branch32(cond, reg, ImmTag(JSVAL_TAG_INT32));
     }

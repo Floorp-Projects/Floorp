@@ -3284,8 +3284,6 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
                         fp->scopeChainObj()->setPrivate(fp);
                 }
                 fp->thisv = fp->argv[-1];
-                if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
-                    fp->flags |= JSFRAME_COMPUTED_THIS;
             }
         }
     }
@@ -15262,7 +15260,6 @@ TraceRecorder::record_JSOP_GETTHISPROP()
      * It's safe to just use cx->fp->thisv here because getThis() returns
      * ARECORD_STOP if thisv is not available.
      */
-    JS_ASSERT(cx->fp->flags & JSFRAME_COMPUTED_THIS);
     CHECK_STATUS_A(getProp(&cx->fp->thisv.asObject(), this_ins));
     return ARECORD_CONTINUE;
 }

@@ -498,6 +498,15 @@ FrameState::addressOf(const FrameEntry *fe) const
 }
 
 inline JSC::MacroAssembler::Jump
+FrameState::testNull(Assembler::Condition cond, FrameEntry *fe)
+{
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testNull(cond, addressOf(fe));
+    return masm.testNull(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
 FrameState::testInt32(Assembler::Condition cond, FrameEntry *fe)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);

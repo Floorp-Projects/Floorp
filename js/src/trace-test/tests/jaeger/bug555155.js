@@ -1,4 +1,4 @@
-// |trace-test| error: TypeError
+// |trace-test| error: undefined
 (function() {
   throw (function f(a, b) {
     if (a.h == b) {
