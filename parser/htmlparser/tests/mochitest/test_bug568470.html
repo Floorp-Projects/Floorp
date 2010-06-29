@@ -31,12 +31,12 @@ var interval = setInterval(function() {
       }
     }
   }
-}, 50);
+}, 25);
 
 function finish() {
   clearInterval(interval);
   var elapsed = new Date().getTime() - time;
-  ok(elapsed > 400,
+  ok(elapsed > 350,
      "Content flush time and parse end time not enough apart.");
   SimpleTest.finish();
 }
