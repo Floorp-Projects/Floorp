@@ -476,9 +476,6 @@ var Browser = {
     notifications.addEventListener("AlertActive", notificationHandler, false);
     notifications.addEventListener("AlertClose", notificationHandler, false);
 
-    // Add context helper to the content area only
-    container.addEventListener("contextmenu", ContextHelper, false);
-
     // initialize input handling
     ih = new InputHandler(container);
 
@@ -1555,10 +1552,11 @@ function ContentCustomClicker(browserView) {
 }
 
 ContentCustomClicker.prototype = {
-  _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY) {
+  _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
+    let aModifiers = aModifiers || null;
     let browser = this._browserView.getBrowser();
     let [x, y] = Browser.transformClientToBrowser(aX, aY);
-    browser.messageManager.sendAsyncMessage(aName, { x: x, y: y });
+    browser.messageManager.sendAsyncMessage(aName, { x: x, y: y, modifiers: aModifiers });
   },
 
   mouseDown: function mouseDown(aX, aY) {
@@ -1576,24 +1574,24 @@ ContentCustomClicker.prototype = {
 
   panBegin: function panBegin() {
     TapHighlightHelper.hide();
+
     let browser = this._browserView.getBrowser();
     browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
   },
 
   singleClick: function singleClick(aX, aY, aModifiers) {
     TapHighlightHelper.hide();
-    this._dispatchMouseEvent("Browser:MouseUp", aX, aY);
-    // TODO e10s: handle modifiers for clicks
-    //
-    //  if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
-    //  let uri = Util.getHrefForElement(element);
-    //  if (uri)
-    //    Browser.addTab(uri, false);
-    //  }
+
+    // Cancel the mouse click if we are showing a context menu
+    if (ContextHelper.popupState)
+      this._dispatchMouseEvent("Browser:MouseCancel", {});
+    else
+      this._dispatchMouseEvent("Browser:MouseUp", aX, aY, aModifiers);
   },
 
   doubleClick: function doubleClick(aX1, aY1, aX2, aY2) {
     TapHighlightHelper.hide();
+
     let browser = this._browserView.getBrowser();
     browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
 
