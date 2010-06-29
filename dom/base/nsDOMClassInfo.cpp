@@ -9042,7 +9042,6 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         // If we have (or just created) a helper, pass the resolve flags
         // to the helper as its private data.
-        // TODO: fix
         if (helper && !::JS_SetPrivate(cx, helper, FlagsToPrivate(flags))) {
           nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
 
