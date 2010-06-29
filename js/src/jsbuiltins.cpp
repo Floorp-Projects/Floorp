@@ -119,13 +119,17 @@ js_UnboxDouble(uint32 tag, uint32 payload)
 JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_UnboxDouble, UINT32, UINT32, 1, ACC_NONE)
 
 int32 FASTCALL
-js_UnboxInt32(const Value *v)
+js_UnboxInt32(uint32 tag, uint32 payload)
 {
-    if (v->isInt32())
-        return v->asInt32();
-    return js_DoubleToECMAInt32(v->asDouble());
+    if (tag == JSVAL_TAG_INT32)
+        return (int32)payload;
+
+    jsval_layout l;
+    l.s.tag = (JSValueTag)tag;
+    l.s.payload.u32 = payload;
+    return js_DoubleToECMAInt32(l.asDouble);
 }
-JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, VALUE, 1, ACC_NONE)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_UnboxInt32, UINT32, UINT32, 1, ACC_NONE)
 
 #elif JS_BITS_PER_WORD == 64
 
