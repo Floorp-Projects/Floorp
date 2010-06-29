@@ -558,6 +558,10 @@ UIClass.prototype = {
         self.reset();
       });
 
+      iQ("#feedback").click(function(){
+        self.newTab('http://feedback.mozillalabs.com/forums/56804-tabcandy');
+      });
+
       Tabs.onOpen(function(a, b) {
         iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
           Page.setCloseButtonOnTabs();
@@ -576,15 +580,18 @@ UIClass.prototype = {
       // ___ Page
       let currentWindow = Utils.getCurrentWindow();
       Page.init();
+      
       currentWindow.addEventListener(
         "tabcandyshow", function() {
           Page.hideChrome();
           Page.showTabCandy();
-        }, false)
+        }, false);
+        
       currentWindow.addEventListener(
-        "tabcandyhide", function() { Page.showChrome(); }, false)
+        "tabcandyhide", function() { Page.showChrome(); }, false);
+        
       currentWindow.addEventListener(
-        "resize", function() { Page.setCloseButtonOnTabs(); }, false)
+        "resize", function() { Page.setCloseButtonOnTabs(); }, false);
 
       // ___ Storage
       // the session store isn't ready when browser starts so a delay is used.
@@ -890,12 +897,7 @@ UIClass.prototype = {
     }, {
       name: 'code docs', 
       code: function() {
-        location.href = 'doc/index.html';
-      }
-    }, {
-      name: 'tests', 
-      code: function() {
-        location.href = 'test.html';
+        self.newTab('http://hg.mozilla.org/labs/tabcandy/raw-file/tip/content/doc/files2/core/iq-js.html');
       }
     }, {
       name: 'save', 
@@ -1004,11 +1006,19 @@ UIClass.prototype = {
     putInGroup(leftovers, 'mixed');
     
     Groups.arrange();
-  },
+  }, 
   
   // ----------
-  newTab: function(url, inBackground) {
-    Tabs.open(url, inBackground);
+  newTab: function(url) {
+    try {
+      var group = Groups.getNewTabGroup();
+      if(group)
+        group.newTab(url);
+      else
+        Tabs.open(url);
+    } catch(e) {
+      Utils.log(e);
+    }
   }
 };
 

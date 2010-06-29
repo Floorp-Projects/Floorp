@@ -1243,9 +1243,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: newTab
   // Creates a new tab within this groups.
-  newTab: function() {
+  newTab: function(url) {
     Groups.setActiveGroup(this);          
-    var newTab = Tabs.open("about:blank", true);
+    var newTab = Tabs.open(url || "about:blank", true);
     
     // Because opening a new tab happens in a different thread(?)
     // calling Page.hideChrome() inline won't do anything. Instead
