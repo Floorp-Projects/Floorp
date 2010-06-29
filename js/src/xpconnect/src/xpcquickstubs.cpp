@@ -1062,7 +1062,7 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
     }
 
     jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
-    if(!jsstr)
+    if(JSVAL_IS_NULL(jsstr))
         return JS_FALSE;
     *rval = jsstr;
     return JS_TRUE;
@@ -1079,7 +1079,7 @@ xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
     }
 
     jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
-    if(!jsstr)
+    if(JSVAL_IS_NULL(jsstr))
         return JS_FALSE;
     *rval = JSVAL_TO_STRING(jsstr);
     return JS_TRUE;

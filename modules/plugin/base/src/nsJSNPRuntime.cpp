@@ -902,7 +902,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier id)
     ok = ::JS_DeleteUCProperty2(cx, npjsobj->mJSObj, ::JS_GetStringChars(str),
                                 ::JS_GetStringLength(str), &deleted);
 
-    if (ok && deleted) {
+    if (ok && deleted == JSVAL_TRUE) {
       // FIXME: See bug 425823, we shouldn't need to do this, and once
       // that bug is fixed we can remove this code.
 
@@ -922,7 +922,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier id)
 
     ok = ::JS_DeleteElement2(cx, npjsobj->mJSObj, NPIdentifierToInt(id), &deleted);
 
-    if (ok && deleted) {
+    if (ok && deleted == JSVAL_TRUE) {
       // FIXME: See bug 425823, we shouldn't need to do this, and once
       // that bug is fixed we can remove this code.
 

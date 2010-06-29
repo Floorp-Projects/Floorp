@@ -2352,7 +2352,7 @@ NS_IMETHODIMP
 nsXPConnect::JSToVariant(JSContext* ctx, jsval value, nsIVariant** _retval)
 {
     NS_PRECONDITION(ctx, "bad param");
-    NS_PRECONDITION(value, "bad param");
+    NS_PRECONDITION(value != JSVAL_NULL, "bad param");
     NS_PRECONDITION(_retval, "bad param");
 
     XPCCallContext ccx(NATIVE_CALLER, ctx);
@@ -2804,7 +2804,7 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    printf("Dumping 0x%p.\n", (void *) val);
+    printf("Dumping 0x%ll.\n", (long long) JSVAL_BITS(val));
     if(JSVAL_IS_NULL(val)) {
         printf("Value is null\n");
     }
