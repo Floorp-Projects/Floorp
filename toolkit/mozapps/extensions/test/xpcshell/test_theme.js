@@ -804,6 +804,67 @@ function run_test_14() {
     do_check_true(gLWThemeChanged);
     gLWThemeChanged = false;
 
+    run_test_15();
+  });
+}
+
+// Upgrading the application with a custom theme in use should not disable it
+function run_test_15() {
+  restartManager();
+
+  installAllFiles([do_get_addon("test_theme")], function() {
+    AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
+      t1.userDisabled = false;
+
+      restartManager();
+
+      do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
+      AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                   "theme1@tests.mozilla.org"], function([d, t1]) {
+        do_check_true(d.userDisabled);
+        do_check_false(d.appDisabled);
+        do_check_false(d.isActive);
+
+        do_check_false(t1.userDisabled);
+        do_check_false(t1.appDisabled);
+        do_check_true(t1.isActive);
+
+        restartManager(1, "2");
+
+        do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
+        AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                     "theme1@tests.mozilla.org"], function([d, t1]) {
+          do_check_true(d.userDisabled);
+          do_check_false(d.appDisabled);
+          do_check_false(d.isActive);
+
+          do_check_false(t1.userDisabled);
+          do_check_false(t1.appDisabled);
+          do_check_true(t1.isActive);
+
+          run_test_16();
+        });
+      });
+    });
+  });
+}
+
+// Upgrading the application with a custom theme in use should disable it if it
+// is no longer compatible
+function run_test_16() {
+  restartManager(1, "3");
+
+  do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org"], function([d, t1]) {
+    do_check_false(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_true(d.isActive);
+
+    do_check_true(t1.userDisabled);
+    do_check_true(t1.appDisabled);
+    do_check_false(t1.isActive);
+
     end_test();
   });
 }
