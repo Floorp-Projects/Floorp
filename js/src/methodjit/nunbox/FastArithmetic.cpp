@@ -228,15 +228,14 @@ void
 mjit::Compiler::slowLoadConstantDouble(Assembler &masm,
                                        FrameEntry *fe, FPRegisterID fpreg)
 {
-    double d;
+    jsdpun u;
     if (fe->getTypeTag() == JSVAL_TAG_INT32)
-        d = (double)fe->getValue().asInt32();
+        u.d = (double)fe->getValue().asInt32();
     else
-        d = fe->getValue().asDouble();
+        u.d = fe->getValue().asDouble();
 
-    int32_t *ip = (int32_t *)&d;
-    masm.storeData32(Imm32(ip[0]), frame.addressOf(fe));
-    masm.storeTypeTag(ImmTag(JSValueTag(ip[1])), frame.addressOf(fe));
+    masm.storeData32(Imm32(u.s.lo), frame.addressOf(fe));
+    masm.storeTypeTag(ImmTag(JSValueTag(u.s.hi)), frame.addressOf(fe));
     masm.loadDouble(frame.addressOf(fe), fpreg);
 }
 
