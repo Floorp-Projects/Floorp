@@ -145,6 +145,9 @@ private:
 
     virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
+    virtual bool RecvSetURITitle(const IPC::URI& uri,
+                                 const nsString& title);
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
