@@ -137,8 +137,7 @@ let WeaveGlue = {
         sync.firstChild.disabled = true;
         connect.setAttribute("title", syncStr.get("connecting.label"));
         sync.setAttribute("title", syncStr.get("lastSyncInProgress.label"));
-      }
-      else {
+      } else {
         connect.firstChild.disabled = false;
         sync.firstChild.disabled = false;
         connect.setAttribute("title", syncStr.get("disconnected.label"));
@@ -175,7 +174,7 @@ let WeaveGlue = {
     user.value = Weave.Service.username || "";
     pass.value = Weave.Service.password || "";
     secret.value = Weave.Service.passphrase || "";
-    device.value = Weave.Clients.localName;
+    device.value = Weave.Clients.localName || "";
   },
 
   changeName: function changeName(input) {
@@ -184,9 +183,3 @@ let WeaveGlue = {
     input.value = Weave.Clients.localName;
   }
 };
-
-// Wait a little bit before loading a bunch of Weave files from service
-addEventListener("UIReady", function ready() setTimeout(function() {
-  removeEventListener("UIReady", ready, false);
-  setTimeout(function() WeaveGlue.init(), 5000);
-}, 0), false);
