@@ -2106,19 +2106,21 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return MakeUpvarForEval(pn, cg);
         }
 
-        switch (op) {
-          case JSOP_NAME:     op = JSOP_GETGNAME; break;
-          case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
-          case JSOP_INCNAME:  op = JSOP_INCGNAME; break;
-          case JSOP_NAMEINC:  op = JSOP_GNAMEINC; break;
-          case JSOP_DECNAME:  op = JSOP_DECGNAME; break;
-          case JSOP_NAMEDEC:  op = JSOP_GNAMEDEC; break;
-          case JSOP_SETCONST:
-          case JSOP_DELNAME:
-          case JSOP_FORNAME:
-            /* Not supported. */
-            return JS_TRUE;
-          default: JS_NOT_REACHED("gname");
+        if (cg->compileAndGo()) { 
+            switch (op) {
+              case JSOP_NAME:     op = JSOP_GETGNAME; break;
+              case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
+              case JSOP_INCNAME:  op = JSOP_INCGNAME; break;
+              case JSOP_NAMEINC:  op = JSOP_GNAMEINC; break;
+              case JSOP_DECNAME:  op = JSOP_DECGNAME; break;
+              case JSOP_NAMEDEC:  op = JSOP_GNAMEDEC; break;
+              case JSOP_SETCONST:
+              case JSOP_DELNAME:
+              case JSOP_FORNAME:
+                /* Not supported. */
+                return JS_TRUE;
+              default: JS_NOT_REACHED("gname");
+            }
         }
 
         ale = cg->atomList.add(cg->parser, atom);
