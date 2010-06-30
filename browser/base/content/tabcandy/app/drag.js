@@ -117,7 +117,7 @@ Drag.prototype = {
         bounds = newRect;
       }
     } else {
-      Trenches.hideGuides( true );
+      Trenches.hideGuides();
     }
 
     // make sure the bounds are in the window.
@@ -128,7 +128,7 @@ Drag.prototype = {
       iQ.extend(snappedTrenches,newRect.snappedTrenches);
     }
 
-    Trenches.hideGuides( true );
+    Trenches.hideGuides();
     for (let edge in snappedTrenches) {
       let trench = snappedTrenches[edge];
       if (typeof trench == 'object') {
