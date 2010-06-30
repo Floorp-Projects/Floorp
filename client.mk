@@ -84,9 +84,11 @@ endif
 
 ifndef TOPSRCDIR
 ifeq (,$(wildcard client.mk))
-$(error Must run from the client.mk directory, or specify TOPSRCDIR)
+TOPSRCDIR := $(patsubst %/,%,$(dir $(MAKEFILE_LIST)))
+MOZ_OBJDIR = .
+else
+TOPSRCDIR := $(CWD)
 endif
-TOPSRCDIR = $(CWD)
 endif
 
 # try to find autoconf 2.13 - discard errors from 'which'

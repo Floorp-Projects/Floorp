@@ -1354,7 +1354,7 @@ _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
 	echo "Building deps for $<"; \
-	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f- $(DEFINES) $(ACDEFINES) $(INCLUDES) $< 2>/dev/null | sed -e "s|^[^ ]*/||" > $(_MDDEPFILE) ; \
+	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f- $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(INCLUDES) $< 2>/dev/null | sed -e "s|^[^ ]*/||" > $(_MDDEPFILE) ; \
 fi
 endef
 

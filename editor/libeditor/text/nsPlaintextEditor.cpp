@@ -924,26 +924,77 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   return res;
 }
 
-NS_IMETHODIMP
-nsPlaintextEditor::BeginComposition()
+nsresult
+nsPlaintextEditor::BeginIMEComposition()
 {
   NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
 
-  if (IsPasswordEditor())  {
-    if (mRules) {
-      // Protect the edit rules object from dying
-      nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  if (IsPasswordEditor()) {
+    NS_ENSURE_TRUE(mRules, NS_ERROR_NULL_POINTER);
+    // Protect the edit rules object from dying
+    nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-      nsIEditRules *p = mRules.get();
-      nsTextEditRules *textEditRules = static_cast<nsTextEditRules *>(p);
-      textEditRules->ResetIMETextPWBuf();
+    nsTextEditRules *textEditRules =
+      static_cast<nsTextEditRules*>(mRules.get());
+    textEditRules->ResetIMETextPWBuf();
+  }
+
+  return nsEditor::BeginIMEComposition();
+}
+
+nsresult
+nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
+                                        nsIPrivateTextRangeList* aTextRangeList)
+{
+  if (!aTextRangeList && !aCompositionString.IsEmpty()) {
+    NS_ERROR("aTextRangeList is null but the composition string is not null");
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsCaret> caretP = ps->GetCaret();
+
+  // We should return caret position if it is possible. Because this event
+  // dispatcher always expects to be returned the correct caret position.
+  // But in following cases, we don't need to process the composition string,
+  // so, we only need to return the caret position.
+
+  // aCompositionString.IsEmpty() && !mIMETextNode:
+  //   Workaround for Windows IME bug 23558: We get every IME event twice.
+  //   For escape keypress, this causes an empty string to be passed
+  //   twice, which freaks out the editor.
+
+  // aCompositionString.IsEmpty() && !aTextRangeList:
+  //   Some Chinese IMEs for Linux are always composition string and text range
+  //   list are empty when listing the Chinese characters. In this case,
+  //   we don't need to process composition string too. See bug 271815.
+
+  if (!aCompositionString.IsEmpty() || (mIMETextNode && aTextRangeList)) {
+    mIMETextRangeList = aTextRangeList;
+
+    SetIsIMEComposing(); // We set mIsIMEComposing properly.
+
+    rv = InsertText(aCompositionString);
+
+    mIMEBufferLength = aCompositionString.Length();
+
+    if (caretP) {
+      caretP->SetCaretDOMSelection(selection);
     }
-    else  {
-      return NS_ERROR_NULL_POINTER;
+
+    // second part of 23558 fix:
+    if (aCompositionString.IsEmpty()) {
+      mIMETextNode = nsnull;
     }
   }
 
-  return nsEditor::BeginComposition();
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1616,68 +1667,6 @@ nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   return NS_OK;
 }
 
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  nsIEditorIMESupport overrides 
-#pragma mark -
-#endif
-
-NS_IMETHODIMP
-nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString,
-                                        nsIPrivateTextRangeList* aTextRangeList)
-{
-  if (!aTextRangeList && !aCompositionString.IsEmpty())
-  {
-    NS_ERROR("aTextRangeList is null but the composition string is not null");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsISelection> selection;
-  nsresult result = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(result, result);
-
-  nsRefPtr<nsCaret> caretP = ps->GetCaret();
-
-  // We should return caret position if it is possible. Because this event
-  // dispatcher always expects to be returned the correct caret position.
-  // But in following cases, we don't need to process the composition string,
-  // so, we only need to return the caret position.
-
-  // aCompositionString.IsEmpty() && !mIMETextNode:
-  //   Workaround for Windows IME bug 23558: We get every IME event twice.
-  //   For escape keypress, this causes an empty string to be passed
-  //   twice, which freaks out the editor.
-
-  // aCompositionString.IsEmpty() && !aTextRangeList:
-  //   Some Chinese IMEs for Linux are always composition string and text range
-  //   list are empty when listing the Chinese characters. In this case,
-  //   we don't need to process composition string too. See bug 271815.
-
-  if (!aCompositionString.IsEmpty() || (mIMETextNode && aTextRangeList))
-  {
-    mIMETextRangeList = aTextRangeList;
-
-    SetIsIMEComposing(); // We set mIsIMEComposing properly.
-
-    result = InsertText(aCompositionString);
-
-    mIMEBufferLength = aCompositionString.Length();
-
-    if (caretP)
-      caretP->SetCaretDOMSelection(selection);
-
-    // second part of 23558 fix:
-    if (aCompositionString.IsEmpty())
-      mIMETextNode = nsnull;
-  }
-
-
-  return result;
-}
 
 #ifdef XP_MAC
 #pragma mark -
