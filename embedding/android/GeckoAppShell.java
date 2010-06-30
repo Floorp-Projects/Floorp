@@ -57,7 +57,7 @@ import android.util.*;
 import android.content.DialogInterface; 
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-
+import android.net.Uri;
 
 class GeckoAppShell
 {
@@ -362,14 +362,41 @@ class GeckoAppShell
         Intent intent = new Intent();
         intent.setType(aMimeType);
         List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
-        int numAttr = 2;
+        int numAttr = 4;
         String[] ret = new String[list.size() * numAttr];
         for (int i = 0; i < list.size(); i++) {
-          ret[i * numAttr] = list.get(i).loadLabel(pm).toString();
-          if (list.get(i).isDefault)
-              ret[i * numAttr + 1] = "default";
-          else
-              ret[i * numAttr + 1] = "";
+            ResolveInfo resolveInfo = list.get(i);
+            ret[i * numAttr] = resolveInfo.loadLabel(pm).toString();
+            if (resolveInfo.isDefault)
+                ret[i * numAttr + 1] = "default";
+            else
+                ret[i * numAttr + 1] = "";
+            ret[i * numAttr + 2] = resolveInfo.activityInfo.applicationInfo.packageName;
+            ret[i * numAttr + 3] = resolveInfo.activityInfo.name;
+            
+        }
+        return ret;
+    }
+
+    static String[] getHandlersForProtocol(String aScheme) {
+        PackageManager pm = 
+            GeckoApp.surfaceView.getContext().getPackageManager();
+        Intent intent = new Intent();
+        Uri uri = new Uri.Builder().scheme(aScheme).build();
+        intent.setData(uri);
+        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        int numAttr = 4;
+        String[] ret = new String[list.size() * numAttr];
+        for (int i = 0; i < list.size(); i++) {
+            ResolveInfo resolveInfo = list.get(i);
+                ret[i * numAttr] = resolveInfo.loadLabel(pm).toString();
+            if (resolveInfo.isDefault)
+                ret[i * numAttr + 1] = "default";
+            else
+                ret[i * numAttr + 1] = "";
+            ret[i * numAttr + 2] = resolveInfo.activityInfo.applicationInfo.packageName;
+            ret[i * numAttr + 3] = resolveInfo.activityInfo.name;
+
         }
         return ret;
     }
@@ -378,10 +405,17 @@ class GeckoAppShell
         return android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(aFileExt);
     }
 
-    static boolean openUriExternal(String aUriSpec, String aMimeType) {
+    static boolean openUriExternal(String aUriSpec, String aMimeType, 
+                                   String aPackageName, String aClassName) {
         // XXX: It's not clear if we should set the action to view or leave it open
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(android.net.Uri.parse(aUriSpec), aMimeType);
+        if (aMimeType.length() > 0)
+            intent.setDataAndType(Uri.parse(aUriSpec), aMimeType);
+        else
+            intent.setData(Uri.parse(aUriSpec));
+        if (aPackageName.length() > 0 && aClassName.length() > 0)
+            intent.setClassName(aPackageName, aClassName);
+
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         try {
             GeckoApp.surfaceView.getContext().startActivity(intent);
