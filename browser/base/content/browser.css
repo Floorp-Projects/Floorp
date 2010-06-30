@@ -254,8 +254,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 /*  Full Screen UI */
 #fullscr-toggler {
   display: none;
-  min-height: 5px;
-  height: 5px;
+  min-height: 1px;
+  height: 1px;
+  background: black;
+  border-style: none;
+  -moz-appearance: none;
 }
 
 #navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,
