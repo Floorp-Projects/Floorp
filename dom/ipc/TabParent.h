@@ -52,6 +52,8 @@
 #include "nsWeakReference.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIAuthPromptProvider.h"
+#include "nsISecureBrowserUI.h"
+#include "nsISSLStatusProvider.h"
 
 class nsIURI;
 class nsIDOMElement;
@@ -91,6 +93,8 @@ class TabParent : public PIFrameEmbeddingParent
                 , public nsITabParent 
                 , public nsIWebProgress
                 , public nsIAuthPromptProvider
+                , public nsISecureBrowserUI
+                , public nsISSLStatusProvider
 {
 public:
     TabParent();
@@ -111,7 +115,10 @@ public:
     virtual bool RecvnotifyLocationChange(const nsCString& aUri);
     virtual bool RecvnotifyStatusChange(const nsresult& status,
                                         const nsString& message);
-    virtual bool RecvnotifySecurityChange(const PRUint32& aState);
+    virtual bool RecvnotifySecurityChange(const PRUint32& aState,
+                                          const PRBool& aUseSSLStatusObject,
+                                          const nsString& aTooltip,
+                                          const nsCString& aSecInfoAsString);
     virtual bool RecvrefreshAttempted(const nsCString& aURI,
                                       const PRInt32& aMillis,
                                       const bool& aSameURI,
@@ -187,6 +194,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESS
     NS_DECL_NSIAUTHPROMPTPROVIDER
+    NS_DECL_NSISECUREBROWSERUI
+    NS_DECL_NSISSLSTATUSPROVIDER
 
     void HandleDelayedDialogs();
 protected:
@@ -201,6 +210,10 @@ protected:
 
     nsIDOMElement* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
+
+    PRUint32 mSecurityState;
+    nsString mSecurityTooltipText;
+    nsCOMPtr<nsISupports> mSecurityStatusObject;
 
     nsTArray<TabParentListenerInfo> mListenerInfoList;
 
