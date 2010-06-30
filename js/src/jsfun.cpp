@@ -1381,13 +1381,11 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         } else {
             *vp = JSVAL_NULL;
         }
+
+        /* Censor the caller if it is from another compartment. */
         if (!JSVAL_IS_PRIMITIVE(*vp)) {
-            JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-            if (callbacks && callbacks->checkObjectAccess) {
-                id = ATOM_KEY(cx->runtime->atomState.callerAtom);
-                if (!callbacks->checkObjectAccess(cx, obj, id, JSACC_READ, vp))
-                    return JS_FALSE;
-            }
+            if (JSVAL_TO_OBJECT(*vp)->getCompartment(cx) != cx->compartment)
+                *vp = JSVAL_NULL;
         }
         break;
 
