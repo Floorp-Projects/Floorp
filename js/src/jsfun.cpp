@@ -109,7 +109,7 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, Value *vp)
     argsobj = js_GetArgsObject(cx, fp);
     if (!argsobj)
         return JS_FALSE;
-    vp->setNonFunObj(*argsobj);
+    vp->setObject(*argsobj);
     return JS_TRUE;
 }
 
@@ -176,7 +176,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    argsobj->init(&js_ArgumentsClass, NonFunObjTag(*proto), NonFunObjTag(*parent), PrivateTag(NULL));
+    argsobj->init(&js_ArgumentsClass, ObjectTag(*proto), ObjectTag(*parent), PrivateTag(NULL));
     argsobj->setArgsCallee(ObjectOrNullTag(callee));
     argsobj->setArgsLength(argc);
 
@@ -724,8 +724,8 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, Value *vp)
 
     const Value &v = *vp;
 
-    if (v.isFunObj()) {
-        JSObject *funobj = &v.asFunObj();
+    JSObject *funobj;
+    if (IsFunctionObject(v, &funobj)) {
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
         /*
@@ -742,7 +742,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, Value *vp)
                 JSObject *wrapper = WrapEscapingClosure(cx, fp, funobj, fun);
                 if (!wrapper)
                     return false;
-                vp->setFunObj(*wrapper);
+                vp->setObject(*wrapper);
                 return true;
             }
 
@@ -768,7 +768,7 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(&js_CallClass, NullTag(), NonFunObjTag(*scopeChain), PrivateTag(NULL));
+    callobj->init(&js_CallClass, NullTag(), ObjectTag(*scopeChain), PrivateTag(NULL));
 
     callobj->map = cx->runtime->emptyCallScope->hold();
 
@@ -849,7 +849,7 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     JSObject *callobj = NewCallObject(cx, fun, scopeChain);
     if (!callobj)
         return NULL;
-    callobj->setSlot(JSSLOT_CALLEE, FunObjTag(*callee));
+    callobj->setSlot(JSSLOT_CALLEE, ObjectTag(*callee));
     return callobj;
 }
 
@@ -1039,7 +1039,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, Value *vp,
                     argsobj = js_GetArgsObject(cx, fp);
                     if (!argsobj)
                         return false;
-                    vp->setNonFunObj(*argsobj);
+                    vp->setObject(*argsobj);
                 } else {
                     *vp = obj->getSlot(JSSLOT_CALL_ARGUMENTS);
                 }
@@ -1170,7 +1170,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     const Value &callee = obj->getSlot(JSSLOT_CALLEE);
     if (callee.isUndefined())
         return JS_TRUE;
-    fun = GET_FUNCTION_PRIVATE(cx, &callee.asFunObj());
+    fun = GET_FUNCTION_PRIVATE(cx, &callee.asObject());
 
     /*
      * Check whether the id refers to a formal parameter, local variable or
@@ -1222,8 +1222,9 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             Value v;
             if (!CallPropertyOp(cx, obj, INT_TO_JSID((int16)slot), &v, cpkind))
                 return JS_FALSE;
-            if (v.isFunObj() &&
-                GET_FUNCTION_PRIVATE(cx, &v.asFunObj())->needsWrapper()) {
+            JSObject *funobj;
+            if (IsFunctionObject(v, &funobj) &&
+                GET_FUNCTION_PRIVATE(cx, funobj)->needsWrapper()) {
                 getter = js_GetCallVarChecked;
             }
         }
@@ -1264,7 +1265,7 @@ call_reserveSlots(JSContext *cx, JSObject *obj)
     return fun->countArgsAndVars();
 }
 
-JS_FRIEND_DATA(Class) js_CallClass = {
+JS_PUBLIC_DATA(Class) js_CallClass = {
     "Call",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(CALL_CLASS_FIXED_RESERVED_SLOTS) |
@@ -1375,7 +1376,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 JSObject *wrapper = WrapEscapingClosure(cx, fp->down, FUN_OBJECT(caller), caller);
                 if (!wrapper)
                     return JS_FALSE;
-                vp->setFunObj(*wrapper);
+                vp->setObject(*wrapper);
                 return JS_TRUE;
             }
 
@@ -1817,7 +1818,7 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
  * does not bloat every instance, only those on which reserved slots are set,
  * and those on which ad-hoc properties are defined.
  */
-JS_FRIEND_DATA(Class) js_FunctionClass = {
+JS_PUBLIC_DATA(Class) js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
@@ -1838,7 +1839,8 @@ fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, Value *vp)
         return JS_FALSE;
     Value fval = vp[1];
 
-    if (!fval.isFunObj()) {
+    JSObject *obj;
+    if (!IsFunctionObject(fval, &obj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
                              js_Function_str, js_toString_str,
@@ -1846,7 +1848,6 @@ fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    JSObject *obj = &fval.asFunObj();
     if (argc != 0) {
         if (!ValueToECMAUint32(cx, vp[2], &indent))
             return JS_FALSE;
@@ -2116,7 +2117,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         obj = NewObject(cx, &js_FunctionClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        rval->setFunObj(*obj);
+        rval->setObject(*obj);
     } else {
         /*
          * The constructor is called before the private slot is initialized so
@@ -2516,7 +2517,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
     fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), fun->funObjVal(),
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectTag(*fun),
                              gsop, gsop, attrs & ~JSFUN_FLAGS_MASK)) {
         return NULL;
     }
@@ -2530,11 +2531,12 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
 JSFunction *
 js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
 {
-    if (!vp->isFunObj()) {
+    JSObject *funobj;
+    if (!IsFunctionObject(*vp, &funobj)) {
         js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
-    return GET_FUNCTION_PRIVATE(cx, &vp->asObject());
+    return GET_FUNCTION_PRIVATE(cx, funobj);
 }
 
 JSObject *
@@ -2544,13 +2546,14 @@ js_ValueToFunctionObject(JSContext *cx, Value *vp, uintN flags)
     JSStackFrame *caller;
     JSPrincipals *principals;
 
-    if (vp->isFunObj())
-        return &vp->asFunObj();
+    JSObject *funobj;
+    if (IsFunctionObject(*vp, &funobj))
+        return funobj;
 
     fun = js_ValueToFunction(cx, vp, flags);
     if (!fun)
         return NULL;
-    vp->setFunObj(*FUN_OBJECT(fun));
+    vp->setObject(*fun);
 
     caller = js_GetScriptedCaller(cx, NULL);
     if (caller) {

@@ -155,7 +155,7 @@ struct JSStackFrame
         if (callobj) {
             js_PutCallObject(cx, this);
             JS_ASSERT(argsval.isNull());
-        } else if (argsval.isNonFunObj()) {
+        } else if (argsval.isObject()) {
             js_PutArgsObject(cx, this);
         }
     }
@@ -189,10 +189,7 @@ struct JSStackFrame
     }
 
     void setArgsObj(JSObject *obj) {
-        if (obj)
-            argsval.setNonFunObj(*obj);
-        else
-            argsval.setNull();
+        argsval.setObjectOrNull(obj);
     }
 
     JSObject *scopeChainObj() {

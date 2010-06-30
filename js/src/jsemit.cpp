@@ -1333,7 +1333,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
 {
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
-    blockObj->setParent(NonFunObjOrNullTag(tc->blockChain));
+    blockObj->setParent(ObjectOrNullTag(tc->blockChain));
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChain = blockObj;

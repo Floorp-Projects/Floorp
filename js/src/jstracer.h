@@ -1064,8 +1064,10 @@ class TraceRecorder
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
                                                nanojit::LIns* d1, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpNonDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
-                                                        JSValueTag mask, VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpNonDoubleObjectSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
+                                                              JSValueType type, VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* slurpObjectSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
+                                                     JSValueType type, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
                                                      VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit);
@@ -1272,21 +1274,25 @@ class TraceRecorder
     nanojit::LIns* unbox_number_as_double(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
                                           nanojit::LIns* tag_ins, VMSideExit* exit,
                                           nanojit::AccSet);
-    nanojit::LIns* unbox_non_double(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
-                                    nanojit::LIns* tag_ins, JSValueTag tag, VMSideExit* exit,
-                                    nanojit::AccSet);
+    nanojit::LIns* unbox_object(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
+                                nanojit::LIns* tag_ins, JSValueType type, VMSideExit* exit,
+                                nanojit::AccSet);
+    nanojit::LIns* unbox_non_double_object(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
+                                           nanojit::LIns* tag_ins, JSValueType type,
+                                           VMSideExit* exit, nanojit::AccSet);
 #elif JS_BITS_PER_WORD == 64
-    nanojit::LIns* non_double_value_has_tag(nanojit::LIns* v_ins, JSValueTag tag);
+    nanojit::LIns* non_double_object_value_has_type(nanojit::LIns* v_ins, JSValueType type);
     nanojit::LIns* unpack_ptr(nanojit::LIns* v_ins);
     nanojit::LIns* unbox_number_as_double(nanojit::LIns* v_ins, VMSideExit* exit);
-    nanojit::LIns* unbox_non_double(nanojit::LIns* v_ins, JSValueTag tag, VMSideExit* exit);
+    nanojit::LIns* unbox_object(nanojit::LIns* v_ins, JSValueType type, VMSideExit* exit);
+    nanojit::LIns* unbox_non_double_object(nanojit::LIns* v_ins, JSValueType type, VMSideExit* exit);
 #endif
 
     nanojit::LIns* unbox_value(const Value& v, nanojit::LIns* vaddr_ins,
                                ptrdiff_t offset, VMSideExit* exit,
                                bool force_double=false);
-    void unbox_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
-                      nanojit::LIns** is_obj_ins, nanojit::AccSet);
+    void unbox_any_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
+                          nanojit::LIns** is_obj_ins, nanojit::AccSet);
     nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet);
 
     nanojit::LIns* is_string_id(nanojit::LIns* id_ins);
