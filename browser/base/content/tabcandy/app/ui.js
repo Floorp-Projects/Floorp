@@ -897,7 +897,7 @@ UIClass.prototype = {
     }, {
       name: 'code docs', 
       code: function() {
-        self.newTab('http://hg.mozilla.org/labs/tabcandy/raw-file/tip/content/doc/files2/core/iq-js.html');
+        self.newTab('http://hg.mozilla.org/labs/tabcandy/raw-file/tip/content/doc/index.html');
       }
     }, {
       name: 'save', 
