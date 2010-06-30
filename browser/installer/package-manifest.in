@@ -119,7 +119,6 @@
 @BINPATH@/components/autocomplete.xpt
 @BINPATH@/components/autoconfig.xpt
 @BINPATH@/components/browsercompsbase.xpt
-@BINPATH@/components/browserplaces.xpt
 @BINPATH@/components/browser-feeds.xpt
 @BINPATH@/components/caps.xpt
 @BINPATH@/components/chardet.xpt
@@ -274,7 +273,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.js
 @BINPATH@/components/nsMicrosummaryService.js
-@BINPATH@/components/nsPlacesTransactionsService.js
 @BINPATH@/components/nsPrivateBrowsingService.js
 @BINPATH@/components/nsSearchService.js
 @BINPATH@/components/nsSearchSuggestions.js
