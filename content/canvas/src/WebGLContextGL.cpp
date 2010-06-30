@@ -296,8 +296,8 @@ GL_SAME_METHOD_4(BlendColor, BlendColor, float, float, float, float)
 
 NS_IMETHODIMP WebGLContext::BlendEquation(WebGLenum mode)
 {
-    if (!ValidateBlendEquationEnum(mode))
-        return ErrorInvalidEnum("BlendEquation: invalid mode");
+    if (!ValidateBlendEquationEnum(mode, "blendEquation: mode"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fBlendEquation(mode);
@@ -306,9 +306,9 @@ NS_IMETHODIMP WebGLContext::BlendEquation(WebGLenum mode)
 
 NS_IMETHODIMP WebGLContext::BlendEquationSeparate(WebGLenum modeRGB, WebGLenum modeAlpha)
 {
-    if (!ValidateBlendEquationEnum(modeRGB) ||
-        !ValidateBlendEquationEnum(modeAlpha))
-        return ErrorInvalidEnum("BlendEquationSeparate: invalid mode");
+    if (!ValidateBlendEquationEnum(modeRGB, "blendEquationSeparate: modeRGB") ||
+        !ValidateBlendEquationEnum(modeAlpha, "blendEquationSeparate: modeAlpha"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fBlendEquationSeparate(modeRGB, modeAlpha);
@@ -317,10 +317,9 @@ NS_IMETHODIMP WebGLContext::BlendEquationSeparate(WebGLenum modeRGB, WebGLenum m
 
 NS_IMETHODIMP WebGLContext::BlendFunc(WebGLenum sfactor, WebGLenum dfactor)
 {
-    if (!ValidateBlendFuncSrcEnum(sfactor))
-        return ErrorInvalidEnum("BlendFunc: invalid source factor");
-    if (!ValidateBlendFuncDstEnum(dfactor))
-        return ErrorInvalidEnum("BlendFunc: invalid destination factor");
+    if (!ValidateBlendFuncSrcEnum(sfactor, "blendFunc: sfactor") ||
+        !ValidateBlendFuncDstEnum(dfactor, "blendFunc: dfactor"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fBlendFunc(sfactor, dfactor);
@@ -331,12 +330,11 @@ NS_IMETHODIMP
 WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
                                 WebGLenum srcAlpha, WebGLenum dstAlpha)
 {
-    if (!ValidateBlendFuncSrcEnum(srcRGB) ||
-        !ValidateBlendFuncSrcEnum(srcAlpha))
-        return ErrorInvalidEnum("BlendFuncSeparate: invalid source factor");
-    if (!ValidateBlendFuncDstEnum(dstRGB) ||
-        !ValidateBlendFuncDstEnum(dstAlpha))
-        return ErrorInvalidEnum("BlendFuncSeparate: invalid destination factor");
+    if (!ValidateBlendFuncSrcEnum(srcRGB, "blendFuncSeparate: srcRGB") ||
+        !ValidateBlendFuncSrcEnum(srcAlpha, "blendFuncSeparate: srcAlpha") ||
+        !ValidateBlendFuncDstEnum(dstRGB, "blendFuncSeparate: dstRGB") ||
+        !ValidateBlendFuncDstEnum(dstAlpha, "blendFuncSeparate: dstAlpha"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
@@ -807,8 +805,8 @@ WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 NS_IMETHODIMP
 WebGLContext::DepthFunc(WebGLenum func)
 {
-    if (!ValidateComparisonEnum(func))
-        return ErrorInvalidEnum("DepthFunc: invalid function enum");
+    if (!ValidateComparisonEnum(func, "depthFunc"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fDepthFunc(func);
@@ -955,8 +953,8 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
 
 NS_IMETHODIMP WebGLContext::Enable(WebGLenum cap)
 {
-    if (!ValidateCapabilityEnum(cap))
-        return ErrorInvalidEnum("Enable: invalid capability enum");
+    if (!ValidateCapabilityEnum(cap, "enable"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fEnable(cap);
@@ -965,8 +963,8 @@ NS_IMETHODIMP WebGLContext::Enable(WebGLenum cap)
 
 NS_IMETHODIMP WebGLContext::Disable(WebGLenum cap)
 {
-    if (!ValidateCapabilityEnum(cap))
-        return ErrorInvalidEnum("Disable: invalid capability enum");
+    if (!ValidateCapabilityEnum(cap, "disable"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fDisable(cap);
@@ -1131,8 +1129,8 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
 NS_IMETHODIMP
 WebGLContext::GenerateMipmap(WebGLenum target)
 {
-    if (!ValidateTextureTargetEnum(target))
-        return ErrorInvalidEnum("GenerateMipmap: invalid target");
+    if (!ValidateTextureTargetEnum(target, "generateMipmap"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fGenerateMipmap(target);
@@ -1855,8 +1853,8 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 
     MakeContextCurrent();
 
-    if (!ValidateTextureTargetEnum(target))
-        return ErrorInvalidEnum("GetTexParameter: invalid target");
+    if (!ValidateTextureTargetEnum(target, "getTexParameter: target"))
+        return NS_OK;
 
     switch (pname) {
         case LOCAL_GL_TEXTURE_MIN_FILTER:
@@ -1871,7 +1869,7 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
             break;
 
         default:
-            return ErrorInvalidEnum("GetTexParameter: invalid parameter");
+            return ErrorInvalidEnum("getTexParameter: invalid parameter");
     }
 
     *retval = wrval.forget().get();
@@ -2109,9 +2107,9 @@ WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsEnabled(WebGLenum cap, WebGLboolean *retval)
 {
-    if (!ValidateCapabilityEnum(cap)) {
+    if (!ValidateCapabilityEnum(cap, "isEnabled")) {
         *retval = 0; // as per the OpenGL ES spec
-        return ErrorInvalidEnum("IsEnabled: invalid capability enum");
+        return NS_OK;
     }
 
     MakeContextCurrent();
@@ -2413,8 +2411,8 @@ WebGLContext::Scissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heigh
 NS_IMETHODIMP
 WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
 {
-    if (!ValidateComparisonEnum(func))
-        return ErrorInvalidEnum("StencilFunc: invalid function enum");
+    if (!ValidateComparisonEnum(func, "stencilFunc: func"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fStencilFunc(func, ref, mask);
@@ -2424,10 +2422,9 @@ WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
 NS_IMETHODIMP
 WebGLContext::StencilFuncSeparate(WebGLenum face, WebGLenum func, WebGLint ref, WebGLuint mask)
 {
-    if (!ValidateFaceEnum(face))
-        return ErrorInvalidEnum("StencilFuncSeparate: invalid face enum");
-    if (!ValidateComparisonEnum(func))
-        return ErrorInvalidEnum("StencilFuncSeparate: invalid function enum");
+    if (!ValidateFaceEnum(face, "stencilFuncSeparate: face") ||
+        !ValidateComparisonEnum(func, "stencilFuncSeparate: func"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fStencilFuncSeparate(face, func, ref, mask);
@@ -2439,8 +2436,8 @@ GL_SAME_METHOD_1(StencilMask, StencilMask, WebGLuint)
 NS_IMETHODIMP
 WebGLContext::StencilMaskSeparate(WebGLenum face, WebGLuint mask)
 {
-    if (!ValidateFaceEnum(face))
-        return ErrorInvalidEnum("StencilFuncSeparate: invalid face enum");
+    if (!ValidateFaceEnum(face, "stencilMaskSeparate: face"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fStencilMaskSeparate(face, mask);
@@ -2450,10 +2447,10 @@ WebGLContext::StencilMaskSeparate(WebGLenum face, WebGLuint mask)
 NS_IMETHODIMP
 WebGLContext::StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
 {
-    if (!ValidateStencilOpEnum(sfail) ||
-        !ValidateStencilOpEnum(dpfail) ||
-        !ValidateStencilOpEnum(dppass))
-        return ErrorInvalidEnum("StencilOp: invalid action enum");
+    if (!ValidateStencilOpEnum(sfail, "stencilOp: sfail") ||
+        !ValidateStencilOpEnum(dpfail, "stencilOp: dpfail") ||
+        !ValidateStencilOpEnum(dppass, "stencilOp: dppass"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fStencilOp(sfail, dpfail, dppass);
@@ -2463,13 +2460,11 @@ WebGLContext::StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
 NS_IMETHODIMP
 WebGLContext::StencilOpSeparate(WebGLenum face, WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
 {
-    if (!ValidateFaceEnum(face))
-        return ErrorInvalidEnum("StencilOpSeparate: invalid face enum");
-
-    if (!ValidateStencilOpEnum(sfail) ||
-        !ValidateStencilOpEnum(dpfail) ||
-        !ValidateStencilOpEnum(dppass))
-        return ErrorInvalidEnum("StencilOpSeparate: invalid action enum");
+    if (!ValidateFaceEnum(face, "stencilOpSeparate: face") ||
+        !ValidateStencilOpEnum(sfail, "stencilOpSeparate: sfail") ||
+        !ValidateStencilOpEnum(dpfail, "stencilOpSeparate: dpfail") ||
+        !ValidateStencilOpEnum(dppass, "stencilOpSeparate: dppass"))
+        return NS_OK;
 
     MakeContextCurrent();
     gl->fStencilOpSeparate(face, sfail, dpfail, dppass);
@@ -3013,7 +3008,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
-            return ErrorInvalidValue("TexImage2D: internal format not supported");
+            return ErrorInvalidEnum("TexImage2D: invalid internal format");
     }
 
     if (width < 0 || height < 0)
@@ -3022,53 +3017,12 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (border != 0)
         return ErrorInvalidValue("TexImage2D: border must be 0");
 
-    // number of bytes per pixel
-    uint32 bufferPixelSize = 0;
-    switch (format) {
-        case LOCAL_GL_RED:
-        case LOCAL_GL_GREEN:
-        case LOCAL_GL_BLUE:
-        case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
-            bufferPixelSize = 1;
-            break;
-        case LOCAL_GL_LUMINANCE_ALPHA:
-            bufferPixelSize = 2;
-            break;
-        case LOCAL_GL_RGB:
-            bufferPixelSize = 3;
-            break;
-        case LOCAL_GL_RGBA:
-            bufferPixelSize = 4;
-            break;
-        default:
-            return ErrorInvalidEnum("TexImage2D: pixel format not supported");
-    }
-
-    switch (type) {
-        case LOCAL_GL_BYTE:
-        case LOCAL_GL_UNSIGNED_BYTE:
-            break;
-        case LOCAL_GL_SHORT:
-        case LOCAL_GL_UNSIGNED_SHORT:
-            bufferPixelSize *= 2;
-            break;
-        case LOCAL_GL_INT:
-        case LOCAL_GL_UNSIGNED_INT:
-        case LOCAL_GL_FLOAT:
-            bufferPixelSize *= 4;
-            break;
-        case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-        case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-        case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-            bufferPixelSize *= 2;
-            break;
-        default:
-            return ErrorInvalidEnum("TexImage2D: invalid type argument");
-    }
+    PRUint32 texelSize = 0;
+    if (!ValidateTexFormatAndType(format, type, &texelSize, "texImage2D"))
+        return NS_OK;
 
     // XXX overflow!
-    uint32 bytesNeeded = width * height * bufferPixelSize;
+    uint32 bytesNeeded = width * height * texelSize;
 
     if (byteLength && byteLength < bytesNeeded)
         return ErrorInvalidValue("TexImage2D: not enough data for operation (need %d, have %d)",
@@ -3193,56 +3147,15 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     if (width < 0 || height < 0)
         return ErrorInvalidValue("TexSubImage2D: width and height must be > 0!");
 
+    PRUint32 texelSize = 0;
+    if (!ValidateTexFormatAndType(format, type, &texelSize, "texSubImage2D"))
+        return NS_OK;
+
     if (width == 0 || height == 0)
         return NS_OK; // ES 2.0 says it has no effect, we better return right now
 
-    // number of bytes per pixel
-    uint32 bufferPixelSize = 0;
-    switch (format) {
-        case LOCAL_GL_RED:
-        case LOCAL_GL_GREEN:
-        case LOCAL_GL_BLUE:
-        case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
-            bufferPixelSize = 1;
-            break;
-        case LOCAL_GL_LUMINANCE_ALPHA:
-            bufferPixelSize = 2;
-            break;
-        case LOCAL_GL_RGB:
-            bufferPixelSize = 3;
-            break;
-        case LOCAL_GL_RGBA:
-            bufferPixelSize = 4;
-            break;
-        default:
-            return ErrorInvalidEnum("TexImage2D: pixel format not supported");
-    }
-
-    switch (type) {
-        case LOCAL_GL_BYTE:
-        case LOCAL_GL_UNSIGNED_BYTE:
-            break;
-        case LOCAL_GL_SHORT:
-        case LOCAL_GL_UNSIGNED_SHORT:
-            bufferPixelSize *= 2;
-            break;
-        case LOCAL_GL_INT:
-        case LOCAL_GL_UNSIGNED_INT:
-        case LOCAL_GL_FLOAT:
-            bufferPixelSize *= 4;
-            break;
-        case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-        case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-        case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-            bufferPixelSize *= 2;
-            break;
-        default:
-            return ErrorInvalidEnum("TexImage2D: invalid type argument");
-    }
-
     // XXX overflow!
-    uint32 bytesNeeded = width * height * bufferPixelSize;
+    uint32 bytesNeeded = width * height * texelSize;
     if (byteLength < bytesNeeded)
         return ErrorInvalidValue("TexSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
