@@ -41,12 +41,12 @@
 #ifndef mozilla_jetpack_HandleParent_h
 #define mozilla_jetpack_HandleParent_h
 
+#include "mozilla/jetpack/PHandleParent.h"
+#include "mozilla/jetpack/PHandleChild.h"
+
 #include "jsapi.h"
 #include "jsobj.h"
 #include "jscntxt.h"
-
-#include "mozilla/jetpack/PHandleParent.h"
-#include "mozilla/jetpack/PHandleChild.h"
 
 namespace mozilla {
 namespace jetpack {
