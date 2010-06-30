@@ -844,12 +844,11 @@ window.Items = {
   // ----------
   // Function: getPageBounds
   // Returns a <Rect> defining the area of the page <Item>s should stay within. 
-  getPageBounds: function() {
-    var top = 0;
-    var bottom = TabItems.tabHeight + 10; // MAGIC NUMBER: giving room for the "new tabs" group
+  getPageBounds: function( dontCountNewTabGroup ) {
+    var bottom = dontCountNewTabGroup ? 0 : TabItems.tabHeight + Items.defaultGutter;
     var width = Math.max(100, window.innerWidth);
-    var height = Math.max(100, window.innerHeight - (top + bottom));
-    return new Rect(0, top, width, height);
+    var height = Math.max(100, window.innerHeight - bottom);
+    return new Rect(0, 0, width, height);
   },
   
   // ----------
