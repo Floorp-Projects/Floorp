@@ -306,8 +306,8 @@ NS_IMETHODIMP WebGLContext::BlendEquation(WebGLenum mode)
 
 NS_IMETHODIMP WebGLContext::BlendEquationSeparate(WebGLenum modeRGB, WebGLenum modeAlpha)
 {
-    if (!ValidateBlendEquationEnum(modeRGB)
-     || !ValidateBlendEquationEnum(modeAlpha))
+    if (!ValidateBlendEquationEnum(modeRGB) ||
+        !ValidateBlendEquationEnum(modeAlpha))
         return ErrorInvalidEnum("BlendEquationSeparate: invalid mode");
 
     MakeContextCurrent();
@@ -331,11 +331,11 @@ NS_IMETHODIMP
 WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
                                 WebGLenum srcAlpha, WebGLenum dstAlpha)
 {
-    if (!ValidateBlendFuncSrcEnum(srcRGB)
-     || !ValidateBlendFuncSrcEnum(srcAlpha))
+    if (!ValidateBlendFuncSrcEnum(srcRGB) ||
+        !ValidateBlendFuncSrcEnum(srcAlpha))
         return ErrorInvalidEnum("BlendFuncSeparate: invalid source factor");
-    if (!ValidateBlendFuncDstEnum(dstRGB)
-     || !ValidateBlendFuncDstEnum(dstAlpha))
+    if (!ValidateBlendFuncDstEnum(dstRGB) ||
+        !ValidateBlendFuncDstEnum(dstAlpha))
         return ErrorInvalidEnum("BlendFuncSeparate: invalid destination factor");
 
     MakeContextCurrent();
@@ -804,7 +804,16 @@ WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(DepthFunc, DepthFunc, WebGLenum)
+NS_IMETHODIMP
+WebGLContext::DepthFunc(WebGLenum func)
+{
+    if (!ValidateComparisonEnum(func))
+        return ErrorInvalidEnum("DepthFunc: invalid function enum");
+
+    MakeContextCurrent();
+    gl->fDepthFunc(func);
+    return NS_OK;
+}
 
 GL_SAME_METHOD_1(DepthMask, DepthMask, WebGLboolean)
 
@@ -1062,9 +1071,21 @@ GL_SAME_METHOD_0(Flush, Flush)
 
 GL_SAME_METHOD_0(Finish, Finish)
 
-GL_SAME_METHOD_1(FrontFace, FrontFace, WebGLenum)
+NS_IMETHODIMP
+WebGLContext::FrontFace(WebGLenum mode)
+{
+    switch (mode) {
+        case LOCAL_GL_CW:
+        case LOCAL_GL_CCW:
+            break;
+        default:
+            return ErrorInvalidEnum("FrontFace: invalid mode");
+    }
 
-GL_SAME_METHOD_1(GenerateMipmap, GenerateMipmap, WebGLenum)
+    MakeContextCurrent();
+    gl->fFrontFace(mode);
+    return NS_OK;
+}
 
 // returns an object: { size: ..., type: ..., name: ... }
 NS_IMETHODIMP
@@ -1104,6 +1125,17 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
 
     js.SetRetVal(retobj);
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GenerateMipmap(WebGLenum target)
+{
+    if (!ValidateTextureTargetEnum(target))
+        return ErrorInvalidEnum("GenerateMipmap: invalid target");
+
+    MakeContextCurrent();
+    gl->fGenerateMipmap(target);
     return NS_OK;
 }
 
@@ -1152,7 +1184,7 @@ WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj, nsIVariant **retval)
 {
     WebGLProgram *prog;
     if (!GetConcreteObject(pobj, &prog))
-        return ErrorInvalidOperation("GetActiveAttrib: invalid program");
+        return ErrorInvalidOperation("GetAttachedShaders: invalid program");
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
@@ -1246,27 +1278,19 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_BLEND_DST_ALPHA:
         case LOCAL_GL_BLEND_EQUATION_RGB:
         case LOCAL_GL_BLEND_EQUATION_ALPHA:
-        //case LOCAL_GL_UNPACK_ALIGNMENT: // not supported
-        //case LOCAL_GL_PACK_ALIGNMENT: // not supported
+        case LOCAL_GL_UNPACK_ALIGNMENT:
+        case LOCAL_GL_PACK_ALIGNMENT:
         case LOCAL_GL_GENERATE_MIPMAP_HINT:
         case LOCAL_GL_SUBPIXEL_BITS:
         case LOCAL_GL_MAX_TEXTURE_SIZE:
         case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
-        case LOCAL_GL_MAX_ELEMENTS_INDICES:
-        case LOCAL_GL_MAX_ELEMENTS_VERTICES:
         case LOCAL_GL_SAMPLE_BUFFERS:
         case LOCAL_GL_SAMPLES:
-        //case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
-        //case LOCAL_GL_NUM_SHADER_BINARY_FORMATS:
         case LOCAL_GL_MAX_VERTEX_ATTRIBS:
-        case LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS:
-        case LOCAL_GL_MAX_VARYING_FLOATS:
         case LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
-        //case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:  // not present in desktop OpenGL
-        //case LOCAL_GL_MAX_VARYING_VECTORS:           // not present in desktop OpenGL
         case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
         case LOCAL_GL_RED_BITS:
         case LOCAL_GL_GREEN_BITS:
@@ -1274,9 +1298,8 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS:
-        case LOCAL_GL_PACK_ALIGNMENT:
-        //case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE:
-        //case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
+        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE:
+        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
@@ -1284,8 +1307,37 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         }
             break;
 
+        #define LOCAL_GL_MAX_VARYING_VECTORS 0x8dfc // not present in desktop OpenGL
+        // temporarily add those defs here, as they're missing from
+        //     gfx/thebes/public/GLDefs.h
+        // and from
+        //     gfx/layers/opengl/glDefs.h
+        // and I don't know in which of these 2 files they should go (probably we're going to
+        // kill one of them soon?)
+        #define LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS  0x9125
+        #define LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS   0x9122
+        case LOCAL_GL_MAX_VARYING_VECTORS:
+        {
+            #ifdef USE_GLES2
+                GLint i = 0;
+                gl->fGetIntegerv(pname, &i);
+                wrval->SetAsInt32(i);
+            #else
+                // since this pname is absent from desktop OpenGL, we have to implement it by hand.
+                // The formula below comes from the public_webgl list, "problematic GetParameter pnames" thread
+                GLint i = 0, j = 0;
+                gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS, &i);
+                gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS, &j);
+                wrval->SetAsInt32(PR_MIN(i,j)/4);
+            #endif
+        }
+            break;
+
         case LOCAL_GL_NUM_COMPRESSED_TEXTURE_FORMATS:
             wrval->SetAsInt32(0);
+            break;
+        case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
+            wrval->SetAsVoid(); // the spec says we must return null
             break;
 
 // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
@@ -1330,6 +1382,14 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             gl->fGetBooleanv(pname, &b);
             wrval->SetAsBool(PRBool(b));
         }
+            break;
+
+// bool, WebGL-specific
+        case UNPACK_FLIP_Y_WEBGL:
+            wrval->SetAsBool(mPixelStoreFlipY);
+            break;
+        case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+            wrval->SetAsBool(mPixelStorePremultiplyAlpha);
             break;
 
         //
@@ -1795,13 +1855,8 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 
     MakeContextCurrent();
 
-    switch (target) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP:
-            break;
-        default:
-            return ErrorInvalidEnum("GetTexParameter: invalid target");
-    }
+    if (!ValidateTextureTargetEnum(target))
+        return ErrorInvalidEnum("GetTexParameter: invalid target");
 
     switch (pname) {
         case LOCAL_GL_TEXTURE_MIN_FILTER:
@@ -2054,7 +2109,7 @@ WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsEnabled(WebGLenum cap, WebGLboolean *retval)
 {
-    if(!ValidateCapabilityEnum(cap)) {
+    if (!ValidateCapabilityEnum(cap)) {
         *retval = 0; // as per the OpenGL ES spec
         return ErrorInvalidEnum("IsEnabled: invalid capability enum");
     }
@@ -2344,19 +2399,82 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
 
 GL_SAME_METHOD_2(SampleCoverage, SampleCoverage, float, WebGLboolean)
 
-GL_SAME_METHOD_4(Scissor, Scissor, WebGLint, WebGLint, WebGLsizei, WebGLsizei)
+NS_IMETHODIMP
+WebGLContext::Scissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
+{
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("Scissor: negative size");
 
-GL_SAME_METHOD_3(StencilFunc, StencilFunc, WebGLenum, WebGLint, WebGLuint)
+    MakeContextCurrent();
+    gl->fScissor(x, y, width, height);
+    return NS_OK;
+}
 
-GL_SAME_METHOD_4(StencilFuncSeparate, StencilFuncSeparate, WebGLenum, WebGLenum, WebGLint, WebGLuint)
+NS_IMETHODIMP
+WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
+{
+    if (!ValidateComparisonEnum(func))
+        return ErrorInvalidEnum("StencilFunc: invalid function enum");
+
+    MakeContextCurrent();
+    gl->fStencilFunc(func, ref, mask);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::StencilFuncSeparate(WebGLenum face, WebGLenum func, WebGLint ref, WebGLuint mask)
+{
+    if (!ValidateFaceEnum(face))
+        return ErrorInvalidEnum("StencilFuncSeparate: invalid face enum");
+    if (!ValidateComparisonEnum(func))
+        return ErrorInvalidEnum("StencilFuncSeparate: invalid function enum");
+
+    MakeContextCurrent();
+    gl->fStencilFuncSeparate(face, func, ref, mask);
+    return NS_OK;
+}
 
 GL_SAME_METHOD_1(StencilMask, StencilMask, WebGLuint)
 
-GL_SAME_METHOD_2(StencilMaskSeparate, StencilMaskSeparate, WebGLenum, WebGLuint)
+NS_IMETHODIMP
+WebGLContext::StencilMaskSeparate(WebGLenum face, WebGLuint mask)
+{
+    if (!ValidateFaceEnum(face))
+        return ErrorInvalidEnum("StencilFuncSeparate: invalid face enum");
 
-GL_SAME_METHOD_3(StencilOp, StencilOp, WebGLenum, WebGLenum, WebGLenum)
+    MakeContextCurrent();
+    gl->fStencilMaskSeparate(face, mask);
+    return NS_OK;
+}
 
-GL_SAME_METHOD_4(StencilOpSeparate, StencilOpSeparate, WebGLenum, WebGLenum, WebGLenum, WebGLenum)
+NS_IMETHODIMP
+WebGLContext::StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
+{
+    if (!ValidateStencilOpEnum(sfail) ||
+        !ValidateStencilOpEnum(dpfail) ||
+        !ValidateStencilOpEnum(dppass))
+        return ErrorInvalidEnum("StencilOp: invalid action enum");
+
+    MakeContextCurrent();
+    gl->fStencilOp(sfail, dpfail, dppass);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::StencilOpSeparate(WebGLenum face, WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
+{
+    if (!ValidateFaceEnum(face))
+        return ErrorInvalidEnum("StencilOpSeparate: invalid face enum");
+
+    if (!ValidateStencilOpEnum(sfail) ||
+        !ValidateStencilOpEnum(dpfail) ||
+        !ValidateStencilOpEnum(dppass))
+        return ErrorInvalidEnum("StencilOpSeparate: invalid action enum");
+
+    MakeContextCurrent();
+    gl->fStencilOpSeparate(face, sfail, dpfail, dppass);
+    return NS_OK;
+}
 
 template<int format>
 inline void convert_pixel(PRUint8* dst, const PRUint8* src)
@@ -2660,7 +2778,16 @@ WebGLContext::CreateRenderbuffer(nsIWebGLRenderbuffer **retval)
     return NS_OK;
 }
 
-GL_SAME_METHOD_4(Viewport, Viewport, PRInt32, PRInt32, PRInt32, PRInt32)
+NS_IMETHODIMP
+WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
+{
+    if (width < 0 || height < 0)
+        return ErrorInvalidOperation("Viewport: negative size");
+
+    MakeContextCurrent();
+    gl->fViewport(x, y, width, height);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::CompileShader(nsIWebGLShader *sobj)
