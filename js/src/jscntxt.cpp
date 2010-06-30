@@ -169,7 +169,7 @@ StackSpace::finish()
 #elif defined(XP_OS2)
     DosFreeMem(base);
 #else
-    munmap(base, CAPACITY_BYTES);
+    munmap((caddr_t)base, CAPACITY_BYTES);
 #endif
 }
 

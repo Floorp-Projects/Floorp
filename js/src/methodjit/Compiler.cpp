@@ -445,7 +445,13 @@ mjit::Compiler::generateMethod()
                 frame.forgetEverything();
                 masm.fixScriptStack(frame.frameDepth());
                 masm.setupVMFrame();
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+                masm.push(Registers::ArgReg0);
+#endif
                 masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+                masm.pop();
+#endif
                 Assembler::Condition cond = (op == JSOP_IFEQ)
                                             ? Assembler::Zero
                                             : Assembler::NonZero;
@@ -825,7 +831,13 @@ mjit::Compiler::generateMethod()
             frame.forgetEverything();
             masm.fixScriptStack(frame.frameDepth());
             masm.setupVMFrame();
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+            masm.push(Registers::ArgReg0);
+#endif
             masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+            masm.pop();
+#endif
             Assembler::Condition cond = (op == JSOP_OR)
                                         ? Assembler::NonZero
                                         : Assembler::Zero;
