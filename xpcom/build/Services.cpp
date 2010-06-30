@@ -48,9 +48,7 @@
 #include "nsIStringBundle.h"
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIXULOverlayProvider.h"
-#include "IHistory.h"
 
-using namespace mozilla;
 using namespace mozilla::services;
 
 /*
