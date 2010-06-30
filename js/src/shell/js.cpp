@@ -3985,7 +3985,8 @@ static const char *const shell_help_messages[] = {
 "testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
 "throwError()             Throw an error from JS_ReportError",
 #ifdef DEBUG
-"dis([fun])               Disassemble functions into bytecodes",
+"dis([fun])               Disassemble functions into bytecodes\n"
+"dis('-r', fun)           Disassembles recursively",
 "disfile('foo.js')        Disassemble script file into bytecodes",
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
