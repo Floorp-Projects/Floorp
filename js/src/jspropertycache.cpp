@@ -145,8 +145,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                  * memoized in the property tree.
                  */
                 JS_ASSERT(scope->hasMethodBarrier());
-                JSObject &funobj = sprop->methodFunObj();
-                JS_ASSERT(&funobj == &pobj->lockedGetSlot(sprop->slot).asFunObj());
+                JSObject &funobj = sprop->methodObject();
+                JS_ASSERT(&funobj == &pobj->lockedGetSlot(sprop->slot).asObject());
                 vword.setFunObj(funobj);
                 break;
             }
@@ -155,7 +155,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                 sprop->hasDefaultGetter() &&
                 SPROP_HAS_VALID_SLOT(sprop, scope)) {
                 const Value &v = pobj->lockedGetSlot(sprop->slot);
-                if (v.isFunObj()) {
+                JSObject *funobj;
+                if (IsFunctionObject(v, &funobj)) {
                     /*
                      * Great, we have a function-valued prototype property
                      * where the getter is JS_PropertyStub. The type id in
@@ -181,7 +182,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                         if (!scope->brand(cx, sprop->slot, v))
                             return JS_NO_PROP_CACHE_FILL;
                     }
-                    vword.setFunObj(v.asFunObj());
+                    vword.setFunObj(*funobj);
                     break;
                 }
             }

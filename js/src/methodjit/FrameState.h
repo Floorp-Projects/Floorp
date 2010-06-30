@@ -451,13 +451,7 @@ class FrameState
      * Helper function. Tests if a slot's type is a non-funobj. Condition should
      * be Equal or NotEqual.
      */
-    inline Jump testNonFunObj(Assembler::Condition cond, FrameEntry *fe);
-
-    /*
-     * Helper function. Tests if a slot's type is a funobj. Condition should
-     * be Equal or NotEqual.
-     */
-    inline Jump testFunObj(Assembler::Condition cond, FrameEntry *fe);
+    inline Jump testObject(Assembler::Condition cond, FrameEntry *fe);
 
     /*
      * Helper function. Tests if a slot's type is primitve. Condition should

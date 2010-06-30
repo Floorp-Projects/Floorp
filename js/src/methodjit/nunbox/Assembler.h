@@ -173,28 +173,20 @@ class Assembler : public BaseAssembler
 
     Jump testPrimitive(Assembler::Condition cond, RegisterID reg) {
         cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
-        return branch32(cond, reg, ImmTag(JSVAL_TAG_NONFUNOBJ));
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_OBJECT));
     }
 
     Jump testPrimitive(Assembler::Condition cond, Address address) {
         cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_NONFUNOBJ));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_OBJECT));
     }
 
-    Jump testNonFunObj(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, ImmTag(JSVAL_TAG_NONFUNOBJ));
+    Jump testObject(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_OBJECT));
     }
 
-    Jump testNonFunObj(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_NONFUNOBJ));
-    }
-
-    Jump testFunObj(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, ImmTag(JSVAL_TAG_FUNOBJ));
-    }
-
-    Jump testFunObj(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_FUNOBJ));
+    Jump testObject(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_OBJECT));
     }
 
     Jump testDouble(Assembler::Condition cond, RegisterID reg) {

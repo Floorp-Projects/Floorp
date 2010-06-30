@@ -65,7 +65,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     stubcc.leave();
     stubcc.call(stubs::BindName);
 
-    frame.pushTypedPayload(JSVAL_TAG_NONFUNOBJ, reg);
+    frame.pushTypedPayload(JSVAL_TAG_OBJECT, reg);
 
     stubcc.rejoin(1);
 }
@@ -681,8 +681,7 @@ mjit::Compiler::jsop_not()
             break;
           }
 
-          case JSVAL_TAG_NONFUNOBJ:
-          case JSVAL_TAG_FUNOBJ:
+          case JSVAL_TAG_OBJECT:
           {
             frame.pop();
             frame.push(BooleanTag(false));
@@ -776,8 +775,7 @@ mjit::Compiler::jsop_typeof()
           case JSVAL_TAG_NULL:
             atom = rt->atomState.typeAtoms[JSTYPE_OBJECT];
             break;
-          case JSVAL_TAG_FUNOBJ:
-          case JSVAL_TAG_NONFUNOBJ:
+          case JSVAL_TAG_OBJECT:
             atom = NULL;
             break;
           case JSVAL_TAG_BOOLEAN:
@@ -923,7 +921,7 @@ mjit::Compiler::jsop_setelem()
     FrameEntry *id = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_NONFUNOBJ) ||
+    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_OBJECT) ||
         (id->isTypeKnown() && id->getTypeTag() != JSVAL_TAG_INT32) ||
         (id->isConstant() && id->getValue().asInt32() < 0)) {
         jsop_setelem_slow();
@@ -936,9 +934,9 @@ mjit::Compiler::jsop_setelem()
         stubcc.linkExit(j);
     }
 
-    /* obj.isNonFunObj() */
+    /* obj.isObject() */
     if (!obj->isTypeKnown()) {
-        Jump j = frame.testNonFunObj(Assembler::NotEqual, obj);
+        Jump j = frame.testObject(Assembler::NotEqual, obj);
         stubcc.linkExit(j);
     }
 
@@ -1027,7 +1025,7 @@ mjit::Compiler::jsop_getelem()
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *id = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_NONFUNOBJ) ||
+    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_OBJECT) ||
         (id->isTypeKnown() && id->getTypeTag() != JSVAL_TAG_INT32) ||
         (id->isConstant() && id->getValue().asInt32() < 0)) {
         jsop_getelem_slow();
@@ -1042,7 +1040,7 @@ mjit::Compiler::jsop_getelem()
 
     /* obj.isNonFunObj() */
     if (!obj->isTypeKnown()) {
-        Jump j = frame.testNonFunObj(Assembler::NotEqual, obj);
+        Jump j = frame.testObject(Assembler::NotEqual, obj);
         stubcc.linkExit(j);
     }
 

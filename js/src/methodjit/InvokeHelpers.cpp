@@ -170,7 +170,7 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp;
     Value *vp = f.regs.sp - (argc + 2);
-    JSObject *funobj = &vp->asFunObj();
+    JSObject *funobj = &vp->asObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
     JS_ASSERT(FUN_INTERPRETED(fun));
@@ -211,7 +211,7 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
     newfp->annotation = NULL;
-    newfp->scopeChain.setNonFunObj(*funobj->getParent());
+    newfp->scopeChain.setObject(*funobj->getParent());
     newfp->flags = flags;
     newfp->blockChain = NULL;
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
@@ -341,9 +341,9 @@ InlineConstruct(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    JS_ASSERT(vp[0].isFunObj());
+    JSObject *funobj = &vp[0].asObject();
+    JS_ASSERT(funobj->isFunction());
 
-    JSObject *funobj = &vp[0].asFunObj();
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     if (!funobj->getProperty(cx, id, &vp[1]))
         return NULL;
@@ -358,8 +358,8 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    if (vp->isFunObj()) {
-        JSObject *obj = &vp->asFunObj();
+    JSObject *obj;
+    if (IsFunctionObject(*vp, &obj)) {
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
 
         if (fun->isInterpreted()) {
@@ -397,8 +397,8 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    if (vp->isFunObj()) {
-        JSObject *obj = &vp->asFunObj();
+    JSObject *obj;
+    if (IsFunctionObject(*vp, &obj)) {
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
 
         if (fun->isInterpreted()) {
@@ -408,7 +408,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
                 THROWV(NULL);
 
             if (script->isEmpty()) {
-                vp[0].setNonFunObj(*obj2);
+                vp[0].setObject(*obj2);
                 return NULL;
             }
 
@@ -432,7 +432,7 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp;
     Value *vp = f.regs.sp - (argc + 2);
-    JSObject *funobj = &vp->asFunObj();
+    JSObject *funobj = &vp->asObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
     JS_ASSERT(FUN_INTERPRETED(fun));
@@ -473,7 +473,7 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
     newfp->annotation = NULL;
-    newfp->scopeChain.setNonFunObj(*funobj->getParent());
+    newfp->scopeChain.setObject(*funobj->getParent());
     newfp->flags = flags;
     newfp->blockChain = NULL;
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
@@ -526,7 +526,7 @@ stubs::New(VMFrame &f, uint32 argc)
     if (!obj)
         THROWV(NULL);
 
-    f.regs.sp[-int(argc + 1)].setNonFunObj(*obj);
+    f.regs.sp[-int(argc + 1)].setObject(*obj);
     if (!CreateLightFrame(f, JSFRAME_CONSTRUCTING, argc))
         THROWV(NULL);
 
@@ -546,7 +546,7 @@ stubs::PutCallObject(VMFrame &f)
 void JS_FASTCALL
 stubs::PutArgsObject(VMFrame &f)
 {
-    JS_ASSERT(f.fp->argsval.isNonFunObj());
+    JS_ASSERT(f.fp->argsval.isObject());
     js_PutArgsObject(f.cx, f.fp);
 }
 

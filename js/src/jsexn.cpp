@@ -709,7 +709,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         obj = NewObject(cx, &js_ErrorClass, &rval->asObject(), NULL);
         if (!obj)
             return JS_FALSE;
-        rval->setNonFunObj(*obj);
+        rval->setObject(*obj);
     }
 
     /*

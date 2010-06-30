@@ -297,21 +297,10 @@ JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, IN
 JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
-    if (!obj)
-        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_OBJECT]);
+    JS_ASSERT(obj);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[obj->typeOf(cx)]);
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfObject, CONTEXT, OBJECT, 1, ACC_NONE)
-
-JSString* FASTCALL
-js_TypeOfBoolean(JSContext* cx, int32 unboxed)
-{
-    JS_ASSERT(unboxed == JS_FALSE || unboxed == JS_TRUE);
-    jsval boxed = BOOLEAN_TO_JSVAL(unboxed);
-    JSType type = JS_TypeOfValue(cx, boxed);
-    return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
-}
-JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfBoolean, CONTEXT, INT32, 1, ACC_NONE)
 
 JSString* FASTCALL
 js_BooleanIntToString(JSContext *cx, int32 unboxed)

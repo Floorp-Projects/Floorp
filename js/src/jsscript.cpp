@@ -1258,7 +1258,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
             --i;
             if (objarray->vector[i]) {
                 JS_SET_TRACING_INDEX(trc, "objects", i);
-                MarkRaw(trc, objarray->vector[i], JSTRACE_OBJECT);
+                Mark(trc, objarray->vector[i], JSTRACE_OBJECT);
             }
         } while (i != 0);
     }
@@ -1270,7 +1270,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
             --i;
             if (objarray->vector[i]) {
                 JS_SET_TRACING_INDEX(trc, "regexps", i);
-                MarkRaw(trc, objarray->vector[i], JSTRACE_OBJECT);
+                Mark(trc, objarray->vector[i], JSTRACE_OBJECT);
             }
         } while (i != 0);
     }
@@ -1282,7 +1282,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
 
     if (script->u.object) {
         JS_SET_TRACING_NAME(trc, "object");
-        MarkRaw(trc, script->u.object, JSTRACE_OBJECT);
+        Mark(trc, script->u.object, JSTRACE_OBJECT);
     }
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)

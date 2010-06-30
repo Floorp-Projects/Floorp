@@ -120,25 +120,26 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, js::Value *vp)
     JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
-    JS_ASSERT(&vp->asFunObj() == &sprop->methodFunObj());
+    JS_ASSERT(&vp->asObject() == &sprop->methodObject());
     JS_ASSERT(object->getClass() == &js_ObjectClass);
 
-    JSObject *funobj = &vp->asFunObj();
+    JSObject *funobj = &vp->asObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
     JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
     funobj = CloneFunctionObject(cx, fun, funobj->getParent());
     if (!funobj)
         return false;
-    vp->setFunObj(*funobj);
+    vp->setObject(*funobj);
     return !!js_SetPropertyHelper(cx, object, sprop->id, 0, vp);
 }
 
 static JS_ALWAYS_INLINE bool
 ChangesMethodValue(const js::Value &prev, const js::Value &v)
 {
-    return prev.isFunObj() &&
-           (!v.isFunObj() || &v.asFunObj() != &prev.asFunObj());
+    JSObject *prevObj;
+    return prev.isObject() && (prevObj = &prev.asObject())->isFunction() &&
+           (!v.isObject() || &v.asObject() != prevObj);
 }
 
 inline bool
