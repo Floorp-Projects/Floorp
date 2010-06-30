@@ -42,9 +42,7 @@ include protocol PNecko;
 
 include "mozilla/TabTypes.h";
 include "mozilla/chrome/RegistryMessageUtils.h";
-include "mozilla/net/NeckoMessageUtils.h";
 
-using IPC::URI;
 using ChromePackage;
 using ResourceMapping;
 using OverrideMapping;
@@ -68,16 +66,10 @@ child:
 
     async SetOffline(PRBool offline);
 
-    async NotifyVisited(URI uri);
-
     NotifyRemotePrefObserver(nsCString aDomain);
 
 parent:
     PNecko();
-
-    async VisitURI(URI uri, URI referrer, PRUint32 flags);
-    async SetURITitle(URI uri, nsString title);
-    async StartVisitedQuery(URI uri);
 
     // prefs-related messages ...
     sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
