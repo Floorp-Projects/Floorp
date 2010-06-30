@@ -1326,6 +1326,8 @@ nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
   if (mJSObject)
       return NS_OK;
 
+  NS_ASSERTION(!GetCurrentInnerWindowInternal(), "Huh?");
+
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
   nsresult rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
