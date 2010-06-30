@@ -110,7 +110,7 @@ ArrayBuffer::class_constructor(JSContext *cx, JSObject *obj,
         obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
         if (!obj)
             return false;
-        rval->setNonFunObj(*obj);
+        rval->setObject(*obj);
     }
 
     return create(cx, obj, argc, argv, rval);
@@ -124,7 +124,7 @@ ArrayBuffer::create(JSContext *cx, JSObject *obj,
         obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
         if (!obj)
             return false;
-        rval->setNonFunObj(*obj);
+        rval->setObject(*obj);
     }
 
     if (argc == 0) {
@@ -244,7 +244,7 @@ class TypedArrayGetter {
 inline Value
 getBuffer(TypedArray *tarray)
 {
-    return NonFunObjTag(*tarray->bufferJS);
+    return ObjectTag(*tarray->bufferJS);
 }
 
 JSBool
@@ -719,7 +719,7 @@ class TypedArrayTemplate
             obj = NewObject(cx, slowClass(), NULL, NULL);
             if (!obj)
                 return false;
-            rval->setNonFunObj(*obj);
+            rval->setObject(*obj);
         }
 
         return create(cx, obj, argc, argv, rval);
@@ -732,7 +732,7 @@ class TypedArrayTemplate
             obj = NewObject(cx, slowClass(), NULL, NULL);
             if (!obj)
                 return false;
-            rval->setNonFunObj(*obj);
+            rval->setObject(*obj);
         }
 
         ThisTypeArray *tarray = 0;
@@ -878,7 +878,7 @@ class TypedArrayTemplate
 
         makeFastWithPrivate(cx, nobj, ntarray);
 
-        vp->setNonFunObj(*nobj);
+        vp->setObject(*nobj);
         return true;
     }
 
@@ -1550,15 +1550,15 @@ js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope)
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    obj->setProto(NonFunObjTag(*proto));
-    obj->setParent(NonFunObjTag(*scope));
+    obj->setProto(ObjectTag(*proto));
+    obj->setParent(ObjectTag(*scope));
 
     key = JSCLASS_CACHED_PROTO_KEY(&ArrayBuffer::jsclass);
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    buffer->setProto(NonFunObjTag(*proto));
-    buffer->setParent(NonFunObjTag(*scope));
+    buffer->setProto(ObjectTag(*proto));
+    buffer->setParent(ObjectTag(*scope));
 
     return JS_TRUE;
 }

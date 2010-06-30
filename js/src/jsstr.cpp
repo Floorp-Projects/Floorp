@@ -1598,7 +1598,7 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const RegExpGuard &g,
     JSObject *obj = js_NewSlowArrayObject(cx);
     if (!obj)
         return false;
-    vp->setNonFunObj(*obj);
+    vp->setObject(*obj);
 
     return obj->defineProperty(cx, INT_TO_JSID(0), StringTag(g.patstr)) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.indexAtom),
@@ -1628,7 +1628,7 @@ str_match(JSContext *cx, uintN argc, Value *vp)
 
     /* When not global, DoMatch will leave |RegEx.exec()| in *vp. */
     if (g.re()->flags & JSREG_GLOB)
-        vp->setNonFunObjOrNull(array.object());
+        vp->setObjectOrNull(array.object());
     return true;
 }
 
@@ -1799,7 +1799,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         /* Push lambda and its 'this' parameter. */
         Value *sp = rdata.args.getvp();
         sp++->setObject(*lambda);
-        sp++->setNonFunObjOrNull(lambda->getParent());
+        sp++->setObjectOrNull(lambda->getParent());
 
         /* Push $&, $1, $2, ... */
         if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp))
@@ -2113,7 +2113,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         JSObject *aobj = js_NewArrayObject(cx, 1, &v);
         if (!aobj)
             return false;
-        vp->setNonFunObj(*aobj);
+        vp->setObject(*aobj);
         return true;
     }
 
@@ -2195,7 +2195,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
     if (!aobj)
         return false;
-    vp->setNonFunObj(*aobj);
+    vp->setObject(*aobj);
     return true;
 }
 

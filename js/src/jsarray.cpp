@@ -2347,7 +2347,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj2 = js_NewArrayObject(cx, 0, NULL);
     if (!obj2)
         return JS_FALSE;
-    vp->setNonFunObj(*obj2);
+    vp->setObject(*obj2);
 
     /* Nothing to do if no args.  Otherwise get length. */
     if (argc == 0)
@@ -2511,7 +2511,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         if (!nobj)
             return JS_FALSE;
         nobj->setDenseArrayLength(length);
-        vp->setNonFunObj(*nobj);
+        vp->setObject(*nobj);
         if (argc == 0)
             return JS_TRUE;
         argc--;
@@ -2520,7 +2520,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = js_NewArrayObject(cx, 0, NULL);
         if (!nobj)
             return JS_FALSE;
-        vp->setNonFunObj(*nobj);
+        vp->setObject(*nobj);
         length = 0;
     }
 
@@ -2626,7 +2626,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
                                  obj->getDenseArrayCount() != obj->getArrayLength());
         if (!nobj)
             return JS_FALSE;
-        vp->setNonFunObj(*nobj);
+        vp->setObject(*nobj);
         return JS_TRUE;
     }
 
@@ -2634,7 +2634,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
     nobj = js_NewArrayObject(cx, 0, NULL);
     if (!nobj)
         return JS_FALSE;
-    vp->setNonFunObj(*nobj);
+    vp->setObject(*nobj);
 
     AutoValueRooter tvr(cx);
     for (slot = begin; slot < end; slot++) {
@@ -2811,7 +2811,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
         newarr = js_NewArrayObject(cx, newlen, NULL);
         if (!newarr)
             return JS_FALSE;
-        vp->setNonFunObj(*newarr);
+        vp->setObject(*newarr);
         break;
       case SOME:
         vp->setBoolean(false);
@@ -3038,7 +3038,7 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         obj = NewObject(cx, &js_ArrayClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        rval->setNonFunObj(*obj);
+        rval->setObject(*obj);
     }
 
     if (argc == 0) {
@@ -3071,7 +3071,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     /* Initialize all fields of JSObject. */
     obj->map = const_cast<JSObjectMap *>(&SharedArrayMap);
 
-    obj->init(&js_ArrayClass, NonFunObjTag(*proto), proto->getParentValue(), NullTag());
+    obj->init(&js_ArrayClass, ObjectTag(*proto), proto->getParentValue(), NullTag());
     obj->setDenseArrayLength(0);
     obj->setDenseArrayCount(0);
     return obj;
