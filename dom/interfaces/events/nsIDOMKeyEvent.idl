@@ -54,7 +54,17 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_ALT            = 0x12;
   const unsigned long DOM_VK_PAUSE          = 0x13;
   const unsigned long DOM_VK_CAPS_LOCK      = 0x14;
+  const unsigned long DOM_VK_KANA           = 0x15;
+  const unsigned long DOM_VK_HANGUL         = 0x15;
+  const unsigned long DOM_VK_JUNJA          = 0x17;
+  const unsigned long DOM_VK_FINAL          = 0x18;
+  const unsigned long DOM_VK_HANJA          = 0x19;
+  const unsigned long DOM_VK_KANJI          = 0x19;
   const unsigned long DOM_VK_ESCAPE         = 0x1B;
+  const unsigned long DOM_VK_CONVERT        = 0x1C;
+  const unsigned long DOM_VK_NONCONVERT     = 0x1D;
+  const unsigned long DOM_VK_ACCEPT         = 0x1E;
+  const unsigned long DOM_VK_MODECHANGE     = 0x1F;
   const unsigned long DOM_VK_SPACE          = 0x20;
   const unsigned long DOM_VK_PAGE_UP        = 0x21;
   const unsigned long DOM_VK_PAGE_DOWN      = 0x22;
@@ -64,6 +74,9 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_UP             = 0x26;
   const unsigned long DOM_VK_RIGHT          = 0x27;
   const unsigned long DOM_VK_DOWN           = 0x28;
+  const unsigned long DOM_VK_SELECT         = 0x29;
+  const unsigned long DOM_VK_PRINT          = 0x2A;
+  const unsigned long DOM_VK_EXECUTE        = 0x2B;
   const unsigned long DOM_VK_PRINTSCREEN    = 0x2C;
   const unsigned long DOM_VK_INSERT         = 0x2D;
   const unsigned long DOM_VK_DELETE         = 0x2E;
@@ -112,6 +125,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_Z              = 0x5A;
 
   const unsigned long DOM_VK_CONTEXT_MENU   = 0x5D;
+  const unsigned long DOM_VK_SLEEP          = 0x5F;
 
   const unsigned long DOM_VK_NUMPAD0        = 0x60;
   const unsigned long DOM_VK_NUMPAD1        = 0x61;
