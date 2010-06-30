@@ -47,7 +47,6 @@
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "mozilla/Monitor.h"
-#include "nsNetUtil.h"
 #include "nsIPrefService.h"
 
 namespace mozilla {
@@ -138,15 +137,6 @@ private:
             nsTArray<nsCString>* list, nsresult* rv);
 
     void EnsurePrefService();
-
-    virtual bool RecvVisitURI(const IPC::URI& uri,
-                              const IPC::URI& referrer,
-                              const PRUint32& flags);
-
-    virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
-
-    virtual bool RecvSetURITitle(const IPC::URI& uri,
-                                 const nsString& title);
 
     mozilla::Monitor mMonitor;
 
