@@ -29,6 +29,7 @@ chrome/overlayinfo/
 chrome/reporter.jar
 chrome/reporter.manifest
 component.reg
+components/components.list
 components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
 components/@DLL_PREFIX@brwsrdir@DLL_SUFFIX@
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
