@@ -32,9 +32,12 @@
 // cfi_frame_info.cc: Implementation of CFIFrameInfo class.
 // See cfi_frame_info.h for details.
 
-#include <cstring>
-
 #include "processor/cfi_frame_info.h"
+
+#include <string.h>
+
+#include <sstream>
+
 #include "processor/postfix_evaluator-inl.h"
 #include "processor/scoped_ptr.h"
 
@@ -93,6 +96,28 @@ template bool CFIFrameInfo::FindCallerRegs<u_int64_t>(
     const RegisterValueMap<u_int64_t> &registers,
     const MemoryRegion &memory,
     RegisterValueMap<u_int64_t> *caller_registers) const;
+
+string CFIFrameInfo::Serialize() const {
+  std::ostringstream stream;
+
+  if (!cfa_rule_.empty()) {
+    stream << ".cfa: " << cfa_rule_;
+  }
+  if (!ra_rule_.empty()) {
+    if (static_cast<std::streamoff>(stream.tellp()) != 0)
+      stream << " ";
+    stream << ".ra: " << ra_rule_;
+  }
+  for (RuleMap::const_iterator iter = register_rules_.begin();
+       iter != register_rules_.end();
+       ++iter) {
+    if (static_cast<std::streamoff>(stream.tellp()) != 0)
+      stream << " ";
+    stream << iter->first << ": " << iter->second;
+  }
+
+  return stream.str();
+}
 
 bool CFIRuleParser::Parse(const string &rule_set) {
   size_t rule_set_len = rule_set.size();
