@@ -113,7 +113,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../threads/_xpidlgen \
 		-I$(srcdir)/../proxy/src \
 		-I$(srcdir)/../reflect/xptinfo/src \
-		-I$(srcdir)/../../docshell/base \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla
