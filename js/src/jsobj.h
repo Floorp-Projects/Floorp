@@ -739,7 +739,6 @@ struct JSObject {
 };
 
 JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
-JS_STATIC_ASSERT(offsetof(JSObject, clasp) == offsetof(JSPretendObject, clasp));
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \

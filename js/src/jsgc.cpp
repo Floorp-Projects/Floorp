@@ -1765,7 +1765,7 @@ MarkDelayedChildren(JSTracer *trc)
 namespace js {
 
 void
-MarkRaw(JSTracer *trc, void *thing, uint32 kind)
+Mark(JSTracer *trc, void *thing, uint32 kind)
 {
     JSContext *cx;
     JSRuntime *rt;
@@ -1853,7 +1853,7 @@ MarkRaw(JSTracer *trc, void *thing, uint32 kind)
 }
 
 void
-MarkGCThingRaw(JSTracer *trc, void *thing)
+MarkGCThing(JSTracer *trc, void *thing)
 {
     JS_ASSERT(size_t(thing) % JS_GCTHING_ALIGN == 0);
     
@@ -1861,7 +1861,7 @@ MarkGCThingRaw(JSTracer *trc, void *thing)
         return;
 
     uint32 kind = js_GetGCThingTraceKind(thing);
-    MarkRaw(trc, thing, kind);
+    Mark(trc, thing, kind);
 }
 
 } /* namespace js */
@@ -1909,7 +1909,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
 #endif
     JS_SET_TRACING_NAME(trc, entry.value.name ? entry.value.name : "root");
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        MarkGCThingRaw(trc, *reinterpret_cast<void **>(entry.key));
+        MarkGCThing(trc, *reinterpret_cast<void **>(entry.key));
     else
         MarkValueRaw(trc, *reinterpret_cast<Value *>(entry.key));
 }

@@ -488,7 +488,7 @@ js_locked_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
         return JS_DHASH_NEXT;
     }
     JS_SET_TRACING_INDEX(trc, "locked_atom", (size_t)number);
-    MarkRaw(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
+    Mark(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
     return JS_DHASH_NEXT;
 }
 
@@ -506,7 +506,7 @@ js_pinned_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              ? "pinned_atom"
                              : "interned_atom",
                              (size_t)number);
-        MarkRaw(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
+        Mark(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
     }
     return JS_DHASH_NEXT;
 }

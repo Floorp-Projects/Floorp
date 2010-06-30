@@ -147,7 +147,7 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
     JSObject *aobj = js_NewArrayObject(cx, 2, vec);
     if (!aobj)
         return false;
-    rval->setNonFunObj(*aobj);
+    rval->setObject(*aobj);
     return true;
 }
 
@@ -539,7 +539,7 @@ JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, V
     if (!iterobj)
         return false;
 
-    vp->setNonFunObj(*iterobj);
+    vp->setObject(*iterobj);
 
     NativeIterator *ni = NativeIterator::allocateKeyIterator(cx, 0, ida->vector, ida->length);
     if (!ni)
@@ -593,7 +593,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                 if (ni->shapes_key == key &&
                     ni->shapes_length == shapes.length() &&
                     Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
-                    vp->setNonFunObj(*iterobj);
+                    vp->setObject(*iterobj);
                     *hp = ni->next;
 
                     RegisterEnumerator(cx, iterobj, ni);
@@ -616,7 +616,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         return false;
 
     /* Store in *vp to protect it from GC (callers must root vp). */
-    vp->setNonFunObj(*iterobj);
+    vp->setObject(*iterobj);
 
     NativeIterator *ni = (flags & JSITER_FOREACH)
                          ? SnapshotValues(cx, obj, flags, shapes.begin(), shapes.length(), key)
@@ -735,7 +735,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
             JSObject *iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
             if (!iterobj)
                 return false;
-            vp->setNonFunObj(*iterobj);
+            vp->setObject(*iterobj);
             return true;
         }
     }

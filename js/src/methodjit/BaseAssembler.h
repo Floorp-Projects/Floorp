@@ -122,6 +122,11 @@ class BaseAssembler : public JSC::MacroAssembler
         load32(Address(shape, offsetof(JSObjectMap, shape)), shape);
     }
 
+    Jump testFunction(Condition cond, RegisterID fun) {
+        return branchPtr(cond, Address(fun, offsetof(JSObject, clasp)),
+                         ImmPtr(&js_FunctionClass));
+    }
+
     /*
      * Finds and returns the address of a known object and slot.
      */
