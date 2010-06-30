@@ -170,6 +170,9 @@ typedef struct JSCompartment     JSCompartment;
    */
 # define VALUE_ALIGNMENT
 # define ASSERT_DOUBLE_ALIGN()
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+# define VALUE_ALIGNMENT
+# define ASSERT_DOUBLE_ALIGN()
 #endif
 
 /*

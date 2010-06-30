@@ -325,9 +325,15 @@ ifeq (x86_64, $(TARGET_CPU))
 ifeq ($(OS_ARCH),WINNT)
 ASFILES +=	TrampolineMasmX64.asm
 endif
+ifdef SOLARIS_SUNPRO_CXX
+ASFILES +=	TrampolineSUNWX64.s
+endif
 #CPPSRCS		+= only_on_x86_64.cpp
 else
 #CPPSRCS		+= only_on_x86.cpp
+ifdef SOLARIS_SUNPRO_CXX
+ASFILES +=	TrampolineSUNWX86.s
+endif
 endif
 endif
 ifeq (arm, $(TARGET_CPU))

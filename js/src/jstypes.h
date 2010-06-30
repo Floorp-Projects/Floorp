@@ -315,6 +315,10 @@
 # ifdef __x86_64__
 #  define JS_64BIT
 # endif
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+# ifdef __x86_64
+#  define JS_64BIT
+# endif
 #else
 # error "Implement me"
 #endif
