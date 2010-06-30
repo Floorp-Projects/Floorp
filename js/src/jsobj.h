@@ -52,6 +52,7 @@
 #include "jshash.h" /* Added by JSIFY */
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsvalue.h"
 
 namespace js {
 

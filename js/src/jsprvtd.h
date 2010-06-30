@@ -359,42 +359,4 @@ typedef JSBool
 extern JSBool js_CStringsAreUTF8;
 #endif
 
-#ifdef __cplusplus
-namespace js {
-
-class Value;
-
-typedef JSBool
-(* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                 PropertyOp getter, PropertyOp setter, uintN attrs);
-typedef JSBool
-(* CheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                    Value *vp, uintN *attrsp);
-typedef JSBool
-(* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-
-/*
- * Since jsval and Value are layout-compatible, pointers to otherwise-identical
- * functions can be cast back and forth. To avoid widespread casting, the
- * following safe casts are provided.
- *
- * See also Valueify and Jsvalify overloads in jspubtd.h.
- */
-
-static inline DefinePropOp        Valueify(JSDefinePropOp f)      { return (DefinePropOp)f; }
-static inline JSDefinePropOp      Jsvalify(DefinePropOp f)        { return (JSDefinePropOp)f; }
-static inline CheckAccessIdOp     Valueify(JSCheckAccessIdOp f)   { return (CheckAccessIdOp)f; }
-static inline JSCheckAccessIdOp   Jsvalify(CheckAccessIdOp f)     { return (JSCheckAccessIdOp)f; }
-static inline PropertyIdOp        Valueify(JSPropertyIdOp f);     /* Same type as JSPropertyOp */
-static inline JSPropertyIdOp      Jsvalify(PropertyIdOp f);       /* Same type as PropertyOp */
-
-static const PropertyOp    PropertyStub  = (PropertyOp)JS_PropertyStub;
-static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
-static const JSResolveOp   ResolveStub   = JS_ResolveStub;
-static const ConvertOp     ConvertStub   = (ConvertOp)JS_ConvertStub;
-static const JSFinalizeOp  FinalizeStub  = JS_FinalizeStub;
-
-}  /* namespace js */
-#endif /* __cplusplus */
-
 #endif /* jsprvtd_h___ */

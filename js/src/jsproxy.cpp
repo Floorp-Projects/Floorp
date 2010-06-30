@@ -302,8 +302,8 @@ MakePropertyDescriptorObject(JSContext *cx, jsid id, PropertyDescriptor *desc, V
         return true;
     }
     uintN attrs = desc->attrs;
-    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : undefinedValue();
-    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : undefinedValue();
+    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : Value(UndefinedTag());
+    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : Value(UndefinedTag());
     return js_NewPropertyDescriptorObject(cx, id, attrs, getter, setter, desc->value, vp);
 }
 
@@ -755,8 +755,8 @@ JS_FRIEND_API(JSBool)
 GetProxyObjectClass(JSContext *cx, JSObject *proxy, const char **namep)
 {
     if (!proxy->isProxy()) {
-        char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                                 OBJECT_TO_JSVAL(proxy), NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                              ObjectTag(*proxy), NULL);
         if (!bytes)
             return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1031,8 +1031,8 @@ NewObjectProxy(JSContext *cx, const Value &handler, JSObject *proto, JSObject *p
     if (!obj)
         return NULL;
     obj->fslots[JSSLOT_PROXY_HANDLER] = handler;
-    obj->fslots[JSSLOT_PROXY_CLASS] = className ? Value(StringTag(className)) : undefinedValue();
-    obj->fslots[JSSLOT_PROXY_PRIVATE] = undefinedValue();
+    obj->fslots[JSSLOT_PROXY_CLASS] = className ? Value(StringTag(className)) : Value(UndefinedTag());
+    obj->fslots[JSSLOT_PROXY_PRIVATE] = UndefinedTag();
     return obj;
 }
 
@@ -1044,8 +1044,8 @@ NewFunctionProxy(JSContext *cx, const Value &handler, JSObject *proto, JSObject 
     if (!obj)
         return NULL;
     obj->fslots[JSSLOT_PROXY_HANDLER] = handler;
-    obj->fslots[JSSLOT_PROXY_CALL] = call ? Value(ObjectTag(*call)) : undefinedValue();
-    obj->fslots[JSSLOT_PROXY_CONSTRUCT] = construct ? Value(ObjectTag(*construct)) : undefinedValue();
+    obj->fslots[JSSLOT_PROXY_CALL] = call ? Value(ObjectTag(*call)) : Value(UndefinedTag());
+    obj->fslots[JSSLOT_PROXY_CONSTRUCT] = construct ? Value(ObjectTag(*construct)) : Value(UndefinedTag());
     return obj;
 }
 
