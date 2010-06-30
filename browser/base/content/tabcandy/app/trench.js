@@ -675,7 +675,7 @@ var Trenches = {
         t.show();
       }
       if (t.snapBeginTime && snappedIds.indexOf(t.id) == -1 ) {
-//        t.unextend();
+        t.snapBeginTime = false;
       }
     }
 
