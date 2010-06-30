@@ -688,7 +688,8 @@ var Browser = {
     if (aScrollY != 0)
       Browser.hideTitlebar();
 
-    Browser.contentScrollboxScroller.scrollTo(aScrollX, aScrollY);
+    let zoomLevel = this._browserView.getZoomLevel();
+    Browser.contentScrollboxScroller.scrollTo(aScrollX*zoomLevel, aScrollY*zoomLevel);
     this._browserView.onAfterVisibleMove();
   },
 
