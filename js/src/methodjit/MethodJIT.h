@@ -90,6 +90,15 @@ struct VMFrame
     void *savedEBP;
     void *savedEIP;
 
+#ifdef JS_NO_FASTCALL
+    inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
+        *(reinterpret_cast<JSC::ReturnAddressPtr*>(this)-3) = addr;
+    }
+
+    inline JSC::ReturnAddressPtr getReturnAddress() const {
+        return *(reinterpret_cast<const JSC::ReturnAddressPtr*>(this)-3);
+    }
+#else
     inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
         *(reinterpret_cast<JSC::ReturnAddressPtr*>(this)-1) = addr;
     }
@@ -97,7 +106,7 @@ struct VMFrame
     inline JSC::ReturnAddressPtr getReturnAddress() const {
         return *(reinterpret_cast<const JSC::ReturnAddressPtr*>(this)-1);
     }
-
+#endif
 #elif defined(JS_CPU_X64)
     void *savedRBX;
 #ifdef _MSC_VER
