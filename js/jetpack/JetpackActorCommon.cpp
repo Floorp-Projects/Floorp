@@ -36,18 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "base/basictypes.h"
 #include "jscntxt.h"
+#include "jsapi.h"
+#include "jstl.h"
+#include "jshashtable.h"
+
+#include "base/basictypes.h"
 
 #include "mozilla/jetpack/JetpackActorCommon.h"
 #include "mozilla/jetpack/PJetpack.h"
 #include "mozilla/jetpack/PHandleParent.h"
 #include "mozilla/jetpack/PHandleChild.h"
 #include "mozilla/jetpack/Handle.h"
-
-#include "jsapi.h"
-#include "jstl.h"
-#include "jshashtable.h"
 
 using mozilla::jetpack::JetpackActorCommon;
 using mozilla::jetpack::PHandleParent;
