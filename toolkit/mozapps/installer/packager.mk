@@ -364,6 +364,8 @@ ifdef MOZ_OPTIONAL_PKG_LIST
 		$(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
 endif
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x "$(XPIDL_LINK)"
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py $(DIST)/manifests $(DEPTH)/installer-stage/nonlocalized
+
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(MOZ_PKG_DIR) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
