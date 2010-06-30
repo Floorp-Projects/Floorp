@@ -68,7 +68,9 @@ bool MinidumpFileWriter::Close() {
   bool result = true;
 
   if (file_ != -1) {
-    ftruncate(file_, position_);
+    if (-1 == ftruncate(file_, position_)) {
+       return false;
+    }
 #if __linux__
     result = (sys_close(file_) == 0);
 #else
