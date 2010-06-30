@@ -438,14 +438,14 @@
                 <setting id="sync-user" type="string" title="&sync.username;" />
                 <setting id="sync-pass" type="string" inputtype="password" title="&sync.password;" />
                 <setting id="sync-secret" type="string" inputtype="password" title="&sync.secretPhrase;" />
-                <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this)"/>
+                <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this)" collapsed="true"/>
                 <setting id="sync-connect" type="control">
                   <button label="&sync.connect;" oncommand="WeaveGlue.connect();" />
                 </setting>
-                <setting id="sync-disconnect" type="control">
+                <setting id="sync-disconnect" type="control" collapsed="true">
                   <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
                 </setting>
-                <setting id="sync-sync" type="control">
+                <setting id="sync-sync" type="control" collapsed="true">
                   <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();" />
                 </setting>
               </settings>
