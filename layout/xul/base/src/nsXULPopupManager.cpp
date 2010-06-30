@@ -282,7 +282,7 @@ nsXULPopupManager::GetFrameOfTypeForContent(nsIContent* aContent,
   if (aShouldFlush) {
     nsIDocument *document = aContent->GetCurrentDoc();
     if (document) {
-      nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
+      nsCOMPtr<nsIPresShell> presShell = document->GetShell();
       if (presShell)
         presShell->FlushPendingNotifications(Flush_Frames);
     }
@@ -344,7 +344,7 @@ nsXULPopupManager::SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup)
       if (event) {
         nsIDocument* doc = aPopup->GetCurrentDoc();
         if (doc) {
-          nsIPresShell* presShell = doc->GetPrimaryShell();
+          nsIPresShell* presShell = doc->GetShell();
           if (presShell && presShell->GetPresContext()) {
             nsPresContext* rootDocPresContext =
               presShell->GetPresContext()->GetRootPresContext();
@@ -545,7 +545,7 @@ CheckCaretDrawingState() {
     if (!focusedDoc)
       return;
 
-    nsIPresShell* presShell = focusedDoc->GetPrimaryShell();
+    nsIPresShell* presShell = focusedDoc->GetShell();
     if (!presShell)
       return;
 
@@ -2024,7 +2024,7 @@ GetPresContextFor(nsIContent* aContent)
 {
   nsIDocument *document = aContent->GetCurrentDoc();
   if (document) {
-    nsIPresShell* presShell = document->GetPrimaryShell();
+    nsIPresShell* presShell = document->GetShell();
     if (presShell)
       return presShell->GetPresContext();
   }

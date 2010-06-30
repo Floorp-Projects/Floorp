@@ -110,6 +110,7 @@
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #ifdef MOZ_XUL
+#include "nsIXULWindow.h"
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
@@ -415,6 +416,8 @@ protected:
   nsPresContext* GetPresContext();
   nsIViewManager* GetViewManager();
 
+  void DetachFromTopLevelWidget();
+
   // IMPORTANT: The ownership implicit in the following member
   // variables has been explicitly checked and set using nsCOMPtr
   // for owning pointers and raw COM interface pointers for weak
@@ -439,6 +442,7 @@ protected:
   nsCOMPtr<nsISHEntry> mSHEntry;
 
   nsIWidget* mParentWidget; // purposely won't be ref counted.  May be null
+  PRBool mAttachedToParent; // view is attached to the parent widget
 
   nsIntRect mBounds;
 
@@ -520,6 +524,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
 {
   mStopped          = PR_FALSE;
   mLoaded           = PR_FALSE;
+  mAttachedToParent = PR_FALSE;
   mDeferredWindowClose = PR_FALSE;
   mCallerIsClosingWindow = PR_FALSE;
 
@@ -1851,10 +1856,18 @@ DocumentViewerImpl::SetBounds(const nsIntRect& aBounds)
 
   mBounds = aBounds;
   if (mWindow) {
+    // When attached to a top level window, change the client area, not the
+    // window frame.
     // Don't have the widget repaint. Layout will generate repaint requests
-    // during reflow
-    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height,
-                    PR_FALSE);
+    // during reflow.
+    if (mAttachedToParent)
+      mWindow->ResizeClient(aBounds.x, aBounds.y,
+                            aBounds.width, aBounds.height,
+                            PR_FALSE);
+    else
+      mWindow->Resize(aBounds.x, aBounds.y,
+                      aBounds.width, aBounds.height,
+                      PR_FALSE);
   } else if (mPresContext && mViewManager) {
     PRInt32 p2a = mPresContext->AppUnitsPerDevPixel();
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(mBounds.width, p2a),
@@ -1931,7 +1944,24 @@ DocumentViewerImpl::Show(void)
     }
   }
 
-  if (mWindow) {
+  // XXX - If this DocumentViewer belongs to an nsIXULWindow that will at some
+  // point in the future call 'Show' on its window, we shouldn't call it.
+  // See bug 574690.
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryReferent(mContainer);
+  nsCOMPtr<nsIXULWindow> xulWin;
+  PRBool willShowWindow = PR_FALSE;
+  if (treeItem) {
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    treeItem->GetTreeOwner(getter_AddRefs(owner));
+    if (owner) {
+      xulWin = do_GetInterface(owner);
+      if (xulWin) {
+        xulWin->WillShowWindow(&willShowWindow);
+      }
+    }
+  }
+
+  if (mWindow && !willShowWindow) {
     mWindow->Show(PR_TRUE);
   }
 
@@ -2235,6 +2265,29 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   if (GetIsPrintPreview())
     return NS_OK;
 
+  // Prior to creating a new widget, check to see if our parent is a base
+  // chrome ui window. If so, drop the content into that widget instead of
+  // creating a new child widget. This eliminates the main content child
+  // widget we've had forever. Also allows for the recycling of the base
+  // widget of each window, vs. creating/discarding child widgets for each
+  // MakeWindow call. (Currently only implemented in windows widgets.)
+#ifdef XP_WIN
+  nsCOMPtr<nsIDocShellTreeItem> containerItem = do_QueryReferent(mContainer);
+  if (mParentWidget && containerItem) {
+    PRInt32 docType;
+    nsWindowType winType;
+    containerItem->GetItemType(&docType);
+    mParentWidget->GetWindowType(winType);
+    if (winType == eWindowType_toplevel &&
+        docType == nsIDocShellTreeItem::typeChrome) {
+      // If the old view is already attached to our parent, detach
+      DetachFromTopLevelWidget();
+      // Use the parent widget
+      mAttachedToParent = PR_TRUE;
+    }
+  }
+#endif
+
   nsresult rv;
   mViewManager = do_CreateInstance(kViewManagerCID, &rv);
   if (NS_FAILED(rv))
@@ -2271,10 +2324,17 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
     } else {
       initDataPtr = nsnull;
     }
-    rv = view->CreateWidget(kWidgetCID, initDataPtr,
-                            (aContainerView != nsnull || !mParentWidget) ?
-                              nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET),
-                            PR_TRUE, PR_FALSE);
+
+    if (mAttachedToParent) {
+      // Reuse the top level parent widget.
+      rv = view->AttachToTopLevelWidget(mParentWidget);
+    }
+    else {
+      nsNativeWidget nw = (aContainerView != nsnull || !mParentWidget) ?
+                 nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+      rv = view->CreateWidget(kWidgetCID, initDataPtr,
+                              nw, PR_TRUE, PR_FALSE);
+    }
     if (NS_FAILED(rv))
       return rv;
   }
@@ -2290,6 +2350,19 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   // mWindow->SetFocus();
 
   return rv;
+}
+
+void
+DocumentViewerImpl::DetachFromTopLevelWidget()
+{
+  if (mViewManager) {
+    nsIView* oldView = nsnull;
+    mViewManager->GetRootView(oldView);
+    if (oldView && oldView->IsAttachedToTopLevel()) {
+      oldView->DetachFromTopLevelWidget();
+    }
+  }
+  mAttachedToParent = PR_FALSE;
 }
 
 nsIView*
@@ -2384,7 +2457,7 @@ DocumentViewerImpl::CreateDeviceContext(nsIView* aContainerView)
   if (doc) {
     NS_ASSERTION(!aContainerView, "External resource document embedded somewhere?");
     // We want to use our display document's device context if possible
-    nsIPresShell* shell = doc->GetPrimaryShell();
+    nsIPresShell* shell = doc->GetShell();
     if (shell) {
       nsPresContext* ctx = shell->GetPresContext();
       if (ctx) {
@@ -2708,7 +2781,7 @@ static PRBool
 SetExtResourceTextZoom(nsIDocument* aDocument, void* aClosure)
 {
   // Would it be better to enumerate external resource viewers instead?
-  nsIPresShell* shell = aDocument->GetPrimaryShell();
+  nsIPresShell* shell = aDocument->GetShell();
   if (shell) {
     nsPresContext* ctxt = shell->GetPresContext();
     if (ctxt) {
@@ -2724,7 +2797,7 @@ static PRBool
 SetExtResourceFullZoom(nsIDocument* aDocument, void* aClosure)
 {
   // Would it be better to enumerate external resource viewers instead?
-  nsIPresShell* shell = aDocument->GetPrimaryShell();
+  nsIPresShell* shell = aDocument->GetShell();
   if (shell) {
     nsPresContext* ctxt = shell->GetPresContext();
     if (ctxt) {

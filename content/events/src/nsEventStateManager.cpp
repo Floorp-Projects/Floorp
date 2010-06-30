@@ -1879,14 +1879,6 @@ nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)
 // If we're in the TRACKING state of the d&d gesture tracker, check the current position
 // of the mouse in relation to the old one. If we've moved a sufficient amount from
 // the mouse down, then fire off a drag gesture event.
-//
-// Note that when the mouse enters a new child window with its own view, the event's
-// coordinates will be in relation to the origin of the inner child window, which could
-// either be very different from that of the mouse coords of the mouse down and trigger
-// a drag too early, or very similar which might not trigger a drag.
-//
-// Do we need to do anything about this? Let's wait and see.
-//
 void
 nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
                                          nsMouseEvent *aEvent)
@@ -2203,7 +2195,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   if (aIsSelection && !dragImage) {
     nsIDocument* doc = aDragTarget->GetCurrentDoc();
     if (doc) {
-      nsIPresShell* presShell = doc->GetPrimaryShell();
+      nsIPresShell* presShell = doc->GetShell();
       if (presShell) {
         selection = presShell->GetCurrentSelection(
                       nsISelectionController::SELECTION_NORMAL);
@@ -2283,7 +2275,7 @@ nsEventStateManager::GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv)
   nsIDocument *doc = GetDocumentFromWindow(contentWindow);
   if(!doc) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = doc->GetPrimaryShell();
+  nsIPresShell *presShell = doc->GetShell();
   if(!presShell) return NS_ERROR_FAILURE;
   nsPresContext *presContext = presShell->GetPresContext();
   if(!presContext) return NS_ERROR_FAILURE;
@@ -3107,6 +3099,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
         event.refPoint = mouseEvent->refPoint;
+        if (mouseEvent->widget) {
+          event.refPoint += mouseEvent->widget->WidgetToScreenOffset();
+        }
+        event.refPoint -= widget->WidgetToScreenOffset();
         event.isShift = mouseEvent->isShift;
         event.isControl = mouseEvent->isControl;
         event.isAlt = mouseEvent->isAlt;
@@ -3570,7 +3566,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   if (parentDoc) {
     nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
     if (docContent) {
-      nsIPresShell *parentShell = parentDoc->GetPrimaryShell();
+      nsIPresShell *parentShell = parentDoc->GetShell();
       if (parentShell) {
         nsEventStateManager* parentESM =
           static_cast<nsEventStateManager*>

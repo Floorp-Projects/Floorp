@@ -527,39 +527,39 @@ private:
 struct nsCSSValue::Array {
 
   // return |Array| with reference count of zero
-  static Array* Create(PRUint16 aItemCount) {
+  static Array* Create(size_t aItemCount) {
     return new (aItemCount) Array(aItemCount);
   }
 
-  nsCSSValue& operator[](PRUint16 aIndex) {
+  nsCSSValue& operator[](size_t aIndex) {
     NS_ASSERTION(aIndex < mCount, "out of range");
     return mArray[aIndex];
   }
 
-  const nsCSSValue& operator[](PRUint16 aIndex) const {
+  const nsCSSValue& operator[](size_t aIndex) const {
     NS_ASSERTION(aIndex < mCount, "out of range");
     return mArray[aIndex];
   }
 
-  nsCSSValue& Item(PRUint16 aIndex) { return (*this)[aIndex]; }
-  const nsCSSValue& Item(PRUint16 aIndex) const { return (*this)[aIndex]; }
+  nsCSSValue& Item(size_t aIndex) { return (*this)[aIndex]; }
+  const nsCSSValue& Item(size_t aIndex) const { return (*this)[aIndex]; }
 
-  PRUint16 Count() const { return mCount; }
+  size_t Count() const { return mCount; }
 
   PRBool operator==(const Array& aOther) const
   {
     if (mCount != aOther.mCount)
       return PR_FALSE;
-    for (PRUint16 i = 0; i < mCount; ++i)
+    for (size_t i = 0; i < mCount; ++i)
       if ((*this)[i] != aOther[i])
         return PR_FALSE;
     return PR_TRUE;
   }
 
-  // XXXdholbert This uses a 16-bit ref count to save space. Should we use
-  // a variant of NS_INLINE_DECL_REFCOUNTING that takes a type as an argument?
+  // XXXdholbert This uses a size_t ref count. Should we use a variant
+  // of NS_INLINE_DECL_REFCOUNTING that takes a type as an argument?
   void AddRef() {
-    if (mRefCnt == PR_UINT16_MAX) {
+    if (mRefCnt == size_t(-1)) { // really want SIZE_MAX
       NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
       return;
     }
@@ -567,7 +567,7 @@ struct nsCSSValue::Array {
     NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Array", sizeof(*this));
   }
   void Release() {
-    if (mRefCnt == PR_UINT16_MAX) {
+    if (mRefCnt == size_t(-1)) { // really want SIZE_MAX
       NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
       return;
     }
@@ -579,14 +579,14 @@ struct nsCSSValue::Array {
 
 private:
 
-  PRUint16 mRefCnt;
-  const PRUint16 mCount;
+  size_t mRefCnt;
+  const size_t mCount;
   // This must be the last sub-object, since we extend this array to
   // be of size mCount; it needs to be a sub-object so it gets proper
   // alignment.
   nsCSSValue mArray[1];
 
-  void* operator new(size_t aSelfSize, PRUint16 aItemCount) CPP_THROW_NEW {
+  void* operator new(size_t aSelfSize, size_t aItemCount) CPP_THROW_NEW {
     NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have a 0 item count");
     return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1));
   }
@@ -601,7 +601,7 @@ private:
   for (nsCSSValue *var = First() + 1, *var##_end = First() + mCount;          \
        var != var##_end; ++var)
 
-  Array(PRUint16 aItemCount)
+  Array(size_t aItemCount)
     : mRefCnt(0)
     , mCount(aItemCount)
   {

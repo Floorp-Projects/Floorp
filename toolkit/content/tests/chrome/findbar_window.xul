@@ -100,7 +100,7 @@
         gFindBar = document.getElementById("FindToolbar");
         gBrowser = document.getElementById("content");
         gBrowser.addEventListener("pageshow", onPageShow, false);
-        gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT + "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" + SAMPLE_TEXT + "'></input><input id='button' type='button'></input>");
+        gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT + "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" + SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>");
       }
       setTimeout(_delayedOnLoad, 1000);
     }
@@ -157,8 +157,12 @@
 
     function testDrop()
     {
-      synthesizeDrop(gFindBar._findField, [[ {type: "text/plain", data: "Rabbits" } ]], "copy", window);
+      gFindBar.open();
+      // use an dummy image to start the drag so it doesn't get interrupted by a selection
+      var img = gBrowser.contentDocument.getElementById("img");
+      synthesizeDrop(img, gFindBar._findField, [[ {type: "text/plain", data: "Rabbits" } ]], "copy", window);
       window.opener.wrappedJSObject.SimpleTest.is(gFindBar._findField.inputField.value, "Rabbits", "drop on findbar");
+      gFindBar.close();
     }
 
     function testQuickFindClose() {

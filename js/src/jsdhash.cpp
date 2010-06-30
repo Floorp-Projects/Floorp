@@ -135,7 +135,7 @@ JS_DHashStringKey(JSDHashTable *table, const void *key)
 JS_PUBLIC_API(JSDHashNumber)
 JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key)
 {
-    return (JSDHashNumber)(unsigned long)key >> 2;
+    return (JSDHashNumber)(uintptr_t)key >> 2;
 }
 
 JS_PUBLIC_API(JSBool)

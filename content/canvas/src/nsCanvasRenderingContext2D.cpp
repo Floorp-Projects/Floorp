@@ -537,7 +537,7 @@ protected:
         do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
       if (content) {
         nsIDocument* ownerDoc = content->GetOwnerDoc();
-        return ownerDoc ? ownerDoc->GetPrimaryShell() : nsnull;
+        return ownerDoc ? ownerDoc->GetShell() : nsnull;
       }
       if (mDocShell) {
         nsCOMPtr<nsIPresShell> shell;
@@ -757,7 +757,9 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 void
 nsCanvasRenderingContext2D::Destroy()
 {
-    if (mValid)
+    // only do this for non-docshell created contexts,
+    // since those are the ones that we created a surface for
+    if (mValid && !mDocShell)
         gCanvasMemoryUsed -= mWidth * mHeight * 4;
 
     mSurface = nsnull;

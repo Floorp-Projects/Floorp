@@ -65,18 +65,18 @@ nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP
-nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsGfxRadioControlFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService
     = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLRadioButtonAccessible(
-      static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLRadioButtonAccessible(mContent,
+                                                       PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 

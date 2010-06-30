@@ -51,6 +51,8 @@ ifdef NS_ENABLE_TSF
 CPP_UNIT_TESTS += TestWinTSF.cpp  \
                   $(NULL)
 endif
+CPP_UNIT_TESTS += TestChromeMargin.cpp  \
+                  $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -184,7 +184,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   // Lets find out how many elements we have.
   // easier to do this then realloc
   const char* pos = aFormatStr;
-  int num = 0;
+  unsigned int num = 0;
   do {
     while (*pos && nsCRT::IsAsciiSpace(PRUnichar(*pos)))
       ++pos;

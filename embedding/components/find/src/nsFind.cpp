@@ -74,6 +74,10 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 #define CH_SHY ((PRUnichar) 0xAD)
 
+// nsFind::Find casts CH_SHY to char before calling StripChars
+// This works correctly if and only if CH_SHY <= 255
+PR_STATIC_ASSERT(CH_SHY <= 255);
+
 // -----------------------------------------------------------------------
 // nsFindContentIterator is a special iterator that also goes through
 // any existing <textarea>'s or text <input>'s editor to lookup the

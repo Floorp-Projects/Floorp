@@ -187,8 +187,8 @@ void
 mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aInLength, 
                                          const PRUint32 pos, nsString& aOutString)
 {
-  NS_ASSERTION(pos < aInLength, "bad args to CompleteAbbreviatedURL, see bug #190851");
-  if (pos >= aInLength)
+  NS_ASSERTION(PRInt32(pos) < aInLength, "bad args to CompleteAbbreviatedURL, see bug #190851");
+  if (PRInt32(pos) >= aInLength)
     return;
 
   if (aInString[pos] == '@')
@@ -259,7 +259,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
          aInString[PRUint32(i)] == '.'
          ); i--)
       ;
-    if (++i >= 0 && i < pos && nsCRT::IsAsciiAlpha(aInString[PRUint32(i)]))
+    if (++i >= 0 && PRUint32(i) < pos && nsCRT::IsAsciiAlpha(aInString[PRUint32(i)]))
     {
       start = PRUint32(i);
       return PR_TRUE;
@@ -287,7 +287,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
       ;
     if
       (
-        ++i >= 0 && i < pos
+        ++i >= 0 && PRUint32(i) < pos
           &&
           (
             nsCRT::IsAsciiAlpha(aInString[PRUint32(i)]) ||
@@ -1253,7 +1253,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>")
      or in a tag ("<!--[...]-->").
      Unescape the rest (text between tags) and pass it to ScanTXT. */
-  for (PRInt32 i = 0; PRUint32(i) < lengthOfInString;)
+  for (PRInt32 i = 0; i < lengthOfInString;)
   {
     if (aInString[i] == '<')  // html tag
     {

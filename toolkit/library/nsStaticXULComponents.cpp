@@ -137,6 +137,13 @@
 #define LAYOUT_DEBUG_MODULE
 #endif
 
+#ifdef MOZ_IPC
+#define JETPACK_MODULES \
+    MODULE(jetpack)
+#else
+#define JETPACK_MODULES
+#endif
+
 #ifdef MOZ_PLUGINS
 #define PLUGINS_MODULES \
     MODULE(nsPluginModule)
@@ -243,6 +250,7 @@
     WIDGET_MODULES                           \
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
+    JETPACK_MODULES                          \
     PLUGINS_MODULES                          \
     MODULE(nsLayoutModule)                   \
     MODULE(docshell_provider)                \

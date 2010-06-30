@@ -63,8 +63,8 @@ enum nsViewVisibility {
 
 // IID for the nsIView interface
 #define NS_IVIEW_IID    \
-  { 0xe981334b, 0x756e, 0x417a, \
-    { 0xbf, 0x18, 0x47, 0x4a, 0x2d, 0xfe, 0xc3, 0x87 } }
+  { 0xdb512cfa, 0xe00c, 0x4eff, \
+    { 0xa2, 0x9c, 0x18, 0x74, 0x96, 0x63, 0x17, 0x69 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -188,13 +188,6 @@ public:
   nsPoint GetOffsetTo(const nsIView* aOther) const;
 
   /**
-   * Get the screen position of the view.
-   * @return the pixel position of the top-left of the view in screen
-   * coordinates.
-   */
-  nsIntPoint GetScreenPosition() const;
-  
-  /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
@@ -292,6 +285,26 @@ public:
                         nsIWidget* aParentWidget = nsnull);
 
   /**
+   * Attach/detach a top level widget from this view. When attached, the view
+   * updates the widget's device context and allows the view to begin receiving
+   * gecko events. The underlying base window associated with the widget will
+   * continues to receive events it expects.
+   *
+   * An attached widget will not be destroyed when the view is destroyed,
+   * allowing the recycling of a single top level widget over multiple views.
+   *
+   * @param aWidget The widget to attach to / detach from.
+   */
+  nsresult AttachToTopLevelWidget(nsIWidget* aWidget);
+  nsresult DetachFromTopLevelWidget();
+
+  /**
+   * Returns a flag indicating whether the view owns it's widget
+   * or is attached to an existing top level widget.
+   */
+  PRBool IsAttachedToTopLevel() const { return mWidgetIsTopLevel; }
+
+  /**
    * In 4.0, the "cutout" nature of a view is queryable.
    * If we believe that all cutout view have a native widget, this
    * could be a replacement.
@@ -342,20 +355,7 @@ public:
   // This is an app unit offset to add when converting view coordinates to
   // widget coordinates.  It is the offset in view coordinates from widget
   // top-left to view top-left.
-  nsPoint ViewToWidgetOffset() const {
-    nsIView* parent = reinterpret_cast<nsIView*>(mParent);
-    if (parent && parent->GetViewManager() != GetViewManager()) {
-      // The document root view's mViewToWidgetOffset is always (0,0).
-      // If it has a parent view, the parent view must be the inner view
-      // for an nsSubdocumentFrame; its top-left position in appunits
-      // is always positioned at that inner view's top-left, and its
-      // widget top-left is always positioned at that inner view's widget's
-      // top-left, so its ViewToWidgetOffset is actually the same as
-      // its parent's.
-      return parent->ViewToWidgetOffset();
-    }
-    return mViewToWidgetOffset;
-  }
+  nsPoint ViewToWidgetOffset() const { return mViewToWidgetOffset; }
 
 protected:
   friend class nsWeakView;
@@ -373,6 +373,7 @@ protected:
   float             mOpacity;
   PRUint32          mVFlags;
   nsWeakView*       mDeletionObserver;
+  PRBool            mWidgetIsTopLevel;
 
   virtual ~nsIView() {}
 };

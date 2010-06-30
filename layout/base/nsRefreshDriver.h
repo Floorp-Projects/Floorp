@@ -63,7 +63,7 @@ public:
   // nsISupports will already have methods with the correct signature.
   //
   // The refresh driver does NOT hold references to refresh observers
-  // except while it is notifying them.  
+  // except while it is notifying them.
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 

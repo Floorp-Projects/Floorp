@@ -95,7 +95,9 @@ nsAutoRollup::~nsAutoRollup()
 
 nsBaseWidget::nsBaseWidget()
 : mClientData(nsnull)
+, mViewWrapperPtr(nsnull)
 , mEventCallback(nsnull)
+, mViewCallback(nsnull)
 , mContext(nsnull)
 , mToolkit(nsnull)
 , mCursor(eCursor_standard)
@@ -235,6 +237,46 @@ NS_IMETHODIMP nsBaseWidget::SetClientData(void* aClientData)
 {
   mClientData = aClientData;
   return NS_OK;
+}
+
+// Attach a view to our widget which we'll send events to. 
+NS_IMETHODIMP
+nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
+                                   nsIDeviceContext *aContext)
+{
+  NS_ASSERTION((mWindowType == eWindowType_toplevel), "Can't attach to child?");
+
+  mViewCallback = aViewEventFunction;
+
+  if (aContext) {
+    if (mContext) {
+      NS_IF_RELEASE(mContext);
+    }
+    mContext = aContext;
+    NS_ADDREF(mContext);
+  }
+
+  return NS_OK;
+}
+
+ViewWrapper* nsBaseWidget::GetAttachedViewPtr()
+ {
+   return mViewWrapperPtr;
+ }
+ 
+NS_IMETHODIMP nsBaseWidget::SetAttachedViewPtr(ViewWrapper* aViewWrapper)
+ {
+   mViewWrapperPtr = aViewWrapper;
+   return NS_OK;
+ }
+
+NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aX,
+                                     PRInt32 aY,
+                                     PRInt32 aWidth,
+                                     PRInt32 aHeight,
+                                     PRBool aRepaint)
+{
+  return Resize(aX, aY, aWidth, aHeight, aRepaint);
 }
 
 //-------------------------------------------------------------------------
@@ -741,6 +783,12 @@ NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//-------------------------------------------------------------------------
+//
+// Bounds
+//
+//-------------------------------------------------------------------------
+
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
@@ -770,18 +818,30 @@ NS_METHOD nsBaseWidget::GetScreenBounds(nsIntRect &aRect)
   return GetBounds(aRect);
 }
 
-/**
-* 
-*
-**/
+NS_METHOD nsBaseWidget::GetClientOffset(nsIntPoint &aPt)
+{
+  aPt.x = aPt.y = 0;
+  return NS_OK;
+}
+
 NS_METHOD nsBaseWidget::SetBounds(const nsIntRect &aRect)
 {
   mBounds = aRect;
 
   return NS_OK;
 }
- 
 
+NS_IMETHODIMP
+nsBaseWidget::GetNonClientMargins(nsIntMargin &margins)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+ 
+NS_IMETHODIMP
+nsBaseWidget::SetNonClientMargins(nsIntMargin &margins)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_METHOD nsBaseWidget::EnableDragDrop(PRBool aEnable)
 {
@@ -1141,6 +1201,7 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_POPSTATE,"NS_POPSTATE");
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
     _ASSIGN_eventName(NS_HASHCHANGE,"NS_HASHCHANGE");
+    _ASSIGN_eventName(NS_READYSTATECHANGE,"NS_READYSTATECHANGE");
     _ASSIGN_eventName(NS_PAINT,"NS_PAINT");
     _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
     _ASSIGN_eventName(NS_XUL_COMMAND_UPDATE, "NS_XUL_COMMAND_UPDATE");

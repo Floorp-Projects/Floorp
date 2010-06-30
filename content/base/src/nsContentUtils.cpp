@@ -474,6 +474,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::ondblclick,                    NS_MOUSE_DOUBLECLICK, EventNameType_HTMLXUL, NS_MOUSE_EVENT },
     { nsGkAtoms::onmouseover,                   NS_MOUSE_ENTER_SYNTH, EventNameType_All, NS_MOUSE_EVENT },
     { nsGkAtoms::onmouseout,                    NS_MOUSE_EXIT_SYNTH, EventNameType_All, NS_MOUSE_EVENT },
+    { nsGkAtoms::onMozMouseHittest,             NS_MOUSE_MOZHITTEST, EventNameType_None, NS_MOUSE_EVENT },
     { nsGkAtoms::onmousemove,                   NS_MOUSE_MOVE, EventNameType_All, NS_MOUSE_EVENT },
     { nsGkAtoms::oncontextmenu,                 NS_CONTEXTMENU, EventNameType_HTMLXUL, NS_MOUSE_EVENT },
 
@@ -495,6 +496,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onunload,                      NS_PAGE_UNLOAD,
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
     { nsGkAtoms::onhashchange,                  NS_HASHCHANGE, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::onreadystatechange,            NS_READYSTATECHANGE, EventNameType_HTMLXUL },
     { nsGkAtoms::onbeforeunload,                NS_BEFORE_PAGE_UNLOAD, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::onabort,                       NS_IMAGE_ABORT,
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
@@ -924,6 +926,53 @@ nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
          aChar == PRUnichar(0x0020);
 }
 
+/* static */
+PRBool
+nsContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& result)
+{
+  nsAutoString marginStr(aString);
+  marginStr.CompressWhitespace(PR_TRUE, PR_TRUE);
+  if (marginStr.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  PRInt32 start = 0, end = 0;
+  for (int count = 0; count < 4; count++) {
+    if (end >= marginStr.Length())
+      return PR_FALSE;
+
+    // top, right, bottom, left
+    if (count < 3)
+      end = Substring(marginStr, start).FindChar(',');
+    else
+      end = Substring(marginStr, start).Length();
+
+    if (end <= 0)
+      return PR_FALSE;
+
+    PRInt32 ec, val = 
+      nsString(Substring(marginStr, start, end)).ToInteger(&ec);
+    if (NS_FAILED(ec))
+      return PR_FALSE;
+
+    switch(count) {
+      case 0:
+        result.top = val;
+      break;
+      case 1:
+        result.right = val;
+      break;
+      case 2:
+        result.bottom = val;
+      break;
+      case 3:
+        result.left = val;
+      break;
+    }
+    start += end + 1;
+  }
+  return PR_TRUE;
+}
 
 /* static */
 void
@@ -2253,7 +2302,7 @@ nsContentUtils::GetContextForContent(nsIContent* aContent)
 {
   nsIDocument* doc = aContent->GetCurrentDoc();
   if (doc) {
-    nsIPresShell *presShell = doc->GetPrimaryShell();
+    nsIPresShell *presShell = doc->GetShell();
     if (presShell) {
       return presShell->GetPresContext();
     }
@@ -6075,7 +6124,7 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
     doc = displayDoc;
   }
 
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
   while (!shell && docShellTreeItem) {
@@ -6121,6 +6170,12 @@ nsIContentUtils::IsSafeToRunScript()
   return nsContentUtils::IsSafeToRunScript();
 }
 
+PRBool
+nsIContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& result)
+{
+  return nsContentUtils::ParseIntMarginValue(aString, result);
+}
+
 already_AddRefed<nsIDocumentLoaderFactory>
 nsIContentUtils::FindInternalContentViewer(const char* aType,
                                            ContentViewerType* aLoaderType)
@@ -6134,39 +6189,20 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
   if (!catMan)
     return NULL;
 
-  FullPagePluginEnabledType pluginEnabled = NOT_ENABLED;
-
-  nsCOMPtr<nsIPluginHost> pluginHost =
-    do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  if (pluginHost) {
-    pluginHost->IsFullPagePluginEnabledForType(aType, &pluginEnabled);
-  }
-
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
-
-  if (OVERRIDE_BUILTIN == pluginEnabled) {
-    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
-    if (docFactory && aLoaderType) {
-      *aLoaderType = TYPE_PLUGIN;
-    }
-    return docFactory.forget();
-  }
 
   nsXPIDLCString contractID;
   nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aType, getter_Copies(contractID));
   if (NS_SUCCEEDED(rv)) {
     docFactory = do_GetService(contractID);
     if (docFactory && aLoaderType) {
-      *aLoaderType = contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID) ? TYPE_CONTENT : TYPE_UNKNOWN;
+      if (contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID))
+        *aLoaderType = TYPE_CONTENT;
+      else if (contractID.EqualsLiteral(PLUGIN_DLF_CONTRACTID))
+        *aLoaderType = TYPE_PLUGIN;
+      else
+      *aLoaderType = TYPE_UNKNOWN;
     }   
-    return docFactory.forget();
-  }
-
-  if (AVAILABLE == pluginEnabled) {
-    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
-    if (docFactory && aLoaderType) {
-      *aLoaderType = TYPE_PLUGIN;
-    }
     return docFactory.forget();
   }
 

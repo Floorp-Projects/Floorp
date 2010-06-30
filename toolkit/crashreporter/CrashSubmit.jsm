@@ -187,12 +187,13 @@ function writeSubmittedReport(crashID, viewURL) {
 }
 
 // the Submitter class represents an individual submission.
-function Submitter(id, element, submitSuccess, submitError) {
+function Submitter(id, element, submitSuccess, submitError, noThrottle) {
   this.id = id;
   this.element = element;
   this.document = element.ownerDocument;
   this.successCallback = submitSuccess;
   this.errorCallback = submitError;
+  this.noThrottle = noThrottle;
 }
 
 Submitter.prototype = {
@@ -250,8 +251,10 @@ Submitter.prototype = {
     for (let [name, value] in Iterator(reportData)) {
       addFormEntry(this.iframe.contentDocument, form, name, value);
     }
-    // tell the server not to throttle this, since it was manually submitted
-    addFormEntry(this.iframe.contentDocument, form, "Throttleable", "0");
+    if (this.noThrottle) {
+      // tell the server not to throttle this, since it was manually submitted
+      addFormEntry(this.iframe.contentDocument, form, "Throttleable", "0");
+    }
     // add the minidump
     this.iframe.contentDocument.getElementById('minidump').value
       = this.dump.path;
@@ -310,6 +313,9 @@ Submitter.prototype = {
     let propBag = Cc["@mozilla.org/hash-property-bag;1"].
                   createInstance(Ci.nsIWritablePropertyBag2);
     propBag.setPropertyAsAString("minidumpID", this.id);
+    if (status == SUCCESS) {
+      propBag.setPropertyAsAString("serverCrashID", ret.CrashID);
+    }
 
     Services.obs.notifyObservers(propBag, "crash-report-status", status);
 
@@ -384,14 +390,25 @@ let CrashSubmit = {
    *        A function that will be called with one parameter if the
    *        report fails to submit: the id that was passed to this
    *        function.
+   * @param noThrottle
+   *        If true, this crash report should be submitted with
+   *        an extra parameter of "Throttleable=0" indicating that
+   *        it should be processed right away. This should be set
+   *        when the report is being submitted and the user expects
+   *        to see the results immediately.
    *
    * @return true if the submission began successfully, or false if
    *         it failed for some reason. (If the dump file does not
    *         exist, for example.)
    */
-  submit: function CrashSubmit_submit(id, element, submitSuccess, submitError)
+  submit: function CrashSubmit_submit(id, element, submitSuccess, submitError,
+                                      noThrottle)
   {
-    let submitter = new Submitter(id, element, submitSuccess, submitError);
+    let submitter = new Submitter(id,
+                                  element,
+                                  submitSuccess,
+                                  submitError,
+                                  noThrottle);
     CrashSubmit._activeSubmissions.push(submitter);
     return submitter.submit();
   },

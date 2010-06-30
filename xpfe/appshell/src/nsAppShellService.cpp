@@ -335,6 +335,12 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     widgetInitData.mWindowType = eWindowType_sheet;
 #endif
 
+#if defined(XP_WIN)
+  if (widgetInitData.mWindowType == eWindowType_toplevel ||
+      widgetInitData.mWindowType == eWindowType_dialog)
+    widgetInitData.clipChildren = PR_TRUE;
+#endif
+
   widgetInitData.mContentType = eContentTypeUI;                
 
   // note default chrome overrides other OS chrome settings, but
