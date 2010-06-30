@@ -476,10 +476,10 @@ var Browser = {
     notifications.addEventListener("AlertActive", notificationHandler, false);
     notifications.addEventListener("AlertClose", notificationHandler, false);
 
+    BrowserUI.init();
+
     // initialize input handling
     ih = new InputHandler(container);
-
-    BrowserUI.init();
 
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
