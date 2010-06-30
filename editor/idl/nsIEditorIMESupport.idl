@@ -39,39 +39,10 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-%{C++
-class nsIPrivateTextRangeList;
-%}
-
-[ptr] native nsIPrivateTextRangeListPtr(nsIPrivateTextRangeList);
-
-
-[scriptable, uuid(5cb3f9c9-5ab9-40fd-8ee2-0d1c7abd20dd)]
+[scriptable, uuid(a64744c5-d3ff-46ba-b9b1-57f79ff7d97d)]
 
 interface nsIEditorIMESupport : nsISupports
 {
-
-
-  /**
-   * beginComposition() Handles the start of inline input composition.
-   */
-
-  [noscript] void beginComposition();
-
-  /**
-   * setCompositionString() Sets the inline input composition string.
-   * beginComposition must be called prior to this.
-   */
-
-  [noscript] void setCompositionString(in DOMString aCompositionString,
-                                       in nsIPrivateTextRangeListPtr aTextRange);
-
-  /**
-   * endComposition() Handles the end of inline input composition.
-   */
-
-  [noscript] void endComposition();
-
   /**
    * forceCompositionEnd() force the composition end
    */

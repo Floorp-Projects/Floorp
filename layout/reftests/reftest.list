@@ -26,6 +26,9 @@ include border-image/reftest.list
 # border-radius/
 include border-radius/reftest.list
 
+# box-ordinal/
+include box-ordinal/reftest.list
+
 # box-properties/
 include box-properties/reftest.list
 

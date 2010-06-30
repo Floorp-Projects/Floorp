@@ -278,7 +278,7 @@ ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
 endif
 ifeq ($(OS_ARCH),Darwin)
-OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
+OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon -framework IOKit
 endif
 endif
 

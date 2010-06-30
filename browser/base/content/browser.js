@@ -4108,7 +4108,11 @@ var XULBrowserWindow = {
         let nBox = gBrowser.getNotificationBox(selectedBrowser);
         nBox.removeTransientNotifications();
 
-        PopupNotifications.locationChange();
+        // Only need to call locationChange if the PopupNotifications object
+        // for this window has already been initialized (i.e. its getter no
+        // longer exists)
+        if (!__lookupGetter__("PopupNotifications"))
+          PopupNotifications.locationChange();
       }
     }
 
@@ -4633,10 +4637,6 @@ var TabsOnTop = {
   set enabled (val) {
     gNavToolbox.setAttribute("tabsontop", !!val);
     this.syncCommand();
-
-    //XXX: Trigger reframe. This is a workaround for bug 555987 and needs to be
-    //     removed once that bug is fixed.
-    gNavToolbox.style.MozBoxOrdinalGroup = val ? 2 : 3;
 
     return val;
   }

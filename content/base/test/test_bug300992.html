@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=300992
+-->
+<head>
+  <title>Test for Bug 300992</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=300992">Mozilla Bug 300992</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 300992 **/
+SimpleTest.waitForExplicitFinish();
+
+var i = 0;
+var states = ['loading',
+  'interactive1', 'interactive2',
+  'complete1', 'complete2'];
+
+is(document.readyState, states[i++], 'initial readyState');
+document.onreadystatechange = function (event) {
+  is(document.readyState + '1', states[i++], 'readystatechange event "on" handler');
+};
+document.addEventListener('readystatechange', function(event) {
+  is(document.readyState + '2', states[i++], 'readystatechange event document listener');
+}, false);
+window.addEventListener('readystatechange', function(event) {
+  ok(false, 'window listener', 'readystatechange event should not bubble to window');
+}, false);
+setTimeout(function() {
+  is(i, states.length, 'readystatechange event count');
+  SimpleTest.finish();
+}, 1000);
+
+</script>
+</pre>
+</body>
+</html>

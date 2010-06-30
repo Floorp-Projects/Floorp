@@ -37,5 +37,5 @@ function test()
     finish();
   }, true);
 
-  EventUtils.synthesizeDrop(tab, [[{type: "text/uri-list", data: "http://mochi.test:8888/"}]], "copy", window);
+  EventUtils.synthesizeDrop(tab, tab, [[{type: "text/uri-list", data: "http://mochi.test:8888/"}]], "copy", window);
 }

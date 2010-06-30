@@ -53,6 +53,9 @@ ID3D10Device1 *D3D10Factory::mDeviceInstance = NULL;
 
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)CAIRO_STATUS_SUCCESS
 
+// Contains our cache usage - perhaps this should be made threadsafe.
+static int cache_usage = 0;
+
 /**
  * Create a similar surface which will blend effectively to
  * another surface. For D2D, this will create another texture.
@@ -591,6 +594,13 @@ _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style
     return strokeStyle;
 }
 
+static int _d2d_compute_bitmap_mem_size(ID2D1Bitmap *bitmap)
+{
+    D2D1_SIZE_U size = bitmap->GetPixelSize();
+    int bytes_per_pixel = bitmap->GetPixelFormat().format == DXGI_FORMAT_A8_UNORM ? 1 : 4;
+    return size.width * size.height * bytes_per_pixel;
+}
+
 cairo_user_data_key_t bitmap_key_nonextend;
 cairo_user_data_key_t bitmap_key_extend;
 cairo_user_data_key_t bitmap_key_snapshot;
@@ -612,6 +622,7 @@ static void _d2d_release_bitmap(void *bitmap)
 {
     cached_bitmap *existingBitmap = (cached_bitmap*)bitmap;
     if (!--existingBitmap->refs) {
+	cache_usage -= _d2d_compute_bitmap_mem_size(existingBitmap->bitmap);
 	delete existingBitmap;
     }
 }
@@ -627,7 +638,8 @@ static void _d2d_snapshot_detached(cairo_surface_t *surface)
 	existingBitmap->dirty = true;
     }
     if (!--existingBitmap->refs) {
-	delete existingBitmap;
+	cache_usage -= _d2d_compute_bitmap_mem_size(existingBitmap->bitmap);
+        delete existingBitmap;
     }
     cairo_surface_destroy(surface);
 }
@@ -1077,6 +1089,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		    _cairo_surface_attach_snapshot(surfacePattern->surface,
 						   nullSurf,
 						   _d2d_snapshot_detached);
+		    cache_usage += _d2d_compute_bitmap_mem_size(sourceBitmap);
 		}
 		if (pix_image) {
 		    pixman_image_unref(pix_image);
@@ -2554,4 +2567,10 @@ cairo_d2d_release_dc(cairo_surface_t *surface, const cairo_rectangle_int_t *upda
     r.bottom = r.top + updated_rect->height;
 
     interopRT->ReleaseDC(&r);
+}
+
+int
+cairo_d2d_get_image_surface_cache_usage()
+{
+  return _cairo_atomic_int_get(&cache_usage);
 }

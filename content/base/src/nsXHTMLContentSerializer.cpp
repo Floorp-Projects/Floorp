@@ -101,6 +101,8 @@ nsXHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                               const char* aCharSet, PRBool aIsCopying,
                               PRBool aRewriteEncodingDeclaration)
 {
+  mInBody = 0;
+
   // The previous version of the HTML serializer did implicit wrapping
   // when there is no flags, so we keep wrapping in order to keep
   // compatibility with the existing calling code

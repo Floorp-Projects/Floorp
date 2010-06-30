@@ -580,7 +580,7 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
 
-toolbar[mode="icons"] #bookmarks-menu-button.toolbarbutton-1 {
+#bookmarks-menu-button.toolbarbutton-1 {
   -moz-box-orient: horizontal;
 }
 

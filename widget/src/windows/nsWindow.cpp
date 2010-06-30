@@ -378,6 +378,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
+  mOldSizeMode          = nsSizeMode_Normal;
   mLastPoint.x          = 0;
   mLastPoint.y          = 0;
   mLastSize.width       = 0;
@@ -385,6 +386,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldStyle             = 0;
   mOldExStyle           = 0;
   mPainting             = 0;
+  mExitToNonClientArea  = 0;
   mLastKeyboardLayout   = 0;
   mBlurSuppressLevel    = 0;
   mIMEEnabled           = nsIWidget::IME_STATUS_ENABLED;
@@ -817,7 +819,8 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_dialog:
-      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME;
+      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK |
+              DS_MODALFRAME | WS_CLIPCHILDREN;
       if (mBorderStyle != eBorderStyle_default)
         style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
       break;
@@ -836,7 +839,7 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_toplevel:
     case eWindowType_invisible:
       style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
-              WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+              WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CLIPCHILDREN;
       break;
   }
 
@@ -1137,10 +1140,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
             break;
           // use default for nsSizeMode_Minimized on Windows CE
 #else
-          case nsSizeMode_Fullscreen:
-            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
-            break;
-
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
@@ -1558,7 +1557,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
 
     switch (aMode) {
       case nsSizeMode_Fullscreen :
-        mode = SW_MAXIMIZE;
+        mode = SW_RESTORE;
         break;
 
       case nsSizeMode_Maximized :
@@ -1879,27 +1878,16 @@ nsWindow::GetNonClientMargins(nsIntMargin &margins)
     return NS_OK;
   }
 
-  nsCOMPtr<nsILookAndFeel> lookAndFeel =
-    do_GetService("@mozilla.org/widget/lookandfeel;1");
-  if (!lookAndFeel) {
-    NS_WARNING("We need nsILookAndFeel for GetNonClientMargins!");
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowTitleHeight, val);
-  margins.top = val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderHeight, val);
-  margins.top += val;
-  margins.bottom = val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderWidth, val); 
-  margins.left = margins.right = val;
+  margins.top = GetSystemMetrics(SM_CYCAPTION);
+  margins.bottom = GetSystemMetrics(SM_CYFRAME);
+  margins.top += margins.bottom;
+  margins.left = margins.right = GetSystemMetrics(SM_CYFRAME);
 
   return NS_OK;
 }
 
 PRBool
-nsWindow::UpdateNonClientMargins()
+nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, PRBool aRefreshWindow)
 {
   if (!mCustomNonClient)
     return PR_FALSE;
@@ -1914,17 +1902,23 @@ nsWindow::UpdateNonClientMargins()
   mNonClientOffset.top = mNonClientOffset.bottom =
     mNonClientOffset.left = mNonClientOffset.right = 0;
 
-  nsCOMPtr<nsILookAndFeel> lookAndFeel =
-    do_GetService("@mozilla.org/widget/lookandfeel;1");
-  if (!lookAndFeel) {
-    NS_WARNING("We need nsILookAndFeel for UpdateNonClientMargins!");
-    return PR_FALSE;
+  if (aSizeMode == -1)
+    aSizeMode = mSizeMode;
+
+  if (aSizeMode == nsSizeMode_Minimized ||
+      aSizeMode == nsSizeMode_Fullscreen) {
+    mCaptionHeight = mVertResizeMargin = mHorResizeMargin = 0;
+    return PR_TRUE;
   }
 
-  // Used in hit testing, provides the resize cursor margin
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderWidth, mResizeMargin);
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowTitleHeight, mCaptionHeight);
-  mCaptionHeight += mResizeMargin;
+  // Note, for maximized windows, we need to continue to offset the client by
+  // thick frame margins of a normal window, since windows expects this
+  // in it's DwmDefWndProc hit testing.
+  mCaptionHeight = GetSystemMetrics(SM_CYCAPTION);
+  mHorResizeMargin = GetSystemMetrics(SM_CXFRAME);
+  mVertResizeMargin = GetSystemMetrics(SM_CYFRAME);
+
+  mCaptionHeight += mVertResizeMargin;
 
   // If a margin value is 0, set the offset to the default size of the frame.
   // If a margin is -1, leave as default, and if a margin > 0, set the offset
@@ -1934,22 +1928,20 @@ nsWindow::UpdateNonClientMargins()
   else if (mNonClientMargins.top > 0)
     mNonClientOffset.top = mCaptionHeight - mNonClientMargins.top;
 
-  if (!mNonClientMargins.left)
-    mNonClientOffset.left = mResizeMargin;
-  else if (mNonClientMargins.left > 0)
-    mNonClientOffset.left = mResizeMargin - mNonClientMargins.left;
+   if (!mNonClientMargins.left)
+    mNonClientOffset.left = mHorResizeMargin;
+   else if (mNonClientMargins.left > 0)
+    mNonClientOffset.left = mHorResizeMargin - mNonClientMargins.left;
+ 
+   if (!mNonClientMargins.right)
+    mNonClientOffset.right = mHorResizeMargin;
+   else if (mNonClientMargins.right > 0)
+    mNonClientOffset.right = mHorResizeMargin - mNonClientMargins.right;
 
-  if (!mNonClientMargins.right)
-    mNonClientOffset.right = mResizeMargin;
-  else if (mNonClientMargins.right > 0)
-    mNonClientOffset.right = mResizeMargin - mNonClientMargins.right;
-
-  PRInt32 val;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowBorderHeight, val);
-  if (!mNonClientMargins.bottom)
-    mNonClientOffset.bottom = val;
-  else if (mNonClientMargins.bottom > 0)
-    mNonClientOffset.bottom = val - mNonClientMargins.bottom;
+   if (!mNonClientMargins.bottom)
+    mNonClientOffset.bottom = mVertResizeMargin;
+   else if (mNonClientMargins.bottom > 0)
+    mNonClientOffset.bottom = mVertResizeMargin - mNonClientMargins.bottom;
 
   NS_ASSERTION(mNonClientOffset.top >= 0, "non-client top margin is negative!");
   NS_ASSERTION(mNonClientOffset.left >= 0, "non-client left margin is negative!");
@@ -1965,10 +1957,12 @@ nsWindow::UpdateNonClientMargins()
   if (mNonClientOffset.bottom < 0)
     mNonClientOffset.bottom = 0;
 
-  SetWindowPos(mWnd, 0, 0, 0, 0, 0,
-               SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOMOVE|
-               SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-  UpdateWindow(mWnd);
+  if (aRefreshWindow) {
+    SetWindowPos(mWnd, 0, 0, 0, 0, 0,
+                 SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOMOVE|
+                 SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+    UpdateWindow(mWnd);
+  }
 
   return PR_TRUE;
 }
@@ -2376,6 +2370,9 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     return NS_ERROR_FAILURE;
   }
 
+  if (mHideChrome == aShouldHide)
+    return NS_OK;
+
   DWORD_PTR style, exStyle;
   mHideChrome = aShouldHide;
   if (aShouldHide) {
@@ -2511,6 +2508,19 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
 #else
 
+  if (aFullScreen) {
+    if (mSizeMode != nsSizeMode_Fullscreen)
+      mOldSizeMode = mSizeMode;
+    SetSizeMode(nsSizeMode_Fullscreen);
+  } else {
+    SetSizeMode(mOldSizeMode);
+  }
+
+  UpdateNonClientMargins();
+
+  // Will call hide chrome, reposition window. Note this will
+  // also cache dimensions for restoration, so it should only
+  // be called once per fullscreen request.
   return nsBaseWidget::MakeFullScreen(aFullScreen);
 #endif
 }
@@ -3835,6 +3845,10 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   else if (aEventType == NS_MOUSE_EXIT) {
     event.exit = IsTopLevelMouseExit(mWnd) ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
   }
+  else if (aEventType == NS_MOUSE_MOZHITTEST)
+  {
+    event.flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+  }
   event.clickCount = sLastClickCount;
 
 #ifdef NS_DEBUG_XX
@@ -4385,6 +4399,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
   static PRBool getWheelInfo = PR_TRUE;
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Glass hit testing w/custom transparent margins
   LRESULT dwmHitResult;
   if (mCustomNonClient &&
@@ -4394,6 +4409,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     *aRetValue = dwmHitResult;
     return PR_TRUE;
   }
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 
   switch (msg) {
 #ifndef WINCE
@@ -4685,6 +4701,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       if ((sLastMouseMovePoint.x != mp.x) || (sLastMouseMovePoint.y != mp.y)) {
         userMovedMouse = PR_TRUE;
       }
+      mExitToNonClientArea = PR_FALSE;
 
       result = DispatchMouseEvent(NS_MOUSE_MOVE, wParam, lParam,
                                   PR_FALSE, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
@@ -4809,6 +4826,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                   nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
       break;
 
+    case WM_NCRBUTTONDOWN:
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0, lParamToClient(lParam), 
+                                  PR_FALSE, nsMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
+    case WM_NCRBUTTONUP:
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
+                                  PR_FALSE, nsMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
+    case WM_NCRBUTTONDBLCLK:
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
+                                  PR_FALSE, nsMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
+
     case WM_APPCOMMAND:
     {
       PRUint32 appCommand = GET_APPCOMMAND_LPARAM(lParam);
@@ -4894,8 +4930,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #else
           *aRetValue = 0;
 #endif
-          if (mSizeMode == nsSizeMode_Fullscreen)
-            MakeFullScreen(TRUE);
         }
       }
 #ifdef WINCE_WINDOWS_MOBILE
@@ -5389,14 +5423,14 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
   PRBool right  = PR_FALSE;
 
   if (my >= winRect.top && my <=
-      (winRect.top + (mCaptionHeight - mNonClientOffset.top)))
+      (winRect.top + mVertResizeMargin + (mCaptionHeight - mNonClientOffset.top)))
     top = PR_TRUE;
-  else if (my <= winRect.bottom && my >= (winRect.bottom - mResizeMargin))
+  else if (my <= winRect.bottom && my >= (winRect.bottom - mVertResizeMargin))
     bottom = PR_TRUE;
 
-  if (mx >= winRect.left && mx <= (winRect.left + mResizeMargin))
+  if (mx >= winRect.left && mx <= (winRect.left + mHorResizeMargin))
     left = PR_TRUE;
-  else if (mx <= winRect.right && mx >= (winRect.right - mResizeMargin))
+  else if (mx <= winRect.right && mx >= (winRect.right - mHorResizeMargin))
     right = PR_TRUE;
 
   if (top) {
@@ -5418,11 +5452,28 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
       testResult = HTRIGHT;
   }
 
-  if (testResult == HTCLIENT && 
-      my > (winRect.top + mResizeMargin) &&
-      my <= (winRect.top + mCaptionHeight) &&
-      my <= (winRect.top + (mCaptionHeight - mNonClientOffset.top)))
-    testResult = HTCAPTION;
+  if (!mIsInMouseCapture && 
+      (testResult == HTCLIENT || testResult == HTTOP || testResult == HTTOPLEFT)) {
+    LPARAM lParam = MAKELPARAM(mx, my);
+    LPARAM lParamClient = lParamToClient(lParam);
+    PRBool result = DispatchMouseEvent(NS_MOUSE_MOZHITTEST, 0, lParamClient,
+                                       PR_FALSE, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+    if (result) {
+      // The mouse is over a blank area
+      testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
+
+      if (!mExitToNonClientArea) {
+        // The first time the mouse pointer goes from client area to non-client area,
+        // we don't want to miss that movement so we can interpret mouseout input.
+        ::SendMessage(mWnd, WM_MOUSEMOVE, 0, lParamClient);
+        mExitToNonClientArea = PR_TRUE;
+      }
+    } else {
+      // There's content over the mouse pointer. Set HTCLIENT
+      // to possibly override a resizer border.
+      testResult = HTCLIENT;
+    }
+  }
 
   return testResult;
 }
@@ -5689,7 +5740,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 #endif
 
   // Handle window size mode changes
-  if (wp->flags & SWP_FRAMECHANGED) {
+  if (wp->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
     nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
 
     WINDOWPLACEMENT pl;
@@ -5843,6 +5894,31 @@ void nsWindow::ActivateOtherWindowHelper(HWND aWnd)
 #if !defined(WINCE)
 void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
 {
+  // Update non-client margins if the frame size is changing, and let the
+  // browser know we are changing size modes, so alternative css can kick in.
+  // If we're going into fullscreen mode, ignore this, since it'll reset
+  // margins to normal mode. 
+  if (info->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
+    WINDOWPLACEMENT pl;
+    pl.length = sizeof(pl);
+    ::GetWindowPlacement(mWnd, &pl);
+    PRInt32 sizeMode;
+    if (pl.showCmd == SW_SHOWMAXIMIZED)
+      sizeMode = nsSizeMode_Maximized;
+    else if (pl.showCmd == SW_SHOWMINIMIZED)
+      sizeMode = nsSizeMode_Minimized;
+    else
+      sizeMode = nsSizeMode_Normal;
+
+    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+
+    InitEvent(event);
+    event.mSizeMode = static_cast<nsSizeMode>(sizeMode);
+    DispatchWindowEvent(&event);
+
+    UpdateNonClientMargins(sizeMode, PR_FALSE);
+  }
+
   // enforce local z-order rules
   if (!(info->flags & SWP_NOZORDER)) {
     HWND hwndAfter = info->hwndInsertAfter;
@@ -7352,43 +7428,43 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   if (aMode == mTransparencyMode)
     return;
 
+  // stop on dialogs and popups!
   HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
-  nsWindow* topWindow = GetNSWindowPtr(hWnd);
+  nsWindow* parent = GetNSWindowPtr(hWnd);
 
-  if (!topWindow)
+  if (!parent)
   {
     NS_WARNING("Trying to use transparent chrome in an embedded context");
     return;
   }
 
-  LONG_PTR style = 0, exStyle = 0;
-  switch(aMode) {
-    case eTransparencyTransparent:
-      exStyle |= WS_EX_LAYERED;
-    case eTransparencyOpaque:
-    case eTransparencyGlass:
-      topWindow->mTransparencyMode = aMode;
-      break;
+  if (parent != this) {
+    NS_WARNING("Setting SetWindowTranslucencyInner on a parent this is not us!");
   }
-
-  // Hide chrome supports caching old styles, so this can be
-  // flipped back and forth
-  //topWindow->HideWindowChrome(aMode == eTransparencyTransparent);
-
-  style |= topWindow->WindowStyle();
-  exStyle |= topWindow->WindowExStyle();
 
   if (aMode == eTransparencyTransparent) {
-    style &= ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-    exStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+    // If we're switching to the use of a transparent window, hide the chrome
+    // on our parent.
+    HideWindowChrome(PR_TRUE);
+  } else if (mHideChrome && mTransparencyMode == eTransparencyTransparent) {
+    // if we're switching out of transparent, re-enable our parent's chrome.
+    HideWindowChrome(PR_FALSE);
   }
 
-  if (topWindow->mIsVisible)
-    style |= WS_VISIBLE;
-  if (topWindow->mSizeMode == nsSizeMode_Maximized)
-    style |= WS_MAXIMIZE;
-  else if (topWindow->mSizeMode == nsSizeMode_Minimized)
-    style |= WS_MINIMIZE;
+  LONG_PTR style = ::GetWindowLongPtrW(hWnd, GWL_STYLE),
+    exStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+ 
+   if (parent->mIsVisible)
+     style |= WS_VISIBLE;
+   if (parent->mSizeMode == nsSizeMode_Maximized)
+     style |= WS_MAXIMIZE;
+   else if (parent->mSizeMode == nsSizeMode_Minimized)
+     style |= WS_MINIMIZE;
+
+   if (aMode == eTransparencyTransparent)
+     exStyle |= WS_EX_LAYERED;
+   else
+     exStyle &= ~WS_EX_LAYERED;
 
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);

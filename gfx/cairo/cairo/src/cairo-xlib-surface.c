@@ -2283,10 +2283,10 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 		       width, height,
 		       dst_x, dst_y);
 	} else {
-	    int n, num_rects;
+	    int n, num_rects, x, y;
 
-	    src_x += src_attr.x_offset + itx - dst_x;
-	    src_y += src_attr.y_offset + ity - dst_y;
+	    x = src_x + src_attr.x_offset + itx - dst_x;
+	    y = src_y + src_attr.y_offset + ity - dst_y;
 
 	    num_rects = cairo_region_num_rectangles (clip_region);
 	    for (n = 0; n < num_rects; n++) {
@@ -2294,7 +2294,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 
 		cairo_region_get_rectangle (clip_region, n, &rect);
 		XCopyArea (dst->dpy, src->drawable, dst->drawable, gc,
-			   rect.x + src_x, rect.y + src_y,
+			   rect.x + x, rect.y + y,
 			   rect.width, rect.height,
 			   rect.x, rect.y);
 	    }

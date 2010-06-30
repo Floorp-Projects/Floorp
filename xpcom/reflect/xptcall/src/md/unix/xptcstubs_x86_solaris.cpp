@@ -42,9 +42,6 @@
 #include "xptiprivate.h"
 #include "xptc_platforms_unixish_x86.h"
 
-#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
-static
-#endif
 nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 {
@@ -101,36 +98,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
     return result;
 }
 
-#ifdef __GNUC__         /* Gnu Compiler. */
-#define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n() \
-{ \
-  register nsresult (*method) (nsXPTCStubBase *, uint32, PRUint32 *) = PrepareAndDispatch; \
-  int temp0, temp1; \
-  register nsresult result; \
-  __asm__ __volatile__( \
-    "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
-    "pushl  %%ecx\n\t" \
-    "pushl  $"#n"\n\t"                 /* method index */ \
-    "movl   0x08(%%ebp), %%ecx\n\t"    /* this */ \
-    "pushl  %%ecx\n\t" \
-    "call   *%%edx\n\t"                /* PrepareAndDispatch */ \
-    "addl   $12, %%esp" \
-    : "=a" (result),    /* %0 */ \
-      "=&c" (temp0),    /* %1 */ \
-      "=d" (temp1)      /* %2 */ \
-    : "2" (method)      /* %2 */ \
-    : "memory" ); \
-    return result; \
-}
-
-#elif defined(__SUNPRO_CC)           /* Sun Workshop Compiler. */
-
 #define STUB_ENTRY(n)
-
-#else
-#error "can't find a compiler to use"
-#endif /* __GNUC__ */
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \

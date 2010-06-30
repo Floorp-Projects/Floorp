@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var q = document.getElementById("q");
+  q.spellcheck = true;
+  q.setAttribute("value", "x");
+  document.documentElement.className = "";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><input id="q"></body>
+</html>

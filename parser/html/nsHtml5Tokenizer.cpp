@@ -3339,7 +3339,7 @@ void
 nsHtml5Tokenizer::emitReplacementCharacter(PRUnichar* buf, PRInt32 pos)
 {
   flushChars(buf, pos);
-  tokenHandler->characters(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, 0, 1);
+  tokenHandler->zeroOriginatingReplacementCharacter();
   cstart = pos + 1;
 }
 

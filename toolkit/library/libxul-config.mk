@@ -288,11 +288,6 @@ STATIC_LIBS += gtkxtbin
 endif
 endif
 
-ifdef MOZ_ENABLE_POSTSCRIPT
-DEFINES += -DMOZ_ENABLE_POSTSCRIPT
-STATIC_LIBS += gfxpsshar
-endif
-
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon

@@ -81,7 +81,7 @@ DumpLayerAndChildren(LayerOGL *l, int advance = 0)
 /**
  * LayerManagerOGL
  */
-LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget) 
+LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
   : mWidget(aWidget)
   , mBackBufferFBO(0)
   , mBackBufferTexture(0)
@@ -102,13 +102,17 @@ LayerManagerOGL::~LayerManagerOGL()
 }
 
 PRBool
-LayerManagerOGL::Initialize()
+LayerManagerOGL::Initialize(GLContext *aExistingContext)
 {
-  mGLContext = sGLContextProvider.CreateForWindow(mWidget);
+  if (aExistingContext) {
+    mGLContext = aExistingContext;
+  } else {
+    mGLContext = sGLContextProvider.CreateForWindow(mWidget);
 
-  if (!mGLContext) {
-    NS_WARNING("Failed to create LayerManagerOGL context");
-    return PR_FALSE;
+    if (!mGLContext) {
+      NS_WARNING("Failed to create LayerManagerOGL context");
+      return PR_FALSE;
+    }
   }
 
   MakeCurrent();

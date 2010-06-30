@@ -6125,24 +6125,28 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsBlockFrame::CreateAccessible()
 {
-  *aAccessible = nsnull;
   nsCOMPtr<nsIAccessibilityService> accService = 
     do_GetService("@mozilla.org/accessibilityService;1");
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+  if (!accService) {
+    return nsnull;
+  }
+
+  nsPresContext* presContext = PresContext();
 
   // block frame may be for <hr>
   if (mContent->Tag() == nsGkAtoms::hr) {
-    return accService->CreateHTMLHRAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLHRAccessible(mContent,
+                                              presContext->PresShell());
   }
 
-  nsPresContext *aPresContext = PresContext();
-  if (!mBullet || !aPresContext) {
+  if (!mBullet || !presContext) {
     if (!mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are redundant with
       // the nsDocAccessible object created with the document node
-      return NS_ERROR_FAILURE;
+      return nsnull;
     }
     
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
@@ -6153,12 +6157,13 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
       if (SameCOMIdentity(body, mContent)) {
         // Don't create accessible objects for the body, they are redundant with
         // the nsDocAccessible object created with the document node
-        return NS_ERROR_FAILURE;
+        return nsnull;
       }
     }
 
     // Not a bullet, treat as normal HTML container
-    return accService->CreateHyperTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHyperTextAccessible(mContent,
+                                                 presContext->PresShell());
   }
 
   // Create special list bullet accessible
@@ -6174,10 +6179,8 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     mBullet->GetListItemText(*myList, bulletText);
   }
 
-  return accService->CreateHTMLLIAccessible(static_cast<nsIFrame*>(this), 
-                                            static_cast<nsIFrame*>(mBullet), 
-                                            bulletText,
-                                            aAccessible);
+  return accService->CreateHTMLLIAccessible(mContent, presContext->PresShell(),
+                                            bulletText);
 }
 #endif
 

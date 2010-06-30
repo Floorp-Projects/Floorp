@@ -122,16 +122,11 @@ MAKEFILES_xmlparser="
 MAKEFILES_gfx="
   gfx/Makefile
   gfx/ycbcr/Makefile
-  gfx/idl/Makefile
   gfx/layers/Makefile
-  gfx/public/Makefile
   gfx/src/Makefile
-  gfx/src/psshared/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
   gfx/thebes/Makefile
-  gfx/thebes/public/Makefile
-  gfx/thebes/src/Makefile
   gfx/qcms/Makefile
 "
 

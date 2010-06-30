@@ -43,7 +43,7 @@
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
 
-#include "IDBObjectStoreRequest.h"
+#include "IDBObjectStore.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 

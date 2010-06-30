@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<xul:deck id="d"/>
+
+<xul:menuitem><span /><xul:menupopup id="p"/></xul:menuitem>
+
+<script>
+function boom()
+{
+  var p = document.getElementById("p");
+  var d = document.getElementById("d");
+  p.parentNode.removeChild(p);
+  d.appendChild(document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box"));
+}
+window.addEventListener("load", boom, false);
+</script>
+
+</html>

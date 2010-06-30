@@ -58,7 +58,7 @@ CAccessibleImage::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleImage == iid) {
-    nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryInterface(this));
+    nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryObject(this));
     if (!imageAcc)
       return E_FAIL;
 
@@ -78,7 +78,7 @@ CAccessibleImage::get_description(BSTR *aDescription)
 __try {
   *aDescription = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -110,7 +110,7 @@ __try {
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryObject(this));
   if (!imageAcc)
     return E_FAIL;
 
@@ -135,7 +135,7 @@ __try {
   *aHeight = 0;
   *aWidth = 0;
 
-  nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryObject(this));
   if (!imageAcc)
     return E_FAIL;
 

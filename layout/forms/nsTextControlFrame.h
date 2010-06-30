@@ -97,7 +97,7 @@ public:
   virtual PRBool IsLeaf() const;
   
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
 #ifdef NS_DEBUG

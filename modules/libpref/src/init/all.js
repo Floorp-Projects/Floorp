@@ -170,7 +170,7 @@ pref("media.webm.enabled", true);
 pref("media.autoplay.enabled", true);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
-// See eCMSMode in gfx/thebes/public/gfxPlatform.h
+// See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
@@ -1256,10 +1256,8 @@ pref("dom.max_script_run_time", 10);
 
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
-//
-// NB: chosen to match dom.max_script_run_time by default
 #ifndef DEBUG
-pref("dom.ipc.plugins.timeoutSecs", 10);
+pref("dom.ipc.plugins.timeoutSecs", 45);
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
