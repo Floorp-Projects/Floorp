@@ -1019,7 +1019,7 @@ hasInt32Repr(const Value &v)
     if (v.isInt32())
         return true;
     int32_t _;
-    return JSDOUBLE_IS_INT32(v.asDouble(), _);
+    return JSDOUBLE_IS_INT32(v.asDouble(), &_);
 }
 
 static inline jsint
@@ -1029,8 +1029,8 @@ asInt32(const Value &v)
     if (v.isInt32())
         return v.asInt32();
 #ifdef DEBUG
-    int32_t i;
-    JS_ASSERT(JSDOUBLE_IS_INT32(v.asDouble(), i));
+    int32_t _;
+    JS_ASSERT(JSDOUBLE_IS_INT32(v.asDouble(), &_));
 #endif
     return jsint(v.asDouble());
 }
@@ -1052,7 +1052,7 @@ getCoercedType(const Value &v)
 {
     if (v.isNumber()) {
         int32_t _;
-        return (v.isInt32() || JSDOUBLE_IS_INT32(v.asDouble(), _))
+        return (v.isInt32() || JSDOUBLE_IS_INT32(v.asDouble(), &_))
                ? JSVAL_TYPE_INT32
                : JSVAL_TYPE_DOUBLE;
     }
@@ -2567,7 +2567,7 @@ ValueToNative(const Value &v, JSValueType type, double* slot)
       }
 
       case JSVAL_TYPE_INT32:
-        JS_ASSERT(v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), _)));
+        JS_ASSERT(v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), &_)));
         debug_only_printf(LC_TMTracer, "int<%d> ", *(jsint *)slot);
         return;
 
@@ -6038,7 +6038,7 @@ IsEntryTypeCompatible(Value* vp, JSValueType* typep)
         debug_only_printf(LC_TMTracer, "double != tag%c ", tag);
         break;
       case JSVAL_TYPE_INT32:
-        if (v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), _)))
+        if (v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), &_)))
             return true;
         debug_only_printf(LC_TMTracer, "int != tag%c ", tag);
         break;

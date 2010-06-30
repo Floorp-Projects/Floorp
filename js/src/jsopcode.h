@@ -47,6 +47,10 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
+#ifdef __cplusplus
+# include "jsvalue.h"
+#endif
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -466,7 +470,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 namespace js {
 
 static inline char *
-DecompileValueGenerator(JSContext *cx, intN spindex, Value v,
+DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
                         JSString *fallback)
 {
     return js_DecompileValueGenerator(cx, spindex, Jsvalify(v), fallback);

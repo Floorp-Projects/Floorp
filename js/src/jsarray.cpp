@@ -3167,8 +3167,7 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     for (i = 0; i < argc; i++) {
         char *bytes;
 
-        bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[i],
-                                           NULL);
+        bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[i], NULL);
         if (!bytes)
             return JS_FALSE;
         if (JSVAL_IS_PRIMITIVE(argv[i]) ||
