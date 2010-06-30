@@ -125,7 +125,7 @@
 <!-- Toolbar items --> 
 <!ENTITY  homeButton.label            "Home">
 <!ENTITY tabCandyButton.label         "TabCandy">
-<!ENTITY tabCandyButton.tooltip       "Open a visual tab interface.">
+<!ENTITY tabCandyButton.tooltip       "Open a visual tab interface">
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
