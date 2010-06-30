@@ -489,9 +489,11 @@ Content.prototype = {
         } else if (!this._formAssistant.open(element)) {
           this._sendMouseEvent("mouseup", element, x, y);
         }
+	break;
       }
 
       case "Browser:MouseCancel":
+        this._cancelMouseEvent();
         if (this._overlayTimeout) {
           content.clearTimeout(this._overlayTimeout);
           this._overlayTimeout = 0;
@@ -576,6 +578,14 @@ Content.prototype = {
     let scrollOffset = Util.getScrollOffset(content);
     let windowUtils = Util.getWindowUtils(content);
     windowUtils.sendMouseEvent(aName, aX - scrollOffset.x, aY - scrollOffset.y, 0, 1, 0, true);
+  },
+
+  _cancelMouseEvent: function _cancelMouseEvent() {
+    // We use a mouseup with a clickcount=0 to cancel the contextmenu timer in
+    // nsEventStateManager.cpp
+    let scrollOffset = Util.getScrollOffset(content);
+    let windowUtils = Util.getWindowUtils(content);
+    windowUtils.sendMouseEvent("mouseup", scrollOffset.x, scrollOffset.y, 0, 0, 0, true);
   },
 
   startLoading: function startLoading() {
