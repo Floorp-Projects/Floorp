@@ -112,6 +112,8 @@
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
+#include "IHistory.h"
+#include "mozilla/Services.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -5672,32 +5674,53 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     if (!(aStateFlags & STATE_IS_DOCUMENT))
         return; // not a toplevel document
 
-    nsCOMPtr<nsIGlobalHistory3> history3(do_QueryInterface(mGlobalHistory));
-    nsresult result = NS_ERROR_NOT_IMPLEMENTED;
-    if (history3) {
-        // notify global history of this redirect
-        result = history3->AddDocumentRedirect(aOldChannel, aNewChannel,
-                                               aRedirectFlags, !IsFrame());
+    nsCOMPtr<nsIURI> oldURI, newURI;
+    aOldChannel->GetURI(getter_AddRefs(oldURI));
+    aNewChannel->GetURI(getter_AddRefs(newURI));
+    if (!oldURI || !newURI) {
+        return;
     }
 
-    if (result == NS_ERROR_NOT_IMPLEMENTED) {
-        // when there is no GlobalHistory3, or it doesn't implement
-        // AddToplevelRedirect, we fall back to GlobalHistory2.  Just notify
-        // that the redirecting page was a rePdirect so it will be link colored
-        // but not visible.
-        nsCOMPtr<nsIURI> oldURI;
-        aOldChannel->GetURI(getter_AddRefs(oldURI));
-        if (! oldURI)
-            return; // nothing to tell anybody about
-        AddToGlobalHistory(oldURI, PR_TRUE, aOldChannel);
+    // Below a URI visit is saved (see AddURIVisit method doc).
+    // The visit chain looks something like:
+    //   ...
+    //   Site N - 1
+    //                =>  Site N
+    //   (redirect to =>) Site N + 1 (we are here!)
+
+    // Get N - 1 and transition type
+    nsCOMPtr<nsIURI> previousURI;
+    PRUint32 previousFlags = 0;
+    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
+
+    if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL ||
+        ChannelIsPost(aOldChannel)) {
+        // 1. Internal redirects are ignored because they are specific to the
+        //    channel implementation.
+        // 2. POSTs are not saved by global history.
+        //
+        // Regardless, we need to propagate the previous visit to the new
+        // channel.
+        SaveLastVisit(aNewChannel, previousURI, previousFlags);
+    }
+    else {
+        nsCOMPtr<nsIURI> referrer;
+        // Treat referrer as null if there is an error getting it.
+        (void)NS_GetReferrerFromChannel(aOldChannel,
+                                        getter_AddRefs(referrer));
+
+        // Add visit N -1 => N
+        AddURIVisit(oldURI, referrer, previousURI, previousFlags);
+
+        // Since N + 1 could be the final destination, we will not save N => N + 1
+        // here.  OnNewURI will do that, so we will cache it.
+        SaveLastVisit(aNewChannel, oldURI, aRedirectFlags);
     }
 
     // check if the new load should go through the application cache.
     nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
         do_QueryInterface(aNewChannel);
     if (appCacheChannel) {
-        nsCOMPtr<nsIURI> newURI;
-        aNewChannel->GetURI(getter_AddRefs(newURI));
         appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(newURI));
     }
 
@@ -8937,7 +8960,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
     nsCOMPtr<nsIInputStream> inputStream;
     if (aChannel) {
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-        
+
         // Check if the HTTPChannel is hiding under a multiPartChannel
         if (!httpChannel)  {
             GetHttpChannel(aChannel, getter_AddRefs(httpChannel));
@@ -9027,8 +9050,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
         
         nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
         nsCOMPtr<nsISupports>  cacheKey;
-        // Get the Cache Key  and store it in SH.         
-        if (cacheChannel) 
+        // Get the Cache Key and store it in SH.
+        if (cacheChannel)
             cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
         // If we already have a loading history entry, store the new cache key
         // in it.  Otherwise, since we're doing a reload and won't be updating
@@ -9050,10 +9073,22 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
                                        getter_AddRefs(mLSHE));
         }
 
-        // Update Global history
         if (aAddToGlobalHistory) {
-            // Get the referrer uri from the channel
-            AddToGlobalHistory(aURI, PR_FALSE, aChannel);
+            // If this is a POST request, we do not want to include this in global
+            // history.
+            if (!ChannelIsPost(aChannel)) {
+                nsCOMPtr<nsIURI> previousURI;
+                PRUint32 previousFlags = 0;
+                ExtractLastVisit(aChannel, getter_AddRefs(previousURI),
+                                 &previousFlags);
+
+                nsCOMPtr<nsIURI> referrer;
+                // Treat referrer as null if there is an error getting it.
+                (void)NS_GetReferrerFromChannel(aChannel,
+                                                getter_AddRefs(referrer));
+
+                AddURIVisit(aURI, referrer, previousURI, previousFlags);
+            }
         }
     }
 
@@ -9372,7 +9407,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         SetCurrentURI(newURI, nsnull, PR_TRUE);
         document->SetDocumentURI(newURI);
 
-        AddToGlobalHistory(newURI, PR_FALSE, oldURI);
+        AddURIVisit(newURI, oldURI, oldURI, 0);
     }
     else {
         FireOnLocationChange(this, nsnull, mCurrentURI);
@@ -10068,53 +10103,109 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
   return mEditorData->MakeEditable(inWaitForUriLoad);
 }
 
-nsresult
-nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
-                               nsIChannel * aChannel)
+bool
+nsDocShell::ChannelIsPost(nsIChannel* aChannel)
 {
-    // If this is a POST request, we do not want to include this in global
-    // history, so return early.
-    nsCOMPtr<nsIHttpChannel> hchan(do_QueryInterface(aChannel));
-    if (hchan) {
-        nsCAutoString type;
-        nsresult rv = hchan->GetRequestMethod(type);
-        if (NS_SUCCEEDED(rv) && type.EqualsLiteral("POST"))
-            return NS_OK;
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+    if (!httpChannel) {
+        return false;
     }
 
-    nsCOMPtr<nsIURI> referrer;
-    if (aChannel)
-        NS_GetReferrerFromChannel(aChannel, getter_AddRefs(referrer));
-
-    return AddToGlobalHistory(aURI, aRedirect, referrer);
+    nsCAutoString method;
+    httpChannel->GetRequestMethod(method);
+    return method.Equals("POST");
 }
 
-nsresult
-nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
-                               nsIURI * aReferrer)
+void
+nsDocShell::ExtractLastVisit(nsIChannel* aChannel,
+                             nsIURI** aURI,
+                             PRUint32* aChannelRedirectFlags)
 {
-    if (mItemType != typeContent || !mGlobalHistory)
-        return NS_OK;
-
-    PRBool visited;
-    nsresult rv = mGlobalHistory->IsVisited(aURI, &visited);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), aReferrer);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (!visited) {
-        nsCOMPtr<nsIObserverService> obsService =
-            mozilla::services::GetObserverService();
-        if (obsService) {
-            obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
-        }
+    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
+    if (!props) {
+        return;
     }
 
-    return NS_OK;
+    nsresult rv = props->GetPropertyAsInterface(
+        NS_LITERAL_STRING("docshell.previousURI"),
+        NS_GET_IID(nsIURI),
+        reinterpret_cast<void**>(aURI)
+    );
 
+    if (NS_FAILED(rv)) {
+        // There is no last visit for this channel, so this must be the first
+        // link.  Link the visit to the referrer of this request, if any.
+        // Treat referrer as null if there is an error getting it.
+        (void)NS_GetReferrerFromChannel(aChannel, aURI);
+    }
+    else {
+      rv = props->GetPropertyAsUint32(
+          NS_LITERAL_STRING("docshell.previousFlags"),
+          aChannelRedirectFlags
+      );
+
+      NS_WARN_IF_FALSE(
+          NS_FAILED(rv),
+          "Could not fetch previous flags, URI will be treated like referrer"
+      );
+    }
+}
+
+void
+nsDocShell::SaveLastVisit(nsIChannel* aChannel,
+                          nsIURI* aURI,
+                          PRUint32 aChannelRedirectFlags)
+{
+    nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
+    if (!props || !aURI) {
+        return;
+    }
+
+    props->SetPropertyAsInterface(NS_LITERAL_STRING("docshell.previousURI"),
+                                  aURI);
+    props->SetPropertyAsUint32(NS_LITERAL_STRING("docshell.previousFlags"),
+                               aChannelRedirectFlags);
+}
+
+void
+nsDocShell::AddURIVisit(nsIURI* aURI,
+                        nsIURI* aReferrerURI,
+                        nsIURI* aPreviousURI,
+                        PRUint32 aChannelRedirectFlags)
+{
+    NS_ASSERTION(aURI, "Visited URI is null!");
+
+    // Only content-type docshells save URI visits.
+    if (mItemType != typeContent) {
+        return;
+    }
+
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+
+    if (history) {
+        PRUint32 visitURIFlags = 0;
+
+        if (!IsFrame()) {
+            visitURIFlags |= IHistory::TOP_LEVEL;
+        }
+
+        if (aChannelRedirectFlags & nsIChannelEventSink::REDIRECT_TEMPORARY) {
+            visitURIFlags |= IHistory::REDIRECT_TEMPORARY;
+        }
+        else if (aChannelRedirectFlags &
+                 nsIChannelEventSink::REDIRECT_PERMANENT) {
+            visitURIFlags |= IHistory::REDIRECT_PERMANENT;
+        }
+
+        (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);
+    }
+    else if (mGlobalHistory) {
+        // Falls back to sync global history interface.
+        (void)mGlobalHistory->AddURI(aURI,
+                                     !!aChannelRedirectFlags,
+                                     !IsFrame(),
+                                     aReferrerURI);
+    }
 }
 
 //*****************************************************************************
