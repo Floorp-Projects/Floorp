@@ -8,10 +8,9 @@
  */
 
 /**
- * Send a mouse event to the node aTarget (aTarget can be an id, or an
- * actual node) . The "event" passed in to aEvent is just a JavaScript
- * object with the properties set that the real mouse event object should
- * have. This includes the type of the mouse event.
+ * Send a mouse event to the node with id aTarget. The "event" passed in to
+ * aEvent is just a JavaScript object with the properties set that the real
+ * mouse event object should have. This includes the type of the mouse event.
  * E.g. to send an click event to the node with id 'node' you might do this:
  *
  * sendMouseEvent({type:'click'}, 'node');
@@ -23,10 +22,6 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
 
   if (!aWindow) {
     aWindow = window;
-  }
-
-  if (aTarget instanceof String) {
-    aTarget = aWindow.document.getElementById(aTarget);
   }
 
   // For events to trigger the UA's default actions they need to be "trusted"
@@ -57,7 +52,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
                        ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                        buttonArg, relatedTargetArg);
 
-  aTarget.dispatchEvent(event);
+  aWindow.document.getElementById(aTarget).dispatchEvent(event);
 }
 
 /**
