@@ -48,6 +48,9 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIBadCertListener2.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsSerializationHelper.h"
+#include "nsISerializable.h"
+#include "nsIAssociatedContentSecurity.h"
 
 namespace mozilla {
 namespace net {
@@ -198,6 +201,29 @@ HttpChannelParent::RecvOnStopRequestCompleted()
   return true;
 }
 
+bool
+HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
+                                                       const PRInt32& low,
+                                                       const PRInt32& broken,
+                                                       const PRInt32& no)
+{
+  nsHttpChannel *chan = static_cast<nsHttpChannel *>(mChannel.get());
+
+  nsCOMPtr<nsISupports> secInfo;
+  chan->GetSecurityInfo(getter_AddRefs(secInfo));
+
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc = do_QueryInterface(secInfo);
+  if (!assoc)
+    return true;
+
+  assoc->SetCountSubRequestsHighSecurity(high);
+  assoc->SetCountSubRequestsLowSecurity(low);
+  assoc->SetCountSubRequestsBrokenSecurity(broken);
+  assoc->SetCountSubRequestsNoSecurity(no);
+
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------
@@ -221,11 +247,20 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   // It could be already released by nsHttpChannel at that time.
   chan->GetCacheToken(getter_AddRefs(mCacheDescriptor));
 
+  nsCOMPtr<nsISupports> secInfoSupp;
+  chan->GetSecurityInfo(getter_AddRefs(secInfoSupp));
+
+  nsCOMPtr<nsISerializable> secInfoSer =
+      do_QueryInterface(secInfoSupp);
+
+  nsCString secInfoSerialization;
+  NS_SerializeToString(secInfoSer, secInfoSerialization);
+
   if (mIPCClosed || 
       !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
                           !!responseHead, isFromCache,
                           mCacheDescriptor ? PR_TRUE : PR_FALSE,
-                          expirationTime, cachedCharset)) {
+                          expirationTime, cachedCharset, secInfoSerialization)) {
     return NS_ERROR_UNEXPECTED; 
   }
   return NS_OK;
