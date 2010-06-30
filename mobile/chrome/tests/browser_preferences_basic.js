@@ -67,8 +67,8 @@ gTests.push({
     let controls = document.getElementById("controls-scrollbox");
 
     // Assign offsets while panning
-		initialDragOffset = document.getElementById("tabs-container").getBoundingClientRect().width;
-		finalDragOffset = initialDragOffset + document.getElementById("browser-controls")
+    initialDragOffset = document.getElementById("tabs-container").getBoundingClientRect().width;
+    finalDragOffset = initialDragOffset + document.getElementById("browser-controls")
       .getBoundingClientRect().width;
 
     gCurrentTest._contentScrollbox.getPosition(x,y);
@@ -132,9 +132,10 @@ gTests.push({
     // Move preferences pane upexpected "+ finalDragOffset +"
     dragElement(prefsList,w/2,h/2,w/2,h/4);
 
-    // Check whether it is moved up to the correct view, height should be 104
+    // Check whether it is moved up to the correct view
+    let distance = (h/2) - (h/4);
     gCurrentTest._prefsScrollbox.getPosition(x,y);
-    ok((x.value==0 & y.value==104),"Preferences pane is panned up","Got "+x.value+" "+y.value+", expected 0,104");
+    ok((x.value==0 & y.value==distance),"Preferences pane is panned up","Got "+x.value+" "+y.value+", expected 0," + distance);
 
     // Move preferences pane down
     dragElement(prefsList,w/2,h/4,w/2,h/2);
