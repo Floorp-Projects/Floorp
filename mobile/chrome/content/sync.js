@@ -40,6 +40,9 @@ let WeaveGlue = {
 
     this._addListeners();
 
+    // Initialize the UI now
+    this._updateOptions();
+
     // Generating keypairs is expensive on mobile, so disable it
     Weave.Service.keyGenEnabled = false;
   },
