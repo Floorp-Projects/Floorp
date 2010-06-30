@@ -114,9 +114,13 @@ public:
     void SetSurfaceView(jobject jobj);
     AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
 
-    void GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray);
+    PRBool GetHandlersForProtocol(const char *aScheme, nsStringArray* aStringArray = nsnull);
 
-    PRBool OpenUriExternal(nsCString& aUriSpec, nsCString& aMimeType);
+    PRBool GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray = nsnull);
+
+    PRBool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType, 
+                           const nsAString& aPackageName = EmptyString(), 
+                           const nsAString& aClassName = EmptyString());
 
     void GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType);
 
@@ -173,6 +177,7 @@ protected:
     jmethodID jScheduleRestart;
     jmethodID jGetOutstandingDrawEvents;
     jmethodID jGetHandlersForMimeType;
+    jmethodID jGetHandlersForProtocol;
     jmethodID jOpenUriExternal;
     jmethodID jGetMimeTypeFromExtension;
     jmethodID jMoveTaskToBack;
