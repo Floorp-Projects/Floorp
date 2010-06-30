@@ -320,6 +320,11 @@ protected:
     static PRBool ValidateBlendEquationEnum(WebGLuint cap);
     static PRBool ValidateBlendFuncDstEnum(WebGLuint mode);
     static PRBool ValidateBlendFuncSrcEnum(WebGLuint mode);
+    static PRBool ValidateTextureTargetEnum(WebGLenum target);
+    static PRBool ValidateComparisonEnum(WebGLenum target);
+    static PRBool ValidateStencilOpEnum(WebGLenum action);
+    static PRBool ValidateFaceEnum(WebGLenum target);
+
     void Invalidate();
 
     void MakeContextCurrent() { gl->MakeCurrent(); }
