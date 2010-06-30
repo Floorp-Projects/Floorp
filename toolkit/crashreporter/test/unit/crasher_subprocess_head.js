@@ -7,4 +7,8 @@ let crashReporter =
     .getService(Components.interfaces.nsICrashReporter);
 crashReporter.enabled = true;
 crashReporter.minidumpPath = cwd;
+let cd = cwd.clone();
+cd.append("components");
+Components.manager instanceof Components.interfaces.nsIComponentRegistrar;
+Components.manager.autoRegister(cd);
 let crashType = Components.interfaces.nsITestCrasher.CRASH_INVALID_POINTER_DEREF;
