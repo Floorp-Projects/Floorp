@@ -776,7 +776,7 @@ NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize
     char *numStr;
 
     JS_ASSERT(bufSize >= DTOSTR_STANDARD_BUFFER_SIZE);
-    if (JSDOUBLE_IS_INT32(d, i)) {
+    if (JSDOUBLE_IS_INT32(d, &i)) {
         numStr = IntToCString(i, base, buf, bufSize);
     } else {
         if (base == 10)
@@ -824,7 +824,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
         return NULL;
 
     int32_t i;
-    if (JSDOUBLE_IS_INT32(d, i)) {
+    if (JSDOUBLE_IS_INT32(d, &i)) {
         if (base == 10 && jsuint(i) < INT_STRING_LIMIT)
             return JSString::intString(i);
         if (jsuint(i) < jsuint(base)) {

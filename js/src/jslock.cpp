@@ -509,7 +509,7 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
                  * ignoring errors except out-of-memory, which should have been
                  * reported through JS_ReportOutOfMemory at this point.
                  */
-                obj->setSlot(i, undefinedValue());
+                obj->setSlot(i, UndefinedTag());
             }
         }
     }

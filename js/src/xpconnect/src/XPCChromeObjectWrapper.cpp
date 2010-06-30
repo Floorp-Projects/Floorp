@@ -290,7 +290,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
 
   *vp = OBJECT_TO_JSVAL(wrapperObj);
 
-  js::AutoValueRooter exposedProps(cx, js::undefinedValue());
+  js::AutoValueRooter exposedProps(cx);
 
   if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), exposedProps.jsval_addr())) {
     return JS_FALSE;

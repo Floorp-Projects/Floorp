@@ -48,6 +48,7 @@
 #include "jsfun.h"
 #include "jsopcode.h"
 #include "jsscript.h"
+#include "jsvalue.h"
 
 typedef struct JSFrameRegs {
     jsbytecode      *pc;            /* program counter */
@@ -136,8 +137,8 @@ struct JSStackFrame
      * also used in some other cases --- entering 'with' blocks, for
      * example.
      */
-    js::Value       scopeChain;
     JSObject        *blockChain;
+    js::Value       scopeChain;
 
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *displaySave;   /* previous value of display entry for

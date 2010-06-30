@@ -101,7 +101,7 @@ inline js::Value
 JSObject::getReservedSlot(uintN index) const
 {
     uint32 slot = JSSLOT_START(getClass()) + index;
-    return (slot < numSlots()) ? getSlot(slot) : js::undefinedValue();
+    return (slot < numSlots()) ? getSlot(slot) : js::Value(js::UndefinedTag());
 }
 
 inline bool
