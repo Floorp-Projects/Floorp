@@ -1192,7 +1192,7 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
      mozilla::dom::ContentProcessChild* cpc = 
        mozilla::dom::ContentProcessChild::GetSingleton();
      NS_ASSERTION(cpc, "Content Protocol is NULL!");
-     (void)cpc->SendSetURITitle(IPC::URI(aURI), aTitle);
+     (void)cpc->SendSetURITitle(IPC::URI(aURI), nsDependentString(aTitle));
      return NS_OK;
    } 
 #endif /* MOZ_IPC */
