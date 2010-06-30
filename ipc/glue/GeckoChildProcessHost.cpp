@@ -107,9 +107,36 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
     );
 }
 
+#ifdef XP_WIN
+void GeckoChildProcessHost::InitWindowsGroupID()
+{
+  // On Win7+, pass the application user model to the child, so it can
+  // register with it. This insures windows created by the container
+  // properly group with the parent app on the Win7 taskbar.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
+    do_GetService(NS_TASKBAR_CONTRACTID);
+  if (taskbarInfo) {
+    PRBool isSupported = PR_FALSE;
+    taskbarInfo->GetAvailable(&isSupported);
+    nsAutoString appId;
+    if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
+      mGroupId.Assign(PRUnichar('\"'));
+      mGroupId.Append(appId);
+      mGroupId.Append(PRUnichar('\"'));
+    } else {
+      mGroupId.AssignLiteral("-");
+    }
+  }
+}
+#endif
+
 bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 {
+#ifdef XP_WIN
+  InitWindowsGroupID();
+#endif
+
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
@@ -131,6 +158,10 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
+#ifdef XP_WIN
+  InitWindowsGroupID();
+#endif
+
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
@@ -289,31 +320,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
       cmdLine.AppendLooseValue(UTF8ToWide(*it));
   }
 
-  // On Win7+, pass the application user model to the child, so it can
-  // register with it. This insures windows created by the container
-  // properly group with the parent app on the Win7 taskbar.
-  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
-    do_GetService(NS_TASKBAR_CONTRACTID);
-  PRBool set = PR_FALSE;
-  if (taskbarInfo) {
-    PRBool isSupported = PR_FALSE;
-    taskbarInfo->GetAvailable(&isSupported);
-    if (isSupported) {
-      // Set the id for the container.
-      nsAutoString appId, param;
-      param.Append(PRUnichar('\"'));
-      if (NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
-        param.Append(appId);
-        param.Append(PRUnichar('\"'));
-        cmdLine.AppendLooseValue(std::wstring(param.get()));
-        set = PR_TRUE;
-      }
-    }
-  }
-  if (!set) {
-    cmdLine.AppendLooseValue(std::wstring(L"-"));
-  }
-
+  cmdLine.AppendLooseValue(std::wstring(mGroupId.get()));
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 #if defined(MOZ_CRASHREPORTER)
