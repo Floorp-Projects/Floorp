@@ -82,13 +82,19 @@ parent:
 
   OnStopRequestCompleted();
 
+  UpdateAssociatedContentSecurity(PRInt32 high,
+                                  PRInt32 low,
+                                  PRInt32 broken,
+                                  PRInt32 no);
+
 child:
   OnStartRequest(nsHttpResponseHead responseHead,
                  PRBool             useResponseHead,
                  PRBool             isFromCache,
                  PRBool             cacheEntryAvailable,
                  PRUint32           cacheExpirationTime,
-                 nsCString          cachedCharset);
+                 nsCString          cachedCharset,
+                 nsCString          securityInfoSerialization);
 
   OnDataAvailable(nsCString data, 
                   PRUint32  offset, 

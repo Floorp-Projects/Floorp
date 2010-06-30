@@ -567,7 +567,12 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: remember securityInfo %p\n", this,
             info));
-    mCurrentToplevelSecurityInfo = info;
+    nsCOMPtr<nsIAssociatedContentSecurity> associatedContentSecurityFromRequest =
+        do_QueryInterface(aRequest);
+    if (associatedContentSecurityFromRequest)
+        mCurrentToplevelSecurityInfo = aRequest;
+    else
+        mCurrentToplevelSecurityInfo = info;
   }
 
   return UpdateSecurityState(aRequest, withNewLocation, 
@@ -1106,6 +1111,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         prevContentSecurity->SetCountSubRequestsLowSecurity(saveSubLow);
         prevContentSecurity->SetCountSubRequestsBrokenSecurity(saveSubBroken);
         prevContentSecurity->SetCountSubRequestsNoSecurity(saveSubNo);
+        prevContentSecurity->Flush();
       }
 
       PRBool retrieveAssociatedState = PR_FALSE;
