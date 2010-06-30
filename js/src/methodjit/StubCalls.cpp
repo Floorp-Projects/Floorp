@@ -93,7 +93,7 @@ mjit::stubs::BindName(VMFrame &f)
             THROW();
     }
     f.regs.sp++;
-    f.regs.sp[-1].setNonFunObj(*obj);
+    f.regs.sp[-1].setObject(*obj);
 }
 
 JSObject * JS_FASTCALL
@@ -338,7 +338,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
     if (!atom) {
         if (entry->vword.isFunObj()) {
             f.regs.sp++;
-            f.regs.sp[-1].setFunObj(entry->vword.toFunObj());
+            f.regs.sp[-1].setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
@@ -416,7 +416,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
                 return NULL;
         }
         f.regs.sp++;
-        f.regs.sp[-1].setNonFunObjOrNull(thisp);
+        f.regs.sp[-1].setObjectOrNull(thisp);
     }
     return obj;
 }
@@ -876,7 +876,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
     fp->setScopeChainObj(obj);
 
     Value rval;
-    rval.setFunObj(*obj);
+    rval.setObject(*obj);
 
     /*
      * ECMA requires functions defined when entering Eval code to be
@@ -1057,15 +1057,15 @@ StubEqualityOp(VMFrame &f)
     JSBool cond;
 
 #if JS_HAS_XML_SUPPORT
-    if ((lval.isNonFunObj() && lval.asObject().isXML()) ||
-        (rval.isNonFunObj() && rval.asObject().isXML())) {
+    if ((lval.isObject() && lval.asObject().isXML()) ||
+        (rval.isObject() && rval.asObject().isXML())) {
         if (!js_TestXMLEquality(cx, lval, rval, &cond))
             return false;
         cond = cond == EQ;
     } else
 #endif
 
-    if (SamePrimitiveTypeOrBothObjects(lval, rval)) {
+    if (SameType(lval, rval)) {
         if (lval.isString()) {
             JSString *l = lval.asString();
             JSString *r = rval.asString();
@@ -1175,8 +1175,8 @@ stubs::Add(VMFrame &f)
             regs.sp[-1].setInt32(sum);
     } else
 #if JS_HAS_XML_SUPPORT
-    if (lval.isNonFunObj() && lval.asObject().isXML() &&
-        rval.isNonFunObj() && rval.asObject().isXML()) {
+    if (lval.isObject() && lval.asObject().isXML() &&
+        rval.isObject() && rval.asObject().isXML()) {
         if (!js_ConcatenateXML(cx, &lval.asObject(), &rval.asObject(), &rval))
             THROW();
         regs.sp--;
@@ -1336,6 +1336,13 @@ stubs::This(VMFrame &f)
     if (!f.fp->getThisObject(f.cx))
         THROW();
     f.regs.sp[-1] = f.fp->thisv;
+}
+
+void JS_FASTCALL
+stubs::ComputeThis(VMFrame &f)
+{
+    if (!f.fp->getThisObject(f.cx))
+        THROW();
 }
 
 void JS_FASTCALL
@@ -1816,7 +1823,7 @@ InlineGetProp(VMFrame &f)
         JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
         if (!atom) {
             if (entry->vword.isFunObj()) {
-                rval.setFunObj(entry->vword.toFunObj());
+                rval.setObject(entry->vword.toFunObj());
             } else if (entry->vword.isSlot()) {
                 uint32 slot = entry->vword.toSlot();
                 JS_ASSERT(slot < obj2->scope()->freeslot);
@@ -1882,7 +1889,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         JSObject *pobj;
         if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
             THROW();
-        objv.setNonFunObj(*pobj);
+        objv.setObject(*pobj);
     }
 
     JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
@@ -1894,7 +1901,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
-            rval.setFunObj(entry->vword.toFunObj());
+            rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
@@ -1945,8 +1952,9 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     /* Wrap primitive lval in object clothing if necessary. */
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-        if (!rval.isFunObj() ||
-            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()), lval)) {
+        JSObject *funobj;
+        if (!IsFunctionObject(rval, &funobj) ||
+            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 THROW();
         }
@@ -1970,8 +1978,9 @@ stubs::WrapPrimitiveThis(VMFrame &f)
     JS_ASSERT(thisv.isPrimitive());
 
     /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-    if (!funv.isFunObj() ||
-        !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &funv.asFunObj()), thisv)) {
+    JSObject *funobj;
+    if (!IsFunctionObject(funv, &funobj) ||
+        !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), thisv)) {
         if (!js_PrimitiveToObject(cx, &f.regs.sp[-1]))
             THROW();
     }

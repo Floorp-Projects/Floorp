@@ -2090,8 +2090,8 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
 
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
     bytes = NULL;
-    if (v.isFunObj()) {
-        atom = GET_FUNCTION_PRIVATE(cx, &v.asFunObj())->atom;
+    if (IsFunctionObject(v)) {
+        atom = GET_FUNCTION_PRIVATE(cx, &v.asObject())->atom;
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
                                         v, ATOM_TO_STRING(atom));
         if (!bytes)

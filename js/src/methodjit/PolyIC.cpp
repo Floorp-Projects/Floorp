@@ -310,7 +310,10 @@ class SetPropCompiler : public PICStubCompiler
         JSScope *scope = obj->scope();
         if (scope->brandedOrHasMethodBarrier()) {
             masm.loadTypeTag(address, pic.shapeReg);
-            rebrand = masm.branch32(Assembler::Equal, pic.shapeReg, ImmTag(JSVAL_TAG_FUNOBJ));
+            Jump skip = masm.testObject(Assembler::NotEqual, pic.shapeReg);
+            masm.loadData32(address, pic.shapeReg);
+            rebrand = masm.testFunction(Assembler::Equal, pic.shapeReg);
+            skip.linkTo(masm.label(), &masm);
         }
 
         if (pic.u.vr.isConstant) {
@@ -1006,7 +1009,7 @@ ic::CallProp(VMFrame &f, uint32 index)
         JSObject *pobj;
         if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
             THROW();
-        objv.setNonFunObj(*pobj);
+        objv.setObject(*pobj);
     }
 
     JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
@@ -1020,7 +1023,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
-            rval.setFunObj(entry->vword.toFunObj());
+            rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
@@ -1071,8 +1074,9 @@ ic::CallProp(VMFrame &f, uint32 index)
     /* Wrap primitive lval in object clothing if necessary. */
     if (lval.isPrimitive()) {
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-        if (!rval.isFunObj() ||
-            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, &rval.asFunObj()), lval)) {
+        JSObject *funobj;
+        if (!IsFunctionObject(rval, &funobj) ||
+            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 THROW();
             usePIC = false;

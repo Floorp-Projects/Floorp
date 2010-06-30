@@ -727,7 +727,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
              * Remove '(function ' from the beginning of valstr and ')' from the
              * end so that we can put "get" in front of the function definition.
              */
-            if (gsop[j] && val[j].isFunObj()) {
+            if (gsop[j] && IsFunctionObject(val[j])) {
                 JSFunction *fun = js_ValueToFunction(cx, &val[j], JSV2F_SEARCH_STACK);
                 const jschar *start = vchars;
                 const jschar *end = vchars + vlength;
@@ -1887,13 +1887,13 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     JSObject *proto;
     if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto))
         return JS_FALSE;
-    vp[1].setNonFunObj(*proto);
+    vp[1].setObject(*proto);
 
     JS_ASSERT(ida.length() <= UINT32_MAX);
     JSObject *aobj = js_NewArrayWithSlots(cx, proto, uint32(ida.length()));
     if (!aobj)
         return JS_FALSE;
-    vp->setNonFunObj(*aobj);
+    vp->setObject(*aobj);
 
     size_t len = ida.length();
     JS_ASSERT(aobj->getDenseArrayCapacity() >= len);
@@ -2553,7 +2553,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
         NewObjectWithGivenProto(cx, &js_ObjectClass, v.asObjectOrNull(), JS_GetScopeChain(cx));
     if (!obj)
         return JS_FALSE;
-    vp->setNonFunObj(*obj); /* Root and prepare for eventual return. */
+    vp->setObject(*obj); /* Root and prepare for eventual return. */
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2653,7 +2653,7 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     if (!nullobj)
         return JS_FALSE;
 
-    rval->setNonFunObj(*nullobj);
+    rval->setObject(*nullobj);
     return JS_TRUE;
 }
 
@@ -3063,7 +3063,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     Value privateValue = PrivateTag(js_FloatingFrameIfGenerator(cx, fp));
 
     /* The caller sets parent on its own. */
-    clone->init(&js_BlockClass, NonFunObjTag(*proto), NullTag(), privateValue);
+    clone->init(&js_BlockClass, ObjectTag(*proto), NullTag(), privateValue);
     clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
 
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
@@ -3303,7 +3303,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             parent = NULL;
         else
             parent = xdr->script->getObject(parentId);
-        obj->setParent(NonFunObjOrNullTag(parent));
+        obj->setParent(ObjectOrNullTag(parent));
     }
 
     AutoObjectRooter tvr(cx, obj);
@@ -3506,7 +3506,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         if (!fun)
             goto bad;
 
-        AutoValueRooter tvr2(cx, FunObjTag(*fun));
+        AutoValueRooter tvr2(cx, ObjectTag(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
             goto bad;
 
@@ -4253,11 +4253,11 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
         /* Add a new property, or replace an existing one of the same id. */
         if (defineHow & JSDNP_SET_METHOD) {
             JS_ASSERT(clasp == &js_ObjectClass);
-            JS_ASSERT(value.isFunObj());
+            JS_ASSERT(IsFunctionObject(value));
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
             JS_ASSERT(!getter && !setter);
 
-            JSObject *funobj = &value.asFunObj();
+            JSObject *funobj = &value.asObject();
             if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
                 flags |= JSScopeProperty::METHOD;
                 getter = CastAsPropertyOp(funobj);
@@ -4718,7 +4718,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
         return true;
 
     if (JS_UNLIKELY(sprop->isMethod()) && (getHow & JSGET_NO_METHOD_BARRIER)) {
-        JS_ASSERT(&sprop->methodFunObj() == &vp->asFunObj());
+        JS_ASSERT(&sprop->methodObject() == &vp->asObject());
         return true;
     }
 
@@ -5151,10 +5151,10 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
          */
         if ((defineHow & JSDNP_SET_METHOD) &&
             obj->getClass() == &js_ObjectClass) {
-            JS_ASSERT(vp->isFunObj());
+            JS_ASSERT(IsFunctionObject(*vp));
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
-            JSObject *funobj = &vp->asFunObj();
+            JSObject *funobj = &vp->asObject();
             if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
                 flags |= JSScopeProperty::METHOD;
                 getter = CastAsPropertyOp(funobj);
@@ -5349,8 +5349,8 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             if (sprop && sprop->hasDefaultGetter() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
                 const Value &fval = pobj->lockedGetSlot(sprop->slot);
 
-                if (fval.isFunObj()) {
-                    JSObject *funobj = &fval.asFunObj();
+                JSObject *funobj;
+                if (IsFunctionObject(fval, &funobj)) {
                     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
                     if (FUN_FAST_NATIVE(fun) == js_str_toString) {
@@ -5722,8 +5722,8 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
     Value v;
     if (!js_FindClassObject(cx, scope, protoKey, &v, clasp))
         return JS_FALSE;
-    if (v.isFunObj()) {
-        JSObject *ctor = &v.asFunObj();
+    JSObject *ctor;
+    if (IsFunctionObject(v, &ctor)) {
         if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &v))
             return JS_FALSE;
         if (v.isObject()) {
@@ -5818,7 +5818,7 @@ js_PrimitiveToObject(JSContext *cx, Value *vp)
         return JS_FALSE;
 
     obj->setPrimitiveThis(v);
-    vp->setNonFunObj(*obj);
+    vp->setObject(*obj);
     return JS_TRUE;
 }
 
@@ -6351,21 +6351,21 @@ dumpValue(const Value &v)
         fprintf(stderr, "%g", v.asDouble());
     else if (v.isString())
         dumpString(v.asString());
-    else if (v.isNonFunObj()) {
-        JSObject *obj = &v.asNonFunObj();
-        Class *cls = obj->getClass();
-        fprintf(stderr, "<%s%s at %p>",
-                cls->name,
-                cls == &js_ObjectClass ? "" : " object",
-                (void *) obj);
-    } else if (v.isFunObj()) {
-        JSObject *funobj = &v.asFunObj();
+    else if (v.isObject() && v.asObject().isFunction()) {
+        JSObject *funobj = &v.asObject();
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         fprintf(stderr, "<%s %s at %p (JSFunction at %p)>",
                 fun->atom ? "function" : "unnamed",
                 fun->atom ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom)) : "function",
                 (void *) funobj,
                 (void *) fun);
+    } else if (v.isObject()) {
+        JSObject *obj = &v.asObject();
+        Class *cls = obj->getClass();
+        fprintf(stderr, "<%s%s at %p>",
+                cls->name,
+                cls == &js_ObjectClass ? "" : " object",
+                (void *) obj);
     } else if (v.isBoolean()) {
         if (v.asBoolean())
             fprintf(stderr, "true");

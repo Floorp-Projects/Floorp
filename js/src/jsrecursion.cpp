@@ -734,11 +734,18 @@ TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, VMSideExit* exi
     return unbox_number_as_double(addr_ins, offset, tag_ins, exit, ACC_OTHER);
 }
 
-JS_REQUIRES_STACK inline LIns*
-TraceRecorder::slurpNonDoubleSlot(LIns* addr_ins, ptrdiff_t offset, JSValueTag tag, VMSideExit* exit)
+JS_REQUIRES_STACK LIns*
+TraceRecorder::slurpObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
 {
     LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
-    return unbox_non_double(addr_ins, offset, tag_ins, tag, exit, ACC_OTHER);
+    return unbox_object(addr_ins, offset, tag_ins, type, exit, ACC_OTHER);
+}
+
+JS_REQUIRES_STACK inline LIns*
+TraceRecorder::slurpNonDoubleObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
+{
+    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
+    return unbox_non_double_object(addr_ins, offset, tag_ins, type, exit, ACC_OTHER);
 }
 #elif JS_BITS_PER_WORD == 64
 JS_REQUIRES_STACK inline LIns*
@@ -748,11 +755,18 @@ TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, VMSideExit* exi
     return unbox_number_as_double(v_ins, exit);
 }
 
-JS_REQUIRES_STACK inline LIns*
-TraceRecorder::slurpNonDoubleSlot(LIns* addr_ins, ptrdiff_t offset, JSValueTag tag, VMSideExit* exit)
+JS_REQUIRES_STACK LIns*
+TraceRecorder::slurpObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
 {
     LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
-    return unbox_non_double(v_ins, tag, exit);
+    return unbox_object(v_ins, type, exit);
+}
+
+JS_REQUIRES_STACK inline LIns*
+TraceRecorder::slurpNonDoubleObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
+{
+    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
+    return unbox_non_double_object(v_ins, type, exit);
 }
 #endif
 
@@ -761,8 +775,10 @@ TraceRecorder::slurpSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, VMSideExit
 {
     if (exit->slurpType == JSVAL_TYPE_DOUBLE)
         return slurpDoubleSlot(addr_ins, offset, exit);
-    JSValueTag tag = JSVAL_TYPE_TO_TAG(exit->slurpType);
-    return slurpNonDoubleSlot(addr_ins, offset, tag, exit);
+    if (exit->slurpType == JSVAL_TYPE_FUNOBJ || exit->slurpType == JSVAL_TYPE_NONFUNOBJ)
+        return slurpObjectSlot(addr_ins, offset, exit->slurpType, exit);
+    JSValueType type = exit->slurpType;
+    return slurpNonDoubleObjectSlot(addr_ins, offset, type, exit);
 }
 
 JS_REQUIRES_STACK void

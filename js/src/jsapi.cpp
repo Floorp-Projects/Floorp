@@ -1106,7 +1106,7 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
             goto out;
         }
         obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
-                            FunObjTag(*ctor), 0, 0, 0);
+                            ObjectTag(*ctor), 0, 0, 0);
     }
 
     /* Initialize the object class next so Object.prototype works. */
@@ -1122,9 +1122,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->setProto(NonFunObjTag(*obj_proto));
+    fun_proto->setProto(ObjectTag(*obj_proto));
     if (!obj->getProto())
-        obj->setProto(NonFunObjTag(*obj_proto));
+        obj->setProto(ObjectTag(*obj_proto));
 
 out:
     /* If resolving, remove the other entry (Object or Function) from table. */
@@ -1905,7 +1905,7 @@ JS_TraceRuntime(JSTracer *trc)
 JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
-    MarkRaw(trc, thing, kind);
+    Mark(trc, thing, kind);
 }
 
 #ifdef DEBUG
@@ -2714,12 +2714,13 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
         if (!proto->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom), &cval))
             return NULL;
     }
-    if (!cval.isFunObj()) {
+    JSObject *funobj;
+    if (!IsFunctionObject(cval, &funobj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
                              proto->getClass()->name);
         return NULL;
     }
-    return &cval.asFunObj();
+    return &cval.asObject();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2881,7 +2882,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
         if (sprop->isMethod()) {
             AutoScopePropertyRooter root(cx, sprop);
             JS_UNLOCK_OBJ(cx, obj2);
-            vp->setFunObj(sprop->methodFunObj());
+            vp->setObject(sprop->methodObject());
             return obj2->scope()->methodReadBarrier(cx, sprop, vp);
         }
 
@@ -3296,7 +3297,7 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
         if (sprop->isMethod()) {
             desc->getter = desc->setter = PropertyStub;
-            desc->value.setFunObj(sprop->methodFunObj());
+            desc->value.setObject(sprop->methodObject());
         } else {
             desc->getter = sprop->getter();
             desc->setter = sprop->setter();
@@ -4381,7 +4382,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         }
 
         if (obj && funAtom &&
-            !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), fun->funObjVal(),
+            !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), ObjectTag(*fun),
                                  NULL, NULL, JSPROP_ENUMERATE)) {
             fun = NULL;
         }
@@ -4558,8 +4559,7 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    ok = InternalCall(cx, obj, fun->funObjVal(), argc, Valueify(argv),
-                      Valueify(rval));
+    ok = InternalCall(cx, obj, ObjectTag(*fun), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }

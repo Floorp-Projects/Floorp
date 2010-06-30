@@ -960,7 +960,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
                  * optimizations only take place if the property is not
                  * defined.
                  */
-                rval.setFunObj(*fun);
+                rval.setObject(*fun);
             } else {
                 rval.setUndefined();
             }
@@ -5595,7 +5595,7 @@ Parser::statement()
             JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
-            obj->setParent(NonFunObjOrNullTag(tc->blockChain));
+            obj->setParent(ObjectOrNullTag(tc->blockChain));
             tc->blockChain = obj;
             stmt->blockObj = obj;
 
