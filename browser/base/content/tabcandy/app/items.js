@@ -504,6 +504,9 @@ window.Item.prototype = {
     }
   },
   
+  // ----------
+  // Function: setTrenches
+  // Sets up/moves the trenches for snapping to this item.
   setTrenches: function(rect) {
 
 		if (this.parent !== null)
@@ -538,6 +541,10 @@ window.Item.prototype = {
 		Trenches.getById(gT.bottom).setWithRect(rect);
 
   },
+  
+  // ----------
+  // Function: removeTrenches
+  // Removes the trenches for snapping to this item.
   removeTrenches: function() {
 		for (let edge in this.borderTrenches) {
 			Trenches.unregister(this.borderTrenches[edge]); // unregister can take an array
