@@ -35,13 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jscntxt.h"
-#include "jsarray.h"
-
 #include "base/basictypes.h"
+#include "jscntxt.h"
 
 #include "mozilla/jetpack/JetpackChild.h"
 #include "mozilla/jetpack/Handle.h"
+
+#include "jsarray.h"
 
 namespace mozilla {
 namespace jetpack {
