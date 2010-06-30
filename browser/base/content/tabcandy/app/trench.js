@@ -109,14 +109,6 @@ var Trench = function(element, xory, type, edge) {
   this.range = new Range(0,10000);
   this.minRange = new Range(0,0);
   this.activeRange = new Range(0,10000);
-  
-  //----------
-  // Variable: extending guide trench variables
-  // only makes sense for guide trenches
-  //   extended - (bool) whether this trench has been extended or not.
-  //   
-  this.extended = false;
-  this.snapBeginTime = false;
 };
 Trench.prototype = {
   //----------
@@ -223,30 +215,21 @@ Trench.prototype = {
   // If <Trenches.showDebug> is true, we will draw the trench. Active portions are drawn with 0.5
   // opacity. If <active> is false, the entire trench will be
   // very translucent.
-  show: function Trench_show( animateExtend ) { // DEBUG
+  show: function Trench_show() { // DEBUG
 
-    if (this.active && (this.showGuide || this.extended)) {
-      if (!this.dom.guideTrench) {
-        var guideTrench = this.dom.guideTrench = iQ("<div/>").addClass('guideTrench').css({id: 'guideTrench'+this.id});
-//        if (!this.animatingExtend)
-          guideTrench.css(this.guideRect);
-        iQ("body").append(guideTrench);
-      }
-      if (animateExtend) {
-        this.animatingExtend = true;
-        var self = this;
-        this.dom.guideTrench.animate( this.guideRect, {
-          complete: function () { self.animatingExtend = false; },
-          duration: 500,
-        } );
-      }
+    if (this.active && this.showGuide) {
+      if (!this.dom.guideTrench)
+        this.dom.guideTrench = iQ("<div/>").addClass('guideTrench').css({id: 'guideTrench'+this.id});
+      var guideTrench = this.dom.guideTrench;
+      guideTrench.css(this.guideRect);
+      iQ("body").append(guideTrench);
     } else {
       if (this.dom.guideTrench) {
         this.dom.guideTrench.remove();
         delete this.dom.guideTrench;
       }
     }
-    
+
     if (!Trenches.showDebug) {
       this.hide( true ); // true for dontHideGuides
       return;
@@ -287,8 +270,6 @@ Trench.prototype = {
       this.dom.activeVisibleTrench.remove();
     if (!dontHideGuides && this.dom.guideTrench)
       this.dom.guideTrench.remove();
-    if (!dontHideGuides && this.extended)
-      this.unextend();
   },
 
   //----------
@@ -428,12 +409,6 @@ Trench.prototype = {
     // only guide-type trenches need to set a separate active range
     if (this.type != 'guide')
       return;
-    
-    // if it's not extended yet, let's just add a little 
-    if (!this.extended) {
-      this.setActiveRange(new Range(this.minRange.min - 30, this.minRange.max + 30));
-      return;
-    }
 
     var groups = Groups.groups;
     var trench = this;
@@ -462,21 +437,6 @@ Trench.prototype = {
           trench.setActiveRange(activeRange);
       }
     });
-  },
-  
-  extend: function Trench_extend() {
-    this.extended = true;
-    this.calculateActiveRange();
-    this.show( true );
-  },
-  
-  unextend: function Trench_unextend() {
-    this.snapBeginTime = false;
-    if (this.extended) {
-      this.extended = false;
-      this.calculateActiveRange();
-      this.show();
-    }
   }
 };
 
@@ -489,11 +449,9 @@ var Trenches = {
   //   nextId - (integer) a counter for the next <Trench>'s <Trench.id> value.
   //   showDebug - (boolean) whether to draw the <Trench>es or not.
   //   defaultRadius - (integer) the default radius for new <Trench>es.
-  //   extendTime - (integer) the number of milliseconds before a <Trench> is extended.
   nextId: 0,
   showDebug: false,
   defaultRadius: 10,
-  extendTime: 1000, // in milliseconds
 
   // ---------
   // Variables: snapping preferences; used to break ties in snapping.
@@ -576,10 +534,8 @@ var Trenches = {
   // ---------
   // Function: hideGuides
   // Hide all guides (dotted lines) en masse.
-  hideGuides: function Trenches_hideGuides( dontHideExtendedGuides ) {
+  hideGuides: function Trenches_hideGuides() {
     this.trenches.forEach(function(t) {
-      if (!dontHideExtendedGuides)
-        t.unextend();
       t.showGuide = false;
       t.show();
     });    
@@ -652,34 +608,18 @@ var Trenches = {
       }
     }
     
-    let stamp = Date.now();
-    if (updated) {
-      for (let i in snappedTrenches) {
-        let t = snappedTrenches[i];
-        t.showGuide = true;
-        t.show();
-        if (t.type == 'guide' && !t.snapBeginTime) {
-          t.snapBeginTime = stamp;
-          iQ.timeout(function(){
-            // if the timestamp is still the same...
-            // that means that this is a continuation of the same drag instance.
-            if (stamp == t.snapBeginTime)
-              t.extend();
-          }, Trenches.extendTime);
-        }
-      }
-    }
-    // clear the snapBeginTime for the other trenches
     let snappedIds = [ snappedTrenches[j].id for (j in snappedTrenches) ];
     for (let i in this.trenches) {
       let t = this.trenches[i];
+      // show the guide if it was used in snapping
+      if (snappedIds.indexOf(t.id) != -1) {
+        t.showGuide = true;
+        t.show();
+      }
       // make sure to turn the guide off if we're no longer snapping to it
       if (t.showGuide && snappedIds.indexOf(t.id) == -1) {
         t.showGuide = false;
         t.show();
-      }
-      if (t.snapBeginTime && snappedIds.indexOf(t.id) == -1 ) {
-        t.snapBeginTime = false;
       }
     }
 
@@ -687,7 +627,7 @@ var Trenches = {
       rect.snappedTrenches = snappedTrenches;
       return rect;
     } else {
-      Trenches.hideGuides( true );
+      Trenches.hideGuides();
       return false;
     }
   },
