@@ -554,7 +554,6 @@ xpicleanup@BIN_SUFFIX@
   components/autoconfig.xpt
   components/browser-feeds.xpt
   components/browsercompsbase.xpt
-  components/browserplaces.xpt
   components/browsersearch.xpt
   components/caps.xpt
   components/chardet.xpt
@@ -860,3 +859,5 @@ extensions/inspector@mozilla.org/platform/WINNT/chrome/icons/default/winInspecto
 extensions/inspector@mozilla.org/components/inspector.xpt
 extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
 extensions/inspector@mozilla.org/chrome/icons/default/winInspectorMain.ico
+components/nsPlacesTransactionsService.js
+components/browserplaces.xpt
