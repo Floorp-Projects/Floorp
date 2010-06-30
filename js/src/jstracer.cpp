@@ -2677,7 +2677,7 @@ MarkTree(JSTracer* trc, TreeFragment *f)
     while (len--) {
         Value &v = *vp++;
         JS_SET_TRACING_NAME(trc, "jitgcthing");
-        MarkRaw(trc, v.asGCThing(), v.gcKind());
+        Mark(trc, v.asGCThing(), v.gcKind());
     }
     JSScopeProperty** spropp = f->sprops.data();
     len = f->sprops.length();

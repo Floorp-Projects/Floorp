@@ -1310,16 +1310,16 @@ JSScopeProperty::trace(JSTracer *trc)
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if ((attrs & JSPROP_GETTER) && rawGetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            MarkRaw(trc, getterObject(), JSTRACE_OBJECT);
+            Mark(trc, getterObject(), JSTRACE_OBJECT);
         }
         if ((attrs & JSPROP_SETTER) && rawSetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            MarkRaw(trc, setterObject(), JSTRACE_OBJECT);
+            Mark(trc, setterObject(), JSTRACE_OBJECT);
         }
     }
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        MarkRaw(trc, &methodObject(), JSTRACE_OBJECT);
+        Mark(trc, &methodObject(), JSTRACE_OBJECT);
     }
 }

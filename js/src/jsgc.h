@@ -461,20 +461,20 @@ namespace js {
 
 /* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
 void
-MarkRaw(JSTracer *trc, void *thing, uint32 kind);
+Mark(JSTracer *trc, void *thing, uint32 kind);
 
 static inline void
 Mark(JSTracer *trc, void *thing, uint32 kind, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkRaw(trc, thing, kind);
+    Mark(trc, thing, kind);
 }
 
 static inline void
 MarkString(JSTracer *trc, JSString *str, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkRaw(trc, str, JSTRACE_STRING);
+    Mark(trc, str, JSTRACE_STRING);
 }
 
 static inline void
@@ -496,7 +496,7 @@ static inline void
 MarkObject(JSTracer *trc, JSObject *obj, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkRaw(trc, obj, JSTRACE_OBJECT);
+    Mark(trc, obj, JSTRACE_OBJECT);
 }
 
 static inline void
@@ -513,7 +513,7 @@ static inline void
 MarkValueRaw(JSTracer *trc, const js::Value &v)
 {
     if (v.isMarkable())
-        return MarkRaw(trc, v.asGCThing(), v.gcKind());
+        return Mark(trc, v.asGCThing(), v.gcKind());
 }
 
 static inline void
@@ -562,20 +562,20 @@ MarkIdRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
 
 /* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
 void
-MarkGCThingRaw(JSTracer *trc, void *thing);
+MarkGCThing(JSTracer *trc, void *thing);
 
 static inline void
 MarkGCThing(JSTracer *trc, void *thing, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkGCThingRaw(trc, thing);
+    MarkGCThing(trc, thing);
 }
 
 static inline void
 MarkGCThing(JSTracer *trc, void *thing, const char *name, size_t index)
 {
     JS_SET_TRACING_INDEX(trc, name, index);
-    MarkGCThingRaw(trc, thing);
+    MarkGCThing(trc, thing);
 }
 
 JSCompartment *

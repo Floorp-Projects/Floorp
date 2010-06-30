@@ -1905,7 +1905,7 @@ JS_TraceRuntime(JSTracer *trc)
 JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
-    MarkRaw(trc, thing, kind);
+    Mark(trc, thing, kind);
 }
 
 #ifdef DEBUG
