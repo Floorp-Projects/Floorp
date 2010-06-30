@@ -205,7 +205,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         if (!clone)
             return NULL;
 
-        newChild->setParent(NonFunObjTag(*clone));
+        newChild->setParent(ObjectTag(*clone));
         newChild = clone;
     }
     newChild->setParent(fp->scopeChain);
@@ -263,7 +263,7 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
         thisp = cx->globalObject;
     else
         thisp = argv[-2].asObject().getGlobal();
-    return JSObject::thisObject(cx, NonFunObjTag(*thisp), &argv[-1]);
+    return JSObject::thisObject(cx, ObjectTag(*thisp), &argv[-1]);
 }
 
 static bool
@@ -349,7 +349,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
             return false;
         obj->fslots[JSSLOT_FOUND_FUNCTION] = tvr.value();
         obj->fslots[JSSLOT_SAVED_ID] = vp[0];
-        vp[0].setNonFunObj(*obj);
+        vp[0].setObject(*obj);
     }
     return true;
 }
@@ -373,7 +373,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
-    invokevp[3].setNonFunObj(*argsobj);
+    invokevp[3].setObject(*argsobj);
     JSBool ok = (flags & JSINVOKE_CONSTRUCT)
                 ? InvokeConstructor(cx, args, JS_TRUE)
                 : Invoke(cx, args, flags);
@@ -931,7 +931,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
             Value value;
             if (!obj->getProperty(cx, id, &value))
                 return JS_FALSE;
-            isFunction = value.isFunObj();
+            isFunction = IsFunctionObject(value);
         }
     }
 
@@ -966,7 +966,7 @@ bool
 StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref)
 {
     Value lval = lref, rval = rref;
-    if (SamePrimitiveTypeOrBothObjects(lval, rval)) {
+    if (SameType(lval, rval)) {
         if (lval.isString())
             return js_EqualStrings(lval.asString(), rval.asString());
         if (lval.isDouble())
@@ -1054,11 +1054,12 @@ JS_REQUIRES_STACK bool
 InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn)
 {
     JSFunction *fun = NULL;
+    JSObject *obj2 = NULL;
     Value *vp = args.getvp();
 
     /* XXX clean up to avoid special cases above ObjectOps layer */
-    if (vp->isPrimitive() || vp->isFunObj() ||
-        !vp->asNonFunObj().map->ops->construct)
+    if (vp->isPrimitive() || (obj2 = &vp->asObject())->isFunction() ||
+        !obj2->map->ops->construct)
     {
         fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
         if (!fun)
@@ -1702,8 +1703,6 @@ namespace reprmeter {
 #define PUSH_DOUBLE(d)           regs.sp++->setDouble(d)
 #define PUSH_INT32(i)            regs.sp++->setInt32(i)
 #define PUSH_STRING(s)           regs.sp++->setString(s)
-#define PUSH_NONFUNOBJ(obj)      regs.sp++->setNonFunObj(obj)
-#define PUSH_FUNOBJ(obj)         regs.sp++->setFunObj(obj)
 #define PUSH_OBJECT(obj)         regs.sp++->setObject(obj)
 #define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObject(obj)
 #define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
@@ -1875,7 +1874,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     } else if (entry->vword.isSprop()) {
         JS_ASSERT(entry->vword.toSprop() == sprop);
         JS_ASSERT_IF(sprop->isMethod(),
-                     &sprop->methodFunObj() == &pobj->lockedGetSlot(sprop->slot).asFunObj());
+                     &sprop->methodObject() == &pobj->lockedGetSlot(sprop->slot).asObject());
     } else {
         Value v;
         JS_ASSERT(entry->vword.isFunObj());
@@ -1884,11 +1883,11 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(sprop->hasDefaultGetterOrIsMethod());
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
         v = pobj->lockedGetSlot(sprop->slot);
-        JS_ASSERT(&entry->vword.toFunObj() == &v.asFunObj());
+        JS_ASSERT(&entry->vword.toFunObj() == &v.asObject());
 
         if (sprop->isMethod()) {
             JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_CALLOP);
-            JS_ASSERT(&sprop->methodFunObj() == &v.asFunObj());
+            JS_ASSERT(&sprop->methodObject() == &v.asObject());
         }
     }
 

@@ -704,7 +704,7 @@ struct JSScopeProperty {
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
     bool isMethod() const   { return (flags & METHOD) != 0; }
 
-    JSObject &methodFunObj() const { JS_ASSERT(isMethod()); return *getterObj; }
+    JSObject &methodObject() const { JS_ASSERT(isMethod()); return *getterObj; }
 
     js::PropertyOp getter() const { return rawGetter; }
     bool hasDefaultGetter() const  { return !rawGetter; }
@@ -982,7 +982,7 @@ JSScopeProperty::get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp
     }
 
     if (isMethod()) {
-        vp->setFunObj(methodFunObj());
+        vp->setObject(methodObject());
 
         JSScope *scope = pobj->scope();
         JS_ASSERT(scope->object == pobj);

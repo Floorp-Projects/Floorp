@@ -1195,7 +1195,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop)
     if (sprop->isMethod()) {
 #ifdef DEBUG
         const Value &prev = object->lockedGetSlot(sprop->slot);
-        JS_ASSERT(&sprop->methodFunObj() == &prev.asObject());
+        JS_ASSERT(&sprop->methodObject() == &prev.asObject());
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(object->getClass() == &js_ObjectClass);
         JS_ASSERT(!sprop->rawSetter || sprop->rawSetter == js_watch_set);
@@ -1320,6 +1320,6 @@ JSScopeProperty::trace(JSTracer *trc)
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        MarkRaw(trc, &methodFunObj(), JSTRACE_OBJECT);
+        MarkRaw(trc, &methodObject(), JSTRACE_OBJECT);
     }
 }

@@ -4671,7 +4671,7 @@ static JSBool
 xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                    PropertyOp getter, PropertyOp setter, uintN attrs)
 {
-    if (v->isFunObj() || getter || setter ||
+    if (IsFunctionObject(*v) || getter || setter ||
         (attrs & JSPROP_ENUMERATE) == 0 ||
         (attrs & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED))) {
         return js_DefineProperty(cx, obj, id, v, getter, setter, attrs);
@@ -4782,7 +4782,7 @@ xml_defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             if (!obj)
                 return JS_FALSE;
         }
-        vp->setNonFunObj(*obj);
+        vp->setObject(*obj);
         return JS_TRUE;
     }
 
@@ -5041,7 +5041,7 @@ js_ConcatenateXML(JSContext *cx, JSObject *obj, JSObject *robj, Value *vp)
     if (!ok)
         goto out;
 
-    vp->setNonFunObj(*listobj);
+    vp->setObject(*listobj);
 out:
     js_LeaveLocalRootScopeWithResult(cx, *vp);
     return ok;
@@ -5727,7 +5727,7 @@ class AutoNamespaceArray : public js::AutoNamespaces {
             JSObject *ns = XMLARRAY_MEMBER(&array, i, JSObject);
             if (!ns)
                 continue;
-            tvr.addr()->setNonFunObj(*ns);
+            tvr.addr()->setObject(*ns);
             if (!arrayobj->setProperty(context, INT_TO_JSID(i), tvr.addr()))
                 return false;
         }
@@ -7188,7 +7188,7 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
         }
         JS_UNLOCK_GC(rt);
     }
-    vp->setNonFunObj(*obj);
+    vp->setObject(*obj);
     return JS_TRUE;
 }
 
@@ -7257,7 +7257,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj(cx);
-    if (!varobj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), NonFunObjTag(*ns),
+    if (!varobj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), ObjectTag(*ns),
                                 PropertyStub, PropertyStub,
                                 JSPROP_PERMANENT)) {
         return JS_FALSE;

@@ -963,13 +963,13 @@ proxy_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rv
         JSObject *newobj = NewObject(cx, &js_ObjectClass, proto, NULL);
         if (!newobj)
             return false;
-        rval->setNonFunObj(*newobj);
+        rval->setObject(*newobj);
 
         /* If the call returns an object, return that, otherwise the original newobj. */
         if (!InternalCall(cx, newobj, proxy->fslots[JSSLOT_PROXY_CALL], argc, argv, rval))
             return false;
         if (rval->isPrimitive())
-            rval->setNonFunObj(*newobj);
+            rval->setObject(*newobj);
 
         return true;
     }
@@ -1075,16 +1075,16 @@ proxy_create(JSContext *cx, uintN argc, Value *vp)
         proto = &vp[3].asObject();
         parent = proto->getParent();
     } else {
-        JS_ASSERT(vp[0].isFunObj());
+        JS_ASSERT(IsFunctionObject(vp[0]));
         proto = NULL;
-        parent = vp[0].asFunObj().getParent();
+        parent = vp[0].asObject().getParent();
     }
     JSString *className = (argc > 2 && vp[4].isString()) ? vp[4].asString() : NULL;
     JSObject *proxy = NewObjectProxy(cx, ObjectTag(*handler), proto, parent, className);
     if (!proxy)
         return false;
 
-    vp->setNonFunObj(*proxy);
+    vp->setObject(*proxy);
     return true;
 }
 
@@ -1120,7 +1120,7 @@ proxy_createFunction(JSContext *cx, uintN argc, Value *vp)
     if (!proxy)
         return false;
 
-    vp->setNonFunObj(*proxy);
+    vp->setObject(*proxy);
     return true;
 }
 
@@ -1208,13 +1208,13 @@ callable_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
         JSObject *newobj = NewObject(cx, &js_ObjectClass, proto, NULL);
         if (!newobj)
             return false;
-        rval->setNonFunObj(*newobj);
+        rval->setObject(*newobj);
 
         /* If the call returns an object, return that, otherwise the original newobj. */
         if (!InternalCall(cx, newobj, callable->fslots[JSSLOT_CALLABLE_CALL], argc, argv, rval))
             return false;
         if (rval->isPrimitive())
-            rval->setNonFunObj(*newobj);
+            rval->setObject(*newobj);
 
         return true;
     }

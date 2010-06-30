@@ -512,8 +512,8 @@ MarkObjectRange(JSTracer *trc, size_t len, JSObject **vec, const char *name)
 static inline void
 MarkValueRaw(JSTracer *trc, const js::Value &v)
 {
-    if (v.isGCThing())
-        return MarkRaw(trc, v.asGCThing(), v.traceKind());
+    if (v.isMarkable())
+        return MarkRaw(trc, v.asGCThing(), v.gcKind());
 }
 
 static inline void
