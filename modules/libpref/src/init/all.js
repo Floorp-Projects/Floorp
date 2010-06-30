@@ -170,7 +170,7 @@ pref("media.webm.enabled", true);
 pref("media.autoplay.enabled", true);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
-// See eCMSMode in gfx/thebes/public/gfxPlatform.h
+// See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
