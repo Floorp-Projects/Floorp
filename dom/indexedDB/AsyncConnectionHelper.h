@@ -42,7 +42,7 @@
 
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
-#include "IDBDatabaseRequest.h"
+#include "IDBDatabase.h"
 #include "IDBRequest.h"
 
 #include "mozIStorageProgressHandler.h"
@@ -56,7 +56,7 @@ class mozIStorageConnection;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBTransactionRequest;
+class IDBTransaction;
 
 /**
  * Must be subclassed. The subclass must implement DoDatabaseWork. It may then
@@ -97,10 +97,10 @@ public:
   nsresult DispatchToTransactionPool();
 
 protected:
-  AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
+  AsyncConnectionHelper(IDBDatabase* aDatabase,
                         IDBRequest* aRequest);
 
-  AsyncConnectionHelper(IDBTransactionRequest* aTransaction,
+  AsyncConnectionHelper(IDBTransaction* aTransaction,
                         IDBRequest* aRequest);
 
   virtual ~AsyncConnectionHelper();
@@ -154,8 +154,8 @@ protected:
   virtual PRUint16 GetSuccessResult(nsIWritableVariant* aVariant);
 
 protected:
-  nsRefPtr<IDBDatabaseRequest> mDatabase;
-  nsRefPtr<IDBTransactionRequest> mTransaction;
+  nsRefPtr<IDBDatabase> mDatabase;
+  nsRefPtr<IDBTransaction> mTransaction;
   nsRefPtr<IDBRequest> mRequest;
 
 private:

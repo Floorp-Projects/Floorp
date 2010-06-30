@@ -41,17 +41,20 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/ipc/app/defs.mk
 
 JAVAFILES = \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoEvent.java \
   GeckoSurfaceView.java \
+  GeckoInputConnection.java \
   $(NULL)
 
 DEFINES += \
   -DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
-  -DMOZ_APP_NAME=$(MOZ_APP_NAME)
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
 GARBAGE += \
   AndroidManifest.xml  \
@@ -98,6 +101,10 @@ DIST_LINK_FILES = \
   browserconfig.properties \
   blocklist.xml \
   $(NULL)
+
+ifdef MOZ_IPC
+DIST_LINK_FILES += $(MOZ_CHILD_PROCESS_NAME)
+endif
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 

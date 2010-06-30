@@ -84,7 +84,6 @@ endif
 
 EXTRA_JS_MODULES = \
   InlineSpellChecker.jsm \
-  WindowDraggingUtils.jsm \
   PopupNotifications.jsm \
   $(NULL)
 
@@ -92,6 +91,7 @@ EXTRA_PP_JS_MODULES = \
   debug.js \
   LightweightThemeConsumer.jsm \
   Services.jsm \
+  WindowDraggingUtils.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

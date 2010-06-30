@@ -47,7 +47,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 #include "TransactionThreadPool.h"
 
 using mozilla::TimeStamp;
@@ -67,17 +67,17 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
 
-  TransactionPoolEventTarget(IDBTransactionRequest* aTransaction)
+  TransactionPoolEventTarget(IDBTransaction* aTransaction)
   : mTransaction(aTransaction)
   { }
 
 private:
-  IDBTransactionRequest* mTransaction;
+  IDBTransaction* mTransaction;
 };
 
 } // anonymous namespace
 
-AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
+AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabase* aDatabase,
                                              IDBRequest* aRequest)
 : mDatabase(aDatabase),
   mRequest(aRequest),
@@ -89,7 +89,7 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
   NS_ASSERTION(mRequest, "Null request!");
 }
 
-AsyncConnectionHelper::AsyncConnectionHelper(IDBTransactionRequest* aTransaction,
+AsyncConnectionHelper::AsyncConnectionHelper(IDBTransaction* aTransaction,
                                              IDBRequest* aRequest)
 : mDatabase(aTransaction->mDatabase),
   mTransaction(aTransaction),
@@ -109,10 +109,10 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
                  "This should only happen if NOREPLY was returned or if the "
                  "runnable already ran on the main thread!");
 
-    IDBDatabaseRequest* database;
+    IDBDatabase* database;
     mDatabase.forget(&database);
 
-    IDBTransactionRequest* transaction;
+    IDBTransaction* transaction;
     mTransaction.forget(&transaction);
 
     IDBRequest* request;

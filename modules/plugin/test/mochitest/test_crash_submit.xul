@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Basic Plugin Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>Plugin Crash Notification Test</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+var crashReporter =
+  Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
+    .getService(Components.interfaces.nsICrashReporter);
+var oldServerURL = crashReporter.serverURL;
+
+const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
+
+var testObserver = {
+  observe: function(subject, topic, data) {
+    if (data == "submitting") // not done yet
+      return;
+    is(data, "success", "report should have been submitted successfully");
+    is(topic, "crash-report-status", "Checking correct topic");
+    ok(subject instanceof Components.interfaces.nsIPropertyBag2,
+       "Subject should be a property bag");
+    ok(subject.hasKey("serverCrashID"), "Should have a server crash ID");
+    let crashid = subject.getPropertyAsAString("serverCrashID");
+
+    // Verify the data. The SJS script will return the data that was POSTed
+    let req = new XMLHttpRequest();
+    req.open("GET", SERVER_URL + "?id=" + crashid, false);
+    req.send(null);
+    is(req.status, 200, "Server response should be 200 OK");
+    let submitted = JSON.parse(req.responseText);
+    ok(!("Throttleable" in submitted), "Submit request should not be Throttleable");
+    is(submitted.ProcessType, "plugin", "Should specify ProcessType=plugin");
+
+    // Cleanup
+    // First remove our fake submitted report
+    let file = Services.dirsvc.get("UAppData", Components.interfaces.nsILocalFile);
+    file.append("Crash Reports");
+    file.append("submitted");
+    file.append(crashid + ".txt");
+    file.remove(false);
+
+    // Next unregister our observer
+    var os = Components.classes["@mozilla.org/observer-service;1"].
+             getService(Components.interfaces.nsIObserverService);
+    os.removeObserver(testObserver, "crash-report-status");
+
+    // Then re-set MOZ_CRASHREPORTER_NO_REPORT
+    let env = Components.classes["@mozilla.org/process/environment;1"]
+                        .getService(Components.interfaces.nsIEnvironment);
+    env.set("MOZ_CRASHREPORTER_NO_REPORT", "1");
+
+    // Finally re-set crashreporter URL
+    crashReporter.serverURL = oldServerURL;
+    SimpleTest.finish();
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIObserver) ||
+        iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+        iid.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  }
+};
+
+
+function onPluginCrashed(aEvent) {
+  ok(true, "Plugin crashed notification received");
+  is(aEvent.type, "PluginCrashed", "event is correct type");
+
+  let pleaseLink = document.getAnonymousElementByAttribute(
+                            aEvent.target, "class", "pleaseSubmitLink");
+  // try to submit this report
+  sendMouseEvent({type:'click'}, pleaseLink, window);
+}
+
+function runTests() {
+  var prefs = Components.classes['@mozilla.org/preferences-service;1']
+    .getService(Components.interfaces.nsIPrefBranch);
+  if (!prefs.getBoolPref('dom.ipc.plugins.enabled')) {
+    ok(true, "Skipping this test when IPC plugins are not enabled.");
+    SimpleTest.finish();
+    return;
+  }
+  // the test harness will have set MOZ_CRASHREPORTER_NO_REPORT,
+  // ensure that we can change the setting and have our minidumps
+  // wind up in Crash Reports/pending
+  let env = Components.classes["@mozilla.org/process/environment;1"]
+                      .getService(Components.interfaces.nsIEnvironment);
+  env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
+
+  // Override the crash reporter URL to send to our fake server
+  crashReporter.serverURL = NetUtil.newURI(SERVER_URL);
+
+  var os = Components.classes["@mozilla.org/observer-service;1"].
+           getService(Components.interfaces.nsIObserverService);
+  os.addObserver(testObserver, "crash-report-status", true);
+  
+  document.addEventListener("PluginCrashed", onPluginCrashed, false);
+
+  var pluginElement = document.getElementById("plugin1");
+  try {
+    pluginElement.crash();
+  } catch (e) {
+  }
+}
+]]>
+</script>
+</window>
+

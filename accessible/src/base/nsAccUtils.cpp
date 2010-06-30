@@ -159,10 +159,10 @@ nsAccUtils::GetPositionAndSizeForXULSelectControlItem(nsIContent *aContent,
   for (PRUint32 index = 0; index < itemsCount; index++) {
     nsCOMPtr<nsIDOMXULSelectControlItemElement> currItem;
     control->GetItemAtIndex(index, getter_AddRefs(currItem));
-    nsCOMPtr<nsIDOMNode> currNode(do_QueryInterface(currItem));
+    nsCOMPtr<nsINode> currNode(do_QueryInterface(currItem));
 
-    nsCOMPtr<nsIAccessible> itemAcc;
-    GetAccService()->GetAccessibleFor(currNode, getter_AddRefs(itemAcc));
+    nsAccessible* itemAcc = GetAccService()->GetAccessible(currNode);
+
     if (!itemAcc ||
         State(itemAcc) & nsIAccessibleStates::STATE_INVISIBLE) {
       (*aSetSize)--;
@@ -201,9 +201,9 @@ nsAccUtils::GetPositionAndSizeForXULContainerItem(nsIContent *aContent,
   for (PRInt32 index = indexOf; index >= 0; index--) {
     nsCOMPtr<nsIDOMXULElement> item;
     container->GetItemAtIndex(index, getter_AddRefs(item));
+    nsCOMPtr<nsINode> itemNode(do_QueryInterface(item));
 
-    nsCOMPtr<nsIAccessible> itemAcc;
-    GetAccService()->GetAccessibleFor(item, getter_AddRefs(itemAcc));
+    nsAccessible* itemAcc = GetAccService()->GetAccessible(itemNode);
 
     if (itemAcc) {
       PRUint32 itemRole = Role(itemAcc);
@@ -222,9 +222,9 @@ nsAccUtils::GetPositionAndSizeForXULContainerItem(nsIContent *aContent,
        index++) {
     nsCOMPtr<nsIDOMXULElement> item;
     container->GetItemAtIndex(index, getter_AddRefs(item));
+    nsCOMPtr<nsINode> itemNode(do_QueryInterface(item));
     
-    nsCOMPtr<nsIAccessible> itemAcc;
-    GetAccService()->GetAccessibleFor(item, getter_AddRefs(itemAcc));
+    nsAccessible* itemAcc = GetAccService()->GetAccessible(itemNode);
 
     if (itemAcc) {
       PRUint32 itemRole = Role(itemAcc);

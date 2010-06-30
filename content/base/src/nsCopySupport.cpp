@@ -598,7 +598,7 @@ nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, nsISelection** aSelec
 {
   *aSelection = nsnull;
 
-  nsIPresShell* presShell = aDocument->GetPrimaryShell();
+  nsIPresShell* presShell = aDocument->GetShell();
   if (!presShell)
     return nsnull;
 

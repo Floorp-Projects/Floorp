@@ -332,7 +332,8 @@
   -moz-box-align: end;
 }
 
-.addon .name {
+.addon .name,
+.addon .version {
   font-size: 150%;
   margin-bottom: 0px;
 }

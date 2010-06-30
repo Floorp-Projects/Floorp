@@ -63,6 +63,7 @@
 #include "nsSMILAnimationController.h"
 #endif // MOZ_SMIL
 #include "nsIScriptGlobalObject.h"
+#include "nsIDocumentEncoder.h"
 
 class nsIContent;
 class nsPresContext;
@@ -115,9 +116,10 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
+
 #define NS_IDOCUMENT_IID      \
-{ 0x3ee6a14b, 0x83b5, 0x4629, \
-  { 0x96, 0x9b, 0xe9, 0x84, 0x7c, 0x57, 0x24, 0x3c } }
+{ 0x1d8bd3d4, 0x6f6d, 0x49fe, \
+  { 0xaf, 0xda, 0xc9, 0x4a, 0xef, 0x8f, 0xcf, 0x1f } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -437,7 +439,7 @@ public:
                                nsIPresShell** aInstancePtrResult) = 0;
   void DeleteShell() { mPresShell = nsnull; }
 
-  nsIPresShell* GetPrimaryShell() const
+  nsIPresShell* GetShell() const
   {
     return mShellIsHidden ? nsnull : mPresShell;
   }
@@ -1113,6 +1115,16 @@ public:
     // Do nothing.
   }
 
+  already_AddRefed<nsIDocumentEncoder> GetCachedEncoder()
+  {
+    return mCachedEncoder.forget();
+  }
+
+  void SetCachedEncoder(nsIDocumentEncoder* aEncoder)
+  {
+    mCachedEncoder = aEncoder;
+  }
+
   // In case of failure, the document really can't initialize the frame loader.
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) = 0;
   // In case of failure, the caller must handle the error, for example by
@@ -1149,7 +1161,7 @@ public:
    */
   void SetDisplayDocument(nsIDocument* aDisplayDocument)
   {
-    NS_PRECONDITION(!GetPrimaryShell() &&
+    NS_PRECONDITION(!GetShell() &&
                     !nsCOMPtr<nsISupports>(GetContainer()) &&
                     !GetWindow() &&
                     !GetScriptGlobalObject(),
@@ -1420,6 +1432,17 @@ protected:
     return GetRootElement();
   }
 
+  void SetContentTypeInternal(const nsACString& aType)
+  {
+    mCachedEncoder = nsnull;
+    mContentType = aType;
+  }
+
+  nsCString GetContentTypeInternal() const
+  {
+    return mContentType;
+  }
+
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
 
@@ -1528,7 +1551,9 @@ protected:
   PRUint32 mBidiOptions;
 
   nsCString mContentLanguage;
+private:
   nsCString mContentType;
+protected:
 
   // The document's security info
   nsCOMPtr<nsISupports> mSecurityInfo;
@@ -1558,6 +1583,8 @@ protected:
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
   // updated on every set of mSecriptGlobalObject.
   nsPIDOMWindow *mWindow;
+
+  nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

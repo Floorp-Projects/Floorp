@@ -253,9 +253,9 @@
                 <description flex="1" id="detail-desc" class="fade"/>
                 <hbox>
                 <!-- XXXunf placeholder - bug 553463 -->
-                  <label value="&rating.yourRating.label;"/>
+                  <label value="&rating.label;"/>
                   <label class="meta-value meta-rating" userrating="3"
-                         showrating="user"/>
+                         showrating="average"/>
                   <spacer flex="1"/>
                   <label id="detail-homepage" class="text-link" value="&addon.homepage;"/>
                 </hbox>

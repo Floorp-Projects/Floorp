@@ -72,7 +72,7 @@ CAccessibleAction::nActions(long *aNumActions)
 __try {
   *aNumActions = 0;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -92,7 +92,7 @@ STDMETHODIMP
 CAccessibleAction::doAction(long aActionIndex)
 {
 __try {
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -110,7 +110,7 @@ CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 __try {
   *aDescription = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -140,7 +140,7 @@ __try {
   *aKeyBinding = NULL;
   *aNumBinding = 0;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -197,7 +197,7 @@ CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
 __try {
   *aName = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 

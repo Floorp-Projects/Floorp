@@ -58,65 +58,56 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsIAccessibilityService
-  virtual nsAccessible* GetAccessibleInShell(nsIDOMNode *aNode,
-                                             nsIPresShell *aPresShell);
+  virtual nsAccessible* GetAccessibleInShell(nsINode* aNode,
+                                             nsIPresShell* aPresShell);
 
-  virtual nsresult CreateOuterDocAccessible(nsIDOMNode *aNode,
-                                            nsIAccessible **aAccessible);
-  virtual nsresult CreateHTML4ButtonAccessible(nsIFrame *aFrame,
-                                               nsIAccessible **aAccessible);
-  virtual nsresult CreateHyperTextAccessible(nsIFrame *aFrame,
-                                             nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLBRAccessible(nsIFrame *aFrame,
-                                          nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLButtonAccessible(nsIFrame *aFrame,
-                                              nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLLIAccessible(nsIFrame *aFrame,
-                                          nsIFrame *aBulletFrame,
-                                          const nsAString& aBulletText,
-                                          nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLCheckboxAccessible(nsIFrame *aFrame,
-                                                nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLComboboxAccessible(nsIDOMNode *aNode,
-                                                nsIWeakReference *aPresShell,
-                                                nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLGenericAccessible(nsIFrame *aFrame,
-                                               nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLGroupboxAccessible(nsIFrame *aFrame,
-                                                nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLHRAccessible(nsIFrame *aFrame,
-                                          nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLImageAccessible(nsIFrame *aFrame,
-                                             nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLLabelAccessible(nsIFrame *aFrame,
-                                             nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLListboxAccessible(nsIDOMNode *aNode,
-                                               nsIWeakReference *aPresShell,
-                                               nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLMediaAccessible(nsIFrame *aFrame,
-                                             nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
-                                                   nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLRadioButtonAccessible(nsIFrame *aFrame,
-                                                   nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLSelectOptionAccessible(nsIDOMNode *aNode,
-                                                    nsIAccessible *aAccParent,
-                                                    nsIWeakReference *aPresShell,
-                                                    nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLTableAccessible(nsIFrame *aFrame,
-                                             nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLTableCellAccessible(nsIFrame *aFrame,
-                                                 nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLTextAccessible(nsIFrame *aFrame,
-                                            nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLTextFieldAccessible(nsIFrame *aFrame,
-                                                 nsIAccessible **aAccessible);
-  virtual nsresult CreateHTMLCaptionAccessible(nsIFrame *aFrame,
-                                               nsIAccessible **aAccessible);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTML4ButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLCaptionAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLCheckboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLComboboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLGroupboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLHRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLImageAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLLabelAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell,
+                           const nsAString& aBulletText);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLListboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLMediaAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
+                                    nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLRadioButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLTableAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLTableCellAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHTMLTextFieldAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateHyperTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  virtual already_AddRefed<nsAccessible>
+    CreateOuterDocAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
 
-  virtual nsresult AddNativeRootAccessible(void *aAtkAccessible,
-                                           nsIAccessible **aAccessible);
-  virtual nsresult RemoveNativeRootAccessible(nsIAccessible *aRootAccessible);
+  virtual nsAccessible* AddNativeRootAccessible(void* aAtkAccessible);
+  virtual void RemoveNativeRootAccessible(nsAccessible* aRootAccessible);
 
   virtual nsresult InvalidateSubtreeFor(nsIPresShell *aPresShell,
                                         nsIContent *aContent,
@@ -241,51 +232,38 @@ private:
   void Shutdown();
 
   /**
-   * Return presentation shell, DOM node for the given frame.
-   *
-   * @param aFrame    [in] the given frame
-   * @param aShell    [out] presentation shell for DOM node associated with the
-   *                    given frame
-   * @param aContent  [out] DOM node associated with the given frame
-   */
-  nsresult GetInfo(nsIFrame *aFrame, nsIWeakReference **aShell,
-                   nsIContent **aContent);
-
-  /**
    * Return accessible for HTML area element associated with an image map.
    */
-  already_AddRefed<nsAccessible>
-    GetAreaAccessible(nsIFrame *aImageFrame, nsINode *aAreaNode,
-                      nsIWeakReference *aWeakShell);
+  nsAccessible* GetAreaAccessible(nsIFrame* aImageFrame, nsINode* aAreaNode,
+                                  nsIWeakReference* aWeakShell);
 
   /**
    * Create accessible for the element implementing nsIAccessibleProvider
    * interface.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleByType(nsIContent *aContent, nsIWeakReference *aWeakShell);
+    CreateAccessibleByType(nsIContent* aContent, nsIWeakReference* aWeakShell);
 
   /**
    * Create accessible for HTML node by tag name.
    */
   already_AddRefed<nsAccessible>
-    CreateHTMLAccessibleByMarkup(nsIFrame *aFrame, nsIWeakReference *aWeakShell,
-                                 nsINode *aNode);
+    CreateHTMLAccessibleByMarkup(nsIFrame* aFrame, nsIContent* aContent,
+                                 nsIWeakReference* aWeakShell);
 
   /**
    * Create accessible if parent is a deck frame.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleForDeckChild(nsIFrame *aFrame, nsIContent *aContent,
-                                 nsIWeakReference *aWeakShell);
+    CreateAccessibleForDeckChild(nsIFrame* aFrame, nsIContent* aContent,
+                                 nsIWeakReference* aWeakShell);
 
 #ifdef MOZ_XUL
   /**
    * Create accessible for XUL tree element.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleForXULTree(nsIContent *aContent,
-                               nsIWeakReference *aWeakShell);
+    CreateAccessibleForXULTree(nsIContent* aContent, nsIWeakReference* aWeakShell);
 #endif
 
   /**
@@ -329,7 +307,7 @@ static const char kRoleNames[][20] = {
   "nothing",             //ROLE_NOTHING
   "titlebar",            //ROLE_TITLEBAR
   "menubar",             //ROLE_MENUBAR
-  "scrollbar",           //ROLE_SCROLLBAR 
+  "scrollbar",           //ROLE_SCROLLBAR
   "grip",                //ROLE_GRIP
   "sound",               //ROLE_SOUND
   "cursor",              //ROLE_CURSOR
@@ -446,7 +424,7 @@ static const char kRoleNames[][20] = {
   "listbox option",      //ROLE_OPTION
   "listbox rich option", //ROLE_RICH_OPTION
   "listbox",             //ROLE_LISTBOX
-  "flat equation",       //ROLE_FLAT_EQUATION  
+  "flat equation",       //ROLE_FLAT_EQUATION
   "gridcell",            //ROLE_GRID_CELL
   "embedded object"      //ROLE_EMBEDDED_OBJECT
 };
