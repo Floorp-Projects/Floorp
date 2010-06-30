@@ -330,10 +330,7 @@ class GeckoInputConnection
 
     @Override
     public boolean beginBatchEdit() {
-        if (mComposing)
-            return true;
         GeckoAppShell.sendEventToGecko(new GeckoEvent(true, null));
-        mComposing = true;
         return true;
     }
     @Override
@@ -356,10 +353,7 @@ class GeckoInputConnection
     @Override
     public boolean endBatchEdit() {
         updateExtractedText();
-        if (!mComposing)
-            return true;
         GeckoAppShell.sendEventToGecko(new GeckoEvent(false, null));
-        mComposing = false;
         return true;
     }
     @Override
@@ -433,7 +427,6 @@ class GeckoInputConnection
         imm.updateExtractedText(GeckoApp.surfaceView, mExtractToken, mExtractedText);
     }
 
-    boolean mComposing;
     int mExtractToken;
     final ExtractedText mExtractedText = new ExtractedText();
 
