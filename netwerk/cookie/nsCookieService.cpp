@@ -585,8 +585,8 @@ nsCookieService::Init()
   }
 
   mInsertListener = new InsertCookieDBListener;
-  mUpdateListener = new InsertCookieDBListener;
-  mRemoveListener = new InsertCookieDBListener;
+  mUpdateListener = new UpdateCookieDBListener;
+  mRemoveListener = new RemoveCookieDBListener;
   mCloseListener = new CloseCookieDBListener;
 
   return NS_OK;

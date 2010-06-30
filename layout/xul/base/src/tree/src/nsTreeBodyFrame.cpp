@@ -111,8 +111,6 @@
 #include "nsBidiPresUtils.h"
 #endif
 
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-
 // Enumeration function that cancels all the image requests in our cache
 static PLDHashOperator
 CancelImageRequest(const nsAString& aKey,
@@ -862,6 +860,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
   
   nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
   while (child &&
+         !child->GetContent()->IsRootOfNativeAnonymousSubtree() &&
          (!aResult->mVScrollbar || !aResult->mHScrollbar ||
           !aResult->mColumnsScrollFrame)) {
     FindScrollParts(child, aResult);
@@ -4114,45 +4113,7 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
 
   mTopRowIndex += delta;
 
-  // See if we have a transparent background or a background image.  
-  // If we do, then we cannot blit.
-  const nsStyleBackground* background = GetStyleBackground();
-  if (!background->BottomLayer().mImage.IsEmpty() ||
-      background->mImageCount > 1 ||
-      NS_GET_A(background->mBackgroundColor) < 255 ||
-      PR_ABS(delta)*mRowHeight >= mRect.height) {
-    Invalidate();
-  } else {
-    nsPoint viewOffset;
-    nsIView* view = GetClosestView(&viewOffset);
-    nsPoint widgetOffset;
-    nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
-    if (widget) {
-      nsPresContext* presContext = PresContext();
-      nscoord rowHeightAsPixels =
-        presContext->AppUnitsToDevPixels(mRowHeight);
-      nsIntPoint deltaPt = nsIntPoint(0, -delta*rowHeightAsPixels);
-
-      nsRect bounds(viewOffset + widgetOffset, GetSize());
-      nsIntRect boundsPx =
-        bounds.ToNearestPixels(presContext->AppUnitsPerDevPixel());
-      nsTArray<nsIntRect> destRects;
-      destRects.AppendElement(boundsPx);
-
-      // No plugins have a tree widget as a parent so we don't need
-      // configurations here.
-      nsTArray<nsIWidget::Configuration> emptyConfigurations;
-      widget->Scroll(deltaPt, destRects, emptyConfigurations);
-      nsIntRect invalid = boundsPx;
-      if (deltaPt.y < 0) {
-        invalid.y = bounds.height + deltaPt.y;
-        invalid.height = -deltaPt.y;
-      } else {
-        invalid.height = deltaPt.y;
-      }
-      widget->Invalidate(invalid, PR_FALSE);
-    }
-  }
+  Invalidate();
 
   PostScrollEvent();
   return NS_OK;
@@ -4174,46 +4135,9 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   if (aPosition > (mHorzWidth - bounds.width)) 
     aPosition = mHorzWidth - bounds.width;
 
-  PRInt32 delta = aPosition - mHorzPosition;
   mHorzPosition = aPosition;
 
-  // See if we have a transparent background or a background image.  
-  // If we do, then we cannot blit.
-  const nsStyleBackground* background = GetStyleBackground();
-  if (!background->BottomLayer().mImage.IsEmpty() ||
-      background->mImageCount > 1 ||
-      NS_GET_A(background->mBackgroundColor) < 255 ||
-      PR_ABS(delta) >= mRect.width) {
-    Invalidate();
-  } else {
-    nsPoint viewOffset;
-    nsIView* view = GetClosestView(&viewOffset);
-    nsPoint widgetOffset;
-    nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
-    if (widget) {
-      nsPresContext* presContext = PresContext();
-      nsIntPoint deltaPt(presContext->AppUnitsToDevPixels(-delta), 0);
-
-      nsRect bounds(viewOffset + widgetOffset, GetSize());
-      nsIntRect boundsPx =
-        bounds.ToNearestPixels(presContext->AppUnitsPerDevPixel());
-      nsTArray<nsIntRect> destRects;
-      destRects.AppendElement(boundsPx);
-
-      // No plugins have a tree widget as a parent so we don't need
-      // configurations here.
-      nsTArray<nsIWidget::Configuration> emptyConfigurations;
-      widget->Scroll(deltaPt, destRects, emptyConfigurations);
-      nsIntRect invalid = boundsPx;
-      if (deltaPt.x < 0) {
-        invalid.x = bounds.width + deltaPt.x;
-        invalid.width = -deltaPt.x;
-      } else {
-        invalid.width = deltaPt.x;
-      }
-      widget->Invalidate(invalid, PR_FALSE);
-    }
-  }
+  Invalidate();
 
   // Update the column scroll view
   aParts.mColumnsScrollFrame->ScrollTo(nsPoint(mHorzPosition, 0),

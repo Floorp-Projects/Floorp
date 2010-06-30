@@ -175,7 +175,7 @@ public:
   virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
   // nsIFrameFrame
@@ -235,16 +235,13 @@ nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsSubDocumentFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsSubDocumentFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
-  if (accService) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateOuterDocAccessible(node, aAccessible);
-  }
-
-  return NS_ERROR_FAILURE;
+  return accService ?
+    accService->CreateOuterDocAccessible(mContent, PresContext()->PresShell()) :
+    nsnull;
 }
 #endif
 

@@ -439,7 +439,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
     return nsnull;
 
   // Ignore documents without presshell.
-  nsIPresShell *presShell = aDocument->GetPrimaryShell();
+  nsIPresShell *presShell = aDocument->GetShell();
   if (!presShell)
     return nsnull;
 

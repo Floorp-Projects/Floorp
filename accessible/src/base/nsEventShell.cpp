@@ -195,10 +195,6 @@ nsAccEventQueue::WillRefresh(mozilla::TimeStamp aTime)
   if (!mDocument)
     return;
 
-  nsCOMPtr<nsIPresShell> presShell = mDocument->GetPresShell();
-  if (!presShell)
-    return;
-
   // Process only currently queued events. Newly appended events during events
   // flushing won't be processed.
   nsTArray < nsRefPtr<nsAccEvent> > events;
@@ -208,14 +204,13 @@ nsAccEventQueue::WillRefresh(mozilla::TimeStamp aTime)
 
   for (PRUint32 index = 0; index < length; index ++) {
 
-    // No presshell means the document was shut down during event handling
-    // by AT.
-    if (!mDocument || !mDocument->HasWeakShell())
-      break;
-
     nsAccEvent *accEvent = events[index];
     if (accEvent->mEventRule != nsAccEvent::eDoNotEmit)
       mDocument->ProcessPendingEvent(accEvent);
+
+    // No document means it was shut down during event handling by AT
+    if (!mDocument)
+      return;
   }
 
   if (mEvents.Length() == 0) {

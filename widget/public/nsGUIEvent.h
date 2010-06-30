@@ -226,6 +226,7 @@ class nsHashKey;
 #define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
 #define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
 #define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
+#define NS_MOUSE_MOZHITTEST             (NS_MOUSE_MESSAGE_START + 33)
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
@@ -246,6 +247,7 @@ class nsHashKey;
 #define NS_POPSTATE                     (NS_STREAM_EVENT_START + 5)
 #define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
 #define NS_PAGE_RESTORE                 (NS_STREAM_EVENT_START + 7)
+#define NS_READYSTATECHANGE             (NS_STREAM_EVENT_START + 8)
  
 #define NS_FORM_EVENT_START             1200
 #define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
@@ -514,7 +516,8 @@ public:
   PRUint8     eventStructType;
   // See GUI MESSAGES,
   PRUint32    message;
-  // In widget relative coordinates, not modified by layout code.
+  // Relative to the widget of the event, or if there is no widget then it is
+  // in screen coordinates. Not modified by layout code.
   nsIntPoint  refPoint;
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
@@ -1376,6 +1379,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_ACTIVATE) || \
         ((evnt)->message == NS_MOUSE_ENTER_SYNTH) || \
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
+        ((evnt)->message == NS_MOUSE_MOZHITTEST) || \
         ((evnt)->message == NS_MOUSE_MOVE))
 
 #define NS_IS_MOUSE_EVENT_STRUCT(evnt) \
@@ -1433,12 +1437,7 @@ enum nsDragDropEventStatus {
        (((evnt)->message == NS_SELECTION_SET))
 
 #define NS_IS_CONTENT_COMMAND_EVENT(evnt) \
-       (((evnt)->message == NS_CONTENT_COMMAND_CUT) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_COPY) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_PASTE) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_DELETE) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_UNDO) || \
-        ((evnt)->message == NS_CONTENT_COMMAND_REDO))
+       ((evnt)->eventStructType == NS_CONTENT_COMMAND_EVENT)
 
 #define NS_IS_PLUGIN_EVENT(evnt) \
        (((evnt)->message == NS_PLUGIN_EVENT))

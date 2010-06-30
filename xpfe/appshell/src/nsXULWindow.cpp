@@ -92,6 +92,7 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
+#include "nsIContentUtils.h"
 
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
@@ -1375,6 +1376,15 @@ void nsXULWindow::SyncAttributesToWidget()
     mWindow->HideWindowChrome(PR_TRUE);
   }
 
+  // "chromemargin" attribute
+  nsIntMargin margins;
+  nsCOMPtr<nsIContentUtils> cutils =
+    do_GetService("@mozilla.org/content/contentutils;1");
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("chromemargin"), attr);
+  if (NS_SUCCEEDED(rv) && cutils && cutils->ParseIntMarginValue(attr, margins)) {
+    mWindow->SetNonClientMargins(margins);
+  }
+
   // "accelerated" attribute
   PRBool isAccelerated;
   rv = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"), &isAccelerated);
@@ -2043,6 +2053,12 @@ NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
   // so no need to compare to the old value.
   window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::WillShowWindow(PRBool *aRetval)
+{
+  *aRetval = mShowAfterLoad && !mChromeLoaded;
   return NS_OK;
 }
 

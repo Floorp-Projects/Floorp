@@ -629,7 +629,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
   aTarget->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, tooltipText);
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetPrimaryShell());
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShell());
     NS_ENSURE_STATE(rootBox);
     *aTooltip = rootBox->GetDefaultTooltip();
     if (*aTooltip) {
@@ -664,7 +664,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 #ifdef MOZ_XUL
   // titletips should just use the default tooltip
   if (mIsSourceTree && mNeedTitletip) {
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetPrimaryShell());
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShell());
     NS_ENSURE_STATE(rootBox);
     NS_IF_ADDREF(*aTooltip = rootBox->GetDefaultTooltip());
   }

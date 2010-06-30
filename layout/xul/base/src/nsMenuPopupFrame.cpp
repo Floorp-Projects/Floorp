@@ -970,7 +970,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
     if (mAnchorContent) {
       nsCOMPtr<nsIDocument> document = mAnchorContent->GetDocument();
       if (document) {
-        nsIPresShell *shell = document->GetPrimaryShell();
+        nsIPresShell *shell = document->GetShell();
         if (!shell)
           return NS_ERROR_FAILURE;
 

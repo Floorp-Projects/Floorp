@@ -49,7 +49,7 @@
 #include "prenv.h"
 
 #include "AndroidBridge.h"
-#include "nsAccelerometerAndroid.h"
+#include "nsAccelerometerSystem.h"
 #include <android/log.h>
 #include <pthread.h>
 
@@ -70,7 +70,7 @@ using namespace mozilla;
 PRLogModuleInfo *gWidgetLog = nsnull;
 #endif
 
-nsAccelerometerAndroid *gAccel = nsnull;
+nsAccelerometerSystem *gAccel = nsnull;
 nsIGeolocationUpdate *gLocationCallback = nsnull;
 
 nsAppShell *nsAppShell::gAppShell = nsnull;

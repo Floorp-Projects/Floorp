@@ -46,14 +46,13 @@
 #include "nsIIDBErrorEvent.h"
 #include "nsIIDBSuccessEvent.h"
 #include "nsIIDBTransactionEvent.h"
-#include "nsIIDBTransactionRequest.h"
+#include "nsIIDBTransaction.h"
 #include "nsIRunnable.h"
 #include "nsIVariant.h"
 
-#include "jsapi.h"
 #include "nsDOMEvent.h"
 
-#include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
+#include "mozilla/dom/indexedDB/IDBObjectStore.h"
 
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"
@@ -64,7 +63,7 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBRequest;
-class IDBTransactionRequest;
+class IDBTransaction;
 
 class IDBEvent : public nsDOMEvent,
                  public nsIIDBEvent
@@ -125,18 +124,18 @@ public:
   static already_AddRefed<nsIDOMEvent>
   Create(IDBRequest* aRequest,
          nsIVariant* aResult,
-         nsIIDBTransactionRequest* aTransaction);
+         nsIIDBTransaction* aTransaction);
 
   static already_AddRefed<nsIRunnable>
   CreateRunnable(IDBRequest* aRequest,
                  nsIVariant* aResult,
-                 nsIIDBTransactionRequest* aTransaction);
+                 nsIIDBTransaction* aTransaction);
 
 protected:
   IDBSuccessEvent() { }
 
   nsCOMPtr<nsIVariant> mResult;
-  nsCOMPtr<nsIIDBTransactionRequest> mTransaction;
+  nsCOMPtr<nsIIDBTransaction> mTransaction;
 };
 
 class GetSuccessEvent : public IDBSuccessEvent
@@ -155,10 +154,11 @@ public:
     }
   }
 
-  NS_IMETHOD GetResult(nsIVariant** aResult);
+  NS_IMETHOD GetResult(JSContext* aCx,
+                       jsval* aResult);
 
   nsresult Init(IDBRequest* aRequest,
-                IDBTransactionRequest* aTransaction);
+                IDBTransaction* aTransaction);
 
 private:
   nsString mValue;
@@ -179,7 +179,8 @@ public:
     }
   }
 
-  NS_IMETHOD GetResult(nsIVariant** aResult);
+  NS_IMETHOD GetResult(JSContext* aCx,
+                       jsval* aResult);
 
 private:
   nsTArray<nsString> mValues;
@@ -196,7 +197,8 @@ public:
     }
   }
 
-  NS_IMETHOD GetResult(nsIVariant** aResult);
+  NS_IMETHOD GetResult(JSContext* aCx,
+                       jsval* aResult);
 
 private:
   nsTArray<Key> mKeys;

@@ -181,19 +181,6 @@ nsGfxButtonControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) cons
   return rv;
 }
 
-#ifdef ACCESSIBILITY
-NS_IMETHODIMP nsGfxButtonControlFrame::GetAccessible(nsIAccessible** aAccessible)
-{
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
-  if (accService) {
-    return accService->CreateHTMLButtonAccessible(static_cast<nsIFrame*>(this), aAccessible);
-  }
-
-  return NS_ERROR_FAILURE;
-}
-#endif
-
 NS_QUERYFRAME_HEAD(nsGfxButtonControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)

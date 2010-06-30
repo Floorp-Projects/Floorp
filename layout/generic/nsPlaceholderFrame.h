@@ -166,11 +166,11 @@ public:
   virtual PRBool CanContinueTextRun() const;
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible)
+  virtual already_AddRefed<nsAccessible> CreateAccessible()
   {
-    nsIFrame *realFrame = GetRealFrameForPlaceholder(this);
-    return realFrame ? realFrame->GetAccessible(aAccessible) :
-                       nsFrame::GetAccessible(aAccessible);
+    nsIFrame* realFrame = GetRealFrameForPlaceholder(this);
+    return realFrame ? realFrame->CreateAccessible() :
+                       nsFrame::CreateAccessible();
   }
 #endif
 

@@ -60,8 +60,7 @@ public:
   }
   NS_IMETHOD Run() {
     if (mTexture) {
-      mContext->MakeCurrent();
-      mContext->fDeleteTextures(1, &mTexture);
+      mContext->DestroyTexture(mTexture);
     }
     // Ensure context is released on the main thread
     mContext = nsnull;
@@ -80,8 +79,7 @@ GLTexture::Allocate(GLContext *aContext)
   Release();
 
   mContext = aContext;
-  mContext->MakeCurrent();
-  mContext->fGenTextures(1, &mTexture);
+  mTexture = mContext->CreateTexture();
 }
 
 void
@@ -104,8 +102,7 @@ GLTexture::Release()
 
   if (NS_IsMainThread()) {
     if (mTexture) {
-      mContext->MakeCurrent();
-      mContext->fDeleteTextures(1, &mTexture);
+      mContext->DestroyTexture(mTexture);
       mTexture = 0;
     }
     mContext = nsnull;
