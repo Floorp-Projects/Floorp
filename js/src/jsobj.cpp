@@ -5537,7 +5537,7 @@ js_TypeOf(JSContext *cx, JSObject *obj)
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &v)) {
         JS_ClearPendingException(cx);
     } else {
-        if (VALUE_IS_FUNCTION(cx, v))
+        if (IsFunctionObject(v))
             return JSTYPE_FUNCTION;
     }
 #endif
@@ -5558,18 +5558,18 @@ static JSBool
 GetCurrentExecutionContext(JSContext *cx, JSObject *obj, Value *rval)
 {
     JSObject *tmp;
-    jsval xcval;
+    Value xcval;
 
     while ((tmp = obj->getParent()) != NULL)
         obj = tmp;
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.ExecutionContextAtom), &xcval))
         return JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(xcval)) {
+    if (xcval.isPrimitive()) {
         JS_ReportError(cx, "invalid ExecutionContext in global object");
         return JS_FALSE;
     }
-    if (!JSVAL_TO_OBJECT(xcval)->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.currentAtom),
-                                             rval)) {
+    if (!xcval.asObject().getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.currentAtom),
+                                      rval)) {
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -5583,26 +5583,26 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     if (!clasp->call) {
 #ifdef NARCISSUS
         JSObject *callee, *args;
-        jsval fval, nargv[3];
+        Value fval, nargv[3];
         JSBool ok;
 
-        callee = JSVAL_TO_OBJECT(argv[-2]);
+        callee = &argv[-2].asObject();
         if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &fval))
             return JS_FALSE;
-        if (VALUE_IS_FUNCTION(cx, fval)) {
+        if (IsFunctionObject(fval)) {
             if (!GetCurrentExecutionContext(cx, obj, &nargv[2]))
                 return JS_FALSE;
             args = js_GetArgsObject(cx, js_GetTopStackFrame(cx));
             if (!args)
                 return JS_FALSE;
-            nargv[0] = OBJECT_TO_JSVAL(obj);
-            nargv[1] = OBJECT_TO_JSVAL(args);
-            return js_InternalCall(cx, callee, fval, 3, nargv, rval);
+            nargv[0].setObject(*obj);
+            nargv[1].setObject(*args);
+            return InternalCall(cx, callee, fval, 3, nargv, rval);
         }
-        if (JSVAL_IS_OBJECT(fval) && JSVAL_TO_OBJECT(fval) != callee) {
+        if (fval.isObjectOrNull() && fval.asObjectOrNull() != callee) {
             argv[-2] = fval;
             ok = js_Call(cx, obj, argc, argv, rval);
-            argv[-2] = OBJECT_TO_JSVAL(callee);
+            argv[-2].setObject(*callee);
             return ok;
         }
 #endif
@@ -5620,27 +5620,27 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     if (!clasp->construct) {
 #ifdef NARCISSUS
         JSObject *callee, *args;
-        jsval cval, nargv[2];
+        Value cval, nargv[2];
         JSBool ok;
 
-        callee = JSVAL_TO_OBJECT(argv[-2]);
+        callee = &argv[-2].asObject();
         if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__construct__Atom),
                                  &cval)) {
             return JS_FALSE;
         }
-        if (VALUE_IS_FUNCTION(cx, cval)) {
+        if (IsFunctionObject(cval)) {
             if (!GetCurrentExecutionContext(cx, obj, &nargv[1]))
                 return JS_FALSE;
             args = js_GetArgsObject(cx, js_GetTopStackFrame(cx));
             if (!args)
                 return JS_FALSE;
-            nargv[0] = OBJECT_TO_JSVAL(args);
-            return js_InternalCall(cx, callee, cval, 2, nargv, rval);
+            nargv[0].setObject(*args);
+            return InternalCall(cx, callee, cval, 2, nargv, rval);
         }
-        if (JSVAL_IS_OBJECT(cval) && JSVAL_TO_OBJECT(cval) != callee) {
+        if (cval.isObjectOrNull() && cval.asObjectOrNull() != callee) {
             argv[-2] = cval;
             ok = js_Call(cx, obj, argc, argv, rval);
-            argv[-2] = OBJECT_TO_JSVAL(callee);
+            argv[-2].setObject(*callee);
             return ok;
         }
 #endif
@@ -5658,12 +5658,12 @@ js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
         return clasp->hasInstance(cx, obj, v, bp);
 #ifdef NARCISSUS
     {
-        jsval fval, rval;
+        Value fval, rval;
 
         if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__hasInstance__Atom), &fval))
             return JS_FALSE;
-        if (VALUE_IS_FUNCTION(cx, fval)) {
-            if (!js_InternalCall(cx, obj, fval, 1, &v, &rval))
+        if (IsFunctionObject(fval)) {
+            if (!InternalCall(cx, obj, fval, 1, v, &rval))
                 return JS_FALSE;
             *bp = js_ValueToBoolean(rval);
             return JS_TRUE;
