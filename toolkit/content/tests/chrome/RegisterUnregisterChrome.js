@@ -22,6 +22,7 @@ function copyToTemporaryFile(f)
   tmpf = tmpd.clone();
   tmpf.append("temp.manifest");
   tmpf.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+  tmpf.remove(false);
 
   f.copyTo(tmpd, tmpf.leafName);
   return tmpf;
