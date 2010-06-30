@@ -2155,18 +2155,25 @@ nsNavHistory::GetNewSessionID()
 
 
 void
-nsNavHistory::FireOnVisit(nsIURI* aURI,
-                          PRInt64 aVisitID,
-                          PRTime aTime,
-                          PRInt64 aSessionID,
-                          PRInt64 referringVisitID,
-                          PRInt32 aTransitionType)
+nsNavHistory::NotifyOnVisit(nsIURI* aURI,
+                            PRInt64 aVisitID,
+                            PRTime aTime,
+                            PRInt64 aSessionID,
+                            PRInt64 referringVisitID,
+                            PRInt32 aTransitionType)
 {
   PRUint32 added = 0;
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
                    OnVisit(aURI, aVisitID, aTime, aSessionID,
                            referringVisitID, aTransitionType, &added));
+}
+
+void
+nsNavHistory::NotifyTitleChange(nsIURI* aURI, const nsString& aTitle)
+{
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
 }
 
 
@@ -2875,7 +2882,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
   if (!hidden) {
-    FireOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
+    NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
                 aTransitionType);
   }
 
@@ -7340,7 +7347,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   rv = mDBSetPlaceTitle->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // observers (have to check first if it's bookmarked)
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
 
