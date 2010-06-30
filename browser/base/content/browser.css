@@ -323,7 +323,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: none;
 }
 
-#notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
-#notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon {
+#notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon {
   display: -moz-box;
 }
