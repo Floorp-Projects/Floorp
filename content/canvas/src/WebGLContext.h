@@ -290,6 +290,9 @@ public:
     nsresult ErrorInvalidEnum(const char *fmt = 0, ...);
     nsresult ErrorInvalidOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidValue(const char *fmt = 0, ...);
+    nsresult ErrorInvalidEnumInfo(const char *info) {
+        return ErrorInvalidEnum("%s: invalid enum value", info);
+    }
 
     already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
     void MarkContextClean() { }
@@ -316,14 +319,16 @@ protected:
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
-    static PRBool ValidateCapabilityEnum(WebGLenum cap);
-    static PRBool ValidateBlendEquationEnum(WebGLuint cap);
-    static PRBool ValidateBlendFuncDstEnum(WebGLuint mode);
-    static PRBool ValidateBlendFuncSrcEnum(WebGLuint mode);
-    static PRBool ValidateTextureTargetEnum(WebGLenum target);
-    static PRBool ValidateComparisonEnum(WebGLenum target);
-    static PRBool ValidateStencilOpEnum(WebGLenum action);
-    static PRBool ValidateFaceEnum(WebGLenum target);
+    PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);
+    PRBool ValidateBlendEquationEnum(WebGLuint cap, const char *info);
+    PRBool ValidateBlendFuncDstEnum(WebGLuint mode, const char *info);
+    PRBool ValidateBlendFuncSrcEnum(WebGLuint mode, const char *info);
+    PRBool ValidateTextureTargetEnum(WebGLenum target, const char *info);
+    PRBool ValidateComparisonEnum(WebGLenum target, const char *info);
+    PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
+    PRBool ValidateFaceEnum(WebGLenum target, const char *info);
+    PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
+                                      PRUint32 *texelSize, const char *info);
 
     void Invalidate();
 
