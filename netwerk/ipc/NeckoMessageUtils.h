@@ -84,7 +84,8 @@ struct ParamTraits<URI>
     if (!serializable) {
       nsCString scheme;
       aParam.mURI->GetScheme(scheme);
-      NS_ABORT_IF_FALSE(scheme.EqualsASCII("about:"),
+      NS_ABORT_IF_FALSE(scheme.EqualsASCII("about:") ||
+                        scheme.EqualsASCII("javascript:"),
                         "All IPDL URIs must be serializable or an allowed scheme");
     }
     
