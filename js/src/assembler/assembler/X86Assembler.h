@@ -329,7 +329,7 @@ public:
             ASSERT(m_offset == offset);
         }
 
-        int m_offset : 31;
+        signed int m_offset : 31;
         bool m_used : 1;
     };
 
