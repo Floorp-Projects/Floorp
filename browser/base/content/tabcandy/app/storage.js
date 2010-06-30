@@ -55,6 +55,11 @@ Storage = {
   wipe: function() {
     try {
       var win = Utils.getCurrentWindow();
+      
+      // make sure that we have the current window
+      if (!win)
+      	win = Utils.getCurrentWindow();
+      
       var self = this;
       
       // ___ Tabs
