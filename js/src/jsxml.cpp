@@ -4598,7 +4598,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
         xml = vec[i];
         if (xml) {
             JS_SET_TRACING_INDEX(trc, "xml_vector", i);
-            MarkRaw(trc, xml, JSTRACE_XML);
+            Mark(trc, xml, JSTRACE_XML);
         }
     }
 }
