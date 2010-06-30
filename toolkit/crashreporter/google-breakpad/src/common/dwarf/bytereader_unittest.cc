@@ -43,10 +43,10 @@ using dwarf2reader::DwarfPointerEncoding;
 using dwarf2reader::ENDIANNESS_BIG;
 using dwarf2reader::ENDIANNESS_LITTLE;
 using google_breakpad::CFISection;
-using google_breakpad::TestAssembler::Label;
-using google_breakpad::TestAssembler::kBigEndian;
-using google_breakpad::TestAssembler::kLittleEndian;
-using google_breakpad::TestAssembler::Section;
+using google_breakpad::test_assembler::Label;
+using google_breakpad::test_assembler::kBigEndian;
+using google_breakpad::test_assembler::kLittleEndian;
+using google_breakpad::test_assembler::Section;
 using std::string;
 using testing::Test;
 
