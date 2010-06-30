@@ -196,8 +196,10 @@ body {
 .guideTrench {
   z-index: -101;
   opacity: 0.9;
-  border-top: 2px solid rgba(0,0,0,0.13);
-  border-left: 2px solid rgba(0,0,0,0.13);
+  border-top: 2px solid;
+  border-left: 2px solid;
+  -moz-border-top-colors:  rgba(0,0,0,0.1) rgba(255,255,255,.25);
+  -moz-border-left-colors:  rgba(0,0,0,0.1) rgba(255,255,255,.25);
 }
 
 .visibleTrench {
