@@ -1556,6 +1556,8 @@ function ContentCustomClicker(browserView) {
 
 ContentCustomClicker.prototype = {
   _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
+    let aX = aX || 0;
+    let aY = aY || 0;
     let aModifiers = aModifiers || null;
     let browser = this._browserView.getBrowser();
     let [x, y] = Browser.transformClientToBrowser(aX, aY);
@@ -1578,32 +1580,29 @@ ContentCustomClicker.prototype = {
   panBegin: function panBegin() {
     TapHighlightHelper.hide();
 
-    let browser = this._browserView.getBrowser();
-    browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
+    this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
   singleClick: function singleClick(aX, aY, aModifiers) {
     TapHighlightHelper.hide();
 
     // Cancel the mouse click if we are showing a context menu
-    if (ContextHelper.popupState)
-      this._dispatchMouseEvent("Browser:MouseCancel", {});
-    else
+    if (!ContextHelper.popupState)
       this._dispatchMouseEvent("Browser:MouseUp", aX, aY, aModifiers);
+    this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
   doubleClick: function doubleClick(aX1, aY1, aX2, aY2) {
     TapHighlightHelper.hide();
 
-    let browser = this._browserView.getBrowser();
-    browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
+    this._dispatchMouseEvent("Browser:MouseCancel");
 
     const kDoubleClickRadius = 32;
 
     let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
     let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
     if (isClickInRadius)
-      browser.messageManager.sendAsyncMessage("Browser:ZoomToPoint", { x: aX1, y: aY1 });
+      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
   },
 
   toString: function toString() {
