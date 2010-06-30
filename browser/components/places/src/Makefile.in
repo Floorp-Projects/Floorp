@@ -45,7 +45,6 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = \
-  nsPlacesTransactionsService.js \
   PlacesProtocolHandler.js \
   $(NULL)
 
