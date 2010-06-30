@@ -52,8 +52,8 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
-class IndexedDatabaseRequest;
-class IDBDatabaseRequest;
+class IDBFactory;
+class IDBDatabase;
 
 class IDBRequest : public nsDOMEventTargetHelper,
                    public nsIIDBRequest

@@ -932,25 +932,6 @@ nsPoint nsIView::GetOffsetTo(const nsIView* aOther) const
   return offset;
 }
 
-nsIntPoint nsIView::GetScreenPosition() const
-{
-  nsIntPoint screenPoint(0,0);  
-  nsPoint toWidgetOffset(0,0);
-  nsIWidget* widget = GetNearestWidget(&toWidgetOffset);
-  if (widget) {
-    nsCOMPtr<nsIDeviceContext> dx;
-    mViewManager->GetDeviceContext(*getter_AddRefs(dx));
-    PRInt32 p2a = dx->AppUnitsPerDevPixel();
-    nsIntPoint ourPoint(NSAppUnitsToIntPixels(toWidgetOffset.x, p2a),
-                        NSAppUnitsToIntPixels(toWidgetOffset.y, p2a));
-    // WidgetToScreenOffset is at the origin of the client area of
-    // the widget.
-    screenPoint = ourPoint + widget->WidgetToScreenOffset();
-  }
-  
-  return screenPoint;
-}
-
 nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
 {
   // aOffset is based on the view's position, which ignores any chrome on

@@ -82,8 +82,11 @@ ifneq (,$(filter qt gtk2 windows cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsNativeTheme.cpp
 endif
 
+SHARED_LIBRARY_LIBS = ../shared/$(LIB_PREFIX)widget_shared.$(LIB_SUFFIX)
+
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
+		-I$(srcdir)/../shared \
 		-I$(srcdir) \
 		$(NULL)
 

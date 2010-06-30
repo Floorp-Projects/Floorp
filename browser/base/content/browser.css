@@ -201,7 +201,8 @@ toolbarbutton.bookmark-item {
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
-#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button {
+#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button,
+#toolbar-menubar:not([autohide="true"]) > #personal-bookmarks > #bookmarks-menu-button {
   display: none;
 }
 %endif
@@ -253,8 +254,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 /*  Full Screen UI */
 #fullscr-toggler {
   display: none;
-  min-height: 5px;
-  height: 5px;
+  min-height: 1px;
+  height: 1px;
+  background: black;
+  border-style: none;
+  -moz-appearance: none;
 }
 
 #navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,

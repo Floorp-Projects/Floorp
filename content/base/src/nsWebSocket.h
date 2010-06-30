@@ -86,6 +86,21 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
                         JSObject* aObject, PRUint32 aArgc, jsval* aArgv);
 
+  // nsIDOMEventTarget
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener* aListener,
+                              PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 PRBool aUseCapture);
+
+  // nsIDOMNSEventTarget
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener *aListener,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
+                              PRUint8 optional_argc);
+
   static void ReleaseGlobals();
 
 protected:
@@ -100,6 +115,14 @@ protected:
   // called from mConnection accordingly to the situation
   void SetReadyState(PRUint16 aNewReadyState);
 
+  // if there are onopen or onmessage event listeners ("strong event listeners")
+  // then this method keeps the object alive when js doesn't have strong
+  // references to it.
+  void UpdateMustKeepAlive();
+  // Releases, if necessary, the strong event listeners. ATTENTION, when calling
+  // this method the object can be released (and possibly collected).
+  void DontKeepAliveAnyMore();
+
   nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnMessageListener;
@@ -109,6 +132,10 @@ protected:
   nsString mOriginalURL;
   PRPackedBool mSecure; // if true it is using SSL and the wss scheme,
                         // otherwise it is using the ws scheme with no SSL
+
+  PRPackedBool mHasStrongEventListeners;
+  PRPackedBool mCheckThereAreStrongEventListeners;
+
   nsCString mAsciiHost;  // hostname
   PRUint32  mPort;
   nsCString mResource; // [filepath[?query]]

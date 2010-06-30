@@ -64,3 +64,9 @@ include scripttests.list
 
 # test url-prefix
 include urlprefixtests.list
+
+# test that all corners are visible
+!= corners-1.html corners-1-ref.html
+!= corners-2.html corners-2-ref.html
+!= corners-3.html corners-3-ref.html
+!= corners-4.html corners-4-ref.html

@@ -291,7 +291,7 @@ GetArgsPrivateNative(JSObject *argsobj)
 {
     JS_ASSERT(argsobj->isArguments());
     uintptr_t p = (uintptr_t) argsobj->getPrivate();
-    return (ArgsPrivateNative *) (p & 2 ? p & ~2 : NULL);
+    return p & 2 ? (ArgsPrivateNative *)(p & ~2) : NULL;
 }
 
 } /* namespace js */

@@ -314,14 +314,14 @@ test_fnptr()
 }
 
 PRInt32
-test_closure_cdecl(PRInt8 i, PRInt32 (*f)(PRInt8))
+test_closure_cdecl(PRInt8 i, test_func_ptr f)
 {
   return f(i);
 }
 
 #if defined(_WIN32) && !defined(_WIN64)
 PRInt32
-test_closure_cdecl(PRInt8 i, PRInt32 (NS_STDCALL *f)(PRInt8))
+test_closure_cdecl(PRInt8 i, test_func_ptr_stdcall f)
 {
   return f(i);
 }

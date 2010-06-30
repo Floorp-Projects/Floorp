@@ -51,7 +51,7 @@
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
 
-#include "IDBTransactionRequest.h"
+#include "IDBTransaction.h"
 
 class nsIRunnable;
 class nsIThreadPool;
@@ -73,7 +73,7 @@ public:
   static TransactionThreadPool* GetOrCreate();
   static void Shutdown();
 
-  nsresult Dispatch(IDBTransactionRequest* aTransaction,
+  nsresult Dispatch(IDBTransaction* aTransaction,
                     nsIRunnable* aRunnable,
                     bool aFinish,
                     nsIRunnable* aFinishRunnable);
@@ -85,7 +85,7 @@ protected:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
 
-    inline TransactionQueue(IDBTransactionRequest* aTransaction,
+    inline TransactionQueue(IDBTransaction* aTransaction,
                             nsIRunnable* aRunnable);
 
     inline void Dispatch(nsIRunnable* aRunnable);
@@ -95,7 +95,7 @@ protected:
   private:
     mozilla::Mutex mMutex;
     mozilla::CondVar mCondVar;
-    IDBTransactionRequest* mTransaction;
+    IDBTransaction* mTransaction;
     nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> mQueue;
     nsCOMPtr<nsIRunnable> mFinishRunnable;
     bool mShouldFinish;
@@ -118,7 +118,7 @@ protected:
     : mode(nsIIDBTransaction::READ_ONLY)
     { }
 
-    nsRefPtr<IDBTransactionRequest> transaction;
+    nsRefPtr<IDBTransaction> transaction;
     nsRefPtr<TransactionQueue> queue;
     nsTArray<TransactionObjectStoreInfo> objectStoreInfo;
     PRUint16 mode;
@@ -141,9 +141,9 @@ protected:
   nsresult Init();
   nsresult Cleanup();
 
-  void FinishTransaction(IDBTransactionRequest* aTransaction);
+  void FinishTransaction(IDBTransaction* aTransaction);
 
-  bool TransactionCanRun(IDBTransactionRequest* aTransaction,
+  bool TransactionCanRun(IDBTransaction* aTransaction,
                          TransactionQueue** aQueue);
 
   nsCOMPtr<nsIThreadPool> mThreadPool;

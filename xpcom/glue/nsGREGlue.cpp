@@ -197,8 +197,8 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 #elif WINCE
     if (p[0] != '\\') 
     {
-      unsigned short dir[MAX_PATH];
-      unsigned short path[MAX_PATH];
+      WCHAR dir[MAX_PATH];
+      WCHAR path[MAX_PATH];
       MultiByteToWideChar(CP_ACP, 0, p, -1, path, MAX_PATH);
       _wfullpath(dir,path,MAX_PATH);
       WideCharToMultiByte(CP_ACP, 0, dir, -1, aBuffer, MAX_PATH, NULL, NULL);

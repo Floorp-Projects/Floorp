@@ -1316,7 +1316,16 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
   return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);         \
 }
 
+// Disable MSVC warning that spams when we pass empty string as only macro arg.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4003)
+#endif
 NS_DECLARE_NS_NEW_HTML_ELEMENT() // HTMLElement
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)

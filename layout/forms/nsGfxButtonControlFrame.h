@@ -66,11 +66,6 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
- 
-#ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
-#endif
-
   virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG

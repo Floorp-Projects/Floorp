@@ -195,7 +195,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
   mGlobalNumPrinters = 0;
 
-#ifdef USE_POSTSCRIPT
   mGlobalPrinterList = new nsTArray<nsString>();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
@@ -241,8 +240,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
     NS_Free(printerList);
   }
-#endif /* USE_POSTSCRIPT */
-      
+
   if (mGlobalNumPrinters == 0)
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
 
