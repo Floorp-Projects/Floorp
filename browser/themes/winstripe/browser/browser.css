@@ -163,6 +163,12 @@ statusbarpanel#statusbar-display {
   -moz-padding-end: 16px;
 }
 
+.split-menuitem-item[_moz-menuactive="true"],
+.split-menuitem-menu[_moz-menuactive="true"] {
+  background-color: -moz-menuhover;
+  color: -moz-menuhovertext;
+}
+
 /* XXX: stop-gap until the button can be drawn in the title bar */
 %ifdef WINSTRIPE_AERO
 @media not all and (-moz-windows-compositor) {
@@ -370,7 +376,7 @@ toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
 toolbarbutton[type="menu-button"]:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
-.toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not(:active):hover {
+.toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not([open="true"]):not(:active):hover {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
@@ -605,7 +611,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-toolbar[mode="icons"] #bookmarks-menu-button.toolbarbutton-1 {
+#bookmarks-menu-button.toolbarbutton-1 {
   -moz-box-orient: horizontal;
 }
 

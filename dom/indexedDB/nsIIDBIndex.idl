@@ -39,12 +39,16 @@
 
 #include "nsISupports.idl"
 
+interface nsIIDBKeyRange;
+interface nsIIDBRequest;
+interface nsIVariant;
+
 /**
  * IDBIndex interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBIndex for more
  * information.
  */
-[scriptable, uuid(7df8a6cc-d11a-48c9-9cd4-6d18a9df3c09)]
+[scriptable, uuid(2451a60c-349a-4b7c-bab4-93ba8f52abec)]
 interface nsIIDBIndex : nsISupports
 {
   readonly attribute DOMString name;
@@ -54,4 +58,33 @@ interface nsIIDBIndex : nsISupports
   readonly attribute DOMString keyPath;
 
   readonly attribute boolean unique;
+
+  nsIIDBRequest
+  get(in nsIVariant key);
+
+  nsIIDBRequest
+  getObject(in nsIVariant key);
+
+  [optional_argc]
+  nsIIDBRequest
+  getAll([optional /* null */] in nsIVariant key,
+         [optional /* unlimited */] in unsigned long limit);
+
+  [optional_argc]
+  nsIIDBRequest
+  getAllObjects([optional /* null */] in nsIVariant key,
+                [optional /* unlimited */] in unsigned long limit);
+
+  [optional_argc]
+  nsIIDBRequest
+  openCursor([optional /* null */] in nsIIDBKeyRange range,
+             [optional /* nsIIDBCursor::NEXT */] in unsigned short direction,
+             [optional /* false */] in boolean preload);
+
+  [optional_argc]
+  nsIIDBRequest
+  openObjectCursor([optional /* null */] in nsIIDBKeyRange range,
+                   [optional /* nsIIDBCursor::NEXT */]
+                   in unsigned short direction,
+                   [optional /* false */] in boolean preload);
 };

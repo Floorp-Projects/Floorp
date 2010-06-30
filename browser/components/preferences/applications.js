@@ -438,6 +438,11 @@ HandlerInfoWrapper.prototype = {
 
     this._prefSvc.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
                               disabledPluginTypes.join(","));
+
+    // Update the category manager so existing browser windows update.
+    this._categoryMgr.deleteCategoryEntry("Gecko-Content-Viewers",
+                                          this.type,
+                                          false);
   },
 
   enablePluginType: function() {
@@ -448,6 +453,14 @@ HandlerInfoWrapper.prototype = {
 
     this._prefSvc.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
                               disabledPluginTypes.join(","));
+
+    // Update the category manager so existing browser windows update.
+    this._categoryMgr.
+      addCategoryEntry("Gecko-Content-Viewers",
+                       this.type,
+                       "@mozilla.org/content/plugin/document-loader-factory;1",
+                       false,
+                       true);
   },
 
 

@@ -129,6 +129,9 @@ public:
         int mEntries;
     };
 
+    /* See GLHelpers.java as to why this is needed */
+    void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -162,6 +165,14 @@ protected:
     jmethodID jOpenUriExternal;
     jmethodID jGetMimeTypeFromExtension;
     jmethodID jMoveTaskToBack;
+
+    // stuff we need for CallEglCreateWindowSurface
+    jclass jEGLSurfaceImplClass;
+    jclass jEGLContextImplClass;
+    jclass jEGLConfigImplClass;
+    jclass jEGLDisplayImplClass;
+    jclass jEGLContextClass;
+    jclass jEGL10Class;
 };
 
 }

@@ -96,7 +96,7 @@ public:
   virtual nsIAtom* GetType() const;
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
 #ifdef DEBUG
@@ -164,20 +164,21 @@ NS_QUERYFRAME_HEAD(nsImageControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsImageControlFrameSuper)
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsImageControlFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsImageControlFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
     if (mContent->Tag() == nsGkAtoms::button) {
-      return accService->CreateHTML4ButtonAccessible(static_cast<nsIFrame*>(this), aAccessible);
+      return accService->CreateHTML4ButtonAccessible(mContent, PresContext()->PresShell());
     }
     else if (mContent->Tag() == nsGkAtoms::input) {
-      return accService->CreateHTMLButtonAccessible(static_cast<nsIFrame*>(this), aAccessible);
+      return accService->CreateHTMLButtonAccessible(mContent, PresContext()->PresShell());
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 

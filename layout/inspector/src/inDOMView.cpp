@@ -758,7 +758,8 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     inDOMViewNode* insertNode = nsnull;
     RowToNode(attrRow, &insertNode);
     if (insertNode) {
-      if (insertNode->level <= contentNode->level) {
+      if (contentNode &&
+          insertNode->level <= contentNode->level) {
         RowToNode(attrRow-1, &insertNode);
         InsertLinkAfter(newNode, insertNode);
       } else

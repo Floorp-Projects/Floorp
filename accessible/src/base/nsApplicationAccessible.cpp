@@ -453,9 +453,8 @@ nsApplicationAccessible::CacheChildren()
       nsCOMPtr<nsIDOMDocument> DOMDocument;
       DOMWindow->GetDocument(getter_AddRefs(DOMDocument));
       if (DOMDocument) {
-        nsCOMPtr<nsIAccessible> accessible;
-        GetAccService()->GetAccessibleFor(DOMDocument,
-                                          getter_AddRefs(accessible));
+        nsCOMPtr<nsIDocument> docNode(do_QueryInterface(DOMDocument));
+        GetAccService()->GetDocAccessible(docNode); // ensure creation
       }
     }
     windowEnumerator->HasMoreElements(&hasMore);

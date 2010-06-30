@@ -475,6 +475,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::ondblclick,                    NS_MOUSE_DOUBLECLICK, EventNameType_HTMLXUL, NS_MOUSE_EVENT },
     { nsGkAtoms::onmouseover,                   NS_MOUSE_ENTER_SYNTH, EventNameType_All, NS_MOUSE_EVENT },
     { nsGkAtoms::onmouseout,                    NS_MOUSE_EXIT_SYNTH, EventNameType_All, NS_MOUSE_EVENT },
+    { nsGkAtoms::onMozMouseHittest,             NS_MOUSE_MOZHITTEST, EventNameType_None, NS_MOUSE_EVENT },
     { nsGkAtoms::onmousemove,                   NS_MOUSE_MOVE, EventNameType_All, NS_MOUSE_EVENT },
     { nsGkAtoms::oncontextmenu,                 NS_CONTEXTMENU, EventNameType_HTMLXUL, NS_MOUSE_EVENT },
 
@@ -496,6 +497,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onunload,                      NS_PAGE_UNLOAD,
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
     { nsGkAtoms::onhashchange,                  NS_HASHCHANGE, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::onreadystatechange,            NS_READYSTATECHANGE, EventNameType_HTMLXUL },
     { nsGkAtoms::onbeforeunload,                NS_BEFORE_PAGE_UNLOAD, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::onabort,                       NS_IMAGE_ABORT,
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
@@ -6182,30 +6184,19 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
   if (!catMan)
     return NULL;
 
-  FullPagePluginEnabledType pluginEnabled = NOT_ENABLED;
-
-  nsCOMPtr<nsIPluginHost> pluginHost =
-    do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  if (pluginHost) {
-    pluginHost->IsFullPagePluginEnabledForType(aType, &pluginEnabled);
-  }
-
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
-
-  if (OVERRIDE_BUILTIN == pluginEnabled) {
-    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
-    if (docFactory && aLoaderType) {
-      *aLoaderType = TYPE_PLUGIN;
-    }
-    return docFactory.forget();
-  }
 
   nsXPIDLCString contractID;
   nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aType, getter_Copies(contractID));
   if (NS_SUCCEEDED(rv)) {
     docFactory = do_GetService(contractID);
     if (docFactory && aLoaderType) {
-      *aLoaderType = contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID) ? TYPE_CONTENT : TYPE_UNKNOWN;
+      if (contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID))
+        *aLoaderType = TYPE_CONTENT;
+      else if (contractID.EqualsLiteral(PLUGIN_DLF_CONTRACTID))
+        *aLoaderType = TYPE_PLUGIN;
+      else
+      *aLoaderType = TYPE_UNKNOWN;
     }   
     return docFactory.forget();
   }
@@ -6241,14 +6232,6 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
   }
 #endif
 #endif // MOZ_MEDIA
-
-  if (AVAILABLE == pluginEnabled) {
-    docFactory = do_GetService(PLUGIN_DLF_CONTRACTID);
-    if (docFactory && aLoaderType) {
-      *aLoaderType = TYPE_PLUGIN;
-    }
-    return docFactory.forget();
-  }
 
   return NULL;
 }

@@ -583,7 +583,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       if not pHandle:
         return False
       pExitCode = ctypes.wintypes.DWORD()
-      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
+      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
       ctypes.windll.kernel32.CloseHandle(pHandle)
       if (pExitCode.value == STILL_ACTIVE):
         return True
@@ -649,35 +649,44 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.log.info("Can't trigger Breakpad, just killing process")
     proc.kill()
 
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo):
+  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerProcess = None
-    stackFixerModule = None
+    stackFixerFunction = None
     didTimeout = False
     if proc.stdout is None:
       self.log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
     else:
       logsource = proc.stdout
-      if self.IS_DEBUG_BUILD and self.IS_LINUX:
-        # Run logsource through fix-linux-stack.pl
+
+      if self.IS_DEBUG_BUILD and (self.IS_MAC or self.IS_LINUX) and symbolsPath and os.path.exists(symbolsPath):
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files)
+        # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
+        sys.path.insert(0, utilityPath)
+        import fix_stack_using_bpsyms as stackFixerModule
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, symbolsPath)
+        del sys.path[0]
+      elif self.IS_DEBUG_BUILD and self.IS_MAC and False:
+        # Run each line through a function in fix_macosx_stack.py (uses atos)
+        sys.path.insert(0, utilityPath)
+        import fix_macosx_stack as stackFixerModule
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
+        del sys.path[0]
+      elif self.IS_DEBUG_BUILD and self.IS_LINUX:
+        # Run logsource through fix-linux-stack.pl (uses addr2line)
+        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
         stackFixerProcess = self.Process([self.PERL, os.path.join(utilityPath, "fix-linux-stack.pl")],
                                          stdin=logsource,
                                          stdout=subprocess.PIPE)
         logsource = stackFixerProcess.stdout
-
-      if self.IS_DEBUG_BUILD and self.IS_MAC and False:
-        # Import fix_macosx_stack.py from utilityPath
-        sys.path.insert(0, utilityPath)
-        import fix_macosx_stack as stackFixerModule
-        del sys.path[0]
 
       (line, didTimeout) = self.readWithTimeout(logsource, timeout)
       hitMaxTime = False
       while line != "" and not didTimeout:
         if "TEST-START" in line and "|" in line:
           self.lastTestSeen = line.split("|")[1].strip()
-        if stackFixerModule:
-          line = stackFixerModule.fixSymbols(line)
+        if stackFixerFunction:
+          line = stackFixerFunction(line)
         self.log.info(line.rstrip())
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
@@ -814,7 +823,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                  stderr = subprocess.STDOUT)
     self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
-    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo)
+    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath)
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.
