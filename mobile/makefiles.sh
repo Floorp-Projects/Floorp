@@ -47,7 +47,6 @@ mobile/chrome/Makefile
 mobile/chrome/tests/Makefile
 mobile/components/Makefile
 mobile/components/phone/Makefile
-mobile/components/protocols/Makefile
 mobile/installer/Makefile
 mobile/locales/Makefile
 mobile/Makefile
