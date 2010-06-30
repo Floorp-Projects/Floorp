@@ -186,6 +186,63 @@ PRBool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor)
         return ValidateBlendFuncDstEnum(factor);
 }
 
+PRBool WebGLContext::ValidateTextureTargetEnum(WebGLenum target)
+{
+    switch (target) {
+        case LOCAL_GL_TEXTURE_2D:
+        case LOCAL_GL_TEXTURE_CUBE_MAP:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateComparisonEnum(WebGLenum target)
+{
+    switch (target) {
+        case LOCAL_GL_NEVER:
+        case LOCAL_GL_LESS:
+        case LOCAL_GL_LEQUAL:
+        case LOCAL_GL_GREATER:
+        case LOCAL_GL_GEQUAL:
+        case LOCAL_GL_EQUAL:
+        case LOCAL_GL_NOTEQUAL:
+        case LOCAL_GL_ALWAYS:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateStencilOpEnum(WebGLenum action)
+{
+    switch (action) {
+        case LOCAL_GL_KEEP:
+        case LOCAL_GL_ZERO:
+        case LOCAL_GL_REPLACE:
+        case LOCAL_GL_INCR:
+        case LOCAL_GL_INCR_WRAP:
+        case LOCAL_GL_DECR:
+        case LOCAL_GL_DECR_WRAP:
+        case LOCAL_GL_INVERT:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateFaceEnum(WebGLenum target)
+{
+    switch (target) {
+        case LOCAL_GL_FRONT:
+        case LOCAL_GL_BACK:
+        case LOCAL_GL_FRONT_AND_BACK:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
 PRBool
 WebGLContext::InitAndValidateGL()
 {
