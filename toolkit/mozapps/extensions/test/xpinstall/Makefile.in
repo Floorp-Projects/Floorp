@@ -89,6 +89,8 @@ _BROWSER_FILES = head.js \
                  signed-no-cn.xpi \
                  signed-untrusted.xpi \
                  signed-tampered.xpi \
+                 restartless.xpi \
+                 incompatible.xpi \
                  empty.xpi \
                  corrupt.xpi \
                  enabled.html \
