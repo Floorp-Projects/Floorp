@@ -158,6 +158,18 @@ GetNativeStackBaseImpl()
     return ptib->tib_pstacklimit;
 }
 
+#elif defined(SOLARIS)
+
+#include <ucontext.h>
+
+void *
+GetNativeStackBaseImpl()
+{
+    stack_t st;
+    stack_getbounds(&st);
+    return static_cast<char*>(st.ss_sp) + st.ss_size;
+}
+
 #else /* XP_UNIX */
 
 void *
