@@ -413,26 +413,6 @@ XRE_API(nsresult,
         XRE_ParseAppData, (nsILocalFile* aINIFile,
                            nsXREAppData *aAppData))
 
-namespace mozilla {
-namespace dom {
-  class TabParent;
-}
-}
-
-class nsString;
-
-XRE_API(nsresult,
-        XRE_SendParentChromeRegistry, (mozilla::dom::TabParent* aParent))
-
-XRE_API(nsresult,
-        XRE_RegisterChromePackage, (const nsString& aPackage,
-                                    const nsString& aBaseURI,
-                                    const PRUint32& aFlags))
-
-XRE_API(nsresult,
-        XRE_RegisterChromeResource, (const nsString& aPackage,
-                                     const nsString& aResolvedURI))
-
 /**
  * Free a nsXREAppData structure that was allocated with XRE_CreateAppData.
  */
