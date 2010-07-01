@@ -1477,6 +1477,9 @@ var FormHelper = {
   },
 
   getAutocompleteSuggestions: function(aElement) {
+    if (!aElement.canAutocomplete)
+      return [];
+
     let suggestions = [];
     let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
     let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
