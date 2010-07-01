@@ -56,4 +56,4 @@ FormNotifier.prototype = {
 };
 
 let components = [FormNotifier];
-function NSGetModule(compMgr, fileSpec) XPCOMUtils.generateModule(components);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
