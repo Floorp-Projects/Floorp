@@ -58,7 +58,6 @@
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
-#include "nsIAssociatedContentSecurity.h"
 
 namespace mozilla {
 namespace net {
@@ -81,7 +80,6 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIProxiedChannel
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
-                       , public nsIAssociatedContentSecurity
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -92,7 +90,6 @@ public:
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
   NS_DECL_NSIAPPLICATIONCACHECHANNEL
-  NS_DECL_NSIASSOCIATEDCONTENTSECURITY
 
   HttpChannelChild();
   virtual ~HttpChannelChild();
@@ -122,8 +119,7 @@ protected:
                           const PRBool& isFromCache,
                           const PRBool& cacheEntryAvailable,
                           const PRUint32& cacheExpirationTime,
-                          const nsCString& cachedCharset,
-                          const nsCString& securityInfoSerialization);
+                          const nsCString& cachedCharset);
   bool RecvOnDataAvailable(const nsCString& data, 
                            const PRUint32& offset,
                            const PRUint32& count);
@@ -131,11 +127,8 @@ protected:
   bool RecvOnProgress(const PRUint64& progress, const PRUint64& progressMax);
   bool RecvOnStatus(const nsresult& status, const nsString& statusArg);
 
-  bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** _result = nsnull);
-
 private:
   RequestHeaderTuples mRequestHeaders;
-  nsCOMPtr<nsISupports> mSecurityInfo;
 
   PRPackedBool mIsFromCache;
   PRPackedBool mCacheEntryAvailable;
