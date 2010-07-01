@@ -233,11 +233,11 @@ typedef enum JSWhyMagic
     JS_NO_CONSTANT               /* compiler sentinel value */
 } JSWhyMagic;
 
-#if defined(IS_LITTLE_ENDIAN)
-#if JS_BITS_PER_WORD == 32
-
 typedef struct JSString JSString;
 typedef struct JSObject JSObject;
+
+#if defined(IS_LITTLE_ENDIAN)
+#if JS_BITS_PER_WORD == 32
 
 typedef union jsval_layout
 {
