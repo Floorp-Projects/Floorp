@@ -247,6 +247,10 @@ PluginWrapper.prototype = {
     return true;
   },
 
+  get isPlatformCompatible() {
+    return true;
+  },
+
   get providesUpdatesSecurely() {
     return true;
   },

@@ -476,6 +476,10 @@ AddonWrapper.prototype = {
     return true;
   },
 
+  get isPlatformCompatible() {
+    return true;
+  },
+
   get scope() {
     return AddonManager.SCOPE_PROFILE;
   },
