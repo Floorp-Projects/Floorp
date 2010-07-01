@@ -1731,22 +1731,24 @@ public:
     eSVG =                              1 << 1,
     eSVGForeignObject =                 1 << 2,
     eSVGContainer =                     1 << 3,
-    eBidiInlineContainer =              1 << 4,
+    eSVGGeometry =                      1 << 4,
+    eSVGPaintServer =                   1 << 5,
+    eBidiInlineContainer =              1 << 6,
     // the frame is for a replaced element, such as an image
-    eReplaced =                         1 << 5,
+    eReplaced =                         1 << 7,
     // Frame that contains a block but looks like a replaced element
     // from the outside
-    eReplacedContainsBlock =            1 << 6,
+    eReplacedContainsBlock =            1 << 8,
     // A frame that participates in inline reflow, i.e., one that
     // requires nsHTMLReflowState::mLineLayout.
-    eLineParticipant =                  1 << 7,
-    eXULBox =                           1 << 8,
-    eCanContainOverflowContainers =     1 << 9,
-    eBlockFrame =                       1 << 10,
+    eLineParticipant =                  1 << 9,
+    eXULBox =                           1 << 10,
+    eCanContainOverflowContainers =     1 << 11,
+    eBlockFrame =                       1 << 12,
     // If this bit is set, the frame doesn't allow ignorable whitespace as
     // children. For example, the whitespace between <table>\n<tr>\n<td>
     // will be excluded during the construction of children. 
-    eExcludesIgnorableWhitespace =      1 << 11,
+    eExcludesIgnorableWhitespace =      1 << 13,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only

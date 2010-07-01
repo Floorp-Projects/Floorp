@@ -85,6 +85,7 @@ typedef void *EGLNativeWindowType;
 #endif
 
 #include "gfxASurface.h"
+#include "gfxPlatform.h"
 #include "GLContextProvider.h"
 #include "nsDebug.h"
 
@@ -244,6 +245,8 @@ private:
 
 class GLContextEGL : public GLContext
 {
+    friend class TextureImageEGL;
+
 public:
     GLContextEGL(EGLDisplay aDisplay, EGLConfig aConfig,
                  EGLSurface aSurface, EGLContext aContext,
@@ -361,6 +364,12 @@ public:
         return sEGLLibrary.fSwapBuffers(mDisplay, mSurface);
     }
 
+    virtual already_AddRefed<TextureImage>
+    CreateTextureImage(const nsIntSize& aSize,
+                       TextureImage::ContentType aContentType,
+                       GLint aWrapMode,
+                       PRBool aUseNearestFilter=PR_FALSE);
+
 private:
     EGLDisplay mDisplay;
     EGLConfig  mConfig;
@@ -370,6 +379,101 @@ private:
     nsRefPtr <gfxASurface> mASurface;
     PRBool     mBound;
 };
+
+class TextureImageEGL : public TextureImage
+{
+public:
+    TextureImageEGL(GLuint aTexture,
+                    const nsIntSize& aSize,
+                    ContentType aContentType,
+                    GLContext* aContext,
+                    GLContextEGL* aImpl)
+        : TextureImage(aTexture, aSize, aContentType)
+        , mGLContext(aContext)
+        , mImpl(aImpl)
+    { }
+
+    virtual ~TextureImageEGL()
+    {
+        mGLContext->MakeCurrent();
+        mImpl->ReleaseTexImage();
+        mGLContext->fDeleteTextures(1, &mTexture);
+        mImpl = NULL;
+    }
+
+    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion)
+    {
+        NS_ASSERTION(!mUpdateContext, "BeginUpdate() without EndUpdate()?");
+
+        mUpdateContext = new gfxContext(mImpl->mASurface);
+        // TextureImageEGL can handle updates to disparate regions
+        // aRegion = aRegion;
+        return mUpdateContext;
+    }
+
+    virtual PRBool EndUpdate()
+    {
+        NS_ASSERTION(mUpdateContext, "EndUpdate() without BeginUpdate()?");
+
+#ifdef MOZ_X11
+        // FIXME: do we need an XSync() or XFlush() here?
+        //XSync(False);
+#endif  // MOZ_X11
+
+        // X has already uploaded the new pixels to our Pixmap, so
+        // there's nothing else we need to do here
+        mUpdateContext = NULL;
+        return PR_FALSE;        // texture not bound
+    }
+
+private:
+    GLContext* mGLContext;
+    nsRefPtr<GLContextEGL> mImpl;
+    nsRefPtr<gfxContext> mUpdateContext;
+};
+
+already_AddRefed<TextureImage>
+GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
+                                 TextureImage::ContentType aContentType,
+                                 GLint aWrapMode,
+                                 PRBool aUseNearestFilter)
+{
+  gfxASurface::gfxImageFormat imageFormat =
+      (gfxASurface::CONTENT_COLOR == aContentType) ?
+      gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32;
+
+  nsRefPtr<gfxASurface> pixmap =
+    gfxPlatform::GetPlatform()->
+      CreateOffscreenSurface(gfxIntSize(aSize.width, aSize.height),
+                             imageFormat);
+
+  nsRefPtr<GLContext> impl =
+      sGLContextProvider.CreateForNativePixmapSurface(pixmap);
+  if (!impl)
+      // FIXME: should fall back on BasicTextureImage here
+      return NULL;
+
+  MakeCurrent();
+
+  GLuint texture;
+  fGenTextures(1, &texture);
+
+  fActiveTexture(LOCAL_GL_TEXTURE0);
+  fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+
+  GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
+  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
+
+  impl->BindTexImage();
+
+  nsRefPtr<TextureImageEGL> teximage =
+      new TextureImageEGL(texture, aSize, aContentType, this,
+                          static_cast<GLContextEGL*>(impl.get()));
+  return teximage.forget();
+}
 
 already_AddRefed<GLContext>
 GLContextProvider::CreateForWindow(nsIWidget *aWidget)

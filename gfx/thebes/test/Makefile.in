@@ -68,7 +68,7 @@ include $(topsrcdir)/config/rules.mk
 EXTRA_LDOPS += $(TK_LIBS)
 
 LIBS =  $(HELPER_OBJS) \
-	$(call EXPAND_LIBNAME_PATH,thebes,../src) \
+	$(call EXPAND_LIBNAME_PATH,thebes,..) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(LIBS_DIR) \
 	$(XPCOM_LIBS) \
