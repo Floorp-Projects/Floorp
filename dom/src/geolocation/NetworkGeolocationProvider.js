@@ -351,7 +351,7 @@ WifiGeoPositionProvider.prototype = {
 
             // if we get a bad response, we will throw and never report a location
             var response;
-            switch (this.protocol) {
+            switch (protocol) {
                 case 1:
                     LOG("service returned: " + req.target.responseXML);
                     response = HELD.decode(req.target.responseXML);
