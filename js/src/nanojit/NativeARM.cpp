@@ -468,6 +468,9 @@ Assembler::nInit(AvmCore*)
 #else
     blx_lr_bug = 0;
 #endif
+    nHints[LIR_calli]  = rmask(retRegs[0]);
+    nHints[LIR_hcalli] = rmask(retRegs[1]);
+    nHints[LIR_paramp] = PREFER_SPECIAL;
 }
 
 void Assembler::nBeginAssembly()
@@ -1173,20 +1176,13 @@ Assembler::nPatchBranch(NIns* branch, NIns* target)
 }
 
 RegisterMask
-Assembler::hint(LIns* ins)
+Assembler::nHint(LIns* ins)
 {
-    uint32_t op = ins->opcode();
-    int prefer = 0;
-    if (op == LIR_calli)
-        prefer = rmask(R0);
-    else if (op == LIR_hcalli)
-        prefer = rmask(R1);
-    else if (op == LIR_paramp) {
-        if (ins->paramKind() == 0) {
-            if (ins->paramArg() < 4)
-                prefer = rmask(argRegs[ins->paramArg()]);
-        }
-    }
+    NanoAssert(ins->isop(LIR_paramp)); 
+    RegisterMask prefer = 0;
+    if (ins->paramKind() == 0)
+        if (ins->paramArg() < 4)
+            prefer = rmask(argRegs[ins->paramArg()]);
     return prefer;
 }
 
