@@ -232,6 +232,16 @@ function isUsableAddon(aAddon) {
   // Hack to ensure the default theme is always usable
   if (aAddon.type == "theme" && aAddon.internalName == XPIProvider.defaultSkin)
     return true;
+
+  if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+    return false;
+
+  if (XPIProvider.checkUpdateSecurity && !aAddon.providesUpdatesSecurely)
+    return false;
+
+  if (!aAddon.isPlatformCompatible)
+    return false;
+
   if (XPIProvider.checkCompatibility) {
     if (!aAddon.isCompatible)
       return false;
@@ -240,9 +250,8 @@ function isUsableAddon(aAddon) {
     if (!aAddon.matchingTargetApplication)
       return false;
   }
-  if (XPIProvider.checkUpdateSecurity && !aAddon.providesUpdatesSecurely)
-    return false;
-  return aAddon.blocklistState != Ci.nsIBlocklistService.STATE_BLOCKED;
+
+  return true;
 }
 
 this.__defineGetter__("gRDF", function() {
@@ -4760,6 +4769,40 @@ AddonInternal.prototype = {
     return this.isCompatibleWith();
   },
 
+  get isPlatformCompatible() {
+    if (this.targetPlatforms.length == 0)
+      return true;
+
+    let matchedOS = false;
+
+    // If any targetPlatform matches the OS and contains an ABI then we will
+    // only match a targetPlatform that contains both the current OS and ABI
+    let needsABI = false;
+
+    // Some platforms do not specify an ABI, test against null in that case.
+    let abi = null;
+    try {
+      abi = Services.appinfo.XPCOMABI;
+    }
+    catch (e) { }
+
+    for (let i = 0; i < this.targetPlatforms.length; i++) {
+      let platform = this.targetPlatforms[i];
+      if (platform.os == Services.appinfo.OS) {
+        if (platform.abi) {
+          needsABI = true;
+          if (platform.abi === abi)
+            return true;
+        }
+        else {
+          matchedOS = true;
+        }
+      }
+    }
+
+    return matchedOS && !needsABI;
+  },
+
   isCompatibleWith: function(aAppVersion, aPlatformVersion) {
     let app = this.matchingTargetApplication;
     if (!app)
@@ -4938,7 +4981,7 @@ function createWrapper(aAddon) {
  * the public API.
  */
 function AddonWrapper(aAddon) {
-  ["id", "version", "type", "isCompatible",
+  ["id", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "appDisabled",
    "userDisabled", "skinnable", "size"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function() aAddon[aProp]);

@@ -362,6 +362,12 @@ function writeInstallRDFToDir(aData, aDir) {
 
   rdf += writeLocaleStrings(aData);
 
+  if ("targetPlatforms" in aData) {
+    aData.targetPlatforms.forEach(function(aPlatform) {
+      rdf += "<em:targetPlatform>" + escapeXML(aPlatform) + "</em:targetPlatform>\n";
+    });
+  }
+
   if ("targetApplications" in aData) {
     aData.targetApplications.forEach(function(aApp) {
       rdf += "<em:targetApplication><Description>\n";
