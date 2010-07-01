@@ -1580,7 +1580,27 @@ nsViewManager::FlushPendingInvalidates()
 {
   NS_ASSERTION(IsRootVM(), "Must be root VM for this to be called!\n");
   NS_ASSERTION(mUpdateBatchCnt == 0, "Must not be in an update batch!");
+  // XXXbz this is probably not quite OK yet, if callers can explicitly
+  // DisableRefresh while we have an event posted.
+  // NS_ASSERTION(mRefreshEnabled, "How did we get here?");
 
+  // Let all the view observers of all viewmanagers in this tree know that
+  // we're about to "paint" (this lets them get in their invalidates now so
+  // we don't go through two invalidate-processing cycles).
+  NS_ASSERTION(gViewManagers, "Better have a viewmanagers array!");
+
+  // Make sure to not send WillPaint notifications while scrolling
+  if (mScrollCnt == 0) {
+    // Disable refresh while we notify our view observers, so that if they do
+    // view update batches we don't reenter this code and so that we batch
+    // all of them together.  We don't use
+    // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
+    // exact code, but we want the effect of a single big update batch.
+    ++mUpdateBatchCnt;
+    CallWillPaintOnObservers();
+    --mUpdateBatchCnt;
+  }
+  
   if (mHasPendingUpdates) {
     ProcessPendingUpdates(mRootView, PR_TRUE);
     mHasPendingUpdates = PR_FALSE;
