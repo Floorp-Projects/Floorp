@@ -53,13 +53,21 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  /*
+  /**
+   * Constructs a gfxPattern of the paint server rendering.
+   */
+  virtual already_AddRefed<gfxPattern>
+    GetPaintServerPattern(nsIFrame *aSource,
+                          float aOpacity,
+                          const gfxRect *aOverrideBounds = nsnull) = 0;
+
+  /**
    * Configure paint server prior to rendering
    * @return PR_FALSE to skip rendering
    */
   virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
-                                  float aOpacity) = 0;
+                                  float aOpacity);
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
