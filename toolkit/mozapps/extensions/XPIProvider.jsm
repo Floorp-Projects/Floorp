@@ -3770,8 +3770,8 @@ var XPIDatabase = {
  *         An optional icon for the add-on
  * @param  aVersion
  *         An optional version for the add-on
- * @param  aInfoURL
- *         An optional URL of release notes for the add-on
+ * @param  aReleaseNotesURI
+ *         An optional nsIURI of release notes for the add-on
  * @param  aExistingAddon
  *         The add-on this install will update if known
  * @param  aLoadGroup
@@ -3780,10 +3780,12 @@ var XPIDatabase = {
  *         or the add-on does not contain an valid install manifest
  */
 function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
-                      aIconURL, aVersion, aInfoURL, aExistingAddon, aLoadGroup) {
+                      aIconURL, aVersion, aReleaseNotesURI, aExistingAddon,
+                      aLoadGroup) {
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = aInstallLocation;
   this.sourceURI = aUrl;
+  this.releaseNotesURI = aReleaseNotesURI;
   this.hash = aHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
@@ -3891,7 +3893,7 @@ AddonInstall.prototype = {
   type: null,
   version: null,
   iconURL: null,
-  infoURL: null,
+  releaseNotesURI: null,
   sourceURI: null,
   file: null,
   certificate: null,
@@ -4035,6 +4037,8 @@ AddonInstall.prototype = {
 
       this.addon = loadManifestFromZipReader(zipreader);
       this.addon.sourceURI = this.sourceURI.spec;
+      if (this.releaseNotesURI)
+        this.addon.releaseNotesURI = this.releaseNotesURI.spec;
       this.addon._install = this;
 
       this.name = this.addon.selectedLocale.name;
@@ -4540,12 +4544,17 @@ AddonInstall.createDownload = function(aCallback, aUri, aHash, aName, aIconURL,
  */
 AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
   let url = NetUtil.newURI(aUpdate.updateURL);
-  let infoURL = null;
-  if (aUpdate.updateInfoURL)
-    infoURL = escapeAddonURI(aAddon, aUpdate.updateInfoURL);
+  let releaseNotesURI = null;
+  try {
+    if (aUpdate.updateInfoURL)
+      releaseNotesURI = NetUtil.newURI(escapeAddonURI(aAddon, aUpdate.updateInfoURL));
+  }
+  catch (e) {
+    // If the releaseNotesURI cannot be parsed then just ignore it.
+  }
   new AddonInstall(aCallback, aAddon._installLocation, url, aUpdate.updateHash,
                    aAddon.selectedLocale.name, aAddon.type,
-                   aAddon.iconURL, aUpdate.version, infoURL, aAddon);
+                   aAddon.iconURL, aUpdate.version, releaseNotesURI, aAddon);
 };
 
 /**
@@ -4555,7 +4564,7 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
  *         The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
-  ["name", "type", "version", "iconURL", "infoURL", "file", "state", "error",
+  ["name", "type", "version", "iconURL", "releaseNotesURI", "file", "state", "error",
    "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function() aInstall[aProp]);
   }, this);
