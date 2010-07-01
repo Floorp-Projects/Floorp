@@ -41,21 +41,21 @@
 #include "TabParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
-#include "mozilla/IHistory.h"
 
 #include "nsIObserverService.h"
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDocShellCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
-#include "nsChromeRegistry.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using mozilla::MonitorAutoEnter;
+
+namespace {
+PRBool gSingletonDied = PR_FALSE;
+}
 
 namespace mozilla {
 namespace dom {
@@ -65,10 +65,7 @@ ContentProcessParent* ContentProcessParent::gSingleton;
 ContentProcessParent*
 ContentProcessParent::GetSingleton()
 {
-    if (gSingleton && !gSingleton->IsAlive())
-        gSingleton = nsnull;
-
-    if (!gSingleton) {
+    if (!gSingleton && !gSingletonDied) {
         nsRefPtr<ContentProcessParent> parent = new ContentProcessParent();
         if (parent) {
             nsCOMPtr<nsIObserverService> obs =
@@ -105,8 +102,6 @@ ContentProcessParent::ActorDestroy(ActorDestroyReason why)
         threadInt->SetObserver(mOldObserver);
     if (mRunToCompletionDepth)
         mRunToCompletionDepth = 0;
-
-    mIsAlive = false;
 }
 
 TabParent*
@@ -130,30 +125,19 @@ ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
 ContentProcessParent::ContentProcessParent()
     : mMonitor("ContentProcessParent::mMonitor")
     , mRunToCompletionDepth(0)
-    , mIsAlive(true)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
     mSubprocess->AsyncLaunch();
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
-
-    nsChromeRegistry* chromeRegistry = nsChromeRegistry::GetService();
-    chromeRegistry->SendRegisteredChrome(this);
 }
 
 ContentProcessParent::~ContentProcessParent()
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    //If the previous content process has died, a new one could have
-    //been started since.
-    if (gSingleton == this)
-        gSingleton = nsnull;
-}
-
-bool
-ContentProcessParent::IsAlive()
-{
-    return mIsAlive;
+    NS_ASSERTION(gSingleton == this, "More than one singleton?!");
+    gSingletonDied = PR_TRUE;
+    gSingleton = nsnull;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(ContentProcessParent,
@@ -234,23 +218,6 @@ ContentProcessParent::RequestRunToCompletion()
     }
 
     return !!mRunToCompletionDepth;
-}
-
-bool
-ContentProcessParent::RecvStartVisitedQuery(const nsCString& aURISpec, nsresult* rv)
-{
-    // reconstruct our IPDL-passed nsIURI
-    nsCOMPtr<nsIURI> newURI;
-    *rv = NS_NewURI(getter_AddRefs(newURI), aURISpec);
-    if (NS_SUCCEEDED(*rv)) {
-        nsCOMPtr<IHistory> history = do_GetService(NS_IHISTORY_CONTRACTID);
-        if (history) {
-            *rv = history->RegisterVisitedCallback(newURI, nsnull);
-        }
-    } else {
-        *rv = NS_ERROR_UNEXPECTED; 
-    }  
-    return true;
 }
 
 /* void onDispatchedEvent (in nsIThreadInternal thread); */

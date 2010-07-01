@@ -186,11 +186,7 @@ nsWindow::nsWindow()
     mSizeState           = nsSizeMode_Normal;
     mPluginType          = PluginType_NONE;
     mQCursor             = Qt::ArrowCursor;
-    mNeedsResize         = PR_FALSE;
-    mNeedsMove           = PR_FALSE;
-    mListenForResizes    = PR_FALSE;
-    mNeedsShow           = PR_FALSE;
-
+    
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
 
@@ -215,8 +211,6 @@ _depth_to_gfximage_format(PRInt32 aDepth)
         return gfxASurface::ImageFormatARGB32;
     case 24:
         return gfxASurface::ImageFormatRGB24;
-    case 16:
-        return gfxASurface::ImageFormatRGB16;
     default:
         return gfxASurface::ImageFormatUnknown;
     }
@@ -449,7 +443,7 @@ nsWindow::SetModal(PRBool aModal)
 NS_IMETHODIMP
 nsWindow::IsVisible(PRBool & aState)
 {
-    aState = mIsShown;
+    aState = mWidget ? mWidget->isVisible() : PR_FALSE;
     return NS_OK;
 }
 
@@ -669,8 +663,6 @@ nsWindow::Invalidate(const nsIntRect &aRect,
 
     if (!mWidget)
         return NS_OK;
-
-    mDirtyScrollArea = mDirtyScrollArea.united(QRect(aRect.x, aRect.y, aRect.width, aRect.height));
 
     mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
 
@@ -1122,8 +1114,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
                        gBufferImage->Width(),
                        gBufferImage->Height(),
                        gBufferImage->Stride(),
-                       gBufferImage->Format() == gfxASurface::ImageFormatRGB16 ?
-                           QImage::Format_RGB16 : QImage::Format_RGB32);
+                       QImage::Format_RGB32);
             aPainter->drawImage(QPoint(rect.x, rect.y), img,
                                 QRect(0, 0, rect.width, rect.height));
         }
@@ -1834,9 +1825,10 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
 
-    mNeedsResize = PR_FALSE;
-
     mWidget->resize( aWidth, aHeight);
+
+    if (aRepaint)
+        mWidget->update();
 }
 
 void
@@ -1847,10 +1839,10 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
 
-    mNeedsResize = PR_FALSE;
-    mNeedsMove = PR_FALSE;
-
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
+
+    if (aRepaint)
+        mWidget->update();
 }
 
 void
@@ -2298,18 +2290,11 @@ nsWindow::Show(PRBool aState)
     if (!mWidget)
         return NS_OK;
 
-    if (aState) {
-        if (mNeedsMove) {
-            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-                         PR_FALSE);
-        } else if (mNeedsResize) {
-            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
-        }
-    }
+    mWidget->setVisible(aState);
+    if (mWindowType == eWindowType_popup && aState)
+        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
 
-    NativeShow(aState);
- 
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2321,33 +2306,16 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     if (!mWidget)
         return NS_OK;
 
-    if (mIsShown) {
-        if (mIsTopLevel || mNeedsShow)
-            NativeResize(mBounds.x, mBounds.y,
-                         mBounds.width, mBounds.height, aRepaint);
-        else
-            NativeResize(mBounds.width, mBounds.height, aRepaint);
+    mWidget->resize(aWidth, aHeight);
 
-        // Does it need to be shown because it was previously insane?
-        if (mNeedsShow)
-            NativeShow(PR_TRUE);
-    }
-    else if (mListenForResizes) {
-        // For widgets that we listen for resizes for (widgets created
-        // with native parents) we apparently _always_ have to resize.  I
-        // dunno why, but apparently we're lame like that.
-        NativeResize(aWidth, aHeight, aRepaint);
-    }
-    else {
-        mNeedsResize = PR_TRUE;
+    if (mIsTopLevel) {
+        QWidget *widget = GetViewWidget();
+        if (widget)
+            widget->resize(aWidth, aHeight);
     }
 
-    // synthesize a resize event if this isn't a toplevel
-    if (mIsTopLevel || mListenForResizes) {
-        nsIntRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
-        nsEventStatus status;
-        DispatchResizeEvent(rect, status);
-    }
+    if (aRepaint)
+        mWidget->update();
 
     return NS_OK;
 }
@@ -2366,34 +2334,17 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     if (!mWidget)
         return NS_OK;
 
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        // Yep?  Resize the window
-        NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-        // Does it need to be shown because it was previously insane?
-        if (mNeedsShow)
-            NativeShow(PR_TRUE);
-    }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown
-    else if (mListenForResizes) {
-        // For widgets that we listen for resizes for (widgets created
-        // with native parents) we apparently _always_ have to resize.  I
-        // dunno why, but apparently we're lame like that.
-        NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-    }
-    else {
-        mNeedsResize = PR_TRUE;
-        mNeedsMove = PR_TRUE;
+    mWidget->setGeometry(aX, aY, aWidth, aHeight);
+
+    if (mIsTopLevel) {
+        QWidget *widget = GetViewWidget();
+        if (widget)
+            widget->resize(aWidth, aHeight);
     }
 
-    if (mIsTopLevel || mListenForResizes) {
-        // synthesize a resize event
-        nsIntRect rect(aX, aY, aWidth, aHeight);
-        nsEventStatus status;
-       DispatchResizeEvent(rect, status);
-    }
+    if (aRepaint)
+        mWidget->update();
+
     return NS_OK;
 }
 
