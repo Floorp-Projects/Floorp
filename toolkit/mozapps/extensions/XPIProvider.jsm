@@ -551,8 +551,7 @@ function extractFiles(aZipFile, aDir) {
         }
         catch (e) {
           ERROR("extractFiles: failed to create target directory for " +
-                "extraction file = " + target.path + ", exception = " + e +
-                "\n");
+                "extraction file = " + target.path + ", exception = " + e);
         }
       }
     }
@@ -4123,7 +4122,7 @@ AddonInstall.prototype = {
    *         The error code to pass to the listeners
    */
   downloadFailed: function(aReason, aError) {
-    WARN("Download failed: " + aError + "\n");
+    WARN("Download failed: " + aError);
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
     this.error = aReason;
     XPIProvider.removeActiveInstall(this);
