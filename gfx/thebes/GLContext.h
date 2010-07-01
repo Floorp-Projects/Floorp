@@ -41,6 +41,8 @@
 #ifndef GLCONTEXT_H_
 #define GLCONTEXT_H_
 
+#include <stdio.h>
+
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -511,6 +513,21 @@ public:
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
 };
+
+inline void
+GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
+{
+  GLenum err = aCx->fGetError();
+  if (err) {
+    fprintf(stderr, "GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
+  }
+}
+
+#ifdef DEBUG
+#  define DEBUG_GL_ERROR_CHECK(cx) mozilla::gl::GLDebugPrintError(cx, __FILE__, __LINE__)
+#else
+#  define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
+#endif
 
 } /* namespace gl */
 } /* namespace mozilla */
