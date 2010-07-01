@@ -41,10 +41,8 @@
  * This test will ensure any transactions service that is going to create
  * a new item, won't replace the GUID when undoing and redoing the action.
  */
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-            getService(Ci.nsINavBookmarksService);
-var txnsvc = Cc["@mozilla.org/browser/placesTransactionsService;1"].
-             getService(Ci.nsIPlacesTransactionsService);
+var bmsvc = PlacesUtils.bookmarks;
+var txnsvc = PlacesUIUtils.ptm;
 
 function test_GUID_persistance(aTxn) {
   aTxn.doTransaction();

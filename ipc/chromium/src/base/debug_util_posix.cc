@@ -6,13 +6,15 @@
 #include "base/debug_util.h"
 
 #include <errno.h>
-#include <execinfo.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <sys/sysctl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifndef ANDROID
+#include <execinfo.h>
+#include <sys/sysctl.h>
+#endif
 
 #include "base/basictypes.h"
 #include "base/eintr_wrapper.h"
@@ -117,7 +119,11 @@ StackTrace::StackTrace() {
   const int kMaxCallers = 256;
 
   void* callers[kMaxCallers];
+#ifndef ANDROID
   int count = backtrace(callers, kMaxCallers);
+#else
+  int count = 0;
+#endif
 
   // Though the backtrace API man page does not list any possible negative
   // return values, we still still exclude them because they would break the
@@ -132,7 +138,9 @@ StackTrace::StackTrace() {
 
 void StackTrace::PrintBacktrace() {
   fflush(stderr);
+#ifndef ANDROID
   backtrace_symbols_fd(&trace_[0], trace_.size(), STDERR_FILENO);
+#endif
 }
 
 void StackTrace::OutputToStream(std::ostream* os) {

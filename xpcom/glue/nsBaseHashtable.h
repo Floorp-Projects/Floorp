@@ -123,7 +123,7 @@ public:
    */
   PRBool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const
   {
-    EntryType* ent = GetEntry(aKey);
+    EntryType* ent = this->GetEntry(aKey);
 
     if (!ent)
       return PR_FALSE;
@@ -145,7 +145,7 @@ public:
    */
   UserDataType Get(KeyType aKey) const
   {
-    EntryType* ent = GetEntry(aKey);
+    EntryType* ent = this->GetEntry(aKey);
     if (!ent)
       return NULL;
 
@@ -160,7 +160,7 @@ public:
    */
   PRBool Put(KeyType aKey, UserDataType aData)
   {
-    EntryType* ent = PutEntry(aKey);
+    EntryType* ent = this->PutEntry(aKey);
 
     if (!ent)
       return PR_FALSE;
@@ -174,7 +174,7 @@ public:
    * remove the data for the associated key
    * @param aKey the key to remove from the hashtable
    */
-  void Remove(KeyType aKey) { RemoveEntry(aKey); }
+  void Remove(KeyType aKey) { this->RemoveEntry(aKey); }
 
   /**
    * function type provided by the application for enumeration.

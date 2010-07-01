@@ -65,19 +65,15 @@ treechildren::-moz-tree-row {
   background-color: -moz-field;
 }
 
-treechildren::-moz-tree-row(multicol, odd) {
- background-color: -moz-oddtreerow;
+treechildren:not(.autocomplete-treebody)::-moz-tree-row(multicol, odd) {
+  background-color: -moz-oddtreerow;
 }
 
-treechildren::-moz-tree-row(selected),
-treechildren::-moz-tree-row(odd, selected),
-treechildren::-moz-tree-row(multicol, odd, selected) {
+treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
   background-color: -moz-mac-secondaryhighlight;
 }
 
-treechildren::-moz-tree-row(selected, focus), 
-treechildren::-moz-tree-row(odd, selected, focus),
-treechildren::-moz-tree-row(multicol, odd, selected, focus) {
+treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus) {
   background-color: Highlight;
   color: HighlightText;
 }

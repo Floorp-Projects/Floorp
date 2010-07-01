@@ -157,6 +157,7 @@
 #include "nsPICommandUpdater.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWebBrowserChrome2.h"
+#include "nsITabChild.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -978,8 +979,17 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
       if (NS_SUCCEEDED(rv) && treeOwner)
         return treeOwner->QueryInterface(aIID, aSink);
     }
+    else if (aIID.Equals(NS_GET_IID(nsITabChild))) {
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      nsresult rv = GetTreeOwner(getter_AddRefs(treeOwner));
+      if (NS_SUCCEEDED(rv) && treeOwner) {
+        nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(treeOwner);
+        if (ir)
+          return ir->GetInterface(aIID, aSink);
+      }
+    }
     else {
-        return nsDocLoader::GetInterface(aIID, aSink);
+      return nsDocLoader::GetInterface(aIID, aSink);
     }
 
     NS_IF_ADDREF(((nsISupports *) * aSink));
@@ -9469,19 +9479,18 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
     nsCOMPtr<nsIInputStream> inputStream;
     nsCOMPtr<nsIURI> referrerURI;
     nsCOMPtr<nsISupports> cacheKey;
-    nsCOMPtr<nsISupports> cacheToken;
     nsCOMPtr<nsISupports> owner = aOwner;
     PRBool expired = PR_FALSE;
     PRBool discardLayoutState = PR_FALSE;
+    nsCOMPtr<nsICachingChannel> cacheChannel;
     if (aChannel) {
-        nsCOMPtr<nsICachingChannel>
-            cacheChannel(do_QueryInterface(aChannel));
-        /* If there is a caching channel, get the Cache Key  and store it 
+        cacheChannel = do_QueryInterface(aChannel);
+
+        /* If there is a caching channel, get the Cache Key and store it
          * in SH.
          */
         if (cacheChannel) {
             cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
-            cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
         }
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
         
@@ -9517,17 +9526,13 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
     if (discardLayoutState) {
         entry->SetSaveLayoutStateFlag(PR_FALSE);
     }
-    if (cacheToken) {
-        // Check if the page has expired from cache 
-        nsCOMPtr<nsICacheEntryInfo> cacheEntryInfo(do_QueryInterface(cacheToken));
-        if (cacheEntryInfo) {        
-            PRUint32 expTime;         
-            cacheEntryInfo->GetExpirationTime(&expTime);         
-            PRUint32 now = PRTimeToSeconds(PR_Now());                  
-            if (expTime <=  now)            
-                expired = PR_TRUE;         
-         
-        }
+    if (cacheChannel) {
+        // Check if the page has expired from cache
+        PRUint32 expTime = 0;
+        cacheChannel->GetCacheTokenExpirationTime(&expTime);
+        PRUint32 now = PRTimeToSeconds(PR_Now());
+        if (expTime <=  now)
+            expired = PR_TRUE;
     }
     if (expired)
         entry->SetExpirationStatus(PR_TRUE);

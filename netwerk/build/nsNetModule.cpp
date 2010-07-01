@@ -37,6 +37,11 @@
 
 #include "necko-config.h"
 
+#ifdef MOZ_IPC
+#define ALLOW_LATE_NSHTTP_H_INCLUDE 1
+#include "base/basictypes.h"
+#endif 
+
 #include "nsCOMPtr.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ModuleUtils.h"
@@ -168,9 +173,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 
 #ifdef NECKO_COOKIES
 #include "nsCookieService.h"
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsICookieService,
+  nsCookieService::GetXPCOMSingleton)
 #endif
-
 
 ///////////////////////////////////////////////////////////////////////////////
 #ifdef NECKO_WIFI
@@ -807,8 +812,8 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_APPLICATIONCACHENAMESPACE_CID, false, NULL, nsApplicationCacheNamespaceConstructor },
 #endif
 #ifdef NECKO_COOKIES
-    { &kNS_COOKIEMANAGER_CID, false, NULL, nsCookieServiceConstructor },
-    { &kNS_COOKIESERVICE_CID, false, NULL, nsCookieServiceConstructor },
+    { &kNS_COOKIEMANAGER_CID, false, NULL, nsICookieServiceConstructor },
+    { &kNS_COOKIESERVICE_CID, false, NULL, nsICookieServiceConstructor },
 #endif
 #ifdef NECKO_WIFI
     { &kNS_WIFI_MONITOR_COMPONENT_CID, false, NULL, nsWifiMonitorConstructor },

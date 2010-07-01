@@ -124,6 +124,20 @@ NS_IMETHODIMP nsSmartCardEvent::SetTrusted(PRBool aResult)
   return mPrivate->SetTrusted(aResult);
 }
 
+void
+nsSmartCardEvent::Serialize(IPC::Message* aMsg,
+                            PRBool aSerializeInterfaceType)
+{
+  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
+  mPrivate->Serialize(aMsg, aSerializeInterfaceType);
+}
+
+PRBool
+nsSmartCardEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
+{
+  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
+  return mPrivate->Deserialize(aMsg, aIter);
+}
 
 // IDOMNSEvent maps
 NS_IMETHODIMP nsSmartCardEvent::GetOriginalTarget(nsIDOMEventTarget * *aOriginalTarget)

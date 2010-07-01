@@ -52,7 +52,7 @@ interface nsIFrameMessageListener : nsISupports
    *     name:    %message name%,
    *     sync:    %true or false%.
    *     json:    %json object or null%,
-   *     objects: %array of cpow or null, always null if sync is false%
+   *     objects: %array of handles or null, always null if sync is false%
    *   }
    * @note objects property isn't implemented yet.
    *

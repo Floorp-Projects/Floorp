@@ -64,10 +64,6 @@
 #include "htypes.hxx"
 #include "csutil.hxx"
 
-#ifdef MOZILLA_CLIENT
-#include "nscore.h" // for mozalloc headers
-#endif
-
 const w_char W_VLINE = { '\0', '|' };
 
 SuggestMgr::SuggestMgr(const char * tryme, int maxn, 

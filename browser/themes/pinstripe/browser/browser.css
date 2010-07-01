@@ -1810,7 +1810,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin-top: -3px;
   margin-left: -23px;
   min-width: 280px;
-  -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat; 
+  -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat;
 }
 
 #notification-popup {
@@ -1823,7 +1823,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #geo-notification-icon {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
   width: 16px;
   height: 16px;
   margin: 0 2px;
@@ -1840,7 +1840,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
 }
 
 #identity-popup-container,

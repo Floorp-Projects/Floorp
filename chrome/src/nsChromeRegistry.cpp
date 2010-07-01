@@ -40,96 +40,47 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsChromeRegistry.h"
+#include "nsChromeRegistryChrome.h"
+#ifdef MOZ_IPC
+#include "nsChromeRegistryContent.h"
+#endif
 
 #include <string.h>
 
 #include "prio.h"
 #include "prprf.h"
-#if defined(XP_WIN)
-#include <windows.h>
-#elif defined(XP_MACOSX)
-#include <CoreServices/CoreServices.h>
-#elif defined(MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif
 
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsArrayEnumerator.h"
-#include "nsComponentManager.h"
-#include "nsStringEnumerator.h"
-#include "nsEnumeratorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 #include "nsEscape.h"
-#include "nsInt64.h"
 #include "nsLayoutCID.h"
-#include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsWidgetsCID.h"
-#include "nsXPCOMCIDInternal.h"
-#include "nsXPIDLString.h"
-#include "nsXULAppAPI.h"
-#include "nsTextFormatter.h"
-#include "nsZipArchive.h"
 
-#include "nsIAtom.h"
-#include "nsICommandLine.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIConsoleService.h"
-#include "nsIDirectoryService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocShell.h"
-#include "nsIDocumentObserver.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIFileChannel.h"
-#include "nsIFileURL.h"
 #include "nsIIOService.h"
 #include "nsIJARProtocolHandler.h"
-#include "nsIJARURI.h"
-#include "nsILocalFile.h"
-#include "nsILocaleService.h"
-#include "nsILookAndFeel.h"
 #include "nsIObserverService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIPresShell.h"
 #include "nsIProtocolHandler.h"
-#include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
-#include "nsIServiceManager.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIStyleSheet.h"
-#include "nsISupportsArray.h"
-#include "nsIVersionComparator.h"
 #include "nsIWindowMediator.h"
-#include "nsIXPConnect.h"
-#include "nsIXULAppInfo.h"
-#include "nsIXULRuntime.h"
-
-#include "mozilla/Omnijar.h"
-
-#define UILOCALE_CMD_LINE_ARG "UILocale"
-
-#define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
-#define SELECTED_LOCALE_PREF "general.useragent.locale"
-#define SELECTED_SKIN_PREF   "general.skins.selectedSkin"
-
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void
-LogMessage(const char* aMsg, ...)
+void
+nsChromeRegistry::LogMessage(const char* aMsg, ...)
 {
   nsCOMPtr<nsIConsoleService> console 
     (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -147,9 +98,9 @@ LogMessage(const char* aMsg, ...)
   PR_smprintf_free(formatted);
 }
 
-static void
-LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
-                      const char* aMsg, ...)
+void
+nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
+                                        const char* aMsg, ...)
 {
   nsresult rv;
 
@@ -184,242 +135,8 @@ LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
   console->LogMessage(error);
 }
 
-// We use a "best-fit" algorithm for matching locales and themes. 
-// 1) the exact selected locale/theme
-// 2) (locales only) same language, different country
-//    e.g. en-GB is the selected locale, only en-US is available
-// 3) any available locale/theme
-
-/**
- * Match the language-part of two lang-COUNTRY codes, hopefully but
- * not guaranteed to be in the form ab-CD or abz-CD. "ab" should also
- * work, any other garbage-in will produce undefined results as long
- * as it does not crash.
- */
-static PRBool
-LanguagesMatch(const nsACString& a, const nsACString& b)
-{
-  if (a.Length() < 2 || b.Length() < 2)
-    return PR_FALSE;
-
-  nsACString::const_iterator as, ae, bs, be;
-  a.BeginReading(as);
-  a.EndReading(ae);
-  b.BeginReading(bs);
-  b.EndReading(be);
-
-  while (*as == *bs) {
-    if (*as == '-')
-      return PR_TRUE;
- 
-    ++as; ++bs;
-
-    // reached the end
-    if (as == ae && bs == be)
-      return PR_TRUE;
-
-    // "a" is short
-    if (as == ae)
-      return (*bs == '-');
-
-    // "b" is short
-    if (bs == be)
-      return (*as == '-');
-  }
-
-  return PR_FALSE;
-}
-
-static PRBool
-CanLoadResource(nsIURI* aResourceURI)
-{
-  PRBool isLocalResource = PR_FALSE;
-  (void)NS_URIChainHasFlags(aResourceURI,
-                            nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                            &isLocalResource);
-  return isLocalResource;
-}
-
-nsChromeRegistry::ProviderEntry*
-nsChromeRegistry::nsProviderArray::GetProvider(const nsACString& aPreferred, MatchType aType)
-{
-  PRInt32 i = mArray.Count();
-  if (!i)
-    return nsnull;
-
-  ProviderEntry* found = nsnull;  // Only set if we find a partial-match locale
-  ProviderEntry* entry;
-
-  while (i--) {
-    entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    if (aPreferred.Equals(entry->provider))
-      return entry;
-
-    if (aType != LOCALE)
-      continue;
-
-    if (LanguagesMatch(aPreferred, entry->provider)) {
-      found = entry;
-      continue;
-    }
-
-    if (!found && entry->provider.EqualsLiteral("en-US"))
-      found = entry;
-  }
-
-  if (!found && aType != EXACT)
-    return entry;
-
-  return found;
-}
-
-nsIURI*
-nsChromeRegistry::nsProviderArray::GetBase(const nsACString& aPreferred, MatchType aType)
-{
-  ProviderEntry* provider = GetProvider(aPreferred, aType);
-
-  if (!provider)
-    return nsnull;
-
-  return provider->baseURI;
-}
-
-const nsACString&
-nsChromeRegistry::nsProviderArray::GetSelected(const nsACString& aPreferred, MatchType aType)
-{
-  ProviderEntry* entry = GetProvider(aPreferred, aType);
-
-  if (entry)
-    return entry->provider;
-
-  return EmptyCString();
-}
-
-void
-nsChromeRegistry::nsProviderArray::SetBase(const nsACString& aProvider, nsIURI* aBaseURL)
-{
-  ProviderEntry* provider = GetProvider(aProvider, EXACT);
-
-  if (provider) {
-    provider->baseURI = aBaseURL;
-    return;
-  }
-
-  // no existing entries, add a new one
-  provider = new ProviderEntry(aProvider, aBaseURL);
-  if (!provider)
-    return; // It's safe to silently fail on OOM
-
-  mArray.AppendElement(provider);
-}
-
-void
-nsChromeRegistry::nsProviderArray::EnumerateToArray(nsTArray<nsCString> *a)
-{
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    ProviderEntry *entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    a->AppendElement(entry->provider);
-  }
-}
-
-void
-nsChromeRegistry::nsProviderArray::Clear()
-{
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    ProviderEntry* entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    delete entry;
-  }
-
-  mArray.Clear();
-}
-
-nsChromeRegistry::PackageEntry::PackageEntry(const nsACString& aPackage) :
-  package(aPackage), flags(0)
-{
-}
-
-PLHashNumber
-nsChromeRegistry::HashKey(PLDHashTable *table, const void *key)
-{
-  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
-  return HashString(str);
-}
-
-PRBool
-nsChromeRegistry::MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                           const void *key)
-{
-  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
-  const PackageEntry* pentry = static_cast<const PackageEntry*>(entry);
-  return str.Equals(pentry->package);
-}
-
-void
-nsChromeRegistry::ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  PackageEntry* pentry = static_cast<PackageEntry*>(entry);
-  pentry->~PackageEntry();
-}
-
-PRBool
-nsChromeRegistry::InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                            const void *key)
-{
-  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
-
-  new (entry) PackageEntry(str);
-  return PR_TRUE;
-}
-
-const PLDHashTableOps
-nsChromeRegistry::kTableOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  HashKey,
-  MatchKey,
-  PL_DHashMoveEntryStub,
-  ClearEntry,
-  PL_DHashFinalizeStub,
-  InitEntry
-};
-
-void
-nsChromeRegistry::OverlayListEntry::AddURI(nsIURI* aURI)
-{
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    PRBool equals;
-    if (NS_SUCCEEDED(aURI->Equals(mArray[i], &equals)) && equals)
-        return;
-  }
-
-  mArray.AppendObject(aURI);
-}
-
-void
-nsChromeRegistry::OverlayListHash::Add(nsIURI* aBase, nsIURI* aOverlay)
-{
-  OverlayListEntry* entry = mTable.PutEntry(aBase);
-  if (entry)
-    entry->AddURI(aOverlay);
-}
-
-const nsCOMArray<nsIURI>*
-nsChromeRegistry::OverlayListHash::GetArray(nsIURI* aBase)
-{
-  OverlayListEntry* entry = mTable.GetEntry(aBase);
-  if (!entry)
-    return nsnull;
-
-  return &entry->mArray;
-}
-
 nsChromeRegistry::~nsChromeRegistry()
 {
-  if (mPackagesHash.ops)
-    PL_DHashTableFinish(&mPackagesHash);
   gChromeRegistry = nsnull;
 }
 
@@ -441,27 +158,25 @@ NS_IMPL_RELEASE(nsChromeRegistry)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
 
-static nsresult
-getUILangCountry(nsACString& aUILang)
+already_AddRefed<nsIChromeRegistry>
+nsChromeRegistry::GetService()
 {
-  nsresult rv;
-
-  nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString uiLang;
-  rv = localeService->GetLocaleComponentForUserAgent(uiLang);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  CopyUTF16toUTF8(uiLang, aUILang);
-  return NS_OK;
+  if (!nsChromeRegistry::gChromeRegistry)
+  {
+    // We don't actually want this ref, we just want the service to
+    // initialize if it hasn't already.
+    nsCOMPtr<nsIChromeRegistry> reg(
+        do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+    if (!gChromeRegistry)
+      return NULL;
+  }
+  NS_IF_ADDREF(gChromeRegistry);
+  return gChromeRegistry;
 }
 
 nsresult
 nsChromeRegistry::Init()
 {
-  nsresult rv;
-
   // Check to see if necko and the JAR protocol handler are registered yet
   // if not, somebody is doing work during XPCOM registration that they
   // shouldn't be doing. See bug 292549, where JS components are trying
@@ -469,17 +184,8 @@ nsChromeRegistry::Init()
   NS_ASSERTION(nsCOMPtr<nsIIOService>(mozilla::services::GetIOService()),
                "I/O service not registered or available early enough?");
 
-  if (!PL_DHashTableInit(&mPackagesHash, &kTableOps,
-                         nsnull, sizeof(PackageEntry), 16))
+  if (!mOverrideTable.Init())
     return NS_ERROR_FAILURE;
-
-  if (!mOverlayHash.Init() ||
-      !mStyleHash.Init() ||
-      !mOverrideTable.Init())
-    return NS_ERROR_FAILURE;
-
-  mSelectedLocale = NS_LITERAL_CSTRING("en-US");
-  mSelectedSkin = NS_LITERAL_CSTRING("classic/1.0");
 
   // This initialization process is fairly complicated and may cause reentrant
   // getservice calls to resolve chrome URIs (especially locale files). We
@@ -487,75 +193,7 @@ nsChromeRegistry::Init()
   // before we are actually fully initialized.
   gChromeRegistry = this;
 
-  PRBool safeMode = PR_FALSE;
-  nsCOMPtr<nsIXULRuntime> xulrun (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
-  if (xulrun)
-    xulrun->GetInSafeMode(&safeMode);
-  
-  nsCOMPtr<nsIPrefService> prefserv (do_GetService(NS_PREFSERVICE_CONTRACTID));
-  nsCOMPtr<nsIPrefBranch> prefs;
-
-  if (safeMode)
-    prefserv->GetDefaultBranch(nsnull, getter_AddRefs(prefs));
-  else
-    prefs = do_QueryInterface(prefserv);
-
-  if (!prefs) {
-    NS_WARNING("Could not get pref service!");
-  }
-  else {
-    nsXPIDLCString provider;
-    rv = prefs->GetCharPref(SELECTED_SKIN_PREF, getter_Copies(provider));
-    if (NS_SUCCEEDED(rv))
-      mSelectedSkin = provider;
-
-    SelectLocaleFromPref(prefs);
-
-    nsCOMPtr<nsIPrefBranch2> prefs2 (do_QueryInterface(prefs));
-    if (prefs2) {
-      rv = prefs2->AddObserver(MATCH_OS_LOCALE_PREF, this, PR_TRUE);
-      rv = prefs2->AddObserver(SELECTED_LOCALE_PREF, this, PR_TRUE);
-      rv = prefs2->AddObserver(SELECTED_SKIN_PREF, this, PR_TRUE);
-    }
-  }
-
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService) {
-    obsService->AddObserver(this, "command-line-startup", PR_TRUE);
-    obsService->AddObserver(this, "profile-initial-state", PR_TRUE);
-  }
-
   mInitialized = PR_TRUE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChromeRegistry::CheckForOSAccessibility()
-{
-  nsresult rv;
-
-  nsCOMPtr<nsILookAndFeel> lookAndFeel (do_GetService(kLookAndFeelCID));
-  if (lookAndFeel) {
-    PRInt32 useAccessibilityTheme = 0;
-
-    rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_UseAccessibilityTheme,
-                                useAccessibilityTheme);
-
-    if (NS_SUCCEEDED(rv) && useAccessibilityTheme) {
-      /* Set the skin to classic and remove pref observers */
-      if (!mSelectedSkin.EqualsLiteral("classic/1.0")) {
-        mSelectedSkin.AssignLiteral("classic/1.0");
-        RefreshSkins();
-      }
-
-      nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefs) {
-        prefs->RemoveObserver(SELECTED_SKIN_PREF, this);
-      }
-    }
-  }
 
   return NS_OK;
 }
@@ -691,22 +329,16 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   rv = GetProviderAndPath(chromeURL, provider, path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (nsACString&) package,
-                                                    PL_DHASH_LOOKUP));
+  nsIURI* baseURI;
+  rv = GetBaseURIFromPackage(package, provider, path, &baseURI);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
-    if (!mInitialized)
-      return NS_ERROR_NOT_INITIALIZED;
+  PRUint32 flags;
+  rv = GetFlagsFromPackage(package, &flags);
+  if (NS_FAILED(rv))
+    return rv;
 
-    LogMessage("No chrome package registered for chrome://%s/%s/%s",
-               package.get(), provider.get(), path.get());
-
-    return NS_ERROR_FAILURE;
-  }
-
-  if (entry->flags & PackageEntry::PLATFORM_PACKAGE) {
+  if (flags & PLATFORM_PACKAGE) {
 #if defined(XP_WIN) || defined(XP_OS2)
     path.Insert("win/", 0);
 #elif defined(XP_MACOSX)
@@ -714,17 +346,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 #else
     path.Insert("unix/", 0);
 #endif
-  }
-
-  nsIURI* baseURI = nsnull;
-  if (provider.EqualsLiteral("locale")) {
-    baseURI = entry->locales.GetBase(mSelectedLocale, nsProviderArray::LOCALE);
-  }
-  else if (provider.EqualsLiteral("skin")) {
-    baseURI = entry->skins.GetBase(mSelectedSkin, nsProviderArray::ANY);
-  }
-  else if (provider.EqualsLiteral("content")) {
-    baseURI = entry->baseURI;
   }
 
   if (!baseURI) {
@@ -735,102 +356,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 
   return NS_NewURI(aResult, path, nsnull, baseURI);
 }
-
-nsresult
-nsChromeRegistry::GetSelectedLocale(const nsACString& aPackage, nsACString& aLocale)
-{
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                       & aPackage,
-                                                       PL_DHASH_LOOKUP));
-
-  if (PL_DHASH_ENTRY_IS_FREE(entry))
-    return NS_ERROR_FAILURE;
-
-  aLocale = entry->locales.GetSelected(mSelectedLocale, nsProviderArray::LOCALE);
-  if (aLocale.IsEmpty())
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChromeRegistry::IsLocaleRTL(const nsACString& package, PRBool *aResult)
-{
-  *aResult = PR_FALSE;
-
-  nsCAutoString locale;
-  GetSelectedLocale(package, locale);
-  if (locale.Length() < 2)
-    return NS_OK;
-
-  // first check the intl.uidirection.<locale> preference, and if that is not
-  // set, check the same preference but with just the first two characters of
-  // the locale. If that isn't set, default to left-to-right.
-  nsCAutoString prefString = NS_LITERAL_CSTRING("intl.uidirection.") + locale;
-  nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (!prefBranch)
-    return NS_OK;
-  
-  nsXPIDLCString dir;
-  prefBranch->GetCharPref(prefString.get(), getter_Copies(dir));
-  if (dir.IsEmpty()) {
-    PRInt32 hyphen = prefString.FindChar('-');
-    if (hyphen >= 1) {
-      nsCAutoString shortPref(Substring(prefString, 0, hyphen));
-      prefBranch->GetCharPref(shortPref.get(), getter_Copies(dir));
-    }
-  }
-  *aResult = dir.EqualsLiteral("rtl");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChromeRegistry::GetLocalesForPackage(const nsACString& aPackage,
-                                       nsIUTF8StringEnumerator* *aResult)
-{
-  nsTArray<nsCString> *a = new nsTArray<nsCString>;
-  if (!a)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                       & aPackage,
-                                                       PL_DHASH_LOOKUP));
-
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    entry->locales.EnumerateToArray(a);
-  }
-
-  nsresult rv = NS_NewAdoptingUTF8StringEnumerator(aResult, a);
-  if (NS_FAILED(rv))
-    delete a;
-
-  return rv;
-}
-
-#ifdef MOZ_XUL
-NS_IMETHODIMP
-nsChromeRegistry::GetStyleOverlays(nsIURI *aChromeURL,
-                                   nsISimpleEnumerator **aResult)
-{
-  const nsCOMArray<nsIURI>* parray = mStyleHash.GetArray(aChromeURL);
-  if (!parray)
-    return NS_NewEmptyEnumerator(aResult);
-
-  return NS_NewArrayEnumerator(aResult, *parray);
-}
-
-NS_IMETHODIMP
-nsChromeRegistry::GetXULOverlays(nsIURI *aChromeURL, nsISimpleEnumerator **aResult)
-{
-  const nsCOMArray<nsIURI>* parray = mOverlayHash.GetArray(aChromeURL);
-  if (!parray)
-    return NS_NewEmptyEnumerator(aResult);
-
-  return NS_NewArrayEnumerator(aResult, *parray);
-}
-#endif // MOZ_XUL
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1120,74 +645,12 @@ nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, PRBool *aResult)
   rv = url->GetHostPort(package);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PackageEntry *entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (nsACString&) package,
-                                                    PL_DHASH_LOOKUP));
+  PRUint32 flags;
+  rv = GetFlagsFromPackage(package, &flags);
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    *aResult = !!(entry->flags & PackageEntry::CONTENT_ACCESSIBLE);
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = !!(flags & CONTENT_ACCESSIBLE);
   }
-  return NS_OK;
-}
-
-static PLDHashOperator
-RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *arg)
-{
-  return (PLDHashOperator) (PL_DHASH_NEXT | PL_DHASH_REMOVE);
-}
-
-#ifdef MOZ_OMNIJAR
-nsresult
-nsChromeRegistry::CheckOmnijarChrome()
-{
-  nsresult rv;
-
-  nsZipArchive* jarReader = mozilla::OmnijarReader();
-  // just proceed normally if there is no omnijar
-  if (!jarReader)
-    return NS_OK;
-
-  nsZipItem* manifest = jarReader->GetItem("chrome/chrome.manifest");
-  NS_ENSURE_TRUE(manifest, NS_ERROR_NOT_AVAILABLE);
-
-  nsCAutoString omniJarSpec;
-  rv = NS_GetURLSpecFromActualFile(mozilla::OmnijarPath(), omniJarSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 len = manifest->RealSize();
-  nsAutoArrayPtr<PRUint8> outbuf(new PRUint8[len]);
-  NS_ENSURE_TRUE(outbuf, NS_ERROR_OUT_OF_MEMORY);
-
-  nsZipCursor cursor(manifest, jarReader, outbuf, len);
-  PRUint32 readlen;
-  PRUint8* buf = cursor.Read(&readlen);
-  NS_ENSURE_TRUE(buf, NS_ERROR_FILE_CORRUPTED);
-
-  nsAutoString jarString(NS_LITERAL_STRING("jar:"));
-  AppendUTF8toUTF16(omniJarSpec, jarString);
-  jarString += NS_LITERAL_STRING("!/chrome/chrome.manifest"); 
-
-  nsCOMPtr<nsIURI> manifestURI;
-  rv = NS_NewURI(getter_AddRefs(manifestURI), jarString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ProcessManifestBuffer((char *)buf, readlen, manifestURI, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
-}
-#endif /* MOZ_OMNIJAR */
-
-NS_IMETHODIMP
-nsChromeRegistry::CheckForNewChrome()
-{
-  PL_DHashTableEnumerate(&mPackagesHash, RemoveAll, nsnull);
-  mOverlayHash.Clear();
-  mStyleHash.Clear();
-  mOverrideTable.Clear();
-
-  nsComponentManagerImpl::gComponentManager->RereadChromeManifests();
   return NS_OK;
 }
 
@@ -1208,372 +671,29 @@ nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
   if (NS_FAILED(rv))
     return PR_FALSE;
 
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (nsACString&) package,
-                                                    PL_DHASH_LOOKUP));
-
-  return PL_DHASH_ENTRY_IS_LIVE(entry);
+  PRUint32 flags;
+  rv = GetFlagsFromPackage(package, &flags);
+  return NS_SUCCEEDED(rv) && (flags & XPCNATIVEWRAPPERS);
 }
 
-nsresult
-nsChromeRegistry::SelectLocaleFromPref(nsIPrefBranch* prefs)
+already_AddRefed<nsChromeRegistry>
+nsChromeRegistry::GetSingleton()
 {
-  nsresult rv;
-  PRBool matchOSLocale = PR_FALSE, userLocaleOverride = PR_FALSE;
-  prefs->PrefHasUserValue(SELECTED_LOCALE_PREF, &userLocaleOverride);
-  rv = prefs->GetBoolPref(MATCH_OS_LOCALE_PREF, &matchOSLocale);
-
-  if (NS_SUCCEEDED(rv) && matchOSLocale && !userLocaleOverride) {
-    // compute lang and region code only when needed!
-    nsCAutoString uiLocale;
-    rv = getUILangCountry(uiLocale);
-    if (NS_SUCCEEDED(rv))
-      mSelectedLocale = uiLocale;
-  }
-  else {
-    nsXPIDLCString provider;
-    rv = prefs->GetCharPref(SELECTED_LOCALE_PREF, getter_Copies(provider));
-    if (NS_SUCCEEDED(rv)) {
-      mSelectedLocale = provider;
-    }
+  if (gChromeRegistry) {
+    NS_ADDREF(gChromeRegistry);
+    return gChromeRegistry;
   }
 
-  return rv;
-}
+  nsRefPtr<nsChromeRegistry> cr;
+#ifdef MOZ_IPC
+  if (GeckoProcessType_Content == XRE_GetProcessType())
+    cr = new nsChromeRegistryContent();
+  else
+#endif
+    cr = new nsChromeRegistryChrome();
 
-NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
-{
-  nsresult rv = NS_OK;
-
-  if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
-    nsCOMPtr<nsIPrefBranch> prefs (do_QueryInterface(aSubject));
-    NS_ASSERTION(prefs, "Bad observer call!");
-
-    NS_ConvertUTF16toUTF8 pref(someData);
-
-    if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
-        pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
-      rv = SelectLocaleFromPref(prefs);
-      if (NS_SUCCEEDED(rv) && mProfileLoaded)
-        FlushAllCaches();
-    }
-    else if (pref.EqualsLiteral(SELECTED_SKIN_PREF)) {
-      nsXPIDLCString provider;
-      rv = prefs->GetCharPref(pref.get(), getter_Copies(provider));
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Couldn't get new locale pref!");
-        return rv;
-      }
-
-      mSelectedSkin = provider;
-      RefreshSkins();
-    } else {
-      NS_ERROR("Unexpected pref!");
-    }
-  }
-  else if (!strcmp("command-line-startup", aTopic)) {
-    nsCOMPtr<nsICommandLine> cmdLine (do_QueryInterface(aSubject));
-    if (cmdLine) {
-      nsAutoString uiLocale;
-      rv = cmdLine->HandleFlagWithParam(NS_LITERAL_STRING(UILOCALE_CMD_LINE_ARG),
-                                        PR_FALSE, uiLocale);
-      if (NS_SUCCEEDED(rv) && !uiLocale.IsEmpty()) {
-        CopyUTF16toUTF8(uiLocale, mSelectedLocale);
-        nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (prefs) {
-          prefs->RemoveObserver(SELECTED_LOCALE_PREF, this);
-        }
-      }
-    }
-  }
-  else if (!strcmp("profile-initial-state", aTopic)) {
-    mProfileLoaded = PR_TRUE;
-  }
-  else {
-    NS_ERROR("Unexpected observer topic!");
-  }
-
-  return rv;
-}
-
-nsIURI*
-nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
-{
-  if (!mManifestURI) {
-    nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
-    if (!io) {
-      NS_WARNING("No IO service trying to process chrome manifests");
-      return NULL;
-    }
-
-    io->NewFileURI(mFile, getter_AddRefs(mManifestURI));
-  }
-  return mManifestURI;
-}
-
-nsIXPConnect*
-nsChromeRegistry::ManifestProcessingContext::GetXPConnect()
-{
-  if (!mXPConnect)
-    mXPConnect = do_GetService("@mozilla.org/js/xpc/XPConnect;1");
-
-  return mXPConnect;
-}
-
-already_AddRefed<nsIURI>
-nsChromeRegistry::ManifestProcessingContext::ResolveURI(const char* uri)
-{
-  nsIURI* baseuri = GetManifestURI();
-  if (!baseuri)
+  if (NS_FAILED(cr->Init()))
     return NULL;
 
-  nsCOMPtr<nsIURI> resolved;
-  nsresult rv = NS_NewURI(getter_AddRefs(resolved), uri, baseuri);
-  if (NS_FAILED(rv))
-    return NULL;
-
-  return resolved.forget();
-}
-
-static void
-EnsureLowerCase(char *aBuf)
-{
-  for (; *aBuf; ++aBuf) {
-    char ch = *aBuf;
-    if (ch >= 'A' && ch <= 'Z')
-      *aBuf = ch + 'a' - 'A';
-  }
-}
-
-void
-nsChromeRegistry::ManifestContent(ManifestProcessingContext& cx, int lineno,
-                                  char *const * argv, bool platform, bool contentaccessible)
-{
-  char* package = argv[0];
-  char* uri = argv[1];
-
-  EnsureLowerCase(package);
-
-  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
-  if (!resolved) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI '%s'.", uri);
-    return;
-  }
-
-  if (!CanLoadResource(resolved)) {
-    LogMessageWithContext(resolved, lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, cannot register non-local URI '%s' as content.",
-                          uri);
-    return;
-  }
-
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (const nsACString&) nsDependentCString(package),
-                                                    PL_DHASH_ADD));
-  if (!entry)
-    return;
-
-  entry->baseURI = resolved;
-
-  if (platform)
-    entry->flags |= PackageEntry::PLATFORM_PACKAGE;
-  if (contentaccessible)
-    entry->flags |= PackageEntry::CONTENT_ACCESSIBLE;
-  if (cx.GetXPConnect()) {
-    nsCAutoString urlp("chrome://");
-    urlp.Append(package);
-    urlp.Append('/');
-
-    cx.GetXPConnect()->FlagSystemFilenamePrefix(urlp.get(), true);
-  }
-}
-
-void
-nsChromeRegistry::ManifestLocale(ManifestProcessingContext& cx, int lineno,
-                                 char *const * argv, bool platform, bool contentaccessible)
-{
-  char* package = argv[0];
-  char* provider = argv[1];
-  char* uri = argv[2];
-
-  EnsureLowerCase(package);
-
-  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
-  if (!resolved) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI '%s'.", uri);
-    return;
-  }
-
-  if (!CanLoadResource(resolved)) {
-    LogMessageWithContext(resolved, lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, cannot register non-local URI '%s' as content.",
-                          uri);
-    return;
-  }
-
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (const nsACString&) nsDependentCString(package),
-                                                    PL_DHASH_ADD));
-  if (!entry)
-    return;
-
-  entry->locales.SetBase(nsDependentCString(provider), resolved);
-}
-
-void
-nsChromeRegistry::ManifestSkin(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, bool platform, bool contentaccessible)
-{
-  char* package = argv[0];
-  char* provider = argv[1];
-  char* uri = argv[2];
-
-  EnsureLowerCase(package);
-
-  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
-  if (!resolved) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI '%s'.", uri);
-    return;
-  }
-
-  if (!CanLoadResource(resolved)) {
-    LogMessageWithContext(resolved, lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, cannot register non-local URI '%s' as content.",
-                          uri);
-    return;
-  }
-
-  PackageEntry* entry =
-    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                    & (const nsACString&) nsDependentCString(package),
-                                                    PL_DHASH_ADD));
-  if (!entry)
-    return;
-
-  entry->skins.SetBase(nsDependentCString(provider), resolved);
-}
-
-void
-nsChromeRegistry::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                                  char *const * argv, bool platform, bool contentaccessible)
-{
-  char* base = argv[0];
-  char* overlay = argv[1];
-
-  nsCOMPtr<nsIURI> baseuri = cx.ResolveURI(base);
-  nsCOMPtr<nsIURI> overlayuri = cx.ResolveURI(overlay);
-  if (!baseuri || !overlayuri) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI.");
-    return;
-  }
-
-  if (!CanLoadResource(overlayuri)) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Cannot register non-local URI '%s' as an overlay.", overlay);
-    return;
-  }
-
-  mOverlayHash.Add(baseuri, overlayuri);
-}
-
-void
-nsChromeRegistry::ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, bool platform, bool contentaccessible)
-{
-  char* base = argv[0];
-  char* overlay = argv[1];
-
-  nsCOMPtr<nsIURI> baseuri = cx.ResolveURI(base);
-  nsCOMPtr<nsIURI> overlayuri = cx.ResolveURI(overlay);
-  if (!baseuri || !overlayuri) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI.");
-    return;
-  }
-
-  if (!CanLoadResource(overlayuri)) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Cannot register non-local URI '%s' as a style overlay.", overlay);
-    return;
-  }
-
-  mStyleHash.Add(baseuri, overlayuri);
-}
-
-void
-nsChromeRegistry::ManifestOverride(ManifestProcessingContext& cx, int lineno,
-                                   char *const * argv, bool platform, bool contentaccessible)
-{
-  char* chrome = argv[0];
-  char* resolved = argv[1];
-
-  nsCOMPtr<nsIURI> chromeuri = cx.ResolveURI(chrome);
-  nsCOMPtr<nsIURI> resolveduri = cx.ResolveURI(resolved);
-  if (!chromeuri || !resolveduri) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI.");
-    return;
-  }
-
-  if (!CanLoadResource(resolveduri)) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Cannot register non-local URI '%s' for an override.", resolved);
-    return;
-  }
-  mOverrideTable.Put(chromeuri, resolveduri);
-}
-
-void
-nsChromeRegistry::ManifestResource(ManifestProcessingContext& cx, int lineno,
-                                   char *const * argv, bool platform, bool contentaccessible)
-{
-  char* package = argv[0];
-  char* uri = argv[1];
-
-  EnsureLowerCase(package);
-  nsDependentCString host(package);
-
-  nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
-  if (!io) {
-    NS_WARNING("No IO service trying to process chrome manifests");
-    return;
-  }
-
-  nsCOMPtr<nsIProtocolHandler> ph;
-  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  if (NS_FAILED(rv))
-    return;
-  
-  nsCOMPtr<nsIResProtocolHandler> rph = do_QueryInterface(ph);
-
-  PRBool exists = PR_FALSE;
-  rv = rph->HasSubstitution(host, &exists);
-  if (exists) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Duplicate resource declaration for '%s' ignored.", package);
-    return;
-  }
-
-  nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
-  if (!resolved) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI '%s'.", uri);
-    return;
-  }
-
-  if (!CanLoadResource(resolved)) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Warning: cannot register non-local URI '%s' as a resource.",
-                          uri);
-    return;
-  }
-
-  rph->SetSubstitution(host, resolved);
+  return cr.forget();
 }

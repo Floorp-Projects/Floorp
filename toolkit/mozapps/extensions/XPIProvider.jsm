@@ -1651,6 +1651,14 @@ var XPIProvider = {
         }
       }
 
+      // When upgrading the app and using a custom skin make sure it is still
+      // compatible otherwise switch back the default
+      if (aAppChanged && this.currentSkin != this.defaultSkin) {
+        let oldSkin = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
+        if (!oldSkin || oldSkin.appDisabled)
+          this.enableDefaultTheme();
+      }
+
       // If the application crashed before completing any pending operations then
       // we should perform them now.
       if (changed || Prefs.getBoolPref(PREF_PENDING_OPERATIONS)) {
@@ -1964,13 +1972,11 @@ var XPIProvider = {
    */
   enableDefaultTheme: function XPI_enableDefaultTheme() {
     LOG("Activating default theme");
-    let addons = XPIDatabase.getAddonsByType("theme");
-    addons.forEach(function(aTheme) {
-      // If this is theme contains the default skin and it is currently visible
-      // then mark it as enabled.
-      if (aTheme.internalName == this.defaultSkin && aTheme.visible)
-        this.updateAddonDisabledState(aTheme, false);
-    }, this);
+    let addon = XPIDatabase.getVisibleAddonForInternalName(this.defaultSkin);
+    if (addon)
+      this.updateAddonDisabledState(addon, false);
+    else
+      WARN("Unable to activate the default theme");
   },
 
   /**
@@ -2527,6 +2533,8 @@ var XPIDatabase = {
     getInstallLocations: "SELECT DISTINCT location FROM addon",
     getVisibleAddonForID: "SELECT " + FIELDS_ADDON + " FROM addon WHERE " +
                           "visible=1 AND id=:id",
+    getVisibleAddoForInternalName: "SELECT " + FIELDS_ADDON + " FROM addon " +
+                                   "WHERE visible=1 AND internalName=:internalName",
     getVisibleAddons: "SELECT " + FIELDS_ADDON + " FROM addon WHERE visible=1",
     getVisibleAddonsWithPendingOperations: "SELECT " + FIELDS_ADDON + " FROM " +
                                            "addon WHERE visible=1 " +
@@ -3231,6 +3239,26 @@ var XPIDatabase = {
 
     stmt.params.type = aType;
     return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];;
+  },
+
+  /**
+   * Synchronously gets an add-on with a particular internalName.
+   *
+   * @param  aInternalName
+   *         The internalName of the add-on to retrieve
+   * @return a DBAddonInternal
+   */
+  getVisibleAddonForInternalName: function XPIDB_getVisibleAddonForInternalName(aInternalName) {
+    let stmt = this.getStatement("getVisibleAddoForInternalName");
+
+    let addon = null;
+    stmt.params.internalName = aInternalName;
+
+    if (stepStatement(stmt))
+      addon = this.makeAddonFromRow(stmt.row);
+
+    stmt.reset();
+    return addon;
   },
 
   /**

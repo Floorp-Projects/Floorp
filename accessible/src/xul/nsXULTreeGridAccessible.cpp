@@ -1202,12 +1202,6 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
   return NS_OK;
 }
 
-nsAccessible*
-nsXULTreeGridCellAccessible::GetParent()
-{
-  return IsDefunct() ? nsnull : mParent.get();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridCellAccessible: public implementation
 
