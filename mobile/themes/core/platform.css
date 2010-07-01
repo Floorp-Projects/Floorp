@@ -302,12 +302,12 @@ toolbarbutton.button-dark {
   color: #fff;
   padding: 2px 4px;
   border-width: 10px;
-  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-64.png") 10 repeat repeat;
 }
 
 toolbarbutton.button-dark[type="checkbox"][checked="true"],
 toolbarbutton.button-dark:not([disabled="true"]):active:hover {
-  -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-64.png") 10 repeat repeat;
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 10 repeat repeat;
 }
 
 toolbarbutton.button-dark[disabled="true"] {
