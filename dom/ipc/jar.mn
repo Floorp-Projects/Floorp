@@ -1,0 +1,3 @@
+toolkit.jar:
+        content/global/test-ipc.xul (test.xul)
+        content/global/remote-test-ipc.js (remote-test.js)

@@ -40,6 +40,7 @@
 
 interface nsIURI;
 interface nsIDOMWindow;
+interface nsIDOMElement;
 interface nsIDOMGeoPosition;
 interface nsIGeolocationPrompt;
 
@@ -53,6 +54,8 @@ interface nsIGeolocationRequest : nsISupports {
 
   readonly attribute nsIURI requestingURI;
   readonly attribute nsIDOMWindow requestingWindow;
+
+  readonly attribute nsIDOMElement requestingElement;
 
   void cancel();
   void allow();

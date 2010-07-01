@@ -411,12 +411,6 @@ public:
   static PRBool MustPrune(nsIAccessible *aAccessible);
 
   /**
-   * Return true if the given node can be accessible and attached to
-   * the document's accessible tree.
-   */
-  static PRBool IsNodeRelevant(nsINode *aNode);
-
-  /**
    * Search hint enum constants. Used by GetHeaderCellsFor() method.
    */
   enum {

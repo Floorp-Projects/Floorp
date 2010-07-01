@@ -39,12 +39,12 @@
 #ifndef nsHttpHeaderArray_h__
 #define nsHttpHeaderArray_h__
 
+#include "nsHttp.h"
 #include "nsTArray.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsHttp.h"
 
 class nsHttpHeaderArray
 {
@@ -85,7 +85,6 @@ public:
 
     void Clear();
 
-private:
     struct nsEntry
     {
         nsEntry() {}
@@ -100,10 +99,12 @@ private:
         };
     };
 
+    nsTArray<nsEntry> &Headers() { return mHeaders; }
+
+private:
     PRInt32 LookupEntry(nsHttpAtom header, nsEntry **);
     PRBool  CanAppendToHeader(nsHttpAtom header);
 
-private:
     nsTArray<nsEntry> mHeaders;
 };
 

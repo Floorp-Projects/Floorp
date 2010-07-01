@@ -21,7 +21,7 @@
 #
 # Contributor(s):
 #   Mike Connor <mconnor@steelgryphon.com>
-#   Asaf Romano <mozilla.mano@sent.com>
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +36,8 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 function restartApp() {
   var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
@@ -78,27 +80,21 @@ function deleteLocalstore() {
 }
 
 function disableAddons() {
-  // Disable addons
-  const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
-  var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                     .getService(Components.interfaces.nsIExtensionManager);
-  var type = nsIUpdateItem.TYPE_EXTENSION + nsIUpdateItem.TYPE_LOCALE;
-  var items = em.getItemList(type);
-  for (var i = 0; i < items.length; ++i)
-    em.disableItem(items[i].id);
-
-  // Select the default theme
-  var prefB = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  if (prefB.prefHasUserValue("general.skins.selectedSkin"))
-    prefB.clearUserPref("general.skins.selectedSkin");
-
-  // Disable plugins
-  var phs = Components.classes["@mozilla.org/plugin/host;1"]
-                      .getService(Components.interfaces.nsIPluginHost);
-  var plugins = phs.getPluginTags();
-  for (i = 0; i < plugins.length; ++i)
-    plugins[i].disabled = true;
+  AddonManager.getAllAddons(function(aAddons) {
+    aAddons.forEach(function(aAddon) {
+      if (aAddon.type == "theme") {
+        // Setting userDisabled to false on the default theme activates it,
+        // disables all other themes and deactivates the applied persona, if
+        // any.
+        const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+        if (aAddon.id == DEFAULT_THEME_ID)
+          aAddon.userDisabled = false;
+      }
+      else {
+        aAddon.userDisabled = true;
+      }
+    });
+  });
 }
 
 function restoreDefaultSearchEngines() {

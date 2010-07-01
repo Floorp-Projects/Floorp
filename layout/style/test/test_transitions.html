@@ -11,6 +11,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
   <style type="text/css">
 
   #display p { margin-top: 0; margin-bottom: 0; }
+  #display .before, #display .after {
+    width: -moz-fit-content; border: 1px solid black;
+  }
+  #display .before::before, #display .after::after {
+    display: block;
+    width: 0;
+    text-indent: 0;
+  }
+  #display .before.started::before, #display .after.started::after {
+    width: 100px;
+    text-indent: 100px;
+    -moz-transition: 8s width ease-in-out, 8s text-indent ease-in-out;
+  }
+  #display .before::before {
+    content: "Before";
+  }
+  #display .after::after {
+    content: "After";
+  }
 
   </style>
 </head>
@@ -342,6 +361,19 @@ to_none_test     = make_display_test(false, "transition to display:none");
 always_none_test = make_display_test(true,  "transition always display:none");
 var display_tests = [ from_none_test, to_none_test, always_none_test ];
 
+// Test transitions on pseudo-elements
+var before_test, after_test;
+function make_pseudo_elem_test(pseudo)
+{
+    var p = document.createElement("p");
+    p.className = pseudo;
+    div.appendChild(p);
+    return {"pseudo": pseudo, element: p};
+}
+before_test = make_pseudo_elem_test("before");
+after_test = make_pseudo_elem_test("after");
+var pseudo_element_tests = [ before_test, after_test ];
+
 // FIXME (Bug 522599): Test a transition that reverses partway through.
 
 var lateref = make_reference_p();
@@ -388,6 +420,10 @@ from_none_test.style.display = "";
 to_none_test.style.textIndent = "100px";
 to_none_test.style.display = "none";
 always_none_test.style.textIndent = "100px";
+for (var i in pseudo_element_tests) {
+    var test = pseudo_element_tests[i];
+    test.element.classList.add("started");
+}
 lateref.style.textIndent = "1000px";
 
 // flush style changes
@@ -685,7 +721,8 @@ function check_display_tests(time)
                                  p.childNodes[0].data,
         // TODO: Making transitions work on 'display:none' elements is
         // still not implemented.
-                               function(range) { return range[1] < 100 });
+                               function(range) { return p != to_none_test &&
+                                                 range[1] < 100 });
     }
 }
 
@@ -695,6 +732,26 @@ add_future_call(4, function() { check_display_tests(4); });
 add_future_call(6, function() { check_display_tests(6); });
 add_future_call(8, function() { check_display_tests(8); });
 
+function check_pseudo_element_tests(time)
+{
+    var tf = timingFunctions["ease-in-out"];
+    for (var i in pseudo_element_tests) {
+        var test = pseudo_element_tests[i];
+
+        check_transition_value(tf, 0, 8, 0, 100,
+                               getComputedStyle(test.element, "").width,
+                               "::"+test.pseudo+" test");
+        check_transition_value(tf, 0, 8, 0, 100,
+                               getComputedStyle(test.element,
+                                                "::"+test.pseudo).textIndent,
+                               "::"+test.pseudo+" indent test");
+    }
+}
+check_pseudo_element_tests(0);
+add_future_call(2, function() { check_pseudo_element_tests(2); });
+add_future_call(4, function() { check_pseudo_element_tests(4); });
+add_future_call(6, function() { check_pseudo_element_tests(6); });
+add_future_call(8, function() { check_pseudo_element_tests(8); });
 </script>
 </pre>
 </body>

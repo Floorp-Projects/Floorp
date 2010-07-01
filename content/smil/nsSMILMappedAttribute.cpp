@@ -159,7 +159,7 @@ nsSMILMappedAttribute::FlushChangesToTargetAttr() const
   if (doc) {
     nsIPresShell* shell = doc->GetShell();
     if (shell) {
-      shell->RestyleForAnimation(mElement);
+      shell->RestyleForAnimation(mElement, eRestyle_Self);
     }
   }
 }

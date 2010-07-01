@@ -1,0 +1,30 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <script>
+      window.foo = {
+        a: 42,
+        b: 37 * 73,
+        ctor: function(name, value) {
+          this[name] = value;
+        },
+        fakector: function(name, value) {
+          window[name] = "oyez";
+          this[name] = value;
+          return window;
+        },
+        f: function(x) {
+          document.body.appendChild(document.createElement("div")).innerHTML =
+            "called f(" + x + ")";
+          return x + Math.PI;
+        },
+        pitch: function(ball) {
+          throw ball;
+        }
+      };
+      window.foo.self = window.foo;
+    </script>
+    oyez
+  </body>
+</html>

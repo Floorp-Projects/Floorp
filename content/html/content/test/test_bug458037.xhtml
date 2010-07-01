@@ -101,13 +101,9 @@ document.addEventListener("DOMContentLoaded", function() {
   test("x", false);
 
   // Make sure that isContentEditable is read-only
-  var exceptionCaught = false;
-  try {
-    d.isContentEditable = true;
-  } catch (e) {
-    exceptionCaught = true;
-  }
-  ok(exceptionCaught, "isContentEditable should be read only");
+  var origValue = d.isContentEditable;
+  d.isContentEditable = !origValue;
+  is(d.isContentEditable, origValue, "isContentEditable should be read only");
 }, false);
 
 </script>

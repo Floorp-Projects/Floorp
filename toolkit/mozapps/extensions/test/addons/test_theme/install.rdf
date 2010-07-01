@@ -16,7 +16,7 @@
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>
         <em:minVersion>1</em:minVersion>
-        <em:maxVersion>1</em:maxVersion>
+        <em:maxVersion>2</em:maxVersion>
       </Description>
     </em:targetApplication>
 

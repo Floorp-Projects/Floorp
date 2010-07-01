@@ -47,7 +47,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(b5f8239b-2abf-4896-b772-71e1e374a661)]
+[scriptable, uuid(56cee121-df62-49b6-b76d-71189441c98e)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
@@ -70,5 +70,9 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   // the options string that it supports. Separate multiple options with
   // semicolons.
   [noscript] DOMString toDataURLAs(in DOMString mimeType, in DOMString encoderOptions);
+
+  // A Mozilla-only extension to get a canvas context backed by double-buffered
+  // shared memory. Only privileged callers can call this.
+  nsISupports MozGetIPCContext(in DOMString contextId);
 };
 

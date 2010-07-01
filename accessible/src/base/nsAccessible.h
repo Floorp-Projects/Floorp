@@ -235,7 +235,7 @@ public:
   /**
    * Return parent accessible.
    */
-  virtual nsAccessible* GetParent();
+  nsAccessible* GetParent();
 
   /**
    * Return child accessible at the given index.
@@ -263,14 +263,13 @@ public:
   PRBool HasChildren() { return !!GetChildAt(0); }
 
   /**
-   * Return parent accessible only if cached.
+   * Return cached accessible of parent-child relatives.
    */
-  nsAccessible* GetCachedParent();
+  nsAccessible* GetCachedParent() const { return mParent; }
+  nsAccessible* GetCachedFirstChild() const
+    { return mChildren.SafeElementAt(0, nsnull); }
 
-  /**
-   * Return first child accessible only if cached.
-   */
-  nsAccessible* GetCachedFirstChild();
+  PRBool AreChildrenCached() const { return mAreChildrenInitialized; }
 
 #ifdef DEBUG
   /**

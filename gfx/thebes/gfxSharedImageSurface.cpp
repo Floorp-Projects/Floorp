@@ -44,7 +44,7 @@
 
 using mozilla::ipc::SharedMemory;
 
-cairo_user_data_key_t gfxSharedImageSurface::SHM_KEY;
+static cairo_user_data_key_t SHM_KEY;
 
 typedef struct _SharedImageInfo
 {
@@ -83,7 +83,7 @@ gfxSharedImageSurface::InitSurface(PRBool aUpdateShmemInfo)
         return false;
 
     cairo_surface_set_user_data(surface,
-                                &gfxSharedImageSurface::SHM_KEY,
+                                &SHM_KEY,
                                 this, NULL);
 
     if (aUpdateShmemInfo) {
@@ -116,4 +116,12 @@ gfxSharedImageSurface::gfxSharedImageSurface(const mozilla::ipc::Shmem &aShmem)
 
     if (!InitSurface(PR_FALSE))
         NS_RUNTIMEABORT("Shared memory is bad");
+}
+
+PRBool
+gfxSharedImageSurface::IsSharedImage(gfxASurface *aSurface)
+{
+    return (aSurface
+            && aSurface->GetType() == gfxASurface::SurfaceTypeImage
+            && aSurface->GetData(&SHM_KEY));
 }

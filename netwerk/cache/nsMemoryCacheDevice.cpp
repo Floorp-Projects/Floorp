@@ -393,7 +393,7 @@ int
 nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, PRInt32  deltaSize)
 {
     // favor items which never expire by putting them in the lowest-index queue
-    if (entry->ExpirationTime() == NO_EXPIRATION_TIME)
+    if (entry->ExpirationTime() == nsICache::NO_EXPIRATION_TIME)
         return 0;
 
     // compute which eviction queue this entry should go into,
