@@ -58,6 +58,7 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 #include "imgTools.h"
+#include "imgDiscardTracker.h"
 
 #ifdef IMG_BUILD_DECODER_gif
 // gif
@@ -295,6 +296,7 @@ static void
 imglib_Shutdown(nsIModule* aSelf)
 {
   imgLoader::Shutdown();
+  imgDiscardTracker::Shutdown();
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsImageLib2Module, components,
