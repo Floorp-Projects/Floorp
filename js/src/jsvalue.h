@@ -48,6 +48,7 @@
  *  - avoid copying
  */
 #include "jsprvtd.h"
+#include "jsstdint.h"
 
 /*
  * To avoid a circular dependency, pull in the necessary pieces of jsnum.h.

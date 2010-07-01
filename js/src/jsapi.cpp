@@ -442,7 +442,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(jsdouble d, jsint *ip)
 {
-    return JSDOUBLE_IS_INT32(d, ip);
+    return JSDOUBLE_IS_INT32(d, (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
