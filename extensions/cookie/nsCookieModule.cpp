@@ -49,7 +49,7 @@
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPermissionManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPopupWindowManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookiePermission, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePermission)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePromptService)
 
 // The list of components we register

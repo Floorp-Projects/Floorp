@@ -45,17 +45,11 @@
 #include <qabstracteventdispatcher.h>
 
 #include "prenv.h"
+#include "nsQAppInstance.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #include "prlog.h"
-#endif
-
-#ifdef MOZ_IPC
-#include <QApplication>
-static QApplication *sQApp = nsnull;
-extern int    gArgc;
-extern char **gArgv;
 #endif
 
 #ifdef PR_LOGGING
@@ -69,11 +63,7 @@ static int sPokeEvent;
 
 nsAppShell::~nsAppShell()
 {
-#ifdef MOZ_IPC
-    if (sQApp)
-        delete sQApp;
-    sQApp = nsnull;
-#endif
+    nsQAppInstance::Release();
 }
 
 nsresult
@@ -95,11 +85,7 @@ nsAppShell::Init()
     sPokeEvent = QEvent::User+5000;
 #endif
 
-#ifdef MOZ_IPC
-    if (!qApp) {
-      sQApp = new QApplication(gArgc, (char**)gArgv);
-    }
-#endif
+    nsQAppInstance::AddRef();
 
     return nsBaseAppShell::Init();
 }

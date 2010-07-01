@@ -42,6 +42,7 @@
 #ifndef nsHttpChannelAuthProvider_h__
 #define nsHttpChannelAuthProvider_h__
 
+#include "nsHttp.h"
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAuthPromptCallback.h"
 #include "nsString.h"
@@ -145,7 +146,7 @@ private:
     nsHttpAuthIdentity                mIdent;
     nsHttpAuthIdentity                mProxyIdent;
 
-    // Reference to the prompt wating in prompt queue. The channel is
+    // Reference to the prompt waiting in prompt queue. The channel is
     // responsible to call its cancel method when user in any way cancels
     // this request.
     nsCOMPtr<nsICancelable>           mAsyncPromptAuthCancelable;

@@ -156,6 +156,10 @@ nsWindow::Create(nsIWidget *aParent,
     ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent, aRect.x, aRect.y, aRect.width, aRect.height);
     nsWindow *parent = (nsWindow*) aParent;
 
+    if (!AndroidBridge::Bridge()) {
+        aNativeParent = nsnull;
+    }
+
     if (aNativeParent) {
         if (parent) {
             ALOG("Ignoring native parent on Android window [%p], since parent was specified (%p %p)", (void*)this, (void*)aNativeParent, (void*)aParent);

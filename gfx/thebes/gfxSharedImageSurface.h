@@ -90,7 +90,7 @@ public:
     Shmem& GetShmem() { return mShmem; }
 
     // This can be used for recognizing normal gfxImageSurface as SharedImage
-    static cairo_user_data_key_t SHM_KEY;
+    static PRBool IsSharedImage(gfxASurface *aSurface);
 
 private:
     size_t GetAlignedSize();
