@@ -34,8 +34,8 @@ category app-startup SessionStore service,@mozilla.org/mobile/sessionstore;1
 component {1d542abc-c88b-4636-a4ef-075b49806317} BrowserStartup.js
 contract @mozilla.org/mobile/browser-startup;1 {1d542abc-c88b-4636-a4ef-075b49806317}
 category app-startup BrowserStartup service,@mozilla.org/mobile/browser-startup;1
-agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
-agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
+category agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
+category agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
 
 # GeolocationPrompt.js
 component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} GeolocationPrompt.js
