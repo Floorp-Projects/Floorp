@@ -47,9 +47,10 @@ LIBRARY_NAME	= xpcwrappers_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-CPPSRCS		= ContentWrapper.cpp \
-		  ChromeWrapper.cpp \
-		  AccessCheck.cpp \
+CPPSRCS		= AccessCheck.cpp \
+	          CrossOriginWrapper.cpp \
+		  FilteringWrapper.cpp \
+		  XrayWrapper.cpp \
 		  WrapperFactory.cpp
 
 LOCAL_INCLUDES = \

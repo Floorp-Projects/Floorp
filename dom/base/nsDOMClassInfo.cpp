@@ -1590,6 +1590,7 @@ jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
+JSPropertyOp nsDOMClassInfo::sXrayWrapperPropertyHolderGetPropertyOp = nsnull;
 
 /**
  * Set our JSClass pointer for the Object class
@@ -1847,6 +1848,25 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   }
   JS_SetPendingException(cx, STRING_TO_JSVAL(str));
   return NS_OK;
+}
+
+// static
+PRBool
+nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
+{
+#ifdef DEBUG
+  {
+    nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+
+    NS_PRECONDITION(!scx || !scx->IsContextInitialized() ||
+                    sXPCNativeWrapperGetPropertyOp,
+                    "Must know what the XPCNativeWrapper class GetProperty op is!");
+  }
+#endif
+
+  JSPropertyOp op = obj->getClass()->getProperty;
+  return !!op && (op == sXPCNativeWrapperGetPropertyOp ||
+                  op == sXrayWrapperPropertyHolderGetPropertyOp);
 }
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)
