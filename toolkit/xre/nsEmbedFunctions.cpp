@@ -91,6 +91,14 @@
 
 #include "mozilla/jetpack/JetpackProcessChild.h"
 #include "mozilla/plugins/PluginProcessChild.h"
+#include "mozilla/dom/ContentProcessProcess.h"
+#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/dom/ContentProcessChild.h"
+
+#include "mozilla/jsipc/ContextWrapperParent.h"
+
+#include "mozilla/ipc/TestShellParent.h"
+#include "mozilla/ipc/XPCShellEnvironment.h"
 
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
@@ -107,6 +115,16 @@ using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::jetpack::JetpackProcessChild;
 using mozilla::plugins::PluginProcessChild;
+using mozilla::dom::ContentProcessProcess;
+using mozilla::dom::ContentProcessParent;
+using mozilla::dom::ContentProcessChild;
+
+using mozilla::jsipc::PContextWrapperParent;
+using mozilla::jsipc::ContextWrapperParent;
+
+using mozilla::ipc::TestShellParent;
+using mozilla::ipc::TestShellCommandParent;
+using mozilla::ipc::XPCShellEnvironment;
 
 using mozilla::startup::sChildProcessType;
 #endif
@@ -381,8 +399,19 @@ XRE_InitChildProcess(int aArgc,
     return NS_ERROR_FAILURE;
   }
 
+  MessageLoop::Type uiLoopType;
+  switch (aProcess) {
+  case GeckoProcessType_Content:
+      // Content processes need the XPCOM/chromium frankenventloop
+      uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
+      break;
+  default:
+      uiLoopType = MessageLoop::TYPE_UI;
+      break;
+  }
+
   // Associate this thread with a UI MessageLoop
-  MessageLoopForUI uiMessageLoop;
+  MessageLoop uiMessageLoop(uiLoopType);
   {
     nsAutoPtr<ProcessChild> process;
 
@@ -393,6 +422,10 @@ XRE_InitChildProcess(int aArgc,
 
     case GeckoProcessType_Plugin:
       process = new PluginProcessChild(parentHandle);
+      break;
+
+    case GeckoProcessType_Content:
+      process = new ContentProcessProcess(parentHandle);
       break;
 
     case GeckoProcessType_Jetpack:
@@ -539,6 +572,13 @@ XRE_RunAppShell()
     return appShell->Run();
 }
 
+template<>
+struct RunnableMethodTraits<ContentProcessChild>
+{
+    static void RetainCallee(ContentProcessChild* obj) { }
+    static void ReleaseCallee(ContentProcessChild* obj) { }
+};
+
 void
 XRE_ShutdownChildProcess()
 {
@@ -554,6 +594,59 @@ XRE_ShutdownChildProcess()
   //  (4) ProcessChild joins the IO thread
   //  (5) exit()
   MessageLoop::current()->Quit(); 
+}
+
+namespace {
+TestShellParent* gTestShellParent = nsnull;
+TestShellParent* GetOrCreateTestShellParent()
+{
+    if (!gTestShellParent) {
+        ContentProcessParent* parent = ContentProcessParent::GetSingleton();
+        NS_ENSURE_TRUE(parent, nsnull);
+        gTestShellParent = parent->CreateTestShell();
+        NS_ENSURE_TRUE(gTestShellParent, nsnull);
+    }
+    return gTestShellParent;
+}
+}
+
+bool
+XRE_SendTestShellCommand(JSContext* aCx,
+                         JSString* aCommand,
+                         void* aCallback)
+{
+    TestShellParent* tsp = GetOrCreateTestShellParent();
+    NS_ENSURE_TRUE(tsp, false);
+
+    nsDependentString command((PRUnichar*)JS_GetStringChars(aCommand),
+                              JS_GetStringLength(aCommand));
+    if (!aCallback) {
+        return tsp->SendExecuteCommand(command);
+    }
+
+    TestShellCommandParent* callback = static_cast<TestShellCommandParent*>(
+        tsp->SendPTestShellCommandConstructor(command));
+    NS_ENSURE_TRUE(callback, false);
+
+    jsval callbackVal = *reinterpret_cast<jsval*>(aCallback);
+    NS_ENSURE_TRUE(callback->SetCallback(aCx, callbackVal), false);
+
+    return true;
+}
+
+bool
+XRE_GetChildGlobalObject(JSContext* aCx, JSObject** aGlobalP)
+{
+    TestShellParent* tsp = GetOrCreateTestShellParent();
+    return tsp && tsp->GetGlobalJSObject(aCx, aGlobalP);
+}
+
+bool
+XRE_ShutdownTestShell()
+{
+  if (!gTestShellParent)
+    return true;
+  return ContentProcessParent::GetSingleton()->DestroyTestShell(gTestShellParent);
 }
 
 #ifdef MOZ_X11
