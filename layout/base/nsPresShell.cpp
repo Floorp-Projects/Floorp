@@ -3633,14 +3633,9 @@ nsIPresShell::PostRecreateFramesFor(Element* aElement)
 }
 
 void
-nsIPresShell::RestyleForAnimation(Element* aElement)
+nsIPresShell::RestyleForAnimation(Element* aElement, nsRestyleHint aHint)
 {
-  // eRestyle_Self is ok here because animations are always tied to a
-  // particular element and don't directly affect its kids.  The kids
-  // might have animations of their own, or inherit from aElement, but
-  // we handle all that during restyling; we don't need to _force_
-  // animation rule matching on the kids here.
-  FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Self,
+  FrameConstructor()->PostAnimationRestyleEvent(aElement, aHint,
                                                 NS_STYLE_HINT_NONE);
 }
 

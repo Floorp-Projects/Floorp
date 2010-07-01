@@ -3303,7 +3303,7 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
     if (doc) {
       nsCOMPtr<nsIPresShell> shell = doc->GetShell();
       if (shell) {
-        shell->RestyleForAnimation(this);
+        shell->RestyleForAnimation(this, eRestyle_Self);
       }
     }
   }
