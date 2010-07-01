@@ -148,13 +148,31 @@ FormAssistant.prototype = {
     }
   },
 
+  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
+  _hasKeyListener: function _hasKeyListener(aElement) {
+    let els = this._els;
+    let listeners = els.getListenerInfoFor(aElement, {});
+    for (let i = 0; i < listeners.length; i++) {
+      let listener = listeners[i];
+      if (["keyup", "keydown", "keypress"].indexOf(listener.type) != -1
+          && !listener.inSystemEventGroup) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   handleEvent: function formHelperHandleEvent(aEvent) {
     let currentWrapper = this.getCurrent();
     let currentElement = currentWrapper.element;
 
     switch (aEvent.keyCode) {
       case aEvent.DOM_VK_DOWN:
-        if (currentElement instanceof HTMLTextAreaElement) {
+        if (currentElement instanceof HTMLInputElement && !currentWrapper.canAutocomplete()) {
+          if (this._hasKeyListener(currentElement))
+            return;
+        }
+        else if (currentElement instanceof HTMLTextAreaElement) {
           let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
           let isEnd = (currentElement.textLength == currentElement.selectionEnd);
           if (!isEnd || existSelection)
@@ -166,7 +184,11 @@ FormAssistant.prototype = {
         break;
 
       case aEvent.DOM_VK_UP:
-        if (currentElement instanceof HTMLTextAreaElement) {
+        if (currentElement instanceof HTMLInputElement && !currentWrapper.canAutocomplete()) {
+          if (this._hasKeyListener(currentElement))
+            return;
+        }
+        else if (currentElement instanceof HTMLTextAreaElement) {
           let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
           let isStart = (currentElement.selectionEnd == 0);
           if (!isStart || existSelection)
@@ -376,7 +398,13 @@ BasicWrapper.prototype = {
 
   /** Element is capable of having autocomplete suggestions. */
   canAutocomplete: function() {
-    return this.element instanceof HTMLInputElement;
+    if (this.element instanceof HTMLInputElement) {
+      let autocomplete = this.element.getAttribute("autocomplete");
+      let allowedValues = ["off", "false", "disabled"];
+      if (allowedValues.indexOf(autocomplete) == -1)
+        return true;
+    }
+    return false;
   },
 
   autocomplete: function(aValue) {
