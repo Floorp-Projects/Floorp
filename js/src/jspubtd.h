@@ -44,7 +44,7 @@
  */
 #include "jscompat.h"
 #include "jsutil.h"
-#include "jsvalimpl.h"
+#include "jsval.h"
 
 JS_BEGIN_EXTERN_C
 
