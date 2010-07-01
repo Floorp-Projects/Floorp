@@ -229,7 +229,7 @@ mjit::Compiler::slowLoadConstantDouble(Assembler &masm,
                                        FrameEntry *fe, FPRegisterID fpreg)
 {
     jsdpun u;
-    if (fe->getTypeTag() == JSVAL_TAG_INT32)
+    if (fe->getKnownType() == JSVAL_TYPE_INT32)
         u.d = (double)fe->getValue().asInt32();
     else
         u.d = fe->getValue().asDouble();
@@ -248,7 +248,7 @@ mjit::Compiler::maybeJumpIfNotInt32(Assembler &masm, MaybeJump &mj, FrameEntry *
             mj.setJump(masm.testInt32(Assembler::NotEqual, mreg.getReg()));
         else
             mj.setJump(masm.testInt32(Assembler::NotEqual, frame.addressOf(fe)));
-    } else if (fe->getTypeTag() != JSVAL_TAG_INT32) {
+    } else if (fe->getKnownType() != JSVAL_TYPE_INT32) {
         mj.setJump(masm.jump());
     }
 }
@@ -262,7 +262,7 @@ mjit::Compiler::maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry 
             mj.setJump(masm.testDouble(Assembler::NotEqual, mreg.getReg()));
         else
             mj.setJump(masm.testDouble(Assembler::NotEqual, frame.addressOf(fe)));
-    } else if (fe->getTypeTag() >= JSVAL_TAG_CLEAR) {
+    } else if (fe->getKnownType() != JSVAL_TYPE_DOUBLE) {
         mj.setJump(masm.jump());
     }
 }
@@ -283,21 +283,21 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
      * This is temporary while ops are still being implemented.
      */
     if ((op == JSOP_MOD) ||
-        (lhs->isTypeKnown() && (lhs->getTypeTag() > JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET)) ||
-        (rhs->isTypeKnown() && (rhs->getTypeTag() > JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET)) 
+        (lhs->isTypeKnown() && (lhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) ||
+        (rhs->isTypeKnown() && (rhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) 
 #if defined(JS_CPU_ARM)
         /* ARM cannot detect integer overflow with multiplication. */
         || op == JSOP_MUL
 #endif /* JS_CPU_ARM */
     ) {
         bool isStringResult = (op == JSOP_ADD) &&
-                              ((lhs->isTypeKnown() && lhs->getTypeTag() == JSVAL_TAG_STRING) ||
-                               (rhs->isTypeKnown() && rhs->getTypeTag() == JSVAL_TAG_STRING));
+                              ((lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_STRING) ||
+                               (rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_STRING));
         prepareStubCall();
         stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
         if (isStringResult)
-            frame.pushSyncedType(JSVAL_TAG_STRING);
+            frame.pushSyncedType(JSVAL_TYPE_STRING);
         else
             frame.pushSynced();
         return;
@@ -305,8 +305,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 
     /* Can do int math iff there is no double constant and the op is not division. */
     bool canDoIntMath = op != JSOP_DIV &&
-                        !((rhs->isTypeKnown() && rhs->getTypeTag() < JSVAL_TAG_CLEAR) ||
-                          (lhs->isTypeKnown() && lhs->getTypeTag() < JSVAL_TAG_CLEAR));
+                        !((rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_DOUBLE) ||
+                          (lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_DOUBLE));
 
     frame.syncAllRegs(Registers::AvailRegs);
 
@@ -369,7 +369,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     Label lblCvtPath2 = stubcc.masm.label();
     {
         /* Don't bother emitting double conversion for a known double. */
-        if (!lhs->isTypeKnown() || lhs->getTypeTag() >= JSVAL_TAG_CLEAR) {
+        if (!lhs->isTypeKnown() || lhs->getKnownType() != JSVAL_TYPE_DOUBLE) {
             maybeJumpIfNotInt32(stubcc.masm, jmpCvtPath2NotInt, lhs, lhsTypeReg);
 
             if (!lhs->isConstant())
@@ -390,7 +390,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     Label lblCvtPath3 = stubcc.masm.label();
     {
         /* Don't bother emitting double checking code for a known int. */
-        if (!lhs->isTypeKnown() || lhs->getTypeTag() != JSVAL_TAG_INT32) {
+        if (!lhs->isTypeKnown() || lhs->getKnownType() != JSVAL_TYPE_INT32) {
             maybeJumpIfNotDouble(stubcc.masm, jmpCvtPath3NotDbl, lhs, lhsTypeReg);
 
             if (!rhs->isConstant())
@@ -545,7 +545,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 
     frame.popn(2);
     if (canDoIntMath)
-        frame.pushUntypedPayload(JSVAL_TAG_INT32, returnReg);
+        frame.pushUntypedPayload(JSVAL_TYPE_INT32, returnReg);
     else
         frame.pushSynced();
 
@@ -560,7 +560,7 @@ mjit::Compiler::jsop_neg()
 {
     FrameEntry *fe = frame.peek(-1);
 
-    if (fe->isTypeKnown() && fe->getTypeTag() > JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET) {
+    if (fe->isTypeKnown() && fe->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET) {
         prepareStubCall();
         stubCall(stubs::Neg, Uses(1), Defs(1));
         frame.pop();

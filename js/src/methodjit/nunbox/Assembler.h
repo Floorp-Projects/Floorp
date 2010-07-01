@@ -53,6 +53,13 @@ class ImmTag : public JSC::MacroAssembler::Imm32
     { }
 };
 
+struct ImmType : ImmTag
+{
+    ImmType(JSValueType type)
+      : ImmTag(JSVAL_TYPE_TO_TAG(type))
+    { }
+};
+
 class Assembler : public BaseAssembler
 {
     static const uint32 PAYLOAD_OFFSET = 0;
