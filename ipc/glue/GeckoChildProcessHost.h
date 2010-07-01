@@ -96,11 +96,6 @@ protected:
   bool mChannelInitialized;
   FilePath mProcessPath;
 
-#ifdef XP_WIN
-  void InitWindowsGroupID();
-  nsString mGroupId;
-#endif
-
 #if defined(OS_POSIX)
   base::file_handle_mapping_vector mFileMap;
 #endif
