@@ -51,8 +51,6 @@ function WeaveCrypto() {
 }
 
 WeaveCrypto.prototype = {
-    classDescription: "WeaveCrypto",
-    contractID: "@labs.mozilla.com/Weave/Crypto;2",
     classID: Components.ID("{7fa20841-c90e-4432-a1a1-ba3b20cb6b37}"),
     QueryInterface: XPCOMUtils.generateQI([Ci.IWeaveCrypto]),
 
@@ -1125,7 +1123,4 @@ WeaveCrypto.prototype = {
     }
 };
 
-let component = typeof Services == "undefined" || typeof ctypes == "undefined" ? [] : [WeaveCrypto];
-function NSGetModule (compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([WeaveCrypto]);
