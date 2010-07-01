@@ -985,7 +985,7 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
 }
 
 /* Notification icon box */
@@ -994,7 +994,7 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 #geo-notification-icon {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
   width: 16px;
   height: 16px;
 }
