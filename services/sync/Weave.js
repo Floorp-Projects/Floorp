@@ -85,11 +85,7 @@ WeaveService.prototype = {
 
     let uri = ioService.newURI("resource://gre/modules/services-sync",
                                null, null);
-    let file = uri.QueryInterface(Ci.nsIFileURL)
-               .file.QueryInterface(Ci.nsILocalFile);
-
-    let aliasURI = ioService.newFileURI(file);
-    resProt.setSubstitution("services-sync", aliasURI);
+    resProt.setSubstitution("services-sync", uri);
   }
 };
 
