@@ -511,10 +511,6 @@ NS_IMETHODIMP nsNSSSocketInfo::SetCountSubRequestsNoSecurity(PRInt32 aSubRequest
   mSubRequestsNoSecurity = aSubRequestsNoSecurity;
   return NS_OK;
 }
-NS_IMETHODIMP nsNSSSocketInfo::Flush()
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetShortSecurityDescription(PRUnichar** aText) {
