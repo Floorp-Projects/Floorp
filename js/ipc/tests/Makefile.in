@@ -44,7 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_jsipc
 
+# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
+ifneq ($(OS_ARCH),Darwin)
 XPCSHELL_TESTS = unit
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
