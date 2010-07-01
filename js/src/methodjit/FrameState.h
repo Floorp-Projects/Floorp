@@ -160,12 +160,12 @@ class FrameState
     /*
      * Pushes a slot that has a known, synced type and payload.
      */
-    inline void pushSyncedType(JSValueTag tag);
+    inline void pushSyncedType(JSValueType type);
 
     /*
      * Pushes a slot that has a known, synced type and payload.
      */
-    inline void pushSynced(JSValueTag tag, RegisterID reg);
+    inline void pushSynced(JSValueType type, RegisterID reg);
 
     /*
      * Pushes a constant value.
@@ -180,7 +180,7 @@ class FrameState
     /*
      * Pushes a known type and allocated payload onto the operation stack.
      */
-    inline void pushTypedPayload(JSValueTag tag, RegisterID payload);
+    inline void pushTypedPayload(JSValueType type, RegisterID payload);
 
     /*
      * Pushes a type register and data register pair.
@@ -196,7 +196,7 @@ class FrameState
      * the value it replaces on the stack had the same tag if the fast-path
      * was taken.
      */
-    inline void pushUntypedPayload(JSValueTag tag, RegisterID payload,
+    inline void pushUntypedPayload(JSValueType type, RegisterID payload,
                                    bool popGuaranteed = false,
                                    bool fastTyped = false);
 
@@ -416,7 +416,7 @@ class FrameState
     /*
      * Mark an existing slot with a type.
      */
-    inline void learnType(FrameEntry *fe, JSValueTag tag);
+    inline void learnType(FrameEntry *fe, JSValueType type);
 
     /*
      * Forget a type, syncing in the process.

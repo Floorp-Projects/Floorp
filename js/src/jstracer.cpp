@@ -1043,7 +1043,7 @@ GetPromotedType(const Value &v)
         return JSVAL_TYPE_DOUBLE;
     if (v.isObject())
         return v.asObject().isFunction() ? JSVAL_TYPE_FUNOBJ : JSVAL_TYPE_NONFUNOBJ;
-    return v.extractNonDoubleObjectType();
+    return v.extractNonDoubleObjectTraceType();
 }
 
 /* Return JSVAL_TYPE_INT32 for all whole numbers that fit into signed 32-bit and the tag otherwise. */
@@ -1058,7 +1058,7 @@ getCoercedType(const Value &v)
     }
     if (v.isObject())
         return v.asObject().isFunction() ? JSVAL_TYPE_FUNOBJ : JSVAL_TYPE_NONFUNOBJ;
-    return v.extractNonDoubleObjectType();
+    return v.extractNonDoubleObjectTraceType();
 }
 
 /* Constant seed and accumulate step borrowed from the DJB hash. */
@@ -3820,7 +3820,7 @@ TraceRecorder::determineSlotType(Value* vp)
 
     if (vp->isObject())
         return vp->asObject().isFunction() ? JSVAL_TYPE_FUNOBJ : JSVAL_TYPE_NONFUNOBJ;
-    return vp->extractNonDoubleObjectType();
+    return vp->extractNonDoubleObjectTraceType();
 }
 
 class DetermineTypesVisitor : public SlotVisitorBase
@@ -9452,7 +9452,7 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
         return unbox_object(vaddr_ins, offset, tag_ins, type, exit, accSet);
     }
 
-    JSValueType type = v.extractNonDoubleObjectType();
+    JSValueType type = v.extractNonDoubleObjectTraceType();
     return unbox_non_double_object(vaddr_ins, offset, tag_ins, type, exit, accSet);
 }
 
@@ -9500,7 +9500,7 @@ TraceRecorder::box_value_into(const Value &v, LIns *v_ins, LIns *dstaddr_ins, pt
     } else if (v.isNull()) {
         box_null_into(dstaddr_ins, offset, accSet);
     } else {
-        JSValueTag tag = v.isObject() ? JSVAL_TAG_OBJECT : v.extractNonDoubleObjectTag();
+        JSValueTag tag = v.isObject() ? JSVAL_TAG_OBJECT : v.extractNonDoubleObjectTraceTag();
         lir->insStore(INS_CONSTU(tag), dstaddr_ins, offset + sTagOffset, ACC_OTHER);
         lir->insStore(v_ins, dstaddr_ins, offset + sPayloadOffset, ACC_OTHER);
     }

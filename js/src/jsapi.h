@@ -3425,12 +3425,22 @@ class Value
         return data.asBits;
     }
 
-    JSValueType extractNonDoubleObjectType() const {
-        return JSVAL_EXTRACT_NON_DOUBLE_OBJECT_TYPE_IMPL(data);
+    JSValueType extractNonDoubleType() const {
+        return JSVAL_EXTRACT_TYPE_IMPL(data);
     }
 
-    JSValueTag extractNonDoubleObjectTag() const {
-        return JSVAL_EXTRACT_NON_DOUBLE_OBJECT_TAG_IMPL(data);
+    JSValueTag extractNonDoubleTag() const {
+        return JSVAL_EXTRACT_TAG_IMPL(data);
+    }
+
+    JSValueType extractNonDoubleObjectTraceType() const {
+        JS_ASSERT(!isObject());
+        return JSVAL_EXTRACT_TYPE_IMPL(data);
+    }
+
+    JSValueTag extractNonDoubleObjectTraceTag() const {
+        JS_ASSERT(!isObject());
+        return JSVAL_EXTRACT_TAG_IMPL(data);
     }
 
     void unboxNonDoubleTo(uint64 *out) const {
