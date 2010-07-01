@@ -359,6 +359,7 @@ WebGLContext::GetThebesSurface(gfxASurface **surface)
     return NS_OK;
 }
 
+
 //
 // XPCOM goop
 //

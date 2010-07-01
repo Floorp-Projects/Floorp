@@ -1529,39 +1529,6 @@ fast_path_composite (pixman_implementation_t *imp,
                      int32_t                  width,
                      int32_t                  height)
 {
-    /*
-     * In some cases, single pass fast path composite operation
-     * can be also run for the cases when source image has
-     * transform and repeat set. For now, only NEAREST transform
-     * is supported and destination image should have trivial
-     * clipping only (one clipping box at most). Additionally,
-     * transform should only perform scaling (but no rotation).
-     */
-    if (src->type == BITS &&
-	src->common.transform &&
-	!mask &&
-	!src->common.alpha_map && !dest->common.alpha_map &&
-	src->common.filter == PIXMAN_FILTER_NEAREST &&
-	!src->bits.read_func && !src->bits.write_func &&
-	!dest->bits.read_func && !dest->bits.write_func)
-    {
-	if (src->common.transform->matrix[0][1] == 0 &&
-	    src->common.transform->matrix[1][0] == 0 &&
-	    src->common.transform->matrix[2][0] == 0 &&
-	    src->common.transform->matrix[2][1] == 0 &&
-	    src->common.transform->matrix[2][2] == pixman_fixed_1 &&
-	    (!dest->common.have_clip_region ||
-	     dest->common.clip_region.data == NULL))
-	{
-	    if (_pixman_run_fast_path_scale (op, src, mask, dest, src_x, src_y,
-	                                     mask_x, mask_y, dest_x, dest_y,
-	                                     width, height))
-	    {
-		return;
-	    }
-	}
-    }
-
     if (src->type == BITS
         && src->common.transform
         && !mask
