@@ -57,9 +57,7 @@
         onclose="return Browser.closing();"
         windowtype="navigator:browser"
         title="&brandShortName;"
-#ifdef WINCE
-        sizemode="fullscreen"
-#elifdef MOZ_PLATFORM_MAEMO
+#ifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"
 #else
         width="800"
@@ -179,16 +177,10 @@
     <!-- misc -->
     <key id="key_zoomin" keycode="VK_UP" modifiers="accel" command="cmd_zoomin"/>
     <key id="key_zoomout" keycode="VK_DOWN" modifiers="accel" command="cmd_zoomout"/>
-#ifndef WINCE
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
     <key id="key_zoomin2" keycode="VK_F7" command="cmd_volumeRight"/>
     <key id="key_zoomout2" keycode="VK_F8" command="cmd_volumeLeft"/>
-#else
-    <key id="key_quit" keycode="VK_F4" command="cmd_quit"/>
-    <key id="key_zoomin2" keycode="VK_F1" command="cmd_zoomin"/>
-    <key id="key_zoomout2" keycode="VK_F2" command="cmd_zoomout"/>
-#endif
 
     <!-- tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
@@ -408,12 +400,7 @@
                     <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
                   </menupopup>
                 </menulist>
-               </setting>
-#ifdef WINCE
-              <setting id="prefs-default-browser" type="bool" title="&defaultBrowser.title;" oncommand="BrowserUI.updateDefaultBrowser(this.value);">
-                &defaultBrowser.description;
               </setting>
-#endif
               <setting id="prefs-homepage" title="&homepage.title;" type="control">
                 <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
                   <menupopup>

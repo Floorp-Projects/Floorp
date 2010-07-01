@@ -118,11 +118,6 @@ var PreferencesView = {
     if (this._languages)
       return;
 
-#ifdef WINCE
-    let phone = Cc["@mozilla.org/phone/support;1"].getService(Ci.nsIPhoneSupport);
-    document.getElementById("prefs-default-browser").value = phone.isDefaultBrowser(false);
-#endif
-
     this._languages = document.getElementById("prefs-languages");
     this._loadLocales();
 
