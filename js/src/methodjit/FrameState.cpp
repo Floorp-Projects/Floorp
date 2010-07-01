@@ -226,7 +226,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     }
 
     if (fe->isTypeKnown()) {
-        masm.storeTypeTag(ImmTag(fe->getTypeTag()), address);
+        masm.storeTypeTag(ImmTag(fe->getKnownTag()), address);
     } else if (fe->type.inRegister()) {
         masm.storeTypeTag(fe->type.reg(), address);
     } else {
@@ -341,7 +341,7 @@ FrameState::sync(Assembler &masm) const
                 /* :TODO: we can do better, the type is learned for all copies. */
                 if (fe->isTypeKnown()) {
                     //JS_ASSERT(fe->getTypeTag() == backing->getTypeTag());
-                    masm.storeTypeTag(ImmTag(fe->getTypeTag()), address);
+                    masm.storeTypeTag(ImmTag(fe->getKnownTag()), address);
                 } else {
                     masm.storeTypeTag(backing->type.reg(), address);
                 }
@@ -676,7 +676,7 @@ FrameState::pushCopyOf(uint32 index)
         fe->setConstant(Jsvalify(backing->getValue()));
     } else {
         if (backing->isTypeKnown())
-            fe->setTypeTag(backing->getTypeTag());
+            fe->setType(backing->getKnownType());
         else
             fe->type.invalidate();
         fe->data.invalidate();
@@ -755,7 +755,7 @@ FrameState::uncopy(FrameEntry *original)
             moveOwnership(fe->type.reg(), fe);
     } else {
         JS_ASSERT(fe->isTypeKnown());
-        JS_ASSERT(fe->getTypeTag() == original->getTypeTag());
+        JS_ASSERT(fe->getKnownTag() == original->getKnownTag());
     }
     if (original->data.inMemory() && !fe->data.synced())
         tempRegForData(original);
@@ -833,7 +833,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
             localFe->setNotCopied();
             localFe->setCopyOf(backing);
             if (backing->isTypeKnown())
-                localFe->setTypeTag(backing->getTypeTag());
+                localFe->setType(backing->getKnownType());
             else
                 localFe->type.invalidate();
             localFe->data.invalidate();
@@ -887,7 +887,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 
     if (typeChange) {
         if (backing->isTypeKnown()) {
-            localFe->setTypeTag(backing->getTypeTag());
+            localFe->setType(backing->getKnownType());
         } else {
             RegisterID reg = tempRegForType(backing);
             localFe->type.setRegister(reg);
@@ -895,7 +895,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         }
     } else {
         if (!wasSynced)
-            masm.storeTypeTag(ImmTag(backing->getTypeTag()), addressOf(localFe));
+            masm.storeTypeTag(ImmTag(backing->getKnownTag()), addressOf(localFe));
         localFe->type.setMemory();
     }
 

@@ -72,8 +72,13 @@ class FrameEntry
         return type.isConstant();
     }
 
-    JSValueTag getTypeTag() const {
+    JSValueTag getKnownTag() const {
         return v_.s.tag;
+    }
+
+    JSValueType getKnownType() const {
+        JS_ASSERT(isTypeKnown());
+        return knownType;
     }
 
     uint32 getPayload32() const {
@@ -82,9 +87,10 @@ class FrameEntry
     }
 
   private:
-    void setTypeTag(JSValueTag u32) {
+    void setType(JSValueType type_) {
         type.setConstant();
-        v_.s.tag = u32;
+        v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
+        knownType = type_;
     }
 
     void track(uint32 index) {
@@ -133,6 +139,11 @@ class FrameEntry
         type.setConstant();
         data.setConstant();
         v_.asBits = JSVAL_BITS(v);
+        Value cv = Valueify(v);
+        if (cv.isDouble())
+            knownType = JSVAL_TYPE_DOUBLE;
+        else
+            knownType = cv.extractNonDoubleType();
     }
 
     bool isCopied() const {
@@ -167,13 +178,14 @@ class FrameEntry
     }
 
   private:
+    JSValueType knownType;
     jsval_layout v_;
     RematInfo  type;
     RematInfo  data;
     uint32     index_;
     FrameEntry *copy;
     bool       copied;
-    char       padding[7];
+    char       padding[3];
 };
 
 } /* namespace mjit */

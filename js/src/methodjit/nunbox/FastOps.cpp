@@ -65,7 +65,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     stubcc.leave();
     stubcc.call(stubs::BindName);
 
-    frame.pushTypedPayload(JSVAL_TAG_OBJECT, reg);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
 
     stubcc.rejoin(1);
 }
@@ -76,11 +76,11 @@ mjit::Compiler::jsop_bitnot()
     FrameEntry *top = frame.peek(-1);
 
     /* We only want to handle integers here. */
-    if (top->isTypeKnown() && top->getTypeTag() != JSVAL_TAG_INT32) {
+    if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_INT32) {
         prepareStubCall();
         stubCall(stubs::BitNot, Uses(1), Defs(1));
         frame.pop();
-        frame.pushSyncedType(JSVAL_TAG_INT32);
+        frame.pushSyncedType(JSVAL_TYPE_INT32);
         return;
     }
            
@@ -89,7 +89,7 @@ mjit::Compiler::jsop_bitnot()
     if (!top->isTypeKnown()) {
         Jump intFail = frame.testInt32(Assembler::NotEqual, top);
         stubcc.linkExit(intFail);
-        frame.learnType(top, JSVAL_TAG_INT32);
+        frame.learnType(top, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
 
@@ -101,7 +101,7 @@ mjit::Compiler::jsop_bitnot()
     RegisterID reg = frame.ownRegForData(top);
     masm.not32(reg);
     frame.pop();
-    frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
 
     if (stubNeeded)
         stubcc.rejoin(1);
@@ -136,12 +136,12 @@ mjit::Compiler::jsop_bitop(JSOp op)
     }
 
     /* We only want to handle integers here. */
-    if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_TAG_INT32) ||
-        (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_TAG_INT32)) {
+    if ((rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32) ||
+        (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32)) {
         prepareStubCall();
         stubCall(stub, Uses(2), Defs(1));
         frame.popn(2);
-        frame.pushSyncedType(JSVAL_TAG_INT32);
+        frame.pushSyncedType(JSVAL_TYPE_INT32);
         return;
     }
            
@@ -150,7 +150,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
         stubcc.linkExit(rhsFail);
-        frame.learnType(rhs, JSVAL_TAG_INT32);
+        frame.learnType(rhs, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
     if (!lhs->isTypeKnown()) {
@@ -248,7 +248,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
                  * Type of LHS should be learned already.
                  */
                 frame.popn(2);
-                frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
+                frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
                 if (stubNeeded)
                     stubcc.rejoin(1);
                 return;
@@ -302,7 +302,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
     frame.pop();
     frame.pop();
-    frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
 
     if (stubNeeded)
         stubcc.rejoin(2);
@@ -355,7 +355,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     masm.storeData32(data, addr);
 
     if (!post && !popped)
-        frame.pushUntypedPayload(JSVAL_TAG_INT32, data);
+        frame.pushUntypedPayload(JSVAL_TYPE_INT32, data);
     else
         frame.freeReg(data);
 
@@ -365,16 +365,12 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 }
 
 static inline bool
-CheckNullOrUndefined(FrameEntry *fe, JSValueTag &mask)
+CheckNullOrUndefined(FrameEntry *fe)
 {
     if (!fe->isTypeKnown())
         return false;
-    mask = fe->getTypeTag();
-    if (mask == JSVAL_TAG_NULL)
-        return true;
-    else if (mask == JSVAL_TAG_UNDEFINED)
-        return true;
-    return false;
+    JSValueType type = fe->getKnownType();
+    return type == JSVAL_TYPE_NULL || type == JSVAL_TYPE_UNDEFINED;
 }
 
 void
@@ -387,8 +383,7 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
 
     bool lhsTest;
-    JSValueTag mask;
-    if ((lhsTest = CheckNullOrUndefined(lhs, mask)) || CheckNullOrUndefined(rhs, mask)) {
+    if ((lhsTest = CheckNullOrUndefined(lhs)) || CheckNullOrUndefined(rhs)) {
         /* What's the other mask? */
         FrameEntry *test = lhsTest ? rhs : lhs;
 
@@ -431,7 +426,7 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
             j.linkTo(masm.label(), &masm);
             masm.move(Imm32(op == JSOP_EQ), reg);
             j3.linkTo(masm.label(), &masm);
-            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, reg);
         }
         return;
     }
@@ -449,8 +444,8 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
 
     /* Always slow path... */
-    if ((rhs->isTypeKnown() && rhs->getTypeTag() != JSVAL_TAG_INT32) ||
-        (lhs->isTypeKnown() && lhs->getTypeTag() != JSVAL_TAG_INT32)) {
+    if ((rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32) ||
+        (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32)) {
         if (op == JSOP_EQ || op == JSOP_NE)
             jsop_equality(op, stub, target, fused);
         else
@@ -462,7 +457,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
         stubcc.linkExit(rhsFail);
-        frame.learnType(rhs, JSVAL_TAG_INT32);
+        frame.learnType(rhs, JSVAL_TYPE_INT32);
     }
     if (!lhs->isTypeKnown()) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
@@ -626,7 +621,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         frame.pop();
         if (reg != resultReg)
             frame.freeReg(reg);
-        frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, resultReg);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, resultReg);
         stubcc.rejoin(1);
     }
 }
@@ -653,9 +648,9 @@ mjit::Compiler::jsop_not()
     }
 
     if (top->isTypeKnown()) {
-        uint32 mask = top->getTypeTag();
-        switch (mask) {
-          case JSVAL_TAG_INT32:
+        JSValueType type = top->getKnownType();
+        switch (type) {
+          case JSVAL_TYPE_INT32:
           {
             RegisterID data = frame.allocReg(Registers::SingleByteRegs);
             if (frame.shouldAvoidDataRemat(top))
@@ -666,22 +661,22 @@ mjit::Compiler::jsop_not()
             masm.set32(Assembler::Equal, data, Imm32(0), data);
 
             frame.pop();
-            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, data);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, data);
             break;
           }
 
-          case JSVAL_TAG_BOOLEAN:
+          case JSVAL_TYPE_BOOLEAN:
           {
             RegisterID reg = frame.ownRegForData(top);
 
             masm.xor32(Imm32(1), reg);
 
             frame.pop();
-            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, reg);
             break;
           }
 
-          case JSVAL_TAG_OBJECT:
+          case JSVAL_TYPE_OBJECT:
           {
             frame.pop();
             frame.push(BooleanTag(false));
@@ -698,7 +693,7 @@ mjit::Compiler::jsop_not()
             masm.xor32(Imm32(1), reg);
 
             frame.pop();
-            frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, reg);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, reg);
             break;
           }
         }
@@ -751,7 +746,7 @@ mjit::Compiler::jsop_not()
     stubcc.call(stubs::Not);
 
     frame.pop();
-    frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, data);
+    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, data);
 
     stubcc.rejoin(1);
 }
@@ -765,20 +760,20 @@ mjit::Compiler::jsop_typeof()
         JSRuntime *rt = cx->runtime;
 
         JSAtom *atom = NULL;
-        switch (fe->getTypeTag()) {
-          case JSVAL_TAG_STRING:
+        switch (fe->getKnownType()) {
+          case JSVAL_TYPE_STRING:
             atom = rt->atomState.typeAtoms[JSTYPE_STRING];
             break;
-          case JSVAL_TAG_UNDEFINED:
+          case JSVAL_TYPE_UNDEFINED:
             atom = rt->atomState.typeAtoms[JSTYPE_VOID];
             break;
-          case JSVAL_TAG_NULL:
+          case JSVAL_TYPE_NULL:
             atom = rt->atomState.typeAtoms[JSTYPE_OBJECT];
             break;
-          case JSVAL_TAG_OBJECT:
+          case JSVAL_TYPE_OBJECT:
             atom = NULL;
             break;
-          case JSVAL_TAG_BOOLEAN:
+          case JSVAL_TYPE_BOOLEAN:
             atom = rt->atomState.typeAtoms[JSTYPE_BOOLEAN];
             break;
           default:
@@ -797,7 +792,7 @@ mjit::Compiler::jsop_typeof()
     stubCall(stubs::TypeOf, Uses(1), Defs(1));
     frame.pop();
     frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_TAG_STRING, Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_TYPE_STRING, Registers::ReturnReg);
 }
 
 void
@@ -828,7 +823,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         fe = frame.peek(-1);
     }
 
-    if (!fe->isTypeKnown() || fe->getTypeTag() != JSVAL_TAG_INT32) {
+    if (!fe->isTypeKnown() || fe->getKnownType() != JSVAL_TYPE_INT32) {
         /* :TODO: do something smarter for the known-type-is-bad case. */
         if (fe->isTypeKnown()) {
             Jump j = masm.jump();
@@ -856,7 +851,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
                        Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
-    frame.pushUntypedPayload(JSVAL_TAG_INT32, reg, true, true);
+    frame.pushUntypedPayload(JSVAL_TYPE_INT32, reg, true, true);
     frame.storeLocal(slot, post || popped, false);
 
     if (post || popped)
@@ -897,7 +892,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
     stubcc.masm.addPtr(Imm32(sizeof(Value) * slot), Registers::ArgReg1, Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
-    frame.pushTypedPayload(JSVAL_TAG_INT32, reg);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
     fe = frame.peek(-1);
 
     reg = frame.allocReg();
@@ -921,8 +916,8 @@ mjit::Compiler::jsop_setelem()
     FrameEntry *id = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_OBJECT) ||
-        (id->isTypeKnown() && id->getTypeTag() != JSVAL_TAG_INT32) ||
+    if ((obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT) ||
+        (id->isTypeKnown() && id->getKnownType() != JSVAL_TYPE_INT32) ||
         (id->isConstant() && id->getValue().asInt32() < 0)) {
         jsop_setelem_slow();
         return;
@@ -977,7 +972,7 @@ mjit::Compiler::jsop_setelem()
         } else {
             masm.storeData32(frame.tempRegForData(fe), slot);
             if (fe->isTypeKnown())
-                masm.storeTypeTag(ImmTag(fe->getTypeTag()), slot);
+                masm.storeTypeTag(ImmTag(fe->getKnownTag()), slot);
             else
                 masm.storeTypeTag(frame.tempRegForType(fe), slot);
         }
@@ -1006,7 +1001,7 @@ mjit::Compiler::jsop_setelem()
         } else {
             masm.storeData32(frame.tempRegForData(fe), slot);
             if (fe->isTypeKnown())
-                masm.storeTypeTag(ImmTag(fe->getTypeTag()), slot);
+                masm.storeTypeTag(ImmTag(fe->getKnownTag()), slot);
             else
                 masm.storeTypeTag(frame.tempRegForType(fe), slot);
         }
@@ -1025,8 +1020,8 @@ mjit::Compiler::jsop_getelem()
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *id = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getTypeTag() != JSVAL_TAG_OBJECT) ||
-        (id->isTypeKnown() && id->getTypeTag() != JSVAL_TAG_INT32) ||
+    if ((obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT) ||
+        (id->isTypeKnown() && id->getKnownType() != JSVAL_TYPE_INT32) ||
         (id->isConstant() && id->getValue().asInt32() < 0)) {
         jsop_getelem_slow();
         return;
@@ -1102,18 +1097,18 @@ mjit::Compiler::jsop_getelem()
 }
 
 static inline bool
-ReallySimpleStrictTest(FrameEntry *fe, JSValueTag &mask)
+ReallySimpleStrictTest(FrameEntry *fe)
 {
     if (!fe->isTypeKnown())
         return false;
-    mask = fe->getTypeTag();
-    return mask == JSVAL_TAG_NULL || mask == JSVAL_TAG_UNDEFINED;
+    JSValueType type = fe->getKnownType();
+    return type == JSVAL_TYPE_NULL || type == JSVAL_TYPE_UNDEFINED;
 }
 
 static inline bool
 BooleanStrictTest(FrameEntry *fe)
 {
-    return fe->isConstant() && fe->getTypeTag() == JSVAL_TAG_BOOLEAN;
+    return fe->isConstant() && fe->getKnownType() == JSVAL_TYPE_BOOLEAN;
 }
 
 void
@@ -1126,15 +1121,19 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     /* Comparison against undefined or null is super easy. */
     bool lhsTest;
-    JSValueTag mask;
-    if ((lhsTest = ReallySimpleStrictTest(lhs, mask)) || ReallySimpleStrictTest(rhs, mask)) {
+    if ((lhsTest = ReallySimpleStrictTest(lhs)) || ReallySimpleStrictTest(rhs)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
 
         if (test->isTypeKnown()) {
+            FrameEntry *known = lhsTest ? lhs : rhs;
             frame.popn(2);
-            frame.push(BooleanTag((test->getTypeTag() == mask) == (op == JSOP_STRICTEQ)));
+            frame.push(BooleanTag((test->getKnownType() == known->getKnownType()) ==
+                                  (op == JSOP_STRICTEQ)));
             return;
         }
+
+        FrameEntry *known = lhsTest ? lhs : rhs;
+        JSValueTag mask = known->getKnownTag();
 
         /* This is only true if the other side is |null|. */
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
@@ -1143,7 +1142,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         else
             masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
         frame.popn(2);
-        frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, result);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
         return;
     }
 
@@ -1151,7 +1150,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if ((lhsTest = BooleanStrictTest(lhs)) || BooleanStrictTest(rhs)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
 
-        if (test->isTypeKnown() && test->getTypeTag() != JSVAL_TAG_BOOLEAN) {
+        if (test->isTypeKnown() && test->getKnownType() != JSVAL_TYPE_BOOLEAN) {
             frame.popn(2);
             frame.push(BooleanTag(op == JSOP_STRICTNE));
             return;
@@ -1187,7 +1186,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         }
 
         frame.popn(2);
-        frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, result);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
         return;
     }
 
@@ -1198,7 +1197,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         stubCall(stubs::StrictNe, Uses(2), Defs(1));
     frame.popn(2);
     frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_TAG_BOOLEAN, Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
 }
 
 void
@@ -1207,7 +1206,7 @@ mjit::Compiler::jsop_pos()
     FrameEntry *top = frame.peek(-1);
 
     if (top->isTypeKnown()) {
-        if (top->getTypeTag() <= JSVAL_TAG_INT32)
+        if (top->getKnownType() <= JSVAL_TYPE_INT32)
             return;
         prepareStubCall();
         stubCall(stubs::Pos, Uses(1), Defs(1));

@@ -203,7 +203,7 @@ ImmutableSync::syncCopy(FrameEntry *fe)
 
     if (fe->isTypeKnown() && !e.learnedType) {
         e.learnedType = true;
-        e.typeTag = fe->getTypeTag();
+        e.typeTag = fe->getKnownTag();
     }
 
     if (!fe->data.synced())
@@ -226,7 +226,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
 
     if (fe->isTypeKnown()) {
         e.learnedType = true;
-        e.typeTag = fe->getTypeTag();
+        e.typeTag = fe->getKnownTag();
     }
 
     if (!fe->data.synced() && !e.dataSynced) {

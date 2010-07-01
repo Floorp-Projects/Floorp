@@ -600,18 +600,18 @@ JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
 }
 
 static JS_ALWAYS_INLINE JSValueType
-JSVAL_EXTRACT_NON_DOUBLE_OBJECT_TYPE_IMPL(jsval_layout l)
+JSVAL_EXTRACT_TYPE_IMPL(jsval_layout l)
 {
     uint32 type = l.s.tag & 0xF;
-    JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type < JSVAL_TYPE_OBJECT);
+    JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_TYPE_OBJECT);
     return (JSValueType)type;
 }
 
 static JS_ALWAYS_INLINE JSValueTag
-JSVAL_EXTRACT_NON_DOUBLE_OBJECT_TAG_IMPL(jsval_layout l)
+JSVAL_EXTRACT_TAG_IMPL(jsval_layout l)
 {
     JSValueTag tag = l.s.tag;
-    JS_ASSERT(tag >= JSVAL_TAG_INT32 && tag != JSVAL_TAG_OBJECT);
+    JS_ASSERT(tag >= JSVAL_TAG_INT32);
     return tag;
 }
 

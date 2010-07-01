@@ -216,23 +216,23 @@ FrameState::pushSynced()
 }
 
 inline void
-FrameState::pushSyncedType(JSValueTag tag)
+FrameState::pushSyncedType(JSValueType type)
 {
     FrameEntry *fe = rawPush();
 
     fe->resetSynced();
-    fe->setTypeTag(tag);
+    fe->setType(type);
 }
 
 inline void
-FrameState::pushSynced(JSValueTag tag, RegisterID reg)
+FrameState::pushSynced(JSValueType type, RegisterID reg)
 {
     FrameEntry *fe = rawPush();
 
     fe->resetUnsynced();
     fe->type.sync();
     fe->data.sync();
-    fe->setTypeTag(tag);
+    fe->setType(type);
     fe->data.setRegister(reg);
     regstate[reg] = RegisterState(fe, RematInfo::DATA);
 }
@@ -278,20 +278,20 @@ FrameState::pushRegs(RegisterID type, RegisterID data)
 }
 
 inline void
-FrameState::pushTypedPayload(JSValueTag tag, RegisterID payload)
+FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
     FrameEntry *fe = rawPush();
 
     fe->resetUnsynced();
-    fe->setTypeTag(tag);
+    fe->setType(type);
     fe->data.setRegister(payload);
     regstate[payload] = RegisterState(fe, RematInfo::DATA);
 }
 
 inline void
-FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload,
+FrameState::pushUntypedPayload(JSValueType type, RegisterID payload,
                                bool popGuaranteed, bool fastType)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
@@ -308,10 +308,10 @@ FrameState::pushUntypedPayload(JSValueTag tag, RegisterID payload,
      * consuming values, so the value has been properly initialized.
      */
     if (popGuaranteed) {
-        fe->setTypeTag(tag);
+        fe->setType(type);
     } else {
         if (!fastType || !fe->type.synced())
-            masm.storeTypeTag(ImmTag(tag), addressOf(fe));
+            masm.storeTypeTag(ImmType(type), addressOf(fe));
 
         /* The forceful type sync will assert otherwise. */
 #ifdef DEBUG
@@ -450,7 +450,7 @@ FrameState::syncType(const FrameEntry *fe, Address to, Assembler &masm) const
 
     if (fe->type.isConstant()) {
         JS_ASSERT(fe->isTypeKnown());
-        masm.storeTypeTag(ImmTag(fe->getTypeTag()), to);
+        masm.storeTypeTag(ImmTag(fe->getKnownTag()), to);
     } else {
         masm.storeTypeTag(fe->type.reg(), to);
     }
@@ -483,11 +483,11 @@ FrameState::forgetType(FrameEntry *fe)
 }
 
 inline void
-FrameState::learnType(FrameEntry *fe, JSValueTag tag)
+FrameState::learnType(FrameEntry *fe, JSValueType type)
 {
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
-    fe->setTypeTag(tag);
+    fe->setType(type);
 }
 
 inline JSC::MacroAssembler::Address
