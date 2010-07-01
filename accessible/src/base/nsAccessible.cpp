@@ -813,16 +813,13 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY, PRBool aDeepestChild,
     return NS_OK;
   }
 
-  nsINode *relevantNode = GetAccService()->GetRelevantContentNodeFor(content);
-  nsAccessible *accessible = GetAccService()->GetAccessible(relevantNode);
+  // Get accessible for the node with the point or the first accessible in
+  // the DOM parent chain.
+  nsAccessible* accessible =
+   GetAccService()->GetAccessibleOrContainer(content, mWeakShell);
   if (!accessible) {
-    // No accessible for the node with the point, so find the first
-    // accessible in the DOM parent chain
-    accessible = GetAccService()->GetContainerAccessible(relevantNode, PR_TRUE);
-    if (!accessible) {
-      NS_IF_ADDREF(*aChild = fallbackAnswer);
-      return NS_OK;
-    }
+    NS_IF_ADDREF(*aChild = fallbackAnswer);
+    return NS_OK;
   }
 
   if (accessible == this) {
@@ -1242,8 +1239,6 @@ nsresult
 nsAccessible::HandleAccEvent(nsAccEvent *aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
-  NS_ENSURE_TRUE(nsAccUtils::IsNodeRelevant(aEvent->GetNode()),
-                 NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
@@ -2675,22 +2670,7 @@ nsAccessible::Init()
   void *uniqueID = nsnull;
   GetUniqueID(&uniqueID);
 
-  if (!docAcc->CacheAccessible(uniqueID, this))
-    return PR_FALSE;
-
-  // Make sure an ancestor in real content is cached so that
-  // nsDocAccessible::RefreshNodes() can find the anonymous subtree to release
-  // when the root node goes away. /Specific examples of where this is used:
-  // <input type="file"> and <xul:findbar>.
-  // XXX: remove this once we create correct accessible tree.
-  if (mContent && mContent->IsInAnonymousSubtree()) {
-    nsAccessible *parent = GetAccService()->GetContainerAccessible(mContent,
-                                                                   PR_TRUE);
-    if (parent)
-      parent->EnsureChildren();
-  }
-
-  return PR_TRUE;
+  return docAcc->CacheAccessible(uniqueID, this);
 }
 
 void
@@ -2779,31 +2759,33 @@ nsAccessible::InvalidateChildren()
 nsAccessible*
 nsAccessible::GetParent()
 {
+  if (mParent)
+    return mParent;
+
   if (IsDefunct())
     return nsnull;
 
-  if (mParent)
-    return mParent;
+  // XXX: mParent can be null randomly because supposedly we get layout
+  // notification and invalidate parent-child relations, this accessible stays
+  // unattached. This should gone after bug 572951. Other reason is bug 574588
+  // since CacheChildren() implementation calls nsAccessible::GetRole() what
+  // can need to get a parent and we are here as result.
+  NS_WARNING("Bad accessible tree!");
 
 #ifdef DEBUG
   nsDocAccessible *docAccessible = GetDocAccessible();
   NS_ASSERTION(docAccessible, "No document accessible for valid accessible!");
 #endif
 
-  nsAccessible *parent = GetAccService()->GetContainerAccessible(mContent,
-                                                                 PR_TRUE);
+  nsAccessible* parent = GetAccService()->GetContainerAccessible(mContent,
+                                                                 mWeakShell);
   NS_ASSERTION(parent, "No accessible parent for valid accessible!");
   if (!parent)
     return nsnull;
 
-#ifdef DEBUG
-  NS_ASSERTION(!parent->IsDefunct(), "Defunct parent!");
-
+  // Repair parent-child relations.
   parent->EnsureChildren();
-  if (parent != mParent)
-    NS_WARNING("Bad accessible tree!");
-#endif
-
+  NS_ASSERTION(parent == mParent, "Wrong children repair!");
   return parent;
 }
 
@@ -2844,25 +2826,6 @@ nsAccessible::GetIndexInParent()
   nsAccessible *parent = GetParent();
   return parent ? parent->GetIndexOf(this) : -1;
 }
-
-nsAccessible*
-nsAccessible::GetCachedParent()
-{
-  if (IsDefunct())
-    return nsnull;
-
-  return mParent;
-}
-
-nsAccessible*
-nsAccessible::GetCachedFirstChild()
-{
-  if (IsDefunct())
-    return nsnull;
-
-  return mChildren.SafeElementAt(0, nsnull);
-}
-
 
 #ifdef DEBUG
 PRBool
