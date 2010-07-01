@@ -1410,6 +1410,12 @@ void nsXULWindow::SyncAttributesToWidget()
   if (NS_SUCCEEDED(rv)) {
     mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
   }
+
+  // "drawintitlebar" attribute
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("drawintitlebar"), attr);
+  if (NS_SUCCEEDED(rv)) {
+    mWindow->SetDrawsInTitlebar(attr.EqualsLiteral("true"));
+  }
 }
 
 NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()

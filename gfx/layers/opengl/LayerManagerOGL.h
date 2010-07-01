@@ -384,16 +384,6 @@ protected:
   LayerManagerOGL *mOGLManager;
 };
 
-#ifdef DEBUG
-#define DEBUG_GL_ERROR_CHECK(cx) do {           \
-    /*fprintf (stderr, "trace %s %d\n", __FILE__, __LINE__);*/          \
-    GLenum err = (cx)->fGetError();             \
-    if (err) { fprintf (stderr, "GL ERROR: 0x%04x at %s:%d\n", err, __FILE__, __LINE__); } \
-  } while (0)
-#else
-#define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
-#endif
-
 } /* layers */
 } /* mozilla */
 

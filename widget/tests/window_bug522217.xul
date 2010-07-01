@@ -49,8 +49,17 @@ function start() {
     is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing drawintitlebar");
     is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing drawintitlebar");
     is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing drawintitlebar");
-    window.opener.wrappedJSObject.SimpleTest.finish();
-    window.close();
+
+    // Test whether having drawintitlebar also works when it's set on the window
+    // from the beginning.
+    var win = open('data:application/vnd.mozilla.xul+xml,<?xml version="1.0"?><?xml-stylesheet href="chrome://global/skin" type="text/css"?><window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" drawintitlebar="true" width="200" height="200"/>', '_blank', 'chrome');
+    win.onfocus = function () {
+      is(win.innerWidth, win.outerWidth, "if drawintitlebar is set, innerWidth and outerWidth should be the same");
+      is(win.innerHeight, win.outerHeight, "if drawintitlebar is set, innerHeight and outerHeight should be the same");
+      win.close();
+      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.close();
+    }
   }
 }
 

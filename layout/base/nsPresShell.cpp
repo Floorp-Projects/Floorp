@@ -225,6 +225,9 @@
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
+/* for NS_MEMORY_REPORTER_IMPLEMENT */
+#include "nsIMemoryReporter.h"
+
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
