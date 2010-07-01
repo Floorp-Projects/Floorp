@@ -207,6 +207,48 @@ protected:
     ContentType mContentType;
 };
 
+/**
+ * BasicTextureImage is the baseline TextureImage implementation ---
+ * it updates its texture by allocating a scratch buffer for the
+ * client to draw into, then using glTexSubImage2D() to upload the new
+ * pixels.  Platforms must provide the code to create a new surface
+ * into which the updated pixels will be drawn, and the code to
+ * convert the update surface's pixels into an image on which we can
+ * glTexSubImage2D().
+ */
+class BasicTextureImage
+    : public TextureImage
+{
+public:
+    virtual ~BasicTextureImage();
+
+    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
+    virtual PRBool EndUpdate();
+
+protected:
+    typedef gfxASurface::gfxImageFormat ImageFormat;
+
+    BasicTextureImage(GLuint aTexture,
+                      const nsIntSize& aSize,
+                      ContentType aContentType,
+                      GLContext* aContext)
+        : TextureImage(aTexture, aSize, aContentType)
+        , mTextureInited(PR_FALSE)
+        , mGLContext(aContext)
+    {}
+
+    virtual already_AddRefed<gfxASurface>
+    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt) = 0;
+
+    virtual already_AddRefed<gfxImageSurface>
+    GetImageForUpload(gfxASurface* aUpdateSurface) = 0;
+
+    PRBool mTextureInited;
+    GLContext* mGLContext;
+    nsRefPtr<gfxContext> mUpdateContext;
+    nsIntRect mUpdateRect;
+};
+
 class GLContext
     : public LibrarySymbolLoader
 {
@@ -301,8 +343,7 @@ public:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLint aWrapMode,
-                       PRBool aUseNearestFilter=PR_FALSE)
-    { return NULL; }
+                       PRBool aUseNearestFilter=PR_FALSE);
 
 protected:
 
@@ -312,6 +353,13 @@ protected:
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
 
     PRBool IsExtensionSupported(const char *extension);
+
+    virtual already_AddRefed<TextureImage>
+    CreateBasicTextureImage(GLuint aTexture,
+                            const nsIntSize& aSize,
+                            TextureImage::ContentType aContentType,
+                            GLContext* aContext)
+    { return NULL; }
 
     //
     // the wrapped functions
