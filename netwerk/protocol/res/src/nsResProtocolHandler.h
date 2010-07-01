@@ -59,8 +59,6 @@ public:
 
 class nsResProtocolHandler : public nsIResProtocolHandler, public nsSupportsWeakReference
 {
-private:
-    typedef nsInterfaceHashtable<nsCStringHashKey,nsIURI> SubstitutionTable;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
@@ -71,12 +69,9 @@ public:
 
     nsresult Init();
 
-    void EnumerateSubstitutions(SubstitutionTable::EnumReadFunction enumFunc,
-                                void* userArg);
-
 private:
     nsresult AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution);
-    SubstitutionTable mSubstitutions;
+    nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
     nsCOMPtr<nsIIOService> mIOService;
 
     friend class nsResURL;

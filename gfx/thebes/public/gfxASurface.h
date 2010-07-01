@@ -67,7 +67,6 @@ public:
         ImageFormatRGB24,  ///< xRGB data in native endianness
         ImageFormatA8,     ///< Only an alpha channel
         ImageFormatA1,     ///< Packed transparency information (one byte refers to 8 pixels)
-        ImageFormatRGB16,  ///< xRGB data in native endianness, using premultiplied alpha
         ImageFormatUnknown
     } gfxImageFormat;
 
@@ -94,8 +93,7 @@ public:
     typedef enum {
         CONTENT_COLOR       = 0x1000,
         CONTENT_ALPHA       = 0x2000,
-        CONTENT_COLOR_ALPHA = 0x3000,
-        CONTENT_COLOR16     = 0x4000
+        CONTENT_COLOR_ALPHA = 0x3000
     } gfxContentType;
 
     /* Wrap the given cairo surface and return a gfxASurface for it */
