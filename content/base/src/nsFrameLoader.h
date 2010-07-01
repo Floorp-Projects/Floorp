@@ -189,7 +189,6 @@ private:
   PRPackedBool mRemoteWidgetCreated : 1;
   bool mRemoteFrame;
   // XXX leaking
-  nsCOMPtr<nsIObserver> mChildHost;
   mozilla::dom::TabParent* mChildProcess;
 
 #ifdef MOZ_WIDGET_GTK2

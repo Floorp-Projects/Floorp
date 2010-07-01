@@ -39,7 +39,6 @@
 #include "TabParent.h"
 
 #include "mozilla/ipc/DocumentRendererParent.h"
-#include "mozilla/ipc/DocumentRendererShmemParent.h"
 
 #include "nsIURI.h"
 #include "nsFocusManager.h"
@@ -53,7 +52,6 @@
 #include "nsFrameLoader.h"
 
 using mozilla::ipc::DocumentRendererParent;
-using mozilla::ipc::DocumentRendererShmemParent;
 
 namespace mozilla {
 namespace dom {
@@ -152,22 +150,6 @@ TabParent::AllocPDocumentRenderer(const PRInt32& x,
 
 bool
 TabParent::DeallocPDocumentRenderer(PDocumentRendererParent* actor)
-{
-    delete actor;
-    return true;
-}
-
-mozilla::ipc::PDocumentRendererShmemParent*
-TabParent::AllocPDocumentRendererShmem(const PRInt32& x,
-        const PRInt32& y, const PRInt32& w, const PRInt32& h, const nsString& bgcolor,
-        const PRUint32& flags, const bool& flush, const gfxMatrix& aMatrix,
-        const PRInt32& bufw, const PRInt32& bufh, Shmem &buf)
-{
-    return new DocumentRendererShmemParent();
-}
-
-bool
-TabParent::DeallocPDocumentRendererShmem(PDocumentRendererShmemParent* actor)
 {
     delete actor;
     return true;

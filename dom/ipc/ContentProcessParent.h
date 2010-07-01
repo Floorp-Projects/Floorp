@@ -85,8 +85,6 @@ public:
 
     bool RequestRunToCompletion();
 
-    bool IsAlive();
-
 protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
@@ -110,8 +108,6 @@ private:
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
 
-    virtual bool RecvStartVisitedQuery(const nsCString& aURISpec, nsresult* rv);
-
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
@@ -119,7 +115,6 @@ private:
     int mRunToCompletionDepth;
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
-    bool mIsAlive;
 };
 
 } // namespace dom
