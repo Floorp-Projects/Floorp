@@ -474,3 +474,8 @@ pref("font.default.x-western", "SwissA");
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
+
+// sync service
+pref("services.sync.client.type", "mobile");
+pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password");
+pref("services.sync.autoconnectDelay", 5);

@@ -119,8 +119,6 @@ var BrowserUI = {
         break;
       }
     }
-
-    return { };
   },
 
   _titleChanged : function(aBrowser) {
@@ -150,8 +148,6 @@ var BrowserUI = {
         return { preventDefault: true };
       }
     }
-
-    return { };
   },
 
   _updateButtons : function(aBrowser) {
@@ -388,9 +384,10 @@ var BrowserUI = {
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMWindowClose", this);
 
-    // listen returns messages from content
-    messageManager.addMessageListener("Browser:SaveAs:Return", this);
     messageManager.addMessageListener("Browser:Highlight", this);
+    messageManager.addMessageListener("Browser:OpenURI", this);
+    messageManager.addMessageListener("Browser:ContextMenu", ContextHelper);
+    messageManager.addMessageListener("Browser:SaveAs:Return", this);
 
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
@@ -415,6 +412,9 @@ var BrowserUI = {
       DownloadsView.init();
       PreferencesView.init();
       ConsoleView.init();
+
+      // Init the sync system
+      WeaveGlue.init();
     });
 
     FormMessageReceiver.start();
@@ -815,9 +815,10 @@ var BrowserUI = {
         }
         TapHighlightHelper.show(rects);
         break;
-    }
 
-    return {};
+      case "Browser:OpenURI":
+        Browser.addTab(json.uri, false, Browser.selectedTab);
+    }
   },
 
   supportsCommand : function(cmd) {
@@ -2003,135 +2004,40 @@ var SelectHelper = {
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
 var ContextHelper = {
-  popupNode: null,
-  onLink: false,
-  onSaveableLink: false,
-  onVoiceLink: false,
-  onImage: false,
-  onLoadedImage: false,
-  linkURL: "",
-  linkProtocol: null,
-  mediaURL: "",
+  popupState: null,
 
-  _clearState: function ch_clearState() {
-    this.popupNode = null;
-    this.onLink = false;
-    this.onSaveableLink = false;
-    this.onVoiceLink = false;
-    this.onImage = false;
-    this.onLoadedImage = false;
-    this.linkURL = "";
-    this.linkProtocol = null;
-    this.mediaURL = "";
-  },
+  receiveMessage: function ch_receiveMessage(aMessage) {
+    this.popupState = aMessage.json;
+    this.popupState.browser = aMessage.target;
 
-  _getLinkURL: function ch_getLinkURL(aLink) {
-    let href = aLink.href;  
-    if (href)
-      return href;
-
-    href = aLink.getAttributeNS(kXLinkNamespace, "href");
-    if (!href || !href.match(/\S/)) {
-      // Without this we try to save as the current doc,
-      // for example, HTML case also throws if empty
-      throw "Empty href";
-    }
-
-    return Util.makeURLAbsolute(aLink.baseURI, href);
-  },
-
-  _getURI: function ch_getURI(aURL) {
-    try {
-      return makeURI(aURL);
-    } catch (ex) { }
-
-    return null;
-  },
-  
-  _getProtocol: function ch_getProtocol(aURI) {
-    if (aURI)
-      return aURI.scheme;
-    return null;
-  },
-  
-  _isSaveable: function ch_isSaveable(aProtocol) {
-    // We don't do the Right Thing for news/snews yet, so turn them off until we do
-    return aProtocol && !(aProtocol == "mailto" || aProtocol == "javascript" || aProtocol == "news" || aProtocol == "snews");
-  },
-
-  _isVoice: function ch_isVoice(aProtocol) {
-    // Collection of protocols related to voice or data links
-    return aProtocol && (aProtocol == "tel" || aProtocol == "callto" || aProtocol == "sip" || aProtocol == "voipto");
-  },
-
-  handleEvent: function ch_handleEvent(aEvent) {
-    this._clearState();
-
-    let [elementX, elementY] = Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
-    this.popupNode = Browser.elementFromPoint(elementX, elementY);
-
-    // Do checks for nodes that never have children.
-    if (this.popupNode.nodeType == Node.ELEMENT_NODE) {
-      // See if the user clicked on an image.
-      if (this.popupNode instanceof Ci.nsIImageLoadingContent && this.popupNode.currentURI) {
-        this.onImage = true;
-        this.mediaURL = this.popupNode.currentURI.spec;
-
-        let request = this.popupNode.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-        if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
-          this.onLoadedImage = true;
-      }
-    }
-
-    let elem = this.popupNode;
-    while (elem) {
-      if (elem.nodeType == Node.ELEMENT_NODE) {
-        // Link?
-        if (!this.onLink &&
-             ((elem instanceof HTMLAnchorElement && elem.href) ||
-              (elem instanceof HTMLAreaElement && elem.href) ||
-              elem instanceof HTMLLinkElement ||
-              elem.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
-
-          // Target is a link or a descendant of a link.
-          this.linkURL = this._getLinkURL(elem);
-          this.linkProtocol = this._getProtocol(this._getURI(this.linkURL));
-          this.onLink = true;
-          this.onSaveableLink = this._isSaveable(this.linkProtocol);
-          this.onVoiceLink = this._isVoice(this.linkProtocol);
-        }
-      }
-
-      elem = elem.parentNode;
-    }
-
-    let first = last = null;
+    let first = null;
+    let last = null;
     let commands = document.getElementById("context-commands");
     for (let i=0; i<commands.childElementCount; i++) {
       let command = commands.children[i];
       let types = command.getAttribute("type").split(/\s+/);
       command.removeAttribute("selector");
-      if (types.indexOf("image") != -1 && this.onImage) {
+      if (types.indexOf("image") != -1 && this.popupState.onImage) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
         continue;
-      } else if (types.indexOf("image-loaded") != -1 && this.onLoadedImage) {
+      } else if (types.indexOf("image-loaded") != -1 && this.popupState.onLoadedImage) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
         continue;
-      } else if (types.indexOf("link") != -1 && this.onSaveableLink) {
+      } else if (types.indexOf("link") != -1 && this.popupState.onSaveableLink) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
         continue;
-      } else if (types.indexOf("callto") != -1 && this.onVoiceLink) {
+      } else if (types.indexOf("callto") != -1 && this.popupState.onVoiceLink) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
         continue;
-      } else if (types.indexOf("mailto") != -1 && this.onLink && this.linkProtocol == "mailto") {
+      } else if (types.indexOf("mailto") != -1 && this.popupState.onLink && this.popupState.linkProtocol == "mailto") {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
@@ -2141,7 +2047,7 @@ var ContextHelper = {
     }
 
     if (!first) {
-      this._clearState();
+      this.popupState = null;
       return;
     }
     
@@ -2149,10 +2055,10 @@ var ContextHelper = {
     last.setAttribute("selector", "last-child");
 
     let label = document.getElementById("context-hint");
-    if (this.onImage)
-      label.value = this.mediaURL;
-    if (this.onLink)
-      label.value = this.linkURL;
+    if (this.popupState.onImage)
+      label.value = this.popupState.mediaURL;
+    if (this.popupState.onLink)
+      label.value = this.popupState.linkURL;
 
     let container = document.getElementById("context-popup");
     container.hidden = false;
@@ -2176,7 +2082,7 @@ var ContextHelper = {
   },
   
   hide: function ch_hide() {
-    this._clearState();
+    this.popupState = null;
     
     let container = document.getElementById("context-popup");
     container.hidden = true;
@@ -2187,12 +2093,12 @@ var ContextHelper = {
 
 var ContextCommands = {
   openInNewTab: function cc_openInNewTab(aEvent) {
-    Browser.addTab(ContextHelper.linkURL, false, Browser.selectedTab);
+    Browser.addTab(ContextHelper.popupState.linkURL, false, Browser.selectedTab);
   },
 
   saveImage: function cc_saveImage(aEvent) {
-    let doc = ContextHelper.popupNode.ownerDocument;
-    saveImageURL(ContextHelper.mediaURL, null, "SaveImageTitle", false, false, doc.documentURIObject);
+    let browser = ContextHelper.popupState.browser;
+    saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, false, browser.documentURI);
   }
 }
 

@@ -52,9 +52,7 @@ function checkClick() {
   element = newTab.browser.contentDocument.documentElement;
   element.addEventListener("click", clickFired, true);
 
-  finish(); // XXX Browser.getBoundingContentRect not available.
-
-  let rect = Browser.getBoundingContentRect(element);
+  let rect = getBoundingContentRect(element);
   EventUtils.synthesizeMouse(element, 1, rect.height + 10, {}, window);
   waitFor(checkPosition, function() { return isClickFired });
 }
@@ -62,7 +60,7 @@ function checkClick() {
 function checkPosition() {
   element.removeEventListener("click", clickFired, true);
 
-  let rect = Browser.getBoundingContentRect(element);
+  let rect = getBoundingContentRect(element);
   is(clickPosition.x, 1, "X position is correct");
   is(clickPosition.y, rect.height + 10, "Y position is correct");
 
@@ -73,11 +71,11 @@ function checkThickBorder() {
   let frame = newTab.browser.contentDocument.getElementById("iframe-2");
   let element = frame.contentDocument.getElementsByTagName("input")[0];
 
-  let frameRect = Browser.getBoundingContentRect(frame);
+  let frameRect = getBoundingContentRect(frame);
   let frameLeftBorder = window.getComputedStyle(frame, "").borderLeftWidth;
   let frameTopBorder = window.getComputedStyle(frame, "").borderTopWidth;
 
-  let elementRect = Browser.getBoundingContentRect(element);
+  let elementRect = getBoundingContentRect(element);
   ok((frameRect.left + parseInt(frameLeftBorder)) < elementRect.left, "X position of nested element ok");
   ok((frameRect.top + parseInt(frameTopBorder)) < elementRect.top, "Y position of nested element ok");
 
@@ -90,4 +88,28 @@ function close() {
 
   // We must finialize the tests
   finish();
+}
+
+// XXX copied from chrome/content/content.js
+function getBoundingContentRect(aElement) {
+  if (!aElement)
+    return new Rect(0, 0, 0, 0);
+
+  let document = aElement.ownerDocument;
+  while(document.defaultView.frameElement)
+    document = document.defaultView.frameElement.ownerDocument;
+
+  let offset = Util.getScrollOffset(content);
+  let r = aElement.getBoundingClientRect();
+
+  // step out of iframes and frames, offsetting scroll values
+  for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
+    // adjust client coordinates' origin to be top left of iframe viewport
+    let rect = frame.frameElement.getBoundingClientRect();
+    let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+    let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+    offset.add(rect.left + parseInt(left), rect.top + parseInt(top));
+  }
+
+  return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
 }

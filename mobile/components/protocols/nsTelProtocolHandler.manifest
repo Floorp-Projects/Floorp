@@ -1,2 +1,0 @@
-component {d4bc06cc-fa9f-48ce-98e4-5326ca96ba28} nsTelProtocolHandler.js
-contract @mozilla.org/network/protocol;1?name=tel {d4bc06cc-fa9f-48ce-98e4-5326ca96ba28}
