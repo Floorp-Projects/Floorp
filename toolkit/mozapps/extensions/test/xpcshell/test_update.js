@@ -88,6 +88,7 @@ function run_test_1() {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
     do_check_true(a1.applyBackgroundUpdates);
+    do_check_eq(a1.releaseNotesURI, null);
     a1.applyBackgroundUpdates = false;
 
     prepare_test({}, [
@@ -107,6 +108,7 @@ function run_test_1() {
         do_check_eq(install.version, "2.0");
         do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
         do_check_eq(install.existingAddon, addon);
+        do_check_eq(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
         prepare_test({}, [
           "onDownloadStarted",
@@ -161,6 +163,8 @@ function check_test_2() {
       do_check_eq(a1.version, "2.0");
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
       do_check_false(a1.applyBackgroundUpdates);
+      do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+
       a1.uninstall();
       restartManager(0);
 
@@ -343,6 +347,7 @@ function check_test_6(install) {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "2.0");
+    do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
     a1.uninstall();
     restartManager(0);
 
