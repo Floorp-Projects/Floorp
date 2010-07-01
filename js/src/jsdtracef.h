@@ -97,7 +97,7 @@ DTrace::enterJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun, JSStackFram
                    jsuint argc, js::Value *argv, js::Value *lval)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (!lval || VALUE_IS_FUNCTION(cx, *lval)) {
+    if (!lval || lval->isFunObj()) {
         if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
             enterJSFunImpl(cx, fp, fun);
         if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
@@ -113,7 +113,7 @@ DTrace::exitJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun,
                   const js::Value &rval, js::Value *lval)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (!lval || VALUE_IS_FUNCTION(cx, *lval)) {
+    if (!lval || lval->isFunObj()) {
         if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
             handleFunctionRval(cx, fp, fun, rval);
         if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
