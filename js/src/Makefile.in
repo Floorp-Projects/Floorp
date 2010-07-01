@@ -239,7 +239,7 @@ INSTALLED_HEADERS = \
 		jswrapper.h \
 		jsxdrapi.h \
 		jsxml.h \
-		jsvalimpl.h \
+		jsval.h \
 		jsvalue.h \
 		prmjtime.h \
 		$(NULL)
