@@ -49,6 +49,7 @@
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
+#include "gfxUtils.h"
 
 #include "CanvasUtils.h"
 #include "NativeJSContext.h"
