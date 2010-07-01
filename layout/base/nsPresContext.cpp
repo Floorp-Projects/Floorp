@@ -2091,12 +2091,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (window)
     return MayHavePaintEventListener(window);
 
-  nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(parentTarget);
-  nsPIDOMEventTarget* tabChildGlobal;
-  return root &&
-         (tabChildGlobal = root->GetParentTarget()) &&
-         (manager = tabChildGlobal->GetListenerManager(PR_FALSE)) &&
-         manager->MayHavePaintEventListener();
+  return PR_FALSE;
 }
 
 PRBool
