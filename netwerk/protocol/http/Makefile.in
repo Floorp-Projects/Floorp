@@ -48,8 +48,9 @@ LIBRARY_NAME   = nkhttp_s
 LIBXUL_LIBRARY = 1
 XPIDL_MODULE   = necko_http
 GRE_MODULE     = 1
-
 FORCE_STATIC_LIB = 1
+
+EXPORTS_NAMESPACES = mozilla/net
 
 SDK_XPIDLSRCS = \
   nsIHttpChannel.idl \
@@ -67,6 +68,25 @@ XPIDLSRCS = \
   nsIHttpAuthenticableChannel.idl \
   $(NULL)
 
+EXPORTS_mozilla/net = \
+  HttpBaseChannel.h \
+  $(NULL)
+
+ifdef MOZ_IPC
+EXPORTS_mozilla/net += \
+  HttpChannelParent.h \
+  HttpChannelChild.h  \
+  PHttpChannelParams.h \
+  $(NULL)
+
+EXPORTS = \
+  nsHttpResponseHead.h \
+  nsHttpHeaderArray.h \
+  nsHttp.h \
+  nsHttpAtomList.h \
+  $(NULL)
+endif
+
 CPPSRCS = \
   nsHttp.cpp \
   nsHttpHeaderArray.cpp \
@@ -83,17 +103,29 @@ CPPSRCS = \
   nsHttpNTLMAuth.cpp \
   nsHttpTransaction.cpp \
   nsHttpHandler.cpp \
+  HttpBaseChannel.cpp \
   nsHttpChannel.cpp \
   nsHttpPipeline.cpp \
   nsHttpActivityDistributor.cpp \
   nsHttpChannelAuthProvider.cpp \
   $(NULL)
 
+ifdef MOZ_IPC
+CPPSRCS += \
+  HttpChannelParent.cpp \
+  HttpChannelChild.cpp \
+  $(NULL)
+endif
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/xpcom/ds \
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET

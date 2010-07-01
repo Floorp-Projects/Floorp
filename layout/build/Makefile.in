@@ -282,6 +282,11 @@ OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -fr
 endif
 endif
 
+ifdef MOZ_IPC
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../base \

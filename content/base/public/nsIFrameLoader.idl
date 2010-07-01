@@ -41,15 +41,23 @@
 
 interface nsIDocShell;
 interface nsIURI;
+interface nsIWebProgress;
+interface nsIFrame;
 interface nsIChromeFrameMessageManager;
+interface nsIVariant;
 
-[scriptable, uuid(3b256c12-20e1-4fd3-8edb-b9c793919f15)]
+[scriptable, uuid(65d2c9e2-852c-48cf-a95d-9b82f1273c15)]
 interface nsIFrameLoader : nsISupports
 {
   /**
    * Get the docshell from the frame loader.
    */
   readonly attribute nsIDocShell docShell;
+
+  /**
+   * Get the nsIWebProgress from the frame loader, allowing listener registration.
+   */
+  readonly attribute nsIWebProgress webProgress;
 
   /**
    * Start loading the frame. This method figures out what to load
@@ -76,13 +84,54 @@ interface nsIFrameLoader : nsISupports
    */
   readonly attribute boolean depthTooGreat;
 
+  /**
+   * Updates the position and size of the subdocument loaded by this frameloader.
+   *
+   *  @param aIFrame The nsIFrame for the content node that owns this frameloader
+   */
+  [noscript] void updatePositionAndSize(in nsIFrame aIFrame);
+
+  /**
+   * Activate remote frame.
+   * Throws an exception with non-remote frames.
+   */
+  void activateRemoteFrame();
+
+  /**
+   * @see nsIDOMWindowUtils sendMouseEvent.
+   */
+  void sendCrossProcessMouseEvent(in AString aType,
+                                  in float aX,
+                                  in float aY,
+                                  in long aButton,
+                                  in long aClickCount,
+                                  in long aModifiers,
+                                  [optional] in boolean aIgnoreRootScrollFrame);
+
+  /**
+   * Activate event forwarding from client (remote frame) to parent.
+   */
+  void activateFrameEvent(in AString aType, in boolean capture);
+
   // Note, when frameloaders are swapped, also messageManagers are swapped.
   readonly attribute nsIChromeFrameMessageManager messageManager;
+
+  /**
+   * @see nsIDOMWindowUtils sendKeyEvent.
+   */
+  void sendCrossProcessKeyEvent(in AString aType,
+                                in long aKeyCode,
+                                in long aCharCode,
+                                in long aModifiers,
+                                [optional] in boolean aPreventDefault);
+
+  attribute boolean delayRemoteDialogs;
+
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
-[scriptable, uuid(8f3b12a0-35ae-4e0d-9152-8e0d7e49d446)]
+[scriptable, uuid(5879040e-83e9-40e3-b2bb-5ddf43b76e47)]
 interface nsIFrameLoaderOwner : nsISupports
 {
   /**

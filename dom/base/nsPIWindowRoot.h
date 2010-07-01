@@ -46,11 +46,12 @@
 class nsPIDOMWindow;
 class nsIControllers;
 class nsIController;
+struct JSContext;
 
-// 313C1D52-88F1-46C7-B35C-4E71EC1B01F3
+// 2e26a297-6e40-41c1-81c9-7306571f955e
 #define NS_IWINDOWROOT_IID \
-{ 0x313c1d52, 0x88f1, 0x46c7, \
-  { 0xb3, 0x5c, 0x4e, 0x71, 0xec, 0x1b, 0x01, 0xf3 } }
+{ 0x2e26a297, 0x6e40, 0x41c1, \
+  { 0x81, 0xc9, 0x73, 0x06, 0x57, 0x1f, 0x95, 0x5e } }
 
 class nsPIWindowRoot : public nsPIDOMEventTarget {
 public:
@@ -64,6 +65,9 @@ public:
   virtual nsresult GetControllerForCommand(const char *aCommand,
                                            nsIController** aResult) = 0;
   virtual nsresult GetControllers(nsIControllers** aResult) = 0;
+
+  virtual void SetParentTarget(nsPIDOMEventTarget* aTarget) = 0;
+  virtual nsPIDOMEventTarget* GetParentTarget() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)

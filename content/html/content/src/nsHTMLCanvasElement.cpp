@@ -291,6 +291,55 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   return NS_OK;
 }
 
+nsresult
+nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
+                                      nsICanvasRenderingContextInternal **aContext)
+{
+  NS_ENSURE_ARG(aContext);
+
+  nsCString ctxId;
+  ctxId.Assign(NS_LossyConvertUTF16toASCII(aContextId));
+
+  // check that ctxId is clamped to A-Za-z0-9_-
+  for (PRUint32 i = 0; i < ctxId.Length(); i++) {
+    if ((ctxId[i] < 'A' || ctxId[i] > 'Z') &&
+        (ctxId[i] < 'a' || ctxId[i] > 'z') &&
+        (ctxId[i] < '0' || ctxId[i] > '9') &&
+        (ctxId[i] != '-') &&
+        (ctxId[i] != '_'))
+    {
+      // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  nsCString ctxString("@mozilla.org/content/canvas-rendering-context;1?id=");
+  ctxString.Append(ctxId);
+
+  nsresult rv;
+  nsCOMPtr<nsICanvasRenderingContextInternal> ctx =
+    do_CreateInstance(nsPromiseFlatCString(ctxString).get(), &rv);
+  if (rv == NS_ERROR_OUT_OF_MEMORY) {
+    *aContext = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (NS_FAILED(rv)) {
+    *aContext = nsnull;
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  rv = ctx->SetCanvasElement(this);
+  if (NS_FAILED(rv)) {
+    *aContext = nsnull;
+    return rv;
+  }
+
+  *aContext = ctx.forget().get();
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
                                 nsISupports **aContext)
@@ -298,28 +347,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
   nsresult rv;
 
   if (mCurrentContextId.IsEmpty()) {
-    nsCString ctxId;
-    ctxId.Assign(NS_LossyConvertUTF16toASCII(aContextId));
-
-    // check that ctxId is clamped to A-Za-z0-9_-
-    for (PRUint32 i = 0; i < ctxId.Length(); i++) {
-      if ((ctxId[i] < 'A' || ctxId[i] > 'Z') &&
-          (ctxId[i] < 'a' || ctxId[i] > 'z') &&
-          (ctxId[i] < '0' || ctxId[i] > '9') &&
-          (ctxId[i] != '-') &&
-          (ctxId[i] != '_'))
-      {
-        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        return NS_ERROR_INVALID_ARG;
-      }
-    }
-
-    nsCString ctxString("@mozilla.org/content/canvas-rendering-context;1?id=");
-    ctxString.Append(ctxId);
-
-    mCurrentContext = do_CreateInstance(nsPromiseFlatCString(ctxString).get(), &rv);
-    if (rv == NS_ERROR_OUT_OF_MEMORY)
-      return NS_ERROR_OUT_OF_MEMORY;
+    rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
     if (NS_FAILED(rv))
       // XXX ERRMSG we need to report an error to developers here! (bug 329026)
       return NS_ERROR_INVALID_ARG;
@@ -353,6 +381,48 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 
   NS_ADDREF (*aContext = mCurrentContext);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
+                                      nsISupports **aContext)
+{
+#ifdef MOZ_IPC
+  if(!nsContentUtils::IsCallerTrustedForRead()) {
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // We only support 2d shmem contexts for now.
+  if (!aContextId.Equals(NS_LITERAL_STRING("2d")))
+    return NS_ERROR_INVALID_ARG;
+
+  nsresult rv;
+
+  if (mCurrentContextId.IsEmpty()) {
+    rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
+    if (NS_FAILED(rv))
+      return rv;
+
+    mCurrentContext->SetIsIPC(PR_TRUE);
+
+    rv = UpdateContext();
+    if (NS_FAILED(rv)) {
+      mCurrentContext = nsnull;
+      return rv;
+    }
+
+    mCurrentContextId.Assign(aContextId);
+  } else if (!mCurrentContextId.Equals(aContextId)) {
+    //XXX eventually allow for more than one active context on a given canvas
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_ADDREF (*aContext = mCurrentContext);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 nsresult
