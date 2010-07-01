@@ -226,6 +226,7 @@ INSTALLED_HEADERS = \
 		jsscript.h \
 		jsscriptinlines.h \
 		jsstaticcheck.h \
+		jsstdint.h \
 		jsstr.h \
 		jstask.h \
 		jstracer.h \
