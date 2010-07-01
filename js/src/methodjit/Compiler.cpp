@@ -79,6 +79,9 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
     branchPatches(ContextAllocPolicy(cx)), mics(ContextAllocPolicy(cx)),
     pics(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
 {
+#ifdef DEBUG
+    masm.setSpewPath(false);
+#endif
 }
 
 #define CHECK_STATUS(expr)              \

@@ -51,6 +51,9 @@ StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame,
   : cx(cx), cc(cc), frame(frame), script(script), generation(1), lastGeneration(0),
     exits(SystemAllocPolicy()), joins(SystemAllocPolicy()), jumpList(SystemAllocPolicy())
 {
+#ifdef DEBUG
+    masm.setSpewPath(true);
+#endif
 }
 
 bool
