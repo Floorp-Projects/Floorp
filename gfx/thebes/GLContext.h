@@ -41,17 +41,22 @@
 #ifndef GLCONTEXT_H_
 #define GLCONTEXT_H_
 
+#include <stdio.h>
+
 #ifdef WIN32
 #include <windows.h>
 #endif
 
 #include "GLDefs.h"
+#include "gfxASurface.h"
+#include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsISupportsImpl.h"
 #include "prlink.h"
 
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsRegion.h"
 
 #ifndef GLAPIENTRY
 #ifdef XP_WIN
@@ -70,6 +75,8 @@ typedef char realGLboolean;
 
 namespace mozilla {
 namespace gl {
+
+class GLContext;
 
 class LibrarySymbolLoader
 {
@@ -112,6 +119,135 @@ protected:
     PlatformLookupFunction mLookupFunc;
 };
 
+
+/**
+ * A TextureImage encapsulates a surface that can be drawn to by a
+ * Thebes gfxContext and (hopefully efficiently!) synchronized to a
+ * texture in the server.  TextureImages are associated with one and
+ * only one GLContext.
+ *
+ * Implementation note: TextureImages attempt to unify two categories
+ * of backends
+ *
+ *  (1) proxy to server-side object that can be bound to a texture;
+ *      e.g. Pixmap on X11.
+ *
+ *  (2) efficient manager of texture memory; e.g. by having clients draw
+ *      into a scratch buffer which is then uploaded with
+ *      glTexSubImage2D().
+ */
+class TextureImage
+{
+    NS_INLINE_DECL_REFCOUNTING(TextureImage)
+public:
+    typedef gfxASurface::gfxContentType ContentType;
+
+    virtual ~TextureImage() {}
+
+    /**
+     * Return a gfxContext for updating |aRegion| of the client's
+     * image if successul, NULL if not.  |aRegion|'s bounds must fit
+     * within Size(); its coordinate space (if any) is ignored.  If
+     * the update begins successfully, the returned gfxContext is
+     * owned by this.  Otherwise, NULL is returned.
+     *
+     * |aRegion| is an inout param: the returned region is what the
+     * client must repaint.  Category (1) regions above can
+     * efficiently handle repaints to "scattered" regions, while (2)
+     * can only efficiently handle repaints to rects.
+     *
+     * The returned context is neither translated nor clipped: it's a
+     * context for rect(<0,0>, Size()).  Painting the returned context
+     * outside of |aRegion| results in undefined behavior.
+     *
+     * BeginUpdate() calls cannot be "nested", and each successful
+     * BeginUpdate() must be followed by exactly one EndUpdate() (see
+     * below).  Failure to do so can leave this in a possibly
+     * inconsistent state.  Unsuccessful BeginUpdate()s must not be
+     * followed by EndUpdate().
+     */
+    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion) = 0;
+    /**
+     * Finish the active update and synchronize with the server, if
+     * necessary.  Return PR_TRUE iff this's texture is already bound.
+     *
+     * BeginUpdate() must have been called exactly once before
+     * EndUpdate().
+     */
+    virtual PRBool EndUpdate() = 0;
+
+    /**
+     * Return this TextureImage's texture ID for use with GL APIs.
+     * Callers are responsible for properly binding the texture etc.
+     *
+     * The effects of using a texture after BeginUpdate() but before
+     * EndUpdate() are undefined.
+     */
+    GLuint Texture() { return mTexture; }
+
+    /** Can be called safely at any time. */
+    const nsIntSize& GetSize() const { return mSize; }
+    ContentType GetContentType() const { return mContentType; }
+
+protected:
+    /**
+     * After the ctor, the TextureImage is invalid.  Implementations
+     * must allocate resources successfully before returning the new
+     * TextureImage from GLContext::CreateTextureImage().  That is,
+     * clients must not be given partially-constructed TextureImages.
+     */
+    TextureImage(GLuint aTexture, const nsIntSize& aSize, ContentType aContentType)
+        : mTexture(aTexture)
+        , mSize(aSize)
+        , mContentType(aContentType)
+    {}
+
+    GLuint mTexture;
+    nsIntSize mSize;
+    ContentType mContentType;
+};
+
+/**
+ * BasicTextureImage is the baseline TextureImage implementation ---
+ * it updates its texture by allocating a scratch buffer for the
+ * client to draw into, then using glTexSubImage2D() to upload the new
+ * pixels.  Platforms must provide the code to create a new surface
+ * into which the updated pixels will be drawn, and the code to
+ * convert the update surface's pixels into an image on which we can
+ * glTexSubImage2D().
+ */
+class BasicTextureImage
+    : public TextureImage
+{
+public:
+    virtual ~BasicTextureImage();
+
+    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
+    virtual PRBool EndUpdate();
+
+protected:
+    typedef gfxASurface::gfxImageFormat ImageFormat;
+
+    BasicTextureImage(GLuint aTexture,
+                      const nsIntSize& aSize,
+                      ContentType aContentType,
+                      GLContext* aContext)
+        : TextureImage(aTexture, aSize, aContentType)
+        , mTextureInited(PR_FALSE)
+        , mGLContext(aContext)
+    {}
+
+    virtual already_AddRefed<gfxASurface>
+    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt) = 0;
+
+    virtual already_AddRefed<gfxImageSurface>
+    GetImageForUpload(gfxASurface* aUpdateSurface) = 0;
+
+    PRBool mTextureInited;
+    GLContext* mGLContext;
+    nsRefPtr<gfxContext> mUpdateContext;
+    nsIntRect mUpdateRect;
+};
 
 class GLContext
     : public LibrarySymbolLoader
@@ -189,6 +325,26 @@ public:
         MakeCurrent();
         fDeleteTextures(1, &tex); 
     }
+
+    /**
+     * Return a valid, allocated TextureImage of |aSize| with
+     * |aContentType|.  The TextureImage's texture is configured to
+     * use |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
+     * default, GL_LINEAR filtering.  Specify
+     * |aUseNearestFilter=PR_TRUE| for GL_NEAREST filtering.  Return
+     * NULL if creating the TextureImage fails.
+     *
+     * The returned TextureImage may only be used with this GLContext.
+     * Attempting to use the returned TextureImage after this
+     * GLContext is destroyed will result in undefined (and likely
+     * crashy) behavior.
+     */
+    virtual already_AddRefed<TextureImage>
+    CreateTextureImage(const nsIntSize& aSize,
+                       TextureImage::ContentType aContentType,
+                       GLint aWrapMode,
+                       PRBool aUseNearestFilter=PR_FALSE);
+
 protected:
 
     PRBool mInitialized;
@@ -197,6 +353,13 @@ protected:
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
 
     PRBool IsExtensionSupported(const char *extension);
+
+    virtual already_AddRefed<TextureImage>
+    CreateBasicTextureImage(GLuint aTexture,
+                            const nsIntSize& aSize,
+                            TextureImage::ContentType aContentType,
+                            GLContext* aContext)
+    { return NULL; }
 
     //
     // the wrapped functions
@@ -511,6 +674,21 @@ public:
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
 };
+
+inline void
+GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
+{
+  GLenum err = aCx->fGetError();
+  if (err) {
+    fprintf(stderr, "GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
+  }
+}
+
+#ifdef DEBUG
+#  define DEBUG_GL_ERROR_CHECK(cx) mozilla::gl::GLDebugPrintError(cx, __FILE__, __LINE__)
+#else
+#  define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
+#endif
 
 } /* namespace gl */
 } /* namespace mozilla */

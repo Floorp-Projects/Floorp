@@ -41,6 +41,8 @@
 #include <OpenGL/gl.h>
 #include <AppKit/NSOpenGL.h>
 #include "gfxASurface.h"
+#include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 
 namespace mozilla {
 namespace gl {
@@ -137,11 +139,72 @@ public:
         return PR_FALSE;
     }
 
+    virtual already_AddRefed<TextureImage>
+    CreateBasicTextureImage(GLuint aTexture,
+                            const nsIntSize& aSize,
+                            TextureImage::ContentType aContentType,
+                            GLContext* aContext);
+
 private:
     NSOpenGLContext *mContext;
     CGLContextObj mCGLContext;
     CGLPBufferObj mPBuffer;
 };
+
+class TextureImageCGL : public BasicTextureImage
+{
+    friend already_AddRefed<TextureImage>
+    GLContextCGL::CreateBasicTextureImage(GLuint,
+                                          const nsIntSize&,
+                                          TextureImage::ContentType,
+                                          GLContext*);
+
+protected:
+    virtual already_AddRefed<gfxASurface>
+    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
+    {
+        mUpdateFormat = aFmt;
+        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
+    }
+
+    virtual already_AddRefed<gfxImageSurface>
+    GetImageForUpload(gfxASurface* aUpdateSurface)
+    {
+        // FIXME/bug 575521: make me fast!
+        nsRefPtr<gfxImageSurface> image =
+            new gfxImageSurface(gfxIntSize(mUpdateRect.width,
+                                           mUpdateRect.height),
+                                mUpdateFormat);
+        nsRefPtr<gfxContext> tmpContext = new gfxContext(image);
+
+        tmpContext->SetSource(aUpdateSurface);
+        tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+        tmpContext->Paint();
+
+        return image.forget();
+    }
+
+private:
+    TextureImageCGL(GLuint aTexture,
+                    const nsIntSize& aSize,
+                    ContentType aContentType,
+                    GLContext* aContext)
+        : BasicTextureImage(aTexture, aSize, aContentType, aContext)
+    {}
+
+    ImageFormat mUpdateFormat;
+};
+
+already_AddRefed<TextureImage>
+GLContextCGL::CreateBasicTextureImage(GLuint aTexture,
+                                      const nsIntSize& aSize,
+                                      TextureImage::ContentType aContentType,
+                                      GLContext* aContext)
+{
+    nsRefPtr<TextureImageCGL> teximage(
+        new TextureImageCGL(aTexture, aSize, aContentType, aContext));
+    return teximage.forget();
+}
 
 already_AddRefed<GLContext>
 GLContextProvider::CreateForWindow(nsIWidget *aWidget)

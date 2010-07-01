@@ -56,6 +56,7 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 #include "imgTools.h"
+#include "imgDiscardTracker.h"
 
 #ifdef IMG_BUILD_DECODER_gif
 // gif
@@ -249,6 +250,7 @@ static void
 imglib_Shutdown()
 {
   imgLoader::Shutdown();
+  imgDiscardTracker::Shutdown();
 }
 
 static const mozilla::Module kImageModule = {
