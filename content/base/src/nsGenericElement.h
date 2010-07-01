@@ -746,6 +746,8 @@ public:
     return NS_OK;
   }
   nsIDOMDOMTokenList* GetClassList(nsresult *aResult);
+  void SetCapture(PRBool aRetargetToElement);
+  void ReleaseCapture();
   PRBool MozMatchesSelector(const nsAString& aSelector);
 
   /**

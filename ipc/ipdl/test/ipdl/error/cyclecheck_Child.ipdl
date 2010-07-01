@@ -1,5 +1,5 @@
-include protocol "cyclecheck_Parent.ipdl";
-include protocol "cyclecheck_Grandchild.ipdl";
+include protocol cyclecheck_Parent;
+include protocol cyclecheck_Grandchild;
 
 protocol cyclecheck_Child {
     manager cyclecheck_Parent;

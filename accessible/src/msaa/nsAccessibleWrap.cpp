@@ -1681,7 +1681,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
   if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
     // Don't use frame from current accessible when we're hiding that
     // accessible.
-    newAccessible = accessible->GetParent();
+    newAccessible = accessible->GetCachedParent();
   } else {
     newAccessible = accessible;
   }

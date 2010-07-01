@@ -107,6 +107,7 @@
 #endif // IBMBIDI
 
 #include "nsContentUtils.h"
+#include "nsPIWindowRoot.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -2091,7 +2092,12 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (window)
     return MayHavePaintEventListener(window);
 
-  return PR_FALSE;
+  nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(parentTarget);
+  nsPIDOMEventTarget* tabChildGlobal;
+  return root &&
+         (tabChildGlobal = root->GetParentTarget()) &&
+         (manager = tabChildGlobal->GetListenerManager(PR_FALSE)) &&
+         manager->MayHavePaintEventListener();
 }
 
 PRBool

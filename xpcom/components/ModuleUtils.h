@@ -115,7 +115,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
         return rv;                                                            \
     }                                                                         \
                                                                               \
-    inst = _GetterProc();                                                     \
+    inst = already_AddRefed<_InstanceClass>(_GetterProc()).get();             \
     if (NULL == inst) {                                                       \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \

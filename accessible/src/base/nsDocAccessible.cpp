@@ -955,8 +955,6 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   NS_ASSERTION(aContent, "No node for attr modified");
-  if (!aContent || !nsAccUtils::IsNodeRelevant(aContent))
-    return;
 
   // Universal boolean properties that don't require a role. Fire the state
   // change when disabled or aria-disabled attribute is set.
@@ -1272,12 +1270,6 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible
 
-nsAccessible*
-nsDocAccessible::GetParent()
-{
-  return IsDefunct() ? nsnull : mParent.get();
-}
-
 #ifdef DEBUG_ACCDOCMGR
 nsresult
 nsDocAccessible::HandleAccEvent(nsAccEvent *aAccEvent)
@@ -1513,16 +1505,17 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
   if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
 
-    nsAccessible *containerAccessible = nsnull;
-    if (accessible)
+    nsAccessible* containerAccessible = nsnull;
+    if (accessible) {
       containerAccessible = accessible->GetParent();
-
-    if (!containerAccessible) {
+    } else {
+      nsCOMPtr<nsIWeakReference> weakShell(nsCoreUtils::GetWeakShellFor(node));
       containerAccessible = GetAccService()->GetContainerAccessible(node,
-                                                                    PR_TRUE);
-      if (!containerAccessible)
-        containerAccessible = this;
+                                                                    weakShell);
     }
+
+    if (!containerAccessible)
+      containerAccessible = this;
 
     if (isAsync) {
       // For asynch show, delayed invalidatation of parent's children
@@ -1769,7 +1762,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       // Just invalidate accessible hierarchy and return,
       // otherwise the page load time slows down way too much
       nsAccessible *containerAccessible =
-        GetAccService()->GetContainerAccessible(childNode, PR_FALSE);
+        GetAccService()->GetCachedContainerAccessible(childNode);
       if (!containerAccessible) {
         containerAccessible = this;
       }
@@ -1805,7 +1798,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 #endif
 
   nsAccessible *containerAccessible =
-    GetAccService()->GetContainerAccessible(childNode, PR_TRUE);
+    GetAccService()->GetCachedContainerAccessible(childNode);
   if (!containerAccessible) {
     containerAccessible = this;
   }
@@ -1950,7 +1943,7 @@ nsDocAccessible::FireShowHideEvents(nsINode *aNode,
       accessible = GetCachedAccessible(aNode);
     } else {
       // Allow creation of new accessibles for show events
-      accessible = GetAccService()->GetAttachedAccessibleFor(aNode);
+      accessible = GetAccService()->GetAccessible(aNode);
     }
   }
 

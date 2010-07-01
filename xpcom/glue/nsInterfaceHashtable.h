@@ -57,6 +57,8 @@ class nsInterfaceHashtable :
 public:
   typedef typename KeyClass::KeyType KeyType;
   typedef Interface* UserDataType;
+  typedef nsBaseHashtable< KeyClass, nsCOMPtr<Interface> , Interface* >
+          base_type;
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -92,6 +94,8 @@ class nsInterfaceHashtableMT :
 public:
   typedef typename KeyClass::KeyType KeyType;
   typedef Interface* UserDataType;
+  typedef nsBaseHashtableMT< KeyClass, nsCOMPtr<Interface> , Interface* >
+          base_type;
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -115,8 +119,7 @@ PRBool
 nsInterfaceHashtable<KeyClass,Interface>::Get
   (KeyType aKey, UserDataType* pInterface) const
 {
-  typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
-    GetEntry(aKey);
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent)
   {
@@ -156,8 +159,7 @@ Interface*
 nsInterfaceHashtable<KeyClass,Interface>::GetWeak
   (KeyType aKey, PRBool* aFound) const
 {
-  typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
-    GetEntry(aKey);
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent)
   {
@@ -184,8 +186,7 @@ nsInterfaceHashtableMT<KeyClass,Interface>::Get
 {
   PR_Lock(this->mLock);
 
-  typename nsBaseHashtableMT<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
-    GetEntry(aKey);
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent)
   {

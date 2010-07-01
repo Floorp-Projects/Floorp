@@ -571,6 +571,11 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       continue;
 
     if (directive->ischrome) {
+#ifdef MOZ_IPC
+      if (GeckoProcessType_Default != XRE_GetProcessType())
+        continue;
+#endif
+
       if (!nsChromeRegistry::gChromeRegistry) {
         nsCOMPtr<nsIChromeRegistry> cr =
           mozilla::services::GetChromeRegistryService();

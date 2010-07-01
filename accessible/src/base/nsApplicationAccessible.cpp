@@ -405,12 +405,6 @@ nsApplicationAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsAccessible*
-nsApplicationAccessible::GetParent()
-{
-  return nsnull;
-}
-
 void
 nsApplicationAccessible::InvalidateChildren()
 {

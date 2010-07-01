@@ -169,6 +169,8 @@ EXTRA_JS_MODULES = \
 		CSPUtils.jsm \
 		$(NULL)
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
@@ -184,8 +186,11 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../dom/base \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(topsrcdir)/xpcom/io \
+		-I$(topsrcdir)/dom/ipc \
 		-I$(topsrcdir)/js/src/xpconnect/src \
 		-I$(topsrcdir)/caps/include \
 		$(NULL)
+
+CXXFLAGS += $(TK_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT
