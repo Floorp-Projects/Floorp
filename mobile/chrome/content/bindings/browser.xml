@@ -118,7 +118,7 @@
               let link = aMessage.json;
               // ignore results from subdocuments
               if (link.windowId != this.contentWindowId)
-                return {};
+                return;
 
               let linkType = this._getLinkType(link);
               switch(linkType) {
@@ -135,8 +135,6 @@
               }
               break;
          }
-
-         return {};
         ]]></body>
       </method>
 
@@ -274,8 +272,6 @@
                              args);
                 break;
             }
-
-            return {};
           },
 
           _notify: function(aFlags, aName, aArguments) {
@@ -592,8 +588,6 @@
                              args);
                 break;
             }
-
-            return {};
           },
 
           _notify: function(aFlags, aName, aArguments) {

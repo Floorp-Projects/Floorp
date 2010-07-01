@@ -119,8 +119,6 @@ var BrowserUI = {
         break;
       }
     }
-
-    return { };
   },
 
   _titleChanged : function(aBrowser) {
@@ -150,8 +148,6 @@ var BrowserUI = {
         return { preventDefault: true };
       }
     }
-
-    return { };
   },
 
   _updateButtons : function(aBrowser) {
@@ -823,8 +819,6 @@ var BrowserUI = {
       case "Browser:OpenURI":
         Browser.addTab(json.uri, false, Browser.selectedTab);
     }
-
-    return {};
   },
 
   supportsCommand : function(cmd) {

@@ -481,8 +481,6 @@ BrowserView.prototype = {
         this.updateScrolledArea(aMessage);
         break;
     }
-    
-    return {};
   },
 
   updateDirtyTiles: function updateDirtyTiles(aMessage) {
