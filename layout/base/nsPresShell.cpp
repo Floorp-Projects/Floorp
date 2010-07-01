@@ -4827,12 +4827,6 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       // immediately
       updateFlags = NS_VMREFRESH_IMMEDIATE;
     }
-    else if (aType < Flush_InterruptibleLayout) {
-      // Not flushing reflows, so do deferred invalidates.  This will keep us
-      // from possibly flushing out reflows due to invalidates being processed
-      // at the end of this view batch.
-      updateFlags = NS_VMREFRESH_DEFERRED;
-    }
     batch.EndUpdateViewBatch(updateFlags);
   }
 }
