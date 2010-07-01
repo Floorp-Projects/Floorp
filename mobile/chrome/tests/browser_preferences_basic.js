@@ -67,8 +67,8 @@ gTests.push({
     let controls = document.getElementById("controls-scrollbox");
 
     // Assign offsets while panning
-		initialDragOffset = document.getElementById("tabs-container").getBoundingClientRect().width;
-		finalDragOffset = initialDragOffset + document.getElementById("browser-controls")
+    initialDragOffset = document.getElementById("tabs-container").getBoundingClientRect().width;
+    finalDragOffset = initialDragOffset + document.getElementById("browser-controls")
       .getBoundingClientRect().width;
 
     gCurrentTest._contentScrollbox.getPosition(x,y);
@@ -91,12 +91,12 @@ gTests.push({
     is(prefsOpen.checked, false, "Preferences open button must not be depressed");
 
     // check if preferences pane is invisble 
-    is(document.getElementById("panel-container").hidden,true, "Preferences panel is invisble");
+    is(BrowserUI.isPanelVisible(), false, "Preferences panel is invisble");
 
     // click on the prefs button to go the preferences pane
     var prefsClick = document.getElementById("tool-panel-open");
     prefsClick.click();
-    waitFor(gCurrentTest.onPrefsView, function() { return document.getElementById("panel-container").hidden == false; });
+    waitFor(gCurrentTest.onPrefsView, BrowserUI.isPanelVisible);
   },
 
   onPrefsView: function(){
@@ -105,8 +105,7 @@ gTests.push({
     let h = prefsList.clientHeight;
 
     //check whether the preferences panel is visible
-    var prefsContainer = document.getElementById("panel-container");
-    is(prefsContainer.hidden, false, "Preferences panel must now be visble");
+    ok(BrowserUI.isPanelVisible(), "Preferences panel must now be visble");
 
     // Check if preferences container is visible
     is(document.getElementById("panel-container").hidden, false, "Preferences panel should be visible");
@@ -133,9 +132,10 @@ gTests.push({
     // Move preferences pane upexpected "+ finalDragOffset +"
     dragElement(prefsList,w/2,h/2,w/2,h/4);
 
-    // Check whether it is moved up to the correct view, height should be 104
+    // Check whether it is moved up to the correct view
+    let distance = (h/2) - (h/4);
     gCurrentTest._prefsScrollbox.getPosition(x,y);
-    ok((x.value==0 & y.value==104),"Preferences pane is panned up","Got "+x.value+" "+y.value+", expected 0,104");
+    ok((x.value==0 & y.value==distance),"Preferences pane is panned up","Got "+x.value+" "+y.value+", expected 0," + distance);
 
     // Move preferences pane down
     dragElement(prefsList,w/2,h/4,w/2,h/2);

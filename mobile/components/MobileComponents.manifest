@@ -11,6 +11,8 @@ component {972efe64-8ac0-4e91-bdb0-22835d987815} AboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=certerror {972efe64-8ac0-4e91-bdb0-22835d987815}
 component {b071364f-ab68-4669-a9db-33fca168271a} AboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=home {b071364f-ab68-4669-a9db-33fca168271a}
+component {d503134a-f6f3-4824-bc3c-09c123177944} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=sync-tabs {d503134a-f6f3-4824-bc3c-09c123177944}
 
 # DirectoryProvider.js
 component {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b} DirectoryProvider.js

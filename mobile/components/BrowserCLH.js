@@ -40,8 +40,39 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+
+function openWindow(aParent, aURL, aTarget, aFeatures) {
+  let wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
+  return wwatch.openWindow(aParent, aURL, aTarget, aFeatures, null);
+}
+
+function resolveURIInternal(aCmdLine, aArgument) {
+  let uri = aCmdLine.resolveURI(aArgument);
+
+  if (!(uri instanceof Ci.nsIFileURL))
+    return uri;
+
+  try {
+    if (uri.file.exists())
+      return uri;
+  }
+  catch (e) {
+    Cu.reportError(e);
+  }
+
+  try {
+    let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+    uri = urifixup.createFixupURI(aArgument, 0);
+  }
+  catch (e) {
+    Cu.reportError(e);
+  }
+
+  return uri;
+}
+
 
 function BrowserCLH() { }
 
@@ -49,41 +80,57 @@ BrowserCLH.prototype = {
   //
   // nsICommandLineHandler
   //
-  handle: function fs_handle(cmdLine) {
+  handle: function fs_handle(aCmdLine) {
     // Instantiate the search service so the search engine cache is created now
     // instead when the application is running. The install process will register
     // this component by using the -silent command line flag, thereby creating
     // the cache during install, not runtime.
     // NOTE: This code assumes this CLH is run before the nsDefaultCLH, which
     // consumes the "-silent" flag.
-    if (cmdLine.findFlag("silent", false) > -1) {
+    if (aCmdLine.findFlag("silent", false) > -1) {
       let searchService = Cc["@mozilla.org/browser/search-service;1"].
                           getService(Ci.nsIBrowserSearchService);
       let autoComplete = Cc["@mozilla.org/autocomplete/search;1?name=history"].
                          getService(Ci.nsIAutoCompleteSearch);
     }
 
+    // Handle chrome windows loaded via commandline
+    let chromeParam = aCmdLine.handleFlagWithParam("chrome", false);
+    if (chromeParam) {
+      try {
+        // only load URIs which do not inherit chrome privs
+        let features = "chrome,dialog=no,all";
+        let uri = resolveURIInternal(aCmdLine, chromeParam);
+        let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
+        if (!netutil.URIChainHasFlags(uri, Ci.nsIHttpProtocolHandler.URI_INHERITS_SECURITY_CONTEXT)) {
+          openWindow(null, uri.spec, "_blank", features);
+          aCmdLine.preventDefault = true;
+        }
+      }
+      catch (e) {
+        Cu.reportError(e);
+      }
+    }
+
     let win;
     try {
-      var windowMediator =
-        Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-
+      let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
       win = windowMediator.getMostRecentWindow("navigator:browser");
       if (!win)
         return;
 
       win.focus();
-      cmdLine.preventDefault = true;
+      aCmdLine.preventDefault = true;
     } catch (e) { }
 
     // Assumption:  All CLH arguments we've received have been sent remotely,
     // or we wouldn't already have a window.  Therefore: open 'em all!
-    for (let i = 0; i < cmdLine.length; i++) {
-      let arg = cmdLine.getArgument(i);
+    for (let i = 0; i < aCmdLine.length; i++) {
+      let arg = aCmdLine.getArgument(i);
       if (!arg || arg[0] == '-')
         continue;
 
-      let uri = cmdLine.resolveURI(arg);
+      let uri = resolveURIInternal(aCmdLine, arg);
       if (uri)
         win.browserDOMWindow.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB, null);
     }

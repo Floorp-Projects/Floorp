@@ -476,13 +476,10 @@ var Browser = {
     notifications.addEventListener("AlertActive", notificationHandler, false);
     notifications.addEventListener("AlertClose", notificationHandler, false);
 
-    // Add context helper to the content area only
-    container.addEventListener("contextmenu", ContextHelper, false);
+    BrowserUI.init();
 
     // initialize input handling
     ih = new InputHandler(container);
-
-    BrowserUI.init();
 
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
@@ -691,7 +688,8 @@ var Browser = {
     if (aScrollY != 0)
       Browser.hideTitlebar();
 
-    Browser.contentScrollboxScroller.scrollTo(aScrollX, aScrollY);
+    let zoomLevel = this._browserView.getZoomLevel();
+    Browser.contentScrollboxScroller.scrollTo(aScrollX*zoomLevel, aScrollY*zoomLevel);
     this._browserView.onAfterVisibleMove();
   },
 
@@ -1277,7 +1275,10 @@ var Browser = {
     switch (aMessage.name) {
       case "Browser:ViewportMetadata":
         let tab = Browser.getTabForBrowser(aMessage.target);
-        tab.updateViewportMetadata(json);
+        // Some browser such as iframes loaded dynamically into the chrome UI
+        // does not have any assigned tab
+        if (tab)
+          tab.updateViewportMetadata(json);
         break;
 
       case "Browser:FormSubmit":
@@ -1304,14 +1305,8 @@ Browser.MainDragger.prototype = {
   isDraggable: function isDraggable(target, scroller) { return true; },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
-    // Make sure pausing occurs before any early returns.
-    this.bv.pauseRendering();
-
-    // XXX shouldn't know about observer
-    // adding pause in pauseRendering isn't so great, because tiles will hardly ever prefetch while
-    // loading state is going (and already, the idle timer is bigger during loading so it doesn't fit
-    // into the aggressive flag).
-    this.bv._idleServiceObserver.pause();
+    this._nextRender = Date.now() + 500;
+    this._dragMoved = false;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1320,15 +1315,17 @@ Browser.MainDragger.prototype = {
 
     Browser.tryUnfloatToolbar();
 
-    this.bv.resumeRendering();
-
-    // XXX shouldn't know about observer
-    this.bv._idleServiceObserver.resume();
+    if (this._dragMoved)
+      this.bv.resumeRendering();
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
     let doffset = new Point(dx, dy);
-    let render = false;
+
+    if (!this._dragMoved) {
+      this._dragMoved = true;
+      this.bv.pauseRendering();
+    }
 
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);
@@ -1345,8 +1342,10 @@ Browser.MainDragger.prototype = {
 
     this.bv.onAfterVisibleMove();
 
-    if (render)
+    if (Date.now() >= this._nextRender) {
       this.bv.renderNow();
+      this._nextRender = Date.now() + 500;
+    }
 
     return !doffset.equals(dx, dy);
   },
@@ -1555,10 +1554,13 @@ function ContentCustomClicker(browserView) {
 }
 
 ContentCustomClicker.prototype = {
-  _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY) {
+  _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
+    let aX = aX || 0;
+    let aY = aY || 0;
+    let aModifiers = aModifiers || null;
     let browser = this._browserView.getBrowser();
     let [x, y] = Browser.transformClientToBrowser(aX, aY);
-    browser.messageManager.sendAsyncMessage(aName, { x: x, y: y });
+    browser.messageManager.sendAsyncMessage(aName, { x: x, y: y, modifiers: aModifiers });
   },
 
   mouseDown: function mouseDown(aX, aY) {
@@ -1576,33 +1578,30 @@ ContentCustomClicker.prototype = {
 
   panBegin: function panBegin() {
     TapHighlightHelper.hide();
-    let browser = this._browserView.getBrowser();
-    browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
+
+    this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
   singleClick: function singleClick(aX, aY, aModifiers) {
     TapHighlightHelper.hide();
-    this._dispatchMouseEvent("Browser:MouseUp", aX, aY);
-    // TODO e10s: handle modifiers for clicks
-    //
-    //  if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
-    //  let uri = Util.getHrefForElement(element);
-    //  if (uri)
-    //    Browser.addTab(uri, false);
-    //  }
+
+    // Cancel the mouse click if we are showing a context menu
+    if (!ContextHelper.popupState)
+      this._dispatchMouseEvent("Browser:MouseUp", aX, aY, aModifiers);
+    this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
   doubleClick: function doubleClick(aX1, aY1, aX2, aY2) {
     TapHighlightHelper.hide();
-    let browser = this._browserView.getBrowser();
-    browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
+
+    this._dispatchMouseEvent("Browser:MouseCancel");
 
     const kDoubleClickRadius = 32;
 
     let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
     let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
     if (isClickInRadius)
-      browser.messageManager.sendAsyncMessage("Browser:ZoomToPoint", { x: aX1, y: aY1 });
+      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
   },
 
   toString: function toString() {

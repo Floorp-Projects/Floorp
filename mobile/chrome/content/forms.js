@@ -181,7 +181,6 @@ FormAssistant.prototype = {
         break;
 
       default:
-        let target = aEvent.target;
         if (currentWrapper.canAutocomplete())
           sendAsyncMessage("FormAssist:AutoComplete", this.getJSON());
         break;
@@ -382,6 +381,10 @@ BasicWrapper.prototype = {
 
   autocomplete: function(aValue) {
     this.element.value = aValue;
+
+    let event = this.element.ownerDocument.createEvent("Events");
+    event.initEvent("DOMAutoComplete", true, true);
+    this.element.dispatchEvent(event);
   },
 
   /** Caret is used to input text for this element. */
@@ -571,7 +574,7 @@ SelectWrapper.prototype = {
     evt.initEvent("change", true, true, this._control.ownerDocument.defaultView, 0,
                   false, false,
                   false, false, null);
-    content.document.defaultView.setTimeout(function() {
+    content.setTimeout(function() {
       control.dispatchEvent(evt);
     }, 0);
   }
@@ -632,7 +635,7 @@ MenulistWrapper.prototype = {
     evt.initCommandEvent("command", true, true, window, 0,
                          false, false,
                          false, false, null);
-    content.document.defaultView.setTimeout(function() {
+    content.setTimeout(function() {
       control.dispatchEvent(evt);
     }, 0);
   }
