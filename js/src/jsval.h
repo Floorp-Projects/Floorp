@@ -237,8 +237,7 @@ typedef struct JSString JSString;
 typedef struct JSObject JSObject;
 
 #if defined(IS_LITTLE_ENDIAN)
-#if JS_BITS_PER_WORD == 32
-
+# if JS_BITS_PER_WORD == 32
 typedef union jsval_layout
 {
     uint64 asBits;
@@ -256,9 +255,7 @@ typedef union jsval_layout
     } s;
     double asDouble;
 } jsval_layout;
-
-#elif JS_BITS_PER_WORD == 64
-
+# elif JS_BITS_PER_WORD == 64
 typedef union jsval_layout
 {
     uint64 asBits;
@@ -275,9 +272,28 @@ typedef union jsval_layout
     } s;
     double asDouble;
 } jsval_layout;
-
-#endif  /* JS_BITS_PER_WORD */
-#endif  /* IS_LITTLE_ENDIAN */
+# endif  /* JS_BITS_PER_WORD */
+#else   /* defined(IS_LITTLE_ENDIAN) */
+# if JS_BITS_PER_WORD == 32
+typedef union jsval_layout
+{
+    uint64 asBits;
+    struct {
+        JSValueTag tag;
+        union {
+            int32          i32;
+            uint32         u32;
+            JSBool         boo;
+            JSString       *str;
+            JSObject       *obj;
+            void           *ptr;
+            JSWhyMagic     why;
+        } payload;
+    } s;
+    double asDouble;
+} jsval_layout;
+# endif /* JS_BITS_PER_WORD */
+#endif  /* defined(IS_LITTLE_ENDIAN) */
 
 #if JS_BITS_PER_WORD == 32
 
