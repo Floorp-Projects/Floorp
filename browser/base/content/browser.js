@@ -3722,7 +3722,10 @@ var FullScreen =
                                                    this._collapseCallback, false);
     }
 
-    gNavToolbox.collapsed = !aShow;
+    // Hiding/collapsing the toolbox interferes with the tab bar's scrollbox,
+    // so we just move it off-screen instead. See bug 430687.
+    gNavToolbox.style.marginTop = aShow ? "" : -gNavToolbox.clientHeight + "px";
+
     document.getElementById("fullscr-toggler").collapsed = aShow;
     this._isChromeCollapsed = !aShow;
     if (gPrefService.getIntPref("browser.fullscreen.animateUp") == 2)
