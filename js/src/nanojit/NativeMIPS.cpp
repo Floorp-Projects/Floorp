@@ -1791,7 +1791,12 @@ namespace nanojit
     void
     Assembler::nInit(AvmCore*)
     {
-        // Cannot use outputf
+        nHints[LIR_calli]  = rmask(V0);
+#if NJ_SOFTFLOAT_SUPPORTED
+        nHints[LIR_hcalli] = rmask(V1);
+#endif
+        nHints[LIR_calld]  = rmask(FV0);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
     }
 
     void Assembler::nBeginAssembly()
@@ -1895,25 +1900,14 @@ namespace nanojit
     }
 
     RegisterMask
-    Assembler::hint(LIns* i)
+    Assembler::nHint(LIns* ins)
     {
-        uint32_t op = i->opcode();
-        RegisterMask prefer = 0LL;
-
-        if (op == LIR_calli)
-            prefer = rmask(V0);
-#if NJ_SOFTFLOAT_SUPPORTED
-        else if (op == LIR_hcalli)
-            prefer = rmask(V1);
-#endif
-        else if (op == LIR_calld)
-            prefer = rmask(FV0);
-        else if (op == LIR_paramp) {
-            // FIXME: FLOAT parameters?
-            if (i->paramArg() < 4)
-                prefer = rmask(argRegs[i->paramArg()]);
-        }
-
+        NanoAssert(ins->isop(LIR_paramp));
+        RegisterMask prefer = 0;
+        // FIXME: FLOAT parameters?
+        if (ins->paramKind() == 0)
+            if (ins->paramArg() < 4)
+                prefer = rmask(argRegs[ins->paramArg()]);
         return prefer;
     }
 

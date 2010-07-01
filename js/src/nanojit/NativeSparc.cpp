@@ -245,9 +245,9 @@ namespace nanojit
         *(uint32_t*)&branch[1] |= (intptr_t)location & 0x3FF;
     }
 
-    RegisterMask Assembler::hint(LIns* ins)
+    RegisterMask Assembler::nHint(LIns* ins)
     {
-        return 0;
+        NanoAssert(0);
     }
 
     bool Assembler::canRemat(LIns* ins)

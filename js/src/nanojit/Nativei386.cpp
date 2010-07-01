@@ -868,6 +868,15 @@ namespace nanojit
 
     void Assembler::nInit(AvmCore*)
     {
+        nHints[LIR_calli]  = rmask(retRegs[0]);
+        nHints[LIR_calld]  = rmask(FST0);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
+        nHints[LIR_immi]   = ScratchRegs;
+        // Nb: Doing this with a loop future-proofs against the possibilty of
+        // new comparison operations being added.
+        for (LOpcode op = LOpcode(0); op < LIR_sentinel; op = LOpcode(op+1))
+            if (isCmpOpcode(op))
+                nHints[op] = AllowableFlagRegs;
     }
 
     void Assembler::nBeginAssembly() {
@@ -1117,35 +1126,19 @@ namespace nanojit
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
     }
 
-    RegisterMask Assembler::hint(LIns* ins)
+    RegisterMask Assembler::nHint(LIns* ins)
     {
-        uint32_t op = ins->opcode();
-        int prefer = 0;
-
-        if (op == LIR_calli) {
-            prefer = rmask(retRegs[0]);
+        NanoAssert(ins->isop(LIR_paramp));
+        RegisterMask prefer = 0;
+        uint8_t arg = ins->paramArg();
+        if (ins->paramKind() == 0) {
+            uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
+            if (arg < max_regs) 
+                prefer = rmask(argRegs[arg]);
+        } else {
+            if (arg < NumSavedRegs)
+                prefer = rmask(savedRegs[arg]);
         }
-        else if (op == LIR_calld) {
-            prefer = rmask(FST0);
-        }
-        else if (op == LIR_paramp) {
-            uint8_t arg = ins->paramArg();
-            if (ins->paramKind() == 0) {
-                uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
-                if (arg < max_regs)
-                    prefer = rmask(argRegs[arg]);
-            } else {
-                if (arg < NumSavedRegs)
-                    prefer = rmask(savedRegs[arg]);
-            }
-        }
-        else if (ins->isCmp()) {
-            prefer = AllowableFlagRegs;
-        }
-        else if (ins->isImmI()) {
-            prefer = ScratchRegs;
-        }
-
         return prefer;
     }
 
