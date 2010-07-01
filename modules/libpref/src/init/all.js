@@ -694,7 +694,8 @@ pref("network.http.redirection-limit", 20);
 
 // Enable http compression: comment this out in case of problems with 1.1
 // NOTE: support for "compress" has been disabled per bug 196406.
-pref("network.http.accept-encoding" ,"gzip,deflate");
+// NOTE: separate values with comma+space (", "): see bug 576033
+pref("network.http.accept-encoding", "gzip, deflate");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
