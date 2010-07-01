@@ -77,7 +77,14 @@ if ("@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
         Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
         .getService(Components.interfaces.nsICrashReporter)) {
     crashReporter.enabled = true;
-    crashReporter.minidumpPath = do_get_cwd();
+
+    try { // nsIXULRuntime is not available in some configurations.
+	let processType = Components.classes["@mozilla.org/xre/runtime;1"].
+	    getService(Components.interfaces.nsIXULRuntime).processType;
+	if (Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT == processType)
+	    crashReporter.minidumpPath = do_get_cwd();
+    }
+    catch (e) { }
   }
 }
 
