@@ -611,8 +611,10 @@ Reify(JSContext *cx, JSCompartment *origin, jsval *vp)
     }
 
     JSObject *obj = ni->obj;
-    return origin->wrap(cx, &obj) &&
-           IdVectorToIterator(cx, obj, ni->flags, props, vp);
+    uintN flags = ni->flags;
+    return js_CloseIterator(cx, *vp) &&
+           origin->wrap(cx, &obj) &&
+           IdVectorToIterator(cx, obj, flags, props, vp);
 }
 
 bool
