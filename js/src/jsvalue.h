@@ -40,17 +40,60 @@
 #ifndef jsvalue_h__
 #define jsvalue_h__
 /*
- * Private value representation
-
- * TODO: describe values.
- *  - jsval vs. js::Value
- *  - XTag
- *  - JSVAL_IS_OBJECT vs. isObject
- *  - undefined vs. void
- *  - avoid copying
+ * Private value interface.
  */
 #include "jsprvtd.h"
 #include "jsstdint.h"
+
+/*
+ * js::Value is a C++-ified version of jsval that provides more information and
+ * helper functions than the basic jsval interface exposed by jsapi.h. A few
+ * general notes on js::Value:
+ *
+ * - Since js::Value and jsval have the same representation, values of these
+ *   types, function pointer types differing only in these types, and structs
+ *   differing only in these types can be converted back and forth at no cost
+ *   using the Jsvalify() and Valueify(). See Jsvalify comment below.
+ *
+ * - js::Value has setX() and isX() members for X in
+ *
+ *     { Int32, Double, String, Boolean, Undefined, Null, Object, Magic }
+ *
+ *   js::Value also contains asX() for each of the the non-singleton types.
+ *
+ * - Magic is a singleton type whose payload contains a JSWhyMagic "reason" for
+ *   the magic value. By providing JSWhyMagic values when creating and checking
+ *   for magic values, it is possible to assert, at runtime, that only magic
+ *   values with the expected reason flow through a particular value. For
+ *   example, if cx->exception has a magic value, the reason must be
+ *   JS_GENERATOR_CLOSING.
+ *
+ * - A key difference between jsval and js::Value is that js::Value gives null
+ *   a separate type. Thus
+ *
+ *           JSVAL_IS_OBJECT(v) === v.isObjectOrNull()
+ *       !JSVAL_IS_PRIMITIVE(v) === v.isObject()
+ *
+ *   To help prevent mistakenly boxing a nullable JSObject* as an object,
+ *   Value::setObject takes a JSObject&. (Conversely, Value::asObject returns a
+ *   JSObject&. A convenience member Value::setObjectOrNull is provided.
+ *
+ * - js::Value does not have constructors that accepts the above set of types
+ *   since this was found to be a significant source of errors involving
+ *   implicit conversions. Instead, the desired type is explicitly stated using
+ *   a set of js::XTag classes, where X is one of the above set of types. The
+ *   js::XTag constructors are marked 'explicit' which allows the js::Value
+ *   constructors to safely be implicit. E.g.:
+ *
+ *     js::Value v = js::Int32Tag(0);
+ *     js_ValueToString(cx, js::DoubleTag(3.5));
+ *
+ * - JSVAL_VOID is the same as the singleton value of the Undefined type.
+ *
+ * - Note that js::Value is always 64-bit. Thus, on 32-bit user code should
+ *   avoid copying jsval/js::Value as much as possible, preferring to pass by
+ *   const Value &.
+ */
 
 /******************************************************************************/
 
