@@ -342,7 +342,7 @@ namespace nanojit
             void        freeResourcesOf(LIns *ins);
             void        evictIfActive(Register r);
             void        evict(LIns* vic);
-            RegisterMask hint(LIns* ins);   // mask==0 means there's no preferred register(s)
+            RegisterMask hint(LIns* ins);
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
                                   verbose_only(, size_t &nBytes));
@@ -475,6 +475,14 @@ namespace nanojit
             void        nRegisterResetAll(RegAlloc& a);
             static void nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
+
+            RegisterMask nHints[LIR_sentinel];
+            RegisterMask nHint(LIns* ins);
+
+            // A special entry for hints[];  if an opcode has this value, we call
+            // nHint() in the back-end.  Used for cases where you need to look at more
+            // than just the opcode to decide.
+            static const RegisterMask PREFER_SPECIAL = 0xffffffff;
 
             // platform specific methods
         public:

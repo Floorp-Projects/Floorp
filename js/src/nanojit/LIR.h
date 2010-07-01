@@ -405,6 +405,13 @@ namespace nanojit
     inline bool isCmpDOpcode(LOpcode op) {
         return LIR_eqd <= op && op <= LIR_ged;
     }
+    inline bool isCmpOpcode(LOpcode op) {
+        return isCmpIOpcode(op) ||
+#if defined NANOJIT_64BIT
+               isCmpQOpcode(op) ||
+#endif
+               isCmpDOpcode(op);
+    }
 
     inline LOpcode invertCondJmpOpcode(LOpcode op) {
         NanoAssert(op == LIR_jt || op == LIR_jf);
@@ -843,12 +850,7 @@ namespace nanojit
             return isRetOpcode(opcode());
         }
         bool isCmp() const {
-            LOpcode op = opcode();
-            return isCmpIOpcode(op) ||
-#if defined NANOJIT_64BIT
-                   isCmpQOpcode(op) ||
-#endif
-                   isCmpDOpcode(op);
+            return isCmpOpcode(opcode());
         }
         bool isCall() const {
             return isop(LIR_calli) ||

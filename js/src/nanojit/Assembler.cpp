@@ -89,6 +89,17 @@ namespace nanojit
         reset();
     }
 
+    // Per-opcode register hint table.  Default to no hints for all
+    // instructions.  It's not marked const because individual back-ends can
+    // install hint values for opcodes of interest in nInit().
+    RegisterMask hints[LIR_sentinel+1] = {
+#define OP___(op, number, repKind, retType, isCse) \
+        0,
+#include "LIRopcode.tbl"
+#undef OP___
+        0
+    };
+
 #ifdef _DEBUG
 
     /*static*/ LIns* const AR::BAD_ENTRY = (LIns*)0xdeadbeef;
@@ -443,6 +454,12 @@ namespace nanojit
         (void) d;
     #endif
         findRegFor2(allowValue, value, rv, allowBase, base, rb);
+    }
+
+    RegisterMask Assembler::hint(LIns* ins)
+    {
+        RegisterMask prefer = nHints[ins->opcode()];
+        return (prefer == PREFER_SPECIAL) ? nHint(ins) : prefer;
     }
 
     // Finds a register in 'allow' to hold the result of 'ins'.  Used when we

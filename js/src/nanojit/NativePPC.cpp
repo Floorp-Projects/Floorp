@@ -1251,24 +1251,12 @@ namespace nanojit
         asm_cmp(condval->opcode(), condval->oprnd1(), condval->oprnd2(), CR7);
     }
 
-    RegisterMask Assembler::hint(LIns* ins) {
-        LOpcode op = ins->opcode();
+    RegisterMask Assembler::nHint(LIns* ins) {
+        NanoAssert(ins->isop(LIR_paramp));
         RegisterMask prefer = 0;
-        if (op == LIR_calli)
-            prefer = rmask(R3);
-    #ifdef NANOJIT_64BIT
-        else if (op == LIR_callq)
-            prefer = rmask(R3);
-    #endif
-        else if (op == LIR_calld)
-            prefer = rmask(F1);
-        else if (op == LIR_paramp) {
-            if (ins->paramKind() == 0) {
-                if (ins->paramArg() < 8) {
-                    prefer = rmask(argRegs[ins->paramArg()]);
-                }
-            }
-        }
+        if (ins->paramKind() == 0)
+            if (ins->paramArg() < 8)
+                prefer = rmask(argRegs[ins->paramArg()]);
         return prefer;
     }
 
@@ -1283,6 +1271,12 @@ namespace nanojit
     }
 
     void Assembler::nInit(AvmCore*) {
+        nHints[LIR_calli]  = rmask(R3);
+    #ifdef NANOJIT_64BIT
+        nHints[LIR_callq]  = rmask(R3);
+    #endif
+        nHints[LIR_calld]  = rmask(F1);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
     }
 
     void Assembler::nBeginAssembly() {
