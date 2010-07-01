@@ -94,11 +94,10 @@ function CreateTestWS(ws_location, ws_protocol)
       ok(false, "onerror called on test " + e.target._testNumber + "!");
     };
     ws._testNumber = current_test;
+    ws._receivedCloseEvent = false;
     ws.addEventListener("close", function(e)
     {
-      if (ws._receivedCloseEvent != undefined) {
-        ws._receivedCloseEvent = true;
-      }
+      ws._receivedCloseEvent = true;
     }, false);
   }
   catch (e) {
@@ -198,8 +197,11 @@ function test3()
 {
   var ws = CreateTestWS("ws://this.websocket.server.probably.does.not.exist");
   ws.onopen = shouldNotOpen;
-  ws.onclose = shouldNotReceiveCloseEvent;
-  doTest(4);
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(4);
+  };
 }
 
 function test4()
@@ -255,7 +257,6 @@ function test6()
     }
   }
   ws.onclose = shouldCloseCleanly;
-  ws._receivedCloseEvent = false;
 }
 
 function test7()
@@ -270,7 +271,6 @@ function test7()
     shouldCloseNotCleanly(e);
     doTest(8);
   };
-  ws._receivedCloseEvent = false;
 }
 
 function test8()
@@ -285,7 +285,6 @@ function test8()
     shouldCloseCleanly(e);
     doTest(9);
   };
-  ws._receivedCloseEvent = false;
 }
 
 function test9()
@@ -298,7 +297,6 @@ function test9()
     doTest(10);
   };
 
-  ws._receivedCloseEvent = false;
   ws.close();
 }
 
@@ -306,7 +304,6 @@ function test10()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 10");
   ws.onclose = shouldCloseCleanly;
-  ws._receivedCloseEvent = false;
 
   try {
     ws.send("client data");
@@ -358,7 +355,6 @@ function test12()
       ok(true, "couldn't send an unpaired surrogate!");
     }
     ws.close();
-    ws._receivedCloseEvent = false;
     doTest(13);
   };
 }
@@ -376,7 +372,6 @@ function test13()
     }
   }
   ws.onclose = shouldCloseCleanly;
-  ws._receivedCloseEvent = false;
 }
 
 function test14()
@@ -391,7 +386,6 @@ function test14()
     shouldCloseCleanly(e);
     doTest(15);
   };
-  ws._receivedCloseEvent = false;
 }
 
 function test15()
@@ -402,7 +396,6 @@ function test15()
     shouldCloseNotCleanly(e);
     doTest(16);
   };
-  ws._receivedCloseEvent = false;
 }
 
 function test16()
@@ -419,7 +412,6 @@ function test16()
     ok(false, "shouldn't send message after calling close()");
   }
   ws.onclose = shouldCloseCleanly;
-  ws._receivedCloseEvent = false;
 }
 
 var status_test17 = "not started";
@@ -427,6 +419,7 @@ var status_test17 = "not started";
 window._test17 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 17");
+  current_test++;
 
   status_test17 = "started";
 
@@ -477,21 +470,28 @@ function test18()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket_http_resource.txt");
   ws.onopen = shouldNotOpen;
-  ws.onclose = shouldNotReceiveCloseEvent;
-  doTest(19);
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(19);
+  };
 }
 
 function test19()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 19");
   ws.onopen = shouldNotOpen;
-  ws.onclose = shouldNotReceiveCloseEvent;
-  doTest(20);
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(20);
+  };
 }
 
 window._test20 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 20");
+  current_test++;
 
   local_ws.onerror = function()
   {
@@ -516,6 +516,7 @@ var timeoutTest21;
 window._test21 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 21");
+  current_test++;
 
   local_ws.onopen = function(e)
   {
@@ -560,14 +561,18 @@ function test22()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 22");
   ws.onopen = shouldNotOpen;
-  ws.onclose = shouldNotReceiveCloseEvent;
-  doTest(23);
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(23);
+  };
 }
 
 function finishWSTest()
 {
   for (i = 0; i < all_ws.length; ++i) {
-    if (all_ws[i]._receivedCloseEvent === false) {
+    if (all_ws[i] != shouldNotReceiveCloseEvent &&
+        !all_ws[i]._receivedCloseEvent) {
       ok(false, "didn't called close on test " + all_ws[i]._testNumber + "!");
     }
   }
