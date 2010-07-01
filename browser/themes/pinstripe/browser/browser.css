@@ -785,7 +785,7 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
 }
 
 #urlbar-display {
-  margin-top: -2px;
+  margin-top: -3px;
   margin-bottom: -2px;
   padding-top: 3px;
   padding-bottom: 2px;
