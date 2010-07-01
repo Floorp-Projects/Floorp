@@ -40,9 +40,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function GtkQtIconsConverter() { };
 GtkQtIconsConverter.prototype = {
-  classDescription: "Gtk Qt stock icons converter",
   classID:          Components.ID("{c0783c34-a831-40c6-8c03-98c9f74cca45}"),
-  contractID:       "@mozilla.org/gtkqticonsconverter;1",
   QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIGtkQtIconsConverter]),
   convert: function(icon) { return this._gtk_qt_icons_table[icon]; },
   _gtk_qt_icons_table: {
@@ -167,7 +165,5 @@ GtkQtIconsConverter.prototype = {
   },
 }
 var components = [GtkQtIconsConverter];
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
