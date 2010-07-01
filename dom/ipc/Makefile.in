@@ -81,7 +81,6 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/events/src \
 		-I$(srcdir)/../src/geolocation \
 		-I$(topsrcdir)/chrome/src \
-		-I$(srcdir)/../../netwerk/base/src \
 		$(NULL)
 
 CXXFLAGS += $(TK_CFLAGS)
