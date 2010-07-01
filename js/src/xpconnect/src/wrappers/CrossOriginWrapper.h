@@ -37,28 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __CrossOriginWrapper_h__
+#define __CrossOriginWrapper_h__
+
 #include "jsapi.h"
 #include "jswrapper.h"
 
-// Content wrappers allow unmitigated access and are only used if the
-// origin (subject) compartment's principals subsume the target (object)
-// compartment's principals.
-//
-// The main responsibility of the content wrapper is to push and pop the
-// target (object) compartment's principals when entering and leaving
-// that compartment.
-
 namespace xpc {
 
-class ContentWrapper : public JSCrossCompartmentWrapper {
+class CrossOriginWrapper : public JSCrossCompartmentWrapper {
   public:
-    ContentWrapper();
-    virtual ~ContentWrapper();
+    CrossOriginWrapper(uintN flags);
+    virtual ~CrossOriginWrapper();
 
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode);
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, bool set);
     virtual void leave(JSContext *cx, JSObject *wrapper);
 
-    static ContentWrapper singleton;
+    static CrossOriginWrapper singleton;
 };
 
 }
+
+#endif

@@ -37,27 +37,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsapi.h"
-#include "jswrapper.h"
+#include "CrossOriginWrapper.h"
+
+#include "nsJSPrincipals.h"
+
+#include "XPCWrapper.h"
 
 namespace xpc {
 
-class WrapperFactory {
-  public:
-    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0) };
+CrossOriginWrapper::CrossOriginWrapper(uintN flags) : JSCrossCompartmentWrapper(flags)
+{
+}
 
-    // Return true if any of any of the nested wrappers have the flag set.
-    bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
-        uintN flags = 0;
-        wrapper->unwrap(&flags);
-        return !!(flags & flag);
+CrossOriginWrapper::~CrossOriginWrapper()
+{
+}
+
+static nsIPrincipal *
+GetCompartmentPrincipal(JSCompartment *compartment)
+{
+    return static_cast<nsJSPrincipals *>(compartment->principals)->nsIPrincipalPtr;
+}
+
+bool
+CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
+{
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (!ssm) {
+        return true;
     }
+    JSStackFrame *fp = NULL;
+    nsIPrincipal *principal = GetCompartmentPrincipal(wrappedObject(wrapper)->getCompartment(cx));
+    nsresult rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp), principal);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Not allowing call because we're out of memory");
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+    return true;
+}
 
-    // Rewrap an object that is about to cross compartment boundaries.
-    static JSObject *Rewrap(JSContext *cx,
-                            JSObject *obj,
-                            JSObject *wrappedProto,
-                            uintN flags);
-};
+void
+CrossOriginWrapper::leave(JSContext *cx, JSObject *wrapper)
+{
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (ssm) {
+        ssm->PopContextPrincipal(cx);
+    }
+}
 
 }
