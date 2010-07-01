@@ -60,6 +60,11 @@ public:
   virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
                                   float aOpacity) = 0;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsSVGPaintServerFrameBase::IsFrameOfType(aFlags & ~nsIFrame::eSVGPaintServer);
+  }
 };
 
 #endif // __NS_SVGPAINTSERVERFRAME_H__
