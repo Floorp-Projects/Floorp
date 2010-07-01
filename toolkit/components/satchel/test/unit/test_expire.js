@@ -96,6 +96,11 @@ function run_test()
   fh.addEntry("name-C", "value-C");
   do_check_true(fh.entryExists("name-C", "value-C"));
 
+  // Check the original db size.
+  // Do a vacuum to make sure the db has current page size.
+  fh.DBConnection.executeSimpleSQL("VACUUM");
+  var oldSize = dbFile.clone().fileSize;
+
   // Update some existing entries to have ages relative to when the test runs.
   var now = 1000 * Date.now();
   var age181 = now - 181 * 24 * PR_HOURS;
@@ -168,8 +173,6 @@ function run_test()
   do_check_true(fh.entryExists("9DaysOld", "foo"));
   do_check_eq(505, countAllEntries());
 
-  do_check_true(dbFile.fileSize > 70000);
-
   triggerExpiration();
 
   do_check_false(fh.entryExists("bar", "29days"));
@@ -181,7 +184,7 @@ function run_test()
   // Check that the file size was reduced.
   // Need to clone the nsIFile because the size is being cached on Windows.
   dbFile = dbFile.clone();
-  do_check_true(dbFile.fileSize < 6000);
+  do_check_true(dbFile.fileSize < oldSize);
 
 
   } catch (e) {
