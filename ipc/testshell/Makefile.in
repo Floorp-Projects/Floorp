@@ -67,7 +67,10 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/base \
   $(NULL)
 
+# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
+ifneq ($(OS_ARCH),Darwin)
 XPCSHELL_TESTS = tests
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
