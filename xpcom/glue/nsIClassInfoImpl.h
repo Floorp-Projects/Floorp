@@ -39,6 +39,8 @@
 #include "nsIClassInfo.h"
 #include "nsISupportsImpl.h"
 
+#include NEW_H
+
 class GenericClassInfo : public nsIClassInfo
 {
 public:
@@ -80,13 +82,15 @@ private:
     _flags,                                                             \
     _cid,                                                               \
   };                                                                    \
+  static char k##_class##ClassInfoDataPlace[sizeof(GenericClassInfo)];  \
   nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
 
-#define NS_IMPL_QUERY_CLASSINFO(_class)                                           \
-  if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                                  \
-    if (!NS_CLASSINFO_NAME(_class))                                               \
-      NS_CLASSINFO_NAME(_class) = new GenericClassInfo(&k##_class##ClassInfoData); \
-    foundInterface = NS_CLASSINFO_NAME(_class);                                   \
+#define NS_IMPL_QUERY_CLASSINFO(_class)                                       \
+  if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                              \
+    if (!NS_CLASSINFO_NAME(_class))                                           \
+      NS_CLASSINFO_NAME(_class) = new (k##_class##ClassInfoDataPlace)         \
+        GenericClassInfo(&k##_class##ClassInfoData);                          \
+    foundInterface = NS_CLASSINFO_NAME(_class);                               \
   } else
 
 #define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                 \
