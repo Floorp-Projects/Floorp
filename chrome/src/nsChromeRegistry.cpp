@@ -39,12 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/ContentProcessParent.h"
-#include "RegistryMessageUtils.h"
-#endif
-
 #include "nsChromeRegistry.h"
 
 #include <string.h>
@@ -107,7 +101,6 @@
 #include "nsIPresShell.h"
 #include "nsIProtocolHandler.h"
 #include "nsIResProtocolHandler.h"
-#include "nsResProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
@@ -458,20 +451,6 @@ getUILangCountry(nsACString& aUILang)
 
   CopyUTF16toUTF8(uiLang, aUILang);
   return NS_OK;
-}
-
-nsChromeRegistry*
-nsChromeRegistry::GetService()
-{
-  if (!nsChromeRegistry::gChromeRegistry)
-  {
-    // We don't actually want this ref, we just want the service to
-    // initialize if it hasn't already.
-    nsCOMPtr<nsIChromeRegistry> reg(
-        do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
-    NS_ENSURE_TRUE(nsChromeRegistry::gChromeRegistry, NULL);
-  }
-  return gChromeRegistry;
 }
 
 nsresult
@@ -1165,202 +1144,6 @@ RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *ar
 {
   return (PLDHashOperator) (PL_DHASH_NEXT | PL_DHASH_REMOVE);
 }
-
-PLDHashOperator
-nsChromeRegistry::SendAllToChildProcess(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *arg)
-{
-  mozilla::dom::TabParent* tabParent = static_cast<mozilla::dom::TabParent*>(arg);
-  nsChromeRegistry::PackageEntry* package = static_cast<PackageEntry*>(entry);
-  nsString packageName(NS_ConvertUTF8toUTF16(package->package).get());
-  nsString baseURI;
-  nsCAutoString prePath, path;
-
-  if(package->baseURI)
-  {
-    package->baseURI->GetPrePath(prePath);
-    package->baseURI->GetPath(path);
-  }
-  CopyUTF8toUTF16(prePath, baseURI);
-  AppendUTF8toUTF16(path, baseURI);
-  
-  if(!tabParent->SendregisterChromePackage(packageName, baseURI, package->flags))
-  {
-    //XXXjdm error
-  }
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsChromeRegistry::SendResourceToChildProcess(const nsACString& aKey, nsIURI* aURI, void* aArg)
-{
-  mozilla::dom::TabParent* tabParent = static_cast<mozilla::dom::TabParent*>(aArg);
-  nsString resolved, packageName(NS_ConvertUTF8toUTF16(aKey).get());
-  nsCAutoString prePath, path;
-
-  aURI->GetPrePath(prePath);
-  aURI->GetPath(path);
-  CopyUTF8toUTF16(prePath, resolved);
-  AppendUTF8toUTF16(path, resolved);
-
-  if(!tabParent->SendregisterChromeResource(packageName, resolved))
-  {
-    //XXXjdm error
-  }
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
-void
-nsChromeRegistry::SendRegisteredPackages(mozilla::dom::TabParent* aParent)
-{
-  PL_DHashTableEnumerate(&mPackagesHash, SendAllToChildProcess, aParent);
-
-  nsCOMPtr<nsIIOService> io (do_GetIOService());
-  //if (!io) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIProtocolHandler> ph;
-  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  //    NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIResProtocolHandler> irph (do_QueryInterface(ph));
-  nsResProtocolHandler* rph = static_cast<nsResProtocolHandler*>(irph.get());
-  rph->EnumerateSubstitutions(SendResourceToChildProcess, aParent);
-}
-
-void
-nsChromeRegistry::RegisterPackage(const nsString& aPackage,
-                                  const nsString& aBaseURI,
-                                  const PRUint32& aFlags)
-{
-  const char *package = NS_ConvertUTF16toUTF8(aPackage).get();
-  PackageEntry* entry =
-      static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                      & (const nsACString&) nsDependentCString(package),
-                                                      PL_DHASH_ADD));
-  entry->flags = aFlags;
-  NS_NewURI(getter_AddRefs(entry->baseURI), NS_ConvertUTF16toUTF8(aBaseURI));
-}
-
-void
-nsChromeRegistry::RegisterResource(const nsString& aPackage,
-                                   const nsString& aResolvedURI)
-{
-  nsCOMPtr<nsIIOService> io (do_GetIOService());
-  //if (!io) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIProtocolHandler> ph;
-  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  //    NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIResProtocolHandler> rph (do_QueryInterface(ph));
-  //if (!rph) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIURI> resolved;
-  NS_NewURI(getter_AddRefs(resolved), NS_ConvertUTF16toUTF8(aResolvedURI));
-
-  rv = rph->SetSubstitution(NS_ConvertUTF16toUTF8(aPackage), resolved);
-}
-
-#ifdef MOZ_IPC
-PLDHashOperator
-nsChromeRegistry::CollectPackages(PLDHashTable *table,
-                                  PLDHashEntryHdr *entry,
-                                  PRUint32 number,
-                                  void *arg)
-{
-  nsTArray<ChromePackage>* packages =
-      static_cast<nsTArray<ChromePackage>*>(arg);
-  nsChromeRegistry::PackageEntry* package = static_cast<PackageEntry*>(entry);
-  ChromePackage chromePackage = {
-    package->package,
-    package->baseURI,
-    package->flags
-  };
-  packages->AppendElement(chromePackage);
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsChromeRegistry::CollectResources(const nsACString& aKey,
-                                   nsIURI* aURI,
-                                   void* aArg)
-{
-  nsTArray<ChromeResource>* resources =
-      static_cast<nsTArray<ChromeResource>*>(aArg);
-  ChromeResource resource = {
-    nsDependentCString(aKey), aURI
-  };
-  resources->AppendElement(resource);
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
-void
-nsChromeRegistry::SendRegisteredChrome(
-    mozilla::dom::ContentProcessParent* aParent)
-{
-  nsTArray<ChromePackage> packages;
-  nsTArray<ChromeResource> resources;
-  
-  PL_DHashTableEnumerate(&mPackagesHash, CollectPackages, &packages);
-
-  nsCOMPtr<nsIIOService> io (do_GetIOService());
-  NS_ENSURE_TRUE(io, );
-
-  nsCOMPtr<nsIProtocolHandler> ph;
-  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  NS_ENSURE_SUCCESS(rv, );
-  
-  nsCOMPtr<nsIResProtocolHandler> irph (do_QueryInterface(ph));
-  nsResProtocolHandler* rph = static_cast<nsResProtocolHandler*>(irph.get());
-  rph->EnumerateSubstitutions(CollectResources, &resources);
-
-  bool success = aParent->SendregisterChrome(packages, resources);
-  NS_ENSURE_TRUE(success, );
-}
-
-void
-nsChromeRegistry::RegisterRemoteChrome(const nsTArray<ChromePackage>& aPackages,
-                                       const nsTArray<ChromeResource>& aResources)
-{
-  for (PRUint32 i = aPackages.Length(); i > 0; ) {
-    --i;
-    RegisterPackage(aPackages[i]);
-  }
-
-  for (PRUint32 i = aResources.Length(); i > 0; ) {
-    --i;
-    RegisterResource(aResources[i]);
-  }
-}
-
-void
-nsChromeRegistry::RegisterPackage(const ChromePackage& aPackage)
-{
-  PackageEntry* entry =
-      static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                      &aPackage.package,
-                                                      PL_DHASH_ADD));
-  NS_ENSURE_TRUE(entry, );
-  entry->flags = aPackage.flags;
-  entry->baseURI = aPackage.baseURI;
-}
-
-void
-nsChromeRegistry::RegisterResource(const ChromeResource& aResource)
-{
-  nsCOMPtr<nsIIOService> io (do_GetIOService());
-  NS_ENSURE_TRUE(io, );
-
-  nsCOMPtr<nsIProtocolHandler> ph;
-  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-  NS_ENSURE_SUCCESS(rv, );
-  
-  nsCOMPtr<nsIResProtocolHandler> rph (do_QueryInterface(ph));
-  NS_ENSURE_TRUE(rph, );
-
-  rv = rph->SetSubstitution(aResource.package, aResource.resolvedURI);
-  NS_ENSURE_SUCCESS(rv, );
-}
-#endif // MOZ_IPC
-
 
 NS_IMETHODIMP
 nsChromeRegistry::CheckForNewChrome()

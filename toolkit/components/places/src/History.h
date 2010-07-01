@@ -67,7 +67,7 @@ public:
    * @param aURI
    *        The URI to notify about.
    */
-  void NotifyVisited(nsIURI *aURI, bool mIsVisited = true);
+  void NotifyVisited(nsIURI *aURI);
 
   /**
    * Obtains a pointer to this service.

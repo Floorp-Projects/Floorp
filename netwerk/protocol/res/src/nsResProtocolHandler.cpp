@@ -208,13 +208,6 @@ nsResProtocolHandler::Init()
     return rv;
 }
 
-void
-nsResProtocolHandler::EnumerateSubstitutions(SubstitutionTable::EnumReadFunction enumFunc,
-                                             void* userArg)
-{
-    mSubstitutions.EnumerateRead(enumFunc, userArg);
-}
-
 //----------------------------------------------------------------------------
 // nsResProtocolHandler::nsISupports
 //----------------------------------------------------------------------------

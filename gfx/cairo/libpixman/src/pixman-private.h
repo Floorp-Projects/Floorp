@@ -618,20 +618,6 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
                                int32_t                  height,
                                pixman_composite_func_t  composite_rect);
 
-pixman_bool_t
-_pixman_run_fast_path_scale (pixman_op_t      op,
-                             pixman_image_t * src_image,
-                             pixman_image_t * mask_image,
-                             pixman_image_t * dst_image,
-                             int32_t          src_x,
-                             int32_t          src_y,
-                             int32_t          mask_x,
-                             int32_t          mask_y,
-                             int32_t          dest_x,
-                             int32_t          dest_y,
-                             int32_t          width,
-                             int32_t          height);
-
 void
 pixman_expand (uint64_t *           dst,
                const uint32_t *     src,

@@ -119,8 +119,6 @@
 #include "ContentProcessParent.h"
 #include "TabParent.h"
 
-#include "nsXULAppAPI.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 #endif
@@ -1508,10 +1506,7 @@ nsFrameLoader::TryNewProcess()
     return false;
   }
 
-  ContentProcessParent* parent = ContentProcessParent::GetSingleton();
-  NS_ASSERTION(parent->IsAlive(), "Process parent should be alive; something is very wrong!");
-  mChildProcess = parent->CreateTab();
-
+  mChildProcess = ContentProcessParent::GetSingleton()->CreateTab();
   if (mChildProcess) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mChildProcess->SetOwnerElement(element);
@@ -1525,10 +1520,6 @@ nsFrameLoader::TryNewProcess()
     nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
     rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
     mChildProcess->SetBrowserDOMWindow(browserDOMWin);
-
-    mChildHost = parent;
-
-    XRE_SendParentChromeRegistry(mChildProcess);
   }
   return true;
 }
