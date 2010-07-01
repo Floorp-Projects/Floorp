@@ -533,7 +533,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
-#if defined(OS_LINUX) && defined(DEBUG)
+#if defined(MOZ_X11) && defined(DEBUG)
     if (GraphicsExpose == event.event.type)
         PLUGIN_LOG_DEBUG(("  received drawable 0x%lx\n",
                           event.event.xgraphicsexpose.drawable));
