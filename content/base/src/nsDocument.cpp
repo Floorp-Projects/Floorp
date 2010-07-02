@@ -2222,29 +2222,23 @@ nsDocument::InitCSP()
     PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP Loaded"));
 #endif
 
-    // ReportOnly mode is enabled *only* if there are no regular-strength CSP
-    // headers present.  If there are, then we ignore the ReportOnly mode and
-    // toss a warning into the error console, proceeding with enforcing the
-    // regular-strength CSP.
-    if (cspHeaderValue.IsEmpty()) {
-      mCSP->SetReportOnlyMode(true);
-      mCSP->RefinePolicy(cspROHeaderValue, chanURI);
+    if (!cspHeaderValue.IsEmpty()) {
+      mCSP->RefineEnforcedPolicy(cspHeaderValue, chanURI);
 #ifdef PR_LOGGING 
       {
         PR_LOG(gCspPRLog, PR_LOG_DEBUG, 
-                ("CSP (report only) refined, policy: \"%s\"", 
-                  NS_ConvertUTF16toUTF8(cspROHeaderValue).get()));
+                ("CSP refined with policy: \"%s\"",
+                  NS_ConvertUTF16toUTF8(cspHeaderValue).get()));
       }
 #endif
-    } else {
-      //XXX(sstamm): maybe we should post a warning when both read only and regular 
-      // CSP headers are present.
-      mCSP->RefinePolicy(cspHeaderValue, chanURI);
+    }
+    if (!cspROHeaderValue.IsEmpty()) {
+      mCSP->RefineReportOnlyPolicy(cspROHeaderValue, chanURI);
 #ifdef PR_LOGGING 
       {
         PR_LOG(gCspPRLog, PR_LOG_DEBUG, 
-               ("CSP refined, policy: \"%s\"",
-                NS_ConvertUTF16toUTF8(cspHeaderValue).get()));
+               ("CSP (report-only) refined with policy: \"%s\"",
+                NS_ConvertUTF16toUTF8(cspROHeaderValue).get()));
       }
 #endif
     }
