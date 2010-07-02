@@ -120,7 +120,6 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define UA_PREF_PREFIX          "general.useragent."
 #define UA_APPNAME              "Mozilla"
 #define UA_APPVERSION           "5.0"
-#define UA_APPSECURITY_FALLBACK "N"
 
 #define HTTP_PREF_PREFIX        "network.http."
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
@@ -272,7 +271,6 @@ nsHttpHandler::Init()
     LOG(("> platform = %s\n", mPlatform.get()));
     LOG(("> oscpu = %s\n", mOscpu.get()));
     LOG(("> device = %s\n", mDeviceType.get()));
-    LOG(("> security = %s\n", mSecurity.get()));
     LOG(("> language = %s\n", mLanguage.get()));
     LOG(("> misc = %s\n", mMisc.get()));
     LOG(("> vendor = %s\n", mVendor.get()));
@@ -605,7 +603,6 @@ nsHttpHandler::BuildUserAgent()
     NS_ASSERTION(!mAppName.IsEmpty() &&
                  !mAppVersion.IsEmpty() &&
                  !mPlatform.IsEmpty() &&
-                 !mSecurity.IsEmpty() &&
                  !mOscpu.IsEmpty(),
                  "HTTP cannot send practical requests without this much");
 
@@ -614,7 +611,6 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent.SetCapacity(mAppName.Length() + 
                            mAppVersion.Length() + 
                            mPlatform.Length() + 
-                           mSecurity.Length() +
                            mOscpu.Length() +
                            mDeviceType.Length() +
                            mLanguage.Length() +
@@ -637,8 +633,6 @@ nsHttpHandler::BuildUserAgent()
     // Application comment
     mUserAgent += '(';
     mUserAgent += mPlatform;
-    mUserAgent.AppendLiteral("; ");
-    mUserAgent += mSecurity;
     mUserAgent.AppendLiteral("; ");
     mUserAgent += mOscpu;
     if (!mLanguage.IsEmpty()) {
@@ -906,14 +900,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("productComment"))) {
         prefs->GetCharPref(UA_PREF("productComment"),
             getter_Copies(mProductComment));
-        mUserAgentIsDirty = PR_TRUE;
-    }
-
-    // Get Security level supported
-    if (PREF_CHANGED(UA_PREF("security"))) {
-        prefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
-        if (!mSecurity)
-            mSecurity.AssignLiteral(UA_APPSECURITY_FALLBACK);
         mUserAgentIsDirty = PR_TRUE;
     }
 
