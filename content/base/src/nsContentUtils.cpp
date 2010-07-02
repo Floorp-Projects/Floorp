@@ -409,17 +409,6 @@ nsContentUtils::Init()
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Ignore failure and just don't load images
-  rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
-  if (NS_FAILED(rv)) {
-    // no image loading for us.  Oh, well.
-    sImgLoader = nsnull;
-    sImgCache = nsnull;
-  } else {
-    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
-      sImgCache = nsnull;
-  }
-
   rv = CallGetService(NS_IHISTORY_CONTRACTID, &sHistory);
   if (NS_FAILED(rv)) {
     NS_RUNTIMEABORT("Cannot get the history service");
@@ -461,6 +450,25 @@ nsContentUtils::Init()
   sInitialized = PR_TRUE;
 
   return NS_OK;
+}
+
+bool nsContentUtils::sImgLoaderInitialized;
+
+void
+nsContentUtils::InitImgLoader()
+{
+  sImgLoaderInitialized = true;
+
+  // Ignore failure and just don't load images
+  nsresult rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
+  if (NS_FAILED(rv)) {
+    // no image loading for us.  Oh, well.
+    sImgLoader = nsnull;
+    sImgCache = nsnull;
+  } else {
+    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
+      sImgCache = nsnull;
+  }
 }
 
 PRBool
@@ -2383,6 +2391,9 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 PRBool
 nsContentUtils::IsImageInCache(nsIURI* aURI)
 {
+    if (!sImgLoaderInitialized)
+        InitImgLoader();
+
     if (!sImgCache) return PR_FALSE;
 
     // If something unexpected happened we return false, otherwise if props
