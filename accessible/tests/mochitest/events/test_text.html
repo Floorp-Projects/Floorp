@@ -76,8 +76,7 @@
      */
     function removeChildDiv(aID, aChildId)
     {
-      this.__proto__ = new textRemoveInvoker(aID, 5, 6,
-                                             String.fromCharCode(0xfffc));
+      this.__proto__ = new textRemoveInvoker(aID, 5, 6, kEmbedChar);
 
       this.invoke = function removeChildDiv_invoke()
       {
@@ -94,6 +93,34 @@
       {
         return "Remove accessible div from the middle of text accessible " +
           prettyName(aID);
+      }
+    }
+
+    /**
+     * Remove children from text container from first to last child or vice
+     * versa.
+     */
+    function removeChildren(aID, aLastToFirst, aStart, aEnd, aText)
+    {
+      this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
+
+      this.invoke = function removeChildren_invoke()
+      {
+        ensureAccessibleTree(this.DOMNode);
+
+        if (aLastToFirst) {
+          while (this.DOMNode.firstChild)
+            this.DOMNode.removeChild(this.DOMNode.lastChild);
+        } else {
+          while (this.DOMNode.firstChild)
+            this.DOMNode.removeChild(this.DOMNode.firstChild);
+        }
+      }
+
+      this.getID = function removeChildren_getID()
+      {
+        return "remove children of " + prettyName(aID) +
+          (aLastToFirst ? " from last to first" : " from first to last");
       }
     }
 
@@ -156,7 +183,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
     var gQueue = null;
-    // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpID = "eventdump"; // debug stuff
 
     function doTests()
     {
@@ -168,6 +195,11 @@
 
       // Remove embedded character.
       gQueue.push(new removeChildDiv("div", 1));
+
+      // Remove all children.
+      var text = kEmbedChar + "txt" + kEmbedChar;
+      gQueue.push(new removeChildren("div2", true, 0, 5, text));
+      gQueue.push(new removeChildren("div3", false, 0, 5, text));
 
       // Text remove from text node within hypertext accessible.
       gQueue.push(new removeTextFromInput("input", 1, 3, "al"));
@@ -193,11 +225,16 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=566293"
      title=" wrong length of text remove event when inaccessible node containing accessible nodes is removed">
     Mozilla Bug 566293
-  </a>
+  </a><br>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=570710"
      title="Avoid extra array traversal during text event creation">
     Mozilla Bug 570710
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=574003"
+     title="Coalesce text events on nodes removal">
+    Mozilla Bug 574003
   </a>
 
   <p id="display"></p>
@@ -208,6 +245,8 @@
 
   <p id="p"><span><span>333</span><span>22</span></span>1111</p>
   <div id="div">hello<div>hello</div>hello</div>
+  <div id="div2"><div>txt</div>txt<div>txt</div></div>
+  <div id="div3"><div>txt</div>txt<div>txt</div></div>
   <input id="input" value="value">
   <div contentEditable="true" id="editable">value</div>
   <div contentEditable="true" id="editable2"><span>value</span></div>
