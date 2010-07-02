@@ -56,7 +56,7 @@
 
 #include "jstypedarray.h"
 
-#include "wrappers/XrayWrapper.h"
+#include "XrayWrapper.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,

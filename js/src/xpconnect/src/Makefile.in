@@ -46,8 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpconnect
 
-DIRS            = wrappers
-
 ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
 LIBRARY_NAME	= xpconnect
 EXPORT_LIBRARY = 1
@@ -118,7 +116,7 @@ endif
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \
-		-I$(srcdir)/wrappers \
+		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/js/src \
 		-I$(topsrcdir)/js/src/nanojit \
@@ -141,7 +139,7 @@ SHARED_LIBRARY_LIBS = \
 endif
 
 SHARED_LIBRARY_LIBS += \
-		./wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
+		../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
