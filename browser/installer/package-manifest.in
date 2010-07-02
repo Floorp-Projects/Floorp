@@ -674,6 +674,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #ifdef WINCE
 #ifdef MOZ_FASTSTART
 @BINPATH@/firefoxfaststart.exe
+@BINPATH@/components/FastStartup.manifest
 @BINPATH@/components/FastStartup.js
 #endif
 #endif
