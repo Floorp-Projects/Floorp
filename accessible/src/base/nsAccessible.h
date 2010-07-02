@@ -259,8 +259,17 @@ public:
    * Return cached accessible of parent-child relatives.
    */
   nsAccessible* GetCachedParent() const { return mParent; }
+  nsAccessible* GetCachedNextSibling() const
+  {
+    return mParent ?
+      mParent->mChildren.SafeElementAt(mIndexInParent + 1, nsnull) : nsnull;
+  }
+  nsAccessible* GetCachedPrevSibling() const
+  {
+    return mParent ?
+      mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull) : nsnull;
+  }
   PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
-
   PRBool AreChildrenCached() const { return mAreChildrenInitialized; }
 
 #ifdef DEBUG

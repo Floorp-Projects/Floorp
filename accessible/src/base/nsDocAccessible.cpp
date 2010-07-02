@@ -1344,17 +1344,15 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (NS_FAILED(rv))
     return;
 
-  // Get text length.
-  PRUint32 length = text.Length();
-  if (length == 0)
+  if (text.IsEmpty())
     return;
 
   // Normally we only fire delayed events created from the node, not an
   // accessible object. See the nsAccTextChangeEvent constructor for details
   // about this exceptional case.
   nsRefPtr<nsAccEvent> event =
-      new nsAccTextChangeEvent(textAccessible, offset, length, text,
-                               aIsInserted, PR_FALSE);
+    new nsAccTextChangeEvent(textAccessible, offset, text, aIsInserted,
+                             PR_FALSE);
   FireDelayedAccessibleEvent(event);
 
   FireValueChangeForTextFields(textAccessible);
@@ -1425,13 +1423,12 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
     aAccessibleForChangeNode->AppendTextTo(text, 0, PR_UINT32_MAX);
   }
 
-  PRUint32 length = text.Length();
-  if (length == 0)
+  if (text.IsEmpty())
     return nsnull;
 
   nsAccEvent *event =
-      new nsAccTextChangeEvent(aContainerAccessible, offset, length, text,
-                               aIsInserting, aIsAsynch, aIsFromUserInput);
+    new nsAccTextChangeEvent(aContainerAccessible, offset, text,
+                             aIsInserting, aIsAsynch, aIsFromUserInput);
   NS_IF_ADDREF(event);
 
   return event;
@@ -1494,7 +1491,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
         // Don't need to invalidate this current accessible, but can
         // just invalidate the children instead
         FireShowHideEvents(node, PR_TRUE, eventType, eNormalEvent,
-                           isAsync, isFromUserInput); 
+                           isAsync, isFromUserInput);
         return;
       }
       gLastFocusedFrameType = newFrameType;
@@ -1828,24 +1825,6 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
                                      eDelayedEvent, isAsynch);
     if (NS_FAILED(rv))
       return;
-
-    if (aChild) {
-      // Fire text change unless the node being removed is for this doc.
-      // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
-      // At this point we still have the frame and accessible for this node if there was one
-      // XXX Collate events when a range is deleted
-      // XXX We need a way to ignore SplitNode and JoinNode() when they
-      // do not affect the text within the hypertext
-      // Normally we only fire delayed events created from the node, not an
-      // accessible object. See the nsAccTextChangeEvent constructor for details
-      // about this exceptional case.
-      nsRefPtr<nsAccEvent> textChangeEvent =
-        CreateTextChangeEventForNode(containerAccessible, aChild, childAccessible,
-                                     PR_FALSE, isAsynch);
-      if (textChangeEvent) {
-        FireDelayedAccessibleEvent(textChangeEvent);
-      }
-    }
   }
 
   // We need to get an accessible for the mutation event's container node
@@ -1948,9 +1927,19 @@ nsDocAccessible::FireShowHideEvents(nsINode *aNode,
   if (accessible) {
     // Found an accessible, so fire the show/hide on it and don't look further
     // into this subtree.
-    nsRefPtr<nsAccEvent> event =
-      new nsAccEvent(aEventType, accessible, aIsAsyncChange, aIsFromUserInput,
-                     nsAccEvent::eCoalesceFromSameSubtree);
+    nsRefPtr<nsAccEvent> event;
+    if (aDelayedOrNormal == eDelayedEvent &&
+        aEventType == nsIAccessibleEvent::EVENT_HIDE) {
+      // Use AccHideEvent for delayed hide events to coalesce text change events
+      // caused by these hide events.
+      event = new AccHideEvent(accessible, accessible->GetNode(),
+                               aIsAsyncChange, aIsFromUserInput);
+
+    } else {
+      event = new nsAccEvent(aEventType, accessible, aIsAsyncChange,
+                             aIsFromUserInput,
+                             nsAccEvent::eCoalesceFromSameSubtree);
+    }
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
     if (aDelayedOrNormal == eDelayedEvent)
