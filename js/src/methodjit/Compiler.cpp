@@ -1574,6 +1574,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     bool typeKnown = fe->isTypeKnown();
 
     if (typeKnown && fe->getKnownType() != JSVAL_TYPE_OBJECT) {
+        prepareStubCall();
         VoidPtrStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
         masm.move(Imm32(argc), Registers::ArgReg1);
         masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
