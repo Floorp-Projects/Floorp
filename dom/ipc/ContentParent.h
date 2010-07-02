@@ -152,6 +152,9 @@ private:
                               const IPC::URI& referrer,
                               const PRUint32& flags);
 
+    virtual bool RecvSetURITitle(const IPC::URI& uri,
+                                 const nsString& title);
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
