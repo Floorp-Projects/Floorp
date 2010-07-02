@@ -450,9 +450,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       function onZoomDone(){
         TabMirror.resumePainting();
         // If it's not focused, the onFocus lsitener would handle it.
-        if (tab.isFocused()) {
-          Page.showChrome();
-        } else {
+        Page.tabOnFocus(tab);
+        if (!tab.isFocused()) {
           tab.focus();
         }
 
