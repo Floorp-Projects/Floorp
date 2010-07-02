@@ -144,6 +144,12 @@ AddonSearchResult.prototype = {
   userDisabled: false,
 
   /**
+   * The size of the add-on's files in bytes. For an add-on that have not yet
+   * been downloaded this may be an estimated value.
+   */
+  size: null,
+
+  /**
    * Indicates what scope the add-on is installed in, per profile, user,
    * system or application
    */
@@ -478,6 +484,8 @@ var AddonRepository = {
                 break;
             }
             result.xpiURL = node.textContent.trim();
+            if (node.hasAttribute("size"))
+              addon.size = node.getAttribute("size");
 
             // Ignore add-on installs
             if (aSkip.sourceURIs.indexOf(result.xpiURL) != -1)

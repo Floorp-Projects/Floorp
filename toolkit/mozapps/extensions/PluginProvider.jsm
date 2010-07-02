@@ -205,6 +205,33 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     return bs.getPluginBlocklistState(aTags[0]);
   });
 
+  this.__defineGetter__("size", function() {
+    function getDirectorySize(aFile) {
+      let size = 0;
+      let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+      let entry;
+      while (entry = entries.nextFile) {
+        if (entry.isSymlink() || !entry.isDirectory())
+          size += entry.fileSize;
+        else
+          size += getDirectorySize(entry);
+      }
+      entries.close();
+      return size;
+    }
+
+    let size = 0;
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    aTags.forEach(function(aTag) {
+      file.initWithPath(aTag.fullpath);
+      if (file.isDirectory())
+        size += getDirectorySize(file);
+      else
+        size += file.fileSize;
+    });
+    return size;
+  });
+
   this.__defineGetter__("scope", function() {
     let path = aTags[0].fullpath;
     // Plugins inside the application directory are in the application scope
