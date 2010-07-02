@@ -384,7 +384,7 @@ window.Page = {
             newItem.setZoomPrep(true);
         }
       }, 1);
-        
+      
       UI.currentTab = focusTab;
     });
   },
@@ -530,7 +530,12 @@ UIClass.prototype = {
   init: function() {
     try {
       Utils.log('TabCandy init --------------------');
-      
+
+      let obsService =
+        Components.classes["@mozilla.org/observer-service;1"]
+          .getService(Components.interfaces.nsIObserverService);
+      obsService.addObserver(this, "browser-delayed-startup-finished", false);
+
       // Variable: navBar
       // A reference to the <Navbar>, for manipulating the browser's nav bar. 
       this.navBar = Navbar;
@@ -594,55 +599,56 @@ UIClass.prototype = {
         
       currentWindow.addEventListener(
         "resize", function() { Page.setCloseButtonOnTabs(); }, false);
-
-      // ___ Storage
-      // the session store isn't ready when browser starts so a delay is used.
-      iQ.timeout(function(){
-        let data = Storage.readUIData(currentWindow);
-        self.storageSanity(data);
-
-        let groupsData = Storage.readGroupsData(currentWindow);
-        let firstTime = !groupsData || iQ.isEmptyObject(groupsData);
-        let groupData = Storage.readGroupData(currentWindow);
-        Groups.reconstitute(groupsData, groupData);
-
-        TabItems.init();
-
-        if(firstTime) {
-          let items = TabItems.getItems();
-          iQ.each(items, function(index, item) {
-            if(item.parent)
-              item.parent.remove(item);
-          });
-
-          let box = Items.getPageBounds();
-          box.inset(10, 10);
-          let options = {padding: 10};
-          Items.arrange(items, box, options);
-        } 
-        
-        // ___ resizing
-        if(data.pageBounds) {
-          self.pageBounds = data.pageBounds;
-          self.resize(true);
-        } else
-          self.pageBounds = Items.getPageBounds();
-
-        iQ(window).resize(function() {
-          self.resize();
-        });
-
-        // ___ Done
-        self.initialized = true;
-        self.save(); // for this.pageBounds
-      }, 100);
     }catch(e) {
       Utils.log("Error in UIClass(): " + e);
       Utils.log(e.fileName);
       Utils.log(e.lineNumber);
       Utils.log(e.stack);
     }
-  }, 
+  },
+
+  // ----------
+  delayInit : function() {
+    // ___ Storage
+    let currentWindow = Utils.getCurrentWindow();
+    let data = Storage.readUIData(currentWindow);
+    this.storageSanity(data);
+
+    let groupsData = Storage.readGroupsData(currentWindow);
+    let firstTime = !groupsData || iQ.isEmptyObject(groupsData);
+    let groupData = Storage.readGroupData(currentWindow);
+    Groups.reconstitute(groupsData, groupData);
+
+    TabItems.init();
+
+    if(firstTime) {
+      let items = TabItems.getItems();
+      iQ.each(items, function(index, item) {
+        if(item.parent)
+          item.parent.remove(item);
+      });
+
+      let box = Items.getPageBounds();
+      box.inset(10, 10);
+      let options = {padding: 10};
+      Items.arrange(items, box, options);
+    } 
+        
+    // ___ resizing
+    if(data.pageBounds) {
+      this.pageBounds = data.pageBounds;
+      this.resize(true);
+    } else
+      this.pageBounds = Items.getPageBounds();
+
+    iQ(window).resize(function() {
+      this.resize();
+    });
+
+    // ___ Done
+    this.initialized = true;
+    this.save(); // for this.pageBounds
+  },
   
   // ----------
   setBrowserKeyHandler : function() {
@@ -1019,6 +1025,17 @@ UIClass.prototype = {
         Tabs.open(url);
     } catch(e) {
       Utils.log(e);
+    }
+  },
+
+  // ----------
+  observe: function(subject, topic, data) {
+    // once the browser delayed startup finished,we can run the rest of init
+    // code.
+    if (topic == "browser-delayed-startup-finished") {
+      if (subject == Utils.getCurrentWindow()) {
+        this.delayInit();
+      }
     }
   }
 };
