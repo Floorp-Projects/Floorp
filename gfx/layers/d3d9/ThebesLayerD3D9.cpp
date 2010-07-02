@@ -79,12 +79,6 @@ ThebesLayerD3D9::InvalidateRegion(const nsIntRegion &aRegion)
   mInvalidatedRect = invalidatedRegion.GetBounds();
 }
 
-LayerD3D9::LayerType
-ThebesLayerD3D9::GetType()
-{
-  return TYPE_THEBES;
-}
-
 void
 ThebesLayerD3D9::RenderLayer()
 {

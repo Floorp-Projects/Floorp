@@ -358,16 +358,6 @@ public:
     : mOGLManager(aManager)
   { }
 
-  enum LayerType {
-    TYPE_THEBES,
-    TYPE_CONTAINER,
-    TYPE_IMAGE,
-    TYPE_COLOR,
-    TYPE_CANVAS
-  };
-  
-  virtual LayerType GetType() = 0;
-
   virtual LayerOGL *GetFirstChildOGL() {
     return nsnull;
   }

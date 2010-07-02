@@ -64,7 +64,6 @@ public:
   void InvalidateRegion(const nsIntRegion& aRegion);
 
   /** LayerOGL implementation */
-  LayerType GetType();
   Layer* GetLayer();
   virtual PRBool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
