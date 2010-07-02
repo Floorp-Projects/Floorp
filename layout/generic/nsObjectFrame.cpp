@@ -734,7 +734,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 
     // XXX this breaks plugins in popups ... do we care?
     nsIWidget* parentWidget =
-      rpc->PresShell()->FrameManager()->GetRootFrame()->GetWindow();
+      rpc->PresShell()->FrameManager()->GetRootFrame()->GetNearestWidget();
 
     nsWidgetInitData initData;
     initData.mWindowType = eWindowType_plugin;
@@ -756,7 +756,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     // displayed, so don't show the widget. If we show the widget, the
     // plugin may appear in the main window. In Web content this would
     // only happen with a plugin in a XUL popup.
-    if (parentWidget == GetWindow()) {
+    if (parentWidget == GetNearestWidget()) {
       mWidget->Show(PR_TRUE);
 #ifdef XP_MACOSX
       // On Mac, we need to invalidate ourselves since even windowed
@@ -2883,7 +2883,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
     // fixing both the caret and ability to interact issues for a windowless control in a non document aligned windw
     // does not seem to be possible without a change to the flash plugin
     
-    nsIWidget* win = mObjectFrame->GetWindow();
+    nsIWidget* win = mObjectFrame->GetNearestWidget();
     if (win) {
       nsIView *view = nsIView::GetViewFor(win);
       NS_ASSERTION(view, "No view for widget");
@@ -2911,7 +2911,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   return rv;
 #elif defined(MOZ_WIDGET_GTK2)
   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
-  nsIWidget* win = mObjectFrame->GetWindow();
+  nsIWidget* win = mObjectFrame->GetNearestWidget();
   if (!win)
     return NS_ERROR_FAILURE;
   GdkWindow* gdkWindow = static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
@@ -2924,7 +2924,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   return NS_OK;
 #elif defined(MOZ_WIDGET_QT)
   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
-  nsIWidget* win = mObjectFrame->GetWindow();
+  nsIWidget* win = mObjectFrame->GetNearestWidget();
   if (!win)
     return NS_ERROR_FAILURE;
   QWidget* widget = static_cast<QWidget*>(win->GetNativeData(NS_NATIVE_WINDOW));
@@ -5186,7 +5186,7 @@ static GdkWindow* GetClosestWindow(nsIDOMElement *element)
   if (!frame)
     return nsnull;
 
-  nsIWidget* win = frame->GetWindow();
+  nsIWidget* win = frame->GetNearestWidget();
   if (!win)
     return nsnull;
 
@@ -5801,7 +5801,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow->window = nsnull;
 #ifdef MOZ_X11
           // Fill in the display field.
-          nsIWidget* win = mObjectFrame->GetWindow();
+          nsIWidget* win = mObjectFrame->GetNearestWidget();
           NPSetWindowCallbackStruct* ws_info = 
             static_cast<NPSetWindowCallbackStruct*>(mPluginWindow->ws_info);
           if (win) {
@@ -5902,7 +5902,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   // We'll need the top-level Cocoa window for the Cocoa event model.
   void* cocoaTopLevelWindow = nsnull;
   if (eventModel == NPEventModelCocoa) {
-    nsIWidget* widget = mObjectFrame->GetWindow();
+    nsIWidget* widget = mObjectFrame->GetNearestWidget();
     if (!widget)
       return nsnull;
     cocoaTopLevelWindow = widget->GetNativeData(NS_NATIVE_WINDOW);
