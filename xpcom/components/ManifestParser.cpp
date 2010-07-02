@@ -53,7 +53,6 @@
 
 #include "nsConsoleMessage.h"
 #include "nsTextFormatter.h"
-#include "nsUnicharUtils.h"
 #include "nsVersionComparator.h"
 #include "nsXPCOMCIDInternal.h"
 
@@ -393,6 +392,14 @@ CheckVersionFlag(const nsString& aFlag, const nsString& aData,
   return true;
 }
 
+// In-place conversion of ascii characters to lower case
+static void
+ToLowerCase(char* token)
+{
+  for (; *token; ++token)
+    *token = NS_ToLower(*token);
+}
+
 namespace {
 
 struct CachedDirective
@@ -439,14 +446,14 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
     if (xruntime) {
       rv = xruntime->GetOS(s);
       if (NS_SUCCEEDED(rv)) {
+        ToLowerCase(s);
         CopyUTF8toUTF16(s, osTarget);
-        ToLowerCase(osTarget);
       }
 
       rv = xruntime->GetXPCOMABI(s);
       if (NS_SUCCEEDED(rv) && osTarget.Length()) {
+        ToLowerCase(s);
         CopyUTF8toUTF16(s, abi);
-        ToLowerCase(abi);
         abi.Insert(PRUnichar('_'), 0);
         abi.Insert(osTarget, 0);
       }
@@ -553,8 +560,8 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
     bool contentAccessible = false;
 
     while (NULL != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) && ok) {
+      ToLowerCase(token);
       NS_ConvertASCIItoUTF16 wtoken(token);
-      ToLowerCase(wtoken);
 
       if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
 	  CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
