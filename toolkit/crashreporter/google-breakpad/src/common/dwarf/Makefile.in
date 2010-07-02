@@ -51,11 +51,8 @@ HOST_CPPSRCS = \
   bytereader.cc \
   dwarf2diehandler.cc \
   dwarf2reader.cc \
+  functioninfo.cc \
   $(NULL)
-
-ifeq (Darwin,$(HOST_OS_ARCH))
-HOST_CPPSRCS += functioninfo.cc
-endif
 
 # This code is only compiled for build-time tools,
 # so enabling RTTI should be fine.

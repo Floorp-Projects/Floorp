@@ -61,8 +61,32 @@ CSRCS = \
   $(NULL)
 
 HOST_CPPSRCS = $(CPPSRCS)
+HOST_CPPSRCS += \
+  dwarf_cfi_to_module.cc \
+  dwarf_cu_to_module.cc \
+  dwarf_line_to_module.cc \
+  language.cc \
+  module.cc \
+  stabs_reader.cc \
+  stabs_to_module.cc \
+  $(NULL)
+
+# This kind of sucks.
+ifeq (Linux,$(OS_ARCH))
+HOST_CXXFLAGS += -DHAVE_A_OUT_H
+endif
+ifeq (Darwin,$(OS_ARCH))
+HOST_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
+endif
 
 HOST_CSRCS = $(CSRCS)
+
+ifdef MOZ_PLATFORM_MAEMO
+# The GCC in scratchbox crashes writing DWARF debug info for language.cc.
+# Since we don't really need debug symbols for the host tools anyway,
+# just get rid of debug options.
+HOST_CXXFLAGS = $(patsubst -g%,,$(CXXFLAGS))
+endif
 
 # need static lib
 FORCE_STATIC_LIB = 1
