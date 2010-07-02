@@ -42,6 +42,7 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxXlibSurface.h"
+#include "nsRect.h"
 
 class QRect;
 
@@ -61,9 +62,9 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      * no clipping is required
      */
-    virtual nsresult NativeDraw(gfxXlibSurface *xsurf,
-            Colormap colormap, short offsetX,
-            short offsetY, QRect * clipRects, PRUint32 numClipRects) = 0;
+    virtual nsresult DrawWithXlib(gfxXlibSurface *xsurf,
+            nsIntPoint offset,
+            nsIntRect* clipRects, PRUint32 numClipRects) = 0;
   
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
@@ -71,9 +72,6 @@ public:
         // will be set and there is no dependence on what the existing pixels
         // in the drawable are set to.
         DRAW_IS_OPAQUE = 0x01,
-        // If set, then offset may be non-zero; if not set, then Draw() can
-        // only be called with offset==(0,0)
-        DRAW_SUPPORTS_OFFSET = 0x02,
         // If set, then numClipRects can be zero or one
         DRAW_SUPPORTS_CLIP_RECT = 0x04,
         // If set, then numClipRects can be any value. If neither this
@@ -81,7 +79,7 @@ public:
         DRAW_SUPPORTS_CLIP_LIST = 0x08,
         // If set, then the visual passed in can be any visual, otherwise the
         // visual passed in must be the default visual for dpy's default screen
-        DRAW_SUPPORTS_NONDEFAULT_VISUAL = 0x10,
+        DRAW_SUPPORTS_ALTERNATE_VISUAL = 0x10,
         // If set, then the Screen 'screen' in the callback can be different
         // from the default Screen of the display passed to 'Draw' and can be
         // on a different display.
@@ -97,16 +95,17 @@ public:
 
     /**
      * @param flags see above
-     * @param bounds Draw()'s drawing is guaranteed to be restricted to
-     * the rectangle (offset.x,offset.y,bounds.width,bounds.height)
+     * @param size Draw()'s drawing is guaranteed to be restricted to
+     * the rectangle (offset.x,offset.y,size.width,size.height)
      * @param dpy a display to use for the drawing if ctx doesn't have one
      * @param resultSurface if non-null, we will try to capture a copy of the
      * rendered image into a surface similar to the surface of ctx; if
      * successful, a pointer to the new gfxASurface is stored in *resultSurface,
      * otherwise *resultSurface is set to nsnull.
      */
-    nsresult Draw(gfxContext* ctx, int width, int height,
-                  PRUint32 flags, DrawOutput* output);
+    nsresult Draw(gfxContext* ctx, nsIntSize size,
+                  PRUint32 flags, Screen* screen, Visual* visual,
+                  DrawOutput* output);
 };
 
 #endif /*GFXQTNATIVERENDER_H_*/

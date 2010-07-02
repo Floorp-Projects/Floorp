@@ -38,9 +38,11 @@
 #ifndef GFXGDKNATIVERENDER_H_
 #define GFXGDKNATIVERENDER_H_
 
-#include "gfxColor.h"
-#include "nsAutoPtr.h"
 #include <gdk/gdk.h>
+#include "nsSize.h"
+#ifdef MOZ_X11
+#include "gfxXlibNativeRenderer.h"
+#endif
 
 class gfxASurface;
 class gfxContext;
@@ -48,10 +50,14 @@ class gfxContext;
 /**
  * This class lets us take code that draws into an GDK drawable and lets us
  * use it to draw into any Thebes context. The user should subclass this class,
- * override NativeDraw, and then call Draw(). The drawing will be subjected
+ * override DrawWithGDK, and then call Draw(). The drawing will be subjected
  * to all Thebes transformations, clipping etc.
  */
-class THEBES_API gfxGdkNativeRenderer {
+class THEBES_API gfxGdkNativeRenderer
+#ifdef MOZ_X11
+    : private gfxXlibNativeRenderer
+#endif
+{
 public:
     /**
      * Perform the native drawing.
@@ -61,37 +67,28 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      * no clipping is required
      */
-    virtual nsresult NativeDraw(GdkDrawable * drawable, short offsetX, 
-            short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects) = 0;
+    virtual nsresult DrawWithGDK(GdkDrawable * drawable, gint offsetX, 
+            gint offsetY, GdkRectangle * clipRects, PRUint32 numClipRects) = 0;
   
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
         // of the clipRect and (offset.x,offset.y,bounds.width,bounds.height)
         // will be set and there is no dependence on what the existing pixels
         // in the drawable are set to.
-        DRAW_IS_OPAQUE = 0x01,
-        // If set, then offset may be non-zero; if not set, then Draw() can
-        // only be called with offset==(0,0)
-        DRAW_SUPPORTS_OFFSET = 0x02,
-        // If set, then numClipRects can be zero or one
-        DRAW_SUPPORTS_CLIP_RECT = 0x04,
-        // If set, then numClipRects can be any value. If neither this
-        // nor CLIP_RECT are set, then numClipRects will be zero
-        DRAW_SUPPORTS_CLIP_LIST = 0x08,
-        // If set, then the visual passed in can be any visual, otherwise the
-        // visual passed in must be the default visual for dpy's default screen
-        DRAW_SUPPORTS_NONDEFAULT_VISUAL = 0x10,
-        // If set, then the Screen 'screen' in the callback can be different
-        // from the default Screen of the default display and can be
-        // on a different display.
-        DRAW_SUPPORTS_ALTERNATE_SCREEN = 0x20
-    };
-
-    struct DrawOutput {
-        nsRefPtr<gfxASurface> mSurface;
-        PRPackedBool mUniformAlpha;
-        PRPackedBool mUniformColor;
-        gfxRGBA      mColor;
+        DRAW_IS_OPAQUE =
+#ifdef MOZ_X11
+            gfxXlibNativeRenderer::DRAW_IS_OPAQUE
+#else
+            0x1
+#endif
+        // If set, then numClipRects can be zero or one.
+        // If not set, then numClipRects will be zero.
+        , DRAW_SUPPORTS_CLIP_RECT =
+#ifdef MOZ_X11
+            gfxXlibNativeRenderer::DRAW_SUPPORTS_CLIP_RECT
+#else
+            0x2
+#endif
     };
 
     /**
@@ -99,13 +96,19 @@ public:
      * @param bounds Draw()'s drawing is guaranteed to be restricted to
      * the rectangle (offset.x,offset.y,bounds.width,bounds.height)
      * @param dpy a display to use for the drawing if ctx doesn't have one
-     * @param resultSurface if non-null, we will try to capture a copy of the
-     * rendered image into a surface similar to the surface of ctx; if
-     * successful, a pointer to the new gfxASurface is stored in *resultSurface,
-     * otherwise *resultSurface is set to nsnull.
      */
-    nsresult Draw(gfxContext* ctx, int width, int height,
-                  PRUint32 flags, DrawOutput* output);
+    void Draw(gfxContext* ctx, nsIntSize size,
+              PRUint32 flags, GdkColormap* colormap);
+
+private:
+#ifdef MOZ_X11
+    // for gfxXlibNativeRenderer:
+    virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
+                                  nsIntPoint offset,
+                                  nsIntRect* clipRects, PRUint32 numClipRects);
+
+    GdkColormap *mColormap;
+#endif
 };
 
 #endif /*GFXGDKNATIVERENDER_H_*/
