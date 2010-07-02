@@ -553,8 +553,7 @@ TabParent::AddProgressListener(nsIWebProgressListener* aListener,
 {
   nsresult rv;
 
-  TabParentListenerInfo* info = GetListenerInfo(aListener);
-  if (info) {
+  if (GetListenerInfo(aListener)) {
     // The listener is already registered!
     return NS_ERROR_FAILURE;
   }
@@ -564,16 +563,12 @@ TabParent::AddProgressListener(nsIWebProgressListener* aListener,
     return NS_ERROR_INVALID_ARG;
   }
 
-  info = new TabParentListenerInfo(listener, aNotifyMask);
-  if (!info) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  TabParentListenerInfo info(listener, aNotifyMask);
 
-  rv = mListenerInfoList.AppendElement(*info) ? NS_OK : NS_ERROR_FAILURE;
-  if (NS_FAILED(rv)) {
-    delete info;
-  }
-  return rv;
+  if (!mListenerInfoList.AppendElement(info))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
