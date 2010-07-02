@@ -2631,16 +2631,11 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now check whether we need to grab a pointer to the
-    // XPCNativeWrapper and XrayWrapperPropertyHolder getProperty ops.
+    // XPCNativeWrapper class
     if (!nsDOMClassInfo::GetXPCNativeWrapperGetPropertyOp()) {
       JSPropertyOp getProperty;
       xpc->GetNativeWrapperGetPropertyOp(&getProperty);
       nsDOMClassInfo::SetXPCNativeWrapperGetPropertyOp(getProperty);
-    }
-    if (!nsDOMClassInfo::GetXrayWrapperPropertyHolderGetPropertyOp()) {
-      JSPropertyOp getProperty;
-      xpc->GetXrayWrapperPropertyHolderGetPropertyOp(&getProperty);
-      nsDOMClassInfo::SetXrayWrapperPropertyHolderGetPropertyOp(getProperty);
     }
   } else {
     // There's already a global object. We are preparing this outer window
