@@ -70,7 +70,8 @@ var RESULTS = [
   screenshots:      [],
   homepageURL:      "https://addons.mozilla.org/addon/5992",
   type:             "extension",
-  sourceURI:        "http://localhost:4444/test.xpi"
+  sourceURI:        "http://localhost:4444/test.xpi",
+  size:             234
 },
 {
   id:               "test6@tests.mozilla.org",
@@ -83,7 +84,8 @@ var RESULTS = [
   screenshots:      ["http://localhost:4444/test_bug404024/thumbnail.png"],
   homepageURL:      null,
   type:             "theme",
-  sourceURI:        "http://localhost:4444/test.xpi"
+  sourceURI:        "http://localhost:4444/test.xpi",
+  size:             1204
 }
 ];
 
