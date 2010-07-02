@@ -50,11 +50,6 @@
 /**
  * Application-specific data needed to start the apprunner.
  *
- * @status FROZEN - This API is stable. Additional fields may be added to the
- *                  end of the structure in the future. Runtime detection
- *                  of the version of nsXREAppData can be determined by
- *                  examining the "size" field.
- *
  * @note When this structure is allocated and manipulated by XRE_CreateAppData,
  *       string fields will be allocated with NS_Alloc, and interface pointers
  *       are strong references.

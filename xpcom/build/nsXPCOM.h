@@ -107,8 +107,6 @@ struct Module;
  * before proceeding to use xpcom. The one exception is that you may
  * call NS_NewLocalFile to create a nsIFile.
  * 
- * @status FROZEN
- *
  * @note Use <CODE>NS_NewLocalFile</CODE> or <CODE>NS_NewNativeLocalFile</CODE> 
  *       to create the file object you supply as the bin directory path in this
  *       call. The function may be safely called before the rest of XPCOM or 
@@ -145,8 +143,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
  * Shutdown XPCOM. You must call this method after you are finished
  * using xpcom. 
  *
- * @status FROZEN
- *
  * @param servMgr           The service manager which was returned by NS_InitXPCOM.
  *                          This will release servMgr.  You may pass null.
  *
@@ -161,7 +157,6 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 /**
  * Public Method to access to the service manager.
  * 
- * @status FROZEN
  * @param result Interface pointer to the service manager 
  *
  * @return NS_OK for success;
@@ -174,7 +169,6 @@ NS_GetServiceManager(nsIServiceManager* *result);
 /**
  * Public Method to access to the component manager.
  * 
- * @status FROZEN
  * @param result Interface pointer to the service 
  *
  * @return NS_OK for success;
@@ -188,7 +182,6 @@ NS_GetComponentManager(nsIComponentManager* *result);
 /**
  * Public Method to access to the component registration manager.
  *
- * @status FROZEN
  * @param result Interface pointer to the service
  *
  * @return NS_OK for success;
@@ -201,7 +194,6 @@ NS_GetComponentRegistrar(nsIComponentRegistrar* *result);
 /**
  * Public Method to access to the memory manager.  See nsIMemory
  * 
- * @status FROZEN
  * @param result Interface pointer to the memory manager 
  *
  * @return NS_OK for success;
@@ -214,8 +206,6 @@ NS_GetMemoryManager(nsIMemory* *result);
 /**
  * Public Method to create an instance of a nsILocalFile.  This function
  * may be called prior to NS_InitXPCOM.
- * 
- * @status FROZEN
  * 
  *   @param path       
  *       A string which specifies a full file path to a 
@@ -252,8 +242,6 @@ NS_NewNativeLocalFile(const nsACString &path,
  * Allocates a block of memory of a particular size. If the memory cannot
  * be allocated (because of an out-of-memory condition), null is returned.
  *
- * @status FROZEN
- *
  * @param size   The size of the block to allocate
  * @result       The block of memory
  * @note         This function is thread-safe.
@@ -263,8 +251,6 @@ NS_Alloc(PRSize size);
 
 /**
  * Reallocates a block of memory to a new size.
- *
- * @status FROZEN
  *
  * @param ptr     The block of memory to reallocate. This block must originally
                   have been allocated by NS_Alloc or NS_Realloc
@@ -285,8 +271,6 @@ NS_Realloc(void* ptr, PRSize size);
 /**
  * Frees a block of memory. Null is a permissible value, in which case no
  * action is taken.
- *
- * @status FROZEN
  *
  * @param ptr   The block of memory to free. This block must originally have
  *              been allocated by NS_Alloc or NS_Realloc
@@ -427,8 +411,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * as the contract ID of a service which implements
  * nsIDirectoryServiceProvider. Each directory service provider is
  * installed in the global directory service.
- *
- * @status FROZEN
  */
 #define XPCOM_DIRECTORY_PROVIDER_CATEGORY "xpcom-directory-providers"
 
@@ -437,8 +419,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * NS_InitXPCOM returns. Each category entry is treated as the contractID of
  * a service: each service is instantiated, and if it implements nsIObserver
  * the nsIObserver.observe method is called with the "xpcom-startup" topic.
- *
- * @status FROZEN
  */
 #define NS_XPCOM_STARTUP_CATEGORY "xpcom-startup"
 
@@ -453,7 +433,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * component must register their contract ID in the category manager,
  *
  * @see NS_XPCOM_STARTUP_CATEGORY
- * @status FROZEN
  */
 #define NS_XPCOM_STARTUP_OBSERVER_ID "xpcom-startup"
 
@@ -468,8 +447,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * At XPCOM shutdown, this topic is notified. All components must
  * release any interface references to objects in other modules when
  * this topic is notified.
- *
- * @status FROZEN
  */
 #define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
 
@@ -478,8 +455,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * category manager. The subject of the notification will be the name of
  * the added entry as an nsISupportsCString, and the data will be the
  * name of the category. The notification will occur on the main thread.
- *
- * @status FROZEN
  */
 #define NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID \
   "xpcom-category-entry-added"
@@ -489,8 +464,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * category manager. The subject of the notification will be the name of
  * the removed entry as an nsISupportsCString, and the data will be the
  * name of the category. The notification will occur on the main thread.
- *
- * @status FROZEN
  */
 #define NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID \
   "xpcom-category-entry-removed"
@@ -500,8 +473,6 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
  * manager. The subject of the notification will be the category manager,
  * and the data will be the name of the cleared category.
  * The notification will occur on the main thread.
- *
- * @status FROZEN
  */
 #define NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID "xpcom-category-cleared"
 
