@@ -262,12 +262,12 @@ public:
   nsAccessible* GetCachedNextSibling() const
   {
     return mParent ?
-      mParent->mChildren.SafeElementAt(mIndexInParent + 1, nsnull) : nsnull;
+      mParent->mChildren.SafeElementAt(mIndexInParent + 1, nsnull).get() : nsnull;
   }
   nsAccessible* GetCachedPrevSibling() const
   {
     return mParent ?
-      mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull) : nsnull;
+      mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull).get() : nsnull;
   }
   PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
   PRBool AreChildrenCached() const { return mAreChildrenInitialized; }
