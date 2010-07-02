@@ -59,8 +59,6 @@ public:
   virtual void RemoveChild(Layer* aChild);
 
   /* LayerD3D9 implementation */
-  LayerType GetType();
-
   Layer* GetLayer();
 
   LayerD3D9* GetFirstChildD3D9();
