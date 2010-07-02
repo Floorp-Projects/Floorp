@@ -218,11 +218,10 @@ JSWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, jsval *vp)
 }
 
 bool
-JSWrapper::construct(JSContext *cx, JSObject *wrapper, JSObject *receiver,
-                     uintN argc, jsval *argv, jsval *rval)
+JSWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, jsval *argv, jsval *rval)
 {
     const jsid id = JSVAL_VOID;
-    GET(JSProxyHandler::construct(cx, wrapper, receiver, argc, argv, rval));
+    GET(JSProxyHandler::construct(cx, wrapper, argc, argv, rval));
 }
 
 JSString *
@@ -741,8 +740,8 @@ JSCrossCompartmentWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, js
 }
 
 bool
-JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, JSObject *receiver,
-                                     uintN argc, jsval *argv, jsval *rval)
+JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, jsval *argv,
+                                     jsval *rval)
 {
     AutoCompartment call(cx, wrappedObject(wrapper));
     if (!call.enter())
@@ -754,10 +753,8 @@ JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, JSObject 
     }
     jsval *vp = call.getvp();
     vp[0] = OBJECT_TO_JSVAL(call.target);
-    if (!call.destination->wrap(cx, &receiver) ||
-        !JSWrapper::construct(cx, wrapper, receiver, argc, argv, rval)) {
+    if (!JSWrapper::construct(cx, wrapper, argc, argv, rval))
         return false;
-    }
 
     call.leave();
     return call.origin->wrap(cx, rval) &&
