@@ -249,12 +249,6 @@ class FrameState
     inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg);
 
     /*
-     * Returns a register that contains the constant value of the
-     * frame entry's data payload.
-     */
-    inline RegisterID tempRegForConstant(FrameEntry *fe);
-
-    /*
      * Forcibly loads the type tag for the specified FrameEntry
      * into a register already marked as owning the type.
      */
@@ -315,6 +309,15 @@ class FrameState
      * can modify it in-place. The actual FE is not modified.
      */
     RegisterID copyTypeIntoReg(FrameEntry *fe);
+
+    /*
+     * Returns a register that contains the constant value of the
+     * frame entry's data payload.
+     * Since the register is not bound to a FrameEntry,
+     * it MUST be explicitly freed with freeReg().
+     */
+    RegisterID copyConstantIntoReg(FrameEntry *fe);
+    RegisterID copyConstantIntoReg(Assembler &masm, FrameEntry *fe);
 
     /*
      * Types don't always have to be in registers, sometimes the compiler

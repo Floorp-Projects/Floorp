@@ -380,23 +380,6 @@ FrameState::tempRegForData(FrameEntry *fe)
 }
 
 inline JSC::MacroAssembler::RegisterID
-FrameState::tempRegForConstant(FrameEntry *fe)
-{
-    JS_ASSERT(fe->data.isConstant());
-
-    if (fe->isCopy())
-        fe = fe->copyOf();
-
-    if (fe->data.inRegister())
-        return fe->data.reg();
-
-    RegisterID reg = allocReg(fe, RematInfo::DATA);
-    masm.move(Imm32(fe->getValue().asInt32()), reg);
-    fe->data.setRegister(reg);
-    return reg;
-}
-
-inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
 {
     JS_ASSERT(!fe->data.isConstant());

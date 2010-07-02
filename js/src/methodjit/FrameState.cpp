@@ -542,6 +542,25 @@ FrameState::copyTypeIntoReg(FrameEntry *fe)
     return reg;
 }
 
+JSC::MacroAssembler::RegisterID
+FrameState::copyConstantIntoReg(FrameEntry *fe)
+{
+    return copyConstantIntoReg(masm, fe);
+}
+
+JSC::MacroAssembler::RegisterID
+FrameState::copyConstantIntoReg(Assembler &masm, FrameEntry *fe)
+{
+    JS_ASSERT(fe->data.isConstant());
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    RegisterID reg = allocReg();
+    masm.move(Imm32(fe->getValue().asInt32()), reg);
+    return reg;
+}
+
 JSC::MacroAssembler::FPRegisterID
 FrameState::copyEntryIntoFPReg(FrameEntry *fe, FPRegisterID fpreg)
 {
