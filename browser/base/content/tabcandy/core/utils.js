@@ -485,34 +485,20 @@ var Utils = {
   // ___ Windows and Tabs
 
   // ----------
-  // Variable: activeWindow
-  get activeWindow(){
-    var win = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-               .getService(Ci.nsIWindowWatcher)
-               .activeWindow;
-               
-    if( win != null ) 
-      return win;  
-      
-    if(homeWindow != null)
-      return homeWindow;
-      
-    win = Cc["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Components.interfaces.nsIWindowMediator)
-      .getMostRecentWindow("navigator:browser");
-
-    return win;
-  },
-  
-  // ----------
   // Variable: activeTab
   // The <Tabs> tab that represents the active tab in the active window.
   get activeTab(){
-    var tabBrowser = this.activeWindow.gBrowser;
-    var rawTab = tabBrowser.selectedTab;
-    for( var i=0; i<Tabs.length; i++){
-      if(Tabs[i].raw == rawTab)
-        return Tabs[i];
+    try {
+      var tabBrowser = this.getCurrentWindow().gBrowser;
+      Utils.assert('tabBrowser', tabBrowser);
+      
+      var rawTab = tabBrowser.selectedTab;
+      for( var i=0; i<Tabs.length; i++){
+        if(Tabs[i].raw == rawTab)
+          return Tabs[i];
+      }
+    } catch(e) {
+      Utils.log(e);
     }
     
     return null;
@@ -531,7 +517,7 @@ var Utils = {
       var tabbrowser = browserWin.gBrowser;
       let tabCandyContainer = browserWin.document.getElementById("tab-candy");
       if (tabCandyContainer && tabCandyContainer.contentWindow == window) {
-	return browserWin;
+      	return browserWin;
       }
     }
     
@@ -611,7 +597,7 @@ var Utils = {
         text += '\n' + calls[3];
       }
       
-      this.log(text);
+      this.trace(text);
     }
   },
   
