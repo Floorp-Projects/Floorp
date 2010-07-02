@@ -311,13 +311,13 @@ class FrameState
     RegisterID copyTypeIntoReg(FrameEntry *fe);
 
     /*
-     * Returns a register that contains the constant value of the
+     * Returns a register that contains the constant Int32 value of the
      * frame entry's data payload.
      * Since the register is not bound to a FrameEntry,
      * it MUST be explicitly freed with freeReg().
      */
-    RegisterID copyConstantIntoReg(FrameEntry *fe);
-    RegisterID copyConstantIntoReg(Assembler &masm, FrameEntry *fe);
+    RegisterID copyInt32ConstantIntoReg(FrameEntry *fe);
+    RegisterID copyInt32ConstantIntoReg(Assembler &masm, FrameEntry *fe);
 
     /*
      * Types don't always have to be in registers, sometimes the compiler

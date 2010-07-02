@@ -173,7 +173,7 @@ mjit::Compiler::jsop_binary_intmath(JSOp op, RegisterID *returnReg, MaybeJump &j
 #if !defined(JS_CPU_ARM)
       case JSOP_MUL:
         if (rhs->isConstant()) {
-            RegisterID rhsReg = frame.copyConstantIntoReg(rhs);
+            RegisterID rhsReg = frame.copyInt32ConstantIntoReg(rhs);
             fail = masm.branchMul32(Assembler::Overflow,
                                     rhsReg, reg);
             frame.freeReg(rhsReg);

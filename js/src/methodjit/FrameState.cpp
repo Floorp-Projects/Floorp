@@ -543,13 +543,13 @@ FrameState::copyTypeIntoReg(FrameEntry *fe)
 }
 
 JSC::MacroAssembler::RegisterID
-FrameState::copyConstantIntoReg(FrameEntry *fe)
+FrameState::copyInt32ConstantIntoReg(FrameEntry *fe)
 {
-    return copyConstantIntoReg(masm, fe);
+    return copyInt32ConstantIntoReg(masm, fe);
 }
 
 JSC::MacroAssembler::RegisterID
-FrameState::copyConstantIntoReg(Assembler &masm, FrameEntry *fe)
+FrameState::copyInt32ConstantIntoReg(Assembler &masm, FrameEntry *fe)
 {
     JS_ASSERT(fe->data.isConstant());
 
