@@ -536,12 +536,6 @@ nsAccEventQueue::CreateTextChangeEventFor(AccHideEvent* aEvent)
   if (!textAccessible)
     return;
 
-  PRInt32 offset = 0;
-  nsAccessible *changeAcc =
-    textAccessible->DOMPointToHypertextOffset(aEvent->mNode, -1, &offset);
-  NS_ASSERTION(!changeAcc || changeAcc == aEvent->mAccessible,
-               "Hypertext is reporting a different accessible for this node");
-
   // Don't fire event for the first html:br in an editor.
   if (nsAccUtils::Role(aEvent->mAccessible) ==
       nsIAccessibleRole::ROLE_WHITESPACE) {
@@ -554,6 +548,8 @@ nsAccEventQueue::CreateTextChangeEventFor(AccHideEvent* aEvent)
         return;
     }
   }
+
+  PRInt32 offset = textAccessible->GetChildOffset(aEvent->mAccessible);
 
   nsAutoString text;
   aEvent->mAccessible->AppendTextTo(text, 0, PR_UINT32_MAX);
