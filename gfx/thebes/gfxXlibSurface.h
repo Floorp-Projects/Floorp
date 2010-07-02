@@ -89,6 +89,9 @@ public:
         mPixmapTaken = PR_TRUE;
     }
 
+    // Find a visual and colormap pair suitable for rendering to this surface.
+    PRBool GetColormapAndVisual(Colormap* colormap, Visual **visual);
+
 protected:
     // if TakePixmap() has been called on this
     PRBool mPixmapTaken;
