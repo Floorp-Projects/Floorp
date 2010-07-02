@@ -43,6 +43,11 @@
 #include "nsXULAppAPI.h"
 #endif
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentChild.h"
+#include "nsXULAppAPI.h"
+#endif
+
 #include "History.h"
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
@@ -1078,6 +1083,16 @@ History::VisitURI(nsIURI* aURI,
   if (mShuttingDown) {
     return NS_OK;
   }
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentChild * cpc = 
+      mozilla::dom::ContentChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    (void)cpc->SendVisitURI(IPC::URI(aURI), IPC::URI(aLastVisitedURI), aFlags);
+    return NS_OK;
+  } 
+#endif /* MOZ_IPC */
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
