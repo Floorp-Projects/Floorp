@@ -58,60 +58,26 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
 {
-    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
-        return;
+    NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
+                 "Bad size");
 
     cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size, int depth)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
-
-{
-    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
-        return;
-
-    mDrawable = (Drawable)XCreatePixmap(dpy,
-                                        RootWindow(dpy, DefaultScreen(dpy)),
-                                        mSize.width, mSize.height,
-                                        depth ? depth : DefaultDepth(dpy, DefaultScreen(dpy)));
-
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, mDrawable, visual, mSize.width, mSize.height);
-
-    Init(surf);
-    TakePixmap();
-}
-
-gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, XRenderPictFormat *format,
+gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
                                const gfxIntSize& size)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
+    : mPixmapTaken(PR_FALSE), mDisplay(DisplayOfScreen(screen)),
+      mDrawable(drawable), mSize(size)
 {
-    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
-        return;
+    NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
+                 "Bad Size");
 
-    cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format(dpy, drawable,
-                                                                          ScreenOfDisplay(dpy,DefaultScreen(dpy)),
-                                                                          format, mSize.width, mSize.height);
+    cairo_surface_t *surf =
+        cairo_xlib_surface_create_with_xrender_format(mDisplay, drawable,
+                                                      screen, format,
+                                                      mSize.width, mSize.height);
     Init(surf);
-}
-
-gfxXlibSurface::gfxXlibSurface(Display *dpy, XRenderPictFormat *format, const gfxIntSize& size)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
-{
-    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
-        return;
-
-    mDrawable = (Drawable)XCreatePixmap(dpy,
-                                        RootWindow(dpy, DefaultScreen(dpy)),
-                                        mSize.width, mSize.height,
-                                        format->depth);
-
-    cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format(dpy, mDrawable,
-                                                                          ScreenOfDisplay(dpy,DefaultScreen(dpy)),
-                                                                          format, mSize.width, mSize.height);
-    Init(surf);
-    TakePixmap();
 }
 
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
@@ -119,6 +85,9 @@ gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
       mSize(cairo_xlib_surface_get_width(csurf),
             cairo_xlib_surface_get_height(csurf))
 {
+    NS_PRECONDITION(cairo_surface_status(csurf) == 0,
+                    "Not expecting an error surface");
+
     mDrawable = cairo_xlib_surface_get_drawable(csurf);
     mDisplay = cairo_xlib_surface_get_display(csurf);
 
@@ -130,6 +99,62 @@ gfxXlibSurface::~gfxXlibSurface()
     if (mPixmapTaken) {
         XFreePixmap (mDisplay, mDrawable);
     }
+}
+
+static Drawable
+CreatePixmap(Screen *screen, const gfxIntSize& size, unsigned int depth,
+             Drawable relatedDrawable)
+{
+    if (!gfxASurface::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
+        return None;
+
+    if (relatedDrawable == None) {
+        relatedDrawable = RootWindowOfScreen(screen);
+    }
+    Display *dpy = DisplayOfScreen(screen);
+    return XCreatePixmap(dpy, relatedDrawable,
+                         size.width, size.height, depth);
+}
+
+/* static */
+already_AddRefed<gfxXlibSurface>
+gfxXlibSurface::Create(Screen *screen, Visual *visual,
+                       const gfxIntSize& size, Drawable relatedDrawable)
+{
+    Drawable drawable =
+        CreatePixmap(screen, size, DepthOfVisual(screen, visual),
+                     relatedDrawable);
+    if (!drawable)
+        return nsnull;
+
+    nsRefPtr<gfxXlibSurface> result =
+        new gfxXlibSurface(DisplayOfScreen(screen), drawable, visual, size);
+    result->TakePixmap();
+
+    if (result->CairoStatus() != 0)
+        return nsnull;
+
+    return result.forget();
+}
+
+/* static */
+already_AddRefed<gfxXlibSurface>
+gfxXlibSurface::Create(Screen *screen, XRenderPictFormat *format,
+                       const gfxIntSize& size, Drawable relatedDrawable)
+{
+    Drawable drawable =
+        CreatePixmap(screen, size, format->depth, relatedDrawable);
+    if (!drawable)
+        return nsnull;
+
+    nsRefPtr<gfxXlibSurface> result =
+        new gfxXlibSurface(screen, drawable, format, size);
+    result->TakePixmap();
+
+    if (result->CairoStatus() != 0)
+        return nsnull;
+
+    return result.forget();
 }
 
 void
@@ -150,6 +175,22 @@ gfxXlibSurface::DoSizeQuery()
     mSize.height = height;
 }
 
+/* static */
+int
+gfxXlibSurface::DepthOfVisual(const Screen* screen, const Visual* visual)
+{
+    for (int d = 0; d < screen->ndepths; d++) {
+        const Depth& d_info = screen->depths[d];
+        if (visual >= &d_info.visuals[0]
+            && visual < &d_info.visuals[d_info.nvisuals])
+            return d_info.depth;
+    }
+
+    NS_ERROR("Visual not on Screen.");
+    return 0;
+}
+    
+/* static */
 XRenderPictFormat*
 gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
 {

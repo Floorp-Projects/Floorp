@@ -168,8 +168,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #endif
 
 #ifdef MOZ_X11
-#include <X11/Xlib.h>
 #include <cairo-xlib.h>
+#include "gfxXlibSurface.h"
 /* X headers suck */
 enum { XKeyPress = KeyPress };
 #ifdef KeyPress
@@ -179,7 +179,6 @@ enum { XKeyPress = KeyPress };
 #if (MOZ_PLATFORM_MAEMO == 5) && defined(MOZ_WIDGET_GTK2)
 #define MOZ_COMPOSITED_PLUGINS 1
 #define MOZ_USE_IMAGE_EXPOSE   1
-#include "gfxXlibSurface.h"
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
@@ -5158,23 +5157,6 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                 rendererFlags, nsnull);
 }
 
-#ifdef MOZ_X11
-static int
-DepthOfVisual(const Screen* screen, const Visual* visual)
-{
-  for (int d = 0; d < screen->ndepths; d++) {
-    Depth *d_info = &screen->depths[d];
-    for (int v = 0; v < d_info->nvisuals; v++) {
-      if (&d_info->visuals[v] == visual)
-        return d_info->depth;
-    }
-  }
-
-  NS_ERROR("Visual not on Screen.");
-  return 0;
-}
-#endif
-
 #ifdef MOZ_USE_IMAGE_EXPOSE
 
 static GdkWindow* GetClosestWindow(nsIDOMElement *element)
@@ -5541,7 +5523,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
   if (ws_info->visual != visual || ws_info->colormap != colormap) {
     ws_info->visual = visual;
     ws_info->colormap = colormap;
-    ws_info->depth = DepthOfVisual(screen, visual);
+    ws_info->depth = gfxXlibSurface::DepthOfVisual(screen, visual);
     doupdatewindow = PR_TRUE;
   }
 #endif
