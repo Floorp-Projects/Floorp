@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy and Report-Only mode</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/";
+
+// These are test results: -1 means it hasn't run,
+// true/false is the pass/fail result.
+window.loads = {
+  css_self: {expected: true, verified: false},
+  css_examplecom: {expected: false, verified: false},
+  img_self: {expected: false, verified: false},
+  img_examplecom: {expected: false, verified: false},
+  script_self: {expected: true, verified: false},
+};
+
+window.violation_reports = {
+  css_self: {expected: 0, received: 0},        /* totally fine */
+  css_examplecom: {expected: 1, received: 0},  /* violates enforced CSP */
+  img_self: {expected: 1, received: 0},        /* violates enforced CSP */
+  img_examplecom: {expected: 2, received: 0},  /* violates both CSPs */
+  script_self: {expected: 1, received: 0},     /* violates report-only */
+};
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.  This also watches for violation reports to go out.
+function examiner() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                        .getService(Components.interfaces.nsIObserverService);
+  obsvc.addObserver(this, "csp-on-violate-policy", false);
+  obsvc.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if(!subject.QueryInterface)
+      return;
+
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    if (topic === "http-on-modify-request") {
+      var uri = subject.QueryInterface(Components.interfaces.nsIHttpChannel).URI;
+      if (!testpat.test(uri.asciiSpec)) return;
+      var testid = testpat.exec(uri.asciiSpec)[1];
+
+      //violation reports don't come through here, but the requested resources do
+      // if the test has already finished, move on.
+      if (window.loads[testid].verified) return;
+
+      //these are requests that were allowed by CSP
+      var testid = testpat.exec(uri.asciiSpec)[1];
+      window.testResult(testid, 'allowed', uri.asciiSpec + " allowed by csp");
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      //these were NOT NECESSARILY blocked, but rather a policy was violated...
+      var uri = subject.QueryInterface(Components.interfaces.nsIURI);
+      if (!testpat.test(uri.asciiSpec)) return;
+      var testid = testpat.exec(uri.asciiSpec)[1];
+
+      // if the test has already finished, move on.
+      if (window.loads[testid].verified) return;
+
+      // record the ones that were supposed to be blocked, but don't use this
+      // as an indicator for tests that are mistakenly blocked.
+      if (!window.loads[testid].expected) {
+        window.testResult(testid,
+                          'blocked',
+                          uri.asciiSpec + " blocked by \"" + data + "\"");
+      }
+    }
+
+    // if any test is unverified, keep waiting
+    for (var v in window.loads)
+      if(!window.loads[v].verified)
+        return;
+
+    // ... otherwise, finish.
+    // Must call SimpleTest.finish() in the background because it modifies the
+    // DOM (and this might be called during a reflow.)
+    var self = window;
+    window.examiner.remove();
+    window.verifyReports();
+    window.setTimeout(function () {
+        SimpleTest.finish();
+      }, 0);
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                          .getService(Components.interfaces.nsIObserverService);
+    obsvc.removeObserver(this, "csp-on-violate-policy");
+    obsvc.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+  //otherwise, make sure the allowed ones are expected and blocked ones are not.
+  if (window.loads[testname].expected) {
+    is(result, 'allowed', ">> " + msg);
+  } else {
+    is(result, 'blocked', ">> " + msg);
+  }
+  window.loads[testname].verified = true;
+}
+
+window.verifyReports = function() {
+  //obtain from server
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://mochi.test:8888" + path + "file_bug552523_violation.sjs?results", false);
+  xhr.send(null);
+
+  var received = JSON.parse(xhr.responseText);
+  for (var r in received)
+    window.violation_reports[r].received = received[r];
+
+  //make sure it all adds up
+  for(var r in window.violation_reports) {
+    var exp = window.violation_reports[r].expected;
+    var rec = window.violation_reports[r].received;
+    is(rec, exp, "Received wrong number of reports for " + r);
+  }
+
+  //reset server
+  xhr.open("GET", "http://mochi.test:8888" + path + "file_bug552523_violation.sjs?reset", false);
+  xhr.send(null);
+};
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+
+document.getElementById('cspframe').src = 'http://mochi.test:8888' + path + 'file_bug552523.html';
+
+</script>
+</pre>
+</body>
+</html>

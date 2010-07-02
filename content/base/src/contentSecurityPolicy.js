@@ -60,16 +60,10 @@ Cu.import("resource://gre/modules/CSPUtils.jsm");
 function ContentSecurityPolicy() {
   CSPdebug("CSP CREATED");
   this._isInitialized = false;
-  this._reportOnlyMode = false;
-  this._policy = CSPRep.fromString("allow *");
-
-  // default options "wide open" since this policy will be intersected soon
-  this._policy._allowInlineScripts = true;
-  this._policy._allowEval = true;
-
-  this._requestHeaders = []; 
+  this._enforcedPolicy = null;
+  this._reportOnlyPolicy = null;
+  this._requestHeaders = [];
   this._request = "";
-  CSPdebug("CSP POLICY INITED TO 'allow *'");
 
   this._observerService = Cc['@mozilla.org/observer-service;1']
                             .getService(Ci.nsIObserverService);
@@ -128,48 +122,76 @@ ContentSecurityPolicy.prototype = {
     return this._policy.toString();
   },
 
+  /**
+   * Decides whether or not inline scripts are allowed and sends out violation
+   * reports if they're not.  Also, if there's a report-only policy, violation
+   * reports are sent when the policy disallows them, but this returns true.
+   */
   get allowsInlineScript() {
-    // trigger automatic report to go out when inline scripts are disabled.
-    if (!this._policy.allowsInlineScripts) {
-      var violation = 'violated base restriction: Inline Scripts will not execute';
-      // gotta wrap the violation string, since it's sent out to observers as
-      // an nsISupports.
-      let wrapper = Cc["@mozilla.org/supports-cstring;1"]
+    // gotta wrap the violation string, since it's sent out to observers as
+    // an nsISupports.
+    var violation = Cc["@mozilla.org/supports-cstring;1"]
                       .createInstance(Ci.nsISupportsCString);
-      wrapper.data = violation;
+    violation.data = 'base restriction: no inline scripts';
+
+    // first, trigger reports if the report-only policy disallows inline
+    // scripts (but do not decide whether or not to block the script).
+    if (this._reportOnlyPolicy && !this._reportOnlyPolicy.allowsInlineScripts) {
       this._observerService.notifyObservers(
-                              wrapper,
+                              violation,
                               CSP_VIOLATION_TOPIC,
                               'inline script base restriction');
-      this.sendReports('self', violation);
+      this._sendReports(this._reportOnlyPolicy, 'self', violation.data);
     }
-    return this._reportOnlyMode || this._policy.allowsInlineScripts;
+
+    // second, verify with real policy and trigger automatic report to go out
+    // when inline scripts are disabled.
+    if (this._enforcedPolicy && !this._enforcedPolicy.allowsInlineScripts) {
+      this._observerService.notifyObservers(
+                              violation,
+                              CSP_VIOLATION_TOPIC,
+                              'inline script base restriction');
+      this._sendReports(this._enforcedPolicy, 'self', violation.data);
+      return false;
+    }
+
+    // finally, if we get here, inline scripts should be allowed
+    return true;
   },
 
+  /**
+   * Decides whether or not eval() is allowed and sends out violation
+   * reports if not.  Also, if there's a report-only policy, violation
+   * reports are sent when the policy disallows eval, but this returns true.
+   */
   get allowsEval() {
-    // trigger automatic report to go out when eval and friends are disabled.
-    if (!this._policy.allowsEvalInScripts) {
-      var violation = 'violated base restriction: Code will not be created from strings';
-      // gotta wrap the violation string, since it's sent out to observers as
-      // an nsISupports.
-      let wrapper = Cc["@mozilla.org/supports-cstring;1"]
-                      .createInstance(Ci.nsISupportsCString);
-      wrapper.data = violation;
+    // gotta wrap the violation string, since it's sent out to observers as
+    // an nsISupports.
+    var violation = Cc["@mozilla.org/supports-cstring;1"]
+                             .createInstance(Ci.nsISupportsCString);
+    violation.data = 'base restriction: no eval-like function calls';
+
+    // first, trigger reports if the report-only policy disallows eval
+    // (but do not decide whether or not to block the script).
+    if (this._reportOnlyPolicy && !this._reportOnlyPolicy.allowsEvalInScripts) {
       this._observerService.notifyObservers(
-                              wrapper,
+                              violation,
                               CSP_VIOLATION_TOPIC,
                               'eval script base restriction');
-      this.sendReports('self', violation);
+      this._sendReports(this._reportOnlyPolicy, 'self', violation.data);
     }
-    return this._reportOnlyMode || this._policy.allowsEvalInScripts;
-  },
 
-  set reportOnlyMode(val) {
-    this._reportOnlyMode = val;
-  },
+    // trigger automatic report to go out when eval and friends are disabled.
+    if (this._enforcedPolicy && !this._enforcedPolicy.allowsEvalInScripts) {
+      this._observerService.notifyObservers(
+                              violation,
+                              CSP_VIOLATION_TOPIC,
+                              'eval script base restriction');
+      this._sendReports(this._enforcedPolicy, 'self', violation.data);
+      return false;
+    }
 
-  get reportOnlyMode () {
-    return this._reportOnlyMode;
+    return true;
   },
 
   /*
@@ -206,14 +228,8 @@ ContentSecurityPolicy.prototype = {
 
 /* ........ Methods .............. */
 
-  /**
-   * Given a new policy, intersects the currently enforced policy with the new
-   * one and stores the result.  The effect is a "tightening" or refinement of
-   * an old policy.  This is called any time a new policy is encountered and
-   * the effective policy has to be refined.
-   */
-  refinePolicy:
-  function csp_refinePolicy(aPolicy, selfURI) {
+  function csp_refinePolicyInternal(policyToRefine, aPolicy, selfURI) {
+    CSPdebug("     REFINING: " + policyToRefine);
     CSPdebug("REFINE POLICY: " + aPolicy);
     CSPdebug("         SELF: " + selfURI.asciiSpec);
 
@@ -226,19 +242,40 @@ ContentSecurityPolicy.prototype = {
                                       selfURI.scheme + "://" + selfURI.hostPort);
 
     // (2) Intersect the currently installed CSPRep object with the new one
-    var intersect = this._policy.intersectWith(newpolicy);
- 
-    // (3) Save the result
-    this._policy = intersect;
+    if (!this[policyToRefine])
+      this[policyToRefine] = newpolicy;
+    else
+      this[policyToRefine] = this._policy.intersectWith(newpolicy);
+
+    // (3) Finished
     this._isInitialized = true;
+  },
+
+  /**
+   * Given a new policy, intersects the currently enforced policy with the new
+   * one and stores the result.  The effect is a "tightening" or refinement of
+   * an old policy.  This is called any time a new policy is encountered and
+   * the effective policy has to be refined.
+   */
+  refineEnforcedPolicy:
+  function csp_refineEnforcedPolicy(aPolicy, selfURI) {
+    return this._refinePolicyInternal("_enforcedPolicy", aPolicy, selfURI);
+  },
+
+  /**
+   * Same, but for report-only policy.
+   */
+  refineReportOnlyPolicy:
+  function csp_refineReportOnlyPolicy(aPolicy, selfURI) {
+    return this._refinePolicyInternal("_reportOnlyPolicy", aPolicy, selfURI);
   },
 
   /**
    * Generates and sends a violation report to the specified report URIs.
    */
-  sendReports:
-  function(blockedUri, violatedDirective) {
-    var uriString = this._policy.getReportURIs();
+  _sendReports:
+  function(policyViolated, blockedUri, violatedDirective) {
+    var uriString = policyViolated.getReportURIs();
     var uris = uriString.split(/\s+/);
     if (uris.length > 0) {
       // Generate report to send composed of
@@ -341,22 +378,40 @@ ContentSecurityPolicy.prototype = {
     let cspContext = CSPRep.SRC_DIRECTIVES.FRAME_ANCESTORS;
     for (let i in ancestors) {
       let ancestor = ancestors[i].prePath;
-      if (!this._policy.permits(ancestor, cspContext)) {
-        // report the frame-ancestor violation
-        let directive = this._policy._directives[cspContext];
+
+      // first, check the report-only policy.
+      if (this._reportOnlyPolicy) {
+        let directive = this._reportOnlyPolicy._directives[cspContext];
         let violatedPolicy = (directive._isImplicit
-                                ? 'allow' : 'frame-ancestors ')
-                                + directive.toString();
-        // send an nsIURI object to the observers (more interesting than a string)
-        this._observerService.notifyObservers(
-                                ancestors[i],
-                                CSP_VIOLATION_TOPIC, 
-                                violatedPolicy);
-        this.sendReports(ancestors[i].asciiSpec, violatedPolicy);
-        // need to lie if we are testing in report-only mode
-        return this._reportOnlyMode;
+                              ? 'allow' : 'frame-ancestors ')
+                              + directive.toString();
+        if (!this._reportOnlyPolicy.permits(ancestor, cspContext)) {
+          this._observerService.notifyObservers(
+                                  ancestors[i],
+                                  CSP_VIOLATION_TOPIC,
+                                  violatedPolicy);
+          this._sendReports(this._enforcedPolicy, ancestors[i].asciiSpec, violatedPolicy);
+        }
+      }
+
+      // second, check the enforced policy.
+      if (this._enforcedPolicy) {
+        let directive = this._enforcedPolicy._directives[cspContext];
+        let violatedPolicy = (directive._isImplicit
+                              ? 'allow' : 'frame-ancestors ')
+                              + directive.toString();
+        if(!this._enforcedPolicy.permits(ancestor, cspContext)) {
+          this._observerService.notifyObservers(
+                                  ancestors[i],
+                                  CSP_VIOLATION_TOPIC,
+                                  violatedPolicy);
+          this._sendReports(this._enforcedPolicy, ancestors[i].asciiSpec, violatedPolicy);
+          return false;
+        }
       }
     }
+
+    // all ancestors allowed (or only violated a report-only policy)
     return true;
   },
 
@@ -389,35 +444,60 @@ ContentSecurityPolicy.prototype = {
       return Ci.nsIContentPolicy.ACCEPT;
     }
 
-    // otherwise, honor the translation
-    // var source = aContentLocation.scheme + "://" + aContentLocation.hostPort; 
-    var res = this._policy.permits(aContentLocation, cspContext)
-              ? Ci.nsIContentPolicy.ACCEPT 
-              : Ci.nsIContentPolicy.REJECT_SERVER;
+    // frame-ancestors is already taken care of early on (as this document is
+    // loaded)
 
-    // frame-ancestors is taken care of early on (as this document is loaded)
+    // first, run it by the report-only policy
+    if (this._reportOnlyPolicy) {
+      var ro_res = this._reportOnlyPolicy.permits(aContentLocation, cspContext)
+                    ? Ci.nsIContentPolicy.ACCEPT
+                    : Ci.nsIContentPolicy.REJECT_SERVER;
 
-    // If the result is *NOT* ACCEPT, then send report
-    if (res != Ci.nsIContentPolicy.ACCEPT) { 
-      CSPdebug("blocking request for " + aContentLocation.asciiSpec);
-      try {
-        let directive = this._policy._directives[cspContext];
-        let violatedPolicy = (directive._isImplicit
-                                ? 'allow' : cspContext)
-                                + ' ' + directive.toString();
-        this._observerService.notifyObservers(
-                                aContentLocation,
-                                CSP_VIOLATION_TOPIC, 
-                                violatedPolicy);
-        this.sendReports(aContentLocation, violatedPolicy);
-      } catch(e) {
-        CSPdebug('---------------- ERROR: ' + e);
+      if (ro_res != Ci.nsIContentPolicy.ACCEPT) {
+        try {
+          let directive = this._reportOnlyPolicy._directives[cspContext];
+          let violatedPolicy = (directive._isImplicit
+                                  ? 'allow' : cspContext)
+                                  + ' ' + directive.toString();
+          this._observerService.notifyObservers(
+                                  aContentLocation,
+                                  CSP_VIOLATION_TOPIC,
+                                  violatedPolicy);
+          this._sendReports(this._reportOnlyPolicy, aContentLocation, violatedPolicy);
+        } catch(e) {
+          CSPdebug('---------------- ERROR: ' + e);
+        }
       }
     }
 
-    return (this._reportOnlyMode ? Ci.nsIContentPolicy.ACCEPT : res);
+    // also run it by the enforced policy
+    if (this._enforcedPolicy) {
+      var en_res = this._enforcedPolicy.permits(aContentLocation, cspContext)
+                    ? Ci.nsIContentPolicy.ACCEPT
+                    : Ci.nsIContentPolicy.REJECT_SERVER;
+
+      if (en_res != Ci.nsIContentPolicy.ACCEPT) {
+        CSPdebug("blocking request for " + aContentLocation.asciiSpec);
+        try {
+          let directive = this._enforcedPolicy._directives[cspContext];
+          let violatedPolicy = (directive._isImplicit
+                                  ? 'allow' : cspContext)
+                                  + ' ' + directive.toString();
+          this._observerService.notifyObservers(
+                                  aContentLocation,
+                                  CSP_VIOLATION_TOPIC,
+                                  violatedPolicy);
+          this._sendReports(this._enforcedPolicy, aContentLocation, violatedPolicy);
+        } catch(e) {
+          CSPdebug('---------------- ERROR: ' + e);
+        }
+        return en_res;
+      }
+    }
+
+    return Ci.nsIContentPolicy.ACCEPT;
   },
-  
+
   shouldProcess:
   function csp_shouldProcess(aContentType,
                              aContentLocation,
