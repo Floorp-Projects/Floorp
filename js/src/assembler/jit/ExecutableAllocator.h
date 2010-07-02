@@ -285,7 +285,7 @@ public:
     }
 #elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_RVCT
     static __asm void cacheFlush(void* code, size_t size);
-#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_RVCT
+#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_GCC
     static void cacheFlush(void* code, size_t size)
     {
         asm volatile (
