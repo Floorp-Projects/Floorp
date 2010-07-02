@@ -68,8 +68,6 @@ const kStateActive = 0x00000001;
  * Currently, the InputHandler listens for the following events by default.
  *
  * On the Fennec global chrome window:
- *   URLChanged
- *   TabSelect
  *   mousedown
  *   mouseup
  *   mousemove
