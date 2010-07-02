@@ -78,6 +78,7 @@ parent:
     // Services remoting
 
     async StartVisitedQuery(URI uri);
+    async VisitURI(URI uri, URI referrer, PRUint32 flags);
 
     // PrefService messages
     sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
