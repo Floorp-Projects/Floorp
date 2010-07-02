@@ -912,7 +912,7 @@ interface nsINavHistoryObserver : nsISupports
  * can be non-negligible.
  */
 
-[scriptable, uuid(6f5668f0-da8e-4069-a0de-6680e5cd8570)]
+[scriptable, uuid(dc87ae79-22f1-4dcf-975b-852b01d210cb)]
 interface nsINavHistoryQuery : nsISupports
 {
   /**
@@ -966,6 +966,27 @@ interface nsINavHistoryQuery : nsISupports
    */
   attribute long minVisits;
   attribute long maxVisits;
+
+  /**
+   * When the set of transitions is nonempty, results are limited to pages which
+   * have at least one visit for each of the transition types.
+   * @note: For searching on more than one transition this can be very slow.
+   *
+   * Limit results to the specified list of transition types.
+   */
+  void setTransitions([const,array, size_is(count)] in unsigned long transitions,
+                      in unsigned long count);
+
+  /**
+   * Get the transitions set for this query.
+   */
+  void getTransitions([optional] out unsigned long count,
+                      [retval,array,size_is(count)] out unsigned long transitions);
+
+  /**
+   * Get the count of the set query transitions.
+   */
+  readonly attribute unsigned long transitionCount;
 
   /**
    * When set, returns only bookmarked items, when unset, returns anything. Setting this

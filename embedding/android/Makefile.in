@@ -41,22 +41,20 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-DX=$(ANDROID_SDK)/tools/dx
-AAPT=$(ANDROID_SDK)/tools/aapt
-APKBUILDER=$(ANDROID_SDK)/../../tools/apkbuilder
-ZIPALIGN=$(ANDROID_SDK)/../../tools/zipalign
+include $(topsrcdir)/ipc/app/defs.mk
 
 JAVAFILES = \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoEvent.java \
   GeckoSurfaceView.java \
+  GeckoInputConnection.java \
   $(NULL)
 
 DEFINES += \
   -DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
-  -DMOZ_APP_NAME=$(MOZ_APP_NAME)
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
 GARBAGE += \
   AndroidManifest.xml  \
@@ -70,10 +68,6 @@ GARBAGE += \
   $(NULL)
 
 GARBAGE_DIRS += res libs dist classes
-
-ifdef JARSIGNER
-  APKBUILDER_FLAGS += -u
-endif
 
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
@@ -108,16 +102,16 @@ DIST_LINK_FILES = \
   blocklist.xml \
   $(NULL)
 
+ifdef MOZ_IPC
+DIST_LINK_FILES += $(MOZ_CHILD_PROCESS_NAME)
+endif
+
+JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
+
 include $(topsrcdir)/config/rules.mk
 
-# rules.mk has some java stuff, but we're going to ignore it for now
-JAVAC_FLAGS = \
-  -target 1.5 \
-  -classpath $(ANDROID_SDK)/android.jar \
-  -bootclasspath $(ANDROID_SDK)/android.jar \
-  -encoding ascii \
-  -g \
-  $(NULL)
+# Override the Java settings with some specific android settings
+include $(topsrcdir)/config/android-common.mk
 
 tools:: $(MOZ_APP_NAME).apk
 

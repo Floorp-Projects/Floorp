@@ -93,7 +93,7 @@
 
 using namespace mozilla::dom;
 
-gfxASurface *nsSVGUtils::mThebesComputationalSurface = nsnull;
+gfxASurface *nsSVGUtils::gThebesComputationalSurface = nsnull;
 
 // c = n / 255
 // (c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1 / 2.4) - 0.055) * 255 + 0.5
@@ -560,7 +560,7 @@ nsSVGUtils::GetCTM(nsSVGElement *aElement, PRBool aScreenCTM)
   // content that we've hit may itself be inside an SVG foreignObject higher up
   float x = 0.0f, y = 0.0f;
   if (currentDoc && element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
-    nsIPresShell *presShell = currentDoc->GetPrimaryShell();
+    nsIPresShell *presShell = currentDoc->GetShell();
     if (presShell) {
       nsIFrame* frame = element->GetPrimaryFrame();
       nsIFrame* ancestorFrame = presShell->GetRootFrame();
@@ -1213,17 +1213,23 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
 gfxASurface *
 nsSVGUtils::GetThebesComputationalSurface()
 {
-  if (!mThebesComputationalSurface) {
+  if (!gThebesComputationalSurface) {
     nsRefPtr<gfxImageSurface> surface =
       new gfxImageSurface(gfxIntSize(1, 1), gfxASurface::ImageFormatARGB32);
     NS_ASSERTION(surface && !surface->CairoStatus(),
                  "Could not create offscreen surface");
-    mThebesComputationalSurface = surface;
+    gThebesComputationalSurface = surface;
     // we want to keep this surface around
-    NS_IF_ADDREF(mThebesComputationalSurface);
+    NS_IF_ADDREF(gThebesComputationalSurface);
   }
 
-  return mThebesComputationalSurface;
+  return gThebesComputationalSurface;
+}
+
+void
+nsSVGUtils::Shutdown()
+{
+  NS_IF_RELEASE(gThebesComputationalSurface);
 }
 
 gfxMatrix

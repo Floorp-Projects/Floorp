@@ -79,7 +79,7 @@ NS_IMETHODIMP DeleteElementTxn::Init(nsIEditor *aEditor,
                                      nsIDOMNode *aElement,
                                      nsRangeUpdater *aRangeUpdater)
 {
-  if (!aEditor || !aElement) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aEditor && aElement, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;
   mElement = do_QueryInterface(aElement);
   nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
@@ -106,7 +106,7 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
   }
 #endif
 
-  if (!mElement) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mElement, NS_ERROR_NOT_INITIALIZED);
 
   if (!mParent) { return NS_OK; }  // this is a no-op, there's no parent to delete mElement from
 

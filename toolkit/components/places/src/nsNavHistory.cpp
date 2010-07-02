@@ -2305,6 +2305,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
 
   PRBool nonTimeBasedItems = PR_FALSE;
   PRBool domainBasedItems = PR_FALSE;
+  PRBool queryContainsTransitions = PR_FALSE;
 
   for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
@@ -2314,6 +2315,10 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
         query->Tags().Length() > 0) {
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
     }
+
+    if (query->Transitions().Length() > 0)
+      queryContainsTransitions = PR_TRUE;
+
     // Note: we don't currently have any complex non-bookmarked items, but these
     // are expected to be added. Put detection of these items here.
     if (! query->SearchTerms().IsEmpty() ||
@@ -2328,6 +2333,9 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   if (aOptions->ResultType() ==
       nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
     return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+
+  if (queryContainsTransitions)
+    return QUERYUPDATE_COMPLEX;
 
   // Whenever there is a maximum number of results, 
   // and we are not a bookmark query we must requery. This
@@ -2859,9 +2867,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
   PRUint32 added = 0;
-  if (!hidden && aTransitionType != TRANSITION_EMBED &&
-                 aTransitionType != TRANSITION_FRAMED_LINK &&
-                 aTransitionType != TRANSITION_DOWNLOAD) {
+  if (!hidden) {
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                      nsINavHistoryObserver,
                      OnVisit(aURI, *aVisitID, aTime, aSessionID,
@@ -3062,6 +3068,9 @@ PRBool IsOptimizableHistoryQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     return PR_FALSE;
 
   if (aQuery->Tags().Length() > 0)
+    return PR_FALSE;
+
+  if (aQuery->Transitions().Length() > 0)
     return PR_FALSE;
 
   return PR_TRUE;
@@ -5724,19 +5733,18 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   if (strcmp(aTopic, TOPIC_GLOBAL_SHUTDOWN) == 0) {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-    if (os) {
-      os->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
-      os->RemoveObserver(this, TOPIC_IDLE_DAILY);
-      os->RemoveObserver(this, TOPIC_GLOBAL_SHUTDOWN);
-#ifdef MOZ_XUL
-      os->RemoveObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
-#endif
-
-      // Notify that Places is shutting down.
-      os->NotifyObservers(nsnull, TOPIC_PLACES_SHUTDOWN, nsnull);
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os) {
+      NS_WARNING("Unable to shutdown Places: Observer Service unavailable.");
+      return NS_OK;
     }
+
+    (void)os->RemoveObserver(this, TOPIC_GLOBAL_SHUTDOWN);
+    (void)os->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
+    (void)os->RemoveObserver(this, TOPIC_IDLE_DAILY);
+#ifdef MOZ_XUL
+    (void)os->RemoveObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
+#endif
 
     // If shutdown happens in the same scope as the service init, we should
     // immediately serve the places-init topic, this way topic observers
@@ -5753,14 +5761,37 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
       nsCOMPtr<nsIObserver> observer;
       PRBool loop = PR_TRUE;
-      while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
-      {
+      while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) {
         e->GetNext(getter_AddRefs(observer));
-        rv = observer->Observe(observer,
-                               TOPIC_PLACES_INIT_COMPLETE,
-                               nsnull);
+        (void)observer->Observe(observer, TOPIC_PLACES_INIT_COMPLETE, nsnull);
       }
     }
+
+    // Notify all Places users that we are about to shutdown.  The notification
+    // is enqueued because there is network work on profile-before-change that
+    // should run before us.
+    nsRefPtr<PlacesEvent> shutdownEvent =
+      new PlacesEvent(TOPIC_PLACES_SHUTDOWN);
+    rv = NS_DispatchToMainThread(shutdownEvent);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                     "Unable to shutdown Places: message dispatch failed.");
+
+    // Once everybody has been notified, proceed with the real shutdown.
+    (void)os->AddObserver(this, TOPIC_PLACES_TEARDOWN, PR_FALSE);
+    nsRefPtr<PlacesEvent> teardownEvent =
+      new PlacesEvent(TOPIC_PLACES_TEARDOWN);
+    rv = NS_DispatchToMainThread(teardownEvent);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                     "Unable to shutdown Places: message dispatch failed.");
+  }
+
+  else if (strcmp(aTopic, TOPIC_PLACES_TEARDOWN) == 0) {
+    // Operations that are unlikely to create issues to implementers should go
+    // in global shutdown.  Any other thing that must run really late must be
+    // here instead.
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os)
+      (void)os->RemoveObserver(this, TOPIC_PLACES_TEARDOWN);
 
     // Stop observing preferences changes.
     if (mPrefBranch)
@@ -5784,12 +5815,13 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 #endif
 
     // Finalize all statements.
-    rv = FinalizeInternalStatements();
+    nsresult rv = FinalizeInternalStatements();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // NOTE: We don't close the connection because the sync service could still
     // need it for a final flush.
   }
+
 #ifdef MOZ_XUL
   else if (strcmp(aTopic, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING) == 0) {
     nsCOMPtr<nsIAutoCompleteInput> input = do_QueryInterface(aSubject);
@@ -5823,10 +5855,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     rv = AutoCompleteFeedback(selectedIndex, controller);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
 #endif
   else if (strcmp(aTopic, TOPIC_PREF_CHANGED) == 0) {
     LoadPrefs();
   }
+
   else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
     // Ensure our connection is still alive.  The idle-daily observer is removed
     // on shutdown, but we could have closed the connection earlier due
@@ -5836,6 +5870,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     (void)DecayFrecency();
     (void)VacuumDatabase();
   }
+
   else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
 #ifdef LAZY_ADD
@@ -5860,6 +5895,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       mInPrivateBrowsing = PR_FALSE;
     }
   }
+
   else if (strcmp(aTopic, TOPIC_PLACES_INIT_COMPLETE) == 0) {
     nsCOMPtr<nsIObserverService> os =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -6313,6 +6349,26 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     clause.Str(")");
   }
 
+  // transitions
+  const nsTArray<PRUint32>& transitions = aQuery->Transitions();
+  // Optimize single transition query, since this is the most common use case.
+  if (transitions.Length() == 1) {
+    clause.Condition("v.visit_type =").Param(":transition0_");
+  }
+  else if (transitions.Length() > 1) {
+    for (PRUint32 i = 0; i < transitions.Length(); ++i) {
+      nsPrintfCString param(":transition%d_", i);
+      clause.Str("EXISTS (SELECT 1 FROM moz_historyvisits "
+                         "WHERE place_id = h.id AND visit_type = "
+                ).Param(param.get()).Str(" UNION ALL "
+                         "SELECT 1 FROM moz_historyvisits_temp "
+                         "WHERE place_id = h.id AND visit_type = "
+                ).Param(param.get()).Str(" LIMIT 1)");
+      if (i < transitions.Length() - 1)
+        clause.Str("AND");
+    }
+  }
+
   // parent parameter is used in tag contents queries.
   // Only one folder should be defined for them.
   if (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
@@ -6454,6 +6510,16 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
       rv = statement->BindInt32ByName(
         NS_LITERAL_CSTRING("tag_count") + qIndex, tags.Length()
       );
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // transitions
+  const nsTArray<PRUint32>& transitions = aQuery->Transitions();
+  if (transitions.Length() > 0) {
+    for (PRUint32 i = 0; i < transitions.Length(); ++i) {
+      nsPrintfCString paramName("transition%d_", i);
+      rv = statement->BindInt64ByName(paramName + qIndex, transitions[i]);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

@@ -70,9 +70,11 @@ namespace nanojit
     const Register Assembler::retRegs[] = { RAX };
 #ifdef _WIN64
     const Register Assembler::argRegs[] = { RCX, RDX, R8, R9 };
+    const static int maxArgRegs = 4;
     const Register Assembler::savedRegs[] = { RBX, RSI, RDI, R12, R13, R14, R15 };
 #else
     const Register Assembler::argRegs[] = { RDI, RSI, RDX, RCX, R8, R9 };
+    const static int maxArgRegs = 6;
     const Register Assembler::savedRegs[] = { RBX, R12, R13, R14, R15 };
 #endif
 
@@ -1956,6 +1958,9 @@ namespace nanojit
     }
 
     void Assembler::nInit(AvmCore*) {
+        nHints[LIR_calli]  = rmask(retRegs[0]);
+        nHints[LIR_calld]  = rmask(XMM0);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
     }
 
     void Assembler::nBeginAssembly() {
@@ -2002,8 +2007,19 @@ namespace nanojit
     #endif
     }
 
-    RegisterMask Assembler::hint(LIns* /*ins*/) {
-        return 0;
+    RegisterMask Assembler::nHint(LIns* ins)
+    {
+        NanoAssert(ins->isop(LIR_paramp));
+        RegisterMask prefer = 0;
+        uint8_t arg = ins->paramArg();
+        if (ins->paramKind() == 0) {
+            if (arg < maxArgRegs) 
+                prefer = rmask(argRegs[arg]);
+        } else {
+            if (arg < NumSavedRegs)
+                prefer = rmask(savedRegs[arg]);
+        }
+        return prefer;
     }
 
     void Assembler::nativePageSetup() {

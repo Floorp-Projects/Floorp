@@ -1,0 +1,11 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<style>
+.x:first-line { }
+.y { }
+</style>
+</head>
+<body onload="setTimeout(function(){  document.documentElement.className = 'y'; }, 0)">
+<td class="x"><a href="#">Link</a></td>
+</body>
+</html>

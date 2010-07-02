@@ -254,8 +254,9 @@ public:
   virtual PRInt64 GetDuration() = 0;
 
   // Called from the main thread to set the duration of the media resource
-  // if it is able to be obtained via HTTP headers. The decoder monitor
-  // must be obtained before calling this.
+  // if it is able to be obtained via HTTP headers. Called from the 
+  // state machine thread to set the duration if it is obtained from the
+  // media metadata. The decoder monitor must be obtained before calling this.
   virtual void SetDuration(PRInt64 aDuration) = 0;
 
   // Functions used by assertions to ensure we're calling things

@@ -58,9 +58,10 @@
 
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
-  "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
-  "focus", "blur", "load", "popstate", "beforeunload", "unload", "hashchange",
-  "abort", "error", "submit", "reset", "change", "select", "input", "text",
+  "mouseout", "MozMouseHittest", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
+  "focus", "blur", "load", "popstate", "beforeunload", "unload",
+  "hashchange", "readystatechange", "abort", "error",
+  "submit", "reset", "change", "select", "input", "text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
@@ -140,9 +141,9 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
 
   // Get the explicit original target (if it's anonymous make it null)
   {
-    mExplicitOriginalTarget = GetTargetFromFrame();
-    mTmpRealOriginalTarget = mExplicitOriginalTarget;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mExplicitOriginalTarget);
+    nsCOMPtr<nsIContent> content = GetTargetFromFrame();
+    mTmpRealOriginalTarget = do_QueryInterface(content);
+    mExplicitOriginalTarget = mTmpRealOriginalTarget;
     if (content && content->IsInAnonymousSubtree()) {
       mExplicitOriginalTarget = nsnull;
     }
@@ -199,7 +200,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPresContext);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTmpRealOriginalTarget)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mExplicitOriginalTarget)
+  // Always set mExplicitOriginalTarget to null, when 
+  // mTmpRealOriginalTarget doesn't point to any object!
+  tmp->mExplicitOriginalTarget = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
@@ -234,7 +237,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPresContext.get(), nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTmpRealOriginalTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mExplicitOriginalTarget)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIDOMEventInterface
@@ -288,7 +290,7 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 //
 // Get the actual event target node (may have been retargeted for mouse events)
 //
-already_AddRefed<nsIDOMEventTarget>
+already_AddRefed<nsIContent>
 nsDOMEvent::GetTargetFromFrame()
 {
   if (!mPresContext) { return nsnull; }
@@ -301,12 +303,7 @@ nsDOMEvent::GetTargetFromFrame()
   // get the real content
   nsCOMPtr<nsIContent> realEventContent;
   targetFrame->GetContentForEvent(mPresContext, mEvent, getter_AddRefs(realEventContent));
-  if (!realEventContent) { return nsnull; }
-
-  // Finally, we have the real content.  QI it and return.
-  nsIDOMEventTarget* target = nsnull;
-  CallQueryInterface(realEventContent, &target);
-  return target;
+  return realEventContent.forget();
 }
 
 NS_IMETHODIMP
@@ -484,235 +481,9 @@ nsDOMEvent::PreventDefault()
 nsresult
 nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 {
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aEventTypeArg);
-  mEvent->message = NS_USER_DEFINED_EVENT;
-
-  if (mEvent->eventStructType == NS_MOUSE_EVENT) {
-    if (atom == nsGkAtoms::onmousedown)
-      mEvent->message = NS_MOUSE_BUTTON_DOWN;
-    else if (atom == nsGkAtoms::onmouseup)
-      mEvent->message = NS_MOUSE_BUTTON_UP;
-    else if (atom == nsGkAtoms::onclick)
-      mEvent->message = NS_MOUSE_CLICK;
-    else if (atom == nsGkAtoms::ondblclick)
-      mEvent->message = NS_MOUSE_DOUBLECLICK;
-    else if (atom == nsGkAtoms::onmouseover)
-      mEvent->message = NS_MOUSE_ENTER_SYNTH;
-    else if (atom == nsGkAtoms::onmouseout)
-      mEvent->message = NS_MOUSE_EXIT_SYNTH;
-    else if (atom == nsGkAtoms::onmousemove)
-      mEvent->message = NS_MOUSE_MOVE;
-    else if (atom == nsGkAtoms::oncontextmenu)
-      mEvent->message = NS_CONTEXTMENU;
-  } else if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
-    if (atom == nsGkAtoms::onDOMMouseScroll)
-      mEvent->message = NS_MOUSE_SCROLL;
-    else if (atom == nsGkAtoms::onMozMousePixelScroll)
-      mEvent->message = NS_MOUSE_PIXEL_SCROLL;
-  } else if (mEvent->eventStructType == NS_DRAG_EVENT) {
-    if (atom == nsGkAtoms::ondragstart)
-      mEvent->message = NS_DRAGDROP_START;
-    else if (atom == nsGkAtoms::ondraggesture)
-      mEvent->message = NS_DRAGDROP_GESTURE;
-    else if (atom == nsGkAtoms::ondragenter)
-      mEvent->message = NS_DRAGDROP_ENTER;
-    else if (atom == nsGkAtoms::ondragover)
-      mEvent->message = NS_DRAGDROP_OVER_SYNTH;
-    else if (atom == nsGkAtoms::ondragleave)
-      mEvent->message = NS_DRAGDROP_LEAVE_SYNTH;
-    else if (atom == nsGkAtoms::ondragexit)
-      mEvent->message = NS_DRAGDROP_EXIT;
-    else if (atom == nsGkAtoms::ondrag)
-      mEvent->message = NS_DRAGDROP_DRAG;
-    else if (atom == nsGkAtoms::ondrop)
-      mEvent->message = NS_DRAGDROP_DROP;
-    else if (atom == nsGkAtoms::ondragdrop)
-      mEvent->message = NS_DRAGDROP_DRAGDROP;
-    else if (atom == nsGkAtoms::ondragend)
-      mEvent->message = NS_DRAGDROP_END;
-  } else if (mEvent->eventStructType == NS_KEY_EVENT) {
-    if (atom == nsGkAtoms::onkeydown)
-      mEvent->message = NS_KEY_DOWN;
-    else if (atom == nsGkAtoms::onkeyup)
-      mEvent->message = NS_KEY_UP;
-    else if (atom == nsGkAtoms::onkeypress)
-      mEvent->message = NS_KEY_PRESS;
-  } else if (mEvent->eventStructType == NS_COMPOSITION_EVENT) {
-    if (atom == nsGkAtoms::oncompositionstart)
-      mEvent->message = NS_COMPOSITION_START;
-    else if (atom == nsGkAtoms::oncompositionend)
-      mEvent->message = NS_COMPOSITION_END;
-  } else if (mEvent->eventStructType == NS_EVENT) {
-    if (atom == nsGkAtoms::onMozAfterPaint)
-      mEvent->message = NS_AFTERPAINT;
-    else if (atom == nsGkAtoms::onsubmit)
-      mEvent->message = NS_FORM_SUBMIT;
-    else if (atom == nsGkAtoms::onreset)
-      mEvent->message = NS_FORM_RESET;
-    else if (atom == nsGkAtoms::onchange)
-      mEvent->message = NS_FORM_CHANGE;
-    else if (atom == nsGkAtoms::onselect)
-      mEvent->message = NS_FORM_SELECTED;
-    else if (atom == nsGkAtoms::onload)
-      mEvent->message = NS_LOAD;
-    else if (atom == nsGkAtoms::onunload)
-      mEvent->message = NS_PAGE_UNLOAD;
-    else if (atom == nsGkAtoms::onbeforeunload)
-      mEvent->message = NS_BEFORE_PAGE_UNLOAD;
-    else if (atom == nsGkAtoms::onabort)
-      mEvent->message = NS_IMAGE_ABORT;
-    else if (atom == nsGkAtoms::onerror)
-      mEvent->message = NS_LOAD_ERROR;
-    else if (atom == nsGkAtoms::onoffline)
-      mEvent->message = NS_OFFLINE;
-    else if (atom == nsGkAtoms::ononline)
-      mEvent->message = NS_ONLINE;
-    else if (atom == nsGkAtoms::oncopy)
-      mEvent->message = NS_COPY;
-    else if (atom == nsGkAtoms::oncut)
-      mEvent->message = NS_CUT;
-    else if (atom == nsGkAtoms::onpaste)
-      mEvent->message = NS_PASTE;
-    else if (atom == nsGkAtoms::onpageshow)
-      mEvent->message = NS_PAGE_SHOW;
-    else if (atom == nsGkAtoms::onpagehide)
-      mEvent->message = NS_PAGE_HIDE;
-    else if (atom == nsGkAtoms::onhashchange)
-      mEvent->message = NS_HASHCHANGE;
-  } else if (mEvent->eventStructType == NS_FOCUS_EVENT) {
-    if (atom == nsGkAtoms::onfocus)
-      mEvent->message = NS_FOCUS_CONTENT;
-    else if (atom == nsGkAtoms::onblur)
-      mEvent->message = NS_BLUR_CONTENT;
-  } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
-    if (atom == nsGkAtoms::onDOMAttrModified)
-      mEvent->message = NS_MUTATION_ATTRMODIFIED;
-    else if (atom == nsGkAtoms::onDOMCharacterDataModified)
-      mEvent->message = NS_MUTATION_CHARACTERDATAMODIFIED;
-    else if (atom == nsGkAtoms::onDOMNodeInserted)
-      mEvent->message = NS_MUTATION_NODEINSERTED;
-    else if (atom == nsGkAtoms::onDOMNodeRemoved)
-      mEvent->message = NS_MUTATION_NODEREMOVED;
-    else if (atom == nsGkAtoms::onDOMNodeInsertedIntoDocument)
-      mEvent->message = NS_MUTATION_NODEINSERTEDINTODOCUMENT;
-    else if (atom == nsGkAtoms::onDOMNodeRemovedFromDocument)
-      mEvent->message = NS_MUTATION_NODEREMOVEDFROMDOCUMENT;
-    else if (atom == nsGkAtoms::onDOMSubtreeModified)
-      mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
-  } else if (mEvent->eventStructType == NS_UI_EVENT) {
-    if (atom == nsGkAtoms::onDOMActivate)
-      mEvent->message = NS_UI_ACTIVATE;
-    else if (atom == nsGkAtoms::onDOMFocusIn)
-      mEvent->message = NS_UI_FOCUSIN;
-    else if (atom == nsGkAtoms::onDOMFocusOut)
-      mEvent->message = NS_UI_FOCUSOUT;
-    else if (atom == nsGkAtoms::oninput)
-      mEvent->message = NS_FORM_INPUT;
-  } else if (mEvent->eventStructType == NS_SCROLLAREA_EVENT) {
-    if (atom == nsGkAtoms::onMozScrolledAreaChanged)
-      mEvent->message = NS_SCROLLEDAREACHANGED;
-  } else if (mEvent->eventStructType == NS_INPUT_EVENT) {
-    if (atom == nsGkAtoms::oncommand)
-      mEvent->message = NS_XUL_COMMAND;
-  }
-#ifdef MOZ_SVG
-  else if (mEvent->eventStructType == NS_SVG_EVENT) {
-    if (atom == nsGkAtoms::onSVGLoad)
-      mEvent->message = NS_SVG_LOAD;
-    else if (atom == nsGkAtoms::onSVGUnload)
-      mEvent->message = NS_SVG_UNLOAD;
-    else if (atom == nsGkAtoms::onSVGAbort)
-      mEvent->message = NS_SVG_ABORT;
-    else if (atom == nsGkAtoms::onSVGError)
-      mEvent->message = NS_SVG_ERROR;
-    else if (atom == nsGkAtoms::onSVGResize)
-      mEvent->message = NS_SVG_RESIZE;
-    else if (atom == nsGkAtoms::onSVGScroll)
-      mEvent->message = NS_SVG_SCROLL;
-  } else if (mEvent->eventStructType == NS_SVGZOOM_EVENT) {
-    if (atom == nsGkAtoms::onSVGZoom)
-      mEvent->message = NS_SVG_ZOOM;
-  }
-#endif // MOZ_SVG
-
-#ifdef MOZ_MEDIA
-  else if (mEvent->eventStructType == NS_MEDIA_EVENT) {
-    if (atom == nsGkAtoms::onloadstart)
-      mEvent->message = NS_LOADSTART;
-    else if (atom == nsGkAtoms::onprogress)
-      mEvent->message = NS_PROGRESS;
-    else if (atom == nsGkAtoms::onsuspend)
-      mEvent->message = NS_SUSPEND;
-    else if (atom == nsGkAtoms::onemptied)
-      mEvent->message = NS_EMPTIED;
-    else if (atom == nsGkAtoms::onstalled)
-      mEvent->message = NS_STALLED;
-    else if (atom == nsGkAtoms::onplay)
-      mEvent->message = NS_PLAY;
-    else if (atom == nsGkAtoms::onpause)
-      mEvent->message = NS_PAUSE;
-    else if (atom == nsGkAtoms::onloadedmetadata)
-      mEvent->message = NS_LOADEDMETADATA;
-    else if (atom == nsGkAtoms::onloadeddata)
-      mEvent->message = NS_LOADEDDATA;
-    else if (atom == nsGkAtoms::onwaiting)
-      mEvent->message = NS_WAITING;
-    else if (atom == nsGkAtoms::onplaying)
-      mEvent->message = NS_PLAYING;
-    else if (atom == nsGkAtoms::oncanplay)
-      mEvent->message = NS_CANPLAY;
-    else if (atom == nsGkAtoms::oncanplaythrough)
-      mEvent->message = NS_CANPLAYTHROUGH;
-    else if (atom == nsGkAtoms::onseeking)
-      mEvent->message = NS_SEEKING;
-    else if (atom == nsGkAtoms::onseeked)
-      mEvent->message = NS_SEEKED;
-    else if (atom == nsGkAtoms::ontimeupdate)
-      mEvent->message = NS_TIMEUPDATE;
-    else if (atom == nsGkAtoms::onended)
-      mEvent->message = NS_ENDED;
-    else if (atom == nsGkAtoms::onratechange)
-      mEvent->message = NS_RATECHANGE;
-    else if (atom == nsGkAtoms::ondurationchange)
-      mEvent->message = NS_DURATIONCHANGE;
-    else if (atom == nsGkAtoms::onvolumechange)
-      mEvent->message = NS_VOLUMECHANGE;
-    else if (atom == nsGkAtoms::onload)
-      mEvent->message = NS_LOAD;
-    else if (atom == nsGkAtoms::onabort)
-      mEvent->message = NS_MEDIA_ABORT;
-    else if (atom == nsGkAtoms::onerror)
-      mEvent->message = NS_MEDIA_ERROR;
-  }
-#endif // MOZ_MEDIA
-  else if (mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT) {
-    if (atom == nsGkAtoms::onMozSwipeGesture)
-      mEvent->message = NS_SIMPLE_GESTURE_SWIPE;
-    else if (atom == nsGkAtoms::onMozMagnifyGestureStart)
-      mEvent->message = NS_SIMPLE_GESTURE_MAGNIFY_START;
-    else if (atom == nsGkAtoms::onMozMagnifyGestureUpdate)
-      mEvent->message = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-    else if (atom == nsGkAtoms::onMozMagnifyGesture)
-      mEvent->message = NS_SIMPLE_GESTURE_MAGNIFY;
-    else if (atom == nsGkAtoms::onMozRotateGestureStart)
-      mEvent->message = NS_SIMPLE_GESTURE_ROTATE_START;
-    else if (atom == nsGkAtoms::onMozRotateGestureUpdate)
-      mEvent->message = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
-    else if (atom == nsGkAtoms::onMozRotateGesture)
-      mEvent->message = NS_SIMPLE_GESTURE_ROTATE;
-    else if (atom == nsGkAtoms::onMozPressTapGesture)
-      mEvent->message = NS_SIMPLE_GESTURE_PRESSTAP;
-    else if (atom == nsGkAtoms::onMozTapGesture)
-      mEvent->message = NS_SIMPLE_GESTURE_TAP;
-  }
-  else if (mEvent->eventStructType == NS_TRANSITION_EVENT) {
-    if (atom == nsGkAtoms::ontransitionend)
-      mEvent->message = NS_TRANSITION_END;
-  }
-
-  if (mEvent->message == NS_USER_DEFINED_EVENT)
-    mEvent->userType = atom;
-
+  mEvent->userType =
+    nsContentUtils::GetEventIdAndAtom(aEventTypeArg, mEvent->eventStructType,
+                                      &(mEvent->message));
   return NS_OK;
 }
 
@@ -1302,6 +1073,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_mouseover];
   case NS_MOUSE_EXIT_SYNTH:
     return sEventNames[eDOMEvents_mouseout];
+  case NS_MOUSE_MOZHITTEST:
+    return sEventNames[eDOMEvents_MozMouseHittest];
   case NS_MOUSE_MOVE:
     return sEventNames[eDOMEvents_mousemove];
   case NS_KEY_UP:
@@ -1330,6 +1103,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_unload];
   case NS_HASHCHANGE:
     return sEventNames[eDOMEvents_hashchange];
+  case NS_READYSTATECHANGE:
+    return sEventNames[eDOMEvents_readystatechange];
   case NS_IMAGE_ABORT:
     return sEventNames[eDOMEvents_abort];
   case NS_LOAD_ERROR:

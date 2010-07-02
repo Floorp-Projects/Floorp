@@ -758,7 +758,8 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     inDOMViewNode* insertNode = nsnull;
     RowToNode(attrRow, &insertNode);
     if (insertNode) {
-      if (insertNode->level <= contentNode->level) {
+      if (contentNode &&
+          insertNode->level <= contentNode->level) {
         RowToNode(attrRow-1, &insertNode);
         InsertLinkAfter(newNode, insertNode);
       } else
@@ -927,6 +928,7 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
   // The parent may no longer be a container.  Note that we don't want
   // to access oldNode after calling RemoveNode, so do this now.
   inDOMViewNode* parentNode = oldNode->parent;
+  PRBool isOnlyChild = oldNode->previous == nsnull && oldNode->next == nsnull;
   
   // Keep track of how many rows we are removing.  It's at least one,
   // but if we're open it's more.
@@ -938,8 +940,7 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
   RemoveLink(oldNode);
   RemoveNode(row);
 
-  nsINode* container = NODE_FROM(aContainer, aDocument);
-  if (container->GetChildCount() == 0) {
+  if (isOnlyChild) {
     // Fix up the parent
     parentNode->isContainer = PR_FALSE;
     parentNode->isOpen = PR_FALSE;

@@ -89,6 +89,8 @@ function Installer(aWindow, aUrl, aInstalls) {
     // Might already be a local file
     if (aInstall.state == AddonManager.STATE_DOWNLOADED)
       this.onDownloadEnded(aInstall);
+    else if (aInstall.state == AddonManager.STATE_DOWNLOAD_FAILED)
+      this.onDownloadFailed(aInstall);
     else
       aInstall.install();
   }, this);
@@ -136,11 +138,12 @@ Installer.prototype = {
     this.checkAllDownloaded();
   },
 
-  onDownloadFailed: function(aInstall, aError) {
+  onDownloadFailed: function(aInstall) {
     aInstall.removeListener(this);
 
     // TODO show some better error
-    Services.prompt.alert(this.window, "Download Failed", "The download of " + aInstall.sourceURL + " failed: " + aError);
+    Services.prompt.alert(this.window, "Download Failed", "The download of " +
+                          aInstall.sourceURL + " failed: " + aInstall.error);
     this.checkAllDownloaded();
   },
 

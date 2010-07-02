@@ -349,6 +349,38 @@ const querySwitches = [
       }
     ]
   },
+  // transitions
+  {
+    desc: "tests nsINavHistoryQuery.getTransitions",
+    matches: function (aQuery1, aQuery2) {
+      var q1Trans = aQuery1.getTransitions();
+      var q2Trans = aQuery2.getTransitions();
+      if (q1Trans.length !== q2Trans.length)
+        return false;
+      for (let i = 0; i < q1Trans.length; i++) {
+        if (q2Trans.indexOf(q1Trans[i]) < 0)
+          return false;
+      }
+      for (let i = 0; i < q2Trans.length; i++) {
+        if (q1Trans.indexOf(q2Trans[i]) < 0)
+          return false;
+      }
+      return true;
+    },
+    runs: [
+      function (aQuery, aQueryOptions) {
+        aQuery.setTransitions([], 0);
+      },
+      function (aQuery, aQueryOptions) {
+        aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD],
+                              1);
+      },
+      function (aQuery, aQueryOptions) {
+        aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_TYPED,
+                               Ci.nsINavHistoryService.TRANSITION_BOOKMARK], 2);
+      }
+    ]
+  },
 ];
 
 // nsINavHistoryQueryOptions switches

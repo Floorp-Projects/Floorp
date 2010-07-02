@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK *****
  */
 
+Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
 const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
@@ -55,38 +57,33 @@ var BROWSE_SEARCH_URLS = [
 
 do_load_httpd_js();
 var server;
-var addonRepo;
 
 var RESULTS = [
 {
-  id:           "test5@tests.mozilla.org",
-  name:         "PASS",
-  version:      "1.0",
-  summary:      "This should work fine",
-  description:  "Test description",
-  rating:       -1,
-  iconURL:      null,
-  thumbnailURL: null,
-  homepageURL:  "https://addons.mozilla.org/addon/5992",
-  eula:         null,
-  type:         Ci.nsIAddonSearchResult.TYPE_EXTENSION,
-  xpiURL:       "http://localhost:4444/test.xpi",
-  xpiHash:      "sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3"
+  id:               "test5@tests.mozilla.org",
+  name:             "PASS",
+  version:          "1.0",
+  description:      "This should work fine",
+  fullDescription:  "Test description",
+  rating:           -1,
+  iconURL:          null,
+  screenshots:      [],
+  homepageURL:      "https://addons.mozilla.org/addon/5992",
+  type:             "extension",
+  sourceURL:        "http://localhost:4444/test.xpi"
 },
 {
-  id:           "test6@tests.mozilla.org",
-  name:         "PASS",
-  version:      "1.0",
-  summary:      "Specific OS should work fine",
-  description:  null,
-  rating:       4,
-  iconURL:      "http://localhost:4444/test_bug404024/icon.png",
-  thumbnailURL: "http://localhost:4444/test_bug404024/thumbnail.png",
-  homepageURL:  null,
-  eula:         "EULA should be confirmed",
-  type:         Ci.nsIAddonSearchResult.TYPE_THEME,
-  xpiURL:       "http://localhost:4444/XPCShell.xpi",
-  xpiHash:      null
+  id:               "test6@tests.mozilla.org",
+  name:             "PASS",
+  version:          "1.0",
+  description:      "Specific OS should work fine",
+  fullDescription:  null,
+  rating:           4,
+  iconURL:          "http://localhost:4444/test_bug404024/icon.png",
+  screenshots:      ["http://localhost:4444/test_bug404024/thumbnail.png"],
+  homepageURL:      null,
+  type:             "theme",
+  sourceURL:        "http://localhost:4444/XPCShell.xpi"
 }
 ];
 
@@ -101,7 +98,22 @@ function checkResults(addons) {
   }
 
   for (var i = 0; i < addons.length; i++) {
+    do_check_neq(addons[i]["install"], null);
+
     for (var p in RESULTS[i]) {
+      if (p == "screenshots") {
+        do_check_eq(addons[i][p].length, RESULTS[i][p].length);
+        for (var j = 0; j < addons[i][p].length; j++)
+          do_check_eq(addons[i][p][j], addons[i][p][j]);
+
+        continue;
+      }
+
+      if (p == "sourceURL") {
+        do_check_eq(addons[i]["install"][p], RESULTS[i][p]);
+        continue;
+      }
+
       if (addons[i][p] != RESULTS[i][p])
         do_throw("Failed on property " + p + " on add-on " + addons[i].id +
                  addons[i][p] + " == " + RESULTS[i][p]);
@@ -112,14 +124,14 @@ function checkResults(addons) {
 var RecommendedCallback = {
   searchSucceeded: function(addons, length, total) {
     // Search is complete
-    do_check_false(addonRepo.isSearching);
+    do_check_false(AddonRepository.isSearching);
     checkResults(addons);
 
     // "search" for the same results
-    addonRepo.searchAddons("bug417606", 10, SearchCallback);
+    AddonRepository.searchAddons("bug417606", 10, SearchCallback);
     // Should be searching now and any attempt to retrieve again should be ignored
-    do_check_true(addonRepo.isSearching);
-    addonRepo.searchAddons("test search", 10, FailCallback);
+    do_check_true(AddonRepository.isSearching);
+    AddonRepository.searchAddons("test search", 10, FailCallback);
   },
 
   searchFailed: function() {
@@ -130,7 +142,7 @@ var RecommendedCallback = {
 
 var SearchCallback = {
   searchSucceeded: function(addons, length, total) {
-    do_check_false(addonRepo.isSearching);
+    do_check_false(AddonRepository.isSearching);
     do_check_eq(total, 100);
     checkResults(addons);
 
@@ -177,29 +189,26 @@ function run_test()
     Services.prefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, SEARCH + "%TERMS%");
     Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, "http://localhost:4444/test_%TERMS%.xml");
 
-    addonRepo = Components.classes["@mozilla.org/extensions/addon-repository;1"]
-                          .getService(Components.interfaces.nsIAddonRepository);
-
-    do_check_neq(addonRepo, null);
+    do_check_neq(AddonRepository, null);
     // Check the homepage and recommended urls
-    do_check_eq(addonRepo.homepageURL, BROWSE);
-    do_check_eq(addonRepo.getRecommendedURL(), RECOMMENDED);
+    do_check_eq(AddonRepository.homepageURL, BROWSE);
+    do_check_eq(AddonRepository.getRecommendedURL(), RECOMMENDED);
 
     // Check that search urls are correct
     for (var i = 0; i < BROWSE_SEARCH_URLS.length; i++) {
-      var url = addonRepo.getSearchURL(BROWSE_SEARCH_URLS[i][0]);
+      var url = AddonRepository.getSearchURL(BROWSE_SEARCH_URLS[i][0]);
       if (url != BROWSE_SEARCH_URLS[i][1])
         do_throw("BROWSE_SEARCH_URL[" + i + "] returned " + url);
     }
 
     // This should fail because we cancel it immediately.
-    addonRepo.retrieveRecommendedAddons(10, FailCallback);
-    addonRepo.cancelSearch();
+    AddonRepository.retrieveRecommendedAddons(10, FailCallback);
+    AddonRepository.cancelSearch();
     // Pull some results.
-    addonRepo.retrieveRecommendedAddons(10, RecommendedCallback);
+    AddonRepository.retrieveRecommendedAddons(10, RecommendedCallback);
     // Should be searching now and any attempt to retrieve again should be ignored
-    do_check_true(addonRepo.isSearching);
-    addonRepo.retrieveRecommendedAddons(10, FailCallback);
+    do_check_true(AddonRepository.isSearching);
+    AddonRepository.retrieveRecommendedAddons(10, FailCallback);
   });
 }
 

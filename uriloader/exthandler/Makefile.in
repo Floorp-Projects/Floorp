@@ -60,7 +60,11 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 OSDIR		= beos
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+OSDIR		= android
+else
 OSDIR		= unix
+endif
 endif
 endif
 endif
@@ -88,6 +92,11 @@ LOCAL_INCLUDES = -I$(srcdir)
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OSHELPER	+= nsGNOMERegistry.cpp
 OSHELPER  += nsMIMEInfoUnix.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+OSHELPER += nsMIMEInfoAndroid.cpp
+OSHELPER += nsAndroidHandlerApp.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)

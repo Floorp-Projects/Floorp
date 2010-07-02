@@ -309,6 +309,7 @@ BrowserGlue.prototype = {
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function BG__onProfileShutdown() {
+#ifdef MOZ_UPDATER
 #ifdef WINCE
     // If there's a pending update, clear cache to free up disk space.
     try {
@@ -320,6 +321,7 @@ BrowserGlue.prototype = {
         cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
       }
     } catch (e) { }
+#endif
 #endif
     this._shutdownPlaces();
     this._sanitizer.onShutdown();
@@ -1259,9 +1261,15 @@ GeolocationPrompt.prototype = {
   contractID:       "@mozilla.org/geolocation/prompt;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
- 
+
   prompt: function GP_prompt(request) {
-    var result = Services.perms.testExactPermission(request.requestingURI, "geo");
+    var requestingURI = request.requestingURI;
+
+    // Ignore requests from non-nsIStandardURLs
+    if (!(requestingURI instanceof Ci.nsIStandardURL))
+      return;
+
+    var result = Services.perms.testExactPermission(requestingURI, "geo");
 
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
@@ -1271,13 +1279,6 @@ GeolocationPrompt.prototype = {
     if (result == Ci.nsIPermissionManager.DENY_ACTION) {
       request.cancel();
       return;
-    }
-
-    function setPagePermission(uri, allow) {
-      if (allow == true)
-        Services.perms.add(uri, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
-      else
-        Services.perms.add(uri, "geo", Ci.nsIPermissionManager.DENY_ACTION);
     }
 
     function getChromeWindow(aWindow) {
@@ -1292,93 +1293,63 @@ GeolocationPrompt.prototype = {
       return chromeWin;
     }
 
-    var requestingWindow = request.requestingWindow.top;
-    var chromeWindowObject = getChromeWindow(requestingWindow).wrappedJSObject;
-    var tabbrowser = chromeWindowObject.gBrowser;
-    var browser = tabbrowser.getBrowserForDocument(requestingWindow.document);
-    var notificationBox = tabbrowser.getNotificationBox(browser);
+    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
-    var notification = notificationBox.getNotificationWithValue("geolocation");
-    if (!notification) {
-      var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    var mainAction = {
+      label: browserBundle.GetStringFromName("geolocation.shareLocation"),
+      accessKey: browserBundle.GetStringFromName("geolocation.shareLocation.accesskey"),
+      callback: function(notification) {
+        request.allow();
+      },
+    };
 
-      var buttons = [{
-              label: browserBundle.GetStringFromName("geolocation.shareLocation"),
-              accessKey: browserBundle.GetStringFromName("geolocation.shareLocation.accesskey"),
-              callback: function(notification) {
-                  var elements = notification.getElementsByClassName("rememberChoice");
-                  if (elements.length && elements[0].checked)
-                      setPagePermission(request.requestingURI, true);
-                  request.allow(); 
-              },
-          },
-          {
-              label: browserBundle.GetStringFromName("geolocation.dontShareLocation"),
-              accessKey: browserBundle.GetStringFromName("geolocation.dontShareLocation.accesskey"),
-              callback: function(notification) {
-                  var elements = notification.getElementsByClassName("rememberChoice");
-                  if (elements.length && elements[0].checked)
-                      setPagePermission(request.requestingURI, false);
-                  request.cancel();
-              },
-          }];
-      
-      var message;
+    // XXX Bug 573536
+    // browserBundle.GetStringFromName("geolocation.learnMore")
+    //var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+    //link.href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
 
-      // Different message/info if it is a local file
-      if (request.requestingURI.schemeIs("file")) {
-        message = browserBundle.formatStringFromName("geolocation.fileWantsToKnow",
-                                                     [request.requestingURI.path], 1);
-      } else {
-        message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
-                                                     [request.requestingURI.host], 1);
+    var message;
+    var secondaryActions = [];
+
+    // Different message/options if it is a local file
+    if (requestingURI.schemeIs("file")) {
+      message = browserBundle.formatStringFromName("geolocation.fileWantsToKnow",
+                                                   [request.requestingURI.path], 1);
+    } else {
+      message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
+                                                   [requestingURI.host], 1);
+
+      // Don't offer to "always/never share" in PB mode
+      var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
+                              getService(Ci.nsIPrivateBrowsingService).
+                              privateBrowsingEnabled;
+
+      if (!inPrivateBrowsing) {
+        secondaryActions.push({
+          label: browserBundle.GetStringFromName("geolocation.alwaysShare"),
+          accessKey: browserBundle.GetStringFromName("geolocation.alwaysShare.accesskey"),
+          callback: function () {
+            Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
+            request.allow();
+          }
+        });
+        secondaryActions.push({
+          label: browserBundle.GetStringFromName("geolocation.neverShare"),
+          accessKey: browserBundle.GetStringFromName("geolocation.neverShare.accesskey"),
+          callback: function () {
+            Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.DENY_ACTION);
+            request.cancel();
+          }
+        });
       }
-
-      var newBar = notificationBox.appendNotification(message,
-                                                      "geolocation",
-                                                      "chrome://browser/skin/Geo.png",
-                                                      notificationBox.PRIORITY_INFO_HIGH,
-                                                      buttons);
-
-      // For whatever reason, if we do this immediately
-      // (eg, without the setTimeout), the "link"
-      // element does not show up in the notification
-      // bar.
-      function geolocation_hacks_to_notification () {
-
-        // Never show a remember checkbox inside the private browsing mode
-        var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
-                                getService(Ci.nsIPrivateBrowsingService).
-                                privateBrowsingEnabled;
-
-        // don't show "Remember for this site" checkbox for file:
-        var host;
-        try {
-            host = request.requestingURI.host;
-        } catch (ex) {}
-
-        if (!inPrivateBrowsing && host) {
-          var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
-          checkbox.className = "rememberChoice";
-          checkbox.setAttribute("label", browserBundle.GetStringFromName("geolocation.remember"));
-          checkbox.setAttribute("accesskey", browserBundle.GetStringFromName("geolocation.remember.accesskey"));
-          newBar.appendChild(checkbox);
-        }
-
-        var link = newBar.ownerDocument.createElementNS(XULNS, "label");
-        link.className = "text-link";
-        link.setAttribute("value", browserBundle.GetStringFromName("geolocation.learnMore"));
-
-        var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-        link.href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
-
-        var description = newBar.ownerDocument.getAnonymousElementByAttribute(newBar, "anonid", "messageText");
-        description.appendChild(link);
-      };
-
-      chromeWindowObject.setTimeout(geolocation_hacks_to_notification, 0);
-
     }
+
+    var requestingWindow = request.requestingWindow.top;
+    var chromeWin = getChromeWindow(requestingWindow).wrappedJSObject;
+    var browser = chromeWin.gBrowser.getBrowserForDocument(requestingWindow.document);
+
+    chromeWin.PopupNotifications.show(browser, "geolocation", message, "geo-notification-icon",
+                                      mainAction, secondaryActions);
   },
 };
 

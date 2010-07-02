@@ -177,10 +177,10 @@ namespace nanojit
     void asm_j(NIns*, bool bdelay);                                     \
     void asm_cmp(LOpcode condop, LIns *a, LIns *b, Register cr);        \
     void asm_move(Register d, Register s);                              \
-    void asm_regarg(ArgType ty, LInsp p, Register r);                   \
-    void asm_stkarg(LInsp arg, int stkd);                               \
-    void asm_arg(ArgType ty, LInsp arg, Register& r, Register& fr, int& stkd);     \
-    void asm_arg_64(LInsp arg, Register& r, Register& fr, int& stkd);   \
+    void asm_regarg(ArgType ty, LIns* p, Register r);                   \
+    void asm_stkarg(LIns* arg, int stkd);                               \
+    void asm_arg(ArgType ty, LIns* arg, Register& r, Register& fr, int& stkd);     \
+    void asm_arg_64(LIns* arg, Register& r, Register& fr, int& stkd);   \
     NIns *asm_branchtarget(NIns*);                                      \
     NIns *asm_bxx(bool, LOpcode, Register, Register, NIns*);
 

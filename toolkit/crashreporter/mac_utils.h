@@ -40,12 +40,6 @@
 
 #include "nsStringGlue.h"
 
-/*
- * Look up a setting in our user defaults indicating
- * that the user wants to see the OS crash reporting dialog.
- */
-bool PassToOSCrashReporter();
-
 // Given an Objective-C NSException object, put exception info into a string.
 void GetObjCExceptionInfo(void* inException, nsACString& outString);
 

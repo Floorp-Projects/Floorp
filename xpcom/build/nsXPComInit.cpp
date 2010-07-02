@@ -281,7 +281,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
     NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
 
     nsCOMPtr<nsIInterfaceInfoManager> iim
-        (xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef());
+        (xptiInterfaceInfoManager::GetSingleton());
     if (!iim)
         return NS_ERROR_FAILURE;
 
@@ -696,9 +696,9 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 
     NS_TIME_FUNCTION_MARK("Next: interface info manager init");
 
-    // Pay the cost at startup time of starting this singleton.
-    nsIInterfaceInfoManager* iim =
-        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+    // The iimanager constructor searches and registers XPT files.
+    // (We trigger the singleton's lazy construction here to make that happen.)
+    (void) xptiInterfaceInfoManager::GetSingleton();
 
     NS_TIME_FUNCTION_MARK("Next: try to load compreg.dat");
 
@@ -707,9 +707,6 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     if (NS_FAILED(rv)) {
         NS_TIME_FUNCTION_MARK("Next: try to register all components (compreg.dat not found)");
 
-        // If the component registry is out of date, malformed, or incomplete,
-        // autoregister the default component directories.
-        (void) iim->AutoRegisterInterfaces();
         nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);
     }
 

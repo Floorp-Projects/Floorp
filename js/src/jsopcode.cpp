@@ -4755,11 +4755,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = Sprint(&ss->sprinter, "%s..%s", lval, rval);
                 break;
 
-              case JSOP_XMLOBJECT:
-                LOAD_OBJECT(0);
-                todo = Sprint(&ss->sprinter, "<xml address='%p'>", obj);
-                break;
-
               case JSOP_XMLCDATA:
                 LOAD_ATOM(0);
                 todo = SprintPut(&ss->sprinter, "<![CDATA[", 9);

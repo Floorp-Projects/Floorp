@@ -25,6 +25,7 @@
 #   Daniel Brooks <db48x@yahoo.com>
 #   Florian QUEZE <f.qu@queze.net>
 #   Erik Fabert <jerfa@yahoo.com>
+#   Tanner M. Young <mozilla@alyoung.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -175,8 +176,11 @@ gImageView._ltrAtom = atomSvc.getAtom("ltr");
 gImageView._brokenAtom = atomSvc.getAtom("broken");
 
 gImageView.getCellProperties = function(row, col, props) {
-  if (gImageView.data[row][COL_IMAGE_SIZE] == gStrings.unknown &&
-      !/^https:/.test(gImageView.data[row][COL_IMAGE_ADDRESS]))
+  var data = gImageView.data[row];
+  var item = gImageView.data[row][COL_IMAGE_NODE];
+  if (!checkProtocol(data) ||
+      item instanceof HTMLEmbedElement ||
+      (item instanceof HTMLObjectElement && !/^image\//.test(item.type)))
     props.AppendElement(this._brokenAtom);
 
   if (col.element.id == "image-address")
@@ -540,7 +544,7 @@ function processFrames()
     onProcessFrame.forEach(function(func) { func(doc); });
     var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
     gFrameList.shift();
-    setTimeout(doGrab, 16, iterator);
+    setTimeout(doGrab, 10, iterator);
     onFinished.push(selectImage);
   }
   else
@@ -549,13 +553,13 @@ function processFrames()
 
 function doGrab(iterator)
 {
-  for (var i = 0; i < 50; ++i)
+  for (var i = 0; i < 500; ++i)
     if (!iterator.nextNode()) {
       processFrames();
       return;
     }
 
-  setTimeout(doGrab, 16, iterator);
+  setTimeout(doGrab, 10, iterator);
 }
 
 function addImage(url, type, alt, elem, isBg)
@@ -928,10 +932,7 @@ function makePreview(row)
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
-  const regex = /^(https?|ftp|file|gopher|about|chrome|resource):/;
-  var isProtocolAllowed = regex.test(url);
-  if (/^data:/.test(url) && /^image\//.test(mimeType))
-    isProtocolAllowed = true;
+  var isProtocolAllowed = checkProtocol(gImageView.data[row]);
 
   var newImage = new Image;
   newImage.id = "thepreviewimage";
@@ -981,12 +982,8 @@ function makePreview(row)
     newImage.id = "thepreviewimage";
     newImage.mozLoadFrom(item);
     newImage.controls = true;
-    physWidth = item.videoWidth;
-    physHeight = item.videoHeight;
-    width = item.width != -1 ? item.width : physWidth;
-    height = item.height != -1 ? item.height : physHeight;
-    newImage.width = width;
-    newImage.height = height;
+    width = physWidth = item.videoWidth;
+    height = physHeight = item.videoHeight;
 
     document.getElementById("theimagecontainer").collapsed = false;
     document.getElementById("brokenimagecontainer").collapsed = true;
@@ -1219,7 +1216,8 @@ function doSelectAll()
     elem.view.selection.selectAll();
 }
 
-function selectImage() {
+function selectImage()
+{
   if (!gImageElement)
     return;
 
@@ -1233,4 +1231,13 @@ function selectImage() {
       return;
     }
   }
+}
+
+function checkProtocol(img)
+{
+  var url = img[COL_IMAGE_ADDRESS];
+  if (/^data:/.test(url) && /^image\//.test(img[COL_IMAGE_NODE].type))
+    return true;
+  const regex = /^(https?|ftp|file|about|chrome|resource):/;
+  return regex.test(url);
 }

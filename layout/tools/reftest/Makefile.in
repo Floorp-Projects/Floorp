@@ -79,6 +79,7 @@ _HARNESS_FILES = \
   $(topsrcdir)/build/mobile/devicemanager.py \
   $(topsrcdir)/build/automationutils.py \
   $(topsrcdir)/build/poster.zip \
+  $(topsrcdir)/build/mobile/remoteautomation.py \
   $(NULL)
 
 $(_DEST_DIR):

@@ -69,34 +69,55 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessNode
-  NS_IMETHOD GetRootDocument(nsIAccessibleDocument **aRootDocument);
+  NS_DECL_NSIACCESSNODE
 
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& aName);
-  NS_IMETHOD GetDescription(nsAString& aValue);
+  NS_IMETHOD GetParent(nsIAccessible **aParent);
+  NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
+  NS_IMETHOD GetName(nsAString &aName);
+  NS_IMETHOD GetValue(nsAString &aValue);
+  NS_IMETHOD GetDescription(nsAString &aDescription);
+  NS_IMETHOD GetKeyboardShortcut(nsAString &aKeyboardShortcut);
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-
-  NS_IMETHOD GetParent(nsIAccessible **aAccessible);
+  NS_IMETHOD GetState(PRUint32 *aState , PRUint32 *aExtraState );
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
+  NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
+                           PRInt32 *aPositionInGroup);
+  NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aChild);
+  NS_IMETHOD GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aChild);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
+  NS_IMETHOD GetRelationsCount(PRUint32 *aRelationsCount);
+  NS_IMETHOD GetRelation(PRUint32 aIndex, nsIAccessibleRelation **aRelation);
+  NS_IMETHOD GetRelations(nsIArray **aRelations);
+  NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
+                       PRInt32 *aWidth, PRInt32 *aHeight);
+  NS_IMETHOD SetSelected(PRBool aIsSelected);
+  NS_IMETHOD TakeSelection();
+  NS_IMETHOD TakeFocus();
+  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString &aName);
+  NS_IMETHOD GetActionDescription(PRUint8 aIndex, nsAString &aDescription);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsIAccessibleApplication
   NS_DECL_NSIACCESSIBLEAPPLICATION
 
   // nsAccessNode
   virtual PRBool IsDefunct();
-  virtual nsresult Init();
-  virtual nsresult Shutdown();
+  virtual PRBool Init();
+  virtual void Shutdown();
 
   // nsAccessible
+  virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsAccessible* GetParent();
 
   virtual void InvalidateChildren();
-
-  // nsApplicationAccessible
-  virtual nsresult AddRootAccessible(nsIAccessible *aRootAccWrap);
-  virtual nsresult RemoveRootAccessible(nsIAccessible *aRootAccWrap);
+  virtual PRBool AppendChild(nsAccessible* aChild);
+  virtual PRBool RemoveChild(nsAccessible* aChild);
 
 protected:
 

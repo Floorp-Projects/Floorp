@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #include "nsHttp.h"
 #include "nsHttpDigestAuth.h"
-#include "nsIHttpChannel.h"
+#include "nsIHttpAuthenticableChannel.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -109,23 +109,19 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
 }
 
 nsresult
-nsHttpDigestAuth::GetMethodAndPath(nsIHttpChannel *httpChannel,
-                                   PRBool          isProxyAuth,
-                                   nsCString      &httpMethod,
-                                   nsCString      &path)
+nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
+                                   PRBool                       isProxyAuth,
+                                   nsCString                   &httpMethod,
+                                   nsCString                   &path)
 {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
-  rv = httpChannel->GetURI(getter_AddRefs(uri));
+  rv = authChannel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(rv)) {
-    PRBool isSecure;
-    rv = uri->SchemeIs("https", &isSecure);
+    PRBool proxyMethodIsConnect;
+    rv = authChannel->GetProxyMethodIsConnect(&proxyMethodIsConnect);
     if (NS_SUCCEEDED(rv)) {
-      //
-      // if we are being called in response to a 407, and if the protocol
-      // is HTTPS, then we are really using a CONNECT method.
-      //
-      if (isSecure && isProxyAuth) {
+      if (proxyMethodIsConnect && isProxyAuth) {
         httpMethod.AssignLiteral("CONNECT");
         //
         // generate hostname:port string. (unfortunately uri->GetHostPort
@@ -141,7 +137,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpChannel *httpChannel,
         }
       }
       else { 
-        rv  = httpChannel->GetRequestMethod(httpMethod);
+        rv  = authChannel->GetRequestMethod(httpMethod);
         rv |= uri->GetPath(path);
         if (NS_SUCCEEDED(rv)) {
           //
@@ -171,7 +167,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpChannel *httpChannel,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpDigestAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
+nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                     const char *challenge,
                                     PRBool isProxyAuth,
                                     nsISupports **sessionState,
@@ -197,7 +193,7 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
 }
 
 NS_IMETHODIMP
-nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
+nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                       const char *challenge,
                                       PRBool isProxyAuth,
                                       const PRUnichar *userdomain,
@@ -222,7 +218,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   PRBool requireExtraQuotes = PR_FALSE;
   {
     nsCAutoString serverVal;
-    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), serverVal);
+    authChannel->GetServerResponseHeader(serverVal);
     if (!serverVal.IsEmpty()) {
       requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
     }
@@ -231,7 +227,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   nsresult rv;
   nsCAutoString httpMethod;
   nsCAutoString path;
-  rv = GetMethodAndPath(httpChannel, isProxyAuth, httpMethod, path);
+  rv = GetMethodAndPath(authChannel, isProxyAuth, httpMethod, path);
   if (NS_FAILED(rv)) return rv;
 
   nsCAutoString realm, domain, nonce, opaque;

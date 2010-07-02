@@ -55,6 +55,7 @@ EXPORT_LIBRARY = 1
 ##
 IPDLDIRS =  \
   dom/plugins  \
+  js/jetpack \
   ipc/ipdl/test/cxx  \
   $(NULL)
 ##-----------------------------------------------------------------------------

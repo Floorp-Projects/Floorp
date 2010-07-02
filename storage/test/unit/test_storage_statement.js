@@ -177,13 +177,36 @@ function test_getColumnDecltype()
   stmt.finalize();
 }
 
+function test_failed_execute()
+{
+  var stmt = createStatement("INSERT INTO test (name) VALUES ('foo')");
+  stmt.execute();
+  stmt.finalize();
+  var id = getOpenedDatabase().lastInsertRowID;
+  stmt = createStatement("INSERT INTO test(id, name) VALUES(:id, 'bar')");
+  stmt.params.id = id;
+  try {
+    // Should throw a constraint error
+    stmt.execute();
+    do_throw("Should have seen a constraint error");
+  }
+  catch (e) {
+    do_check_eq(getOpenedDatabase().lastError, Ci.mozIStorageError.CONSTRAINT);
+  }
+  do_check_eq(Ci.mozIStorageStatement.MOZ_STORAGE_STATEMENT_READY, stmt.state);
+  // Should succeed without needing to reset the statement manually
+  stmt.finalize();
+}
+
 var tests = [test_parameterCount_none, test_parameterCount_one,
              test_getParameterName, test_getParameterIndex_different,
              test_getParameterIndex_same, test_columnCount,
              test_getColumnName, test_getColumnIndex_same_case,
              test_getColumnIndex_different_case, test_state_ready,
              test_state_executing, test_state_after_finalize,
-             test_getColumnDecltype];
+             test_getColumnDecltype,
+             test_failed_execute,
+];
 
 function run_test()
 {

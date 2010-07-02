@@ -80,6 +80,8 @@ struct nsSortState
   PRBool sortStaticsLast;
   PRBool isContainerRDFSeq;
 
+  PRUint32 sortHints;
+
   nsSortState_direction direction;
   nsAutoString sort;
   nsCOMArray<nsIAtom> sortKeys;
@@ -89,7 +91,8 @@ struct nsSortState
   PRBool lastWasFirst, lastWasLast;
 
   nsSortState()
-    : initialized(PR_FALSE)
+    : initialized(PR_FALSE),
+      sortHints(0)
   {
   }
   void Traverse(nsCycleCollectionTraversalCallback &cb) const
@@ -203,4 +206,12 @@ public:
                       const nsAString& aSortKey,
                       const nsAString& aSortDirection,
                       nsSortState* aSortState);
+
+  /**
+   * Compares aLeft and aRight and returns < 0, 0, or > 0. The sort
+   * hints are checked for case matching and integer sorting.
+   */
+  static PRInt32 CompareValues(const nsAString& aLeft,
+                               const nsAString& aRight,
+                               PRUint32 aSortHints);
 };

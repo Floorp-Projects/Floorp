@@ -125,6 +125,26 @@ PlacesController.prototype = {
    */
   _view: null,
 
+  supportsCommand: function PC_supportsCommand(aCommand) {
+    //LOG("supportsCommand: " + command);
+    // Non-Places specific commands that we also support
+    switch (aCommand) {
+    case "cmd_undo":
+    case "cmd_redo":
+    case "cmd_cut":
+    case "cmd_copy":
+    case "cmd_paste":
+    case "cmd_delete":
+    case "cmd_selectAll":
+      return true;
+    }
+
+    // All other Places Commands are prefixed with "placesCmd_" ... this 
+    // filters out other commands that we do _not_ support (see 329587).
+    const CMD_PREFIX = "placesCmd_";
+    return (aCommand.substr(0, CMD_PREFIX.length) == CMD_PREFIX);
+  },
+
   isCommandEnabled: function PC_isCommandEnabled(aCommand) {
     switch (aCommand) {
     case "cmd_undo":
@@ -204,26 +224,6 @@ PlacesController.prototype = {
     default:
       return false;
     }
-  },
-
-  supportsCommand: function PC_supportsCommand(aCommand) {
-    //LOG("supportsCommand: " + command);
-    // Non-Places specific commands that we also support
-    switch (aCommand) {
-    case "cmd_undo":
-    case "cmd_redo":
-    case "cmd_cut":
-    case "cmd_copy":
-    case "cmd_paste":
-    case "cmd_delete":
-    case "cmd_selectAll":
-      return true;
-    }
-
-    // All other Places Commands are prefixed with "placesCmd_" ... this 
-    // filters out other commands that we do _not_ support (see 329587).
-    const CMD_PREFIX = "placesCmd_";
-    return (aCommand.substr(0, CMD_PREFIX.length) == CMD_PREFIX);
   },
 
   doCommand: function PC_doCommand(aCommand) {

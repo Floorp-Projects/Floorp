@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=566879
+-->
+<head>
+  <title>Test for Bug 566879</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload='runTest();'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566879">Mozilla Bug 566879</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<form>
+<input type=text id=textfield name=textfield>
+<input type=checkbox id=checkbox name=checkbox>
+<input type=radio id=radio1 name=radio>
+<input type=radio id=radio2 name=radio>
+<textarea name=textarea id=textarea></textarea>
+<select name=select id=select>
+<option value=foo>Foo</option>
+<option value=bar selected>Bar</option>
+</select>
+</form>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function runTest() {
+  initialState = document.getElementById('content').innerHTML;
+  document.getElementById('textfield').value = "foo";
+  document.getElementById('checkbox').checked = true;
+  document.getElementById('radio2').checked = true;
+  document.getElementById('textarea').value = "foo";
+  document.getElementById('select').value = "foo";
+  setTimeout(continuation1, 1);
+}
+
+function continuation1() {
+  document.getElementById('content').innerHTML = initialState;
+  setTimeout(continuation2, 1);
+}
+
+function continuation2() {
+  is(document.getElementById('textfield').value, "", "The text field should have gone back to its initial state.");
+  ok(!document.getElementById('checkbox').checked, "The checkbox should have gone back to its initial state.");
+  ok(!document.getElementById('radio2').checked, "The second radio button should have gone back to its initial state.");
+  is(document.getElementById('textarea').value, "", "The text area should have gone back to its initial state.");
+  is(document.getElementById('select').value, "bar", "The select should have gone back to its initial state.");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

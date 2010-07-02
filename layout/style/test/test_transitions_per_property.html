@@ -24,8 +24,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
   fixed-width container so that percentages for margin-top and
   margin-bottom are all relative to the same size container (rather than
   one that depends on whether we're tall enough to need a scrollbar)
+
+  Use a 20px font size and line-height so that percentage line-height
+  and vertical-align doesn't accumulate rounding error.
   -->
-<div style="height: 50px; width: 300px">
+<div style="height: 50px; width: 300px; font-size: 20px; line-height: 20px">
 
 <div id="display">
 
@@ -47,7 +50,6 @@ function any_unit_to_num(str)
 }
 
 var supported_properties = {
-    "-moz-background-size": [ test_background_size_transition ],
     "-moz-border-radius-bottomleft": [ test_radius_transition ],
     "-moz-border-radius-bottomright": [ test_radius_transition ],
     "-moz-border-radius-topleft": [ test_radius_transition ],
@@ -70,6 +72,7 @@ var supported_properties = {
                                test_length_percent_pair_transition ],
     "background-color": [ test_color_transition ],
     "background-position": [ test_background_position_transition ],
+    "background-size": [ test_background_size_transition ],
     "border-bottom-color": [ test_color_transition,
                              test_border_color_transition ],
     "border-bottom-width": [ test_length_transition ],
@@ -190,8 +193,8 @@ for (prop in gCSSProperties) {
       }
     }
 
-    div.style.removeProperty(prop);
     div.style.removeProperty("-moz-transition");
+    div.style.removeProperty(prop);
     if ("prerequisites" in info) {
       var prereqs = info.prerequisites;
       for (var prereq in prereqs) {
@@ -201,11 +204,12 @@ for (prop in gCSSProperties) {
   }
 }
 
-// Do 4-second linear transitions with -2 second transition delay and
+// Do 4-second linear transitions with -1 second transition delay and
 // linear timing function so that we can expect the transition to be
-// right in the middle just after changing the property.
+// one quarter of the way through the value space right after changing
+// the property.
 div.style.setProperty("-moz-transition-duration", "4s", "");
-div.style.setProperty("-moz-transition-delay", "-2s", "");
+div.style.setProperty("-moz-transition-delay", "-1s", "");
 div.style.setProperty("-moz-transition-timing-function", "linear", "");
 for (prop in supported_properties) {
   var tinfo = supported_properties[prop];
@@ -216,7 +220,11 @@ for (prop in supported_properties) {
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
-      div.style.setProperty(prereq, prereqs[prereq], "");
+      // We don't want the 19px font-size prereq of line-height, since we
+      // want to leave it 20px.
+      if (prop != "line-height" || prereq != "font-size") {
+        div.style.setProperty(prereq, prereqs[prereq], "");
+      }
     }
   }
 
@@ -225,11 +233,9 @@ for (prop in supported_properties) {
   }
 
   // Make sure to unset the property and stop transitions on it.
-  div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty("-moz-transition-delay", "-6s", "");
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.removeProperty(prop);
   cs.getPropertyValue(prop);
-  div.style.setProperty("-moz-transition-delay", "-2s", "");
 
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;
@@ -247,7 +253,7 @@ function test_length_transition(prop) {
      "length-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "12px", "");
-  is(cs.getPropertyValue(prop), "8px",
+  is(cs.getPropertyValue(prop), "6px",
      "length-valued property " + prop + ": interpolation of lengths");
 }
 
@@ -259,7 +265,7 @@ function test_float_zeroToOne_transition(prop) {
      "float-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "0.8", "");
-  is(cs.getPropertyValue(prop), "0.55",
+  is(cs.getPropertyValue(prop), "0.425",
      "float-valued property " + prop + ": interpolation of floats");
 }
 
@@ -271,7 +277,7 @@ function test_float_aboveOne_transition(prop) {
      "float-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "2.1", "");
-  is(cs.getPropertyValue(prop), "1.55",
+  is(cs.getPropertyValue(prop), "1.275",
      "float-valued property " + prop + ": interpolation of floats");
 }
 
@@ -288,9 +294,9 @@ function test_percent_transition(prop) {
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
   var res = cs.getPropertyValue(prop);
-  is(any_unit_to_num(res) * 2, a + b,
+  is(any_unit_to_num(res) * 4, 3 * b + a,
      "percent-valued property " + prop + ": interpolation of percents: " +
-     res + " should be halfway between " + av + " and " + bv);
+     res + " should be a quarter of the way between " + bv + " and " + av);
   ok(has_num(res),
      "percent-valued property " + prop + ": percent computes to number");
 }
@@ -301,8 +307,8 @@ function test_color_transition(prop) {
   is(cs.getPropertyValue(prop), "rgb(255, 28, 0)",
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "rgb(77, 84, 128)", "");
-  is(cs.getPropertyValue(prop), "rgb(166, 56, 64)",
+  div.style.setProperty(prop, "rgb(75, 84, 128)", "");
+  is(cs.getPropertyValue(prop), "rgb(210, 42, 32)",
      "color-valued property " + prop + ": interpolation of colors");
 
   div.style.setProperty("-moz-transition-property", "none", "");
@@ -313,7 +319,7 @@ function test_color_transition(prop) {
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "currentColor", "");
-  is(cs.getPropertyValue(prop), "rgb(64, 32, 64)",
+  is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of currentColor");
   (prop == "color" ? div.parentNode : div).style.removeProperty("color");
 }
@@ -326,7 +332,7 @@ function test_border_color_transition(prop) {
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.removeProperty(prop);
-  is(cs.getPropertyValue(prop), "rgb(64, 32, 64)",
+  is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of initial value");
   div.style.removeProperty("color");
 }
@@ -340,16 +346,16 @@ function test_shadow_transition(prop) {
      "shadow-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "4px 8px 3px red", "");
-  is(cs.getPropertyValue(prop), "rgba(255, 0, 0, 0.5) 2px 4px 1.5px" + spreadStr,
+  is(cs.getPropertyValue(prop), "rgba(255, 0, 0, 0.25) 1px 2px 0.75px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation of shadows");
 
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "green 4px 4px, 2px 2px blue", "");
-  is(cs.getPropertyValue(prop), "rgb(0, 128, 0) 4px 4px 0px" + spreadStr + ", rgb(0, 0, 255) 2px 2px 0px" + spreadStr,
+  div.style.setProperty(prop, "#038000 4px 4px, 2px 2px blue", "");
+  is(cs.getPropertyValue(prop), "rgb(3, 128, 0) 4px 4px 0px" + spreadStr + ", rgb(0, 0, 255) 2px 2px 0px" + spreadStr,
      "shadow-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "8px 8px 8px red", "");
-  is(cs.getPropertyValue(prop), "rgb(128, 64, 0) 6px 6px 4px" + spreadStr + ", rgba(0, 0, 255, 0.5) 1px 1px 0px" + spreadStr,
+  is(cs.getPropertyValue(prop), "rgb(66, 96, 0) 5px 5px 2px" + spreadStr + ", rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation of shadows");
 
   if (prop == "-moz-box-shadow") {
@@ -357,7 +363,7 @@ function test_shadow_transition(prop) {
     is(cs.getPropertyValue(prop), "rgb(255, 0, 0) 8px 8px 8px 0px inset",
        "shadow-valued property " + prop + ": non-interpolable cases");
     div.style.setProperty(prop, "8px 8px 8px 8px red inset", "");
-    is(cs.getPropertyValue(prop), "rgb(255, 0, 0) 8px 8px 8px 4px inset",
+    is(cs.getPropertyValue(prop), "rgb(255, 0, 0) 8px 8px 8px 2px inset",
        "shadow-valued property " + prop + ": interpolation of spread");
     // Leave in same state whether in the |if| or not.
     div.style.setProperty(prop, "8px 8px 8px red", "");
@@ -369,7 +375,7 @@ function test_shadow_transition(prop) {
   div.style.setProperty(prop, "2px 2px 2px", "");
   is(cs.getPropertyValue(prop), defaultColor + "2px 2px 2px" + spreadStr,
      "shadow-valued property " + prop + ": non-interpolable cases");
-  div.style.setProperty(prop, "4px 8px 6px", "");
+  div.style.setProperty(prop, "6px 14px 10px", "");
   is(cs.getPropertyValue(prop), defaultColor + "3px 5px 4px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation without color");
 }
@@ -381,7 +387,7 @@ function test_dasharray_transition(prop) {
      "dasharray-valued property " + prop +
      ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "9px", "");
+  div.style.setProperty(prop, "15px", "");
   is(cs.getPropertyValue(prop), "6",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
   div.style.setProperty(prop, "none", "");
@@ -391,24 +397,24 @@ function test_dasharray_transition(prop) {
   is(cs.getPropertyValue(prop), "6, 8px, 4, 4",
      "dasharray-valued property " + prop +
      ": computed value before transition");
-  div.style.setProperty(prop, "10, 10,10,10px", "");
+  div.style.setProperty(prop, "14, 12,16,16px", "");
   is(cs.getPropertyValue(prop), "8, 9, 7, 7",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
   div.style.setProperty(prop, "none", "");
   is(cs.getPropertyValue(prop), "none",
      "dasharray-valued property " + prop + ": non-interpolability of none");
-  div.style.setProperty(prop, "4,8,2", "");
-  is(cs.getPropertyValue(prop), "4, 8, 2",
+  div.style.setProperty(prop, "8,16,4", "");
+  is(cs.getPropertyValue(prop), "8, 16, 4",
      "dasharray-valued property " + prop +
      ": computed value before transition");
-  div.style.setProperty(prop, "2,4,6,8", "");
-  is(cs.getPropertyValue(prop), "3, 6, 4, 6, 5, 3, 5, 8, 2, 4, 7, 5",
+  div.style.setProperty(prop, "4,8,12,16", "");
+  is(cs.getPropertyValue(prop), "7, 14, 6, 10, 13, 5, 9, 16, 4, 8, 15, 7",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
-  div.style.setProperty(prop, "2,50%,6,8", "");
-  is(cs.getPropertyValue(prop), "2, 50%, 6, 8",
+  div.style.setProperty(prop, "2,50%,6,10", "");
+  is(cs.getPropertyValue(prop), "2, 50%, 6, 10",
      "dasharray-valued property " + prop + ": non-interpolability of mixed units");
-  div.style.setProperty(prop, "4,20%,2,2", "");
-  is(cs.getPropertyValue(prop), "3, 35%, 4, 5",
+  div.style.setProperty(prop, "6,30%,2,2", "");
+  is(cs.getPropertyValue(prop), "3, 45%, 5, 8",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
 }
 
@@ -427,26 +433,26 @@ function test_radius_transition(prop) {
      "radius-valued property " + prop +
      ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "9px", "");
+  div.style.setProperty(prop, "15px", "");
   is(cs.getPropertyValue(prop), "6px",
      "radius-valued property " + prop + ": interpolation of radius");
   div.style.setProperty(prop, "5%", "");
   is(cs.getPropertyValue(prop), "10px",
      "radius-valued property " + prop + ": non-interpolability of unit change");
   div.style.setProperty(prop, "25%", "");
-  is(cs.getPropertyValue(prop), "30px",
+  is(cs.getPropertyValue(prop), "20px",
      "radius-valued property " + prop + ": interpolation of radius");
   div.style.setProperty(prop, "3px 8px", "");
   is(cs.getPropertyValue(prop), "3px 8px",
      "radius-valued property " + prop + ": non-interpolability of unit change");
-  div.style.setProperty(prop, "9px 10px", "");
+  div.style.setProperty(prop, "15px 12px", "");
   is(cs.getPropertyValue(prop), "6px 9px",
      "radius-valued property " + prop + ": interpolation of radius");
   div.style.setProperty(prop, "5% 15%", "");
   is(cs.getPropertyValue(prop), "10px 30px",
      "radius-valued property " + prop + ": non-interpolability of unit change");
   div.style.setProperty(prop, "25%", "");
-  is(cs.getPropertyValue(prop), "30px 40px",
+  is(cs.getPropertyValue(prop), "20px 35px",
      "radius-valued property " + prop + ": interpolation of radius");
 
   div.style.removeProperty("width");
@@ -461,7 +467,7 @@ function test_zindex_transition(prop) {
   is(cs.getPropertyValue(prop), "4",
      "integer-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "-5", "");
+  div.style.setProperty(prop, "-14", "");
   is(cs.getPropertyValue(prop), "-1",
      "integer-valued property " + prop + ": interpolation of lengths");
   div.style.setProperty(prop, "auto", "");
@@ -471,7 +477,7 @@ function test_zindex_transition(prop) {
   is(cs.getPropertyValue(prop), "-4",
      "integer-valued property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "8", "");
-  is(cs.getPropertyValue(prop), "2",
+  is(cs.getPropertyValue(prop), "-1",
      "integer-valued property " + prop + ": interpolation of lengths");
 }
 
@@ -484,7 +490,7 @@ function test_font_stretch(prop) {
      "font-stretch property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "ultra-expanded", "");
-  is(cs.getPropertyValue(prop), "expanded",
+  is(cs.getPropertyValue(prop), "semi-expanded",
      "font-stretch property " + prop + ": interpolation of font-stretches");
   div.style.setProperty(prop, "wider", "");
   is(cs.getPropertyValue(prop), "wider",
@@ -493,7 +499,7 @@ function test_font_stretch(prop) {
   is(cs.getPropertyValue(prop), "expanded",
      "font-stretch property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "extra-condensed", "");
-  is(cs.getPropertyValue(prop), "semi-condensed",
+  is(cs.getPropertyValue(prop), "normal",
      "font-stretch property " + prop + ": interpolation of font-stretches");
 }
 
@@ -506,16 +512,16 @@ function test_font_weight(prop) {
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "900", "");
-  is(cs.getPropertyValue(prop), "600",
+  is(cs.getPropertyValue(prop), "500",
      "font-weight property " + prop + ": interpolation of font-weights");
   div.style.setProperty(prop, "lighter", "");
   is(cs.getPropertyValue(prop), "lighter",
      "font-weight property " + prop + ": can't interpolate bolder/lighter");
-  div.style.setProperty(prop, "700", "");
-  is(cs.getPropertyValue(prop), "700",
+  div.style.setProperty(prop, "900", "");
+  is(cs.getPropertyValue(prop), "900",
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "100", "");
-  is(cs.getPropertyValue(prop), "400",
+  is(cs.getPropertyValue(prop), "700",
      "font-weight property " + prop + ": interpolation of font-weights");
 }
 
@@ -525,7 +531,7 @@ function test_pos_integer_or_auto_transition(prop) {
   is(cs.getPropertyValue(prop), "4",
      "integer-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "7", "");
+  div.style.setProperty(prop, "11", "");
   is(cs.getPropertyValue(prop), "5",
      "integer-valued property " + prop + ": interpolation of lengths");
   div.style.setProperty(prop, "auto", "");
@@ -535,18 +541,18 @@ function test_pos_integer_or_auto_transition(prop) {
   is(cs.getPropertyValue(prop), "8",
      "integer-valued property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "4", "");
-  is(cs.getPropertyValue(prop), "6",
+  is(cs.getPropertyValue(prop), "7",
      "integer-valued property " + prop + ": interpolation of lengths");
 }
 
 function test_length_pair_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "4px 8px", "");
-  is(cs.getPropertyValue(prop), "4px 8px",
+  div.style.setProperty(prop, "4px 6px", "");
+  is(cs.getPropertyValue(prop), "4px 6px",
      "length-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "12px 10px", "");
-  is(cs.getPropertyValue(prop), "8px 9px",
+  is(cs.getPropertyValue(prop), "6px 7px",
      "length-valued property " + prop + ": interpolation of lengths");
 }
 
@@ -557,18 +563,18 @@ function test_length_percent_pair_transition(prop) {
      "length-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "12px 70%", "");
-  is(cs.getPropertyValue(prop), "8px 60%",
+  is(cs.getPropertyValue(prop), "6px 55%",
      "length-valued property " + prop + ": interpolation of lengths");
 }
 
 function test_rect_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "rect(4px, 16px, 12px, 8px)", "");
-  is(cs.getPropertyValue(prop), "rect(4px, 16px, 12px, 8px)",
+  div.style.setProperty(prop, "rect(4px, 16px, 12px, 6px)", "");
+  is(cs.getPropertyValue(prop), "rect(4px, 16px, 12px, 6px)",
      "rect-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "rect(0px, 6px, 4px, 2px)", "");
-  is(cs.getPropertyValue(prop), "rect(2px, 11px, 8px, 5px)",
+  div.style.setProperty(prop, "rect(0px, 4px, 4px, 2px)", "");
+  is(cs.getPropertyValue(prop), "rect(3px, 13px, 10px, 5px)",
      "rect-valued property " + prop + ": interpolation of rects");
   if (prop == "clip") {
     div.style.setProperty(prop, "rect(0px, 6px, 4px, auto)", "");
@@ -599,7 +605,7 @@ function test_background_size_transition(prop) {
      "property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "100% 100%", "");
-  is(cs.getPropertyValue(prop), "75% 90%",
+  is(cs.getPropertyValue(prop), "62.5% 85%",
      "property " + prop + ": interpolation of percents");
   div.style.setProperty(prop, "contain", "");
   is(cs.getPropertyValue(prop), "contain",
@@ -614,7 +620,7 @@ function test_background_position_transition(prop) {
      "property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "bottom right", "");
-  is(cs.getPropertyValue(prop), "75% 90%",
+  is(cs.getPropertyValue(prop), "62.5% 85%",
      "property " + prop + ": interpolation of percents");
   test_background_position_size_common(prop);
 }
@@ -624,19 +630,19 @@ function test_background_position_size_common(prop) {
   is(cs.getPropertyValue(prop), "10px 40px",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "50px 0", "");
-  is(cs.getPropertyValue(prop), "30px 20px",
+  is(cs.getPropertyValue(prop), "20px 30px",
      "property " + prop + ": interpolation of lengths");
   div.style.setProperty(prop, "10px 40px, 50px 50px, 30px 20px", "");
   is(cs.getPropertyValue(prop), "10px 40px, 50px 50px, 30px 20px",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "50px 20px, 70px 50px, 30px 40px", "");
-  is(cs.getPropertyValue(prop), "30px 30px, 60px 50px, 30px 30px",
+  is(cs.getPropertyValue(prop), "20px 35px, 55px 50px, 30px 25px",
      "property " + prop + ": interpolation of lists of lengths");
   div.style.setProperty(prop, "10px 40%, 50% 50px, 30% 20%", "");
   is(cs.getPropertyValue(prop), "10px 40%, 50% 50px, 30% 20%",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "50px 20%, 70% 50px, 30% 40%", "");
-  is(cs.getPropertyValue(prop), "30px 30%, 60% 50px, 30% 30%",
+  is(cs.getPropertyValue(prop), "20px 35%, 55% 50px, 30% 25%",
      "property " + prop + ": interpolation of lists of lengths and percents");
 }
 

@@ -248,8 +248,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // Code depends on these constants having the same values as BG_ORIGIN_*
 #define NS_STYLE_BG_CLIP_BORDER           0
 #define NS_STYLE_BG_CLIP_PADDING          1
-// When we add NS_STYLE_BG_CLIP_CONTENT, we should add the PR_STATIC_ASSERTs
-// to the places that assert equality for BORDER and PADDING.
+#define NS_STYLE_BG_CLIP_CONTENT          2
 
 // See nsStyleBackground
 #define NS_STYLE_BG_INLINE_POLICY_EACH_BOX      0

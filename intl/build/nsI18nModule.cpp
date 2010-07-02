@@ -75,8 +75,6 @@ static const nsModuleComponentInfo components[] =
       NS_ENTITYCONVERTER_CONTRACTID, nsEntityConverterConstructor },
   { "Unicode To Charset Converter", NS_SAVEASCHARSET_CID, 
       NS_SAVEASCHARSET_CONTRACTID, nsSaveAsCharsetConstructor},
-  { "Japanese Hankaku To Zenkaku", NS_HANKAKUTOZENKAKU_CID, 
-      NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
   { "Unicode Normlization", NS_UNICODE_NORMALIZER_CID, 
       NS_UNICODE_NORMALIZER_CONTRACTID,  nsUnicodeNormalizerConstructor},
 

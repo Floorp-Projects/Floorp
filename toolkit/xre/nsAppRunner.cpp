@@ -743,6 +743,7 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
 SYNC_ENUMS(DEFAULT, Default)
 SYNC_ENUMS(PLUGIN, Plugin)
 SYNC_ENUMS(CONTENT, Content)
+SYNC_ENUMS(JETPACK, Jetpack)
 SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
 
 // .. and ensure that that is all of them:
@@ -1757,7 +1758,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   mozilla::AndroidBridge::Bridge()->ScheduleRestart();
 #else
 #if defined(XP_MACOSX)
-  SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+  CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #else
   nsCOMPtr<nsILocalFile> lf;
@@ -1963,7 +1964,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
 #ifdef XP_MACOSX
-    SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+    CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
 #endif
 
 #ifdef XP_WIN
@@ -2053,7 +2054,7 @@ ImportProfiles(nsIToolkitProfileService* aPService,
       xpcom.RegisterProfileService();
 
 #ifdef XP_MACOSX
-      SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+      CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
 #endif
 
       nsCOMPtr<nsIProfileMigrator> migrator
@@ -2477,9 +2478,6 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
     return;
 
   file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
-  file->Remove(PR_FALSE);
-
-  file->SetNativeLeafName(NS_LITERAL_CSTRING("xpti.dat"));
   file->Remove(PR_FALSE);
 
   if (aRemoveEMFiles) {
@@ -3327,7 +3325,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
     else if (versionOK) {
       if (!cachesOK) {
-        // Remove compreg.dat and xpti.dat, forcing component re-registration.
+        // Remove compreg.dat, forcing component re-registration.
         // The new list of additional components directories is derived from
         // information in "extensions.ini".
         RemoveComponentRegistries(profD, profLD, PR_FALSE);
@@ -3339,7 +3337,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Nothing need be done for the normal startup case.
     }
     else {
-      // Remove compreg.dat and xpti.dat, forcing component re-registration
+      // Remove compreg.dat, forcing component re-registration
       // with the default set of components (this disables any potentially
       // troublesome incompatible XPCOM components). 
       RemoveComponentRegistries(profD, profLD, PR_TRUE);
@@ -3571,14 +3569,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
             NS_ENSURE_TRUE(cmdLine, 1);
 
-            SetupMacCommandLine(gArgc, gArgv, PR_FALSE);
+            CommandLineServiceMac::SetupMacCommandLine(gArgc, gArgv, PR_FALSE);
 
             rv = cmdLine->Init(gArgc, gArgv,
                                workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
             NS_ENSURE_SUCCESS(rv, 1);
-#endif
-#ifdef MOZ_WIDGET_COCOA
-            // Prepare Cocoa's form of Apple Event handling.
+            
+            // Set up ability to respond to system (Apple) events.
             SetupMacApplicationDelegate();
 #endif
 
@@ -3614,7 +3611,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                                      PromiseFlatCString(profileName).get());
 #endif /* MOZ_ENABLE_XREMOTE */
 
-            // enable win32 DDE responses and Mac appleevents responses
             nativeApp->Enable();
           }
 
@@ -3670,7 +3666,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef XP_MACOSX
-          SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+          CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
 #endif
         }
       }

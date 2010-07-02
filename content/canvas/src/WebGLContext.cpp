@@ -78,7 +78,9 @@ WebGLContext::WebGLContext()
       mGeneration(0),
       mInvalidated(PR_FALSE),
       mActiveTexture(0),
-      mSynthesizedGLError(LOCAL_GL_NO_ERROR)
+      mSynthesizedGLError(LOCAL_GL_NO_ERROR),
+      mPixelStoreFlipY(PR_FALSE),
+      mPixelStorePremultiplyAlpha(PR_FALSE)
 {
     mMapBuffers.Init();
     mMapTextures.Init();
@@ -102,7 +104,16 @@ WebGLContext::Invalidate()
         return;
 
     mInvalidated = true;
-    mCanvasElement->InvalidateFrame();
+    HTMLCanvasElement()->InvalidateFrame();
+}
+
+/* readonly attribute nsIDOMHTMLCanvasElement canvas; */
+NS_IMETHODIMP
+WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
+{
+    NS_IF_ADDREF(*canvas = mCanvasElement);
+
+    return NS_OK;
 }
 
 //
@@ -112,14 +123,7 @@ WebGLContext::Invalidate()
 NS_IMETHODIMP
 WebGLContext::SetCanvasElement(nsHTMLCanvasElement* aParentCanvas)
 {
-    if (aParentCanvas == nsnull) {
-        // we get this on shutdown; we should do some more cleanup here,
-        // but instead we just let our destructor do it.
-        mCanvasElement = nsnull;
-        return NS_OK;
-    }
-
-    if (!SafeToCreateCanvas3DContext(aParentCanvas))
+    if (aParentCanvas && !SafeToCreateCanvas3DContext(aParentCanvas))
         return NS_ERROR_FAILURE;
 
     mCanvasElement = aParentCanvas;
@@ -139,7 +143,21 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (mWidth == width && mHeight == height)
         return NS_OK;
 
-    LogMessage("Canvas 3D: creating PBuffer...");
+    if (gl) {
+        // hey we already have something
+        if (gl->Resize(gfxIntSize(width, height))) {
+
+            mWidth = width;
+            mHeight = height;
+
+            gl->fViewport(0, 0, mWidth, mHeight);
+            gl->fClearColor(0, 0, 0, 0);
+            gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+
+            // great success!
+            return NS_OK;
+        }
+    }
 
     GLContextProvider::ContextFormat format(GLContextProvider::ContextFormat::BasicRGBA32);
     format.depth = 16;
@@ -147,52 +165,16 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height), format);
 
-    if (!gl) {
-        LogMessage("Canvas 3D: can't get a native PBuffer, trying OSMesa...");
+    if (!InitAndValidateGL()) {
         gl = gl::GLContextProviderOSMesa::CreatePBuffer(gfxIntSize(width, height), format);
-        if (!gl) {
-            LogMessage("Canvas 3D: can't create a OSMesa pseudo-PBuffer.");
+        if (!InitAndValidateGL()) {
+            LogMessage("WebGL: Can't get a usable OpenGL context.");
             return NS_ERROR_FAILURE;
         }
+        else {
+            LogMessage("WebGL: Using software rendering via OSMesa");
+        }
     }
-
-    // We just blew away all the resources by creating a new context; reset everything,
-    // and let ValidateGL set up the correct dimensions again.
-
-    mActiveTexture = 0;
-    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
-
-    mAttribBuffers.Clear();
-
-    mUniformTextures.Clear();
-    mBound2DTextures.Clear();
-    mBoundCubeMapTextures.Clear();
-
-    mBoundArrayBuffer = nsnull;
-    mBoundElementArrayBuffer = nsnull;
-    mCurrentProgram = nsnull;
-
-    mFramebufferColorAttachments.Clear();
-    mFramebufferDepthAttachment = nsnull;
-    mFramebufferStencilAttachment = nsnull;
-
-    mBoundFramebuffer = nsnull;
-    mBoundRenderbuffer = nsnull;
-
-    mMapTextures.Clear();
-    mMapBuffers.Clear();
-    mMapPrograms.Clear();
-    mMapShaders.Clear();
-    mMapFramebuffers.Clear();
-    mMapRenderbuffers.Clear();
-
-    // Now check the GL implementation, checking limits along the way
-    if (!ValidateGL()) {
-        LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
-        return NS_ERROR_FAILURE;
-    }
-
-    LogMessage("Canvas 3D: ready");
 
     mWidth = width;
     mHeight = height;
@@ -361,12 +343,20 @@ WebGLContext::GetCanvasLayer(LayerManager *manager)
 // XPCOM goop
 //
 
-NS_IMPL_ADDREF(WebGLContext)
-NS_IMPL_RELEASE(WebGLContext)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(WebGLContext)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebGLContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCanvasElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebGLContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCanvasElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(CanvasRenderingContextWebGL, WebGLContext)
 
-NS_INTERFACE_MAP_BEGIN(WebGLContext)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextWebGL)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)

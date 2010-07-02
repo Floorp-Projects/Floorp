@@ -21,6 +21,7 @@ toolkit.jar:
 * skin/classic/global/findBar.css
 * skin/classic/global/global.css
   skin/classic/global/groupbox.css
+* skin/classic/global/headsUpDisplay.css
   skin/classic/global/linkTree.css
   skin/classic/global/listbox.css
   skin/classic/global/menu.css
@@ -97,6 +98,8 @@ toolkit.jar:
   skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
   skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
   skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
+  skin/classic/global/icons/resizer.png                              (icons/resizer.png)
+  skin/classic/global/icons/resizer-rtl.png                          (icons/resizer-rtl.png)
   skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
   skin/classic/global/icons/searchfield-regular-cancel.png           (icons/searchfield-regular-cancel.png)
   skin/classic/global/icons/searchfield-small-cancel.png             (icons/searchfield-small-cancel.png)

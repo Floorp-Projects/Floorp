@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<head>
+<title>Test for bug 521720</title>
+<style type="text/css">
+
+p {
+  -moz-transform-origin: inherit;
+  -moz-transform: scale(2);
+  height: 10px;
+  width: 10px;
+  background: green;
+  margin: 50px;
+}
+
+</style>
+<head>
+<body onload="document.getElementById('a').style.removeProperty('-moz-transform-origin');">
+<div id="a" style="-moz-transform-origin: 10px 10px">
+<p style="font-size: 10px"></p>
+</div>
+</body>

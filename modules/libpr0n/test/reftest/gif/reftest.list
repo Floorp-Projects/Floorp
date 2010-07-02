@@ -14,4 +14,4 @@
 
 # a transparent gif that disposes previous frames with clear; we must properly
 # clear each frame to pass.
-== delaytest.html?transparent-animation.gif transparent-animation-finalframe.gif
+random == delaytest.html?transparent-animation.gif transparent-animation-finalframe.gif # incorrect timing dependence (bug 558678)

@@ -140,6 +140,7 @@ _TEST_FILES = \
 		test_tmpl_simplesyntaxfilter.xul \
 		test_tmpl_sortascendingquerysyntax.xul \
 		test_tmpl_sortdescendingquerysyntax.xul \
+		test_tmpl_sortascendinginteger.xul \
 		test_tmpl_sortunknownascendingquerysyntax.xul \
 		test_tmpl_sortresourceascendingquerysyntax.xul \
 		test_tmpl_sortresourcedescendingquerysyntax.xul \

@@ -141,7 +141,8 @@ public:
         T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS ,
         T_UTF8STRING        = TD_UTF8STRING       ,
         T_CSTRING           = TD_CSTRING          ,
-        T_ASTRING           = TD_ASTRING
+        T_ASTRING           = TD_ASTRING          ,
+        T_JSVAL             = TD_JSVAL
     };
 // NO DATA - this a flyweight wrapper
 };
@@ -182,6 +183,7 @@ public:
     PRBool IsConstructor() const {return 0 != (XPT_MD_IS_CTOR(flags)   );}
     PRBool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
     PRBool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
+    PRBool WantsContext()  const {return 0 != (XPT_MD_WANTS_CONTEXT(flags));}
     const char* GetName()  const {return name;}
     PRUint8 GetParamCount()  const {return num_args;}
     /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */

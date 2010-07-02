@@ -44,99 +44,23 @@ import tempfile
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
 from automation import Automation
+from remoteautomation import RemoteAutomation
 from runtests import Mochitest
 from runtests import MochitestOptions
 from runtests import MochitestServer
 
 import devicemanager
 
-class RemoteAutomation(Automation):
-    _devicemanager = None
-    
-    def __init__(self, deviceManager, product):
-        self._devicemanager = deviceManager
-        self._product = product
-        Automation.__init__(self)
-
-    def setDeviceManager(self, deviceManager):
-        self._devicemanager = deviceManager
-        
-    def setProduct(self, productName):
-        self._product = productName
-        
-    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo):
-        status = proc.wait()
-        print proc.stdout
-        # todo: consider pulling log file from remote
-        return status
-        
-    def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
-        cmd, args = Automation.buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs)
-        # Remove -foreground if it exists, if it doesn't this just returns
-        try:
-          args.remove('-foreground')
-        except:
-          pass
-#TODO: figure out which platform require NO_EM_RESTART
-#        return app, ['--environ:NO_EM_RESTART=1'] + args
-        return app, args
-
-    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
-        return self.RProcess(self._devicemanager, self._product, cmd, stdout, stderr, env, cwd)
-
-    # be careful here as this inner class doesn't have access to outer class members    
-    class RProcess(object):
-        # device manager process
-        dm = None
-        def __init__(self, dm, product, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
-            self.dm = dm
-            print "going to launch process: " + str(self.dm.host)
-            self.proc = dm.launchProcess(cmd)
-            exepath = cmd[0]
-            name = exepath.split('/')[-1]
-            self.procName = name
-
-            # Setting timeout at 1 hour since on a remote device this takes much longer
-            self.timeout = 3600
-            time.sleep(15)
-
-        @property
-        def pid(self):
-            hexpid = self.dm.processExist(self.procName)
-            if (hexpid == '' or hexpid == None):
-                hexpid = "0x0"
-            return int(hexpid, 0)
-    
-        @property
-        def stdout(self):
-            return self.dm.getFile(self.proc)
- 
-        def wait(self, timeout = None):
-            timer = 0
-            interval = 5
-
-            if timeout == None:
-                timeout = self.timeout
-
-            while (self.dm.processExist(self.procName)):
-                time.sleep(interval)
-                timer += interval
-                if (timer > timeout):
-                    break
-
-            if (timer >= timeout):
-                return 1
-            return 0
- 
-        def kill(self):
-            self.dm.killProcess(self.procName)
- 
-
 class RemoteOptions(MochitestOptions):
 
     def __init__(self, automation, scriptdir, **kwargs):
         defaults = {}
         MochitestOptions.__init__(self, automation, scriptdir)
+
+        self.add_option("--remote-app-path", action="store",
+                    type = "string", dest = "remoteAppPath",
+                    help = "Path to remote executable relative to device root using only forward slashes. Either this or app must be specified but not both")
+        defaults["remoteAppPath"] = None
 
         self.add_option("--deviceIP", action="store",
                     type = "string", dest = "deviceIP",
@@ -148,7 +72,7 @@ class RemoteOptions(MochitestOptions):
                     help = "port of remote device to test")
         defaults["devicePort"] = 20701
 
-        self.add_option("--remoteProductName", action="store",
+        self.add_option("--remote-product-name", action="store",
                     type = "string", dest = "remoteProductName",
                     help = "The executable's name of remote product to test - either fennec or firefox, defaults to fennec")
         defaults["remoteProductName"] = "fennec"
@@ -188,35 +112,43 @@ class RemoteOptions(MochitestOptions):
         options.utilityPath = options.remoteTestRoot + "/bin"
         options.certPath = options.remoteTestRoot + "/certs"
 
+       
         if options.remoteWebServer == None and os.name != "nt":
-          options.remoteWebServer = get_lan_ip()
+            options.remoteWebServer = get_lan_ip()
         elif os.name == "nt":
-          print "ERROR: you must specify a remoteWebServer ip address\n"
-          return None
+            print "ERROR: you must specify a remoteWebServer ip address\n"
+            return None
 
         options.webServer = options.remoteWebServer
 
         if (options.deviceIP == None):
-          print "ERROR: you must provide a device IP"
-          return None
+            print "ERROR: you must provide a device IP"
+            return None
 
         if (options.remoteLogFile == None):
-          options.remoteLogFile =  automation._devicemanager.getDeviceRoot() + '/test.log'
+            options.remoteLogFile =  automation._devicemanager.getDeviceRoot() + '/test.log'
 
         # Set up our options that we depend on based on the above
         productRoot = options.remoteTestRoot + "/" + automation._product
         options.utilityPath = productRoot + "/bin"
 
-        # If provided, use cli value, otherwise reset as remoteTestRoot
-        if (options.app == None):
-             options.app = productRoot + "/" + options.remoteProductName
+        # remoteAppPath or app must be specified to find the product to launch
+        if (options.remoteAppPath and options.app):
+            print "ERROR: You cannot specify both the remoteAppPath and the app setting"
+            return None
+        elif (options.remoteAppPath):
+            options.app = options.remoteTestRoot + "/" + options.remoteAppPath
+        elif (options.app == None):
+            # Neither remoteAppPath nor app are set -- error
+            print "ERROR: You must specify either appPath or app"
+            return None
 
         # Only reset the xrePath if it wasn't provided
         if (options.xrePath == None):
-          if (automation._product == "fennec"):
-              options.xrePath = productRoot + "/xulrunner"
-          else:
-              options.xrePath = options.utilityPath
+            if (automation._product == "fennec"):
+                options.xrePath = productRoot + "/xulrunner"
+            else:
+                options.xrePath = options.utilityPath
 
         return options
 
@@ -254,54 +186,51 @@ class MochiRemote(Mochitest):
         self._dm.removeDir(self.remoteProfile)
 
     def findPath(self, paths, filename = None):
-      for path in paths:
-        p = path
-        if filename:
-          p = os.path.join(p, filename)
-        if os.path.exists(self.getFullPath(p)):
-          return path
-      return None
+        for path in paths:
+            p = path
+            if filename:
+                p = os.path.join(p, filename)
+            if os.path.exists(self.getFullPath(p)):
+                return path
+        return None
 
     def startWebServer(self, options):
-      """ Create the webserver on the host and start it up """
-      remoteXrePath = options.xrePath
-      remoteProfilePath = options.profilePath
-      remoteUtilityPath = options.utilityPath
-      localAutomation = Automation()
+        """ Create the webserver on the host and start it up """
+        remoteXrePath = options.xrePath
+        remoteProfilePath = options.profilePath
+        remoteUtilityPath = options.utilityPath
+        localAutomation = Automation()
 
-      paths = [options.xrePath, localAutomation.DIST_BIN, self._automation._product, os.path.join('..', self._automation._product)]
-      options.xrePath = self.findPath(paths)
-      if options.xrePath == None:
-        print "ERROR: unable to find xulrunner path for %s, please specify with --xre-path" % (os.name)
-        sys.exit(1)
-      paths.append("bin")
-      paths.append(os.path.join("..", "bin"))
+        paths = [options.xrePath, localAutomation.DIST_BIN, self._automation._product, os.path.join('..', self._automation._product)]
+        options.xrePath = self.findPath(paths)
+        if options.xrePath == None:
+            print "ERROR: unable to find xulrunner path for %s, please specify with --xre-path" % (os.name)
+            sys.exit(1)
+        paths.append("bin")
+        paths.append(os.path.join("..", "bin"))
 
-      xpcshell = "xpcshell"
-      if (os.name == "nt"):
-        xpcshell += ".exe"
+        xpcshell = "xpcshell"
+        if (os.name == "nt"):
+            xpcshell += ".exe"
       
-      if (options.utilityPath):
-        paths.insert(0, options.utilityPath)
-      options.utilityPath = self.findPath(paths, xpcshell)
-      if options.utilityPath == None:
-        print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
-        sys.exit(1)
+        if (options.utilityPath):
+            paths.insert(0, options.utilityPath)
+        options.utilityPath = self.findPath(paths, xpcshell)
+        if options.utilityPath == None:
+            print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
+            sys.exit(1)
 
-      options.profilePath = tempfile.mkdtemp()
-      self.server = MochitestServer(localAutomation, options)
-      self.server.start()
+        options.profilePath = tempfile.mkdtemp()
+        self.server = MochitestServer(localAutomation, options)
+        self.server.start()
 
-      self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
-      options.xrePath = remoteXrePath
-      options.utilityPath = remoteUtilityPath
-      options.profilePath = remoteProfilePath
+        self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
+        options.xrePath = remoteXrePath
+        options.utilityPath = remoteUtilityPath
+        options.profilePath = remoteProfilePath
          
     def stopWebServer(self, options):
         self.server.stop()
-        
-    def runExtensionRegistration(self, options, browserEnv):
-        pass
         
     def buildProfile(self, options):
         manifest = Mochitest.buildProfile(self, options)
@@ -311,7 +240,24 @@ class MochiRemote(Mochitest):
 
         options.profilePath = self.remoteProfile
         return manifest
-        
+    
+    def runExtensionRegistration(self, options, browserEnv):
+        """ run once with -silent to let the extension manager do its thing
+            and then exit the app
+            We do this on every run because we need to work around bug 570027
+        """
+        self._automation.log.info("INFO | runtestsremote.py | Performing extension manager registration: start.\n")
+        # Don't care about this |status|: |runApp()| reporting it should be enough.
+        # Because process() doesn't return until fennec starts, we just give it a fudge
+        # factor of 20s before timing it out and killing it.
+        status = self._automation.runApp(None, browserEnv, options.app,
+                                options.profilePath, ["-silent"],
+                                utilityPath = options.utilityPath,
+                                xrePath = options.xrePath,
+                                symbolsPath=options.symbolsPath,
+                                maxTime = 20)
+        # We don't care to call |processLeakLog()| for this step.
+        self._automation.log.info("\nINFO | runtestsremote.py | Performing extension manager registration: end.")
     def buildURLOptions(self, options):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
@@ -336,27 +282,27 @@ class MochiRemote(Mochitest):
 # utilities to get the local ip address
 #
 if os.name != "nt":
-  import fcntl
-  import struct
-  def get_interface_ip(ifname):
-      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-      return socket.inet_ntoa(fcntl.ioctl(
-                      s.fileno(),
-                      0x8915,  # SIOCGIFADDR
-                      struct.pack('256s', ifname[:15])
-                      )[20:24])
+    import fcntl
+    import struct
+    def get_interface_ip(ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+                                s.fileno(),
+                                0x8915,  # SIOCGIFADDR
+                                struct.pack('256s', ifname[:15])
+                                )[20:24])
 
 def get_lan_ip():
-  ip = socket.gethostbyname(socket.gethostname())
-  if ip.startswith("127.") and os.name != "nt":
-    interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
-    for ifname in interfaces:
-      try:
-        ip = get_interface_ip(ifname)
-        break;
-      except IOError:
-        pass
-  return ip
+    ip = socket.gethostbyname(socket.gethostname())
+    if ip.startswith("127.") and os.name != "nt":
+        interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                break;
+            except IOError:
+                pass
+    return ip
 
 
 def main():
@@ -370,24 +316,24 @@ def main():
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):
-      print "ERROR: Invalid options specified, use --help for a list of valid options"
-      sys.exit(1)
+        print "ERROR: Invalid options specified, use --help for a list of valid options"
+        sys.exit(1)
 
     productPieces = options.remoteProductName.split('.')
     if (productPieces != None):
-      auto.setProduct(productPieces[0])
+        auto.setProduct(productPieces[0])
     else:
-      auto.setProduct(options.remoteProductName)
+        auto.setProduct(options.remoteProductName)
 
     mochitest = MochiRemote(auto, dm, options)
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
-      sys.exit(1)
+        sys.exit(1)
     
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
     sys.exit(mochitest.runTests(options))
     
 if __name__ == "__main__":
-  main()
+    main()
 

@@ -38,7 +38,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl">
+<bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation implements="nsIObserver, nsIDOMEventListener">
@@ -679,5 +681,4 @@
 
     </implementation>
   </binding>
-
 </bindings>

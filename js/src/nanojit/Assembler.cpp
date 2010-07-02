@@ -89,6 +89,17 @@ namespace nanojit
         reset();
     }
 
+    // Per-opcode register hint table.  Default to no hints for all
+    // instructions.  It's not marked const because individual back-ends can
+    // install hint values for opcodes of interest in nInit().
+    RegisterMask hints[LIR_sentinel+1] = {
+#define OP___(op, number, repKind, retType, isCse) \
+        0,
+#include "LIRopcode.tbl"
+#undef OP___
+        0
+    };
+
 #ifdef _DEBUG
 
     /*static*/ LIns* const AR::BAD_ENTRY = (LIns*)0xdeadbeef;
@@ -405,7 +416,7 @@ namespace nanojit
     // optimize the LIR_allocp case by indexing off FP, thus saving the use of
     // a GpReg.
     //
-    Register Assembler::getBaseReg(LInsp base, int &d, RegisterMask allow)
+    Register Assembler::getBaseReg(LIns* base, int &d, RegisterMask allow)
     {
     #if !PEDANTIC
         if (base->isop(LIR_allocp)) {
@@ -443,6 +454,12 @@ namespace nanojit
         (void) d;
     #endif
         findRegFor2(allowValue, value, rv, allowBase, base, rb);
+    }
+
+    RegisterMask Assembler::hint(LIns* ins)
+    {
+        RegisterMask prefer = nHints[ins->opcode()];
+        return (prefer == PREFER_SPECIAL) ? nHint(ins) : prefer;
     }
 
     // Finds a register in 'allow' to hold the result of 'ins'.  Used when we
@@ -637,7 +654,7 @@ namespace nanojit
         return r;
     }
 
-    void Assembler::asm_maybe_spill(LInsp ins, bool pop)
+    void Assembler::asm_maybe_spill(LIns* ins, bool pop)
     {
         int d = ins->isInAr() ? arDisp(ins) : 0;
         Register r = ins->getReg();
@@ -751,7 +768,7 @@ namespace nanojit
     }
 #endif
 
-    NIns* Assembler::asm_exit(LInsp guard)
+    NIns* Assembler::asm_exit(LIns* guard)
     {
         SideExit *exit = guard->record()->exit;
         NIns* at = 0;
@@ -770,7 +787,7 @@ namespace nanojit
         return at;
     }
 
-    NIns* Assembler::asm_leave_trace(LInsp guard)
+    NIns* Assembler::asm_leave_trace(LIns* guard)
     {
         verbose_only( verbose_outputf("----------------------------------- ## END exit block %p", guard);)
 
@@ -1169,14 +1186,14 @@ namespace nanojit
 #define countlir_jtbl()
 #endif
 
-    void Assembler::asm_jmp(LInsp ins, InsList& pending_lives)
+    void Assembler::asm_jmp(LIns* ins, InsList& pending_lives)
     {
         NanoAssert((ins->isop(LIR_j) && !ins->oprnd1()) ||
                    (ins->isop(LIR_jf) && ins->oprnd1()->isImmI(0)) ||
                    (ins->isop(LIR_jt) && ins->oprnd1()->isImmI(1)));
 
         countlir_jmp();
-        LInsp to = ins->getTarget();
+        LIns* to = ins->getTarget();
         LabelState *label = _labels.get(to);
         // The jump is always taken so whatever register state we
         // have from downstream code, is irrelevant to code before
@@ -1203,7 +1220,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_jcc(LInsp ins, InsList& pending_lives)
+    void Assembler::asm_jcc(LIns* ins, InsList& pending_lives)
     {
         bool branchOnFalse = (ins->opcode() == LIR_jf);
         LIns* cond = ins->oprnd1();
@@ -1219,7 +1236,7 @@ namespace nanojit
         // Changes to the logic below will likely need to be propagated to Assembler::asm_jov().
 
         countlir_jcc();
-        LInsp to = ins->getTarget();
+        LIns* to = ins->getTarget();
         LabelState *label = _labels.get(to);
         if (label && label->addr) {
             // Forward jump to known label.  Need to merge with label's register state.
@@ -1243,14 +1260,14 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_jov(LInsp ins, InsList& pending_lives)
+    void Assembler::asm_jov(LIns* ins, InsList& pending_lives)
     {
         // The caller is responsible for countlir_* profiling, unlike
         // asm_jcc above.  The reason for this is that asm_jov may not be
         // be called if the instruction is dead, and it is our convention
         // to count such instructions anyway.
         LOpcode op = ins->opcode();
-        LInsp to = ins->getTarget();
+        LIns* to = ins->getTarget();
         LabelState *label = _labels.get(to);
         if (label && label->addr) {
             // forward jump to known label.  need to merge with label's register state.
@@ -1274,7 +1291,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_x(LInsp ins)
+    void Assembler::asm_x(LIns* ins)
     {
         verbose_only( _thisfrag->nStaticExits++; )
         countlir_x();
@@ -1283,7 +1300,7 @@ namespace nanojit
         JMP(exit);
     }
 
-    void Assembler::asm_xcc(LInsp ins)
+    void Assembler::asm_xcc(LIns* ins)
     {
         LIns* cond = ins->oprnd1();
         if (cond->isImmI()) {
@@ -1356,7 +1373,7 @@ namespace nanojit
 
         for (currIns = reader->read(); !currIns->isop(LIR_start); currIns = reader->read())
         {
-            LInsp ins = currIns;        // give it a shorter name for local use
+            LIns* ins = currIns;        // give it a shorter name for local use
 
             if (!ins->isLive()) {
                 NanoAssert(!ins->isExtant());
@@ -1389,7 +1406,7 @@ namespace nanojit
                 CASE64(LIR_liveq:)
                 case LIR_lived: {
                     countlir_live();
-                    LInsp op1 = ins->oprnd1();
+                    LIns* op1 = ins->oprnd1();
                     op1->setResultLive();
                     // LIR_allocp's are meant to live until the point of the
                     // LIR_livep instruction, marking other expressions as
@@ -1460,7 +1477,7 @@ namespace nanojit
 
 #if NJ_SOFTFLOAT_SUPPORTED
                 case LIR_hcalli: {
-                    LInsp op1 = ins->oprnd1();
+                    LIns* op1 = ins->oprnd1();
                     op1->setResultLive();
                     if (ins->isExtant()) {
                         // Return result of quad-call in register.
@@ -1979,10 +1996,10 @@ namespace nanojit
 
     void Assembler::assignParamRegs()
     {
-        LInsp state = _thisfrag->lirbuf->state;
+        LIns* state = _thisfrag->lirbuf->state;
         if (state)
             findSpecificRegForUnallocated(state, argRegs[state->paramArg()]);
-        LInsp param1 = _thisfrag->lirbuf->param1;
+        LIns* param1 = _thisfrag->lirbuf->param1;
         if (param1)
             findSpecificRegForUnallocated(param1, argRegs[param1->paramArg()]);
     }

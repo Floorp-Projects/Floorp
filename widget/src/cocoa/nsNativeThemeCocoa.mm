@@ -60,6 +60,7 @@
 #include "nsToolkit.h"
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
+#include "nsIScrollableFrame.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -2285,6 +2286,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       HIRect bounds;
       HIThemeGetGrowBoxBounds(&pnt, &drawInfo, &bounds);
       aResult->SizeTo(bounds.size.width, bounds.size.height);
+      *aIsOverridable = PR_FALSE;
     }
   }
 
@@ -2383,7 +2385,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
-    case NS_THEME_RESIZER:
     
     case NS_THEME_CHECKBOX:
     case NS_THEME_CHECKBOX_CONTAINER:
@@ -2441,6 +2442,22 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_DROPDOWN_TEXTFIELD:
       return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
       break;
+
+    case NS_THEME_RESIZER:
+    {
+      nsIFrame* parentFrame = aFrame->GetParent();
+      if (!parentFrame || parentFrame->GetType() != nsWidgetAtoms::scrollFrame)
+        return PR_TRUE;
+
+      // Note that IsWidgetStyled is not called for resizers on Mac. This is
+      // because for scrollable containers, the native resizer looks better
+      // when scrollbars are present even when the style is overriden, and the
+      // custom transparent resizer looks better when scrollbars are not
+      // present.
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(parentFrame);
+      return (scrollFrame && scrollFrame->GetScrollbarVisibility());
+      break;
+    }
   }
 
   return PR_FALSE;
@@ -2480,12 +2497,12 @@ nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
   return PR_FALSE;
 }
 
-nsTransparencyMode
-nsNativeThemeCocoa::GetWidgetTransparency(PRUint8 aWidgetType)
+nsITheme::Transparency
+nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP)
-    return eTransparencyTransparent;
+    return eTransparent;
 
-  return eTransparencyOpaque;
+  return eUnknownTransparency;
 }

@@ -22,6 +22,39 @@ tabbrowser {
 
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+  -moz-box-flex: 100;
+}
+
+.tabbrowser-tab:not([fadein]) {
+  max-width: 1px !important;
+  min-width: 1px !important;
+}
+
+.tabbrowser-tab[fadein]:not([pinned]) {
+  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
+}
+
+.tabbrowser-tab:not([fadein]) > .tab-text,
+.tabbrowser-tab:not([fadein]) > .tab-icon-image,
+.tabbrowser-tab:not([fadein]) > .tab-close-button {
+  opacity: 0 !important;
+}
+
+.tabbrowser-tab[fadein] > .tab-text,
+.tabbrowser-tab[fadein] > .tab-icon-image,
+.tabbrowser-tab[fadein] > .tab-close-button {
+  -moz-transition: opacity .25s;
+}
+
+.tabbrowser-tab[pinned] {
+  position: fixed;
+  -moz-box-flex: 0;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.tabbrowser-tab[pinned] > .tab-text {
+  display: none;
 }
 
 #alltabs-popup {
@@ -71,6 +104,11 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 #browser-bottombox[lwthemefooter="true"] {
   background-repeat: no-repeat;
   background-position: bottom left;
+}
+
+.split-menuitem-menu > .menu-text,
+.split-menuitem-menu > .menu-accel-container {
+  display: none;
 }
 
 /* ::::: location bar ::::: */
@@ -161,9 +199,21 @@ toolbarbutton.bookmark-item {
   max-width: 13em;
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+#toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
+#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button,
+#toolbar-menubar:not([autohide="true"]) > #personal-bookmarks > #bookmarks-menu-button {
+  display: none;
+}
+%endif
+
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;
+}
+
+menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
+  display: none;
 }
 
 menuitem.spell-suggestion {
@@ -204,8 +254,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 /*  Full Screen UI */
 #fullscr-toggler {
   display: none;
-  min-height: 5px;
-  height: 5px;
+  min-height: 1px;
+  height: 1px;
+  background: black;
+  border-style: none;
+  -moz-appearance: none;
 }
 
 #navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,
@@ -266,4 +319,14 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #highlighter-panel {
   -moz-appearance: none;
   -moz-window-shadow: none;
+}
+
+/* notification anchors should only be visible when their associated
+   notifications are */
+.notification-anchor-icon {
+  display: none;
+}
+
+#notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon {
+  display: -moz-box;
 }

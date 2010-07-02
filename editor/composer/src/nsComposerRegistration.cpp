@@ -126,19 +126,19 @@ CreateControllerWithSingletonCommandTable(const nsCID& inCommandTableCID, nsICon
 {
   nsresult rv;
   nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIControllerCommandTable> composerCommandTable = do_GetService(inCommandTableCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // this guy is a singleton, so make it immutable
   composerCommandTable->MakeImmutable();
   
   nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   rv = controllerContext->Init(composerCommandTable);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   *aResult = controller;
   NS_ADDREF(*aResult);
@@ -154,7 +154,7 @@ nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
 {
   nsCOMPtr<nsIController> controller;
   nsresult rv = CreateControllerWithSingletonCommandTable(kHTMLEditorDocStateCommandTableCID, getter_AddRefs(controller));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return controller->QueryInterface(aIID, aResult);
 }
@@ -166,7 +166,7 @@ nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aRe
 {
   nsCOMPtr<nsIController> controller;
   nsresult rv = CreateControllerWithSingletonCommandTable(kHTMLEditorCommandTableCID, getter_AddRefs(controller));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return controller->QueryInterface(aIID, aResult);
 }
@@ -179,10 +179,10 @@ nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
   nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   rv = nsComposerController::RegisterHTMLEditorCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // we don't know here whether we're being created as an instance,
   // or a service, so we can't become immutable
@@ -199,10 +199,10 @@ nsHTMLEditorDocStateCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
   nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   rv = nsComposerController::RegisterEditorDocStateCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // we don't know here whether we're being created as an instance,
   // or a service, so we can't become immutable

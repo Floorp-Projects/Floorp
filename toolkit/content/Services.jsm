@@ -81,9 +81,11 @@ XPCOMUtils.defineLazyServiceGetter(Services, "prompt",
                                    "@mozilla.org/embedcomp/prompt-service;1",
                                    "nsIPromptService");
 
+#ifdef MOZ_TOOLKIT_SEARCH
 XPCOMUtils.defineLazyServiceGetter(Services, "search",
                                    "@mozilla.org/browser/search-service;1",
                                    "nsIBrowserSearchService");
+#endif
 
 XPCOMUtils.defineLazyServiceGetter(Services, "storage",
                                    "@mozilla.org/storage/service;1",

@@ -51,18 +51,18 @@
 class nsBoxLayoutState;
 
 // flags from box
-#define NS_STATE_BOX_CHILD_RESERVED      0x00100000
-#define NS_STATE_STACK_NOT_POSITIONED    0x00200000
-//#define NS_STATE_IS_HORIZONTAL           0x00400000  moved to nsIFrame.h
-#define NS_STATE_AUTO_STRETCH            0x00800000
-//#define NS_STATE_IS_ROOT                 0x01000000  moved to nsBox.h
-#define NS_STATE_CURRENTLY_IN_DEBUG      0x02000000
-//#define NS_STATE_SET_TO_DEBUG            0x04000000  moved to nsBox.h
-//#define NS_STATE_DEBUG_WAS_SET           0x08000000  moved to nsBox.h
-//                                         0x10000000  not used anymore
-#define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK 0x20000000
-#define NS_STATE_EQUAL_SIZE              0x40000000
-//#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000  moved to nsIFrame.h
+#define NS_STATE_BOX_CHILD_RESERVED      NS_FRAME_STATE_BIT(20)
+#define NS_STATE_STACK_NOT_POSITIONED    NS_FRAME_STATE_BIT(21)
+//#define NS_STATE_IS_HORIZONTAL           NS_FRAME_STATE_BIT(22)  moved to nsIFrame.h
+#define NS_STATE_AUTO_STRETCH            NS_FRAME_STATE_BIT(23)
+//#define NS_STATE_IS_ROOT                 NS_FRAME_STATE_BIT(24)  moved to nsBox.h
+#define NS_STATE_CURRENTLY_IN_DEBUG      NS_FRAME_STATE_BIT(25)
+//#define NS_STATE_SET_TO_DEBUG            NS_FRAME_STATE_BIT(26)  moved to nsBox.h
+//#define NS_STATE_DEBUG_WAS_SET           NS_FRAME_STATE_BIT(27)  moved to nsBox.h
+//                                         NS_FRAME_STATE_BIT(28)  not used anymore
+#define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK NS_FRAME_STATE_BIT(29)
+#define NS_STATE_EQUAL_SIZE              NS_FRAME_STATE_BIT(30)
+//#define NS_STATE_IS_DIRECTION_NORMAL     NS_FRAME_STATE_BIT(31)  moved to nsIFrame.h
 
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext,

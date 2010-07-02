@@ -430,6 +430,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
     JSBool chromeOnly = JS_FALSE;
     JSBool crossDoubleWrapped = JS_FALSE;
+    JSBool needsXOW = JS_FALSE;
 
     if(sciWrapper.GetFlags().WantPreCreate())
     {
@@ -439,7 +440,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(NS_FAILED(rv))
             return rv;
 
-        chromeOnly = (rv == NS_SUCCESS_CHROME_ACCESS_ONLY);
+        if(rv == NS_SUCCESS_CHROME_ACCESS_ONLY)
+            chromeOnly = JS_TRUE;
+        else if(rv == NS_SUCCESS_NEEDS_XOW)
+            needsXOW = JS_TRUE;
         rv = NS_OK;
 
         NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
@@ -535,7 +539,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
         proto->CacheOffsets(identity);
 
-        wrapper = new XPCWrappedNative(identity.get(), proto);
+        wrapper = needsXOW
+                  ? new XPCWrappedNativeWithXOW(identity.get(), proto)
+                  : new XPCWrappedNative(identity.get(), proto);
         if(!wrapper)
             return NS_ERROR_FAILURE;
     }
@@ -551,7 +557,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(!set)
             return NS_ERROR_FAILURE;
 
-        wrapper = new XPCWrappedNative(identity.get(), Scope, set);
+        wrapper = needsXOW
+                  ? new XPCWrappedNativeWithXOW(identity.get(), Scope, set)
+                  : new XPCWrappedNative(identity.get(), Scope, set);
         if(!wrapper)
             return NS_ERROR_FAILURE;
 
@@ -850,6 +858,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mScriptableInfo(nsnull),
       mWrapperWord(0)
 {
+    PR_STATIC_ASSERT(LAST_FLAG & JSVAL_TAGMASK);
     mIdentity = aIdentity.get();
 
     NS_ASSERTION(mMaybeProto, "bad ctor param");
@@ -1356,6 +1365,25 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
 
     // This makes IsValid return false from now on...
     mFlatJSObject = nsnull;
+
+    // Because order of finalization is random, we need to be careful here: if
+    // we're getting finalized, then it means that any XOWs in our cache are
+    // also getting finalized (or else we would be marked). But it's possible
+    // for us to outlive our cached XOW. So, in order to make it safe for the
+    // cached XOW to clear the cache, we need to finalize it first.
+    if(NeedsXOW())
+    {
+        XPCWrappedNativeWithXOW* wnxow =
+            static_cast<XPCWrappedNativeWithXOW *>(this);
+        if(JSObject* wrapper = wnxow->GetXOW())
+        {
+            wrapper->getClass()->finalize(cx, wrapper);
+            NS_ASSERTION(!XPCWrapper::UnwrapGeneric(cx,
+                                                    &XPCCrossOriginWrapper::XOWClass,
+                                                    wrapper),
+                         "finalize didn't do its job");
+        }
+    }
 
     NS_ASSERTION(mIdentity, "bad pointer!");
 #ifdef XP_WIN
@@ -2120,6 +2148,7 @@ class CallMethodHelper
     const jsid mIdxValueId;
 
     nsAutoTArray<nsXPTCVariant, 8> mDispatchParams;
+    uint8 mJSContextIndex; // TODO make const
     uint8 mOptArgcIndex; // TODO make const
 
     // Reserve space for one nsAutoString. We don't want the string itself
@@ -2169,6 +2198,8 @@ class CallMethodHelper
     nsXPTCVariant*
     GetDispatchParam(uint8 paramIndex)
     {
+        if (paramIndex >= mJSContextIndex)
+            paramIndex += 1;
         if (paramIndex >= mOptArgcIndex)
             paramIndex += 1;
         return &mDispatchParams[paramIndex];
@@ -2195,6 +2226,7 @@ public:
         , mCallee(ccx.GetTearOff()->GetNative())
         , mVTableIndex(ccx.GetMethodIndex())
         , mIdxValueId(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_VALUE))
+        , mJSContextIndex(PR_UINT8_MAX)
         , mOptArgcIndex(PR_UINT8_MAX)
         , mArgv(ccx.GetArgv())
         , mArgc(ccx.GetArgc())
@@ -2380,8 +2412,11 @@ CallMethodHelper::~CallMethodHelper()
                 delete (nsCString*) p;
             else if(dp->IsValCString())
                 delete (nsCString*) p;
-        }
+            else if(dp->IsValJSRoot())
+                JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
+        }   
     }
+
 }
 
 JSBool
@@ -2565,7 +2600,7 @@ CallMethodHelper::GatherAndConvertResults()
 
         if(paramInfo.IsRetval())
         {
-            if(!mCallContext.GetReturnValueWasSet())
+            if(!mCallContext.GetReturnValueWasSet() && type.TagPart() != nsXPTType::T_JSVAL)
                 mCallContext.SetRetVal(v);
         }
         else if(i < mArgc)
@@ -2653,12 +2688,17 @@ JSBool
 CallMethodHelper::InitializeDispatchParams()
 {
     const uint8 wantsOptArgc = mMethodInfo->WantsOptArgc() ? 1 : 0;
+    const uint8 wantsJSContext = mMethodInfo->WantsContext() ? 1 : 0;
     const uint8 paramCount = mMethodInfo->GetParamCount();
     uint8 requiredArgs = paramCount;
+    uint8 hasRetval = 0;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     if(paramCount && mMethodInfo->GetParam(paramCount-1).IsRetval())
+    {
+        hasRetval = 1;
         requiredArgs--;
+    }
 
     if(mArgc < requiredArgs || wantsOptArgc)
     {
@@ -2675,12 +2715,29 @@ CallMethodHelper::InitializeDispatchParams()
         }
     }
 
+    if(wantsJSContext)
+    {
+        if(wantsOptArgc)
+            // Need to bump mOptArgcIndex up one here.
+            mJSContextIndex = mOptArgcIndex++;
+        else
+            mJSContextIndex = paramCount - hasRetval;
+    }
+
     // iterate through the params to clear flags (for safe cleanup later)
-    for(uint8 i = 0; i < paramCount + wantsOptArgc; i++)
+    for(uint8 i = 0; i < paramCount + wantsJSContext + wantsOptArgc; i++)
     {
         nsXPTCVariant* dp = mDispatchParams.AppendElement();
         dp->ClearFlags();
         dp->val.p = nsnull;
+    }
+
+    // Fill in the JSContext argument
+    if(wantsJSContext)
+    {
+        nsXPTCVariant* dp = &mDispatchParams[mJSContextIndex];
+        dp->type = nsXPTType::T_VOID;
+        dp->val.p = mCallContext;
     }
 
     // Fill in the optional_argc argument
@@ -2728,6 +2785,22 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
         {
             dp->SetPtrIsData();
             dp->ptr = &dp->val;
+
+            if (type_tag == nsXPTType::T_JSVAL)
+            {
+                if (paramInfo.IsRetval())
+                {
+                    dp->ptr = mCallContext.GetRetVal();
+                }
+                else
+                {
+                    jsval *rootp = (jsval *)&dp->val.p;
+                    dp->ptr = rootp;
+                    *rootp = JSVAL_VOID;
+                    if (!JS_AddValueRoot(mCallContext, rootp))
+                        return JS_FALSE;
+                }
+            }
 
             if(type.IsPointer() &&
                type_tag != nsXPTType::T_INTERFACE &&

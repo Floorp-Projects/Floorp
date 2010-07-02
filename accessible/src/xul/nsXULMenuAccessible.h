@@ -43,7 +43,7 @@
 #include "nsIAccessibleSelectable.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 
-/*
+/**
  * The basic implementation of nsIAccessibleSelectable.
  */
 class nsXULSelectableAccessible : public nsAccessibleWrap
@@ -52,11 +52,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
 
-  nsXULSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  nsXULSelectableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsXULSelectableAccessible() {}
 
   // nsAccessNode
-  virtual nsresult Shutdown();
+  virtual void Shutdown();
 
 protected:
   nsresult ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
@@ -66,15 +66,15 @@ protected:
   nsCOMPtr<nsIDOMXULSelectControlElement> mSelectControl;
 };
 
-/* Accessible for supporting XUL menus
+/**
+ * Used for XUL menu, menuitem elements.
  */
-
 class nsXULMenuitemAccessible : public nsAccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };
 
-  nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsXULMenuitemAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetDescription(nsAString& aDescription);
@@ -85,7 +85,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
 
   // nsAccessNode
-  virtual nsresult Init();
+  virtual PRBool Init();
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -98,10 +98,13 @@ public:
   virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
+/**
+ * Used for XUL menuseparator element.
+ */
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
 {
 public:
-  nsXULMenuSeparatorAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsXULMenuSeparatorAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
@@ -121,7 +124,7 @@ public:
 class nsXULMenupopupAccessible : public nsXULSelectableAccessible
 {
 public:
-  nsXULMenupopupAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsXULMenupopupAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -129,10 +132,13 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
+/**
+ * Used for XUL menubar element.
+ */
 class nsXULMenubarAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULMenubarAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsXULMenubarAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);

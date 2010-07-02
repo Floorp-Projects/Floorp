@@ -20,23 +20,41 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
 
     function testThis(aID, aCharIndex, aExpectedLinkIndex, aName)
     {
-      is(gParagraphAcc.getLinkIndex(aCharIndex), aExpectedLinkIndex,
-         "Wrong link index for ID " + aID + "!");
-      var linkAcc = null;
-      try {
-        linkAcc = gParagraphAcc.getLink(aExpectedLinkIndex);
-      } catch(e) { }
+      is(gParagraphAcc.getLinkIndexAtOffset(aCharIndex), aExpectedLinkIndex,
+         "Wrong link index at offset " + aCharIndex + " for ID " + aID + "!");
+
+      var linkAcc = gParagraphAcc.getLinkAt(aExpectedLinkIndex);
       ok(linkAcc, "No accessible for link " + aID + "!");
+
+      var linkIndex = gParagraphAcc.getLinkIndex(linkAcc);
+      is(linkIndex, aExpectedLinkIndex, "Wrong link index for " + aID + "!");
 
       // Just test the link's name to make sure we get the right one.
       is(linkAcc.getAnchor(0).name, aName, "Wrong name for " + aID + "!");
     }
 
+    const kLinksCount = 128;
+    function prepareTest()
+    {
+      var container = document.getElementById("p3");
+      for (var jdx = 0; jdx < kLinksCount; jdx++) {
+        var a = document.createElement("a");
+        a.setAttribute("href", "mozilla.org");
+        a.textContent = "mozilla";
+        container.appendChild(a);
+
+        var span = document.createElement("span");
+        span.textContent = " text ";
+        container.appendChild(span);
+      }
+
+      window.setTimeout(doTest, 0);
+    }
+
     function doTest()
     {
-      gParagraphAcc = getAccessible("testParagraph", [nsIAccessibleHyperText]);
-
       // Test link count
+      gParagraphAcc = getAccessible("testParagraph", [nsIAccessibleHyperText]);
       is(gParagraphAcc.linkCount, 7, "Wrong link count for paragraph!");
 
       // normal hyperlink
@@ -60,16 +78,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       // Named anchor
       testThis("namedAnchor", 193, 6, "This should never be of state_linked");
 
+      // Paragraph with link
+      var p2 = getAccessible("p2", [nsIAccessibleHyperText]);
+      var link = p2.getLinkAt(0);
+      is(link, p2.getChildAt(0), "Wrong link for p2");
+      is(p2.linkCount, 1, "Wrong link count for p2");
+
+      // getLinkAt and getLinkIndex.
+      var container = document.getElementById("p3");
+      var htAcc = getAccessible(container, [nsIAccessibleHyperText]);
+      for (var jdx = 0; jdx < kLinksCount; jdx++) {
+        var link = htAcc.getLinkAt(jdx);
+        ok(link, "No link at index " + jdx + " for 'p3'");
+
+        var linkIdx = htAcc.getLinkIndex(link);
+        is(linkIdx, jdx, "Wrong link index for 'p3'!");
+      };
+
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yLoadEvent(prepareTest);
   </script>
 </head>
 <body>
 
-  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">Mozilla Bug 418368</a>
+  <a target="_blank"
+     title="Create tests for NSIAccessibleHyperlink interface"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">
+    Mozilla Bug 418368
+  </a><br>
+  <a target="_blank"
+     title="Cache links within hypertext accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=572394">
+    Mozilla Bug 572394
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -104,5 +148,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   >Named anchor, must not have "linked" state for it to be exposed correctly:<br
   ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
   </p>
+  <p id="p2"><a href="http://mozilla.org">mozilla.org</a></p>
+  <p id="p3"></p>
 </body>
 </html>

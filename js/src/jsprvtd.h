@@ -341,13 +341,12 @@ typedef JSBool
 (* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 /*
- * JSObjectOps.checkAccess type: check whether obj[id] may be accessed per
- * mode, returning false on error/exception, true on success with obj[id]'s
- * last-got value in *vp, and its attributes in *attrsp.
+ * The type of ops->call. Same argument types as JSFastNative, but a different
+ * contract. A JSCallOp expects a dummy stack frame with the caller's
+ * scopeChain.
  */
 typedef JSBool
-(* JSCheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                      jsval *vp, uintN *attrsp);
+(* JSCallOp)(JSContext *cx, uintN argc, jsval *vp);
 
 /*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes

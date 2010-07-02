@@ -7,14 +7,17 @@ x.innerHTML='\
 *::first-letter {float: right; }\
 ';
 document.documentElement.appendChild(x);
+
+setTimeout(removestyles,500);
 }
 setTimeout(addstyles1,200);
 
 function removestyles(i){
 document.getElementsByTagName('tfoot')[0].removeAttribute('style');
 document.getElementsByTagName('table')[0].removeAttribute('style');
+
+window.parent.document.documentElement.className = "";
 }
-setTimeout(removestyles,500);
 </script>
 <style>
 *::before { content:"before text";}

@@ -146,7 +146,7 @@ nsresult
 nsSVGBoolean::SMILBool::ValueFromString(const nsAString& aStr,
                                         const nsISMILAnimationElement* /*aSrcElement*/,
                                         nsSMILValue& aValue,
-                                        PRBool& aCanCache) const
+                                        PRBool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SMILBoolType::sSingleton);
 
@@ -158,7 +158,7 @@ nsSVGBoolean::SMILBool::ValueFromString(const nsAString& aStr,
     return NS_ERROR_FAILURE;
 
   aValue = val;
-  aCanCache = PR_TRUE;
+  aPreventCachingOfSandwich = PR_FALSE;
   return NS_OK;
 }
 

@@ -99,6 +99,10 @@ _TEST_FILES = 	findbar_window.xul \
 		window_titlebar.xul \
 		test_browser_drop.xul \
 		window_browser_drop.xul \
+		test_subframe_origin.xul \
+		window_subframe_origin.xul \
+		frame_subframe_origin_subframe1.xul \
+		frame_subframe_origin_subframe2.xul \
 		RegisterUnregisterChrome.js \
 		$(NULL)
 
@@ -106,7 +110,9 @@ _TEST_FILES = 	findbar_window.xul \
 # textboxes and lists only, so skip this test on Mac
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += test_panel_focus.xul \
-               window_panel_focus.xul
+               window_panel_focus.xul \
+               test_chromemargin.xul \
+               window_chromemargin.xul
 else
 _TEST_FILES += test_autocomplete.xul
 endif

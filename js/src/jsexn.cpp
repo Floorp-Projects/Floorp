@@ -697,8 +697,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
          * called as functions, without operator new.  But as we do not give
          * each constructor a distinct JSClass, whose .name member is used by
-         * NewObject to find the class prototype, we must get the class
-         * prototype ourselves.
+         * NewNativeClassInstance to find the class prototype, we must get the
+         * class prototype ourselves.
          */
         if (!argv[-2].asObject().getProperty(cx,
                                              ATOM_TO_JSID(cx->runtime->atomState
@@ -706,7 +706,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
                                              rval)) {
             return JS_FALSE;
         }
-        obj = NewObject(cx, &js_ErrorClass, &rval->asObject(), NULL);
+        JSObject *errProto = JSVAL_TO_OBJECT(*rval);
+        obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
         if (!obj)
             return JS_FALSE;
         rval->setObject(*obj);
@@ -975,7 +976,6 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 {
     jsval roots[3];
     JSObject *obj_proto, *error_proto;
-    jsval empty;
 
     /*
      * If lazy class initialization occurs for any Error subclass, then all
@@ -997,17 +997,13 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     error_proto = NULL;   /* quell GCC overwarning */
 #endif
 
+    jsval empty = STRING_TO_JSVAL(cx->runtime->emptyString);
+
     /* Initialize the prototypes first. */
     for (intN i = JSEXN_ERR; i != JSEXN_LIMIT; i++) {
-        JSObject *proto;
-        JSProtoKey protoKey;
-        JSAtom *atom;
-        JSFunction *fun;
-
         /* Make the prototype for the current constructor name. */
-        proto = NewObject(cx, &js_ErrorClass,
-                          (i != JSEXN_ERR) ? error_proto : obj_proto,
-                          obj);
+        JSObject *proto =
+            NewObject(cx, &js_ErrorClass, (i != JSEXN_ERR) ? error_proto : obj_proto, obj);
         if (!proto)
             return NULL;
         if (i == JSEXN_ERR) {
@@ -1023,9 +1019,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         proto->setPrivate(NULL);
 
         /* Make a constructor function for the current name. */
-        protoKey = GetExceptionProtoKey(i);
-        atom = cx->runtime->atomState.classAtoms[protoKey];
-        fun = js_DefineFunction(cx, obj, atom, Exception, 3, 0);
+        JSProtoKey protoKey = GetExceptionProtoKey(i);
+        JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
+        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, 0);
         if (!fun)
             return NULL;
         roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
@@ -1049,22 +1045,18 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* Finally, stash the constructor for later uses. */
         if (!js_SetClassObject(cx, obj, protoKey, FUN_OBJECT(fun), proto))
             return NULL;
+
+        /* Set default values. */
+        if (!JS_DefineProperty(cx, proto, js_message_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
+            !JS_DefineProperty(cx, proto, js_fileName_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
+            !JS_DefineProperty(cx, proto, js_lineNumber_str, JSVAL_ZERO, NULL, NULL,
+                               JSPROP_ENUMERATE)) {
+            return NULL;
+        }
     }
 
-    /*
-     * Set default values and add methods. We do it only for Error.prototype
-     * as the rest of exceptions delegate to it.
-     */
-    empty = STRING_TO_JSVAL(cx->runtime->emptyString);
-    if (!JS_DefineProperty(cx, error_proto, js_message_str, empty,
-                           NULL, NULL, JSPROP_ENUMERATE) ||
-        !JS_DefineProperty(cx, error_proto, js_fileName_str, empty,
-                           NULL, NULL, JSPROP_ENUMERATE) ||
-        !JS_DefineProperty(cx, error_proto, js_lineNumber_str, JSVAL_ZERO,
-                           NULL, NULL, JSPROP_ENUMERATE) ||
-        !JS_DefineFunctions(cx, error_proto, exception_methods)) {
+    if (!JS_DefineFunctions(cx, error_proto, exception_methods))
         return NULL;
-    }
 
     return error_proto;
 }
@@ -1162,7 +1154,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = NewObject(cx, &js_ErrorClass, errProto, NULL);
+    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
     if (!errObject) {
         ok = JS_FALSE;
         goto out;

@@ -222,14 +222,12 @@ nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
   return rv;
 }
 
-nsresult
+void
 nsINode::DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName)
 {
   nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable(aCategory)->DeleteProperty(this, aPropertyName);
+  if (doc)
+    doc->PropertyTable(aCategory)->DeleteProperty(this, aPropertyName);
 }
 
 void*
@@ -849,7 +847,7 @@ nsIContent::GetDesiredIMEState()
   if (!doc) {
     return IME_STATUS_DISABLE;
   }
-  nsIPresShell* ps = doc->GetPrimaryShell();
+  nsIPresShell* ps = doc->GetShell();
   if (!ps) {
     return IME_STATUS_DISABLE;
   }
@@ -2884,7 +2882,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+               // And the restyle bits
+               ELEMENT_ALL_RESTYLE_FLAGS);
   }
 
   // If NODE_FORCE_XBL_BINDINGS was set we might have anonymous children
@@ -3301,7 +3301,7 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
     // be in a document, if we're clearing animation effects on a target node
     // that's been detached since the previous animation sample.)
     if (doc) {
-      nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+      nsCOMPtr<nsIPresShell> shell = doc->GetShell();
       if (shell) {
         shell->RestyleForAnimation(this);
       }
@@ -3483,14 +3483,13 @@ nsGenericElement::GetScriptTypeID() const
 {
     PtrBits flags = GetFlags();
 
-    /* 4 bits reserved for script-type ID. */
-    return (flags >> NODE_SCRIPT_TYPE_OFFSET) & 0x000F;
+    return (flags >> NODE_SCRIPT_TYPE_OFFSET) & NODE_SCRIPT_TYPE_MASK;
 }
 
 NS_IMETHODIMP
 nsGenericElement::SetScriptTypeID(PRUint32 aLang)
 {
-    if ((aLang & 0x000F) != aLang) {
+    if ((aLang & NODE_SCRIPT_TYPE_MASK) != aLang) {
         NS_ERROR("script ID too large!");
         return NS_ERROR_FAILURE;
     }
@@ -3622,7 +3621,7 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   // A11y needs to be notified of content removals first, so accessibility
   // events can be fired before any changes occur
   if (aNotify && doc) {
-    nsIPresShell *presShell = doc->GetPrimaryShell();
+    nsIPresShell *presShell = doc->GetShell();
     if (presShell && presShell->IsAccessibilityActive()) {
       nsCOMPtr<nsIAccessibilityService> accService = 
         do_GetService("@mozilla.org/accessibilityService;1");
@@ -5379,7 +5378,7 @@ ParseSelectorList(nsINode* aNode,
   // It's not strictly necessary to have a prescontext here, but it's
   // a bit of an optimization for various stuff.
   *aPresContext = nsnull;
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   if (shell) {
     *aPresContext = shell->GetPresContext();
   }

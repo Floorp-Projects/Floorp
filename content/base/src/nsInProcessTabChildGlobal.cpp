@@ -57,13 +57,16 @@ bool SendSyncMessageToParent(void* aCallbackData,
 {
   nsInProcessTabChildGlobal* tabChild =
     static_cast<nsInProcessTabChildGlobal*>(aCallbackData);
-  PRInt32 count = tabChild->mASyncMessages.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsIRunnable> async = tabChild->mASyncMessages.SafeObjectAt(i);
+  nsCOMPtr<nsIContent> owner = tabChild->mOwner;
+  nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
+  asyncMessages.SwapElements(tabChild->mASyncMessages);
+  PRUint32 len = asyncMessages.Length();
+  for (PRInt32 i = 0; i < len; ++i) {
+    nsCOMPtr<nsIRunnable> async = asyncMessages[i];
     async->Run();
   }
   if (tabChild->mChromeMessageManager) {
-    tabChild->mChromeMessageManager->ReceiveMessage(tabChild->mOwner, aMessage, PR_TRUE,
+    tabChild->mChromeMessageManager->ReceiveMessage(owner, aMessage, PR_TRUE,
                                                     aJSON, nsnull, aJSONRetVal);
   }
   return true;
@@ -78,7 +81,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    mTabChild->mASyncMessages.RemoveObject(this);
+    mTabChild->mASyncMessages.RemoveElement(this);
     if (mTabChild->mChromeMessageManager) {
       mTabChild->mChromeMessageManager->ReceiveMessage(mTabChild->mOwner, mMessage,
                                                        PR_FALSE,
@@ -97,13 +100,13 @@ bool SendAsyncMessageToParent(void* aCallbackData,
 {
   nsInProcessTabChildGlobal* tabChild =
     static_cast<nsInProcessTabChildGlobal*>(aCallbackData);
-  nsRefPtr<nsIRunnable> ev = new nsAsyncMessageToParent(tabChild, aMessage, aJSON);
-  tabChild->mASyncMessages.AppendObject(ev);
+  nsCOMPtr<nsIRunnable> ev =
+    new nsAsyncMessageToParent(tabChild, aMessage, aJSON);
+  tabChild->mASyncMessages.AppendElement(ev);
   NS_DispatchToCurrentThread(ev);
   return true;
 }
 
-static int tabChildC = 0;
 nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
                                                      nsIContent* aOwner,
                                                      nsFrameMessageManager* aChrome)
@@ -179,6 +182,11 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
 void
 nsInProcessTabChildGlobal::Disconnect()
 {
+  nsCOMPtr<nsIDOMWindow> win = do_GetInterface(mDocShell);
+  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(win);
+  if (pwin) {
+    pwin->SetChromeEventHandler(pwin->GetChromeEventHandler());
+  }
   mDocShell = nsnull;
   mOwner = nsnull;
   mChromeMessageManager = nsnull;

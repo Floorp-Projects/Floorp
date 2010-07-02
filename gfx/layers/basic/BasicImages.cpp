@@ -188,7 +188,7 @@ BasicPlanarYCbCrImage::GetAsSurface()
   }
   nsRefPtr<gfxImageSurface> imgSurface =
       new gfxImageSurface(mBuffer, mSize,
-                          mSize.width * 4,
+                          mSize.width * gfxASurface::BytePerPixelFromFormat(gfxASurface::ImageFormatRGB24),
                           gfxASurface::ImageFormatRGB24);
   if (!imgSurface) {
     return nsnull;

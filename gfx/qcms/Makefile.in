@@ -16,10 +16,13 @@ EXPORTS      = qcms.h qcmstypes.h
 CSRCS = iccread.c transform.c
 
 ifeq (86,$(findstring 86,$(OS_TEST)))
-ifeq ($(OS_ARCH)_$(OS_TEST),WINNT_x86_64)
-	CSRCS += transform-sse2.c
+CSRCS += transform-sse2.c
+ifdef _MSC_VER
+ifneq ($(OS_ARCH)_$(OS_TEST),WINNT_x86_64)
+	CSRCS += transform-sse1.c
+endif
 else
-	CSRCS += transform-sse2.c transform-sse1.c
+	CSRCS += transform-sse1.c
 ifdef GNU_CC
 	SSE1_FLAGS=-msse
 	SSE2_FLAGS=-msse2
@@ -52,12 +55,12 @@ CFLAGS          += -DMOZ_QCMS
 
 
 # special rules for transform-sse*.c to get the right cflags. (taken from pixman/src/Makefile.in)
-transform-sse1.$(OBJ_SUFFIX): transform-sse1.c Makefile Makefile.in
+transform-sse1.$(OBJ_SUFFIX): transform-sse1.c $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE1_FLAGS) $(_VPATH_SRCS)
 
-transform-sse2.$(OBJ_SUFFIX): transform-sse2.c Makefile Makefile.in
+transform-sse2.$(OBJ_SUFFIX): transform-sse2.c $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE2_FLAGS) $(_VPATH_SRCS)

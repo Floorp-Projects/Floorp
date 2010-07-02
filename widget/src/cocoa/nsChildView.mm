@@ -41,6 +41,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+#include "prlog.h"
+
 #include <unistd.h>
  
 #include "nsChildView.h"
@@ -74,6 +79,9 @@
 #include "nsCocoaUtils.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
+#ifdef __LP64__
+#include "ComplexTextInputPanel.h"
+#endif
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -93,11 +101,6 @@ using namespace mozilla::layers;
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
-
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG
-#endif
-#include "prlog.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* sCocoaLog = nsnull;
@@ -420,9 +423,8 @@ ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSR
     i++;
   }
   // Get current caret position.
-  // Caret is indicator of insertion point, so mEndOffset = 0.
   aRanges[i].mStartOffset = selRange.location + selRange.length;                         
-  aRanges[i].mEndOffset = 0;                         
+  aRanges[i].mEndOffset = aRanges[i].mStartOffset;                         
   aRanges[i].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -478,7 +480,9 @@ nsChildView::nsChildView() : nsBaseWidget()
 #endif // PR_LOGGING
 
   memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
+#ifndef NP_NO_QUICKDRAW
   memset(&mPluginQDPort, 0, sizeof(mPluginQDPort));
+#endif
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
@@ -736,8 +740,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       UpdatePluginPort();
       if (mPluginIsCG)
         retVal = (void*)&mPluginCGContext;
+#ifndef NP_NO_QUICKDRAW
       else
         retVal = (void*)&mPluginQDPort;
+#endif
       break;
     }
   }
@@ -820,8 +826,8 @@ void nsChildView::UpdatePluginPort()
   NS_ASSERTION(mWindowType == eWindowType_plugin,
                "UpdatePluginPort called on non-plugin view");
 
-  NSWindow* cocoaWindow = [mView window];
 #if !defined(NP_NO_CARBON) || !defined(NP_NO_QUICKDRAW)
+  NSWindow* cocoaWindow = [mView window];
   WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
 #endif
 
@@ -959,6 +965,8 @@ LayerManager*
 nsChildView::GetLayerManager()
 {
   nsCocoaWindow* window = GetXULWindowWidget();
+  if (!window)
+    return nsnull;
   if (window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
     mLayerManager = NULL;
     mUseAcceleratedRendering = window->GetAcceleratedRendering();
@@ -1328,6 +1336,12 @@ NS_IMETHODIMP nsChildView::SetPluginEventModel(int inEventModel)
 NS_IMETHODIMP nsChildView::GetPluginEventModel(int* outEventModel)
 {
   *outEventModel = [(ChildView*)mView pluginEventModel];
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChildView::StartComplexTextInputForCurrentEvent()
+{
+  [(ChildView*)mView pluginRequestsComplexTextInputForCurrentEvent];
   return NS_OK;
 }
 
@@ -2191,6 +2205,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mKeyDownHandled = PR_FALSE;
     mKeyPressHandled = NO;
     mKeyPressSent = NO;
+    mPendingDisplay = NO;
 
     // initialization for NSTextInput
     mMarkedRange.location = NSNotFound;
@@ -2202,6 +2217,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #ifndef NP_NO_CARBON
     mPluginTSMDoc = nil;
 #endif
+    mPluginComplexTextInputRequested = NO;
 
     mGestureState = eGestureState_None;
     mCumulativeMagnification = 0.0;
@@ -2257,6 +2273,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  [mGLContext release];
   [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
   ChildViewMouseTracker::OnDestroyView(self);
@@ -2349,7 +2366,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mPendingFullDisplay = YES;
-  [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+  if (!mPendingDisplay) {
+    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+    mPendingDisplay = YES;
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2361,7 +2381,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mPendingDirtyRects)
     mPendingDirtyRects = [[NSMutableArray alloc] initWithCapacity:1];
   [mPendingDirtyRects addObject:[NSValue valueWithRect:invalidRect]];
-  [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+  if (!mPendingDisplay) {
+    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+    mPendingDisplay = YES;
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2374,13 +2397,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mPendingFullDisplay) {
     [self setNeedsDisplay:YES];
   }
-  else {
+  else if (mPendingDirtyRects) {
     unsigned int count = [mPendingDirtyRects count];
     for (unsigned int i = 0; i < count; ++i) {
       [self setNeedsDisplayInRect:[[mPendingDirtyRects objectAtIndex:i] rectValue]];
     }
   }
   mPendingFullDisplay = NO;
+  mPendingDisplay = NO;
   [mPendingDirtyRects release];
   mPendingDirtyRects = nil;
 
@@ -2520,12 +2544,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [super lockFocus];
 
-  if (mContext) {
-    if ([mContext view] != self) {
-      [mContext setView:self];
+  if (mGLContext) {
+    if ([mGLContext view] != self) {
+      [mGLContext setView:self];
     }
 
-    [mContext makeCurrentContext];
+    [mGLContext makeCurrentContext];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2569,8 +2593,8 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
 
 -(void)update
 {
-  if (mContext) {
-    [mContext update];
+  if (mGLContext) {
+    [mGLContext update];
   }
 }
 
@@ -2644,12 +2668,13 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   if (mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager());
     manager->SetClippingRegion(paintEvent.region); 
-    if (!mContext) {
-      mContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+    if (!mGLContext) {
+      mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+      [mGLContext retain];
     }
-    [mContext makeCurrentContext];
+    [mGLContext makeCurrentContext];
     mGeckoChild->DispatchWindowEvent(paintEvent);
-    [mContext flushBuffer];
+    [mGLContext flushBuffer];
     return;
   }
 
@@ -3260,7 +3285,9 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+#ifndef NP_NO_CARBON  
   EventRecord carbonEvent;
+#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON  
@@ -3311,7 +3338,9 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+#ifndef NP_NO_CARBON
   EventRecord carbonEvent;
+#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
@@ -4456,6 +4485,44 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   if (!mGeckoChild)
     return;
 
+  if (mPluginEventModel == NPEventModelCocoa) {
+    UInt32 size;
+    OSStatus status = ::GetEventParameter(aKeyEvent, kEventParamKeyUnicodes, typeUnicodeText, NULL, 0, &size, NULL);
+    if (status != noErr)
+      return;
+
+    UniChar* chars = (UniChar*)malloc(size);
+    if (!chars)
+      return;
+
+    status = ::GetEventParameter(aKeyEvent, kEventParamKeyUnicodes, typeUnicodeText, NULL, size, NULL, chars);
+    if (status != noErr) {
+      free(chars);
+      return;
+    }
+
+    CFStringRef text = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, chars, (size / sizeof(UniChar)), kCFAllocatorNull);
+    if (!text) {
+      free(chars);
+      return;
+    }
+
+    NPCocoaEvent cocoaTextEvent;
+    InitNPCocoaEvent(&cocoaTextEvent);
+    cocoaTextEvent.type = NPCocoaEventTextInput;
+    cocoaTextEvent.data.text.text = (NPNSString*)text;
+
+    nsGUIEvent pluginTextEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
+    pluginTextEvent.time = PR_IntervalNow();
+    pluginTextEvent.pluginEvent = (void*)&cocoaTextEvent;
+    mGeckoChild->DispatchWindowEvent(pluginTextEvent);
+
+    ::CFRelease(text);
+    free(chars);
+
+    return;
+  }
+
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   UInt32 numCharCodes;
@@ -4520,6 +4587,11 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 #endif // NP_NO_CARBON
+
+- (void)pluginRequestsComplexTextInputForCurrentEvent
+{
+  mPluginComplexTextInputRequested = YES;
+}
 
 - (void)sendCompositionEvent:(PRInt32) aEventType
 {
@@ -4616,7 +4688,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #ifndef NP_NO_CARBON
     EventRecord carbonEvent;
 #endif
-    NPCocoaEvent cocoaEvent;
     if (mCurKeyEvent) {
       // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
       // might send the keyDown event with wrong keyboard layout if other
@@ -4628,10 +4699,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         geckoEvent.pluginEvent = &carbonEvent;
       }
 #endif
-      if (mPluginEventModel == NPEventModelCocoa) {
-        ConvertCocoaKeyEventToNPCocoaEvent(mCurKeyEvent, cocoaEvent);
-        geckoEvent.pluginEvent = &cocoaEvent;
-      }
 
       geckoEvent.isShift = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
       if (!IsPrintableChar(geckoEvent.charCode)) {
@@ -5101,13 +5168,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
         !mGeckoChild->IME_IsComposing()) {
       if (mKeyDownHandled)
         geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-
-      NPCocoaEvent cocoaEvent;
-      if (mPluginEventModel == NPEventModelCocoa) {
-        ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-        geckoEvent.pluginEvent = &cocoaEvent;
-      }
-
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       mKeyPressSent = YES;
       if (!mGeckoChild)
@@ -5140,13 +5200,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(geckoEvent))) {
       if (mKeyDownHandled)
         geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-
-      NPCocoaEvent cocoaEvent;
-      if (mPluginEventModel == NPEventModelCocoa) {
-        ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-        geckoEvent.pluginEvent = &cocoaEvent;
-      }
-
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
     }
   }
@@ -5165,6 +5218,16 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
+
+#ifdef NP_NO_CARBON
+- (NSTextInputContext *)inputContext
+{
+  if (mIsPluginView && mPluginEventModel == NPEventModelCocoa)
+    return [[ComplexTextInputPanel sharedComplexTextInputPanel] inputContext];
+  else
+    return [super inputContext];
+}
+#endif
 
 #ifndef NP_NO_CARBON
 // Create a TSM document for use with plugins, so that we can support IME in
@@ -5202,14 +5265,52 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (mGeckoChild && mIsPluginView) {
+    // If a plugin has the focus, we need to use an alternate method for
+    // handling NSKeyDown and NSKeyUp events (otherwise Carbon-based IME won't
+    // work in plugins like the Flash plugin).  The same strategy is used by the
+    // WebKit.  See PluginKeyEventsHandler() and [ChildView processPluginKeyEvent:]
+    // for more info.
+    if (mPluginEventModel == NPEventModelCocoa) {
+      // Reset complex text input request.
+      mPluginComplexTextInputRequested = NO;
+      
+      // Send key down event.
+      nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
+      NPCocoaEvent cocoaEvent;
+      ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
+      pluginEvent.pluginEvent = &cocoaEvent;
+      mGeckoChild->DispatchWindowEvent(pluginEvent);
+      if (!mGeckoChild)
+        return;
+      
+      if (!mPluginComplexTextInputRequested) {
+        // Ideally we'd cancel any TSM composition here.
+        return;
+      }
+
+#ifdef NP_NO_CARBON
+      ComplexTextInputPanel* ctInputPanel = [ComplexTextInputPanel sharedComplexTextInputPanel];
+      NSString* textString = nil;
+      [ctInputPanel interpretKeyEvent:theEvent string:&textString];
+      if (textString) {
+        NPCocoaEvent cocoaTextEvent;
+        InitNPCocoaEvent(&cocoaTextEvent);
+        cocoaTextEvent.type = NPCocoaEventTextInput;
+        cocoaTextEvent.data.text.text = (NPNSString*)textString;
+        
+        nsGUIEvent pluginTextEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
+        pluginTextEvent.time = PR_IntervalNow();
+        pluginTextEvent.pluginEvent = (void*)&cocoaTextEvent;
+        mGeckoChild->DispatchWindowEvent(pluginTextEvent);
+      }
+      return;
+#endif
+    }
+
 #ifndef NP_NO_CARBON
-  // If a plugin has the focus, we need to use an alternate method for
-  // handling NSKeyDown and NSKeyUp events (otherwise Carbon-based IME won't
-  // work in plugins like the Flash plugin).  The same strategy is used by the
-  // WebKit.  See PluginKeyEventsHandler() and [ChildView processPluginKeyEvent:]
-  // for more info.
-  if (mGeckoChild && mIsPluginView &&
-      (mPluginEventModel == NPEventModelCarbon)) {
+    // This will take care of all Carbon plugin events and also send Cocoa plugin
+    // text events when NSInputContext is not available (ifndef NP_NO_CARBON).
     [self activatePluginTSMDoc];
     // We use the active TSM document to pass a pointer to ourselves (the
     // currently focused ChildView) to PluginKeyEventsHandler().  Because this
@@ -5221,8 +5322,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     ::TSMProcessRawKeyEvent([theEvent _eventRef]);
     ::TSMRemoveDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag);
     return;
-  }
 #endif
+  }
 
   [self processKeyDownEvent:theEvent keyEquiv:NO];
 
@@ -5400,6 +5501,44 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (!keyDownNeverFiredEvent &&
       (modifierFlags & (NSControlKeyMask | NSAlternateKeyMask)))
     return handledByEmbedding;
+
+  // At this point we're about to hand the event off to "processKeyDownEvent:keyEquiv:".
+  // Don't bother if this is a Cocoa plugin event, just handle it directly.
+  if (mGeckoChild && mIsPluginView && mPluginEventModel == NPEventModelCocoa) {
+    // Reset complex text input request.
+    mPluginComplexTextInputRequested = NO;
+
+    // Send key down event.
+    nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
+    NPCocoaEvent cocoaEvent;
+    ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
+    pluginEvent.pluginEvent = &cocoaEvent;
+    mGeckoChild->DispatchWindowEvent(pluginEvent);
+    if (!mGeckoChild)
+      return YES;
+
+    if (!mPluginComplexTextInputRequested) {
+      // Ideally we'd cancel any TSM composition here.
+      return YES;
+    }
+
+    // We send these events to Carbon TSM but not to the ComplexTextInputPanel.
+    // We assume that events coming in through pKE: are only relevant to TSM.
+#ifndef NP_NO_CARBON
+    [self activatePluginTSMDoc];
+    // We use the active TSM document to pass a pointer to ourselves (the
+    // currently focused ChildView) to PluginKeyEventsHandler().  Because this
+    // pointer is weak, we should retain and release ourselves around the call
+    // to TSMProcessRawKeyEvent().
+    nsAutoRetainCocoaObject kungFuDeathGrip(self);
+    ::TSMSetDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag,
+                             sizeof(ChildView *), &self);
+    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
+    ::TSMRemoveDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag);
+#endif
+
+    return YES;
+  }
 
   if ([theEvent type] == NSKeyDown) {
     // We trust the Gecko handled status for cmd key events. See bug 417466 for more info.

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<head>
+<script>
+function boom()
+{
+  document.createElement("span").innerHTML = "<body a='b'>";
+}
+</script>
+</head>
+<body onload="boom();"></body>

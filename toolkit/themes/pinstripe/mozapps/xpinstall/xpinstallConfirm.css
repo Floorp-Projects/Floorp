@@ -66,6 +66,17 @@ installitem {
 .xpinstallItemIcon {
   max-width: 32px;
   max-height: 32px;
-  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
 }
 
+installitem[type="theme"] .xpinstallItemIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+}
+
+installitem[type="locale"] .xpinstallItemIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+}
+
+installitem[type="plugin"] .xpinstallItemIcon {
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+}
