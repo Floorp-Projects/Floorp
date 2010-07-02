@@ -600,8 +600,13 @@ mjit::Compiler::jsop_neg()
         maybeJumpIfNotDouble(masm, jmpNotDbl, fe, feTypeReg);
 
         FPRegisterID fpreg = frame.copyEntryIntoFPReg(fe, FPRegisters::First);
+
+#ifdef JS_CPU_X86
         masm.loadDouble(&DoubleNegMask, FPRegisters::Second);
         masm.xorDouble(FPRegisters::Second, fpreg);
+#else
+        masm.negDouble(fpreg, fpreg);
+#endif
 
         /* Overwrite pushed frame's memory (before push). */
         masm.storeDouble(fpreg, frame.addressOf(fe));

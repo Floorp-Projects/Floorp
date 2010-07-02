@@ -38,16 +38,19 @@
 #include <wtf/Assertions.h>
 
 #include "methodjit/Logging.h"
-#define IPFX  "        "
+#define IPFX    "        %s"
+#define ISPFX   "        "
 #ifdef JS_METHODJIT_SPEW
-#define FIXME_INSN_PRINTING                                \
+# define MAYBE_PAD (isOOLPath ? ">  " : "")
+# define FIXME_INSN_PRINTING                                \
     do {                                                   \
         js::JaegerSpew(js::JSpew_Insns,                    \
                        IPFX "FIXME insn printing %s:%d\n", \
                        __FILE__, __LINE__);                \
     } while (0)
 #else
-#define FIXME_INSN_PRINTING ((void) 0)
+# define MAYBE_PAD ""
+# define FIXME_INSN_PRINTING ((void) 0)
 #endif
 
 namespace JSC {
@@ -85,19 +88,54 @@ namespace JSC {
             d1,
             d2,
             d3,
-            SD0 = d3
+            SD0 = d3,
+            d4,
+            d5,
+            d6,
+            d7,
+            d8,
+            d9,
+            d10,
+            d11,
+            d12,
+            d13,
+            d14,
+            d15,
+            d16,
+            d17,
+            d18,
+            d19,
+            d20,
+            d21,
+            d22,
+            d23,
+            d24,
+            d25,
+            d26,
+            d27,
+            d28,
+            d29,
+            d30,
+            d31
         } FPRegisterID;
 
     } // namespace ARMRegisters
 
     class ARMAssembler {
     public:
+        
+#ifdef DEBUG
+        bool isOOLPath;
+#endif
+
         typedef ARMRegisters::RegisterID RegisterID;
         typedef ARMRegisters::FPRegisterID FPRegisterID;
         typedef AssemblerBufferWithConstantPool<2048, 4, 4, ARMAssembler> ARMBuffer;
         typedef SegmentedVector<int, 64> Jumps;
 
         ARMAssembler() { }
+
+        unsigned char *buffer() const { return m_buffer.buffer(); }
 
         // ARM conditional constants
         typedef enum {
@@ -139,6 +177,7 @@ namespace JSC {
             MUL = 0x00000090,
             MULL = 0x00c00090,
             FADDD = 0x0e300b00,
+            FNEGD = 0x0eb10b40,
             FDIVD = 0x0e800b00,
             FSUBD = 0x0e300b40,
             FMULD = 0x0e200b00,
@@ -403,7 +442,7 @@ namespace JSC {
         {
             ASSERT((op2 | 0xf0fff) == 0xf0fff);
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX    "%-15s %s, 0x%04x\n", "movw", nameGpReg(rd), (op2 & 0xfff) | ((op2 >> 4) & 0xf000));
+                    IPFX    "%-15s %s, 0x%04x\n", MAYBE_PAD, "movw", nameGpReg(rd), (op2 & 0xfff) | ((op2 >> 4) & 0xf000));
             m_buffer.putInt(static_cast<ARMWord>(cc) | MOVW | RD(rd) | op2);
         }
 
@@ -411,7 +450,7 @@ namespace JSC {
         {
             ASSERT((op2 | 0xf0fff) == 0xf0fff);
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX    "%-15s %s, 0x%04x\n", "movt", nameGpReg(rd), (op2 & 0xfff) | ((op2 >> 4) & 0xf000));
+                    IPFX    "%-15s %s, 0x%04x\n", MAYBE_PAD, "movt", nameGpReg(rd), (op2 & 0xfff) | ((op2 >> 4) & 0xf000));
             m_buffer.putInt(static_cast<ARMWord>(cc) | MOVT | RD(rd) | op2);
         }
 #endif
@@ -461,43 +500,59 @@ namespace JSC {
         void mull_r(int rdhi, int rdlo, int rn, int rm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", "mull", nameGpReg(rdlo), nameGpReg(rdhi), nameGpReg(rn), nameGpReg(rm));
+                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "mull", nameGpReg(rdlo), nameGpReg(rdhi), nameGpReg(rn), nameGpReg(rm));
             m_buffer.putInt(static_cast<ARMWord>(cc) | MULL | RN(rdhi) | RD(rdlo) | RS(rn) | RM(rm));
         }
 
         void faddd_r(int dd, int dn, int dm, Condition cc = AL)
         {
             FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FADDD, dd, dn, dm);
+        }
+
+        void fnegd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
+            m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
         }
 
         void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
         {
             FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FDIVD, dd, dn, dm);
         }
 
         void fsubd_r(int dd, int dn, int dm, Condition cc = AL)
         {
             FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
         }
 
         void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
         }
 
         void fcmpd_r(int dd, int dm, Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FCMPD, dd, 0, dm);
         }
 
         void fsqrtd_r(int dd, int dm, Condition cc = AL)
         {
-		    FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
         }
 
@@ -506,7 +561,7 @@ namespace JSC {
             char mnemonic[16];
             snprintf(mnemonic, 16, "ldr%s", nameCC(cc));
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX    "%-15s %s, =0x%x @ (%d) (reusable pool entry)\n", mnemonic, nameGpReg(rd), imm, static_cast<int32_t>(imm));
+                    IPFX    "%-15s %s, =0x%x @ (%d) (reusable pool entry)\n", MAYBE_PAD, mnemonic, nameGpReg(rd), imm, static_cast<int32_t>(imm));
             m_buffer.putIntWithConstantInt(static_cast<ARMWord>(cc) | DTR | DT_LOAD | DT_UP | RN(ARMRegisters::pc) | RD(rd), imm, true);
         }
 
@@ -515,7 +570,7 @@ namespace JSC {
             char mnemonic[16];
             snprintf(mnemonic, 16, "ldr%s", nameCC(cc));
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX    "%-15s %s, =0x%x @ (%d)\n", mnemonic, nameGpReg(rd), imm, static_cast<int32_t>(imm));
+                    IPFX    "%-15s %s, =0x%x @ (%d)\n", MAYBE_PAD, mnemonic, nameGpReg(rd), imm, static_cast<int32_t>(imm));
             m_buffer.putIntWithConstantInt(static_cast<ARMWord>(cc) | DTR | DT_LOAD | DT_UP | RN(ARMRegisters::pc) | RD(rd), imm);
         }
 
@@ -526,7 +581,7 @@ namespace JSC {
         {
             char const * mnemonic = (isLoad) ? ("ldr") : ("str");
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #+%u]\n", mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
             emitInst(static_cast<ARMWord>(cc) | DTR | (isLoad ? DT_LOAD : 0) | DT_UP, rd, rb, offset);
         }
 
@@ -537,7 +592,7 @@ namespace JSC {
         {
             char const * mnemonic = (isLoad) ? ("ldr") : ("str");
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, +%s]\n", mnemonic, nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
+                    IPFX   "%-15s %s, [%s, +%s]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | DTR | (isLoad ? DT_LOAD : 0) | DT_UP | OP2_OFSREG, rd, rb, rm);
         }
 
@@ -548,7 +603,7 @@ namespace JSC {
         {
             char const * mnemonic = (isLoad) ? ("ldr") : ("str");
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #-%u]\n", mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
             emitInst(static_cast<ARMWord>(cc) | DTR | (isLoad ? DT_LOAD : 0), rd, rb, offset);
         }
 
@@ -559,35 +614,35 @@ namespace JSC {
         {
             char const * mnemonic = (isLoad) ? ("ldr") : ("str");
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, -%s]\n", mnemonic, nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
+                    IPFX   "%-15s %s, [%s, -%s]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | DTR | (isLoad ? DT_LOAD : 0) | OP2_OFSREG, rd, rb, rm);
         }
 
         void ldrh_r(int rd, int rb, int rm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, +%s]\n", "ldrh", nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
+                    IPFX   "%-15s %s, [%s, +%s]\n", MAYBE_PAD, "ldrh", nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | LDRH | HDT_UH | DT_UP | DT_PRE, rd, rb, rm);
         }
 
         void ldrh_d(int rd, int rb, ARMWord offset, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #-%u]\n", "ldrh", nameGpReg(rd), nameGpReg(rb), offset);
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, "ldrh", nameGpReg(rd), nameGpReg(rb), offset);
             emitInst(static_cast<ARMWord>(cc) | LDRH | HDT_UH | DT_PRE, rd, rb, offset);
         }
 
         void ldrh_u(int rd, int rb, ARMWord offset, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #+%u]\n", "ldrh", nameGpReg(rd), nameGpReg(rb), offset);
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, "ldrh", nameGpReg(rd), nameGpReg(rb), offset);
             emitInst(static_cast<ARMWord>(cc) | LDRH | HDT_UH | DT_UP | DT_PRE, rd, rb, offset);
         }
 
         void strh_r(int rb, int rm, int rd, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, +%s]\n", "strh", nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
+                    IPFX   "%-15s %s, [%s, +%s]\n", MAYBE_PAD, "strh", nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | STRH | HDT_UH | DT_UP | DT_PRE, rd, rb, rm);
         }
 
@@ -608,7 +663,7 @@ namespace JSC {
         void push_r(int reg, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s {%s}\n", "push", nameGpReg(reg));
+                    IPFX   "%-15s {%s}\n", MAYBE_PAD, "push", nameGpReg(reg));
             ASSERT(ARMWord(reg) <= 0xf);
             m_buffer.putInt(cc | DTR | DT_WB | RN(ARMRegisters::sp) | RD(reg) | 0x4);
         }
@@ -616,7 +671,7 @@ namespace JSC {
         void pop_r(int reg, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s {%s}\n", "pop", nameGpReg(reg));
+                    IPFX   "%-15s {%s}\n", MAYBE_PAD, "pop", nameGpReg(reg));
             ASSERT(ARMWord(reg) <= 0xf);
             m_buffer.putInt(cc | (DTR ^ DT_PRE) | DT_LOAD | DT_UP | RN(ARMRegisters::sp) | RD(reg) | 0x4);
         }
@@ -633,31 +688,36 @@ namespace JSC {
 
         void fmsr_r(int dd, int rn, Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FMSR, rn, dd, 0);
         }
 
         void fmrs_r(int rd, int dn, Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FMRS, rd, dn, 0);
         }
 
         void fsitod_r(int dd, int dm, Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSITOD, dd, 0, dm);
         }
 
         void ftosid_r(int fd, int dm, Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FTOSID, fd, 0, dm);
         }
 
         void fmstat(Condition cc = AL)
         {
-            FIXME_INSN_PRINTING;
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
             m_buffer.putInt(static_cast<ARMWord>(cc) | FMSTAT);
         }
 
@@ -673,7 +733,7 @@ namespace JSC {
         {
 #if WTF_ARM_ARCH_VERSION >= 5
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s #0x%04x\n", "bkpt", value);
+                    IPFX   "%-15s #0x%04x\n", MAYBE_PAD, "bkpt", value);
             m_buffer.putInt(BKPT | ((value & 0xfff0) << 4) | (value & 0xf));
 #else
             // Cannot access to Zero memory address
@@ -686,7 +746,7 @@ namespace JSC {
 #if WTF_ARM_ARCH_VERSION >= 5 || defined(__ARM_ARCH_4T__)
             js::JaegerSpew(
                     js::JSpew_Insns,
-                    IPFX    "bx%-13s %s\n", nameCC(cc), nameGpReg(rm));
+                    IPFX    "bx%-13s %s\n", MAYBE_PAD, nameCC(cc), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | BX, 0, 0, RM(rm));
 #else
             mov_r(ARMRegisters::pc, RM(rm), cc);
@@ -699,7 +759,7 @@ namespace JSC {
             int s = m_buffer.uncheckedSize();
             js::JaegerSpew(
                     js::JSpew_Insns,
-                    IPFX    "blx%-12s %s\n", nameCC(cc), nameGpReg(rm));
+                    IPFX    "blx%-12s %s\n", MAYBE_PAD, nameCC(cc), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | BLX, 0, 0, RM(rm));
 #else
             ASSERT(rm != 14);
@@ -1004,6 +1064,23 @@ namespace JSC {
             return names[reg];
         }
 
+        static char const * nameFpRegD(int reg)
+        {
+            ASSERT(reg <= 31);
+            ASSERT(reg >= 0);
+            static char const * names[] = {
+                 "d0",   "d1",   "d2",   "d3",
+                 "d4",   "d5",   "d6",   "d7",
+                 "d8",   "d9",  "d10",  "d11",
+                "d12",  "d13",  "d14",  "d15",
+                "d16",  "d17",  "d18",  "d19",
+                "d20",  "d21",  "d22",  "d23",
+                "d24",  "d25",  "d26",  "d27",
+                "d28",  "d29",  "d30",  "d31"
+            };
+            return names[reg];
+        }
+
         static char const * nameCC(Condition cc)
         {
             ASSERT(cc <= AL);
@@ -1098,7 +1175,7 @@ namespace JSC {
             fmtOp2(op2_fmt, op2);
 
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", mnemonic, nameGpReg(rd), nameGpReg(rn), op2_fmt);
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rn), op2_fmt);
         }
 
         void spewInsWithOp2(char const * ins, Condition cc, int r, ARMWord op2)
@@ -1110,7 +1187,7 @@ namespace JSC {
             fmtOp2(op2_fmt, op2);
 
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s\n", mnemonic, nameGpReg(r), op2_fmt);
+                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, mnemonic, nameGpReg(r), op2_fmt);
         }
 
         ARMWord RM(int reg)
@@ -1135,6 +1212,27 @@ namespace JSC {
         {
             ASSERT(reg <= ARMRegisters::pc);
             return reg << 16;
+        }
+
+        ARMWord DD(int reg)
+        {
+            ASSERT(reg <= ARMRegisters::d31);
+            // Endoded as bits [22,15:12].
+            return ((reg << 12) | (reg << 18)) & 0x0040f000;
+        }
+
+        ARMWord DN(int reg)
+        {
+            ASSERT(reg <= ARMRegisters::d31);
+            // Endoded as bits [7,19:16].
+            return ((reg << 16) | (reg << 3)) & 0x000f0080;
+        }
+
+        ARMWord DM(int reg)
+        {
+            ASSERT(reg <= ARMRegisters::d31);
+            // Encoded as bits [5,3:0].
+            return ((reg << 1) & 0x20) | (reg & 0xf);
         }
 
         static ARMWord getConditionalField(ARMWord i)

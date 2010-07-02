@@ -71,6 +71,9 @@ NotCheckedSSE2;
 #ifdef JS_CPU_X86
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
+#elif defined(JS_CPU_ARM)
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::ARMRegisters::r2;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegisters::r1;
 #endif
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
@@ -212,7 +215,7 @@ mjit::Compiler::generatePrologue()
      * scripts at any arbitrary point - i.e. we can't rely on this being here,
      * except for inline calls.
      */
-    masm.storePtr(ARMRegisters::lr, FrameAddress(offsetof(VMFrame, scriptedReturn)));
+    masm.storePtr(JSC::ARMRegisters::lr, FrameAddress(offsetof(VMFrame, scriptedReturn)));
 #endif
 
     return Compile_Okay;
@@ -1460,7 +1463,7 @@ mjit::Compiler::emitReturn()
                                         ImmPtr(0));
     stubcc.linkExit(noInlineCalls);
 #if defined(JS_CPU_ARM)
-    stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
+    stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
 #endif
     stubcc.masm.ret();
 
@@ -1541,7 +1544,7 @@ mjit::Compiler::emitReturn()
 #endif
 
 #if defined(JS_CPU_ARM)
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
 #endif
 
     masm.ret();
