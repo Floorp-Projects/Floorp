@@ -38,6 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <gdk/gdkkeysyms.h>
+#ifndef GDK_Sleep
+#define GDK_Sleep 0x1008ff2f
+#endif
+
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
@@ -71,7 +75,18 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_META,       GDK_Meta_R },
     { NS_VK_PAUSE,      GDK_Pause },
     { NS_VK_CAPS_LOCK,  GDK_Caps_Lock },
+    { NS_VK_KANA,       GDK_Kana_Lock },
+    { NS_VK_KANA,       GDK_Kana_Shift },
+    { NS_VK_HANGUL,     GDK_Hangul },
+    // { NS_VK_JUNJA,      GDK_XXX },
+    // { NS_VK_FINAL,      GDK_XXX },
+    { NS_VK_HANJA,      GDK_Hangul_Hanja },
+    { NS_VK_KANJI,      GDK_Kanji },
     { NS_VK_ESCAPE,     GDK_Escape },
+    { NS_VK_CONVERT,    GDK_Henkan },
+    { NS_VK_NONCONVERT, GDK_Muhenkan },
+    // { NS_VK_ACCEPT,     GDK_XXX },
+    { NS_VK_MODECHANGE, GDK_Mode_switch },
     { NS_VK_SPACE,      GDK_space },
     { NS_VK_PAGE_UP,    GDK_Page_Up },
     { NS_VK_PAGE_DOWN,  GDK_Page_Down },
@@ -81,9 +96,13 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_UP,         GDK_Up },
     { NS_VK_RIGHT,      GDK_Right },
     { NS_VK_DOWN,       GDK_Down },
+    { NS_VK_SELECT,     GDK_Select },
+    { NS_VK_PRINT,      GDK_Print },
+    { NS_VK_EXECUTE,    GDK_Execute },
     { NS_VK_PRINTSCREEN, GDK_Print },
     { NS_VK_INSERT,     GDK_Insert },
     { NS_VK_DELETE,     GDK_Delete },
+    { NS_VK_HELP,       GDK_Help },
 
     // keypad keys
     { NS_VK_LEFT,       GDK_KP_Left },
@@ -125,6 +144,7 @@ struct nsKeyConverter nsKeycodes[] = {
     // context menu key, keysym 0xff67, typically keycode 117 on 105-key (Microsoft) 
     // x86 keyboards, located between right 'Windows' key and right Ctrl key
     { NS_VK_CONTEXT_MENU, GDK_Menu },
+    { NS_VK_SLEEP,      GDK_Sleep },
 
     // NS doesn't have dash or equals distinct from the numeric keypad ones,
     // so we'll use those for now.  See bug 17008:
