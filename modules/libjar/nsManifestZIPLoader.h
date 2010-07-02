@@ -38,18 +38,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.h"
-#include "nsIXPTLoader.h"
+#include "nsIManifestLoader.h"
 
 #include "nsIZipReader.h"
 
-class nsXPTZipLoader : public nsIXPTLoader
+class nsManifestZIPLoader : public nsIManifestLoader
 {
  public:
-    nsXPTZipLoader();
-    virtual ~nsXPTZipLoader() {}
+    nsManifestZIPLoader();
+    virtual ~nsManifestZIPLoader() {}
     
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPTLOADER
+    NS_DECL_NSIMANIFESTLOADER
 
  private:
     already_AddRefed<nsIZipReader> GetZipReader(nsILocalFile* aFile);

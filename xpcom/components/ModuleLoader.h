@@ -61,10 +61,10 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_MODULELOADER_PSEUDO_IID)
 
   /**
-   * Return the module for a specified file. The loader should cache
-   * the module and return the same module in future calls. The Module
-   * should either be statically or permanently allocated, it will not
-   * be freed.
+   * Return the module for a specified file. The caller should cache
+   * the module: the implementer should not expect for the same file
+   * to be loaded multiple times. The Module object should either be
+   * statically or permanently allocated; it will not be freed.
    */
   virtual const Module* LoadModule(nsILocalFile* aFile) = 0;
 

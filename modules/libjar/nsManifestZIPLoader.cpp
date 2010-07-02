@@ -38,20 +38,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#include "nsXPTZipLoader.h"
+#include "nsManifestZIPLoader.h"
 #include "nsJAR.h"
 #include "nsString.h"
 #include "nsStringEnumerator.h"
 
-nsXPTZipLoader::nsXPTZipLoader() {
+nsManifestZIPLoader::nsManifestZIPLoader() {
 }
 
-NS_IMPL_ISUPPORTS1(nsXPTZipLoader, nsIXPTLoader)
+NS_IMPL_ISUPPORTS1(nsManifestZIPLoader, nsIManifestLoader)
 
 nsresult
-nsXPTZipLoader::LoadEntry(nsILocalFile* aFile,
-                          const char* aName,
-                          nsIInputStream** aResult)
+nsManifestZIPLoader::LoadEntry(nsILocalFile* aFile,
+                               const char* aName,
+                               nsIInputStream** aResult)
 {
     nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(aFile));
 
@@ -60,10 +60,36 @@ nsXPTZipLoader::LoadEntry(nsILocalFile* aFile,
 
     return zip->GetInputStream(aName, aResult);
 }
+
+static void
+EnumerateEntriesForPattern(nsIZipReader* zip, const char* pattern,
+                           nsIManifestLoaderSink* aSink)
+{
+    nsCOMPtr<nsIUTF8StringEnumerator> entries;
+    if (NS_FAILED(zip->FindEntries(pattern, getter_AddRefs(entries))) ||
+        !entries) {
+        return;
+    }
+
+    PRBool hasMore;
+    int index = 0;
+    while (NS_SUCCEEDED(entries->HasMore(&hasMore)) && hasMore) {
+        nsCAutoString itemName;
+        if (NS_FAILED(entries->GetNext(itemName)))
+            return;
+
+        nsCOMPtr<nsIInputStream> stream;
+        if (NS_FAILED(zip->GetInputStream(itemName.get(), getter_AddRefs(stream))))
+            continue;
+
+        // ignore the result
+        aSink->FoundEntry(itemName.get(), index++, stream);
+    }
+}
     
 nsresult
-nsXPTZipLoader::EnumerateEntries(nsILocalFile* aFile,
-                                 nsIXPTLoaderSink* aSink)
+nsManifestZIPLoader::EnumerateEntries(nsILocalFile* aFile,
+                                      nsIManifestLoaderSink* aSink)
 {
     nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(aFile));
 
@@ -72,33 +98,14 @@ nsXPTZipLoader::EnumerateEntries(nsILocalFile* aFile,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIUTF8StringEnumerator> entries;
-    if (NS_FAILED(zip->FindEntries("*.xpt", getter_AddRefs(entries))) ||
-        !entries) {
-        // no problem, just no .xpt files in this archive
-        return NS_OK;
-    }
-
-    PRBool hasMore;
-    int index = 0;
-    while (NS_SUCCEEDED(entries->HasMore(&hasMore)) && hasMore) {
-        nsCAutoString itemName;
-        if (NS_FAILED(entries->GetNext(itemName)))
-            return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsIInputStream> stream;
-        if (NS_FAILED(zip->GetInputStream(itemName.get(), getter_AddRefs(stream))))
-            return NS_ERROR_FAILURE;
-
-        // ignore the result
-        aSink->FoundEntry(itemName.get(), index++, stream);
-    }
+    EnumerateEntriesForPattern(zip, "components/*.manifest$", aSink);
+    EnumerateEntriesForPattern(zip, "chrome/*.manifest$", aSink);
 
     return NS_OK;
 }
 
 already_AddRefed<nsIZipReader>
-nsXPTZipLoader::GetZipReader(nsILocalFile* file)
+nsManifestZIPLoader::GetZipReader(nsILocalFile* file)
 {
     NS_ASSERTION(file, "bad file");
     

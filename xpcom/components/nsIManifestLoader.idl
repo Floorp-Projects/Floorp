@@ -47,10 +47,11 @@
  * an XPT archive of some kind
  */
 [scriptable, uuid(6E48C500-8682-4730-ADD6-7DB693B9E7BA)]
-interface nsIXPTLoaderSink : nsISupports {
-    
+interface nsIManifestLoaderSink : nsISupports
+{
     /**
-     * called by the loader for each entry in the archive
+     * Called by the loader for each components / *.manifest and
+     * chrome / *.manifest in the archive.
      * @param itemName the name of this particular item in the archive
      * @param index the index of the item inthe archive
      * @param stream contains the contents of the xpt file
@@ -65,7 +66,7 @@ interface nsIXPTLoaderSink : nsISupports {
  * stream which will be consumed by the interface loader.
  */
 [scriptable, uuid(368A15D9-17A9-4c2b-AC3D-A35B3A22B876)]
-interface nsIXPTLoader : nsISupports {
+interface nsIManifestLoader : nsISupports {
     /**
      * enumerate entries in the given archive
      * for each entry found, the loader will call the sink's
@@ -76,7 +77,7 @@ interface nsIXPTLoader : nsISupports {
      *             in the file
      */
     void enumerateEntries(in nsILocalFile file,
-                          in nsIXPTLoaderSink sink );
+                          in nsIManifestLoaderSink sink );
 
     /**
      * Load a specific entry from the archive
@@ -88,13 +89,3 @@ interface nsIXPTLoader : nsISupports {
     nsIInputStream loadEntry(in nsILocalFile file,
                              in string name);
 };
-
-
-%{C++
-
-// the first part of the contractID for any loader
-// append the type of loader that you need, such as "zip"
-#define NS_XPTLOADER_CONTRACTID_PREFIX \
-   "@mozilla.org/xptinfo/loader;1&type="
-
-%}

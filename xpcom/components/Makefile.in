@@ -76,6 +76,7 @@ SDK_XPIDLSRCS	= \
 		nsIServiceManager.idl	      \
 		nsIComponentManager.idl       \
 		nsICategoryManager.idl        \
+		nsIManifestLoader.idl         \
 		$(NULL)
 
 LOCAL_INCLUDES	= \

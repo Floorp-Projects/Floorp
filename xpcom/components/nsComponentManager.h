@@ -66,6 +66,11 @@
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
 
+#ifdef MOZ_OMNIJAR
+#include "mozilla/Omnijar.h"
+#include "nsIManifestLoader.h"
+#endif
+
 struct nsFactoryEntry;
 class nsIServiceManager;
 struct PRThread;
@@ -108,17 +113,23 @@ struct nsLoaderdata {
 };
 
 class nsComponentManagerImpl
-    : public nsIComponentManager,
-      public nsIServiceManager,
-      public nsSupportsWeakReference,
-      public nsIComponentRegistrar,
-      public nsIInterfaceRequestor
+    : public nsIComponentManager
+    , public nsIServiceManager
+    , public nsSupportsWeakReference
+    , public nsIComponentRegistrar
+    , public nsIInterfaceRequestor
+#ifdef MOZ_OMNIJAR
+    , public nsIManifestLoaderSink
+#endif
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICOMPONENTMANAGER
     NS_DECL_NSICOMPONENTREGISTRAR
+#ifdef MOZ_OMNIJAR
+    NS_DECL_NSIMANIFESTLOADERSINK
+#endif
 
     static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -192,6 +203,17 @@ public:
             , mFailed(false)
         { }
 
+#ifdef MOZ_OMNIJAR
+        KnownModule(const nsACString& aPath)
+            : mModule(NULL)
+            , mFile(NULL)
+            , mPath(aPath)
+            , mLoader(NULL)
+            , mLoaded(false)
+            , mFailed(false)
+        { }
+#endif
+
         ~KnownModule()
         {
             if (mLoaded && mModule->unloadProc)
@@ -215,15 +237,21 @@ public:
     private:
         const mozilla::Module* mModule;
         nsCOMPtr<nsILocalFile> mFile;
+#ifdef MOZ_OMNIJAR
+        nsCString mPath;
+#endif
         nsCOMPtr<mozilla::ModuleLoader> mLoader;
         bool mLoaded;
         bool mFailed;
     };
 
-    // The KnownModule is kept alive by these members, it is referenced by pointer
-    // from the factory entries.
+    // The KnownModule is kept alive by these members, it is
+    // referenced by pointer from the factory entries.
     nsTArray< nsAutoPtr<KnownModule> > mKnownStaticModules;
     nsClassHashtable<nsHashableHashKey, KnownModule> mKnownFileModules;
+#ifdef MOZ_OMNIJAR
+    nsClassHashtable<nsCStringHashKey, KnownModule> mKnownJARModules;
+#endif
 
     void RegisterModule(const mozilla::Module* aModule,
                         nsILocalFile* aFile);
@@ -233,6 +261,10 @@ public:
 
     void RegisterLocation(NSLocationType aType, nsILocalFile* aLocation,
                           bool aChromeOnly);
+
+#ifdef MOZ_OMNIJAR
+    void RegisterOmnijar(bool aChromeOnly);
+#endif
 
     void GetManifestsInDirectory(nsILocalFile* aDirectory,
                                  nsCOMArray<nsILocalFile>& aManifests);
@@ -245,11 +277,22 @@ public:
         ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile)
             : mType(aType)
             , mFile(aFile)
+            , mPath(NULL)
         { }
+
+#ifdef MOZ_OMNIJAR
+        ManifestProcessingContext(NSLocationType aType, const char* aPath)
+            : mType(aType)
+            , mFile(mozilla::OmnijarPath())
+            , mPath(aPath)
+        { }
+#endif
+
         ~ManifestProcessingContext() { }
 
         NSLocationType mType;
-        nsCOMPtr<nsILocalFile> mFile;
+        nsILocalFile* mFile;
+        const char* mPath;
     };
 
     void ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
@@ -286,6 +329,11 @@ public:
 
 private:
     ~nsComponentManagerImpl();
+
+#ifdef MOZ_OMNIJAR
+    nsIManifestLoader* mManifestLoader;
+    bool mRegisterJARChromeOnly;
+#endif
 };
 
 

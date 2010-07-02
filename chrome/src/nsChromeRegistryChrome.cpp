@@ -413,48 +413,6 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
   return rv;
 }
 
-#ifdef MOZ_OMNIJAR
-nsresult
-nsChromeRegistryChrome::CheckOmnijarChrome()
-{
-  nsresult rv;
-
-  nsZipArchive* jarReader = mozilla::OmnijarReader();
-  // just proceed normally if there is no omnijar
-  if (!jarReader)
-    return NS_OK;
-
-  nsZipItem* manifest = jarReader->GetItem("chrome/chrome.manifest");
-  NS_ENSURE_TRUE(manifest, NS_ERROR_NOT_AVAILABLE);
-
-  nsCAutoString omniJarSpec;
-  rv = NS_GetURLSpecFromActualFile(mozilla::OmnijarPath(), omniJarSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 len = manifest->RealSize();
-  nsAutoArrayPtr<PRUint8> outbuf(new PRUint8[len]);
-  NS_ENSURE_TRUE(outbuf, NS_ERROR_OUT_OF_MEMORY);
-
-  nsZipCursor cursor(manifest, jarReader, outbuf, len);
-  PRUint32 readlen;
-  PRUint8* buf = cursor.Read(&readlen);
-  NS_ENSURE_TRUE(buf, NS_ERROR_FILE_CORRUPTED);
-
-  nsAutoString jarString(NS_LITERAL_STRING("jar:"));
-  AppendUTF8toUTF16(omniJarSpec, jarString);
-  jarString += NS_LITERAL_STRING("!/chrome/chrome.manifest"); 
-
-  nsCOMPtr<nsIURI> manifestURI;
-  rv = NS_NewURI(getter_AddRefs(manifestURI), jarString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ProcessManifestBuffer((char *)buf, readlen, manifestURI, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
-}
-#endif /* MOZ_OMNIJAR */
-
 NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForNewChrome()
 {
@@ -830,7 +788,24 @@ nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
       return NULL;
     }
 
-    io->NewFileURI(mFile, getter_AddRefs(mManifestURI));
+#ifdef MOZ_OMNIJAR
+    if (mPath) {
+      nsCOMPtr<nsIURI> fileURI;
+      io->NewFileURI(mFile, getter_AddRefs(fileURI));
+
+      nsCAutoString spec;
+      fileURI->GetSpec(spec);
+      spec.Insert(NS_LITERAL_CSTRING("jar:"), 0);
+      spec.AppendLiteral("!/");
+      spec.Append(mPath);
+
+      NS_NewURI(getter_AddRefs(mManifestURI), spec, NULL, NULL, io);
+    }
+    else
+#endif
+    {
+      io->NewFileURI(mFile, getter_AddRefs(mManifestURI));
+    }
   }
   return mManifestURI;
 }

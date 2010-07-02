@@ -107,7 +107,7 @@
 #endif
 
 #ifdef MOZ_OMNIJAR
-#include "nsIZipReader.h"
+#include "nsManifestZIPLoader.h"
 #include "mozilla/Omnijar.h"
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 #endif
@@ -352,6 +352,9 @@ nsresult nsComponentManagerImpl::Init()
     mContractIDs.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
     mLoaderMap.Init();
     mKnownFileModules.Init();
+#ifdef MOZ_OMNIJAR
+    mKnownJARModules.Init();
+#endif
 
     mMon = nsAutoMonitor::NewMonitor("nsComponentManagerImpl");
     if (mMon == nsnull)
@@ -400,6 +403,10 @@ nsresult nsComponentManagerImpl::Init()
 
     for (PRUint32 i = 0; i < sStaticModules->Length(); ++i)
         RegisterModule((*sStaticModules)[i], NULL);
+
+#ifdef MOZ_OMNIJAR
+    RegisterOmnijar(false);
+#endif
 
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
@@ -502,18 +509,22 @@ nsComponentManagerImpl::RegisterContractID(const mozilla::Module::ContractIDEntr
     mContractIDs.Put(nsDependentCString(aEntry->contractid), f);
 }
 
+static void
+CutExtension(nsCString& path)
+{
+    PRInt32 dotPos = path.RFindChar('.');
+    if (kNotFound == dotPos)
+        path.Truncate();
+    else
+        path.Cut(0, dotPos + 1);
+}
+
 static nsCString
 GetExtension(nsILocalFile* file)
 {
     nsCString extension;
     file->GetNativePath(extension);
-
-    PRInt32 dotPos = extension.RFindChar('.');
-    if (kNotFound == dotPos)
-        extension.Truncate();
-    else
-        extension.Cut(0, dotPos + 1);
-
+    CutExtension(extension);
     return extension;
 }
 
@@ -534,6 +545,57 @@ nsComponentManagerImpl::RegisterLocation(NSLocationType aType,
     for (PRInt32 i = 0; i < manifests.Count(); ++i)
         RegisterManifestFile(aType, manifests[i], aChromeOnly);
 }
+
+#ifdef MOZ_OMNIJAR
+void
+nsComponentManagerImpl::RegisterOmnijar(bool aChromeOnly)
+{
+    nsCOMPtr<nsIManifestLoader> loader = new nsManifestZIPLoader();
+
+    mManifestLoader = loader;
+    mRegisterJARChromeOnly = aChromeOnly;
+
+    loader->EnumerateEntries(mozilla::OmnijarPath(), this);
+
+    mManifestLoader = NULL;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::FoundEntry(const char* aPath,
+                                   PRInt32 aIndex,
+                                   nsIInputStream* aStream)
+{
+    NS_ASSERTION(mManifestLoader, "Not registering a JAR.");
+
+    PRUint32 flen;
+    aStream->Available(&flen);
+
+    nsAutoArrayPtr<char> whole(new char[flen + 1]);
+    if (!whole)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (PRUint32 totalRead = 0; totalRead < flen; ) {
+        PRUint32 avail;
+        PRUint32 read;
+
+        if (NS_FAILED(aStream->Available(&avail)))
+            return NS_ERROR_FAILURE;
+
+        if (avail > flen)
+            return NS_ERROR_FAILURE;
+
+        if (NS_FAILED(aStream->Read(whole + totalRead, avail, &read)))
+            return NS_ERROR_FAILURE;
+
+        totalRead += read;
+    }
+
+    whole[flen] = '\0';
+
+    ParseManifest(NS_COMPONENT_LOCATION, aPath, whole, mRegisterJARChromeOnly);
+    return NS_OK;
+}
+#endif // MOZ_OMNIJAR
 
 void
 nsComponentManagerImpl::GetManifestsInDirectory(nsILocalFile* aDirectory,
@@ -628,6 +690,15 @@ TranslateSlashes(char* path)
 void
 nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
+#ifdef MOZ_OMNIJAR
+    if (cx.mPath) {
+        NS_WARNING("Cannot load binary components from the omnijar.");
+        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+                              "Cannot load binary components from the omnijar.");
+        return;
+    }
+#endif
+
     char* file = argv[0];
 
 #ifdef TRANSLATE_SLASHES
@@ -651,6 +722,21 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
     RegisterModule(m, clfile);
 }
 
+#ifdef MOZ_OMNIJAR
+static void
+AppendFileToManifestPath(nsCString& path,
+                         const char* file)
+{
+    PRInt32 i = path.RFindChar('/');
+    if (kNotFound == i)
+        path.Truncate(0);
+    else
+        path.Truncate(i + 1);
+
+    path.Append(file);
+}
+#endif
+
 void
 nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
@@ -660,18 +746,38 @@ nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, c
     TranslateSlashes(file);
 #endif
 
-    nsCOMPtr<nsIFile> cfile;
-    cx.mFile->GetParent(getter_AddRefs(cfile));
-    nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
+#ifdef MOZ_OMNIJAR
+    if (cx.mPath) {
+        nsCAutoString manifest(cx.mPath);
+        AppendFileToManifestPath(manifest, file);
 
-    nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Couldn't append relative path?");
-        return;
+        nsCOMPtr<nsIInputStream> stream;
+        nsresult rv = mManifestLoader->LoadEntry(cx.mFile, manifest.get(),
+                                                 getter_AddRefs(stream));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to load omnijar XPT file.");
+            return;
+        }
+
+        xptiInterfaceInfoManager::GetSingleton()
+            ->RegisterInputStream(stream);
     }
+    else
+#endif
+    {
+        nsCOMPtr<nsIFile> cfile;
+        cx.mFile->GetParent(getter_AddRefs(cfile));
+        nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
 
-    xptiInterfaceInfoManager::GetSingleton()
-        ->RegisterFile(clfile, xptiInterfaceInfoManager::XPT);
+        nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Couldn't append relative path?");
+            return;
+        }
+
+        xptiInterfaceInfoManager::GetSingleton()
+            ->RegisterFile(clfile);
+    }
 }
 
 void
@@ -686,7 +792,8 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
 
     nsID cid;
     if (!cid.Parse(id)) {
-        LogMessageWithContext(cx.mFile, lineno, "Malformed CID: '%s'.", id);
+        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+                              "Malformed CID: '%s'.", id);
         return;
     }
 
@@ -702,27 +809,45 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
         else
             existing = "<unknown module>";
 
-        LogMessageWithContext(cx.mFile, lineno, "Trying to re-register CID '%s' already registered by %s.",
+        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+                              "Trying to re-register CID '%s' already registered by %s.",
                               idstr,
                               existing.get());
         return;
     }
 
-    nsCOMPtr<nsIFile> cfile;
-    cx.mFile->GetParent(getter_AddRefs(cfile));
-    nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
+    KnownModule* km;
 
-    nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Couldn't append relative path?");
-        return;
+#ifdef MOZ_OMNIJAR
+    if (cx.mPath) {
+        nsCAutoString manifest(cx.mPath);
+        AppendFileToManifestPath(manifest, file);
+
+        km = mKnownJARModules.Get(manifest);
+        if (!km) {
+            km = new KnownModule(manifest);
+            mKnownJARModules.Put(manifest, km);
+        }
     }
+    else
+#endif
+    {
+        nsCOMPtr<nsIFile> cfile;
+        cx.mFile->GetParent(getter_AddRefs(cfile));
+        nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
 
-    nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
-    KnownModule* km = mKnownFileModules.Get(h);
-    if (!km) {
-        km = new KnownModule(clfile);
-        mKnownFileModules.Put(h, km);
+        nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Couldn't append relative path?");
+            return;
+        }
+
+        nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
+        km = mKnownFileModules.Get(h);
+        if (!km) {
+            km = new KnownModule(clfile);
+            mKnownFileModules.Put(h, km);
+        }
     }
 
     void* place;
@@ -747,14 +872,16 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int line
 
     nsID cid;
     if (!cid.Parse(id)) {
-        LogMessageWithContext(cx.mFile, lineno, "Malformed CID: '%s'.", id);
+        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+                              "Malformed CID: '%s'.", id);
         return;
     }
 
     nsAutoMonitor mon(mMon);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (!f) {
-        LogMessageWithContext(cx.mFile, lineno, "Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
+        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+                              "Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
                               contract, id);
         return;
     }
@@ -776,6 +903,10 @@ nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& cx, int line
 void
 nsComponentManagerImpl::RereadChromeManifests()
 {
+#ifdef MOZ_OMNIJAR
+    RegisterOmnijar(true);
+#endif
+
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
         RegisterLocation(l.type, l.location, true);
@@ -786,7 +917,17 @@ bool
 nsComponentManagerImpl::KnownModule::EnsureLoader()
 {
     if (!mLoader) {
-        nsCString extension = GetExtension(mFile);
+        nsCString extension;
+#if MOZ_OMNIJAR
+        if (!mPath.IsEmpty()) {
+            extension = mPath;
+            CutExtension(extension);
+        }
+        else
+#endif
+        {
+            extension = GetExtension(mFile);
+        }
 
         mLoader = nsComponentManagerImpl::gComponentManager->LoaderForExtension(extension);
     }
@@ -801,7 +942,14 @@ nsComponentManagerImpl::KnownModule::Load()
     if (!mModule) {
         if (!EnsureLoader())
             return false;
-        mModule = mLoader->LoadModule(mFile);
+
+#ifdef MOZ_OMNIJAR
+        if (!mPath.IsEmpty())
+            mModule = mLoader->LoadModuleFromJAR(mozilla::OmnijarPath(), mPath);
+        else
+#endif
+            mModule = mLoader->LoadModule(mFile);
+
         if (!mModule) {
             mFailed = true;
             return false;
@@ -824,6 +972,13 @@ nsCString
 nsComponentManagerImpl::KnownModule::Description() const
 {
     nsCString s;
+#ifdef MOZ_OMNIJAR
+    if (!mPath.IsEmpty()) {
+        s.AssignLiteral("omnijar:");
+        s.Append(mPath);
+    }
+    else
+#endif
     if (mFile)
         mFile->GetNativePath(s);
     else
@@ -846,6 +1001,9 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     mContractIDs.Clear();
     mFactories.Clear(); // XXX release the objects, don't just clear
     mLoaderMap.Clear();
+#ifdef MOZ_OMNIJAR
+    mKnownJARModules.Clear();
+#endif
     mKnownFileModules.Clear();
     mKnownStaticModules.Clear();
 
