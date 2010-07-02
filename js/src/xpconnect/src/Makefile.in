@@ -46,6 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpconnect
 
+DIRS            = wrappers
+
 ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
 LIBRARY_NAME	= xpconnect
 EXPORT_LIBRARY = 1
