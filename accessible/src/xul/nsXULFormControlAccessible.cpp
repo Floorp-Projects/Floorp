@@ -231,13 +231,9 @@ nsXULButtonAccessible::CacheChildren()
   if (!menupopupAccessible)
     return;
 
-  mChildren.AppendElement(menupopupAccessible);
-  menupopupAccessible->SetParent(this);
-
-  if (buttonAccessible) {
-    mChildren.AppendElement(buttonAccessible);
-    buttonAccessible->SetParent(this);
-  }
+  AppendChild(menupopupAccessible);
+  if (buttonAccessible)
+    AppendChild(buttonAccessible);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1062,10 +1058,7 @@ nsXULTextFieldAccessible::CacheChildren()
   nsAccTreeWalker walker(mWeakShell, inputContent, PR_FALSE);
 
   nsRefPtr<nsAccessible> child;
-  while ((child = walker.GetNextChild())) {
-    mChildren.AppendElement(child);
-    child->SetParent(this);
-  }
+  while ((child = walker.GetNextChild()) && AppendChild(child));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

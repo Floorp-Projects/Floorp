@@ -163,14 +163,16 @@ public:
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
 
-  nsIFrame*  GetBoundsFrame();
-
   /**
    * Return focused option if any.
    */
   static already_AddRefed<nsIContent> GetFocusedOption(nsIContent *aListNode);
 
   static void SelectionChangedIfOption(nsIContent *aPossibleOption);
+
+protected:
+  // nsAccessible
+  virtual nsIFrame* GetBoundsFrame();
 
 private:
   
