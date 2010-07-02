@@ -1772,12 +1772,10 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 
                     for (uint32 i = 0, n = uva->length; i < n; i++) {
                         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[upvar_base + i]);
-                        uint32 cookie = uva->vector[i];
+                        UpvarCookie cookie = uva->vector[i];
 
                         printf("  %s: {skip:%u, slot:%u},\n",
-                               js_AtomToPrintableString(cx, atom),
-                               UPVAR_FRAME_SKIP(cookie),
-                               UPVAR_FRAME_SLOT(cookie));
+                               js_AtomToPrintableString(cx, atom), cookie.level(), cookie.slot());
                     }
 
                     JS_ARENA_RELEASE(&cx->tempPool, mark);

@@ -1306,23 +1306,23 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
     return JS_TRUE;
 }
 
-jsval&
-js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
+jsval &
+js_GetUpvar(JSContext *cx, uintN level, UpvarCookie cookie)
 {
-    level -= UPVAR_FRAME_SKIP(cookie);
+    level -= cookie.level();
     JS_ASSERT(level < JS_DISPLAY_SIZE);
 
     JSStackFrame *fp = cx->display[level];
     JS_ASSERT(fp->script);
 
-    uintN slot = UPVAR_FRAME_SLOT(cookie);
+    uintN slot = cookie.slot();
     jsval *vp;
 
     if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
         vp = fp->slots() + fp->script->nfixed;
     } else if (slot < fp->fun->nargs) {
         vp = fp->argv;
-    } else if (slot == CALLEE_UPVAR_SLOT) {
+    } else if (slot == UpvarCookie::CALLEE_SLOT) {
         vp = &fp->argv[-2];
         slot = 0;
     } else {
