@@ -14,15 +14,17 @@ function run_test() {
 
   AddonManager.getInstallForFile(do_get_addon("test_getresource"), function(aInstall) {
     do_check_true(aInstall.addon.hasResource("install.rdf"));
-    do_check_eq(aInstall.addon.getResourceURI().spec, aInstall.sourceURL);
+    do_check_eq(aInstall.addon.getResourceURI().spec, aInstall.sourceURI.spec);
 
     do_check_true(aInstall.addon.hasResource("icon.png"));
-    do_check_eq(aInstall.addon.getResourceURI("icon.png").spec, "jar:" + aInstall.sourceURL + "!/icon.png");
+    do_check_eq(aInstall.addon.getResourceURI("icon.png").spec,
+                "jar:" + aInstall.sourceURI.spec + "!/icon.png");
 
     do_check_false(aInstall.addon.hasResource("missing.txt"));
 
     do_check_true(aInstall.addon.hasResource("subdir/subfile.txt"));
-    do_check_eq(aInstall.addon.getResourceURI("subdir/subfile.txt").spec, "jar:" + aInstall.sourceURL + "!/subdir/subfile.txt");
+    do_check_eq(aInstall.addon.getResourceURI("subdir/subfile.txt").spec,
+                "jar:" + aInstall.sourceURI.spec + "!/subdir/subfile.txt");
 
     do_check_false(aInstall.addon.hasResource("subdir/missing.txt"));
 

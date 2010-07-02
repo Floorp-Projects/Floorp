@@ -480,7 +480,7 @@ var AddonRepository = {
             result.xpiURL = node.textContent.trim();
 
             // Ignore add-on installs
-            if (aSkip.sourceURLs.indexOf(result.xpiURL) != -1)
+            if (aSkip.sourceURIs.indexOf(result.xpiURL) != -1)
               return;
 
             result.xpiHash = node.hasAttribute("hash") ? node.getAttribute("hash") : null;
@@ -540,19 +540,19 @@ var AddonRepository = {
       var totalResults = elements.length;
 
     var self = this;
-    var skip = {ids: null, sourceURLs: null};
+    var skip = {ids: null, sourceURIs: null};
 
     AddonManager.getAllAddons(function(aAddons) {
       skip.ids  = [a.id for each (a in aAddons)];
-      if (skip.sourceURLs)
+      if (skip.sourceURIs)
         self._parseAddons(elements, totalResults, skip);
     });
 
     AddonManager.getAllInstalls(function(aInstalls) {
-      skip.sourceURLs = [];
+      skip.sourceURIs = [];
       aInstalls.forEach(function(aInstall) {
         if (aInstall.state != AddonManager.STATE_AVAILABLE)
-          skip.sourceURLs.push(aInstall.sourceURL);
+          skip.sourceURIs.push(aInstall.sourceURI.spec);
       });
 
       if (skip.ids)

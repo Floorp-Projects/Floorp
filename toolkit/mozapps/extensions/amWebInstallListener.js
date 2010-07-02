@@ -139,7 +139,7 @@ Installer.prototype = {
           installs.push(install);
         break;
       default:
-        WARN("Download of " + install.sourceURL + " in unexpected state " +
+        WARN("Download of " + install.sourceURI + " in unexpected state " +
              install.state);
       }
     }

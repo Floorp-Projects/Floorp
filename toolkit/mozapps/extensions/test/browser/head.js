@@ -537,7 +537,7 @@ function MockInstall(aName, aType) {
   this.infoURL = "";
   this.state = AddonManager.STATE_AVAILABLE;
   this.error = 0;
-  this.sourceURL = "";
+  this.sourceURI = null;
   this.file = null;
   this.progress = 0;
   this.maxProgress = -1;
