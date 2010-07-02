@@ -39,21 +39,6 @@ const PREF_BOOL    = 128;
 const PREF_INT     = 64;
 const PREF_STRING  = 32;
 
-function do_check_throws(f, result, stack)
-{
-  if (!stack)
-    stack = Components.stack.caller;
-
-  try {
-    f();
-  } catch (exc) {
-    if (exc.result == result)
-      return;
-    do_throw("expected result " + result + ", caught " + exc, stack);
-  }
-  do_throw("expected result " + result + ", none thrown", stack);
-}
-
 function makeList(a)
 {
   var o = {};
