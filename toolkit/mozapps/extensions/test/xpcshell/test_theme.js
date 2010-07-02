@@ -42,6 +42,7 @@ function run_test() {
     version: "1.0",
     name: "Test 1",
     type: 4,
+    skinnable: true,
     internalName: "theme1/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -56,6 +57,7 @@ function run_test() {
     id: "theme2@tests.mozilla.org",
     version: "1.0",
     name: "Test 1",
+    skinnable: false,
     internalName: "theme2/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -88,12 +90,18 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
-  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
-                               "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"],
+                               function([d, t1, t2]) {
+    do_check_neq(d, null);
+    do_check_false(d.skinnable);
+
     do_check_neq(t1, null);
     do_check_false(t1.userDisabled);
     do_check_false(t1.appDisabled);
     do_check_true(t1.isActive);
+    do_check_true(t1.skinnable);
     do_check_eq(t1.screenshots.length, 0);
     do_check_true(isThemeInAddonsList(profileDir, t1.id));
     do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -103,6 +111,7 @@ function run_test() {
     do_check_true(t2.userDisabled);
     do_check_false(t2.appDisabled);
     do_check_false(t2.isActive);
+    do_check_false(t2.skinnable);
     do_check_eq(t2.screenshots.length, 0);
     do_check_false(isThemeInAddonsList(profileDir, t2.id));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -643,6 +652,7 @@ function run_test_11() {
     do_check_eq(install.version, "1.0");
     do_check_eq(install.name, "Test Theme 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(install.addon.skinnable, true);
 
     prepare_test({
       "theme1@tests.mozilla.org": [
@@ -665,6 +675,7 @@ function check_test_11() {
     preview.append("preview.png");
     do_check_eq(t1.screenshots.length, 1);
     do_check_eq(t1.screenshots[0], NetUtil.newURI(preview).spec);
+    do_check_true(t1.skinnable);
     do_check_false(gLWThemeChanged);
 
     run_test_12();
