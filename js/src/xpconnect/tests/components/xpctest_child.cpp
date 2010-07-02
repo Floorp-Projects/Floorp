@@ -199,7 +199,7 @@ NS_IMETHODIMP xpctestChild::Method2(PRInt16 i, PRInt16 j)
 /***************************************************************************/
 
 // static
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructChild(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;

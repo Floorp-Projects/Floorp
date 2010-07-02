@@ -126,7 +126,7 @@ NS_IMETHODIMP xpctestNoisy::Squawk()
 /***************************************************************************/
 
 // static
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructNoisy(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
