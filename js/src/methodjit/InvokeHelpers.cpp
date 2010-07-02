@@ -413,6 +413,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
             }
 
             void *ret;
+            vp[1].setObject(*obj2);
             if (!InlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
                 THROWV(NULL);
 
