@@ -162,7 +162,8 @@ void LogMessage(const char* aMsg, ...)
   console->LogMessage(error);
 }
 
-void LogMessageWithContext(nsILocalFile* aFile, PRUint32 aLineNumber, const char* aMsg, ...)
+void LogMessageWithContext(nsILocalFile* aFile, const char* aPath,
+                           PRUint32 aLineNumber, const char* aMsg, ...)
 {
   va_list args;
   va_start(args, aMsg);
@@ -173,6 +174,10 @@ void LogMessageWithContext(nsILocalFile* aFile, PRUint32 aLineNumber, const char
 
   nsString file;
   aFile->GetPath(file);
+  if (aPath) {
+    file.Append(':');
+    file.Append(NS_ConvertUTF8toUTF16(aPath));
+  }
 
   nsCOMPtr<nsIScriptError> error =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
@@ -398,14 +403,13 @@ struct CachedDirective
 
 } // anonymous namespace
 
-void
-ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
-              bool aChromeOnly)
+static void
+ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
+                    nsComponentManagerImpl::ManifestProcessingContext& mgrcx,
+                    nsChromeRegistry::ManifestProcessingContext& chromecx,
+                    const char* aPath, char* buf, bool aChromeOnly)
 {
   nsresult rv;
-
-  nsComponentManagerImpl::ManifestProcessingContext mgrcx(aType, aFile);
-  nsChromeRegistry::ManifestProcessingContext chromecx(aType, aFile);
 
   NS_NAMED_LITERAL_STRING(kPlatform, "platform");
   NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
@@ -515,11 +519,15 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       }
     }
     if (!directive) {
-      LogMessageWithContext(aFile, line, "Ignoring unrecognized chrome manifest directive '%s'.", token);
+      LogMessageWithContext(aFile, aPath, line,
+                            "Ignoring unrecognized chrome manifest directive '%s'.",
+                            token);
       continue;
     }
     if (directive->componentonly && NS_COMPONENT_LOCATION != aType) {
-      LogMessageWithContext(aFile, line, "Skin manifest not allowed to use '%s' directive.", token);
+      LogMessageWithContext(aFile, aPath, line,
+                            "Skin manifest not allowed to use '%s' directive.",
+                            token);
       continue;
     }
 
@@ -529,7 +537,9 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       argv[i] = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
 
     if (!argv[directive->argc - 1]) {
-      LogMessageWithContext(aFile, line, "Not enough arguments for chrome manifest directive '%s', expected %i.", token, directive->argc);
+      LogMessageWithContext(aFile, aPath, line,
+                            "Not enough arguments for chrome manifest directive '%s', expected %i.",
+                            token, directive->argc);
       continue;
     }
 
@@ -558,7 +568,9 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
 	   CheckFlag(kContentAccessible, wtoken, contentAccessible)))
 	  continue;
 
-      LogMessageWithContext(aFile, line, "Unrecognized chrome manifest modifier '%s'.", token);
+      LogMessageWithContext(aFile, aPath, line,
+                            "Unrecognized chrome manifest modifier '%s'.",
+                            token);
       ok = false;
     }
 
@@ -580,7 +592,8 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
         nsCOMPtr<nsIChromeRegistry> cr =
           mozilla::services::GetChromeRegistryService();
         if (!nsChromeRegistry::gChromeRegistry) {
-          LogMessageWithContext(aFile, line, "Chrome registry isn't available yet.");
+          LogMessageWithContext(aFile, aPath, line,
+                                "Chrome registry isn't available yet.");
           continue;
         }
       }
@@ -607,3 +620,24 @@ ParseManifest(NSLocationType aType, nsILocalFile* aFile, char* buf,
       (mgrcx, d.lineno, d.argv);
   }
 }
+
+void
+ParseManifest(NSLocationType type, nsILocalFile* file,
+              char* buf, bool aChromeOnly)
+{
+  nsComponentManagerImpl::ManifestProcessingContext mgrcx(type, file);
+  nsChromeRegistry::ManifestProcessingContext chromecx(type, file);
+  ParseManifestCommon(type, file, mgrcx, chromecx, NULL, buf, aChromeOnly);
+}
+
+#ifdef MOZ_OMNIJAR
+void
+ParseManifest(NSLocationType type, const char* jarPath,
+              char* buf, bool aChromeOnly)
+{
+  nsComponentManagerImpl::ManifestProcessingContext mgrcx(type, jarPath);
+  nsChromeRegistry::ManifestProcessingContext chromecx(type, jarPath);
+  ParseManifestCommon(type, mozilla::OmnijarPath(), mgrcx, chromecx, jarPath,
+                      buf, aChromeOnly);
+}
+#endif

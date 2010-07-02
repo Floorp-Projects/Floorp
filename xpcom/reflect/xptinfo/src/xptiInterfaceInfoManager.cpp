@@ -45,10 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsArrayEnumerator.h"
 #include "mozilla/FunctionTimer.h"
-#include "nsXPTZipLoader.h"
 #include "nsDirectoryService.h"
-
-#define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(xptiInterfaceInfoManager, 
                               nsIInterfaceInfoManager,
@@ -225,31 +222,13 @@ xptiInterfaceInfoManager::ReadXPTFileFromInputStream(nsIInputStream *stream)
 }
 
 void
-xptiInterfaceInfoManager::RegisterFile(nsILocalFile* aFile, Type aType)
+xptiInterfaceInfoManager::RegisterFile(nsILocalFile* aFile)
 {
-    switch (aType) {
-    case XPT: {
-        XPTHeader* header = ReadXPTFile(aFile);
-        if (!header)
-            return;
+    XPTHeader* header = ReadXPTFile(aFile);
+    if (!header)
+        return;
 
-        RegisterXPTHeader(header);
-        break;
-    }
-
-    case ZIP: {
-#ifndef MOZ_ENABLE_LIBXUL
-        NS_WARNING("Trying to register XPTs in a JAR in a non-libxul build");
-#else
-        nsCOMPtr<nsIXPTLoader> loader = new nsXPTZipLoader();
-        loader->EnumerateEntries(aFile, this);
-#endif
-        break;
-    }
-
-    default:
-        NS_ERROR("Unexpected enumeration value");
-    }
+    RegisterXPTHeader(header);
 }
 
 void
@@ -266,13 +245,12 @@ xptiInterfaceInfoManager::RegisterXPTHeader(XPTHeader* aHeader)
         VerifyAndAddEntryIfNew(aHeader->interface_directory + k, k, typelib);
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfoManager::FoundEntry(const char* entryName, PRInt32 index, nsIInputStream* aStream)
+void
+xptiInterfaceInfoManager::RegisterInputStream(nsIInputStream* aStream)
 {
     XPTHeader* header = ReadXPTFileFromInputStream(aStream);
     if (header)
         RegisterXPTHeader(header);
-    return NS_OK;
 }
 
 void

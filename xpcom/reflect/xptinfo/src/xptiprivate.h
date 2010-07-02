@@ -54,7 +54,6 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
-#include "nsIXPTLoader.h"
 
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
@@ -428,19 +427,17 @@ private:
 
 class xptiInterfaceInfoManager 
     : public nsIInterfaceInfoSuperManager
-    , public nsIXPTLoaderSink
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
     NS_DECL_NSIINTERFACEINFOSUPERMANAGER
-    NS_DECL_NSIXPTLOADERSINK
 
 public:
     static xptiInterfaceInfoManager* GetSingleton();
     static void FreeInterfaceInfoManager();
 
-    enum Type { XPT = 0, ZIP = 1 };
-    void RegisterFile(nsILocalFile* aFile, Type type);
+    void RegisterFile(nsILocalFile* aFile);
+    void RegisterInputStream(nsIInputStream* aStream);
 
     xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
 
