@@ -16,6 +16,8 @@ const PARAMS = "?%REQ_VERSION%/%ITEM_ID%/%ITEM_VERSION%/%ITEM_MAXAPPVERSION%/" +
                "%ITEM_STATUS%/%APP_ID%/%APP_VERSION%/%CURRENT_APP_VERSION%/" +
                "%APP_OS%/%APP_ABI%/%APP_LOCALE%/%UPDATE_TYPE%";
 
+var gInstallDate;
+
 do_load_httpd_js();
 var testserver;
 const profileDir = gProfD.clone();
@@ -399,6 +401,14 @@ function run_test_7() {
     do_check_eq(p1.version, "1");
     do_check_eq(p1.name, "Test LW Theme");
     do_check_true(p1.isActive);
+    do_check_eq(p1.installDate.getTime(), p1.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p1.installDate.getTime()) < 5000);
+
+    gInstallDate = p1.installDate.getTime();
 
     prepare_test({
       "1@personas.mozilla.org": [
@@ -420,6 +430,15 @@ function check_test_7() {
     do_check_neq(p1, null);
     do_check_eq(p1.version, "2");
     do_check_eq(p1.name, "Updated Theme");
+    do_check_eq(p1.installDate.getTime(), gInstallDate);
+    do_check_true(p1.installDate.getTime() < p1.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p1.updateDate.getTime()) < 5000);
+
+    gInstallDate = p1.installDate.getTime();
 
     run_test_8();
   });
