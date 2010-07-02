@@ -61,6 +61,8 @@
 #include "nsIResProtocolHandler.h"
 #include "nsIXPConnect.h"
 
+#include "mozilla/Omnijar.h"
+
 class nsIDOMWindowInternal;
 class nsIURL;
 
@@ -137,7 +139,17 @@ public:
     ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile)
       : mType(aType)
       , mFile(aFile)
+      , mPath(NULL)
     { }
+
+#ifdef MOZ_OMNIJAR
+    ManifestProcessingContext(NSLocationType aType, const char* aPath)
+      : mType(aType)
+      , mFile(mozilla::OmnijarPath())
+      , mPath(aPath)
+    { }
+#endif
+
     ~ManifestProcessingContext()
     { }
 
@@ -147,7 +159,8 @@ public:
     already_AddRefed<nsIURI> ResolveURI(const char* uri);
 
     NSLocationType mType;
-    nsCOMPtr<nsILocalFile> mFile;
+    nsILocalFile* mFile;
+    const char* mPath;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIXPConnect> mXPConnect;
   };
