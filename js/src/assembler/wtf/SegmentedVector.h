@@ -44,8 +44,8 @@ namespace WTF {
 
         ~SegmentedVectorIterator() { }
 
-        T& operator*() const { return m_vector.m_segments.at(m_segment)->at(m_index); }
-        T* operator->() const { return &m_vector.m_segments.at(m_segment)->at(m_index); }
+        T& operator*() const { return (*m_vector.m_segments[m_segment])[m_index]; }
+        T* operator->() const { return &(*m_vector.m_segments[m_segment])[m_index]; }
 
         // Only prefix ++ operator supported
         Iterator& operator++()
