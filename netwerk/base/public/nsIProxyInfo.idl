@@ -41,8 +41,6 @@
 
 /**
  * This interface identifies a proxy server.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(3fe9308b-1608-4fa0-933c-c5ec2c6175fd)]
 interface nsIProxyInfo : nsISupports

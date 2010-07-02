@@ -41,8 +41,6 @@
  * wish to provide a custom "new window" of their own (for example by returning
  * a new tab, an existing window, etc) instead of just having a real new
  * toplevel window open.
- *
- * @status UNDER_REVIEW
  */
 
 #include "nsISupports.idl"

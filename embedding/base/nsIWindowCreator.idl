@@ -43,8 +43,6 @@
  * must provide an implementation of the Window Watcher component and
  * notify the WindowWatcher during application initialization.
  * @see nsIWindowWatcher
- *
- * @status FROZEN
  */
 
 #include "nsISupports.idl"

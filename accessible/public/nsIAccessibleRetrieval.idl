@@ -53,8 +53,6 @@ interface nsIDOMDOMStringList;
  * a given DOM node.
  * More documentation at:
  *   http://www.mozilla.org/projects/ui/accessibility
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(310ce77d-c92b-4761-82e8-77e1a728e8d4)]
 interface nsIAccessibleRetrieval : nsISupports
