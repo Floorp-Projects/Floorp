@@ -37,25 +37,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <jsapi.h>
-#include <jswrapper.h>
+#include "jsapi.h"
+#include "jswrapper.h"
 
 namespace xpc {
 
-template <typename Base, typename Policy>
-class FilteringWrapper : public Base {
+class ChromeWrapper : public JSCrossCompartmentWrapper {
   public:
-    FilteringWrapper(uintN flags);
-    virtual ~FilteringWrapper();
+    ChromeWrapper();
+    virtual ~ChromeWrapper();
 
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoValueVector &props);
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoValueVector &props);
     virtual bool enumerateOwn(JSContext *cx, JSObject *wrapper, js::AutoValueVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, bool set);
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode);
 
-    static FilteringWrapper singleton;
+    virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
+
+    static ChromeWrapper singleton;
 };
 
 }

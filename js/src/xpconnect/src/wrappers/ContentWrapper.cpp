@@ -37,30 +37,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsapi.h"
-#include "jswrapper.h"
-
-// Xray wrappers re-resolve the original native properties on the native
-// object and always directly access to those properties.
+#include "ContentWrapper.h"
+#include "AccessCheck.h"
 
 namespace xpc {
 
-extern JSClass HolderClass;
+ContentWrapper ContentWrapper::singleton;
 
-template <typename Base>
-class XrayWrapper : public Base {
-  public:
-    XrayWrapper(uintN flags);
-    virtual ~XrayWrapper();
+ContentWrapper::ContentWrapper() : JSCrossCompartmentWrapper()
+{
+}
 
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                       JSPropertyDescriptor *desc);
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                          JSPropertyDescriptor *desc);
-    virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
+ContentWrapper::~ContentWrapper()
+{
+}
 
-    static XrayWrapper singleton;
-};
+bool
+ContentWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Mode mode)
+{
+    return AccessCheck::enter(cx, wrapper, wrappedObject(wrapper), id, mode);
+}
+
+void
+ContentWrapper::leave(JSContext *cx, JSObject *wrapper)
+{
+    return AccessCheck::leave(cx, wrapper, wrappedObject(wrapper));
+}
 
 }

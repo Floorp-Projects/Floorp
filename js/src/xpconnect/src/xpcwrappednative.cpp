@@ -428,8 +428,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     jsval newParentVal = JSVAL_NULL;
     XPCMarkableJSVal newParentVal_markable(&newParentVal);
     AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
-    JSBool needsSOW = JS_FALSE;
-    JSBool needsCOW = JS_FALSE;
+    JSBool chromeOnly = JS_FALSE;
+    JSBool crossDoubleWrapped = JS_FALSE;
     JSBool needsXOW = JS_FALSE;
 
     if(sciWrapper.GetFlags().WantPreCreate())
@@ -441,7 +441,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             return rv;
 
         if(rv == NS_SUCCESS_CHROME_ACCESS_ONLY)
-            needsSOW = JS_TRUE;
+            chromeOnly = JS_TRUE;
         else if(rv == NS_SUCCESS_NEEDS_XOW)
             needsXOW = JS_TRUE;
         rv = NS_OK;
@@ -517,7 +517,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                 JS_GetGlobalForObject(ccx, obj)->isSystem()) &&
                !Scope->GetGlobalJSObject()->isSystem())
             {
-                needsCOW = JS_TRUE;
+                crossDoubleWrapped = JS_TRUE;
             }
         }
     }
@@ -590,10 +590,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         return rv;
     }
 
-    if(needsSOW)
-        wrapper->SetNeedsSOW();
-    if(needsCOW)
-        wrapper->SetNeedsCOW();
+    if(chromeOnly)
+        wrapper->SetNeedsChromeWrapper();
+    if(crossDoubleWrapped)
+        wrapper->SetIsDoubleWrapper();
 
     return FinishCreate(ccx, Scope, Interface, cache, wrapper, resultWrapper);
 }

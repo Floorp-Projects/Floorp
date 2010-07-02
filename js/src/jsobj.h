@@ -698,7 +698,7 @@ struct JSObject {
 
     inline void dropProperty(JSContext *cx, JSProperty *prop);
 
-    JS_FRIEND_API(JSCompartment *) getCompartment(JSContext *cx);
+    JSCompartment *getCompartment(JSContext *cx);
 
     void swap(JSObject *obj);
 
@@ -721,8 +721,10 @@ struct JSObject {
     inline bool isObjectProxy() const;
     inline bool isFunctionProxy() const;
 
-    JS_FRIEND_API(bool) isWrapper() const;
-    JS_FRIEND_API(JSObject *) unwrap(uintN *flagsp = NULL);
+    bool isWrapper() const;
+    JSObject *unwrap();
+
+    bool isCrossCompartmentWrapper() const;
 
     inline bool unbrand(JSContext *cx);
 };
