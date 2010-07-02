@@ -321,7 +321,7 @@ protected:
   static jsid sOnbeforeunload_id;
   static jsid sOnunload_id;
   static jsid sOnhashchange_id;
-  static jsid sOnpageshow_id;
+  static jsid sOnreadystatechange_id;
   static jsid sOnpagehide_id;
   static jsid sOnabort_id;
   static jsid sOnerror_id;

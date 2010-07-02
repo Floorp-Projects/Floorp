@@ -751,6 +751,7 @@ interface nsIXPConnect : nsISupports
      * Tells updateXOWs to clear the scope of all of the XOWs it finds.
      */
     const PRUint32 XPC_XOW_CLEARSCOPE = 1;
+    const PRUint32 XPC_XOW_NAVIGATED = 2;
 
     /**
      * Performs an operation over all of |object|'s XOWs such as clearing

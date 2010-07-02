@@ -64,10 +64,6 @@ ifndef MOZ_ENABLE_LIBXUL
 DIRS += stub
 endif
 
-TOOL_DIRS = \
-	tools \
-	$(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_DEBUG
 DIRS		+= windbgdlg

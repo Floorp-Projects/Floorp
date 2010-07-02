@@ -111,12 +111,15 @@ objectIfaces2.push("nsIImageLoadingContent");
    head
    html
  */
+
 HTML_TAG("a", "Anchor", [ "nsIDOMNSHTMLAnchorElement2" ]);
 HTML_TAG("abbr", "Span");
 HTML_TAG("acronym", "Span");
 HTML_TAG("address", "Span");
 HTML_TAG("applet", "Applet", [], objectIfaces);
 HTML_TAG("area", "Area", [ "nsIDOMNSHTMLAreaElement2" ]);
+HTML_TAG("article", ""); // HTMLElement
+HTML_TAG("aside", ""); // HTMLElement
 HTML_TAG("b", "Span");
 HTML_TAG("base", "Base");
 HTML_TAG("bdo", "Span");
@@ -144,7 +147,10 @@ HTML_TAG("dt", "Span");
 HTML_TAG("em", "Span");
 HTML_TAG("embed", "Embed", [ "nsIDOMGetSVGDocument" ], objectIfaces);
 HTML_TAG("fieldset", "FieldSet");
+HTML_TAG("figcaption", "") // HTMLElement
+HTML_TAG("figure", "") // HTMLElement
 HTML_TAG("font", "Font");
+HTML_TAG("footer", "") // HTMLElement
 HTML_TAG("form", "Form", [], [ "nsIWebProgressListener" ]);
 HTML_TAG("frame", "Frame", [], [ "nsIFrameLoaderOwner" ]);
 HTML_TAG("frameset", "FrameSet");
@@ -155,6 +161,8 @@ HTML_TAG("h4", "Heading");
 HTML_TAG("h5", "Heading");
 HTML_TAG("h6", "Heading");
 HTML_TAG("head", "Head");
+HTML_TAG("header", "") // HTMLElement
+HTML_TAG("hgroup", "") // HTMLElement
 HTML_TAG("hr", "HR");
 HTML_TAG("html", "Html");
 HTML_TAG("i", "Span");
@@ -176,10 +184,12 @@ HTML_TAG("li", "LI");
 HTML_TAG("link", "Link", [ "nsIDOMLinkStyle" ]);
 HTML_TAG("listing", "Span");
 HTML_TAG("map", "Map");
+HTML_TAG("mark", ""); // HTMLElement
 HTML_TAG("marquee", "Div");
 HTML_TAG("menu", "Menu");
 HTML_TAG("meta", "Meta");
 HTML_TAG("multicol", "Span");
+HTML_TAG("nav", "") // HTMLElement
 HTML_TAG("nobr", "Span");
 HTML_TAG("noembed", "Div");
 HTML_TAG("noframes", "Div");
@@ -191,12 +201,13 @@ HTML_TAG("optgroup", "OptGroup");
 HTML_TAG("option", "Option");
 HTML_TAG("p", "Paragraph");
 HTML_TAG("param", "Param");
-HTML_TAG("plaintext", "Span");
+HTML_TAG("plaintext", ""); // HTMLElement
 HTML_TAG("pre", "Pre");
 HTML_TAG("q", "Quote");
 HTML_TAG("s", "Span");
 HTML_TAG("samp", "Span");
 HTML_TAG("script", "Script", [], [ "nsIScriptLoaderObserver" ]);
+HTML_TAG("section", "") // HTMLElement
 HTML_TAG("select", "Select");
 HTML_TAG("small", "Span");
 HTML_TAG("spacer", "Spacer");
@@ -220,7 +231,7 @@ HTML_TAG("u", "Span");
 HTML_TAG("ul", "UList");
 HTML_TAG("var", "Span");
 HTML_TAG("wbr", "WBR");
-HTML_TAG("xmp", "Span");
+HTML_TAG("xmp", ""); // HTMLElement
 
 function tagName(aTag) {
   return "<" + aTag + ">";

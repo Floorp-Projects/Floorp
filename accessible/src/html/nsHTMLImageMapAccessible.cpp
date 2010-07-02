@@ -54,9 +54,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLImageMapAccessible::
-  nsHTMLImageMapAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+  nsHTMLImageMapAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                            nsIDOMHTMLMapElement *aMapElm) :
-  nsHTMLImageAccessibleWrap(aDOMNode, aShell), mMapElement(aMapElm)
+  nsHTMLImageAccessibleWrap(aContent, aShell), mMapElement(aMapElm)
 {
 }
 
@@ -143,19 +143,19 @@ nsHTMLImageMapAccessible::CacheChildren()
     if (!areaNode)
       return;
 
+    nsCOMPtr<nsIContent> areaContent(do_QueryInterface(areaNode));
     nsRefPtr<nsAccessible> areaAcc =
-      new nsHTMLAreaAccessible(areaNode, mWeakShell);
+      new nsHTMLAreaAccessible(areaContent, mWeakShell);
     if (!areaAcc)
       return;
 
-    nsresult rv = areaAcc->Init();
-    if (NS_FAILED(rv)) {
+    if (!areaAcc->Init()) {
       areaAcc->Shutdown();
       return;
     }
 
     // We must respect ARIA on area elements (for the canvas map technique)
-    areaAcc->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(areaNode));
+    areaAcc->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(areaContent));
 
     mChildren.AppendElement(areaAcc);
     areaAcc->SetParent(this);
@@ -168,8 +168,8 @@ nsHTMLImageMapAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLAreaAccessible::
-  nsHTMLAreaAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell) :
-  nsHTMLLinkAccessible(aNode, aShell)
+  nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHTMLLinkAccessible(aContent, aShell)
 {
 }
 
@@ -185,9 +185,8 @@ nsHTMLAreaAccessible::GetNameInternal(nsAString & aName)
   if (!aName.IsEmpty())
     return NS_OK;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
-                        aName)) {
+  if (!mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+                         aName)) {
     return GetValue(aName);
   }
 
@@ -200,7 +199,7 @@ nsHTMLAreaAccessible::GetDescription(nsAString& aDescription)
   aDescription.Truncate();
 
   // Still to do - follow IE's standard here
-  nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mContent));
   if (area) 
     area->GetShape(aDescription);
 
@@ -208,20 +207,24 @@ nsHTMLAreaAccessible::GetDescription(nsAString& aDescription)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
-                                PRInt32 *width, PRInt32 *height)
+nsHTMLAreaAccessible::GetBounds(PRInt32 *aX, PRInt32 *aY,
+                                PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aX);
+  *aX = 0;
+  NS_ENSURE_ARG_POINTER(aY);
+  *aY = 0;
+  NS_ENSURE_ARG_POINTER(aWidth);
+  *aWidth = 0;
+  NS_ENSURE_ARG_POINTER(aHeight);
+  *aHeight = 0;
 
-  // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
-  *x = *y = *width = *height = 0;
-
+  // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame.
   nsPresContext *presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIContent> ourContent(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(ourContent, NS_ERROR_FAILURE);
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
@@ -233,21 +236,21 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
 
   nsRect rect;
   nsIntRect orgRectPixels;
-  rv = map->GetBoundsForAreaContent(ourContent, rect);
+  nsresult rv = map->GetBoundsForAreaContent(mContent, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *x      = presContext->AppUnitsToDevPixels(rect.x); 
-  *y      = presContext->AppUnitsToDevPixels(rect.y); 
+  *aX = presContext->AppUnitsToDevPixels(rect.x);
+  *aY = presContext->AppUnitsToDevPixels(rect.y);
 
   // XXX Areas are screwy; they return their rects as a pair of points, one pair
   // stored into the width and height.
-  *width  = presContext->AppUnitsToDevPixels(rect.width - rect.x);
-  *height = presContext->AppUnitsToDevPixels(rect.height - rect.y);
+  *aWidth  = presContext->AppUnitsToDevPixels(rect.width - rect.x);
+  *aHeight = presContext->AppUnitsToDevPixels(rect.height - rect.y);
 
   // Put coords in absolute screen coords
   orgRectPixels = frame->GetScreenRectExternal();
-  *x += orgRectPixels.x;
-  *y += orgRectPixels.y;
+  *aX += orgRectPixels.x;
+  *aY += orgRectPixels.y;
 
   return NS_OK;
 }

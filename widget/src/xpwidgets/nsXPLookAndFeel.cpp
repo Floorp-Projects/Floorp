@@ -316,14 +316,13 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
     if (NS_SUCCEEDED(rv) && !colorStr.IsEmpty()) {
       nscolor thecolor;
       if (colorStr[0] == '#') {
-        if (NS_SUCCEEDED(NS_HexToRGB(NS_ConvertASCIItoUTF16(Substring(colorStr, 1, colorStr.Length() - 1)),
-                                     &thecolor))) {
+        if (NS_HexToRGB(NS_ConvertASCIItoUTF16(Substring(colorStr, 1, colorStr.Length() - 1)),
+                        &thecolor)) {
           PRInt32 id = NS_PTR_TO_INT32(index);
           CACHE_COLOR(id, thecolor);
         }
       }
-      else if (NS_SUCCEEDED(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(colorStr),
-                                         &thecolor))) {
+      else if (NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(colorStr), &thecolor)) {
         PRInt32 id = NS_PTR_TO_INT32(index);
         CACHE_COLOR(id, thecolor);
 #ifdef DEBUG_akkana
@@ -376,11 +375,11 @@ nsXPLookAndFeel::InitColorFromPref(PRInt32 i, nsIPrefBranch* aPrefBranch)
     if (colorNSStr[0] == '#') {
       nsAutoString hexString;
       colorNSStr.Right(hexString, colorNSStr.Length() - 1);
-      if (NS_SUCCEEDED(NS_HexToRGB(hexString, &thecolor))) {
+      if (NS_HexToRGB(hexString, &thecolor)) {
         CACHE_COLOR(i, thecolor);
       }
     }
-    else if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
+    else if (NS_ColorNameToRGB(colorNSStr, &thecolor))
     {
       CACHE_COLOR(i, thecolor);
     }

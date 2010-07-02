@@ -248,9 +248,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
                              : nsnull;
       NS_ASSERTION(!firstPopup || !firstPopup->GetNextSibling(),
                    "We assume popupList only has one child, but it has more.");
-      listName = (!firstPopup || firstPopup == aChildFrame)
-                 ? nsGkAtoms::popupList
-                 : nsnull;
+      listName = firstPopup == aChildFrame ? nsGkAtoms::popupList : nsnull;
     } else if (nsGkAtoms::tableColGroupFrame == childType) {
       listName = nsGkAtoms::colGroupList;
     } else if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
@@ -2193,8 +2191,10 @@ nsLayoutUtils::ComputeWidthDependentValue(
                  nscoord              aContainingBlockWidth,
                  const nsStyleCoord&  aCoord)
 {
-  NS_PRECONDITION(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
-                  "unconstrained widths no longer supported");
+  NS_WARN_IF_FALSE(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
 
   if (eStyleUnit_Coord == aCoord.GetUnit()) {
     return aCoord.GetCoordValue();
@@ -2865,6 +2865,11 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 gfxPattern::GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  gfxPattern::GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
+#else
+  gfxPattern::GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
+#endif
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
@@ -2877,10 +2882,10 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
   case NS_STYLE_IMAGE_RENDERING_CRISPEDGES:
     return gfxPattern::FILTER_NEAREST;
   default:
-    return gfxPattern::FILTER_GOOD;
+    return defaultFilter;
   }
 #else
-  return gfxPattern::FILTER_GOOD;
+  return defaultFilter;
 #endif
 }
 
@@ -3211,9 +3216,11 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   if (HasNonZeroCorner(aCSSRootFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  nsTransparencyMode transparency;
+  nsITheme::Transparency transparency;
   if (aCSSRootFrame->IsThemed(&transparency))
-    return transparency;
+    return transparency == nsITheme::eTransparent
+         ? eTransparencyTransparent
+         : eTransparencyOpaque;
 
   if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
@@ -3434,6 +3441,14 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   if (node && ve) {
     nsHTMLVideoElement *video = static_cast<nsHTMLVideoElement*>(ve.get());
 
+    unsigned short readyState;
+    if (NS_SUCCEEDED(ve->GetReadyState(&readyState)) &&
+        (readyState == nsIDOMHTMLMediaElement::HAVE_NOTHING ||
+         readyState == nsIDOMHTMLMediaElement::HAVE_METADATA)) {
+      result.mIsStillLoading = PR_TRUE;
+      return result;
+    }
+
     // If it doesn't have a principal, just bail
     nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
     if (!principal)
@@ -3485,8 +3500,13 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
   PRUint32 status;
   imgRequest->GetImageStatus(&status);
-  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
+  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
+    // Spec says to use GetComplete, but that only works on
+    // nsIDOMHTMLImageElement, and we support all sorts of other stuff
+    // here.  Do this for now pending spec clarification.
+    result.mIsStillLoading = (status & imgIRequest::STATUS_ERROR) == 0;
     return result;
+  }
 
   // In case of data: URIs, we want to ignore principals;
   // they should have the originating content's principal,

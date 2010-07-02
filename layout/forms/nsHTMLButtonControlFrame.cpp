@@ -110,21 +110,18 @@ NS_QUERYFRAME_HEAD(nsHTMLButtonControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsHTMLButtonControlFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsIContent* content = GetContent();
-    nsCOMPtr<nsIDOMHTMLButtonElement> buttonElement(do_QueryInterface(content));
-    if (buttonElement) //If turned XBL-base form control off, the frame contains HTML 4 button
-      return accService->CreateHTML4ButtonAccessible(static_cast<nsIFrame*>(this), aAccessible);
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
-    if (inputElement) //If turned XBL-base form control on, the frame contains normal HTML button
-      return accService->CreateHTMLButtonAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return IsInput() ?
+      accService->CreateHTMLButtonAccessible(mContent, PresContext()->PresShell()) :
+      accService->CreateHTML4ButtonAccessible(mContent, PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 

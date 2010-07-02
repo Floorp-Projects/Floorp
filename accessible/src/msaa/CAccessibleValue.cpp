@@ -56,7 +56,7 @@ CAccessibleValue::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleValue == iid) {
-    nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
+    nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
     if (!valueAcc)
       return E_NOINTERFACE;
 
@@ -76,7 +76,7 @@ CAccessibleValue::get_currentValue(VARIANT *aCurrentValue)
 __try {
   VariantInit(aCurrentValue);
 
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
   if (!valueAcc)
     return E_FAIL;
 
@@ -97,7 +97,7 @@ STDMETHODIMP
 CAccessibleValue::setCurrentValue(VARIANT aValue)
 {
 __try {
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
   if (!valueAcc)
     return E_FAIL;
 
@@ -117,7 +117,7 @@ CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
 __try {
   VariantInit(aMaximumValue);
 
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
   if (!valueAcc)
     return E_FAIL;
 
@@ -140,7 +140,7 @@ CAccessibleValue::get_minimumValue(VARIANT *aMinimumValue)
 __try {
   VariantInit(aMinimumValue);
 
-  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryObject(this));
   if (!valueAcc)
     return E_FAIL;
 

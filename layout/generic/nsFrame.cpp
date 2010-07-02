@@ -131,7 +131,6 @@
 using namespace mozilla;
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -2460,8 +2459,10 @@ static FrameContentRange GetRangeForFrame(nsIFrame* aFrame) {
 // frame is the result (in which case different handling is needed), and
 // afterFrame says which end is repersented if frameEdge is true
 struct FrameTarget {
-  FrameTarget(nsIFrame* aFrame, PRBool aFrameEdge, PRBool aAfterFrame) :
-    frame(aFrame), frameEdge(aFrameEdge), afterFrame(aAfterFrame) { }
+  FrameTarget(nsIFrame* aFrame, PRBool aFrameEdge, PRBool aAfterFrame,
+              PRBool aEmptyBlock = PR_FALSE) :
+    frame(aFrame), frameEdge(aFrameEdge), afterFrame(aAfterFrame),
+    emptyBlock(aEmptyBlock) { }
   static FrameTarget Null() {
     return FrameTarget(nsnull, PR_FALSE, PR_FALSE);
   }
@@ -2471,6 +2472,7 @@ struct FrameTarget {
   nsIFrame* frame;
   PRPackedBool frameEdge;
   PRPackedBool afterFrame;
+  PRPackedBool emptyBlock;
 };
 
 // See function implementation for information
@@ -2596,7 +2598,7 @@ static FrameTarget GetSelectionClosestFrameForLine(
 // special because they represent paragraphs and because they are organized
 // into lines, which have bounds that are not stored elsewhere in the
 // frame tree.  Returns a null FrameTarget for frames which are not
-// blocks or blocks with no lines.
+// blocks or blocks with no lines except editable one.
 static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
                                                     nsPoint aPoint)
 {
@@ -2607,8 +2609,15 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
   // This code searches for the correct line
   nsBlockFrame::line_iterator firstLine = bf->begin_lines();
   nsBlockFrame::line_iterator end = bf->end_lines();
-  if (firstLine == end)
+  if (firstLine == end) {
+    nsIContent *blockContent = aFrame->GetContent();
+    if (blockContent && blockContent->IsEditable()) {
+      // If the frame is ediable empty block, we should return it with empty
+      // flag.
+      return FrameTarget(aFrame, PR_FALSE, PR_FALSE, PR_TRUE);
+    }
     return FrameTarget::Null();
+  }
   nsBlockFrame::line_iterator curLine = firstLine;
   nsBlockFrame::line_iterator closestLine = end;
   while (curLine != end) {
@@ -2824,6 +2833,17 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
   nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
 
   FrameTarget closest = GetSelectionClosestFrame(adjustedFrame, adjustedPoint);
+
+  if (closest.emptyBlock) {
+    ContentOffsets offsets;
+    NS_ASSERTION(closest.frame,
+                 "closest.frame must not be null when it's empty");
+    offsets.content = closest.frame->GetContent();
+    offsets.offset = 0;
+    offsets.secondaryOffset = 0;
+    offsets.associateWithNext = PR_TRUE;
+    return offsets;
+  }
 
   // If the correct offset is at one end of a frame, use offset-based
   // calculation method
@@ -4141,7 +4161,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%08x]", mState);
+    fprintf(out, " [state=%016llx]", mState);
   }
   nsIFrame* prevInFlow = GetPrevInFlow();
   nsIFrame* nextInFlow = GetNextInFlow();
@@ -4158,6 +4178,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
+  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
   fputs("\n", out);
   return NS_OK;
 }
@@ -4357,7 +4378,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
   GetFrameName(name);
   XMLQuote(name);
   fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
-  fprintf(out, "\" state=\"%d\" parent=\"%ld\">\n",
+  fprintf(out, "\" state=\"%016llx\" parent=\"%ld\">\n",
           GetDebugStateBits(), PRUptrdiff(mParent));
 
   aIndent++;
@@ -5416,7 +5437,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
         for (;lineFrameCount > 1;lineFrameCount --){
           result = it->GetNextSiblingOnLine(lastFrame, thisLine);
           if (NS_FAILED(result) || !lastFrame){
-            NS_ERROR("should not be reached nsFrame\n");
+            NS_ERROR("should not be reached nsFrame");
             return NS_ERROR_FAILURE;
           }
         }
@@ -5493,10 +5514,10 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP
-nsFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsFrame::CreateAccessible()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
 }
 #endif
 
@@ -5611,7 +5632,30 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
                aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
                "Computed overflow area must contain frame bounds");
 
+  // If we clip our children, clear accumulated overflow area. The
+  // children are actually clipped to the padding-box, but since the
+  // overflow area should include the entire border-box, just set it to
+  // the border-box here.
   const nsStyleDisplay *disp = GetStyleDisplay();
+  NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
+               (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
+               "If one overflow is clip, the other should be too");
+  if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
+    // The contents are actually clipped to the padding area 
+    *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
+  }
+
+  // Overflow area must always include the frame's top-left and bottom-right,
+  // even if the frame rect is empty.
+  // Pending a real fix for bug 426879, don't do this for inline frames
+  // with zero width.
+  if (aNewSize.width != 0 || !IsInlineFrame(this)) {
+    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
+                                         nsRect(nsPoint(0, 0), aNewSize));
+  }
+
+  // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
+  // so we add theme background overflow here so it's not clipped.
   if (!IsBoxWrapped() && IsThemed(disp)) {
     nsRect r(nsPoint(0, 0), aNewSize);
     nsPresContext *presContext = PresContext();
@@ -5622,27 +5666,6 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     }
   }
   
-  // Overflow area must always include the frame's top-left and bottom-right,
-  // even if the frame rect is empty.
-  // Pending a real fix for bug 426879, don't do this for inline frames
-  // with zero width.
-  if (aNewSize.width != 0 || !IsInlineFrame(this))
-    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
-                                         nsRect(nsPoint(0, 0), aNewSize));
-
-  PRBool geometricOverflow =
-    aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
-    aOverflowArea->XMost() > aNewSize.width || aOverflowArea->YMost() > aNewSize.height;
-  // Clear geometric overflow area if we clip our children
-  NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
-               (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
-               "If one overflow is clip, the other should be too");
-  if (geometricOverflow &&
-      disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
-    *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
-    geometricOverflow = PR_FALSE;
-  }
-
   PRBool hasOutlineOrEffects;
   *aOverflowArea = GetAdditionalOverflow(*aOverflowArea, aNewSize,
       &hasOutlineOrEffects);
@@ -6419,7 +6442,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     nsHTMLReflowState parentReflowState(aPresContext, parentFrame,
                                         aRenderingContext,
                                         parentSize);
-    parentFrame->RemoveStateBits(0xffffffff);
+    parentFrame->RemoveStateBits(~nsFrameState(0));
     parentFrame->AddStateBits(savedState);
 
     // This may not do very much useful, but it's probably worth trying.

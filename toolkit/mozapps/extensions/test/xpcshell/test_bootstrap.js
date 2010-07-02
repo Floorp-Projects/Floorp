@@ -100,7 +100,7 @@ function check_test_1() {
       dir.append("bootstrap1@tests.mozilla.org");
       dir.append("bootstrap.js");
       let uri = Services.io.newFileURI(dir).spec;
-      do_check_eq(b1.getResourceURL("bootstrap.js"), uri);
+      do_check_eq(b1.getResourceURI("bootstrap.js").spec, uri);
 
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         do_check_eq(list.length, 0);
@@ -520,6 +520,113 @@ function run_test_12() {
     do_check_eq(getActiveVersion(), 1);
     do_check_eq(getStartupReason(), APP_STARTUP);
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+
+    b1.uninstall();
+    restartManager(0);
+
+    run_test_13();
+  });
+}
+
+
+// Tests that installing a bootstrapped extension with an invalid application
+// entry doesn't call it's startup method
+function run_test_13() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_3"), function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.type, "extension");
+    do_check_eq(install.version, "3.0");
+    do_check_eq(install.name, "Test Bootstrap 1");
+    do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+
+    prepare_test({
+      "bootstrap1@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], check_test_13);
+    install.install();
+  });
+}
+
+function check_test_13() {
+  AddonManager.getAllInstalls(function(installs) {
+    // There should be no active installs now since the install completed and
+    // doesn't require a restart.
+    do_check_eq(installs.length, 0);
+
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      do_check_neq(b1, null);
+      do_check_eq(b1.version, "3.0");
+      do_check_true(b1.appDisabled);
+      do_check_false(b1.userDisabled);
+      do_check_false(b1.isActive);
+      do_check_eq(getInstalledVersion(), 3);  // We call install even for disabled add-ons
+      do_check_eq(getActiveVersion(), 0);     // Should not have called startup though
+      do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+
+      restartManager();
+
+      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+        do_check_neq(b1, null);
+        do_check_eq(b1.version, "3.0");
+        do_check_true(b1.appDisabled);
+        do_check_false(b1.userDisabled);
+        do_check_false(b1.isActive);
+        do_check_eq(getInstalledVersion(), 3);  // We call install even for disabled add-ons
+        do_check_eq(getActiveVersion(), 0);     // Should not have called startup though
+        do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+
+        b1.uninstall();
+        restartManager(0);
+
+        run_test_14();
+      });
+    });
+  });
+}
+
+// Tests that a bootstrapped extension with an invalid target application entry
+// does not get loaded when detected during startup
+function run_test_14() {
+  shutdownManager();
+
+  let dir = profileDir.clone();
+  dir.append("bootstrap1@tests.mozilla.org");
+  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+            createInstance(AM_Ci.nsIZipReader);
+  zip.open(do_get_addon("test_bootstrap1_3"));
+  dir.append("install.rdf");
+  zip.extract("install.rdf", dir);
+  dir = dir.parent;
+  dir.append("bootstrap.js");
+  zip.extract("bootstrap.js", dir);
+  zip.close();
+
+  startupManager(0, false);
+
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "3.0");
+    do_check_true(b1.appDisabled);
+    do_check_false(b1.userDisabled);
+    do_check_false(b1.isActive);
+    do_check_eq(getInstalledVersion(), 3);   // We call install even for disabled add-ons
+    do_check_eq(getActiveVersion(), 0);      // Should not have called startup though
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+
+    b1.uninstall();
 
     do_test_finished();
   });

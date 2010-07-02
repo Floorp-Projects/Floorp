@@ -148,12 +148,12 @@ AddToHistoryCB(const nsCSubstring &aRowID,
       visitCount = 1;
     }
 
-    PRTime lastVisitDate;
+    PRInt64 lastVisitDate;
     if (PR_sscanf(values[kLastVisitColumn].get(), "%lld", &lastVisitDate) != 1) {
       lastVisitDate = -1;
     }
 
-    PRTime firstVisitDate;
+    PRInt64 firstVisitDate;
     if (PR_sscanf(values[kFirstVisitColumn].get(), "%lld", &firstVisitDate) != 1) {
       firstVisitDate = -1;
     }

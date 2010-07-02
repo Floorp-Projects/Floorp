@@ -94,6 +94,10 @@
 #endif
 // Fired when Places is shutting down.
 #define TOPIC_PLACES_SHUTDOWN "places-shutdown"
+// Internal notification, called after places-shutdown.
+// If you need to listen for Places shutdown, you should really use
+// places-shutdown, because places-teardown is guaranteed to break your code.
+#define TOPIC_PLACES_TEARDOWN "places-teardown"
 // Fired when Places found a locked database while initing.
 #define TOPIC_DATABASE_LOCKED "places-database-locked"
 // Fired after Places inited.

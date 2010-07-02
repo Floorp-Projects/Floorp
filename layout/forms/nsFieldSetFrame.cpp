@@ -108,7 +108,7 @@ public:
   virtual PRBool IsContainingBlock() const;
 
 #ifdef ACCESSIBILITY  
-  NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
 #ifdef DEBUG
@@ -649,15 +649,17 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsFieldSetFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLGroupboxAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLGroupboxAccessible(mContent,
+                                                    PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 

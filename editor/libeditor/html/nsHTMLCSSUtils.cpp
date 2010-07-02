@@ -317,7 +317,7 @@ nsHTMLCSSUtils::Init(nsHTMLEditor *aEditor)
     do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
   if (NS_SUCCEEDED(result) && prefBranch) {
     result = prefBranch->GetBoolPref("editor.use_css", &mIsCSSPrefChecked);
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
   }
   return result;
 }
@@ -337,7 +337,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
     aNode->GetParentNode(getter_AddRefs(node));
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  if (!content) return PR_FALSE;
+  NS_ENSURE_TRUE(content, PR_FALSE);
 
   nsIAtom *tagName = content->Tag();
   // brade: should the above use nsEditor::GetTag(aNode)?
@@ -519,12 +519,10 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement,
                                      ChangeCSSInlineStyleTxn ** aTxn,
                                      PRBool aRemoveProperty)
 {
-  if (!aElement)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
   *aTxn = new ChangeCSSInlineStyleTxn();
-  if (!*aTxn)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aTxn);
   return (*aTxn)->Init(mHTMLEditor, aElement, aAttribute, aValue, aRemoveProperty);
 }
@@ -542,7 +540,7 @@ nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
 {
   nsCOMPtr<nsIDOMViewCSS> viewCSS = nsnull;
   nsresult res = GetDefaultViewCSS(aNode, getter_AddRefs(viewCSS));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   return GetCSSInlinePropertyBase(aNode, aProperty, aValue, viewCSS, COMPUTED_STYLE_TYPE);
 }
@@ -558,7 +556,7 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
 
   nsCOMPtr<nsIDOMElement>element;
   nsresult res = GetElementContainerOrSelf(aNode, getter_AddRefs(element));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   switch (aStyleType) {
     case COMPUTED_STYLE_TYPE:
@@ -571,7 +569,7 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
         if (NS_FAILED(res) || !cssDecl) return res;
         // from these declarations, get the one we want and that one only
         res = cssDecl->GetPropertyValue(propString, value);
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
         aValue.Assign(value);
       }
       break;
@@ -584,7 +582,7 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
         nsAutoString value, propString;
         aProperty->ToString(propString);
         res = cssDecl->GetPropertyValue(propString, value);
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
         aValue.Assign(value);
       }
       break;
@@ -597,7 +595,7 @@ nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMViewCSS **aViewCSS)
 {
   nsCOMPtr<nsIDOMElement>element;
   nsresult res = GetElementContainerOrSelf(aNode, getter_AddRefs(element));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   // if we have an element node
   if (element) {
@@ -605,13 +603,13 @@ nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMViewCSS **aViewCSS)
     nsCOMPtr<nsIDOMDocument> doc;
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
     res = node->GetOwnerDocument(getter_AddRefs(doc));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (doc) {
       nsCOMPtr<nsIDOMDocumentView> documentView = do_QueryInterface(doc);
       nsCOMPtr<nsIDOMAbstractView> abstractView;
       // from the document, get the abtractView
       res = documentView->GetDefaultView(getter_AddRefs(abstractView));
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       if (abstractView) {
         // from the abstractView, get the CSS view
         CallQueryInterface(abstractView, aViewCSS);
@@ -645,7 +643,7 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
 
   // remove the property from the style attribute
   nsresult res = RemoveCSSProperty(elem, aProperty, aPropertyValue, PR_FALSE);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   if (nsEditor::NodeIsType(aNode, nsEditProperty::span)) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -654,13 +652,13 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
     if (0 == attrCount) {
       // no more attributes on this span, let's remove the element
       res = mHTMLEditor->RemoveContainer(aNode);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
     else if (1 == attrCount) {
       // incredible hack in case the only remaining attribute is a _moz_dirty...
       if (content->GetAttrNameAt(0)->Equals(nsEditProperty::mozdirty)) {
         res = mHTMLEditor->RemoveContainer(aNode);
-        if (NS_FAILED(res)) return res;
+        NS_ENSURE_SUCCESS(res, res);
       }
     }
   }
@@ -682,26 +680,26 @@ nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
   nsresult result;
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   aColor.AssignLiteral("#ffffff");
   nsXPIDLCString returnColor;
   if (prefBranch) {
     PRBool useCustomColors;
     result = prefBranch->GetBoolPref("editor.use_custom_colors", &useCustomColors);
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (useCustomColors) {
       result = prefBranch->GetCharPref("editor.background_color",
                                        getter_Copies(returnColor));
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
     }
     else {
       PRBool useSystemColors;
       result = prefBranch->GetBoolPref("browser.display.use_system_colors", &useSystemColors);
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
       if (!useSystemColors) {
         result = prefBranch->GetCharPref("browser.display.background_color",
                                          getter_Copies(returnColor));
-        if (NS_FAILED(result)) return result;
+        NS_ENSURE_SUCCESS(result, result);
       }
     }
   }
@@ -718,13 +716,13 @@ nsHTMLCSSUtils::GetDefaultLengthUnit(nsAString & aLengthUnit)
   nsresult result;
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
   aLengthUnit.AssignLiteral("px");
   if (NS_SUCCEEDED(result) && prefBranch) {
     nsXPIDLCString returnLengthUnit;
     result = prefBranch->GetCharPref("editor.css.default_length_unit",
                                      getter_Copies(returnLengthUnit));
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (returnLengthUnit) {
       CopyASCIItoUTF16(returnLengthUnit, aLengthUnit);
     }
@@ -745,7 +743,6 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
   PRInt8 sign = 1;
   PRInt32 i = 0, j = aString.Length();
   PRUnichar c;
-  nsAutoString unit;
   PRBool floatingPointFound = PR_FALSE;
   c = *iter;
   if (PRUnichar('-') == c) { sign = -1; iter++; i++; }
@@ -773,9 +770,8 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
     iter++;
     i++;
   }
-  unit = Substring(aString, aString.Length() - (j-i), j-i);
   *aValue = value * sign;
-  *aUnit = NS_NewAtom(unit); 
+  *aUnit = NS_NewAtom(StringTail(aString, j-i)); 
 }
 
 void
@@ -1011,7 +1007,7 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
       nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
       res = SetCSSProperty(theElement, cssPropertyArray[index],
                            cssValueArray[index], aSuppressTransaction);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
   return NS_OK;
@@ -1046,7 +1042,7 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                               cssPropertyArray[index],
                               cssValueArray[index],
                               aSuppressTransaction);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
   return NS_OK;
@@ -1061,9 +1057,9 @@ nsHTMLCSSUtils::HasClassOrID(nsIDOMElement * aElement, PRBool & aReturn)
   aReturn = PR_FALSE;
 
   nsresult res = mHTMLEditor->GetAttributeValue(aElement,  NS_LITERAL_STRING("class"), classVal, &isClassSet);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
   res = mHTMLEditor->GetAttributeValue(aElement,  NS_LITERAL_STRING("id"), idVal, &isIdSet);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   // we need to make sure that if the element has an id or a class attribute,
   // the attribute is not the empty string
@@ -1086,7 +1082,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
   aValueString.Truncate();
   nsCOMPtr<nsIDOMElement> theElement;
   nsresult res = GetElementContainerOrSelf(aNode, getter_AddRefs(theElement));
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   if (theElement && IsCSSEditableProperty(theElement, aHTMLProperty, aAttribute)) {
     // Yes, the requested HTML style has a CSS equivalence in this implementation
@@ -1094,7 +1090,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     nsCOMPtr<nsIDOMViewCSS> viewCSS = nsnull;
     if (COMPUTED_STYLE_TYPE == aStyleType) {
       res = GetDefaultViewCSS(theElement, getter_AddRefs(viewCSS));
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
     nsTArray<nsIAtom*> cssPropertyArray;
     nsTArray<nsString> cssValueArray;
@@ -1109,7 +1105,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       // retrieve the specified/computed value of the property
       res = GetCSSInlinePropertyBase(theElement, cssPropertyArray[index],
                                      valueString, viewCSS, aStyleType);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       // append the value to aValueString (possibly with a leading whitespace)
       if (index) aValueString.Append(PRUnichar(' '));
       aValueString.Append(valueString);
@@ -1142,7 +1138,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     // get the value of the CSS equivalent styles
     nsresult res = GetCSSEquivalentToHTMLInlineStyleSet(node, aHTMLProperty, aHTMLAttribute,
                                                         valueString, aStyleType);
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
     // early way out if we can
     if (valueString.IsEmpty()) return NS_OK;
@@ -1276,7 +1272,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       // that means that we have to look at ancestors of node to see if they are underlined
       nsCOMPtr<nsIDOMNode> tmp;
       res = node->GetParentNode(getter_AddRefs(tmp));
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(tmp);
       node = element;  // set to null if it's not a dom element
     }
@@ -1385,10 +1381,10 @@ nsHTMLCSSUtils::GetInlineStyles(nsIDOMElement *aElement,
                                 nsIDOMCSSStyleDeclaration **aCssDecl,
                                 PRUint32 *aLength)
 {
-  if (!aElement || !aLength) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aElement && aLength, NS_ERROR_NULL_POINTER);
   *aLength = 0;
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(aElement);
-  if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
   nsresult res = inlineStyles->GetStyle(aCssDecl);
   if (NS_FAILED(res) || !aCssDecl) return NS_ERROR_NULL_POINTER;
   (*aCssDecl)->GetLength(aLength);
@@ -1404,7 +1400,7 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** a
   PRUint16 type;
   nsresult res;
   res = node->GetNodeType(&type);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
 
   if (nsIDOMNode::DOCUMENT_NODE == type) {
     return NS_ERROR_NULL_POINTER;
@@ -1414,10 +1410,10 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** a
   while (node && nsIDOMNode::ELEMENT_NODE != type) {
     parentNode = node;
     res = parentNode->GetParentNode(getter_AddRefs(node));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
     if (node) {
       res = node->GetNodeType(&type);
-      if (NS_FAILED(res)) return res;
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
   NS_ASSERTION(node, "we reached a null node ancestor !");

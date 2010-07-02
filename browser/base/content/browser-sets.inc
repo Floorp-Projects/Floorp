@@ -46,7 +46,7 @@
 #endif
 #endif
 
-  <stringbundleset id="stringbundleset"> 
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
@@ -90,7 +90,7 @@
              oncommand="gFindBar.onFindAgainCommand(true);"
              observes="isImage"/>
     <!-- work-around bug 392512 -->
-    <command id="Browser:AddBookmarkAs" 
+    <command id="Browser:AddBookmarkAs"
              oncommand="PlacesCommandHook.bookmarkCurrentPage(true, PlacesUtils.bookmarksMenuFolderId);"/>
     <!-- The command is disabled for the hidden window. Otherwise its enabled
          state is handled by gBookmarkAllTabsHandler. -->
@@ -123,7 +123,7 @@
     <command id="cmd_fullZoomToggle"  oncommand="ZoomManager.toggleZoom();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
 
-    <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>    
+    <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
     <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
@@ -146,32 +146,32 @@
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="toggleSidebar('viewBookmarksSidebar');"/>
 
-    <!-- for both places and non-places, the sidebar lives at 
+    <!-- for both places and non-places, the sidebar lives at
          chrome://browser/content/history/history-panel.xul so there are no
          problems when switching between versions -->
     <broadcaster id="viewHistorySidebar" autoCheck="false" sidebartitle="&historyButton.label;"
-                 type="checkbox" group="sidebar" 
+                 type="checkbox" group="sidebar"
                  sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
                  
-    <broadcaster id="viewWebPanelsSidebar" autoCheck="false" 
+    <broadcaster id="viewWebPanelsSidebar" autoCheck="false"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
 
     <!-- popup blocking menu items -->
-    <broadcaster id="blockedPopupAllowSite" 
-                 accesskey="&allowPopups.accesskey;" 
+    <broadcaster id="blockedPopupAllowSite"
+                 accesskey="&allowPopups.accesskey;"
                  oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
-    <broadcaster id="blockedPopupEditSettings" 
+    <broadcaster id="blockedPopupEditSettings"
 #ifdef XP_WIN
                  label="&editPopupSettings.label;"
 #else
-                 label="&editPopupSettingsUnix.label;" 
+                 label="&editPopupSettingsUnix.label;"
 #endif
-                 accesskey="&editPopupSettings.accesskey;" 
+                 accesskey="&editPopupSettings.accesskey;"
                  oncommand="gPopupBlockerObserver.editPopupSettings();"/>
-    <broadcaster id="blockedPopupDontShowMessage" 
-                 accesskey="&dontShowMessage.accesskey;" 
+    <broadcaster id="blockedPopupDontShowMessage"
+                 accesskey="&dontShowMessage.accesskey;"
                  type="checkbox"
                  oncommand="gPopupBlockerObserver.dontShowMessage();"/>
     <broadcaster id="blockedPopupsSeparator"/>
@@ -222,6 +222,7 @@
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift"/>
+    <key id="key_hudConsole" key="&hudConsoleCmd.commandkey;" oncommand="HUDConsoleUI.toggleHUD();" modifiers="accel,shift"/>
     <key id="key_inspect" key="&inspectMenu.commandkey;" command="Tools:Inspect" modifiers="accel,shift"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
@@ -293,15 +294,15 @@
 #endif
     <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #ifdef XP_WIN
-# Cmd+I is conventially mapped to Info on MacOS X, thus it should not be 
-# overridden for other purposes there. 
+# Cmd+I is conventially mapped to Info on MacOS X, thus it should not be
+# overridden for other purposes there.
     <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
 
 # don't use |command="Browser:Stop"|, ESC is being used to freeze animated gifs,
 # even if the stop button and menuitem are disabled (see Bug 284140)
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
-    
+
 #ifdef XP_MACOSX
     <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
 #endif

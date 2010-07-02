@@ -440,7 +440,7 @@ nsresult
 nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
                                         const nsISMILAnimationElement* /*aSrcElement*/,
                                         nsSMILValue& aValue,
-                                        PRBool& aCanCache) const
+                                        PRBool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SVGOrientSMILType::sSingleton);
   if (aStr.EqualsLiteral("auto")) {
@@ -457,7 +457,7 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
     val.mU.mOrient.mOrientType = nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE;
   }
   aValue.Swap(val);
-  aCanCache = PR_TRUE;
+  aPreventCachingOfSandwich = PR_FALSE;
 
   return NS_OK;
 }

@@ -71,6 +71,10 @@ endif
 
 DIRS += pgo
 
+ifeq (Android,$(OS_TARGET))
+  DIRS += mobile/sutagent/android
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/
@@ -106,6 +110,9 @@ libs:: bloaturls.txt
 # autocycling of URLs.
 libs:: bloatcycle.html
 	$(INSTALL) $< $(DIST)/bin/res
+
+libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
+	$(INSTALL) $< $(DIST)/bin
 
 ifeq ($(OS_ARCH),Darwin)
 libs:: $(topsrcdir)/tools/rb/fix-macosx-stack.pl

@@ -77,7 +77,8 @@ using namespace js;
 ArrayBuffer *
 ArrayBuffer::fromJSObject(JSObject *obj)
 {
-    JS_ASSERT(obj->getClass() == &ArrayBuffer::jsclass);
+    while (!js_IsArrayBuffer(obj))
+        obj = obj->getProto();
     return reinterpret_cast<ArrayBuffer*>(obj->getPrivate());
 }
 
@@ -107,7 +108,7 @@ ArrayBuffer::class_constructor(JSContext *cx, JSObject *obj,
                                uintN argc, Value *argv, Value *rval)
 {
     if (!JS_IsConstructing(cx)) {
-        obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass);
         if (!obj)
             return false;
         rval->setObject(*obj);
@@ -121,7 +122,7 @@ ArrayBuffer::create(JSContext *cx, JSObject *obj,
                     uintN argc, Value *argv, Value *rval)
 {
     if (!obj) {
-        obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass);
         if (!obj)
             return false;
         rval->setObject(*obj);
@@ -207,6 +208,8 @@ ArrayBuffer::~ArrayBuffer()
 TypedArray *
 TypedArray::fromJSObject(JSObject *obj)
 {
+    while (!js_IsTypedArray(obj))
+        obj = obj->getProto();
     return reinterpret_cast<TypedArray*>(obj->getPrivate());
 }
 
@@ -716,7 +719,7 @@ class TypedArrayTemplate
         //
 
         if (!JS_IsConstructing(cx)) {
-            obj = NewObject(cx, slowClass(), NULL, NULL);
+            obj = NewBuiltinClassInstance(cx, slowClass());
             if (!obj)
                 return false;
             rval->setObject(*obj);
@@ -729,7 +732,7 @@ class TypedArrayTemplate
     create(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     {
         if (!obj) {
-            obj = NewObject(cx, slowClass(), NULL, NULL);
+            obj = NewBuiltinClassInstance(cx, slowClass());
             if (!obj)
                 return false;
             rval->setObject(*obj);
@@ -824,6 +827,9 @@ class TypedArrayTemplate
 
         argv = JS_ARGV(cx, vp);
         obj = ComputeThisObjectFromVp(cx, vp);
+
+        if (!JS_InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+            return false;
 
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         if (!tarray)
@@ -1284,7 +1290,6 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     _typedArray::obj_deleteProperty,                                           \
     js_DefaultValue,                                                           \
     _typedArray::obj_enumerate,                                                \
-    js_CheckAccess,                                                            \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \
     NULL,   /* thisObject */                                                   \

@@ -49,6 +49,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIEventListenerManager.h"
+#include "nsIScriptContext.h"
 
 class nsDOMEventListenerWrapper : public nsIDOMEventListener
 {

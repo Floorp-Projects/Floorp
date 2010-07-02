@@ -250,11 +250,13 @@ struct RangePaintInfo {
   RangePaintInfo(nsIRange* aRange, nsIFrame* aFrame)
     : mRange(aRange), mBuilder(aFrame, PR_FALSE, PR_FALSE)
   {
+    MOZ_COUNT_CTOR(RangePaintInfo);
   }
 
   ~RangePaintInfo()
   {
     mList.DeleteAll();
+    MOZ_COUNT_DTOR(RangePaintInfo);
   }
 };
 
@@ -850,6 +852,7 @@ public:
 
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
+  NS_IMETHOD CharacterExtendForBackspace();
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordExtendForDelete(PRBool aForward);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
@@ -1815,6 +1818,16 @@ PresShell::Destroy()
   if (mHaveShutDown)
     return;
 
+#ifdef ACCESSIBILITY
+  if (gIsAccessibilityActive) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->PresShellDestroyed(this);
+    }
+  }
+#endif // ACCESSIBILITY
+
   MaybeReleaseCapturingContent();
 
   mContentToScrollTo = nsnull;
@@ -1899,14 +1912,16 @@ PresShell::Destroy()
   // hierarchy is torn down to avoid finding deleted frames through
   // this presshell while the frames are being torn down
   if (mDocument) {
-    NS_ASSERTION(mDocument->GetPrimaryShell() == this, "Wrong shell?");
+    NS_ASSERTION(mDocument->GetShell() == this, "Wrong shell?");
     mDocument->DeleteShell();
   }
 
   nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
+#ifdef MOZ_SMIL
   if (mDocument->HasAnimationController()) {
     mDocument->GetAnimationController()->StopSampling(rd);
   }
+#endif // MOZ_SMIL
 
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
@@ -2981,6 +2996,12 @@ PresShell::CharacterExtendForDelete()
   return mSelection->CharacterExtendForDelete();
 }
 
+NS_IMETHODIMP
+PresShell::CharacterExtendForBackspace()
+{
+  return mSelection->CharacterExtendForBackspace();
+}
+
 NS_IMETHODIMP 
 PresShell::WordMove(PRBool aForward, PRBool aExtend)
 {
@@ -3607,13 +3628,18 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 void
 nsIPresShell::PostRecreateFramesFor(Element* aElement)
 {
-  FrameConstructor()->PostRestyleEvent(aElement, eRestyle_Self,
+  FrameConstructor()->PostRestyleEvent(aElement, nsRestyleHint(0),
                                        nsChangeHint_ReconstructFrame);
 }
 
 void
 nsIPresShell::RestyleForAnimation(Element* aElement)
 {
+  // eRestyle_Self is ok here because animations are always tied to a
+  // particular element and don't directly affect its kids.  The kids
+  // might have animations of their own, or inherit from aElement, but
+  // we handle all that during restyling; we don't need to _force_
+  // animation rule matching on the kids here.
   FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Self,
                                                 NS_STYLE_HINT_NONE);
 }
@@ -3697,20 +3723,13 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
   nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> content;
 
   // Search for an element with a matching "id" attribute
-  if (doc) {    
-    nsCOMPtr<nsIDOMElement> element;
-    rv = doc->GetElementById(aAnchorName, getter_AddRefs(element));
-    if (NS_SUCCEEDED(rv) && element) {
-      // Get the nsIContent interface, because that's what we need to
-      // get the primary frame
-      content = do_QueryInterface(element);
-    }
+  if (mDocument) {    
+    content = mDocument->GetElementById(aAnchorName);
   }
 
   // Search for an anchor element with a matching "name" attribute
@@ -3742,6 +3761,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   // Search for anchor in the HTML namespace with a matching name
   if (!content && !htmlDoc)
   {
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
     nsCOMPtr<nsIDOMNodeList> list;
     NS_NAMED_LITERAL_STRING(nameSpace, "http://www.w3.org/1999/xhtml");
     // Get the list of anchor elements
@@ -4883,7 +4903,7 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
                                                 mDocument->GetRootElement(),
                                                 aStateMask)) {
     mFrameConstructor->PostRestyleEvent(mDocument->GetRootElement(),
-                                        eRestyle_Self, NS_STYLE_HINT_NONE);
+                                        eRestyle_Subtree, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
 }
@@ -5060,7 +5080,7 @@ nsIPresShell::ReconstructStyleDataInternal()
     return;
   }
   
-  mFrameConstructor->PostRestyleEvent(root, eRestyle_Self, NS_STYLE_HINT_NONE);
+  mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree, NS_STYLE_HINT_NONE);
 
 #ifdef ACCESSIBILITY
   InvalidateAccessibleSubtree(nsnull);
@@ -5804,9 +5824,7 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
   PaintParams* params = static_cast<PaintParams*>(aCallbackData);
   nsIFrame* frame = params->mFrame;
   if (frame) {
-    // We're drawing into a child window. Don't pass
-    // nsLayoutUtils::PAINT_WIDGET_LAYERS, since that will draw into
-    // the widget for the display root.
+    // We're drawing into a child window.
     nsIDeviceContext* devCtx = frame->PresContext()->DeviceContext();
     nsCOMPtr<nsIRenderingContext> rc;
     nsresult rv = devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
@@ -5817,7 +5835,8 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
       nsIRenderingContext::AutoPushTranslation
         push(rc, -params->mOffsetToWidget.x, -params->mOffsetToWidget.y);
       nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion,
-                                params->mBackgroundColor);
+                                params->mBackgroundColor,
+                                nsLayoutUtils::PAINT_WIDGET_LAYERS);
     }
   } else {
     aContext->NewPath();
@@ -6089,30 +6108,25 @@ PresShell::HandleEvent(nsIView         *aView,
     NS_IS_MOUSE_EVENT(aEvent) ? GetCapturingContent() : nsnull;
 
   nsCOMPtr<nsIDocument> retargetEventDoc;
-  // key and IME events must be targeted at the presshell for the focused frame
   if (!sDontRetargetEvents) {
+    // key and IME related events should not cross top level window boundary.
+    // Basically, such input events should be fired only on focused widget.
+    // However, some IMEs might need to clean up composition after focused
+    // window is deactivated.  And also some tests on MozMill want to test key
+    // handling on deactivated window because MozMill window can be activated
+    // during tests.  So, there is no merit the events should be redirected to
+    // active window.  So, the events should be handled on the last focused
+    // content in the last focused DOM window in same top level window.
+    // Note, if no DOM window has been focused yet, we can discard the events.
     if (NS_IsEventTargetedAtFocusedWindow(aEvent)) {
-      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (!fm)
-         return NS_ERROR_FAILURE;
- 
-      nsCOMPtr<nsIDOMWindow> window;
-      fm->GetFocusedWindow(getter_AddRefs(window));
-
-      // if there is no focused frame, there isn't anything to fire a key event
-      // at so just return
-      nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
-
-      if (!piWindow) {
-        // When all our windows are deactive, we should use the last focused
-        // window under our top level window.
-        piWindow = GetFocusedDOMWindowInOurWindow();
+      nsCOMPtr<nsPIDOMWindow> window = GetFocusedDOMWindowInOurWindow();
+      // No DOM window in same top level window has not been focused yet,
+      // discard the events.
+      if (!window) {
+        return NS_OK;
       }
 
-      if (!piWindow)
-        return NS_OK;
-
-      retargetEventDoc = do_QueryInterface(piWindow->GetExtantDocument());
+      retargetEventDoc = do_QueryInterface(window->GetExtantDocument());
       if (!retargetEventDoc)
         return NS_OK;
     } else if (capturingContent) {
@@ -6122,7 +6136,7 @@ PresShell::HandleEvent(nsIView         *aView,
     }
 
     if (retargetEventDoc) {
-      nsIPresShell* presShell = retargetEventDoc->GetPrimaryShell();
+      nsIPresShell* presShell = retargetEventDoc->GetShell();
       if (!presShell)
         return NS_OK;
 
@@ -6358,27 +6372,15 @@ PresShell::HandleEvent(nsIView         *aView,
   if (frame) {
     PushCurrentEventInfo(nsnull, nsnull);
 
-    // key and IME events go to the focused frame
-    if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
-        NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_PLUGIN_EVENT(aEvent)) {
-      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (!fm)
-        return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDOMElement> element;
-      fm->GetFocusedElement(getter_AddRefs(element));
-      mCurrentEventContent = do_QueryInterface(element);
-
-      // a key or IME event may come in to an inactive window. In this
-      // situation, look for the element that would be focused if this
-      // window was active.
-      if (!mCurrentEventContent &&
-          NS_TargetUnfocusedEventToLastFocusedContent(aEvent)) {
-        nsPIDOMWindow *win = mDocument->GetWindow();
-        nsCOMPtr<nsPIDOMWindow> focusedWindow;
-        mCurrentEventContent =
-          nsFocusManager::GetFocusedDescendant(win, PR_TRUE, getter_AddRefs(focusedWindow));
-      }
+    // key and IME related events go to the focused frame in this DOM window.
+    if (NS_IsEventTargetedAtFocusedContent(aEvent)) {
+      NS_ASSERTION(mDocument, "mDocument is null");
+      nsCOMPtr<nsPIDOMWindow> window =
+        do_QueryInterface(mDocument->GetWindow());
+      nsCOMPtr<nsPIDOMWindow> focusedWindow;
+      mCurrentEventContent =
+        nsFocusManager::GetFocusedDescendant(window, PR_FALSE,
+                                             getter_AddRefs(focusedWindow));
 
       // otherwise, if there is no focused content or the focused content has
       // no frame, just use the root content. This ensures that key events
@@ -6564,10 +6566,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mDocument));
-      NS_ASSERTION(domNode, "No dom node for doc");
-
-      accEvent->mAccessible = accService->GetAccessibleInShell(domNode, this);
+      accEvent->mAccessible = accService->GetAccessibleInShell(mDocument, this);
 
       // Ensure this is set in case a11y was activated before any
       // nsPresShells existed to observe "a11y-init-or-shutdown" topic
@@ -6995,11 +6994,12 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     // don't check menulists as the selected item will be inside a popup.
     nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aCurrentEl);
     if (!menulist) {
-      checkLineHeight = PR_FALSE;
       nsCOMPtr<nsIDOMXULSelectControlElement> select =
         do_QueryInterface(aCurrentEl);
-      if (select)
+      if (select) {
+        checkLineHeight = PR_FALSE;
         select->GetSelectedItem(getter_AddRefs(item));
+      }
     }
   }
 
@@ -7131,7 +7131,7 @@ FreezeElement(nsIContent *aContent, void * /* unused */)
 static PRBool
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetPrimaryShell();
+  nsIPresShell *shell = aDocument->GetShell();
   if (shell)
     shell->Freeze();
 
@@ -7196,7 +7196,7 @@ ThawElement(nsIContent *aContent, void *aShell)
 static PRBool
 ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetPrimaryShell();
+  nsIPresShell *shell = aDocument->GetShell();
   if (shell)
     shell->Thaw();
 
@@ -7740,6 +7740,36 @@ PresShell::Observe(nsISupports* aSubject,
 #endif
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;
+}
+
+PRBool
+nsIPresShell::AddRefreshObserverInternal(nsARefreshObserver* aObserver,
+                                         mozFlushType aFlushType)
+{
+  return GetPresContext()->RefreshDriver()->
+    AddRefreshObserver(aObserver, aFlushType);
+}
+
+/* virtual */ PRBool
+nsIPresShell::AddRefreshObserverExternal(nsARefreshObserver* aObserver,
+                                         mozFlushType aFlushType)
+{
+  return AddRefreshObserverInternal(aObserver, aFlushType);
+}
+
+PRBool
+nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
+                                            mozFlushType aFlushType)
+{
+  return GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(aObserver, aFlushType);
+}
+
+/* virtual */ PRBool
+nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
+                                            mozFlushType aFlushType)
+{
+  return RemoveRefreshObserverInternal(aObserver, aFlushType);
 }
 
 //------------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
  * Copyright (c) 2007-2010 Mozilla Foundation
- * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
+ * Portions of comments Copyright 2004-2010 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
@@ -2397,7 +2397,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
               } else {
                 ch = strBuf[strBufMark];
               }
-              if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
+              if (ch == '=' || (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
 
                 appendStrBufToLongStrBuf();
                 state = returnState;
@@ -3338,10 +3338,9 @@ nsHtml5Tokenizer::emitCarriageReturn(PRUnichar* buf, PRInt32 pos)
 void 
 nsHtml5Tokenizer::emitReplacementCharacter(PRUnichar* buf, PRInt32 pos)
 {
-  silentCarriageReturn();
   flushChars(buf, pos);
-  tokenHandler->characters(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, 0, 1);
-  cstart = PR_INT32_MAX;
+  tokenHandler->zeroOriginatingReplacementCharacter();
+  cstart = pos + 1;
 }
 
 void 

@@ -123,10 +123,10 @@
              oncommand="goDoPlacesCommand('placesCmd_delete');"/>
   </commandset>
 
-  <popup id="placesContext"
-         onpopupshowing="this._view = PlacesUIUtils.getViewForNode(document.popupNode);
-                         return this._view.buildContextMenu(this);"
-         onpopuphiding="this._view.destroyContextMenu();">
+  <menupopup id="placesContext"
+             onpopupshowing="this._view = PlacesUIUtils.getViewForNode(document.popupNode);
+                             return this._view.buildContextMenu(this);"
+             onpopuphiding="this._view.destroyContextMenu();">
     <menuitem id="placesContext_open"
               command="placesCmd_open"
               label="&cmd.open.label;"
@@ -258,6 +258,6 @@
               accesskey="&cmd.properties.accesskey;"
               selection="bookmark|folder|query"
               forcehideselection="livemarkChild"/>
-  </popup>
+  </menupopup>
 
 </overlay>

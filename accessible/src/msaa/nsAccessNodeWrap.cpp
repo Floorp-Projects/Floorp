@@ -70,7 +70,7 @@ PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
 // Used to determine whether an IAccessible2 compatible screen reader is loaded.
 PRBool nsAccessNodeWrap::gIsIA2Disabled = PR_FALSE;
 
-nsIAccessibleTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
+nsAccTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
 
 // Pref to disallow CtrlTab preview functionality if JAWS or Window-Eyes are
 // running.
@@ -81,22 +81,16 @@ nsIAccessibleTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-/*
- * Class nsAccessNodeWrap
- */
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessNodeWrap
+////////////////////////////////////////////////////////////////////////////////
 
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-
-nsAccessNodeWrap::nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  nsAccessNode(aNode, aShell)
+nsAccessNodeWrap::
+  nsAccessNodeWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessNode(aContent, aShell)
 {
 }
 
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
 nsAccessNodeWrap::~nsAccessNodeWrap()
 {
 }
@@ -188,26 +182,28 @@ __try{
   *aNodeName = nsnull;
   *aNodeValue = nsnull;
 
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
- 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(GetNode()));
 
   PRUint16 nodeType = 0;
-  mDOMNode->GetNodeType(&nodeType);
+  DOMNode->GetNodeType(&nodeType);
   *aNodeType=static_cast<unsigned short>(nodeType);
 
   if (*aNodeType !=  NODETYPE_TEXT) {
     nsAutoString nodeName;
-    mDOMNode->GetNodeName(nodeName);
+    DOMNode->GetNodeName(nodeName);
     *aNodeName =   ::SysAllocString(nodeName.get());
   }
 
   nsAutoString nodeValue;
 
-  mDOMNode->GetNodeValue(nodeValue);
+  DOMNode->GetNodeValue(nodeValue);
   *aNodeValue = ::SysAllocString(nodeValue.get());
-  *aNameSpaceID = content ? static_cast<short>(content->GetNameSpaceID()) : 0;
+
+  *aNameSpaceID = IsContent() ?
+    static_cast<short>(mContent->GetNameSpaceID()) : 0;
 
   // This is a unique ID for every content node.  The 3rd party
   // accessibility application can compare this to the childID we
@@ -217,12 +213,7 @@ __try{
   GetUniqueID(&uniqueID);
   *aUniqueID = - NS_PTR_TO_INT32(uniqueID);
 
-  *aNumChildren = 0;
-  PRUint32 numChildren = 0;
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  mDOMNode->GetChildNodes(getter_AddRefs(nodeList));
-  if (nodeList && NS_OK == nodeList->GetLength(&numChildren))
-    *aNumChildren = static_cast<unsigned int>(numChildren);
+  *aNumChildren = GetNode()->GetChildCount();
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
@@ -240,12 +231,10 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
 __try{
   *aNumAttribs = 0;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) 
+  if (IsDefunct() || IsDocument())
     return E_FAIL;
 
-  PRUint32 numAttribs = content->GetAttrCount();
-
+  PRUint32 numAttribs = mContent->GetAttrCount();
   if (numAttribs > aMaxAttribs)
     numAttribs = aMaxAttribs;
   *aNumAttribs = static_cast<unsigned short>(numAttribs);
@@ -254,10 +243,10 @@ __try{
     aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nsnull;
     nsAutoString attributeValue;
 
-    const nsAttrName* name = content->GetAttrNameAt(index);
+    const nsAttrName* name = mContent->GetAttrNameAt(index);
     aNameSpaceIDs[index] = static_cast<short>(name->NamespaceID());
     aAttribNames[index] = ::SysAllocString(name->LocalName()->GetUTF16String());
-    content->GetAttr(name->NamespaceID(), name->LocalName(), attributeValue);
+    mContent->GetAttr(name->NamespaceID(), name->LocalName(), attributeValue);
     aAttribValues[index] = ::SysAllocString(attributeValue.get());
   }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -273,15 +262,10 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
     /* [length_is][size_is][retval] */ BSTR __RPC_FAR *aAttribValues)
 {
 __try {
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-
-  if (!domElement || !content) 
+  if (IsDefunct() || IsDocument())
     return E_FAIL;
 
-  if (!content->GetDocument())
-    return E_FAIL;
-
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
   nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
     do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
 
@@ -320,12 +304,11 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyle(
 __try{
   *aNumStyleProperties = 0;
 
-  if (IsDefunct())
+  if (IsDefunct() || IsDocument())
     return E_FAIL;
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), mDOMNode,
-                                           getter_AddRefs(cssDecl));
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
+    nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), mContent);
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 
   PRUint32 length;
@@ -356,12 +339,11 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aStyleValues)
 {
 __try {
-  if (IsDefunct())
+  if (IsDefunct() || IsDocument())
     return E_FAIL;
  
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), mDOMNode,
-                                           getter_AddRefs(cssDecl));
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
+    nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), mContent);
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 
   PRUint32 index;
@@ -391,30 +373,17 @@ __try {
   return E_FAIL;
 }
 
-ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
+ISimpleDOMNode*
+nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
 {
-  if (!node) 
+  if (!aNode)
     return NULL;
 
   nsAccessNodeWrap *newNode = NULL;
-  
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  nsCOMPtr<nsIDocument> doc;
-
-  if (content) 
-    doc = content->GetDocument();
-  else {
-    // Get the document via QueryInterface, since there is no content node
-    doc = do_QueryInterface(node);
-    content = do_QueryInterface(node);
-  }
-
-  if (!doc)
-    return NULL;
 
   ISimpleDOMNode *iNode = NULL;
   nsAccessible *acc =
-    GetAccService()->GetAccessibleInWeakShell(node, mWeakShell);
+    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
   if (acc) {
     IAccessible *msaaAccessible = nsnull;
     acc->GetNativeInterface((void**)&msaaAccessible); // addrefs
@@ -422,7 +391,13 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
     msaaAccessible->Release(); // Release IAccessible
   }
   else {
-    newNode = new nsAccessNodeWrap(node, mWeakShell);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+    if (!content) {
+      NS_NOTREACHED("The node is a document which is not accessible!");
+      return NULL;
+    }
+
+    newNode = new nsAccessNodeWrap(content, mWeakShell);
     if (!newNode)
       return NULL;
 
@@ -438,12 +413,11 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
 STDMETHODIMP nsAccessNodeWrap::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
- 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetParentNode(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+
+  *aNode = MakeAccessNode(GetNode()->GetNodeParent());
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -452,12 +426,11 @@ __try {
 STDMETHODIMP nsAccessNodeWrap::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
- 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetFirstChild(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+
+  *aNode = MakeAccessNode(GetNode()->GetFirstChild());
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -465,13 +438,12 @@ __try {
 
 STDMETHODIMP nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
-  __try {
-  if (!mDOMNode)
+__try {
+  if (IsDefunct())
     return E_FAIL;
 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetLastChild(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  *aNode = MakeAccessNode(GetNode()->GetLastChild());
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -480,12 +452,11 @@ STDMETHODIMP nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR
 STDMETHODIMP nsAccessNodeWrap::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetPreviousSibling(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  *aNode = MakeAccessNode(GetNode()->GetPreviousSibling());
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -494,12 +465,11 @@ __try {
 STDMETHODIMP nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetNextSibling(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  *aNode = MakeAccessNode(GetNode()->GetNextSibling());
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -512,17 +482,11 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
 __try {
   *aNode = nsnull;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content)
-    return E_FAIL;  // Node already shut down
+  if (IsDefunct())
+    return E_FAIL;
 
-  nsCOMPtr<nsIDOMNode> node =
-    do_QueryInterface(content->GetChildAt(aChildIndex));
+  *aNode = MakeAccessNode(GetNode()->GetChildAt(aChildIndex));
 
-  if (!node)
-    return E_FAIL; // No such child
-
-  *aNode = MakeAccessNode(node);
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -534,7 +498,7 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 __try {
   *aInnerHTML = nsnull;
 
-  nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(GetNode()));
   if (!domNSElement)
     return E_FAIL; // Node already shut down
 

@@ -465,4 +465,34 @@
       </method>
     </implementation>
   </binding>
+
+  <binding id="popup-notification">
+    <content align="start">
+      <xul:image class="popup-notification-icon"
+                 xbl:inherits="popupid=id"/>
+      <xul:vbox>
+        <xul:description class="popup-notification-description"
+                         xbl:inherits="value=label"/>
+        <xul:spacer flex="1"/>
+        <xul:hbox pack="end">
+          <xul:button anonid="button"
+                      class="popup-notification-menubutton"
+                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,type=buttontype">
+            <xul:menupopup anonid="menupopup"
+                           xbl:inherits="oncommand=menucommand">
+              <children/>
+            </xul:menupopup>
+          </xul:button>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <field name="button" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "button");
+      </field>
+      <field name="menupopup" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "menupopup");
+      </field>
+    </implementation>
+  </binding>
 </bindings>

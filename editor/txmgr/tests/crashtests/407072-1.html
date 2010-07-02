@@ -1,0 +1,22 @@
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var br = document.getElementById("br");
+  br.contentEditable = "true";
+  br.focus();
+
+  try { document.execCommand("justifyfull", false, null);  } catch(e) { }
+  try { document.execCommand("justifyfull", false, null);  } catch(e) { }
+        document.execCommand("underline",   false, null);
+        document.execCommand("insertimage", false, "foo");
+  try { document.execCommand("outdent",     false, null);  } catch(e) { }
+}
+
+</script>
+</head>
+
+<body onload="boom();"><br id="br"></body>
+</html>

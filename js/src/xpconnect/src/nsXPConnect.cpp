@@ -445,7 +445,24 @@ nsXPConnect::Collect()
 
     JSContext *cx = mCycleCollectionContext->GetJSContext();
     gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleCollectGCCallback);
-    JS_GC(cx);
+
+    // We want to scan the current thread for GC roots only if it was in a
+    // request prior to the Collect call to avoid false positives during the
+    // cycle collection. So to compensate for JS_BeginRequest in
+    // XPCCallContext::Init we disable the conservative scanner if that call
+    // has started the only request on this thread.
+    JS_ASSERT(cx->requestDepth >= 1);
+    JS_ASSERT(cx->thread->contextsInRequests >= 1);
+    if(cx->requestDepth >= 2 || cx->thread->contextsInRequests >= 2)
+    {
+        JS_GC(cx);
+    }
+    else
+    {
+        JS_THREAD_DATA(cx)->conservativeGC.disable();
+        JS_GC(cx);
+        JS_THREAD_DATA(cx)->conservativeGC.enable();
+    }
     JS_SetGCCallback(cx, gOldJSGCCallback);
     gOldJSGCCallback = nsnull;
 
@@ -582,7 +599,8 @@ nsXPConnect::CommenceShutdown()
     fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
 #endif
     // Tell the JS engine that we are about to destroy the runtime.
-    JS_CommenceRuntimeShutDown(mRuntime->GetJSRuntime());
+    JSRuntime* rt = mRuntime->GetJSRuntime();
+    JS_CommenceRuntimeShutDown(rt);
 }
 
 NS_IMETHODIMP
@@ -2147,6 +2165,15 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
 
     if(!list)
         return NS_OK; // No wrappers to update.
+
+    if(aWay == nsIXPConnect::XPC_XOW_NAVIGATED)
+    {
+        XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(aObject);
+        NS_ASSERTION(wn->NeedsXOW(), "Window isn't a window");
+
+        XPCCrossOriginWrapper::WindowNavigated(aJSContext, wn);
+        return NS_OK;
+    }
 
     JSAutoRequest req(aJSContext);
 

@@ -48,24 +48,16 @@ class nsAnonymousBlockFrame;
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
-// NS_INLINE_FRAME_HARD_TEXT_OFFSETS is used for access keys, where what
-// would normally be 1 text frame is split into 3 sets of an inline parent 
-// and text child (the pre access key text, the underlined key text, and
-// the post access key text). The offsets of the 3 text frame children
-// are set in nsCSSFrameConstructor
-
-#define NS_INLINE_FRAME_HARD_TEXT_OFFSETS            0x00100000
-
 /**  In Bidi left (or right) margin/padding/border should be applied to left
  *  (or right) most frame (or a continuation frame).
  *  This state value shows if this frame is left (or right) most continuation
  *  or not.
  */
-#define NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET     0x00200000
+#define NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET     NS_FRAME_STATE_BIT(21)
 
-#define NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST     0x00400000
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST     NS_FRAME_STATE_BIT(22)
 
-#define NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST    0x00800000
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST    NS_FRAME_STATE_BIT(23)
 
 /**
  * Inline frame class.
@@ -88,7 +80,7 @@ public:
                               const nsDisplayListSet& aLists);
 
 #ifdef ACCESSIBILITY
-  NS_IMETHODIMP GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
 #ifdef DEBUG

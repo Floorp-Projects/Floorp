@@ -61,9 +61,6 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
-  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
-  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
@@ -97,29 +94,6 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSpanElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLSpanElement)
 
-
-nsresult
-nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
-{
-  if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
-      mNodeInfo->Equals(nsGkAtoms::plaintext)) {
-    nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
-    return NS_OK;
-  }
-
-  return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);  
-}
-
-nsresult
-nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
-{
-  if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
-      mNodeInfo->Equals(nsGkAtoms::plaintext)) {
-    return nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
-  }
-
-  return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
-}
 
 // ------------------------------------------------------------------
 

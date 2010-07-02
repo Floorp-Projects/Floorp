@@ -130,7 +130,7 @@ function test() {
 
   // public session, add new tab: (A)
   let tab_A = gBrowser.addTab(testURL);
-  ss.setTabState(tab_A, state.toSource());
+  ss.setTabState(tab_A, JSON.stringify(state));
   tab_A.linkedBrowser.addEventListener("load", function(aEvent) {
     this.removeEventListener("load", arguments.callee, true);
 
@@ -167,7 +167,7 @@ function test() {
 
       // private browsing session, new tab: (B)
       let tab_B = gBrowser.addTab(testURL2);
-      ss.setTabState(tab_B, state1.toSource());
+      ss.setTabState(tab_B, JSON.stringify(state1));
       tab_B.linkedBrowser.addEventListener("load", function(aEvent) {
         this.removeEventListener("load", arguments.callee, true);
 

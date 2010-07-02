@@ -3018,11 +3018,28 @@ SandboxDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!str)
         return JS_FALSE;
 
-    char *bytes = JS_GetStringBytes(str);
-    if (!bytes)
+    jschar *chars = JS_GetStringChars(str);
+    if (!chars)
         return JS_FALSE;
 
-    fputs(bytes, stderr);
+    nsDependentString wstr(reinterpret_cast<PRUnichar *>(chars),
+                           JS_GetStringLength(str));
+    char *cstr = ToNewUTF8String(wstr);
+    if (!cstr)
+        return JS_FALSE;
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    // Be nice and convert all \r to \n.
+    char *c = cstr, *cEnd = cstr + strlen(cstr);
+    while (c < cEnd) {
+        if (*c == '\r')
+            *c = '\n';
+        c++;
+    }
+#endif
+
+    fputs(cstr, stderr);
+    NS_Free(cstr);
     return JS_TRUE;
 }
 
@@ -3196,11 +3213,6 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
     if(NS_FAILED(rv))
         return NS_ERROR_XPC_UNEXPECTED;
 
-    JSObject *sandbox = JS_NewGlobalObject(cx, &SandboxClass);
-    if (!sandbox)
-        return NS_ERROR_XPC_UNEXPECTED;
-    js::AutoObjectRooter tvr(cx, sandbox);
-
     nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(prinOrSop));
 
     if (!sop) {
@@ -3225,19 +3237,35 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Pass on ownership of sop to |sandbox|.
-
-    if (!JS_SetPrivate(cx, sandbox, sop.forget().get())) {
-        return NS_ERROR_XPC_UNEXPECTED;
-    }
-
-    rv = xpc->InitClasses(cx, sandbox);
-    if (NS_SUCCEEDED(rv) &&
-        !JS_DefineFunctions(cx, sandbox, SandboxFunctions)) {
-        rv = NS_ERROR_FAILURE;
-    }
+    JSPrincipals *jsPrincipals;
+    rv = sop->GetPrincipal()->GetJSPrincipals(cx, &jsPrincipals);
     if (NS_FAILED(rv))
+        return rv;
+    JSObject *sandbox = JS_NewCompartmentAndGlobalObject(cx, &SandboxClass, jsPrincipals);
+    if (jsPrincipals)
+        JSPRINCIPALS_DROP(cx, jsPrincipals);
+    if (!sandbox)
         return NS_ERROR_XPC_UNEXPECTED;
+    js::AutoValueRooter tvr(cx, sandbox);
+
+    {
+        JSAutoCrossCompartmentCall ac;
+        if (!ac.enter(cx, sandbox))
+            return NS_ERROR_XPC_UNEXPECTED;
+
+        // Pass on ownership of sop to |sandbox|.
+        if (!JS_SetPrivate(cx, sandbox, sop.forget().get())) {
+            return NS_ERROR_XPC_UNEXPECTED;
+        }
+
+        rv = xpc->InitClasses(cx, sandbox);
+        if (NS_SUCCEEDED(rv) &&
+            !JS_DefineFunctions(cx, sandbox, SandboxFunctions)) {
+            rv = NS_ERROR_FAILURE;
+        }
+        if (NS_FAILED(rv))
+            return NS_ERROR_XPC_UNEXPECTED;
+    }
 
     if (vp) {
         *vp = OBJECT_TO_JSVAL(sandbox);
@@ -3621,20 +3649,9 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
             jsval exn;
             if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
-                // Stash the exception in |cx| so we can execute code on
+                // Root the exception temporarily so we can execute code on
                 // sandcx without a pending exception.
-                // Note that, even if wrapped, |exn| is rooted.
-                {
-                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
-
-                    if (!JSVAL_IS_PRIMITIVE(exn) &&
-                        XPCWrapper::RewrapObject(cx, callingScope,
-                                                 JSVAL_TO_OBJECT(exn),
-                                                 XPCWrapper::SJOW, &exn)) {
-                        JS_SetPendingException(cx, exn);
-                    }
-                }
-
+                js::AutoValueRooter exnroot(sandcx->GetJSContext(), exn);
                 JS_ClearPendingException(sandcx->GetJSContext());
                 if (returnStringOnly) {
                     // The caller asked for strings only, convert the
@@ -3650,7 +3667,17 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                         JS_ClearPendingException(cx);
                         rv = NS_ERROR_FAILURE;
                     }
+                } else {
+                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
+
+                    if (!JSVAL_IS_PRIMITIVE(exn) &&
+                        XPCWrapper::RewrapObject(cx, callingScope,
+                                                 JSVAL_TO_OBJECT(exn),
+                                                 XPCWrapper::SJOW, &exn)) {
+                        JS_SetPendingException(cx, exn);
+                    }
                 }
+
 
                 // Clear str so we don't confuse callers.
                 str = nsnull;

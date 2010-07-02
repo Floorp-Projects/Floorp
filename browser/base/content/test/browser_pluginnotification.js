@@ -37,15 +37,15 @@ TabOpenListener.prototype = {
       gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
       this.tab = event.originalTarget;
       this.browser = this.tab.linkedBrowser;
-      gBrowser.addEventListener("load", this, true);
-    } else if (event.type == "load") {
-      gBrowser.removeEventListener("load", this, true);
+      gBrowser.addEventListener("pageshow", this, false);
+    } else if (event.type == "pageshow") {
+      if (event.target.location.href != this.url)
+        return;
+      gBrowser.removeEventListener("pageshow", this, false);
       this.tab.addEventListener("TabClose", this, false);
       var url = this.browser.contentDocument.location.href;
       is(url, this.url, "Should have opened the correct tab");
-      // Allow any other load handlers to execute
-      var self = this;
-      executeSoon(function() { self.opencallback(self.tab, self.browser.contentWindow); } );
+      this.opencallback(this.tab, this.browser.contentWindow);
     } else if (event.type == "TabClose") {
       if (event.originalTarget != this.tab)
         return;
@@ -131,7 +131,7 @@ function test3() {
 }
 
 function test4(tab, win) {
-  todo_is(win.gView, "plugins", "Should have displayed the plugins pane");
+  is(win.wrappedJSObject.gViewController.currentViewId, "addons://list/plugin", "Should have displayed the plugins pane");
   gBrowser.removeTab(tab);
 }
 

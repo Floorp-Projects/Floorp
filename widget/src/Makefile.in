@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE  = widget
 
-DIRS		= xpwidgets
+DIRS		= shared xpwidgets
 
 ifneq (,$(filter beos os2 cocoa qt android,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)

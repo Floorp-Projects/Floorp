@@ -88,11 +88,14 @@ CMMSRCS = \
 		nsPrintOptionsX.mm \
 		nsPrintSettingsX.mm \
 		nsIdleServiceX.mm \
-		nsAccelerometerX.mm \
 		nsCocoaTextInputHandler.mm \
 		nsMacDockSupport.mm \
 		nsStandaloneNativeMenu.mm \
 		$(NULL)
+
+ifeq (x86_64,$(TARGET_CPU))
+CMMSRCS += ComplexTextInputPanel.mm
+endif
 
 XPIDLSRCS	+= \
 		nsPIWidgetCocoa.idl \

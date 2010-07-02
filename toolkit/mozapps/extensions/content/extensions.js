@@ -58,6 +58,9 @@ const SEARCH_SCORE_MATCH_WHOLEWORD = 1;
 const SEARCH_SCORE_MATCH_WORDBOUNDRY = 0.6;
 const SEARCH_SCORE_MATCH_SUBSTRING = 0.3;
 
+const VIEW_DEFAULT = "addons://list/extension";
+
+const INTEGER_FIELDS = ["dateUpdated", "size", "relevancescore"];
 
 var gStrings = {};
 XPCOMUtils.defineLazyServiceGetter(gStrings, "bundleSvc",
@@ -85,17 +88,49 @@ XPCOMUtils.defineLazyGetter(gStrings, "appVersion", function() {
 window.addEventListener("load",  initialize, false);
 window.addEventListener("unload",  shutdown, false);
 
+var gPendingInitializations = 1;
+__defineGetter__("gIsInitializing", function() gPendingInitializations > 0);
+
 function initialize() {
   gCategories.initialize();
   gHeader.initialize();
   gViewController.initialize();
   gEventManager.initialize();
 
-  gViewController.loadView("addons://list/extension");
+  var view = VIEW_DEFAULT;
+  if (gCategories.node.selectedItem &&
+      gCategories.node.selectedItem.id != "category-search")
+    view = gCategories.node.selectedItem.value;
+
+  if ("arguments" in window && window.arguments.length > 0) {
+    if ("view" in window.arguments[0])
+      view = window.arguments[0].view;
+  }
+
+  gViewController.loadView(view);
+  notifyInitialized();
+}
+
+function notifyInitialized() {
+  if (!gIsInitializing)
+    return;
+
+  gPendingInitializations--;
+  if (!gIsInitializing) {
+    var event = document.createEvent("Events");
+    event.initEvent("Initialized", true, true);
+    document.dispatchEvent(event);
+  }
 }
 
 function shutdown() {
   gEventManager.shutdown();
+  gViewController.shutdown();
+}
+
+// Used by external callers to load a specific view into the manager
+function loadView(url) {
+  gViewController.loadView(url);
 }
 
 var gEventManager = {
@@ -211,6 +246,7 @@ var gViewController = {
   viewPort: null,
   currentViewId: "",
   currentViewObj: null,
+  currentViewRequest: 0,
   previousViewId: "",
   viewObjects: {},
 
@@ -228,10 +264,18 @@ var gViewController = {
     window.controllers.appendController(this);
   },
 
+  shutdown: function() {
+    this.currentViewRequest = 0;
+  },
+
   parseViewId: function(aViewId) {
     var matchRegex = /^addons:\/\/([^\/]+)\/(.*)$/;
     var [,viewType, viewParam] = aViewId.match(matchRegex) || [];
     return {type: viewType, param: decodeURIComponent(viewParam)};
+  },
+
+  get isLoading() {
+    return this.currentViewObj.node.hasAttribute("loading");
   },
 
   loadView: function(aViewId) {
@@ -252,6 +296,7 @@ var gViewController = {
         let canHide = this.currentViewObj.hide();
         if (canHide === false)
           return;
+        this.viewPort.selectedPanel.removeAttribute("loading");
       } catch (e) {
         // this shouldn't be fatal
         Cu.reportError(e);
@@ -266,7 +311,15 @@ var gViewController = {
     this.currentViewObj = viewObj;
 
     this.viewPort.selectedPanel = this.currentViewObj.node;
-    this.currentViewObj.show(view.param);
+    this.viewPort.selectedPanel.setAttribute("loading", "true");
+    this.currentViewObj.show(view.param, ++this.currentViewRequest);
+  },
+
+  notifyViewChanged: function() {
+    this.viewPort.selectedPanel.removeAttribute("loading");
+    var event = document.createEvent("Events");
+    event.initEvent("ViewChanged", true, true);
+    this.currentViewObj.node.dispatchEvent(event);
   },
 
   commands: {
@@ -508,14 +561,15 @@ var gViewController = {
     }
   },
 
-  doCommand: function(aCommand) {
+  doCommand: function(aCommand, aAddon) {
     if (!this.supportsCommand(aCommand))
       return;
-    var addon = this.currentViewObj.getSelectedAddon();
     var cmd = this.commands[aCommand];
-    if (!cmd.isEnabled(addon))
+    if (!aAddon)
+      aAddon = this.currentViewObj.getSelectedAddon();
+    if (!cmd.isEnabled(aAddon))
       return;
-    cmd.doCommand(addon);
+    cmd.doCommand(aAddon);
   },
 
   onEvent: function() {}
@@ -571,16 +625,48 @@ function createItem(aObj, aIsInstall, aRequiresRestart) {
     // the binding handles the rest
     item.setAttribute("value", aObj.id);
 
-    var updated = "000000000000000"; // HACK: nsIXULSortService doesn't do numerical sorting (bug 379745)
+    // The XUL sort service only supports 32 bit integers so we strip the
+    // milliseconds to make this small enough
     if (aObj.updateDate)
-      updated = (updated + aObj.updateDate.valueOf()).slice(-14);
-    item.setAttribute("dateUpdated", updated);
+      item.setAttribute("dateUpdated", aObj.updateDate.getTime() / 1000);
 
-    var size = Math.floor(Math.random() * 1024 * 1024 * 2);
-    size = ("00000000000" + size).slice(-10); // HACK: nsIXULSortService doesn't do numerical sorting (bug 379745)
-    item.setAttribute("size", size); // XXXapi - bug 561261
+    if (aObj.size)
+      item.setAttribute("size", aObj.size);
   }
   return item;
+}
+
+function getAddonsAndInstalls(aType, aCallback) {
+  var addonTypes = null, installTypes = null;
+  if (aType != null) {
+    addonTypes = [aType];
+    installTypes = [aType];
+    if (aType == "extension") {
+      addonTypes.push("bootstrapped");
+      installTypes = addonTypes.concat("");
+    }
+  }
+
+  var addons = null, installs = null;
+
+  AddonManager.getAddonsByTypes(addonTypes, function(aAddonsList) {
+    addons = aAddonsList;
+    if (installs != null)
+      aCallback(addons, installs);
+  });
+
+  AddonManager.getInstallsByTypes(installTypes, function(aInstallsList) {
+    // skip over upgrade installs and non-active installs
+    installs = aInstallsList.filter(function(aInstall) {
+      return !(aInstall.existingAddon ||
+               aInstall.state == AddonManager.STATE_AVAILABLE);
+    });
+
+    if (addons != null)
+      aCallback(addons, installs)
+  });
+
+  return {addon: addonTypes, install: installTypes};
 }
 
 
@@ -614,17 +700,19 @@ var gCategories = {
       }
     }, false);
 
-    var maybeHidden = ["addons://list/language", "addons://list/searchengine"];
+    var maybeHidden = ["addons://list/locale", "addons://list/searchengine"];
+    gPendingInitializations += maybeHidden.length;
     maybeHidden.forEach(function(aId) {
       var type = gViewController.parseViewId(aId).param;
-      AddonManager.getAddonsByTypes([type], function(aAddonsList) {
-        self.get(aId).hidden = (aAddonsList.length == 0);
-
-        if (aAddonsList.length > 0)
+      getAddonsAndInstalls(type, function(aAddonsList, aInstallsList) {
+        if (aAddonsList.length > 0 || aInstallsList.length > 0) {
+          self.get(aId).hidden = false;
+          notifyInitialized();
           return;
+        }
 
         gEventManager.registerInstallListener({
-          onNewInstall: function(aInstall) {
+          onDownloadStarted: function(aInstall) {
             this._maybeShowCategory(aInstall);
           },
 
@@ -647,6 +735,8 @@ var gCategories = {
             }
           }
         });
+
+        notifyInitialized();
       });
     });
   },
@@ -762,6 +852,7 @@ var gDiscoverView = {
                 .getService(Ci.nsIURLFormatter)
                 .formatURLPref(PREF_DISCOVERURL);
 
+    gPendingInitializations++;
     AddonManager.getAllAddons(function(aAddons) {
       var list = {};
       aAddons.forEach(function(aAddon) {
@@ -776,6 +867,7 @@ var gDiscoverView = {
       });
 
       gDiscoverView._browser.homePage = url + "#" + JSON.stringify(list);
+      notifyInitialized();
     });
   },
 
@@ -787,6 +879,7 @@ var gDiscoverView = {
       this._browser.goHome();
 
     gViewController.updateCommands();
+    gViewController.notifyViewChanged();
   },
 
   hide: function() { },
@@ -819,7 +912,7 @@ var gSearchView = {
     }, false);
   },
 
-  show: function(aQuery) {
+  show: function(aQuery, aRequest) {
     gHeader.setName(gStrings.ext.GetStringFromName("header-search"));
     this.showEmptyNotice(false);
 
@@ -831,6 +924,9 @@ var gSearchView = {
 
     var self = this;
     AddonManager.getAddonsByTypes(null, function(aAddonsList) {
+      if (gViewController && aRequest != gViewController.currentViewRequest)
+        return;
+
       var elementCount = 0;
       for (let i = 0; i < aAddonsList.length; i++) {
         let addon = aAddonsList[i];
@@ -853,6 +949,7 @@ var gSearchView = {
         self.showEmptyNotice(true);
 
       gViewController.updateCommands();
+      gViewController.notifyViewChanged();
     });
   },
 
@@ -906,10 +1003,15 @@ var gSearchView = {
   onSortChanged: function(aSortBy, aAscending) {
     var header = this._listBox.firstChild;
     this._listBox.removeChild(header);
+
+    var hints = aAscending ? "ascending" : "descending";
+    if (INTEGER_FIELDS.indexOf(aSortBy) >= 0)
+      hints += " integer";
+
     var sortService = Cc["@mozilla.org/xul/xul-sort-service;1"].
                       getService(Ci.nsIXULSortService);
-    sortService.sort(this._listBox, aSortBy,
-                     aAscending ? "ascending" : "descending");
+    sortService.sort(this._listBox, aSortBy, hints);
+
     this._listBox.insertBefore(header, this._listBox.firstChild);
   },
 
@@ -949,37 +1051,25 @@ var gListView = {
     }, false);
   },
 
-  show: function(aType) {
+  show: function(aType, aRequest) {
     gHeader.setName(gStrings.ext.GetStringFromName("header-" + aType));
     this.showEmptyNotice(false);
-
-    this._types = [aType];
-    this._installTypes = [aType];
-    if (aType == "extension") {
-      this._types.push("bootstrapped");
-      this._installTypes = this._types.concat("");
-    }
 
     while (this._listBox.itemCount > 0)
       this._listBox.removeItemAt(0);
 
     var self = this;
-    var addons = null, installs = null;
-
-    function updateList() {
-      if (addons == null || installs == null)
+    var types = getAddonsAndInstalls(aType, function(aAddonsList, aInstallsList) {
+      if (gViewController && aRequest != gViewController.currentViewRequest)
         return;
 
-      for (let i = 0; i < addons.length; i++) {
-        let item = createItem(addons[i]);
+      for (let i = 0; i < aAddonsList.length; i++) {
+        let item = createItem(aAddonsList[i]);
         self._listBox.appendChild(item);
       }
 
-      for (let i = 0; i < installs.length; i++) {
-        // skip over upgrade installs
-        if (installs[i].existingAddon)
-          continue;
-        let item = createItem(installs[i], true);
+      for (let i = 0; i < aInstallsList.length; i++) {
+        let item = createItem(aInstallsList[i], true);
         self._listBox.appendChild(item);
       }
 
@@ -988,20 +1078,13 @@ var gListView = {
       else
         self.showEmptyNotice(true);
 
-      gViewController.updateCommands();
-    }
-
-    AddonManager.getAddonsByTypes(this._types, function(aAddonsList) {
-      addons = aAddonsList;
-      updateList();
-    });
-
-    AddonManager.getInstallsByTypes(this._installTypes, function(aInstallsList) {
-      installs = aInstallsList;
-      updateList();
       gEventManager.registerInstallListener(self);
+      gViewController.updateCommands();
+      gViewController.notifyViewChanged();
     });
 
+    this._types = types.addon;
+    this._installTypes = types.install;
   },
 
   hide: function() {
@@ -1013,10 +1096,13 @@ var gListView = {
   },
 
   onSortChanged: function(aSortBy, aAscending) {
+    var hints = aAscending ? "ascending" : "descending";
+    if (INTEGER_FIELDS.indexOf(aSortBy) >= 0)
+      hints += " integer";
+
     var sortService = Cc["@mozilla.org/xul/xul-sort-service;1"].
                       getService(Ci.nsIXULSortService);
-    sortService.sort(this._listBox, aSortBy,
-                     aAscending ? "ascending" : "descending");
+    sortService.sort(this._listBox, aSortBy, hints);
   },
 
   onNewInstall: function(aInstall) {
@@ -1081,16 +1167,20 @@ var gDetailView = {
     }, true);
   },
 
-  show: function(aAddonId) {
+  show: function(aAddonId, aRequest) {
     var self = this;
-    this.node.setAttribute("loading", true);
     this._loadingTimer = setTimeout(function() {
       self.node.setAttribute("loading-extended", true);
     }, LOADING_MSG_DELAY);
     gHeader.showBackButton();
 
+    var view = gViewController.currentViewId;
+
     AddonManager.getAddonByID(aAddonId, function(aAddon) {
       self.clearLoading();
+
+      if (gViewController && aRequest != gViewController.currentViewRequest)
+        return;
 
       self._addon = aAddon;
       gEventManager.registerAddonListener(self, aAddon.id);
@@ -1127,6 +1217,7 @@ var gDetailView = {
       self.updateState();
 
       gViewController.updateCommands();
+      gViewController.notifyViewChanged();
     });
   },
 
@@ -1174,7 +1265,6 @@ var gDetailView = {
       this._loadingTimer = null;
     }
 
-    this.node.removeAttribute("loading");
     this.node.removeAttribute("loading-extended");
   },
 
@@ -1208,5 +1298,65 @@ var gDetailView = {
 
   onOperationCancelled: function() {
     this.updateState();
+  }
+};
+
+
+var gDragDrop = {
+  onDragOver: function(aEvent) {
+    var types = aEvent.dataTransfer.types;
+    if (types.contains("text/uri-list") ||
+        types.contains("text/x-moz-url") ||
+        types.contains("application/x-moz-file"))
+      aEvent.preventDefault();
+  },
+
+  onDrop: function(aEvent) {
+    var dataTransfer = aEvent.dataTransfer;
+    var urls = [];
+
+    // Convert every dropped item into a url
+    for (var i = 0; i < dataTransfer.mozItemCount; i++) {
+      var url = dataTransfer.mozGetDataAt("text/uri-list", i);
+      if (url) {
+        urls.push(url);
+        continue;
+      }
+
+      url = dataTransfer.mozGetDataAt("text/x-moz-url", i);
+      if (url) {
+        urls.push(url.split("\n")[0]);
+        continue;
+      }
+
+      var file = dataTransfer.mozGetDataAt("application/x-moz-file", i);
+      if (file) {
+        urls.push(Services.io.newFileURI(file).spec);
+        continue;
+      }
+    }
+
+    var pos = 0;
+    var installs = [];
+
+    function buildNextInstall() {
+      if (pos == urls.length) {
+        if (installs.length > 0) {
+          // Display the normal install confirmation for the installs
+          AddonManager.installAddonsFromWebpage("application/x-xpinstall", this,
+                                                null, installs);
+        }
+        return;
+      }
+
+      AddonManager.getInstallForURL(urls[pos++], function(aInstall) {
+        installs.push(aInstall);
+        buildNextInstall();
+      }, "application/x-xpinstall");
+    }
+
+    buildNextInstall();
+
+    aEvent.preventDefault();
   }
 };

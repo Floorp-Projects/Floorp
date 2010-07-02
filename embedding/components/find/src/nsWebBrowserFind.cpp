@@ -395,7 +395,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   if (!domDoc) return;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  nsIPresShell* presShell = doc->GetPrimaryShell();
+  nsIPresShell* presShell = doc->GetShell();
   if (!presShell) return;
 
   nsCOMPtr<nsIDOMNode> node;
@@ -834,7 +834,7 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
     if (!domDoc) return;
 
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    nsIPresShell* presShell = doc->GetPrimaryShell();
+    nsIPresShell* presShell = doc->GetShell();
     if (!presShell) return;
 
     // text input controls have their independent selection controllers

@@ -37,10 +37,15 @@
 #ifndef nsIContentUtils_h__
 #define nsIContentUtils_h__
 
-// C4EA618E-A3D9-4524-8EEA-E92F26FC44DB
+#include "nsIDocumentLoaderFactory.h"
+#include "nsCOMPtr.h"
+#include "nsAString.h"
+#include "nsMargin.h"
+
+// {3682DD99-8560-44f4-9B8F-CCCE9D7B96FB}
 #define NS_ICONTENTUTILS_IID \
-{ 0xC4EA618E, 0xA3D9, 0x4524, \
-  { 0x8E, 0xEA, 0xE9, 0x2F, 0x26, 0xFC, 0x44, 0xDB } }
+{ 0x3682dd99, 0x8560, 0x44f4, \
+  { 0x9b, 0x8f, 0xcc, 0xce, 0x9d, 0x7b, 0x96, 0xfb } }
 
 class nsIContentUtils : public nsISupports
 {
@@ -49,6 +54,19 @@ public:
     NS_DECL_ISUPPORTS
 
     virtual PRBool IsSafeToRunScript();
+    virtual PRBool ParseIntMarginValue(const nsAString& aString, nsIntMargin& result);
+
+    enum ContentViewerType
+    {
+        TYPE_UNSUPPORTED,
+        TYPE_CONTENT,
+        TYPE_PLUGIN,
+        TYPE_UNKNOWN
+    };
+
+    virtual already_AddRefed<nsIDocumentLoaderFactory>
+    FindInternalContentViewer(const char* aType,
+                              ContentViewerType* aLoaderType = NULL);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentUtils, NS_ICONTENTUTILS_IID)

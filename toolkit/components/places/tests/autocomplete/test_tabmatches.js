@@ -62,16 +62,16 @@ addOpenPages(0, 1);
 
 let gTests = [
   ["0: single result, that is also a tab match",
-   "abc.com", [0,1]],
+   "abc.com", [1]],
   ["1: two results, one tab match",
-   "abc", [0,1,2]],
+   "abc", [1,2]],
   ["2: two results, both tab matches",
-   "abc", [0,1,2,3],
+   "abc", [1,3],
    function() {
      addOpenPages(2, 1);
    }],
   ["3: two results, both tab matches, one has multiple tabs",
-   "abc", [0,1,2,3],
+   "abc", [1,3],
    function() {
      addOpenPages(2, 5);
    }],

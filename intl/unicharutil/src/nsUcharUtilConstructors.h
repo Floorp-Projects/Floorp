@@ -41,8 +41,6 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsCaseConversionImp2.h"
 #include "nsCategoryImp.h"
-#include "nsHankakuToZenkakuCID.h"
-#include "nsTextTransformFactory.h"
 #include "nsICaseConversion.h"
 #include "nsEntityConverter.h"
 #include "nsSaveAsCharset.h"
@@ -78,8 +76,6 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
     return rv;                                                       \
 }
 
-
-UNICHARUTIL_MAKE_CTOR(HankakuToZenkaku)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCaseConversionImp2,
                                          nsCaseConversionImp2::GetInstance)

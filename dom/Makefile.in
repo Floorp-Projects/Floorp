@@ -80,6 +80,8 @@ DIRS += \
   src \
   locales \
   plugins \
+  indexedDB \
+  system \
   $(NULL)
 
 ifdef ENABLE_TESTS

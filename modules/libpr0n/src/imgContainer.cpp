@@ -1397,6 +1397,15 @@ NS_IMETHODIMP imgContainer::NewSourceData()
 }
 
 //******************************************************************************
+/* void setSourceSizeHint(in unsigned long sizeHint); */
+NS_IMETHODIMP imgContainer::SetSourceSizeHint(PRUint32 sizeHint)
+{
+  if (sizeHint && StoringSourceData())
+    mSourceData.SetCapacity(sizeHint);
+  return NS_OK;
+}
+
+//******************************************************************************
 /* void notify(in nsITimer timer); */
 NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
 {
@@ -1624,7 +1633,8 @@ nsresult imgContainer::DoComposite(imgFrame** aFrameToUse,
       return rv;
     }
     needToBlankComposite = PR_TRUE;
-  } else if (aNextFrameIndex == 1) {
+  } else if (aNextFrameIndex != mAnim->lastCompositedFrameIndex+1) {
+
     // When we are looping the compositing frame needs to be cleared.
     needToBlankComposite = PR_TRUE;
   }

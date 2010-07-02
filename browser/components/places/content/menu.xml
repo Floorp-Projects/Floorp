@@ -117,6 +117,8 @@
 
             // The element we are dragging over
             let elt = aEvent.target;
+            if (elt.localName == "menupopup")
+              elt = elt.parentNode;
 
             // Calculate positions taking care of arrowscrollbox
             let eventY = aEvent.layerY;
@@ -132,6 +134,14 @@
                                   PlacesUtils.getConcreteItemId(resultNode),
                                   -1,
                                   Ci.nsITreeView.DROP_ON);
+              // We can set folderElt if we are dropping over a static menu that
+              // has an internal placespopup.
+              let isMenu = elt.localName == "menu" ||
+                 (elt.localName == "toolbarbutton" &&
+                  elt.getAttribute("type") == "menu");
+              if (isMenu && elt.lastChild &&
+                  elt.lastChild.hasAttribute("placespopup"))
+                dropPoint.folderElt = elt;
               return dropPoint;
             }
             else if ((PlacesUtils.nodeIsFolder(elt._placesNode) ||

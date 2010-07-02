@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -710,7 +710,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                          ? InternalCall(cx, obj,
                                         ObjectTag(*CastAsObject(wp->setter)),
                                         1, vp, vp)
-                         : wp->setter(cx, obj, userid, vp));
+                         : callJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
 
             /* Evil code can cause us to have an arguments object. */
             if (frame.getFrame())
@@ -815,7 +815,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
      * If, by unwrapping and innerizing, we changed the object, check
      * again to make sure that we're allowed to set a watch point.
      */
-    if (origobj != obj && !obj->checkAccess(cx, propid, JSACC_WATCH, &v, &attrs))
+    if (origobj != obj && !CheckAccess(cx, obj, propid, JSACC_WATCH, &v, &attrs))
         return JS_FALSE;
 
     if (!obj->isNative()) {
@@ -1570,6 +1570,81 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
             js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
     cx->free(pd);
+}
+
+/************************************************************************/
+
+static bool
+SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObject *scopeobj)
+{
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, scopeobj);
+    JS_ASSERT(fun->minArgs() == 0 && !fun->isInterpreted() && fun->u.n.extra == 0);
+
+    const uintN vplen = 2;
+    const uintN nfixed = 0;
+    if (!cx->stack().getExecuteFrame(cx, js_GetTopStackFrame(cx), vplen, nfixed, frame))
+        return false;
+
+    jsval *vp = frame.getvp();
+    PodZero(vp, vplen);
+    vp[0] = OBJECT_TO_JSVAL(scopeobj);
+
+    JSStackFrame *fp = frame.getFrame();
+    PodZero(fp);
+    fp->fun = fun;
+    fp->argv = vp + 2;
+    fp->scopeChain = scopeobj->getGlobal();
+
+    regs.pc = NULL;
+    regs.sp = fp->slots();
+
+    cx->stack().pushExecuteFrame(cx, frame, regs, NULL);
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js_GetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
+                                jsval *vp)
+{
+    ExecuteFrameGuard frame;
+    JSFrameRegs regs;
+
+    if (!SetupFakeFrame(cx, frame, regs, scopeobj))
+        return false;
+
+    bool ok = JS_GetPropertyById(cx, obj, id, vp);
+    frame.getFrame()->putActivationObjects(cx);
+    return ok;
+}
+
+JS_FRIEND_API(JSBool)
+js_SetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
+                                jsval *vp)
+{
+    ExecuteFrameGuard frame;
+    JSFrameRegs regs;
+
+    if (!SetupFakeFrame(cx, frame, regs, scopeobj))
+        return false;
+
+    bool ok = JS_SetPropertyById(cx, obj, id, vp);
+    frame.getFrame()->putActivationObjects(cx);
+    return ok;
+}
+
+JS_FRIEND_API(JSBool)
+js_CallFunctionValueWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsval funval,
+                                  uintN argc, jsval *argv, jsval *rval)
+{
+    ExecuteFrameGuard frame;
+    JSFrameRegs regs;
+
+    if (!SetupFakeFrame(cx, frame, regs, scopeobj))
+        return false;
+
+    bool ok = JS_CallFunctionValue(cx, obj, funval, argc, argv, rval);
+    frame.getFrame()->putActivationObjects(cx);
+    return ok;
 }
 
 /************************************************************************/

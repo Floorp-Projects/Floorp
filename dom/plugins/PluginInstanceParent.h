@@ -244,7 +244,7 @@ public:
     }
 
     virtual bool
-    AnswerPluginGotFocus();
+    AnswerPluginFocusChange(const bool& gotFocus);
 
 #if defined(OS_MACOSX)
     void Invalidate();

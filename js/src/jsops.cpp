@@ -83,9 +83,11 @@
                 moreInterrupts = true;
                 break;
               case ARECORD_IMACRO:
+              case ARECORD_IMACRO_ABORTED:
                 atoms = COMMON_ATOMS_START(&rt->atomState);
                 op = JSOp(*regs.pc);
-                DO_OP();    /* keep interrupting for op. */
+                if (status == ARECORD_IMACRO)
+                    DO_OP();    /* keep interrupting for op. */
                 break;
               case ARECORD_ERROR:
                 // The code at 'error:' aborts the recording.
@@ -1917,17 +1919,12 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 PCMETER(cache->pchits++);
                 PCMETER(cache->addpchits++);
 
-                /*
-                 * Beware classes such as Function that use the
-                 * reserveSlots hook to allocate a number of reserved
-                 * slots that may vary with obj.
-                 */
-                if (slot < obj->numSlots() &&
-                    !obj->getClass()->reserveSlots) {
+                if (slot < obj->numSlots()) {
                     ++scope->freeslot;
                 } else {
                     if (!js_AllocSlot(cx, obj, &slot))
                         goto error;
+                    JS_ASSERT(slot + 1 == scope->freeslot);
                 }
 
                 /*
@@ -1935,12 +1932,16 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * if something created a hash table for scope, we must
                  * pay the price of JSScope::putProperty.
                  *
-                 * (A reserveSlots hook can cause scopes of the same
-                 * shape to have different freeslot values. This is
-                 * what causes the slot != sprop->slot case. See
-                 * js_GetMutableScope.)
+                 * (A built-in object with a pre-allocated but not fixed
+                 * population of reserved slots  hook can cause scopes of the
+                 * same shape to have different freeslot values. Arguments,
+                 * Block, Call, and certain Function objects pre-allocate
+                 * reserveds lots this way. This is what causes the slot !=
+                 * sprop->slot case. See js_GetMutableScope. FIXME 558451)
                  */
-                if (slot != sprop->slot || scope->table) {
+                if (slot == sprop->slot && !scope->table) {
+                    scope->extend(cx, sprop);
+                } else {
                     JSScopeProperty *sprop2 =
                         scope->putProperty(cx, sprop->id,
                                            sprop->getter(), sprop->setter(),
@@ -1951,8 +1952,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         goto error;
                     }
                     sprop = sprop2;
-                } else {
-                    scope->extend(cx, sprop);
                 }
 
                 /*
@@ -2205,7 +2204,7 @@ BEGIN_CASE(JSOP_NEW)
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc), JS_FALSE))
+    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))
         goto error;
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
@@ -2288,10 +2287,6 @@ BEGIN_CASE(JSOP_APPLY)
             Value *newsp = newfp->base();
             SetValueRangeToUndefined(newfp->slots(), newsp);
 
-            /* Scope with a call object parented by callee's parent. */
-            if (fun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-                goto error;
-
             /* Switch version if currentVersion wasn't overridden. */
             newfp->callerVersion = (JSVersion) cx->version;
             if (JS_LIKELY(cx->version == currentVersion)) {
@@ -2312,6 +2307,10 @@ BEGIN_CASE(JSOP_APPLY)
             fp = newfp;
             script = newscript;
             atoms = script->atomMap.vector;
+
+            /* Now that the new frame is rooted, maybe create a call object. */
+            if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+                goto error;
 
             /* Call the debugger hook if present. */
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
@@ -3479,9 +3478,7 @@ BEGIN_CASE(JSOP_SETTER)
      * Getters and setters are just like watchpoints from an access control
      * point of view.
      */
-    Value rtmp;
-    uintN attrs;
-    if (!obj->checkAccess(cx, id, JSACC_WATCH, &rtmp, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
         goto error;
 
     PropertyOp getter, setter;
@@ -3538,7 +3535,7 @@ BEGIN_CASE(JSOP_NEWINIT)
         if (!obj)
             goto error;
     } else {
-        obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
         if (!obj)
             goto error;
 
@@ -3585,7 +3582,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
     /* Load the object being initialized into lval/obj. */
     JSObject *obj = &regs.sp[-2].asObject();
     JS_ASSERT(obj->isNative());
-    JS_ASSERT(!obj->getClass()->reserveSlots);
 
     JSScope *scope = obj->scope();
 
@@ -4194,17 +4190,6 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
 }
 END_CASE(JSOP_XMLELTEXPR)
 
-BEGIN_CASE(JSOP_XMLOBJECT)
-{
-    JSObject *obj;
-    LOAD_OBJECT(0, obj);
-    obj = js_CloneXMLObject(cx, obj);
-    if (!obj)
-        goto error;
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_XMLOBJECT)
-
 BEGIN_CASE(JSOP_XMLCDATA)
 {
     JSAtom *atom;
@@ -4373,6 +4358,8 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
 END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
 
+  L_JSOP_UNUSED180:
+
 #if JS_THREADED_INTERP
   L_JSOP_BACKPATCH:
   L_JSOP_BACKPATCH_POP:
@@ -4402,7 +4389,6 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_XMLPI:
   L_JSOP_XMLCOMMENT:
   L_JSOP_XMLCDATA:
-  L_JSOP_XMLOBJECT:
   L_JSOP_XMLELTEXPR:
   L_JSOP_XMLTAGEXPR:
   L_JSOP_TOXMLLIST:

@@ -67,7 +67,7 @@ GetCSSComputedValue(nsIContent* aElem,
     return PR_FALSE;
   }
 
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   if (!shell) {
     NS_WARNING("Unable to look up computed style -- no pres shell");
     return PR_FALSE;
@@ -145,8 +145,8 @@ nsSMILCSSProperty::GetBaseValue() const
 
   // (4) Populate our nsSMILValue from the computed style
   if (didGetComputedVal) {
-    nsSMILCSSValueType::ValueFromString(mPropID, mElement, computedStyleVal,
-                                        PR_FALSE, baseValue);
+    nsSMILCSSValueType::ValueFromString(mPropID, mElement,
+                                        computedStyleVal, baseValue);
   }
   return baseValue;
 }
@@ -155,12 +155,11 @@ nsresult
 nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   PRBool& aCanCache) const
+                                   PRBool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
-  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr,
-                                      PR_FALSE, aValue);
+  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue);
   if (aValue.IsNull()) {
     return NS_ERROR_FAILURE;
   }
@@ -169,11 +168,12 @@ nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
   // reparsed every sample. This prevents us from doing the "nothing's changed
   // so don't recompose" optimization (bug 533291) for CSS properties & mapped
   // attributes.  If it ends up being expensive to always recompose those, we
-  // can be a little smarter here.  We really only need to disable aCanCache
-  // for "inherit" & "currentColor" (whose values could change at any time), as
-  // well as for length-valued types (particularly those with em/ex/percent
-  // units, since their conversion ratios can change at any time).
-  aCanCache = PR_FALSE;
+  // can be a little smarter here.  We really only need to set
+  // aPreventCachingOfSandwich to true for "inherit" & "currentColor" (whose
+  // values could change at any time), for length-valued types (particularly
+  // those with em/ex/percent units, since their conversion ratios can change
+  // at any time), and for any value for 'font-family'.
+  aPreventCachingOfSandwich = PR_TRUE;
   return NS_OK;
 }
 

@@ -130,45 +130,28 @@ const APP_ICON_ATTR_NAME = "appHandlerIcon";
 //****************************************************************************//
 // Utilities
 
-function getDisplayNameForFile(aFile) {
-/*
+function getFileDisplayName(file) {
 #ifdef XP_WIN
-*/
-  if (aFile instanceof Ci.nsILocalFileWin) {
+  if (file instanceof Ci.nsILocalFileWin) {
     try {
-      return aFile.getVersionInfoField("FileDescription"); 
-    }
-    catch(ex) {
-      // fall through to the file name
-    }
+      return file.getVersionInfoField("FileDescription");
+    } catch (e) {}
   }
-/*
 #endif
 #ifdef XP_MACOSX
-*/
-  if (aFile instanceof Ci.nsILocalFileMac) {
+  if (file instanceof Ci.nsILocalFileMac) {
     try {
-      return aFile.bundleDisplayName;
-    }
-    catch(ex) {
-      // fall through to the file name
-    }
+      return file.bundleDisplayName;
+    } catch (e) {}
   }
-/*
 #endif
-*/
-
-  return Cc["@mozilla.org/network/io-service;1"].
-         getService(Ci.nsIIOService).
-         newFileURI(aFile).
-         QueryInterface(Ci.nsIURL).
-         fileName;
+  return file.leafName;
 }
 
 function getLocalHandlerApp(aFile) {
   var localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
                         createInstance(Ci.nsILocalHandlerApp);
-  localHandlerApp.name = getDisplayNameForFile(aFile);
+  localHandlerApp.name = getFileDisplayName(aFile);
   localHandlerApp.executable = aFile;
 
   return localHandlerApp;
@@ -686,7 +669,7 @@ FeedHandlerInfo.prototype = {
     if (defaultFeedReader) {
       let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
                        createInstance(Ci.nsIHandlerApp);
-      handlerApp.name = getDisplayNameForFile(defaultFeedReader);
+      handlerApp.name = getFileDisplayName(defaultFeedReader);
       handlerApp.QueryInterface(Ci.nsILocalHandlerApp);
       handlerApp.executable = defaultFeedReader;
 
@@ -1281,7 +1264,7 @@ var gApplicationsPane = {
         var preferredApp = aHandlerInfo.preferredApplicationHandler;
         var name;
         if (preferredApp instanceof Ci.nsILocalHandlerApp)
-          name = getDisplayNameForFile(preferredApp.executable);
+          name = getFileDisplayName(preferredApp.executable);
         else
           name = preferredApp.name;
         return this._prefsBundle.getFormattedString("useApp", [name]);
@@ -1464,7 +1447,7 @@ var gApplicationsPane = {
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
       let label;
       if (possibleApp instanceof Ci.nsILocalHandlerApp)
-        label = getDisplayNameForFile(possibleApp.executable);
+        label = getFileDisplayName(possibleApp.executable);
       else
         label = possibleApp.name;
       label = this._prefsBundle.getFormattedString("useApp", [label]);
@@ -1752,7 +1735,7 @@ var gApplicationsPane = {
         this._isValidHandlerExecutable(fp.file)) {
       handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
                    createInstance(Ci.nsILocalHandlerApp);
-      handlerApp.name = getDisplayNameForFile(fp.file);
+      handlerApp.name = getFileDisplayName(fp.file);
       handlerApp.executable = fp.file;
 
       // Add the app to the type's list of possible handlers.

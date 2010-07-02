@@ -45,8 +45,7 @@
 
 #include "AccessibleTableCell.h"
 
-class CAccessibleTableCell: public nsISupports,
-                            public IAccessibleTableCell
+class CAccessibleTableCell: public IAccessibleTableCell
 {
 public:
 
@@ -87,6 +86,9 @@ public:
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_isSelected(
       /* [out, retval] */ boolean *isSelected);
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 };
 
 #endif

@@ -64,6 +64,8 @@ public class GeckoEvent {
     public static final int DRAW = 6;
     public static final int SIZE_CHANGED = 7;
     public static final int ACTIVITY_STOPPING = 8;
+    public static final int ACTIVITY_PAUSING = 9;
+    public static final int LOAD_URI = 10;
 
     public static final int IME_BATCH_END = 0;
     public static final int IME_BATCH_BEGIN = 1;
@@ -169,5 +171,10 @@ public class GeckoEvent {
 
         mP0 = new Point(w, h);
         mP1 = new Point(oldw, oldh);
+    }
+
+    public GeckoEvent(String uri) {
+        mType = LOAD_URI;
+        mCharacters = uri;
     }
 }

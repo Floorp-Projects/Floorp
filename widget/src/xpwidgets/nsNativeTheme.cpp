@@ -228,8 +228,28 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                               PRUint8 aWidgetType)
 {
   // Check for specific widgets to see if HTML has overridden the style.
-  return aFrame &&
-         (aWidgetType == NS_THEME_BUTTON ||
+  if (!aFrame)
+    return PR_FALSE;
+
+  // Resizers have some special handling, dependent on whether in a scrollable
+  // container or not. If so, use the scrollable container's to determine
+  // whether the style is overriden instead of the resizer. This allows a
+  // non-native transparent resizer to be used instead. Otherwise, we just
+  // fall through and return false.
+  if (aWidgetType == NS_THEME_RESIZER) {
+    nsIFrame* parentFrame = aFrame->GetParent();
+    if (parentFrame && parentFrame->GetType() == nsWidgetAtoms::scrollFrame) {
+      // if the parent is a scrollframe, the resizer should be native themed
+      // only if the scrollable area doesn't override the widget style.
+      parentFrame = parentFrame->GetParent();
+      if (parentFrame) {
+        return IsWidgetStyled(aPresContext, parentFrame,
+                              parentFrame->GetStyleDisplay()->mAppearance);
+      }
+    }
+  }
+
+  return (aWidgetType == NS_THEME_BUTTON ||
           aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
           aWidgetType == NS_THEME_LISTBOX ||

@@ -83,6 +83,10 @@
  */
 #define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
+// The MIME type of the default favicon and favicons created by
+// OptimizeFaviconImage.
+#define DEFAULT_MIME_TYPE "image/png"
+
 using namespace mozilla::places;
 
 /**
@@ -717,8 +721,33 @@ nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
   NS_ENSURE_ARG_POINTER(aDataLen);
   NS_ENSURE_ARG_POINTER(aData);
 
+  nsCOMPtr<nsIURI> defaultFaviconURI;
+  nsresult rv = GetDefaultFavicon(getter_AddRefs(defaultFaviconURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool isDefaultFavicon = PR_FALSE;
+  rv = defaultFaviconURI->Equals(aFaviconURI, &isDefaultFavicon);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If we're getting the default favicon, we need to handle it separately since
+  // it's not in the database.
+  if (isDefaultFavicon) {
+    nsCAutoString defaultData;
+    rv = GetDefaultFaviconData(defaultData);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint8* bytes = reinterpret_cast<PRUint8*>(ToNewCString(defaultData));
+    NS_ENSURE_STATE(bytes);
+
+    *aData = bytes;
+    *aDataLen = defaultData.Length();
+    aMimeType.AssignLiteral(DEFAULT_MIME_TYPE);
+
+    return NS_OK;
+  }
+
   DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetData);
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasResult = PR_FALSE;
@@ -729,6 +758,33 @@ nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
     return stmt->GetBlob(0, aDataLen, aData);
   }
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+
+nsresult
+nsFaviconService::GetDefaultFaviconData(nsCString& byteStr)
+{
+  if (mDefaultFaviconData.IsEmpty()) {
+    nsCOMPtr<nsIURI> defaultFaviconURI;
+    nsresult rv = GetDefaultFavicon(getter_AddRefs(defaultFaviconURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIInputStream> istream;
+    rv = NS_OpenURI(getter_AddRefs(istream), defaultFaviconURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_ConsumeStream(istream, PR_UINT32_MAX, mDefaultFaviconData);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = istream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mDefaultFaviconData.IsEmpty())
+      return NS_ERROR_UNEXPECTED;
+  }
+
+  byteStr.Assign(mDefaultFaviconData);
+  return NS_OK;
 }
 
 
@@ -963,7 +1019,6 @@ nsFaviconService::OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
                                        nsACString& aNewMimeType)
 {
   nsresult rv;
-  
 
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
 
@@ -978,7 +1033,7 @@ nsFaviconService::OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
   rv = imgtool->DecodeImageData(stream, aMimeType, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aNewMimeType.AssignLiteral("image/png");
+  aNewMimeType.AssignLiteral(DEFAULT_MIME_TYPE);
 
   // scale and recompress
   nsCOMPtr<nsIInputStream> iconStream;

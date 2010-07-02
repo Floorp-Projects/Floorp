@@ -90,7 +90,8 @@ typedef int LoaderType;
 // Predefined loader types.
 #define NS_LOADER_TYPE_NATIVE  -1
 #define NS_LOADER_TYPE_STATIC  -2
-#define NS_LOADER_TYPE_INVALID -3
+#define NS_LOADER_TYPE_JAR     -3
+#define NS_LOADER_TYPE_INVALID -4
 
 #ifdef DEBUG
 #define XPCOM_CHECK_PENDING_CIDS
@@ -238,6 +239,9 @@ public:
                                 LoaderType                minLoader);
 
     void LoadDeferredModules(nsTArray<DeferredModule> &aDeferred);
+#ifdef MOZ_OMNIJAR
+    void AutoRegisterJar();
+#endif
 
     PLDHashTable        mFactories;
     PLDHashTable        mContractIDs;

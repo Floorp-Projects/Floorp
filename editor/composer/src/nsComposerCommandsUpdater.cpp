@@ -262,7 +262,7 @@ nsComposerCommandsUpdater::PrimeUpdateTimer()
   {
     nsresult rv = NS_OK;
     mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   const PRUint32 kUpdateTimerDelay = 150;
@@ -304,7 +304,7 @@ nsresult
 nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
 {
   nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
-  if (!commandUpdater) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
   
   // This hardcoded list of commands is temporary.
@@ -358,7 +358,7 @@ nsresult
 nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 {
   nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
-  if (!commandUpdater) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
   commandUpdater->CommandStatusChanged(aCommand);
 
@@ -369,8 +369,7 @@ PRBool
 nsComposerCommandsUpdater::SelectionIsCollapsed()
 {
   nsCOMPtr<nsIDOMWindow> domWindow = do_QueryReferent(mDOMWindow);
-  if (!domWindow)
-    return PR_TRUE;
+  NS_ENSURE_TRUE(domWindow, PR_TRUE);
 
   nsCOMPtr<nsISelection> domSelection;
   if (NS_SUCCEEDED(domWindow->GetSelection(getter_AddRefs(domSelection))) && domSelection)
@@ -418,8 +417,7 @@ nsresult
 NS_NewComposerCommandsUpdater(nsISelectionListener** aInstancePtrResult)
 {
   nsComposerCommandsUpdater* newThang = new nsComposerCommandsUpdater;
-  if (!newThang)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(newThang, NS_ERROR_OUT_OF_MEMORY);
 
   return newThang->QueryInterface(NS_GET_IID(nsISelectionListener),
                                   (void **)aInstancePtrResult);

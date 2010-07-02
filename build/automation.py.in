@@ -50,6 +50,7 @@ import subprocess
 import sys
 import threading
 import tempfile
+import zipfile
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -58,6 +59,8 @@ import automationutils
 _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
+_DEFAULT_WEBSOCKET_PORT = 9988
+_DEFAULT_WEBSOCKET_PROXY_PORT = 7777
 
 #expand _DIST_BIN = __XPC_BIN_PATH__
 #expand _IS_WIN32 = len("__WIN32__") != 0
@@ -151,14 +154,24 @@ class Automation(object):
   DEFAULT_WEB_SERVER = _DEFAULT_WEB_SERVER
   DEFAULT_HTTP_PORT = _DEFAULT_HTTP_PORT
   DEFAULT_SSL_PORT = _DEFAULT_SSL_PORT
+  DEFAULT_WEBSOCKET_PORT = _DEFAULT_WEBSOCKET_PORT
+  DEFAULT_WEBSOCKET_PROXY_PORT = _DEFAULT_WEBSOCKET_PROXY_PORT
 
   def __init__(self):
     self.log = _log
+    self.lastTestSeen = "automation.py"
 
-  def setServerInfo(self, webServer = _DEFAULT_WEB_SERVER, httpPort = _DEFAULT_HTTP_PORT, sslPort = _DEFAULT_SSL_PORT):
+  def setServerInfo(self, 
+                    webServer = _DEFAULT_WEB_SERVER, 
+                    httpPort = _DEFAULT_HTTP_PORT, 
+                    sslPort = _DEFAULT_SSL_PORT,
+                    webSocketPort = _DEFAULT_WEBSOCKET_PORT,
+                    webSocketProxyPort = _DEFAULT_WEBSOCKET_PROXY_PORT):
     self.webServer = webServer
     self.httpPort = httpPort
     self.sslPort = sslPort
+    self.webSocketPort = webSocketPort
+    self.webSocketProxyPort = webSocketProxyPort
 
   @property
   def __all__(self):
@@ -312,7 +325,12 @@ user_pref("security.default_personal_cert", "Select Automatically"); // Need to 
 user_pref("network.http.prompt-temp-redirect", false);
 user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
-user_pref("extensions.enabledScopes", 3);
+
+// Only load extensions from the application and user profile
+// AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
+user_pref("extensions.enabledScopes", 5);
+
+user_pref("extensions.testpilot.runStudies", false);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
@@ -374,12 +392,15 @@ function FindProxyForURL(url, host)
     return 'DIRECT';
   var isHttp = matches[1] == 'http';
   var isHttps = matches[1] == 'https';
+  var isWebSocket = matches[1] == 'ws';
   if (!matches[3])
   {
-    if (isHttp) matches[3] = '80';
+    if (isHttp | isWebSocket) matches[3] = '80';
     if (isHttps) matches[3] = '443';
   }
-    
+  if (isWebSocket)
+    matches[1] = 'http';
+
   var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
   if (origins.indexOf(origin) < 0)
     return 'DIRECT';
@@ -387,11 +408,14 @@ function FindProxyForURL(url, host)
     return 'PROXY %(remote)s:%(httpport)s';
   if (isHttps)
     return 'PROXY %(remote)s:%(sslport)s';
+  if (isWebSocket)
+    return 'PROXY %(remote)s:%(websocketproxyport)s';
   return 'DIRECT';
 }""" % { "origins": origins,
          "remote":  self.webServer,
          "httpport":self.httpPort,
-         "sslport": self.sslPort }
+         "sslport": self.sslPort,
+         "websocketproxyport": self.webSocketProxyPort }
       pacURL = "".join(pacURL.splitlines())
 
       part += """
@@ -438,6 +462,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     sslTunnelConfig.write("httpproxy:1\n")
     sslTunnelConfig.write("certdbdir:%s\n" % certPath)
     sslTunnelConfig.write("forward:127.0.0.1:%s\n" % self.httpPort)
+    sslTunnelConfig.write("proxy:%s:%s:%s\n" % 
+      (self.webSocketProxyPort, self.webServer, self.webSocketPort))
     sslTunnelConfig.write("listen:*:%s:pgo server certificate\n" % self.sslPort)
 
     # Configure automatic certificate and bind custom certificates, client authentication
@@ -557,7 +583,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       if not pHandle:
         return False
       pExitCode = ctypes.wintypes.DWORD()
-      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
+      ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
       ctypes.windll.kernel32.CloseHandle(pHandle)
       if (pExitCode.value == STILL_ACTIVE):
         return True
@@ -623,47 +649,60 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.log.info("Can't trigger Breakpad, just killing process")
     proc.kill()
 
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo):
+  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerProcess = None
-    stackFixerModule = None
+    stackFixerFunction = None
     didTimeout = False
     if proc.stdout is None:
       self.log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
     else:
       logsource = proc.stdout
-      if self.IS_DEBUG_BUILD and self.IS_LINUX:
-        # Run logsource through fix-linux-stack.pl
+
+      if self.IS_DEBUG_BUILD and (self.IS_MAC or self.IS_LINUX) and symbolsPath and os.path.exists(symbolsPath):
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files)
+        # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
+        sys.path.insert(0, utilityPath)
+        import fix_stack_using_bpsyms as stackFixerModule
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, symbolsPath)
+        del sys.path[0]
+      elif self.IS_DEBUG_BUILD and self.IS_MAC and False:
+        # Run each line through a function in fix_macosx_stack.py (uses atos)
+        sys.path.insert(0, utilityPath)
+        import fix_macosx_stack as stackFixerModule
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
+        del sys.path[0]
+      elif self.IS_DEBUG_BUILD and self.IS_LINUX:
+        # Run logsource through fix-linux-stack.pl (uses addr2line)
+        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
         stackFixerProcess = self.Process([self.PERL, os.path.join(utilityPath, "fix-linux-stack.pl")],
                                          stdin=logsource,
                                          stdout=subprocess.PIPE)
         logsource = stackFixerProcess.stdout
 
-      if self.IS_DEBUG_BUILD and self.IS_MAC:
-        # Import fix_macosx_stack.py from utilityPath
-        sys.path.insert(0, utilityPath)
-        import fix_macosx_stack as stackFixerModule
-        del sys.path[0]
-
       (line, didTimeout) = self.readWithTimeout(logsource, timeout)
       hitMaxTime = False
       while line != "" and not didTimeout:
-        if stackFixerModule:
-          line = stackFixerModule.fixSymbols(line)
+        if "TEST-START" in line and "|" in line:
+          self.lastTestSeen = line.split("|")[1].strip()
+        if stackFixerFunction:
+          line = stackFixerFunction(line)
         self.log.info(line.rstrip())
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
           # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().
           hitMaxTime = True
-          self.log.info("TEST-UNEXPECTED-FAIL | automation.py | application ran for longer than allowed maximum time of %d seconds", int(maxTime))
+          self.log.info("TEST-UNEXPECTED-FAIL | %s | application ran for longer than allowed maximum time of %d seconds", self.lastTestSeen, int(maxTime))
           self.killAndGetStack(proc, utilityPath, debuggerInfo)
       if didTimeout:
-        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | application timed out after %d seconds with no output", int(timeout))
+        self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))
         self.killAndGetStack(proc, utilityPath, debuggerInfo)
 
     status = proc.wait()
+    if status == 0:
+      self.lastTestSeen = "Main app process exited normally"
     if status != 0 and not didTimeout and not hitMaxTime:
-      self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
+      self.log.info("TEST-UNEXPECTED-FAIL | %s | Exited with code %d during test run", self.lastTestSeen, status)
     if stackFixerProcess is not None:
       fixerStatus = stackFixerProcess.wait()
       if fixerStatus != 0 and not didTimeout and not hitMaxTime:
@@ -776,6 +815,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     else:
       outputPipe = subprocess.PIPE
 
+    self.lastTestSeen = "automation.py"
     proc = self.Process([cmd] + args,
                  env = self.environment(env, xrePath = xrePath,
                                    crashreporter = not debuggerInfo),
@@ -783,12 +823,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                  stderr = subprocess.STDOUT)
     self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
-    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo)
+    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath)
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.
     self.checkForZombies(processLog)
-    automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
+    automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath, self.lastTestSeen)
 
     if os.path.exists(processLog):
       os.unlink(processLog)
@@ -797,3 +837,48 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       ssltunnelProcess.kill()
 
     return status
+
+  """ 
+   Copies an "installed" extension into the extensions directory of the given profile
+   extensionSource - the source location of the extension files.  This can be either 
+                     a directory or a path to an xpi file.
+   profileDir      - the profile directory we are copying into.  We will create the
+                     "extensions" directory there if it doesn't exist
+   extensionID     - the id of the extension to be used as the containing directory for the
+                     extension, i.e.
+                 this is the name of the folder in the <profileDir>/extensions/<extensionID>
+  """
+  def installExtension(self, extensionSource, profileDir, extensionID):
+    if (not os.path.exists(extensionSource)):
+      self.log.info("INFO | automation.py | Cannot install extension no source at: %s", extensionSource) 
+      
+    if (not os.path.exists(profileDir)):
+      self.log.info("INFO | automation.py | Cannot install extension invalid profileDir at: %s", profileDir)
+
+    # See if we have an XPI or a directory
+    if (os.path.isfile(extensionSource)):
+      tmpd = tempfile.mkdtemp()
+      extrootdir = self.extractZip(extensionSource, tmpd)
+    else:
+      extrootdir = extensionSource 
+    extnsdir = os.path.join(profileDir, "extensions")
+    extnshome = os.path.join(extnsdir, extensionID)
+
+    # Now we copy the extension source into the extnshome
+    shutil.copytree(extrootdir, extnshome)
+
+  def extractZip(self, filename, dest):
+    z = zipfile.ZipFile(filename, 'r')
+    for n in z.namelist():
+      fullpath = os.path.join(dest, n)
+      parentdir = os.path.dirname(fullpath)
+      if not os.path.isdir(parentdir):
+        os.makedirs(parentdir)
+      if (not n.endswith(os.sep)):
+        data = z.read(n)
+        f = open(fullpath, 'w')
+        f.write(data)
+        f.close()
+    z.close()
+    return dest
+

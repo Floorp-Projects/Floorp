@@ -46,7 +46,10 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-const kTopicShutdown = "places-shutdown";
+// Use places-teardown to ensure we run last in the shutdown process.
+// Any other implementer should use places-shutdown instead, since teardown is
+// where things really break.
+const kTopicShutdown = "places-teardown";
 const kSyncFinished = "places-sync-finished";
 const kDebugStopSync = "places-debug-stop-sync";
 const kDebugStartSync = "places-debug-start-sync";

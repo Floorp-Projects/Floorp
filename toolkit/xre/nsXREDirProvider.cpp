@@ -47,6 +47,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsILocalFile.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsISimpleEnumerator.h"
@@ -335,9 +336,6 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     // occur prior to the profile-after-change notification.
     if (!strcmp(aProperty, NS_XPCOM_COMPONENT_REGISTRY_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
-    }
-    else if (!strcmp(aProperty, NS_XPCOM_XPTI_REGISTRY_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("xpti.dat"));
     }
     else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("chrome"));
@@ -816,6 +814,13 @@ nsXREDirProvider::DoStartup()
 
     static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
+    // Init the Extension Manager
+    nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
+    if (em) {
+      em->Observe(nsnull, "addons-startup", nsnull);
+    } else {
+      NS_WARNING("Failed to create Addons Manager.");
+    }
     obsSvc->NotifyObservers(nsnull, "profile-after-change", kStartup);
 
     // Any component that has registered for the profile-after-change category

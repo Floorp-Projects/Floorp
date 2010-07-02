@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
  * Copyright (c) 2007-2010 Mozilla Foundation
- * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
+ * Portions of comments Copyright 2004-2010 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
@@ -26,9 +26,9 @@
 /*
  * The comments following this one that use the same comment syntax as this 
  * comment are quotes from the WHATWG HTML 5 spec as of 2 June 2007 
- * amended as of June 18 2008.
+ * amended as of June 18 2008 and May 31 2010.
  * That document came with this statement:
- * "© Copyright 2004-2008 Apple Computer, Inc., Mozilla Foundation, and 
+ * "© Copyright 2004-2010 Apple Computer, Inc., Mozilla Foundation, and 
  * Opera Software ASA. You are granted a license to use, reproduce and 
  * create derivative works of this document."
  */
@@ -4516,11 +4516,12 @@ public class Tokenizer implements Locator {
                                     ch = strBuf[strBufMark];
                                     // }
                                 }
-                                if ((ch >= '0' && ch <= '9')
+                                if (ch == '=' || (ch >= '0' && ch <= '9')
                                         || (ch >= 'A' && ch <= 'Z')
                                         || (ch >= 'a' && ch <= 'z')) {
                                     /*
-                                     * and the next character is in the range
+                                     * and the next character is either a U+003D
+                                     * EQUALS SIGN character (=) or in the range
                                      * U+0030 DIGIT ZERO to U+0039 DIGIT NINE,
                                      * U+0041 LATIN CAPITAL LETTER A to U+005A
                                      * LATIN CAPITAL LETTER Z, or U+0061 LATIN
@@ -5858,10 +5859,9 @@ public class Tokenizer implements Locator {
 
     private void emitReplacementCharacter(@NoLength char[] buf, int pos)
             throws SAXException {
-        silentCarriageReturn();
         flushChars(buf, pos);
-        tokenHandler.characters(Tokenizer.REPLACEMENT_CHARACTER, 0, 1);
-        cstart = Integer.MAX_VALUE;
+        tokenHandler.zeroOriginatingReplacementCharacter();
+        cstart = pos + 1;
     }
 
     private void setAdditionalAndRememberAmpersandLocation(char add) {

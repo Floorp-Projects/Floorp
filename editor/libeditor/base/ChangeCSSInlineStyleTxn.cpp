@@ -44,6 +44,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+#include "nsGkAtoms.h"
 
 #define kNullCh (PRUnichar('\0'))
 
@@ -175,23 +176,23 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
-  if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
   nsresult result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
-  if (NS_FAILED(result)) return result;
-  if (!cssDecl) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_TRUE(cssDecl, NS_ERROR_NULL_POINTER);
 
   nsAutoString propertyNameString;
   mProperty->ToString(propertyNameString);
 
   NS_NAMED_LITERAL_STRING(styleAttr, "style");
   result = mElement->HasAttribute(styleAttr, &mUndoAttributeWasSet);
-  if (NS_FAILED(result)) return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   nsAutoString values;
   result = cssDecl->GetPropertyValue(propertyNameString, values);
-  if (NS_FAILED(result)) return result;     
+  NS_ENSURE_SUCCESS(result, result);     
   mUndoValue.Assign(values);
 
   // does this property accept more than 1 value ?
@@ -210,26 +211,26 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
         result = cssDecl->RemoveProperty(propertyNameString, returnString);
-        if (NS_FAILED(result)) return result;     
+        NS_ENSURE_SUCCESS(result, result);     
       }
       else {
         nsAutoString priority;
         result = cssDecl->GetPropertyPriority(propertyNameString, priority);
-        if (NS_FAILED(result)) return result;     
+        NS_ENSURE_SUCCESS(result, result);     
         result = cssDecl->SetProperty(propertyNameString, values,
                                       priority);
-        if (NS_FAILED(result)) return result;     
+        NS_ENSURE_SUCCESS(result, result);     
       }
     }
     else {
       result = cssDecl->RemoveProperty(propertyNameString, returnString);
-      if (NS_FAILED(result)) return result;     
+      NS_ENSURE_SUCCESS(result, result);     
     }
   }
   else {
     nsAutoString priority;
     result = cssDecl->GetPropertyPriority(propertyNameString, priority);
-    if (NS_FAILED(result)) return result;
+    NS_ENSURE_SUCCESS(result, result);
     if (multiple) {
       // the property can have more than one value, let's add
       // the value we have to add to the others
@@ -242,16 +243,16 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
       values.Assign(mValue);
     result = cssDecl->SetProperty(propertyNameString, values,
                                   priority);
-    if (NS_FAILED(result)) return result;     
+    NS_ENSURE_SUCCESS(result, result);     
   }
 
   // let's be sure we don't keep an empty style attribute
   PRUint32 length;
   result = cssDecl->GetLength(&length);
-  if (NS_FAILED(result)) return result;     
+  NS_ENSURE_SUCCESS(result, result);     
   if (!length) {
     result = mElement->RemoveAttribute(styleAttr);
-    if (NS_FAILED(result)) return result;     
+    NS_ENSURE_SUCCESS(result, result);     
   }
   else
     mRedoAttributeWasSet = PR_TRUE;
@@ -272,11 +273,11 @@ nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
     mProperty->ToString(propertyNameString);
 
     nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
-    if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
-    if (NS_FAILED(result)) return result;
-    if (!cssDecl) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_SUCCESS(result, result);
+    NS_ENSURE_TRUE(cssDecl, NS_ERROR_NULL_POINTER);
 
     if (aValue.IsEmpty()) {
       // an empty value means we have to remove the property
@@ -287,7 +288,7 @@ nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
       // let's recreate the declaration as it was
       nsAutoString priority;
       result = cssDecl->GetPropertyPriority(propertyNameString, priority);
-      if (NS_FAILED(result)) return result;
+      NS_ENSURE_SUCCESS(result, result);
       result = cssDecl->SetProperty(propertyNameString, aValue, priority);
     }
   }
@@ -325,10 +326,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 PRBool
 ChangeCSSInlineStyleTxn::AcceptsMoreThanOneValue(nsIAtom *aCSSProperty)
 {
-  nsIAtom * textDecorationAtom = NS_NewAtom("text-decoration");
-  PRBool res = (textDecorationAtom == aCSSProperty);
-  NS_IF_RELEASE(textDecorationAtom);
-  return res;
+  return aCSSProperty == nsGkAtoms::text_decoration;
 }
 
 // adds the value aNewValue to the list of white-space separated values aValues

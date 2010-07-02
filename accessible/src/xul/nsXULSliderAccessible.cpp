@@ -44,11 +44,13 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsIFrame.h"
 
+////////////////////////////////////////////////////////////////////////////////
 // nsXULSliderAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-nsXULSliderAccessible::nsXULSliderAccessible(nsIDOMNode* aNode,
-                                             nsIWeakReference* aShell) :
-  nsAccessibleWrap(aNode, aShell)
+nsXULSliderAccessible::
+  nsXULSliderAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -81,7 +83,7 @@ nsXULSliderAccessible::GetStateInternal(PRUint32 *aState,
   if (frame && frame->IsFocusable())
     *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
-  if (gLastFocusedNode == mDOMNode)
+  if (gLastFocusedNode == mContent)
     *aState |= nsIAccessibleStates::STATE_FOCUSED;
 
   return NS_OK;
@@ -201,12 +203,11 @@ nsXULSliderAccessible::GetAllowsAnonChildAccessibles()
 already_AddRefed<nsIContent>
 nsXULSliderAccessible::GetSliderNode()
 {
-  if (!mDOMNode)
+  if (IsDefunct())
     return nsnull;
 
   if (!mSliderNode) {
-    nsCOMPtr<nsIDOMDocument> document;
-    mDOMNode->GetOwnerDocument(getter_AddRefs(document));
+    nsIDocument* document = mContent->GetOwnerDoc();
     if (!document)
       return nsnull;
 
@@ -215,7 +216,7 @@ nsXULSliderAccessible::GetSliderNode()
       return nsnull;
 
     // XXX: we depend on anonymous content.
-    nsCOMPtr<nsIDOMElement> domElm(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMElement> domElm(do_QueryInterface(mContent));
     if (!domElm)
       return nsnull;
 
@@ -289,11 +290,15 @@ nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, double aValue)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
 // nsXULThumbAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-nsXULThumbAccessible::nsXULThumbAccessible(nsIDOMNode* aNode,
-                                           nsIWeakReference* aShell) :
-  nsAccessibleWrap(aNode, aShell) {}
+nsXULThumbAccessible::
+  nsXULThumbAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
+{
+}
 
 // nsIAccessible
 

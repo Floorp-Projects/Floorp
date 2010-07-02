@@ -66,6 +66,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/build/mobile/devicemanager.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/poster.zip \
+		$(topsrcdir)/build/mobile/remoteautomation.py \
 		gen_template.pl \
 		server.js \
 		harness-a11y.xul \
@@ -73,6 +74,8 @@ _SERV_FILES = 	\
 		harness.xul \
 		browser-test-overlay.xul \
 		browser-test.js \
+		ipc-overlay.xul \
+		ipc.js \
 		browser-harness.xul \
 		redirect-a11y.html \
 		redirect.html \
@@ -82,8 +85,36 @@ _SERV_FILES = 	\
 		mozprefs.js \
 		$(NULL)	
 
+_PYWEBSOCKET_FILES = \
+		pywebsocket/standalone.py \
+		$(NULL)
+
+_MOD_PYWEBSOCKET_FILES = \
+		pywebsocket/mod_pywebsocket/__init__.py \
+		pywebsocket/mod_pywebsocket/dispatch.py \
+		pywebsocket/mod_pywebsocket/util.py \
+		pywebsocket/mod_pywebsocket/msgutil.py \
+		pywebsocket/mod_pywebsocket/memorizingfile.py \
+		pywebsocket/mod_pywebsocket/headerparserhandler.py \
+		$(NULL)
+
+_HANDSHAKE_FILES = \
+		pywebsocket/mod_pywebsocket/handshake/__init__.py \
+		pywebsocket/mod_pywebsocket/handshake/_base.py \
+		pywebsocket/mod_pywebsocket/handshake/draft75.py \
+		pywebsocket/mod_pywebsocket/handshake/handshake.py \
+		$(NULL)
 
 _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+
+libs:: $(_PYWEBSOCKET_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket
+
+libs:: $(_MOD_PYWEBSOCKET_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket/mod_pywebsocket
+
+libs:: $(_HANDSHAKE_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket/mod_pywebsocket/handshake
 
 runtests.py: runtests.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
@@ -94,13 +125,14 @@ GARBAGE += runtests.py
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
 
-# Binaries that don't get packaged with the build,
+# Binaries and scripts that don't get packaged with the build,
 # but that we need for the test harness
 TEST_HARNESS_BINS := \
   xpcshell$(BIN_SUFFIX) \
   ssltunnel$(BIN_SUFFIX) \
   certutil$(BIN_SUFFIX) \
   pk12util$(BIN_SUFFIX) \
+  fix_stack_using_bpsyms.py \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
