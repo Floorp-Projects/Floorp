@@ -46,8 +46,6 @@
 /**
  * An interface for the accessibility module and in-process accessibility clients
  * for dealing with getting and changing the selection of accessible nodes.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(34d268d6-1dd2-11b2-9d63-83a5e0ada290)]
 interface nsIAccessibleSelectable : nsISupports

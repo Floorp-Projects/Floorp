@@ -65,8 +65,6 @@ interface nsIInputStream;
  * Errors are never passed to the caller of ReadSegments.
  *
  * NOTE: returning NS_OK and (*aWriteCount = 0) has undefined behavior.
- *
- * @status FROZEN
  */
 typedef NS_CALLBACK(nsWriteSegmentFun)(nsIInputStream *aInStream,
                                        void *aClosure,
@@ -91,8 +89,6 @@ native nsWriteSegmentFun(nsWriteSegmentFun);
  * locking up the main application thread.  For this reason, it is generally
  * the case that a blocking input stream should be implemented using thread-
  * safe AddRef and Release.
- *
- * @status FROZEN
  */
 [scriptable, uuid(fa9c7f6c-61b3-11d4-9877-00c04fa0cf4a)]
 interface nsIInputStream : nsISupports

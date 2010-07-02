@@ -54,7 +54,6 @@
 
 /**
  * Provides information about a specific implementation class
- * @status FROZEN
  */
 
 [scriptable, uuid(986c11d0-f340-11d4-9075-0010a4e73d9a)]

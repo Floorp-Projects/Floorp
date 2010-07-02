@@ -45,8 +45,6 @@ interface nsIDocShellTreeItem;
 /**
  * nsIWebBrowserChrome corresponds to the top-level, outermost window
  * containing an embedded Gecko web browser.
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]
