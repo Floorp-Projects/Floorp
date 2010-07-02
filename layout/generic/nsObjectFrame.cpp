@@ -190,11 +190,8 @@ enum { XKeyPress = KeyPress };
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#include "gfxXlibNativeRenderer.h"
 #endif
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-#include "gfxGdkNativeRenderer.h"
 #endif
 
 #ifdef MOZ_WIDGET_QT
@@ -321,7 +318,7 @@ public:
 #elif defined(XP_MACOSX)
   void Paint(const gfxRect& aDirtyRect, CGContextRef cgContext);  
   void RenderCoreAnimation(CGContextRef aCGContext, int aWidth, int aHeight);
-#elif defined(MOZ_X11) || defined(MOZ_DFB)
+#elif defined(MOZ_X11)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
              const gfxRect& aDirtyRect);
@@ -514,33 +511,22 @@ private:
   nsEventStatus ProcessEventX11Composited(const nsGUIEvent & anEvent);
 #endif
 
+#ifdef MOZ_X11
+  class Renderer
 #if defined(MOZ_WIDGET_GTK2)
-  class Renderer : public gfxGdkNativeRenderer {
-  public:
-    Renderer(NPWindow* aWindow, nsPluginInstanceOwner* aInstanceOwner,
-             const nsIntSize& aPluginSize, const nsIntRect& aDirtyRect)
-      : mWindow(aWindow), mInstanceOwner(aInstanceOwner),
-        mPluginSize(aPluginSize), mDirtyRect(aDirtyRect)
-    {}
-    virtual nsresult NativeDraw(GdkDrawable * drawable, short offsetX, 
-            short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects);
-  private:
-    NPWindow* mWindow;
-    nsPluginInstanceOwner* mInstanceOwner;
-    const nsIntSize& mPluginSize;
-    const nsIntRect& mDirtyRect;
-  };
+    : public gfxXlibNativeRenderer
 #elif defined(MOZ_WIDGET_QT)
-  class Renderer : public gfxQtNativeRenderer {
+    : public gfxQtNativeRenderer
+#endif
+  {
   public:
     Renderer(NPWindow* aWindow, nsPluginInstanceOwner* aInstanceOwner,
              const nsIntSize& aPluginSize, const nsIntRect& aDirtyRect)
       : mWindow(aWindow), mInstanceOwner(aInstanceOwner),
         mPluginSize(aPluginSize), mDirtyRect(aDirtyRect)
     {}
-    virtual nsresult NativeDraw(gfxXlibSurface* xsurface, Colormap colormap,
-                                short offsetX, short offsetY,
-                                QRect * clipRects, PRUint32 numClipRects);
+    virtual nsresult DrawWithXlib(gfxXlibSurface* surface, nsIntPoint offset, 
+            nsIntRect* clipRects, PRUint32 numClipRects);
   private:
     NPWindow* mWindow;
     nsPluginInstanceOwner* mInstanceOwner;
@@ -1694,7 +1680,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       mInstanceOwner->Paint(tmpRect, NULL);
     }
   }
-#elif defined(MOZ_X11) || defined(MOZ_DFB)
+#elif defined(MOZ_X11)
   if (mInstanceOwner) {
     NPWindow *window;
     mInstanceOwner->GetWindow(window);
@@ -5098,7 +5084,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 }
 #endif
 
-#if defined(MOZ_X11) || defined(MOZ_DFB)
+#if defined(MOZ_X11)
 void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
@@ -5158,11 +5144,11 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   NPWindow* window;
   GetWindow(window);
 
-  PRUint32 rendererFlags = Renderer::DRAW_SUPPORTS_OFFSET;
+  PRUint32 rendererFlags = 0;
   if (!mFlash10Quirks) {
     rendererFlags |=
       Renderer::DRAW_SUPPORTS_CLIP_RECT |
-      Renderer::DRAW_SUPPORTS_NONDEFAULT_VISUAL;
+      Renderer::DRAW_SUPPORTS_ALTERNATE_VISUAL;
   }
 
   PRBool transparent;
@@ -5175,8 +5161,20 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   aContext->Translate(pluginRect.pos);
 
   Renderer renderer(window, this, pluginSize, pluginDirtyRect);
-  renderer.Draw(aContext, window->width, window->height,
-                rendererFlags, nsnull);
+#ifdef MOZ_WIDGET_GTK2
+  // This is the visual used by the widgets, 24-bit if available.
+  GdkVisual* gdkVisual = gdk_rgb_get_visual();
+  Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
+  Screen* screen =
+    gdk_x11_screen_get_xscreen(gdk_visual_get_screen(gdkVisual));
+#endif
+#ifdef MOZ_WIDGET_QT
+  Display* dpy = QX11Info().display();
+  Screen* screen = ScreenOfDisplay(dpy, QX11Info().screen());
+  Visual* visual = static_cast<Visual*>(QX11Info().visual());
+#endif
+  renderer.Draw(aContext, nsIntSize(window->width, window->height),
+                rendererFlags, screen, visual, nsnull);
 }
 
 #ifdef MOZ_USE_IMAGE_EXPOSE
@@ -5458,32 +5456,19 @@ nsPluginInstanceOwner::NativeImageDraw(NPRect* invalidRect)
 }
 #endif
 
-#if defined(MOZ_WIDGET_GTK2)
 nsresult
-nsPluginInstanceOwner::Renderer::NativeDraw(GdkDrawable * drawable, 
-                                            short offsetX, short offsetY,
-                                            GdkRectangle * clipRects, 
-                                            PRUint32 numClipRects)
-
+nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface, 
+                                              nsIntPoint offset,
+                                              nsIntRect *clipRects, 
+                                              PRUint32 numClipRects)
 {
-#ifdef MOZ_X11
-  Visual * visual = GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(drawable));
-  Colormap colormap = GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(drawable));
-  Screen * screen = GDK_SCREEN_XSCREEN (gdk_drawable_get_screen(drawable));
-#endif
-#elif defined(MOZ_WIDGET_QT)
-nsresult
-nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
-                                            Colormap colormap,
-                                            short offsetX, short offsetY,
-                                            QRect * clipRects,
-                                            PRUint32 numClipRects)
-{
-#ifdef MOZ_X11
-  Visual * visual = cairo_xlib_surface_get_visual(xsurface->CairoSurface());
   Screen *screen = cairo_xlib_surface_get_screen(xsurface->CairoSurface());
-#endif
-#endif
+  Colormap colormap;
+  Visual* visual;
+  if (!xsurface->GetColormapAndVisual(&colormap, &visual)) {
+    NS_ERROR("Failed to get visual and colormap");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsIPluginInstance *instance = mInstanceOwner->mInstance;
   if (!instance)
@@ -5492,9 +5477,9 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
   // See if the plugin must be notified of new window parameters.
   PRBool doupdatewindow = PR_FALSE;
 
-  if (mWindow->x != offsetX || mWindow->y != offsetY) {
-    mWindow->x = offsetX;
-    mWindow->y = offsetY;
+  if (mWindow->x != offset.x || mWindow->y != offset.y) {
+    mWindow->x = offset.x;
+    mWindow->y = offset.y;
     doupdatewindow = PR_TRUE;
   }
 
@@ -5508,25 +5493,18 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
   NS_ASSERTION(numClipRects <= 1, "We don't support multiple clip rectangles!");
   nsIntRect clipRect;
   if (numClipRects) {
-#if defined(MOZ_WIDGET_GTK2)
     clipRect.x = clipRects[0].x;
     clipRect.y = clipRects[0].y;
     clipRect.width  = clipRects[0].width;
     clipRect.height = clipRects[0].height;
-#elif defined(MOZ_WIDGET_QT)
-    clipRect.x = clipRects[0].x();
-    clipRect.y = clipRects[0].y();
-    clipRect.width  = clipRects[0].width();
-    clipRect.height = clipRects[0].height();
-#endif
   }
   else {
     // NPRect members are unsigned, but
     // we should have been given a clip if an offset is -ve.
-    NS_ASSERTION(offsetX >= 0 && offsetY >= 0,
+    NS_ASSERTION(offset.x >= 0 && offset.y >= 0,
                  "Clip rectangle offsets are negative!");
-    clipRect.x = offsetX;
-    clipRect.y = offsetY;
+    clipRect.x = offset.x;
+    clipRect.y = offset.y;
     clipRect.width  = mWindow->width;
     clipRect.height = mWindow->height;
   }
@@ -5563,15 +5541,14 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
       instance->SetWindow(mWindow);
   }
 
-#ifdef MOZ_X11
   // Translate the dirty rect to drawable coordinates.
-  nsIntRect dirtyRect = mDirtyRect + nsIntPoint(offsetX, offsetY);
+  nsIntRect dirtyRect = mDirtyRect + offset;
   if (mInstanceOwner->mFlash10Quirks) {
     // Work around a bug in Flash up to 10.1 d51 at least, where expose event
     // top left coordinates within the plugin-rect and not at the drawable
     // origin are misinterpreted.  (We can move the top left coordinate
     // provided it is within the clipRect.)
-    dirtyRect.SetRect(offsetX, offsetY,
+    dirtyRect.SetRect(offset.x, offset.y,
                       mDirtyRect.XMost(), mDirtyRect.YMost());
   }
   // Intersect the dirty rect with the clip rect to ensure that it lies within
@@ -5587,12 +5564,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
     // set the drawing info
     exposeEvent.type = GraphicsExpose;
     exposeEvent.display = DisplayOfScreen(screen);
-    exposeEvent.drawable =
-#if defined(MOZ_WIDGET_GTK2)
-      GDK_DRAWABLE_XID(drawable);
-#elif defined(MOZ_WIDGET_QT)
-      xsurface->XDrawable();
-#endif
+    exposeEvent.drawable = xsurface->XDrawable();
     exposeEvent.x = dirtyRect.x;
     exposeEvent.y = dirtyRect.y;
     exposeEvent.width  = dirtyRect.width;
@@ -5617,11 +5589,12 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
     XGCValues gcv;
     gcv.subwindow_mode = IncludeInferiors;
     gcv.graphics_exposures = False;
-    GC gc = XCreateGC(DefaultXDisplay(), gdk_x11_drawable_get_xid(drawable), GCGraphicsExposures | GCSubwindowMode, &gcv);
+    Drawable drawable = xsurface->XDrawable();
+    GC gc = XCreateGC(DefaultXDisplay(), drawable, GCGraphicsExposures | GCSubwindowMode, &gcv);
     /* The source and destination appear to always line up, so src and dest
      * coords should be the same */
     XCopyArea(DefaultXDisplay(), gdk_x11_drawable_get_xid(plug->window),
-              gdk_x11_drawable_get_xid(drawable),
+              drawable,
               gc,
               mDirtyRect.x,
               mDirtyRect.y,
@@ -5631,7 +5604,6 @@ nsPluginInstanceOwner::Renderer::NativeDraw(gfxXlibSurface * xsurface,
               mDirtyRect.y);
     XFreeGC(DefaultXDisplay(), gc);
   }
-#endif
 #endif
   return NS_OK;
 }

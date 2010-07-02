@@ -807,6 +807,14 @@ moz_gtk_init()
     return MOZ_GTK_SUCCESS;
 }
 
+GdkColormap*
+moz_gtk_widget_get_colormap()
+{
+    /* Child widgets inherit the colormap from the GtkWindow. */
+    ensure_window_widget();
+    return gtk_widget_get_colormap(gProtoWindow);
+}
+
 gint
 moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing)
 {
