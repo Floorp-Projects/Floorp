@@ -2258,7 +2258,7 @@ nsPresContext::HavePendingInputEvent()
     case ModeEvent: {
       nsIFrame* f = PresShell()->GetRootFrame();
       if (f) {
-        nsIWidget* w = f->GetWindow();
+        nsIWidget* w = f->GetNearestWidget();
         if (w) {
           return w->HasPendingInputEvent();
         }
@@ -2501,7 +2501,7 @@ nsRootPresContext::UpdatePluginGeometry(nsIFrame* aChangedSubtree)
   GetPluginGeometryUpdates(aChangedSubtree, &configurations);
   if (configurations.IsEmpty())
     return;
-  nsIWidget* widget = FrameManager()->GetRootFrame()->GetWindow();
+  nsIWidget* widget = FrameManager()->GetRootFrame()->GetNearestWidget();
   NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
   DidApplyPluginGeometryUpdates();

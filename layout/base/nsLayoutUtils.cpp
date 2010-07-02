@@ -1250,7 +1250,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
-    nsIWidget *widget = aFrame->GetWindow();
+    nsIWidget *widget = aFrame->GetNearestWidget();
     PRInt32 pixelRatio = widget->GetDeviceContext()->AppUnitsPerDevPixel();
     nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
     nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
