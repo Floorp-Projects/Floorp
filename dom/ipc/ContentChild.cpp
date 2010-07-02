@@ -54,6 +54,10 @@
 #include "nsXULAppAPI.h"
 #include "nsWeakReference.h"
 
+#include "History.h"
+#include "nsDocShellCID.h"
+#include "nsNetUtil.h"
+
 #include "base/message_loop.h"
 #include "base/task.h"
 
@@ -62,6 +66,7 @@
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
+using namespace mozilla::places;
 
 namespace mozilla {
 namespace dom {
@@ -340,6 +345,14 @@ ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aPref)
         }
         ++i;
     }
+    return true;
+}
+
+bool
+ContentChild::RecvNotifyVisited(const IPC::URI& aURI)
+{
+    nsCOMPtr<nsIURI> newURI = aURI;
+    History::GetService()->NotifyVisited(newURI);
     return true;
 }
 
