@@ -81,7 +81,7 @@ xpcTestParentOne :: ParentOneMethod(char * *_retval)
                 sizeof(char)*(strlen(aString)+1));            
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 }                                                                   
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestParentOne(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -147,7 +147,7 @@ xpcTestParentTwo :: ParentTwoMethod(char **_retval)
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 }
   
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -268,7 +268,7 @@ xpcTestChild2 :: ParentTwoMethod(char **_retval) {
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 }                                 
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestChild2(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -366,7 +366,7 @@ xpcTestChild3 :: ParentOneMethod(char * *_retval)
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 }                                  
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -436,7 +436,7 @@ xpcTestChild4 ::ChildMethod(char **_retval)
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 }
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -532,7 +532,7 @@ xpcTestChild5 :: ParentOneMethod(char * *_retval)
     return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 }                                  
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;

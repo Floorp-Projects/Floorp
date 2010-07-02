@@ -222,7 +222,7 @@ xpcoverloaded::Create(nsIXPConnectWrappedNative *wrapper,
 // our standard generic factory helper.
 
 // static
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructOverloaded(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
