@@ -879,7 +879,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
     AutoPreserveEnumerators preserve(cx);
-    JSBool ok = RunScript(cx, script, fp->fun, &fp->scopeChain.asObject());
+    JSBool ok = RunScript(cx, script, NULL, &fp->scopeChain.asObject());
     if (result)
         *result = fp->rval;
 
