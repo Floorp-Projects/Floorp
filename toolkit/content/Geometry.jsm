@@ -138,6 +138,10 @@ let Util = {
     return this.makeURI(url, null, this.makeURI(base)).spec;
   },
 
+  isLocalScheme: function isLocalScheme(aURL) {
+    return (aURL.indexOf("about:") == 0 && aURL != "about:blank") || aURL.indexOf("chrome:") == 0;
+  },
+
   clamp: function(num, min, max) {
     return Math.max(min, Math.min(max, num));
   },
