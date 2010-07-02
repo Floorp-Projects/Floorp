@@ -43,10 +43,21 @@
 namespace xpc {
 
 class WrapperFactory {
-    // Return the wrapper handler to use, or NULL in case of error.
-    static JSCrossCompartmentWrapper *select(JSContext *cx,
-                                             JSCompartment *subject,
-                                             JSCompartment *object);
+  public:
+    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0) };
+
+    // Return true if any of any of the nested wrappers have the flag set.
+    bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
+        uintN flags = 0;
+        wrapper->unwrap(&flags);
+        return !!(flags & flag);
+    }
+
+    // Rewrap an object that is about to cross compartment boundaries.
+    static JSObject *Rewrap(JSContext *cx,
+                            JSObject *obj,
+                            JSObject *wrappedProto,
+                            uintN flags);
 };
 
 }
