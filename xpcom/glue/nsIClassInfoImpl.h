@@ -41,7 +41,7 @@
 
 #include NEW_H
 
-class GenericClassInfo : public nsIClassInfo
+class NS_COM_GLUE GenericClassInfo : public nsIClassInfo
 {
 public:
   struct ClassInfoData
