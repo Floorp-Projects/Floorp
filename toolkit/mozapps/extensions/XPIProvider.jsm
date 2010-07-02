@@ -3783,7 +3783,7 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
                       aIconURL, aVersion, aInfoURL, aExistingAddon, aLoadGroup) {
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = aInstallLocation;
-  this.sourceURL = aUrl;
+  this.sourceURI = aUrl;
   this.hash = aHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
@@ -3892,7 +3892,7 @@ AddonInstall.prototype = {
   version: null,
   iconURL: null,
   infoURL: null,
-  sourceURL: null,
+  sourceURI: null,
   file: null,
   certificate: null,
   certName: null,
@@ -3940,12 +3940,12 @@ AddonInstall.prototype = {
       this.channel.cancel(Cr.NS_BINDING_ABORTED);
     case AddonManager.STATE_AVAILABLE:
     case AddonManager.STATE_DOWNLOADED:
-      LOG("Cancelling download of " + this.sourceURL.spec);
+      LOG("Cancelling download of " + this.sourceURI.spec);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
                                                this.listeners, this.wrapper);
-      if (this.file && !(this.sourceURL instanceof Ci.nsIFileURL)) {
+      if (this.file && !(this.sourceURI instanceof Ci.nsIFileURL)) {
         try {
           this.file.remove(true);
         }
@@ -4034,7 +4034,7 @@ AddonInstall.prototype = {
       }
 
       this.addon = loadManifestFromZipReader(zipreader);
-      this.addon.sourceURI = this.sourceURL.spec;
+      this.addon.sourceURI = this.sourceURI.spec;
       this.addon._install = this;
 
       this.name = this.addon.selectedLocale.name;
@@ -4121,7 +4121,7 @@ AddonInstall.prototype = {
                    createInstance(Ci.nsIStreamListenerTee);
     listener.init(this, this.stream);
     try {
-      this.channel = NetUtil.newChannel(this.sourceURL);
+      this.channel = NetUtil.newChannel(this.sourceURI);
       if (this.loadGroup)
         this.channel.loadGroup = this.loadGroup;
 
@@ -4176,7 +4176,7 @@ AddonInstall.prototype = {
       }
       catch (e) {
       }
-      LOG("Download started for " + this.sourceURL.spec + " to file " +
+      LOG("Download started for " + this.sourceURI.spec + " to file " +
           this.file.path);
     }
   },
@@ -4195,7 +4195,7 @@ AddonInstall.prototype = {
     if (aStatus == Cr.NS_BINDING_ABORTED)
       return;
 
-    LOG("Download of " + this.sourceURL.spec + " completed.");
+    LOG("Download of " + this.sourceURI.spec + " completed.");
 
     if (Components.isSuccessCode(aStatus)) {
       if (!(aRequest instanceof Ci.nsIHttpChannel) || aRequest.requestSucceeded) {
@@ -4323,7 +4323,7 @@ AddonInstall.prototype = {
                         XPIProvider.disableRequiresRestart(this.existingAddon);
     }
 
-    LOG("Starting install of " + this.sourceURL.spec);
+    LOG("Starting install of " + this.sourceURI.spec);
     AddonManagerPrivate.callAddonListeners("onInstalling",
                                            createWrapper(this.addon),
                                            requiresRestart);
@@ -4363,7 +4363,7 @@ AddonInstall.prototype = {
           stream.close();
         }
 
-        LOG("Install of " + this.sourceURL.spec + " completed.");
+        LOG("Install of " + this.sourceURI.spec + " completed.");
         this.state = AddonManager.STATE_INSTALLED;
         if (isUpgrade) {
           delete this.existingAddon.pendingUpgrade;
@@ -4447,7 +4447,7 @@ AddonInstall.prototype = {
           AddonManagerPrivate.callAddonListeners("onInstalled",
                                                  createWrapper(self.addon));
 
-          LOG("Install of " + self.sourceURL.spec + " completed.");
+          LOG("Install of " + self.sourceURI.spec + " completed.");
           self.state = AddonManager.STATE_INSTALLED;
           AddonManagerPrivate.callInstallListeners("onInstallEnded",
                                                    self.listeners, self.wrapper,
@@ -4468,7 +4468,7 @@ AddonInstall.prototype = {
     }
     finally {
       // If the file was downloaded then delete it
-      if (!(this.sourceURL instanceof Ci.nsIFileURL)) {
+      if (!(this.sourceURI instanceof Ci.nsIFileURL)) {
         try {
           this.file.remove(true);
         }
@@ -4564,7 +4564,7 @@ function AddonInstallWrapper(aInstall) {
     return createWrapper(aInstall.existingAddon);
   });
   this.__defineGetter__("addon", function() createWrapper(aInstall.addon));
-  this.__defineGetter__("sourceURL", function() aInstall.sourceURL.spec);
+  this.__defineGetter__("sourceURI", function() aInstall.sourceURI);
 
   this.install = function() {
     aInstall.install();
