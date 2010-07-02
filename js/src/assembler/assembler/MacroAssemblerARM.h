@@ -73,7 +73,7 @@ public:
         DoubleGreaterThanOrUnordered = ARMAssembler::HI,
         DoubleGreaterThanOrEqualOrUnordered = ARMAssembler::CS,
         DoubleLessThanOrUnordered = ARMAssembler::LT,
-        DoubleLessThanOrEqualOrUnordered = ARMAssembler::LE,
+        DoubleLessThanOrEqualOrUnordered = ARMAssembler::LE
     };
 
     static const RegisterID stackPointerRegister = ARMRegisters::sp;
@@ -517,7 +517,7 @@ public:
 
     void jump(RegisterID target)
     {
-        m_assembler.bx_r(target);
+        m_assembler.bx(target);
     }
 
     void jump(Address address)
@@ -611,7 +611,7 @@ public:
     {
 #if WTF_ARM_ARCH_VERSION >= 5
         Call    call(m_assembler.loadBranchTarget(ARMRegisters::S1, ARMAssembler::AL, true), Call::LinkableNear);
-        m_assembler.blx_r(ARMRegisters::S1);
+        m_assembler.blx(ARMRegisters::S1);
         return call;
 #else
         prepareCall();
@@ -621,7 +621,7 @@ public:
 
     Call call(RegisterID target)
     {
-        m_assembler.blx_r(target);
+        m_assembler.blx(target);
         JmpSrc jmpSrc;
         return Call(jmpSrc, Call::None);
     }
@@ -633,7 +633,7 @@ public:
 
     void ret()
     {
-        m_assembler.bx_r(linkRegister);
+        m_assembler.bx(linkRegister);
     }
 
     void set32(Condition cond, Address left, RegisterID right, RegisterID dest)
@@ -760,7 +760,7 @@ public:
     {
 #if WTF_ARM_ARCH_VERSION >= 5
         Call    call(m_assembler.loadBranchTarget(ARMRegisters::S1, ARMAssembler::AL, true), Call::Linkable);
-        m_assembler.blx_r(ARMRegisters::S1);
+        m_assembler.blx(ARMRegisters::S1);
         return call;
 #else
         prepareCall();
@@ -932,8 +932,8 @@ public:
     // (specifically, in this case, INT_MIN).
     Jump branchTruncateDoubleToInt32(FPRegisterID src, RegisterID dest)
     {
-        UNUSED_PARAM(src);
-        UNUSED_PARAM(dest);
+        (void)(src);
+        (void)(dest);
         ASSERT_NOT_REACHED();
         return jump();
     }
@@ -1076,7 +1076,7 @@ protected:
                 m_assembler.dtr_dr(true, ARMRegisters::S0, base, reg);
             }
         }
-        m_assembler.blx_r(ARMRegisters::S0);
+        m_assembler.blx(ARMRegisters::S0);
     }
 #endif
 
