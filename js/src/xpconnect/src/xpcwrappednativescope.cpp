@@ -1088,9 +1088,9 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
 
         if(wrapper)
         {
-            NS_ASSERTION(!wrapper->NeedsCOW(),
+            NS_ASSERTION(!wrapper->IsDoubleWrapper(),
                          "chrome object that's double wrapped makes no sense");
-            if(wrapper->NeedsSOW())
+            if(wrapper->NeedsChromeWrapper())
                 return WrapperType(SOW | hint);
         }
 
@@ -1116,9 +1116,9 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
     // NB: obj2 controls whether or not this is actually a "wrapped native".
     if(wrapper)
     {
-        if(wrapper->NeedsSOW())
+        if(wrapper->NeedsChromeWrapper())
             return WrapperType(SOW | (hint & (SJOW | XPCNW_EXPLICIT | COW)));
-        if(wrapper->NeedsCOW())
+        if(wrapper->IsDoubleWrapper())
         {
 #ifdef DEBUG
             {
