@@ -481,7 +481,7 @@ window.Subscribable.prototype = {
 // ##########
 // Class: Utils
 // Singelton with common utility functions.
-var Utils = {
+var Utils = {  
   // ___ Windows and Tabs
 
   // ----------
