@@ -68,12 +68,16 @@ child:
 
     async SetOffline(PRBool offline);
 
+    async NotifyVisited(URI uri);
+
     NotifyRemotePrefObserver(nsCString aDomain);
 
 parent:
     PNecko();
 
     // Services remoting
+
+    async StartVisitedQuery(URI uri);
 
     // PrefService messages
     sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
