@@ -20,5 +20,7 @@
       </Description>
     </em:targetApplication>
 
+    <em:skinnable>true</em:skinnable>
+
   </Description>
 </RDF>
