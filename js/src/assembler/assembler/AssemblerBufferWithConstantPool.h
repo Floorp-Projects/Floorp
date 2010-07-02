@@ -91,7 +91,7 @@ public:
     enum {
         UniqueConst,
         ReusableConst,
-        UnusedEntry,
+        UnusedEntry
     };
 
     AssemblerBufferWithConstantPool()
