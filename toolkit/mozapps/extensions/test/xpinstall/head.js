@@ -99,7 +99,7 @@ var Harness = {
 
       is(self.runningInstalls.length, 0, "Should be no running installs left");
       self.runningInstalls.forEach(function(aInstall) {
-        info("Install for " + aInstall.sourceURL + " is in state " + aInstall.state);
+        info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
       });
 
       self.installBlockedCallback = null;

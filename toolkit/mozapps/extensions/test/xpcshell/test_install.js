@@ -68,6 +68,9 @@ function run_test_1() {
     do_check_eq(install.addon.iconURL, "jar:" + uri + "!/icon.png");
     do_check_eq(install.iconURL, null);
 
+    do_check_eq(install.sourceURI.spec, uri);
+    do_check_eq(install.addon.sourceURI.spec, uri);
+
     AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
@@ -120,6 +123,8 @@ function check_test_1() {
           do_check_true(do_get_addon("test_install1").exists());
           do_check_in_crash_annotation(a1.id, a1.version);
 
+          do_check_eq(a1.sourceURI.spec,
+                      Services.io.newFileURI(do_get_addon("test_install1")).spec);
           // Should have been installed sometime in the last two second.
           let difference = Date.now() - a1.installDate.getTime();
           if (difference > MAX_INSTALL_TIME)
@@ -158,6 +163,7 @@ function run_test_2() {
     do_check_eq(install.name, "Test 2");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
     do_check_eq(install.iconURL, null);
+    do_check_eq(install.sourceURI.spec, url);
 
     AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
@@ -224,6 +230,8 @@ function check_test_3() {
         do_check_true(isExtensionInAddonsList(profileDir, a2.id));
         do_check_true(do_get_addon("test_install2_1").exists());
         do_check_in_crash_annotation(a2.id, a2.version);
+        do_check_eq(a2.sourceURI.spec,
+                    "http://localhost:4444/addons/test_install2_1.xpi");
 
         // Should have been installed sometime in the last two second.
         let difference = Date.now() - a2.installDate.getTime();
@@ -322,6 +330,8 @@ function check_test_5(install) {
           do_check_true(isExtensionInAddonsList(profileDir, a2.id));
           do_check_true(do_get_addon("test_install2_2").exists());
           do_check_in_crash_annotation(a2.id, a2.version);
+          do_check_eq(a2.sourceURI.spec,
+                      "http://localhost:4444/addons/test_install2_2.xpi");
 
           do_check_eq(a2.installDate.getTime(), gInstallDate);
           // Update date should be later (or the same if this test is too fast)
