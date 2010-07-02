@@ -1135,16 +1135,6 @@ static const mozilla::Module kXREModule = {
 
 NSMODULE_DEFN(Apprunner) = &kXREModule;
 
-#if !defined(_BUILD_STATIC_BIN) && !defined(MOZ_ENABLE_LIBXUL)
-static mozilla::Module const *const kXREStaticModules[] =
-{
-  Apprunner_NSModule,
-  NULL
-};
-
-mozilla::Module const *const *const kPStaticModules = kXREStaticModule;
-#endif
-
 nsresult
 ScopedXPCOMStartup::Initialize()
 {
@@ -1160,6 +1150,10 @@ ScopedXPCOMStartup::Initialize()
     rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
   if (NS_SUCCEEDED(rv))
     mozilla::SetOmnijar(lf);
+#endif
+
+#if !defined(_BUILD_STATIC_BIN) && !defined(MOZ_ENABLE_LIBXUL)
+  XRE_AddStaticComponent(&kXREModule);
 #endif
 
   rv = NS_InitXPCOM2(&mServiceManager, gDirServiceProvider->GetAppDir(),
