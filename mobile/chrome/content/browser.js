@@ -2613,7 +2613,7 @@ Tab.prototype = {
     browser.setAttribute("type", "content");
 
     let useRemote = gPrefService.getBoolPref("browser.tabs.remote");
-    let useLocal = aURI.indexOf("about") == 0 && aURI != "about:blank";
+    let useLocal = Util.isLocalScheme(aURI);
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
     
     // Append the browser to the document, which should start the page load
