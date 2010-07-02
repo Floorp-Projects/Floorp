@@ -82,7 +82,7 @@ class JSWrapper : public js::JSProxyHandler {
 
     /* Spidermonkey extensions. */
     virtual JS_FRIEND_API(bool) call(JSContext *cx, JSObject *wrapper, uintN argc, jsval *vp);
-    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *wrapper, JSObject *receiver,
+    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *wrapper,
                                           uintN argc, jsval *argv, jsval *rval);
     virtual JS_FRIEND_API(JSString *) obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JS_FRIEND_API(JSString *) fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
@@ -132,8 +132,8 @@ class JSCrossCompartmentWrapper : public JSWrapper {
 
     /* Spidermonkey extensions. */
     virtual JS_FRIEND_API(bool) call(JSContext *cx, JSObject *wrapper, uintN argc, jsval *vp);
-    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *wrapper, JSObject *receiver,
-                           uintN argc, jsval *argv, jsval *rval);
+    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *wrapper,
+                                          uintN argc, jsval *argv, jsval *rval);
     virtual JS_FRIEND_API(JSString *) obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JS_FRIEND_API(JSString *) fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
 
