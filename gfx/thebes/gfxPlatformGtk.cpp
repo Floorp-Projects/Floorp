@@ -168,24 +168,21 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     // XXX we really need a different interface here, something that passes
     // in more context, including the display and/or target surface type that
     // we should try to match
-    Display* display = GDK_DISPLAY();
-    if (!display)
-        return nsnull;
+    GdkScreen *gdkScreen = gdk_screen_get_default();
+    if (gdkScreen) {
 
-    // try to optimize it for 16bpp default screen
-    if (gfxASurface::ImageFormatRGB24 == imageFormat
-        && 16 == gdk_visual_get_system()->depth)
-        imageFormat = gfxASurface::ImageFormatRGB16_565;
+        // try to optimize it for 16bpp default screen
+        if (gfxASurface::ImageFormatRGB24 == imageFormat
+            && 16 == gdk_visual_get_system()->depth)
+            imageFormat = gfxASurface::ImageFormatRGB16_565;
 
-    XRenderPictFormat* xrenderFormat =
-        gfxXlibSurface::FindRenderFormat(display, imageFormat);
+        Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
+        XRenderPictFormat* xrenderFormat =
+            gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
+                                             imageFormat);
 
-    if (xrenderFormat) {
-        newSurface = new gfxXlibSurface(display, xrenderFormat, size);
-        if (newSurface && newSurface->CairoStatus() != 0) {
-            // something went wrong with the surface creation.
-            // Ignore and let's fall back to image surfaces.
-            newSurface = nsnull;
+        if (xrenderFormat) {
+            newSurface = gfxXlibSurface::Create(screen, xrenderFormat, size);
         }
     }
 #endif
@@ -199,7 +196,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
 
     if (!newSurface) {
         // We couldn't create a native surface for whatever reason;
-        // e.g., no RENDER, bad size, etc.
+        // e.g., no display, no RENDER, bad size, etc.
         // Fall back to image surface for the data.
         newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
     }

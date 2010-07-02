@@ -48,13 +48,12 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, int width, int height,
     Display *dpy = QX11Info().display();
     PRBool isOpaque = (flags & DRAW_IS_OPAQUE) ? PR_TRUE : PR_FALSE;
     int screen = QX11Info().screen();
-    int depth = QX11Info().depth();
     Visual *visual = static_cast<Visual*>(QX11Info().visual());
     Colormap colormap = QX11Info().colormap();
     PRBool allocColormap = PR_FALSE;
 
     if (!isOpaque) {
-        depth = 32;
+        int depth = 32;
         XVisualInfo vinfo;
         int foundVisual = XMatchVisualInfo(dpy, screen,
                                            depth, TrueColor,
@@ -72,9 +71,8 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, int width, int height,
     }
 
     nsRefPtr<gfxXlibSurface> xsurf =
-        new gfxXlibSurface(dpy, visual,
-                           gfxIntSize(width, height),
-                           depth);
+        gfxXlibSurface::Create(ScreenOfDisplay(dpy, screen), visual,
+                               gfxIntSize(width, height));
 
     if (!isOpaque) {
         nsRefPtr<gfxContext> tempCtx = new gfxContext(xsurf);
