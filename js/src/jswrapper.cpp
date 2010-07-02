@@ -566,7 +566,7 @@ JSCrossCompartmentWrapper::isCrossCompartmentWrapper(JSObject *obj)
         AutoCompartment call(cx, wrappedObject(wrapper));   \
         if (!call.enter())                                  \
             return false;                                   \
-        bool ok = (pre) && (op);                            \ 
+        bool ok = (pre) && (op);                            \
         call.leave();                                       \
         return ok && (post);                                \
     JS_END_MACRO
