@@ -95,6 +95,8 @@ LayerManagerOGL::~LayerManagerOGL()
   if (mGLContext)
     mGLContext->MakeCurrent();
 
+  mRoot = NULL;
+
   for (unsigned int i = 0; i < mPrograms.Length(); ++i)
     delete mPrograms[i];
 
