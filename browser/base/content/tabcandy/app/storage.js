@@ -46,6 +46,41 @@ Storage = {
   UI_DATA_IDENTIFIER:    "tabcandy-ui",
 
   // ----------
+  // Function: onReady
+  // Calls callback when Storage is ready for business. Could be immediately if it's already ready
+  // or later if needed. 
+  onReady: function(callback) {
+    try {
+      var alreadyReady = false; // TODO: actually check
+      if(alreadyReady)
+        callback();
+      else {    
+        let obsService =
+          Components.classes["@mozilla.org/observer-service;1"]
+          .getService(Components.interfaces.nsIObserverService);
+    
+        let observer = {      
+          observe: function(subject, topic, data) {
+            try {
+              if (topic == "browser-delayed-startup-finished") {
+                if (subject == Utils.getCurrentWindow()) {
+                  callback();
+                }
+              }
+            } catch(e) {
+              Utils.log(e);
+            }
+          }
+        };
+          
+        obsService.addObserver(observer, "browser-delayed-startup-finished", false);
+      }
+    } catch(e) {
+      Utils.log(e);
+    }  
+  },
+
+  // ----------
   init: function() {
     this._sessionStore = Components.classes["@mozilla.org/browser/sessionstore;1"]
                                    .getService(Components.interfaces.nsISessionStore);
