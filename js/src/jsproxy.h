@@ -77,7 +77,7 @@ class JSProxyHandler {
 
     /* Spidermonkey extensions. */
     virtual JS_FRIEND_API(bool) call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
-    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
+    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *proxy,
                                           uintN argc, jsval *argv, jsval *rval);
     virtual JS_FRIEND_API(JSString *) obj_toString(JSContext *cx, JSObject *proxy);
     virtual JS_FRIEND_API(JSString *) fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
@@ -116,8 +116,7 @@ class JSProxy {
 
     /* Spidermonkey extensions. */
     static bool call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
-    static bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                          uintN argc, jsval *argv, jsval *rval);
+    static bool construct(JSContext *cx, JSObject *proxy, uintN argc, jsval *argv, jsval *rval);
     static JSString *obj_toString(JSContext *cx, JSObject *proxy);
     static JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
 };

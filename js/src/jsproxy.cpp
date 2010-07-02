@@ -258,40 +258,27 @@ JSProxyHandler::call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp)
 }
 
 bool
-JSProxyHandler::construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
+JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
                           uintN argc, jsval *argv, jsval *rval)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     jsval fval = GetConstruct(proxy);
-    if (fval == JSVAL_VOID) {
-        /*
-         * proxy is the constructor, so get proxy.prototype as the proto
-         * of the new object.
-         */
-        if (!JSProxy::get(cx, proxy, proxy, ATOM_TO_JSID(ATOM(classPrototype)), rval))
+    if (JSVAL_IS_VOID(fval)) {
+        fval = GetCall(proxy);
+        JSObject *obj = JS_New(cx, JSVAL_TO_OBJECT(fval), argc, argv);
+        if (!obj)
             return false;
-
-        JSObject *proto;
-        if (!JSVAL_IS_PRIMITIVE(*rval)) {
-            proto = JSVAL_TO_OBJECT(*rval);
-        } else {
-            if (!js_GetClassPrototype(cx, NULL, JSProto_Object, &proto))
-                return false;
-        }
-
-        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent());
-
-        *rval = OBJECT_TO_JSVAL(newobj);
-
-        /* If the call returns an object, return that, otherwise the original newobj. */
-        if (!js_InternalCall(cx, newobj, GetCall(proxy), argc, argv, rval))
-            return false;
-        if (JSVAL_IS_PRIMITIVE(*rval))
-            *rval = OBJECT_TO_JSVAL(newobj);
-
+        *rval = OBJECT_TO_JSVAL(obj);
         return true;
     }
-    return js_InternalCall(cx, receiver, fval, argc, argv, rval);
+
+    /*
+     * FIXME: The Proxy proposal says to pass undefined as the this argument,
+     * but primitive this is not supported yet. See bug 576644.
+     */
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(fval));
+    JSObject *thisobj = JSVAL_TO_OBJECT(fval)->getGlobal();
+    return js_InternalCall(cx, thisobj, fval, argc, argv, rval);
 }
 
 void
@@ -802,11 +789,10 @@ JSProxy::call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp)
 }
 
 bool
-JSProxy::construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                   uintN argc, jsval *argv, jsval *rval)
+JSProxy::construct(JSContext *cx, JSObject *proxy, uintN argc, jsval *argv, jsval *rval)
 {
     AutoPendingProxyOperation pending(cx, proxy);
-    return proxy->getProxyHandler()->construct(cx, proxy, receiver, argc, argv, rval);
+    return proxy->getProxyHandler()->construct(cx, proxy, argc, argv, rval);
 }
 
 JSString *
@@ -985,11 +971,11 @@ proxy_Call(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-proxy_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+proxy_Construct(JSContext *cx, JSObject * /*obj*/, uintN argc, jsval *argv, jsval *rval)
 {
     JSObject *proxy = JSVAL_TO_OBJECT(argv[-2]);
     JS_ASSERT(proxy->isProxy());
-    return JSProxy::construct(cx, proxy, obj, argc, argv, rval);
+    return JSProxy::construct(cx, proxy, argc, argv, rval);
 }
 
 static JSType
