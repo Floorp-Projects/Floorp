@@ -748,19 +748,22 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // GTK themes can only draw an integer number of pixels
   // (even when not snapped).
   nsIntRect widgetRect(0, 0, NS_lround(rect.Width()), NS_lround(rect.Height()));
-  nsIntRect overflowRect(widgetRect);
-  nsIntMargin extraSize;
-  if (GetExtraSizeForWidget(aWidgetType, state.isDefault, &extraSize)) {
-    overflowRect.Inflate(extraSize);
-  }
 
   // This is the rectangle that will actually be drawn, in gdk pixels
   nsIntRect drawingRect(PRInt32(dirtyRect.X()),
                         PRInt32(dirtyRect.Y()),
                         PRInt32(dirtyRect.Width()),
                         PRInt32(dirtyRect.Height()));
-  if (!drawingRect.IntersectRect(overflowRect, drawingRect))
+  if (!drawingRect.IntersectRect(widgetRect, drawingRect))
     return NS_OK;
+
+  nsIntMargin extraSize;
+  // The margin should be applied to the widget rect rather than the dirty
+  // rect but nsCSSRendering::PaintBackgroundWithSC has already intersected
+  // the dirty rect with the uninflated widget rect.
+  if (GetExtraSizeForWidget(aWidgetType, state.isDefault, &extraSize)) {
+    drawingRect.Inflate(extraSize);
+  }
 
   // gdk rectangles are wrt the drawing rect.
 
