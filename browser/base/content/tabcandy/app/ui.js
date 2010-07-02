@@ -176,8 +176,9 @@ window.Page = {
     this.hideChrome();
   },
 
-  isTabCandyFocused: function(){
-    return !Utils.getCurrentWindow().document.getElementById("tab-candy").hidden;
+  isTabCandyDisplayed: function(){
+    return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
+             selectedIndex == 1);
   },
   
   hideChrome: function(){
@@ -300,9 +301,6 @@ window.Page = {
       
       if((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
         if( self.getActiveTab() ) self.getActiveTab().zoomIn();
-      
-      
-       
     });
     
   },
@@ -353,40 +351,52 @@ window.Page = {
     });
     
     Tabs.onFocus(function() {
-      var focusTab = this;
-      var currentTab = UI.currentTab;
-      
-      Page.showChrome();
+      self.tabOnFocus(this);
+    });
+  },
 
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-        if(focusTab != UI.currentTab) {
-          // things have changed while we were in timeout
-          return;
-        }
+  // ----------  
+  tabOnFocus: function(tab) {
+    var focusTab = tab;
+    var currentTab = UI.currentTab;
+    
+    UI.currentTab = focusTab;
+    if (this.isTabCandyDisplayed()) {
+      this.showChrome();    
+    }
 
-        let newItem = null;
-        if(focusTab && focusTab.mirror)
-          newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
+    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+      if(focusTab != UI.currentTab) {
+        // things have changed while we were in timeout
+        return;
+      }
+       
+      let newItem = null;
+      if(focusTab && focusTab.mirror)
+        newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
+
+      if(newItem)
+        Groups.setActiveGroup(newItem.parent);
+
+      // ___ prepare for when we return to TabCandy
+      let oldItem = null;
+      if(currentTab && currentTab.mirror)
+        oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+
+      if(newItem != oldItem) {
+        if(oldItem)
+          oldItem.setZoomPrep(false);
 
         if(newItem)
-          Groups.setActiveGroup(newItem.parent);
-
-        // ___ prepare for when we return to TabCandy
-        let oldItem = null;
-        if(currentTab && currentTab.mirror)
-          oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
-
-        if(newItem != oldItem) {
-          if(oldItem)
-            oldItem.setZoomPrep(false);
-
-          if(newItem)
-            newItem.setZoomPrep(true);
+          newItem.setZoomPrep(true);
+      } else {
+        // the tab is already focused so the new and old items are the
+        // same.
+        if (oldItem) {
+          oldItem.setZoomPrep(true);
         }
-      }, 1);
-      
-      UI.currentTab = focusTab;
-    });
+      }
+    }, 1);
   },
 
   // ----------  
@@ -786,7 +796,7 @@ UIClass.prototype = {
     // don't perform a resize. This resize really slows things down.
     var isAnimating = iQ.isAnimating();
     if( force == false){
-      if( isAnimating || !Page.isTabCandyFocused() ) {
+      if( isAnimating || !Page.isTabCandyDisplayed() ) {
         // TODO: should try again once the animation is done
         // Actually, looks like iQ.isAnimating is non-functional;
         // perhaps we should clean it out, or maybe we should fix it. 
