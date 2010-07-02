@@ -241,6 +241,12 @@ public:
         m_assembler.eors_r(dest, dest, m_assembler.getImm(imm.m_value, ARMRegisters::S0));
     }
 
+    void xor32(Address src, RegisterID dest)
+    {
+        load32(src, ARMRegisters::S1);
+        m_assembler.eors_r(dest, dest, ARMRegisters::S1);
+    }
+
     void load8(ImplicitAddress address, RegisterID dest)
     {
         m_assembler.dataTransfer32(true, dest, address.base, address.offset, true);
@@ -539,6 +545,13 @@ public:
         return Jump(m_assembler.jmp(ARMCondition(cond)));
     }
 
+    Jump branchAdd32(Condition cond, Address src, RegisterID dest)
+    {
+        ASSERT((cond == Overflow) || (cond == Signed) || (cond == Zero) || (cond == NonZero));
+        add32(src, dest);
+        return Jump(m_assembler.jmp(ARMCondition(cond)));
+    }
+
     void mull32(RegisterID src1, RegisterID src2, RegisterID dest)
     {
         if (src1 == dest) {
@@ -585,6 +598,13 @@ public:
     {
         ASSERT((cond == Overflow) || (cond == Signed) || (cond == Zero) || (cond == NonZero));
         sub32(imm, dest);
+        return Jump(m_assembler.jmp(ARMCondition(cond)));
+    }
+
+    Jump branchSub32(Condition cond, Address src, RegisterID dest)
+    {
+        ASSERT((cond == Overflow) || (cond == Signed) || (cond == Zero) || (cond == NonZero));
+        sub32(src, dest);
         return Jump(m_assembler.jmp(ARMCondition(cond)));
     }
 
@@ -660,6 +680,12 @@ public:
         m_assembler.cmp_r(left, m_assembler.getImm(right.m_value, ARMRegisters::S0));
         m_assembler.mov_r(dest, ARMAssembler::getOp2(0));
         m_assembler.mov_r(dest, ARMAssembler::getOp2(1), ARMCondition(cond));
+    }
+
+    void set32(Condition cond, Address left, Imm32 right, RegisterID dest)
+    {
+        load32(left, ARMRegisters::S1);
+        set32(cond, ARMRegisters::S1, right, dest);
     }
 
     void set8(Condition cond, RegisterID left, RegisterID right, RegisterID dest)
@@ -887,6 +913,11 @@ public:
     {
         loadDouble(src, ARMRegisters::SD0);
         mulDouble(ARMRegisters::SD0, dest);
+    }
+
+    void negDouble(FPRegisterID src, FPRegisterID dest)
+    {
+        m_assembler.fnegd_r(dest, src);
     }
 
     void sqrtDouble(FPRegisterID src, FPRegisterID dest)

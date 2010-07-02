@@ -80,7 +80,7 @@ class BaseAssembler : public JSC::MacroAssembler
     };
 
     /* Need a temp reg that is not ArgReg1. */
-#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const RegisterID ClobberInCall = JSC::X86Registers::ecx;
 #elif defined(JS_CPU_ARM)
     static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
@@ -106,7 +106,7 @@ class BaseAssembler : public JSC::MacroAssembler
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
-    static const RegisterID JSFrameReg = JSC::X86Registers::r11;
+    static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
 #endif
 
     size_t distanceOf(Label l) {
@@ -164,7 +164,7 @@ class BaseAssembler : public JSC::MacroAssembler
          * the EABI argument-passing mechanism. Technically, this isn't ABI-
          * compliant.
          */
-        move(Imm32(intptr_t(fun)), ARMRegisters::ip);
+        move(Imm32(intptr_t(fun)), JSC::ARMRegisters::ip);
 #else
         /*
          * Architectures that push the return address to an easily-determined
