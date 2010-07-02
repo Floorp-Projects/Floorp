@@ -631,10 +631,8 @@ nsDocAccessible::Shutdown()
 
   RemoveEventListeners();
 
-  if (mParent) {
+  if (mParent)
     mParent->RemoveChild(this);
-    mParent = nsnull;
-  }
 
   mWeakShell = nsnull;  // Avoid reentrancy
 
@@ -1393,7 +1391,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
     nsAccessible *parent = changeAcc->GetParent();
     nsINode *parentNode = parent->GetNode();
     PRInt32 childCount = parent->GetChildCount();
-    PRInt32 changeAccIdx = parent->GetIndexOf(changeAcc);
+    PRInt32 changeAccIdx = changeAcc->GetIndexInParent();
 
     for (PRInt32 idx = changeAccIdx; idx < childCount; idx++) {
       nsAccessible *child = parent->GetChildAt(idx);
@@ -1647,7 +1645,7 @@ nsDocAccessible::RefreshNodes(nsINode *aStartNode)
 
     // We only need to shutdown the accessibles here if one of them has been
     // created.
-    if (accessible->GetCachedFirstChild()) {
+    if (accessible->GetCachedChildCount() > 0) {
       nsCOMPtr<nsIArray> children;
       // use GetChildren() to fetch all children at once, because after shutdown
       // the child references are cleared.
