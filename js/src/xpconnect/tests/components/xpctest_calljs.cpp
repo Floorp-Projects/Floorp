@@ -114,7 +114,7 @@ NS_IMETHODIMP xpcTestCallJS :: UnscriptableMethod() {
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestCallJS(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
