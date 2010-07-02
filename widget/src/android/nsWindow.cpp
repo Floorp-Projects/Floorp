@@ -51,24 +51,15 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 
+#include "Layers.h"
+#include "BasicLayers.h"
+#include "LayerManagerOGL.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
+
 #include "nsTArray.h"
 
 #include "AndroidBridge.h"
-
-/* OpenGL */
-#define USE_GLES2
-
-#ifdef USE_GLES2
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#else
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#endif
-
-#ifndef GL_BGRA_EXT
-#define GL_BGRA_EXT 0x80E1
-#endif
 
 using namespace mozilla;
 
@@ -89,6 +80,9 @@ static PRBool gSym;
 static nsTArray<nsWindow*> gTopLevelWindows;
 static nsWindow* gFocusedWindow = nsnull;
 static PRUint32 gIMEState;
+
+static nsRefPtr<gl::GLContext> sGLContext;
+static PRBool sFailedToCreateGLContext = PR_FALSE;
 
 static nsWindow*
 TopWindow()
@@ -119,7 +113,7 @@ nsWindow::DumpWindows()
 void
 nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 {
-    for (int i = 0; i < wins.Length(); ++i) {
+    for (PRUint32 i = 0; i < wins.Length(); ++i) {
         nsWindow *w = wins[i];
         LogWindow(w, i, indent);
         DumpWindows(w->mChildren, indent+1);
@@ -136,6 +130,8 @@ nsWindow::nsWindow() :
 nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
+    if (gFocusedWindow == this)
+        gFocusedWindow = nsnull;
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
@@ -411,6 +407,11 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 NS_IMETHODIMP
 nsWindow::SetSizeMode(PRInt32 aMode)
 {
+    switch (aMode) {
+        case nsSizeMode_Minimized:
+            AndroidBridge::Bridge()->MoveTaskToBack();
+            break;
+    }
     return NS_OK;
 }
 
@@ -579,8 +580,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             int nh = ae->P0().y;
 
             if (nw == gAndroidBounds.width &&
-                nh == gAndroidBounds.height)
-            {
+                nh == gAndroidBounds.height) {
                 return;
             }
 
@@ -631,8 +631,12 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::IME_EVENT:
             TopWindow()->UserActivity();
-            if (gFocusedWindow)
+            if (gFocusedWindow) {
                 gFocusedWindow->OnIMEEvent(ae);
+            } else {
+                NS_WARNING("Sending unexpected IME event to top window");
+                TopWindow()->OnIMEEvent(ae);
+            }
             break;
 
         default:
@@ -660,54 +664,90 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
     if (!mIsVisible)
         return PR_FALSE;
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
-
+    nsEventStatus status;
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
 
-    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.region = boundsRect;
-    {
-        AutoLayerManagerSetup setupLayerManager(this, ctx);
-        nsEventStatus status = DispatchEvent(&event);
+    // Figure out if any of our children cover this widget completely
+    PRInt32 coveringChildIndex = -1;
+    for (PRUint32 i = 0; i < mChildren.Length(); ++i) {
+        if (mChildren[i]->mBounds.IsEmpty())
+            continue;
+
+        if (mChildren[i]->mBounds.Contains(boundsRect)) {
+            coveringChildIndex = PRInt32(i);
+        }
     }
 
-    // XXX uhh.. we can't just ignore this because we no longer have
-    // what we needed before, but let's keep drawing the children anyway?
+    // If we have no covering child, then we need to render this.
+    if (coveringChildIndex == -1) {
+        ALOG("nsWindow[%p]::DrawTo no covering child, drawing this", (void*) this);
+
+        nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+        event.region = boundsRect;
+        switch (GetLayerManager()->GetBackendType()) {
+            case LayerManager::LAYERS_BASIC: {
+                nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
+
+                {
+                    AutoLayerManagerSetup setupLayerManager(this, ctx);
+                    status = DispatchEvent(&event);
+                }
+
+                // XXX uhh.. we can't just ignore this because we no longer have
+                // what we needed before, but let's keep drawing the children anyway?
 #if 0
-    if (status == nsEventStatus_eIgnore)
-        return PR_FALSE;
+                if (status == nsEventStatus_eIgnore)
+                    return PR_FALSE;
 #endif
 
-    // XXX if we got an ignore for the parent, do we still want to draw the children?
-    // We don't really have a good way not to...
+                // XXX if we got an ignore for the parent, do we still want to draw the children?
+                // We don't really have a good way not to...
+                break;
+            }
 
-    gfxPoint offset = targetSurface->GetDeviceOffset();
+            case LayerManager::LAYERS_OPENGL: {
+                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
+                    SetClippingRegion(nsIntRegion(boundsRect));
 
-    for (PRUint32 i = 0; i < mChildren.Length(); ++i) {
-        targetSurface->SetDeviceOffset(offset + gfxPoint(mChildren[i]->mBounds.x,
-                                                         mChildren[i]->mBounds.y));
-        if (!mChildren[i]->DrawTo(targetSurface)) {
+                status = DispatchEvent(&event);
+                break;
+            }
+
+            default:
+                NS_ERROR("Invalid layer manager");
+        }
+
+        // We had no covering child, so make sure we draw all the children,
+        // starting from index 0.
+        coveringChildIndex = 0;
+    }
+
+    gfxPoint offset;
+
+    if (targetSurface)
+        offset = targetSurface->GetDeviceOffset();
+
+    for (PRUint32 i = coveringChildIndex; i < mChildren.Length(); ++i) {
+        if (mChildren[i]->mBounds.IsEmpty() ||
+            !mChildren[i]->mBounds.Intersects(boundsRect)) {
+            continue;
+        }
+
+        if (targetSurface)
+            targetSurface->SetDeviceOffset(offset + gfxPoint(mChildren[i]->mBounds.x,
+                                                             mChildren[i]->mBounds.y));
+
+        PRBool ok = mChildren[i]->DrawTo(targetSurface);
+
+        if (!ok) {
             ALOG("nsWindow[%p]::DrawTo child %d[%p] returned FALSE!", (void*) this, i, (void*)mChildren[i]);
         }
     }
 
-    targetSurface->SetDeviceOffset(offset);
+    if (targetSurface)
+        targetSurface->SetDeviceOffset(offset);
 
     return PR_TRUE;
-}
-
-static int
-next_power_of_two(int v)
-{
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v++;
-
-    return v;
 }
 
 void
@@ -735,351 +775,46 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
-    int drawType = sview.BeginDrawing();
-
-    if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
-        ALOG("##### BeginDrawing failed!");
-        return;
-    }
-
-    nsRefPtr<gfxImageSurface> targetSurface;
-
-    if (drawType == AndroidGeckoSurfaceView::DRAW_SOFTWARE) {
-        int bufCap;
-        unsigned char *buf = sview.GetSoftwareDrawBuffer(&bufCap);
-        if (!buf || bufCap != mBounds.width * mBounds.height * 4) {
-            ALOG("### Software drawing, but too small a buffer %d expected %d (or no buffer %p)!", bufCap, mBounds.width * mBounds.height * 4, (void*)buf);
-            sview.EndDrawing();
+    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
+        jobject bytebuf = sview.GetSoftwareDrawBuffer();
+        if (!bytebuf) {
+            ALOG("no buffer to draw into - skipping draw");
             return;
         }
-        targetSurface =
-            new gfxImageSurface(buf,
+
+        void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
+        int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
+        if (!buf || cap < (mBounds.width * mBounds.height * 2)) {
+            ALOG("### Software drawing, but too small a buffer %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
+            return;
+        }
+
+        nsRefPtr<gfxImageSurface> targetSurface =
+            new gfxImageSurface((unsigned char *)buf,
                                 gfxIntSize(mBounds.width, mBounds.height),
-                                mBounds.width * 4,
-                                gfxASurface::ImageFormatARGB32);
+                                mBounds.width * 2,
+                                gfxASurface::ImageFormatRGB16_565);
 
         DrawTo(targetSurface);
-
-        // need to swap B and R channels, to get ABGR instead of ARGB
-        unsigned int *ibuf = (unsigned int*) buf;
-        unsigned int *ibufMax = ibuf + mBounds.width * mBounds.height;
-        while (ibuf < ibufMax) {
-            *ibuf++ = (*ibuf & 0xff00ff00) | ((*ibuf & 0x00ff0000) >> 16) | ((*ibuf & 0x000000ff) << 16);
-        }
-
-        sview.EndDrawing();
-        return;
-    }
-
-    targetSurface =
-        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height), gfxASurface::ImageFormatARGB32);
-
-    if (!DrawTo(targetSurface)) {
-        sview.EndDrawing();
-        return;
-    }
-
-#ifdef USE_GLES2
-    if (drawType != AndroidGeckoSurfaceView::DRAW_GLES_2) {
-        ALOG("#### GL drawing path, but beingDrawing wanted something else!");
-        sview.EndDrawing();
-        return;
-    }
-
-    static bool hasBGRA = false;
-
-    if (firstDraw) {
-        const char *ext = (const char *) glGetString(GL_EXTENSIONS);
-        ALOG("GL extensions: %s", ext);
-        if (strstr(ext, "GL_EXT_bgra") ||
-            strstr(ext, "GL_IMG_texture_format_BGRA8888") ||
-            strstr(ext, "GL_EXT_texture_format_BGRA8888"))
-            hasBGRA = true;
-
-        firstDraw = false;
-    }
-
-    static GLuint textureId = GLuint(-1);
-    static GLuint programId = GLuint(-1);
-    static GLint positionLoc, texCoordLoc, textureLoc;
-    if (textureId == GLuint(-1) || !glIsTexture(textureId)) {
-        glGenTextures(1, &textureId);
-
-        glBindTexture(GL_TEXTURE_2D, textureId);
-
-        /* Set required NPOT texture params, for baseline ES2 NPOT support */
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        const char *vsString =
-            "attribute vec3 aPosition; \n"
-            "attribute vec2 aTexCoord; \n"
-            "varying vec2 vTexCoord; \n"
-            "void main() { \n"
-            "  gl_Position = vec4(aPosition, 1.0); \n"
-            "  vTexCoord = aTexCoord; \n"
-            "}";
-
-        /* Note that while the swizzle is, afaik, "free", the texture upload
-         * can potentially be faster if the native hardware format is BGRA.  So
-         * we use BGRA if it's available.
-         */
-
-        const char *fsStringNoBGRA =
-            "precision mediump float; \n"
-            "varying vec2 vTexCoord; \n"
-            "uniform sampler2D sTexture; \n"
-            "void main() { \n"
-            "  gl_FragColor = vec4(texture2D(sTexture, vTexCoord).bgr, 1.0); \n"
-            "}";
-
-        const char *fsStringBGRA =
-            "precision mediump float; \n"
-            "varying vec2 vTexCoord; \n"
-            "uniform sampler2D sTexture; \n"
-            "void main() { \n"
-            "  gl_FragColor = vec4(texture2D(sTexture, vTexCoord).rgb, 1.0); \n"
-            "}";
-
-        GLint status;
-
-        GLuint vsh = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vsh, 1, &vsString, NULL);
-        glCompileShader(vsh);
-        glGetShaderiv(vsh, GL_COMPILE_STATUS, &status);
-        if (!status) {
-            ALOG("Failed to compile vertex shader");
-            return;
-        }
-
-        GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fsh, 1, hasBGRA ? &fsStringBGRA : &fsStringNoBGRA, NULL);
-        glCompileShader(fsh);
-        glGetShaderiv(fsh, GL_COMPILE_STATUS, &status);
-        if (!status) {
-            ALOG("Failed to compile fragment shader");
-            return;
-        }
-
-        programId = glCreateProgram();
-        glAttachShader(programId, vsh);
-        glAttachShader(programId, fsh);
-
-        glLinkProgram(programId);
-        glGetProgramiv(programId, GL_LINK_STATUS, &status);
-        if (!status) {
-            ALOG("Failed to link program");
-            return;
-        }
-
-        positionLoc = glGetAttribLocation(programId, "aPosition");
-        texCoordLoc = glGetAttribLocation(programId, "aTexCoord");
-        textureLoc = glGetUniformLocation(programId, "sTexture");
-    }
-
-    int texDimWidth = targetSurface->Width();
-    int texDimHeight = targetSurface->Height();
-
-    glClearColor(1.0f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glFrontFace(GL_CCW);
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-
-    glBindTexture(GL_TEXTURE_2D, textureId);
-
-    glTexImage2D(GL_TEXTURE_2D,
-                 0,
-                 hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                 texDimWidth,
-                 texDimHeight,
-                 0,
-                 hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                 GL_UNSIGNED_BYTE,
-                 targetSurface->Data());
-
-    GLfloat texCoords[] = { 0.0f, 1.0f,
-                            0.0f, 0.0f,
-                            1.0f, 1.0f,
-                            1.0f, 0.0f };
-
-    GLfloat vCoords[] = { -1.0f, -1.0f, 0.0f,
-                          -1.0f,  1.0f, 0.0f,
-                           1.0f, -1.0f, 0.0f,
-                           1.0f,  1.0f, 0.0f };
-
-    glUseProgram(programId);
-
-    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, vCoords);
-    glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, GL_FALSE, 0, texCoords);
-
-    glEnableVertexAttribArray(positionLoc);
-    glEnableVertexAttribArray(texCoordLoc);
-
-    glUniform1i(textureLoc, 0);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    int err = glGetError();
-    if (err)
-        ALOG("GL error: %d", err);
-#else
-
-    /* GLES 1.0[1?] code.
-     *
-     * Two things:
-     *   NPOT textures are not supported by default, unlike with GLES 2
-     *   BGRA texture support is generally available, and might have
-     *   one of three different extension names.
-     */
-
-    static bool hasBGRA = false;
-    static bool hasNPOT = false;
-    static bool hasDrawTex = false;
-
-    if (firstDraw) {
-        const char *ext = (const char *) glGetString(GL_EXTENSIONS);
-        ALOG("GL extensions: %s", ext);
-        if (strstr(ext, "GL_EXT_bgra") ||
-            strstr(ext, "GL_IMG_texture_format_BGRA8888") ||
-            strstr(ext, "GL_EXT_texture_format_BGRA8888"))
-            hasBGRA = true;
-
-        if (strstr(ext, "GL_ARB_texture_non_power_of_two"))
-            hasNPOT = true;
-
-        if (strstr(ext, "GL_OES_draw_texture"))
-            hasDrawTex = true;
-
-        if (!hasBGRA)
-            ALOG("No BGRA extension found -- colors will be weird! XXX FIXME");
-
-        firstDraw = false;
-    }
-
-    glClearColor(1.0f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // This is all the way a hack and will need to be changed with
-    // real code to handle lost/reset context issues (e.g. when
-    // rotating.
-    static int lastTexDimWidth = -1;
-    static int lastTexDimHeight = -1;
-    static GLuint textureId = GLuint(-1);
-    if (textureId == GLuint(-1) || !glIsTexture(textureId)) {
-        glGenTextures(1, &textureId);
-
-        // Reset these to ensure that the non-NPOT path
-        // calls TexImage2D first.
-        lastTexDimWidth = -1;
-        lastTexDimHeight = -1;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, textureId);
-
-    int texDimWidth = targetSurface->Width();
-    int texDimHeight = targetSurface->Height();
-
-    // Not sure if it would be faster to just call TexImage2D
-    // if we have NPOT textures -- I'd hope that the driver
-    // can turn that SubImage2D to an equivalent operation,
-    // given that the dimensions are going to cover the full
-    // size of the texture.
-
-
-    // There seems to be a Tegra bug here, where we can't
-    // do TexSubImage2D with GL_BGRA_EXT.  We have NPOT there,
-    // but it means that we have to have a separate codepath
-    // for when we have NPOT to avoid the update with SubImage2D.
-
-    if (hasNPOT) {
-        glTexImage2D(GL_TEXTURE_2D,
-                     0,
-                     hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                     texDimWidth,
-                     texDimHeight,
-                     0,
-                     hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                     GL_UNSIGNED_BYTE,
-                     targetSurface->Data());
+        sview.Draw2D(bytebuf);
     } else {
-        texDimWidth = next_power_of_two(targetSurface->Width());
-        texDimHeight = next_power_of_two(targetSurface->Height());
+        int drawType = sview.BeginDrawing();
 
-        if (lastTexDimWidth != texDimWidth ||
-            lastTexDimHeight != texDimHeight)
-        {
-            // Set the texture size, but don't load
-            // data.
-            glTexImage2D(GL_TEXTURE_2D,
-                         0,
-                         hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                         texDimWidth,
-                         texDimHeight,
-                         0,
-                         hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                         GL_UNSIGNED_BYTE,
-                         NULL);
-
-            lastTexDimWidth = texDimWidth;
-            lastTexDimHeight = texDimHeight;
+        if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
+            ALOG("##### BeginDrawing failed!");
+            return;
         }
 
-        // then actually load the data in the sub-rectangle
-        glTexSubImage2D(GL_TEXTURE_2D,
-                        0,
-                        0, 0,
-                        targetSurface->Width(),
-                        targetSurface->Height(),
-                        hasBGRA ? GL_BGRA_EXT : GL_RGBA,
-                        GL_UNSIGNED_BYTE,
-                        targetSurface->Data());
+        NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
+
+        sGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+
+        DrawTo(nsnull);
+
+        if (sGLContext)
+            sGLContext->SwapBuffers();
+        sview.EndDrawing();
     }
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glEnable(GL_TEXTURE_2D);
-
-    glFrontFace(GL_CCW);
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_ALPHA_TEST);
-    glDisable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    GLfloat texCoordW = GLfloat(targetSurface->Width()) / GLfloat(texDimWidth);
-    GLfloat texCoordH = GLfloat(targetSurface->Height()) / GLfloat(texDimHeight);
-
-    GLfloat texCoords[] = { 0.0f, texCoordH,
-                            0.0f, 0.0f,
-                            texCoordW, texCoordH,
-                            texCoordW, 0.0f };
-
-    GLfloat vCoords[] = { -1.0f, -1.0f, 0.0f,
-                          -1.0f,  1.0f, 0.0f,
-                           1.0f, -1.0f, 0.0f,
-                           1.0f,  1.0f, 0.0f };
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    glVertexPointer(3, GL_FLOAT, 0, vCoords);
-    glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-#endif
-
-    sview.EndDrawing();
 }
 
 void
@@ -1138,6 +873,10 @@ void *
 nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch (aDataType) {
+        // used by GLContextProviderEGL, NULL is EGL_DEFAULT_DISPLAY
+        case NS_NATIVE_DISPLAY:
+            return NULL;
+
         case NS_NATIVE_WIDGET:
             return (void *) this;
     }

@@ -71,19 +71,6 @@ var gCSSProperties = {
 		other_values: [ "radio", "menulist" ],
 		invalid_values: []
 	},
-	"-moz-background-clip": {
-		/*
-		 * When we rename this to 'background-clip', we also
-		 * need to rename the values to match the spec.
-		 */
-		domProp: "MozBackgroundClip",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		/* XXX Need to add support for "content" -- important for symmetry when handling background shorthand */
-		initial_values: [ "border" ],
-		other_values: [ "padding", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "content", "margin", "border border" ]
-	},
 	"-moz-background-inline-policy": {
 		domProp: "MozBackgroundInlinePolicy",
 		inherited: false,
@@ -91,22 +78,6 @@ var gCSSProperties = {
 		initial_values: [ "continuous" ],
 		other_values: ["bounding-box", "each-box" ],
 		invalid_values: []
-	},
-	"-moz-background-origin": {
-		domProp: "MozBackgroundOrigin",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "padding" ],
-		other_values: [ "border", "content", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "margin", "padding padding" ]
-	},
-	"-moz-background-size": {
-		domProp: "MozBackgroundSize",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "auto", "auto auto" ],
-		other_values: [ "contain", "cover", "100px auto", "auto 100px", "100% auto", "auto 100%", "25% 50px", "3em 40%" ],
-		invalid_values: [ "contain contain", "cover cover", "cover auto", "auto cover", "contain cover", "cover contain", "-5px 3px", "3px -5px", "auto -5px", "-5px auto" ]
 	},
 	"-moz-binding": {
 		domProp: "MozBinding",
@@ -789,7 +760,7 @@ var gCSSProperties = {
 		domProp: "background",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "-moz-background-clip", "-moz-background-origin", "-moz-background-size" ],
+		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "background-clip", "background-origin", "background-size" ],
 		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent" ],
 		other_values: [
 				/* without multiple backgrounds */
@@ -824,15 +795,9 @@ var gCSSProperties = {
 				"fixed repeat-y top left url(404.png), repeat-x green",
 				"url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green) black",
 				/* test cases with clip+origin in the shorthand */
-	// This is commented out for now until we change
-	// -moz-background-clip to background-clip, -moz-background-origin
-	// to background-origin, change their value names to *-box, and add
-	// support for content-box on background-clip.
-	/*
 				"url(404.png) green padding-box",
 				"url(404.png) border-box transparent",
 				"content-box url(404.png) blue",
-	*/
 		],
 		invalid_values: [
 			/* mixes with keywords have to be in correct order */
@@ -862,6 +827,18 @@ var gCSSProperties = {
 		initial_values: [ "scroll" ],
 		other_values: [ "fixed", "scroll,scroll", "fixed, scroll", "scroll, fixed, scroll", "fixed, fixed" ],
 		invalid_values: []
+	},
+	"background-clip": {
+		/*
+		 * When we rename this to 'background-clip', we also
+		 * need to rename the values to match the spec.
+		 */
+		domProp: "backgroundClip",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "border-box" ],
+		other_values: [ "content-box", "padding-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+		invalid_values: [ "margin-box", "border-box border-box" ]
 	},
 	"background-color": {
 		domProp: "backgroundColor",
@@ -1091,6 +1068,14 @@ var gCSSProperties = {
 			"-moz-repeating-linear-gradient(left left blue red)",
 			"-moz-repeating-linear-gradient()" ]
 	},
+	"background-origin": {
+		domProp: "backgroundOrigin",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "padding-box" ],
+		other_values: [ "border-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+		invalid_values: [ "margin-box", "padding-box padding-box" ]
+	},
 	"background-position": {
 		domProp: "backgroundPosition",
 		inherited: false,
@@ -1112,6 +1097,14 @@ var gCSSProperties = {
 			"repeat, repeat, repeat"
 		],
 		invalid_values: [ "repeat repeat" ]
+	},
+	"background-size": {
+		domProp: "backgroundSize",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto", "auto auto" ],
+		other_values: [ "contain", "cover", "100px auto", "auto 100px", "100% auto", "auto 100%", "25% 50px", "3em 40%" ],
+		invalid_values: [ "contain contain", "cover cover", "cover auto", "auto cover", "contain cover", "cover contain", "-5px 3px", "3px -5px", "auto -5px", "-5px auto" ]
 	},
 	"border": {
 		domProp: "border",

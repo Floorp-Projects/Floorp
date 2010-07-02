@@ -37,9 +37,7 @@
  
 #include "nsISupports.idl"
 
-interface nsIDOMKeyEvent;
-
-[scriptable, uuid(1480e196-0d5c-40cf-8563-ed8a33eabcf2)]
+[scriptable, uuid(05d312ef-8914-494e-91c9-2be8ed7f8e29)]
 interface nsIPlaintextEditor : nsISupports
 {
 
@@ -119,12 +117,6 @@ interface nsIPlaintextEditor : nsISupports
    *  Values are the constants defined above.
    */
   attribute long newlineHandling;
-
-  /** 
-   * EditorKeyPress consumes a keyevent.
-   * @param aKeyEvent    key event to consume
-   */
-  void handleKeyPress(in nsIDOMKeyEvent aKeyEvent);
 
   /**
    * Inserts a string at the current location,

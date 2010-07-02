@@ -75,6 +75,8 @@ class LayerOGL;
  * the main thread.
  */
 class THEBES_API LayerManagerOGL : public LayerManager {
+  typedef mozilla::gl::GLContext GLContext;
+
 public:
   LayerManagerOGL(nsIWidget *aWidget);
   virtual ~LayerManagerOGL();
@@ -85,9 +87,12 @@ public:
    * to draw to the window. If this method fails the device cannot be used.
    * This function is not threadsafe.
    *
+   * \param aExistingContext an existing GL context to use, instead of creating
+   * our own for the widget.
+   *
    * \return True is initialization was succesful, false when it was not.
    */
-  PRBool Initialize();
+  PRBool Initialize(GLContext *aExistingContext = nsnull);
 
   /**
    * Sets the clipping region for this layer manager. This is important on 
@@ -112,8 +117,8 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
-  void SetRoot(Layer* aLayer);
-  
+  virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
+
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
 
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
@@ -166,8 +171,6 @@ public:
       return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBARectLayerProgramType]);
     return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBALayerProgramType]);
   }
-
-  typedef mozilla::gl::GLContext GLContext;
 
   GLContext *gl() const { return mGLContext; }
 
@@ -284,9 +287,6 @@ private:
 
   static ProgramType sLayerProgramTypes[];
 
-  /** Current root layer. */
-  LayerOGL *mRootLayer;
-
   /** Backbuffer */
   GLuint mBackBufferFBO;
   GLuint mBackBufferTexture;
@@ -308,6 +308,9 @@ private:
 
   /** Misc */
   PRPackedBool mHasBGRA;
+
+  /** Current root layer. */
+  LayerOGL *RootLayer() const;
 
   /**
    * Render the current layer tree to the active target.

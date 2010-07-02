@@ -39,14 +39,17 @@
 #include "nsAppShell.h"
 #include "nsWindow.h"
 #include "nsThreadUtils.h"
+#include "nsICommandLineRunner.h"
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
+#include "nsIPrefService.h"
 
+#include "mozilla/Services.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
-#include "nsAccelerometerAndroid.h"
+#include "nsAccelerometerSystem.h"
 #include <android/log.h>
 #include <pthread.h>
 
@@ -67,7 +70,7 @@ using namespace mozilla;
 PRLogModuleInfo *gWidgetLog = nsnull;
 #endif
 
-nsAccelerometerAndroid *gAccel = nsnull;
+nsAccelerometerSystem *gAccel = nsnull;
 nsIGeolocationUpdate *gLocationCallback = nsnull;
 
 nsAppShell *nsAppShell::gAppShell = nsnull;
@@ -77,6 +80,8 @@ nsAppShell::nsAppShell()
     : mQueueLock(nsnull),
       mCondLock(nsnull),
       mQueueCond(nsnull),
+      mPausedLock(nsnull),
+      mPaused(nsnull),
       mNumDraws(0)
 {
     gAppShell = this;
@@ -109,7 +114,9 @@ nsAppShell::Init()
 
     mQueueLock = PR_NewLock();
     mCondLock = PR_NewLock();
+    mPausedLock = PR_NewLock();
     mQueueCond = PR_NewCondVar(mCondLock);
+    mPaused = PR_NewCondVar(mPausedLock);
 
     return nsBaseAppShell::Init();
 }
@@ -231,9 +238,53 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
+        obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application-forced", nsnull);
+        obsServ->NotifyObservers(nsnull, "profile-change-net-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-change-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-before-change", context.get());
         nsCOMPtr<nsIAppStartup> appSvc = do_GetService("@mozilla.org/toolkit/app-startup;1");
         if (appSvc)
             appSvc->Quit(nsIAppStartup::eForceQuit);
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_PAUSING: {
+        // We really want to send a notification like profile-before-change,
+        // but profile-before-change ends up shutting some things down instead
+        // of flushing data
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs)
+            prefs->SavePrefFile(nsnull);
+
+        // The OS is sending us to the background, block this thread until 
+        // onResume is called to signal that we're back in the foreground
+        PR_WaitCondVar(mPaused, PR_INTERVAL_NO_TIMEOUT);
+        break;
+    }
+
+    case AndroidGeckoEvent::LOAD_URI: {
+        nsCOMPtr<nsICommandLineRunner> cmdline
+            (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+        if (!cmdline)
+            break;
+
+        char *uri = ToNewUTF8String(curEvent->Characters());
+        if (!uri)
+            break;
+
+        char* argv[3] = {
+            "dummyappname",
+            "-remote",
+            uri
+        };
+        nsresult rv = cmdline->Init(3, argv, nsnull, nsICommandLine::STATE_REMOTE_AUTO);
+        if (NS_SUCCEEDED(rv))
+            cmdline->Run();
+        nsMemory::Free(uri);
         break;
     }
 
@@ -304,6 +355,15 @@ nsAppShell::RemoveNextEvent()
         }
     }
     PR_Unlock(mQueueLock);
+}
+
+void
+nsAppShell::OnResume()
+{
+    PR_Lock(mPausedLock);
+    PR_NotifyCondVar(mPaused);
+    PR_Unlock(mPausedLock);
+
 }
 
 // Used by IPC code

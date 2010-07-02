@@ -109,6 +109,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
+#include "nsContentCreatorFunctions.h"
 
 #include "nsTextEditRules.h"
 
@@ -133,6 +134,7 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 #define BF_IN_INTERNAL_ACTIVATE 8
 #define BF_CHECKED_IS_TOGGLED 9
 #define BF_INDETERMINATE 10
+#define BF_INHIBIT_RESTORATION 11
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -244,7 +246,7 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIFileControlElement
 {
 public:
-  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
+  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -285,7 +287,7 @@ public:
   virtual PRBool AllowDrop();
 
   // nsIContent
-  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -484,6 +486,11 @@ protected:
   void FreeData();
   nsTextEditorState *GetEditorState() const;
 
+  /**
+   * Manages the internal data storage across type changes.
+   */
+  void HandleTypeChange(PRUint8 aNewType);
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
@@ -543,12 +550,14 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
 nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
-                                       PRBool aFromParser)
+                                       PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kInputDefaultType->value),
     mBitField(0)
 {
   SET_BOOLBIT(mBitField, BF_PARSER_CREATING, aFromParser);
+  SET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION,
+      aFromParser & NS_FROM_PARSER_FRAGMENT);
   mInputData.mState = new nsTextEditorState(this);
   NS_ADDREF(mInputData.mState);
 }
@@ -566,6 +575,7 @@ nsHTMLInputElement::FreeData()
     nsMemory::Free(mInputData.mValue);
     mInputData.mValue = nsnull;
   } else {
+    UnbindFromFrame(nsnull);
     NS_IF_RELEASE(mInputData.mState);
   }
 }
@@ -773,7 +783,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // We're now a text input.  Note that we have to handle this manually,
         // since removing an attribute (which is what happened, since aValue is
         // null) doesn't call ParseAttribute.
-        mType = kInputDefaultType->value;
+        HandleTypeChange(kInputDefaultType->value);
       }
     
       // If we are changing type from File/Text/Tel/Passwd to other input types
@@ -1700,7 +1710,7 @@ nsHTMLInputElement::Click()
       return rv;
     }
 
-    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
     nsRefPtr<nsPresContext> context = nsnull;
     if (shell) {
       context = shell->GetPresContext();
@@ -1708,7 +1718,7 @@ nsHTMLInputElement::Click()
 
     if (!context) {
       doc->FlushPendingNotifications(Flush_Frames);
-      shell = doc->GetPrimaryShell();
+      shell = doc->GetShell();
       if (shell) {
         context = shell->GetPresContext();
       }
@@ -2355,6 +2365,25 @@ nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
+void
+nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
+{
+  // Only single line text inputs have a text editor state.
+  PRBool isNewTypeSingleLine =
+    IsSingleLineTextControlInternal(PR_FALSE, aNewType);
+  PRBool isCurrentTypeSingleLine =
+    IsSingleLineTextControl(PR_FALSE);
+  if (isNewTypeSingleLine && !isCurrentTypeSingleLine) {
+    FreeData();
+    mInputData.mState = new nsTextEditorState(this);
+    NS_ADDREF(mInputData.mState);
+  } else if (isCurrentTypeSingleLine && !isNewTypeSingleLine) {
+    FreeData();
+  }
+
+  mType = aNewType;
+}
+
 PRBool
 nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsIAtom* aAttribute,
@@ -2387,20 +2416,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
           ClearFileNames();
         }
 
-        // Only single line text inputs have a text editor state.
-        PRBool isNewTypeSingleLine =
-          IsSingleLineTextControlInternal(PR_FALSE, newType);
-        PRBool isCurrentTypeSingleLine =
-          IsSingleLineTextControl(PR_FALSE);
-        if (isNewTypeSingleLine && !isCurrentTypeSingleLine) {
-          FreeData();
-          mInputData.mState = new nsTextEditorState(this);
-          NS_ADDREF(mInputData.mState);
-        } else if (isCurrentTypeSingleLine && !isNewTypeSingleLine) {
-          FreeData();
-        }
-
-        mType = newType;
+        HandleTypeChange(newType);
       }
 
       return success;
@@ -2953,7 +2969,10 @@ nsHTMLInputElement::DoneCreatingElement()
   // Restore state as needed.  Note that disabled state applies to all control
   // types.
   //
-  PRBool restoredCheckedState = RestoreFormControlState(this, this);
+  PRBool restoredCheckedState =
+      GET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION) ?
+      PR_FALSE :
+      RestoreFormControlState(this, this);
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED
@@ -3166,9 +3185,9 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
 }
 
 PRBool
-nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
+nsHTMLInputElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
 
@@ -3182,11 +3201,17 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
     return PR_FALSE;
   }
 
+#ifdef XP_MACOSX
+  const PRBool defaultFocusable = !aWithMouse;
+#else
+  const PRBool defaultFocusable = PR_TRUE;
+#endif
+
   if (mType == NS_FORM_INPUT_FILE) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_TRUE;
   }
 
@@ -3200,7 +3225,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 
   if (!aTabIndex) {
     // The other controls are all focusable
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
@@ -3211,13 +3236,13 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
   }
 
   if (mType != NS_FORM_INPUT_RADIO) {
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
   if (GetChecked()) {
     // Selected radio buttons are tabbable
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
@@ -3226,7 +3251,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   nsAutoString name;
   if (!container || !GetNameIfExists(name)) {
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = defaultFocusable;
     return PR_FALSE;
   }
 
@@ -3235,7 +3260,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
   if (currentRadio) {
     *aTabIndex = -1;
   }
-  *aIsFocusable = PR_TRUE;
+  *aIsFocusable = defaultFocusable;
   return PR_FALSE;
 }
 

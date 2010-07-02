@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  var xt = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 'textbox');
+  document.body.appendChild(xt);
+  xt.setAttribute('disabled', "true");
+  xt.setAttribute('value', "foo");
+}
+</script>
+</head>
+<body onload="boom();">
+</body>
+</html>

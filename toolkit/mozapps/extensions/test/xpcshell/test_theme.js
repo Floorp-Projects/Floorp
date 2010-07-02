@@ -13,6 +13,23 @@ Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+// Observer to ensure a "lightweight-theme-styling-update" notification is sent
+// when expected
+var gLWThemeChanged = false;
+var LightweightThemeObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != "lightweight-theme-styling-update")
+      return;
+
+    gLWThemeChanged = true;
+  }
+};
+
+AM_Cc["@mozilla.org/observer-service;1"]
+     .getService(Components.interfaces.nsIObserverService)
+     .addObserver(LightweightThemeObserver, "lightweight-theme-styling-update", false);
+
+
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -146,6 +163,7 @@ function check_test_1() {
     do_check_true(isThemeInAddonsList(profileDir, t2.id));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_false(gLWThemeChanged);
 
     run_test_2();
   });
@@ -173,6 +191,7 @@ function run_test_2() {
 
     do_check_eq(t2, null);
     do_check_false(isThemeInAddonsList(profileDir, "theme2@tests.mozilla.org"));
+    do_check_false(gLWThemeChanged);
 
     run_test_3();
   });
@@ -262,6 +281,9 @@ function run_test_3() {
       });
       do_check_true(seen);
 
+      do_check_true(gLWThemeChanged);
+      gLWThemeChanged = false;
+
       run_test_4();
     });
   });
@@ -329,6 +351,9 @@ function run_test_4() {
       });
       do_check_true(seen);
 
+      do_check_true(gLWThemeChanged);
+      gLWThemeChanged = false;
+
       run_test_5();
     });
   });
@@ -385,6 +410,7 @@ function run_test_5() {
     do_check_true(p2.userDisabled);
     do_check_true(hasFlag(AddonManager.PENDING_DISABLE, p2.pendingOperations));
     do_check_true(hasFlag(AddonManager.PERM_CAN_ENABLE, p2.permissions));
+    do_check_false(gLWThemeChanged);
 
     check_test_5();
   });
@@ -401,6 +427,9 @@ function check_test_5() {
     do_check_false(p2.isActive);
     do_check_true(p2.userDisabled);
     do_check_false(hasFlag(AddonManager.PENDING_DISABLE, p2.pendingOperations));
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     run_test_6();
   });
@@ -455,6 +484,7 @@ function run_test_6() {
     do_check_true(t2.isActive);
     do_check_true(t2.userDisabled);
     do_check_true(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
+    do_check_false(gLWThemeChanged);
 
     check_test_6();
   });
@@ -471,6 +501,9 @@ function check_test_6() {
     do_check_false(t2.isActive);
     do_check_true(t2.userDisabled);
     do_check_false(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     run_test_7();
   });
@@ -490,6 +523,7 @@ function run_test_7() {
 
     ensure_test_completed();
     do_check_eq(LightweightThemeManager.usedThemes.length, 1);
+    do_check_false(gLWThemeChanged);
 
     run_test_8();
   });
@@ -497,6 +531,8 @@ function run_test_7() {
 
 // Uninstalling a lightweight theme in use should not require a restart and it
 // should reactivate the default theme
+// Also, uninstalling a lightweight theme in use should send a
+// "lightweight-theme-styling-update" notification through the observer service
 function run_test_8() {
   prepare_test({
     "2@personas.mozilla.org": [
@@ -514,6 +550,9 @@ function run_test_8() {
 
     ensure_test_completed();
     do_check_eq(LightweightThemeManager.usedThemes.length, 0);
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     run_test_9();
   });
@@ -535,6 +574,7 @@ function run_test_9() {
 
     AddonManager.getAddonByID("theme1@tests.mozilla.org", function(newt1) {
       do_check_eq(newt1, null);
+      do_check_false(gLWThemeChanged);
 
       run_test_10();
     });
@@ -580,6 +620,7 @@ function run_test_10() {
       t2.uninstall();
 
       ensure_test_completed();
+      do_check_false(gLWThemeChanged);
 
       restartManager(0);
 
@@ -624,6 +665,7 @@ function check_test_11() {
     preview.append("preview.png");
     do_check_eq(t1.screenshots.length, 1);
     do_check_eq(t1.screenshots[0], NetUtil.newURI(preview).spec);
+    do_check_false(gLWThemeChanged);
 
     run_test_12();
   });
@@ -660,6 +702,7 @@ function run_test_12() {
 function check_test_12() {
   AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
+    do_check_false(gLWThemeChanged);
 
     run_test_13();
   });
@@ -713,6 +756,7 @@ function check_test_13() {
   AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
     do_check_true(t1.isActive);
+    do_check_false(gLWThemeChanged);
     t1.uninstall();
     restartManager();
 
@@ -756,6 +800,9 @@ function run_test_14() {
 
     do_check_false(d.userDisabled);
     do_check_true(d.isActive);
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     end_test();
   });

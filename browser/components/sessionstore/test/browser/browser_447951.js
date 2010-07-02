@@ -55,7 +55,7 @@ function test() {
     ss.setTabState(tab, JSON.stringify(tabState));
     tab.addEventListener("SSTabRestored", function(aEvent) {
       tab.removeEventListener("SSTabRestored", arguments.callee, false);
-      tabState = eval("(" + ss.getTabState(tab) + ")");
+      tabState = JSON.parse(ss.getTabState(tab));
       is(tabState.entries.length, max_entries, "session history filled to the limit");
       is(tabState.entries[0].url, baseURL + 0, "... but not more");
       
@@ -67,7 +67,7 @@ function test() {
       doc.querySelector("a").dispatchEvent(event);
       
       executeSoon(function() {
-        tabState = eval("(" + ss.getTabState(tab) + ")");
+        tabState = JSON.parse(ss.getTabState(tab));
         is(tab.linkedBrowser.currentURI.spec, baseURL + "end",
            "the new anchor was loaded");
         is(tabState.entries[tabState.entries.length - 1].url, baseURL + "end",

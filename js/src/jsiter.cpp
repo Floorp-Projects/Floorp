@@ -346,7 +346,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, ResultSet &results)
         return NULL;
 
     JSObject *pobj = obj;
-    while (pobj) {
+    do {
         Class *clasp = pobj->getClass();
         if (pobj->isNative() &&
             pobj->map->ops->enumerate == js_Enumerate &&
@@ -360,17 +360,16 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, ResultSet &results)
                 return false;
         } else {
             if (pobj->isProxy()) {
-                JSIdArray *ida;
+                AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
-                    if (!JSProxy::enumerateOwn(cx, pobj, &ida))
+                    if (!JSProxy::enumerateOwn(cx, pobj, proxyProps))
                         return false;
                 } else {
-                    if (!JSProxy::enumerate(cx, pobj, &ida))
+                    if (!JSProxy::enumerate(cx, pobj, proxyProps))
                         return false;
                 }
-                AutoIdArray idar(cx, ida);
-                for (size_t n = 0; n < size_t(ida->length); ++n) {
-                    if (!Enumerate(cx, obj, pobj, ida->vector[n], true, flags, seen, results))
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    if (!Enumerate(cx, obj, pobj, proxyProps[n], true, flags, seen, results))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
@@ -397,9 +396,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, ResultSet &results)
 
         if (JS_UNLIKELY(pobj->isXML() || (flags & JSITER_OWNONLY)))
             break;
-
-        pobj = pobj->getProto();
-    }
+    } while ((pobj = pobj->getProto()) != NULL);
 
     return true;
 }
@@ -455,8 +452,9 @@ NativeIteratorToJSIdArray(JSContext *cx, NativeIterator *ni, JSIdArray **idap)
 }
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, JSIdArray **idap)
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props)
 {
+    #error "either want to have SnapshotKeys fill props or something else...
     NativeIterator *ni = SnapshotKeys(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), NULL, 0, true);
     if (!ni)
         return false;
@@ -512,12 +510,27 @@ Compare(T *a, T *b, size_t c)
     return true;
 }
 
-static JSObject *
+static inline JSObject *
 NewIteratorObject(JSContext *cx, uintN flags)
 {
-    return !(flags & JSITER_ENUMERATE)
-           ? NewObject(cx, &js_IteratorClass.base, NULL, NULL)
-           : NewObjectWithGivenProto(cx, &js_IteratorClass.base, NULL, NULL);
+    if (flags & JSITER_ENUMERATE) {
+        /*
+         * Non-escaping native enumerator objects do not need map, proto, or
+         * parent. However, code in jstracer.cpp and elsewhere may find such a
+         * native enumerator object via the stack and (as for all objects that
+         * are not stillborn, with the exception of "NoSuchMethod" internal
+         * helper objects) expect it to have a non-null map pointer, so we
+         * share an empty Enumerator scope in the runtime.
+         */
+        JSObject *obj = js_NewGCObject(cx);
+        if (!obj)
+            return false;
+        obj->map = cx->runtime->emptyEnumeratorScope->hold();
+        obj->init(&js_IteratorClass.base, NULL, NULL, JSVAL_NULL);
+        return obj;
+    }
+
+    return NewBuiltinClassInstance(cx, &js_IteratorClass.base);
 }
 
 static inline void
@@ -531,20 +544,28 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 }
 
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, Value *vp)
+IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props, Value *vp)
 {
-    JS_ASSERT((flags & JSITER_FOREACH) == 0);
-
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
         return false;
 
     vp->setObject(*iterobj);
 
-    NativeIterator *ni = NativeIterator::allocateKeyIterator(cx, 0, ida->vector, ida->length);
+    NativeIterator *ni = NativeIterator::allocateKeyIterator(cx, 0, props);
     if (!ni)
         return false;
     ni->init(obj, flags, NULL, 0, 0);
+
+    /* If this is a for-each iteration, fetch the values or key/value pairs. */
+    if (flags & JSITER_FOREACH) {
+        size_t length = props.length();
+        for (size_t n = 0; n < length; ++n) {
+            jsval *vp = &ni->begin()[n];
+            if (!IdToIteratorValue(cx, obj, *vp, flags, vp))
+                return false;
+        }
+    }
 
     iterobj->setNativeIterator(ni);
 
@@ -618,6 +639,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     /* Store in *vp to protect it from GC (callers must root vp). */
     vp->setObject(*iterobj);
 
+    #error "TODO: handle null so that it succeeds with no properties... somehow"
     NativeIterator *ni = (flags & JSITER_FOREACH)
                          ? SnapshotValues(cx, obj, flags, shapes.begin(), shapes.length(), key)
                          : SnapshotKeys(cx, obj, flags, shapes.begin(), shapes.length(), key);
@@ -1032,7 +1054,7 @@ ExtendedClass js_GeneratorClass = {
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    JSObject *obj = NewObject(cx, &js_GeneratorClass.base, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass.base);
     if (!obj)
         return NULL;
 

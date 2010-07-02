@@ -358,7 +358,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       while (shadow1) {
         nsCSSValue::Array *array1 = shadow1->mValue.GetArrayValue();
         nsCSSValue::Array *array2 = shadow2->mValue.GetArrayValue();
-        for (PRUint32 i = 0; i < 4; ++i) {
+        for (size_t i = 0; i < 4; ++i) {
           NS_ABORT_IF_FALSE(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
                             "unexpected unit");
           NS_ABORT_IF_FALSE(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
@@ -495,7 +495,7 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
     return PR_FALSE;
   }
 
-  for (PRUint32 i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     NS_ABORT_IF_FALSE(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
                       "unexpected unit");
     NS_ABORT_IF_FALSE(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
@@ -944,7 +944,11 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCSSParser parser(doc->CSSLoader());
 
   if (aUseSVGMode) {
+#ifdef MOZ_SVG
     parser.SetSVGMode(PR_TRUE);
+#else
+    NS_NOTREACHED("aUseSVGMode should not be set");
+#endif
   }
 
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
@@ -977,7 +981,7 @@ already_AddRefed<nsStyleContext>
 LookupStyleContext(nsIContent* aElement)
 {
   nsIDocument* doc = aElement->GetCurrentDoc();
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   if (!shell) {
     return nsnull;
   }
@@ -1595,7 +1599,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
-        case eCSSProperty__moz_background_size: {
+        case eCSSProperty_background_size: {
           const nsStyleBackground *bg =
             static_cast<const nsStyleBackground*>(styleStruct);
           nsCSSValuePairList *result = nsnull;

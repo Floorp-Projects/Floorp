@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=571981
+-->
+<head>
+  <title>Test for Bug 571981</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=571981">Mozilla Bug 571981</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 571981 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var doc = document.getElementById("testframe").contentDocument;
+  var elem = doc.documentElement;
+  ok(elem.nodeName == "HTML" &&
+     elem.namespaceURI == "http://www.w3.org/1999/xhtml",
+     "documentElement should be an html element with nodename 'HTML'");
+  var childNodes = elem.childNodes;
+  elem = null;
+  for (var i = 0; i < childNodes.length; ++i) {
+    if (childNodes[i].nodeName == "BODY" &&
+        childNodes[i].namespaceURI == "http://www.w3.org/1999/xhtml") {
+      elem = childNodes[i];
+    }
+  }
+  ok(elem && doc.body == elem,
+     "HTMLDocument.body should be an html element with nodeName 'BODY' " +
+     "and a child of the documentElement");
+  doc.removeChild(doc.documentElement);
+  elem = doc.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml",
+                                             "frameset"));
+  var framesets = doc.getElementsByTagNameNS("http://www.w3.org/1999/xhtml",
+                                             "frameset");
+  ok(doc.body && doc.body == framesets[0],
+     "HTMLDocument.body should be the first html element in the document " +
+     "with nodename 'frameset'");
+  doc.removeChild(doc.documentElement);
+  doc.appendChild(doc.createElementNS('wrongnamespace', 'frameset'));
+  is(doc.body, null,
+     "HTMLDocument.body should not return non-html elements");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

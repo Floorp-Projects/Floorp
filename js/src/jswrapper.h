@@ -45,13 +45,11 @@
 #include "jsapi.h"
 #include "jsproxy.h"
 
-namespace js {
-
 /* No-op wrapper handler base class. */
-class JSWrapper : public JSProxyHandler {
-    JSObject *mWrappedObject;
-
-    JS_FRIEND_API(JSWrapper(JSObject *));
+class JSWrapper : public js::JSProxyHandler {
+    void *mKind;
+  protected:
+    explicit JS_FRIEND_API(JSWrapper(void *kind));
 
   public:
     JS_FRIEND_API(virtual ~JSWrapper());
@@ -64,9 +62,9 @@ class JSWrapper : public JSProxyHandler {
     virtual JS_FRIEND_API(bool) defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                                PropertyDescriptor *desc);
     virtual JS_FRIEND_API(bool) getOwnPropertyNames(JSContext *cx, JSObject *proxy,
-                                                    JSIdArray **idap);
+                                                    js::AutoValueVector &props);
     virtual JS_FRIEND_API(bool) delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual JS_FRIEND_API(bool) enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    virtual JS_FRIEND_API(bool) enumerate(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     virtual JS_FRIEND_API(bool) fix(JSContext *cx, JSObject *proxy, Value *vp);
 
     /* ES5 Harmony derived proxy traps. */
@@ -76,24 +74,109 @@ class JSWrapper : public JSProxyHandler {
                                     Value *vp);
     virtual JS_FRIEND_API(bool) set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
                                     Value *vp);
-    virtual JS_FRIEND_API(bool) enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray **idap);
+    virtual JS_FRIEND_API(bool) enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
     virtual JS_FRIEND_API(bool) iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp);
 
     /* Spidermonkey extensions. */
-    virtual JS_FRIEND_API(void) finalize(JSContext *cx, JSObject *proxy);
     virtual JS_FRIEND_API(void) trace(JSTracer *trc, JSObject *proxy);
-    virtual JS_FRIEND_API(const void *) family();
 
     static JS_FRIEND_API(JSWrapper) singleton;
 
-    static JS_FRIEND_API(JSObject *) wrap(JSContext *cx, JSObject *obj,
-                                          JSObject *proto, JSObject *parent,
-                                          JSString *className);
+    static JS_FRIEND_API(JSObject *) New(JSContext *cx, JSObject *obj,
+                                         JSObject *proto, JSObject *parent,
+                                         JSProxyHandler *handler);
 
-    inline JSObject *wrappedObject(JSObject *proxy) {
-        return mWrappedObject ? mWrappedObject : proxy->getProxyPrivate().asObjectOrNull();
+    inline void *kind() {
+        return mKind;
+    }
+
+    static inline JSObject *wrappedObject(JSObject *proxy) {
+        return JSVAL_TO_OBJECT(proxy->getProxyPrivate());
     }
 };
+
+/* Base class for all cross compartment wrapper handlers. */
+class JSCrossCompartmentWrapper : public JSWrapper {
+  protected:
+    JS_FRIEND_API(JSCrossCompartmentWrapper());
+
+  public:
+    typedef enum { GET, SET } Mode;
+
+    virtual JS_FRIEND_API(~JSCrossCompartmentWrapper());
+
+    /* ES5 Harmony fundamental proxy traps. */
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                       JSPropertyDescriptor *desc);
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                          JSPropertyDescriptor *desc);
+    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+                                JSPropertyDescriptor *desc);
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual bool enumerate(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+
+    /* ES5 Harmony derived proxy traps. */
+    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
+    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval *vp);
+    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+    virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
+
+    /* Spidermonkey extensions. */
+    virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, jsval *vp);
+    virtual bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                           uintN argc, jsval *argv, jsval *rval);
+    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
+    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
+
+    /* Policy enforcement traps. */
+    virtual bool enter(JSContext *cx, JSObject *proxy, jsid id, Mode mode);
+    virtual void leave(JSContext *cx, JSObject *proxy);
+
+    static JSCrossCompartmentWrapper singleton;
+
+    /* Default id used for filter when the trap signature does not contain an id. */
+    static const jsid id = JSVAL_VOID;
+};
+
+namespace js {
+
+class AutoCompartment
+{
+  public:
+    JSContext * const context;
+    JSCompartment * const origin;
+    JSObject * const target;
+    JSCompartment * const destination;
+  private:
+    LazilyConstructed<ExecuteFrameGuard> frame;
+    JSFrameRegs regs;
+    JSRegExpStatics statics;
+    AutoValueRooter input;
+
+  public:
+    AutoCompartment(JSContext *cx, JSObject *target);
+    ~AutoCompartment();
+
+    bool entered() const { return context->compartment == destination; }
+    bool enter();
+    void leave();
+
+    jsval *getvp() {
+        JS_ASSERT(entered());
+        return frame.ref().getvp();
+    }
+
+  private:
+    // Prohibit copying.
+    AutoCompartment(const AutoCompartment &);
+    AutoCompartment & operator=(const AutoCompartment &);
+};
+
+extern JSObject *
+TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto);
 
 }
 

@@ -337,7 +337,7 @@ nsHTMLEditUtils::IsImage(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsLink(nsIDOMNode *aNode)
 {
-  if (!aNode) return PR_FALSE;
+  NS_ENSURE_TRUE(aNode, PR_FALSE);
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
   if (anchor)
   {
@@ -351,7 +351,7 @@ nsHTMLEditUtils::IsLink(nsIDOMNode *aNode)
 PRBool 
 nsHTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
 {
-  if (!aNode) return PR_FALSE;
+  NS_ENSURE_TRUE(aNode, PR_FALSE);
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
   if (anchor)
   {
@@ -393,7 +393,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsMailCite");
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
-  if (!elem) return PR_FALSE;
+  NS_ENSURE_TRUE(elem, PR_FALSE);
   nsAutoString attrName (NS_LITERAL_STRING("type")); 
   
   // don't ask me why, but our html mailcites are id'd by "type=cite"...
@@ -479,7 +479,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // b, big, i, s, small, strike, tt, u
 #define GROUP_FONTSTYLE        (1 << 3)
 
-// abbr, acronym, cite, code, del, dfn, em, ins, kbd, samp, strong, var
+// abbr, acronym, cite, code, del, dfn, em, ins, kbd, mark, samp, strong, var
 #define GROUP_PHRASE           (1 << 4)
 
 // a, applet, basefont, bdo, br, font, iframe, img, map, object, output, q,
@@ -489,9 +489,10 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // button, form, input, label, select, textarea
 #define GROUP_FORMCONTROL      (1 << 6)
 
-// address, applet, blockquote, button, center, del, dir, div, dl, fieldset,
-// form, h1, h2, h3, h4, h5, h6, hr, iframe, ins, isindex, map, menu, noframes,
-// noscript, object, ol, p, pre, table, ul
+// address, applet, article, aside, blockquote, button, center, del, dir, div,
+// dl, fieldset, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup,
+// hr, iframe, ins, isindex, map, menu, nav, noframes, noscript, object, ol, p,
+// pre, table, section, ul
 #define GROUP_BLOCK            (1 << 7)
 
 // frame, frameset
@@ -537,6 +538,12 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // ol, ul
 #define GROUP_OL_UL            (1 << 21)
 
+// h1, h2, h3, h4, h5, h6
+#define GROUP_HEADING          (1 << 22)
+
+// figcaption
+#define GROUP_FIGCAPTION       (1 << 23)
+
 #define GROUP_INLINE_ELEMENT \
   (GROUP_FONTSTYLE | GROUP_PHRASE | GROUP_SPECIAL | GROUP_FORMCONTROL | \
    GROUP_LEAF)
@@ -571,6 +578,8 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(applet, PR_TRUE, PR_TRUE, GROUP_SPECIAL | GROUP_BLOCK,
        GROUP_FLOW_ELEMENT | GROUP_OBJECT_CONTENT),
   ELEM(area, PR_FALSE, PR_FALSE, GROUP_MAP_CONTENT, GROUP_NONE),
+  ELEM(article, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
+  ELEM(aside, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
 #if defined(MOZ_MEDIA)
   ELEM(audio, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
 #endif
@@ -604,17 +613,29 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(em, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(embed, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
   ELEM(fieldset, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
+  ELEM(figcaption, PR_TRUE, PR_FALSE, GROUP_FIGCAPTION, GROUP_FLOW_ELEMENT),
+  ELEM(figure, PR_TRUE, PR_TRUE, GROUP_BLOCK,
+       GROUP_FLOW_ELEMENT | GROUP_FIGCAPTION),
   ELEM(font, PR_TRUE, PR_TRUE, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
+  ELEM(footer, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(form, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(frame, PR_FALSE, PR_FALSE, GROUP_FRAME, GROUP_NONE),
   ELEM(frameset, PR_TRUE, PR_TRUE, GROUP_FRAME, GROUP_FRAME),
-  ELEM(h1, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
-  ELEM(h2, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
-  ELEM(h3, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
-  ELEM(h4, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
-  ELEM(h5, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
-  ELEM(h6, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
+  ELEM(h1, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_HEADING,
+       GROUP_INLINE_ELEMENT),
+  ELEM(h2, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_HEADING,
+       GROUP_INLINE_ELEMENT),
+  ELEM(h3, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_HEADING,
+       GROUP_INLINE_ELEMENT),
+  ELEM(h4, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_HEADING,
+       GROUP_INLINE_ELEMENT),
+  ELEM(h5, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_HEADING,
+       GROUP_INLINE_ELEMENT),
+  ELEM(h6, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_HEADING,
+       GROUP_INLINE_ELEMENT),
   ELEM(head, PR_TRUE, PR_FALSE, GROUP_TOPLEVEL, GROUP_HEAD_CONTENT),
+  ELEM(header, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
+  ELEM(hgroup, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_HEADING),
   ELEM(hr, PR_FALSE, PR_FALSE, GROUP_BLOCK, GROUP_NONE),
   ELEM(html, PR_TRUE, PR_FALSE, GROUP_TOPLEVEL, GROUP_TOPLEVEL),
   ELEM(i, PR_TRUE, PR_TRUE, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
@@ -634,10 +655,12 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(link, PR_FALSE, PR_FALSE, GROUP_HEAD_CONTENT, GROUP_NONE),
   ELEM(listing, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
   ELEM(map, PR_TRUE, PR_TRUE, GROUP_SPECIAL, GROUP_BLOCK | GROUP_MAP_CONTENT),
+  ELEM(mark, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(marquee, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
   ELEM(menu, PR_TRUE, PR_FALSE, GROUP_BLOCK, GROUP_LI),
   ELEM(meta, PR_FALSE, PR_FALSE, GROUP_HEAD_CONTENT, GROUP_NONE),
   ELEM(multicol, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
+  ELEM(nav, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(nobr, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
   ELEM(noembed, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
   ELEM(noframes, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
@@ -661,6 +684,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(samp, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(script, PR_TRUE, PR_FALSE, GROUP_HEAD_CONTENT | GROUP_SPECIAL,
        GROUP_LEAF),
+  ELEM(section, PR_TRUE, PR_TRUE, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(select, PR_TRUE, PR_FALSE, GROUP_FORMCONTROL, GROUP_SELECT_CONTENT),
   ELEM(small, PR_TRUE, PR_TRUE, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
 #if defined(MOZ_MEDIA)

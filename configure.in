@@ -666,14 +666,12 @@ case "$target" in
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
@@ -1001,7 +999,6 @@ fi
 AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(WHOAMI, whoami, :)
 MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROG(UNZIP, unzip, :)
 MOZ_PATH_PROGS(ZIP, zip)
@@ -1234,8 +1231,6 @@ MOZ_COMPONENT_NSPR_LIBS='-L$(LIBXUL_DIST)/bin $(NSPR_LIBS)'
 USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
-
-MOZ_ENABLE_POSTSCRIPT=1 
 
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
@@ -1605,15 +1600,6 @@ if test "$GNU_CC"; then
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 elif test "$SOLARIS_SUNPRO_CC"; then
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
-
-    DSO_LDOPTS='-shared'
-    if test "$GNU_LD"; then
-        # Don't allow undefined symbols in libraries
-        DSO_LDOPTS="$DSO_LDOPTS -z defs"
-    fi
-
     DSO_CFLAGS=''
     if test "$CPU_ARCH" = "sparc"; then
         # for Sun Studio on Solaris/SPARC
@@ -2042,7 +2028,6 @@ case "$target" in
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
     _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
-    MOZ_ENABLE_POSTSCRIPT=
     TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
@@ -2309,7 +2294,6 @@ ia64*-hpux*)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
@@ -2432,7 +2416,6 @@ ia64*-hpux*)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
-    MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
     dnl Hardcode to win95 for now - cls
@@ -2636,7 +2619,6 @@ ia64*-hpux*)
     LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
-    MOZ_ENABLE_POSTSCRIPT=
     RC=rc.exe
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"
@@ -2723,19 +2705,19 @@ alpha*-*-osf*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
     SYSTEM_MAKEDEPEND=
+    MOZ_FIX_LINK_PATHS=
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
-    LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
     if test "$SOLARIS_SUNPRO_CC"; then
-       LIBS="-lCrun -lCstd $LIBS"
+       LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..' -z lazyload -z combreloc -z muldefs"
+       LIBS="-lCrun -lCstd -lc $LIBS"
        NS_USE_NATIVE=1
-       MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-       CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
+       CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all -D__FUNCTION__=__func__"
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions -norunpath -D__FUNCTION__=__func__"
        _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
        _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
-       LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
+       LDFLAGS="-xildoff $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
            LDFLAGS="-M /usr/lib/ld/map.noexstk $LDFLAGS" 
@@ -2747,10 +2729,10 @@ alpha*-*-osf*)
        WARNINGS_AS_ERRORS='-Werror'
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -z muldefs -h $@ -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL='-z defaultextract'
-       DSO_LDOPTS='-G -z muldefs'
+       DSO_LDOPTS='-G'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
        AR_DELETE="$AR d"
@@ -2770,25 +2752,38 @@ alpha*-*-osf*)
            #error "Denied"
            #endif],
            _BAD_COMPILER=,_BAD_COMPILER=1)
-        if test -n "$_BAD_COMPILER"; then
-            _res="no"
-            AC_MSG_ERROR([Sun C++ 5.9 (Sun Studio 12) or higher is required to build. Your compiler version is $CXX_VERSION .])
-        else
-            _res="yes"
-        fi
-        AC_MSG_RESULT([$_res])
-        AC_LANG_RESTORE
+       if test -n "$_BAD_COMPILER"; then
+           _res="no"
+           AC_MSG_ERROR([Sun C++ 5.9 (Sun Studio 12) or higher is required to build. Your compiler version is $CXX_VERSION .])
+       else
+           _res="yes"
+       fi
+       AC_TRY_COMPILE([],
+           [#if (__SUNPRO_CC >= 0x5100)
+           #error "Sun C++ 5.10 or above"
+           #endif],
+           _ABOVE_SS12U1=,_ABOVE_SS12U1=1)
+       if test "$_ABOVE_SS12U1"; then
+           # disable xannotate
+           CXXFLAGS="$CXXFLAGS -xannotate=no"
+       fi
+       AC_MSG_RESULT([$_res])
+       AC_LANG_RESTORE
     else
+       LDFLAGS="$LDFLAGS -Wl,-z,ignore -Wl,-R,'\$\$ORIGIN:\$\$ORIGIN/..' -Wl,-z,lazyload -Wl,-z,combreloc -Wl,-z,muldefs"
+       LIBS="-lc $LIBS"
+       MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
+       MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
        ASFLAGS="$ASFLAGS -fPIC"
-       DSO_LDOPTS='-G'
+       DSO_LDOPTS='-shared'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
-	  AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
+           AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
        fi
     fi
     if test "$OS_RELEASE" = "5.5.1"; then
-       AC_DEFINE(NEED_USLEEP_PROTOTYPE)
+        AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     fi
     ;;
 
@@ -2899,17 +2894,19 @@ fi
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
-AC_LANG_C
 AC_HEADER_STDC
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for __stdcall)
 AC_CACHE_VAL(ac_cv___stdcall,
- [AC_TRY_COMPILE([],
-                 [void foo(); void __stdcall foo();],
+ [AC_TRY_COMPILE([template <typename Method> struct foo;
+                  template <> struct foo<void (*)()> {};
+                  template <> struct foo<void (__stdcall*)()> {};],
+                 [],
                  [ac_cv___stdcall=true],
                  [ac_cv___stdcall=false])])
 if test "$ac_cv___stdcall" = true ; then
@@ -2918,6 +2915,7 @@ if test "$ac_cv___stdcall" = true ; then
 else
   AC_MSG_RESULT(no)
 fi
+AC_LANG_C
 AC_MSG_CHECKING(for ssize_t)
 AC_CACHE_VAL(ac_cv_type_ssize_t,
  [AC_TRY_COMPILE([#include <stdio.h>
@@ -3302,6 +3300,7 @@ AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
 AC_CHECK_HEADERS(sys/quota.h)
+AC_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
@@ -4908,8 +4907,13 @@ MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
 MOZ_SYDNEYAUDIO=
+MOZ_VORBIS=
 MOZ_WAVE=1
 MOZ_MEDIA=
+MOZ_WEBM=1
+VPX_AS=
+VPX_ASFLAGS=
+VPX_X86_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -4944,7 +4948,7 @@ NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
-NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
@@ -4966,8 +4970,6 @@ case "$target_os" in
             if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
                 NS_ENABLE_TSF=
             fi
-            XPC_IDISPATCH_SUPPORT=1
-            MOZ_NO_ACTIVEX_SUPPORT=
         fi
         if test -n "$NS_ENABLE_TSF"; then
             AC_DEFINE(NS_ENABLE_TSF)
@@ -5739,14 +5741,16 @@ dnl = Disable plugin support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(plugins,
 [  --disable-plugins       Disable plugins support],
-    MOZ_PLUGINS=,)
+    MOZ_PLUGINS=,
+    MOZ_PLUGINS=1)
 
 dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
 [  --disable-dbm       Disable building dbm],
-    NSS_DISABLE_DBM=1,)
+    NSS_DISABLE_DBM=1,
+    NSS_DISABLE_DBM=)
 
 dnl bi-directional support always on
 IBMBIDI=1
@@ -5796,7 +5800,8 @@ dnl Disable printing
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(printing,
 [  --disable-printing      Disable printing support],
-    NS_PRINTING=,)
+    NS_PRINTING=,
+    NS_PRINTING=1)
 
 if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
     AC_MSG_WARN([Printing does not work with Qt at this time. Omitting printing support.])
@@ -5854,15 +5859,15 @@ dnl ========================================================
 dnl = Disable Ogg Codecs
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(ogg,
-[  --disable-ogg           Disable Ogg Codec support],
-    MOZ_OGG=,)
-
-AC_SUBST(MOZ_OGG)
+[  --disable-ogg           Disable support for OGG media (Theora video and Vorbis audio)],
+    MOZ_OGG=,
+    MOZ_OGG=1)
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
+    MOZ_VORBIS=1
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5887,13 +5892,87 @@ if test -n "$MOZ_OGG"; then
 fi
 
 dnl ========================================================
+dnl = Disable VP8 decoder support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webm,
+[  --disable-webm         Disable support for WebM media (VP8 video and Vorbis audio)],
+    MOZ_WEBM=,
+    MOZ_WEBM=1)
+
+if test -n "$MOZ_WEBM"; then
+    AC_DEFINE(MOZ_WEBM)
+    MOZ_SYDNEYAUDIO=1
+    MOZ_MEDIA=1
+    MOZ_VORBIS=1
+
+    dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
+    dnl For Win32 (MSVC) we must use MASM.
+    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a -z "$GNU_CC"; then
+        AC_MSG_CHECKING([for MASM assembler])
+        AC_CHECK_PROGS(VPX_AS, ml, "")
+        if test -n "$VPX_AS"; then
+          VPX_X86_ASM=1
+          VPX_AS='sh $(topsrcdir)/media/libvpx/yasm2masm-as.sh'
+        else
+            AC_MSG_ERROR([Need MASM (ml.exe) in order to assemble libvpx optimized assembly. Either disable webm (reconfigure with --disable-webm) or install MASM. MASM is included in the Windows 7 SDK, or you can download MASM directly from http://www.microsoft.com/downloads/details.aspx?familyid=7a1c9da0-0510-44a2-b042-7ef370530c64&displaylang=en])
+        fi
+    else 
+
+      dnl For Darwin x86, Darwin x86_64, Linux x86, and WINNT x86_64
+      dnl we can use YASM.
+      AC_MSG_CHECKING([for YASM assembler])
+      AC_CHECK_PROGS(VPX_AS, yasm, "")
+      if test -n "$VPX_AS"; then
+        dnl We have YASM, see if we have assembly on this platform.  
+        case "$OS_ARCH:$OS_TEST" in
+        Linux:x86|Linux:i?86)
+          VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+          VPX_X86_ASM=1
+        ;;
+        Linux:x86_64)
+          VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        SunOS:i?86)
+          VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+          VPX_X86_ASM=1
+        ;;
+        SunOS:x86_64)
+          VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        Darwin:i?86)
+          VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        Darwin:x86_64)
+          VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        ;;
+        WINNT:x86_64)
+          if test -z "$GNU_CC"; then
+            VPX_ASFLAGS="-f x64 -rnasm -pnasm"
+            VPX_X86_ASM=1
+          fi
+        ;;
+        esac
+      fi # end have YASM
+    fi # end !WINNT_x86_MSVC
+
+    if test -n "$VPX_X86_ASM"; then
+      AC_DEFINE(VPX_X86_ASM)
+    else
+      AC_MSG_WARN([No assembler or assembly support for libvpx, using unoptimized C routines.])
+    fi
+fi
+
+dnl ========================================================
 dnl = Disable Wave decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(wave,
 [  --disable-wave          Disable Wave decoder support],
-    MOZ_WAVE=,)
-
-AC_SUBST(MOZ_WAVE)
+    MOZ_WAVE=,
+    MOZ_WAVE=1)
 
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
@@ -5905,16 +5984,16 @@ dnl ========================================================
 dnl = Handle dependent SYDNEYAUDIO and MEDIA defines
 dnl ========================================================
 
-AC_SUBST(MOZ_SYDNEYAUDIO)
-
 if test -n "$MOZ_SYDNEYAUDIO"; then
     AC_DEFINE(MOZ_SYDNEYAUDIO)
 fi
 
-AC_SUBST(MOZ_MEDIA)
-
 if test -n "$MOZ_MEDIA"; then
     AC_DEFINE(MOZ_MEDIA)
+fi
+
+if test -n "$MOZ_VORBIS"; then
+    AC_DEFINE(MOZ_VORBIS)
 fi
 
 dnl ========================================================
@@ -5927,11 +6006,10 @@ if test -n "$MOZ_SYDNEYAUDIO"; then
 linux*)
       PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
-          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.])])
+          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
       ;;
    esac
 fi
-AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl Splashscreen
@@ -6004,7 +6082,8 @@ esac
 MOZ_ARG_ENABLE_BOOL(javaxpcom,
 [  --enable-javaxpcom
                           Enable Java-XPCOM bridge],
-    MOZ_JAVAXPCOM=1,)
+    MOZ_JAVAXPCOM=1,
+    MOZ_JAVAXPCOM=)
 
 case "$host_os" in
   cygwin*|msvc*|mks*)
@@ -6081,7 +6160,8 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
 [  --disable-crashreporter Disable breakpad crash reporting],
-    MOZ_CRASHREPORTER=,)
+    MOZ_CRASHREPORTER=,
+    MOZ_CRASHREPORTER=1)
 
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
@@ -6358,14 +6438,35 @@ esac
 
 MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
-    MOZ_INSTALLER=,)
+    MOZ_INSTALLER=,
+    MOZ_INSTALLER=1)
 if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
-    # Disable installer for Windows builds that use the new toolkit if NSIS
-    # isn't in the path.
-    MOZ_PATH_PROGS(MAKENSIS, makensis)
-    if test -z "$MAKENSIS" || test "$MAKENSIS" = ":"; then
-        AC_MSG_ERROR([To build the installer makensis is required in your path. To build without the installer reconfigure using --disable-installer.])
+    # Disable installer for Windows builds that use the new toolkit if the
+    # required major version and minimum minor version of Unicode NSIS isn't in
+    # the path.
+    REQ_NSIS_MAJOR_VER=2
+    MIN_NSIS_MINOR_VER=33
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
+    if test -z "$MAKENSISU" || test "$MAKENSISU" = ":"; then
+        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
     fi
+    changequote(,)
+    MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
+    changequote([,])
+    if test ! "$MAKENSISU_VER" == ""; then
+        MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
+        MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
+    fi
+    AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
+    if test "$MAKENSISU_VER" == "" ||
+       test ! "$MAKENSISU_MAJOR_VER" == "$REQ_NSIS_MAJOR_VER" ||
+       test ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
+    fi
+    AC_MSG_RESULT([yes])
+    MAKENSISU="${CYGWIN_WRAPPER} $MAKENSISU"
+
     # The Windows build for NSIS requires the iconv command line utility to
     # convert the charset of the locale files.
     MOZ_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
@@ -6397,7 +6498,10 @@ MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
     MOZ_UPDATER=,
     MOZ_UPDATER=1 )
-AC_SUBST(MOZ_UPDATER)
+
+if test -n "$MOZ_UPDATER"; then
+    AC_DEFINE(MOZ_UPDATER)
+fi
 
 # app update channel is 'default' when not supplied.
 MOZ_ARG_ENABLE_STRING([update-channel],
@@ -6409,6 +6513,7 @@ if test -z "$MOZ_UPDATE_CHANNEL"; then
     MOZ_UPDATE_CHANNEL=default
 fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
+AC_SUBST(MOZ_UPDATE_CHANNEL)
 
 # tools/update-packaging is not checked out by default.
 MOZ_ARG_ENABLE_BOOL(update-packaging,
@@ -6608,7 +6713,7 @@ else
     dnl === SQLITE_ENABLE_FTS3 check ===
     dnl ================================
     dnl check to see if the system SQLite package is compiled with
-    dnl SQLITE_THREADSAFE enabled.
+    dnl SQLITE_ENABLE_FTS3 enabled.
     AC_MSG_CHECKING(for SQLITE_ENABLE_FTS3 support in system SQLite)
     _SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $SQLITE_CFLAGS"
@@ -6631,6 +6736,35 @@ else
     LIBS="$_SAVE_LIBS"
     if test "x$ac_cv_sqlite_enable_fts3" = "xno"; then
         AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_FTS3.])
+    fi
+
+    dnl =========================================
+    dnl === SQLITE_ENABLE_UNLOCK_NOTIFY check ===
+    dnl =========================================
+    dnl check to see if the system SQLite package is compiled with
+    dnl SQLITE_ENABLE_UNLOCK_NOTIFY enabled.
+    AC_MSG_CHECKING(for SQLITE_ENABLE_UNLOCK_NOTIFY support in system SQLite)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
+    _SAVE_LIBS="$LIBS"
+    LIBS="$LIBS $SQLITE_LIBS"
+    AC_CACHE_VAL(ac_cv_sqlite_enable_unlock_notify,[
+        AC_TRY_RUN([
+            #include "sqlite3.h"
+
+            int main(int argc, char **argv){
+              return !sqlite3_compileoption_used("SQLITE_ENABLE_UNLOCK_NOTIFY");
+            }],
+            ac_cv_sqlite_enable_unlock_notify=yes,
+            ac_cv_sqlite_enable_unlock_notify=no,
+            ac_cv_sqlite_enable_unlock_notify=no
+        )
+    ])
+    AC_MSG_RESULT($ac_cv_sqlite_enable_unlock_notify)
+    CFLAGS="$_SAVE_CFLAGS"
+    LIBS="$_SAVE_LIBS"
+    if test "x$ac_cv_sqlite_enable_unlock_notify" = "xno"; then
+        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_UNLOCK_NOTIFY.])
     fi
 fi
 
@@ -8312,11 +8446,18 @@ AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
 
+dnl ========================================================
 dnl qcms
 dnl ========================================================
 
 QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
 AC_SUBST(QCMS_LIBS)
+
+dnl ========================================================
+dnl HarfBuzz
+dnl ========================================================
+MOZ_HARFBUZZ_LIBS='$(DEPTH)/gfx/harfbuzz/src/$(LIB_PREFIX)mozharfbuzz.$(LIB_SUFFIX)'
+AC_SUBST(MOZ_HARFBUZZ_LIBS)
 
 dnl ========================================================
 dnl disable xul
@@ -8409,7 +8550,8 @@ dnl option to disable necko's wifi scanner
 dnl
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
 [  --disable-necko-wifi    Disable necko wifi scanner],
-    NECKO_WIFI=,)
+    NECKO_WIFI=,
+    NECKO_WIFI=1)
 
 if test "$OS_ARCH" = "OS2"; then
   dnl OS/2 implementation of Necko-WiFi support will be added in bug 506566
@@ -8484,6 +8626,12 @@ fi
 dnl Build Places if required
 if test "$MOZ_PLACES"; then
   AC_DEFINE(MOZ_PLACES)
+fi
+
+dnl Build Sync Services if required
+AC_SUBST(MOZ_SERVICES_SYNC)
+if test -n "$MOZ_SERVICES_SYNC"; then
+  AC_DEFINE(MOZ_SERVICES_SYNC)
 fi
 
 dnl ========================================================
@@ -8569,7 +8717,6 @@ AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
-AC_SUBST(MOZ_ENABLE_POSTSCRIPT)
 
 AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
@@ -8581,6 +8728,7 @@ AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
+AC_SUBST(MOZ_UPDATER)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -8624,6 +8772,7 @@ AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
+AC_SUBST(MAKENSISU)
 
 AC_SUBST(WINCE)
 AC_SUBST(WINCE_SDK_DIR)
@@ -8746,6 +8895,17 @@ AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(MOZ_NSS_PATCH)
+
+AC_SUBST(MOZ_MEDIA)
+AC_SUBST(MOZ_SYDNEYAUDIO)
+AC_SUBST(MOZ_WAVE)
+AC_SUBST(MOZ_VORBIS)
+AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_OGG)
+AC_SUBST(MOZ_ALSA_LIBS)
+AC_SUBST(VPX_AS)
+AC_SUBST(VPX_ASFLAGS)
+AC_SUBST(VPX_X86_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

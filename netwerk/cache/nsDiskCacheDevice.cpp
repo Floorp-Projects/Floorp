@@ -784,8 +784,8 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 
     PRUint32  sizeK = ((entry->DataSize() + 0x03FF) >> 10); // round up to next 1k
 
-    NS_ASSERTION(sizeK < USHRT_MAX, "data size out of range");
-    NS_ASSERTION(newSizeK < USHRT_MAX, "data size out of range");
+    NS_ASSERTION(sizeK <= USHRT_MAX, "data size out of range");
+    NS_ASSERTION(newSizeK <= USHRT_MAX, "data size out of range");
 
     // pre-evict entries to make space for new data
     PRUint32  targetCapacity = mCacheCapacity > (newSizeK - sizeK)
@@ -1034,6 +1034,8 @@ nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
         // start evicting entries if the new size is smaller!
         EvictDiskCacheEntries(mCacheCapacity);
     }
+    // Let cache map know of the new capacity
+    mCacheMap.NotifyCapacityChange(capacity);
 }
 
 

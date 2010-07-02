@@ -531,7 +531,7 @@ RegisterTypes(nsICategoryManager* aCatMgr,
     // this allows users of layout's viewers (the docshell for example)
     // to query the types of viewers layout can create.
     rv = aCatMgr->AddCategoryEntry("Gecko-Content-Viewers", contentType,
-                                   "@mozilla.org/content/document-loader-factory;1",
+                                   CONTENT_DLF_CONTRACTID,
                                    aPersist, PR_TRUE, nsnull);
     if (NS_FAILED(rv)) break;
   }

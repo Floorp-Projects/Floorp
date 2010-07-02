@@ -56,7 +56,7 @@ ifndef BUILD_STATIC_LIBS
 DIRS		+= ycbcr
 endif
 
-DIRS		+= public idl src qcms layers thebes src/thebes
+DIRS		+= src qcms layers harfbuzz/src thebes src/thebes
 
 ifdef BUILD_STATIC_LIBS
 DIRS		+= ycbcr

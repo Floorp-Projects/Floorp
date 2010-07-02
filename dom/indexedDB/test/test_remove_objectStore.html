@@ -1,0 +1,97 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStoreName = "Objects";
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
+
+      request = db.createObjectStore(objectStoreName, "foo");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let objectStore = event.result;
+
+      let addedCount = 0;
+
+      for (let i = 0; i < 100; i++) {
+        request = objectStore.add({foo: i});
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          if (++addedCount == 100) {
+            SimpleTest.executeSoon(function() { testGenerator.next(); });
+          }
+        }
+      }
+      yield;
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
+      is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
+
+      request = db.removeObjectStore(objectStore.name);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, undefined, "Correct result");
+      is(db.objectStoreNames.length, 0, "Correct objectStores list");
+
+      request = db.createObjectStore(objectStoreName, "foo");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
+      is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
+
+      objectStore = event.result;
+
+      request = objectStore.openCursor();
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        is(event.result, undefined, "ObjectStore shouldn't have any items");
+        testGenerator.send(event);
+      }
+      event = yield;
+
+      request = db.removeObjectStore(objectStore.name);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, undefined, "Correct result");
+      is(db.objectStoreNames.length, 0, "Correct objectStores list");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

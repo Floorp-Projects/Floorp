@@ -57,6 +57,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject sv);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setInitialSize(JNIEnv *jenv, jclass, int width, int height);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *, jclass);
 }
 
 
@@ -105,4 +106,11 @@ Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map)
     putenv(strdup(str));
     jenv->ReleaseStringUTFChars(map, str);
     
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
+{
+    if (nsAppShell::gAppShell)
+        nsAppShell::gAppShell->OnResume();
 }

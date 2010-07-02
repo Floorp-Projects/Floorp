@@ -99,6 +99,9 @@ var gPlayTests = [
   { name:"redirect.sjs?domain=mochi.test:8888&file=320x240.ogv",
     type:"video/ogg", duration:0.233 },
 
+  // Test playback of a webm file
+  { name:"seek.webm", type:"video/webm", duration:3.966 },
+
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
   
 ];

@@ -99,13 +99,16 @@ struct NativeIterator {
 };
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, JSIdArray **idap);
+VectorToIdArray(JSContext *cx, js::AutoValueVector &props, JSIdArray **idap);
+
+bool
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props);
 
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, js::Value *vp);
 
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, js::Value *vp);
+IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should

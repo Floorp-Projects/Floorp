@@ -18,6 +18,7 @@
  * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
  *                 David Einstein (deinst@world.std.com)
  *                 László Németh (nemethl@gyorsposta.hu)
+ *                 Caolan McNamara (caolanm@redhat.com)
  *                 Davide Prina
  *                 Giuseppe Modugno
  *                 Gianluca Turconi
@@ -57,14 +58,9 @@
 #ifndef _AFFIXMGR_HXX_
 #define _AFFIXMGR_HXX_
 
-#ifdef MOZILLA_CLIENT
-#ifdef __SUNPRO_CC // for SunONE Studio compiler
-using namespace std;
-#endif
+#include "hunvisapi.h"
+
 #include <stdio.h>
-#else
-#include <cstdio>
-#endif
 
 #include "atypes.hxx"
 #include "baseaffix.hxx"
@@ -76,13 +72,16 @@ using namespace std;
 #define dupSFX        (1 << 0)
 #define dupPFX        (1 << 1)
 
-class AffixMgr
+class PfxEntry;
+class SfxEntry;
+
+class LIBHUNSPELL_DLL_EXPORTED AffixMgr
 {
 
-  AffEntry *          pStart[SETSIZE];
-  AffEntry *          sStart[SETSIZE];
-  AffEntry *          pFlag[SETSIZE];
-  AffEntry *          sFlag[SETSIZE];
+  PfxEntry *          pStart[SETSIZE];
+  SfxEntry *          sStart[SETSIZE];
+  PfxEntry *          pFlag[SETSIZE];
+  SfxEntry *          sFlag[SETSIZE];
   HashMgr *           pHMgr;
   HashMgr **          alldic;
   int *               maxdic;
@@ -135,8 +134,8 @@ class AffixMgr
   const char *        sfxappnd; // BUG: not stateless
   FLAG                sfxflag;  // BUG: not stateless
   char *              derived;  // BUG: not stateless
-  AffEntry *          sfx;      // BUG: not stateless
-  AffEntry *          pfx;      // BUG: not stateless
+  SfxEntry *          sfx;      // BUG: not stateless
+  PfxEntry *          pfx;      // BUG: not stateless
   int                 checknum;
   char *              wordchars;
   unsigned short *    wordchars_utf16;
@@ -173,24 +172,24 @@ public:
             char in_compound, const FLAG needflag = FLAG_NULL);
   inline int isRevSubset(const char * s1, const char * end_of_s2, int len);
   struct hentry *     suffix_check(const char * word, int len, int sfxopts,
-            AffEntry* ppfx, char ** wlst, int maxSug, int * ns,
+            PfxEntry* ppfx, char ** wlst, int maxSug, int * ns,
             const FLAG cclass = FLAG_NULL, const FLAG needflag = FLAG_NULL,
             char in_compound = IN_CPD_NOT);
   struct hentry *     suffix_check_twosfx(const char * word, int len,
-            int sfxopts, AffEntry* ppfx, const FLAG needflag = FLAG_NULL);
+            int sfxopts, PfxEntry* ppfx, const FLAG needflag = FLAG_NULL);
 
   char * affix_check_morph(const char * word, int len,
             const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
   char * prefix_check_morph(const char * word, int len,
             char in_compound, const FLAG needflag = FLAG_NULL);
   char * suffix_check_morph (const char * word, int len, int sfxopts,
-            AffEntry * ppfx, const FLAG cclass = FLAG_NULL,
+            PfxEntry * ppfx, const FLAG cclass = FLAG_NULL,
             const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
 
   char * prefix_check_twosfx_morph(const char * word, int len,
             char in_compound, const FLAG needflag = FLAG_NULL);
   char * suffix_check_twosfx_morph(const char * word, int len,
-            int sfxopts, AffEntry * ppfx, const FLAG needflag = FLAG_NULL);
+            int sfxopts, PfxEntry * ppfx, const FLAG needflag = FLAG_NULL);
 
   char * morphgen(char * ts, int wl, const unsigned short * ap,
             unsigned short al, char * morph, char * targetmorph, int level);
@@ -216,49 +215,48 @@ public:
             char hu_mov_rule, char ** result, char * partresult);
 
   struct hentry * lookup(const char * word);
-  int                 get_numrep();
-  struct replentry *  get_reptable();
-  RepList *           get_iconvtable();
-  RepList *           get_oconvtable();
-  struct phonetable * get_phonetable();
-  int                 get_nummap();
-  struct mapentry *   get_maptable();
-  int                 get_numbreak();
-  char **             get_breaktable();
+  int                 get_numrep() const;
+  struct replentry *  get_reptable() const;
+  RepList *           get_iconvtable() const;
+  RepList *           get_oconvtable() const;
+  struct phonetable * get_phonetable() const;
+  int                 get_nummap() const;
+  struct mapentry *   get_maptable() const;
+  int                 get_numbreak() const;
+  char **             get_breaktable() const;
   char *              get_encoding();
-  int                 get_langnum();
+  int                 get_langnum() const;
   char *              get_key_string();
-  char *              get_try_string();
-  const char *        get_wordchars();
-  unsigned short *    get_wordchars_utf16(int * len);
-  char *              get_ignore();
-  unsigned short *    get_ignore_utf16(int * len);
-  int                 get_compound();
-  FLAG                get_compoundflag();
-  FLAG                get_compoundbegin();
-  FLAG                get_forbiddenword();
-  FLAG                get_nosuggest();
-  FLAG                get_needaffix();
-  FLAG                get_onlyincompound();
-  FLAG                get_compoundroot();
-  FLAG                get_lemma_present();
-  int                 get_checknum();
-  char *              get_possible_root();
-  const char *        get_prefix();
-  const char *        get_suffix();
-  const char *        get_derived();
-  const char *        get_version();
-  const int           have_contclass();
-  int                 get_utf8();
-  int                 get_complexprefixes();
-  char *              get_suffixed(char );
-  int                 get_maxngramsugs();
-  int                 get_nosplitsugs();
-  int                 get_sugswithdots(void);
-  FLAG                get_keepcase(void);
-  int                 get_checksharps(void);
-  char *              encode_flag(unsigned short aflag);
-  int                 get_fullstrip();
+  char *              get_try_string() const;
+  const char *        get_wordchars() const;
+  unsigned short *    get_wordchars_utf16(int * len) const;
+  char *              get_ignore() const;
+  unsigned short *    get_ignore_utf16(int * len) const;
+  int                 get_compound() const;
+  FLAG                get_compoundflag() const;
+  FLAG                get_compoundbegin() const;
+  FLAG                get_forbiddenword() const;
+  FLAG                get_nosuggest() const;
+  FLAG                get_needaffix() const;
+  FLAG                get_onlyincompound() const;
+  FLAG                get_compoundroot() const;
+  FLAG                get_lemma_present() const;
+  int                 get_checknum() const;
+  const char *        get_prefix() const;
+  const char *        get_suffix() const;
+  const char *        get_derived() const;
+  const char *        get_version() const;
+  int                 have_contclass() const;
+  int                 get_utf8() const;
+  int                 get_complexprefixes() const;
+  char *              get_suffixed(char ) const;
+  int                 get_maxngramsugs() const;
+  int                 get_nosplitsugs() const;
+  int                 get_sugswithdots(void) const;
+  FLAG                get_keepcase(void) const;
+  int                 get_checksharps(void) const;
+  char *              encode_flag(unsigned short aflag) const;
+  int                 get_fullstrip() const;
 
 private:
   int  parse_file(const char * affpath, const char * key);
@@ -277,13 +275,13 @@ private:
   void reverse_condition(char *);
   void debugflag(char * result, unsigned short flag);
   int condlen(char *);
-  int encodeit(struct affentry * ptr, char * cs);
-  int build_pfxtree(AffEntry* pfxptr);
-  int build_sfxtree(AffEntry* sfxptr);
+  int encodeit(affentry &entry, char * cs);
+  int build_pfxtree(PfxEntry* pfxptr);
+  int build_sfxtree(SfxEntry* sfxptr);
   int process_pfx_order();
   int process_sfx_order();
-  AffEntry * process_pfx_in_order(AffEntry * ptr, AffEntry * nptr);
-  AffEntry * process_sfx_in_order(AffEntry * ptr, AffEntry * nptr);
+  PfxEntry * process_pfx_in_order(PfxEntry * ptr, PfxEntry * nptr);
+  SfxEntry * process_sfx_in_order(SfxEntry * ptr, SfxEntry * nptr);
   int process_pfx_tree_to_list();
   int process_sfx_tree_to_list();
   int redundant_condition(char, char * strip, int stripl,
@@ -291,3 +289,4 @@ private:
 };
 
 #endif
+

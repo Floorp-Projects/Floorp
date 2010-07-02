@@ -48,11 +48,7 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "Services", function() {
-  Cu.import("resource://gre/modules/Services.jsm");
-  return Services;
-});
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -652,7 +648,7 @@ var PlacesUIUtils = {
 
     var features;
     if (aMinimalUI)
-      features = "centerscreen,chrome,dialog,resizable,modal";
+      features = "centerscreen,chrome,modal,resizable=yes";
     else
       features = "centerscreen,chrome,modal,resizable=no";
     this._getCurrentActiveWin().openDialog(dialogURL, "",  features, aInfo);
@@ -679,10 +675,9 @@ var PlacesUIUtils = {
     // The view for a <menu> of which its associated menupopup is a places
     // view, is the menupopup.
     if (node.localName == "menu" && !node._placesNode &&
-        node.firstChild._placesView)
-      return node.firstChild._placesView;
+        node.lastChild._placesView)
+      return node.lastChild._placesView;
 
-    // XXXmano: somehow we reach the xul document here!
     while (node instanceof Ci.nsIDOMElement) {
       if (node._placesView)
         return node._placesView;
@@ -739,19 +734,20 @@ var PlacesUIUtils = {
    *
    */
   checkURLSecurity: function PUIU_checkURLSecurity(aURINode, aWindow) {
-    if (!PlacesUtils.nodeIsBookmark(aURINode)) {
-      var uri = PlacesUtils._uri(aURINode.uri);
-      if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
-        const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-        var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
-                             getService(Ci.nsIStringBundleService).
-                             createBundle(BRANDING_BUNDLE_URI).
-                             GetStringFromName("brandShortName");
+    if (PlacesUtils.nodeIsBookmark(aURINode))
+      return true;
 
-        var errorStr = this.getString("load-js-data-url-error");
-        Services.prompt.alert(aWindow, brandShortName, errorStr);
-        return false;
-      }
+    var uri = PlacesUtils._uri(aURINode.uri);
+    if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
+      const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
+      var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
+                           getService(Ci.nsIStringBundleService).
+                           createBundle(BRANDING_BUNDLE_URI).
+                           GetStringFromName("brandShortName");
+
+      var errorStr = this.getString("load-js-data-url-error");
+      Services.prompt.alert(aWindow, brandShortName, errorStr);
+      return false;
     }
     return true;
   },
@@ -792,13 +788,11 @@ var PlacesUIUtils = {
    * Gives the user a chance to cancel loading lots of tabs at once
    */
   _confirmOpenInTabs: function PUIU__confirmOpenInTabs(numTabsToOpen) {
-    let pref = Services.prefs;
-    let prompt = Services.prompt;
     const WARN_ON_OPEN_PREF = "browser.tabs.warnOnOpen";
     var reallyOpen = true;
 
-    if (pref.getBoolPref(WARN_ON_OPEN_PREF)) {
-      if (numTabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+    if (Services.prefs.getBoolPref(WARN_ON_OPEN_PREF)) {
+      if (numTabsToOpen >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
         // default to true: if it were false, we wouldn't get this far
         var warnOnOpen = { value: true };
 
@@ -810,12 +804,12 @@ var PlacesUIUtils = {
                              createBundle(BRANDING_BUNDLE_URI).
                              GetStringFromName("brandShortName");
 
-        var buttonPressed = prompt.confirmEx(
+        var buttonPressed = Services.prompt.confirmEx(
           this._getCurrentActiveWin(),
           this.getString("tabs.openWarningTitle"),
           this.getFormattedString(messageKey, [numTabsToOpen, brandShortName]),
-          (prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0) +
-            (prompt.BUTTON_TITLE_CANCEL * prompt.BUTTON_POS_1),
+          (Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0) +
+            (Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1),
           this.getString(openKey), null, null,
           this.getFormattedString("tabs.openWarningPromptMeBranded",
                                   [brandShortName]),
@@ -825,7 +819,7 @@ var PlacesUIUtils = {
         reallyOpen = (buttonPressed == 0);
         // don't set the pref unless they press OK and it's false
         if (reallyOpen && !warnOnOpen.value)
-          pref.setBoolPref(WARN_ON_OPEN_PREF, false);
+          Services.prefs.setBoolPref(WARN_ON_OPEN_PREF, false);
       }
     }
 

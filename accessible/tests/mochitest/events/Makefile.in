@@ -46,13 +46,16 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
+		docload_wnd.html \
+		docload_wnd.xul \
 		focus.html \
 		scroll.html \
 		test_aria_statechange.html \
 		test_attrs.html \
 		test_caretmove.html \
 	$(warning	test_coalescence.html temporarily disabled) \
-		test_doc.html \
+		test_docload.html \
+		test_docload.xul \
 		test_dragndrop.html \
 		test_flush.html \
 		test_focus.html \
@@ -61,6 +64,7 @@ _TEST_FILES =\
 		test_focusdoc.html \
 		test_mutation.html \
 		test_scroll.xul \
+		test_selection.html \
 		test_statechange.html \
 		test_text.html \
 		test_tree.xul \

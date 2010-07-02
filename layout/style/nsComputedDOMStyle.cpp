@@ -408,7 +408,7 @@ nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
   if (!currentDoc)
     return nsnull;
 
-  return currentDoc->GetPrimaryShell();
+  return currentDoc->GetShell();
 }
 
 NS_IMETHODIMP
@@ -455,7 +455,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   mFlushedPendingReflows = propEntry->mNeedsLayoutFlush;
 #endif
 
-  mPresShell = document->GetPrimaryShell();
+  mPresShell = document->GetShell();
   NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
                  NS_ERROR_NOT_AVAILABLE);
 
@@ -1179,7 +1179,7 @@ nsComputedDOMStyle::GetFontFamily(nsIDOMCSSValue** aValue)
 
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocumentWeak);
   NS_ASSERTION(doc, "document is required");
-  nsIPresShell* presShell = doc->GetPrimaryShell();
+  nsIPresShell* presShell = doc->GetShell();
   NS_ASSERTION(presShell, "pres shell is required");
   nsPresContext *presContext = presShell->GetPresContext();
   NS_ASSERTION(presContext, "pres context is required");
@@ -1356,7 +1356,7 @@ nsComputedDOMStyle::GetBackgroundClip(nsIDOMCSSValue** aValue)
 {
   return GetBackgroundList(&nsStyleBackground::Layer::mClip,
                            &nsStyleBackground::mClipCount,
-                           nsCSSProps::kBackgroundClipKTable,
+                           nsCSSProps::kBackgroundOriginKTable,
                            aValue);
 }
 
@@ -4669,10 +4669,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     \* ******************************* */
 
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_background_clip,          BackgroundClip),
+    COMPUTED_STYLE_MAP_ENTRY(background_clip,               BackgroundClip),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_background_origin,        BackgroundOrigin),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_background_size,          MozBackgroundSize),
+    COMPUTED_STYLE_MAP_ENTRY(background_origin,             BackgroundOrigin),
+    COMPUTED_STYLE_MAP_ENTRY(background_size,               MozBackgroundSize),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),
     COMPUTED_STYLE_MAP_ENTRY(border_image,                  BorderImage),

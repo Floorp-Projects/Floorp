@@ -227,7 +227,7 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 
 nsresult
 NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
-              nsINodeInfo* aNodeInfo, PRBool aFromParser)
+              nsINodeInfo* aNodeInfo, PRUint32 aFromParser)
 {
   if (aElementType == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);
@@ -287,7 +287,7 @@ nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  NS_ASSERTION(aNameSpaceID - 1 == mURIArray.Length(),
+  NS_ASSERTION(aNameSpaceID - 1 == (PRInt32) mURIArray.Length(),
                "BAD! AddNameSpace not called in right order!");
 
   nsString* uri = new nsString(aURI);

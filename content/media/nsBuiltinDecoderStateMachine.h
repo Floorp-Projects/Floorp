@@ -396,9 +396,9 @@ protected:
   // unless another sample is pushed to the hardware.
   PRInt64 mAudioEndTime;
 
-  // The presentation time of the last video frame which has been displayed.
+  // The presentation end time of the last video frame which has been displayed.
   // Accessed from the state machine thread.
-  PRInt64 mVideoFrameTime;
+  PRInt64 mVideoFrameEndTime;
   
   // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
   // from the state machine and main threads. Synchronised via decoder

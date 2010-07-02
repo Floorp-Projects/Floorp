@@ -157,10 +157,6 @@
 #include "winbase.h"
 #endif
 
-#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2) & defined(MOZ_X11)
-#include <gdk/gdkx.h> // for GDK_DISPLAY()
-#endif
-
 using mozilla::TimeStamp;
 
 // Null out a strong ref to a linked list iteratively to avoid
@@ -282,7 +278,7 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
   for (PRUint32 i = 0; i < c; i++) {
     nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
     if (doc) {
-      nsIPresShell *shell = doc->GetPrimaryShell();
+      nsIPresShell *shell = doc->GetShell();
 
       // if this document has a presentation shell, then it has frames and can be reframed
       if (shell) {

@@ -43,6 +43,8 @@ load 473720-1.html
 load 473892-1.html
 load 473914-1.html
 load 478321-1.xhtml
+load 512851-1.xhtml
+load 539613-1.xhtml
 skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
 load 495269-1.html
 load 495269-2.html
@@ -54,3 +56,6 @@ load 524252-1.html
 load font-face-truncated-src.html 
 load 536789-1.html
 load 565248-1.html
+load 558943-1.xhtml
+load 571105-1.xhtml
+load 573127-1.html

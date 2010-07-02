@@ -64,6 +64,6 @@ script regress-67773.js
 script regress-72964.js
 script regress-76683.js
 script regress-78156.js
-script regress-85721.js
+random script regress-85721.js # bogus perf test (bug 467263)
 script regress-87231.js
 script regress-98306.js

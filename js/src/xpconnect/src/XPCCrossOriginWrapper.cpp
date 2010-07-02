@@ -150,6 +150,10 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 // enabled code.
 static const PRUint32 FLAG_IS_UXPC_OBJECT = XPCWrapper::LAST_FLAG << 1;
 
+// This flag is set on objects that have to clear their wrapped native's XOW
+// cache when they get finalized.
+static const PRUint32 FLAG_IS_CACHED = XPCWrapper::LAST_FLAG << 2;
+
 namespace XPCCrossOriginWrapper {
 
 JSExtendedClass XOWClass = {
@@ -212,6 +216,26 @@ WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
   return JS_SetReservedSlot(cx, xow, XPC_XOW_ScopeSlot,
                             PRIVATE_TO_JSVAL(newScope)) &&
          JS_SetParent(cx, xow, newScope->GetGlobalJSObject());
+}
+
+void
+WindowNavigated(JSContext *cx, XPCWrappedNative *innerObj)
+{
+  NS_ABORT_IF_FALSE(innerObj->NeedsXOW(), "About to write to unowned memory");
+
+  // First, disconnect the old XOW from the XOW cache.
+  XPCWrappedNativeWithXOW *wnxow =
+    static_cast<XPCWrappedNativeWithXOW *>(innerObj);
+  JSObject *oldXOW = wnxow->GetXOW();
+  if (oldXOW) {
+    jsval flags = GetFlags(cx, oldXOW);
+    NS_ASSERTION(HAS_FLAGS(flags, FLAG_IS_CACHED), "Wrapper should be cached");
+
+    SetFlags(cx, oldXOW, RemoveFlags(flags, FLAG_IS_CACHED));
+
+    NS_ASSERTION(wnxow->GetXOW() == oldXOW, "bad XOW in cache");
+    wnxow->SetXOW(nsnull);
+  }
 }
 
 // Returns whether the currently executing code is allowed to access
@@ -384,14 +408,25 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
 
   // The parent must be the inner global object for its scope.
   parent = JS_GetGlobalForObject(cx, parent);
+  OBJ_TO_INNER_OBJECT(cx, parent);
+  if (!parent) {
+    return JS_FALSE;
+  }
 
-  JSClass *clasp = parent->getJSClass();
-  if (clasp->flags & JSCLASS_IS_EXTENDED) {
-    JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
-    if (xclasp->innerObject) {
-      parent = xclasp->innerObject(cx, parent);
-      if (!parent) {
-        return JS_FALSE;
+  XPCWrappedNativeWithXOW *wnxow = nsnull;
+  if (wn->NeedsXOW()) {
+    JSObject *innerWrappedObj = wrappedObj;
+    OBJ_TO_INNER_OBJECT(cx, innerWrappedObj);
+    if (!innerWrappedObj) {
+      return JS_FALSE;
+    }
+
+    if (innerWrappedObj == parent) {
+      wnxow = static_cast<XPCWrappedNativeWithXOW *>(wn);
+      JSObject *xow = wnxow->GetXOW();
+      if (xow) {
+        *vp = OBJECT_TO_JSVAL(xow);
+        return JS_TRUE;
       }
     }
   }
@@ -405,23 +440,21 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
     parentScope = XPCWrappedNativeScope::FindInJSObjectScope(cx, parent);
   }
 
-#ifdef DEBUG_mrbkap_off
-  printf("Wrapping object at %p (%s) [%p]\n",
-         (void *)wrappedObj, wrappedObj->getClass()->name,
-         (void *)parentScope);
-#endif
-
   JSObject *outerObj = nsnull;
   WrappedNative2WrapperMap *map = parentScope->GetWrapperMap();
 
   outerObj = map->Find(wrappedObj);
   if (outerObj) {
     NS_ASSERTION(outerObj->getJSClass() == &XOWClass.base,
-                              "What crazy object are we getting here?");
-#ifdef DEBUG_mrbkap_off
-    printf("But found a wrapper in the map %p!\n", (void *)outerObj);
-#endif
+                 "What crazy object are we getting here?");
     *vp = OBJECT_TO_JSVAL(outerObj);
+
+    if (wnxow) {
+      // NB: wnxow->GetXOW() must have returned false.
+      SetFlags(cx, outerObj, AddFlags(GetFlags(cx, outerObj), FLAG_IS_CACHED));
+      wnxow->SetXOW(outerObj);
+    }
+
     return JS_TRUE;
   }
 
@@ -431,8 +464,9 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
     return JS_FALSE;
   }
 
+  jsval flags = INT_TO_JSVAL(wnxow ? FLAG_IS_CACHED : 0);
   if (!JS_SetReservedSlot(cx, outerObj, sWrappedObjSlot, *vp) ||
-      !JS_SetReservedSlot(cx, outerObj, sFlagsSlot, JSVAL_ZERO) ||
+      !JS_SetReservedSlot(cx, outerObj, sFlagsSlot, flags) ||
       !JS_SetReservedSlot(cx, outerObj, XPC_XOW_ScopeSlot,
                           PRIVATE_TO_JSVAL(parentScope))) {
     return JS_FALSE;
@@ -441,6 +475,9 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
   *vp = OBJECT_TO_JSVAL(outerObj);
 
   map->Add(wn->GetScope()->GetWrapperMap(), wrappedObj, outerObj);
+  if(wnxow) {
+    wnxow->SetXOW(outerObj);
+  }
 
   return JS_TRUE;
 }
@@ -990,6 +1027,17 @@ XPC_XOW_Finalize(JSContext *cx, JSObject *obj)
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
     return;
+  }
+
+  jsval flags = GetFlags(cx, obj);
+  if (HAS_FLAGS(flags, FLAG_IS_CACHED)) {
+    // We know that it's safe to access our wrapped object.
+    XPCWrappedNativeWithXOW *wnxow =
+      static_cast<XPCWrappedNativeWithXOW *>(xpc_GetJSPrivate(wrappedObj));
+    wnxow->SetXOW(nsnull);
+
+    JS_SetReservedSlot(cx, obj, sWrappedObjSlot, JSVAL_VOID);
+    SetFlags(cx, obj, RemoveFlags(flags, FLAG_IS_CACHED));
   }
 
   // Get our scope.

@@ -179,10 +179,10 @@
   </keyset>
 
   <popupset id="placesPopupset">
-    <popup id="placesContext"/>
-    <popup id="placesColumnsContext"
-           onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
-           oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
+    <menupopup id="placesContext"/>
+    <menupopup id="placesColumnsContext"
+               onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+               oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
   </popupset>
 
   <toolbox id="placesToolbox">

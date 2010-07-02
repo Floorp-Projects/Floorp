@@ -1,0 +1,184 @@
+/*
+ *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license 
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may 
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+
+#ifndef VPX_PORTS_X86_H
+#define VPX_PORTS_X86_H
+#include <stdlib.h>
+#include "config.h"
+
+#if defined(__GNUC__) && __GNUC__
+#if ARCH_X86_64
+#define cpuid(func,ax,bx,cx,dx)\
+    __asm__ __volatile__ (\
+                          "cpuid           \n\t" \
+                          : "=a" (ax), "=b" (bx), "=c" (cx), "=d" (dx) \
+                          : "a"  (func));
+#else
+#define cpuid(func,ax,bx,cx,dx)\
+    __asm__ __volatile__ (\
+                          "pushl %%ebx     \n\t" \
+                          "cpuid           \n\t" \
+                          "movl  %%ebx, %1 \n\t" \
+                          "popl  %%ebx     \n\t" \
+                          : "=a" (ax), "=r" (bx), "=c" (cx), "=d" (dx) \
+                          : "a"  (func));
+#endif
+#else
+#if ARCH_X86_64
+void __cpuid(int CPUInfo[4], int info_type);
+#pragma intrinsic(__cpuid)
+#define cpuid(func,a,b,c,d) do{\
+        int regs[4];\
+        __cpuid(regs,func); a=regs[0];  b=regs[1];  c=regs[2];  d=regs[3];\
+    } while(0)
+#else
+#define cpuid(func,a,b,c,d)\
+    __asm mov eax, func\
+    __asm cpuid\
+    __asm mov a, eax\
+    __asm mov b, ebx\
+    __asm mov c, ecx\
+    __asm mov d, edx
+#endif
+#endif
+
+#define HAS_MMX   0x01
+#define HAS_SSE   0x02
+#define HAS_SSE2  0x04
+#define HAS_SSE3  0x08
+#define HAS_SSSE3 0x10
+#ifndef BIT
+#define BIT(n) (1<<n)
+#endif
+
+static int
+x86_simd_caps(void)
+{
+    unsigned int flags = 0;
+    unsigned int mask = ~0;
+    unsigned int reg_eax, reg_ebx, reg_ecx, reg_edx;
+    char *env;
+    (void)reg_ebx;
+
+    /* See if the CPU capabilities are being overridden by the environment */
+    env = getenv("VPX_SIMD_CAPS");
+
+    if (env && *env)
+        return (int)strtol(env, NULL, 0);
+
+    env = getenv("VPX_SIMD_CAPS_MASK");
+
+    if (env && *env)
+        mask = strtol(env, NULL, 0);
+
+    /* Ensure that the CPUID instruction supports extended features */
+    cpuid(0, reg_eax, reg_ebx, reg_ecx, reg_edx);
+
+    if (reg_eax < 1)
+        return 0;
+
+    /* Get the standard feature flags */
+    cpuid(1, reg_eax, reg_ebx, reg_ecx, reg_edx);
+
+    if (reg_edx & BIT(23)) flags |= HAS_MMX;
+
+    if (reg_edx & BIT(25)) flags |= HAS_SSE; /* aka xmm */
+
+    if (reg_edx & BIT(26)) flags |= HAS_SSE2; /* aka wmt */
+
+    if (reg_ecx & BIT(0))  flags |= HAS_SSE3;
+
+    if (reg_ecx & BIT(9))  flags |= HAS_SSSE3;
+
+    return flags & mask;
+}
+
+
+#if ARCH_X86_64 && defined(_MSC_VER)
+unsigned __int64 __rdtsc(void);
+#pragma intrinsic(__rdtsc)
+#endif
+static unsigned int
+x86_readtsc(void)
+{
+#if defined(__GNUC__) && __GNUC__
+    unsigned int tsc;
+    __asm__ __volatile__("rdtsc\n\t":"=a"(tsc):);
+    return tsc;
+#else
+#if ARCH_X86_64
+    return __rdtsc();
+#else
+    __asm  rdtsc;
+#endif
+#endif
+}
+
+
+#if defined(__GNUC__) && __GNUC__
+#define x86_pause_hint()\
+    __asm__ __volatile__ ("pause \n\t")
+#else
+#if ARCH_X86_64
+/* No pause intrinsic for windows x64 */
+#define x86_pause_hint()
+#else
+#define x86_pause_hint()\
+    __asm pause
+#endif
+#endif
+
+#if defined(__GNUC__) && __GNUC__
+static void
+x87_set_control_word(unsigned short mode)
+{
+    __asm__ __volatile__("fldcw %0" : : "m"(*&mode));
+}
+static unsigned short
+x87_get_control_word(void)
+{
+    unsigned short mode;
+    __asm__ __volatile__("fstcw %0\n\t":"=m"(*&mode):);
+    return mode;
+}
+#elif ARCH_X86_64
+/* No fldcw intrinsics on Windows x64, punt to external asm */
+extern void           vpx_winx64_fldcw(unsigned short mode);
+extern unsigned short vpx_winx64_fstcw(void);
+#define x87_set_control_word vpx_winx64_fldcw
+#define x87_get_control_word vpx_winx64_fstcw
+#else
+static void
+x87_set_control_word(unsigned short mode)
+{
+    __asm { fldcw mode }
+}
+static unsigned short
+x87_get_control_word(void)
+{
+    unsigned short mode;
+    __asm { fstcw mode }
+    return mode;
+}
+#endif
+
+static unsigned short
+x87_set_double_precision(void)
+{
+    unsigned short mode = x87_get_control_word();
+    x87_set_control_word((mode&~0x300) | 0x200);
+    return mode;
+}
+
+
+extern void vpx_reset_mmx_state(void);
+#endif
+

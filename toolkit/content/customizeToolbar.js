@@ -455,6 +455,8 @@ function cleanUpItemForPalette(aItem, aWrapper)
 
   if (aItem.hasAttribute("title"))
     aWrapper.setAttribute("title", aItem.getAttribute("title"));
+  else if (aItem.hasAttribute("label"))
+    aWrapper.setAttribute("title", aItem.getAttribute("label"));
   else if (isSpecialItem(aItem)) {
     var stringBundle = document.getElementById("stringBundle");
     // Remove the common "toolbar" prefix to generate the string name.

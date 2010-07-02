@@ -165,24 +165,31 @@ for (var tf in timingFunctions) {
 // Check that the timing function continues even when we restyle in the
 // middle.
 var interrupt_tests = [];
-for (var itime = 2; itime < 8; itime += 2) {
-    var p = document.createElement("p");
-    var t = document.createTextNode("interrupt at " + itime + "s");
-    p.appendChild(t);
-    p.style.textIndent = "0px";
-    p.style.MozTransition = "8s text-indent cubic-bezier(0, 1, 1, 0)";
-    div.appendChild(p);
-    is(getComputedStyle(p, "").textIndent, "0px",
-       "should be zero before changing value");
-    interrupt_tests.push([ p, itime ]);
-    
+for each (var restyleParent in [true, false]) {
+    for (var itime = 2; itime < 8; itime += 2) {
+        var p = document.createElement("p");
+        var t = document.createTextNode("interrupt on " +
+                                        (restyleParent ? "parent" : "node itself") +
+                                        " at " + itime + "s");
+        p.appendChild(t);
+        p.style.textIndent = "0px";
+        p.style.MozTransition = "8s text-indent cubic-bezier(0, 1, 1, 0)";
+        if (restyleParent) {
+          var d = document.createElement("div");
+          d.appendChild(p);
+          div.appendChild(d);
+        } else {
+          div.appendChild(p);
+        }
+        is(getComputedStyle(p, "").textIndent, "0px",
+           "should be zero before changing value");
+        setTimeout("interrupt_tests[" + interrupt_tests.length + "]" +
+                   "[0]" + (restyleParent ? ".parentNode" : "") +
+                   ".style.color = 'blue';" +
+                   "check_interrupt_tests()", itime*1000);
+        interrupt_tests.push([ p, itime ]);
+    }
 }
-setTimeout("interrupt_tests[0][0].style.color = 'blue';" +
-           "check_interrupt_tests()", 2000);
-setTimeout("interrupt_tests[1][0].style.color = 'blue';" +
-           "check_interrupt_tests()", 4000);
-setTimeout("interrupt_tests[2][0].style.color = 'blue';" +
-           "check_interrupt_tests()", 6000);
 
 // Test transition-delay values of -4s through 4s on a 4s transition
 // with 'ease-out' timing function.
@@ -514,7 +521,9 @@ function check_interrupt_tests()
         check_transition_value(timingFunctions["cubic-bezier(0, 1, 1, 0)"],
                                0, 8, 0, 100,
                                getComputedStyle(p, "").textIndent,
-                               "interrupt test for time " + itime + "s");
+                               "interrupt " +
+                               (p.parentNode == div ? "" : "on parent ") +
+                               "test for time " + itime + "s");
     }
 }
 

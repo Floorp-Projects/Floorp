@@ -45,10 +45,7 @@
 #include <setjmp.h>
 #include "jerror.h"
 
-// Input streams that do not implement nsIAsyncInputStream should be threadsafe
-// so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
-// which read such a stream on a background thread.
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsJPEGEncoder, imgIEncoder, nsIInputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsJPEGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 // used to pass error info through the JPEG library
 struct encoder_error_mgr {
@@ -57,7 +54,10 @@ struct encoder_error_mgr {
 };
 
 nsJPEGEncoder::nsJPEGEncoder() : mImageBuffer(nsnull), mImageBufferSize(0),
-                                 mImageBufferUsed(0), mImageBufferReadPoint(0)
+                                 mImageBufferUsed(0), mImageBufferReadPoint(0),
+                                 mFinished(PR_FALSE), mCallback(nsnull),
+                                 mCallbackTarget(nsnull), mNotifyThreshold(0),
+                                 mMonitor("JPEG Encoder Monitor")
 {
 }
 
@@ -197,6 +197,9 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
   jpeg_finish_compress(&cinfo);
   jpeg_destroy_compress(&cinfo);
 
+  mFinished = PR_TRUE;
+  NotifyListener();
+
   // if output callback can't get enough memory, it will free our buffer
   if (!mImageBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -263,10 +266,13 @@ NS_IMETHODIMP nsJPEGEncoder::Read(char * aBuf, PRUint32 aCount,
 /* [noscript] unsigned long readSegments (in nsWriteSegmentFun aWriter, in voidPtr aClosure, in unsigned long aCount); */
 NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, PRUint32 aCount, PRUint32 *_retval)
 {
+  // Avoid another thread reallocing the buffer underneath us
+  mozilla::MonitorAutoEnter autoEnter(mMonitor);
+
   PRUint32 maxCount = mImageBufferUsed - mImageBufferReadPoint;
   if (maxCount == 0) {
     *_retval = 0;
-    return NS_OK;
+    return mFinished ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
   }
 
   if (aCount > maxCount)
@@ -286,10 +292,42 @@ NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClos
 /* boolean isNonBlocking (); */
 NS_IMETHODIMP nsJPEGEncoder::IsNonBlocking(PRBool *_retval)
 {
-  *_retval = PR_FALSE;  // We don't implement nsIAsyncInputStream
+  *_retval = PR_TRUE;
   return NS_OK;
 }
 
+NS_IMETHODIMP nsJPEGEncoder::AsyncWait(nsIInputStreamCallback *aCallback,
+                                       PRUint32 aFlags,
+                                       PRUint32 aRequestedCount,
+                                       nsIEventTarget *aTarget)
+{
+  if (aFlags != 0)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  if (mCallback || mCallbackTarget)
+    return NS_ERROR_UNEXPECTED;
+
+  mCallbackTarget = aTarget;
+  // 0 means "any number of bytes except 0"
+  mNotifyThreshold = aRequestedCount;
+  if (!aRequestedCount)
+    mNotifyThreshold = 1024; // 1 KB seems good.  We don't want to notify incessantly
+
+  // We set the callback absolutely last, because NotifyListener uses it to
+  // determine if someone needs to be notified.  If we don't set it last,
+  // NotifyListener might try to fire off a notification to a null target
+  // which will generally cause non-threadsafe objects to be used off the main thread
+  mCallback = aCallback;
+
+  // What we are being asked for may be present already
+  NotifyListener();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsJPEGEncoder::CloseWithStatus(nsresult aStatus)
+{
+  return Close();
+}
 
 // nsJPEGEncoder::ConvertHostARGBRow
 //
@@ -374,6 +412,10 @@ nsJPEGEncoder::emptyOutputBuffer(jpeg_compress_struct* cinfo)
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(that->mImageBuffer, "No buffer to empty!");
 
+  // When we're reallocing the buffer we need to take the lock to ensure
+  // that nobody is trying to read from the buffer we are destroying
+  mozilla::MonitorAutoEnter autoEnter(that->mMonitor);
+
   that->mImageBufferUsed = that->mImageBufferSize;
 
   // expand buffer, just double size each time
@@ -416,6 +458,7 @@ nsJPEGEncoder::termDestination(jpeg_compress_struct* cinfo)
   that->mImageBufferUsed = cinfo->dest->next_output_byte - that->mImageBuffer;
   NS_ASSERTION(that->mImageBufferUsed < that->mImageBufferSize,
                "JPEG library busted, got a bad image buffer size");
+  that->NotifyListener();
 }
 
 
@@ -441,4 +484,36 @@ nsJPEGEncoder::errorExit(jpeg_common_struct* cinfo)
 
   // Return control to the setjmp point.
   longjmp(err->setjmp_buffer, error_code);
+}
+
+void
+nsJPEGEncoder::NotifyListener()
+{
+  // We might call this function on multiple threads (any threads that call
+  // AsyncWait and any that do encoding) so we lock to avoid notifying the
+  // listener twice about the same data (which generally leads to a truncated
+  // image).
+  mozilla::MonitorAutoEnter autoEnter(mMonitor);
+
+  if (mCallback &&
+      (mImageBufferUsed - mImageBufferReadPoint >= mNotifyThreshold ||
+       mFinished)) {
+    nsCOMPtr<nsIInputStreamCallback> callback;
+    if (mCallbackTarget) {
+      NS_NewInputStreamReadyEvent(getter_AddRefs(callback),
+                                  mCallback,
+                                  mCallbackTarget);
+    } else {
+      callback = mCallback;
+    }
+
+    NS_ASSERTION(callback, "Shouldn't fail to make the callback");
+    // Null the callback first because OnInputStreamReady could reenter
+    // AsyncWait
+    mCallback = nsnull;
+    mCallbackTarget = nsnull;
+    mNotifyThreshold = 0;
+
+    callback->OnInputStreamReady(this);
+  }
 }

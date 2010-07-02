@@ -405,6 +405,13 @@ namespace nanojit
     inline bool isCmpDOpcode(LOpcode op) {
         return LIR_eqd <= op && op <= LIR_ged;
     }
+    inline bool isCmpOpcode(LOpcode op) {
+        return isCmpIOpcode(op) ||
+#if defined NANOJIT_64BIT
+               isCmpQOpcode(op) ||
+#endif
+               isCmpDOpcode(op);
+    }
 
     inline LOpcode invertCondJmpOpcode(LOpcode op) {
         NanoAssert(op == LIR_jt || op == LIR_jf);
@@ -843,12 +850,7 @@ namespace nanojit
             return isRetOpcode(opcode());
         }
         bool isCmp() const {
-            LOpcode op = opcode();
-            return isCmpIOpcode(op) ||
-#if defined NANOJIT_64BIT
-                   isCmpQOpcode(op) ||
-#endif
-                   isCmpDOpcode(op);
+            return isCmpOpcode(opcode());
         }
         bool isCall() const {
             return isop(LIR_calli) ||
@@ -965,7 +967,6 @@ namespace nanojit
         }
     };
 
-    typedef LIns* LInsp;
     typedef SeqBuilder<LIns*> InsList;
     typedef SeqBuilder<char*> StringList;
 
@@ -1427,61 +1428,61 @@ namespace nanojit
             : out(out) {}
         virtual ~LirWriter() {}
 
-        virtual LInsp ins0(LOpcode v) {
+        virtual LIns* ins0(LOpcode v) {
             return out->ins0(v);
         }
-        virtual LInsp ins1(LOpcode v, LIns* a) {
+        virtual LIns* ins1(LOpcode v, LIns* a) {
             return out->ins1(v, a);
         }
-        virtual LInsp ins2(LOpcode v, LIns* a, LIns* b) {
+        virtual LIns* ins2(LOpcode v, LIns* a, LIns* b) {
             return out->ins2(v, a, b);
         }
-        virtual LInsp ins3(LOpcode v, LIns* a, LIns* b, LIns* c) {
+        virtual LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c) {
             return out->ins3(v, a, b, c);
         }
-        virtual LInsp insGuard(LOpcode v, LIns *c, GuardRecord *gr) {
+        virtual LIns* insGuard(LOpcode v, LIns *c, GuardRecord *gr) {
             return out->insGuard(v, c, gr);
         }
-        virtual LInsp insGuardXov(LOpcode v, LIns *a, LIns* b, GuardRecord *gr) {
+        virtual LIns* insGuardXov(LOpcode v, LIns *a, LIns* b, GuardRecord *gr) {
             return out->insGuardXov(v, a, b, gr);
         }
-        virtual LInsp insBranch(LOpcode v, LIns* condition, LIns* to) {
+        virtual LIns* insBranch(LOpcode v, LIns* condition, LIns* to) {
             return out->insBranch(v, condition, to);
         }
-        virtual LInsp insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to) {
+        virtual LIns* insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to) {
             return out->insBranchJov(v, a, b, to);
         }
         // arg: 0=first, 1=second, ...
         // kind: 0=arg 1=saved-reg
-        virtual LInsp insParam(int32_t arg, int32_t kind) {
+        virtual LIns* insParam(int32_t arg, int32_t kind) {
             return out->insParam(arg, kind);
         }
-        virtual LInsp insImmI(int32_t imm) {
+        virtual LIns* insImmI(int32_t imm) {
             return out->insImmI(imm);
         }
 #ifdef NANOJIT_64BIT
-        virtual LInsp insImmQ(uint64_t imm) {
+        virtual LIns* insImmQ(uint64_t imm) {
             return out->insImmQ(imm);
         }
 #endif
-        virtual LInsp insImmD(double d) {
+        virtual LIns* insImmD(double d) {
             return out->insImmD(d);
         }
-        virtual LInsp insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet) {
+        virtual LIns* insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet) {
             return out->insLoad(op, base, d, accSet);
         }
-        virtual LInsp insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet) {
+        virtual LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet) {
             return out->insStore(op, value, base, d, accSet);
         }
         // args[] is in reverse order, ie. args[0] holds the rightmost arg.
-        virtual LInsp insCall(const CallInfo *call, LInsp args[]) {
+        virtual LIns* insCall(const CallInfo *call, LIns* args[]) {
             return out->insCall(call, args);
         }
-        virtual LInsp insAlloc(int32_t size) {
+        virtual LIns* insAlloc(int32_t size) {
             NanoAssert(size != 0);
             return out->insAlloc(size);
         }
-        virtual LInsp insJtbl(LIns* index, uint32_t size) {
+        virtual LIns* insJtbl(LIns* index, uint32_t size) {
             return out->insJtbl(index, size);
         }
 
@@ -1592,7 +1593,7 @@ namespace nanojit
         CountMap<const CallInfo *> funccounts;
         CountMap<const char *> namecounts;
 
-        void addNameWithSuffix(LInsp i, const char *s, int suffix, bool ignoreOneSuffix);
+        void addNameWithSuffix(LIns* i, const char *s, int suffix, bool ignoreOneSuffix);
 
         class Entry
         {
@@ -1602,7 +1603,7 @@ namespace nanojit
             char* name;
         };
 
-        HashMap<LInsp, Entry*> names;
+        HashMap<LIns*, Entry*> names;
 
     public:
         LirNameMap(Allocator& alloc)
@@ -1613,9 +1614,9 @@ namespace nanojit
             names(alloc)
         {}
 
-        void        addName(LInsp ins, const char *s);  // gives 'ins' a special name
-        const char* createName(LInsp ins);              // gives 'ins' a generic name
-        const char* lookupName(LInsp ins);
+        void        addName(LIns* ins, const char *s);  // gives 'ins' a special name
+        const char* createName(LIns* ins);              // gives 'ins' a generic name
+        const char* lookupName(LIns* ins);
     };
 
     // We use big buffers for cases where we need to fit a whole instruction,
@@ -1641,8 +1642,8 @@ namespace nanojit
         char *formatImmI(RefBuf* buf, int32_t c);
         char *formatImmQ(RefBuf* buf, uint64_t c);
         char *formatImmD(RefBuf* buf, double c);
-        void formatGuard(InsBuf* buf, LInsp ins);
-        void formatGuardXov(InsBuf* buf, LInsp ins);
+        void formatGuard(InsBuf* buf, LIns* ins);
+        void formatGuardXov(InsBuf* buf, LIns* ins);
 
     public:
         LInsPrinter(Allocator& alloc)
@@ -1653,8 +1654,8 @@ namespace nanojit
         }
 
         char *formatAddr(RefBuf* buf, void* p);
-        char *formatRef(RefBuf* buf, LInsp ref, bool showImmValue = true);
-        char *formatIns(InsBuf* buf, LInsp ins);
+        char *formatRef(RefBuf* buf, LIns* ref, bool showImmValue = true);
+        char *formatIns(InsBuf* buf, LIns* ins);
         char *formatAccSet(RefBuf* buf, AccSet accSet);
 
         AddrNameMap* addrNameMap;
@@ -1675,7 +1676,7 @@ namespace nanojit
             : LirWriter(out), code(alloc), printer(printer), logc(logc), prefix(prefix), always_flush(always_flush)
         {}
 
-        LInsp add(LInsp i) {
+        LIns* add(LIns* i) {
             if (i) {
                 code.add(i);
                 if (always_flush)
@@ -1684,7 +1685,7 @@ namespace nanojit
             return i;
         }
 
-        LInsp add_flush(LInsp i) {
+        LIns* add_flush(LIns* i) {
             if ((i = add(i)) != 0)
                 flush();
             return i;
@@ -1705,19 +1706,19 @@ namespace nanojit
             }
         }
 
-        LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr) {
+        LIns* insGuard(LOpcode op, LIns* cond, GuardRecord *gr) {
             return add_flush(out->insGuard(op,cond,gr));
         }
 
-        LIns* insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr) {
+        LIns* insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord *gr) {
             return add_flush(out->insGuardXov(op,a,b,gr));
         }
 
-        LIns* insBranch(LOpcode v, LInsp condition, LInsp to) {
+        LIns* insBranch(LOpcode v, LIns* condition, LIns* to) {
             return add_flush(out->insBranch(v, condition, to));
         }
 
-        LIns* insBranchJov(LOpcode v, LInsp a, LInsp b, LInsp to) {
+        LIns* insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to) {
             return add_flush(out->insBranchJov(v, a, b, to));
         }
 
@@ -1732,25 +1733,25 @@ namespace nanojit
             return add(out->ins0(v));
         }
 
-        LIns* ins1(LOpcode v, LInsp a) {
+        LIns* ins1(LOpcode v, LIns* a) {
             return isRetOpcode(v) ? add_flush(out->ins1(v, a)) : add(out->ins1(v, a));
         }
-        LIns* ins2(LOpcode v, LInsp a, LInsp b) {
+        LIns* ins2(LOpcode v, LIns* a, LIns* b) {
             return add(out->ins2(v, a, b));
         }
-        LIns* ins3(LOpcode v, LInsp a, LInsp b, LInsp c) {
+        LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c) {
             return add(out->ins3(v, a, b, c));
         }
-        LIns* insCall(const CallInfo *call, LInsp args[]) {
+        LIns* insCall(const CallInfo *call, LIns* args[]) {
             return add_flush(out->insCall(call, args));
         }
         LIns* insParam(int32_t i, int32_t kind) {
             return add(out->insParam(i, kind));
         }
-        LIns* insLoad(LOpcode v, LInsp base, int32_t disp, AccSet accSet) {
+        LIns* insLoad(LOpcode v, LIns* base, int32_t disp, AccSet accSet) {
             return add(out->insLoad(v, base, disp, accSet));
         }
-        LIns* insStore(LOpcode op, LInsp v, LInsp b, int32_t d, AccSet accSet) {
+        LIns* insStore(LOpcode op, LIns* v, LIns* b, int32_t d, AccSet accSet) {
             return add(out->insStore(op, v, b, d, accSet));
         }
         LIns* insAlloc(int32_t size) {
@@ -1782,9 +1783,9 @@ namespace nanojit
         LIns* insGuardXov(LOpcode, LIns* a, LIns* b, GuardRecord *);
         LIns* insBranch(LOpcode, LIns* cond, LIns* target);
         LIns* insBranchJov(LOpcode, LIns* a, LIns* b, LIns* target);
-        LIns* insLoad(LOpcode op, LInsp base, int32_t off, AccSet accSet);
+        LIns* insLoad(LOpcode op, LIns* base, int32_t off, AccSet accSet);
     private:
-        LIns* simplifyOverflowArith(LOpcode op, LInsp *opnd1, LInsp *opnd2);
+        LIns* simplifyOverflowArith(LOpcode op, LIns** opnd1, LIns** opnd2);
     };
 
     class CseFilter: public LirWriter
@@ -1830,10 +1831,10 @@ namespace nanojit
         //     Don't start too small, or we'll waste time growing and rehashing.
         //     Don't start too large, will waste memory.
         //
-        LInsp*      m_list[LInsLast + 1];
+        LIns**      m_list[LInsLast + 1];
         uint32_t    m_cap[LInsLast + 1];
         uint32_t    m_used[LInsLast + 1];
-        typedef uint32_t (CseFilter::*find_t)(LInsp);
+        typedef uint32_t (CseFilter::*find_t)(LIns*);
         find_t      m_find[LInsLast + 1];
 
         AccSet      storesSinceLastLoad;    // regions stored to since the last load
@@ -1847,47 +1848,47 @@ namespace nanojit
 
         static uint32_t hashImmI(int32_t);
         static uint32_t hashImmQorD(uint64_t);     // not NANOJIT_64BIT-only -- used by findImmD()
-        static uint32_t hash1(LOpcode op, LInsp);
-        static uint32_t hash2(LOpcode op, LInsp, LInsp);
-        static uint32_t hash3(LOpcode op, LInsp, LInsp, LInsp);
-        static uint32_t hashLoad(LOpcode op, LInsp, int32_t, AccSet);
-        static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
+        static uint32_t hash1(LOpcode op, LIns*);
+        static uint32_t hash2(LOpcode op, LIns*, LIns*);
+        static uint32_t hash3(LOpcode op, LIns*, LIns*, LIns*);
+        static uint32_t hashLoad(LOpcode op, LIns*, int32_t, AccSet);
+        static uint32_t hashCall(const CallInfo *call, uint32_t argc, LIns* args[]);
 
         // These versions are used before an LIns has been created.
-        LInsp findImmI(int32_t a, uint32_t &k);
+        LIns* findImmI(int32_t a, uint32_t &k);
 #ifdef NANOJIT_64BIT
-        LInsp findImmQ(uint64_t a, uint32_t &k);
+        LIns* findImmQ(uint64_t a, uint32_t &k);
 #endif
-        LInsp findImmD(uint64_t d, uint32_t &k);
-        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
-        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
-        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
+        LIns* findImmD(uint64_t d, uint32_t &k);
+        LIns* find1(LOpcode v, LIns* a, uint32_t &k);
+        LIns* find2(LOpcode v, LIns* a, LIns* b, uint32_t &k);
+        LIns* find3(LOpcode v, LIns* a, LIns* b, LIns* c, uint32_t &k);
+        LIns* findLoad(LOpcode v, LIns* a, int32_t b, AccSet accSet, LInsHashKind kind,
                        uint32_t &k);
-        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
+        LIns* findCall(const CallInfo *call, uint32_t argc, LIns* args[], uint32_t &k);
 
         // These versions are used after an LIns has been created; they are
         // used for rehashing after growing.  They just call onto the
         // multi-arg versions above.
-        uint32_t findImmI(LInsp ins);
+        uint32_t findImmI(LIns* ins);
 #ifdef NANOJIT_64BIT
-        uint32_t findImmQ(LInsp ins);
+        uint32_t findImmQ(LIns* ins);
 #endif
-        uint32_t findImmD(LInsp ins);
-        uint32_t find1(LInsp ins);
-        uint32_t find2(LInsp ins);
-        uint32_t find3(LInsp ins);
-        uint32_t findCall(LInsp ins);
-        uint32_t findLoadReadOnly(LInsp ins);
-        uint32_t findLoadStack(LInsp ins);
-        uint32_t findLoadRStack(LInsp ins);
-        uint32_t findLoadOther(LInsp ins);
-        uint32_t findLoadMultiple(LInsp ins);
+        uint32_t findImmD(LIns* ins);
+        uint32_t find1(LIns* ins);
+        uint32_t find2(LIns* ins);
+        uint32_t find3(LIns* ins);
+        uint32_t findCall(LIns* ins);
+        uint32_t findLoadReadOnly(LIns* ins);
+        uint32_t findLoadStack(LIns* ins);
+        uint32_t findLoadRStack(LIns* ins);
+        uint32_t findLoadOther(LIns* ins);
+        uint32_t findLoadMultiple(LIns* ins);
 
         void grow(LInsHashKind kind);
 
         // 'k' is the index found by findXYZ().
-        void add(LInsHashKind kind, LInsp ins, uint32_t k);
+        void add(LInsHashKind kind, LIns* ins, uint32_t k);
 
         void clear();               // clears all tables
         void clear(LInsHashKind);   // clears one table
@@ -1901,14 +1902,14 @@ namespace nanojit
 #endif
         LIns* insImmD(double d);
         LIns* ins0(LOpcode v);
-        LIns* ins1(LOpcode v, LInsp);
-        LIns* ins2(LOpcode v, LInsp, LInsp);
-        LIns* ins3(LOpcode v, LInsp, LInsp, LInsp);
-        LIns* insLoad(LOpcode op, LInsp base, int32_t d, AccSet accSet);
-        LIns* insStore(LOpcode op, LInsp value, LInsp base, int32_t d, AccSet accSet);
-        LIns* insCall(const CallInfo *call, LInsp args[]);
-        LIns* insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
-        LIns* insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
+        LIns* ins1(LOpcode v, LIns*);
+        LIns* ins2(LOpcode v, LIns*, LIns*);
+        LIns* ins3(LOpcode v, LIns*, LIns*, LIns*);
+        LIns* insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet);
+        LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet);
+        LIns* insCall(const CallInfo *call, LIns* args[]);
+        LIns* insGuard(LOpcode op, LIns* cond, GuardRecord *gr);
+        LIns* insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord *gr);
     };
 
     class LirBuffer
@@ -1932,8 +1933,8 @@ namespace nanojit
             _stats;
 
             AbiKind abi;
-            LInsp state,param1,sp,rp;
-            LInsp savedRegs[NumSavedRegs];
+            LIns *state, *param1, *sp, *rp;
+            LIns* savedRegs[NumSavedRegs+1]; // Allocate an extra element in case NumSavedRegs == 0
 
         protected:
             friend class LirBufWriter;
@@ -1963,25 +1964,25 @@ namespace nanojit
             }
 
             // LirWriter interface
-            LInsp   insLoad(LOpcode op, LInsp base, int32_t disp, AccSet accSet);
-            LInsp   insStore(LOpcode op, LInsp o1, LInsp o2, int32_t disp, AccSet accSet);
-            LInsp   ins0(LOpcode op);
-            LInsp   ins1(LOpcode op, LInsp o1);
-            LInsp   ins2(LOpcode op, LInsp o1, LInsp o2);
-            LInsp   ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
-            LInsp   insParam(int32_t i, int32_t kind);
-            LInsp   insImmI(int32_t imm);
+            LIns*   insLoad(LOpcode op, LIns* base, int32_t disp, AccSet accSet);
+            LIns*   insStore(LOpcode op, LIns* o1, LIns* o2, int32_t disp, AccSet accSet);
+            LIns*   ins0(LOpcode op);
+            LIns*   ins1(LOpcode op, LIns* o1);
+            LIns*   ins2(LOpcode op, LIns* o1, LIns* o2);
+            LIns*   ins3(LOpcode op, LIns* o1, LIns* o2, LIns* o3);
+            LIns*   insParam(int32_t i, int32_t kind);
+            LIns*   insImmI(int32_t imm);
 #ifdef NANOJIT_64BIT
-            LInsp   insImmQ(uint64_t imm);
+            LIns*   insImmQ(uint64_t imm);
 #endif
-            LInsp   insImmD(double d);
-            LInsp   insCall(const CallInfo *call, LInsp args[]);
-            LInsp   insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
-            LInsp   insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
-            LInsp   insBranch(LOpcode v, LInsp condition, LInsp to);
-            LInsp   insBranchJov(LOpcode v, LInsp a, LInsp b, LInsp to);
-            LInsp   insAlloc(int32_t size);
-            LInsp   insJtbl(LIns* index, uint32_t size);
+            LIns*   insImmD(double d);
+            LIns*   insCall(const CallInfo *call, LIns* args[]);
+            LIns*   insGuard(LOpcode op, LIns* cond, GuardRecord *gr);
+            LIns*   insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord *gr);
+            LIns*   insBranch(LOpcode v, LIns* condition, LIns* to);
+            LIns*   insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to);
+            LIns*   insAlloc(int32_t size);
+            LIns*   insJtbl(LIns* index, uint32_t size);
     };
 
     class LirFilter
@@ -1994,10 +1995,10 @@ namespace nanojit
         // It's crucial that once this reaches the LIR_start at the beginning
         // of the buffer, that it just keeps returning that LIR_start LIns on
         // any subsequent calls.
-        virtual LInsp read() {
+        virtual LIns* read() {
             return in->read();
         }
-        virtual LInsp finalIns() {
+        virtual LIns* finalIns() {
             return in->finalIns();
         }
     };
@@ -2005,11 +2006,11 @@ namespace nanojit
     // concrete
     class LirReader : public LirFilter
     {
-        LInsp _ins;         // next instruction to be read;  invariant: is never a skip
-        LInsp _finalIns;    // final instruction in the stream;  ie. the first one to be read
+        LIns* _ins;         // next instruction to be read;  invariant: is never a skip
+        LIns* _finalIns;    // final instruction in the stream;  ie. the first one to be read
 
     public:
-        LirReader(LInsp ins) : LirFilter(0), _ins(ins), _finalIns(ins)
+        LirReader(LIns* ins) : LirFilter(0), _ins(ins), _finalIns(ins)
         {
             // The last instruction for a fragment shouldn't be a skip.
             // (Actually, if the last *inserted* instruction exactly fills up
@@ -2024,9 +2025,9 @@ namespace nanojit
 
         // Returns next instruction and advances to the prior instruction.
         // Invariant: never returns a skip.
-        LInsp read();
+        LIns* read();
 
-        LInsp finalIns() {
+        LIns* finalIns() {
             return _finalIns;
         }
     };
@@ -2038,14 +2039,14 @@ namespace nanojit
     // StackFilter::read() for more details.
     class StackFilter: public LirFilter
     {
-        LInsp sp;
+        LIns* sp;
         BitSet stk;
         int top;
-        int getTop(LInsp br);
+        int getTop(LIns* br);
 
     public:
-        StackFilter(LirFilter *in, Allocator& alloc, LInsp sp);
-        LInsp read();
+        StackFilter(LirFilter *in, Allocator& alloc, LIns* sp);
+        LIns* read();
     };
 
     struct SoftFloatOps
@@ -2065,13 +2066,13 @@ namespace nanojit
 
         SoftFloatFilter(LirWriter *out);
         LIns *split(LIns *a);
-        LIns *split(const CallInfo *call, LInsp args[]);
+        LIns *split(const CallInfo *call, LIns* args[]);
         LIns *callD1(const CallInfo *call, LIns *a);
         LIns *callD2(const CallInfo *call, LIns *a, LIns *b);
         LIns *cmpD(const CallInfo *call, LIns *a, LIns *b);
         LIns *ins1(LOpcode op, LIns *a);
         LIns *ins2(LOpcode op, LIns *a, LIns *b);
-        LIns *insCall(const CallInfo *ci, LInsp args[]);
+        LIns *insCall(const CallInfo *ci, LIns* args[]);
     };
 
 
@@ -2102,14 +2103,14 @@ namespace nanojit
         void checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2);
         void checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins);
         void checkLInsIsNull(LOpcode op, int argN, LIns* ins);
-        void checkAccSet(LOpcode op, LInsp base, AccSet accSet, AccSet maxAccSet);
+        void checkAccSet(LOpcode op, LIns* base, AccSet accSet, AccSet maxAccSet);
 
-        LInsp sp, rp;
+        LIns *sp, *rp;
 
     public:
         ValidateWriter(LirWriter* out, LInsPrinter* printer, const char* where);
-        void setSp(LInsp ins) { sp = ins; }
-        void setRp(LInsp ins) { rp = ins; }
+        void setSp(LIns* ins) { sp = ins; }
+        void setRp(LIns* ins) { rp = ins; }
 
         LIns* insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet);
         LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet);
@@ -2168,7 +2169,7 @@ namespace nanojit
         { }
 
         void finish();
-        LInsp read();
+        LIns* read();
     };
 #endif
 

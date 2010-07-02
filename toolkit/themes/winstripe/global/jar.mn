@@ -25,6 +25,7 @@ toolkit.jar:
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
+*       skin/classic/global/headsUpDisplay.css
         skin/classic/global/linkTree.css
         skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
@@ -120,6 +121,8 @@ toolkit.jar:
         skin/classic/global/icons/question-24.png                (icons/question-24.png)
         skin/classic/global/icons/question-48.png                (icons/question-48.png)
         skin/classic/global/icons/question-64.png                (icons/question-64.png)
+        skin/classic/global/icons/resizer.png                    (icons/resizer.png)
+        skin/classic/global/icons/resizer-rtl.png                (icons/resizer-rtl.png)
         skin/classic/global/icons/Restore.gif                    (icons/Restore.gif)
         skin/classic/global/icons/Search-close.png               (icons/Search-close.png)
         skin/classic/global/icons/Search-glass.png               (icons/Search-glass.png)
@@ -188,6 +191,7 @@ toolkit.jar:
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css
+*       skin/classic/aero/global/headsUpDisplay.css
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
 *       skin/classic/aero/global/menu.css                                (menu-aero.css)
@@ -283,6 +287,8 @@ toolkit.jar:
         skin/classic/aero/global/icons/question-24.png                   (icons/question-24-aero.png)
         skin/classic/aero/global/icons/question-48.png                   (icons/question-48-aero.png)
         skin/classic/aero/global/icons/question-64.png                   (icons/question-64-aero.png)
+        skin/classic/aero/global/icons/resizer.png                       (icons/resizer.png)
+        skin/classic/aero/global/icons/resizer-rtl.png                   (icons/resizer-rtl.png)
         skin/classic/aero/global/icons/Restore.gif                       (icons/Restore.gif)
         skin/classic/aero/global/icons/Search-close.png                  (icons/Search-close-aero.png)
         skin/classic/aero/global/icons/Search-glass.png                  (icons/Search-glass-aero.png)

@@ -129,6 +129,7 @@ class nsIBidiKeyboard;
 class nsIMIMEHeaderParam;
 class nsIObserver;
 class nsPresContext;
+class nsIChannel;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -161,9 +162,12 @@ enum EventNameType {
   EventNameType_All = 0xFFFF
 };
 
-struct EventNameMapping {
-  PRUint32  mId;
-  PRInt32 mType;
+struct EventNameMapping
+{
+  nsIAtom* mAtom;
+  PRUint32 mId;
+  PRInt32  mType;
+  PRUint32 mStructType;
 };
 
 struct nsShortcutCandidate {
@@ -396,6 +400,16 @@ public:
    * HTML 4.01 also lists U+200B (zero-width space).
    */
   static PRBool IsHTMLWhitespace(PRUnichar aChar);
+
+  /**
+   * Parse a margin string of format 'top, right, bottom, left' into
+   * an nsIntMargin.
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting integer
+   * @return whether the value could be parsed
+   */
+  static PRBool ParseIntMarginValue(const nsAString& aString, nsIntMargin& aResult);
 
   static void Shutdown();
 
@@ -953,6 +967,19 @@ public:
    * @param aName the event name to look up
    */
   static PRUint32 GetEventId(nsIAtom* aName);
+
+  /**
+   * Return the event id and atom for the event with the given name.
+   * The name is the event name *without* the 'on' prefix.
+   * Returns NS_USER_DEFINED_EVENT on the aEventID if the
+   * event doesn't match a known event name in the category.
+   *
+   * @param aName the event name to look up
+   * @param aEventStruct only return event id in aEventStruct category
+   */
+  static nsIAtom* GetEventIdAndAtom(const nsAString& aName,
+                                    PRUint32 aEventStruct,
+                                    PRUint32* aEventID);
 
   /**
    * Used only during traversal of the XPCOM graph by the cycle
@@ -1524,6 +1551,8 @@ public:
   static already_AddRefed<nsIDocument>
   GetDocumentFromScriptContext(nsIScriptContext *aScriptContext);
 
+  static PRBool CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel);
+
   /**
    * The method checks whether the caller can access native anonymous content.
    * If there is no JS in the stack or privileged JS is running, this
@@ -1666,7 +1695,9 @@ private:
 
   static nsIConsoleService* sConsoleService;
 
-  static nsDataHashtable<nsISupportsHashKey, EventNameMapping>* sEventTable;
+  static nsDataHashtable<nsISupportsHashKey, EventNameMapping>* sAtomEventTable;
+  static nsDataHashtable<nsStringHashKey, EventNameMapping>* sStringEventTable;
+  static nsCOMArray<nsIAtom>* sUserDefinedEvents;
 
   static nsIStringBundleService* sStringBundleService;
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];

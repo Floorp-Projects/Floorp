@@ -84,8 +84,6 @@
 #define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("compreg.dat")
 #define COMPONENT_DIRECTORY     NS_LITERAL_CSTRING("components")
 
-#define XPTI_REGISTRY_NAME      NS_LITERAL_CSTRING("xpti.dat")
-
 // define home directory
 // For Windows platform, We are choosing Appdata folder as HOME
 #if defined (XP_WIN)
@@ -632,15 +630,6 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
 
         localFile->AppendNative(COMPONENT_DIRECTORY);           
         localFile->AppendNative(COMPONENT_REGISTRY_NAME);           
-    }
-    else if (inAtom == nsDirectoryService::sXPTIRegistry)
-    {
-        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-        if (!localFile)
-            return NS_ERROR_FAILURE;
-
-        localFile->AppendNative(COMPONENT_DIRECTORY);           
-        localFile->AppendNative(XPTI_REGISTRY_NAME);           
     }
     
     // Unless otherwise set, the core pieces of the GRE exist

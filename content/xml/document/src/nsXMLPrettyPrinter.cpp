@@ -77,7 +77,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     *aDidPrettyPrint = PR_FALSE;
     
     // Check for iframe with display:none. Such iframes don't have presshells
-    if (!aDocument->GetPrimaryShell()) {
+    if (!aDocument->GetShell()) {
         return NS_OK;
     }
 

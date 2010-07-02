@@ -46,8 +46,10 @@
 #include "nsRect.h"
 #include "nsString.h"
 
+//#define FORCE_ALOG 1
+
 #ifndef ALOG
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FORCE_ALOG)
 #define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko" , ## args)
 #else
 #define ALOG(args...)
@@ -161,18 +163,25 @@ public:
 
     enum {
         DRAW_ERROR = 0,
-        DRAW_GLES_2 = 1,
-        DRAW_SOFTWARE = 2
+        DRAW_GLES_2 = 1
     };
 
     int BeginDrawing();
-    unsigned char *GetSoftwareDrawBuffer(int *cap);
+    jobject GetSoftwareDrawBuffer();
     void EndDrawing();
+    void Draw2D(jobject buffer);
+
+    // must have a JNI local frame when calling this,
+    // and you'd better know what you're doing
+    jobject GetSurfaceHolder();
+
 protected:
     static jclass jGeckoSurfaceViewClass;
     static jmethodID jBeginDrawingMethod;
     static jmethodID jEndDrawingMethod;
+    static jmethodID jDraw2DMethod;
     static jmethodID jGetSoftwareDrawBufferMethod;
+    static jmethodID jGetHolderMethod;
 };
 
 class AndroidKeyEvent
@@ -429,6 +438,8 @@ public:
         DRAW = 6,
         SIZE_CHANGED = 7,
         ACTIVITY_STOPPING = 8,
+        ACTIVITY_PAUSING = 9,
+        LOAD_URI = 10,
         dummy_java_enum_list_end
     };
 
@@ -439,6 +450,12 @@ public:
         IME_GET_TEXT = 3,
         IME_DELETE_TEXT = 4
     };
+};
+
+class nsJNIString : public nsString
+{
+public:
+    nsJNIString(jstring jstr);
 };
 
 }

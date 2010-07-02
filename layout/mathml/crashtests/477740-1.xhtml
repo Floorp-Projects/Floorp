@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xbl="http://www.mozilla.org/xbl" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:math="http://www.w3.org/1998/Math/MathML">
+<head>
+
+<xbl:bindings><xbl:binding id="res"><xbl:content><xul:resizer><xbl:children/></xul:resizer></xbl:content></xbl:binding></xbl:bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var x = document.getElementById("x");
+
+  var r = document.createRange();
+  r.setEnd(x, 1);
+  r.extractContents();
+
+  x.appendChild(document.createElement('span'));
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<xul:rows id="x" style="-moz-binding: url(#res);"><math:ms/></xul:rows>
+</body>
+</html>

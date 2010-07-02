@@ -218,6 +218,8 @@ struct JSStackFrame
         JS_ASSERT_IF(flags & JSFRAME_FLOATING_GENERATOR, isGenerator());
         return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
+
+    bool isDummyFrame() const { return !script && !fun; }
 };
 
 namespace js {
@@ -329,23 +331,21 @@ InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
  */
 #define JSINVOKE_FUNFLAGS       JSINVOKE_CONSTRUCT
 
-extern bool
-InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,
-               uintN argc, const Value *argv, Value *rval);
+#error "TODO: un-js_ and re-inline"
 
-static JS_ALWAYS_INLINE bool
-InternalCall(JSContext *cx, JSObject *obj, const Value &fval, uintN argc,
-             const Value *argv, Value *rval)
-{
-    return InternalInvoke(cx, obj, fval, 0, argc, argv, rval);
-}
+/*
+ * "Internal" calls may come from C or C++ code using a JSContext on which no
+ * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
+ */
+#define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
+    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, 0, argc, argv, rval)
 
-static JS_ALWAYS_INLINE bool
-InternalConstruct(JSContext *cx, JSObject *obj, const Value &fval, uintN argc,
-                  const Value *argv, Value *rval)
-{
-    return InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
-}
+#define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
+    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
+
+extern JSBool
+js_InternalInvoke(JSContext *cx, jsval thisv, jsval fval, uintN flags,
+                  uintN argc, jsval *argv, jsval *rval);
 
 extern bool
 InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,

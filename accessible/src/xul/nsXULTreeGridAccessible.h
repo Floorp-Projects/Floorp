@@ -50,8 +50,7 @@ class nsXULTreeGridAccessible : public nsXULTreeAccessible,
                                 public nsIAccessibleTable
 {
 public:
-  nsXULTreeGridAccessible(nsIDOMNode *aDOMNode,
-                          nsIWeakReference *aShell);
+  nsXULTreeGridAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -76,7 +75,7 @@ protected:
 class nsXULTreeGridRowAccessible : public nsXULTreeItemAccessibleBase
 {
 public:
-  nsXULTreeGridRowAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+  nsXULTreeGridRowAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                              nsAccessible *aParent, nsITreeBoxObject *aTree,
                              nsITreeView *aTreeView, PRInt32 aRow);
 
@@ -86,7 +85,7 @@ public:
                                            nsAccessible)
 
   // nsAccessNode
-  virtual nsresult Shutdown();
+  virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
@@ -129,7 +128,7 @@ class nsXULTreeGridCellAccessible : public nsLeafAccessible,
                                     public nsIAccessibleTableCell
 {
 public:
-  nsXULTreeGridCellAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+  nsXULTreeGridCellAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                               nsXULTreeGridRowAccessible *aRowAcc,
                               nsITreeBoxObject *aTree, nsITreeView *aTreeView,
                               PRInt32 aRow, nsITreeColumn* aColumn);
@@ -156,7 +155,7 @@ public:
 
   // nsAccessNode
   virtual PRBool IsDefunct();
-  virtual nsresult Init();
+  virtual PRBool Init();
 
   // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);

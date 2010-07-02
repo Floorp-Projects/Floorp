@@ -440,15 +440,20 @@
   <binding id="toolbar-drag"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <implementation>
+      <field name="_alive">true</field>
       <constructor><![CDATA[
-        try {
-          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
-          let draggableThis = new WindowDraggingElement(this, window);
-          draggableThis.mouseDownCheck = function(e) {
-            // Don't move while customizing or while in full screen mode.
-            return !this.parentNode.customizing && !window.fullScreen;
-          }
-        } catch (e) {}
+        if (!this._draggableStarted) {
+          this._draggableStarted = true;
+          try {
+            let tmp = {};
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            let draggableThis = new tmp.WindowDraggingElement(this, window);
+            draggableThis.mouseDownCheck = function(e) {
+              // Don't move while customizing.
+              return !this.parentNode.customizing;
+            }
+          } catch (e) {}
+        }
       ]]></constructor>
     </implementation>
   </binding>

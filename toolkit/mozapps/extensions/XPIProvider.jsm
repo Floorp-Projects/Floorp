@@ -300,16 +300,46 @@ function loadManifestFromRDF(aUri, aStream) {
     return values;
   }
 
-  function readLocale(aDs, aSource, isDefault) {
+  /**
+   * Reads locale properties from either the main install manifest root or
+   * an em:localized section in the install manifest.
+   *
+   * @param  aDs
+   *         The nsIRDFDatasource to read from
+   * @param  aSource
+   *         The nsIRDFResource to read the properties from
+   * @param  isDefault
+   *         True if the locale is to be read from the main install manifest
+   *         root
+   * @param  aSeenLocales
+   *         An array of locale names already seen for this install manifest.
+   *         Any locale names seen as a part of this function will be added to
+   *         this array
+   * @return an object containing the locale properties
+   */
+  function readLocale(aDs, aSource, isDefault, aSeenLocales) {
     let locale = { };
     if (!isDefault) {
       locale.locales = [];
       let targets = ds.GetTargets(aSource, EM_R("locale"), true);
-      while (targets.hasMoreElements())
-        locale.locales.push(getRDFValue(targets.getNext()));
+      while (targets.hasMoreElements()) {
+        let localeName = getRDFValue(targets.getNext());
+        if (!localeName) {
+          WARN("Ignoring empty locale in localized properties");
+          continue;
+        }
+        if (aSeenLocales.indexOf(localeName) != -1) {
+          WARN("Ignoring duplicate locale in localized properties");
+          continue;
+        }
+        aSeenLocales.push(localeName);
+        locale.locales.push(localeName);
+      }
 
-      if (locale.locales.length == 0)
-        throw new Error("No locales given for localized properties");
+      if (locale.locales.length == 0) {
+        WARN("Ignoring localized properties with no listed locales");
+        return null;
+      }
     }
 
     PROP_LOCALE_SINGLE.forEach(function(aProp) {
@@ -360,6 +390,8 @@ function loadManifestFromRDF(aUri, aStream) {
   });
   if (!addon.id || !addon.version)
     throw new Error("No ID or version in install manifest");
+  if (!gIDTest.test(addon.id))
+    throw new Error("Illegal add-on ID " + addon.id);
 
   if (!addon.type) {
     addon.type = addon.internalName ? "theme" : "extension";
@@ -390,13 +422,17 @@ function loadManifestFromRDF(aUri, aStream) {
 
   addon.defaultLocale = readLocale(ds, root, true);
 
+  let seenLocales = [];
   addon.locales = [];
   let targets = ds.GetTargets(root, EM_R("localized"), true);
   while (targets.hasMoreElements()) {
     let target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
-    addon.locales.push(readLocale(ds, target, false));
+    let locale = readLocale(ds, target, false, seenLocales);
+    if (locale)
+      addon.locales.push(locale);
   }
 
+  let seenApplications = [];
   addon.targetApplications = [];
   targets = ds.GetTargets(root, EM_R("targetApplication"), true);
   while (targets.hasMoreElements()) {
@@ -406,8 +442,16 @@ function loadManifestFromRDF(aUri, aStream) {
       targetAppInfo[aProp] = getRDFProperty(ds, target, aProp);
     });
     if (!targetAppInfo.id || !targetAppInfo.minVersion ||
-        !targetAppInfo.maxVersion)
-      throw new Error("Invalid targetApplication entry in install manifest");
+        !targetAppInfo.maxVersion) {
+      WARN("Ignoring invalid targetApplication entry in install manifest");
+      continue;
+    }
+    if (seenApplications.indexOf(targetAppInfo.id) != -1) {
+      WARN("Ignoring duplicate targetApplication entry for " + targetAppInfo.id +
+           " in install manifest");
+      continue;
+    }
+    seenApplications.push(targetAppInfo.id);
     addon.targetApplications.push(targetAppInfo);
   }
 
@@ -1435,6 +1479,8 @@ var XPIProvider = {
         XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, dir,
                                         "install",
                                         BOOTSTRAP_REASONS.ADDON_INSTALL);
+        if (!newAddon.active)
+          XPIProvider.unloadBootstrapScope(newAddon.id);
       }
 
       return false;
@@ -3554,12 +3600,23 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = aInstallLocation;
   this.sourceURL = aUrl;
+  this.hash = aHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
   this.existingAddon = aExistingAddon;
+  this.error = 0;
 
   if (aUrl instanceof Ci.nsIFileURL) {
     this.file = aUrl.file.QueryInterface(Ci.nsILocalFile);
+
+    if (!this.file.exists()) {
+      WARN("XPI file " + this.file.path + " does not exist");
+      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_NETWORK_FAILURE;
+      aCallback(this);
+      return;
+    }
+
     this.state = AddonManager.STATE_DOWNLOADED;
     this.progress = this.file.fileSize;
     this.maxProgress = this.file.fileSize;
@@ -3572,11 +3629,25 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
       fis.init(this.file, -1, -1, false);
       crypto.updateFromStream(fis, this.file.fileSize);
       let hash = crypto.finish(true);
-      if (hash != this.hash)
-        throw new Error("Hash mismatch");
+      if (hash != this.hash) {
+        WARN("Hash mismatch");
+        this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
+        aCallback(this);
+        return;
+      }
     }
 
-    this.loadManifest();
+    try {
+      this.loadManifest();
+    }
+    catch (e) {
+      WARN("Invalid XPI: " + e);
+      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_CORRUPT_FILE;
+      aCallback(this);
+      return;
+    }
 
     let self = this;
     XPIDatabase.getVisibleAddonForID(this.addon.id, function(aAddon) {
@@ -3614,7 +3685,6 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
     this.iconURL = aIconURL;
     this.progress = 0;
     this.maxProgress = -1;
-    this.hash = aHash;
 
     XPIProvider.installs.push(this);
     AddonManagerPrivate.callInstallListeners("onNewInstall", this.listeners,
@@ -3647,6 +3717,7 @@ AddonInstall.prototype = {
   addon: null,
 
   state: null,
+  error: null,
   progress: null,
   maxProgress: null,
 
@@ -3841,10 +3912,10 @@ AddonInstall.prototype = {
       catch (e) {
         WARN("Unknown hash algorithm " + alg);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
         XPIProvider.removeActiveInstall(this);
         AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                                 this.listeners, this.wrapper,
-                                                 AddonManager.ERROR_INCORRECT_HASH);
+                                                 this.listeners, this.wrapper);
         return;
       }
     }
@@ -3863,29 +3934,40 @@ AddonInstall.prototype = {
                     createInstance(Ci.nsIFileOutputStream);
       this.stream.init(this.file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                        FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE, 0);
+    }
+    catch (e) {
+      WARN("Failed to start download: " + e);
+      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_FILE_ACCESS;
+      XPIProvider.removeActiveInstall(this);
+      AddonManagerPrivate.callInstallListeners("onDownloadFailed",
+                                               this.listeners, this.wrapper);
+      return;
+    }
 
-      let listener = Cc["@mozilla.org/network/stream-listener-tee;1"].
-                     createInstance(Ci.nsIStreamListenerTee);
-      listener.init(this, this.stream);
+    let listener = Cc["@mozilla.org/network/stream-listener-tee;1"].
+                   createInstance(Ci.nsIStreamListenerTee);
+    listener.init(this, this.stream);
+    try {
       this.channel = NetUtil.newChannel(this.sourceURL);
       if (this.loadGroup)
         this.channel.loadGroup = this.loadGroup;
-
-      Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
 
       // Verify that we don't end up on an insecure channel if we haven't got a
       // hash to verify with (see bug 537761 for discussion)
       if (!this.hash)
         this.channel.notificationCallbacks = new BadCertHandler();
       this.channel.asyncOpen(listener, null);
+
+      Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
     }
     catch (e) {
       WARN("Failed to start download: " + e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+      this.error = AddonManager.ERROR_NETWORK_FAILURE;
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                               this.listeners, this.wrapper,
-                                               AddonManager.ERROR_NETWORK_FAILURE);
+                                               this.listeners, this.wrapper);
     }
   },
 
@@ -4015,9 +4097,10 @@ AddonInstall.prototype = {
   downloadFailed: function(aReason, aError) {
     WARN("Download failed: " + aError + "\n");
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+    this.error = aReason;
     XPIProvider.removeActiveInstall(this);
     AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
-                                             this.wrapper, aReason);
+                                             this.wrapper);
     try {
       this.file.remove(true);
     }
@@ -4205,10 +4288,11 @@ AddonInstall.prototype = {
       if (stagedAddon.exists())
         stagedAddon.remove(true);
       this.state = AddonManager.STATE_INSTALL_FAILED;
+      this.error = AddonManager.ERROR_FILE_ACCESS;
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallFailed",
                                                this.listeners,
-                                               this.wrapper, e);
+                                               this.wrapper);
     }
     finally {
       // If the file was downloaded then delete it
@@ -4299,8 +4383,8 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
  *         The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
-  ["name", "type", "version", "iconURL", "infoURL", "file", "state", "progress",
-   "maxProgress", "certificate", "certName"].forEach(function(aProp) {
+  ["name", "type", "version", "iconURL", "infoURL", "file", "state", "error",
+   "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function() aInstall[aProp]);
   }, this);
 
@@ -4424,19 +4508,24 @@ UpdateChecker.prototype = {
         AddonInstall.createUpdate(function(install) {
           self.listener.onUpdateAvailable(createWrapper(self.addon),
                                           install.wrapper);
-          if ("onUpdateFinished" in self.listener)
-            self.listener.onUpdateFinished(createWrapper(self.addon));
+          if ("onUpdateFinished" in self.listener) {
+            self.listener.onUpdateFinished(createWrapper(self.addon),
+                                           AddonManager.UPDATE_STATUS_NO_ERROR);
+          }
         }, this.addon, update);
       }
       else if ("onUpdateFinished" in this.listener) {
-        this.listener.onUpdateFinished(createWrapper(this.addon));
+        this.listener.onUpdateFinished(createWrapper(this.addon),
+                                       AddonManager.UPDATE_STATUS_NO_ERROR);
       }
     }
     else {
       if ("onNoUpdateAvailable" in this.listener)
         this.listener.onNoUpdateAvailable(createWrapper(this.addon));
-      if ("onUpdateFinished" in this.listener)
-        this.listener.onUpdateFinished(createWrapper(this.addon));
+      if ("onUpdateFinished" in this.listener) {
+        this.listener.onUpdateFinished(createWrapper(this.addon),
+                                       AddonManager.UPDATE_STATUS_NO_ERROR);
+      }
     }
   },
 
@@ -4447,10 +4536,12 @@ UpdateChecker.prototype = {
    *         An error status
    */
   onUpdateCheckError: function UC_onUpdateCheckError(aError) {
+    if ("onNoCompatibilityUpdateAvailable" in this.listener)
+      this.listener.onNoCompatibilityUpdateAvailable(createWrapper(this.addon));
     if ("onNoUpdateAvailable" in this.listener)
-      this.listener.onNoUpdateAvailable(createWrapper(this.addon), aError);
+      this.listener.onNoUpdateAvailable(createWrapper(this.addon));
     if ("onUpdateFinished" in this.listener)
-      this.listener.onUpdateFinished(createWrapper(this.addon));
+      this.listener.onUpdateFinished(createWrapper(this.addon), aError);
   }
 };
 
@@ -4680,7 +4771,7 @@ function AddonWrapper(aAddon) {
       return aAddon.iconURL;
 
     if (this.hasResource("icon.png"))
-      return this.getResourceURL("icon.png");
+      return this.getResourceURI("icon.png").spec;
 
     return null;
   }, this);
@@ -4729,7 +4820,7 @@ function AddonWrapper(aAddon) {
     let screenshots = [];
 
     if (aAddon.type == "theme" && this.hasResource("preview.png"))
-      screenshots.push(this.getResourceURL("preview.png"));
+      screenshots.push(this.getResourceURI("preview.png").spec);
 
     return screenshots;
   });
@@ -4842,7 +4933,11 @@ function AddonWrapper(aAddon) {
     }
 
     if (bundle.isDirectory()) {
-      bundle.append(aPath);
+      if (aPath) {
+        aPath.split("/").forEach(function(aPart) {
+          bundle.append(aPart);
+        });
+      }
       return bundle.exists();
     }
 
@@ -4854,7 +4949,7 @@ function AddonWrapper(aAddon) {
     return result;
   },
 
-  this.getResourceURL = function(aPath) {
+  this.getResourceURI = function(aPath) {
     let bundle = null;
     if (aAddon instanceof DBAddonInternal) {
       bundle = aAddon._sourceBundle = aAddon._installLocation
@@ -4865,11 +4960,17 @@ function AddonWrapper(aAddon) {
     }
 
     if (bundle.isDirectory()) {
-      bundle.append(aPath);
-      return Services.io.newFileURI(bundle).spec;
+      if (aPath) {
+        aPath.split("/").forEach(function(aPart) {
+          bundle.append(aPart);
+        });
+      }
+      return Services.io.newFileURI(bundle);
     }
 
-    return buildJarURI(bundle, aPath).spec;
+    if (!aPath)
+      return Services.io.newFileURI(bundle);
+    return buildJarURI(bundle, aPath);
   }
 }
 

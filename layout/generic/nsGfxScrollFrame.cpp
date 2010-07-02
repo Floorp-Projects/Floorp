@@ -884,20 +884,21 @@ nsHTMLScrollFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsHTMLScrollFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsHTMLScrollFrame::CreateAccessible()
 {
-  *aAccessible = nsnull;
   if (!IsFocusable()) {
-    return NS_OK;
+    return nsnull;
   }
   // Focusable via CSS, so needs to be in accessibility hierarchy
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLGenericAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHyperTextAccessible(mContent,
+                                                 PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 
@@ -1844,16 +1845,21 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // borders and underneath borders and backgrounds of later elements
   // in the tree.
   PRBool hasResizer = HasResizer();
+  nsDisplayListCollection scrollParts;
   for (nsIFrame* kid = mOuter->GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
     if (kid != mScrolledFrame) {
       if (kid == mScrollCornerBox && hasResizer) {
         // skip the resizer as this will be drawn later on top of the scrolled content
         continue;
       }
-      rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+      rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, scrollParts,
+                                            nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+  // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
+  // PositionedDescendants list.
+  aLists.BorderBackground()->AppendToTop(scrollParts.PositionedDescendants());
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -1878,13 +1884,17 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, PR_TRUE, mIsRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Place the resizer in the display list above the overflow clip. This
-  // ensures that the resizer appears above the content and the mouse can
+  // Place the resizer in the display list in our Content() list above
+  // scrolled content in the Content() list.
+  // This ensures that the resizer appears above the content and the mouse can
   // still target the resizer even when scrollbars are hidden.
   if (hasResizer && mScrollCornerBox) {
-    rv = mOuter->BuildDisplayListForChild(aBuilder, mScrollCornerBox, aDirtyRect, aLists,
-                                          nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+    rv = mOuter->BuildDisplayListForChild(aBuilder, mScrollCornerBox, aDirtyRect, scrollParts,
+                                          nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
     NS_ENSURE_SUCCESS(rv, rv);
+    // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
+    // PositionedDescendants list.
+    aLists.Content()->AppendToTop(scrollParts.PositionedDescendants());
   }
 
   return NS_OK;
@@ -3297,17 +3307,6 @@ nsGfxScrollFrameInner::GetCoordAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 de
   }
 
   return defaultValue;
-}
-
-static nsIURI* GetDocURI(nsIFrame* aFrame)
-{
-  nsIPresShell* shell = aFrame->PresContext()->GetPresShell();
-  if (!shell)
-    return nsnull;
-  nsIDocument* doc = shell->GetDocument();
-  if (!doc)
-    return nsnull;
-  return doc->GetDocumentURI();
 }
 
 nsPresState*

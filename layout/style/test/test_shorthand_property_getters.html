@@ -113,47 +113,45 @@ is(e.style.font, "", "should not have font shorthand");
 // ... or at least we will once we support them in the shorthand.
 e.setAttribute("style", "background: red");
 isnot(e.style.background, "", "should have background shorthand");
-e.setAttribute("style", "background: red; -moz-background-origin: border");
-is(e.style.background, "", "should not have background shorthand (origin:border)");
-e.setAttribute("style", "background: red; -moz-background-clip: padding");
-is(e.style.background, "", "should not have background shorthand (clip:padding)");
-e.setAttribute("style", "background: red; -moz-background-origin: content");
-is(e.style.background, "", "should not have background shorthand (origin:content)");
-// -moz-background-clip:content not yet supported
-//e.setAttribute("style", "background: red; -moz-background-clip: content");
-//is(e.style.background, "", "should not have background shorthand (clip:content)");
-//e.setAttribute("style", "background: red; -moz-background-clip: content; -moz-background-origin: content;");
-//isnot(e.style.background, "", "should have background shorthand (clip:content;origin:content)");
-e.setAttribute("style", "background: red; -moz-background-size: 100% 100%");
+e.setAttribute("style", "background: red; background-origin: border-box");
+isnot(e.style.background, "", "should have background shorthand (origin:border-box)");
+e.setAttribute("style", "background: red; background-clip: padding-box");
+isnot(e.style.background, "", "should have background shorthand (clip:padding-box)");
+e.setAttribute("style", "background: red; background-origin: content-box");
+is(e.style.background, "", "should not have background shorthand (origin:content-box)");
+e.setAttribute("style", "background: red; background-clip: content-box");
+is(e.style.background, "", "should not have background shorthand (clip:content-box)");
+e.setAttribute("style", "background: red; background-clip: content-box; background-origin: content-box;");
+isnot(e.style.background, "", "should have background shorthand (clip:content-box;origin:content-box)");
+e.setAttribute("style", "background: red; background-size: 100% 100%");
 is(e.style.background, "", "should not have background shorthand (size:100% 100%)");
-e.setAttribute("style", "background: red; -moz-background-size: 100% auto");
+e.setAttribute("style", "background: red; background-size: 100% auto");
 is(e.style.background, "", "should not have background shorthand (size:100% auto)");
-e.setAttribute("style", "background: red; -moz-background-size: auto 100%");
+e.setAttribute("style", "background: red; background-size: auto 100%");
 is(e.style.background, "", "should not have background shorthand (size:auto 100%)");
 e.setAttribute("style", "background: red; -moz-background-inline-policy: each-box");
 isnot(e.style.background, "", "should have background shorthand (-moz-background-inline-policy not relevant)");
 
 // Check that we only serialize background when the lists (of layers) for
 // the subproperties are the same length.
-// XXX Should change background-clip to border,padding,border and
-// background-origin to border,padding,padding and background-size to
-// cover,auto,contain once serialization does clip/origin/size.
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+// XXX Should change  background-size to cover,auto,contain once
+// background-size is part of shorthand.
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
 isnot(e.style.background, "", "should have background shorthand (all lists length 3)");
-e.setAttribute("style", "-moz-background-clip: border, border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
 is(e.style.background, "", "should not have background shorthand (background-clip too long)");
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
 is(e.style.background, "", "should not have background shorthand (background-origin too short)");
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png), none; background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png), none; background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
 is(e.style.background, "", "should not have background shorthand (background-image too long)");
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
 is(e.style.background, "", "should not have background shorthand (background-attachment too short)");
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px, bottom; background-repeat: repeat-x, repeat, no-repeat");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px, bottom; background-repeat: repeat-x, repeat, no-repeat");
 is(e.style.background, "", "should not have background shorthand (background-position too long)");
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat");
 is(e.style.background, "", "should not have background shorthand (background-repeat too short)");
-e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: auto, auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
-is(e.style.background, "", "should not have background shorthand (-moz-background-size too long)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: auto, auto, auto, auto; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-size too long)");
 
 // Check that we only serialize transition when the lists are the same length.
 e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0s, 1s");

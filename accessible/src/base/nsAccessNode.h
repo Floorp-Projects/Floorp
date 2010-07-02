@@ -52,7 +52,6 @@
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"
 #include "nsIStringBundle.h"
-#include "nsRefPtrHashtable.h"
 #include "nsWeakReference.h"
 
 class nsAccessNode;
@@ -65,9 +64,6 @@ class nsIPresShell;
 class nsPresContext;
 class nsIFrame;
 class nsIDocShellTreeItem;
-
-typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessNode>
-  nsAccessNodeHashtable;
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
@@ -82,9 +78,10 @@ typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessNode>
 
 class nsAccessNode: public nsIAccessNode
 {
-  public: // construction, destruction
-    nsAccessNode(nsIDOMNode *, nsIWeakReference* aShell);
-    virtual ~nsAccessNode();
+public:
+
+  nsAccessNode(nsIContent *aContent, nsIWeakReference *aShell);
+  virtual ~nsAccessNode();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAccessNode, nsIAccessNode)
@@ -101,33 +98,42 @@ class nsAccessNode: public nsIAccessNode
   static nsApplicationAccessible* GetApplicationAccessible();
 
   /**
-   * Return the document accessible for this accesnode.
+   * Return the document accessible for this access node.
    */
-  nsDocAccessible* GetDocAccessible() const;
+  nsDocAccessible *GetDocAccessible() const;
 
   /**
    * Return the root document accessible for this accessnode.
    */
   already_AddRefed<nsRootAccessible> GetRootAccessible();
 
-    static nsIDOMNode *gLastFocusedNode;
+  /**
+   * Reference to a node of focused accessible.
+   */
+  static nsINode *gLastFocusedNode;
 
-    already_AddRefed<nsIDOMNode> GetCurrentFocus();
+  /**
+   * Return focused node within accessible window.
+   *
+   * XXX: it shouldn't break us if we return focused node not depending on
+   * window so that we can turn this method into util method.
+   */
+  already_AddRefed<nsINode> GetCurrentFocus();
 
-    /**
-     * Returns true when the accessible is defunct.
-     */
-    virtual PRBool IsDefunct();
+  /**
+   * Returns true when the accessible is defunct.
+   */
+  virtual PRBool IsDefunct() { return !mContent; }
 
-    /**
-     * Initialize the access node object, add it to the cache.
-     */
-    virtual nsresult Init();
+  /**
+   * Initialize the access node object, add it to the cache.
+   */
+  virtual PRBool Init();
 
-    /**
-     * Shutdown the access node object.
-     */
-    virtual nsresult Shutdown();
+  /**
+   * Shutdown the access node object.
+   */
+  virtual void Shutdown();
 
     /**
      * Return frame for the given access node object.
@@ -137,53 +143,46 @@ class nsAccessNode: public nsIAccessNode
   /**
    * Return DOM node associated with this accessible.
    */
-  nsIDOMNode *GetDOMNode() const { return mDOMNode; }
+  already_AddRefed<nsIDOMNode> GetDOMNode() const
+  {
+    nsIDOMNode *DOMNode = nsnull;
+    if (GetNode())
+      CallQueryInterface(GetNode(), &DOMNode);
+    return DOMNode;
+  }
+
+  /**
+   * Return DOM node associated with the accessible.
+   */
+  virtual nsINode* GetNode() const { return mContent; }
+  nsIContent* GetContent() const { return mContent; }
+  nsIDocument* GetDocumentNode() const
+    { return mContent ? mContent->GetOwnerDoc() : nsnull; }
+
+  /**
+   * Return node type information of DOM node associated with the accessible.
+   */
+  PRBool IsContent() const
+  {
+    return GetNode() && GetNode()->IsNodeOfType(nsINode::eCONTENT);
+  }
+  PRBool IsDocument() const
+  {
+    return GetNode() && GetNode()->IsNodeOfType(nsINode::eDOCUMENT);
+  }
 
   /**
    * Return the corresponding press shell for this accessible.
    */
   already_AddRefed<nsIPresShell> GetPresShell();
 
-  /**
-   * Return true if the accessible still has presentation shell. Light-weight
-   * version of IsDefunct() method.
-   */
-  PRBool HasWeakShell() const { return !!mWeakShell; }
-
-#ifdef DEBUG
-  /**
-   * Return true if the access node is cached.
-   */
-  PRBool IsInCache();
-#endif
-
-  /**
-   * Return cached document accessible.
-   */
-  static nsDocAccessible* GetDocAccessibleFor(nsIDocument *aDocument);
-  static nsDocAccessible* GetDocAccessibleFor(nsIWeakReference *aWeakShell);
-  static nsDocAccessible* GetDocAccessibleFor(nsIDOMNode *aNode);
-
-  /**
-   * Return document accessible.
-   */
-  static already_AddRefed<nsIAccessibleDocument>
-    GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
-                        PRBool aCanCreate = PR_FALSE);
-
 protected:
-    nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
-
     nsPresContext* GetPresContext();
 
     void LastRelease();
 
-    nsCOMPtr<nsIDOMNode> mDOMNode;
-    nsCOMPtr<nsIWeakReference> mWeakShell;
-
-#ifdef DEBUG_A11Y
-    PRBool mIsInitialized;
-#endif
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIWeakReference> mWeakShell;
 
     /**
      * Notify global nsIObserver's that a11y is getting init'd or shutdown
@@ -196,9 +195,6 @@ protected:
 
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
-
-  static nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible>
-    gGlobalDocAccessibleCache;
 
 private:
   static nsApplicationAccessible *gApplicationAccessible;

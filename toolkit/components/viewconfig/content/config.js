@@ -23,7 +23,6 @@
 #   Chip Clark <chipc@netscape.com>
 #   Seth Spitzer <sspitzer@netscape.com>
 #   Neil Rashbrook <neil@parkwaycc.co.uk>
-#   Mats Palmgren <mats.palmgren@bredband.net>.
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -587,26 +586,27 @@ function ModifyPref(entry)
     if (!entry.valueCol && !gPromptService.select(window, title, entry.prefCol, 2, [false, true], check))
       return false;
     gPrefBranch.setBoolPref(entry.prefCol, check.value);
-  }
-  else if (entry.typeCol == nsIPrefBranch.PREF_INT) {
-    var params = { windowTitle: title,
-                   label: entry.prefCol,
-                   value: entry.valueCol,
-                   cancelled: true };
-    window.openDialog("chrome://global/content/configIntValue.xul", "_blank",
-                      "chrome,titlebar,centerscreen,modal", params);
-    if (params.cancelled)
-      return false;
-    gPrefBranch.setIntPref(entry.prefCol, params.value);
-  }
-  else {
+  } else {
     var result = { value: entry.valueCol };
     var dummy = { value: 0 };
     if (!gPromptService.prompt(window, title, entry.prefCol, result, null, dummy))
       return false;
-    var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
-    supportsString.data = result.value;
-    gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
+    if (entry.typeCol == nsIPrefBranch.PREF_INT) {
+      // | 0 converts to integer or 0; - 0 to float or NaN.
+      // Thus, this check should catch all cases.
+      var val = result.value | 0;
+      if (val != result.value - 0) {
+        var err_title = gConfigBundle.getString("nan_title");
+        var err_text = gConfigBundle.getString("nan_text");
+        gPromptService.alert(window, err_title, err_text);
+        return false;
+      }
+      gPrefBranch.setIntPref(entry.prefCol, val);
+    } else {
+      var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
+      supportsString.data = result.value;
+      gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
+    }
   }
 
   gPrefService.savePrefFile(null);
