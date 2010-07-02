@@ -2085,7 +2085,7 @@ private:
      * threshold when p is not null. The function takes the pointer and not
      * a boolean flag to minimize the amount of code in its inlined callers.
      */
-    void checkMallocGCPressure(void *p);
+    JS_FRIEND_API(void) checkMallocGCPressure(void *p);
 };
 
 JS_ALWAYS_INLINE JSObject *
@@ -2806,7 +2806,7 @@ js_ReportOutOfScriptQuota(JSContext *cx);
 extern void
 js_ReportOverRecursed(JSContext *cx);
 
-extern void
+extern JS_FRIEND_API(void)
 js_ReportAllocationOverflow(JSContext *cx);
 
 #define JS_CHECK_RECURSION(cx, onerror)                                       \

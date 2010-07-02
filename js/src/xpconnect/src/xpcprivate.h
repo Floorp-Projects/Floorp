@@ -2632,10 +2632,10 @@ public:
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
-    JSBool NeedsChromeWrapper() { return !!(mWrapperWord & CHROME_ONLY); }
-    void SetNeedsChromeWrapper() { mWrapperWord |= CHROME_ONLY; }
-    JSBool IsDoubleWrapper() { return !!(mWrapperWord & DOUBLE_WRAPPER); }
-    void SetIsDoubleWrapper() { mWrapperWord |= DOUBLE_WRAPPER; }
+    JSBool NeedsSOW() { return !!(mWrapperWord & NEEDS_SOW); }
+    void SetNeedsSOW() { mWrapperWord |= NEEDS_SOW; }
+    JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
+    void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
     JSBool NeedsXOW() { return !!(mWrapperWord & NEEDS_XOW); }
 
     JSObject* GetWrapper()
@@ -2644,13 +2644,13 @@ public:
     }
     void SetWrapper(JSObject *obj)
     {
-        PRWord needsChrome = NeedsChromeWrapper() ? CHROME_ONLY : 0;
-        PRWord doubleWrapper = IsDoubleWrapper() ? DOUBLE_WRAPPER : 0;
+        PRWord needsSOW = NeedsSOW() ? NEEDS_SOW : 0;
+        PRWord needsCOW = NeedsCOW() ? NEEDS_COW : 0;
         PRWord needsXOW = NeedsXOW() ? NEEDS_XOW : 0;
         mWrapperWord = PRWord(obj) |
-                         needsXOW |
-                         doubleWrapper |
-                         needsChrome;
+                         needsSOW |
+                         needsCOW |
+                         needsXOW;
     }
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
@@ -2687,8 +2687,8 @@ protected:
 
 private:
     enum {
-        CHROME_ONLY = JS_BIT(0),
-        DOUBLE_WRAPPER = JS_BIT(1),
+        NEEDS_SOW = JS_BIT(0),
+        NEEDS_COW = JS_BIT(1),
         NEEDS_XOW = JS_BIT(2),
 
         LAST_FLAG = NEEDS_XOW

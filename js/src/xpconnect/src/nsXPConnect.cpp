@@ -56,6 +56,8 @@
 
 #include "jstypedarray.h"
 
+#include "wrappers/XrayWrapper.h"
+
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
@@ -2590,7 +2592,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         return NS_ERROR_FAILURE;
 
     *_retval = OBJECT_TO_JSVAL(wrappedObj);
-    if(wrapper && wrapper->NeedsChromeWrapper() &&
+    if(wrapper && wrapper->NeedsSOW() &&
        !SystemOnlyWrapper::WrapObject(aJSContext, aScope, *_retval, _retval))
         return NS_ERROR_FAILURE;
     return NS_OK;
@@ -2791,6 +2793,12 @@ nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
     }
 
     return nsnull;
+}
+
+NS_IMETHODIMP_(void)
+nsXPConnect::GetXrayWrapperPropertyHolderGetPropertyOp(JSPropertyOp *getPropertyPtr)
+{
+    *getPropertyPtr = xpc::HolderClass.getProperty;
 }
 
 NS_IMETHODIMP_(void)

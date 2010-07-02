@@ -2997,7 +2997,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     {
         JSAutoCrossCompartmentCall ac;
-        if (sobj->isCrossCompartmentWrapper()) {
+        if (JSCrossCompartmentWrapper::isCrossCompartmentWrapper(sobj)) {
             sobj = sobj->unwrap();
             if (!ac.enter(cx, sobj))
                 return false;
