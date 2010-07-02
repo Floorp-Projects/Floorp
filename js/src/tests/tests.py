@@ -23,9 +23,15 @@ def set_limits():
 
 def th_run_cmd(cmd, l):
     t0 = datetime.datetime.now()
-    # close_fds is not supported on Windows and will cause a ValueError.
-    close_fds = sys.platform != 'win32'
-    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds, preexec_fn=set_limits)
+
+    # close_fds and preexec_fn are not supported on Windows and will
+    # cause a ValueError.
+    options = {}
+    if sys.platform != 'win32':
+        options["close_fds"] = True
+        options["preexec_fn"] = set_limits
+    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, **options)
+
     l[0] = p
     out, err = p.communicate()
     t1 = datetime.datetime.now()
