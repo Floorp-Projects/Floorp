@@ -78,6 +78,7 @@
 // Prototypes
 static nsresult openPrefFile(nsIFile* aFile);
 static nsresult pref_InitInitialObjects(void);
+static nsresult pref_LoadPrefsInDirList(const char *listId);
 
 //-----------------------------------------------------------------------------
 
@@ -165,6 +166,8 @@ nsresult nsPrefService::Init()
   if (NS_SUCCEEDED(rv))
     rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
 
+  observerService->AddObserver(this, "load-extension-defaults", PR_TRUE);
+
   return(rv);
 }
 
@@ -184,6 +187,8 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, 
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     ResetUserPrefs();
     rv = ReadUserPrefs(nsnull);
+  } else if (!strcmp(aTopic, "load-extension-defaults")) {
+    pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
     pref_InitInitialObjects();
