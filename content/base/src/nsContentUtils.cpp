@@ -6143,7 +6143,7 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
     nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
     if (rootFrame) {
       nsIWidget* widget =
-        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
+        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetNearestWidget();
       if (widget) {
         nsRefPtr<mozilla::layers::LayerManager> manager = widget->GetLayerManager();
         return manager.forget();

@@ -1689,19 +1689,20 @@ public:
   virtual PRBool AreAncestorViewsVisible() const;
 
   /**
-   * Returns the window that contains this frame. If this frame has a
-   * view and the view has a window, then this frames window is
+   * Returns the nearest widget containing this frame. If this frame has a
+   * view and the view has a widget, then this frame's widget is
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
    * XXX virtual because gfx callers use it! (themes)
    */
-  virtual nsIWidget* GetWindow() const;
+  virtual nsIWidget* GetNearestWidget() const;
 
   /**
-   * Same as GetWindow() with an offset out param.
-   * @param the offset of this frame in widget coordinates
+   * Same as GetNearestWidget() above but uses an outparam to return the offset
+   * of this frame to the returned widget expressed in appunits of |this| (the
+   * widget might be in a different document with a different zoom).
    */
-  virtual nsIWidget* GetWindowOffset(nsPoint& aOffset) const;
+  virtual nsIWidget* GetNearestWidget(nsPoint& aOffset) const;
 
   /**
    * Get the "type" of the frame. May return a NULL atom pointer

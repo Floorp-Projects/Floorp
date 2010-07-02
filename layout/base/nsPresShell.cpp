@@ -6739,7 +6739,7 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
       if (!itemFrame)
         itemFrame = popupFrame;
 
-      nsCOMPtr<nsIWidget> widget = popupFrame->GetWindow();
+      nsCOMPtr<nsIWidget> widget = popupFrame->GetNearestWidget();
       aEvent->widget = widget;
       nsIntPoint widgetPoint = widget->WidgetToScreenOffset();
       aEvent->refPoint = itemFrame->GetScreenRect().BottomLeft() - widgetPoint;
@@ -6893,11 +6893,11 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   nsIFrame* caretFrame = caret->GetGeometry(domSelection, &caretCoords);
   if (!caretFrame)
     return PR_FALSE;
-  nsPoint windowOffset;
-  nsIWidget* widget = caretFrame->GetWindowOffset(windowOffset);
+  nsPoint widgetOffset;
+  nsIWidget* widget = caretFrame->GetNearestWidget(widgetOffset);
   if (!widget)
     return PR_FALSE;
-  caretCoords.MoveBy(windowOffset);
+  caretCoords.MoveBy(widgetOffset);
   nsIView* caretView = nsIView::GetViewFor(widget);
 
   // in case the view used for caret coordinates was something else, we need
