@@ -12509,7 +12509,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
      * It does not work to assign the result to v, because v is an already
      * existing reference that points to something else.
      */
-    uint32 cookie = uva->vector[index];
+    UpvarCookie cookie = uva->vector[index];
     jsval& vr = js_GetUpvar(cx, script->staticLevel, cookie);
     v = vr;
 
@@ -12520,8 +12520,8 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
      * The upvar is not in the current trace, so get the upvar value exactly as
      * the interpreter does and unbox.
      */
-    uint32 level = script->staticLevel - UPVAR_FRAME_SKIP(cookie);
-    uint32 cookieSlot = UPVAR_FRAME_SLOT(cookie);
+    uint32 level = script->staticLevel - cookie.level();
+    uint32 cookieSlot = cookie.slot();
     JSStackFrame* fp = cx->display[level];
     const CallInfo* ci;
     int32 slot;
@@ -12531,7 +12531,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
     } else if (cookieSlot < fp->fun->nargs) {
         ci = &GetUpvarArgOnTrace_ci;
         slot = cookieSlot;
-    } else if (cookieSlot == CALLEE_UPVAR_SLOT) {
+    } else if (cookieSlot == UpvarCookie::CALLEE_SLOT) {
         ci = &GetUpvarArgOnTrace_ci;
         slot = -2;
     } else {
