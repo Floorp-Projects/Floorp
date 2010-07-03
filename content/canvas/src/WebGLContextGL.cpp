@@ -347,6 +347,12 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
         return ErrorInvalidEnum("BufferData: invalid target");
     }
 
+    if (size < 0)
+        return ErrorInvalidValue("bufferData: negative size");
+
+    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
+        return NS_OK;
+
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
@@ -373,6 +379,9 @@ WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum us
         return ErrorInvalidEnum("BufferData: invalid target");
     }
 
+    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
+        return NS_OK;
+
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
@@ -398,6 +407,9 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
     } else {
         return ErrorInvalidEnum("BufferData: invalid target");
     }
+
+    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
+        return NS_OK;
 
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
