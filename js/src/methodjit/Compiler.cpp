@@ -655,6 +655,10 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_NEG)
 
+          BEGIN_CASE(JSOP_POS)
+            jsop_pos();
+          END_CASE(JSOP_POS)
+
           BEGIN_CASE(JSOP_TYPEOF)
           BEGIN_CASE(JSOP_TYPEOFEXPR)
             jsop_typeof();
