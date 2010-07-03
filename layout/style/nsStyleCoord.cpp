@@ -42,6 +42,7 @@
 #include "nsCRT.h"
 #include "prlog.h"
 #include "nsMathUtils.h"
+#include "nsStyleContext.h"
 
 nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
   : mUnit(aUnit)
@@ -191,6 +192,45 @@ nsStyleCoord::GetAngleValueInRadians() const
     NS_NOTREACHED("unrecognized angular unit");
     return 0.0;
   }
+}
+
+inline void*
+nsStyleCoord::Array::operator new(size_t aSelfSize,
+                                  nsStyleContext *aAllocationContext,
+                                  size_t aItemCount) CPP_THROW_NEW
+{
+  NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have 0 item count");
+  return aAllocationContext->Alloc(
+           aSelfSize + sizeof(nsStyleCoord) * (aItemCount - 1));
+}
+
+/* static */ nsStyleCoord::Array*
+nsStyleCoord::Array::Create(nsStyleContext *aAllocationContext,
+                            PRBool& aCanStoreInRuleTree,
+                            size_t aCount)
+{
+  // While it's not ideal that every time we use an array, we force it
+  // not to be stored in the rule tree, it's the easiest option for now.
+  // (This is done only because of the style-context-scoped allocation.)
+  aCanStoreInRuleTree = PR_FALSE;
+
+  return new(aAllocationContext, aCount) Array(aCount);
+}
+
+bool
+nsStyleCoord::Array::operator==(const Array& aOther) const
+{
+  if (Count() != aOther.Count()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < mCount; ++i) {
+    if ((*this)[i] != aOther[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 // used by nsStyleSides and nsStyleCorners
