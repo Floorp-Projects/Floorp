@@ -509,8 +509,9 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         },
   
         close: function close() {
-          if (browser)
-            browser.contentWindow.close();
+          if (browser) {
+            tabbrowser.removeTab(chromeTab);
+          }
         },
   
         toString: function toString() {
