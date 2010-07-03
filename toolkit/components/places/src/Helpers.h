@@ -136,44 +136,6 @@ public:
                        const nsACString& aURLString);
 };
 
-/**
- * This extracts the hostname from the URI and reverses it in the
- * form that we use (always ending with a "."). So
- * "http://microsoft.com/" becomes "moc.tfosorcim."
- * 
- * The idea behind this is that we can create an index over the items in
- * the reversed host name column, and then query for as much or as little
- * of the host name as we feel like.
- * 
- * For example, the query "host >= 'gro.allizom.' AND host < 'gro.allizom/'
- * Matches all host names ending in '.mozilla.org', including
- * 'developer.mozilla.org' and just 'mozilla.org' (since we define all
- * reversed host names to end in a period, even 'mozilla.org' matches).
- * The important thing is that this operation uses the index. Any substring
- * calls in a select statement (even if it's for the beginning of a string)
- * will bypass any indices and will be slow).
- *
- * @param aURI
- *        URI that contains spec to reverse
- * @param aRevHost
- *        Out parameter
- */
-nsresult GetReversedHostname(nsIURI* aURI, nsString& aRevHost);
-
-/**
- * Similar method to GetReversedHostName but for strings
- */
-void GetReversedHostname(const nsString& aForward, nsString& aRevHost);
-
-/**
- * Reverses a string.
- *
- * @param aInput
- *        The string to be reversed
- * @param aReversed
- *        Ouput parameter will contain the reversed string
- */
-void ReverseString(const nsString& aInput, nsString& aReversed);
 
 } // namespace places
 } // namespace mozilla
