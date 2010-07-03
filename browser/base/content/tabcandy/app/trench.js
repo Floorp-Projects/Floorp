@@ -285,6 +285,8 @@ Trench.prototype = {
   // 
   // Parameters:
   //   rect - (<Rect>) the rectangle in question
+  //   stationaryCorner   - which corner is stationary? by default, the top left.
+  //                        "topleft", "bottomleft", "topright", "bottomright"
   //   assumeConstantSize - (boolean) whether the rect's dimensions are sacred or not
   //   keepProportional - (boolean) if we are allowed to change the rect's size, whether the
   //                                dimensions should scaled proportionally or not.
@@ -292,7 +294,7 @@ Trench.prototype = {
   // Returns:
   //   false - if rect does not overlap with this trench
   //   newRect - (<Rect>) an adjusted version of rect, if it is affected by this trench
-  rectOverlaps: function Trench_rectOverlaps(rect,assumeConstantSize,keepProportional) {
+  rectOverlaps: function Trench_rectOverlaps(rect,stationaryCorner,assumeConstantSize,keepProportional) {
     var edgeToCheck;
     if (this.type == "border") {
       if (this.edge == "left")
@@ -312,6 +314,8 @@ Trench.prototype = {
     switch (edgeToCheck) {
       case "left":
         if (this.ruleOverlaps(rect.left, rect.yRange)) {
+          if (stationaryCorner.indexOf('right') > -1)
+            rect.width = rect.right - this.position;
           rect.left = this.position;
           return rect;
         }
@@ -331,6 +335,8 @@ Trench.prototype = {
         break;
       case "top":
         if (this.ruleOverlaps(rect.top, rect.xRange)) {
+          if (stationaryCorner.indexOf('bottom') > -1)
+            rect.height = rect.bottom - this.position;
           rect.top = this.position;
           return rect;
         }
@@ -548,22 +554,25 @@ var Trenches = {
   // not leaving the safe bounds of the window.
   //
   // Parameters:
-  //   rect - (<Rect>) the object's current bounds 
+  //   rect               - (<Rect>) the object's current bounds 
+  //   stationaryCorner   - which corner is stationary? by default, the top left.
+  //                        "topleft", "bottomleft", "topright", "bottomright"
   //   assumeConstantSize - (boolean) whether the rect's dimensions are sacred or not
-  //   keepProportional - (boolean) if we are allowed to change the rect's size, whether the
-  //                                dimensions should scaled proportionally or not.
+  //   keepProportional   - (boolean) if we are allowed to change the rect's size, whether the
+  //                                  dimensions should scaled proportionally or not.
   //   
   // Returns:
   //   (<Rect>) - the updated bounds, if they were updated
   //   false - if the bounds were not updated
-  snap: function Trenches_snap(rect,assumeConstantSize,keepProportional) {
+  snap: function Trenches_snap(rect,stationaryCorner,assumeConstantSize,keepProportional) {
     var aT = this.activeTrenches;
     
+    // hide all the guide trenches, because the correct ones will be turned on later.
+    Trenches.hideGuides();
+    
     // if we're currently dragging over a drop-site, don't snap at all.
-    if (iQ(".acceptsDrop").length) {
-      Trenches.hideGuides();
+    if (iQ(".acceptsDrop").length)
       return;
-    }
     
     var updated = false;
     var updatedX = false;
@@ -576,7 +585,7 @@ var Trenches = {
       if (!t.active)
         continue;
       // newRect will be a new rect, or false
-      var newRect = t.rectOverlaps(rect,assumeConstantSize,keepProportional);
+      var newRect = t.rectOverlaps(rect,stationaryCorner,assumeConstantSize,keepProportional);
 
       if (newRect) { // if rectOverlaps returned an updated rect...
       
@@ -607,27 +616,11 @@ var Trenches = {
 
       }
     }
-    
-    let snappedIds = [ snappedTrenches[j].id for (j in snappedTrenches) ];
-    for (let i in this.trenches) {
-      let t = this.trenches[i];
-      // show the guide if it was used in snapping
-      if (snappedIds.indexOf(t.id) != -1) {
-        t.showGuide = true;
-        t.show();
-      }
-      // make sure to turn the guide off if we're no longer snapping to it
-      if (t.showGuide && snappedIds.indexOf(t.id) == -1) {
-        t.showGuide = false;
-        t.show();
-      }
-    }
-
+        
     if (updated) {
       rect.snappedTrenches = snappedTrenches;
       return rect;
     } else {
-      Trenches.hideGuides();
       return false;
     }
   },
