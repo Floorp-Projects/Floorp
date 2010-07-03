@@ -57,6 +57,7 @@ _TEST_FILES = \
 	  test_smilAnimateMotion.xhtml \
 	  test_smilAnimateMotionInvalidValues.xhtml \
 	  test_smilAnimateMotionOverrideRules.xhtml \
+	  test_smilBackwardsSeeking.xhtml \
 	  test_smilChangeAfterFrozen.xhtml \
 	  test_smilContainerBinding.xhtml \
 	  test_smilCrossContainer.xhtml \

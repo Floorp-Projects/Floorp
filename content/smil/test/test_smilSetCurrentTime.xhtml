@@ -31,7 +31,8 @@ function main() {
   // Test that seeking takes effect immediately
   for (var i = 0; i < gTimes.length; i++) {
     gSvg.setCurrentTime(gTimes[i]);
-    assertFloatsEqual(gSvg.getCurrentTime(), gTimes[i]);
+    // We adopt the SVGT1.2 behavior of clamping negative times to 0
+    assertFloatsEqual(gSvg.getCurrentTime(), Math.max(gTimes[i], 0.0));
   }
 
   // Test that seeking isn't messed up by timeouts
@@ -56,7 +57,7 @@ function checkTimesAfterIndex(index) {
 
   gSvg.setCurrentTime(gTimes[index]);
   var func = function() {
-    assertFloatsEqual(gSvg.getCurrentTime(), gTimes[index]);
+    assertFloatsEqual(gSvg.getCurrentTime(), Math.max(gTimes[index], 0.0));
     checkTimesAfterIndex(index + 1);
   }
   setTimeout(func, gWaitTime);

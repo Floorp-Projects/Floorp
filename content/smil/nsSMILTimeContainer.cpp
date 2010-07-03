@@ -46,6 +46,8 @@ nsSMILTimeContainer::nsSMILTimeContainer()
   mParentOffset(0L),
   mPauseStart(0L),
   mNeedsPauseSample(PR_FALSE),
+  mNeedsRewind(PR_FALSE),
+  mIsSeeking(PR_FALSE),
   mPauseState(PAUSE_BEGIN)
 {
 }
@@ -145,6 +147,10 @@ nsSMILTimeContainer::GetCurrentTime() const
 void
 nsSMILTimeContainer::SetCurrentTime(nsSMILTime aSeekTo)
 {
+  // SVG 1.1 doesn't specify what to do for negative times so we adopt SVGT1.2's
+  // behaviour of clamping negative times to 0.
+  aSeekTo = PR_MAX(0, aSeekTo);
+
   // The following behaviour is consistent with:
   // http://www.w3.org/2003/01/REC-SVG11-20030114-errata
   //  #getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
@@ -152,10 +158,17 @@ nsSMILTimeContainer::SetCurrentTime(nsSMILTime aSeekTo)
   // has begun we should still adjust the offset.
   nsSMILTime parentTime = GetParentTime();
   mParentOffset = parentTime - aSeekTo;
+  mIsSeeking = PR_TRUE;
 
   if (IsPaused()) {
     mNeedsPauseSample = PR_TRUE;
     mPauseStart = parentTime;
+  }
+
+  if (aSeekTo < mCurrentTime) {
+    // Backwards seek
+    mNeedsRewind = PR_TRUE;
+    ClearMilestones();
   }
 
   // Force an update to the current time in case we get a call to GetCurrentTime

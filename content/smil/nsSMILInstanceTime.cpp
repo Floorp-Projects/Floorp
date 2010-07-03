@@ -174,6 +174,18 @@ nsSMILInstanceTime::HandleFilteredInterval()
   mCreator = nsnull;
 }
 
+PRBool
+nsSMILInstanceTime::ShouldPreserve() const
+{
+  return mFixedEndpointRefCnt > 0 || (mFlags & kWasDynamicEndpoint);
+}
+
+void
+nsSMILInstanceTime::UnmarkShouldPreserve()
+{
+  mFlags &= ~kWasDynamicEndpoint;
+}
+
 void
 nsSMILInstanceTime::AddRefFixedEndpoint()
 {
@@ -188,6 +200,9 @@ nsSMILInstanceTime::ReleaseFixedEndpoint()
 {
   NS_ABORT_IF_FALSE(mFixedEndpointRefCnt > 0, "Duplicate release");
   --mFixedEndpointRefCnt;
+  if (mFixedEndpointRefCnt == 0 && IsDynamic()) {
+    mFlags |= kWasDynamicEndpoint;
+  }
 }
 
 PRBool
