@@ -1492,6 +1492,15 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 }
 
 JSObject * JS_FASTCALL
+stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    if (!obj)
+        THROWV(NULL);
+    return obj;
+}
+
+JSObject * JS_FASTCALL
 stubs::RegExp(VMFrame &f, JSObject *regex)
 {
     /*

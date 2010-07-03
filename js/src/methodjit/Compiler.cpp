@@ -1098,6 +1098,20 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::DefFun, Uses(0), Defs(0));
           END_CASE(JSOP_DEFFUN)
 
+          BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
+          {
+            uint32 slot = GET_SLOTNO(PC);
+            JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
+            prepareStubCall();
+            masm.move(ImmPtr(fun), Registers::ArgReg1);
+            stubCall(stubs::DefLocalFun_FC, Uses(0), Defs(0));
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+            frame.storeLocal(slot);
+            frame.pop();
+          }
+          END_CASE(JSOP_DEFFUN)
+
           BEGIN_CASE(JSOP_LAMBDA)
           {
             JSFunction *fun = script->getFunction(fullAtomIndex(PC));

@@ -569,7 +569,7 @@ OPDEF(JSOP_HOLE,          223, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
  * Variants of JSOP_{DEF{,LOCAL}FUN,LAMBDA} optimized for the flat closure case.
  */
 OPDEF(JSOP_DEFFUN_FC,     224,"deffun_fc",     NULL,  3,  0,  0,  0,  JOF_OBJECT|JOF_DECLARING)
-OPDEF(JSOP_DEFLOCALFUN_FC,225,"deflocalfun_fc",NULL,  5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING)
+OPDEF(JSOP_DEFLOCALFUN_FC,225,"deflocalfun_fc",NULL,  5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING|JOF_TMPSLOT)
 OPDEF(JSOP_LAMBDA_FC,     226,"lambda_fc",     NULL,  3,  0,  1, 19,  JOF_OBJECT)
 
 /*
@@ -587,7 +587,7 @@ OPDEF(JSOP_TRACE,         228, "trace",         NULL,  1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GETUPVAR_DBG,  229,"getupvar_dbg",  NULL,  3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
 OPDEF(JSOP_CALLUPVAR_DBG, 230,"callupvar_dbg", NULL,  3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_DEFFUN_DBGFC,     231,"deffun_dbgfc",     NULL,  3,  0,  0,  0,  JOF_OBJECT|JOF_DECLARING)
-OPDEF(JSOP_DEFLOCALFUN_DBGFC,232,"deflocalfun_dbgfc",NULL,  5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING)
+OPDEF(JSOP_DEFLOCALFUN_DBGFC,232,"deflocalfun_dbgfc",NULL,  5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING|JOF_TMPSLOT)
 OPDEF(JSOP_LAMBDA_DBGFC,     233,"lambda_dbgfc",     NULL,  3,  0,  1, 19,  JOF_OBJECT)
 
 /*
