@@ -45,8 +45,6 @@ interface nsIASN1Object;
 
 /**
  * This represents a X.509 certificate.
- *
- * @status FROZEN
  */
 [scriptable, uuid(f0980f60-ee3d-11d4-998b-00b0d02354a0)]
 interface nsIX509Cert : nsISupports {

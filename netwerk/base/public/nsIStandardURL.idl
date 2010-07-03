@@ -46,8 +46,6 @@ interface nsIURI;
  * file path format common to protocols like http, ftp, and file.
  * It supports initialization from a relative path and provides
  * some customization on how URLs are normalized.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(babd6cca-ebe7-4329-967c-d6b9e33caa81)]
 interface nsIStandardURL : nsIMutable

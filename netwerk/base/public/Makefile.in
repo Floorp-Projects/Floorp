@@ -84,6 +84,7 @@ XPIDLSRCS	= \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
                 nsIIOService2.idl \
+                nsIIPCSerializable.idl \
 		nsIMIMEInputStream.idl \
                 nsINetworkLinkService.idl \
 		nsIPermission.idl \
@@ -122,6 +123,7 @@ XPIDLSRCS	= \
 		nsISecureBrowserUI.idl \
 		nsICryptoFIPSInfo.idl \
 		nsINSSErrorsService.idl \
+		nsICacheInfoChannel.idl \
 		nsICachingChannel.idl \
 		nsIByteRangeRequest.idl \
 		nsIMultiPartChannel.idl \

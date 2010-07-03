@@ -81,13 +81,11 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
   // nsAccessNode
-  virtual PRBool Init();
   virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
-  virtual nsAccessible* GetParent();
 
   // nsRootAccessible
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ROOTACCESSIBLE_IMPL_CID)
@@ -126,19 +124,12 @@ protected:
     nsresult RemoveEventListeners();
 
   /**
-   * Process DOM events.
-   */
-  nsresult HandleEventWithTarget(nsIDOMEvent* aEvent, nsINode* aTargetNode);
-
-    static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
-
-  /**
-   * Process "popupshown" event. Used by HandleEventWithTarget().
+   * Process "popupshown" event. Used by HandleEvent().
    */
 
   nsresult HandlePopupShownEvent(nsAccessible *aAccessible);
   /*
-   * Process "popuphiding" event. Used by HandleEventWithTarget().
+   * Process "popuphiding" event. Used by HandleEvent().
    */
   nsresult HandlePopupHidingEvent(nsINode *aNode, nsAccessible *aAccessible);
 

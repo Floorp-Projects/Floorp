@@ -76,13 +76,7 @@ PlacesProtocolHandler.prototype = {
     Ci.nsIProtocolHandler
   ]),
 
-  classDescription: "Places Protocol Handler",
-  contractID: "@mozilla.org/network/protocol;1?name=" + SCHEME,
   classID: Components.ID("{6bcb9bde-9018-4443-a071-c32653469597}")
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([
-    PlacesProtocolHandler
-  ]);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([PlacesProtocolHandler]);

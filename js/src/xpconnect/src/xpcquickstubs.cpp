@@ -675,6 +675,16 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
     ThrowBadArg(cx, rv, ifaceName, memberName, 0);
 }
 
+JSBool
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    return JS_ReportErrorFlagsAndNumber(cx,
+                                        JSREPORT_WARNING | JSREPORT_STRICT |
+                                        JSREPORT_STRICT_MODE_ERROR,
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_GETTER_ONLY);
+}
+
 xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
                                  StringificationBehavior nullBehavior,
                                  StringificationBehavior undefinedBehavior)

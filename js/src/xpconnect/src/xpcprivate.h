@@ -69,7 +69,6 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIGenericFactory.h"
 #include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
@@ -79,7 +78,6 @@
 #include "nsIJSRuntimeService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
 #include "nsAutoLock.h"
 #include "nsXPTCUtils.h"
 #include "xptinfo.h"
@@ -415,14 +413,6 @@ private:
 
 const PRBool OBJ_IS_GLOBAL = PR_TRUE;
 const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
-
-#define NS_JS_RUNTIME_SERVICE_CID \
-{0xb5e65b52, 0x1dd1, 0x11b2, \
-    { 0xae, 0x8f, 0xf0, 0x92, 0x8e, 0xd8, 0x84, 0x82 }}
-
-#define NS_XPC_THREAD_JSCONTEXT_STACK_CID  \
-{ 0xff8c4d10, 0x3194, 0x11d3, \
-    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
 class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
@@ -3330,7 +3320,7 @@ private:
 * member (as a hidden implementaion detail) to which they delegate many calls.
 */
 
-extern JSBool xpc_InitJSxIDClassObjects();
+extern void xpc_InitJSxIDClassObjects();
 extern void xpc_DestroyJSxIDClassObjects();
 
 
@@ -4128,6 +4118,11 @@ extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 #define XPCVARIANT_IID \
     {0x1809fd50, 0x91e8, 0x11d5, \
       { 0x90, 0xf9, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
+
+// {DC524540-487E-4501-9AC7-AAA784B17C1C}
+#define XPCVARIANT_CID                                                        \
+    {0xdc524540, 0x487e, 0x4501,                                              \
+      { 0x9a, 0xc7, 0xaa, 0xa7, 0x84, 0xb1, 0x7c, 0x1c } }
 
 class XPCVariant : public nsIVariant
 {

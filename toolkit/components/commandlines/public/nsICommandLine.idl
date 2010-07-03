@@ -50,9 +50,6 @@ interface nsIDOMWindow;
  * "arguments" are any values found on the command line.
  * "flags" are switches. In normalized form they are preceded by a single dash.
  * Some flags may take "parameters", e.g. "-url <param>" or "-install-xpi <param>"
- *
- * @status UNDER_REVIEW This interface is intended to be frozen, but isn't frozen
- *                      yet. Please use with care.
  */
 
 [scriptable, uuid(bc3173bd-aa46-46a0-9d25-d9867a9659b6)]

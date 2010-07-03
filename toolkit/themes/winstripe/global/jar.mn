@@ -4,6 +4,8 @@ toolkit.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/global/about.css
+        skin/classic/global/aboutCache.css
+        skin/classic/global/aboutCacheEntry.css
         skin/classic/global/aboutMemory.css
         skin/classic/global/aboutSupport.css
         skin/classic/global/appPicker.css
@@ -170,6 +172,8 @@ toolkit.jar:
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/aero/global/ os=WINNT osversion>=6
         skin/classic/aero/global/about.css
+        skin/classic/aero/global/aboutCache.css
+        skin/classic/aero/global/aboutCacheEntry.css
         skin/classic/aero/global/aboutMemory.css
         skin/classic/aero/global/aboutSupport.css
         skin/classic/aero/global/appPicker.css

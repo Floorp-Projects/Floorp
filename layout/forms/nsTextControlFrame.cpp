@@ -228,7 +228,7 @@ nsresult nsTextControlFrame::MaybeBeginSecureKeyboardInput()
 {
   nsresult rv = NS_OK;
   if (IsPasswordTextControl() && !mInSecureKeyboardInputMode) {
-    nsIWidget* window = GetWindow();
+    nsIWidget* window = GetNearestWidget();
     NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
     rv = window->BeginSecureKeyboardInput();
     mInSecureKeyboardInputMode = NS_SUCCEEDED(rv);
@@ -239,7 +239,7 @@ nsresult nsTextControlFrame::MaybeBeginSecureKeyboardInput()
 void nsTextControlFrame::MaybeEndSecureKeyboardInput()
 {
   if (mInSecureKeyboardInputMode) {
-    nsIWidget* window = GetWindow();
+    nsIWidget* window = GetNearestWidget();
     if (!window)
       return;
     window->EndSecureKeyboardInput();

@@ -41,8 +41,8 @@ load 265973-1.html
 asserts(10) asserts-if(MOZ_WIDGET_TOOLKIT=="windows",8) load 265986-1.html # Bug 512405
 load 265999-1.html
 load 266222-1.html
-asserts(7) load 266360-1.html
-asserts(4) load 266445-1.html
+asserts(7) load 266360-1.html # Bug 576358
+asserts(4) load 266445-1.html # Bug 575011
 load 268157-1.html
 load 269566-1.html
 load 272647-1.html
@@ -202,7 +202,7 @@ load 409513.html
 load 410967.html
 load 411870-1.html
 load 412651-1.html
-asserts(6) load 413587-1.svg
+asserts(6) load 413587-1.svg # Bug 563481?
 load 414058-1.html
 load 414175-1.xul
 load 420031-1.html
@@ -230,7 +230,7 @@ load 444967-1.html
 load 446328.html
 load 448488-1.html
 load 450319-1.xhtml
-asserts(3) load 453894-1.xhtml
+asserts(3) load 453894-1.xhtml # Bug 575011
 load 454751-1.xul
 load 455063-1.html
 load 455063-2.html
@@ -302,5 +302,6 @@ load 560441-1.xhtml
 load 560447-1.html
 load 564063-1.html
 load 567292-1.xhtml
+load 569018-1.html
 load 572003.xul
 load 572582-1.xhtml

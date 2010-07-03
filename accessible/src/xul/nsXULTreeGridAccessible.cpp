@@ -698,17 +698,6 @@ nsXULTreeGridRowAccessible::GetChildCount()
   return nsCoreUtils::GetSensibleColumnCount(mTree);
 }
 
-PRInt32
-nsXULTreeGridRowAccessible::GetIndexOf(nsIAccessible *aChild)
-{
-  if (IsDefunct())
-    return -1;
-
-  nsRefPtr<nsXULTreeGridCellAccessible> cell = do_QueryObject(aChild);
-
-  return cell ? cell->GetColumnIndex() : -1;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridRowAccessible: nsXULTreeItemAccessibleBase implementation
 
@@ -1200,12 +1189,6 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
   }
 
   return NS_OK;
-}
-
-nsAccessible*
-nsXULTreeGridCellAccessible::GetParent()
-{
-  return IsDefunct() ? nsnull : mParent.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

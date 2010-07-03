@@ -43,8 +43,6 @@ interface nsIInterfaceRequestor;
 /**
  * Functions that display warnings for transitions between secure
  * and insecure pages, posts to insecure servers etc.
- *
- * @status FROZEN
  */
 [scriptable, uuid(1c399d06-1dd2-11b2-bc58-c87cbcacdb78)]
 interface nsISecurityWarningDialogs : nsISupports

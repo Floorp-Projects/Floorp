@@ -43,8 +43,6 @@ typedef unsigned long nsLoadFlags;
 
 /**
  * nsIRequest
- *
- * @status FROZEN
  */
 [scriptable, uuid(ef6bfbd2-fd46-48d8-96b7-9f8f0fd387fe)]
 interface nsIRequest : nsISupports

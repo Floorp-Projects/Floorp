@@ -355,12 +355,18 @@ function writeInstallRDFToDir(aData, aDir) {
   rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
-   "optionsURL", "aboutURL", "iconURL"].forEach(function(aProp) {
+   "optionsURL", "aboutURL", "iconURL", "skinnable"].forEach(function(aProp) {
     if (aProp in aData)
       rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });
 
   rdf += writeLocaleStrings(aData);
+
+  if ("targetPlatforms" in aData) {
+    aData.targetPlatforms.forEach(function(aPlatform) {
+      rdf += "<em:targetPlatform>" + escapeXML(aPlatform) + "</em:targetPlatform>\n";
+    });
+  }
 
   if ("targetApplications" in aData) {
     aData.targetApplications.forEach(function(aApp) {

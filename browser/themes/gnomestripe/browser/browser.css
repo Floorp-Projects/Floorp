@@ -985,7 +985,16 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+}
+
+.popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-failed"],
+.popup-notification-icon[popupid="addon-install-complete"] {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  width: 32px;
+  height: 32px;
 }
 
 /* Notification icon box */
@@ -993,10 +1002,17 @@ toolbar[iconsize="small"] #fullscreen-button {
   margin: 0 3px;
 }
 
-#geo-notification-icon {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+.notification-anchor-icon {
   width: 16px;
   height: 16px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
+}
+
+#addons-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
 /* Feed icon */

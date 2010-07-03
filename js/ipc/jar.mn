@@ -1,0 +1,3 @@
+toolkit.jar:
+        content/global/cpow/test.xul (tests/adhoc/test.xul)
+        content/global/cpow/child.html (tests/adhoc/child.html)

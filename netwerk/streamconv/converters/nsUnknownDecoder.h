@@ -41,7 +41,6 @@
 #include "nsIStreamConverter.h"
 #include "nsIChannel.h"
 #include "nsIContentSniffer.h"
-#include "nsIGenericFactory.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -159,15 +158,12 @@ protected:
  */
 class nsBinaryDetector : public nsUnknownDecoder
 {
-public:
-  static NS_METHOD Register(nsIComponentManager* compMgr, nsIFile* path, 
-                            const char* registryLocation,
-                            const char* componentType, 
-                            const nsModuleComponentInfo *info);
-  
 protected:
   virtual void DetermineContentType(nsIRequest* aRequest);
 };
+
+#define NS_BINARYDETECTOR_CATEGORYENTRY \
+  { NS_CONTENT_SNIFFER_CATEGORY, "Binary Detector", NS_BINARYDETECTOR_CONTRACTID }
 
 #endif /* nsUnknownDecoder_h__ */
 

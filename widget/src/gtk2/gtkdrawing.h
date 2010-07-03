@@ -242,11 +242,17 @@ gint moz_gtk_enable_style_props(style_prop_t styleGetProp);
  */
 gint moz_gtk_shutdown();
 
+/**
+ * Retrieves the colormap to use for drawables passed to moz_gtk_widget_paint.
+ */
+GdkColormap* moz_gtk_widget_get_colormap();
 
 /*** Widget drawing ***/
 /**
  * Paint a widget in the current theme.
  * widget:    a constant giving the widget to paint
+ * drawable:  the drawable to paint to;
+ *            it's colormap must be moz_gtk_widget_get_colormap().
  * rect:      the bounding rectangle for the widget
  * cliprect:  a clipprect rectangle for this painting operation
  * state:     the state of the widget.  ignored for some widgets.

@@ -52,7 +52,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMArray.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 #include "nsXULAppAPI.h"
@@ -274,43 +274,6 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
   }
 
   return NS_ERROR_FAILURE;
-}
-
-NS_METHOD
-DirectoryProvider::Register(nsIComponentManager* aCompMgr, nsIFile* aPath,
-                            const char *aLoaderStr, const char *aType,
-                            const nsModuleComponentInfo *aInfo)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsICategoryManager> catMan
-    (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
-  if (!catMan)
-    return NS_ERROR_FAILURE;
-
-  rv = catMan->AddCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
-                                "browser-directory-provider",
-                                NS_BROWSERDIRECTORYPROVIDER_CONTRACTID,
-                                PR_TRUE, PR_TRUE, nsnull);
-  return rv;
-}
-
-
-NS_METHOD
-DirectoryProvider::Unregister(nsIComponentManager* aCompMgr, 
-                              nsIFile* aPath, const char *aLoaderStr,
-                              const nsModuleComponentInfo *aInfo)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsICategoryManager> catMan
-    (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
-  if (!catMan)
-    return NS_ERROR_FAILURE;
-
-  rv = catMan->DeleteCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
-                                   "browser-directory-provider", PR_TRUE);
-  return rv;
 }
 
 NS_IMPL_ISUPPORTS1(DirectoryProvider::AppendingEnumerator, nsISimpleEnumerator)

@@ -38,16 +38,69 @@
 
 #include "gfxGdkNativeRenderer.h"
 #include "gfxContext.h"
+#include "gfxPlatformGtk.h"
+
+#ifdef MOZ_X11
+#include <gdk/gdkx.h>
+#include "cairo-xlib.h"
+#include "gfxXlibSurface.h"
+nsresult
+gfxGdkNativeRenderer::DrawWithXlib(gfxXlibSurface* surface,
+                                   nsIntPoint offset,
+                                   nsIntRect* clipRects, PRUint32 numClipRects)
+{
+    GdkDrawable *drawable = gfxPlatformGtk::GetGdkDrawable(surface);
+    if (!drawable) {
+        gfxIntSize size = surface->GetSize();
+        int depth = cairo_xlib_surface_get_depth(surface->CairoSurface());
+        GdkScreen* screen = gdk_colormap_get_screen(mColormap);
+        drawable =
+            gdk_pixmap_foreign_new_for_screen(screen, surface->XDrawable(),
+                                              size.width, size.height, depth);
+        if (!drawable)
+            return NS_ERROR_FAILURE;
+
+        gdk_drawable_set_colormap(drawable, mColormap);
+        gfxPlatformGtk::SetGdkDrawable(surface, drawable);
+        g_object_unref(drawable); // The drawable now belongs to |surface|.
+    }
+    
+    GdkRectangle clipRect;
+    if (numClipRects) {
+        NS_ASSERTION(numClipRects == 1, "Too many clip rects");
+        clipRect.x = clipRects[0].x;
+        clipRect.y = clipRects[0].y;
+        clipRect.width = clipRects[0].width;
+        clipRect.height = clipRects[0].height;
+    }
+
+    return DrawWithGDK(drawable, offset.x, offset.y,
+                       numClipRects ? &clipRect : NULL, numClipRects);
+}
+
+void
+gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
+                           PRUint32 flags, GdkColormap* colormap)
+{
+    mColormap = colormap;
+
+    Visual* visual =
+        gdk_x11_visual_get_xvisual(gdk_colormap_get_visual(colormap));
+    Screen* screen =
+        gdk_x11_screen_get_xscreen(gdk_colormap_get_screen(colormap));
+
+    gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual, nsnull);
+}
+
+#endif
+#ifdef MOZ_DFB
 
 #include "cairo-gdk-utils.h"
-
-#include "gfxPlatformGtk.h"
 
 typedef struct {
     gfxGdkNativeRenderer* mRenderer;
     nsresult               mRV;
 } NativeRenderingClosure;
-
 
 static cairo_bool_t
 NativeRendering(void *closure,
@@ -57,78 +110,39 @@ NativeRendering(void *closure,
 {
     NativeRenderingClosure* cl = (NativeRenderingClosure*)closure;
     nsRefPtr<gfxASurface> gfxSurface = gfxASurface::Wrap(surface);
-    GdkDrawable *drawable =
-        gfxPlatformGtk::GetPlatform()->GetGdkDrawable(gfxSurface);
+    GdkDrawable *drawable = gfxPlatformGtk::GetGdkDrawable(gfxSurface);
     if (!drawable)
         return 0;
 
     nsresult rv = cl->mRenderer->
-        NativeDraw(drawable, offset_x, offset_y,
-                   rectangles, num_rects);
+        DrawWithGDK(drawable, offset_x, offset_y,
+                    rectangles, num_rects);
     cl->mRV = rv;
     return NS_SUCCEEDED(rv);
 }
 
-
-nsresult
-gfxGdkNativeRenderer::Draw(gfxContext* ctx, int width, int height,
-                            PRUint32 flags, DrawOutput* output)
+void
+gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
+                           PRUint32 flags, GdkVisual* visual)
 {
     NativeRenderingClosure closure = { this, NS_OK };
     cairo_gdk_drawing_result_t result;
-    // Make sure result.surface is null to start with; we rely on it
-    // being non-null meaning that a surface actually got allocated.
-    result.surface = NULL;
   
-    if (output) {
-        output->mSurface = NULL;
-        output->mUniformAlpha = PR_FALSE;
-        output->mUniformColor = PR_FALSE;
-    }
-
     int cairoFlags = 0;
-    if (flags & DRAW_SUPPORTS_OFFSET) {
-        cairoFlags |= CAIRO_GDK_DRAWING_SUPPORTS_OFFSET;
-    }
     if (flags & DRAW_SUPPORTS_CLIP_RECT) {
         cairoFlags |= CAIRO_GDK_DRAWING_SUPPORTS_CLIP_RECT;
     }
-    if (flags & DRAW_SUPPORTS_CLIP_LIST) {
-        cairoFlags |= CAIRO_GDK_DRAWING_SUPPORTS_CLIP_LIST;
-    }
-    if (flags & DRAW_SUPPORTS_ALTERNATE_SCREEN) {
-        cairoFlags |= CAIRO_GDK_DRAWING_SUPPORTS_ALTERNATE_SCREEN;
-    }
-    if (flags & DRAW_SUPPORTS_NONDEFAULT_VISUAL) {
-        cairoFlags |= CAIRO_GDK_DRAWING_SUPPORTS_NONDEFAULT_VISUAL;
-    }
     cairo_draw_with_gdk(ctx->GetCairo(),
                         NativeRendering, 
-                        &closure, width, height,
+                        &closure, size.width, size.height,
                         (flags & DRAW_IS_OPAQUE) ? CAIRO_GDK_DRAWING_OPAQUE : CAIRO_GDK_DRAWING_TRANSPARENT,
                         (cairo_gdk_drawing_support_t)cairoFlags,
-                        output ? &result : NULL);
+                        NULL);
     if (NS_FAILED(closure.mRV)) {
-        if (result.surface) {
-            NS_ASSERTION(output, "How did that happen?");
-            cairo_surface_destroy (result.surface);
-        }
         return closure.mRV;
-    }
-
-    if (output) {
-        if (result.surface) {
-            output->mSurface = gfxASurface::Wrap(result.surface);
-            if (!output->mSurface) {
-                cairo_surface_destroy (result.surface);
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-
-        output->mUniformAlpha = result.uniform_alpha;
-        output->mUniformColor = result.uniform_color;
-        output->mColor = gfxRGBA(result.r, result.g, result.b, result.alpha);
     }
   
     return NS_OK;
 }
+
+#endif // MOZ_DFB

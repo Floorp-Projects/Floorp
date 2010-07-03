@@ -214,9 +214,8 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     XRenderPictFormat* xrenderFormat =
         gfxXlibSurface::FindRenderFormat(QX11Info().display(), imageFormat);
 
-    newSurface = new gfxXlibSurface((Display*)QX11Info().display(),
-                                    xrenderFormat,
-                                    size);
+    Screen* screen = ScreenOfDisplay(QX11Info().display(), QX11Info().screen());
+    newSurface = gfxXlibSurface::Create(screen, xrenderFormat, size);
 #endif
 
     if (newSurface) {

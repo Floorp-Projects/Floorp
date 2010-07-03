@@ -41,7 +41,8 @@
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
 #include "nsICategoryManager.h"
-#include "nsIFactory.h"
+#include "mozilla/Module.h"
+#include "nsXULAppAPI.h"
 #include "nsIStringStream.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
@@ -142,17 +143,49 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* 
 }
 #define SEND_DATA(x) SendData(x, converterListener, request)
 
+static const mozilla::Module::CIDEntry kTestCIDs[] = {
+    { &kTestConverterCID, false, NULL, CreateTestConverter },
+    { NULL }
+};
+
+static const mozilla::Module::ContractIDEntry kTestContracts[] = {
+    { NS_ISTREAMCONVERTER_KEY "?from=a/foo&to=b/foo", &kTestConverterCID },
+    { NS_ISTREAMCONVERTER_KEY "?from=b/foo&to=c/foo", &kTestConverterCID },
+    { NS_ISTREAMCONVERTER_KEY "?from=b/foo&to=d/foo", &kTestConverterCID },
+    { NS_ISTREAMCONVERTER_KEY "?from=c/foo&to=d/foo", &kTestConverterCID },
+    { NS_ISTREAMCONVERTER_KEY "?from=d/foo&to=e/foo", &kTestConverterCID },
+    { NS_ISTREAMCONVERTER_KEY "?from=d/foo&to=f/foo", &kTestConverterCID },
+    { NS_ISTREAMCONVERTER_KEY "?from=t/foo&to=k/foo", &kTestConverterCID },
+    { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kTestCategories[] = {
+    { NS_ISTREAMCONVERTER_KEY, "?from=a/foo&to=b/foo", "x" },
+    { NS_ISTREAMCONVERTER_KEY, "?from=b/foo&to=c/foo", "x" },
+    { NS_ISTREAMCONVERTER_KEY, "?from=b/foo&to=d/foo", "x" },
+    { NS_ISTREAMCONVERTER_KEY, "?from=c/foo&to=d/foo", "x" },
+    { NS_ISTREAMCONVERTER_KEY, "?from=d/foo&to=e/foo", "x" },
+    { NS_ISTREAMCONVERTER_KEY, "?from=d/foo&to=f/foo", "x" },
+    { NS_ISTREAMCONVERTER_KEY, "?from=t/foo&to=k/foo", "x" },
+    { NULL }
+};
+
+static const mozilla::Module kTestModule = {
+    mozilla::Module::kVersion,
+    kTestCIDs,
+    kTestContracts,
+    kTestCategories
+};
+
 int
 main(int argc, char* argv[])
 {
     nsresult rv;
     {
+        XRE_AddStaticComponent(&kTestModule);
+
         nsCOMPtr<nsIServiceManager> servMan;
         NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-        if (registrar)
-            registrar->AutoRegister(nsnull);
     
         nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
@@ -160,45 +193,6 @@ main(int argc, char* argv[])
             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         nsCString previous;
-
-        ///////////////////////////////////////////
-        // BEGIN - Stream converter registration
-        //   All stream converters must register with the ComponentManager
-        ///////////////////////////////////////////
-
-        // these stream converters are just for testing. running this harness
-        // from the dist/bin dir will also pickup converters registered
-        // in other modules (necko converters for example).
-
-        PRUint32 converterListSize = 7;
-        const char *const converterList[] = {
-            "?from=a/foo&to=b/foo",
-            "?from=b/foo&to=c/foo",
-            "?from=b/foo&to=d/foo",
-            "?from=c/foo&to=d/foo",
-            "?from=d/foo&to=e/foo",
-            "?from=d/foo&to=f/foo",
-            "?from=t/foo&to=k/foo",
-        };
-
-        TestConverterFactory *convFactory = new TestConverterFactory(kTestConverterCID, "TestConverter", NS_ISTREAMCONVERTER_KEY);
-        nsCOMPtr<nsIFactory> convFactSup(do_QueryInterface(convFactory, &rv));
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRUint32 count = 0; count < converterListSize; ++count) {
-            // register the TestConverter with the component manager. One contractid registration
-            // per conversion pair (from - to pair).
-            nsCString contractID(NS_ISTREAMCONVERTER_KEY);
-            contractID.Append(converterList[count]);
-            rv = registrar->RegisterFactory(kTestConverterCID,
-                                            "TestConverter",
-                                            contractID.get(),
-                                            convFactSup);
-            if (NS_FAILED(rv)) return rv;
-            rv = catman->AddCategoryEntry(NS_ISTREAMCONVERTER_KEY, converterList[count], "x",
-                                            PR_TRUE, PR_TRUE, getter_Copies(previous));
-            if (NS_FAILED(rv)) return rv;
-        }
 
         nsCOMPtr<nsIStreamConverterService> StreamConvService =
                  do_GetService(kStreamConverterServiceCID, &rv);

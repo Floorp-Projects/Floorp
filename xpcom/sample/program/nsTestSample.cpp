@@ -69,13 +69,8 @@ main(void)
         printf("ERROR: XPCOM intialization error [%x].\n", rv);
         return -1;
     }
-    // register all components in our default component directory
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
-    
-    nsCOMPtr<nsIComponentManager> manager = do_QueryInterface(registrar);
-    NS_ASSERTION(registrar, "Null nsIComponentManager");
+
+    nsCOMPtr<nsIComponentManager> manager = do_QueryInterface(servMan);
     
     // Create an instance of our component
     nsCOMPtr<nsISample> mysample;
@@ -133,7 +128,6 @@ main(void)
     // All nsCOMPtr's must be deleted prior to calling shutdown XPCOM
     // as we should not hold references passed XPCOM Shutdown.
     servMan = 0;
-    registrar = 0;
     manager = 0;
     mysample = 0;
     

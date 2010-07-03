@@ -999,7 +999,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
 == 426629-1.html 426629-1-ref.html
-asserts(3) != 427017-1.xhtml about:blank    # crash test (needs reftest-print)
+asserts(3) != 427017-1.xhtml about:blank # crash test (needs reftest-print). existing assertions are bug 457400.
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html
@@ -1394,7 +1394,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 528038-1d.html 528038-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
-asserts(5) == 528038-2.html 528038-2-ref.html
+asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
@@ -1447,5 +1447,12 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 571281-1a.html 571281-1-ref.html
 == 571281-1b.html 571281-1-ref.html
 == 571281-1c.html 571281-1-ref.html
+== 571347-1a.html 571347-1-ref.html
+== 571347-1b.html 571347-1-ref.html
+== 571347-2a.html 571347-2-ref.html
+== 571347-2b.html 571347-2-ref.html
+== 571347-2c.html 571347-2-ref.html
+== 571347-2d.html 571347-2-ref.html
+== 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
