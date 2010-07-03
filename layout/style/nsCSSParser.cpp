@@ -154,6 +154,8 @@
 #define VARIANT_TIMING_FUNCTION (VARIANT_KEYWORD | VARIANT_CUBIC_BEZIER)
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_ANGLE_OR_ZERO (VARIANT_ANGLE | VARIANT_ZERO_ANGLE)
+#define VARIANT_TRANSFORM_LPCALC (VARIANT_LP | VARIANT_CALC | \
+                                  VARIANT_CALC_NO_MIN_MAX)
 
 //----------------------------------------------------------------------
 
@@ -8096,8 +8098,8 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
    * parse out the individual functions.  The order in the enumeration
    * must match the order in which the masks are declared.
    */
-  enum { eLengthPercent,
-         eTwoLengthPercents,
+  enum { eLengthPercentCalc,
+         eTwoLengthPercentCalcs,
          eAngle,
          eTwoAngles,
          eNumber,
@@ -8106,14 +8108,14 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
          eNumVariantMasks };
   static const PRInt32 kMaxElemsPerFunction = 6;
   static const PRInt32 kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
-    {VARIANT_LENGTH | VARIANT_PERCENT},
-    {VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT},
+    {VARIANT_TRANSFORM_LPCALC},
+    {VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC},
     {VARIANT_ANGLE_OR_ZERO},
     {VARIANT_ANGLE_OR_ZERO, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT}};
+     VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC}};
 
 #ifdef DEBUG
   static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
@@ -8124,14 +8126,9 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
 
   switch (aToken) {
   case eCSSKeyword_translatex:
-    /* Exactly one length or percent. */
-    variantIndex = eLengthPercent;
-    aMinElems = 1U;
-    aMaxElems = 1U;
-    break;
   case eCSSKeyword_translatey:
     /* Exactly one length or percent. */
-    variantIndex = eLengthPercent;
+    variantIndex = eLengthPercentCalc;
     aMinElems = 1U;
     aMaxElems = 1U;
     break;
@@ -8155,7 +8152,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     break;
   case eCSSKeyword_translate:
     /* One or two lengths or percents. */
-    variantIndex = eTwoLengthPercents;
+    variantIndex = eTwoLengthPercentCalcs;
     aMinElems = 1U;
     aMaxElems = 2U;
     break;
