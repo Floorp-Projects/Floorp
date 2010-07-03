@@ -121,18 +121,22 @@ CryptoMeta.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.CryptoMeta",
 
-  getKey: function CryptoMeta_getKey(privkey, passphrase) {
+  getWrappedKey: function _getWrappedKey(privkey) {
     // get the uri to our public key
     let pubkeyUri = privkey.publicKeyUri.spec;
 
     // each hash key is a relative uri, resolve those and match against ours
-    let wrapped_key;
     for (let relUri in this.keyring) {
       if (pubkeyUri == this.baseUri.resolve(relUri))
-        wrapped_key = this.keyring[relUri];
+        return this.keyring[relUri];
     }
+    return null;
+  },
+
+  getKey: function CryptoMeta_getKey(privkey, passphrase) {
+    let wrapped_key = this.getWrappedKey(privkey);
     if (!wrapped_key)
-      throw "keyring doesn't contain a key for " + pubkeyUri;
+      throw "keyring doesn't contain a key for " + privkey.publicKeyUri.spec;
 
     // Make sure the wrapped key hasn't been tampered with
     let localHMAC = Utils.sha256HMAC(wrapped_key.wrapped, this.hmacKey);
@@ -144,7 +148,7 @@ CryptoMeta.prototype = {
       Svc.Crypto.unwrapSymmetricKey(
         wrapped_key.wrapped,
         privkey.keyData,
-        passphrase.password,
+        passphrase.passwordUTF8,
         privkey.salt,
         privkey.iv
       )
@@ -170,7 +174,7 @@ CryptoMeta.prototype = {
     // each hash key is a relative uri, resolve those and
     // if we find the one we're about to add, remove it
     for (let relUri in this.keyring) {
-      if (pubkeyUri == this.uri.resolve(relUri))
+      if (new_pubkey.uri.spec == this.uri.resolve(relUri))
         delete this.keyring[relUri];
     }
 
@@ -183,7 +187,7 @@ CryptoMeta.prototype = {
   },
 
   get hmacKey() {
-    let passphrase = ID.get("WeaveCryptoID").password;
+    let passphrase = ID.get("WeaveCryptoID").passwordUTF8;
     return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, passphrase);
   }
 };
