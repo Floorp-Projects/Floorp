@@ -217,6 +217,14 @@ static nscoord CalcLength(const nsCSSValue &aValue,
                           nsPresContext* aPresContext,
                           PRBool &aCanStoreInRuleTree)
 {
+  if (aValue.GetUnit() == eCSSUnit_Pixel) {
+    // Handle this here (even though nsRuleNode::CalcLength handles it
+    // fine) so that callers are allowed to pass a null style context
+    // and pres context to SetToTransformFunction if they know (as
+    // nsStyleAnimation does) that all lengths within the transform
+    // function have already been computed to pixels and percents.
+    return nsPresContext::CSSPixelsToAppUnits(aValue.GetFloatValue());
+  }
   return nsRuleNode::CalcLength(aValue, aContext, aPresContext,
                                 aCanStoreInRuleTree);
 }
@@ -532,6 +540,18 @@ static void ProcessRotate(float aMain[4], const nsCSSValue::Array* aData)
 }
 
 /**
+ * Return the transform function, as an nsCSSKeyword, for the given
+ * nsCSSValue::Array from a transform list.
+ */
+/* static */ nsCSSKeyword
+nsStyleTransformMatrix::TransformFunctionOf(const nsCSSValue::Array* aData)
+{
+  nsAutoString keyword;
+  aData->Item(0).GetStringValue(keyword);
+  return nsCSSKeywords::LookupKeyword(keyword);
+}
+
+/**
  * SetToTransformFunction is essentially a giant switch statement that fans
  * out to many smaller helper functions.
  */
@@ -542,18 +562,17 @@ nsStyleTransformMatrix::SetToTransformFunction(const nsCSSValue::Array * aData,
                                                PRBool& aCanStoreInRuleTree)
 {
   NS_PRECONDITION(aData, "Why did you want to get data from a null array?");
-  NS_PRECONDITION(aContext, "Need a context for unit conversion!");
-  NS_PRECONDITION(aPresContext, "Need a context for unit conversion!");
-  
+  // It's OK if aContext and aPresContext are null if the caller already
+  // knows that all length units have been converted to pixels (as
+  // nsStyleAnimation does).
+
   /* Reset the matrix to the identity so that each subfunction can just
    * worry about its own components.
    */
   SetToIdentity();
 
   /* Get the keyword for the transform. */
-  nsAutoString keyword;
-  aData->Item(0).GetStringValue(keyword);
-  switch (nsCSSKeywords::LookupKeyword(keyword)) {
+  switch (TransformFunctionOf(aData)) {
   case eCSSKeyword_translatex:
     ProcessTranslateX(mDelta, mX, aData, aContext, aPresContext,
                       aCanStoreInRuleTree);
