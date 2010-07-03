@@ -53,12 +53,6 @@ public:
     typedef typename AssemblerType::JmpSrc JmpSrc;
     typedef typename AssemblerType::JmpDst JmpDst;
 
-#ifdef DEBUG
-    void setSpewPath(bool isOOLPath)
-    {
-        m_assembler.isOOLPath = isOOLPath;
-    }
-#endif
 
     // Section 1: MacroAssembler operand types
     //
