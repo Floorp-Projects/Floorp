@@ -49,7 +49,21 @@ namespace css {
  *
  * It is templatized over a CalcOps class that is expected to provide:
  *
+ *   // input_type and input_array_type have a bunch of very specific
+ *   // expectations (which happen to be met by two classes (nsCSSValue
+ *   // and nsStyleCoord).  There must be methods (roughly):
+ *   //   input_array_type* input_type::GetArrayValue();
+ *   //   PRUint32 input_array_type::Count() const;
+ *   //   input_type& input_array_type::Item(PRUint32);
+ *   typedef ... input_type;
+ *   typedef ... input_array_type;
+ *
  *   typedef ... result_type;
+ *
+ *   // GetUnit(avalue) must return the correct nsCSSUnit for any
+ *   // value that represents a calc tree node (eCSSUnit_Calc*).  For
+ *   // other nodes, it may return any non eCSSUnit_Calc* unit.
+ *   static nsCSSUnit GetUnit(const input_type& aValue);
  *
  *   result_type
  *   MergeAdditive(nsCSSUnit aCalcFunction,
@@ -64,10 +78,10 @@ namespace css {
  *                        result_type aValue1, float aValue2);
  *
  *   result_type
- *   ComputeLeafValue(const nsCSSValue& aValue);
+ *   ComputeLeafValue(const input_type& aValue);
  *
  *   float
- *   ComputeNumber(const nsCSSValue& aValue);
+ *   ComputeNumber(const input_type& aValue);
  *
  * The CalcOps methods might compute the calc() expression down to a
  * number, reduce some parts of it to a number but replicate other
@@ -91,44 +105,44 @@ namespace css {
  */
 template <class CalcOps>
 static typename CalcOps::result_type
-ComputeCalc(const nsCSSValue& aValue, CalcOps &aOps)
+ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
 {
-  switch (aValue.GetUnit()) {
+  switch (CalcOps::GetUnit(aValue)) {
     case eCSSUnit_Calc: {
-      nsCSSValue::Array *arr = aValue.GetArrayValue();
+      typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 1, "unexpected length");
       return ComputeCalc(arr->Item(0), aOps);
     }
     case eCSSUnit_Calc_Plus:
     case eCSSUnit_Calc_Minus: {
-      nsCSSValue::Array *arr = aValue.GetArrayValue();
+      typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
       typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps),
                                     rhs = ComputeCalc(arr->Item(1), aOps);
-      return aOps.MergeAdditive(aValue.GetUnit(), lhs, rhs);
+      return aOps.MergeAdditive(CalcOps::GetUnit(aValue), lhs, rhs);
     }
     case eCSSUnit_Calc_Times_L: {
-      nsCSSValue::Array *arr = aValue.GetArrayValue();
+      typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
       float lhs = aOps.ComputeNumber(arr->Item(0));
       typename CalcOps::result_type rhs = ComputeCalc(arr->Item(1), aOps);
-      return aOps.MergeMultiplicativeL(aValue.GetUnit(), lhs, rhs);
+      return aOps.MergeMultiplicativeL(CalcOps::GetUnit(aValue), lhs, rhs);
     }
     case eCSSUnit_Calc_Times_R:
     case eCSSUnit_Calc_Divided: {
-      nsCSSValue::Array *arr = aValue.GetArrayValue();
+      typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
       typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps);
       float rhs = aOps.ComputeNumber(arr->Item(1));
-      return aOps.MergeMultiplicativeR(aValue.GetUnit(), lhs, rhs);
+      return aOps.MergeMultiplicativeR(CalcOps::GetUnit(aValue), lhs, rhs);
     }
     case eCSSUnit_Calc_Minimum:
     case eCSSUnit_Calc_Maximum: {
-      nsCSSValue::Array *arr = aValue.GetArrayValue();
+      typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       typename CalcOps::result_type result = ComputeCalc(arr->Item(0), aOps);
       for (size_t i = 1, i_end = arr->Count(); i < i_end; ++i) {
         typename CalcOps::result_type tmp = ComputeCalc(arr->Item(i), aOps);
-        result = aOps.MergeAdditive(aValue.GetUnit(), result, tmp);
+        result = aOps.MergeAdditive(CalcOps::GetUnit(aValue), result, tmp);
       }
       return result;
     }
@@ -137,6 +151,21 @@ ComputeCalc(const nsCSSValue& aValue, CalcOps &aOps)
     }
   }
 }
+
+/**
+ * The input unit operation for input_type being nsCSSValue.
+ */
+struct CSSValueInputCalcOps
+{
+  typedef nsCSSValue input_type;
+  typedef nsCSSValue::Array input_array_type;
+
+  static nsCSSUnit GetUnit(const nsCSSValue& aValue)
+  {
+    return aValue.GetUnit();
+  }
+
+};
 
 /**
  * Basic*CalcOps provide a partial implementation of the CalcOps
@@ -237,7 +266,7 @@ struct BasicFloatCalcOps
  * A ComputeNumber implementation for callers that can assume numbers
  * are already normalized (i.e., anything past the parser).
  */
-struct NumbersAlreadyNormalizedOps
+struct NumbersAlreadyNormalizedOps : public CSSValueInputCalcOps
 {
   float ComputeNumber(const nsCSSValue& aValue)
   {
