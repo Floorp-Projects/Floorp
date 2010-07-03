@@ -434,8 +434,11 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayB
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
-    // XXX check for overflow
-    if (byteOffset + wb->byteLength > boundBuffer->ByteLength())
+    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + wb->byteLength;
+    if (!checked_neededByteLength.valid())
+        return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
+
+    if (checked_neededByteLength.value() > boundBuffer->ByteLength())
         return ErrorInvalidOperation("BufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
                                      byteOffset, wb->byteLength, boundBuffer->ByteLength());
 
@@ -464,8 +467,11 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::T
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
-    // XXX check for overflow
-    if (byteOffset + wa->byteLength > boundBuffer->ByteLength())
+    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + wa->byteLength;
+    if (!checked_neededByteLength.valid())
+        return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
+
+    if (checked_neededByteLength.value() > boundBuffer->ByteLength())
         return ErrorInvalidOperation("BufferSubData: not enough data -- operation requires %d bytes, but buffer only has %d bytes",
                                      byteOffset, wa->byteLength, boundBuffer->ByteLength());
 
@@ -848,10 +854,12 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (!mCurrentProgram)
         return NS_OK;
 
-    if (first+count < first || first+count < count)
-        return ErrorInvalidOperation("DrawArrays: overflow in first+count");
+    CheckedInt32 checked_firstPlusCount = CheckedInt32(first) + count;
 
-    if (!ValidateBuffers(first+count))
+    if (!checked_firstPlusCount.valid())
+        return ErrorInvalidOperation("drawArrays: overflow in first+count");
+
+    if (!ValidateBuffers(checked_firstPlusCount.value()))
         return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient data for given first and count");
 
     MakeContextCurrent();
@@ -882,19 +890,20 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (count < 0 || byteOffset < 0)
         return ErrorInvalidValue("DrawElements: negative count or offset");
 
-    WebGLuint byteCount;
-    if (type == LOCAL_GL_UNSIGNED_SHORT) {
-        byteCount = WebGLuint(count) << 1;
-        if (byteCount >> 1 != WebGLuint(count))
-            return ErrorInvalidValue("DrawElements: overflow in byteCount");
+    CheckedUint32 checked_byteCount;
 
+    if (type == LOCAL_GL_UNSIGNED_SHORT) {
+        checked_byteCount = 2 * CheckedUint32(count);
         if (byteOffset % 2 != 0)
             return ErrorInvalidValue("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
     } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
-        byteCount = count;
+        checked_byteCount = count;
     } else {
         return ErrorInvalidEnum("DrawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
+
+    if (!checked_byteCount.valid())
+        return ErrorInvalidValue("DrawElements: overflow in byteCount");
 
     // If count is 0, there's nothing to do.
     if (count == 0)
@@ -908,10 +917,12 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (!mBoundElementArrayBuffer)
         return ErrorInvalidOperation("DrawElements: must have element array buffer binding");
 
-    if (byteOffset+byteCount < WebGLuint(byteOffset) || byteOffset+byteCount < byteCount)
+    CheckedUint32 checked_neededByteCount = checked_byteCount + byteOffset;
+
+    if (!checked_neededByteCount.valid())
         return ErrorInvalidOperation("DrawElements: overflow in byteOffset+byteCount");
 
-    if (byteOffset + byteCount > mBoundElementArrayBuffer->ByteLength())
+    if (checked_neededByteCount.value() > mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
 
     WebGLuint maxIndex = 0;
@@ -921,8 +932,13 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
         maxIndex = mBoundElementArrayBuffer->FindMaximum<GLubyte>(count, byteOffset);
     }
 
-    // maxIndex+1 because ValidateBuffers expects the number of elements needed
-    if (!ValidateBuffers(maxIndex+1)) {
+    // maxIndex+1 because ValidateBuffers expects the number of elements needed.
+    // it is very important here to check tha maxIndex+1 doesn't overflow, otherwise the buffer validation is bypassed !!!
+    // maxIndex is a WebGLuint, ValidateBuffers takes a PRUint32, we validate maxIndex+1 as a PRUint32.
+    CheckedUint32 checked_neededCount = CheckedUint32(maxIndex) + 1;
+    if (!checked_neededCount.valid())
+        return ErrorInvalidOperation("drawElements: overflow in maxIndex+1");
+    if (!ValidateBuffers(checked_neededCount.value())) {
         return ErrorInvalidOperation("DrawElements: bound vertex attribute buffers do not have sufficient "
                                      "data for given indices from the bound element array");
     }
@@ -2210,16 +2226,19 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     PRUint32 packAlignment;
     gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*) &packAlignment);
 
-    PRUint32 plainRowSize = width*size;
+    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
 
-    // alignedRowSize = row size rounded up to next multiple of
-    // packAlignment which is a power of 2
-    PRUint32 alignedRowSize = (plainRowSize + packAlignment-1) &
-        ~PRUint32(packAlignment-1);
+    // alignedRowSize = row size rounded up to next multiple of packAlignment
+    CheckedUint32 checked_alignedRowSize
+        = ((checked_plainRowSize + packAlignment-1) / packAlignment) * packAlignment;
 
-    PRUint32 neededByteLength = (height-1)*alignedRowSize + plainRowSize;
+    CheckedUint32 checked_neededByteLength
+        = (height-1) * checked_alignedRowSize + checked_plainRowSize;
 
-    if(neededByteLength > byteLength)
+    if (!checked_neededByteLength.valid())
+        return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
+
+    if (checked_neededByteLength.value() > byteLength)
         return ErrorInvalidOperation("ReadPixels: buffer too small");
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight)) {
@@ -2255,7 +2274,14 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         GLint   subrect_end_y  = PR_MIN(y+height, boundHeight);
         GLsizei subrect_height = subrect_end_y - subrect_y;
 
+        if (subrect_width < 0 || subrect_height < 0 ||
+            subrect_width > width || subrect_height)
+            return ErrorInvalidOperation("ReadPixels: integer overflow computing clipped rect size");
+
+        // now we know that subrect_width is in the [0..width] interval, and same for heights.
+
         // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
+        // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
         PRUint32 subrect_plainRowSize = subrect_width * size;
         PRUint32 subrect_alignedRowSize = (subrect_plainRowSize + packAlignment-1) &
             ~PRUint32(packAlignment-1);
@@ -2264,11 +2290,13 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         // create subrect buffer, call glReadPixels, copy pixels into destination buffer, delete subrect buffer
         GLubyte *subrect_data = new GLubyte[subrect_byteLength];
         gl->fReadPixels(subrect_x, subrect_y, subrect_width, subrect_height, format, type, subrect_data);
+
+        // notice that this for loop terminates because we already checked that subrect_height is at most height
         for (GLint y_inside_subrect = 0; y_inside_subrect < subrect_height; ++y_inside_subrect) {
             GLint subrect_x_in_dest_buffer = subrect_x - x;
             GLint subrect_y_in_dest_buffer = subrect_y - y;
             memcpy(static_cast<GLubyte*>(data)
-                     + alignedRowSize * (subrect_y_in_dest_buffer + y_inside_subrect)
+                     + checked_alignedRowSize.value() * (subrect_y_in_dest_buffer + y_inside_subrect)
                      + size * subrect_x_in_dest_buffer, // destination
                    subrect_data + subrect_alignedRowSize * y_inside_subrect, // source
                    subrect_plainRowSize); // size
@@ -2331,14 +2359,19 @@ WebGLContext::ReadPixels_byteLength_old_API_deprecated(WebGLsizei width, WebGLsi
     PRUint32 packAlignment;
     gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*) &packAlignment);
 
-    PRUint32 plainRowSize = width*size;
+    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
 
     // alignedRowSize = row size rounded up to next multiple of
     // packAlignment which is a power of 2
-    PRUint32 alignedRowSize = (plainRowSize + packAlignment-1) &
-        ~PRUint32(packAlignment-1);
+    CheckedUint32 checked_alignedRowSize
+        = ((checked_plainRowSize + packAlignment-1) / packAlignment) * packAlignment;
 
-    *retval = (height-1)*alignedRowSize + plainRowSize;
+    CheckedUint32 checked_neededByteLength = (height-1)*checked_alignedRowSize + checked_plainRowSize;
+
+    if (!checked_neededByteLength.valid())
+        return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
+
+    *retval = checked_neededByteLength.value();
 
     return NS_OK;
 }
@@ -2999,11 +3032,15 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (!ValidateTexFormatAndType(format, type, &texelSize, "texImage2D"))
         return NS_OK;
 
-    // XXX overflow!
-    uint32 bytesNeeded = width * height * texelSize;
+    CheckedUint32 checked_bytesNeeded = CheckedUint32(width) * height * texelSize;
 
+    if (!checked_bytesNeeded.valid())
+        return ErrorInvalidOperation("texImage2D: integer overflow computing the needed buffer size");
+
+    PRUint32 bytesNeeded = checked_bytesNeeded.value();
+    
     if (byteLength && byteLength < bytesNeeded)
-        return ErrorInvalidValue("TexImage2D: not enough data for operation (need %d, have %d)",
+        return ErrorInvalidOperation("TexImage2D: not enough data for operation (need %d, have %d)",
                                  bytesNeeded, byteLength);
 
     MakeContextCurrent();
@@ -3132,8 +3169,13 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     if (width == 0 || height == 0)
         return NS_OK; // ES 2.0 says it has no effect, we better return right now
 
-    // XXX overflow!
-    uint32 bytesNeeded = width * height * texelSize;
+    CheckedUint32 checked_bytesNeeded = CheckedUint32(width) * height * texelSize;
+
+    if (!checked_bytesNeeded.valid())
+        return ErrorInvalidOperation("texSubImage2D: integer overflow computing the needed buffer size");
+
+    PRUint32 bytesNeeded = checked_bytesNeeded.value();
+ 
     if (byteLength < bytesNeeded)
         return ErrorInvalidValue("TexSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
