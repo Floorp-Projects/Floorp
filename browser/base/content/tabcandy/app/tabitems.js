@@ -439,8 +439,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       function onZoomDone(){
         TabMirror.resumePainting();
         // If it's not focused, the onFocus lsitener would handle it.
-        Page.tabOnFocus(tab);
-        if (!tab.isFocused()) {
+        if (tab.isFocused()) {
+          Page.tabOnFocus(tab);
+        } else {
           tab.focus();
         }
 

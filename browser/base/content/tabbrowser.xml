@@ -888,8 +888,11 @@
 
             // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
             if (!this._previewMode) {
-              this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
-
+              try {
+                this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
+              } catch (e) {
+                Components.utils.reportError(e);
+              }
               this.updateTitlebar();
             }
 
