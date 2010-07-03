@@ -410,15 +410,34 @@ window.Page = {
       .addClass('group phantom')
       .css({
         position: "absolute",
-        top: startPos.y,
-        left: startPos.x,
-        width: 0,
-        height: 0,
         opacity: .7,
         zIndex: -1,
         cursor: "default"
       })
       .appendTo("body");
+
+    var item = { // a faux-Item
+      container: phantom,
+      bounds: {},
+      getBounds: function FauxItem_getBounds() {
+        return this.container.bounds();
+      },
+      setBounds: function FauxItem_setBounds( bounds ) {
+        this.container.css( bounds );
+      },
+      setZ: function FauxItem_setZ( z ) {
+        this.container.css( 'z-index', z );
+      },
+      setOpacity: function FauxItem_setOpacity( opacity ) {
+        this.container.css( 'opacity', opacity );
+      },
+      // we don't need to pushAway the phantom item at the end, because 
+      // when we create a new Group, it'll do the actual pushAway.
+      pushAway: function () {},
+    };
+    item.setBounds( new Rect( startPos.y, startPos.x, 0, 0 ) );
+    
+    var dragOutInfo = new Drag(item, e, true); // true = isResizing
     
     function updateSize(e){
       var box = new Rect();
@@ -426,15 +445,17 @@ window.Page = {
       box.right = Math.max(startPos.x, e.clientX);
       box.top = Math.min(startPos.y, e.clientY);
       box.bottom = Math.max(startPos.y, e.clientY);
-
-      var css = box.css();      
-      if(css.width > minMinSize && css.height > minMinSize
-          && (css.width > minSize || css.height > minSize)) 
-        css.opacity = 1;
-      else 
-        css.opacity = .7
+      item.setBounds(box);
       
-      phantom.css(css);
+      dragOutInfo.snap(e, null, false, false); // null for ui, which we don't use anyway.
+
+      box = item.getBounds();
+      if (box.width > minMinSize && box.height > minMinSize
+          && (box.width > minSize || box.height > minSize)) 
+        item.setOpacity(1);
+      else 
+        item.setOpacity(0.7);
+      
       e.preventDefault();     
     }
     
@@ -454,23 +475,25 @@ window.Page = {
     
     function finalize(e){
       iQ(window).unbind("mousemove", updateSize);
-      if( phantom.css("opacity") != 1 ) 
+      dragOutInfo.stop();
+      if ( phantom.css("opacity") != 1 ) 
         collapse();
-      else{
-        var bounds = phantom.bounds();
+      else {
+        var bounds = item.getBounds();
 
         // Add all of the orphaned tabs that are contained inside the new group
         // to that group.
         var tabs = Groups.getOrphanedTabs();
         var insideTabs = [];
         for each( tab in tabs ){
-          if( bounds.contains( tab.bounds ) ){
+          if ( bounds.contains( tab.bounds ) ){
             insideTabs.push(tab);
           }
         }
         
         var group = new Group(insideTabs,{bounds:bounds});
         phantom.remove();
+        dragOutInfo = null;
       }
     }
     

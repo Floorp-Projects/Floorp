@@ -82,13 +82,13 @@ var Drag = function(item, event, isResizing) {
     Trenches.activateOthersTrenches(this.el);
     
     // When a tab drag starts, make it the focused tab.
-    if(this.item.isAGroup) {
+    if (this.item.isAGroup) {
       var tab = Page.getActiveTab();
-      if(!tab || tab.parent != this.item) {
-        if(this.item._children.length)
+      if (!tab || tab.parent != this.item) {
+        if (this.item._children.length)
           Page.setActiveTab(this.item._children[0]);
       }
-    } else {
+    } else if (this.item.isATabItem) {
       Page.setActiveTab(this.item);
     }
   } catch(e) {
@@ -108,7 +108,7 @@ Drag.prototype = {
 
     // OH SNAP!
     if ( !Keys.meta                           // if we aren't holding down the meta key...
-        && !this.item.overlapsWithOtherItems() // and we aren't on top of anything else...
+        && !(this.isATabItem && this.item.overlapsWithOtherItems()) // and we aren't a tab on top of something else...
         ) { 
       newRect = Trenches.snap(bounds,assumeConstantSize,keepProportional);
       if (newRect) { // might be false if no changes were made
@@ -116,8 +116,6 @@ Drag.prototype = {
         snappedTrenches = newRect.snappedTrenches || {};
         bounds = newRect;
       }
-    } else {
-      Trenches.hideGuides();
     }
 
     // make sure the bounds are in the window.
@@ -135,7 +133,7 @@ Drag.prototype = {
         trench.showGuide = true;
         trench.show();
       } else if (trench === 'edge') {
-        // show the edge.
+        // show the edge...?
       }
     }
 
@@ -217,10 +215,10 @@ Drag.prototype = {
   drag: function(event, ui) {
     this.snap(event,ui,true);
       
-    if(this.parent && this.parent.expanded) {
+    if (this.parent && this.parent.expanded) {
       var now = Utils.getMilliseconds();
       var distance = this.startPosition.distance(new Point(event.clientX, event.clientY));
-      if(/* now - this.startTime > 500 ||  */distance > 100) {
+      if (/* now - this.startTime > 500 ||  */distance > 100) {
         this.parent.remove(this.item);
         this.parent.collapse();
       }
@@ -231,18 +229,19 @@ Drag.prototype = {
   // Function: stop
   // Called in response to an <Item> draggable "stop" event.
   stop: function() {
-		Trenches.hideGuides();
+    Trenches.hideGuides();
     this.item.isDragging = false;
 
-    if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
+    // TODO: create a Group.isEmpty instead.
+    if (this.parent && !this.parent.locked.close && this.parent != this.item.parent 
         && this.parent._children.length == 0 && !this.parent.getTitle()) {
       this.parent.close();
     }
      
-    if(this.parent && this.parent.expanded)
+    if (this.parent && this.parent.expanded)
       this.parent.arrange();
       
-    if(this.item && !this.item.parent) {
+    if (this.item && !this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
       
