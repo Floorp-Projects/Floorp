@@ -1809,6 +1809,10 @@ function BrowserShowTabCandy() {
   dispatchEvent(event);
 }
 
+function isTabCandyVisible() {
+  return window.document.getElementById("tab-candy-deck").selectedIndex == 1
+}
+
 function openLocation() {
   if (focusAndSelectUrlBar())
     return;

@@ -1288,7 +1288,7 @@
             t.linkedPanel = uniqueId;
             t.linkedBrowser = b;
             t._tPos = position;
-            if (t.previousSibling.selected)
+            if (t.previousSibling && t.previousSibling.selected)
               t.setAttribute("afterselected", true);
 
             this.tabContainer.adjustTabstrip();
@@ -1453,21 +1453,23 @@
             var closeWindow = false;
             var newTab = false;
             if (this.tabs.length - this._removingTabs.length == 1) {
-              closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
-                            !window.toolbar.visible ||
-                              this.tabContainer._closeWindowWithLastTab;
+              if (!isTabCandyVisible()) {
+                closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
+                              !window.toolbar.visible ||
+                                this.tabContainer._closeWindowWithLastTab;
 
-              // Closing the tab and replacing it with a blank one is notably slower
-              // than closing the window right away. If the caller opts in, take
-              // the fast path.
-              if (closeWindow &&
-                  aCloseWindowFastpath &&
-                  this._removingTabs.length == 0 &&
-                  (this._windowIsClosing = window.closeWindow(true)))
-                return null;
+                // Closing the tab and replacing it with a blank one is notably slower
+                // than closing the window right away. If the caller opts in, take
+                // the fast path.
+                if (closeWindow &&
+                   aCloseWindowFastpath &&
+                   this._removingTabs.length == 0 &&
+                   (this._windowIsClosing = window.closeWindow(true)))
+                  return null;
 
-              newTab = true;
-            }
+                newTab = true;
+              }
+           }
 
             this._removingTabs.push(aTab);
 
