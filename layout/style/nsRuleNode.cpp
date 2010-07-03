@@ -509,6 +509,56 @@ SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   aCoord = ComputeCalc(aValue, ops);
 }
 
+struct ComputeComputedCalcCalcOps : public css::BasicCoordCalcOps
+{
+  typedef nsStyleCoord input_type;
+  typedef nsStyleCoord::Array input_array_type;
+
+  static nsCSSUnit GetUnit(const nsStyleCoord& aValue)
+  {
+    if (aValue.IsCalcUnit()) {
+      return css::ConvertCalcUnit(aValue.GetUnit());
+    }
+    return eCSSUnit_Null;
+  }
+
+  const nscoord mPercentageBasis;
+
+  ComputeComputedCalcCalcOps(nscoord aPercentageBasis)
+    : mPercentageBasis(aPercentageBasis)
+  {
+  }
+
+  result_type ComputeLeafValue(const nsStyleCoord& aValue)
+  {
+    nscoord result;
+    if (aValue.GetUnit() == eStyleUnit_Percent) {
+      result = NSCoordSaturatingMultiply(mPercentageBasis,
+                                         aValue.GetPercentValue());
+    } else {
+      result = aValue.GetCoordValue();
+    }
+    return result;
+  }
+
+  float ComputeNumber(const nsStyleCoord& aValue)
+  {
+    NS_ABORT_IF_FALSE(PR_FALSE, "SpecifiedToComputedCalcOps should not "
+                                "leave numbers in structure");
+    return 0.0f;
+  }
+};
+
+// This is our public API for handling calc() expressions that involve
+// percentages.
+/* static */ nscoord
+nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
+                                nscoord aPercentageBasis)
+{
+  ComputeComputedCalcCalcOps ops(aPercentageBasis);
+  return css::ComputeCalc(aValue, ops);
+}
+
 #define SETCOORD_NORMAL                 0x01   // N
 #define SETCOORD_AUTO                   0x02   // A
 #define SETCOORD_INHERIT                0x04   // H
