@@ -38,16 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Module level methods. */
-
-#ifdef XPCONNECT_STANDALONE
-#define NO_SUBSCRIPT_LOADER
-#endif
-
-#include "xpcmodule.h"
+#include "xpcprivate.h"
 
 nsresult
-xpcModuleCtor(nsIModule* self)
+xpcModuleCtor()
 {
     nsXPConnect::InitStatics();
     nsXPCException::InitStatics();
@@ -62,7 +56,7 @@ xpcModuleCtor(nsIModule* self)
 }
 
 void
-xpcModuleDtor(nsIModule*)
+xpcModuleDtor()
 {
     // Release our singletons
     nsXPConnect::ReleaseXPConnectSingleton();
@@ -72,16 +66,3 @@ xpcModuleDtor(nsIModule*)
     XPCIDispatchClassInfo::FreeSingleton();
 #endif
 }
-
-#ifdef XPCONNECT_STANDALONE
-
-/* Module implementation for the xpconnect library. */
-
-XPCONNECT_FACTORIES
-
-static const nsModuleComponentInfo components[] = {
-  XPCONNECT_COMPONENTS
-};
-
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(xpconnect, components, xpcModuleCtor, xpcModuleDtor)
-#endif

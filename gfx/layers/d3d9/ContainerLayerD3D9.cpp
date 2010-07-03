@@ -119,12 +119,6 @@ ContainerLayerD3D9::RemoveChild(Layer *aChild)
   }
 }
 
-LayerD3D9::LayerType
-ContainerLayerD3D9::GetType()
-{
-  return TYPE_CONTAINER;
-}
-
 Layer*
 ContainerLayerD3D9::GetLayer()
 {

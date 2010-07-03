@@ -82,6 +82,7 @@ _BROWSER_FILES = head.js \
                  browser_navigateaway2.js \
                  browser_bug540558.js \
                  browser_relative.js \
+                 browser_cancel.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
@@ -89,6 +90,8 @@ _BROWSER_FILES = head.js \
                  signed-no-cn.xpi \
                  signed-untrusted.xpi \
                  signed-tampered.xpi \
+                 restartless.xpi \
+                 incompatible.xpi \
                  empty.xpi \
                  corrupt.xpi \
                  enabled.html \

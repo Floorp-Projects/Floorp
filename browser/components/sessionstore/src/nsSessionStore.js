@@ -148,8 +148,6 @@ function SessionStoreService() {
 }
 
 SessionStoreService.prototype = {
-  classDescription: "Browser Session Store Service",
-  contractID: "@mozilla.org/browser/sessionstore;1",
   classID: Components.ID("{5280606b-2510-4fe0-97ef-9b5a22eafe6b}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISessionStore,
                                          Ci.nsIDOMEventListener,
@@ -3089,5 +3087,4 @@ String.prototype.hasRootDomain = function hasRootDomain(aDomain)
          (prevChar == "." || prevChar == "/");
 }
 
-function NSGetModule(aComMgr, aFileSpec)
-  XPCOMUtils.generateModule([SessionStoreService]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStoreService]);

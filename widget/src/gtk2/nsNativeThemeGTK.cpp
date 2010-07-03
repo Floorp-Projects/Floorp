@@ -624,8 +624,8 @@ public:
                 const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
     : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
       mDirection(aDirection), mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
-  nsresult NativeDraw(GdkDrawable * drawable, short offsetX, short offsetY,
-                      GdkRectangle * clipRects, PRUint32 numClipRects);
+  nsresult DrawWithGDK(GdkDrawable * drawable, gint offsetX, gint offsetY,
+                       GdkRectangle * clipRects, PRUint32 numClipRects);
 private:
   GtkWidgetState mState;
   GtkThemeWidgetType mGTKWidgetType;
@@ -637,8 +637,8 @@ private:
 };
 
 nsresult
-ThemeRenderer::NativeDraw(GdkDrawable * drawable, short offsetX, 
-        short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects)
+ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX, 
+        gint offsetY, GdkRectangle * clipRects, PRUint32 numClipRects)
 {
   GdkRectangle gdk_rect = mGDKRect;
   gdk_rect.x += offsetX;
@@ -777,12 +777,10 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   ThemeRenderer renderer(state, gtkWidgetType, flags, direction,
                          gdk_rect, gdk_clip);
 
-  // We require the use of the default screen and visual
-  // because I'm afraid that otherwise the GTK theme may explode.
   // Some themes (e.g. Clearlooks) just don't clip properly to any
   // clip rect we provide, so we cannot advertise support for clipping within
   // the widget bounds.
-  PRUint32 rendererFlags = gfxGdkNativeRenderer::DRAW_SUPPORTS_OFFSET;
+  PRUint32 rendererFlags = 0;
   if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque) {
     rendererFlags |= gfxGdkNativeRenderer::DRAW_IS_OPAQUE;
   }
@@ -804,7 +802,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     gdk_error_trap_push ();
   }
 
-  renderer.Draw(ctx, drawingRect.width, drawingRect.height, rendererFlags, nsnull);
+  // GtkStyles (used by the widget drawing backend) are created for a
+  // particular colormap/visual.
+  GdkColormap* colormap = moz_gtk_widget_get_colormap();
+
+  renderer.Draw(ctx, drawingRect.Size(), rendererFlags, colormap);
 
   if (!safeState) {
     gdk_flush();

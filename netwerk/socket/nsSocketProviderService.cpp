@@ -43,7 +43,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_METHOD
+nsresult
 nsSocketProviderService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;

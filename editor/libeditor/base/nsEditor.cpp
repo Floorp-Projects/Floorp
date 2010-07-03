@@ -1943,7 +1943,7 @@ GetEditorContentWindow(nsIDOMElement *aRoot, nsIWidget **aResult)
 
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  *aResult = frame->GetWindow();
+  *aResult = frame->GetNearestWidget();
   NS_ENSURE_TRUE(*aResult, NS_ERROR_FAILURE);
 
   NS_ADDREF(*aResult);

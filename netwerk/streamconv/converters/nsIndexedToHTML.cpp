@@ -81,7 +81,7 @@ static void AppendNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
   }
 }
 
-NS_METHOD
+nsresult
 nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
     nsresult rv;
     if (aOuter)

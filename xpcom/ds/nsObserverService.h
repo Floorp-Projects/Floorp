@@ -59,7 +59,7 @@ public:
   
   void Shutdown();
 
-  static NS_METHOD
+  static nsresult
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 private:

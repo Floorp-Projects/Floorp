@@ -42,6 +42,7 @@ function run_test() {
     version: "1.0",
     name: "Test 1",
     type: 4,
+    skinnable: true,
     internalName: "theme1/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -56,6 +57,7 @@ function run_test() {
     id: "theme2@tests.mozilla.org",
     version: "1.0",
     name: "Test 1",
+    skinnable: false,
     internalName: "theme2/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -88,12 +90,18 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
-  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
-                               "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"],
+                               function([d, t1, t2]) {
+    do_check_neq(d, null);
+    do_check_false(d.skinnable);
+
     do_check_neq(t1, null);
     do_check_false(t1.userDisabled);
     do_check_false(t1.appDisabled);
     do_check_true(t1.isActive);
+    do_check_true(t1.skinnable);
     do_check_eq(t1.screenshots.length, 0);
     do_check_true(isThemeInAddonsList(profileDir, t1.id));
     do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -103,6 +111,7 @@ function run_test() {
     do_check_true(t2.userDisabled);
     do_check_false(t2.appDisabled);
     do_check_false(t2.isActive);
+    do_check_false(t2.skinnable);
     do_check_eq(t2.screenshots.length, 0);
     do_check_false(isThemeInAddonsList(profileDir, t2.id));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -266,6 +275,12 @@ function run_test_3() {
     do_check_eq(p1.scope, AddonManager.SCOPE_PROFILE);
     do_check_true("isCompatibleWith" in p1);
     do_check_true("findUpdates" in p1);
+    do_check_eq(p1.installDate.getTime(), p1.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p1.installDate.getTime()) < 5000);
 
     AddonManager.getAddonsByTypes(["theme"], function(addons) {
       let seen = false;
@@ -329,6 +344,12 @@ function run_test_4() {
     do_check_true(p2.isActive);
     do_check_eq(p2.pendingOperations, 0);
     do_check_eq(p2.permissions, AddonManager.PERM_CAN_UNINSTALL);
+    do_check_eq(p2.installDate.getTime(), p2.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p2.installDate.getTime()) < 5000);
 
     do_check_neq(null, p1);
     do_check_false(p1.appDisabled);
@@ -643,6 +664,7 @@ function run_test_11() {
     do_check_eq(install.version, "1.0");
     do_check_eq(install.name, "Test Theme 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(install.addon.skinnable, true);
 
     prepare_test({
       "theme1@tests.mozilla.org": [
@@ -665,6 +687,7 @@ function check_test_11() {
     preview.append("preview.png");
     do_check_eq(t1.screenshots.length, 1);
     do_check_eq(t1.screenshots[0], NetUtil.newURI(preview).spec);
+    do_check_true(t1.skinnable);
     do_check_false(gLWThemeChanged);
 
     run_test_12();
@@ -803,6 +826,67 @@ function run_test_14() {
 
     do_check_true(gLWThemeChanged);
     gLWThemeChanged = false;
+
+    run_test_15();
+  });
+}
+
+// Upgrading the application with a custom theme in use should not disable it
+function run_test_15() {
+  restartManager();
+
+  installAllFiles([do_get_addon("test_theme")], function() {
+    AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
+      t1.userDisabled = false;
+
+      restartManager();
+
+      do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
+      AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                   "theme1@tests.mozilla.org"], function([d, t1]) {
+        do_check_true(d.userDisabled);
+        do_check_false(d.appDisabled);
+        do_check_false(d.isActive);
+
+        do_check_false(t1.userDisabled);
+        do_check_false(t1.appDisabled);
+        do_check_true(t1.isActive);
+
+        restartManager(1, "2");
+
+        do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
+        AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                     "theme1@tests.mozilla.org"], function([d, t1]) {
+          do_check_true(d.userDisabled);
+          do_check_false(d.appDisabled);
+          do_check_false(d.isActive);
+
+          do_check_false(t1.userDisabled);
+          do_check_false(t1.appDisabled);
+          do_check_true(t1.isActive);
+
+          run_test_16();
+        });
+      });
+    });
+  });
+}
+
+// Upgrading the application with a custom theme in use should disable it if it
+// is no longer compatible
+function run_test_16() {
+  restartManager(1, "3");
+
+  do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org"], function([d, t1]) {
+    do_check_false(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_true(d.isActive);
+
+    do_check_true(t1.userDisabled);
+    do_check_true(t1.appDisabled);
+    do_check_false(t1.isActive);
 
     end_test();
   });

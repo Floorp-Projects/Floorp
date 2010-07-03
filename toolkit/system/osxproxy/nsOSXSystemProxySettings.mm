@@ -47,7 +47,7 @@
 #import <SystemConfiguration/SystemConfiguration.h>
 
 #include "nsISystemProxySettings.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
@@ -372,12 +372,22 @@ nsOSXSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
       { 0x8f, 0x1f, 0x3b, 0xf0, 0xd3, 0xcf, 0x67, 0xde } }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsOSXSystemProxySettings, Init);
+NS_DEFINE_NAMED_CID(NS_OSXSYSTEMPROXYSERVICE_CID);
 
-static const nsModuleComponentInfo components[] = {
-  { "OSX System Proxy Settings Service",
-    NS_OSXSYSTEMPROXYSERVICE_CID,
-    NS_SYSTEMPROXYSETTINGS_CONTRACTID,
-    nsOSXSystemProxySettingsConstructor }
+static const mozilla::Module::CIDEntry kOSXSysProxyCIDs[] = {
+  { &kNS_OSXSYSTEMPROXYSERVICE_CID, false, NULL, nsOSXSystemProxySettingsConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsOSXProxyModule, components)
+static const mozilla::Module::ContractIDEntry kOSXSysProxyContracts[] = {
+  { NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_OSXSYSTEMPROXYSERVICE_CID },
+  { NULL }
+};
+
+static const mozilla::Module kOSXSysProxyModule = {
+  mozilla::Module::kVersion,
+  kOSXSysProxyCIDs,
+  kOSXSysProxyContracts
+};
+
+NSMODULE_DEFN(nsOSXProxyModule) = &kOSXSysProxyModule;

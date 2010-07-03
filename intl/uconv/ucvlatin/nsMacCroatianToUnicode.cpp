@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "maccroat.ut"
 };
 
-NS_METHOD
+nsresult
 nsMacCroatianToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                   void **aResult) 
 {
