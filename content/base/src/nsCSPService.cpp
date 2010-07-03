@@ -117,18 +117,10 @@ CSPService::ShouldLoad(PRUint32 aContentType,
         if (csp) {
 #ifdef PR_LOGGING
             nsAutoString policy;
-            csp->GetEnforcedPolicy(policy);
-            if (policy.Length() > 0) {
-              PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                      ("Document CSP: %s",
-                      NS_ConvertUTF16toUTF8(policy).get()));
-            }
-            csp->GetReportOnlyPolicy(policy);
-            if (policy.Length() > 0) {
-              PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                      ("Report-Only CSP: %s",
-                      NS_ConvertUTF16toUTF8(policy).get()));
-            }
+            csp->GetPolicy(policy);
+            PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+                    ("Document has CSP: %s",
+                     NS_ConvertUTF16toUTF8(policy).get()));
 #endif
             // obtain the enforcement decision
             csp->ShouldLoad(aContentType,
@@ -183,18 +175,10 @@ CSPService::ShouldProcess(PRUint32         aContentType,
         if (csp) {
 #ifdef PR_LOGGING
             nsAutoString policy;
-            csp->GetEnforcedPolicy(policy);
-            if (policy.Length() > 0) {
-              PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                      ("shouldProcess - CSP: %s",
-                      NS_ConvertUTF16toUTF8(policy).get()));
-            }
-            csp->GetReportOnlyPolicy(policy);
-            if (policy.Length() > 0) {
-              PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                      ("shouldProcess - Report-Only CSP: %s",
-                      NS_ConvertUTF16toUTF8(policy).get()));
-            }
+            csp->GetPolicy(policy);
+            PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+                  ("shouldProcess - document has policy: %s",
+                    NS_ConvertUTF16toUTF8(policy).get()));
 #endif
             // obtain the enforcement decision
             csp->ShouldProcess(aContentType,
