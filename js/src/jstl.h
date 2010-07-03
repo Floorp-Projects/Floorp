@@ -405,6 +405,25 @@ PodArrayZero(T (&t)[N])
     memset(t, 0, N * sizeof(T));
 }
 
+template <typename InputIterT, typename ValueT>
+InputIterT
+find(InputIterT begin, InputIterT end, const ValueT &target)
+{
+    for (; begin != end; ++begin) {
+        if (*begin == target)
+            return begin;
+    }
+    return end;
+}
+
+template <typename InputIterT, typename CallableT>
+void
+for_each(InputIterT begin, InputIterT end, CallableT f)
+{
+    for (; begin != end; ++begin)
+        f(*begin);
+}
+
 } /* namespace js */
 
 #endif /* jstl_h_ */
