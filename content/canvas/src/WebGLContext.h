@@ -60,6 +60,8 @@
 #include "GLContext.h"
 #include "Layers.h"
 
+#include "CheckedInt.h"
+
 #define UNPACK_FLIP_Y_WEBGL            0x9240
 #define UNPACK_PREMULTIPLY_ALPHA_WEBGL 0x9241
 #define CONTEXT_LOST_WEBGL             0x9242
@@ -307,7 +309,7 @@ public:
 
     // a number that increments every time we have an event that causes
     // all context resources to be lost.
-    PRUint32 Generation() { return mGeneration; }
+    PRUint32 Generation() { return mGeneration.value(); }
 protected:
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
     nsHTMLCanvasElement *HTMLCanvasElement() {
@@ -317,7 +319,7 @@ protected:
     nsRefPtr<gl::GLContext> gl;
 
     PRInt32 mWidth, mHeight;
-    PRUint32 mGeneration;
+    CheckedUint32 mGeneration;
 
     PRBool mInvalidated;
 
@@ -705,7 +707,7 @@ public:
     WebGLuint GLName() { return mName; }
     const nsTArray<WebGLShader*>& AttachedShaders() const { return mAttachedShaders; }
     PRBool LinkStatus() { return mLinkStatus; }
-    GLuint Generation() const { return mGeneration; }
+    PRUint32 Generation() const { return mGeneration.value(); }
     void SetLinkStatus(PRBool val) { mLinkStatus = val; }
 
     PRBool ContainsShader(WebGLShader *shader) {
@@ -742,10 +744,9 @@ public:
 
     PRBool NextGeneration()
     {
-        GLuint nextGeneration = mGeneration + 1;
-        if (nextGeneration == 0)
+        if (!(mGeneration+1).valid())
             return PR_FALSE; // must exit without changing mGeneration
-        mGeneration = nextGeneration;
+        ++mGeneration;
         mMapUniformLocations.Clear();
         return PR_TRUE;
     }
@@ -770,7 +771,7 @@ protected:
     PRPackedBool mLinkStatus;
     nsTArray<WebGLShader*> mAttachedShaders;
     nsRefPtrHashtable<nsUint32HashKey, WebGLUniformLocation> mMapUniformLocations;
-    GLuint mGeneration;
+    CheckedUint32 mGeneration;
     GLint mUniformMaxNameLength;
     GLint mAttribMaxNameLength;
     GLint mUniformCount;
@@ -864,7 +865,7 @@ public:
 
     WebGLProgram *Program() const { return mProgram; }
     GLint Location() const { return mLocation; }
-    GLuint ProgramGeneration() const { return mProgramGeneration; }
+    PRUint32 ProgramGeneration() const { return mProgramGeneration; }
 
     // needed for our generic helpers to check nsIxxx parameters, see GetConcreteObject.
     PRBool Deleted() { return PR_FALSE; }
@@ -873,7 +874,7 @@ public:
     NS_DECL_NSIWEBGLUNIFORMLOCATION
 protected:
     WebGLObjectRefPtr<WebGLProgram> mProgram;
-    GLuint mProgramGeneration;
+    PRUint32 mProgramGeneration;
     GLint mLocation;
 };
 
