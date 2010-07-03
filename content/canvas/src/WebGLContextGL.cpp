@@ -1306,14 +1306,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
 
         #define LOCAL_GL_MAX_VARYING_VECTORS 0x8dfc // not present in desktop OpenGL
-        // temporarily add those defs here, as they're missing from
-        //     gfx/thebes/public/GLDefs.h
-        // and from
-        //     gfx/layers/opengl/glDefs.h
-        // and I don't know in which of these 2 files they should go (probably we're going to
-        // kill one of them soon?)
-        #define LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS  0x9125
-        #define LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS   0x9122
+
         case LOCAL_GL_MAX_VARYING_VECTORS:
         {
             #ifdef USE_GLES2
