@@ -1215,11 +1215,13 @@ mjit::Compiler::jsop_pos()
         return;
     }
 
+    frame.giveOwnRegs(top);
+
     Jump j;
     if (frame.shouldAvoidTypeRemat(top))
-        j = masm.branch32(Assembler::GreaterThan, frame.addressOf(top), ImmTag(JSVAL_TAG_INT32));
+        j = masm.testNumber(Assembler::NotEqual, frame.addressOf(top));
     else
-        j = masm.branch32(Assembler::GreaterThan, frame.tempRegForType(top), ImmTag(JSVAL_TAG_INT32));
+        j = masm.testNumber(Assembler::NotEqual, frame.tempRegForType(top));
     stubcc.linkExit(j);
 
     stubcc.leave();

@@ -178,6 +178,16 @@ class Assembler : public BaseAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_INT32));
     }
 
+    Jump testNumber(Assembler::Condition cond, RegisterID reg) {
+        cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_INT32));
+    }
+
+    Jump testNumber(Assembler::Condition cond, Address address) {
+        cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_INT32));
+    }
+
     Jump testPrimitive(Assembler::Condition cond, RegisterID reg) {
         cond = (cond == Assembler::NotEqual) ? Assembler::AboveOrEqual : Assembler::Below;
         return branch32(cond, reg, ImmTag(JSVAL_TAG_OBJECT));
