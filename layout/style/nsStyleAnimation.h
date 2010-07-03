@@ -238,6 +238,7 @@ public:
     eUnit_CSSRect, // nsCSSRect* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow, // nsCSSValueList* (may be null)
+    eUnit_Transform, // nsCSSValueList* (never null)
     eUnit_CSSValuePairList, // nsCSSValuePairList* (never null)
     eUnit_UnparsedString // nsStringBuffer* (never null)
   };
@@ -376,7 +377,8 @@ public:
       return aUnit == eUnit_CSSRect;
     }
     static PRBool IsCSSValueListUnit(Unit aUnit) {
-      return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow;
+      return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow ||
+             aUnit == eUnit_Transform;
     }
     static PRBool IsCSSValuePairListUnit(Unit aUnit) {
       return aUnit == eUnit_CSSValuePairList;
