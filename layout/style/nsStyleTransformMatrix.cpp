@@ -208,12 +208,12 @@ nsStyleTransformMatrix::operator *(const nsStyleTransformMatrix &aOther) const
 }
 
 /* Helper function to fill in an nscoord with the specified nsCSSValue. */
-static void SetCoordToValue(const nsCSSValue &aValue,
-                            nsStyleContext* aContext,
-                            nsPresContext* aPresContext,
-                            PRBool &aCanStoreInRuleTree, nscoord &aOut)
+static nscoord CalcLength(const nsCSSValue &aValue,
+                          nsStyleContext* aContext,
+                          nsPresContext* aPresContext,
+                          PRBool &aCanStoreInRuleTree)
 {
-  aOut = nsRuleNode::CalcLength(aValue, aContext, aPresContext,
+  return nsRuleNode::CalcLength(aValue, aContext, aPresContext,
                                 aCanStoreInRuleTree);
 }
 
@@ -239,8 +239,8 @@ static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
   if (aData->Item(5).GetUnit() == eCSSUnit_Percent)
     aX[0] = aData->Item(5).GetPercentValue();
   else
-    SetCoordToValue(aData->Item(5), aContext, aPresContext, aCanStoreInRuleTree,
-                    aDelta[0]);
+    aDelta[0] = CalcLength(aData->Item(5), aContext, aPresContext,
+                           aCanStoreInRuleTree);
 
   /* For the final element, if it's a percentage, store it in aY[1].
    * Otherwise, it's a length that needs to go in aDelta[1].
@@ -248,8 +248,8 @@ static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
   if (aData->Item(6).GetUnit() == eCSSUnit_Percent)
     aY[1] = aData->Item(6).GetPercentValue();
   else
-    SetCoordToValue(aData->Item(6), aContext, aPresContext, aCanStoreInRuleTree,
-                    aDelta[1]);
+    aDelta[1] = CalcLength(aData->Item(6), aContext, aPresContext,
+                           aCanStoreInRuleTree);
 }
 
 static void ProcessTranslatePart(nscoord& aOffset, float& aPercent,
@@ -261,8 +261,8 @@ static void ProcessTranslatePart(nscoord& aOffset, float& aPercent,
   if (aValue.GetUnit() == eCSSUnit_Percent) {
     aPercent = aValue.GetPercentValue();
   } else {
-    SetCoordToValue(aValue, aContext, aPresContext, aCanStoreInRuleTree,
-                    aOffset);
+    aOffset = CalcLength(aValue, aContext, aPresContext,
+                         aCanStoreInRuleTree);
   }
 }
 
