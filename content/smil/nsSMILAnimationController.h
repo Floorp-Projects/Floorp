@@ -152,11 +152,21 @@ protected:
   // Sample-related callbacks and implementation helpers
   virtual void DoSample();
   void DoSample(PRBool aSkipUnchangedContainers);
+
+  void RewindElements();
+  PR_STATIC_CALLBACK(PLDHashOperator) RewindNeeded(
+      TimeContainerPtrKey* aKey, void* aData);
+  PR_STATIC_CALLBACK(PLDHashOperator) RewindAnimation(
+      AnimationElementPtrKey* aKey, void* aData);
+  PR_STATIC_CALLBACK(PLDHashOperator) ClearRewindNeeded(
+      TimeContainerPtrKey* aKey, void* aData);
+
   void DoMilestoneSamples();
   PR_STATIC_CALLBACK(PLDHashOperator) GetNextMilestone(
       TimeContainerPtrKey* aKey, void* aData);
   PR_STATIC_CALLBACK(PLDHashOperator) GetMilestoneElements(
       TimeContainerPtrKey* aKey, void* aData);
+
   PR_STATIC_CALLBACK(PLDHashOperator) SampleTimeContainer(
       TimeContainerPtrKey* aKey, void* aData);
   PR_STATIC_CALLBACK(PLDHashOperator) SampleAnimation(

@@ -151,7 +151,8 @@ nsSMILTimedElement::nsSMILTimedElement()
   mClient(nsnull),
   mCurrentInterval(nsnull),
   mPrevRegisteredMilestone(sMaxMilestone),
-  mElementState(STATE_STARTUP)
+  mElementState(STATE_STARTUP),
+  mSeekState(SEEK_NOT_SEEKING)
 {
   mSimpleDur.SetIndefinite();
   mMin.SetMillis(0L);
@@ -456,6 +457,16 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
       "Got a regular sample during startup state, expected an end sample"
       " instead");
 
+  PRBool finishedSeek = PR_FALSE;
+  if (GetTimeContainer()->IsSeeking() && mSeekState == SEEK_NOT_SEEKING) {
+    mSeekState = mElementState == STATE_ACTIVE ?
+                 SEEK_FORWARD_FROM_ACTIVE :
+                 SEEK_FORWARD_FROM_INACTIVE;
+  } else if (mSeekState != SEEK_NOT_SEEKING &&
+             !GetTimeContainer()->IsSeeking()) {
+    finishedSeek = PR_TRUE;
+  }
+
   PRBool          stateChanged;
   nsSMILTimeValue sampleTime(aContainerTime);
 
@@ -541,6 +552,8 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
           stateChanged = PR_TRUE;
         } else {
           nsSMILTime beginTime = mCurrentInterval->Begin()->Time().GetMillis();
+          NS_ASSERTION(aContainerTime >= beginTime,
+                       "Sample time should not precede current interval");
           nsSMILTime activeTime = aContainerTime - beginTime;
           SampleSimpleTime(activeTime);
         }
@@ -560,6 +573,9 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
   } while (stateChanged && (!aEndOnly || (mElementState != STATE_WAITING &&
                                           mElementState != STATE_POSTACTIVE)));
 
+  if (finishedSeek) {
+    DoPostSeek();
+  }
   RegisterMilestone();
 }
 
@@ -574,6 +590,49 @@ nsSMILTimedElement::HandleContainerTimeChange()
   if (mElementState == STATE_WAITING || mElementState == STATE_ACTIVE) {
     NotifyChangedInterval();
   }
+}
+
+void
+nsSMILTimedElement::Rewind()
+{
+  NS_ABORT_IF_FALSE(mAnimationElement,
+      "Got rewind request before being attached to an animation element");
+  NS_ABORT_IF_FALSE(mSeekState == SEEK_NOT_SEEKING,
+      "Got rewind request whilst already seeking");
+
+  mSeekState = mElementState == STATE_ACTIVE ?
+               SEEK_BACKWARD_FROM_ACTIVE :
+               SEEK_BACKWARD_FROM_INACTIVE;
+
+  // Set the STARTUP state first so that if we get any callbacks we won't waste
+  // time recalculating the current interval
+  mElementState = STATE_STARTUP;
+
+  // Clear the intervals and instance times except those instance times we can't
+  // regenerate (DOM calls etc.)
+  RewindTiming();
+
+  UnsetBeginSpec();
+  UnsetEndSpec();
+
+  if (mClient) {
+    mClient->Inactivate(PR_FALSE);
+  }
+
+  if (mAnimationElement->HasAnimAttr(nsGkAtoms::begin)) {
+    nsAutoString attValue;
+    mAnimationElement->GetAnimAttr(nsGkAtoms::begin, attValue);
+    SetBeginSpec(attValue, &mAnimationElement->Content());
+  }
+
+  if (mAnimationElement->HasAnimAttr(nsGkAtoms::end)) {
+    nsAutoString attValue;
+    mAnimationElement->GetAnimAttr(nsGkAtoms::end, attValue);
+    SetEndSpec(attValue, &mAnimationElement->Content());
+  }
+
+  mPrevRegisteredMilestone = sMaxMilestone;
+  RegisterMilestone();
 }
 
 PRBool
@@ -1072,6 +1131,50 @@ nsSMILTimedElement::ClearBeginOrEndSpecs(PRBool aIsBegin)
 }
 
 void
+nsSMILTimedElement::RewindTiming()
+{
+  RewindInstanceTimes(mBeginInstances);
+  RewindInstanceTimes(mEndInstances);
+
+  if (mCurrentInterval) {
+    mCurrentInterval->Unlink();
+    mCurrentInterval = nsnull;
+  }
+
+  for (PRInt32 i = mOldIntervals.Length() - 1; i >= 0; --i) {
+    mOldIntervals[i]->Unlink();
+  }
+  mOldIntervals.Clear();
+}
+
+namespace
+{
+  class RemoveNonDynamic
+  {
+  public:
+    PRBool operator()(nsSMILInstanceTime* aInstanceTime, PRUint32 /*aIndex*/)
+    {
+      // Generally dynamically-generated instance times (DOM calls, event-based
+      // times) are not associated with their creator nsSMILTimeValueSpec.
+      // If that ever changes though we'll need to make sure to disassociate
+      // them here otherwise they'll get removed when we clear the set of
+      // nsSMILTimeValueSpecs later on.
+      NS_ABORT_IF_FALSE(!aInstanceTime->IsDynamic() ||
+           !aInstanceTime->GetCreator(),
+          "Instance time retained during rewind needs to be unlinked");
+      return !aInstanceTime->IsDynamic();
+    }
+  };
+}
+
+void
+nsSMILTimedElement::RewindInstanceTimes(InstanceTimeList& aList)
+{
+  RemoveNonDynamic removeNonDynamic;
+  RemoveInstanceTimes(aList, removeNonDynamic);
+}
+
+void
 nsSMILTimedElement::ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime)
 {
   // This should only be called within DoSampleAt as a helper function
@@ -1113,7 +1216,7 @@ namespace
       //   and DOM methods calls in the past are cleared. This does not apply to
       //   an instance time that defines the begin of the current interval.
       return aInstanceTime->IsDynamic() &&
-             !aInstanceTime->IsUsedAsFixedEndpoint() &&
+             !aInstanceTime->ShouldPreserve() &&
              (!mCurrentIntervalBegin || aInstanceTime != mCurrentIntervalBegin);
     }
 
@@ -1130,6 +1233,57 @@ nsSMILTimedElement::Reset()
 
   RemoveReset resetEnd(nsnull);
   RemoveInstanceTimes(mEndInstances, resetEnd);
+}
+
+void
+nsSMILTimedElement::DoPostSeek()
+{
+  // XXX When implementing TimeEvents we'll need to compare mElementState with
+  // mSeekState and dispatch events as follows:
+  //     ACTIVE->INACTIVE: End event
+  //     INACTIVE->ACTIVE: Begin event
+  //     ACTIVE->ACTIVE: Nothing (even if they're different intervals)
+  //     INACTIVE->INACTIVE: Nothing (even if we've skipped intervals)
+
+  // Finish backwards seek
+  if (mSeekState == SEEK_BACKWARD_FROM_INACTIVE ||
+      mSeekState == SEEK_BACKWARD_FROM_ACTIVE) {
+    // Previously some dynamic instance times may have been marked to be
+    // preserved because they were endpoints of an historic interval (which may
+    // or may not have been filtered). Now that we've finished a seek we should
+    // clear that flag for those instance times whose intervals are no longer
+    // historic.
+    UnpreserveInstanceTimes(mBeginInstances);
+    UnpreserveInstanceTimes(mEndInstances);
+
+    // Now that the times have been unmarked perform a reset. This might seem
+    // counter-intuitive when we're only doing a seek within an interval but
+    // SMIL seems to require this. SMIL 3.0, 'Hyperlinks and timing':
+    //   Resolved end times associated with events, Repeat-values,
+    //   Accesskey-values or added via DOM method calls are cleared when seeking
+    //   to time earlier than the resolved end time.
+    Reset();
+    UpdateCurrentInterval();
+  }
+
+  mSeekState = SEEK_NOT_SEEKING;
+}
+
+void
+nsSMILTimedElement::UnpreserveInstanceTimes(InstanceTimeList& aList)
+{
+  const nsSMILInterval* prevInterval = GetPreviousInterval();
+  const nsSMILInstanceTime* cutoff = mCurrentInterval ?
+      mCurrentInterval->Begin() :
+      prevInterval ? prevInterval->Begin() : nsnull;
+  InstanceTimeComparator cmp;
+  PRUint32 count = aList.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsSMILInstanceTime* instance = aList[i].get();
+    if (!cutoff || cmp.LessThan(cutoff, instance)) {
+      instance->UnmarkShouldPreserve();
+    }
+  }
 }
 
 void
@@ -1196,7 +1350,7 @@ namespace
       // c) Are NOT fixed end points in any remaining interval.
       return aInstanceTime->Time() < mCutoff &&
              aInstanceTime->IsFixedTime() &&
-             !aInstanceTime->IsUsedAsFixedEndpoint();
+             !aInstanceTime->ShouldPreserve();
     }
 
   private:
@@ -1500,6 +1654,9 @@ nsSMILTimedElement::ActiveTimeToSimpleTime(nsSMILTime aActiveTime,
 
   NS_ASSERTION(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
       "Unresolved simple duration in ActiveTimeToSimpleTime");
+  NS_ASSERTION(aActiveTime >= 0, "Expecting non-negative active time");
+  // Note that a negative aActiveTime will give us a negative value for
+  // aRepeatIteration, which is bad because aRepeatIteration is unsigned
 
   if (mSimpleDur.IsIndefinite() || mSimpleDur.GetMillis() == 0L) {
     aRepeatIteration = 0;

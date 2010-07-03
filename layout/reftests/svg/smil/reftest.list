@@ -47,6 +47,9 @@ include pause/reftest.list
 # syncbase tests
 include syncbase/reftest.list
 
+# seek tests
+include seek/reftest.list
+
 # General tests
 == anim-discrete-values-1.svg      anim-standard-ref.svg
 == anim-discrete-replace-sum-1.svg anim-standard-ref.svg
