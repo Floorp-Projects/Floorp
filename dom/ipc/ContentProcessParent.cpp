@@ -316,13 +316,15 @@ ContentProcessParent::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, "nsPref:changed")) {
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
-        SendNotifyRemotePrefObserver(strData);
+        if (mIsAlive)
+            SendNotifyRemotePrefObserver(strData);
     }
 
     if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC) && mSubprocess) {
       NS_ConvertUTF16toUTF8 dataStr(aData);
       const char *offline = dataStr.get();
-      SendSetOffline(!strcmp(offline, "true") ? true : false);
+      if (mIsAlive)
+          SendSetOffline(!strcmp(offline, "true") ? true : false);
     }
     return NS_OK;
 }
