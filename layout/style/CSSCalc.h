@@ -246,6 +246,37 @@ struct NumbersAlreadyNormalizedOps
   }
 };
 
+#define CHECK_UNIT(u_)                                                        \
+  PR_STATIC_ASSERT(int(eCSSUnit_Calc_##u_) + 14 == int(eStyleUnit_Calc_##u_));\
+  PR_STATIC_ASSERT(eCSSUnit_Calc_##u_ >= eCSSUnit_Calc_Plus);                 \
+  PR_STATIC_ASSERT(eCSSUnit_Calc_##u_ <= eCSSUnit_Calc_Maximum);
+
+CHECK_UNIT(Plus)
+CHECK_UNIT(Minus)
+CHECK_UNIT(Times_L)
+CHECK_UNIT(Times_R)
+CHECK_UNIT(Divided)
+CHECK_UNIT(Minimum)
+CHECK_UNIT(Maximum)
+
+#undef CHECK_UNIT
+
+inline nsStyleUnit
+ConvertCalcUnit(nsCSSUnit aUnit)
+{
+  NS_ABORT_IF_FALSE(eCSSUnit_Calc_Plus <= aUnit &&
+                    aUnit <= eCSSUnit_Calc_Maximum, "out of range");
+  return nsStyleUnit(aUnit + 14);
+}
+
+inline nsCSSUnit
+ConvertCalcUnit(nsStyleUnit aUnit)
+{
+  NS_ABORT_IF_FALSE(eStyleUnit_Calc_Plus <= aUnit &&
+                    aUnit <= eStyleUnit_Calc_Maximum, "out of range");
+  return nsCSSUnit(aUnit - 14);
+}
+
 }
 
 }

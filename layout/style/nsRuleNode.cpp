@@ -369,6 +369,146 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
                         PR_TRUE, PR_FALSE, canStoreInRuleTree);
 }
 
+struct SpecifiedToComputedCalcOps : public css::NumbersAlreadyNormalizedOps
+{
+  // FIXME (perf): Is there too much copying as a result of returning
+  // nsStyleCoord objects?
+  typedef nsStyleCoord result_type;
+
+  nsStyleContext* const mStyleContext;
+  nsPresContext* const mPresContext;
+  PRBool& mCanStoreInRuleTree;
+
+  SpecifiedToComputedCalcOps(nsStyleContext* aStyleContext,
+                             nsPresContext* aPresContext,
+                             PRBool& aCanStoreInRuleTree)
+    : mStyleContext(aStyleContext),
+      mPresContext(aPresContext),
+      mCanStoreInRuleTree(aCanStoreInRuleTree)
+  {
+  }
+
+  result_type
+  MergeAdditive(nsCSSUnit aCalcFunction,
+                result_type aValue1, result_type aValue2)
+  {
+    nsStyleUnit unit1 = aValue1.GetUnit();
+    nsStyleUnit unit2 = aValue2.GetUnit();
+    NS_ABORT_IF_FALSE(unit1 == eStyleUnit_Coord ||
+                      unit1 == eStyleUnit_Percent ||
+                      aValue1.IsCalcUnit(),
+                      "unexpected unit");
+    NS_ABORT_IF_FALSE(unit2 == eStyleUnit_Coord ||
+                      unit2 == eStyleUnit_Percent ||
+                      aValue2.IsCalcUnit(),
+                      "unexpected unit");
+    nsStyleCoord result;
+    if (unit1 == unit2 && !aValue1.IsCalcUnit()) {
+      // Merge nodes that we don't need to keep separate.
+      if (unit1 == eStyleUnit_Percent) {
+        css::BasicFloatCalcOps ops;
+        result.SetPercentValue(ops.MergeAdditive(aCalcFunction,
+                                                 aValue1.GetPercentValue(),
+                                                 aValue2.GetPercentValue()));
+      } else {
+        css::BasicCoordCalcOps ops;
+        result.SetCoordValue(ops.MergeAdditive(aCalcFunction,
+                                               aValue1.GetCoordValue(),
+                                               aValue2.GetCoordValue()));
+      }
+    } else {
+      nsStyleCoord::Array *array =
+        nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
+      array->Item(0) = aValue1;
+      array->Item(1) = aValue2;
+      result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+    }
+    return result;
+  }
+
+  result_type
+  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
+                       float aValue1, result_type aValue2)
+  {
+    nsStyleCoord result;
+    switch (aValue2.GetUnit()) {
+      case eStyleUnit_Percent: {
+        css::BasicFloatCalcOps ops;
+        result.SetPercentValue(ops.MergeMultiplicativeL(
+          aCalcFunction, aValue1, aValue2.GetPercentValue()));
+        break;
+      }
+      case eStyleUnit_Coord: {
+        css::BasicCoordCalcOps ops;
+        result.SetCoordValue(ops.MergeMultiplicativeL(
+          aCalcFunction, aValue1, aValue2.GetCoordValue()));
+        break;
+      }
+      default:
+        NS_ABORT_IF_FALSE(aValue2.IsCalcUnit(), "unexpected unit");
+        nsStyleCoord::Array *array =
+          nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
+        array->Item(0).SetFactorValue(aValue1);
+        array->Item(1) = aValue2;
+        result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+        break;
+    }
+    return result;
+  }
+
+  result_type
+  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
+                       result_type aValue1, float aValue2)
+  {
+    nsStyleCoord result;
+    switch (aValue1.GetUnit()) {
+      case eStyleUnit_Percent: {
+        css::BasicFloatCalcOps ops;
+        result.SetPercentValue(ops.MergeMultiplicativeR(
+          aCalcFunction, aValue1.GetPercentValue(), aValue2));
+        break;
+      }
+      case eStyleUnit_Coord: {
+        css::BasicCoordCalcOps ops;
+        result.SetCoordValue(ops.MergeMultiplicativeR(
+          aCalcFunction, aValue1.GetCoordValue(), aValue2));
+        break;
+      }
+      default:
+        NS_ABORT_IF_FALSE(aValue1.IsCalcUnit(), "unexpected unit");
+        nsStyleCoord::Array *array =
+          nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
+        array->Item(0) = aValue1;
+        array->Item(1).SetFactorValue(aValue2);
+        result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+        break;
+    }
+    return result;
+  }
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    nsStyleCoord result;
+    if (aValue.GetUnit() == eCSSUnit_Percent) {
+      result.SetPercentValue(aValue.GetPercentValue());
+    } else {
+      result.SetCoordValue(CalcLength(aValue, mStyleContext, mPresContext,
+                                      mCanStoreInRuleTree));
+    }
+    return result;
+  }
+};
+
+static void
+SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                            nsStyleContext* aStyleContext,
+                            PRBool& aCanStoreInRuleTree)
+{
+  SpecifiedToComputedCalcOps ops(aStyleContext, aStyleContext->PresContext(),
+                                 aCanStoreInRuleTree);
+  aCoord = ComputeCalc(aValue, ops);
+}
+
 #define SETCOORD_NORMAL                 0x01   // N
 #define SETCOORD_AUTO                   0x02   // A
 #define SETCOORD_INHERIT                0x04   // H
@@ -385,6 +525,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_INITIAL_HALF           0x2000
 #define SETCOORD_CALC_LENGTH_ONLY       0x4000
 #define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
+#define SETCOORD_STORE_CALC             0x00010000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -478,6 +619,19 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   else if (((aMask & SETCOORD_INITIAL_HALF) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Initial)) {
     aCoord.SetPercentValue(0.5f);
+  }
+  else if (((aMask & SETCOORD_STORE_CALC) != 0) &&
+           (aValue.IsCalcUnit())) {
+    if (aValue.GetUnit() == eCSSUnit_Calc) {
+      // Don't copy the extra Calc node at top-level.
+      nsCSSValue::Array *array = aValue.GetArrayValue();
+      NS_ABORT_IF_FALSE(array->Count() == 1, "unexpected count");
+      SpecifiedCalcToComputedCalc(array->Item(0), aCoord, aStyleContext,
+                                  aCanStoreInRuleTree);
+    } else {
+      SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
+                                  aCanStoreInRuleTree);
+    }
   }
   else {
     result = PR_FALSE;  // didn't set anything
