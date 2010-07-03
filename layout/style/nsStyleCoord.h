@@ -59,12 +59,31 @@ enum nsStyleUnit {
   eStyleUnit_Radian       = 14,     // (float) angle in radians
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
-  eStyleUnit_Enumerated   = 32      // (int) value has enumerated meaning
+  eStyleUnit_Enumerated   = 32,     // (int) value has enumerated meaning
+  // The following are all of the eCSSUnit_Calc_* types (but not
+  // eCSSUnit_Calc itself, since we don't need to distinguish
+  // calc(min()) from min() in compute dstyle).  They are all weak
+  // pointers to a calc tree allocated by nsStyleContext::Alloc.
+  // NOTE:  They are in the same order as the eCSSUnit_Calc_* values so
+  // that converting between the two sets is just addition/subtraction.
+  eStyleUnit_Calc_Plus    = 40,     // (Array*) + node within calc()
+  eStyleUnit_Calc_Minus   = 41,     // (Array*) - within calc
+  eStyleUnit_Calc_Times_L = 42,     // (Array*) num * val within calc
+  eStyleUnit_Calc_Times_R = 43,     // (Array*) val * num within calc
+  eStyleUnit_Calc_Divided = 44,     // (Array*) / within calc
+  eStyleUnit_Calc_Minimum = 45,     // (Array*) min() within calc
+  eStyleUnit_Calc_Maximum = 46      // (Array*) max() within calc
 };
 
 typedef union {
   PRInt32     mInt;   // nscoord is a PRInt32 for now
   float       mFloat;
+  // An mPointer is a weak pointer to a value that is guaranteed to
+  // outlive the nsStyleCoord.  In the case of nsStyleCoord::Array*, it
+  // is a pointer owned by the style context, allocated through
+  // nsStyleContext::Alloc (and, therefore, is never stored in the rule
+  // tree).
+  void*       mPointer;
 } nsStyleUnion;
 
 /**
@@ -101,12 +120,21 @@ public:
     return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Radian;
   }
 
+  PRBool IsCalcUnit() const {
+    return eStyleUnit_Calc_Plus <= mUnit && mUnit <= eStyleUnit_Calc_Maximum;
+  }
+
+  PRBool IsArrayValue() const {
+    return IsCalcUnit();
+  }
+
   nscoord     GetCoordValue() const;
   PRInt32     GetIntValue() const;
   float       GetPercentValue() const;
   float       GetFactorValue() const;
   float       GetAngleValue() const;
   double      GetAngleValueInRadians() const;
+  Array*      GetArrayValue() const;
   void        GetUnionValue(nsStyleUnion& aValue) const;
 
   void  Reset();  // sets to null
@@ -118,6 +146,7 @@ public:
   void  SetNormalValue();
   void  SetAutoValue();
   void  SetNoneValue();
+  void  SetArrayValue(Array* aValue, nsStyleUnit aUnit);
 
 public: // FIXME: private!
   nsStyleUnit   mUnit;
@@ -252,11 +281,17 @@ inline nsStyleCoord::nsStyleCoord(nscoord aValue, CoordConstructorType)
   mValue.mInt = aValue;
 }
 
+// FIXME: In C++0x we can rely on the default copy constructor since
+// default copy construction is defined properly for unions.  But when
+// can we actually use that?  (It seems to work in gcc 4.4.)
 inline nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
   : mUnit(aCopy.mUnit)
 {
   if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
     mValue.mFloat = aCopy.mValue.mFloat;
+  }
+  else if (IsArrayValue()) {
+    mValue.mPointer = aCopy.mValue.mPointer;
   }
   else {
     mValue.mInt = aCopy.mValue.mInt;
@@ -325,6 +360,16 @@ inline float nsStyleCoord::GetAngleValue() const
   }
   return 0.0f;
 }
+
+inline nsStyleCoord::Array* nsStyleCoord::GetArrayValue() const
+{
+  NS_ASSERTION(IsArrayValue(), "not a pointer value");
+  if (IsArrayValue()) {
+    return static_cast<Array*>(mValue.mPointer);
+  }
+  return nsnull;
+}
+
 
 inline void nsStyleCoord::GetUnionValue(nsStyleUnion& aValue) const
 {
