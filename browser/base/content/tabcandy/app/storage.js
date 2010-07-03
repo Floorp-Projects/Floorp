@@ -51,15 +51,17 @@ Storage = {
   // or later if needed. 
   onReady: function(callback) {
     try {
-      var alreadyReady = false; // TODO: actually check
+      // ToDo: the session store doesn't expose any public methods/variables for
+      // us to check whether it's loaded or not so using a private one for
+      // now.
+      var alreadyReady = Utils.getCurrentWindow().__SSi;
       if(alreadyReady)
         callback();
       else {    
-        let obsService =
+        var obsService =
           Components.classes["@mozilla.org/observer-service;1"]
           .getService(Components.interfaces.nsIObserverService);
-    
-        let observer = {      
+        var observer = {      
           observe: function(subject, topic, data) {
             try {
               if (topic == "browser-delayed-startup-finished") {
@@ -73,7 +75,8 @@ Storage = {
           }
         };
           
-        obsService.addObserver(observer, "browser-delayed-startup-finished", false);
+        obsService.addObserver(
+          observer, "browser-delayed-startup-finished", false);
       }
     } catch(e) {
       Utils.log(e);
@@ -82,8 +85,9 @@ Storage = {
 
   // ----------
   init: function() {
-    this._sessionStore = Components.classes["@mozilla.org/browser/sessionstore;1"]
-                                   .getService(Components.interfaces.nsISessionStore);
+    this._sessionStore =
+      Components.classes["@mozilla.org/browser/sessionstore;1"]
+        .getService(Components.interfaces.nsISessionStore);
   },
 
   // ----------
