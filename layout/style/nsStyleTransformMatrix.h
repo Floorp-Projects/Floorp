@@ -45,6 +45,8 @@
 #include "gfxMatrix.h"
 #include "nsRect.h"
 
+struct nsCSSValueList;
+
 /**
  * A class representing a style transformation matrix.  The class actually
  * wraps three different matrices, a constant matrix and two matrices
@@ -120,6 +122,14 @@ class nsStyleTransformMatrix
                               nsPresContext* aPresContext,
                               PRBool& aCanStoreInRuleTree);
 
+  /**
+   * The same as SetToTransformFunction, but for a list of transform
+   * functions.
+   */
+  static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
+                                               nsStyleContext* aContext,
+                                               nsPresContext* aPresContext,
+                                               PRBool &aCanStoreInRuleTree);
   /**
    * Sets this matrix to be the identity matrix.
    */

@@ -47,6 +47,7 @@
 #include "nsCSSKeywords.h"
 #include "nsMathUtils.h"
 #include "CSSCalc.h"
+#include "nsCSSStruct.h"
 
 namespace css = mozilla::css;
 
@@ -593,6 +594,39 @@ nsStyleTransformMatrix::SetToTransformFunction(const nsCSSValue::Array * aData,
   default:
     NS_NOTREACHED("Unknown transform function!");
   }
+}
+
+/* Given a -moz-transform token stream, accumulates them into an
+ * nsStyleTransformMatrix
+ *
+ * @param aList The nsCSSValueList of arrays to read into transform functions.
+ * @param aContext The style context to use for unit conversion.
+ * @param aPresContext The presentation context to use for unit conversion
+ * @param aCanStoreInRuleTree This is set to PR_FALSE if the value cannot be stored in the rule tree.
+ * @return An nsStyleTransformMatrix corresponding to the net transform.
+ */
+/* static */ nsStyleTransformMatrix
+nsStyleTransformMatrix::ReadTransforms(const nsCSSValueList* aList,
+                                       nsStyleContext* aContext,
+                                       nsPresContext* aPresContext,
+                                       PRBool &aCanStoreInRuleTree)
+{
+  nsStyleTransformMatrix result;
+
+  for (const nsCSSValueList* curr = aList; curr != nsnull; curr = curr->mNext) {
+    const nsCSSValue &currElem = curr->mValue;
+    NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
+                 "Stream should consist solely of functions!");
+    NS_ASSERTION(currElem.GetArrayValue()->Count() >= 1,
+                 "Incoming function is too short!");
+
+    /* Read in a single transform matrix, then accumulate it with the total. */
+    nsStyleTransformMatrix currMatrix;
+    currMatrix.SetToTransformFunction(currElem.GetArrayValue(), aContext,
+                                      aPresContext, aCanStoreInRuleTree);
+    result *= currMatrix;
+  }
+  return result;
 }
 
 /* Does an element-by-element comparison and returns whether or not the
