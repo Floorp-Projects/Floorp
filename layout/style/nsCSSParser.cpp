@@ -117,6 +117,7 @@
 // This is an extra bit that says that a VARIANT_ANGLE allows unitless zero:
 #define VARIANT_ZERO_ANGLE    0x02000000  // unitless zero for angles
 #define VARIANT_CALC          0x04000000  // eCSSUnit_Calc
+#define VARIANT_CALC_NO_MIN_MAX 0x08000000 // no min() and max() for calc()
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -4397,7 +4398,8 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   VARIANT_GRADIENT | \
   VARIANT_CUBIC_BEZIER | \
   VARIANT_ALL | \
-  VARIANT_CALC
+  VARIANT_CALC | \
+  VARIANT_CALC_NO_MIN_MAX
 
 // Note that callers passing VARIANT_CALC in aVariantMask will get
 // full-range parsing inside the calc() expression, and the code that
@@ -4671,7 +4673,8 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
        tk->mIdent.LowerCaseEqualsLiteral("-moz-min") ||
        tk->mIdent.LowerCaseEqualsLiteral("-moz-max"))) {
     // calc() currently allows only lengths and percents inside it.
-    return ParseCalc(aValue, aVariantMask & VARIANT_LP);
+    return ParseCalc(aValue,
+                     aVariantMask & (VARIANT_LP | VARIANT_CALC_NO_MIN_MAX));
   }
 
   UngetToken();
@@ -7150,6 +7153,21 @@ CSSParserImpl::ParseBorderColors(nsCSSValueList** aResult,
   return PR_FALSE;
 }
 
+static PRBool
+HasMinMax(const nsCSSValue::Array *aArray)
+{
+  for (PRUint32 i = 0, i_end = aArray->Count(); i != i_end; ++i) {
+    const nsCSSValue &v = aArray->Item(i);
+    if (v.IsCalcUnit() &&
+        (v.GetUnit() == eCSSUnit_Calc_Minimum ||
+         v.GetUnit() == eCSSUnit_Calc_Maximum ||
+         HasMinMax(v.GetArrayValue()))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 // Parse the top level of a calc() expression, which can be calc(),
 // min(), or max().
 PRBool
@@ -7161,6 +7179,9 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   // values cannot themselves be numbers.
   NS_ASSERTION(!(aVariantMask & VARIANT_NUMBER), "unexpected variant mask");
   NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+
+  PRBool noMinMax = aVariantMask & VARIANT_CALC_NO_MIN_MAX;
+  aVariantMask &= ~VARIANT_CALC_NO_MIN_MAX;
 
   nsCSSUnit unit;
   if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-min")) {
@@ -7174,6 +7195,10 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   }
 
   if (unit != eCSSUnit_Calc) {
+    if (noMinMax) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
     return ParseCalcMinMax(aValue, unit, aVariantMask);
   }
 
@@ -7191,6 +7216,10 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
 
     if (!ExpectSymbol(')', PR_TRUE))
       break;
+
+    if (noMinMax && HasMinMax(arr)) {
+      return PR_FALSE;
+    }
 
     aValue.SetArrayValue(arr, eCSSUnit_Calc);
     return PR_TRUE;
