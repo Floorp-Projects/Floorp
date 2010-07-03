@@ -88,10 +88,6 @@
 #define URI_LENGTH_MAX 65536
 #define TITLE_LENGTH_MAX 4096
 
-// Microsecond timeout for "recent" events such as typed and bookmark following.
-// If you typed it more than this time ago, it's not recent.
-#define RECENT_EVENT_THRESHOLD PRTime((PRInt64)15 * 60 * PR_USEC_PER_SEC)
-
 #ifdef MOZ_XUL
 // Fired after autocomplete feedback has been updated.
 #define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
@@ -116,11 +112,6 @@ namespace places {
     DB_GET_PAGE_INFO_BY_URL = 0
   , DB_GET_TAGS = 1
   , DB_IS_PAGE_VISITED = 2
-  , DB_INSERT_VISIT = 3
-  , DB_RECENT_VISIT_OF_URL = 4
-  , DB_GET_PAGE_VISIT_STATS = 5
-  , DB_UPDATE_PAGE_VISIT_STATS = 6
-  , DB_ADD_NEW_PAGE = 7
   };
 
 } // namespace places
@@ -403,19 +394,6 @@ public:
    */
   bool canNotify() { return mCanNotify; }
 
-  enum RecentEventFlags {
-    RECENT_TYPED      = 1 << 0,    // User typed in URL recently
-    RECENT_ACTIVATED  = 1 << 1,    // User tapped URL link recently
-    RECENT_BOOKMARKED = 1 << 2     // User bookmarked URL recently
-  };
-
-  /**
-   * Returns any recent activity done with a URL.
-   * @return Any recent events associated with this URI.  Each bit is set
-   *         according to RecentEventFlags enum values.
-   */
-  PRUint32 GetRecentFlags(nsIURI *aURI);
-
   mozIStorageStatement* GetStatementById(
     enum mozilla::places::HistoryStatementId aStatementId
   )
@@ -428,31 +406,9 @@ public:
         return mDBGetTags;
       case DB_IS_PAGE_VISITED:
         return mDBIsPageVisited;
-      case DB_INSERT_VISIT:
-        return mDBInsertVisit;
-      case DB_RECENT_VISIT_OF_URL:
-        return mDBRecentVisitOfURL;
-      case DB_GET_PAGE_VISIT_STATS:
-        return mDBGetPageVisitStats;
-      case DB_UPDATE_PAGE_VISIT_STATS:
-        return mDBUpdatePageVisitStats;
-      case DB_ADD_NEW_PAGE:
-        return mDBAddNewPage;
     }
     return nsnull;
   }
-
-  PRInt64 GetNewSessionID();
-
-  /**
-   * Fires onVisit event to nsINavHistoryService observers
-   */
-  void FireOnVisit(nsIURI* aURI,
-                   PRInt64 aVisitID,
-                   PRTime aTime,
-                   PRInt64 aSessionID,
-                   PRInt64 referringVisitID,
-                   PRInt32 aTransitionType);
 
 private:
   ~nsNavHistory();
@@ -731,6 +687,7 @@ protected:
 
   // Sessions tracking.
   PRInt64 mLastSessionID;
+  PRInt64 GetNewSessionID();
 
 #ifdef MOZ_XUL
   // AutoComplete stuff
