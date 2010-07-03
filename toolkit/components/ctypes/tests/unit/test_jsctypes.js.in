@@ -653,31 +653,11 @@ function run_UInt64_tests() {
 function run_basic_abi_tests(library, t, name, toprimitive,
                              get_test, set_tests, sum_tests, sum_many_tests) {
   // Test the function call ABI for calls involving the type.
-  function declare_fn_cdecl(fn_t, prefix) {
-    return library.declare(prefix + name + "_cdecl", fn_t);
-  }
-  run_single_abi_tests(declare_fn_cdecl, ctypes.default_abi, t,
+  run_single_abi_tests(library, ctypes.default_abi, t, name + "_cdecl",
     toprimitive, get_test, set_tests, sum_tests, sum_many_tests);
-
-#ifdef WIN32
-#ifndef HAVE_64BIT_OS
-  function declare_fn_stdcall(fn_t, prefix) {
-    return library.declare(
-      // stdcall functions have the symbol name postfixed with the (aligned)
-      // size of the args.
-      "_" + prefix + name + "_stdcall" + "@" + argsize(fn_t.targetType.argTypes), fn_t);
-  }
-  function argsize(arglist) {
-    let size = 0;
-    for each (let a in arglist) {
-      if (a.size % 4 == 0)
-        size += a.size;
-      else
-        size += a.size + 4 - a.size % 4;
-    }
-    return size;
-  }
-  run_single_abi_tests(declare_fn_stdcall, ctypes.stdcall_abi, t,
+#ifdef _WIN32
+#ifndef _WIN64
+  run_single_abi_tests(library, ctypes.stdcall_abi, t, name + "_stdcall",
     toprimitive, get_test, set_tests, sum_tests, sum_many_tests);
 #endif
 #endif
@@ -687,28 +667,23 @@ function run_basic_abi_tests(library, t, name, toprimitive,
   check_struct_stats(library, t);
 }
 
-function run_single_abi_tests(decl, abi, t, toprimitive,
+function run_single_abi_tests(library, abi, t, name, toprimitive,
                               get_test, set_tests, sum_tests, sum_many_tests) {
-  let getter_t = ctypes.FunctionType(abi, t).ptr;
-  let getter = decl(getter_t, "get_");
+  let getter = library.declare("get_" + name, abi, t);
   do_check_eq(toprimitive(getter()), get_test);
 
-  let setter_t = ctypes.FunctionType(abi, t, [t]).ptr;
-  let setter = decl(setter_t, "set_");
+  let setter = library.declare("set_" + name, ctypes.default_abi, t, t);
   for each (let i in set_tests)
     do_check_eq(toprimitive(setter(i)), i);
 
-  let sum_t = ctypes.FunctionType(abi, t, [t, t]).ptr;
-  let sum = decl(sum_t, "sum_");
+  let sum = library.declare("sum_" + name, ctypes.default_abi, t, t, t);
   for each (let a in sum_tests)
     do_check_eq(toprimitive(sum(a[0], a[1])), a[2]);
 
-  let sum_alignb_t = ctypes.FunctionType(abi, t,
-    [ctypes.char, t, ctypes.char, t, ctypes.char]).ptr;
-  let sum_alignb = decl(sum_alignb_t, "sum_alignb_");
-  let sum_alignf_t = ctypes.FunctionType(abi, t,
-    [ctypes.float, t, ctypes.float, t, ctypes.float]).ptr;
-  let sum_alignf = decl(sum_alignf_t, "sum_alignf_");
+  let sum_alignb = library.declare("sum_alignb_" + name, ctypes.default_abi, t,
+    ctypes.char, t, ctypes.char, t, ctypes.char);
+  let sum_alignf = library.declare("sum_alignf_" + name, ctypes.default_abi, t,
+    ctypes.float, t, ctypes.float, t, ctypes.float);
   for each (let a in sum_tests) {
     do_check_eq(toprimitive(sum_alignb(0, a[0], 0, a[1], 0)), a[2]);
     do_check_eq(toprimitive(sum_alignb(1, a[0], 1, a[1], 1)), a[2]);
@@ -716,14 +691,13 @@ function run_single_abi_tests(decl, abi, t, toprimitive,
     do_check_eq(toprimitive(sum_alignf(1, a[0], 1, a[1], 1)), a[2]);
   }
 
-  let sum_many_t = ctypes.FunctionType(abi, t,
-    [t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t]).ptr;
-  let sum_many = decl(sum_many_t, "sum_many_");
+  let sum_many = library.declare("sum_many_" + name, ctypes.default_abi, t,
+    t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t);
   for each (let a in sum_many_tests)
-    do_check_eq(
-      toprimitive(sum_many(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
-                           a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15],
-                           a[16], a[17])), a[18]);
+    do_check_eq(toprimitive(
+      sum_many(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
+               a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15],
+               a[16], a[17])), a[18]);
 }
 
 function check_struct_stats(library, t) {
@@ -1850,11 +1824,11 @@ function run_FunctionType_tests() {
     ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
   do_check_eq(f3_t.name, "char*(*(**[][8])())[]");
 
-#ifdef WIN32
-#ifndef HAVE_64BIT_OS
+#ifdef _WIN32
+#ifndef _WIN64
   f3_t = ctypes.FunctionType(ctypes.stdcall_abi,
-    ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
-  do_check_eq(f3_t.name, "char*(*(__stdcall **[][8])())[]");
+    ctypes.char.ptr.array().ptr).ptr.array(8).array();
+  do_check_eq(f3_t.ptr.name, "char*(__stdcall *(**[][8])())[]");
 #endif
 #endif
 
@@ -2042,9 +2016,9 @@ function run_void_tests(library) {
     library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t, ctypes.void_t);
   }, Error);
 
-#ifdef WIN32
-#ifndef HAVE_64BIT_OS
-  test_void_t = library.declare("_test_void_t_stdcall@0", ctypes.stdcall_abi, ctypes.void_t);
+#ifdef _WIN32
+#ifndef _WIN64
+  test_void_t = library.declare("test_void_t_stdcall", ctypes.stdcall_abi, ctypes.void_t);
   do_check_eq(test_void_t(), undefined);
 #endif
 #endif
@@ -2196,10 +2170,9 @@ function run_function_tests(library)
 function run_closure_tests(library)
 {
   run_single_closure_tests(library, ctypes.default_abi, "cdecl");
-#ifdef WIN32
-#ifndef HAVE_64BIT_OS
-  // stdcall closure tests are currently broken on windows. see bug 564966.
-  //run_single_closure_tests(library, ctypes.stdcall_abi, "stdcall");
+#ifdef _WIN32
+#ifndef _WIN64
+  run_single_closure_tests(library, ctypes.stdcall_abi, "stdcall");
 #endif
 #endif
 }
@@ -2260,8 +2233,8 @@ function run_variadic_tests(library) {
     ctypes.FunctionType(ctypes.default_abi, ctypes.bool, ["..."]);
   }, Error);
 
-#ifdef WIN32
-#ifndef HAVE_64BIT_OS
+#ifdef _WIN32
+#ifndef _WIN64
   do_check_throws(function() {
       ctypes.FunctionType(ctypes.stdcall_abi, ctypes.bool,
                           [ctypes.bool, "..."]);
