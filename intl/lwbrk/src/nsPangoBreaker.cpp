@@ -83,7 +83,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
         // pango_break (pango 1.16.2) only analyses text before the
         // first NUL (but sets one extra attr). Workaround loop to call
         // pango_break again to analyse after the NUL is done somewhere else
-        // (gfx/thebes/src/gfxPangoFonts.cpp: SetupClusterBoundaries()).
+        // (gfx/thebes/gfxPangoFonts.cpp: SetupClusterBoundaries()).
         // So, we do the same here for pango_get_log_attrs.
         break;
       }

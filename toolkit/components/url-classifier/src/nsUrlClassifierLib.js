@@ -43,6 +43,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 #include ../content/moz/lang.js
 #include ../content/moz/preferences.js
 #include ../content/moz/debug.js
@@ -61,51 +63,7 @@ var lib = this;
 function UrlClassifierLib() {
   this.wrappedJSObject = lib;
 }
+UrlClassifierLib.prototype.classID = Components.ID("{26a4a019-2827-4a89-a85c-5931a678823a}");
+UrlClassifierLib.prototype.QueryInterface = XPCOMUtils.generateQI([]);
 
-// Module object
-function UrlClassifierLibMod() {
-  this.firstTime = true;
-  this.cid = Components.ID("{26a4a019-2827-4a89-a85c-5931a678823a}");
-  this.progid = "@mozilla.org/url-classifier/jslib;1";
-}
-
-UrlClassifierLibMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
-  if (this.firstTime) {
-    this.firstTime = false;
-    throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-  }
-  compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-  compMgr.registerFactoryLocation(this.cid,
-                                  "UrlClassifier JS Lib",
-                                  this.progid,
-                                  fileSpec,
-                                  loc,
-                                  type);
-};
-
-UrlClassifierLibMod.prototype.getClassObject = function(compMgr, cid, iid) {  
-  if (!cid.equals(this.cid))
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  if (!iid.equals(Ci.nsIFactory))
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-  return this.factory;
-}
-
-UrlClassifierLibMod.prototype.canUnload = function(compMgr) {
-  return true;
-}
-
-UrlClassifierLibMod.prototype.factory = {
-  createInstance: function(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return new UrlClassifierLib();
-  }
-};
-
-var LibModInst = new UrlClassifierLibMod();
-
-function NSGetModule(compMgr, fileSpec) {
-  return LibModInst;
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([UrlClassifierLib]);

@@ -57,6 +57,10 @@ CPPSRCS = \
 
 LOCAL_INCLUDES = -I$(srcdir)/../../build
 
+EXTRA_COMPONENTS = \
+  nsPrivateBrowsingService.manifest \
+  $(NULL)
+
 EXTRA_PP_COMPONENTS = \
 	nsPrivateBrowsingService.js \
 	$(NULL)

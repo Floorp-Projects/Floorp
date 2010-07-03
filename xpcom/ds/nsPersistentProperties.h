@@ -57,7 +57,7 @@ public:
   NS_DECL_NSIPROPERTIES
   NS_DECL_NSIPERSISTENTPROPERTIES
 
-  static NS_METHOD
+  static nsresult
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:

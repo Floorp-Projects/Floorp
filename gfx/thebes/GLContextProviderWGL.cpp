@@ -40,6 +40,9 @@
 #include "nsIWidget.h"
 #include "WGLLibrary.h"
 #include "gfxASurface.h"
+#include "gfxImageSurface.h"
+#include "gfxPlatform.h"
+#include "gfxWindowsSurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -284,12 +287,64 @@ public:
         return PR_TRUE;
     }
 
+    virtual already_AddRefed<TextureImage>
+    CreateBasicTextureImage(GLuint aTexture,
+                            const nsIntSize& aSize,
+                            TextureImage::ContentType aContentType,
+                            GLContext* aContext);
+
 private:
     HGLRC mContext;
     HDC mDC;
     HANDLE mPBuffer;
     int mPixelFormat;
 };
+
+class TextureImageWGL : public BasicTextureImage
+{
+    friend already_AddRefed<TextureImage>
+    GLContextWGL::CreateBasicTextureImage(GLuint,
+                                          const nsIntSize&,
+                                          TextureImage::ContentType,
+                                          GLContext*);
+
+protected:
+    virtual already_AddRefed<gfxASurface>
+    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
+    {
+        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
+    }
+
+    virtual already_AddRefed<gfxImageSurface>
+    GetImageForUpload(gfxASurface* aUpdateSurface)
+    {
+        NS_ASSERTION(gfxASurface::SurfaceTypeWin32 == aUpdateSurface->GetType(),
+                     "unexpected surface type");
+        nsRefPtr<gfxImageSurface> uploadImage(
+            static_cast<gfxWindowsSurface*>(aUpdateSurface)->
+            GetImageSurface());
+        return uploadImage.forget();
+    }
+
+private:
+    TextureImageWGL(GLuint aTexture,
+                    const nsIntSize& aSize,
+                    ContentType aContentType,
+                    GLContext* aContext)
+        : BasicTextureImage(aTexture, aSize, aContentType, aContext)
+    {}
+};
+
+already_AddRefed<TextureImage>
+GLContextWGL::CreateBasicTextureImage(GLuint aTexture,
+                                      const nsIntSize& aSize,
+                                      TextureImage::ContentType aContentType,
+                                      GLContext* aContext)
+{
+    nsRefPtr<TextureImageWGL> teximage(
+        new TextureImageWGL(aTexture, aSize, aContentType, aContext));
+    return teximage.forget();
+}
 
 already_AddRefed<GLContext>
 GLContextProvider::CreateForWindow(nsIWidget *aWidget)

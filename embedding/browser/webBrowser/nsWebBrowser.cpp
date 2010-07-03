@@ -1669,6 +1669,7 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
 static void DrawThebesLayer(ThebesLayer* aLayer,
                             gfxContext* aContext,
                             const nsIntRegion& aRegionToDraw,
+                            const nsIntRegion& aRegionToInvalidate,
                             void* aCallbackData)
 {
   nscolor* color = static_cast<nscolor*>(aCallbackData);

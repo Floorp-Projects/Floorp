@@ -142,7 +142,7 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
   nsIFrame* frame = caret->GetGeometry(mSelection, &r);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  aEvent->mReply.mFocusedWidget = frame->GetWindow();
+  aEvent->mReply.mFocusedWidget = frame->GetNearestWidget();
 
   return NS_OK;
 }
@@ -762,7 +762,7 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
 
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
-  nsIWidget* rootWidget = rootFrame->GetWindow();
+  nsIWidget* rootWidget = rootFrame->GetNearestWidget();
   NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);
 
   // The root frame's widget might be different, e.g., the event was fired on
@@ -773,7 +773,7 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     rootFrame = nsLayoutUtils::GetFrameFor(view);
     NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
-    rootWidget = rootFrame->GetWindow();
+    rootWidget = rootFrame->GetNearestWidget();
     NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);
   }
 

@@ -49,6 +49,7 @@
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
+#include "gfxUtils.h"
 
 #include "CanvasUtils.h"
 #include "NativeJSContext.h"
@@ -337,7 +338,6 @@ WebGLContext::GetCanvasLayer(LayerManager *manager)
 
     return canvasLayer.forget().get();
 }
-
 
 //
 // XPCOM goop

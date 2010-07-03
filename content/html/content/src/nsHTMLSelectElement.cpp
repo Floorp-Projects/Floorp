@@ -1231,9 +1231,6 @@ nsHTMLSelectElement::IsHTMLFocusable(PRBool aWithMouse,
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
-  if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
-    *aTabIndex = -1;
-  }
 
   *aIsFocusable = !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 

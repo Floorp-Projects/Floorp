@@ -44,8 +44,6 @@
  * UTF-16.
  *
  * nsIUnicharStreamListener
- *
- * @status FROZEN
  */
 [scriptable, uuid(4a7e9b62-fef8-400d-9865-d6820f630b4c)]
 interface nsIUnicharStreamListener : nsIRequestObserver

@@ -67,7 +67,7 @@ NS_NewWindowsRegKey(nsIWindowsRegKey **result);
   { 0xa53bc624, 0xd577, 0x4839, \
     { 0xb8, 0xec, 0xbb, 0x50, 0x40, 0xa5, 0x2f, 0xf4 } }
 
-extern NS_METHOD
+extern nsresult
 nsWindowsRegKeyConstructor(nsISupports *outer, const nsIID &iid, void **result);
 
 #endif  // _IMPL_NS_COM

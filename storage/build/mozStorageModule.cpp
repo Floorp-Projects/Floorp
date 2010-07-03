@@ -38,8 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
+#include "mozilla/ModuleUtils.h"
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
@@ -58,19 +57,25 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(StatementWrapper)
 } // namespace storage
 } // namespace mozilla
 
-static const nsModuleComponentInfo components[] =
-{
-    { "Unified Data Store Service",
-      MOZ_STORAGE_SERVICE_CID,
-      MOZ_STORAGE_SERVICE_CONTRACTID,
-      mozilla::storage::ServiceConstructor
-    },
+NS_DEFINE_NAMED_CID(MOZ_STORAGE_SERVICE_CID);
+NS_DEFINE_NAMED_CID(MOZ_STORAGE_STATEMENT_WRAPPER_CID);
 
-    { "Unified Data Store Scriptable Statement Wrapper",
-      MOZ_STORAGE_STATEMENT_WRAPPER_CID,
-      MOZ_STORAGE_STATEMENT_WRAPPER_CONTRACTID,
-      mozilla::storage::StatementWrapperConstructor
-    }
+static const mozilla::Module::CIDEntry kStorageCIDs[] = {
+    { &kMOZ_STORAGE_SERVICE_CID, false, NULL, mozilla::storage::ServiceConstructor },
+    { &kMOZ_STORAGE_STATEMENT_WRAPPER_CID, false, NULL, mozilla::storage::StatementWrapperConstructor },
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(mozStorageModule, components)
+static const mozilla::Module::ContractIDEntry kStorageContracts[] = {
+    { MOZ_STORAGE_SERVICE_CONTRACTID, &kMOZ_STORAGE_SERVICE_CID },
+    { MOZ_STORAGE_STATEMENT_WRAPPER_CONTRACTID, &kMOZ_STORAGE_STATEMENT_WRAPPER_CID },
+    { NULL }
+};
+
+static const mozilla::Module kStorageModule = {
+    mozilla::Module::kVersion,
+    kStorageCIDs,
+    kStorageContracts
+};
+
+NSMODULE_DEFN(mozStorageModule) = &kStorageModule;

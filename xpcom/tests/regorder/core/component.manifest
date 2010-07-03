@@ -1,0 +1,5 @@
+component {56ab1cd4-ac44-4f86-8104-171f8b8f2fc7} component.js
+contract @mozilla.org/RegTestServiceA;1 {56ab1cd4-ac44-4f86-8104-171f8b8f2fc7}
+
+contract @mozilla.org/RegTestOrderC;1 {ada15884-bb89-473c-8b50-dcfbb8447ff4}
+component {ada15884-bb89-473c-8b50-dcfbb8447ff4} missing.js

@@ -56,8 +56,8 @@ public:
 
     NS_DECL_NSIMEMORY
 
-    static NS_METHOD Create(nsISupports* outer,
-                            const nsIID& aIID, void **aResult);
+    static nsresult Create(nsISupports* outer,
+                           const nsIID& aIID, void **aResult);
 
     NS_HIDDEN_(nsresult) FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
     NS_HIDDEN_(nsresult) RunFlushers(const PRUnichar* aReason);

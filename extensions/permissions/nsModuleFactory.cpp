@@ -34,55 +34,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsContentBlocker.h"
 #include "nsXPIDLString.h"
-#include "nsICategoryManager.h"
 
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsContentBlocker, Init)
 
-static NS_METHOD
-RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                      const char *registryLocation, const char *componentType,
-                      const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsXPIDLCString previous;
-  return catman->AddCategoryEntry("content-policy",
-                                  NS_CONTENTBLOCKER_CONTRACTID,
-                                  NS_CONTENTBLOCKER_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
+NS_DEFINE_NAMED_CID(NS_CONTENTBLOCKER_CID);
 
-static NS_METHOD
-UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                        const char *registryLocation,
-                        const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  return catman->DeleteCategoryEntry("content-policy",
-                                     NS_CONTENTBLOCKER_CONTRACTID,
-                                     PR_TRUE);
-}
-
-// The list of components we register
-static const nsModuleComponentInfo components[] = {
-  { "ContentBlocker",
-    NS_CONTENTBLOCKER_CID,
-    NS_CONTENTBLOCKER_CONTRACTID,
-    nsContentBlockerConstructor,
-    RegisterContentPolicy, UnregisterContentPolicy
-  }
+static const mozilla::Module::CIDEntry kPermissionsCIDs[] = {
+  { &kNS_CONTENTBLOCKER_CID, false, NULL, nsContentBlockerConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsPermissionsModule, components)
+static const mozilla::Module::ContractIDEntry kPermissionsContracts[] = {
+  { NS_CONTENTBLOCKER_CONTRACTID, &kNS_CONTENTBLOCKER_CID },
+  { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kPermissionsCategories[] = {
+  { "content-policy", NS_CONTENTBLOCKER_CONTRACTID, NS_CONTENTBLOCKER_CONTRACTID },
+  { NULL }
+};
+
+static const mozilla::Module kPermissionsModule = {
+  mozilla::Module::kVersion,
+  kPermissionsCIDs,
+  kPermissionsContracts,
+  kPermissionsCategories
+};
+
+NSMODULE_DEFN(nsPermissionsModule) = &kPermissionsModule;

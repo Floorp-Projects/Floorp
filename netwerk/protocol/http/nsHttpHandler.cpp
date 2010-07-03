@@ -77,6 +77,10 @@
 
 #include "nsIXULAppInfo.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/net/NeckoChild.h"
+#endif 
+
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
 #endif
@@ -94,6 +98,12 @@
 #include <os2.h>
 #endif
 
+//-----------------------------------------------------------------------------
+using namespace mozilla::net;
+#ifdef MOZ_IPC
+#include "mozilla/net/HttpChannelChild.h"
+#endif 
+
 #include "mozilla/FunctionTimer.h"
 
 #ifdef DEBUG
@@ -110,7 +120,6 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define UA_PREF_PREFIX          "general.useragent."
 #define UA_APPNAME              "Mozilla"
 #define UA_APPVERSION           "5.0"
-#define UA_APPSECURITY_FALLBACK "N"
 
 #define HTTP_PREF_PREFIX        "network.http."
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
@@ -206,6 +215,9 @@ nsHttpHandler::~nsHttpHandler()
         NS_RELEASE(mConnMgr);
     }
 
+    // Note: don't call NeckoChild::DestroyNeckoChild() here, as it's too late
+    // and it'll segfault.  NeckoChild will get cleaned up by process exit.
+
     nsHttp::DestroyAtomTable();
 
     gHttpHandler = nsnull;
@@ -229,6 +241,11 @@ nsHttpHandler::Init()
         NS_WARNING("unable to continue without io service");
         return rv;
     }
+
+#ifdef MOZ_IPC
+    if (IsNeckoChild())
+        NeckoChild::InitNeckoChild();
+#endif // MOZ_IPC
 
     InitUserAgentComponents();
 
@@ -254,7 +271,6 @@ nsHttpHandler::Init()
     LOG(("> platform = %s\n", mPlatform.get()));
     LOG(("> oscpu = %s\n", mOscpu.get()));
     LOG(("> device = %s\n", mDeviceType.get()));
-    LOG(("> security = %s\n", mSecurity.get()));
     LOG(("> language = %s\n", mLanguage.get()));
     LOG(("> misc = %s\n", mMisc.get()));
     LOG(("> vendor = %s\n", mVendor.get()));
@@ -587,7 +603,6 @@ nsHttpHandler::BuildUserAgent()
     NS_ASSERTION(!mAppName.IsEmpty() &&
                  !mAppVersion.IsEmpty() &&
                  !mPlatform.IsEmpty() &&
-                 !mSecurity.IsEmpty() &&
                  !mOscpu.IsEmpty(),
                  "HTTP cannot send practical requests without this much");
 
@@ -596,7 +611,6 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent.SetCapacity(mAppName.Length() + 
                            mAppVersion.Length() + 
                            mPlatform.Length() + 
-                           mSecurity.Length() +
                            mOscpu.Length() +
                            mDeviceType.Length() +
                            mLanguage.Length() +
@@ -619,8 +633,6 @@ nsHttpHandler::BuildUserAgent()
     // Application comment
     mUserAgent += '(';
     mUserAgent += mPlatform;
-    mUserAgent.AppendLiteral("; ");
-    mUserAgent += mSecurity;
     mUserAgent.AppendLiteral("; ");
     mUserAgent += mOscpu;
     if (!mLanguage.IsEmpty()) {
@@ -888,14 +900,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("productComment"))) {
         prefs->GetCharPref(UA_PREF("productComment"),
             getter_Copies(mProductComment));
-        mUserAgentIsDirty = PR_TRUE;
-    }
-
-    // Get Security level supported
-    if (PREF_CHANGED(UA_PREF("security"))) {
-        prefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
-        if (!mSecurity)
-            mSecurity.AssignLiteral(UA_APPSECURITY_FALLBACK);
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1540,7 +1544,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
                                  nsIProxyInfo* givenProxyInfo,
                                  nsIChannel **result)
 {
-    nsHttpChannel *httpChannel = nsnull;
+    nsRefPtr<HttpBaseChannel> httpChannel;
 
     LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n",
         givenProxyInfo));
@@ -1556,10 +1560,14 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     if (NS_FAILED(rv))
         return rv;
 
-    NS_NEWXPCOM(httpChannel, nsHttpChannel);
-    if (!httpChannel)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(httpChannel);
+#ifdef MOZ_IPC
+    if (IsNeckoChild()) {
+        httpChannel = new HttpChannelChild();
+    } else
+#endif
+    {
+        httpChannel = new nsHttpChannel();
+    }
 
     // select proxy caps if using a non-transparent proxy.  SSL tunneling
     // should not use proxy settings.
@@ -1584,13 +1592,10 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     }
 
     rv = httpChannel->Init(uri, caps, proxyInfo);
-
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(httpChannel);
+    if (NS_FAILED(rv))
         return rv;
-    }
 
-    *result = httpChannel;
+    httpChannel.forget(result);
     return NS_OK;
 }
 

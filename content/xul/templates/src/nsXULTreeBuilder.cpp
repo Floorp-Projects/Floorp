@@ -92,7 +92,7 @@ public:
     virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
 protected:
-    friend NS_IMETHODIMP
+    friend nsresult
     NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsXULTreeBuilder();
@@ -277,7 +277,7 @@ protected:
 
 //----------------------------------------------------------------------
 
-NS_IMETHODIMP
+nsresult
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
     *aResult = nsnull;

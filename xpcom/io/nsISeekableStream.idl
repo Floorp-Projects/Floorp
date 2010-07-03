@@ -41,8 +41,6 @@
  *
  * Note that a stream might not implement all methods (e.g., a readonly stream 
  * won't implement setEOF)
- * 
- * @status UNDER_REVIEW
  */
 
 #include "nsISupports.idl"

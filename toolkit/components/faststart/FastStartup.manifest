@@ -1,0 +1,3 @@
+component {580c6c51-f690-4ce1-9ecc-b678e0c031c7} FastStartup.js
+contract @mozilla.org/browser/faststart;1 {580c6c51-f690-4ce1-9ecc-b678e0c031c7}
+category command-line-handler 00-faststart @mozilla.org/browser/faststart;1

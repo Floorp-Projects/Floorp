@@ -1,0 +1,2 @@
+component {4177e257-a0dc-49b9-a774-522a000a49fa} SimpleTest.js
+contract @test.mozilla.org/simple-test;1?impl=js {4177e257-a0dc-49b9-a774-522a000a49fa}
