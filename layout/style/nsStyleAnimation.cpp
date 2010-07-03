@@ -408,11 +408,18 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       const nsCSSValueList *list1 = aStartValue.GetCSSValueListValue();
       const nsCSSValueList *list2 = aEndValue.GetCSSValueListValue();
 
+      nsStyleTransformMatrix matrix1, matrix2; // initialized to identity
+
       PRBool dummy;
-      nsStyleTransformMatrix matrix1 =
-        nsStyleTransformMatrix::ReadTransforms(list1, nsnull, nsnull, dummy),
-                             matrix2 =
-        nsStyleTransformMatrix::ReadTransforms(list2, nsnull, nsnull, dummy);
+      if (list1->mValue.GetUnit() != eCSSUnit_None) {
+        matrix1 = nsStyleTransformMatrix::ReadTransforms(list1, nsnull,
+                                                         nsnull, dummy);
+      }
+      if (list2->mValue.GetUnit() != eCSSUnit_None) {
+        matrix2 = nsStyleTransformMatrix::ReadTransforms(list2, nsnull,
+                                                         nsnull, dummy);
+      }
+
       double diff;
       double squareDistance = 0.0;
       for (PRUint32 i = 0; i < 4; ++i) {
