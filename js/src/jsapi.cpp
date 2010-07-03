@@ -93,9 +93,6 @@
 #include "jscntxtinlines.h"
 #include "jsscopeinlines.h"
 #include "jsobjinlines.h"
-#include "jsregexpinlines.h"
-
-#include "assembler/jit/ExecutableAllocator.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -578,10 +575,6 @@ JSRuntime::init(uint32 maxbytes)
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
 
-    regExpAllocator = new JSC::ExecutableAllocator();
-    if (!regExpAllocator)
-        return false;
-
     deflatedStringCache = new js::DeflatedStringCache();
     if (!deflatedStringCache || !deflatedStringCache->init())
         return false;
@@ -641,7 +634,6 @@ JSRuntime::~JSRuntime()
     js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
-    delete regExpAllocator;
     /*
      * Finish the deflated string cache after the last GC and after
      * calling js_FinishAtomState, which finalizes strings.
@@ -5404,11 +5396,14 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
 {
+    jschar *chars;
+    JSObject *obj;
+
     CHECK_REQUEST(cx);
-    jschar *chars = js_InflateString(cx, bytes, &length);
+    chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObject(cx, chars, length, flags);
+    obj = js_NewRegExpObject(cx, NULL, chars, length, flags);
     cx->free(chars);
     return obj;
 }
@@ -5417,17 +5412,22 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObject(cx, chars, length, flags);
+    return js_NewRegExpObject(cx, NULL, chars, length, flags);
 }
 
 JS_PUBLIC_API(void)
 JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
 {
+    JSRegExpStatics *res;
+
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
     /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.reset(input, !!multiline);
+    res = &cx->regExpStatics;
+    res->clearRoots();
+    res->input = input;
+    res->multiline = multiline;
 }
 
 JS_PUBLIC_API(void)
@@ -5441,7 +5441,7 @@ JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx)
 {
     /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clear();
+    cx->regExpStatics.clearRoots();
 }
 
 /* TODO: compile, execute, get/set other statics... */
