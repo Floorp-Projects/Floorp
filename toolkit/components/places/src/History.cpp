@@ -136,7 +136,7 @@ NS_IMETHODIMP
 Step::HandleCompletion(PRUint16 aReason)
 {
   nsCOMPtr<mozIStorageResultSet> resultSet = mResultSet;
-  mResultSet = 0;
+  mResultSet = NULL;
   Callback(resultSet);
   return NS_OK;
 }
@@ -234,12 +234,8 @@ NS_IMPL_ISUPPORTS1(
 class FailSafeFinishTask
 {
 public:
-  FailSafeFinishTask() : active(false) {}
-  // Whether a step has been added for this data.
-  bool active;
   ~FailSafeFinishTask() {
-    if (active)
-      History::GetService()->CurrentTaskFinished();
+    History::GetService()->CurrentTaskFinished();
   }
 };
 
@@ -512,7 +508,7 @@ public:
       // Empty lastSpec.
       // Not part of a session.  Just run next step's callback with no results.
       nsCOMPtr<Step> step = new AddVisitStep(mData);
-      rv = step->Callback(nsnull);
+      rv = step->Callback(NULL);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -673,7 +669,6 @@ public:
   StartVisitURIStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
-    mData->active = true;
   }
 
   NS_IMETHOD Callback(mozIStorageResultSet* aResultSet)
@@ -728,7 +723,6 @@ public:
   NS_IMETHOD Callback(mozIStorageResultSet* aResultSet)
   {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     history->NotifyTitleChange(mData->uri, mData->title);
 
     return NS_OK;
@@ -778,7 +772,6 @@ public:
       return NS_OK;
 
     nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
     nsCOMPtr<mozIStorageStatement> stmt =
       history->GetStatementById(DB_SET_PLACE_TITLE);
@@ -824,13 +817,11 @@ public:
   StartSetURITitleStep(nsAutoPtr<SetTitleData> aData)
   : mData(aData)
   {
-    mData->active = true;
   }
 
   NS_IMETHOD Callback(mozIStorageResultSet* aResultSet)
   {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
     // Find existing entry in moz_places table, if any.
     nsCOMPtr<mozIStorageStatement> stmt =
@@ -860,7 +851,7 @@ NS_IMPL_ISUPPORTS1(
 ////////////////////////////////////////////////////////////////////////////////
 //// History
 
-History* History::gService = nsnull;
+History* History::gService = NULL;
 
 History::History()
 : mShuttingDown(false)
@@ -877,7 +868,7 @@ History::History()
 
 History::~History()
 {
-  gService = nsnull;
+  gService = NULL;
 
 #ifdef DEBUG
   if (mObservers.IsInitialized()) {
@@ -885,7 +876,7 @@ History::~History()
                  "Not all Links were removed before we disappear!");
   }
 
-  NS_WARN_IF_FALSE(mShuttingDown, "Did not receive Places shutdown event");
+  NS_ASSERTION(mShuttingDown, "Did not receive Places shutdown event");
 #endif
 }
 
@@ -994,7 +985,7 @@ History::StartNextTask()
     // No more pending visits left to process.
     return;
   }
-  nsresult rv = nextTask->Callback(nsnull);
+  nsresult rv = nextTask->Callback(NULL);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Beginning a task failed.");
 }
 
@@ -1024,7 +1015,6 @@ History::VisitURI(nsIURI* aURI,
 
   // Populate data structure that will be used in our async SQL steps.
   nsAutoPtr<VisitURIData> data(new VisitURIData());
-  NS_ENSURE_STATE(data);
 
   nsCAutoString spec;
   rv = aURI->GetSpec(spec);
@@ -1176,8 +1166,6 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
   }
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
   PRBool canAdd;
   nsresult rv = history->CanAddURI(aURI, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1186,7 +1174,6 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
   }
 
   nsAutoPtr<SetTitleData> data(new SetTitleData());
-  NS_ENSURE_STATE(data);
   data->uri = aURI;
 
   if (aTitle.IsEmpty()) {
