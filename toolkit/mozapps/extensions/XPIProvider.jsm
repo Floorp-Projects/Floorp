@@ -5300,8 +5300,22 @@ DirectoryInstallLocation.prototype = {
         linkedDirectory.setRelativeDescriptor(file.parent, line.value);
       }
 
+      if (!linkedDirectory.exists()) {
+        WARN("File pointer " + aFile.path + " points to " + linkedDirectory.path +
+             " which does not exist");
+        return null;
+      }
+
+      if (!linkedDirectory.isDirectory()) {
+        WARN("File pointer " + aFile.path + " points to " + linkedDirectory.path +
+             " which is not a directory");
+        return null;
+      }
+
       return linkedDirectory;
     }
+
+    WARN("File pointer " + aFile.path + " does not contain a path");
     return null;
   },
 
@@ -5333,11 +5347,8 @@ DirectoryInstallLocation.prototype = {
       entry.append(id);
       if (entry.isFile()) {
         newEntry = this._readDirectoryFromFile(entry);
-        if (!newEntry || !newEntry.exists() || !newEntry.isDirectory()) {
-          WARN("File pointer " + entry.path + " points to an invalid " +
-               "directory " + newEntry.path);
+        if (!newEntry)
           continue;
-        }
         entry = newEntry;
       }
       else if (!entry.isDirectory()) {
