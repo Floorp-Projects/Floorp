@@ -277,7 +277,7 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
     return NS_OK;
 }
 
-GL_SAME_METHOD_4(BlendColor, BlendColor, float, float, float, float)
+GL_SAME_METHOD_4(BlendColor, BlendColor, WebGLfloat, WebGLfloat, WebGLfloat, WebGLfloat)
 
 NS_IMETHODIMP WebGLContext::BlendEquation(WebGLenum mode)
 {
@@ -503,15 +503,15 @@ WebGLContext::Clear(PRUint32 mask)
     return NS_OK;
 }
 
-GL_SAME_METHOD_4(ClearColor, ClearColor, float, float, float, float)
+GL_SAME_METHOD_4(ClearColor, ClearColor, WebGLfloat, WebGLfloat, WebGLfloat, WebGLfloat)
 
 #ifdef USE_GLES2
-GL_SAME_METHOD_1(ClearDepthf, ClearDepth, float)
+GL_SAME_METHOD_1(ClearDepthf, ClearDepth, WebGLfloat)
 #else
-GL_SAME_METHOD_1(ClearDepth, ClearDepth, float)
+GL_SAME_METHOD_1(ClearDepth, ClearDepth, WebGLfloat)
 #endif
 
-GL_SAME_METHOD_1(ClearStencil, ClearStencil, PRInt32)
+GL_SAME_METHOD_1(ClearStencil, ClearStencil, WebGLint)
 
 GL_SAME_METHOD_4(ColorMask, ColorMask, WebGLboolean, WebGLboolean, WebGLboolean, WebGLboolean)
 
@@ -631,7 +631,16 @@ WebGLContext::CreateShader(WebGLenum type, nsIWebGLShader **retval)
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(CullFace, CullFace, WebGLenum)
+NS_IMETHODIMP
+WebGLContext::CullFace(WebGLenum face)
+{
+    if (!ValidateFaceEnum(face, "cullFace"))
+        return NS_OK;
+
+    MakeContextCurrent();
+    gl->fCullFace(face);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::DeleteBuffer(nsIWebGLBuffer *bobj)
@@ -807,9 +816,9 @@ WebGLContext::DepthFunc(WebGLenum func)
 GL_SAME_METHOD_1(DepthMask, DepthMask, WebGLboolean)
 
 #ifdef USE_GLES2
-GL_SAME_METHOD_2(DepthRangef, DepthRange, float, float)
+GL_SAME_METHOD_2(DepthRangef, DepthRange, WebGLfloat, WebGLfloat)
 #else
-GL_SAME_METHOD_2(DepthRange, DepthRange, float, float)
+GL_SAME_METHOD_2(DepthRange, DepthRange, WebGLfloat, WebGLfloat)
 #endif
 
 NS_IMETHODIMP
@@ -2111,7 +2120,7 @@ WebGLContext::IsEnabled(WebGLenum cap, WebGLboolean *retval)
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(LineWidth, LineWidth, float)
+GL_SAME_METHOD_1(LineWidth, LineWidth, WebGLfloat)
 
 NS_IMETHODIMP
 WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
@@ -2173,7 +2182,7 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 }
 
 
-GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, float, float)
+GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, WebGLfloat, WebGLfloat)
 
 NS_IMETHODIMP
 WebGLContext::ReadPixels(PRInt32 dummy)
@@ -2406,7 +2415,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     return NS_OK;
 }
 
-GL_SAME_METHOD_2(SampleCoverage, SampleCoverage, float, WebGLboolean)
+GL_SAME_METHOD_2(SampleCoverage, SampleCoverage, WebGLfloat, WebGLboolean)
 
 NS_IMETHODIMP
 WebGLContext::Scissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
