@@ -307,6 +307,9 @@ js_GetStringChars(JSContext *cx, JSString *str);
 extern JSString * JS_FASTCALL
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
+extern JSString * JS_FASTCALL
+js_ConcatStringsZ(JSContext *cx, const char *left, JSString *right);
+
 extern const jschar *
 js_UndependString(JSContext *cx, JSString *str);
 

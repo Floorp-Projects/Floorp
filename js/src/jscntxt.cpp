@@ -825,8 +825,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
     JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble),
                      &cx->scriptStackQuota);
+    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int),
+                     &cx->scriptStackQuota);
 
-    js_InitRegExpStatics(cx);
     JS_ASSERT(cx->resolveFlags == 0);
 
 #ifdef JS_THREADSAFE
@@ -1176,7 +1177,7 @@ FreeContext(JSContext *cx)
 #endif
 
     /* Free the stuff hanging off of cx. */
-    js_FreeRegExpStatics(cx);
+    cx->regExpStatics.clear();
     VOUCH_DOES_NOT_REQUIRE_STACK();
     JS_FinishArenaPool(&cx->tempPool);
 
@@ -2229,6 +2230,6 @@ FreeOldArenas(JSRuntime *rt, JSArenaPool *pool)
 void
 JSContext::purge()
 {
-    FreeOldArenas(runtime, &regexpPool);
+    FreeOldArenas(runtime, &regExpPool);
 }
 
