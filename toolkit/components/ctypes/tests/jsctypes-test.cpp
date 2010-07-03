@@ -75,39 +75,39 @@ test_void_t_cdecl()
   return;
 }
 
-#define FUNCTION_TESTS(name, type, ffiType, suffix)                            \
+#define DEFINE_TYPE(name, type, ffiType)                                       \
 type ABI                                                                       \
-get_##name##_##suffix()                                                        \
+get_##name##_cdecl()                                                           \
 {                                                                              \
   return ValueTraits<type>::literal();                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-set_##name##_##suffix(type x)                                                  \
+set_##name##_cdecl(type x)                                                     \
 {                                                                              \
   return x;                                                                    \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_##name##_##suffix(type x, type y)                                          \
+sum_##name##_cdecl(type x, type y)                                             \
 {                                                                              \
   return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_alignb_##name##_##suffix(char a, type x, char b, type y, char c)           \
+sum_alignb_##name##_cdecl(char a, type x, char b, type y, char c)              \
 {                                                                              \
   return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_alignf_##name##_##suffix(float a, type x, float b, type y, float c)        \
+sum_alignf_##name##_cdecl(float a, type x, float b, type y, float c)           \
 {                                                                              \
   return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_many_##name##_##suffix(                                                    \
+sum_many_##name##_cdecl(                                                       \
   type a, type b, type c, type d, type e, type f, type g, type h, type i,      \
   type j, type k, type l, type m, type n, type o, type p, type q, type r)      \
 {                                                                              \
@@ -116,7 +116,6 @@ sum_many_##name##_##suffix(                                                    \
 }
 
 #define ABI /* cdecl */
-#define DEFINE_TYPE(x, y, z) FUNCTION_TESTS(x, y, z, cdecl)
 #include "typedefs.h"
 #undef ABI
 
@@ -130,7 +129,6 @@ test_void_t_stdcall()
 }
 
 #define ABI NS_STDCALL
-#define DEFINE_TYPE(x, y, z) FUNCTION_TESTS(x, y, z, stdcall)
 #include "typedefs.h"
 #undef ABI
 
@@ -323,7 +321,7 @@ test_closure_cdecl(PRInt8 i, test_func_ptr f)
 
 #if defined(_WIN32) && !defined(_WIN64)
 PRInt32
-test_closure_cdecl(PRInt8 i, test_func_ptr_stdcall f)
+test_closure_stdcall(PRInt8 i, test_func_ptr_stdcall f)
 {
   return f(i);
 }

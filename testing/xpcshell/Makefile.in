@@ -75,6 +75,7 @@ MOBILE_BUILD_FILES := \
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \
   httpd.js \
+  httpd.manifest \
   $(NULL)
 
 ifdef MOZ_CRASHREPORTER

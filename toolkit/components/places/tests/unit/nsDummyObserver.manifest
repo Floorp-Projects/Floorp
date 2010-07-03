@@ -1,0 +1,4 @@
+component 62e221d3-68c3-4e1a-8943-a27beb5005fe nsDummyObserver.js
+contract @mozilla.org/places/test/dummy-observer;1 62e221d3-68c3-4e1a-8943-a27beb5005fe
+category bookmark-observers nsDummyObserver @mozilla.org/places/test/dummy-observer;1
+category history-observers nsDummyObserver @mozilla.org/places/test/dummy-observer;1

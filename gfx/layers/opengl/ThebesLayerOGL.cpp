@@ -74,85 +74,43 @@ UseOpaqueSurface(Layer* aLayer)
 
 
 ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
-  : ThebesLayer(aManager, NULL)
+  : ThebesLayer(aManager, nsnull)
   , LayerOGL(aManager)
-  , mTexture(0)
-  , mOffscreenFormat(gfxASurface::ImageFormatUnknown)
-  , mOffscreenSize(-1,-1)
+  , mTexImage(nsnull)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
 
 ThebesLayerOGL::~ThebesLayerOGL()
 {
-  mOGLManager->MakeCurrent();
-  if (mOffscreenSurfaceAsGLContext)
-    mOffscreenSurfaceAsGLContext->ReleaseTexImage();
-  if (mTexture) {
-    gl()->fDeleteTextures(1, &mTexture);
-  }
+  mTexImage = nsnull;
+  DEBUG_GL_ERROR_CHECK(gl());
 }
 
 PRBool
 ThebesLayerOGL::EnsureSurface()
 {
-  gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatARGB32;
-  if (UseOpaqueSurface(this))
-    imageFormat = gfxASurface::ImageFormatRGB24;
-
-  if (mInvalidatedRect.IsEmpty())
-    return mOffScreenSurface ? PR_TRUE : PR_FALSE;
-
-  if ((mOffscreenSize == gfxIntSize(mInvalidatedRect.width, mInvalidatedRect.height)
-      && imageFormat == mOffscreenFormat)
-      || mInvalidatedRect.IsEmpty())
-    return mOffScreenSurface ? PR_TRUE : PR_FALSE;
-
-  mOffScreenSurface =
-    gfxPlatform::GetPlatform()->
-      CreateOffscreenSurface(gfxIntSize(mInvalidatedRect.width, mInvalidatedRect.height),
-                             imageFormat);
-  if (!mOffScreenSurface)
-    return PR_FALSE;
-
-  if (mOffScreenSurface) {
-    mOffscreenSize.width = mInvalidatedRect.width;
-    mOffscreenSize.height = mInvalidatedRect.height;
-    mOffscreenFormat = imageFormat;
+  nsIntSize visibleSize = mVisibleRegion.GetBounds().Size();
+  TextureImage::ContentType contentType =
+    UseOpaqueSurface(this) ? gfxASurface::CONTENT_COLOR :
+                             gfxASurface::CONTENT_COLOR_ALPHA;
+  if (!mTexImage ||
+      mTexImage->GetSize() != visibleSize ||
+      mTexImage->GetContentType() != contentType)
+  {
+    mValidRegion.SetEmpty();
+    mTexImage = nsnull;
+    DEBUG_GL_ERROR_CHECK(gl());
   }
 
-
-  mOGLManager->MakeCurrent();
-
-  if (!mTexture)
-    gl()->fGenTextures(1, &mTexture);
-
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  // Try bind our offscreen surface directly to texture
-  mOffscreenSurfaceAsGLContext = sGLContextProvider.CreateForNativePixmapSurface(mOffScreenSurface);
-  // Bind GL surface to the texture, and return
-  if (mOffscreenSurfaceAsGLContext)
-    return mOffscreenSurfaceAsGLContext->BindTexImage();
-
-  // Otherwise allocate new texture
-  gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                    0,
-                    LOCAL_GL_RGBA,
-                    mInvalidatedRect.width,
-                    mInvalidatedRect.height,
-                    0,
-                    LOCAL_GL_RGBA,
-                    LOCAL_GL_UNSIGNED_BYTE,
-                    NULL);
-
-  DEBUG_GL_ERROR_CHECK(gl());
-  return PR_TRUE;
+  if (!mTexImage && !mVisibleRegion.IsEmpty())
+  {
+    mTexImage = gl()->CreateTextureImage(visibleSize,
+                                         contentType,
+                                         LOCAL_GL_CLAMP_TO_EDGE);
+    DEBUG_GL_ERROR_CHECK(gl());
+  }
+  return !!mTexImage;
 }
 
 void
@@ -160,25 +118,15 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
 {
   if (aRegion.IsEqual(mVisibleRegion))
     return;
-
   ThebesLayer::SetVisibleRegion(aRegion);
-
-  mInvalidatedRect = mVisibleRegion.GetBounds();
+  // FIXME/bug 573829: keep some of these pixels, if we can!
+  mValidRegion.SetEmpty();
 }
 
 void
 ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
 {
-  nsIntRegion invalidatedRegion;
-  invalidatedRegion.Or(aRegion, mInvalidatedRect);
-  invalidatedRegion.And(invalidatedRegion, mVisibleRegion);
-  mInvalidatedRect = invalidatedRegion.GetBounds();
-}
-
-LayerOGL::LayerType
-ThebesLayerOGL::GetType()
-{
-  return TYPE_THEBES;
+  mValidRegion.Sub(mValidRegion, aRegion);
 }
 
 void
@@ -188,77 +136,44 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   if (!EnsureSurface())
     return;
 
-  if (!mTexture)
-    return;
-
   mOGLManager->MakeCurrent();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
-  bool needsTextureBind = true;
-  nsIntRect visibleRect = mVisibleRegion.GetBounds();
+  nsIntRegion rgnToPaint = mVisibleRegion;
+  rgnToPaint.Sub(rgnToPaint, mValidRegion);
+  PRBool textureBound = PR_FALSE;
+  if (!rgnToPaint.IsEmpty())
+  {
+    nsIntRect visibleRect = mVisibleRegion.GetBounds();
+    // translate repaint region to texture-buffer space
+    nsIntRegion bufRgnToPaint = rgnToPaint;
+    bufRgnToPaint.MoveBy(-visibleRect.x, -visibleRect.y);
+    nsRefPtr<gfxContext> ctx = mTexImage->BeginUpdate(bufRgnToPaint);
+    if (!ctx)
+    {
+      NS_WARNING("unable to get context for update");
+      return;
+    }
+    // and translate update context back to screen space
+    ctx->Translate(-gfxPoint(visibleRect.x, visibleRect.y));
 
-  nsRefPtr<gfxASurface> surface = mOffScreenSurface;
-  gfxASurface::gfxImageFormat imageFormat = mOffscreenFormat;
-
-  if (!mInvalidatedRect.IsEmpty()) {
-    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
-    ctx->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
-
-    /* Call the thebes layer callback */
-    mOGLManager->CallThebesLayerDrawCallback(this, ctx, mInvalidatedRect);
-  }
-
-  // If draw callback happend and we don't have native surface
-  if (!mInvalidatedRect.IsEmpty() && !mOffscreenSurfaceAsGLContext) {
-    /* Then take its results and put it in an image surface,
-     * in preparation for a texture upload */
-    nsRefPtr<gfxImageSurface> imageSurface;
-
-    switch (surface->GetType()) {
-      case gfxASurface::SurfaceTypeImage:
-        imageSurface = static_cast<gfxImageSurface*>(surface.get());
-        break;
-#ifdef XP_WIN
-      case gfxASurface::SurfaceTypeWin32:
-        imageSurface =
-          static_cast<gfxWindowsSurface*>(surface.get())->
-            GetImageSurface();
-        break;
-#endif
-      default:
-        /** 
-         * XXX - This is very undesirable. Implement this for other platforms in
-         * a more efficient way as well!
-         */
-        {
-          imageSurface = new gfxImageSurface(gfxIntSize(mInvalidatedRect.width,
-                                                        mInvalidatedRect.height),
-                                             imageFormat);
-          nsRefPtr<gfxContext> tmpContext = new gfxContext(imageSurface);
-          tmpContext->SetSource(surface);
-          tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-          tmpContext->Paint();
-        }
-        break;
+    TextureImage::ContentType contentType = mTexImage->GetContentType();
+    //ClipToRegion(ctx, rgnToDraw);
+    if (gfxASurface::CONTENT_COLOR_ALPHA == contentType)
+    {
+      ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+      ctx->Paint();
+      ctx->SetOperator(gfxContext::OPERATOR_OVER);
     }
 
-    // Upload image to texture (slow)
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-    gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                         0,
-                         mInvalidatedRect.x - visibleRect.x,
-                         mInvalidatedRect.y - visibleRect.y,
-                         mInvalidatedRect.width,
-                         mInvalidatedRect.height,
-                         LOCAL_GL_RGBA,
-                         LOCAL_GL_UNSIGNED_BYTE,
-                         imageSurface->Data());
+    mOGLManager->CallThebesLayerDrawCallback(this, ctx, rgnToPaint);
 
-    needsTextureBind = false;
+    textureBound = mTexImage->EndUpdate();
+    mValidRegion.Or(mValidRegion, rgnToPaint);
   }
 
-  if (needsTextureBind)
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  if (!textureBound)
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
 
   // Note BGR: Cairo's image surfaces are always in what
   // OpenGL and our shaders consider BGR format.
@@ -268,7 +183,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     : mOGLManager->GetBGRALayerProgram();
 
   program->Activate();
-  program->SetLayerQuadRect(visibleRect);
+  program->SetLayerQuadRect(mVisibleRegion.GetBounds());
   program->SetLayerOpacity(GetOpacity());
   program->SetLayerTransform(mTransform);
   program->SetRenderOffset(aOffset);
@@ -277,12 +192,6 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   mOGLManager->BindAndDrawQuad(program);
 
   DEBUG_GL_ERROR_CHECK(gl());
-}
-
-const nsIntRect&
-ThebesLayerOGL::GetInvalidatedRect()
-{
-  return mInvalidatedRect;
 }
 
 Layer*
@@ -294,7 +203,7 @@ ThebesLayerOGL::GetLayer()
 PRBool
 ThebesLayerOGL::IsEmpty()
 {
-  return !mTexture;
+  return !mTexImage;
 }
 
 } /* layers */

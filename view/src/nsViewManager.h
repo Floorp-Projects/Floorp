@@ -203,11 +203,11 @@ private:
   void UpdateWidgetsForView(nsView* aView);
 
   /**
-   * Transforms a rectangle from aView's coordinate system to the coordinate
-   * system of the widget attached to aWidgetView, which should be an ancestor
-   * of aView.
+   * Intersects aRect with aView's bounds and then transforms it from aView's
+   * coordinate system to the coordinate system of the widget attached to
+   * aView.
    */
-  nsIntRect ViewToWidget(nsView *aView, nsView* aWidgetView, const nsRect &aRect) const;
+  nsIntRect ViewToWidget(nsView *aView, const nsRect &aRect) const;
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
 

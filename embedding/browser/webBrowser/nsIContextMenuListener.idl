@@ -51,8 +51,6 @@ interface nsIDOMNode;
  * 
  * @see nsIDOMNode
  * @see nsIDOMEvent
- *
- * @status FROZEN
  */
 [scriptable, uuid(3478b6b0-3875-11d4-94ef-0020183bf181)]
 interface nsIContextMenuListener : nsISupports

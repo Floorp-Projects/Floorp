@@ -41,8 +41,8 @@
 #include "nsIWindowsRegKey.h"
 
 #include "nsISystemProxySettings.h"
-#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
@@ -309,12 +309,22 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
         {0xad, 0xa4, 0x92, 0x47, 0xde, 0x57, 0xd3, 0x67 } }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowsSystemProxySettings, Init)
+NS_DEFINE_NAMED_CID(NS_WINDOWSSYSTEMPROXYSERVICE_CID);
 
-static const nsModuleComponentInfo components[] = {
-    { "Windows System Proxy Settings Service",
-        NS_WINDOWSSYSTEMPROXYSERVICE_CID,
-        NS_SYSTEMPROXYSETTINGS_CONTRACTID,
-        nsWindowsSystemProxySettingsConstructor }
+static const mozilla::Module::CIDEntry kSysProxyCIDs[] = {
+    { &kNS_WINDOWSSYSTEMPROXYSERVICE_CID, false, NULL, nsWindowsSystemProxySettingsConstructor },
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsWindowsProxyModule, components)
+static const mozilla::Module::ContractIDEntry kSysProxyContracts[] = {
+    { NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_WINDOWSSYSTEMPROXYSERVICE_CID },
+    { NULL }
+};
+
+static const mozilla::Module kSysProxyModule = {
+    mozilla::Module::kVersion,
+    kSysProxyCIDs,
+    kSysProxyContracts
+};
+
+NSMODULE_DEFN(nsWindowsProxyModule) = &kSysProxyModule;

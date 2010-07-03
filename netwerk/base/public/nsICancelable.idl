@@ -40,8 +40,6 @@
 
 /**
  * This interface provides a means to cancel an operation that is in progress.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(d94ac0a0-bb18-46b8-844e-84159064b0bd)]
 interface nsICancelable : nsISupports

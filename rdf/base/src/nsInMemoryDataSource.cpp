@@ -355,7 +355,7 @@ protected:
     virtual ~InMemoryDataSource();
     nsresult Init();
 
-    friend NS_IMETHODIMP
+    friend nsresult
     NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
 
 public:
@@ -852,7 +852,7 @@ InMemoryArcsEnumeratorImpl::GetNext(nsISupports** aResult)
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
 
-NS_IMETHODIMP
+nsresult
 NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");

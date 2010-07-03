@@ -38,6 +38,8 @@
 #include "TestHarness.h"
 
 #include "nsIFactory.h"
+#include "mozilla/Module.h"
+#include "nsXULAppAPI.h"
 #include "nsIThread.h"
 #include "nsIComponentRegistrar.h"
 
@@ -245,24 +247,43 @@ Runnable::Run()
   return NS_OK;
 }
 
+static Factory* gFactory;
+
+static already_AddRefed<nsIFactory>
+CreateFactory(const mozilla::Module& module, const mozilla::Module::CIDEntry& entry)
+{
+    if (!gFactory) {
+        gFactory = new Factory();
+        NS_ADDREF(gFactory);
+    }
+    NS_ADDREF(gFactory);
+    return gFactory;
+}
+
+static const mozilla::Module::CIDEntry kLocalCIDs[] = {
+    { &kFactoryCID1, false, CreateFactory, NULL },
+    { &kFactoryCID2, false, CreateFactory, NULL },
+    { NULL }
+};
+
+static const mozilla::Module::ContractIDEntry kLocalContracts[] = {
+    { FACTORY_CONTRACTID, &kFactoryCID2 },
+    { NULL }
+};
+
+static const mozilla::Module kLocalModule = {
+    mozilla::Module::kVersion,
+    kLocalCIDs,
+    kLocalContracts
+};
+
 int main(int argc, char** argv)
 {
+  nsresult rv;
+  XRE_AddStaticComponent(&kLocalModule);
+
   ScopedXPCOM xpcom("RacingServiceManager");
   NS_ENSURE_FALSE(xpcom.failed(), 1);
-
-  nsCOMPtr<nsIComponentRegistrar> registrar;
-  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
-  NS_ENSURE_SUCCESS(rv, 1);
-
-  nsRefPtr<Factory> factory = new Factory();
-  NS_ENSURE_TRUE(factory, 1);
-
-  rv = registrar->RegisterFactory(kFactoryCID1, nsnull, nsnull, factory);
-  NS_ENSURE_SUCCESS(rv, 1);
-
-  rv = registrar->RegisterFactory(kFactoryCID2, nsnull, FACTORY_CONTRACTID,
-                                  factory);
-  NS_ENSURE_SUCCESS(rv, 1);
 
   AutoCreateAndDestroyMonitor mon(&gMonitor);
 
@@ -290,7 +311,7 @@ int main(int argc, char** argv)
 
   // Reset for the contractID test
   gMainThreadWaiting = gCreateInstanceCalled = PR_FALSE;
-  factory->mFirstComponentCreated = runnable->mFirstRunnableDone = PR_TRUE;
+  gFactory->mFirstComponentCreated = runnable->mFirstRunnableDone = PR_TRUE;
   component = nsnull;
 
   rv = newThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
@@ -309,6 +330,8 @@ int main(int argc, char** argv)
 
   component = do_GetService(FACTORY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, 1);
+
+  NS_RELEASE(gFactory);
 
   return 0;
 }

@@ -44,7 +44,9 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxPattern.h"
+#include "gfxPlatform.h"
 #include "gfxUtils.h"
+#include "ThebesLayerBuffer.h"
 
 #include "GLContext.h"
 
@@ -210,12 +212,28 @@ BasicContainerLayer::RemoveChildInternal(Layer* aChild)
   NS_RELEASE(aChild);
 }
 
-/**
- * BasicThebesLayer does not currently retain any buffers. This
- * makes the implementation fairly simple. During a transaction the
- * valid region is just the visible region, and between transactions
- * the valid region is empty.
- */
+// Returns true if it's OK to save the contents of aLayer in an
+// opaque surface (a surface without an alpha channel).
+// If we can use a surface without an alpha channel, we should, because
+// it will often make painting of antialiased text faster and higher
+// quality.
+static PRBool
+UseOpaqueSurface(Layer* aLayer)
+{
+  // If the visible content in the layer is opaque, there is no need
+  // for an alpha channel.
+  if (aLayer->IsOpaqueContent())
+    return PR_TRUE;
+  // Also, if this layer is the bottommost layer in a container which
+  // doesn't need an alpha channel, we can use an opaque surface for this
+  // layer too. Any transparent areas must be covered by something else
+  // in the container.
+  BasicContainerLayer* parent =
+    static_cast<BasicContainerLayer*>(aLayer->GetParent());
+  return parent && parent->GetFirstChild() == aLayer &&
+         UseOpaqueSurface(parent);
+}
+
 class BasicThebesLayer : public ThebesLayer, BasicImplData {
 public:
   BasicThebesLayer(BasicLayerManager* aLayerManager) :
@@ -238,6 +256,7 @@ public:
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
+    mValidRegion.Sub(mValidRegion, aRegion);
   }
 
   virtual void Paint(gfxContext* aContext,
@@ -249,6 +268,8 @@ protected:
   {
     return static_cast<BasicLayerManager*>(mManager);
   }
+
+  ThebesLayerBuffer mBuffer;
 };
 
 void
@@ -261,7 +282,40 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
 
-  aCallback(this, target, mVisibleRegion, aCallbackData);
+  if (!BasicManager()->IsRetained()) {
+    mValidRegion.SetEmpty();
+    mBuffer.Clear();
+    aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
+    return;
+  }
+
+  PRUint32 flags = 0;
+  if (UseOpaqueSurface(this)) {
+    flags |= ThebesLayerBuffer::OPAQUE_CONTENT;
+  }
+
+  {
+    ThebesLayerBuffer::PaintState state =
+      mBuffer.BeginPaint(this, aContext, flags);
+    mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
+
+    if (state.mContext) {
+      // The area that became invalid and is visible needs to be repainted
+      // (this could be the whole visible area if our buffer switched
+      // from RGB to RGBA, because we might need to repaint with
+      // subpixel AA)
+      state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
+      aCallback(this, state.mContext, state.mRegionToDraw,
+                state.mRegionToInvalidate, aCallbackData);
+      mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+    } else {
+      NS_ASSERTION(state.mRegionToDraw.IsEmpty() &&
+                   state.mRegionToInvalidate.IsEmpty(),
+                   "If we need to draw, we should have a context");
+    }
+  }
+
+  mBuffer.DrawTo(this, flags, target);
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
@@ -280,7 +334,7 @@ public:
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    mVisibleRegion = aRegion;
+    ImageLayer::SetVisibleRegion(aRegion);
   }
 
   virtual void Paint(gfxContext* aContext,
@@ -354,7 +408,7 @@ public:
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    mVisibleRegion = aRegion;
+    ColorLayer::SetVisibleRegion(aRegion);
   }
 
   virtual void Paint(gfxContext* aContext,
@@ -521,28 +575,37 @@ BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
 #ifdef DEBUG
   , mPhase(PHASE_NONE)
 #endif
+  , mRetain(PR_FALSE)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
 }
 
 BasicLayerManager::~BasicLayerManager()
 {
-  NS_ASSERTION(mPhase == PHASE_NONE, "Died during transaction?");
+  NS_ASSERTION(!InTransaction(), "Died during transaction?");
   MOZ_COUNT_DTOR(BasicLayerManager);
 }
 
 void
 BasicLayerManager::SetDefaultTarget(gfxContext* aContext)
 {
-  NS_ASSERTION(mPhase == PHASE_NONE,
+  NS_ASSERTION(!InTransaction(),
                "Must set default target outside transaction");
   mDefaultTarget = aContext;
 }
 
 void
+BasicLayerManager::SetRetain(PRBool aRetain)
+{
+  NS_ASSERTION(!InTransaction(),
+               "Must set retained mode outside transaction");
+  mRetain = aRetain;
+}
+
+void
 BasicLayerManager::BeginTransaction()
 {
-  NS_ASSERTION(mPhase == PHASE_NONE, "Nested transactions not allowed");
+  NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
 #ifdef DEBUG
   mPhase = PHASE_CONSTRUCTION;
 #endif
@@ -552,7 +615,7 @@ BasicLayerManager::BeginTransaction()
 void
 BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
-  NS_ASSERTION(mPhase == PHASE_NONE, "Nested transactions not allowed");
+  NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
 #ifdef DEBUG
   mPhase = PHASE_CONSTRUCTION;
 #endif
@@ -564,7 +627,7 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
   NS_ASSERTION(mRoot, "Root not set");
-  NS_ASSERTION(mPhase == PHASE_CONSTRUCTION, "Should be in construction phase");
+  NS_ASSERTION(InConstruction(), "Should be in construction phase");
 #ifdef DEBUG
   mPhase = PHASE_DRAWING;
 #endif
@@ -577,8 +640,6 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 #ifdef DEBUG
   mPhase = PHASE_NONE;
 #endif
-  // No retained layers supported for now
-  mRoot = nsnull;
 }
 
 void
@@ -605,28 +666,6 @@ NeedsState(Layer* aLayer)
 {
   return aLayer->GetClipRect() != nsnull ||
          !aLayer->GetTransform().IsIdentity();
-}
-
-// Returns true if it's OK to save the contents of aLayer in an
-// opaque surface (a surface without an alpha channel).
-// If we can use a surface without an alpha channel, we should, because
-// it will often make painting of antialiased text faster and higher
-// quality.
-static PRBool
-UseOpaqueSurface(Layer* aLayer)
-{
-  // If the visible content in the layer is opaque, there is no need
-  // for an alpha channel.
-  if (aLayer->IsOpaqueContent())
-    return PR_TRUE;
-  // Also, if this layer is the bottommost layer in a container which
-  // doesn't need an alpha channel, we can use an opaque surface for this
-  // layer too. Any transparent areas must be covered by something else
-  // in the container.
-  BasicContainerLayer* parent =
-    static_cast<BasicContainerLayer*>(aLayer->GetParent());
-  return parent && parent->GetFirstChild() == aLayer &&
-         UseOpaqueSurface(parent);
 }
 
 void

@@ -56,6 +56,17 @@ CPPSRCS	= \
 	nsCanvasRenderingContext2D.cpp \
 	$(NULL)
 
+ifdef MOZ_IPC
+CPPSRCS += \
+	DocumentRendererParent.cpp \
+	DocumentRendererChild.cpp \
+	DocumentRendererNativeIDParent.cpp \
+	DocumentRendererNativeIDChild.cpp \
+	DocumentRendererShmemParent.cpp \
+	DocumentRendererShmemChild.cpp \
+	$(NULL)
+endif
+
 # Canvas 3D Pieces
 
 ifdef MOZ_WEBGL
@@ -78,6 +89,7 @@ endif
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 

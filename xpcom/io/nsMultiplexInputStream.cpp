@@ -388,7 +388,7 @@ nsMultiplexInputStream::SetEOF()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD
+nsresult
 nsMultiplexInputStreamConstructor(nsISupports *outer,
                                   REFNSIID iid,
                                   void **result)

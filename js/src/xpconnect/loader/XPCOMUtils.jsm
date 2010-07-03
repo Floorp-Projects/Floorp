@@ -126,129 +126,22 @@ var XPCOMUtils = {
   },
 
   /**
-   * Generate the NSGetModule function (along with the module definition).
-   * See the parameters to generateModule.
+   * Generate a NSGetFactory function given an array of components.
    */
-  generateNSGetModule: function XPCU_generateNSGetModule(componentsArray,
-                                                         postRegister,
-                                                         preUnregister) {
-    return function NSGetModule(compMgr, fileSpec) {
-      return XPCOMUtils.generateModule(componentsArray,
-                                       postRegister,
-                                       preUnregister);
-    }
-  },
-
-  /**
-   * Generate a module implementation.
-   *
-   * @param componentsArray  Array of component constructors. See the comment
-   *                         at the top of this file for details.
-   * @param postRegister  optional post-registration function with
-   *                      signature 'postRegister(nsIComponentManager,
-   *                                              nsIFile, componentsArray)'
-   * @param preUnregister optional pre-unregistration function with
-   *                      signature 'preUnregister(nsIComponentManager,
-   *                                               nsIFile, componentsArray)'
-   */
-  generateModule: function XPCU_generateModule(componentsArray,
-                                               postRegister,
-                                               preUnregister) {
-    let classes = [];
+  generateNSGetFactory: function XPCU_generateNSGetFactory(componentsArray) {
+    let classes = {};
     for each (let component in componentsArray) {
-      classes.push({
-        cid:          component.prototype.classID,
-        className:    component.prototype.classDescription,
-        contractID:   component.prototype.contractID,
-        factory:      this._getFactory(component),
-        categories:   component.prototype._xpcom_categories
-      });
+        if (!(component.prototype.classID instanceof Components.ID))
+          throw Error("In generateNSGetFactory, classID missing or incorrect for component " + component);
+
+        classes[component.prototype.classID] = this._getFactory(component);
     }
-
-    function categoryRegistration(action, compMgr, fileSpec,
-                                  registrationFunc, hookFunc) {
-      debug("*** " + action + "ing " + fileSpec.leafName + ": [ ");
-      var componentCount = 0;
-      compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-
-      if (action == "unregister" && preUnregister)
-        preUnregister(compMgr, fileSpec, componentsArray);
-
-      for each (let classDesc in classes) {
-        debug((componentCount++ ? ", " : "") + classDesc.className);
-
-        if (action == "register" && hookFunc)
-          hookFunc(classDesc);
-
-        if (classDesc.categories) {
-          for each (let cat in classDesc.categories) {
-            if ("apps" in cat && -1 == cat.apps.indexOf(XPCOMUtils._appID))
-              continue;
-            registrationFunc(cat, classDesc);
-          }
-        }
-
-        if (action == "unregister" && hookFunc)
-          hookFunc(classDesc);
-      }
-
-      if (action == "register" && postRegister)
-        postRegister(compMgr, fileSpec, componentsArray);
-      debug(" ]\n");
+    return function NSGetFactory(cid) {
+      let cidstring = cid.toString();
+      if (cidstring in classes)
+        return classes[cidstring];
+      throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
     }
-
-    return { // nsIModule impl.
-      getClassObject: function(compMgr, cid, iid) {
-        // We only support nsIFactory queries, not nsIClassInfo
-        if (!iid.equals(Ci.nsIFactory))
-          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-        for each (let classDesc in classes) {
-          if (classDesc.cid.equals(cid))
-            return classDesc.factory;
-        }
-
-        throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
-      },
-
-      registerSelf: function(compMgr, fileSpec, location, type) {
-        categoryRegistration("register", compMgr, fileSpec,
-          function(cat, classDesc) {
-            let defaultValue = (cat.service ? "service," : "") +
-                               classDesc.contractID;
-            let catMan = XPCOMUtils.categoryManager;
-            catMan.addCategoryEntry(cat.category,
-                                    cat.entry || classDesc.className,
-                                    cat.value || defaultValue,
-                                    true, true);
-          },
-          function(classDesc) {
-            compMgr.registerFactoryLocation(classDesc.cid,
-                                            classDesc.className,
-                                            classDesc.contractID,
-                                            fileSpec,
-                                            location,
-                                            type);
-          });
-      },
-
-      unregisterSelf: function(compMgr, fileSpec, location) {
-        categoryRegistration("unregister", compMgr, fileSpec,
-          function(cat, classDesc) {
-            let catMan = XPCOMUtils.categoryManager;
-            catMan.deleteCategoryEntry(cat.category,
-                                       cat.entry || classDesc.className,
-                                       true);
-          },
-          function (classDesc) {
-            compMgr.unregisterFactoryLocation(classDesc.cid, fileSpec);
-          });
-      },
-
-      canUnload: function(compMgr) {
-        return true;
-      }
-    };
   },
 
   get _appID() {

@@ -1062,7 +1062,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsXPIDLCString contractID;
-        rv = catman->GetCategoryEntry("XSLT extension functions",
+        rv = catman->GetCategoryEntry("XSLT-extension-functions",
                                       NS_ConvertUTF16toUTF8(namespaceURI).get(),
                                       getter_Copies(contractID));
         if (rv == NS_ERROR_NOT_AVAILABLE) {

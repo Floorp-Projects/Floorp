@@ -1,0 +1,89 @@
+    COMPONENT(MEMORY, nsMemoryImpl::Create)
+    COMPONENT(DEBUG,  nsDebugImpl::Create)
+    COMPONENT(ERRORSERVICE, nsErrorService::Create)
+
+    COMPONENT(CATEGORYMANAGER, nsCategoryManager::Create)
+
+    COMPONENT(BYTEBUFFER, ByteBufferImpl::Create)
+    COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create)
+    COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor)
+    COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor)
+    COMPONENT(STORAGESTREAM, nsStorageStreamConstructor)
+    COMPONENT(VERSIONCOMPARATOR, nsVersionComparatorImplConstructor)
+    COMPONENT(PIPE, nsPipeConstructor)
+
+    COMPONENT(PROPERTIES, nsPropertiesConstructor)
+
+    COMPONENT(PERSISTENTPROPERTIES, nsPersistentProperties::Create)
+
+    COMPONENT(SUPPORTSARRAY, nsSupportsArray::Create)
+    COMPONENT(ARRAY, nsArrayConstructor)
+    COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
+    COMPONENT(EXCEPTIONSERVICE, nsExceptionServiceConstructor)
+    COMPONENT(ATOMSERVICE, nsAtomServiceConstructor)
+#ifdef MOZ_TIMELINE
+    COMPONENT(TIMELINESERVICE, nsTimelineServiceConstructor)
+#endif
+    COMPONENT(OBSERVERSERVICE, nsObserverService::Create)
+
+    COMPONENT(XPCOMPROXY, nsProxyObjectManager::Create)
+
+    COMPONENT(TIMER, nsTimerImplConstructor)
+
+#define COMPONENT_SUPPORTS(TYPE, Type)                                         \
+  COMPONENT(SUPPORTS_##TYPE, nsSupports##Type##ImplConstructor)
+
+    COMPONENT_SUPPORTS(ID, ID)
+    COMPONENT_SUPPORTS(STRING, String)
+    COMPONENT_SUPPORTS(CSTRING, CString)
+    COMPONENT_SUPPORTS(PRBOOL, PRBool)
+    COMPONENT_SUPPORTS(PRUINT8, PRUint8)
+    COMPONENT_SUPPORTS(PRUINT16, PRUint16)
+    COMPONENT_SUPPORTS(PRUINT32, PRUint32)
+    COMPONENT_SUPPORTS(PRUINT64, PRUint64)
+    COMPONENT_SUPPORTS(PRTIME, PRTime)
+    COMPONENT_SUPPORTS(CHAR, Char)
+    COMPONENT_SUPPORTS(PRINT16, PRInt16)
+    COMPONENT_SUPPORTS(PRINT32, PRInt32)
+    COMPONENT_SUPPORTS(PRINT64, PRInt64)
+    COMPONENT_SUPPORTS(FLOAT, Float)
+    COMPONENT_SUPPORTS(DOUBLE, Double)
+    COMPONENT_SUPPORTS(VOID, Void)
+    COMPONENT_SUPPORTS(INTERFACE_POINTER, InterfacePointer)
+
+#undef COMPONENT_SUPPORTS
+    COMPONENT(LOCAL_FILE, nsLocalFile::nsLocalFileConstructor)
+    COMPONENT(DIRECTORY_SERVICE, nsDirectoryService::Create)
+    COMPONENT(PROCESS, nsProcessConstructor)
+    COMPONENT(ENVIRONMENT, nsEnvironment::Create)
+
+    COMPONENT(THREADMANAGER, nsThreadManagerGetSingleton)
+    COMPONENT(THREADPOOL, nsThreadPoolConstructor)
+
+    COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor)
+    COMPONENT(MULTIPLEXINPUTSTREAM, nsMultiplexInputStreamConstructor)
+
+#ifndef MOZ_NO_FAST_LOAD
+    COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create)
+#endif
+
+    COMPONENT(VARIANT, nsVariantConstructor)
+    COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton)
+
+    COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImplConstructor)
+
+    COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor)
+
+    COMPONENT(UUID_GENERATOR, nsUUIDGeneratorConstructor)
+
+#if defined(XP_WIN)
+    COMPONENT(WINDOWSREGKEY, nsWindowsRegKeyConstructor)
+#endif
+
+#ifdef XP_MACOSX
+    COMPONENT(MACUTILSIMPL, nsMacUtilsImplConstructor)
+#endif
+
+    COMPONENT(SYSTEMINFO, nsSystemInfoConstructor)
+    COMPONENT(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor)
+    COMPONENT(IOUTIL, nsIOUtilConstructor)

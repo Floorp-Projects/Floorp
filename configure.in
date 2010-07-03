@@ -2181,8 +2181,8 @@ ia64*-hpux*)
     elif test "$GNU_CC" || test "$GNU_CXX"; then
         GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
         case $GCC_VERSION in
-        4.1.*|4.2.*)
-            # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
+        4.1.*|4.2.*|4.5.*)
+            # -Os is broken on gcc 4.1.x 4.2.x, 4.5.x we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
@@ -4985,7 +4985,6 @@ case "${target}" in
         MOZ_CRASHREPORTER=
         NS_PRINTING=
         NECKO_WIFI=
-        MOZ_PLUGINS=
         MOZ_THUMB2=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
@@ -5700,7 +5699,7 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
-*-wince*|*-android*)
+*-wince*)
     MOZ_IPC=
     ;;
 esac
