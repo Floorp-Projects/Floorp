@@ -7249,7 +7249,8 @@ CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
   }
 }
 
-struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps
+struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
+                             public mozilla::css::CSSValueInputCalcOps
 {
   result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
