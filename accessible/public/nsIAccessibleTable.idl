@@ -45,7 +45,7 @@
 interface nsIAccessible;
 interface nsIArray;
 
-[scriptable, uuid(035c0c0e-41e3-4985-8ad9-d9f14cdc667a)]
+[scriptable, uuid(cb0bf7b9-117e-40e2-9e46-189c3d43ce4a)]
 interface nsIAccessibleTable : nsISupports
 {
   /**
@@ -103,6 +103,17 @@ interface nsIAccessibleTable : nsISupports
    * @param cellIndex  [in] index of the table cell to return row index for
    */
   long getRowIndexAt(in long cellIndex);
+
+  /**
+   * Translate the given cell index into the corresponding row and column
+   * indices.
+   *
+   * @param cellIndex    [in] cell index to return row and column indices for
+   * @param rowIndex     [out] row index at the given cell index
+   * @param columnIndex  [out] column index at the given cell index
+   */
+  void getRowAndColumnIndicesAt(in long cellIndex,
+                                out long rowIndex, out long columnIndex);
 
   /**
    * Return the number of columns occupied by the accessible cell at
