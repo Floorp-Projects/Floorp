@@ -629,10 +629,28 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
 void
 mjit::Compiler::jsop_objtostr()
 {
-    prepareStubCall();
-    stubCall(stubs::ObjToStr, Uses(1), Defs(1));
-    frame.pop();
-    frame.pushSynced();
+    FrameEntry *top = frame.peek(-1);
+
+    if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_OBJECT) {
+        prepareStubCall();
+        stubCall(stubs::ObjToStr, Uses(1), Defs(1));
+        frame.pop();
+        frame.pushSynced();
+        return;
+    }
+
+    if (top->isTypeKnown())
+        return;
+
+    frame.giveOwnRegs(top);
+
+    Jump isObj = frame.testPrimitive(Assembler::NotEqual, top);
+    stubcc.linkExit(isObj);
+
+    stubcc.leave();
+    stubcc.call(stubs::ObjToStr);
+
+    stubcc.rejoin(1);
 }
 
 void
