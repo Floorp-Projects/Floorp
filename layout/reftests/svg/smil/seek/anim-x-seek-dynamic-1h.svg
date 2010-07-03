@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that dynamic times are not prematurely reset during a forwards seek
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    svg.setCurrentTime(1);
+    a.beginElement();      // Interval: 1s-3s
+    a.endElementAt(2);
+    svg.setCurrentTime(2); // Should not cause end time at t=3s to be reset
+    svg.setCurrentTime(3); // Should no longer be active
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="100" begin="indefinite" dur="indefinite" id="a"/>
+  </rect>
+</svg>

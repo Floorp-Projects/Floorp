@@ -229,6 +229,16 @@ public:
   void HandleContainerTimeChange();
 
   /**
+   * Resets this timed element's accumulated times and intervals back to start
+   * up state.
+   *
+   * This is used for backwards seeking where rather than accumulating
+   * historical timing state and winding it back, we reset the element and seek
+   * forwards.
+   */
+  void Rewind();
+
+  /**
    * Attempts to set an attribute on this timed element.
    *
    * @param aAttribute  The name of the attribute to set. The namespace of this
@@ -373,6 +383,8 @@ protected:
                                       nsIContent* aContextNode,
                                       PRBool aIsBegin);
   void              ClearBeginOrEndSpecs(PRBool aIsBegin);
+  void              RewindTiming();
+  void              RewindInstanceTimes(InstanceTimeList& aList);
   void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
 
   /**
@@ -395,6 +407,20 @@ protected:
    * This state is described in SMIL 3.0, section 5.4.3, Resetting element state
    */
   void Reset();
+
+  /**
+   * Completes a seek operation by sending appropriate events and, in the case
+   * of a backwards seek, updating the state of timing information that was
+   * previously considered historical.
+   */
+  void DoPostSeek();
+
+  /**
+   * Unmarks instance times that were previously preserved because they were
+   * considered important historical milestones but are no longer such because
+   * a backwards seek has been performed.
+   */
+  void UnpreserveInstanceTimes(InstanceTimeList& aList);
 
   /**
    * Helper function to iterate through this element's accumulated timing
@@ -538,6 +564,16 @@ protected:
     STATE_POSTACTIVE
   };
   nsSMILElementState              mElementState;
+
+  enum nsSMILSeekState
+  {
+    SEEK_NOT_SEEKING,
+    SEEK_FORWARD_FROM_ACTIVE,
+    SEEK_FORWARD_FROM_INACTIVE,
+    SEEK_BACKWARD_FROM_ACTIVE,
+    SEEK_BACKWARD_FROM_INACTIVE
+  };
+  nsSMILSeekState                 mSeekState;
 };
 
 #endif // NS_SMILTIMEDELEMENT_H_

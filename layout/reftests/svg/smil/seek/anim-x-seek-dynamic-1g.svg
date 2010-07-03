@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that dynamic interval end times are reset during a backwards seek
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    svg.setCurrentTime(1);
+    a.beginElement(); // First interval 1s-2s
+    a.endElementAt(1);
+    svg.setCurrentTime(3);
+    svg.setCurrentTime(1.5); // Backwards seek to 1.5s -- instance time at t=2s
+                             // should be reset
+    svg.setCurrentTime(3);   // Should still be active
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="15" begin="indefinite" dur="indefinite" id="a"/>
+  </rect>
+</svg>
