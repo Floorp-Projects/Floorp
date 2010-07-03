@@ -82,6 +82,7 @@
 #include "CSSCalc.h"
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 #define NS_SET_IMAGE_REQUEST(method_, context_, request_)                   \
   if ((context_)->PresContext()->IsDynamic()) {                               \
@@ -179,8 +180,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                               PRBool aUseUserFontSet,
                               PRBool& aCanStoreInRuleTree);
 
-struct CalcLengthCalcOps : public mozilla::css::BasicCoordCalcOps,
-                           public mozilla::css::NumbersAlreadyNormalizedOps
+struct CalcLengthCalcOps : public css::BasicCoordCalcOps,
+                           public css::NumbersAlreadyNormalizedOps
 {
   // All of the parameters to CalcLengthWith except aValue.
   const nscoord mFontSize;
@@ -327,7 +328,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       CalcLengthCalcOps ops(aFontSize, aStyleFont, aStyleContext, aPresContext,
                             aUseProvidedRootEmSize, aUseUserFontSet,
                             aCanStoreInRuleTree);
-      return mozilla::css::ComputeCalc(aValue, ops);
+      return css::ComputeCalc(aValue, ops);
     }
     default:
       NS_NOTREACHED("unexpected unit");
@@ -2654,8 +2655,8 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
 }
 #endif
 
-struct SetFontSizeCalcOps : public mozilla::css::BasicCoordCalcOps,
-                            public mozilla::css::NumbersAlreadyNormalizedOps
+struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
+                            public css::NumbersAlreadyNormalizedOps
 {
   // The parameters beyond aValue that we need for CalcLengthWith.
   const nscoord mParentSize;
@@ -2771,7 +2772,7 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
            aFontData.mSize.IsCalcUnit()) {
     SetFontSizeCalcOps ops(aParentSize, aParentFont, aPresContext, aAtRoot,
                            aCanStoreInRuleTree);
-    *aSize = mozilla::css::ComputeCalc(aFontData.mSize, ops);
+    *aSize = css::ComputeCalc(aFontData.mSize, ops);
     if (*aSize < 0) {
       NS_ABORT_IF_FALSE(aFontData.mSize.IsCalcUnit(),
                         "negative lengths and percents should be rejected "
