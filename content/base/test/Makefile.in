@@ -402,10 +402,6 @@ _TEST_FILES2 = \
 		test_websocket.html \
 		file_websocket_wsh.py \
 		file_websocket_http_resource.txt \
-		test_bug552523.html \
-		file_bug552523.html \
-		file_bug552523.html^headers^ \
-		file_bug552523_violation.sjs \
 		$(NULL)
 
 # This test fails on the Mac for some reason
