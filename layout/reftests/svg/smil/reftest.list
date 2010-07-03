@@ -175,3 +175,6 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == smil-transitions-interaction-3b.svg lime.svg
 == smil-transitions-interaction-4a.svg lime.svg
 == smil-transitions-interaction-4b.svg lime.svg
+
+# Test filtering of excessive times
+== filtered-instance-time-1.svg anim-standard-ref.svg

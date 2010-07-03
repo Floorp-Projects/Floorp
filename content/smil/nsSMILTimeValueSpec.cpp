@@ -160,8 +160,8 @@ nsSMILTimeValueSpec::HandleChangedInstanceTime(
     PRBool aObjectChanged)
 {
   // If the instance time is fixed (e.g. because it's being used as the begin
-  // time of an active interval) we just ignore the change.
-  if (!aInstanceTimeToUpdate.MayUpdate())
+  // time of an active or postactive interval) we just ignore the change.
+  if (aInstanceTimeToUpdate.IsFixedTime())
     return;
 
   nsSMILTimeValue updatedTime =

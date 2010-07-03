@@ -39,6 +39,8 @@
 
 nsSMILInterval::nsSMILInterval()
 :
+  mBeginFixed(PR_FALSE),
+  mEndFixed(PR_FALSE),
   mBeginObjectChanged(PR_FALSE),
   mEndObjectChanged(PR_FALSE)
 {
@@ -48,19 +50,28 @@ nsSMILInterval::nsSMILInterval(const nsSMILInterval& aOther)
 :
   mBegin(aOther.mBegin),
   mEnd(aOther.mEnd),
+  mBeginFixed(PR_FALSE),
+  mEndFixed(PR_FALSE),
   mBeginObjectChanged(PR_FALSE),
   mEndObjectChanged(PR_FALSE)
 {
   NS_ABORT_IF_FALSE(aOther.mDependentTimes.IsEmpty(),
       "Attempting to copy-construct an interval with dependent times, "
       "this will lead to instance times being shared between intervals.");
+
+  // For the time being we don't allow intervals with fixed endpoints to be
+  // copied since we only ever copy-construct to establish a new current
+  // interval. If we ever need to copy historical intervals we may need to move
+  // the ReleaseFixedEndpoint calls from Unlink to the dtor.
+  NS_ABORT_IF_FALSE(!aOther.mBeginFixed && !aOther.mEndFixed,
+      "Attempting to copy-construct an interval with fixed endpoints");
 }
 
 nsSMILInterval::~nsSMILInterval()
 {
   NS_ABORT_IF_FALSE(mDependentTimes.IsEmpty(),
       "Destroying interval without disassociating dependent instance times. "
-      "NotifyDeleting was not called.");
+      "Unlink was not called");
 }
 
 void
@@ -76,12 +87,24 @@ nsSMILInterval::NotifyChanged(const nsSMILTimeContainer* aContainer)
 }
 
 void
-nsSMILInterval::NotifyDeleting()
+nsSMILInterval::Unlink(PRBool aFiltered)
 {
   for (PRInt32 i = mDependentTimes.Length() - 1; i >= 0; --i) {
-    mDependentTimes[i]->HandleDeletedInterval();
+    if (aFiltered) {
+      mDependentTimes[i]->HandleFilteredInterval();
+    } else {
+      mDependentTimes[i]->HandleDeletedInterval();
+    }
   }
   mDependentTimes.Clear();
+  if (mBegin && mBeginFixed) {
+    mBegin->ReleaseFixedEndpoint();
+  }
+  mBegin = nsnull;
+  if (mEnd && mEndFixed) {
+    mEnd->ReleaseFixedEndpoint();
+  }
+  mEnd = nsnull;
 }
 
 nsSMILInstanceTime*
@@ -104,7 +127,9 @@ void
 nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
 {
   NS_ABORT_IF_FALSE(aBegin.Time().IsResolved(),
-      "Attempting to set unresolved begin time on interval.");
+      "Attempting to set unresolved begin time on interval");
+  NS_ABORT_IF_FALSE(!mBeginFixed,
+      "Attempting to set begin time but the begin point is fixed");
 
   if (mBegin == &aBegin)
     return;
@@ -116,11 +141,36 @@ nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
 void
 nsSMILInterval::SetEnd(nsSMILInstanceTime& aEnd)
 {
+  NS_ABORT_IF_FALSE(!mEndFixed,
+      "Attempting to set end time but the end point is fixed");
+
   if (mEnd == &aEnd)
     return;
 
   mEnd = &aEnd;
   mEndObjectChanged = PR_TRUE;
+}
+
+void
+nsSMILInterval::FixBegin()
+{
+  NS_ABORT_IF_FALSE(mBegin && mEnd,
+      "Fixing begin point on un-initialized interval");
+  NS_ABORT_IF_FALSE(!mBeginFixed, "Duplicate calls to FixBegin()");
+  mBeginFixed = PR_TRUE;
+  mBegin->AddRefFixedEndpoint();
+}
+
+void
+nsSMILInterval::FixEnd()
+{
+  NS_ABORT_IF_FALSE(mBegin && mEnd,
+      "Fixing end point on un-initialized interval");
+  NS_ABORT_IF_FALSE(mBeginFixed,
+      "Fixing the end of an interval without a fixed begin");
+  NS_ABORT_IF_FALSE(!mEndFixed, "Duplicate calls to FixEnd()");
+  mEndFixed = PR_TRUE;
+  mEnd->AddRefFixedEndpoint();
 }
 
 void
@@ -141,4 +191,20 @@ nsSMILInterval::RemoveDependentTime(const nsSMILInstanceTime& aTime)
 #endif
     mDependentTimes.RemoveElementSorted(&aTime);
   NS_ABORT_IF_FALSE(found, "Couldn't find instance time to delete.");
+}
+
+PRBool
+nsSMILInterval::IsDependencyChainLink() const
+{
+  if (!mBegin || !mEnd)
+    return PR_FALSE; // Not yet initialised so it can't be part of a chain
+
+  if (mDependentTimes.IsEmpty())
+    return PR_FALSE; // No dependents, chain end
+
+  // So we have dependents, but we're still only a link in the chain (as opposed
+  // to the end of the chain) if one of our endpoints is dependent on an
+  // interval other than ourselves.
+  return (mBegin->IsDependent() && mBegin->GetBaseInterval() != this) ||
+         (mEnd->IsDependent() && mEnd->GetBaseInterval() != this);
 }
