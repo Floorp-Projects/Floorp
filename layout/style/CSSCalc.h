@@ -306,6 +306,159 @@ ConvertCalcUnit(nsStyleUnit aUnit)
   return nsCSSUnit(aUnit - 14);
 }
 
+/**
+ * SerializeCalc appends the serialization of aValue to a string.
+ *
+ * It is templatized over a CalcOps class that is expected to provide:
+ *
+ *   // input_type and input_array_type have a bunch of very specific
+ *   // expectations (which happen to be met by two classes (nsCSSValue
+ *   // and nsStyleCoord).  There must be methods (roughly):
+ *   //   input_array_type* input_type::GetArrayValue();
+ *   //   PRUint32 input_array_type::Count() const;
+ *   //   input_type& input_array_type::Item(PRUint32);
+ *   typedef ... input_type;
+ *   typedef ... input_array_type;
+ *
+ *   static nsCSSUnit GetUnit(const input_type& aValue);
+ *
+ *   void Append(const char* aString);
+ *   void AppendLeafValue(const input_type& aValue);
+ *   void AppendNumber(const input_type& aValue);
+ *
+ * Data structures given may or may not have a toplevel eCSSUnit_Calc
+ * node representing a calc whose toplevel is not min() or max().
+ */
+
+template <class CalcOps>
+static void
+SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps);
+
+// Serialize the toplevel value in a calc() tree.  See big comment
+// above.
+template <class CalcOps>
+static void
+SerializeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
+{
+  aOps.Append("-moz-");
+  nsCSSUnit unit = CalcOps::GetUnit(aValue);
+  if (unit != eCSSUnit_Calc_Minimum && unit != eCSSUnit_Calc_Maximum) {
+    aOps.Append("calc(");
+  }
+  if (unit == eCSSUnit_Calc) {
+    const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
+    NS_ABORT_IF_FALSE(array->Count() == 1, "unexpected length");
+    SerializeCalcInternal(array->Item(0), aOps);
+  } else {
+    SerializeCalcInternal(aValue, aOps);
+  }
+  if (unit != eCSSUnit_Calc_Minimum && unit != eCSSUnit_Calc_Maximum) {
+    aOps.Append(")");
+  }
+}
+
+static inline PRBool
+IsCalcAdditiveUnit(nsCSSUnit aUnit)
+{
+  return aUnit == eCSSUnit_Calc_Plus ||
+         aUnit == eCSSUnit_Calc_Minus;
+}
+
+static inline PRBool
+IsCalcMultiplicativeUnit(nsCSSUnit aUnit)
+{
+  return aUnit == eCSSUnit_Calc_Times_L ||
+         aUnit == eCSSUnit_Calc_Times_R ||
+         aUnit == eCSSUnit_Calc_Divided;
+}
+
+// Serialize a non-toplevel value in a calc() tree.  See big comment
+// above.
+template <class CalcOps>
+/* static */ void
+SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
+{
+  nsCSSUnit unit = CalcOps::GetUnit(aValue);
+  if (eCSSUnit_Calc_Minimum == unit || eCSSUnit_Calc_Maximum == unit) {
+    const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
+    if (eCSSUnit_Calc_Minimum == unit) {
+      aOps.Append("min(");
+    } else {
+      aOps.Append("max(");
+    }
+
+    for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
+      if (i != 0) {
+        aOps.Append(", ");
+      }
+      SerializeCalcInternal(array->Item(i), aOps);
+    }
+
+    aOps.Append(")");
+  } else if (IsCalcAdditiveUnit(unit)) {
+    const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
+    NS_ABORT_IF_FALSE(array->Count() == 2, "unexpected length");
+
+    SerializeCalcInternal(array->Item(0), aOps);
+
+    if (eCSSUnit_Calc_Plus == unit) {
+      aOps.Append(" + ");
+    } else {
+      NS_ABORT_IF_FALSE(eCSSUnit_Calc_Minus == unit, "unexpected unit");
+      aOps.Append(" - ");
+    }
+
+    PRBool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(1)));
+    if (needParens) {
+      aOps.Append("(");
+    }
+    SerializeCalcInternal(array->Item(1), aOps);
+    if (needParens) {
+      aOps.Append(")");
+    }
+  } else if (IsCalcMultiplicativeUnit(unit)) {
+    const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
+    NS_ABORT_IF_FALSE(array->Count() == 2, "unexpected length");
+
+    PRBool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(0)));
+    if (needParens) {
+      aOps.Append("(");
+    }
+    if (unit == eCSSUnit_Calc_Times_L) {
+      aOps.AppendNumber(array->Item(0));
+    } else {
+      SerializeCalcInternal(array->Item(0), aOps);
+    }
+    if (needParens) {
+      aOps.Append(")");
+    }
+
+    if (eCSSUnit_Calc_Times_L == unit || eCSSUnit_Calc_Times_R == unit) {
+      aOps.Append(" * ");
+    } else {
+      NS_ABORT_IF_FALSE(eCSSUnit_Calc_Divided == unit, "unexpected unit");
+      aOps.Append(" / ");
+    }
+
+    nsCSSUnit subUnit = CalcOps::GetUnit(array->Item(1));
+    needParens = IsCalcAdditiveUnit(subUnit) ||
+                 IsCalcMultiplicativeUnit(subUnit);
+    if (needParens) {
+      aOps.Append("(");
+    }
+    if (unit == eCSSUnit_Calc_Times_L) {
+      SerializeCalcInternal(array->Item(1), aOps);
+    } else {
+      aOps.AppendNumber(array->Item(1));
+    }
+    if (needParens) {
+      aOps.Append(")");
+    }
+  } else {
+    aOps.AppendLeafValue(aValue);
+  }
+}
+
 }
 
 }
