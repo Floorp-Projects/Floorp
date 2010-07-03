@@ -56,10 +56,11 @@
 #include "nsFont.h"
 #include "nsReadableUtils.h"
 #include "nsStyleUtil.h"
-
 #include "nsStyleConsts.h"
-
 #include "nsCOMPtr.h"
+#include "CSSCalc.h"
+
+namespace css = mozilla::css;
 
 nsCSSDeclaration::nsCSSDeclaration() 
 {
@@ -226,20 +227,42 @@ nsCSSDeclaration::AppendStorageToString(nsCSSProperty aProperty,
   return aStorage != nsnull;
 }
 
-static inline PRBool
-IsCalcAdditiveUnit(nsCSSUnit aUnit)
-{
-  return aUnit == eCSSUnit_Calc_Plus ||
-         aUnit == eCSSUnit_Calc_Minus;
-}
+struct CSSValueSerializeCalcOps {
+  CSSValueSerializeCalcOps(nsCSSProperty aProperty, nsAString& aResult)
+    : mProperty(aProperty),
+      mResult(aResult)
+  {
+  }
 
-static inline PRBool
-IsCalcMultiplicativeUnit(nsCSSUnit aUnit)
-{
-  return aUnit == eCSSUnit_Calc_Times_L ||
-         aUnit == eCSSUnit_Calc_Times_R ||
-         aUnit == eCSSUnit_Calc_Divided;
-}
+  typedef nsCSSValue input_type;
+  typedef nsCSSValue::Array input_array_type;
+
+  static nsCSSUnit GetUnit(const input_type& aValue) {
+    return aValue.GetUnit();
+  }
+
+  void Append(const char* aString)
+  {
+    mResult.AppendASCII(aString);
+  }
+
+  void AppendLeafValue(const input_type& aValue)
+  {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Percent ||
+                      aValue.IsLengthUnit(), "unexpected unit");
+    nsCSSDeclaration::AppendCSSValueToString(mProperty, aValue, mResult);
+  }
+
+  void AppendNumber(const input_type& aValue)
+  {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
+    nsCSSDeclaration::AppendCSSValueToString(mProperty, aValue, mResult);
+  }
+
+private:
+  nsCSSProperty mProperty;
+  nsAString &mResult;
+};
 
 /* static */ PRBool
 nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
@@ -338,89 +361,13 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     /* Finally, append the closing parenthesis. */
     aResult.AppendLiteral(")");
   }
-  else if (eCSSUnit_Calc <= unit && unit <= eCSSUnit_Calc_Maximum) {
-    const nsCSSValue::Array* array = aValue.GetArrayValue();
-    if (eCSSUnit_Calc == unit) {
-      NS_ABORT_IF_FALSE(array->Count() == 1, "unexpected length");
-      aResult.AppendLiteral("-moz-calc(");
-      // When we make recursive calls, we pass eCSSProperty_UNKNOWN as
-      // the property so we can distinguish min() and max() at toplevel
-      // (where we need to serialize with a -moz- prefix) from min() and
-      // max() within calc() (where we don't).
-      AppendCSSValueToString(eCSSProperty_UNKNOWN, array->Item(0), aResult);
-      aResult.AppendLiteral(")");
-    } else if (eCSSUnit_Calc_Minimum == unit ||
-               eCSSUnit_Calc_Maximum == unit) {
-      if (aProperty == eCSSProperty_UNKNOWN) {
-        // min() or max() inside calc()
-        if (eCSSUnit_Calc_Minimum == unit) {
-          aResult.AppendLiteral("min(");
-        } else {
-          aResult.AppendLiteral("max(");
-        }
-      } else {
-        // min() or max() at toplevel
-        if (eCSSUnit_Calc_Minimum == unit) {
-          aResult.AppendLiteral("-moz-min(");
-        } else {
-          aResult.AppendLiteral("-moz-max(");
-        }
-      }
-
-      for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
-        if (i != 0) {
-          aResult.AppendLiteral(", ");
-        }
-        // When we make recursive calls, we pass eCSSProperty_UNKNOWN as
-        // the property so we can distinguish min() and max() at toplevel
-        // (where we need to serialize with a -moz- prefix) from min() and
-        // max() within calc() (where we don't).
-        AppendCSSValueToString(eCSSProperty_UNKNOWN, array->Item(i), aResult);
-      }
-
-      aResult.AppendLiteral(")");
-    } else if (IsCalcAdditiveUnit(unit)) {
-      NS_ABORT_IF_FALSE(array->Count() == 2, "unexpected length");
-
-      AppendCSSValueToString(aProperty, array->Item(0), aResult);
-
-      if (eCSSUnit_Calc_Plus == unit) {
-        aResult.AppendLiteral(" + ");
-      } else {
-        NS_ABORT_IF_FALSE(eCSSUnit_Calc_Minus == unit, "unexpected unit");
-        aResult.AppendLiteral(" - ");
-      }
-
-      PRBool needParens = IsCalcAdditiveUnit(array->Item(1).GetUnit());
-      if (needParens)
-        aResult.AppendLiteral("(");
-      AppendCSSValueToString(aProperty, array->Item(1), aResult);
-      if (needParens)
-        aResult.AppendLiteral(")");
-    } else if (IsCalcMultiplicativeUnit(unit)) {
-      PRBool needParens = IsCalcAdditiveUnit(array->Item(0).GetUnit());
-      if (needParens)
-        aResult.AppendLiteral("(");
-      AppendCSSValueToString(aProperty, array->Item(0), aResult);
-      if (needParens)
-        aResult.AppendLiteral(")");
-
-      if (eCSSUnit_Calc_Times_L == unit || eCSSUnit_Calc_Times_R == unit) {
-        aResult.AppendLiteral(" * ");
-      } else {
-        NS_ABORT_IF_FALSE(eCSSUnit_Calc_Divided == unit, "unexpected unit");
-        aResult.AppendLiteral(" / ");
-      }
-
-      nsCSSUnit subUnit = array->Item(1).GetUnit();
-      needParens = IsCalcAdditiveUnit(subUnit) ||
-                   IsCalcMultiplicativeUnit(subUnit);
-      if (needParens)
-        aResult.AppendLiteral("(");
-      AppendCSSValueToString(aProperty, array->Item(1), aResult);
-      if (needParens)
-        aResult.AppendLiteral(")");
-    }
+  else if (aValue.IsCalcUnit()) {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Calc ||
+                      aValue.GetUnit() == eCSSUnit_Calc_Maximum ||
+                      aValue.GetUnit() == eCSSUnit_Calc_Minimum,
+                      "unexpected unit");
+    CSSValueSerializeCalcOps ops(aProperty, aResult);
+    css::SerializeCalc(aValue, ops);
   }
   else if (eCSSUnit_Integer == unit) {
     nsAutoString tmpStr;
