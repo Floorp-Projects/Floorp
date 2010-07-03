@@ -1,2 +1,0 @@
-x-content-security-policy: allow 'self'; img-src 'none'; report-uri http://mochi.test:8888/tests/content/base/test/file_bug552523_violation.sjs
-x-content-security-policy-report-only: allow *; img-src 'self'; script-src 'none'; report-uri http://mochi.test:8888/tests/content/base/test/file_bug552523_violation.sjs
