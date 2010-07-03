@@ -259,21 +259,6 @@ public:
     {
         m_assembler.asr(dest, dest, imm.m_value & 0x1f);
     }
-    
-    void urshift32(RegisterID shift_amount, RegisterID dest)
-    {
-        // Clamp the shift to the range 0..31
-        ARMThumbImmediate armImm = ARMThumbImmediate::makeEncodedImm(0x1f);
-        ASSERT(armImm.isValid());
-        m_assembler.ARM_and(dataTempRegister, shift_amount, armImm);
-        
-        m_assembler.lsr(dest, dest, dataTempRegister);
-    }
-    
-    void urshift32(Imm32 imm, RegisterID dest)
-    {
-        m_assembler.lsr(dest, dest, imm.m_value & 0x1f);
-    }
 
     void sub32(RegisterID src, RegisterID dest)
     {
@@ -384,20 +369,6 @@ private:
         }
     }
 
-    void load8(ArmAddress address, RegisterID dest)
-    {
-        if (address.type == ArmAddress::HasIndex)
-            m_assembler.ldrb(dest, address.base, address.u.index, address.u.scale);
-        else if (address.u.offset >= 0) {
-            ARMThumbImmediate armImm = ARMThumbImmediate::makeUInt12(address.u.offset);
-            ASSERT(armImm.isValid());
-            m_assembler.ldrb(dest, address.base, armImm);
-        } else {
-            ASSERT(address.u.offset >= -255);
-            m_assembler.ldrb(dest, address.base, address.u.offset, true, false);
-        }
-    }
-
     void store32(RegisterID src, ArmAddress address)
     {
         if (address.type == ArmAddress::HasIndex)
@@ -434,11 +405,6 @@ public:
         m_assembler.ldr(dest, addressTempRegister, ARMThumbImmediate::makeUInt16(0));
     }
 
-    void load8(ImplicitAddress address, RegisterID dest)
-    {
-        load8(setupArmAddress(address), dest);
-    }
-
     DataLabel32 load32WithAddressOffsetPatch(Address address, RegisterID dest)
     {
         DataLabel32 label = moveWithPatch(Imm32(address.offset), dataTempRegister);
@@ -457,11 +423,6 @@ public:
     void load16(BaseIndex address, RegisterID dest)
     {
         m_assembler.ldrh(dest, makeBaseIndexBase(address), address.index, address.scale);
-    }
-    
-    void load16(ImplicitAddress address, RegisterID dest)
-    {
-        m_assembler.ldrh(dest, address.base, address.offset);
     }
 
     DataLabel32 store32WithAddressOffsetPatch(RegisterID src, Address address)
@@ -515,11 +476,6 @@ public:
     // operations, and make clients go directly to the m_assembler to plant truncation instructions.
     // In short, FIXME:.
     bool supportsFloatingPointTruncate() const { return false; }
-
-    bool supportsFloatingPointSqrt() const
-    {
-        return false;
-    }
 
     void loadDouble(ImplicitAddress address, FPRegisterID dest)
     {
@@ -582,11 +538,6 @@ public:
     {
         loadDouble(src, fpTempRegister);
         mulDouble(fpTempRegister, dest);
-    }
-
-    void sqrtDouble(FPRegisterID, FPRegisterID)
-    {
-        ASSERT_NOT_REACHED();
     }
 
     void convertInt32ToDouble(RegisterID src, FPRegisterID dest)
@@ -843,19 +794,6 @@ public:
         return branch32(cond, addressTempRegister, Imm32(right.m_value << 16));
     }
 
-    Jump branch8(Condition cond, RegisterID left, Imm32 right)
-    {
-        compare32(left, right);
-        return Jump(makeBranch(cond));
-    }
-
-    Jump branch8(Condition cond, Address left, Imm32 right)
-    {
-        // use addressTempRegister incase the branch8 we call uses dataTempRegister. :-/
-        load8(left, addressTempRegister);
-        return branch8(cond, addressTempRegister, right);
-    }
-
     Jump branchTest32(Condition cond, RegisterID reg, RegisterID mask)
     {
         ASSERT((cond == Zero) || (cond == NonZero));
@@ -884,21 +822,6 @@ public:
         // use addressTempRegister incase the branchTest32 we call uses dataTempRegister. :-/
         load32(address, addressTempRegister);
         return branchTest32(cond, addressTempRegister, mask);
-    }
-
-    Jump branchTest8(Condition cond, RegisterID reg, Imm32 mask = Imm32(-1))
-    {
-        ASSERT((cond == Zero) || (cond == NonZero));
-        test32(reg, mask);
-        return Jump(makeBranch(cond));
-    }
-
-    Jump branchTest8(Condition cond, Address address, Imm32 mask = Imm32(-1))
-    {
-        ASSERT((cond == Zero) || (cond == NonZero));
-        // use addressTempRegister incase the branchTest8 we call uses dataTempRegister. :-/
-        load8(address, addressTempRegister);
-        return branchTest8(cond, addressTempRegister, mask);
     }
 
     Jump jump()
@@ -1051,14 +974,6 @@ public:
         m_assembler.mov(dest, ARMThumbImmediate::makeUInt16(0));
     }
 
-    void setTest8(Condition cond, Address address, Imm32 mask, RegisterID dest)
-    {
-        load8(address, dataTempRegister);
-        test32(dataTempRegister, mask);
-        m_assembler.it(armV7Condition(cond), false);
-        m_assembler.mov(dest, ARMThumbImmediate::makeUInt16(1));
-        m_assembler.mov(dest, ARMThumbImmediate::makeUInt16(0));
-    }
 
     DataLabel32 moveWithPatch(Imm32 imm, RegisterID dst)
     {

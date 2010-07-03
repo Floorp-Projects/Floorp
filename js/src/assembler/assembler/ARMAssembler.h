@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2010 University of Szeged
+ * Copyright (C) 2009 University of Szeged
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 #include "AssemblerBufferWithConstantPool.h"
 #include "assembler/wtf/Assertions.h"
 
+#define IPFX  "        "
 
 namespace JSC {
 
@@ -73,54 +74,19 @@ namespace JSC {
             d1,
             d2,
             d3,
-            SD0 = d3,
-            d4,
-            d5,
-            d6,
-            d7,
-            d8,
-            d9,
-            d10,
-            d11,
-            d12,
-            d13,
-            d14,
-            d15,
-            d16,
-            d17,
-            d18,
-            d19,
-            d20,
-            d21,
-            d22,
-            d23,
-            d24,
-            d25,
-            d26,
-            d27,
-            d28,
-            d29,
-            d30,
-            d31
+            SD0 = d3
         } FPRegisterID;
 
     } // namespace ARMRegisters
 
     class ARMAssembler {
     public:
-        
-#ifdef DEBUG
-        bool isOOLPath;
-#endif
-
         typedef ARMRegisters::RegisterID RegisterID;
         typedef ARMRegisters::FPRegisterID FPRegisterID;
         typedef AssemblerBufferWithConstantPool<2048, 4, 4, ARMAssembler> ARMBuffer;
         typedef SegmentedVector<int, 64> Jumps;
 
         ARMAssembler() { }
-
-        unsigned char *buffer() const { return m_buffer.buffer(); }
 
         // ARM conditional constants
         typedef enum {
@@ -162,12 +128,10 @@ namespace JSC {
             MUL = 0x00000090,
             MULL = 0x00c00090,
             FADDD = 0x0e300b00,
-            FNEGD = 0x0eb10b40,
             FDIVD = 0x0e800b00,
             FSUBD = 0x0e300b40,
             FMULD = 0x0e200b00,
             FCMPD = 0x0eb40b40,
-            FSQRTD = 0x0eb10bc0,
             DTR = 0x05000000,
             LDRH = 0x00100090,
             STRH = 0x00000090,
@@ -175,11 +139,11 @@ namespace JSC {
             LDMIA = 0x08b00000,
             FDTR = 0x0d000b00,
             B = 0x0a000000,
-            BL = 0x0b000000
-#if WTF_ARM_ARCH_VERSION >= 5 || defined(__ARM_ARCH_4T__)
-           ,BX = 0x012fff10
+            BL = 0x0b000000,
+#ifndef __ARM_ARCH_4__
+            BX = 0x012fff10,    // Only on ARMv4T+!
 #endif
-           ,FMSR = 0x0e000a10,
+            FMSR = 0x0e000a10,
             FMRS = 0x0e100a10,
             FSITOD = 0x0eb80bc0,
             FTOSID = 0x0ebd0b40,
@@ -187,7 +151,7 @@ namespace JSC {
 #if WTF_ARM_ARCH_VERSION >= 5
            ,CLZ = 0x016f0f10,
             BKPT = 0xe120070,
-            BLX = 0x012fff30
+            BLX_R = 0x012fff30
 #endif
 #if WTF_ARM_ARCH_VERSION >= 7
            ,MOVW = 0x03000000,
@@ -202,7 +166,6 @@ namespace JSC {
             SET_CC = (1 << 20),
             OP2_OFSREG = (1 << 25),
             DT_UP = (1 << 23),
-            DT_BYTE = (1 << 22),
             DT_WB = (1 << 21),
             // This flag is inlcuded in LDR and STR
             DT_PRE = (1 << 24),
@@ -238,8 +201,6 @@ namespace JSC {
         } Shift;
 
         static const ARMWord INVALID_IMM = 0xf0000000;
-        static const ARMWord InvalidBranchTarget = 0xffffffff;
-        static const int DefaultPrefetching = 2;
 
         class JmpSrc {
             friend class ARMAssembler;
@@ -485,34 +446,32 @@ namespace JSC {
 
         void faddd_r(int dd, int dn, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FADDD, dd, dn, dm);
         }
 
         void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FDIVD, dd, dn, dm);
         }
 
         void fsubd_r(int dd, int dn, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
         }
 
         void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
         }
 
         void fcmpd_r(int dd, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FCMPD, dd, 0, dm);
-        }
-
-        void fsqrtd_r(int dd, int dm, Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
         }
 
         void ldr_imm(int rd, ARMWord imm, Condition cc = AL)
@@ -587,12 +546,14 @@ namespace JSC {
 
         void fdtr_u(bool isLoad, int rd, int rb, ARMWord op2, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             ASSERT(op2 <= 0xff);
             emitInst(static_cast<ARMWord>(cc) | FDTR | DT_UP | (isLoad ? DT_LOAD : 0), rd, rb, op2);
         }
 
         void fdtr_d(bool isLoad, int rd, int rb, ARMWord op2, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             ASSERT(op2 <= 0xff);
             emitInst(static_cast<ARMWord>(cc) | FDTR | (isLoad ? DT_LOAD : 0), rd, rb, op2);
         }
@@ -621,26 +582,31 @@ namespace JSC {
 
         void fmsr_r(int dd, int rn, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FMSR, rn, dd, 0);
         }
 
         void fmrs_r(int rd, int dn, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FMRS, rd, dn, 0);
         }
 
         void fsitod_r(int dd, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FSITOD, dd, 0, dm);
         }
 
         void ftosid_r(int fd, int dm, Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             emitInst(static_cast<ARMWord>(cc) | FTOSID, fd, 0, dm);
         }
 
         void fmstat(Condition cc = AL)
         {
+            FIXME_INSN_PRINTING;
             m_buffer.putInt(static_cast<ARMWord>(cc) | FMSTAT);
         }
 
@@ -662,28 +628,37 @@ namespace JSC {
 #endif
         }
 
-        void bx(int rm, Condition cc = AL)
+        // BX is emitted where possible, or an equivalent sequence on ARMv4.
+        void bx_r(int rm, Condition cc = AL)
         {
-#if WTF_ARM_ARCH_VERSION >= 5 || defined(__ARM_ARCH_4T__)
-            emitInst(static_cast<ARMWord>(cc) | BX, 0, 0, RM(rm));
-#else
-            mov_r(ARMRegisters::pc, RM(rm), cc);
+#if (WTF_ARM_ARCH_VERSION >= 5) || defined(__ARM_ARCH_4T__)
+            // ARMv4T+ has BX <reg>.
+            m_buffer.putInt(static_cast<ARMWord>(cc) | BX | RM(rm));
+#else   // defined(__ARM_ARCH_4__)
+            // ARMv4 has to do "MOV pc, rm". This works on newer architectures
+            // too, but breaks return stack prediction and doesn't interwork on
+            // ARMv4T, so this becomes a special case of ARMv4.
+            mov_r(ARMRegisters::pc, rm, cc);
 #endif
         }
 
-        JmpSrc blx(int rm, Condition cc = AL)
+        // BLX is emitted where possible, or an equivalent (slower) sequence on
+        // ARMv4 or ARMv4T.
+        void blx_r(int rm, Condition cc = AL)
         {
-#if WTF_ARM_ARCH_AT_LEAST(5)
-            int s = m_buffer.uncheckedSize();
-            emitInst(static_cast<ARMWord>(cc) | BLX, 0, 0, RM(rm));
-#else
+            ASSERT((rm >= 0) && (rm <= 14));
+#if WTF_ARM_ARCH_VERSION >= 5
+            // ARMv5+ is the ideal (fast) case, and can use a proper "BLX rm".
+            m_buffer.putInt(static_cast<ARMWord>(cc) | BLX_R | RM(rm));
+#else   // defined(__ARM_ARCH_4__) || defined(__ARM_ARCH_4T__)
+            // ARMv4T must do "MOV lr, pc; BX rm".
+            // ARMv4 must do "MOV lr, pc; MOV pc, rm".
+            // Both cases are handled here and by bx_r.
             ASSERT(rm != 14);
             ensureSpace(2 * sizeof(ARMWord), 0);
             mov_r(ARMRegisters::lr, ARMRegisters::pc, cc);
-            int s = m_buffer.uncheckedSize();
-            bx(rm, cc);
+            bx_r(rm, cc);
 #endif
-            return JmpSrc(s);
         }
 
         static ARMWord lsl(int reg, ARMWord value)
@@ -762,7 +737,7 @@ namespace JSC {
         {
             ensureSpace(sizeof(ARMWord), sizeof(ARMWord));
             int s = m_buffer.uncheckedSize();
-            ldr_un_imm(rd, InvalidBranchTarget, cc);
+            ldr_un_imm(rd, 0xffffffff, cc);
             m_jumps.append(s | (useConstantPool & 0x1));
             return JmpSrc(s);
         }
@@ -776,40 +751,15 @@ namespace JSC {
 
         // Patching helpers
 
-        static ARMWord* getLdrImmAddress(ARMWord* insn)
-        {
-#if WTF_ARM_ARCH_AT_LEAST(5)
-            // Check for call
-            if ((*insn & 0x0f7f0000) != 0x051f0000) {
-                // Must be BLX
-                ASSERT((*insn & 0x012fff30) == 0x012fff30);
-                insn--;
-            }
-#endif
-            // Must be an ldr ..., [pc +/- imm]
-            ASSERT((*insn & 0x0f7f0000) == 0x051f0000);
-
-            ARMWord addr = reinterpret_cast<ARMWord>(insn) + DefaultPrefetching * sizeof(ARMWord);
-            if (*insn & DT_UP)
-                return reinterpret_cast<ARMWord*>(addr + (*insn & SDT_OFFSET_MASK));
-            return reinterpret_cast<ARMWord*>(addr - (*insn & SDT_OFFSET_MASK));
-        }
-
-        static ARMWord* getLdrImmAddressOnPool(ARMWord* insn, uint32_t* constPool)
-        {
-            // Must be an ldr ..., [pc +/- imm]
-            ASSERT((*insn & 0x0f7f0000) == 0x051f0000);
-
-            if (*insn & 0x1)
-                return reinterpret_cast<ARMWord*>(constPool + ((*insn & SDT_OFFSET_MASK) >> 1));
-            return getLdrImmAddress(insn);
-        }
+        static ARMWord* getLdrImmAddress(ARMWord* insn, uint32_t* constPool = 0);
+        static void linkBranch(void* code, JmpSrc from, void* to, int useConstantPool = 0);
 
         static void patchPointerInternal(intptr_t from, void* to)
         {
             ARMWord* insn = reinterpret_cast<ARMWord*>(from);
             ARMWord* addr = getLdrImmAddress(insn);
             *addr = reinterpret_cast<ARMWord>(to);
+            ExecutableAllocator::cacheFlush(addr, sizeof(ARMWord));
         }
 
         static ARMWord patchConstantPoolLoad(ARMWord load, ARMWord value)
@@ -866,13 +816,12 @@ namespace JSC {
         void linkJump(JmpSrc from, JmpDst to)
         {
             ARMWord* insn = reinterpret_cast<ARMWord*>(m_buffer.data()) + (from.m_offset / sizeof(ARMWord));
-            ARMWord* addr = getLdrImmAddressOnPool(insn, m_buffer.poolAddress());
-            *addr = static_cast<ARMWord>(to.m_offset);
+            *getLdrImmAddress(insn, m_buffer.poolAddress()) = static_cast<ARMWord>(to.m_offset);
         }
 
         static void linkJump(void* code, JmpSrc from, void* to)
         {
-            patchPointerInternal(reinterpret_cast<intptr_t>(code) + from.m_offset, to);
+            linkBranch(code, from, to);
         }
 
         static void relinkJump(void* from, void* to)
@@ -882,12 +831,12 @@ namespace JSC {
 
         static void linkCall(void* code, JmpSrc from, void* to)
         {
-            patchPointerInternal(reinterpret_cast<intptr_t>(code) + from.m_offset, to);
+            linkBranch(code, from, to, true);
         }
 
         static void relinkCall(void* from, void* to)
         {
-            patchPointerInternal(reinterpret_cast<intptr_t>(from) - sizeof(ARMWord), to);
+            relinkJump(from, to);
         }
 
         // Address operations
@@ -941,18 +890,9 @@ namespace JSC {
         void moveImm(ARMWord imm, int dest);
         ARMWord encodeComplexImm(ARMWord imm, int dest);
 
-        ARMWord getOffsetForHalfwordDataTransfer(ARMWord imm, int tmpReg)
-        {
-            // Encode immediate data in the instruction if it is possible
-            if (imm <= 0xff)
-                return getOp2Byte(imm);
-            // Otherwise, store the data in a temporary register
-            return encodeComplexImm(imm, tmpReg);
-        }
-
         // Memory load/store helpers
 
-        void dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset, bool bytes = false);
+        void dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
         void baseIndexTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
 
@@ -975,23 +915,6 @@ namespace JSC {
                 "r4", "r5", "r6", "r7",
                 "r8", "r9", "r10", "r11",
                 "ip", "sp", "lr", "pc"
-            };
-            return names[reg];
-        }
-
-        static char const * nameFpRegD(int reg)
-        {
-            ASSERT(reg <= 31);
-            ASSERT(reg >= 0);
-            static char const * names[] = {
-                 "d0",   "d1",   "d2",   "d3",
-                 "d4",   "d5",   "d6",   "d7",
-                 "d8",   "d9",  "d10",  "d11",
-                "d12",  "d13",  "d14",  "d15",
-                "d16",  "d17",  "d18",  "d19",
-                "d20",  "d21",  "d22",  "d23",
-                "d24",  "d25",  "d26",  "d27",
-                "d28",  "d29",  "d30",  "d31"
             };
             return names[reg];
         }
@@ -1121,27 +1044,6 @@ namespace JSC {
         {
             ASSERT(reg <= ARMRegisters::pc);
             return reg << 16;
-        }
-
-        ARMWord DD(int reg)
-        {
-            ASSERT(reg <= ARMRegisters::d31);
-            // Endoded as bits [22,15:12].
-            return ((reg << 12) | (reg << 18)) & 0x0040f000;
-        }
-
-        ARMWord DN(int reg)
-        {
-            ASSERT(reg <= ARMRegisters::d31);
-            // Endoded as bits [7,19:16].
-            return ((reg << 16) | (reg << 3)) & 0x000f0080;
-        }
-
-        ARMWord DM(int reg)
-        {
-            ASSERT(reg <= ARMRegisters::d31);
-            // Encoded as bits [5,3:0].
-            return ((reg << 1) & 0x20) | (reg & 0xf);
         }
 
         static ARMWord getConditionalField(ARMWord i)

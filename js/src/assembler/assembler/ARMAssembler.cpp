@@ -278,13 +278,13 @@ void ARMAssembler::dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID bas
     } else {
         offset = -offset;
         if (offset <= 0xfff)
-            dtr_d(isLoad, srcDst, base, offset | transferFlag);
+            dtr_d(isLoad, srcDst, base, offset);
         else if (offset <= 0xfffff) {
             sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
-            dtr_d(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff) | transferFlag);
+            dtr_d(isLoad, srcDst, ARMRegisters::S0, offset & 0xfff);
         } else {
             ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtr_dr(isLoad, srcDst, base, reg | transferFlag);
+            dtr_dr(isLoad, srcDst, base, reg);
         }
     }
 }
@@ -356,17 +356,10 @@ void* ARMAssembler::executableCopy(ExecutablePool* allocator)
         // The last bit is set if the constant must be placed on constant pool.
         int pos = (*iter) & (~0x1);
         ARMWord* ldrAddr = reinterpret_cast<ARMWord*>(data + pos);
-        ARMWord* addr = getLdrImmAddress(ldrAddr);
-        if (*addr != InvalidBranchTarget) {
-            if (!(*iter & 1)) {
-                int diff = reinterpret_cast<ARMWord*>(data + *addr) - (ldrAddr + DefaultPrefetching);
-
-                if ((diff <= BOFFSET_MAX && diff >= BOFFSET_MIN)) {
-                    *ldrAddr = B | getConditionalField(*ldrAddr) | (diff & BRANCH_MASK);
-                    continue;
-                }
-            }
-            *addr = reinterpret_cast<ARMWord>(data + *addr);
+        ARMWord offset = *getLdrImmAddress(ldrAddr);
+        if (offset != 0xffffffff) {
+            JmpSrc jmpSrc(pos);
+            linkBranch(data, jmpSrc, data + offset, ((*iter) & 1));
         }
     }
 
