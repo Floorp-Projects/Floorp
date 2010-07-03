@@ -143,10 +143,55 @@ ComputeCalc(const nsCSSValue& aValue, CalcOps &aOps)
  * template parameter to ComputeCalc, for those callers whose merging
  * just consists of mathematics (rather than tree construction).
  */
-template <typename T>
-struct BasicCalcOpsAdditive
+
+struct BasicCoordCalcOps
 {
-  typedef T result_type;
+  typedef nscoord result_type;
+
+  result_type
+  MergeAdditive(nsCSSUnit aCalcFunction,
+                result_type aValue1, result_type aValue2)
+  {
+    if (aCalcFunction == eCSSUnit_Calc_Plus) {
+      return NSCoordSaturatingAdd(aValue1, aValue2);
+    }
+    if (aCalcFunction == eCSSUnit_Calc_Minus) {
+      return NSCoordSaturatingSubtract(aValue1, aValue2, 0);
+    }
+    if (aCalcFunction == eCSSUnit_Calc_Minimum) {
+      return NS_MIN(aValue1, aValue2);
+    }
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Maximum,
+                      "unexpected unit");
+    return NS_MAX(aValue1, aValue2);
+  }
+
+  result_type
+  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
+                       float aValue1, result_type aValue2)
+  {
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_L,
+                      "unexpected unit");
+    return NSCoordSaturatingMultiply(aValue2, aValue1);
+  }
+
+  result_type
+  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
+                       result_type aValue1, float aValue2)
+  {
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_R ||
+                      aCalcFunction == eCSSUnit_Calc_Divided,
+                      "unexpected unit");
+    if (aCalcFunction == eCSSUnit_Calc_Divided) {
+      aValue2 = 1.0f / aValue2;
+    }
+    return NSCoordSaturatingMultiply(aValue1, aValue2);
+  }
+};
+
+struct BasicFloatCalcOps
+{
+  typedef float result_type;
 
   result_type
   MergeAdditive(nsCSSUnit aCalcFunction,
@@ -165,34 +210,7 @@ struct BasicCalcOpsAdditive
                       "unexpected unit");
     return NS_MAX(aValue1, aValue2);
   }
-};
 
-struct BasicCoordCalcOps : public BasicCalcOpsAdditive<nscoord>
-{
-  result_type
-  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
-                       float aValue1, result_type aValue2)
-  {
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_L,
-                      "unexpected unit");
-    return NSToCoordRound(aValue1 * aValue2);
-  }
-
-  result_type
-  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
-                       result_type aValue1, float aValue2)
-  {
-    if (aCalcFunction == eCSSUnit_Calc_Times_R) {
-      return NSToCoordRound(aValue1 * aValue2);
-    }
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Divided,
-                      "unexpected unit");
-    return NSToCoordRound(aValue1 / aValue2);
-  }
-};
-
-struct BasicFloatCalcOps : public BasicCalcOpsAdditive<float>
-{
   result_type
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
                        float aValue1, result_type aValue2)
