@@ -229,12 +229,6 @@ public:
   void HandleContainerTimeChange();
 
   /**
-   * Reset the element's internal state. As described in SMILANIM 3.3.7, all
-   * instance times associated with DOM calls, events, etc. are cleared.
-   */
-  void Reset();
-
-  /**
    * Attempts to set an attribute on this timed element.
    *
    * @param aAttribute  The name of the attribute to set. The namespace of this
@@ -345,6 +339,10 @@ protected:
     nsSMILTimeContainer* mTimeContainer;
   };
 
+  // Templated helper functions
+  template <class TestFunctor>
+  void RemoveInstanceTimes(InstanceTimeList& aArray, TestFunctor& aTest);
+
   //
   // Implementation helpers
   //
@@ -376,6 +374,40 @@ protected:
                                       PRBool aIsBegin);
   void              ClearBeginOrEndSpecs(PRBool aIsBegin);
   void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
+
+  /**
+   * Helper function to check for an early end and, if necessary, update the
+   * current interval accordingly.
+   *
+   * See SMIL 3.0, section 5.4.5, Element life cycle, "Active Time - Playing an
+   * interval" for a description of ending early.
+   *
+   * @param aSampleTime The current sample time. Early ends should only be
+   *                    applied at the last possible moment (i.e. if they are at
+   *                    or before the current sample time) and only if the
+   *                    current interval is not already ending.
+   */
+  void ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime);
+
+  /**
+   * Clears certain state in response to the element restarting.
+   *
+   * This state is described in SMIL 3.0, section 5.4.3, Resetting element state
+   */
+  void Reset();
+
+  /**
+   * Helper function to iterate through this element's accumulated timing
+   * information (specifically old nsSMILIntervals and nsSMILTimeInstanceTimes)
+   * and discard items that are no longer needed or exceed some threshold of
+   * accumulated state.
+   */
+  void FilterHistory();
+
+  // Helper functions for FilterHistory to clear old nsSMILIntervals and
+  // nsSMILInstanceTimes respectively.
+  void FilterIntervals();
+  void FilterInstanceTimes(InstanceTimeList& aList);
 
   /**
    * Calculates the next acceptable interval for this element after the
@@ -483,6 +515,8 @@ protected:
   IntervalList                    mOldIntervals;
   nsSMILMilestone                 mPrevRegisteredMilestone;
   static const nsSMILMilestone    sMaxMilestone;
+  static const PRUint8            sMaxNumIntervals;
+  static const PRUint8            sMaxNumInstanceTimes;
 
   // Set of dependent time value specs to be notified when establishing a new
   // current interval. Change notifications and delete notifications are handled
