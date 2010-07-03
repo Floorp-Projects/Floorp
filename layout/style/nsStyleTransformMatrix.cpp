@@ -252,6 +252,20 @@ static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
                     aDelta[1]);
 }
 
+static void ProcessTranslatePart(nscoord& aOffset, float& aPercent,
+                                 const nsCSSValue& aValue,
+                                 nsStyleContext* aContext,
+                                 nsPresContext* aPresContext,
+                                 PRBool& aCanStoreInRuleTree)
+{
+  if (aValue.GetUnit() == eCSSUnit_Percent) {
+    aPercent = aValue.GetPercentValue();
+  } else {
+    SetCoordToValue(aValue, aContext, aPresContext, aCanStoreInRuleTree,
+                    aOffset);
+  }
+}
+
 /* Helper function to process a translatex function. */
 static void ProcessTranslateX(nscoord aDelta[2], float aX[2],
                               const nsCSSValue::Array* aData,
@@ -272,11 +286,8 @@ static void ProcessTranslateX(nscoord aDelta[2], float aX[2],
    * Otherwise, we might have a percentage, so we want to set the dX component
    * to the percent.
    */
-  if (aData->Item(1).GetUnit() != eCSSUnit_Percent)
-    SetCoordToValue(aData->Item(1), aContext, aPresContext, aCanStoreInRuleTree,
-                    aDelta[0]);
-  else
-    aX[0] = aData->Item(1).GetPercentValue();
+  ProcessTranslatePart(aDelta[0], aX[0], aData->Item(1),
+                       aContext, aPresContext, aCanStoreInRuleTree);
 }
 
 /* Helper function to process a translatey function. */
@@ -299,11 +310,8 @@ static void ProcessTranslateY(nscoord aDelta[2], float aY[2],
    * Otherwise, we might have a percentage, so we want to set the dY component
    * to the percent.
    */
-  if (aData->Item(1).GetUnit() != eCSSUnit_Percent)
-    SetCoordToValue(aData->Item(1), aContext, aPresContext, aCanStoreInRuleTree,
-                    aDelta[1]);
-  else
-    aY[1] = aData->Item(1).GetPercentValue();
+  ProcessTranslatePart(aDelta[1], aY[1], aData->Item(1),
+                       aContext, aPresContext, aCanStoreInRuleTree);
 }
 
 /* Helper function to process a translate function. */
@@ -323,20 +331,13 @@ static void ProcessTranslate(nscoord aDelta[2], float aX[2], float aY[2],
    * the main matrix.
    */
 
-  const nsCSSValue &dx = aData->Item(1);
-  if (dx.GetUnit() == eCSSUnit_Percent)
-    aX[0] = dx.GetPercentValue();
-  else
-    SetCoordToValue(dx, aContext, aPresContext, aCanStoreInRuleTree, aDelta[0]);
+  ProcessTranslatePart(aDelta[0], aX[0], aData->Item(1),
+                       aContext, aPresContext, aCanStoreInRuleTree);
 
   /* If we read in a Y component, set it appropriately */
   if (aData->Count() == 3) {
-    const nsCSSValue &dy = aData->Item(2);
-    if (dy.GetUnit() == eCSSUnit_Percent)
-      aY[1] = dy.GetPercentValue();
-    else
-      SetCoordToValue(dy, aContext, aPresContext, aCanStoreInRuleTree,
-                      aDelta[1]); 
+    ProcessTranslatePart(aDelta[1], aY[1], aData->Item(2),
+                         aContext, aPresContext, aCanStoreInRuleTree);
   }
 }
 
