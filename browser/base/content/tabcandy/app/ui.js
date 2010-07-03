@@ -418,6 +418,7 @@ window.Page = {
 
     var item = { // a faux-Item
       container: phantom,
+      isAFauxItem: true,
       bounds: {},
       getBounds: function FauxItem_getBounds() {
         return this.container.bounds();
@@ -447,7 +448,20 @@ window.Page = {
       box.bottom = Math.max(startPos.y, e.clientY);
       item.setBounds(box);
       
-      dragOutInfo.snap(e, null, false, false); // null for ui, which we don't use anyway.
+      // compute the stationaryCorner
+      var stationaryCorner = '';
+      
+      if (startPos.y == box.top)
+        stationaryCorner += 'top';
+      else
+        stationaryCorner += 'bottom';
+        
+      if (startPos.x == box.left)
+        stationaryCorner += 'left';
+      else
+        stationaryCorner += 'right';
+      
+      dragOutInfo.snap(stationaryCorner, false, false); // null for ui, which we don't use anyway.
 
       box = item.getBounds();
       if (box.width > minMinSize && box.height > minMinSize
