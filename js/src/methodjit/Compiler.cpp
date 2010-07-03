@@ -1127,6 +1127,13 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_CALLDSLOT)
 
+          BEGIN_CASE(JSOP_ARGSUB)
+            prepareStubCall();
+            masm.move(Imm32(GET_ARGNO(PC)), Registers::ArgReg1);
+            stubCall(stubs::ArgSub, Uses(0), Defs(1));
+            frame.pushSynced();
+          END_CASE(JSOP_ARGSUB)
+
           BEGIN_CASE(JSOP_ARGCNT)
             prepareStubCall();
             stubCall(stubs::ArgCnt, Uses(0), Defs(1));

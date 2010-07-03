@@ -2482,3 +2482,13 @@ stubs::Pos(VMFrame &f)
         THROW();
 }
 
+void JS_FASTCALL
+stubs::ArgSub(VMFrame &f, uint32 n)
+{
+    jsid id = INT_TO_JSID(n);
+    Value rval;
+    if (!js_GetArgsProperty(f.cx, f.fp, id, &rval))
+        THROW();
+    f.regs.sp[0] = rval;
+}
+
