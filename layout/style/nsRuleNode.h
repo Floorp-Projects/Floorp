@@ -756,6 +756,12 @@ public:
                             nsPresContext* aPresContext,
                             PRBool& aCanStoreInRuleTree);
 
+  // Compute the value of an nsStyleCoord that IsCalcUnit().
+  // (Values that don't require aPercentageBasis should be handled
+  // inside nsRuleNode rather than through this API.)
+  static nscoord ComputeComputedCalc(const nsStyleCoord& aCoord,
+                                     nscoord aPercentageBasis);
+
   // Return whether the rule tree for which this node is the root has
   // cached data such that we need to do dynamic change handling for
   // changes that change the results of media queries or require
