@@ -253,9 +253,8 @@ Drag.prototype = {
     Trenches.hideGuides();
     this.item.isDragging = false;
 
-    // TODO: create a Group.isEmpty instead.
     if (this.parent && !this.parent.locked.close && this.parent != this.item.parent 
-        && this.parent._children.length == 0 && !this.parent.getTitle()) {
+        && this.parent.isEmpty()) {
       this.parent.close();
     }
      

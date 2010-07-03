@@ -363,6 +363,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: isEmpty
+  // Returns true if the tab group is empty and unnamed.
+	isEmpty: function() {
+		return this._children.length == 0 && !this.getTitle();
+	},
+
+  // ----------
   // Function: save
   // Saves this group to persistant storage. 
   save: function() {
