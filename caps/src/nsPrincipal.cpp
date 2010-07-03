@@ -140,6 +140,8 @@ PRInt32 nsPrincipal::sCapabilitiesOrdinal = 0;
 const char nsPrincipal::sInvalid[] = "Invalid";
 
 
+NS_IMPL_CLASSINFO(nsPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
+                  NS_PRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
                             nsIPrincipal,
                             nsISerializable)

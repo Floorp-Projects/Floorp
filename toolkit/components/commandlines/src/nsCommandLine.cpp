@@ -47,7 +47,7 @@
 #include "nsIStringEnumerator.h"
 
 #include "nsCOMPtr.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsNetUtil.h"
@@ -74,6 +74,9 @@
 #ifdef DEBUG_bsmedberg
 #define DEBUG_COMMANDLINE
 #endif
+
+#define NS_COMMANDLINE_CID \
+  { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } }
 
 class nsCommandLine : public nsICommandLineRunner
 {
@@ -114,6 +117,7 @@ nsCommandLine::nsCommandLine() :
 }
 
 
+NS_IMPL_CLASSINFO(nsCommandLine, NULL, 0, NS_COMMANDLINE_CID)
 NS_IMPL_ISUPPORTS2_CI(nsCommandLine,
                       nsICommandLine,
                       nsICommandLineRunner)
@@ -708,22 +712,23 @@ nsCommandLine::GetHelpText(nsACString& aResult)
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandLine)
-NS_DECL_CLASSINFO(nsCommandLine)
 
-static const nsModuleComponentInfo components[] =
-{
-  { "nsCommandLine",
-    { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } },
-    "@mozilla.org/toolkit/command-line;1",
-    nsCommandLineConstructor,
-    nsnull,
-    nsnull,
-    nsnull,
-    NS_CI_INTERFACE_GETTER_NAME(nsCommandLine),
-    nsnull,
-    &NS_CLASSINFO_NAME(nsCommandLine),
-    0
-  }
+NS_DEFINE_NAMED_CID(NS_COMMANDLINE_CID);
+
+static const mozilla::Module::CIDEntry kCommandLineCIDs[] = {
+  { &kNS_COMMANDLINE_CID, false, NULL, nsCommandLineConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(CommandLineModule, components)
+static const mozilla::Module::ContractIDEntry kCommandLineContracts[] = {
+  { "@mozilla.org/toolkit/command-line;1", &kNS_COMMANDLINE_CID },
+  { NULL }
+};
+
+static const mozilla::Module kCommandLineModule = {
+  mozilla::Module::kVersion,
+  kCommandLineCIDs,
+  kCommandLineContracts
+};
+
+NSMODULE_DEFN(CommandLineModule) = &kCommandLineModule;

@@ -84,6 +84,12 @@ DIRS += \
   system \
   $(NULL)
 
+ifdef MOZ_IPC
+DIRS += \
+  ipc \
+  $(NULL)
+endif
+
 ifdef ENABLE_TESTS
 DIRS += tests
 endif

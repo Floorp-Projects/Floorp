@@ -94,6 +94,7 @@ EXPORTS += \
 ifdef MOZ_X11
 EXPORTS += \
 	gfxXlibSurface.h \
+        gfxXlibNativeRenderer.h \
 	GLXLibrary.h \
 	$(NULL)
 endif
@@ -300,7 +301,7 @@ CPPSRCS += gfxFT2Fonts.cpp
 endif
 
 ifdef MOZ_X11
-CPPSRCS += gfxXlibSurface.cpp
+CPPSRCS += gfxXlibSurface.cpp gfxXlibNativeRenderer.cpp
 endif
 
 CPPSRCS +=  gfxPlatformGtk.cpp gfxGdkNativeRenderer.cpp
@@ -309,10 +310,6 @@ CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
-
-ifdef MOZ_X11
-CSRCS = cairo-xlib-utils.c
-endif
 
 ifdef MOZ_DFB
 CSRCS = cairo-gdk-utils.c
@@ -337,7 +334,6 @@ CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
-#CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 

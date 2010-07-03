@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "macicela.ut"
 };
 
-NS_METHOD
+nsresult
 nsMacIcelandicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                    void **aResult) 
 {

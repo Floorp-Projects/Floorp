@@ -96,7 +96,6 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIChromeRegistry.idl       \
 		nsIContentPolicy.idl        \
 		nsIDocumentEncoder.idl      \
 		nsIDOMFile.idl \

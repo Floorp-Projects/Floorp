@@ -1,0 +1,4 @@
+component {22117140-9c6e-11d3-aaf1-00805f8a4905} nsSidebar.js
+contract @mozilla.org/sidebar;1 {22117140-9c6e-11d3-aaf1-00805f8a4905}
+category JavaScript-global-property sidebar @mozilla.org/sidebar;1
+category JavaScript-global-property external @mozilla.org/sidebar;1

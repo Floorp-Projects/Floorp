@@ -557,7 +557,7 @@ JSCrossCompartmentWrapper::~JSCrossCompartmentWrapper()
 bool
 JSCrossCompartmentWrapper::isCrossCompartmentWrapper(JSObject *obj)
 {
-    return obj->getProxyHandler() == &JSCrossCompartmentWrapper::singleton;
+    return obj->isProxy() && obj->getProxyHandler() == &JSCrossCompartmentWrapper::singleton;
 }
 
 #define PIERCE(cx, wrapper, mode, pre, op, post)            \

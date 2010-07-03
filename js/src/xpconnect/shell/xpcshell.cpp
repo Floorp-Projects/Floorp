@@ -73,7 +73,6 @@
 #include "nsCOMArray.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsMemory.h"
-#include "nsIGenericFactory.h"
 #include "nsISupportsImpl.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
@@ -661,6 +660,56 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#ifdef MOZ_IPC
+
+static JSBool
+SendCommand(JSContext* cx,
+            JSObject* obj,
+            uintN argc,
+            jsval* argv,
+            jsval* rval)
+{
+    if (argc == 0) {
+        JS_ReportError(cx, "Function takes at least one argument!");
+        return JS_FALSE;
+    }
+
+    JSString* str = JS_ValueToString(cx, argv[0]);
+    if (!str) {
+        JS_ReportError(cx, "Could not convert argument 1 to string!");
+        return JS_FALSE;
+    }
+
+    if (argc > 1 && JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
+        JS_ReportError(cx, "Could not convert argument 2 to function!");
+        return JS_FALSE;
+    }
+
+    if (!XRE_SendTestShellCommand(cx, str, argc > 1 ? &argv[1] : nsnull)) {
+        JS_ReportError(cx, "Couldn't send command!");
+        return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
+GetChildGlobalObject(JSContext* cx,
+                     JSObject*,
+                     uintN,
+                     jsval*,
+                     jsval* rval)
+{
+    JSObject* global;
+    if (XRE_GetChildGlobalObject(cx, &global)) {
+        *rval = OBJECT_TO_JSVAL(global);
+        return JS_TRUE;
+    }
+    return JS_FALSE;
+}
+
+#endif // MOZ_IPC
+
 /*
  * JSContext option name to flag map. The option names are in alphabetical
  * order for better reporting.
@@ -795,6 +844,10 @@ static JSFunctionSpec glob_functions[] = {
     JS_FN("parent",     Parent,         1,0),
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
+#endif
+#ifdef MOZ_IPC
+    {"sendCommand",     SendCommand,    1,0,0},
+    {"getChildGlobalObject", GetChildGlobalObject, 0,0,0},
 #endif
 #ifdef MOZ_SHARK
     {"startShark",      js_StartShark,      0,0,0},
@@ -1773,12 +1826,6 @@ main(int argc, char **argv)
             printf("NS_InitXPCOM2 failed!\n");
             return 1;
         }
-        {
-            nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-            NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-            if (registrar)
-                registrar->AutoRegister(nsnull);
-        }
 
         nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
         // get the JSRuntime from the runtime svc
@@ -1923,6 +1970,11 @@ main(int argc, char **argv)
         JS_GC(cx);
         JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
+
+#ifdef MOZ_IPC
+    if (!XRE_ShutdownTestShell())
+        NS_ERROR("problem shutting down testshell");
+#endif
 
 #ifdef MOZ_CRASHREPORTER
     // Get the crashreporter service while XPCOM is still active.

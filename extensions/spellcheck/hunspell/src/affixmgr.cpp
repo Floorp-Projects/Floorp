@@ -68,10 +68,6 @@
 
 #include "csutil.hxx"
 
-#ifdef MOZILLA_CLIENT
-#include "nscore.h" // for mozalloc headers
-#endif
-
 AffixMgr::AffixMgr(const char * affpath, HashMgr** ptr, int * md, const char * key) 
 {
   // register hash manager and load affix data from aff file

@@ -45,6 +45,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#endif
+
 // Local Includes
 #include "nsGlobalWindow.h"
 #include "nsScreen.h"

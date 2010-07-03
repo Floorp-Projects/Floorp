@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,6 +43,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
+#include "nsXULAppAPI.h"
+#include "nsIComponentRegistrar.h"
 
 #define SERVICE_A_CONTRACT_ID  "@mozilla.org/RegTestServiceA;1"
 #define SERVICE_B_CONTRACT_ID  "@mozilla.org/RegTestServiceB;1"
@@ -70,110 +72,6 @@ NS_DEFINE_CID(kCoreServiceB_CID, CORE_SERVICE_B_CID);
         { 0xe93dadeb, 0xa6f6, 0x4667, \
         { 0xbb, 0xbc, 0xac, 0x8c, 0x6d, 0x44, 0x0b, 0x20 } }
 NS_DEFINE_CID(kExtServiceB_CID, EXT_SERVICE_B_CID);
-
-
-#ifdef DEBUG_brade
-inline void
-debugPrintPath(const char *aPrefix, nsIFile *aFile)
-{
-  if (!aPrefix || !aFile)
-    return;
-
-  nsCAutoString path;
-  nsresult rv = aFile->GetNativePath(path);
-  if (NS_FAILED(rv))
-    fprintf(stderr, "%s:  GetNativePath failed 0x%x\n", aPrefix, rv);
-  else
-    fprintf(stderr, "%s: %s\n", aPrefix, path.get());
-}
-#endif /* DEBUG_brade */
-
-/*
- * nsIDirectoryServiceProvider class.
- */
-class RegOrderDirSvcProvider: public nsIDirectoryServiceProvider2 {
-public:
-  RegOrderDirSvcProvider(const char *aRegPath)
-    : mRegPath(aRegPath)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
-
-private:
-  nsresult getRegDirectory(const char *aDirName, nsIFile **_retval);
-  const char *mRegPath;
-};
-
-NS_IMPL_ISUPPORTS2(RegOrderDirSvcProvider,
-                   nsIDirectoryServiceProvider,
-                   nsIDirectoryServiceProvider2)
-
-NS_IMETHODIMP
-RegOrderDirSvcProvider::GetFiles(const char *aKey, nsISimpleEnumerator **aEnum)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  *aEnum = nsnull;
-
-#ifdef DEBUG_brade
-    fprintf(stderr, "GetFiles(%s)\n", aKey);
-#endif
-
-  if (0 == strcmp(aKey, NS_XPCOM_COMPONENT_DIR_LIST))
-  {
-    nsCOMPtr<nsIFile> coreDir;
-    rv = getRegDirectory("core", getter_AddRefs(coreDir));
-    if (NS_SUCCEEDED(rv))
-    {
-      nsCOMPtr<nsIFile> extDir;
-      rv = getRegDirectory("extension", getter_AddRefs(extDir));
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCOMArray<nsIFile> dirArray;
-        dirArray.AppendObject(coreDir);
-        dirArray.AppendObject(extDir);
-        rv = NS_NewArrayEnumerator(aEnum, dirArray);
-      }
-    }
-  }
-
-#ifdef DEBUG_brade
-  if (rv) fprintf(stderr, "rv: %d (%x)\n", rv, rv);
-#endif
-  return rv;
-}
-
-NS_IMETHODIMP
-RegOrderDirSvcProvider::GetFile(const char *aProp, PRBool *aPersistent,
-                                nsIFile **_retval)
-{
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-RegOrderDirSvcProvider::getRegDirectory(const char *aDirName, nsIFile **_retval)
-{
-  nsCOMPtr<nsILocalFile> compDir;
-  nsresult rv = NS_NewLocalFile(EmptyString(), PR_TRUE,
-                                getter_AddRefs(compDir));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = compDir->InitWithNativePath(nsDependentCString(mRegPath));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = compDir->AppendRelativeNativePath(nsDependentCString(aDirName));
-  if (NS_FAILED(rv))
-    return rv;
-
-  *_retval = compDir;
-  NS_ADDREF(*_retval);
-  return NS_OK;
-}
 
 nsresult execRegOrderTest(const char *aTestName, const char *aContractID,
                       const nsCID &aCoreCID, const nsCID &aExtCID)
@@ -235,11 +133,44 @@ nsresult TestRegular()
                           kCoreServiceA_CID, kExtServiceA_CID);
 }
 
-nsresult TestDeferred()
+bool TestContractFirst()
 {
-  return execRegOrderTest("TestDeferred", SERVICE_B_CONTRACT_ID,
-                          kCoreServiceB_CID, kExtServiceB_CID);
+  nsCOMPtr<nsIComponentRegistrar> r;
+  NS_GetComponentRegistrar(getter_AddRefs(r));
+
+  nsCID* cid = NULL;
+  nsresult rv = r->ContractIDToCID("@mozilla.org/RegTestOrderC;1", &cid);
+  if (NS_FAILED(rv)) {
+    fail("RegTestOrderC: contract not registered");
+    return false;
+  }
+
+  nsCID goodcid;
+  goodcid.Parse("{ada15884-bb89-473c-8b50-dcfbb8447ff4}");
+
+  if (!goodcid.Equals(*cid)) {
+    fail("RegTestOrderC: CID doesn't match");
+    return false;
+  }
+
+  passed("RegTestOrderC");
+  return true;
 }
+
+static already_AddRefed<nsILocalFile>
+GetRegDirectory(const char* basename, const char* dirname)
+{
+    nsCOMPtr<nsILocalFile> f;
+    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(basename), PR_TRUE,
+                                        getter_AddRefs(f));
+    if (NS_FAILED(rv))
+        return NULL;
+
+    f->AppendNative(nsDependentCString(dirname));
+    return f.forget();
+}
+
+
 
 int main(int argc, char** argv)
 {
@@ -249,23 +180,22 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  ScopedLogging logging;
+  
   const char *regPath = argv[1];
-  RegOrderDirSvcProvider *dirSvcProvider = new RegOrderDirSvcProvider(regPath);
-  if (NULL == dirSvcProvider)
-  {
-    fprintf(stderr, "could not create dirSvcProvider\n");
-    return 1;
-  }
-  // no addref needed, ScopedXPCOM will do that if it doesn't fail
-
-  ScopedXPCOM xpcom("RegistrationOrder", dirSvcProvider);
+  XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
+                          nsCOMPtr<nsILocalFile>(GetRegDirectory(regPath, "core")));
+  XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
+                          nsCOMPtr<nsILocalFile>(GetRegDirectory(regPath, "extension")));
+  ScopedXPCOM xpcom("RegistrationOrder");
   if (xpcom.failed())
     return 1;
 
   int rv = 0;
   if (NS_FAILED(TestRegular()))
     rv = 1;
-  if (NS_FAILED(TestDeferred()))
+
+  if (!TestContractFirst())
     rv = 1;
 
   return rv;
