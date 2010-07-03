@@ -125,21 +125,6 @@ WebGLContext::Present()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* long sizeInBytes (in GLenum type); */
-NS_IMETHODIMP
-WebGLContext::SizeInBytes(WebGLenum type, PRInt32 *retval)
-{
-    if (type == LOCAL_GL_FLOAT) *retval = sizeof(float);
-    if (type == LOCAL_GL_SHORT) *retval = sizeof(short);
-    if (type == LOCAL_GL_UNSIGNED_SHORT) *retval = sizeof(unsigned short);
-    if (type == LOCAL_GL_BYTE) *retval = 1;
-    if (type == LOCAL_GL_UNSIGNED_BYTE) *retval = 1;
-    if (type == LOCAL_GL_INT) *retval = sizeof(int);
-    if (type == LOCAL_GL_UNSIGNED_INT) *retval = sizeof(unsigned int);
-    if (type == LOCAL_GL_DOUBLE) *retval = sizeof(double);
-    return NS_OK;
-}
-
 /* void GlActiveTexture (in GLenum texture); */
 NS_IMETHODIMP
 WebGLContext::ActiveTexture(WebGLenum texture)
