@@ -490,6 +490,12 @@ class FrameState
     inline void dupAt(int32 n);
 
     /*
+     * If the frameentry is a copy, give it its own registers.
+     * This may only be called on the topmost fe.
+     */
+    inline void giveOwnRegs(FrameEntry *fe);
+
+    /*
      * Returns the current stack depth of the frame.
      */
     uint32 stackDepth() const { return sp - spBase; }
