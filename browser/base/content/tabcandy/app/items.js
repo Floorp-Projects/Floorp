@@ -214,7 +214,8 @@ window.Item.prototype = {
       	resizeInfo = new Drag(this, e, true); // true = isResizing
       },
       resize: function(e,ui){
-        resizeInfo.snap(e,ui, false, self.keepProportional);
+      	// TODO: maybe the stationaryCorner should be topright for rtl langs?
+        resizeInfo.snap('topleft', false, self.keepProportional);
       },
       stop: function(){
         self.setUserSize();
