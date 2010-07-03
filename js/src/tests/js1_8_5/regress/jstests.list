@@ -24,4 +24,3 @@ script regress-566914.js
 script regress-567152.js
 script regress-569306.js
 script regress-571014.js
-script regress-yarr-regexp.js

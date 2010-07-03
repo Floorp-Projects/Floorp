@@ -40,7 +40,7 @@ var gTestfile = 'regress-332472.js';
 var BUGNUMBER = 332472;
 var summary = 'new RegExp() ignores string boundaries when throwing exceptions';
 var actual = '';
-var expect = 'SyntaxError: invalid quantifier';
+var expect = 'SyntaxError: invalid quantifier ?asdf';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);

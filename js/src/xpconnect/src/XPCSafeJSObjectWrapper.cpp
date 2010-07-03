@@ -612,7 +612,7 @@ public:
 
 private:
   JSContext *cx;
-  js::RegExpStatics statics;
+  JSRegExpStatics statics;
   js::AutoValueRooter tvr;
   uint32 options;
   JSStackFrame *fp;

@@ -122,10 +122,6 @@ template<typename T> class Seq;
 
 }  /* namespace nanojit */
 
-namespace JSC {
-    class ExecutableAllocator;
-}
-
 namespace js {
 
 /* Tracer constants. */
@@ -1546,8 +1542,6 @@ struct JSRuntime {
 
     JSWrapObjectCallback wrapObjectCallback;
 
-    JSC::ExecutableAllocator *regExpAllocator;
-
     JSRuntime();
     ~JSRuntime();
 
@@ -1642,130 +1636,22 @@ namespace js {
 class AutoGCRooter;
 }
 
-namespace js {
+struct JSRegExpStatics {
+    JSContext   *cx;
+    JSString    *input;         /* input string to match (perl $_, GC root) */
+    JSBool      multiline;      /* whether input contains newlines (perl $*) */
+    JSSubString lastMatch;      /* last string matched (perl $&) */
+    JSSubString lastParen;      /* last paren matched (perl $+) */
+    JSSubString leftContext;    /* input to left of last match (perl $`) */
+    JSSubString rightContext;   /* input to right of last match (perl $') */
+    js::Vector<JSSubString> parens; /* last set of parens matched (perl $1, $2) */
 
-class RegExp;
+    JSRegExpStatics(JSContext *cx) : cx(cx), parens(cx) {}
 
-class RegExpStatics
-{
-    typedef Vector<int, 16> MatchPairs;
-    JSContext   * const cx;
-    MatchPairs  *matchPairs;
-    JSString    *input;
-    uintN       flags;
-    bool        ownsMatchPairs;
-
-    bool createDependent(size_t start, size_t end, jsval &out) const;
-    /*
-     * Check whether the index at |checkValidIndex| is valid (>= 0).
-     * If so, construct a string for it and place it in |out|.
-     * If not, place undefined in |out|.
-     */
-    bool makeMatch(size_t checkValidIndex, size_t pairNum, jsval &out) const;
-    static const uintN allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_STICKY | JSREG_MULTILINE;
-
-    size_t pairCount() const {
-        if (!matchPairs)
-            return 0;
-        size_t matchItems = matchPairs->length();
-        JS_ASSERT((matchItems % 2) == 0);
-        return matchItems / 2;
-    }
-
-    /* Fallible interface for RegExp. */
-    MatchPairs *getOrCreateMatchPairs(JSString *newInput);
-
-    friend class RegExp;
-
-  public:
-    explicit RegExpStatics(JSContext *cx)
-      : cx(cx), matchPairs(), input(), flags(), ownsMatchPairs(true) { clear(); }
-    ~RegExpStatics();
-    void save(RegExpStatics &container);
-    void saveAndClear(RegExpStatics &container);
-    void restore(RegExpStatics &container);
-
-    void reset(JSString *newInput, bool multiline) {
-        clear();
-        input = newInput;
-        multiline = multiline;
-        checkInvariants();
-    }
-
-    void checkInvariants() {
-        if (pairCount() > 0) {
-            JS_ASSERT(input);
-            JS_ASSERT(get(0, 0) <= get(0, 1));
-            JS_ASSERT(get(0, 1) <= int(input->length()));
-        }
-    }
-
-    /* Mutators. */
-
-    void setInput(JSString *newInput) { reset(newInput, multiline()); }
-
-    void setMultiline(bool enabled) {
-        if (enabled)
-            flags = flags | JSREG_MULTILINE;
-        else
-            flags = flags & ~JSREG_MULTILINE;
-    }
-
-    void clear() {
-        input = 0;
-        flags = 0;
-        if (!ownsMatchPairs)
-            matchPairs = 0;
-        else if (matchPairs)
-            matchPairs->clear();
-    }
-
-    /* Accessors. */
-
-    JSString *getInput() const { return input; }
-    uintN getFlags() const { return flags; }
-    bool multiline() const { return flags & JSREG_MULTILINE; }
-    bool matched() const { JS_ASSERT(pairCount() > 0); return get(0, 1) - get(0, 0) > 0; }
-    size_t getParenCount() const { JS_ASSERT(pairCount() > 0); return pairCount() - 1; }
-
-    void mark(JSTracer *trc) const {
-        if (input)
-            JS_CALL_STRING_TRACER(trc, input, "res->input");
-    }
-
-    size_t getParenLength(size_t parenNum) const {
-        if (pairCount() <= parenNum + 1)
-            return 0;
-        return get(parenNum + 1, 1) - get(parenNum + 1, 0);
-    }
-
-    int get(size_t pairNum, bool which) const {
-        JS_ASSERT(pairNum < pairCount());
-        return (*matchPairs)[2 * pairNum + which];
-    }
-
-    /* jsval creators. */
-
-    bool createInput(jsval &out) const;
-    bool createLastMatch(jsval &out) const { return makeMatch(0, 0, out); }
-    bool createLastParen(jsval &out) const;
-    bool createLeftContext(jsval &out) const;
-    bool createRightContext(jsval &out) const;
-
-    bool createParen(size_t parenNum, jsval &out) const {
-        return makeMatch((parenNum + 1) * 2, parenNum + 1, out);
-    }
-
-    /* Substring creators. */
-
-    void getParen(size_t num, JSSubString &out) const;
-    void getLastMatch(JSSubString &out) const;
-    void getLastParen(JSSubString &out) const;
-    void getLeftContext(JSSubString &out) const;
-    void getRightContext(JSSubString &out) const;
+    bool copy(const JSRegExpStatics& other);
+    void clearRoots();
+    void clear();
 };
-
-}
 
 struct JSContext
 {
@@ -1857,9 +1743,6 @@ struct JSContext
     /* Temporary arena pool used while compiling and decompiling. */
     JSArenaPool         tempPool;
 
-    /* Temporary arena pool used while evaluate regular expressions. */
-    JSArenaPool         regExpPool;
-
     /* Top-level object and pointer to top stack frame's scope chain. */
     JSObject            *globalObject;
 
@@ -1867,7 +1750,7 @@ struct JSContext
     JSWeakRoots         weakRoots;
 
     /* Regular expression class statics. */
-    js::RegExpStatics   regExpStatics;
+    JSRegExpStatics     regExpStatics;
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
@@ -1975,6 +1858,9 @@ struct JSContext
 
     /* Security callbacks that override any defined on the runtime. */
     JSSecurityCallbacks *securityCallbacks;
+
+    /* Pinned regexp pool used for regular expressions. */
+    JSArenaPool         regexpPool;
 
     /* Stored here to avoid passing it around as a parameter. */
     uintN               resolveFlags;
@@ -2201,19 +2087,6 @@ private:
      */
     JS_FRIEND_API(void) checkMallocGCPressure(void *p);
 };
-
-inline
-js::RegExpStatics::~RegExpStatics()
-{
-    if (ownsMatchPairs && matchPairs)
-        cx->destroy<MatchPairs>(matchPairs);
-}
-
-static inline void
-js_TraceRegExpStatics(JSTracer *trc, JSContext *acx)
-{
-    acx->regExpStatics.mark(trc);
-}
 
 JS_ALWAYS_INLINE JSObject *
 JSStackFrame::varobj(js::CallStack *cs) const
@@ -2697,30 +2570,6 @@ class AutoKeepAtoms {
   public:
     explicit AutoKeepAtoms(JSRuntime *rt) : rt(rt) { JS_KEEP_ATOMS(rt); }
     ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
-};
-
-class AutoArenaAllocator {
-    JSArenaPool *pool;
-    void        *mark;
-  public:
-    explicit AutoArenaAllocator(JSArenaPool *pool) : pool(pool) { mark = JS_ARENA_MARK(pool); }
-    ~AutoArenaAllocator() { JS_ARENA_RELEASE(pool, mark); }
-
-    template <typename T>
-    T *alloc(size_t elems) {
-        void *ptr;
-        JS_ARENA_ALLOCATE(ptr, pool, elems * sizeof(T));
-        return static_cast<T *>(ptr);
-    }
-};
-
-class AutoReleasePtr {
-    JSContext   *cx;
-    void        *ptr;
-    AutoReleasePtr operator=(const AutoReleasePtr &other);
-  public:
-    explicit AutoReleasePtr(JSContext *cx, void *ptr) : cx(cx), ptr(ptr) {}
-    ~AutoReleasePtr() { cx->free(ptr); }
 };
 
 } /* namespace js */
