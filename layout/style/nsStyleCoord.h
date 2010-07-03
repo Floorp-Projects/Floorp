@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 #include "nsStyleConsts.h"
 class nsString;
+class nsStyleContext;
 
 enum nsStyleUnit {
   eStyleUnit_Null         = 0,      // (no value) value is not specified
@@ -76,6 +77,9 @@ typedef union {
  */
 class nsStyleCoord {
 public:
+  struct Array;
+  friend struct Array;
+
   nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
   enum CoordConstructorType { CoordConstructor };
   inline nsStyleCoord(nscoord aValue, CoordConstructorType);
@@ -115,11 +119,62 @@ public:
   void  SetAutoValue();
   void  SetNoneValue();
 
-public:
+public: // FIXME: private!
   nsStyleUnit   mUnit;
   nsStyleUnion  mValue;
 };
 
+// A fixed-size array, that, like everything else in nsStyleCoord,
+// doesn't require that its destructors be called.
+struct nsStyleCoord::Array {
+  static Array* Create(nsStyleContext *aAllocationContext,
+                       PRBool& aCanStoreInRuleTree,
+                       size_t aCount);
+
+  size_t Count() const { return mCount; }
+
+  nsStyleCoord& operator[](size_t aIndex) {
+    NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
+    return mArray[aIndex];
+  }
+
+  const nsStyleCoord& operator[](size_t aIndex) const {
+    NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
+    return mArray[aIndex];
+  }
+
+  // Easier to use with an Array*:
+  nsStyleCoord& Item(size_t aIndex) { return (*this)[aIndex]; }
+  const nsStyleCoord& Item(size_t aIndex) const { return (*this)[aIndex]; }
+
+  bool operator==(const Array& aOther) const;
+
+  bool operator!=(const Array& aOther) const {
+    return !(*this == aOther);
+  }
+
+private:
+  inline void* operator new(size_t aSelfSize,
+                            nsStyleContext *aAllocationContext,
+                            size_t aItemCount) CPP_THROW_NEW;
+
+  Array(size_t aCount)
+    : mCount(aCount)
+  {
+    // Initialize all entries not in the class.
+    for (size_t i = 1; i < aCount; ++i) {
+      new (mArray + i) nsStyleCoord();
+    }
+  }
+
+  size_t mCount;
+  nsStyleCoord mArray[1]; // for alignment, have the first element in the class
+
+  // not to be implemented
+  Array(const Array& aOther);
+  Array& operator=(const Array& aOther);
+  ~Array();
+};
 
 /**
  * Class that represents a set of top/right/bottom/left nsStyleCoords.
