@@ -478,6 +478,41 @@ inline PRUint8 ClampColor(double aColor)
   return NSToIntRound(aColor);
 }
 
+static inline void
+AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
+                 double aCoeff2, const nsCSSValue &aValue2,
+                 nsCSSValue &aResult)
+{
+  NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
+  NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
+  aResult.SetFloatValue(aCoeff1 * aValue1.GetFloatValue() +
+                        aCoeff2 * aValue2.GetFloatValue(),
+                        eCSSUnit_Pixel);
+}
+
+static inline void
+AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
+                  double aCoeff2, const nsCSSValue &aValue2,
+                  nsCSSValue &aResult)
+{
+  NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Number, "unexpected unit");
+  NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Number, "unexpected unit");
+  aResult.SetFloatValue(aCoeff1 * aValue1.GetFloatValue() +
+                        aCoeff2 * aValue2.GetFloatValue(),
+                        eCSSUnit_Number);
+}
+
+static inline void
+AddCSSValuePercent(double aCoeff1, const nsCSSValue &aValue1,
+                   double aCoeff2, const nsCSSValue &aValue2,
+                   nsCSSValue &aResult)
+{
+  NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Percent, "unexpected unit");
+  NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Percent, "unexpected unit");
+  aResult.SetPercentValue(aCoeff1 * aValue1.GetPercentValue() +
+                          aCoeff2 * aValue2.GetPercentValue());
+}
+
 static PRBool
 AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                double aCoeff2, const nsCSSValue &aValue2,
@@ -496,14 +531,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   }
 
   for (size_t i = 0; i < 4; ++i) {
-    NS_ABORT_IF_FALSE(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
-                      "unexpected unit");
-    NS_ABORT_IF_FALSE(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
-                      "unexpected unit");
-    double pixel1 = array1->Item(i).GetFloatValue();
-    double pixel2 = array2->Item(i).GetFloatValue();
-    resultArray->Item(i).SetFloatValue(aCoeff1 * pixel1 + aCoeff2 * pixel2,
-                                       eCSSUnit_Pixel);
+    AddCSSValuePixel(aCoeff1, array1->Item(i), aCoeff2, array2->Item(i),
+                     resultArray->Item(i));
   }
 
   const nsCSSValue& color1 = array1->Item(4);
@@ -676,15 +705,13 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                           "should have returned above");
         switch ((pair1->*member).GetUnit()) {
           case eCSSUnit_Pixel:
-            (result->*member).SetFloatValue(
-              aCoeff1 * (pair1->*member).GetFloatValue() +
-              aCoeff2 * (pair2->*member).GetFloatValue(),
-              eCSSUnit_Pixel);
+            AddCSSValuePixel(aCoeff1, pair1->*member, aCoeff2, pair2->*member,
+                             result->*member);
             break;
           case eCSSUnit_Percent:
-            (result->*member).SetPercentValue(
-              aCoeff1 * (pair1->*member).GetPercentValue() +
-              aCoeff2 * (pair2->*member).GetPercentValue());
+            AddCSSValuePercent(aCoeff1, pair1->*member,
+                               aCoeff2, pair2->*member,
+                               result->*member);
             break;
           default:
             NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
@@ -718,10 +745,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                           "should have returned above");
         switch ((rect1->*member).GetUnit()) {
           case eCSSUnit_Pixel:
-            (result->*member).SetFloatValue(
-              aCoeff1 * (rect1->*member).GetFloatValue() +
-              aCoeff2 * (rect2->*member).GetFloatValue(),
-              eCSSUnit_Pixel);
+            AddCSSValuePixel(aCoeff1, rect1->*member, aCoeff2, rect2->*member,
+                             result->*member);
             break;
           case eCSSUnit_Auto:
             if (float(aCoeff1 + aCoeff2) != 1.0f) {
@@ -787,13 +812,9 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         resultTail = &item->mNext;
 
         if (v1.GetUnit() == eCSSUnit_Number) {
-          item->mValue.SetFloatValue(aCoeff1 * v1.GetFloatValue() +
-                                     aCoeff2 * v2.GetFloatValue(),
-                                     eCSSUnit_Number);
+          AddCSSValueNumber(aCoeff1, v1, aCoeff2, v2, item->mValue);
         } else {
-          NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Percent, "unexpected");
-          item->mValue.SetPercentValue(aCoeff1 * v1.GetPercentValue() +
-                                       aCoeff2 * v2.GetPercentValue());
+          AddCSSValuePercent(aCoeff1, v1, aCoeff2, v2, item->mValue);
         }
 
         list1 = list1->mNext;
@@ -883,13 +904,10 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           }
           switch (v1.GetUnit()) {
             case eCSSUnit_Pixel:
-              vr.SetFloatValue(aCoeff1 * v1.GetFloatValue() +
-                               aCoeff2 * v2.GetFloatValue(),
-                               eCSSUnit_Pixel);
+              AddCSSValuePixel(aCoeff1, v1, aCoeff2, v2, vr);
               break;
             case eCSSUnit_Percent:
-              vr.SetPercentValue(aCoeff1 * v1.GetPercentValue() +
-                                 aCoeff2 * v2.GetPercentValue());
+              AddCSSValuePercent(aCoeff1, v1, aCoeff2, v2, vr);
               break;
             default:
               if (v1 == v2) {
