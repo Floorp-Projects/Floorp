@@ -79,6 +79,7 @@
 #include "jsstaticcheck.h"
 #include "jslibmath.h"
 #include "jsvector.h"
+#include "jsregexpinlines.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -86,6 +87,11 @@
 
 #if JS_HAS_DESTRUCTURING
 #include "jsdhash.h"
+#endif
+
+// Grr, windows.h or something under it #defines CONST...
+#ifdef CONST
+#undef CONST
 #endif
 
 using namespace js;
@@ -8273,16 +8279,13 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
       case TOK_REGEXP:
       {
-        JSObject *obj;
-
         pn = NullaryNode::create(tc);
         if (!pn)
             return NULL;
 
-        obj = js_NewRegExpObject(context, &tokenStream,
-                                 tokenStream.getTokenbuf().begin(),
-                                 tokenStream.getTokenbuf().length(),
-                                 tokenStream.currentToken().t_reflags);
+        JSObject *obj = RegExp::createObject(context, tokenStream.getTokenbuf().begin(),
+                                             tokenStream.getTokenbuf().length(),
+                                             tokenStream.currentToken().t_reflags);
         if (!obj)
             return NULL;
         if (!tc->compileAndGo()) {

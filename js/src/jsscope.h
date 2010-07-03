@@ -997,6 +997,22 @@ js_TraceId(JSTracer *trc, jsid id);
 
 JS_END_EXTERN_C
 
+namespace js {
+
+class AutoObjectLocker {
+    JSContext   * const cx;
+    JSObject    * const obj;
+  public:
+    AutoObjectLocker(JSContext *cx, JSObject *obj)
+      : cx(cx), obj(obj) {
+        JS_LOCK_OBJ(cx, obj);
+    }
+
+    ~AutoObjectLocker() { JS_UNLOCK_OBJ(cx, obj); }
+};
+
+}
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(pop)
